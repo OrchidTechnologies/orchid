@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.4.1)
+
+add_library(orchid SHARED
+            orchid.c)
+
+# Include libraries needed for orchid lib
+target_link_libraries(orchid
+                      android
+                      log)
