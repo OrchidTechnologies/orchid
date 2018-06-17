@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3C3390CF20D7121800641910 /* orchid.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C3390CD20D7121700641910 /* orchid.c */; };
+		3C3390D020D7121800641910 /* orchid.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C3390CD20D7121700641910 /* orchid.c */; };
 		3C504EE220CF0F4400C7D3AC /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504EE120CF0F4400C7D3AC /* AppDelegate.m */; };
 		3C504EE420CF0F4700C7D3AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C504EE320CF0F4700C7D3AC /* Assets.xcassets */; };
 		3C504EE720CF0F4700C7D3AC /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3C504EE520CF0F4700C7D3AC /* MainMenu.xib */; };
 		3C504EEA20CF0F4700C7D3AC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504EE920CF0F4700C7D3AC /* main.m */; };
 		3C504EF920CF0F6E00C7D3AC /* PacketTunnelProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504EF820CF0F6E00C7D3AC /* PacketTunnelProvider.m */; };
-		3C504EFE20CF0F6E00C7D3AC /* OrchidTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 3C504EF520CF0F6E00C7D3AC /* OrchidTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3C504EFE20CF0F6E00C7D3AC /* OrchidTunnel macOS.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 3C504EF520CF0F6E00C7D3AC /* OrchidTunnel macOS.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3C504F0520CF0FA100C7D3AC /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C504F0420CF0FA100C7D3AC /* NetworkExtension.framework */; };
 		3C504F0620CF32E400C7D3AC /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C504F0420CF0FA100C7D3AC /* NetworkExtension.framework */; };
 		3C504F0F20CF392900C7D3AC /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504F0E20CF392900C7D3AC /* AppDelegate.m */; };
@@ -51,7 +53,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				3C504EFE20CF0F6E00C7D3AC /* OrchidTunnel.appex in Embed App Extensions */,
+				3C504EFE20CF0F6E00C7D3AC /* OrchidTunnel macOS.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -70,7 +72,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3C504EDD20CF0F4400C7D3AC /* Orchid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Orchid.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C3390CD20D7121700641910 /* orchid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = orchid.c; path = ../orchid.c; sourceTree = "<group>"; };
+		3C3390CE20D7121800641910 /* orchid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = orchid.h; path = ../orchid.h; sourceTree = "<group>"; };
+		3C504EDD20CF0F4400C7D3AC /* Orchid macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Orchid macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C504EE020CF0F4400C7D3AC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		3C504EE120CF0F4400C7D3AC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		3C504EE320CF0F4700C7D3AC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -78,7 +82,7 @@
 		3C504EE820CF0F4700C7D3AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3C504EE920CF0F4700C7D3AC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		3C504EEB20CF0F4700C7D3AC /* Orchid.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Orchid.entitlements; sourceTree = "<group>"; };
-		3C504EF520CF0F6E00C7D3AC /* OrchidTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OrchidTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C504EF520CF0F6E00C7D3AC /* OrchidTunnel macOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "OrchidTunnel macOS.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C504EF720CF0F6E00C7D3AC /* PacketTunnelProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PacketTunnelProvider.h; sourceTree = "<group>"; };
 		3C504EF820CF0F6E00C7D3AC /* PacketTunnelProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PacketTunnelProvider.m; sourceTree = "<group>"; };
 		3C504EFA20CF0F6E00C7D3AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -96,7 +100,7 @@
 		3C504F1C20CF392A00C7D3AC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		3C504F2520CF395400C7D3AC /* OrchidTunnel iOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "OrchidTunnel iOS.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C504F2A20CF395500C7D3AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3C504F2B20CF395500C7D3AC /* OrchidTunnel_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OrchidTunnel_iOS.entitlements; sourceTree = "<group>"; };
+		3C504F2B20CF395500C7D3AC /* OrchidTunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OrchidTunnel.entitlements; sourceTree = "<group>"; };
 		3C504F3420CF3B2700C7D3AC /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.0.sdk/System/Library/Frameworks/NetworkExtension.framework; sourceTree = DEVELOPER_DIR; };
 		3C504F3720CF3B2F00C7D3AC /* Orchid iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Orchid iOS.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -137,30 +141,50 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3C3390C520D70EDD00641910 /* OrchidTunnel */ = {
+			isa = PBXGroup;
+			children = (
+				3C504EF720CF0F6E00C7D3AC /* PacketTunnelProvider.h */,
+				3C504EF820CF0F6E00C7D3AC /* PacketTunnelProvider.m */,
+			);
+			path = OrchidTunnel;
+			sourceTree = "<group>";
+		};
+		3C3390CC20D7120B00641910 /* orchid */ = {
+			isa = PBXGroup;
+			children = (
+				3C3390CD20D7121700641910 /* orchid.c */,
+				3C3390CE20D7121800641910 /* orchid.h */,
+			);
+			name = orchid;
+			sourceTree = "<group>";
+		};
 		3C504ED420CF0F4400C7D3AC = {
 			isa = PBXGroup;
 			children = (
-				3C504EDF20CF0F4400C7D3AC /* Orchid */,
-				3C504EF620CF0F6E00C7D3AC /* OrchidTunnel */,
-				3C504F0C20CF392900C7D3AC /* Orchid iOS */,
-				3C504F2620CF395500C7D3AC /* OrchidTunnel iOS */,
-				3C504EDE20CF0F4400C7D3AC /* Products */,
+				3C3390CC20D7120B00641910 /* orchid */,
 				3C504F0320CF0FA100C7D3AC /* Frameworks */,
+				3C504F0C20CF392900C7D3AC /* Orchid iOS */,
+				3C504EDF20CF0F4400C7D3AC /* Orchid macOS */,
+				3C3390C520D70EDD00641910 /* OrchidTunnel */,
+				3C504F2620CF395500C7D3AC /* OrchidTunnel iOS */,
+				3C504EF620CF0F6E00C7D3AC /* OrchidTunnel macOS */,
+				3C504EDE20CF0F4400C7D3AC /* Products */,
 			);
 			sourceTree = "<group>";
 		};
 		3C504EDE20CF0F4400C7D3AC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3C504EDD20CF0F4400C7D3AC /* Orchid.app */,
-				3C504EF520CF0F6E00C7D3AC /* OrchidTunnel.appex */,
+				3C504EDD20CF0F4400C7D3AC /* Orchid macOS.app */,
+				3C504EF520CF0F6E00C7D3AC /* OrchidTunnel macOS.appex */,
 				3C504F0B20CF392900C7D3AC /* Orchid iOS.app */,
 				3C504F2520CF395400C7D3AC /* OrchidTunnel iOS.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		3C504EDF20CF0F4400C7D3AC /* Orchid */ = {
+		3C504EDF20CF0F4400C7D3AC /* Orchid macOS */ = {
 			isa = PBXGroup;
 			children = (
 				3C504EE020CF0F4400C7D3AC /* AppDelegate.h */,
@@ -171,18 +195,16 @@
 				3C504EE920CF0F4700C7D3AC /* main.m */,
 				3C504EEB20CF0F4700C7D3AC /* Orchid.entitlements */,
 			);
-			path = Orchid;
+			path = "Orchid macOS";
 			sourceTree = "<group>";
 		};
-		3C504EF620CF0F6E00C7D3AC /* OrchidTunnel */ = {
+		3C504EF620CF0F6E00C7D3AC /* OrchidTunnel macOS */ = {
 			isa = PBXGroup;
 			children = (
-				3C504EF720CF0F6E00C7D3AC /* PacketTunnelProvider.h */,
-				3C504EF820CF0F6E00C7D3AC /* PacketTunnelProvider.m */,
 				3C504EFA20CF0F6E00C7D3AC /* Info.plist */,
 				3C504EFB20CF0F6E00C7D3AC /* OrchidTunnel.entitlements */,
 			);
-			path = OrchidTunnel;
+			path = "OrchidTunnel macOS";
 			sourceTree = "<group>";
 		};
 		3C504F0320CF0FA100C7D3AC /* Frameworks */ = {
@@ -215,7 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				3C504F2A20CF395500C7D3AC /* Info.plist */,
-				3C504F2B20CF395500C7D3AC /* OrchidTunnel_iOS.entitlements */,
+				3C504F2B20CF395500C7D3AC /* OrchidTunnel.entitlements */,
 			);
 			path = "OrchidTunnel iOS";
 			sourceTree = "<group>";
@@ -223,9 +245,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3C504EDC20CF0F4400C7D3AC /* Orchid */ = {
+		3C504EDC20CF0F4400C7D3AC /* Orchid macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3C504EEE20CF0F4700C7D3AC /* Build configuration list for PBXNativeTarget "Orchid" */;
+			buildConfigurationList = 3C504EEE20CF0F4700C7D3AC /* Build configuration list for PBXNativeTarget "Orchid macOS" */;
 			buildPhases = (
 				3C504ED920CF0F4400C7D3AC /* Sources */,
 				3C504EDA20CF0F4400C7D3AC /* Frameworks */,
@@ -237,14 +259,14 @@
 			dependencies = (
 				3C504EFD20CF0F6E00C7D3AC /* PBXTargetDependency */,
 			);
-			name = Orchid;
+			name = "Orchid macOS";
 			productName = Orchid;
-			productReference = 3C504EDD20CF0F4400C7D3AC /* Orchid.app */;
+			productReference = 3C504EDD20CF0F4400C7D3AC /* Orchid macOS.app */;
 			productType = "com.apple.product-type.application";
 		};
-		3C504EF420CF0F6E00C7D3AC /* OrchidTunnel */ = {
+		3C504EF420CF0F6E00C7D3AC /* OrchidTunnel macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3C504EFF20CF0F6E00C7D3AC /* Build configuration list for PBXNativeTarget "OrchidTunnel" */;
+			buildConfigurationList = 3C504EFF20CF0F6E00C7D3AC /* Build configuration list for PBXNativeTarget "OrchidTunnel macOS" */;
 			buildPhases = (
 				3C504EF120CF0F6E00C7D3AC /* Sources */,
 				3C504EF220CF0F6E00C7D3AC /* Frameworks */,
@@ -254,9 +276,9 @@
 			);
 			dependencies = (
 			);
-			name = OrchidTunnel;
+			name = "OrchidTunnel macOS";
 			productName = OrchidTunnel;
-			productReference = 3C504EF520CF0F6E00C7D3AC /* OrchidTunnel.appex */;
+			productReference = 3C504EF520CF0F6E00C7D3AC /* OrchidTunnel macOS.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		3C504F0A20CF392900C7D3AC /* Orchid iOS */ = {
@@ -360,8 +382,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3C504EDC20CF0F4400C7D3AC /* Orchid */,
-				3C504EF420CF0F6E00C7D3AC /* OrchidTunnel */,
+				3C504EDC20CF0F4400C7D3AC /* Orchid macOS */,
+				3C504EF420CF0F6E00C7D3AC /* OrchidTunnel macOS */,
 				3C504F0A20CF392900C7D3AC /* Orchid iOS */,
 				3C504F2420CF395400C7D3AC /* OrchidTunnel iOS */,
 			);
@@ -418,6 +440,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C3390CF20D7121800641910 /* orchid.c in Sources */,
 				3C504EF920CF0F6E00C7D3AC /* PacketTunnelProvider.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -436,6 +459,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C3390D020D7121800641910 /* orchid.c in Sources */,
 				3C504F3320CF3A5B00C7D3AC /* PacketTunnelProvider.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -445,7 +469,7 @@
 /* Begin PBXTargetDependency section */
 		3C504EFD20CF0F6E00C7D3AC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3C504EF420CF0F6E00C7D3AC /* OrchidTunnel */;
+			target = 3C504EF420CF0F6E00C7D3AC /* OrchidTunnel macOS */;
 			targetProxy = 3C504EFC20CF0F6E00C7D3AC /* PBXContainerItemProxy */;
 		};
 		3C504F2D20CF395500C7D3AC /* PBXTargetDependency */ = {
@@ -489,7 +513,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -520,7 +544,8 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -534,6 +559,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				ONLY_ACTIVE_ARCH = YES;
@@ -547,7 +573,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -578,7 +604,8 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -586,6 +613,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -596,11 +624,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Orchid/Orchid.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Orchid macOS/Orchid.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = TH2QY3324E;
-				INFOPLIST_FILE = Orchid/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Orchid macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -614,11 +642,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Orchid/Orchid.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Orchid macOS/Orchid.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = TH2QY3324E;
-				INFOPLIST_FILE = Orchid/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Orchid macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -631,10 +659,10 @@
 		3C504F0020CF0F6E00C7D3AC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = OrchidTunnel/OrchidTunnel.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "OrchidTunnel macOS/OrchidTunnel.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = TH2QY3324E;
-				INFOPLIST_FILE = OrchidTunnel/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/OrchidTunnel macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -649,10 +677,10 @@
 		3C504F0120CF0F6E00C7D3AC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = OrchidTunnel/OrchidTunnel.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "OrchidTunnel macOS/OrchidTunnel.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = TH2QY3324E;
-				INFOPLIST_FILE = OrchidTunnel/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/OrchidTunnel macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -710,7 +738,7 @@
 		3C504F3020CF395500C7D3AC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "OrchidTunnel iOS/OrchidTunnel_iOS.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "OrchidTunnel iOS/OrchidTunnel.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = TH2QY3324E;
@@ -732,7 +760,7 @@
 		3C504F3120CF395500C7D3AC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "OrchidTunnel iOS/OrchidTunnel_iOS.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "OrchidTunnel iOS/OrchidTunnel.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = TH2QY3324E;
@@ -764,7 +792,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3C504EEE20CF0F4700C7D3AC /* Build configuration list for PBXNativeTarget "Orchid" */ = {
+		3C504EEE20CF0F4700C7D3AC /* Build configuration list for PBXNativeTarget "Orchid macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3C504EEF20CF0F4700C7D3AC /* Debug */,
@@ -773,7 +801,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3C504EFF20CF0F6E00C7D3AC /* Build configuration list for PBXNativeTarget "OrchidTunnel" */ = {
+		3C504EFF20CF0F6E00C7D3AC /* Build configuration list for PBXNativeTarget "OrchidTunnel macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3C504F0020CF0F6E00C7D3AC /* Debug */,

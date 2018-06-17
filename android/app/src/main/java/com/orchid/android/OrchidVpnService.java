@@ -29,10 +29,13 @@ public class OrchidVpnService extends VpnService {
         try {
             ParcelFileDescriptor p = builder.establish();
             if (p != null) {
-                int fd = p.detachFd();
+                final int fd = p.detachFd();
                 Log.w(TAG, "Success: " + fd);
-                OrchidNative.setTunnelFd(fd);
                 startForeground();
+                new Thread(new Runnable() { public void run() {
+                    OrchidNative.runTunnel(fd);
+                    stopForeground(1);
+                }}).start();
             }
         } catch (IllegalStateException e) {
             Log.e(TAG, "onCreate", e);

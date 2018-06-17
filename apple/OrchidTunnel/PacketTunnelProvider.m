@@ -1,4 +1,4 @@
-//
+  //
 //  PacketTunnelProvider.m
 //  OrchidTunnel
 //
@@ -7,6 +7,12 @@
 //
 
 #import "PacketTunnelProvider.h"
+#include "orchid.h"
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+
+typedef struct ip ip;
+
 
 PacketTunnelProvider *packetTunnelProvider;
 
@@ -73,14 +79,48 @@ PacketTunnelProvider *packetTunnelProvider;
 - (void)readPacketsFromTunnel
 {
     [self.packetFlow readPacketsWithCompletionHandler:^(NSArray<NSData *> * _Nonnull packets, NSArray<NSNumber *> * _Nonnull protocols) {
+        NSData *outPackets[packets.count];
+        NSNumber *outProtocols[protocols.count];
+        size_t insert = 0;
         for (int i = 0; i < packets.count; i++) {
             NSData *packet = packets[i];
             NSNumber *protocol = protocols[i];
-
-            //[self.packetFlow writePackets:@[packet] withProtocols:@[protocol]];
+            if (!on_tunnel_packet((const uint8_t*)packet.bytes, packet.length)) {
+                outPackets[insert] = packet;
+                outProtocols[insert] = protocol;
+                insert++;
+            }
+        }
+        if (insert) {
+            NSArray *wPackets = packets;
+            NSArray *wProtocols = protocols;
+            if (insert != packets.count) {
+                wPackets = [NSArray arrayWithObjects:outPackets count:insert];
+                wProtocols = [NSArray arrayWithObjects:outProtocols count:insert];
+            }
+            [self.packetFlow writePackets:wPackets withProtocols:wProtocols];
         }
         [self readPacketsFromTunnel];
     }];
+}
+
+void write_tunnel_packet(const uint8_t *packet, size_t length)
+{
+    if (length < sizeof(ip)) {
+        return;
+    }
+    const ip *p = (const ip*)packet;
+    sa_family_t protocol;
+    switch (p->ip_v) {
+        case 4: protocol = AF_INET; break;
+        case 6: protocol = AF_INET6; break;
+        default: return;
+    }
+
+    // HMM: this copies
+    NSData *d = [NSData dataWithBytes:packet length:length];
+
+    [packetTunnelProvider.packetFlow writePackets:@[d] withProtocols:@[@(protocol)]];
 }
 
 @end
