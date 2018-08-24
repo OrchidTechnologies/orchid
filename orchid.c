@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <netdb.h>
+#include <Block.h>
+#include <pthread.h>
 
 #include "orchid.h"
 #include "tun_api.h"
@@ -184,10 +186,10 @@ const char* tcp_flags(unsigned char flags)
     buf[0] = '\0';
     char *p = NULL;
 #define ADD_FLAG(f) \
-if (flags & TH_ ## f) { \
-if (p) strcat(buf, "|"); \
-p = strcat(buf, #f); \
-}
+    if (flags & TH_ ## f) { \
+        if (p) strcat(buf, "|"); \
+        p = strcat(buf, #f); \
+    }
     ADD_FLAG(FIN);
     ADD_FLAG(SYN);
     ADD_FLAG(RST);
@@ -215,9 +217,6 @@ void nonblock(int s)
 {
     fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
 }
-
-#include <Block.h>
-#include <pthread.h>
 
 typedef void (^thread_body)(void);
 void thread(thread_body tb);
@@ -280,13 +279,13 @@ void listener_thread(int fd)
         }
         printf("accepted %d -> %s:%d", m->src_port, inet_ntoa((in_addr){.s_addr = m->dst_ip}), m->dst_port);
         /*
-         if (!s->con) {
-         printf("incomplete TCP session: %@", s);
-         close(c);
-         continue;
-         }
-         [s accept:c];
-         */
+        if (!s->con) {
+            printf("incomplete TCP session: %@", s);
+            close(c);
+            continue;
+        }
+        [s accept:c];
+        */
     }
 }
 

@@ -6,6 +6,8 @@
 //  Copyright © 2018 Example. All rights reserved.
 //
 
+#include <Block.h>
+
 #include "tun_api.h"
 #include "orchid.h"
 
