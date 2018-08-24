@@ -15,7 +15,7 @@
 #define memdup(m, len) memcpy(malloc(len), m, len)
 #define memeq(a, b, len) (memcmp(a, b, len) == 0)
 #define PACKED __attribute__((__packed__))
-
+#define in_addr_t_toa(x) inet_ntoa((in_addr){.s_addr = x})
 #define INET_ADDR(a,b,c,d) (a | (b<<8) | (c<<16) | (d<<24))
 
 #define TERMINATE_HOST INET_ADDR(10,7,0,3)

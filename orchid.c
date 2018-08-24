@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
+#include <strings.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <net/if.h>
@@ -22,10 +23,6 @@
 #define log(...) os_log(OS_LOG_DEFAULT, __VA_ARGS__)
 #else
 #define log(...) printf(__VA_ARGS__)
-#endif
-
-#ifndef __APPLE__
-#define bzero(p, s) memset(p, 0, s)
 #endif
 
 typedef struct {
@@ -297,7 +294,7 @@ void listener_thread(int fd)
             close(c);
             continue;
         }
-        log("accepted %d -> %s:%d", m->src_port, inet_ntoa((in_addr){.s_addr = m->dst_ip}), m->dst_port);
+        log("accepted %d -> %s:%d", m->src_port, in_addr_t_toa(m->dst_ip), m->dst_port);
         /*
         if (!s->con) {
             log("incomplete TCP session: %@", s);
