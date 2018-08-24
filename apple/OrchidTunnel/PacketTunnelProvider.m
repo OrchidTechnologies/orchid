@@ -8,10 +8,6 @@
 
 #import "PacketTunnelProvider.h"
 #include "orchid.h"
-#include <netinet/ip.h>
-#include <netinet/ip6.h>
-
-typedef struct ip ip;
 
 
 PacketTunnelProvider *packetTunnelProvider;
@@ -49,6 +45,7 @@ PacketTunnelProvider *packetTunnelProvider;
         [self setTunnelNetworkSettings:settings completionHandler:^(NSError * _Nullable error) {
             NSLog(@"setTunnelNetworkSettings error: %@", error);
             completionHandler(error);
+            start_listener();
             [packetTunnelProvider readPacketsFromTunnel];
         }];
     });
@@ -109,13 +106,7 @@ void write_tunnel_packet(const uint8_t *packet, size_t length)
     if (length < sizeof(ip)) {
         return;
     }
-    const ip *p = (const ip*)packet;
-    sa_family_t protocol;
-    switch (p->ip_v) {
-        case 4: protocol = AF_INET; break;
-        case 6: protocol = AF_INET6; break;
-        default: return;
-    }
+    sa_family_t protocol = address_family((const ip*)packet);
 
     // HMM: this copies
     NSData *d = [NSData dataWithBytes:packet length:length];
