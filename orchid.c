@@ -324,7 +324,7 @@ void start_listener()
                 ((sockaddr_in*)i->ifa_addr)->sin_addr.s_addr == listen_sin.sin_addr.s_addr) {
                 int index = if_nametoindex(i->ifa_name);
                 setsockopt(listen_fd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-                //printf("bound to %s %d", i->ifa_name, r);
+                //log("bound to %s %d", i->ifa_name, r);
                 break;
             }
         }
@@ -333,12 +333,12 @@ void start_listener()
 
     int r = bind(listen_fd, (const sockaddr*)&listen_sin, sizeof(listen_sin));
     if (r < 0) {
-        printf("TCP bind error %d %d %s", r, errno, strerror(errno));
+        log("TCP bind error %d %d %s", r, errno, strerror(errno));
         close(listen_fd);
         return;
     }
     r = listen(listen_fd, 128);
-    printf("TCP listen %d", r);
+    log("TCP listen %d", r);
 
     nonblock(listen_fd);
 
@@ -405,7 +405,7 @@ bool on_tcp_packet(ip *p, size_t length)
             }
         }
         if (!m) {
-            printf("unknown TCP session %s:%d\n", inet_ntoa(p->ip_dst), dst_port);
+            log("unknown TCP session %s:%d\n", inet_ntoa(p->ip_dst), dst_port);
             return false;
         }
 
