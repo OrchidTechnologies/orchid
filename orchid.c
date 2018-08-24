@@ -24,6 +24,10 @@
 #define log(...) printf(__VA_ARGS__)
 #endif
 
+#ifndef __APPLE__
+#define bzero(p, s) memset(p, 0, s)
+#endif
+
 typedef struct {
     port_t src_port;
     port_t dst_port;
@@ -182,13 +186,26 @@ sa_family_t address_family(const ip *p)
 const char* address_to_string(const sockaddr_storage *ss)
 {
     static char addr[NI_MAXHOST];
-    int e = getnameinfo((const sockaddr*)ss, ss->ss_len, addr, sizeof(addr), NULL, 0, NI_NUMERICHOST);
+    socklen_t ss_len = 0;
+    switch (ss->ss_family) {
+    case AF_INET: ss_len = sizeof(sockaddr_in);
+    case AF_INET6: ss_len = sizeof(sockaddr_in6);
+    }
+
+    int e = getnameinfo((const sockaddr*)ss, ss_len, addr, sizeof(addr), NULL, 0, NI_NUMERICHOST);
     if (!e) {
         log("getnameinfo failed %d %s\n", e, gai_strerror(e));
         return NULL;
     }
     return addr;
 }
+
+#ifndef TH_ECE
+#define TH_ECE 0x40
+#endif
+#ifndef TH_CWR
+#define TH_CWR 0x80
+#endif
 
 const char* tcp_flags(unsigned char flags)
 {
@@ -209,12 +226,6 @@ const char* tcp_flags(unsigned char flags)
     ADD_FLAG(ECE);
     ADD_FLAG(CWR);
     return buf;
-}
-
-void no_sigpipe(int s)
-{
-    int option = 1;
-    setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, &option, sizeof(option));
 }
 
 void reuseport(int s)
@@ -267,7 +278,6 @@ void listener_thread(int fd)
             return;
         }
         log("accept socket: %d", c);
-        assert(addr.ss_len == addr_len);
 
         assert(addr.ss_family == AF_INET); // TODO: IPv6
         sockaddr_in *sin = (sockaddr_in*)&addr;
@@ -307,16 +317,16 @@ void start_listener()
             assert(false);
         }
     }
-    no_sigpipe(listen_fd);
+    signal(SIGPIPE, SIG_IGN);
 
     sockaddr_in listen_sin = {
-        .sin_len = sizeof(listen_sin),
         .sin_family = AF_INET,
         .sin_port = htons(TERMINATE_PORT),
         .sin_addr.s_addr = TERMINATE_HOST,
     };
     reuseport(listen_fd);
 
+#ifdef __APPLE__
     ifaddrs *interfaces = NULL;
     if (!getifaddrs(&interfaces)) {
         for (ifaddrs *i = interfaces; i; i = i->ifa_next) {
@@ -330,6 +340,11 @@ void start_listener()
         }
         freeifaddrs(interfaces);
     }
+#endif
+
+#ifdef __LINUX__
+    setsockopt(fd, SOL_SOCKET, SO_MARK, &fwmark, sizeof(fwmark));
+#endif
 
     int r = bind(listen_fd, (const sockaddr*)&listen_sin, sizeof(listen_sin));
     if (r < 0) {
@@ -476,7 +491,7 @@ bool on_tcp_packet(ip *p, size_t length)
                 // HMM: copies, but some callers (NSData*) can be refcounted
                 uint8_t *pending_packet = memdup(p, length);
 
-                sockaddr_storage ss = {.ss_family = AF_INET, .ss_len = sizeof(sockaddr_in)};
+                sockaddr_storage ss = {.ss_family = AF_INET};
                 sockaddr_in *s = (sockaddr_in*)&ss;
                 s->sin_addr = p->ip_src;
                 const tcphdr *tcp = (tcphdr *)((uint8_t*)p + sizeof(ip));

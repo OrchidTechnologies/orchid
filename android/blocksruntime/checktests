@@ -1,0 +1,290 @@
+#!/bin/sh
+
+# This file produces TAP compliant output
+
+# NOTE:
+#   This file can be run directly or with "prove" like this:
+#     prove checktests
+#   Or like this:
+#     prove -v checktests
+#   Do not forget to set the compiler if needed like so:
+#     CC=my-clang-build prove -v checktests
+
+: ${CC:=clang}
+: ${CXX:=$CC}
+: ${CFLAGS:=}
+LC_ALL=C
+export LC_ALL
+CPPFLAGS='-O -Wno-unused -include testprefix.h -IBlocksRuntime'
+CCFLAGS='-std=c99 -Wimplicit-function-declaration'
+LIB=libBlocksRuntime.a
+TESTDIR=testbin
+rm -rf $TESTDIR
+mkdir $TESTDIR
+diag () {
+  while [ $# != 0 ]; do
+    echo '# '"$1"
+    shift
+  done
+}
+diagfilt() {
+  while read -r LINE; do
+    echo '# '"$LINE"
+  done
+}
+usedashs=
+diag 'blocksruntime tests' ''
+if ! ccver="$("$CC" --version 2>&1)"; then
+  echo 'Bail out! '"\"$CC\" not installed (did you forget to set \$CC?)"
+  exit 1
+else
+  out="$( ("$CC" -fblocks -c -o /dev/null -x c - < /dev/null 2>&1 || echo '-fblocks') 2>&1)"
+  case "$out" in *"-fblocks"*)
+    out="$( ("$CC" -fblocks -S -o /dev/null -x c - < /dev/null 2>&1 || echo '-fblocks') 2>&1)"
+    case "$out" in *"-fblocks"*)
+      echo 'Bail out! '"\"$CC\" does not support the -fblocks option"
+      exit 1
+    esac
+    usedashs=1
+    diag "WARNING: -S required for -fblocks with $CC"
+  esac
+  ccmach="$("$CC" -dumpmachine 2>/dev/null)"
+fi
+warnskipcxx=
+if cxxver="$("$CXX" --version 2>&1)"; then
+  dopp=1
+  out="$( ("$CXX" -fblocks -c -o /dev/null -x c - < /dev/null 2>&1 || echo '-fblocks') 2>&1)"
+  case "$out" in *"-fblocks"*)
+    out="$( ("$CXX" -fblocks -S -o /dev/null -x c - < /dev/null 2>&1 || echo '-fblocks') 2>&1)"
+    case "$out" in
+    *"-fblocks"*)
+      warnskipcxx="\"$CXX\" does not support the -fblocks option; skipping C++ tests"
+      dopp=
+      ;;
+    *)
+      usedashs=1
+      ;;
+    esac
+    if [ "$CC" != "$CXX" ]; then
+      diag "WARNING: -S required for -fblocks with $CXX"
+    fi
+  esac
+  if [ -n "$dopp" ]; then
+    cxxmach="$("$CXX" -dumpmachine 2>/dev/null)"
+    cxxdver="$("$CXX" -dumpversion 2>/dev/null)"
+  fi
+else
+  warnskipcxx="\"$CXX\" not installed; skipping C++ tests"
+fi
+if [ -n "$usedashs" ]; then
+  diag ""
+fi
+if [ -n "$warnskipcxx" ]; then
+  diag "$warnskipcxx" ""
+fi
+if [ ! -r "$LIB" ]; then
+  echo 'Bail out! '"No \"$LIB\" file found, try running \"$(dirname "$0")/buildlib\" first"
+  exit 1
+fi
+iscc_clang=
+iscxx_clang=
+case "$ccver" in *[Cc][Ll][Aa][Nn][Gg]*)
+  iscc_clang=1
+esac
+case "$cxxver" in *[Cc][Ll][Aa][Nn][Gg]*)
+  iscxx_clang=1
+esac
+if [ -n "$iscxx_clang" ]; then case "$cxxdver" in
+  "1.1")
+    skiprefC=1
+esac; fi
+iscc_armhf=
+iscxx_armhf=
+case "$ccmach" in arm-*)
+  case "$ccmach" in *abihf)
+    iscc_armhf=1
+  esac
+esac
+case "$cxxmach" in arm-*)
+  case "$cxxmach" in *abihf)
+    iscxx_armhf=1
+  esac
+esac
+diag "CC${iscc_clang:+(clang)}: $CC --version"
+echo "$ccver" | diagfilt
+diag ''
+if [ -n "$dopp" -a z"$CXX" != z"$CC" ]; then
+  diag "CXX${iscxx_clang:+(clang)}: $CXX --version"
+  echo "$cxxver" | diagfilt
+  diag ''
+fi
+testcount=0
+failcount=0
+xfailcount=0
+bonuscount=0
+skipcount=0
+skipcpp=0
+passcount=0
+testsfailed=
+for test in BlocksRuntime/tests/*.[cC]; do
+  testname="${test#BlocksRuntime/tests/}"
+  skip=
+  skipdoze=
+  extra=
+  stub=
+  xfail=
+  reason=
+  showxfail=
+  testcount=$(($testcount + 1))
+  case $testname in
+    rdar6405500.c | \
+    rdar6414583.c | \
+    objectRRGC.c | \
+    dispatch_async.c) skip=1;;
+    fail.c) skipdoze=1;;
+    macro.c) stub='void foo(); int main(){foo(); printf("success");}';;
+    varargs-bad-assign.c | \
+    rettypepromotion.c | \
+    shorthandexpression.c | \
+    k-and-r.c | \
+    sizeof.c | \
+    orbars.c | \
+    constassign.c) xfail=1;;
+    copy-block-literal-rdar6439600.c) reason='compiler bug'; showxfail=1; xfail=1;;
+    ${iscc_clang}cast.c) reason='gcc compiler bug'; showxfail=1; xfail=1;;
+    ${iscxx_clang}josh.C) reason='g++ compiler bug'; showxfail=1; xfail=1;;
+    reference.C)
+      if [ -n "$skiprefC" ]; then
+        reason="\"$CXX\" version too old"
+        xfail=1
+      fi;;
+    variadic.c)
+      if [ -n "$iscc_armhf" ]; then
+        reason='incorrect clang armhf block float vararg implementation'
+        showxfail=1
+        xfail=1
+      fi;;
+  esac
+  ext=.c
+  cpp=
+  USECC="$CC"
+  USEFLAGS="$CCFLAGS $CPPFLAGS"
+  USELIB="$LIB"
+  case $test in
+    *.C)   cpp=1; ext=.C;;
+    *.cpp) cpp=1; ext=.cpp;;
+    *.cp)  cpp=1; ext=.cp;;
+    *.c++) cpp=1; ext=.c++;;
+  esac
+  if [ -n "$cpp" ]; then
+    USECC="$CXX"
+    USEFLAGS="$CPPFLAGS"
+    USELIB="$LIB -lstdc++"
+  fi
+  if [ -n "$COMSPEC" -a -n "$skipdoze" ]; then
+    skip=1
+  fi
+  if [ -z "$skip" -a -n "$cpp" -a -z "$dopp" ]; then
+    echo "ok $testcount - $testname # skipped: C++ with blocks not available"
+    skipcpp=$(($skipcpp + 1))
+    skipcount=$(($skipcount + 1))
+  else
+    if [ -n "$skip" ]; then
+      if [ -n "$skipdoze" ]; then
+        echo "ok $testcount - $testname # skipped: not supported on this platform"
+      else
+        echo "ok $testcount - $testname # skipped: not supported"
+      fi
+      skipcount=$(($skipcount + 1))
+    else
+      if [ -n "$stub" ]; then
+        out="$( (
+          if [ -z "$usedashs" ]; then
+            "$USECC" -c $CFLAGS $USEFLAGS $extra -o $TESTDIR/$(basename $test $ext).o -fblocks $test && \
+            echo "$stub" | "$USECC" $CFLAGS $USEFLAGS $extra -o $TESTDIR/$(basename $test $ext) -fblocks \
+              $TESTDIR/$(basename $test $ext).o $USELIB -x c - && \
+            cd $TESTDIR && ./$(basename $test $ext)
+	  else
+            "$USECC" -S $CFLAGS $USEFLAGS $extra -o $TESTDIR/$(basename $test $ext).s -fblocks $test && \
+            "$USECC" -c $CFLAGS $extra -o $TESTDIR/$(basename $test $ext).o \
+	      $TESTDIR/$(basename $test $ext).s && \
+            echo "$stub" | "$USECC" $CFLAGS $USEFLAGS $extra -o $TESTDIR/$(basename $test $ext) \
+              $TESTDIR/$(basename $test $ext).o $USELIB -x c - && \
+            cd $TESTDIR && ./$(basename $test $ext)
+	  fi
+        ) 2>&1)"
+      else
+        out="$( (
+          if [ -z "$usedashs" ]; then
+            "$USECC" -c $CFLAGS $USEFLAGS $extra -o $TESTDIR/$(basename $test $ext).o -fblocks $test && \
+            "$USECC" $CFLAGS -o $TESTDIR/$(basename $test $ext) -fblocks $TESTDIR/$(basename $test $ext).o $USELIB && \
+            cd $TESTDIR && ./$(basename $test $ext)
+	  else
+            "$USECC" -S $CFLAGS $USEFLAGS $extra -o $TESTDIR/$(basename $test $ext).s -fblocks $test && \
+            "$USECC" -c $CFLAGS $extra -o $TESTDIR/$(basename $test $ext).o \
+	      $TESTDIR/$(basename $test $ext).s && \
+            "$USECC" $CFLAGS -o $TESTDIR/$(basename $test $ext) $TESTDIR/$(basename $test $ext).o $USELIB && \
+            cd $TESTDIR && ./$(basename $test $ext)
+	  fi
+        ) 2>&1)"
+      fi
+      result=$?
+      if [ -n "$xfail" ]; then
+        xfailcount=$(($xfailcount + 1))
+        : ${reason:=expected to fail}
+        if [ $result = 0 ]; then
+          bonuscount=$(($bonuscount + 1))
+          passcount=$(($passcount + 1))
+          echo "ok $testcount - $testname # TODO: $reason"
+        else
+          echo "not ok $testcount - $testname # TODO: $reason"
+          if [ -n "$showxfail" ]; then
+            echo "$out" | diagfilt
+          fi
+        fi
+      else
+        if [ $result != 0 ]; then
+          testsfailed=1
+          failcount=$(($failcount + 1))
+          echo "not ok $testcount - $testname"
+          echo "$out" | diagfilt
+        else
+          echo "ok $testcount - $testname"
+          passcount=$(($passcount + 1))
+        fi
+      fi
+    fi
+  fi
+done
+diag "" "test count: $testcount"
+if [ $bonuscount != 0 ]; then
+  diag "    passed: $passcount (todo=$bonuscount)"
+else
+  diag "    passed: $passcount"
+fi
+if [ $xfailcount != 0 ]; then
+  if [ $bonuscount != 0 ]; then
+    diag "     xfail: $xfailcount (passed=$bonuscount)"
+  else
+    diag "     xfail: $xfailcount"
+  fi
+fi
+if [ $skipcount != 0 ]; then
+  if [ $skipcpp != 0 ]; then
+    diag "   skipped: $skipcount (C++=$skipcpp)"
+  else
+    diag "   skipped: $skipcount"
+  fi
+fi
+if [ $failcount != 0 ]; then
+  diag "    failed: $failcount"
+fi
+if [ -n "$testsfailed" ]; then
+  diag "test failures occurred"
+else
+  diag "all tests passed"
+fi
+diag ""
+echo "1..$testcount"
+[ -z "$testsfailed" ] || exit 1
+exit 0
