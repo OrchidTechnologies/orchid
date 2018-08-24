@@ -161,8 +161,8 @@ void change_tcp_ip_addr(ip* p, in_addr_t *oldv, in_addr_t newv)
 sa_family_t address_family(const ip *p)
 {
     switch (p->ip_v) {
-        case 4: return AF_INET;
-        case 6: return AF_INET6;
+    case 4: return AF_INET;
+    case 6: return AF_INET6;
     }
     return AF_UNSPEC;
 }
@@ -531,15 +531,15 @@ bool on_tunnel_packet(const uint8_t *packet, size_t length)
     }
     ip *p = (ip*)packet;
     switch (address_family(p)) {
-        case AF_INET:
-            switch (p->ip_p) {
-                case IPPROTO_UDP: return on_udp_packet(p, length);
-                case IPPROTO_TCP: return on_tcp_packet(p, length);
-            }
-            break;
-        case AF_INET6: {
-            // TODO: IPv6
+    case AF_INET:
+        switch (p->ip_p) {
+        case IPPROTO_UDP: return on_udp_packet(p, length);
+        case IPPROTO_TCP: return on_tcp_packet(p, length);
         }
+        break;
+    case AF_INET6: {
+        // TODO: IPv6
+    }
     }
 
     return false;
