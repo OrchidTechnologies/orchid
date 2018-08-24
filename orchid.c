@@ -108,7 +108,7 @@ uint32_t ip_addr_checksum(const ip *p)
 
 uint16_t udp_checksum(const ip *p)
 {
-    udphdr *udp = (udphdr*)((uint8_t*)p + sizeof(ip));
+    const udphdr *udp = (const udphdr*)((const uint8_t*)p + sizeof(ip));
     assert(udp->uh_sum == 0);
     register uint32_t sum = ip_addr_checksum(p);
     sum += htons(IPPROTO_UDP);
@@ -119,7 +119,7 @@ uint16_t udp_checksum(const ip *p)
 
 uint16_t tcp_checksum(const ip *p)
 {
-    tcphdr *tcp = (tcphdr*)((uint8_t*)p + sizeof(ip));
+    const tcphdr *tcp = (const tcphdr*)((const uint8_t*)p + sizeof(ip));
     uint16_t tcp_len = ntohs(p->ip_len) - sizeof(ip);
     assert(tcp->th_sum == 0);
     register uint32_t sum = ip_addr_checksum(p);
