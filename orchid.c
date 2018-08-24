@@ -14,6 +14,16 @@
 #include "khash.h"
 
 
+#ifdef ANDROID
+#include <android/log.h>
+#define log(...) __android_log_print(ANDROID_LOG_VERBOSE, "orchid", __VA_ARGS__)
+#elif defined __APPLE__
+#import <os/log.h>
+#define log(...) os_log(OS_LOG_DEFAULT, __VA_ARGS__)
+#else
+#define log(...) printf(__VA_ARGS__)
+#endif
+
 typedef struct {
     port_t src_port;
     port_t dst_port;
@@ -174,7 +184,7 @@ const char* address_to_string(const sockaddr_storage *ss)
     static char addr[NI_MAXHOST];
     int e = getnameinfo((const sockaddr*)ss, ss->ss_len, addr, sizeof(addr), NULL, 0, NI_NUMERICHOST);
     if (!e) {
-        printf("getnameinfo failed %d %s\n", e, gai_strerror(e));
+        log("getnameinfo failed %d %s\n", e, gai_strerror(e));
         return NULL;
     }
     return addr;
@@ -253,10 +263,10 @@ void listener_thread(int fd)
                 // XXX: TODO: close the most idle sockets
                 return;
             }
-            printf("TCP accept error %d %s", errno, strerror(errno));
+            log("TCP accept error %d %s", errno, strerror(errno));
             return;
         }
-        printf("accept socket: %d", c);
+        log("accept socket: %d", c);
         assert(addr.ss_len == addr_len);
 
         assert(addr.ss_family == AF_INET); // TODO: IPv6
@@ -273,14 +283,14 @@ void listener_thread(int fd)
             }
         }
         if (!m) {
-            printf("unknown TCP session %s:%d\n", inet_ntoa(sin->sin_addr), src_port);
+            log("unknown TCP session %s:%d\n", inet_ntoa(sin->sin_addr), src_port);
             close(c);
             continue;
         }
-        printf("accepted %d -> %s:%d", m->src_port, inet_ntoa((in_addr){.s_addr = m->dst_ip}), m->dst_port);
+        log("accepted %d -> %s:%d", m->src_port, inet_ntoa((in_addr){.s_addr = m->dst_ip}), m->dst_port);
         /*
         if (!s->con) {
-            printf("incomplete TCP session: %@", s);
+            log("incomplete TCP session: %@", s);
             close(c);
             continue;
         }
@@ -366,18 +376,19 @@ bool on_udp_packet(ip *p, size_t length)
     return false;
 }
 
-#import <os/log.h>
-
 bool on_tcp_packet(ip *p, size_t length)
 {
     tcphdr *tcp = (tcphdr*)((uint8_t*)p + sizeof(ip));
 
-    os_log(OS_LOG_DEFAULT, "TCP packet %d -> %{public}s:%d flags:0x%08x %{public}s", ntohs(tcp->th_sport), inet_ntoa(p->ip_dst), ntohs(tcp->th_dport), tcp->th_flags, tcp_flags(tcp->th_flags));
+    /*
+    log("TCP packet %d -> %{public}s:%d flags:0x%08x %{public}s",
+        ntohs(tcp->th_sport), inet_ntoa(p->ip_dst), ntohs(tcp->th_dport),
+        tcp->th_flags, tcp_flags(tcp->th_flags));
+    */
 
     static bool initialized = false;
     if (!initialized) {
         initialized = true;
-        os_log(OS_LOG_DEFAULT, "initialize!");
         portmap4 = kh_init(portmapping_v4);
     }
 
@@ -412,10 +423,8 @@ bool on_tcp_packet(ip *p, size_t length)
         if (tcp->th_flags & TH_SYN) {
             int absent;
             khint_t k = kh_put(portmapping_v4, portmap4, src_port, &absent);
-            os_log(OS_LOG_DEFAULT, "k:%d absent:%d", k, absent);
             if (!absent) {
                 mappings = kh_val(portmap4, k);
-                os_log(OS_LOG_DEFAULT, "mappings:%p", mappings);
                 for (index = 0; index < mappings->length; index++) {
                     ipv4_mapping *s = &mappings->mappings[index];
                     if (s->dst_ip == p->ip_dst.s_addr && s->dst_port == ntohs(tcp->th_dport)) {
@@ -431,7 +440,6 @@ bool on_tcp_packet(ip *p, size_t length)
                     mappings->alloc = 1;
                     assert(index == 0);
                     m = &mappings->mappings[0];
-                    os_log(OS_LOG_DEFAULT, "store new mappings:%p k:%d", mappings, k);
                     kh_val(portmap4, k) = mappings;
                 } else {
                     assert(mappings->length <= mappings->alloc);
@@ -445,9 +453,7 @@ bool on_tcp_packet(ip *p, size_t length)
                     if (!m) {
                         if (mappings->length == mappings->alloc) {
                             mappings->alloc *= 2;
-                            os_log(OS_LOG_DEFAULT, "realloc mappings:%p k:%d", mappings, k);
                             mappings = realloc(mappings, sizeof(ipv4_mapping_array) + mappings->alloc * sizeof(ipv4_mapping));
-                            os_log(OS_LOG_DEFAULT, "store realloc mappings:%p k:%d", mappings, k);
                             kh_val(portmap4, k) = mappings;
                         }
                         mappings->length++;
@@ -497,10 +503,8 @@ bool on_tcp_packet(ip *p, size_t length)
             }
         } else {
             khint_t k = kh_get(portmapping_v4, portmap4, src_port);
-            os_log(OS_LOG_DEFAULT, "get k:%d", k);
             if (k != kh_end(portmap4)) {
                 mappings = kh_val(portmap4, k);
-                os_log(OS_LOG_DEFAULT, "get mappings:%p", mappings);
                 for (index = 0; index < mappings->length; index++) {
                     ipv4_mapping *s = &mappings->mappings[index];
                     if (s->dst_ip == p->ip_dst.s_addr && s->dst_port == ntohs(tcp->th_dport)) {
@@ -519,7 +523,11 @@ bool on_tcp_packet(ip *p, size_t length)
         change_tcp_port(tcp, &tcp->th_dport, htons(TERMINATE_PORT));
     }
 
-    os_log(OS_LOG_DEFAULT, "TCP return %d -> %{public}s:%d flags:0x%08x %{public}s", ntohs(tcp->th_sport), inet_ntoa(p->ip_dst), ntohs(tcp->th_dport), tcp->th_flags, tcp_flags(tcp->th_flags));
+    /*
+    log("TCP return %d -> %{public}s:%d flags:0x%08x %{public}s",
+        ntohs(tcp->th_sport), inet_ntoa(p->ip_dst), ntohs(tcp->th_dport),
+        tcp->th_flags, tcp_flags(tcp->th_flags));
+    */
     return false;
 }
 
