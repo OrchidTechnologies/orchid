@@ -383,9 +383,7 @@ void mapping_close(ipv4_mapping *m)
 
 bool on_udp_packet(ip *p, size_t length)
 {
-    udphdr *udp = (udphdr*)((uint8_t*)p + sizeof(ip));
-
-    return false;
+    return tun_api_udp_packet(p, length);
 }
 
 bool on_tcp_packet(ip *p, size_t length)
@@ -494,7 +492,7 @@ bool on_tcp_packet(ip *p, size_t length)
                 const tcphdr *tcp = (tcphdr *)((uint8_t*)p + sizeof(ip));
                 s->sin_port = tcp->th_sport;
                 m->connecting = true;
-                tun_api_connect(&ss, ^(int error) {
+                tun_api_tcp_connect(&ss, ^(int error) {
                     m->connecting = false;
                     if (error) {
                         // XXX: craft RST?
@@ -563,4 +561,3 @@ bool on_tunnel_packet(const uint8_t *packet, size_t length)
 
     return false;
 }
-

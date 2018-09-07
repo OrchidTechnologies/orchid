@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 typedef void (^connection_complete_cb)(int error);
-void tun_api_connect(sockaddr_storage *ss, connection_complete_cb cb);
+void tun_api_tcp_connect(sockaddr_storage *ss, connection_complete_cb cb);
+bool tun_api_udp_packet(ip *p, size_t length);
 
 #endif /* tun_api_h */
