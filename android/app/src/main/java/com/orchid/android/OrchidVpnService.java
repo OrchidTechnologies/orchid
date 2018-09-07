@@ -34,7 +34,7 @@ public class OrchidVpnService extends VpnService {
                 startForeground();
                 new Thread(new Runnable() { public void run() {
                     OrchidNative.runTunnel(fd);
-                    stopForeground(1);
+                    stopSelfResult(1);
                 }}).start();
             }
         } catch (IllegalStateException e) {

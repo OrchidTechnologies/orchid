@@ -6,8 +6,8 @@ android {
 
     defaultConfig {
         applicationId "com.orchid.android"
-        minSdkVersion 14
-        targetSdkVersion 14
+        minSdkVersion 16
+        targetSdkVersion 16
     }
 
     buildTypes {
