@@ -500,6 +500,7 @@ bool on_tcp_packet(ip *p, size_t length)
                         return;
                     }
                     write_tunnel_packet(pending_packet, length);
+                    free(pending_packet);
                 });
                 return true;
             }
