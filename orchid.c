@@ -159,8 +159,8 @@ const char* address_to_string(const sockaddr_storage *ss)
     static char addr[NI_MAXHOST];
     socklen_t ss_len = 0;
     switch (ss->ss_family) {
-    case AF_INET: ss_len = sizeof(sockaddr_in);
-    case AF_INET6: ss_len = sizeof(sockaddr_in6);
+    case AF_INET: ss_len = sizeof(sockaddr_in); break;
+    case AF_INET6: ss_len = sizeof(sockaddr_in6); break;
     }
 
     int e = getnameinfo((const sockaddr*)ss, ss_len, addr, sizeof(addr), NULL, 0, NI_NUMERICHOST);
