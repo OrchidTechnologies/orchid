@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3C0212E9212F8CE70012DE3B /* tun_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C95B98E2110676D00EA1B0E /* tun_api.c */; };
-		3C0212EA212F8CE80012DE3B /* tun_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C95B98E2110676D00EA1B0E /* tun_api.c */; };
+		3C0212E9212F8CE70012DE3B /* tun_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C95B98E2110676D00EA1B0E /* tun_client.c */; };
+		3C0212EA212F8CE80012DE3B /* tun_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C95B98E2110676D00EA1B0E /* tun_client.c */; };
 		3C3390CF20D7121800641910 /* orchid.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C3390CD20D7121700641910 /* orchid.c */; };
 		3C3390D020D7121800641910 /* orchid.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C3390CD20D7121700641910 /* orchid.c */; };
 		3C504EE220CF0F4400C7D3AC /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504EE120CF0F4400C7D3AC /* AppDelegate.m */; };
@@ -17,8 +17,6 @@
 		3C504EEA20CF0F4700C7D3AC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504EE920CF0F4700C7D3AC /* main.m */; };
 		3C504EF920CF0F6E00C7D3AC /* PacketTunnelProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504EF820CF0F6E00C7D3AC /* PacketTunnelProvider.m */; };
 		3C504EFE20CF0F6E00C7D3AC /* OrchidTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 3C504EF520CF0F6E00C7D3AC /* OrchidTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		3C504F0520CF0FA100C7D3AC /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C504F0420CF0FA100C7D3AC /* NetworkExtension.framework */; };
-		3C504F0620CF32E400C7D3AC /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C504F0420CF0FA100C7D3AC /* NetworkExtension.framework */; };
 		3C504F0F20CF392900C7D3AC /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504F0E20CF392900C7D3AC /* AppDelegate.m */; };
 		3C504F1220CF392900C7D3AC /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504F1120CF392900C7D3AC /* ViewController.m */; };
 		3C504F1520CF392900C7D3AC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C504F1320CF392900C7D3AC /* Main.storyboard */; };
@@ -27,8 +25,6 @@
 		3C504F1D20CF392A00C7D3AC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504F1C20CF392A00C7D3AC /* main.m */; };
 		3C504F2E20CF395500C7D3AC /* OrchidTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 3C504F2520CF395400C7D3AC /* OrchidTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3C504F3320CF3A5B00C7D3AC /* PacketTunnelProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C504EF820CF0F6E00C7D3AC /* PacketTunnelProvider.m */; };
-		3C504F3520CF3B2700C7D3AC /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C504F3420CF3B2700C7D3AC /* NetworkExtension.framework */; };
-		3C504F3620CF3B2F00C7D3AC /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C504F3420CF3B2700C7D3AC /* NetworkExtension.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,7 +85,6 @@
 		3C504EF820CF0F6E00C7D3AC /* PacketTunnelProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PacketTunnelProvider.m; sourceTree = "<group>"; };
 		3C504EFA20CF0F6E00C7D3AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3C504EFB20CF0F6E00C7D3AC /* OrchidTunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OrchidTunnel.entitlements; sourceTree = "<group>"; };
-		3C504F0420CF0FA100C7D3AC /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
 		3C504F0B20CF392900C7D3AC /* Orchid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Orchid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C504F0D20CF392900C7D3AC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		3C504F0E20CF392900C7D3AC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -103,10 +98,9 @@
 		3C504F2520CF395400C7D3AC /* OrchidTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OrchidTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C504F2A20CF395500C7D3AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3C504F2B20CF395500C7D3AC /* OrchidTunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OrchidTunnel.entitlements; sourceTree = "<group>"; };
-		3C504F3420CF3B2700C7D3AC /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.0.sdk/System/Library/Frameworks/NetworkExtension.framework; sourceTree = DEVELOPER_DIR; };
 		3C504F3720CF3B2F00C7D3AC /* Orchid iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Orchid iOS.entitlements"; sourceTree = "<group>"; };
-		3C95B98D2110676D00EA1B0E /* tun_api.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tun_api.h; path = ../tun_api.h; sourceTree = "<group>"; };
-		3C95B98E2110676D00EA1B0E /* tun_api.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = tun_api.c; path = ../tun_api.c; sourceTree = "<group>"; };
+		3C95B98D2110676D00EA1B0E /* tun_client.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tun_client.h; path = ../tun_client.h; sourceTree = "<group>"; };
+		3C95B98E2110676D00EA1B0E /* tun_client.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = tun_client.c; path = ../tun_client.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,7 +108,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C504F0620CF32E400C7D3AC /* NetworkExtension.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,7 +115,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C504F0520CF0FA100C7D3AC /* NetworkExtension.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,7 +122,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C504F3620CF3B2F00C7D3AC /* NetworkExtension.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,7 +129,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C504F3520CF3B2700C7D3AC /* NetworkExtension.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -159,8 +149,8 @@
 			children = (
 				3C3390CD20D7121700641910 /* orchid.c */,
 				3C3390CE20D7121800641910 /* orchid.h */,
-				3C95B98E2110676D00EA1B0E /* tun_api.c */,
-				3C95B98D2110676D00EA1B0E /* tun_api.h */,
+				3C95B98E2110676D00EA1B0E /* tun_client.c */,
+				3C95B98D2110676D00EA1B0E /* tun_client.h */,
 			);
 			name = orchid;
 			sourceTree = "<group>";
@@ -216,8 +206,6 @@
 		3C504F0320CF0FA100C7D3AC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				3C504F3420CF3B2700C7D3AC /* NetworkExtension.framework */,
-				3C504F0420CF0FA100C7D3AC /* NetworkExtension.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -448,7 +436,7 @@
 			files = (
 				3C3390CF20D7121800641910 /* orchid.c in Sources */,
 				3C504EF920CF0F6E00C7D3AC /* PacketTunnelProvider.m in Sources */,
-				3C0212E9212F8CE70012DE3B /* tun_api.c in Sources */,
+				3C0212E9212F8CE70012DE3B /* tun_client.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -468,7 +456,7 @@
 			files = (
 				3C3390D020D7121800641910 /* orchid.c in Sources */,
 				3C504F3320CF3A5B00C7D3AC /* PacketTunnelProvider.m in Sources */,
-				3C0212EA212F8CE80012DE3B /* tun_api.c in Sources */,
+				3C0212EA212F8CE80012DE3B /* tun_client.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

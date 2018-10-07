@@ -6,7 +6,7 @@ include_directories(../../../../..
 add_library(orchid SHARED
             orchid_native.c
             ../../../../../orchid.c
-            ../../../../../tun_api.c)
+            ../../../../../tun_client.c)
 
 target_compile_options(orchid PRIVATE -fblocks)
 

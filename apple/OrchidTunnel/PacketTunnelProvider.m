@@ -108,7 +108,7 @@ void write_tunnel_packet(const uint8_t *packet, size_t length)
     }
     sa_family_t protocol = address_family((const ip*)packet);
 
-    // HMM: this copies
+    // HMM: this copies. instead, take ownership of packet and free when NSData is destroyed
     NSData *d = [NSData dataWithBytes:packet length:length];
 
     [packetTunnelProvider.packetFlow writePackets:@[d] withProtocols:@[@(protocol)]];

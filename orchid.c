@@ -11,7 +11,7 @@
 #include <pthread.h>
 
 #include "orchid.h"
-#include "tun_api.h"
+#include "tun_client.h"
 #include "khash.h"
 
 
@@ -26,43 +26,17 @@
 #endif
 
 typedef struct {
-    port_t src_port;
-    port_t dst_port;
-    in_addr_t dst_ip;
-    bool connecting:1;
-} ipv4_mapping;
-
-typedef struct {
-    port_t src_port;
-    port_t dst_port;
-    in6_addr dst_ip;
-    bool connecting:1;
-} ipv6_mapping;
-
-typedef struct {
     uint32_t length;
     uint32_t alloc;
     ipv4_mapping mappings[];
 } ipv4_mapping_array;
 
-typedef struct {
-    uint32_t length;
-    uint32_t alloc;
-    ipv6_mapping mappings[];
-} ipv6_mapping_array;
-
 #define KHASH_MAP_INIT_UINT16(name, khval_t)                                \
 KHASH_INIT(name, uint16_t, khval_t, 1, kh_int_hash_func, kh_int_hash_equal)
-
 
 typedef ipv4_mapping_array* ipv4_mapping_array_p;
 KHASH_MAP_INIT_UINT16(portmapping_v4, ipv4_mapping_array_p);
 typedef khash_t(portmapping_v4) portmap_v4;
-
-typedef ipv6_mapping_array* ipv6_mapping_array_p;
-KHASH_MAP_INIT_UINT16(portmapping_v6, ipv6_mapping_array_p);
-typedef khash_t(portmapping_v6) portmap_v6;
-
 
 portmap_v4 *portmap4;
 
@@ -303,10 +277,11 @@ void listener_thread(int fd)
         }
         [s accept:c];
         */
+        tun_client_tcp_accepted(m, c);
     }
 }
 
-void start_listener()
+void start_listener(void)
 {
     int listen_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (listen_fd == -1) {
@@ -383,7 +358,7 @@ void mapping_close(ipv4_mapping *m)
 
 bool on_udp_packet(ip *p, size_t length)
 {
-    return tun_api_udp_packet(p, length);
+    return tun_client_udp_packet(p, length);
 }
 
 bool on_tcp_packet(ip *p, size_t length)
@@ -486,20 +461,15 @@ bool on_tcp_packet(ip *p, size_t length)
                 // HMM: copies, but some callers (NSData*) can be refcounted
                 uint8_t *pending_packet = memdup(p, length);
 
-                sockaddr_storage ss = {.ss_family = AF_INET};
-                sockaddr_in *s = (sockaddr_in*)&ss;
-                s->sin_addr = p->ip_src;
-                const tcphdr *tcp = (tcphdr *)((uint8_t*)p + sizeof(ip));
-                s->sin_port = tcp->th_sport;
                 m->connecting = true;
-                tun_api_tcp_connect(&ss, ^(int error) {
+                tun_client_tcp_connect(m, ^(int error) {
                     m->connecting = false;
                     if (error) {
-                        // XXX: craft RST?
-                        free(pending_packet);
-                        return;
+                        // XXX: craft RST
+                        mapping_close(m);
+                    } else {
+                        write_tunnel_packet(pending_packet, length);
                     }
-                    write_tunnel_packet(pending_packet, length);
                     free(pending_packet);
                 });
                 return true;
