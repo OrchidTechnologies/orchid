@@ -162,7 +162,6 @@ const char* address_to_string(const sockaddr_storage *ss)
     case AF_INET: ss_len = sizeof(sockaddr_in); break;
     case AF_INET6: ss_len = sizeof(sockaddr_in6); break;
     }
-
     int e = getnameinfo((const sockaddr*)ss, ss_len, addr, sizeof(addr), NULL, 0, NI_NUMERICHOST);
     if (!e) {
         log("getnameinfo failed %d %s\n", e, gai_strerror(e));
@@ -201,7 +200,7 @@ const char* tcp_flags(unsigned char flags)
 
 void reuseport(int s)
 {
-    int option = 1;
+    const int option = 1;
     setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option));
 }
 
@@ -235,13 +234,10 @@ void listener_thread(int fd)
         socklen_t addr_len = sizeof(addr);
         int c = accept(fd, (sockaddr*)&addr, &addr_len);
         if (c == -1) {
-            if (errno == EAGAIN) {
-                return;
-            }
-            if (errno == ECONNABORTED) {
-                continue;
-            }
-            if (errno == EMFILE) {
+            switch (errno) {
+            case EAGAIN: return;
+            case ECONNABORTED: continue;
+            case EMFILE:
                 // XXX: TODO: close the most idle sockets
                 return;
             }
@@ -269,14 +265,6 @@ void listener_thread(int fd)
             continue;
         }
         log("accepted %d -> %s:%d", m->src_port, in_addr_t_toa(m->dst_ip), m->dst_port);
-        /*
-        if (!s->con) {
-            log("incomplete TCP session: %@", s);
-            close(c);
-            continue;
-        }
-        [s accept:c];
-        */
         tun_client_tcp_accepted(m, c);
     }
 }
@@ -525,9 +513,9 @@ bool on_tunnel_packet(const uint8_t *packet, size_t length)
         case IPPROTO_TCP: return on_tcp_packet(p, length);
         }
         break;
-    case AF_INET6: {
+    case AF_INET6:
         // TODO: IPv6
-    }
+        break;
     }
 
     return false;
