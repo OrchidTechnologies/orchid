@@ -7,6 +7,7 @@
 //
 
 #include <net/if.h>
+#include <ifaddrs.h>
 
 #import "PacketTunnelProvider.h"
 #include "orchid.h"

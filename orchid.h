@@ -9,8 +9,6 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 
-#include <ifaddrs.h>
-
 
 #define alloc(type) calloc(1, sizeof(type))
 #define alloc_with_extra(type, extra) calloc(1, sizeof(type) + extra)
