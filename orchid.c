@@ -7,7 +7,7 @@
 #ifndef _WIN32
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <Pthread.h>
+#include <pthread.h>
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
