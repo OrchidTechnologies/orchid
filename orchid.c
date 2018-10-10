@@ -5,7 +5,6 @@
 #include <strings.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include <net/if.h>
 #include <netdb.h>
 #include <Block.h>
 #include <pthread.h>
@@ -15,7 +14,7 @@
 #include "khash.h"
 
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 #include <android/log.h>
 #define log(...) __android_log_print(ANDROID_LOG_VERBOSE, "orchid", __VA_ARGS__)
 #elif defined __APPLE__
@@ -285,26 +284,7 @@ void start_listener(void)
         .sin_addr.s_addr = TERMINATE_HOST,
     };
     reuseport(listen_fd);
-
-#ifdef __APPLE__
-    ifaddrs *interfaces = NULL;
-    if (!getifaddrs(&interfaces)) {
-        for (ifaddrs *i = interfaces; i; i = i->ifa_next) {
-            if (i->ifa_addr->sa_family == AF_INET &&
-                ((sockaddr_in*)i->ifa_addr)->sin_addr.s_addr == listen_sin.sin_addr.s_addr) {
-                int index = if_nametoindex(i->ifa_name);
-                setsockopt(listen_fd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-                //log("bound to %s %d", i->ifa_name, r);
-                break;
-            }
-        }
-        freeifaddrs(interfaces);
-    }
-#endif
-
-#ifdef __LINUX__
-    setsockopt(fd, SOL_SOCKET, SO_MARK, &fwmark, sizeof(fwmark));
-#endif
+    vpn_protect(listen_fd);
 
     int r = bind(listen_fd, (const sockaddr*)&listen_sin, sizeof(listen_sin));
     if (r < 0) {

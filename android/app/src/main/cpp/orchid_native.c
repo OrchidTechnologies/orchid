@@ -7,7 +7,8 @@
 #include "orchid.h"
 
 
-int g_fd;
+int g_fd = -1;
+static JavaVM *g_jvm;
 
 JNIEXPORT void JNICALL
 Java_com_orchid_android_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fd)
@@ -33,6 +34,32 @@ Java_com_orchid_android_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
     }
 }
 
+jint JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+    g_jvm = vm;
+    JNIEnv *env;
+    if ((*vm)->GetEnv(vm, (void**)&env, JNI_VERSION_1_6) != JNI_OK) {
+        return JNI_ERR;
+    }
+    return JNI_VERSION_1_6;
+}
+
+#define STR(A) #A
+#define IMPORT(pkg, class) jclass c ## class = (*env)->FindClass(env, STR(pkg) "/" STR(class));
+#define CATCH(code) if ((*env)->ExceptionOccurred(env)) { /*(*env)->ExceptionClear(env);*/ code; }
+
+void vpn_protect(int s)
+{
+    JNIEnv *env;
+    if ((*g_jvm)->GetEnv(g_jvm, (void**)&env, JNI_VERSION_1_6) != JNI_OK) {
+        return;
+    }
+    IMPORT(com/orchid/android, OrchidVpnService);
+    CATCH(return);
+    jmethodID mVpnProtect = (*env)->GetStaticMethodID(env, cOrchidVpnService, "vpnProtect", "(I)V");
+    CATCH(return);
+    (*env)->CallStaticObjectMethod(env, cOrchidVpnService, mVpnProtect, s);
+}
 void write_tunnel_packet(const uint8_t *packet, size_t length)
 {
     write(g_fd, packet, length);

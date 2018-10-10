@@ -6,6 +6,8 @@
 //  Copyright © 2018 Example. All rights reserved.
 //
 
+#include <net/if.h>
+
 #import "PacketTunnelProvider.h"
 #include "orchid.h"
 
@@ -99,6 +101,23 @@ PacketTunnelProvider *packetTunnelProvider;
         }
         [self readPacketsFromTunnel];
     }];
+}
+
+void vpn_protect(int s)
+{
+    ifaddrs *interfaces = NULL;
+    if (!getifaddrs(&interfaces)) {
+        for (ifaddrs *i = interfaces; i; i = i->ifa_next) {
+            if (i->ifa_addr->sa_family == AF_INET &&
+                ((sockaddr_in*)i->ifa_addr)->sin_addr.s_addr == TERMINATE_HOST) {
+                int index = if_nametoindex(i->ifa_name);
+                setsockopt(s, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
+                //log("bound to %s %d", i->ifa_name, r);
+                break;
+            }
+        }
+        freeifaddrs(interfaces);
+    }
 }
 
 void write_tunnel_packet(const uint8_t *packet, size_t length)

@@ -44,6 +44,9 @@ typedef struct {
     bool connecting:1;
 } ipv4_mapping;
 
+void nonblock(int s);
+void vpn_protect(int s);
+
 sa_family_t address_family(const ip *p);
 
 void start_listener(void);

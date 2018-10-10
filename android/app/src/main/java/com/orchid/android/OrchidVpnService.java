@@ -9,6 +9,11 @@ import android.util.Log;
 
 public class OrchidVpnService extends VpnService {
     private static final String TAG = "OrchidVpnService";
+    private static OrchidVpnService vpnService;
+
+    static void vpnProtect(int fd) {
+        vpnService.vpnProtect(fd);
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -31,6 +36,7 @@ public class OrchidVpnService extends VpnService {
             if (p != null) {
                 final int fd = p.detachFd();
                 Log.w(TAG, "Success: " + fd);
+                vpnService = this;
                 startForeground();
                 new Thread(new Runnable() { public void run() {
                     OrchidNative.runTunnel(fd);
