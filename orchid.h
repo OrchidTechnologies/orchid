@@ -43,7 +43,6 @@ typedef struct {
 } ipv4_mapping;
 
 void nonblock(int s);
-void vpn_protect(int s);
 
 sa_family_t address_family(const ip *p);
 
@@ -52,7 +51,8 @@ bool on_tunnel_packet(const uint8_t *packet, size_t length);
 
 void mapping_close(ipv4_mapping *m);
 
-// defined by the caller
+// defined by the platform
+bool vpn_protect(int s, port_t port);
 void write_tunnel_packet(const uint8_t *packet, size_t length);
 
 #endif //__ORCHID_H__

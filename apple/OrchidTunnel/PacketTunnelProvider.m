@@ -104,21 +104,25 @@ PacketTunnelProvider *packetTunnelProvider;
     }];
 }
 
-void vpn_protect(int s)
+bool vpn_protect(int s, port_t port)
 {
+    bool success = false;
     ifaddrs *interfaces = NULL;
     if (!getifaddrs(&interfaces)) {
         for (ifaddrs *i = interfaces; i; i = i->ifa_next) {
             if (i->ifa_addr->sa_family == AF_INET &&
                 ((sockaddr_in*)i->ifa_addr)->sin_addr.s_addr == TERMINATE_HOST) {
                 int index = if_nametoindex(i->ifa_name);
-                setsockopt(s, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-                //log("bound to %s %d", i->ifa_name, r);
+                if (!setsockopt(s, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index))) {
+                    //log("bound to %s %d", i->ifa_name, r);
+                    success = true;
+                }
                 break;
             }
         }
         freeifaddrs(interfaces);
     }
+    return success;
 }
 
 void write_tunnel_packet(const uint8_t *packet, size_t length)

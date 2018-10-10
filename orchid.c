@@ -284,7 +284,7 @@ void start_listener(void)
         .sin_addr.s_addr = TERMINATE_HOST,
     };
     reuseport(listen_fd);
-    vpn_protect(listen_fd);
+    vpn_protect(listen_fd, TERMINATE_PORT);
 
     int r = bind(listen_fd, (const sockaddr*)&listen_sin, sizeof(listen_sin));
     if (r < 0) {

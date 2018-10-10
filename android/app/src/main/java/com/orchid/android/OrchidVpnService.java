@@ -11,8 +11,8 @@ public class OrchidVpnService extends VpnService {
     private static final String TAG = "OrchidVpnService";
     private static OrchidVpnService vpnService;
 
-    static void vpnProtect(int fd) {
-        vpnService.vpnProtect(fd);
+    static boolean vpnProtect(int fd) {
+        return vpnService.vpnProtect(fd);
     }
 
     @Override

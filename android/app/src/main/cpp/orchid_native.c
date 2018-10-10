@@ -48,18 +48,20 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 #define IMPORT(pkg, class) jclass c ## class = (*env)->FindClass(env, STR(pkg) "/" STR(class));
 #define CATCH(code) if ((*env)->ExceptionOccurred(env)) { /*(*env)->ExceptionClear(env);*/ code; }
 
-void vpn_protect(int s)
+bool vpn_protect(int s, port_t port)
 {
     JNIEnv *env;
     if ((*g_jvm)->GetEnv(g_jvm, (void**)&env, JNI_VERSION_1_6) != JNI_OK) {
-        return;
+        return false;
     }
     IMPORT(com/orchid/android, OrchidVpnService);
-    CATCH(return);
-    jmethodID mVpnProtect = (*env)->GetStaticMethodID(env, cOrchidVpnService, "vpnProtect", "(I)V");
-    CATCH(return);
-    (*env)->CallStaticObjectMethod(env, cOrchidVpnService, mVpnProtect, s);
+    CATCH(return false);
+    jmethodID mVpnProtect = (*env)->GetStaticMethodID(env, cOrchidVpnService, "vpnProtect", "(I)Z");
+    CATCH(return false);
+    jboolean success = (*env)->CallStaticBooleanMethod(env, cOrchidVpnService, mVpnProtect, s);
+    return success;
 }
+
 void write_tunnel_packet(const uint8_t *packet, size_t length)
 {
     write(g_fd, packet, length);
