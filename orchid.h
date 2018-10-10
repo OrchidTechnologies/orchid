@@ -23,6 +23,12 @@
 #define TERMINATE_PORT 4612
 
 
+#ifdef _WIN32
+typedef USHORT in_port_t;
+typedef ULONG in_addr_t;
+typedef ADDRESS_FAMILY sa_family_t;
+#endif
+
 typedef in_port_t port_t;
 typedef struct ip ip;
 typedef struct udphdr udphdr;

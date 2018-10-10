@@ -4,10 +4,16 @@
 #include <unistd.h>
 #include <strings.h>
 #include <fcntl.h>
+#ifndef _WIN32
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <Pthread.h>
+#else
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <Ws2tcpip.h>
+#endif
 #include <Block.h>
-#include <pthread.h>
 
 #include "orchid.h"
 #include "tun_client.h"
@@ -276,7 +282,9 @@ void start_listener(void)
             assert(false);
         }
     }
+#ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
+#endif
 
     sockaddr_in listen_sin = {
         .sin_family = AF_INET,
