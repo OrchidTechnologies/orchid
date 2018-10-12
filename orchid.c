@@ -182,6 +182,7 @@ const char* address_to_string(const sockaddr_storage *ss)
 #define TH_CWR 0x80
 #endif
 
+/*
 const char* tcp_flags(unsigned char flags)
 {
     static char buf[33];
@@ -202,16 +203,26 @@ const char* tcp_flags(unsigned char flags)
     ADD_FLAG(CWR);
     return buf;
 }
+*/
 
 void reuseport(int s)
 {
     const int option = 1;
+#ifdef SO_REUSEPORT
     setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option));
+#else
+    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+#endif
 }
 
 void nonblock(int s)
 {
+#ifdef _WIN32
+	u_long nonblocking = 1;
+	ioctlsocket(s, FIONBIO, &nonblocking);
+#else
     fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
+#endif
 }
 
 typedef void (^thread_body)(void);
