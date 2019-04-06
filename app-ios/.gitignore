@@ -1,0 +1,6 @@
+/android
+/build
+/identity.mk
+/ios
+/out-*
+/.packages

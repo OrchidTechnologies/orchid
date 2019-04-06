@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleVersion</key>
+    <string>@MONOTONIC@</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+
+    <key>CFBundlePackageType</key>
+    <string>XPC!</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+
+    <key>CFBundleExecutable</key>
+    <string>@NAME@.VPN</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>@DOMAIN@.@NAME@.VPN</string>
+    <key>CFBundleName</key>
+    <string>@NAME@</string>
+    <key>CFBundleShortVersionString</key>
+    <string>@VERSION@</string>
+
+    <key>BuildMachineOSBuild</key>
+    <string>11G63</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+
+    <key>DTCompiler</key>
+    <string></string>
+    <key>DTPlatformBuild</key>
+    <string>4H1003</string>
+    <key>DTPlatformVersion</key>
+    <string>GM</string>
+    <key>DTSDKBuild</key>
+    <string>12D75</string>
+    <key>DTSDKName</key>
+    <string>iphoneos6.1</string>
+    <key>DTXcode</key>
+    <string>0462</string>
+    <key>DTXcodeBuild</key>
+    <string>4H1003</string>
+
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2019 The @NAME@ Authors</string>
+
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionPrincipalClass</key>
+        <string>OrchidPacketTunnelProvider</string>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.networkextension.packet-tunnel</string>
+    </dict>
+
+    <key>SBUsesNetwork</key>
+    <integer>11</integer>
+
+    <key>DTSDKName</key>
+    <string>iphoneos2.0.saurik</string>
+
+    <key>DTPlatformVersion</key>
+    <string>8.0</string>
+
+    <key>MinimumOSVersion</key>
+    <string>2.0</string>
+
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+        <integer>2</integer>
+    </array>
+</dict>
+</plist>

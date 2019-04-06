@@ -1,0 +1,75 @@
+[submodule "flutter"]
+	path = app-shared/flutter
+	url = https://github.com/flutter/flutter.git
+[submodule "libff"]
+	path = p2p/libff
+	url = https://github.com/scipr-lab/libff.git
+[submodule "rocksdb"]
+	path = p2p/rocksdb
+	url = https://github.com/facebook/rocksdb.git
+[submodule "leveldb"]
+	path = p2p/leveldb
+	url = https://github.com/google/leveldb.git
+[submodule "aleth"]
+	path = p2p/aleth
+	url = https://github.com/ethereum/aleth.git
+[submodule "cryptopp"]
+	path = p2p/cryptopp
+	url = https://github.com/weidai11/cryptopp.git
+[submodule "ethash"]
+	path = p2p/ethash
+	url = https://github.com/chfast/ethash.git
+[submodule "boost"]
+	path = p2p/boost
+	url = https://github.com/boostorg/boost.git
+[submodule "libscrypt"]
+	path = p2p/libscrypt
+	url = https://github.com/technion/libscrypt.git
+[submodule "libsodium"]
+	path = p2p/libsodium
+	url = https://github.com/jedisct1/libsodium.git
+[submodule "cppcoro"]
+	path = p2p/cppcoro
+	url = https://github.com/lewissbaker/cppcoro.git
+[submodule "jsoncpp"]
+	path = min-webrtc/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "abseil-cpp"]
+	path = min-webrtc/abseil-cpp
+	url = https://github.com/abseil/abseil-cpp.git
+[submodule "boringssl"]
+	path = min-webrtc/boringssl
+	url = https://boringssl.googlesource.com/boringssl
+[submodule "libsrtp"]
+	path = min-webrtc/libsrtp
+	url = https://chromium.googlesource.com/chromium/deps/libsrtp
+[submodule "usrsctp"]
+	path = min-webrtc/usrsctp
+	url = https://github.com/sctplab/usrsctp.git
+[submodule "sctp-idata"]
+	path = min-webrtc/sctp-idata
+	url = https://github.com/sctplab/sctp-idata.git
+[submodule "webrtc"]
+	path = min-webrtc/webrtc
+	url = https://chromium.googlesource.com/external/webrtc
+[submodule "libmicrohttpd"]
+	path = srv-shared/libmicrohttpd
+	url = https://android.googlesource.com/platform/external/libmicrohttpd
+[submodule "openvpn"]
+	path = srv-shared/openvpn
+	url = https://github.com/OpenVPN/openvpn.git
+[submodule "OpenVPNAdapter"]
+	path = vpn-apple/OpenVPNAdapter
+	url = https://github.com/ss-abramchuk/OpenVPNAdapter.git
+[submodule "openvpn3"]
+	path = vpn-shared/openvpn3
+	url = https://github.com/OpenVPN/openvpn3.git
+[submodule "mbedtls"]
+	path = vpn-shared/mbedtls
+	url = https://github.com/ARMmbed/mbedtls.git
+[submodule "lz4"]
+	path = vpn-shared/lz4
+	url = https://github.com/lz4/lz4.git
+[submodule "openzeppelin-solidity"]
+	path = openzeppelin-solidity
+	url = https://github.com/OpenZeppelin/openzeppelin-solidity.git
