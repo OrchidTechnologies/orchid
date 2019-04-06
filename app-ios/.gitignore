@@ -1,5 +1,6 @@
 /android
 /build
+/.flutter-plugins
 /identity.mk
 /ios
 /out-*
