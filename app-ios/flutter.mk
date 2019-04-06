@@ -32,7 +32,7 @@ $(bundle)/Frameworks/App.framework/App:
 	    -install_name '@rpath/App.framework/App'
 
 signed += $(bundle)/Frameworks/App.framework$(signature)
-$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(name).App.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App
+$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App
 	@rm -rf $(dir $@)
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
@@ -58,7 +58,7 @@ build/app.dill: $(wildcard lib/*.dart)
 # XXX: -include out-ios/snapshot_blob.bin.d
 
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
-$(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-Flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,Flutter Info.plist icudtl.dat)
+$(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,Flutter Info.plist icudtl.dat)
 	@rm -rf $(dir $@)
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
 	@touch $@

@@ -74,12 +74,12 @@ $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(output)/tunnel.o $(object)
 	@echo [LD] $@
 	@$(cycc) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
 
-$(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-$(name).VPN.plist.in
+$(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	@mkdir -p $(dir $@)
 	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
 
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
-$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(name).VPN.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
+$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
 	@touch $@
@@ -92,7 +92,7 @@ $(bundle)/$(name): $(output)/app.o
 	@$(cycc) -o $@ $^ $(lflags) -rpath "@executable_path/Frameworks" -framework Flutter -framework UIKit
 
 signed += $(bundle)/Info.plist
-$(bundle)/Info.plist: info-$(name).plist.in
+$(bundle)/Info.plist: info-main.plist.in
 	@mkdir -p $(dir $@)
 	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
 
@@ -100,7 +100,7 @@ signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
 	xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
 
-$(bundle)$(signature): $(output)/ents-$(name).xml $(signed)
+$(bundle)$(signature): $(output)/ents-main.xml $(signed)
 	@rm -rf $(dir $@)
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
 	@touch $@
