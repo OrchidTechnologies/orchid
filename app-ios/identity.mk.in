@@ -2,7 +2,7 @@ name := Orchid
 domain := com.example
 
 teamid := XXX
-codesign := "Developer ID Application: XXX ($(teamid))"
+codesign := "iPhone Developer: XXX ($(teamid))"
 
 cflags += '-DORCHID_INFURA=""'
 cflags += '-DORCHID_ALCHEMY=""'
