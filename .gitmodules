@@ -73,3 +73,6 @@
 [submodule "openzeppelin-solidity"]
 	path = openzeppelin-solidity
 	url = https://github.com/OpenZeppelin/openzeppelin-solidity.git
+[submodule "libmaxminddb"]
+	path = vpn-shared/libmaxminddb
+	url = https://github.com/maxmind/libmaxminddb.git

@@ -53,4 +53,7 @@ c_openvpn3 += -Wno-delete-non-virtual-dtor
 c_openvpn3 += -Wno-unused-private-field
 c_openvpn3 += -Wno-vexing-parse
 
+source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
+cflags += -I$(pwd)/libmaxminddb/include
+
 include $(pwd)/p2p/target.mk
