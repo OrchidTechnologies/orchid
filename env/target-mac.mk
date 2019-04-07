@@ -11,4 +11,4 @@
 
 include $(pwd)/target-apl.mk
 
-cycc := g++
+cycc := $(xcode) g++
