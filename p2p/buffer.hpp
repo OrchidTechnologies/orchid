@@ -42,12 +42,12 @@ class Buffer {
   public:
     virtual void each(const std::function<void (const Region &)> &code) const = 0;
 
-    virtual bool null() const {
-        return false;
-    }
-
     virtual size_t size() const;
     std::string str() const;
+
+    virtual bool empty() const {
+        return size() == 0;
+    }
 };
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer);
@@ -193,15 +193,6 @@ class Nothing :
 
     size_t size() const override {
         return 0;
-    }
-};
-
-class Null :
-    public Nothing
-{
-  public:
-    bool null() const override {
-        return true;
     }
 };
 
@@ -477,7 +468,7 @@ template <size_t Index_>
 struct Taker<Index_> {
 template <typename Type_>
 static void Take(Window &&window, Type_ &value) {
-    _assert(window.size() == 0);
+    _assert(window.empty());
 } };
 
 template <size_t... Size_>

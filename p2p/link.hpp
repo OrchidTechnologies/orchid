@@ -79,7 +79,7 @@ class Link :
     }
 
   protected:
-    void Land(const Buffer &data = Null()) {
+    void Land(const Buffer &data = Nothing()) {
         std::lock_guard<std::mutex> lock(mutex_);
         _assert(drain_ != nullptr);
         drain_(data);
@@ -124,12 +124,15 @@ class Router :
   public:
     Router(const H<Link> &link) :
         Sink([this](const Buffer &data) {
-            auto string(data.str());
-            _assert(string.size() > TagSize);
-            auto tag(string.substr(0, TagSize));
-            auto route(routes_.find(tag));
-            _assert(route != routes_.end());
-            route->second(Beam(string.substr(TagSize)));
+            if (data.empty())
+                for (const auto &[tag, drain] : routes_)
+                    drain(data);
+            else {
+                auto [tag, rest] = Take<TagSize, 0>(data);
+                auto route(routes_.find(tag));
+                _assert(route != routes_.end());
+                route->second(rest);
+            }
         }, link)
     {
     }
@@ -145,6 +148,7 @@ class Route {
   public:
     Route(Drain drain, const H<Router> &router) :
         router_(router),
+        // XXX: ensure this tag isn't being used
         tag_(NewTag())
     {
         router_->routes_.emplace(tag_, std::move(drain));

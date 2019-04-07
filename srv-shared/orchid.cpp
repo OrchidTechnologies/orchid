@@ -129,7 +129,7 @@ class Node {
   public:
     void Land(const H<Pipe> &path, const Buffer &data) {
 _trace();
-        if (data.size() == 0) {
+        if (data.empty()) {
             for (auto [key, value] : inputs_)
                 if (key.first == path.get())
                     inputs_.erase(key);
@@ -175,7 +175,7 @@ _trace();
 
         if (failed_)
             return;
-        if (data.size() == 0) {
+        if (data.empty()) {
             self_.reset();
             socket_->close();
         } else if (socket_) {

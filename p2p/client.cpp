@@ -53,6 +53,7 @@ class Tunnel :
 {
   private:
     cppcoro::shared_task<Tag> handle_;
+    cppcoro::async_manual_reset_event closed_;
 
   public:
     Tunnel(const H<Router> &router, const std::function<cppcoro::shared_task<Tag> (const Tag &)> &handle) :
@@ -64,9 +65,10 @@ class Tunnel :
     }
 
     ~Tunnel() {
+        // XXX: this only works because Spawn doesn't do what it claims
         Spawn([router = router_, handle = handle_]() -> cppcoro::task<void> {
             co_await router->Send(Tie(CloseTag, co_await handle));
-            // XXX
+            //co_await closed_;
         }());
     }
 
@@ -76,6 +78,13 @@ class Tunnel :
 
     cppcoro::task<void> Send(const Buffer &data) override {
         co_await router_->Send(Tie(ForwardTag, co_await handle_, data));
+    }
+
+  protected:
+    void Land(const Buffer &data) {
+        Link::Land(data);
+        if (data.empty())
+            closed_.set();
     }
 };
 
