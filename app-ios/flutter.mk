@@ -40,11 +40,11 @@ $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-dart.xml $(bundle
 flutter/packages/flutter/pubspec.lock:
 	cd flutter && bin/flutter update-packages
 
-$(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter flutter/packages/flutter/pubspec.lock
+$(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
 	lipo -thin arm64 $< -output $@
 
-$(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/% flutter/packages/flutter/pubspec.lock
+$(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%
 	@mkdir -p $(dir $@)
 	cp -af $< $@
 	touch $@
@@ -57,8 +57,12 @@ build/app.dill: $(wildcard lib/*.dart)
 
 # XXX: -include out-ios/snapshot_blob.bin.d
 
+flutter := Flutter Info.plist icudtl.dat
+
+$(patsubst %,flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%,$(flutter)): flutter/packages/flutter/pubspec.lock
+
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
-$(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,Flutter Info.plist icudtl.dat)
+$(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))
 	@rm -rf $(dir $@)
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
 	@touch $@
