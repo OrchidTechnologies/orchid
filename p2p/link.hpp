@@ -75,7 +75,8 @@ class Link :
     }
 
     virtual ~Link() {
-        _assert(drain_ == nullptr);
+        // XXX: this should be verified
+        //_assert(drain_ == nullptr);
     }
 
   protected:
