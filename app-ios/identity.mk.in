@@ -4,6 +4,8 @@ domain := com.example
 teamid := XXX
 codesign := "iPhone Developer: XXX ($(teamid))"
 
+# xcode := DEVELOPER_DIR=/Applications/Xcode-10.1.0.app
+
 cflags += '-DORCHID_INFURA=""'
 cflags += '-DORCHID_ALCHEMY=""'
 

@@ -34,7 +34,7 @@ $(bundle)/Frameworks/App.framework/App:
 signed += $(bundle)/Frameworks/App.framework$(signature)
 $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App
 	@rm -rf $(dir $@)
-	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
+	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
 
 flutter/packages/flutter/pubspec.lock:
@@ -64,5 +64,5 @@ $(patsubst %,flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%,$(flutte
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
 $(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))
 	@rm -rf $(dir $@)
-	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
+	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
 	@touch $@
