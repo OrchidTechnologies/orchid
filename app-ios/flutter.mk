@@ -38,11 +38,11 @@ $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-dart.xml $(bundle
 	@touch $@
 
 flutter/packages/flutter/pubspec.lock:
-	cd flutter && bin/flutter update-packages
+	cd flutter && $(xcode) bin/flutter update-packages
 
 $(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
-	lipo -thin arm64 $< -output $@
+	$(xcode) lipo -thin arm64 $< -output $@
 
 $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%
 	@mkdir -p $(dir $@)
@@ -53,7 +53,7 @@ assets := $(bundle)/Frameworks/App.framework/flutter_assets
 build/app.dill: $(wildcard lib/*.dart)
 	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p $(dir $@)
-	flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --debug --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
+	$(xcode) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --debug --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
 
 # XXX: -include out-ios/snapshot_blob.bin.d
 
