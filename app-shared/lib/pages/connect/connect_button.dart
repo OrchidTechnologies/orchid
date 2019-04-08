@@ -1,0 +1,225 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/pages/app_colors.dart';
+import 'package:rxdart/rxdart.dart';
+
+/// The primiary connect and reroute buttons.
+class ConnectButton extends StatefulWidget {
+  final Observable<OrchidConnectionState> connectionStatus;
+  final Observable<bool> enabledStatus;
+  final VoidCallback onConnectButtonPressed;
+  final VoidCallback onRerouteButtonPressed;
+
+  ConnectButton({
+    @required this.connectionStatus,
+    @required this.enabledStatus,
+    @required this.onConnectButtonPressed,
+    @required this.onRerouteButtonPressed,
+  });
+
+  @override
+  ConnectButtonState createState() => ConnectButtonState();
+}
+
+class ConnectButtonState extends State<ConnectButton>
+    with TickerProviderStateMixin {
+  final Map<OrchidConnectionState, String> images = {
+    OrchidConnectionState.NotConnected: 'connect_button_enabled.png',
+    OrchidConnectionState.Connecting: 'connect_button_enabled.png',
+    OrchidConnectionState.Connected: 'connect_button_connected.png',
+  };
+
+  OrchidConnectionState connectionState = OrchidConnectionState.NotConnected;
+  bool enabled = true;
+
+  AnimationController _pulseAnimationController;
+  AnimationController _teeterAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.connectionStatus.listen((OrchidConnectionState state) {
+      setState(() {
+        this.connectionState = state;
+      });
+    });
+
+    widget.enabledStatus.listen((bool state) {
+      setState(() {
+        this.enabled = state;
+      });
+    });
+
+    _pulseAnimationController = new AnimationController(
+        vsync: this, duration: Duration(milliseconds: 4000));
+    _pulseAnimationController.repeat();
+
+    _teeterAnimationController = new AnimationController(
+        vsync: this, duration: Duration(milliseconds: 600));
+    _teeterAnimationController.repeat(reverse: true);
+  }
+
+  bool _showRerouteButton() {
+    if (!enabled) {
+      return false;
+    }
+    switch (connectionState) {
+      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.Connecting:
+        return false;
+      case OrchidConnectionState.Connected:
+        return true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var imageButtonName = 'assets/images/' +
+        (enabled ? images[connectionState] : 'connect_button_disabled');
+    var buttonImage = Image.asset(imageButtonName);
+    var rerouteImage = Image.asset('assets/images/reroute_button.png');
+    double buttonWidth = 146;
+
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    Animation<double> _pulseSize = _pulseAnimationController
+        .drive(Tween(begin: buttonWidth, end: buttonWidth * 2.3));
+
+    Animation<double> _offsetPulseSize = _pulseAnimationController
+        .drive(OffsetPhaseAnimation(0.5))
+        .drive(Tween(begin: buttonWidth, end: buttonWidth * 2.3));
+
+    Animation<double> _pulseAlpha =
+        _pulseAnimationController.drive(Tween(begin: 1.0, end: 0.0));
+
+    Animation<double> _offsetPulseAlpha = _pulseAnimationController
+        .drive(OffsetPhaseAnimation(0.5))
+        .drive(Tween(begin: 1.0, end: 0.0));
+
+    Animation<double> _teeterAnim = _teeterAnimationController
+        .drive(CurveTween(curve: Curves.easeInOutSine));
+
+    int teeterBaseAlpha = (0.4 * 255).round();
+
+    return Stack(
+      alignment: Alignment.center,
+      children: <Widget>[
+        Visibility(
+          visible: connectionState == OrchidConnectionState.Connected,
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              buildPing(sizeAnim: _pulseSize, alphaAnim: _pulseAlpha),
+              buildPing(sizeAnim: _offsetPulseSize, alphaAnim: _offsetPulseAlpha),
+            ],
+          ),
+        ),
+
+        Visibility(
+          visible: connectionState == OrchidConnectionState.Connecting,
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              buildTeeter(0.5, teeterBaseAlpha, screenWidth, _teeterAnim),
+              buildTeeter(1.0, teeterBaseAlpha, screenWidth, _teeterAnim),
+            ],
+          ),
+        ),
+
+        // connect button
+        Container(
+          child: FlatButton(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            child: buttonImage,
+            onPressed: enabled ? widget.onConnectButtonPressed : null,
+            shape: new CircleBorder(),
+          ),
+        ),
+
+        // re-route button
+        Container(
+          //color: Colors.orange.withAlpha(100),
+          width: 215, height: 215,
+          child: Align(
+            alignment: Alignment.bottomRight,
+            child: Visibility(
+              visible: _showRerouteButton(),
+              child: Container(
+                width: 46, height: 46,
+                //color: Colors.purple,
+                child: FlatButton(
+                  //materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: EdgeInsets.all(0),
+                  child: rerouteImage,
+                  onPressed: enabled ? widget.onRerouteButtonPressed : null,
+                  shape: new CircleBorder(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  AnimatedBuilder buildPing(
+      {Animation<double> sizeAnim,
+      Animation<double> alphaAnim,
+      Color color = Colors.white}) {
+    return AnimatedBuilder(
+      builder: (BuildContext context, Widget child) {
+        return Container(
+          decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withAlpha((0.5 * alphaAnim.value * 255).round())),
+          width: sizeAnim.value,
+          height: sizeAnim.value,
+        );
+      },
+      animation: sizeAnim,
+    );
+  }
+
+  AnimatedBuilder buildTeeter(
+      double rate, int baseAlpha, double screenWidth, Animation<double> anim) {
+    return AnimatedBuilder(
+      builder: (BuildContext context, Widget child) {
+        return Container(
+          decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.neutral_4
+                  .withAlpha(((0.4 - anim.value / 8) * baseAlpha).round())),
+          width: 190 + 35 * anim.value * rate,
+          height: 190 + 35 * anim.value * rate,
+        );
+      },
+      animation: anim,
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseAnimationController.dispose();
+    super.dispose();
+  }
+}
+
+/// offset a 0.0 - 1.0 animation by the specified amount, modulo the range.
+/// i.e. for an offset of 0.5:
+///   0.25->0.75
+///   0.75 -> 0.25
+class OffsetPhaseAnimation extends Animatable<double> {
+  double offset = 0.5;
+
+  OffsetPhaseAnimation(this.offset);
+
+  @override
+  double transform(double t) {
+    var raw = t + offset;
+    return raw > 1.0 ? raw - 1.0 : raw;
+  }
+}
