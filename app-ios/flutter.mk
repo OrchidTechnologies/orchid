@@ -50,7 +50,7 @@ $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios
 	touch $@
 
 assets := $(bundle)/Frameworks/App.framework/flutter_assets
-build/app.dill: $(wildcard lib/*.dart)
+build/app.dill: $(shell find lib/ -name '*.dart')
 	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p $(dir $@)
 	$(xcode) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --debug --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"

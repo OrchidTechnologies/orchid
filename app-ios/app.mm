@@ -152,13 +152,14 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     FlutterViewController *flutter([FlutterViewController new]);
     self.window.rootViewController = flutter;
 
-    feedback_ = [FlutterMethodChannel methodChannelWithName:@"samples.flutter.io/battery" binaryMessenger:flutter];
+    feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter];
 
     __weak typeof(self) weakSelf = self;
     [feedback_ setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
         if (false) {
-        } else if ([@"VPN" isEqualToString:call.method]) {
+        } else if ([@"connect" isEqualToString:call.method]) {
             [weakSelf connection];
+        } else if ([@"reroute" isEqualToString:call.method]) {
         }
     }];
 
