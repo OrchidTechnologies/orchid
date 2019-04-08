@@ -26,9 +26,8 @@
 #include <map>
 #include <string>
 
-#include <cppcoro/task.hpp>
-
 #include "link.hpp"
+#include "task.hpp"
 
 namespace orc {
 
@@ -50,9 +49,9 @@ class URI {
     }
 };
 
-cppcoro::task<std::string> Request(U<Link> link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
+task<std::string> Request(U<Link> link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 
-cppcoro::task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
+task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 
 }
 

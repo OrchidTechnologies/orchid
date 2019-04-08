@@ -27,11 +27,10 @@
 #include <map>
 #include <set>
 
-#include <cppcoro/task.hpp>
-
 #include "buffer.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
+#include "task.hpp"
 
 namespace orc {
 
@@ -55,7 +54,7 @@ inline Tag NewTag() {
 class Pipe {
   public:
     virtual ~Pipe() {}
-    virtual cppcoro::task<void> Send(const Buffer &data) = 0;
+    virtual task<void> Send(const Buffer &data) = 0;
 };
 
 typedef std::function<void (const Buffer &data)> Drain;
@@ -71,7 +70,6 @@ class Link :
     uint64_t unique_ = ++Unique_;
 
   private:
-    std::mutex mutex_;
     Drain drain_;
 
   public:
@@ -85,7 +83,6 @@ class Link :
 
   protected:
     void Land(const Buffer &data = Nothing()) {
-        std::lock_guard<std::mutex> lock(mutex_);
         _assert(drain_ != nullptr);
         drain_(data);
     }
@@ -101,26 +98,22 @@ class Sink {
         link_(std::move(link))
     {
         _assert(link_);
-        std::lock_guard<std::mutex> lock(link_->mutex_);
         _assert(link_->drain_ == nullptr);
         link_->drain_ = std::move(drain);
     }
 
     ~Sink() {
-        if (link_) {
-            std::lock_guard<std::mutex> lock(link_->mutex_);
+        if (link_)
             link_->drain_ = nullptr;
-        }
     }
 
-    cppcoro::task<void> Send(const Buffer &data) {
+    task<void> Send(const Buffer &data) {
         _assert(link_);
         co_return co_await link_->Send(data);
     }
 
     U<Type_> Move() {
         _assert(link_);
-        std::lock_guard<std::mutex> lock(link_->mutex_);
         link_->drain_ = nullptr;
         return std::move(link_);
     }
@@ -162,7 +155,7 @@ class Router :
             std::terminate();
     }
 
-    cppcoro::task<void> Send(const Buffer &data) override {
+    task<void> Send(const Buffer &data) override {
         co_return co_await sink_.Send(data);
     }
 
@@ -198,7 +191,7 @@ class Route :
         router_->routes_.erase(tag_);
     }
 
-    cppcoro::task<void> Send(const Buffer &data) override {
+    task<void> Send(const Buffer &data) override {
         co_return co_await router_->Send(Tie(tag_, data));
     }
 

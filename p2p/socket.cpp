@@ -22,6 +22,8 @@
 
 #include "baton.hpp"
 #include "socket.hpp"
+#include "spawn.hpp"
+#include "task.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -31,7 +33,7 @@ Socket::Socket() :
 {
 }
 
-cppcoro::task<void> Socket::_(const std::string &host, const std::string &port) {
+task<void> Socket::_(const std::string &host, const std::string &port) {
     {
         asio::ip::tcp::resolver resolver(Context());
         asio::ip::tcp::resolver::query query(host, port);
@@ -39,18 +41,17 @@ cppcoro::task<void> Socket::_(const std::string &host, const std::string &port) 
     }
 
     // XXX: the memory management on this is incorrect
-    asio::experimental::co_spawn(Context(), [this]() -> Awaitable<void> {
-        auto token(co_await asio::experimental::this_coro::token());
+    Spawn([this]() -> task<void> {
         try {
             for (;;) {
                 char data[1024];
-                size_t writ(co_await socket_.async_receive(asio::buffer(data), token));
+                size_t writ(co_await socket_.async_receive(asio::buffer(data), Token()));
                 Land(Beam(data, writ));
             }
         } catch (const asio::system_error &e) {
             Land();
         }
-    }, asio::experimental::detached);
+    });
 }
 
 Socket::~Socket() {
@@ -58,7 +59,7 @@ Socket::~Socket() {
     socket_.close();
 }
 
-cppcoro::task<void> Socket::Send(const Buffer &data) {
+task<void> Socket::Send(const Buffer &data) {
     if (data.empty())
         // XXX: is there really no asynchronous shutdown?
         socket_.shutdown(asio::ip::tcp::socket::shutdown_send);

@@ -24,7 +24,6 @@
 #define ORCHID_BATON_HPP
 
 #include <cppcoro/async_manual_reset_event.hpp>
-#include <cppcoro/task.hpp>
 
 #include <asio/experimental/co_spawn.hpp>
 #include <asio/experimental/detached.hpp>
@@ -35,6 +34,8 @@
 #include <iostream>
 
 #include <asio.hpp>
+#include "spawn.hpp"
+#include "task.hpp"
 
 namespace orc {
 
@@ -50,12 +51,16 @@ class Baton;
 template <typename Type_>
 class Baton<Type_, boost::system::error_code> {
   public:
+    typedef void Value;
     boost::system::error_code error_;
 
   public:
-    void get() {
-        if (error_)
-            throw error_;
+    task<void> get() {
+        if (error_) {
+            auto error(error_);
+            co_await Schedule();
+            throw error;
+        }
     }
 
     Type_ set(const boost::system::error_code &error) {
@@ -68,15 +73,18 @@ class Baton<Type_, boost::system::error_code, Value_> :
     public Baton<Type_, boost::system::error_code>
 {
   public:
-    Value_ value_;
+    typedef Value_ Value;
+    Value value_;
 
   public:
-    Value_ get() {
-        Baton<Type_, boost::system::error_code>::get();
-        return value_;
+    task<Value> get() {
+        co_await Baton<Type_, boost::system::error_code>::get();
+        auto value(value_);
+        co_await Schedule();
+        co_return value;
     }
 
-    Type_ set(const boost::system::error_code &error, const Value_ &value) {
+    Type_ set(const boost::system::error_code &error, const Value &value) {
         Baton<Type_, boost::system::error_code>::set(error);
         value_ = value;
     }
@@ -87,9 +95,9 @@ struct Token {
     void *baton_;
 
     template <typename Type_, typename... Args_>
-    auto get() -> cppcoro::task<decltype(reinterpret_cast<Baton<Type_, Args_...> *>(baton_)->get())> {
+    auto get() -> task<typename Baton<Type_, Args_...>::Value> {
         co_await event_;
-        co_return reinterpret_cast<Baton<Type_, Args_...> *>(baton_)->get();
+        co_return co_await reinterpret_cast<Baton<Type_, Args_...> *>(baton_)->get();
     }
 
     template <typename Type_, typename... Args_>
@@ -143,7 +151,7 @@ class async_result<orc::Token, Type_ (Args_...)> {
     {
     }
 
-    typedef cppcoro::task<decltype(reinterpret_cast<orc::Baton<Type_, Args_...> *>(0)->get())> return_type;
+    typedef task<typename orc::Baton<Type_, Args_...>::Value> return_type;
 
     return_type get() {
         return token_->get<Type_, Args_...>();

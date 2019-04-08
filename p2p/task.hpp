@@ -20,34 +20,10 @@
 /* }}} */
 
 
-#include <iostream>
+#ifndef ORCHID_TASK_HPP
+#define ORCHID_TASK_HPP
 
-#include "trace.hpp"
-#include "spawn.hpp"
+#include <cppcoro/task.hpp>
+using cppcoro::task;
 
-namespace orc {
-
-static cppcoro::static_thread_pool pool_(1);
-
-cppcoro::static_thread_pool &Scheduler() {
-    return pool_;
-}
-
-cppcoro::static_thread_pool::schedule_operation Schedule() {
-    return Scheduler().schedule();
-}
-
-static pthread_t thread_;
-
-static struct SetupThread { SetupThread() {
-    cppcoro::sync_wait([]() -> task<void> {
-        co_await Schedule();
-        thread_ = pthread_self();
-    }());
-} } SetupThread_;
-
-bool Check() {
-    return pthread_self() == thread_;
-}
-
-}
+#endif//ORCHID_TASK_HPP

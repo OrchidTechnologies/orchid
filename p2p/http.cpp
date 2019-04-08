@@ -45,7 +45,7 @@
 namespace orc {
 
 template <typename Stream_>
-cppcoro::task<std::string> Request(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
+task<std::string> Request(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
     (void) co_await boost::beast::http::async_write(stream, req, orc::Token());
 
     boost::beast::flat_buffer buffer;
@@ -57,7 +57,7 @@ cppcoro::task<std::string> Request(Stream_ &stream, boost::beast::http::request<
 }
 
 template <typename Socket_>
-cppcoro::task<std::string> Request(Socket_ &socket, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Request(Socket_ &socket, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
     boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), uri.path_, 11};
     req.set(boost::beast::http::field::host, uri.host_);
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -98,12 +98,12 @@ cppcoro::task<std::string> Request(Socket_ &socket, const std::string &method, c
     co_return body;
 }
 
-cppcoro::task<std::string> Request(U<Link> link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Request(U<Link> link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
     Adapter adapter(orc::Context(), std::move(link));
     return Request(adapter, method, uri, headers, data);
 }
 
-cppcoro::task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
     boost::asio::ip::tcp::resolver resolver(orc::Context());
     const auto results(co_await resolver.async_resolve(uri.host_, uri.port_, orc::Token()));
 

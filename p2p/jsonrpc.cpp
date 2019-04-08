@@ -29,7 +29,7 @@
 
 namespace orc {
 
-cppcoro::task<std::string> Endpoint::operator ()(const std::string &method, const std::vector<std::string> &args) {
+task<std::string> Endpoint::operator ()(const std::string &method, const std::vector<std::string> &args) {
     Json::Value root;
     root["jsonrpc"] = "2.0";
     root["method"] = method;

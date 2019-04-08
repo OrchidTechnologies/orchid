@@ -32,11 +32,11 @@
 
 namespace orc {
 
-class Client :
+class Actor :
     public Connection
 {
   public:
-    ~Client() {
+    ~Actor() {
         _trace();
     }
 
@@ -61,17 +61,17 @@ class Tunnel :
     }
 
     ~Tunnel() {
-        Spawn([route = sink_.Move()]() -> cppcoro::task<void> {
+        Spawn([route = sink_.Move()]() -> task<void> {
             Take<>(co_await (*route)->Call(CloseTag, route->tag_));
             // XXX: co_await closed_
-        }());
+        });
     }
 
-    cppcoro::task<void> _(const std::function<cppcoro::task<void> (const Tag &tag)> &setup) {
-        (void) co_await setup(sink_->tag_);
+    task<void> _(const std::function<task<void> (const Tag &tag)> &setup) {
+        co_await setup(sink_->tag_);
     }
 
-    cppcoro::task<void> Send(const Buffer &data) override {
+    task<void> Send(const Buffer &data) override {
         co_return co_await sink_->Send(data);
     }
 
@@ -83,7 +83,7 @@ class Tunnel :
     }
 };
 
-cppcoro::task<Beam> Local::Call(const Tag &command, const Buffer &args) {
+task<Beam> Local::Call(const Tag &command, const Buffer &args) {
     Beam response;
     cppcoro::async_manual_reset_event responded;
     Sink sink(std::make_unique<Route<Local>>(shared_from_this()), [&](const Buffer &data) {
@@ -95,28 +95,30 @@ cppcoro::task<Beam> Local::Call(const Tag &command, const Buffer &args) {
     co_return response;
 }
 
-cppcoro::task<S<Remote>> Local::Indirect(const std::string &server) {
+task<S<Remote>> Local::Hop(const std::string &server) {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
-    co_await tunnel->_([&](const Tag &tag) -> cppcoro::task<void> {
+    co_await tunnel->_([&](const Tag &tag) -> task<void> {
         auto handle(NewTag()); // XXX: this is horribly wrong
+        Take<>(co_await Call(EstablishTag, Tie(handle)));
+        Take<>(co_await Call(ChannelTag, Tie(handle, tag)));
         auto offer(co_await Call(OfferTag, handle));
         auto answer(co_await Request("POST", {"http", server, "8080", "/"}, {}, offer.str()));
         Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
-        Take<>(co_await Call(ChannelTag, Tie(handle, tag)));
     });
     co_return std::make_shared<Remote>(std::move(tunnel));
 }
 
-cppcoro::task<U<Link>> Local::Connect(const std::string &host, const std::string &port) {
+task<U<Link>> Local::Connect(const std::string &host, const std::string &port) {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
-    co_await tunnel->_([&](const Tag &tag) -> cppcoro::task<void> {
-        Take<>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+    co_await tunnel->_([&](const Tag &tag) -> task<void> {
+        auto res(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+        Take<>(res);
     });
     co_return std::move(tunnel);
 }
 
-cppcoro::task<S<Remote>> Direct(const std::string &server) {
-    auto client(std::make_shared<Client>());
+task<S<Remote>> Direct(const std::string &server) {
+    auto client(std::make_shared<Actor>());
     auto channel(std::make_unique<Channel>(client));
 
     auto offer(co_await client->Offer());
@@ -132,15 +134,33 @@ cppcoro::task<S<Remote>> Direct(const std::string &server) {
 
     co_await client->Negotiate(answer);
     co_await *channel;
+    co_await Schedule();
     co_return std::make_shared<Remote>(std::move(channel));
 }
 
-cppcoro::task<U<Link>> Setup(const std::string &host, const std::string &port) {
-    auto remote(co_await Direct("localhost"));
+task<U<Link>> Setup(const std::string &host, const std::string &port) {
+    S<Local> local;
 
-    Identity identity;
-    auto local(std::make_shared<Local>(remote));
-    co_await local->_(identity.GetCommon());
+    {
+        auto remote(co_await Direct("localhost"));
+        Identity identity;
+        local = std::make_shared<Local>(remote);
+        co_await local->_(identity.GetCommon());
+    }
+
+    {
+        auto remote(co_await local->Hop("localhost"));
+        Identity identity;
+        auto local(std::make_shared<Local>(remote));
+        co_await local->_(identity.GetCommon());
+    }
+
+    {
+        auto remote(co_await local->Hop("localhost"));
+        Identity identity;
+        auto local(std::make_shared<Local>(remote));
+        co_await local->_(identity.GetCommon());
+    }
 
     co_return co_await local->Connect("localhost", "9090");
 }

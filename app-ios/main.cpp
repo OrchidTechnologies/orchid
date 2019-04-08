@@ -30,7 +30,6 @@
 
 #include <unistd.h>
 
-#include <cppcoro/task.hpp>
 #include <cppcoro/sync_wait.hpp>
 
 #include "client.hpp"
@@ -40,6 +39,7 @@
 #include "jsonrpc.hpp"
 #include "scope.hpp"
 #include "shared.hpp"
+#include "task.hpp"
 #include "trace.hpp"
 #include "webrtc.hpp"
 
@@ -53,12 +53,15 @@ int main() {
     //orc::Ethereum();
 
     if (false)
-    return cppcoro::sync_wait([&]() -> cppcoro::task<int> {
+    return cppcoro::sync_wait([&]() -> task<int> {
+        co_await orc::Schedule();
         co_await block;
         co_return 0;
     }());
 
-    return cppcoro::sync_wait([&]() -> cppcoro::task<int> {
+    return cppcoro::sync_wait([&]() -> task<int> {
+        co_await orc::Schedule();
+
         //orc::Endpoint endpoint({"http", "localhost", "8545", "/"});
         //orc::Endpoint endpoint({"https", "mainnet.infura.io", "443", "/v3/" ORCHID_INFURA});
         /*orc::Endpoint endpoint({"https", "eth-mainnet.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});

@@ -25,6 +25,7 @@
 
 #include "shared.hpp"
 #include "spawn.hpp"
+#include "task.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -53,30 +54,30 @@ class Local :
     {
     }
 
-    cppcoro::task<void> _(const Common &common) {
+    task<void> _(const Common &common) {
         co_await Router::Send(Tie(AssociateTag, common));
     }
 
     ~Local() {
-        Spawn([pipe = Move()]() -> cppcoro::task<void> {
+        Spawn([pipe = Move()]() -> task<void> {
             co_await pipe->Send(Tie(DissociateTag));
-        }());
+        });
     }
 
-    cppcoro::task<void> Send(const Buffer &data) override {
+    task<void> Send(const Buffer &data) override {
         co_await Router::Send(Tie(DeliverTag, data));
     }
 
 
-    cppcoro::task<Beam> Call(const Tag &command, const Buffer &data);
+    task<Beam> Call(const Tag &command, const Buffer &data);
 
-    cppcoro::task<S<Remote>> Indirect(const std::string &server);
-    cppcoro::task<U<Link>> Connect(const std::string &host, const std::string &port);
+    task<S<Remote>> Hop(const std::string &server);
+    task<U<Link>> Connect(const std::string &host, const std::string &port);
 };
 
-cppcoro::task<S<Remote>> Direct(const std::string &server);
+task<S<Remote>> Direct(const std::string &server);
 
-cppcoro::task<U<Link>> Setup(const std::string &host, const std::string &port);
+task<U<Link>> Setup(const std::string &host, const std::string &port);
 
 }
 

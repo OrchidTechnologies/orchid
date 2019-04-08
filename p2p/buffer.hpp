@@ -32,6 +32,7 @@
 #include <boost/mp11/tuple.hpp>
 
 #include "error.hpp"
+#include "trace.hpp"
 
 namespace orc {
 

@@ -30,11 +30,12 @@
 #include <api/video_codecs/video_decoder_factory.h>
 
 #include <cppcoro/async_manual_reset_event.hpp>
-#include <cppcoro/task.hpp>
 
 #include "error.hpp"
 #include "future.hpp"
 #include "link.hpp"
+#include "spawn.hpp"
+#include "task.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -128,55 +129,60 @@ _trace();
 
 
     virtual void OnChannel(U<Channel> channel) = 0;
-    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override;
+    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override;
 
 
-    cppcoro::task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
+    task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetLocalDescription(observer, description);
         co_await *observer;
+        co_await Schedule();
     }
 
-    cppcoro::task<std::string> Negotiation(webrtc::SessionDescriptionInterface *description) {
+    task<std::string> Negotiation(webrtc::SessionDescriptionInterface *description) {
         co_await Negotiate(description);
         co_await gathered_;
+        co_await Schedule();
         std::string sdp;
         peer_->local_description()->ToString(&sdp);
         co_return sdp;
     }
 
-    cppcoro::task<std::string> Offer() {
-        co_return co_await Negotiation(co_await [&]() -> cppcoro::task<webrtc::SessionDescriptionInterface *> {
+    task<std::string> Offer() {
+        co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
             rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
             webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
             peer_->CreateOffer(observer, options);
             co_await *observer;
+            co_await Schedule();
             co_return observer->description_;
         }());
     }
 
 
-    cppcoro::task<void> Negotiate(const char *type, const std::string &sdp) {
+    task<void> Negotiate(const char *type, const std::string &sdp) {
         webrtc::SdpParseError error;
         auto answer(webrtc::CreateSessionDescription(type, sdp, &error));
         _assert(answer != NULL);
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetRemoteDescription(observer, answer);
         co_await *observer;
+        co_await Schedule();
     }
 
-    cppcoro::task<std::string> Answer(const std::string &offer) {
+    task<std::string> Answer(const std::string &offer) {
         co_await Negotiate("offer", offer);
-        co_return co_await Negotiation(co_await [&]() -> cppcoro::task<webrtc::SessionDescriptionInterface *> {
+        co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
             rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
             webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
             peer_->CreateAnswer(observer, options);
             co_await *observer;
+            co_await Schedule();
             co_return observer->description_;
         }());
     }
 
-    cppcoro::task<void> Negotiate(const std::string &sdp) {
+    task<void> Negotiate(const std::string &sdp) {
         co_return co_await Negotiate("answer", sdp);
     }
 };
@@ -244,10 +250,12 @@ _trace();
 
     void OnMessage(const webrtc::DataBuffer &buffer) override {
         Beam data(reinterpret_cast<const char *>(buffer.data.data()), buffer.data.size());
-        Land(data);
+        Spawn([this, data = std::move(data)]() -> task<void> {
+            co_return Land(data);
+        });
     }
 
-    cppcoro::task<void> Send(const Buffer &data) override {
+    task<void> Send(const Buffer &data) override {
         Beam beam(data);
         channel_->Send(webrtc::DataBuffer(rtc::CopyOnWriteBuffer(beam.data(), beam.size()), true));
         co_return;
@@ -255,7 +263,9 @@ _trace();
 
     void Close() {
         closed_.set();
-        Land();
+        Spawn([this]() -> task<void> {
+            co_return Land();
+        });
     }
 };
 

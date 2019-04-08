@@ -25,9 +25,8 @@
 
 #include <string>
 
-#include <cppcoro/task.hpp>
-
 #include "http.hpp"
+#include "task.hpp"
 
 namespace orc {
 
@@ -41,7 +40,7 @@ class Endpoint {
     {
     }
 
-    cppcoro::task<std::string> operator ()(const std::string &method, const std::vector<std::string> &args);
+    task<std::string> operator ()(const std::string &method, const std::vector<std::string> &args);
 };
 
 }

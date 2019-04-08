@@ -23,6 +23,7 @@
 #include <asio/ip/tcp.hpp>
 
 #include "link.hpp"
+#include "task.hpp"
 
 namespace orc {
 
@@ -35,11 +36,11 @@ class Socket :
   public:
     Socket();
 
-    cppcoro::task<void> _(const std::string &host, const std::string &port);
+    task<void> _(const std::string &host, const std::string &port);
 
     ~Socket();
 
-    cppcoro::task<void> Send(const Buffer &data) override;
+    task<void> Send(const Buffer &data) override;
 };
 
 }

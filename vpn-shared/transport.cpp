@@ -61,7 +61,7 @@ class OrchidClient :
     {
     }
 
-    void transport_start() override { cppcoro::sync_wait([this]() -> cppcoro::task<void> {
+    void transport_start() override { cppcoro::sync_wait([this]() -> task<void> {
         /*NSLog(@"transport_start(): protocol:%s", config_.protocol.protocol_to_string());
         if (config_.frame) for (size_t i(0), e(config_.frame->n_contexts()); i != e; ++i)
             NSLog(@"  frame[%zu]:%s", i, (*config_.frame)[i].info().c_str());
@@ -97,7 +97,7 @@ class OrchidClient :
         });
     }()); }
 
-    void stop() override { cppcoro::sync_wait([this]() -> cppcoro::task<void> {
+    void stop() override { cppcoro::sync_wait([this]() -> task<void> {
         co_await pipe_->Send(orc::Nothing());
         pipe_.reset();
     }()); }

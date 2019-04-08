@@ -35,7 +35,11 @@ cflags += -I$(pwd)/cppcoro/include
 cflags += -I$(output)/$(pwd)
 
 source += $(pwd)/cppcoro/lib/async_manual_reset_event.cpp
+source += $(pwd)/cppcoro/lib/auto_reset_event.cpp
 source += $(pwd)/cppcoro/lib/lightweight_manual_reset_event.cpp
+source += $(pwd)/cppcoro/lib/spin_mutex.cpp
+source += $(pwd)/cppcoro/lib/spin_wait.cpp
+source += $(pwd)/cppcoro/lib/static_thread_pool.cpp
 
 source += $(pwd)/baton.cpp
 source += $(pwd)/buffer.cpp
