@@ -62,6 +62,8 @@ class OrchidClient :
     }
 
     void transport_start() override { cppcoro::sync_wait([this]() -> task<void> {
+        co_await orc::Schedule();
+
         /*NSLog(@"transport_start(): protocol:%s", config_.protocol.protocol_to_string());
         if (config_.frame) for (size_t i(0), e(config_.frame->n_contexts()); i != e; ++i)
             NSLog(@"  frame[%zu]:%s", i, (*config_.frame)[i].info().c_str());
@@ -97,17 +99,23 @@ class OrchidClient :
         });
     }()); }
 
-    void stop() override { cppcoro::sync_wait([this]() -> task<void> {
-        co_await pipe_->Send(orc::Nothing());
-        pipe_.reset();
-    }()); }
+    void stop() override {
+        cppcoro::sync_wait([this]() -> task<void> {
+            co_await orc::Schedule();
+            co_await pipe_->Send(orc::Nothing());
+            pipe_.reset();
+        }());
+    }
 
     bool transport_send_const(const openvpn::Buffer &data) override {
         std::string packet;
         packet.resize(data.size() + 2);
         memcpy(&packet[2], data.c_data(), data.size());
         *reinterpret_cast<uint16_t *>(&packet[0]) = htons(data.size());
-        cppcoro::sync_wait(pipe_->Send(orc::Beam(packet)));
+        cppcoro::sync_wait([this, packet = std::move(packet)]() -> task<void> {
+            co_await orc::Schedule();
+            co_await pipe_->Send(orc::Beam(packet));
+        }());
         return true;
     }
 

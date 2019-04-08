@@ -63,17 +63,20 @@ class Outstanding :
     }
 };
 
+template <typename Type_>
 class Output :
     public Pipe
 {
   private:
-    Sink<> sink_;
+    Sink<Type_> sink_;
 
   public:
-    Output(const W<Pipe> &path, const Tag &tag, U<Link> link) :
+    Output(const W<Pipe> &path, const Tag &tag, U<Type_> link) :
         sink_(std::move(link), [weak = path, tag](const Buffer &data) {
             if (auto strong = weak.lock())
-                strong->Send(Tie(tag, data));
+                Spawn([strong = std::move(strong), tag, data = Beam(data)]() -> task<void> {
+                    co_await strong->Send(Tie(tag, data));
+                });
         })
     {
         _trace();
@@ -85,6 +88,10 @@ class Output :
 
     task<void> Send(const Buffer &data) override {
         co_return co_await sink_.Send(data);
+    }
+
+    Type_ *operator ->() {
+        return sink_.operator ->();
     }
 };
 
@@ -122,7 +129,7 @@ class Account :
 
     Pipe *input_;
 
-    std::map<Tag, U<Output>> outputs_;
+    std::map<Tag, U<Pipe>> outputs_;
     std::map<Tag, S<Outstanding>> outstandings_;
 
   public:
@@ -175,8 +182,9 @@ class Account :
                     auto host(string.substr(0, colon));
                     auto port(string.substr(colon + 1));
                     auto socket(std::make_unique<Socket>());
-                    co_await socket->_(host, port);
-                    self->outputs_[tag] = std::make_unique<Output>(self, tag, std::move(socket));
+                    auto output(std::make_unique<Output<Socket>>(self, tag, std::move(socket)));
+                    co_await (*output)->_(host, port);
+                    self->outputs_[tag] = std::move(output);
                     co_await self->Send(Tie(nonce));
 
 
@@ -205,12 +213,21 @@ class Account :
                     auto outstanding(self->outstandings_.find(handle));
                     _assert(outstanding != self->outstandings_.end());
                     auto channel(std::make_unique<Channel>(outstanding->second));
-                    self->outputs_[tag] = std::make_unique<Output>(self, tag, std::move(channel));
+                    self->outputs_[tag] = std::make_unique<Output<Channel>>(self, tag, std::move(channel));
                     co_await self->Send(Tie(nonce));
 
                 } else if (command == CancelTag) {
                     const auto [handle] = Take<TagSize>(args);
                     self->outstandings_.erase(handle);
+                    co_await self->Send(Tie(nonce));
+
+                } else if (command == FinishTag) {
+                    const auto [tag] = Take<TagSize>(args);
+                    auto output(self->outputs_.find(tag));
+                    _assert(output != self->outputs_.end());
+                    auto channel(dynamic_cast<Output<Channel> *>(output->second.get()));
+                    _assert(channel != NULL);
+                    co_await *channel->operator ->();
                     co_await self->Send(Tie(nonce));
 
 
@@ -340,7 +357,8 @@ class Client :
         auto conduit(std::make_shared<Conduit>(node_, std::move(channel)));
         conduit->self_ = conduit;
         // XXX: also automatically remove this after some timeout
-        node_->clients_.erase(shared_from_this());
+        // XXX: this was temporarily removed due to thread issues
+        // node_->clients_.erase(shared_from_this());
     }
 };
 

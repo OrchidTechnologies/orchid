@@ -493,7 +493,6 @@ class Window :
 
             if (need < size) {
                 memcpy(data, (*here)->data() + step, need);
-                std::cerr << step << " " << value << std::endl;
                 step += need;
                 break;
             }

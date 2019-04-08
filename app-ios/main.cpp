@@ -70,11 +70,15 @@ int main() {
         std::cerr << parsed << std::endl;
         co_return 0;*/
 
-        auto service(co_await orc::Setup("localhost", "9090"));
+        auto service(co_await orc::Setup("localhost", "9999"));
         if (!service)
             co_return 1;
 
-        co_await service->Send(orc::Beam("test\n"));
+        orc::Sink sink(std::move(service), [](const orc::Buffer &data) {
+            std::cerr << data << std::endl;
+        });
+
+        co_await sink.Send(orc::Beam("test\n"));
 
         co_await block;
 

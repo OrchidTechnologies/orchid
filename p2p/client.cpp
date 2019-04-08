@@ -49,12 +49,12 @@ class Tunnel :
     public Link
 {
   private:
-    Sink<Route<Local>> sink_;
+    Sink<Route<Account$>> sink_;
     cppcoro::async_manual_reset_event closed_;
 
   public:
-    Tunnel(const S<Local> &local) :
-        sink_(std::make_unique<Route<Local>>(local), [this](const Buffer &data) {
+    Tunnel(const S<Account$> &account) :
+        sink_(std::make_unique<Route<Account$>>(account), [this](const Buffer &data) {
             Land(data);
         })
     {
@@ -83,10 +83,10 @@ class Tunnel :
     }
 };
 
-task<Beam> Local::Call(const Tag &command, const Buffer &args) {
+task<Beam> Account$::Call(const Tag &command, const Buffer &args) {
     Beam response;
     cppcoro::async_manual_reset_event responded;
-    Sink sink(std::make_unique<Route<Local>>(shared_from_this()), [&](const Buffer &data) {
+    Sink sink(std::make_unique<Route<Account$>>(shared_from_this()), [&](const Buffer &data) {
         response = data;
         responded.set();
     });
@@ -95,7 +95,7 @@ task<Beam> Local::Call(const Tag &command, const Buffer &args) {
     co_return response;
 }
 
-task<S<Remote>> Local::Hop(const std::string &server) {
+task<S<Remote>> Account$::Hop(const std::string &server) {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
     co_await tunnel->_([&](const Tag &tag) -> task<void> {
         auto handle(NewTag()); // XXX: this is horribly wrong
@@ -104,11 +104,12 @@ task<S<Remote>> Local::Hop(const std::string &server) {
         auto offer(co_await Call(OfferTag, handle));
         auto answer(co_await Request("POST", {"http", server, "8080", "/"}, {}, offer.str()));
         Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
+        Take<>(co_await Call(FinishTag, Tie(tag)));
     });
     co_return std::make_shared<Remote>(std::move(tunnel));
 }
 
-task<U<Link>> Local::Connect(const std::string &host, const std::string &port) {
+task<U<Link>> Account$::Connect(const std::string &host, const std::string &port) {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
     co_await tunnel->_([&](const Tag &tag) -> task<void> {
         auto res(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
@@ -117,7 +118,7 @@ task<U<Link>> Local::Connect(const std::string &host, const std::string &port) {
     co_return std::move(tunnel);
 }
 
-task<S<Remote>> Direct(const std::string &server) {
+task<S<Remote>> Hop(const std::string &server) {
     auto client(std::make_shared<Actor>());
     auto channel(std::make_unique<Channel>(client));
 
@@ -139,30 +140,33 @@ task<S<Remote>> Direct(const std::string &server) {
 }
 
 task<U<Link>> Setup(const std::string &host, const std::string &port) {
-    S<Local> local;
+    S<Account$> account;
+
+    const char *server("mac.saurik.com");
+    //const char *server("localhost");
 
     {
-        auto remote(co_await Direct("mac.saurik.com"));
+        auto remote(co_await Hop(server));
         Identity identity;
-        local = std::make_shared<Local>(remote);
-        co_await local->_(identity.GetCommon());
+        account = std::make_shared<Account$>(remote);
+        co_await account->_(identity.GetCommon());
     }
 
     {
-        auto remote(co_await local->Hop("mac.saurik.com"));
+        auto remote(co_await account->Hop(server));
         Identity identity;
-        local = std::make_shared<Local>(remote);
-        co_await local->_(identity.GetCommon());
+        account = std::make_shared<Account$>(remote);
+        co_await account->_(identity.GetCommon());
     }
 
     {
-        auto remote(co_await local->Hop("mac.saurik.com"));
+        auto remote(co_await account->Hop(server));
         Identity identity;
-        local = std::make_shared<Local>(remote);
-        co_await local->_(identity.GetCommon());
+        account = std::make_shared<Account$>(remote);
+        co_await account->_(identity.GetCommon());
     }
 
-    co_return co_await local->Connect(host, port);
+    co_return co_await account->Connect(host, port);
 }
 
 }

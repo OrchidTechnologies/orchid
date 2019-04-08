@@ -159,6 +159,8 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
         if (false) {
         } else if ([@"connect" isEqualToString:call.method]) {
             [weakSelf connection];
+        } else if ([@"disconnect" isEqualToString:call.method]) {
+            [weakSelf.providerManager.connection stopVPNTunnel];
         } else if ([@"reroute" isEqualToString:call.method]) {
         }
     }];

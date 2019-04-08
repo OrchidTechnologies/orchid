@@ -250,12 +250,12 @@ _trace();
 
     void OnMessage(const webrtc::DataBuffer &buffer) override {
         Beam data(reinterpret_cast<const char *>(buffer.data.data()), buffer.data.size());
-        Spawn([this, data = std::move(data)]() -> task<void> {
-            co_return Land(data);
-        });
+        //std::cerr << "WebRTC >>> " << this << " " << data << std::endl;
+        Land(data);
     }
 
     task<void> Send(const Buffer &data) override {
+        //std::cerr << "WebRTC <<< " << this << " " << data << std::endl;
         Beam beam(data);
         channel_->Send(webrtc::DataBuffer(rtc::CopyOnWriteBuffer(beam.data(), beam.size()), true));
         co_return;
@@ -263,9 +263,7 @@ _trace();
 
     void Close() {
         closed_.set();
-        Spawn([this]() -> task<void> {
-            co_return Land();
-        });
+        Land();
     }
 };
 

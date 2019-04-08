@@ -37,6 +37,7 @@ static const Tag ChannelTag{159, 32, 166, 189};
 static const Tag CloseTag{129, 185, 120, 174};
 static const Tag ConnectTag{231, 40, 11, 3};
 static const Tag EstablishTag{246, 205, 229, 74};
+static const Tag FinishTag{115, 80, 108, 75};
 static const Tag OfferTag{17, 59, 137, 94};
 static const Tag NegotiateTag{188, 73, 31, 143};
 

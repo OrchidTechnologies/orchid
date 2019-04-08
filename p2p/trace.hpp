@@ -21,6 +21,7 @@
 
 
 #include <Foundation/Foundation.h>
+#include <pthread.h>
 #define _trace() \
-    NSLog(@ "_trace(%s:%u): %s", __FILE__, __LINE__, __FUNCTION__)
+    NSLog(@ "[%p] _trace(%s:%u): %s", pthread_self(), __FILE__, __LINE__, __FUNCTION__)
     //fprintf(stderr, "\e[31m_trace(%s:%u): %s\e[0m\n", __FILE__, __LINE__, __FUNCTION__)

@@ -42,14 +42,21 @@ class Remote :
     }
 };
 
-class Local :
-    public std::enable_shared_from_this<Local>,
-    public Router
+class Connector {
+  public:
+    virtual task<S<Remote>> Hop(const std::string &server) = 0;
+    virtual task<U<Link>> Connect(const std::string &host, const std::string &port) = 0;
+};
+
+class Account$ :
+    public std::enable_shared_from_this<Account$>,
+    public Router,
+    public Connector
 {
   private:
 
   public:
-    Local(const S<Remote> &remote) :
+    Account$(const S<Remote> &remote) :
         Router(std::make_unique<Route<Remote>>(remote))
     {
     }
@@ -58,7 +65,7 @@ class Local :
         co_await Router::Send(Tie(AssociateTag, common));
     }
 
-    ~Local() {
+    ~Account$() {
         Spawn([pipe = Move()]() -> task<void> {
             co_await pipe->Send(Tie(DissociateTag));
         });
@@ -71,11 +78,11 @@ class Local :
 
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<S<Remote>> Hop(const std::string &server);
-    task<U<Link>> Connect(const std::string &host, const std::string &port);
+    task<S<Remote>> Hop(const std::string &server) override;
+    task<U<Link>> Connect(const std::string &host, const std::string &port) override;
 };
 
-task<S<Remote>> Direct(const std::string &server);
+task<S<Remote>> Hop(const std::string &server);
 
 task<U<Link>> Setup(const std::string &host, const std::string &port);
 

@@ -108,10 +108,7 @@ void Connection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConne
 void Connection::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) {
     auto self(shared_from_this());
     auto channel(std::make_unique<Channel>(self, interface));
-    Spawn([self = std::move(self), channel = std::move(channel)]() mutable -> task<void> {
-        self->OnChannel(std::move(channel));
-        co_return;
-    });
+    self->OnChannel(std::move(channel));
 }
 
 }

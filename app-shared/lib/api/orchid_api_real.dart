@@ -94,7 +94,10 @@ class RealOrchidAPI implements OrchidAPI {
 
     @override
     Future<void> setConnected(bool connect) async {
-        await _platform.invokeMethod('connect', connect);
+        if (connect)
+            await _platform.invokeMethod('connect');
+        else
+            await _platform.invokeMethod('disconnect');
     }
 
     @override
