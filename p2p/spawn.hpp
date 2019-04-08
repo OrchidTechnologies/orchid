@@ -23,13 +23,11 @@
 #ifndef ORCHID_SPAWN_HPP
 #define ORCHID_SPAWN_HPP
 
-#include <cppcoro/sync_wait.hpp>
+#include <cppcoro/task.hpp>
 
 namespace orc {
 
-void Spawn(const cppcoro::task<void> &code) {
-    cppcoro::sync_wait(code);
-}
+void Spawn(cppcoro::task<void> code);
 
 }
 

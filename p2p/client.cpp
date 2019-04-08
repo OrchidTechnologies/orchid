@@ -23,8 +23,6 @@
 #include <iostream>
 #include <thread>
 
-#include <cppcoro/shared_task.hpp>
-
 #include "client.hpp"
 #include "http.hpp"
 #include "link.hpp"
@@ -42,42 +40,39 @@ class Client :
         _trace();
     }
 
-    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override {
+    void OnChannel(U<Channel> channel) override {
         _trace();
     }
 };
 
 class Tunnel :
-    public Link,
-    public Route
+    public Link
 {
   private:
-    cppcoro::shared_task<Tag> handle_;
+    Sink<Route<Local>> sink_;
     cppcoro::async_manual_reset_event closed_;
 
   public:
-    Tunnel(const H<Router> &router, const std::function<cppcoro::shared_task<Tag> (const Tag &)> &handle) :
-        Route([this](const Buffer &data) {
+    Tunnel(const S<Local> &local) :
+        sink_(std::make_unique<Route<Local>>(local), [this](const Buffer &data) {
             Land(data);
-        }, router),
-        handle_(handle(tag_))
+        })
     {
     }
 
     ~Tunnel() {
-        // XXX: this only works because Spawn doesn't do what it claims
-        Spawn([router = router_, handle = handle_]() -> cppcoro::task<void> {
-            co_await router->Send(Tie(CloseTag, co_await handle));
-            //co_await closed_;
+        Spawn([route = sink_.Move()]() -> cppcoro::task<void> {
+            Take<>(co_await (*route)->Call(CloseTag, route->tag_));
+            // XXX: co_await closed_
         }());
     }
 
-    cppcoro::task<void> _() {
-        (void) co_await handle_;
+    cppcoro::task<void> _(const std::function<cppcoro::task<void> (const Tag &tag)> &setup) {
+        (void) co_await setup(sink_->tag_);
     }
 
     cppcoro::task<void> Send(const Buffer &data) override {
-        co_await router_->Send(Tie(ForwardTag, co_await handle_, data));
+        co_return co_await sink_->Send(data);
     }
 
   protected:
@@ -88,33 +83,43 @@ class Tunnel :
     }
 };
 
-cppcoro::task<Beam> Local::Request(const Tag &command, const Buffer &data) {
-    auto tag(NewTag());
-    co_await router_->Send(orc::Tie(command, tag, data));
-    co_return Beam("");
+cppcoro::task<Beam> Local::Call(const Tag &command, const Buffer &args) {
+    Beam response;
+    cppcoro::async_manual_reset_event responded;
+    Sink sink(std::make_unique<Route<Local>>(shared_from_this()), [&](const Buffer &data) {
+        response = data;
+        responded.set();
+    });
+    co_await sink.Send(Tie(command, args));
+    co_await responded;
+    co_return response;
 }
 
-cppcoro::task<H<Link>> Local::Connect(const std::string &host, const std::string &port) {
-    auto tunnel(std::make_shared<Tunnel>(router_, [&](const Tag &tag) -> cppcoro::shared_task<Tag> {
-        auto [handle] = orc::Take<TagSize>(co_await Request(ConnectTag, Beam(host + ":" + port)));
-        co_return handle;
-    }));
-    co_await tunnel->_();
-    co_return tunnel;
+cppcoro::task<S<Remote>> Local::Indirect(const std::string &server) {
+    auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
+    co_await tunnel->_([&](const Tag &tag) -> cppcoro::task<void> {
+        auto handle(NewTag()); // XXX: this is horribly wrong
+        auto offer(co_await Call(OfferTag, handle));
+        auto answer(co_await Request("POST", {"http", server, "8080", "/"}, {}, offer.str()));
+        Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
+        Take<>(co_await Call(ChannelTag, Tie(handle, tag)));
+    });
+    co_return std::make_shared<Remote>(std::move(tunnel));
 }
 
-cppcoro::task<H<Remote>> Direct(const std::string &server) {
+cppcoro::task<U<Link>> Local::Connect(const std::string &host, const std::string &port) {
+    auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
+    co_await tunnel->_([&](const Tag &tag) -> cppcoro::task<void> {
+        Take<>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+    });
+    co_return std::move(tunnel);
+}
+
+cppcoro::task<S<Remote>> Direct(const std::string &server) {
     auto client(std::make_shared<Client>());
-    auto channel(std::make_shared<Channel>(client));
+    auto channel(std::make_unique<Channel>(client));
 
-    auto offer(co_await client->Negotiation(co_await [&]() -> cppcoro::task<webrtc::SessionDescriptionInterface *> {
-        rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
-        webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-        (*client)->CreateOffer(observer, options);
-        co_await *observer;
-        co_return observer->description_;
-    }()));
-
+    auto offer(co_await client->Offer());
     auto answer(co_await Request("POST", {"http", server, "8080", "/"}, {}, offer));
 
     std::cerr << std::endl;
@@ -125,17 +130,17 @@ cppcoro::task<H<Remote>> Direct(const std::string &server) {
     std::cerr << "vvvvvvvvvvvvvvvv" << std::endl;
     std::cerr << std::endl;
 
-    co_await client->Negotiate("answer", answer);
+    co_await client->Negotiate(answer);
     co_await *channel;
-    co_return std::make_shared<Remote>(channel);
+    co_return std::make_shared<Remote>(std::move(channel));
 }
 
-cppcoro::task<H<Link>> Setup(const std::string &host, const std::string &port) {
+cppcoro::task<U<Link>> Setup(const std::string &host, const std::string &port) {
     auto remote(co_await Direct("localhost"));
 
-    Common common;
-    auto local(std::make_shared<Local>(remote, common));
-    co_await local->_();
+    Identity identity;
+    auto local(std::make_shared<Local>(remote));
+    co_await local->_(identity.GetCommon());
 
     co_return co_await local->Connect("localhost", "9090");
 }

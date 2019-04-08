@@ -22,8 +22,8 @@
 
 #include <iomanip>
 
-#include "trace.hpp"
 #include "buffer.hpp"
+#include "trace.hpp"
 
 namespace orc {
 
@@ -65,7 +65,7 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
 Beam::Beam(const Buffer &buffer) :
     Beam(buffer.size())
 {
-    auto data(data_ + 1);
+    auto data(data_);
     buffer.each([&](const Region &region) {
         auto size(region.size());
         memcpy(data, region.data(), size);

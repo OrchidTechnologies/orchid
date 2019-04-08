@@ -98,8 +98,8 @@ cppcoro::task<std::string> Request(Socket_ &socket, const std::string &method, c
     co_return body;
 }
 
-cppcoro::task<std::string> Request(Link &link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
-    Adapter adapter(orc::Context(), link);
+cppcoro::task<std::string> Request(U<Link> link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+    Adapter adapter(orc::Context(), std::move(link));
     return Request(adapter, method, uri, headers, data);
 }
 

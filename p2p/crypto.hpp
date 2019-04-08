@@ -64,11 +64,17 @@ class Identity {
         _crycall(crypto_box_keypair(common_.data(), secret_.data()));
     }
 
-    const Secret &Secret() {
+    Identity(const Secret &secret, const Common &common) :
+        secret_(secret),
+        common_(common)
+    {
+    }
+
+    const Secret &GetSecret() {
         return secret_;
     }
 
-    const Common &Common() {
+    const Common &GetCommon() {
         return common_;
     }
 };

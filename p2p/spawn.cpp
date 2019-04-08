@@ -20,15 +20,26 @@
 /* }}} */
 
 
-pragma solidity ^0.5.7;
+#include <thread>
 
-import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "../openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+#include <cppcoro/sync_wait.hpp>
 
-contract OrchidToken is ERC20, ERC20Detailed {
-    constructor()
-        ERC20Detailed("Test", "TST", 18)
-    public {
-        _mint(msg.sender, 1000000000*10**18);
+#include "trace.hpp"
+#include "spawn.hpp"
+
+namespace orc {
+
+void Spawn(cppcoro::task<void> code) {
+    if (false)
+        cppcoro::sync_wait(code);
+    else {
+_trace();
+        std::thread([code = std::move(code)]() {
+_trace();
+            cppcoro::sync_wait(code);
+        }).detach();
+_trace();
     }
+}
+
 }

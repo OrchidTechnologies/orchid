@@ -68,6 +68,29 @@ class Region :
     }
 };
 
+class Subset :
+    public Region
+{
+  private:
+    const uint8_t *data_;
+    size_t size_;
+
+  public:
+    Subset(const uint8_t *data, size_t size) :
+        data_(data),
+        size_(size)
+    {
+    }
+
+    const uint8_t *data() const override {
+        return data_;
+    }
+
+    size_t size() const override {
+        return size_;
+    }
+};
+
 template <size_t Size_>
 class Block :
     public Region
@@ -129,21 +152,37 @@ class Beam :
     uint8_t *data_;
 
     uint8_t &count() {
-        return *data_;
+        return data_[size_];
+    }
+
+    void subsume() {
+        if (data_ != nullptr)
+            ++count();
+    }
+
+    void destroy() {
+        if (data_ != nullptr && --count() == 0)
+            delete [] data_;
     }
 
   public:
+    Beam() :
+        size_(0),
+        data_(NULL)
+    {
+    }
+
     Beam(size_t size) :
         size_(size),
         data_(new uint8_t[size_ + 1])
     {
-        data_[0] = 1;
+        count() = 1;
     }
 
     Beam(const void *data, size_t size) :
         Beam(size)
     {
-        memcpy(data_ + 1, data, size_);
+        memcpy(data_, data, size_);
     }
 
     Beam(const std::string &data) :
@@ -153,24 +192,39 @@ class Beam :
 
     Beam(const Buffer &buffer);
 
+    Beam(Beam &&rhs) noexcept :
+        size_(rhs.size_),
+        data_(rhs.data_)
+    {
+        rhs.size_ = 0;
+        rhs.data_ = nullptr;
+    }
+
     Beam(const Beam &rhs) :
         size_(rhs.size_),
         data_(rhs.data_)
     {
-        ++count();
+        subsume();
     }
 
     virtual ~Beam() {
-        if (--count() == 0)
-            delete [] data_;
+        destroy();
+    }
+
+    Beam &operator =(const Beam &rhs) {
+        destroy();
+        size_ = rhs.size_;
+        data_ = rhs.data_;
+        subsume();
+        return *this;
     }
 
     const uint8_t *data() const override {
-        return data_ + 1;
+        return data_;
     }
 
     uint8_t *data() {
-        return data_ + 1;
+        return data_;
     }
 
     size_t size() const override {
@@ -306,6 +360,20 @@ class Sequence :
         buffer.each([&](const Region &region) {
             *(i++) = &region;
         });
+    }
+
+    Sequence(Sequence &&sequence) :
+        count_(sequence.count_),
+        regions_(std::move(sequence.regions_))
+    {
+    }
+
+    Sequence(const Sequence &sequence) :
+        count_(sequence.count_),
+        regions_(new const Region *[count_])
+    {
+        auto old(sequence.regions_.get());
+        std::copy(old, old + count_, regions_.get());
     }
 
     Iterator begin() const {

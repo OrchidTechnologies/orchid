@@ -26,7 +26,6 @@
 
 #include <ovpncli.hpp>
 
-#include "trace.hpp"
 #include "client.hpp"
 #include "error.hpp"
 #include "link.hpp"
@@ -52,7 +51,7 @@ class OrchidClient :
     openvpn::TransportClientParent *parent_;
 
     std::string buffer_;
-    orc::H<orc::Pipe> pipe_;
+    orc::U<orc::Sink<>> pipe_;
 
   public:
     OrchidClient(const openvpn::ExternalTransport::Config config, asio::io_context &io_context, openvpn::TransportClientParent *parent) :
@@ -77,7 +76,9 @@ class OrchidClient :
         auto remote(config_.remote_list->first_item());
         _assert(remote != NULL);
 
-        pipe_ = std::make_shared<orc::Sink>([&](const orc::Buffer &data) {
+        auto link(co_await orc::Setup(remote->server_host, remote->server_port));
+
+        pipe_ = std::make_unique<orc::Sink<>>(std::move(link), [&](const orc::Buffer &data) {
             buffer_ += data.str();
             while (buffer_.size() >= 2) {
                 auto size(ntohs(*reinterpret_cast<uint16_t *>(&buffer_[0])));
@@ -89,7 +90,7 @@ class OrchidClient :
                     parent->transport_recv(buffer);
                 });
             }
-        }, co_await orc::Setup(remote->server_host, remote->server_port));
+        });
 
         asio::dispatch(io_context, [parent = parent_]() {
             parent->transport_connecting();

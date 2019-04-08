@@ -20,8 +20,6 @@
 /* }}} */
 
 
-#include "trace.hpp"
-
 #include <condition_variable>
 #include <cstdio>
 #include <iostream>

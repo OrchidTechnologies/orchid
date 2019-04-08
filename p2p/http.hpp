@@ -50,7 +50,7 @@ class URI {
     }
 };
 
-cppcoro::task<std::string> Request(Link &link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
+cppcoro::task<std::string> Request(U<Link> link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 
 cppcoro::task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 

@@ -29,18 +29,23 @@
 
 namespace orc {
 
-boost::asio::io_context context_;
+static asio::io_context context_;
+static std::thread thread_;
 
-static auto work_(boost::asio::make_work_guard(context_));
+static auto work_(asio::make_work_guard(context_));
 
 static struct SetupContext { SetupContext() {
-    std::thread([]() {
+    thread_ = std::thread([]() {
         context_.run();
-    }).detach();
+    });
 } } SetupContext_;
 
-boost::asio::io_context &Context() {
+asio::io_context &Context() {
     return context_;
+}
+
+std::thread &Thread() {
+    return thread_;
 }
 
 }

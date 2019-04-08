@@ -67,7 +67,7 @@ class Channel;
 
 class Connection :
     public std::enable_shared_from_this<Connection>,
-    public cppcoro::async_manual_reset_event,
+    //public cppcoro::async_manual_reset_event,
     public webrtc::PeerConnectionObserver
 {
     friend class Channel;
@@ -77,6 +77,7 @@ class Connection :
 
     std::set<Channel *> channels_;
 
+    cppcoro::async_manual_reset_event gathered_;
     std::vector<std::string> gathering_;
     std::vector<std::string> candidates_;
 
@@ -114,7 +115,7 @@ _trace();
 
             case webrtc::PeerConnectionInterface::kIceGatheringComplete:
                 candidates_ = gathering_;
-                set();
+                gathered_.set();
             break;
         }
     }
@@ -126,6 +127,10 @@ _trace();
     }
 
 
+    virtual void OnChannel(U<Channel> channel) = 0;
+    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override;
+
+
     cppcoro::task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetLocalDescription(observer, description);
@@ -134,11 +139,22 @@ _trace();
 
     cppcoro::task<std::string> Negotiation(webrtc::SessionDescriptionInterface *description) {
         co_await Negotiate(description);
-        co_await *this;
+        co_await gathered_;
         std::string sdp;
         peer_->local_description()->ToString(&sdp);
         co_return sdp;
     }
+
+    cppcoro::task<std::string> Offer() {
+        co_return co_await Negotiation(co_await [&]() -> cppcoro::task<webrtc::SessionDescriptionInterface *> {
+            rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
+            peer_->CreateOffer(observer, options);
+            co_await *observer;
+            co_return observer->description_;
+        }());
+    }
+
 
     cppcoro::task<void> Negotiate(const char *type, const std::string &sdp) {
         webrtc::SdpParseError error;
@@ -148,21 +164,35 @@ _trace();
         peer_->SetRemoteDescription(observer, answer);
         co_await *observer;
     }
+
+    cppcoro::task<std::string> Answer(const std::string &offer) {
+        co_await Negotiate("offer", offer);
+        co_return co_await Negotiation(co_await [&]() -> cppcoro::task<webrtc::SessionDescriptionInterface *> {
+            rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
+            peer_->CreateAnswer(observer, options);
+            co_await *observer;
+            co_return observer->description_;
+        }());
+    }
+
+    cppcoro::task<void> Negotiate(const std::string &sdp) {
+        co_return co_await Negotiate("answer", sdp);
+    }
 };
 
 class Channel :
-    public std::enable_shared_from_this<Channel>,
     public Link,
     public webrtc::DataChannelObserver,
     public cppcoro::async_manual_reset_event
 {
   private:
-    const H<Connection> connection_;
+    const S<Connection> connection_;
     const rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
     cppcoro::async_manual_reset_event closed_;
 
   public:
-    Channel(const H<Connection> &connection, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
+    Channel(const S<Connection> &connection, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
         connection_(connection),
         channel_(channel)
     {
@@ -170,7 +200,7 @@ class Channel :
         connection_->channels_.insert(this);
     }
 
-    Channel(const H<Connection> &connection, const std::string &label = std::string(), const std::string &protocol = std::string()) :
+    Channel(const S<Connection> &connection, const std::string &label = std::string(), const std::string &protocol = std::string()) :
         Channel(connection, [&]() {
             webrtc::DataChannelInit init;
             init.protocol = protocol;
@@ -184,7 +214,7 @@ class Channel :
         channel_->UnregisterObserver();
     }
 
-    H<Connection> Connection() {
+    S<Connection> Connection() {
         return connection_;
     }
 

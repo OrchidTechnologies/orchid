@@ -26,14 +26,23 @@
 #include <cppcoro/async_manual_reset_event.hpp>
 #include <cppcoro/task.hpp>
 
+#include <asio/experimental/co_spawn.hpp>
+#include <asio/experimental/detached.hpp>
+
 #include <boost/asio/async_result.hpp>
 #include <boost/asio/io_context.hpp>
 
 #include <iostream>
 
+#include <asio.hpp>
+
 namespace orc {
 
+template <typename Type_>
+using Awaitable = asio::experimental::awaitable<Type_, asio::io_context::executor_type>;
+
 boost::asio::io_context &Context();
+std::thread &Thread();
 
 template <typename Type_, typename... Args_>
 class Baton;

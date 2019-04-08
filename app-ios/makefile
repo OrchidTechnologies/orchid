@@ -99,11 +99,6 @@ signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
 	$(xcode) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
 
-$(bundle)$(signature): $(output)/ents-main.xml $(signed)
-	@rm -rf $(dir $@)
-	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
-	@touch $@
-
 
 signed += $(patsubst %,$(bundle)/%,$(resources))
 $(bundle)/%: resource/%
@@ -111,6 +106,11 @@ $(bundle)/%: resource/%
 	cp -af $< $@
 	@touch $@
 
+
+$(bundle)$(signature): $(output)/ents-main.xml $(signed)
+	@rm -rf $(dir $@)
+	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
+	@touch $@
 
 $(output)/$(name).ipa: $(bundle)$(signature)
 	@rm -f $@

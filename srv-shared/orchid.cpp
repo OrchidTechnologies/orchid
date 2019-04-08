@@ -25,11 +25,6 @@
 #include <iostream>
 #include <mutex>
 
-#include <asio/experimental/co_spawn.hpp>
-#include <asio/experimental/detached.hpp>
-
-#include <asio/ip/tcp.hpp>
-
 #include <asio/connect.hpp>
 #include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
@@ -41,77 +36,213 @@
 
 #include <microhttpd.h>
 
+#include "baton.hpp"
 #include "crypto.hpp"
 //#include "ethereum.hpp"
+#include "http.hpp"
 #include "scope.hpp"
 #include "shared.hpp"
+#include "socket.hpp"
+#include "spawn.hpp"
 #include "trace.hpp"
 #include "webrtc.hpp"
 
 #define _disused \
     __attribute__((__unused__))
 
-template <typename Type_>
-using awaitable = asio::experimental::awaitable<Type_, asio::io_context::executor_type>;
-
-static asio::io_context io_context(1);
-
-
-static std::set<std::shared_ptr<orc::Connection>> clients_;
 
 namespace orc {
 
 class Client;
 
-class Account :
-    public orc::Link
+class Outstanding :
+    public Connection
+{
+  public:
+    void OnChannel(U<Channel> channel) override {
+    }
+};
+
+class Output :
+    public Pipe
 {
   private:
-    Common common_;
-    W<Pipe> input_;
-
-    std::map<Tag, H<Pipe>> handles_;
+    Sink<> sink_;
 
   public:
-    Account(const Common &common) :
-        common_(common)
+    Output(const W<Pipe> &path, const Tag &tag, U<Link> link) :
+        sink_(std::move(link), [weak = path, tag](const Buffer &data) {
+            if (auto strong = weak.lock())
+                strong->Send(Tie(tag, data));
+        })
     {
+        _trace();
     }
 
-    void Associate(const H<Pipe> &input) {
-        input_ = input;
+    virtual ~Output() {
+        _trace();
     }
 
     cppcoro::task<void> Send(const Buffer &data) override {
-        if (auto input = input_.lock())
-            return input->Send(data);
-        else _assert(false);
+        co_return co_await sink_.Send(data);
+    }
+};
+
+class Account;
+class Input;
+
+class Node :
+    public std::enable_shared_from_this<Node>,
+    public Identity
+{
+    friend class Client;
+
+  private:
+    // XXX: this should be a weak set
+    std::map<Common, S<Account>> accounts_;
+
+    typedef std::pair<Pipe *, Tag> Key_;
+    std::map<Key_, S<Input>> inputs_;
+
+    std::set<S<Connection>> clients_;
+
+  public:
+    void Land(const S<Pipe> &path, const Buffer &data);
+
+    cppcoro::task<std::string> Respond(const std::string &offer);
+};
+
+class Account :
+    public std::enable_shared_from_this<Account>,
+    public Link
+{
+  private:
+    S<Node> node_;
+    Boxer boxer_;
+
+    Pipe *input_;
+
+    std::map<Tag, U<Output>> outputs_;
+    std::map<Tag, S<Outstanding>> outstandings_;
+
+  public:
+    Account(const S<Node> &node, const Common &common) :
+        node_(node),
+        boxer_(node->GetSecret(), common)
+    {
     }
 
+
+    // XXX: implement a set
+
+    void Associate(Pipe *input) {
+        input_ = input;
+    }
+
+    void Dissociate(Pipe *input) {
+        if (input_ == input)
+            input_ = nullptr;
+    }
+
+    cppcoro::task<void> Send(const Buffer &data) override {
+        _assert(input_ != nullptr);
+        co_return co_await input_->Send(data);
+    }
+
+
     void Land(const Buffer &data) {
-        const auto &unboxed(data);
-        auto [key, tag, args] = orc::Take<TagSize, TagSize, 0>(unboxed);
+        Beam unboxed(data);
+        Spawn([unboxed = std::move(unboxed), self = shared_from_this()]() -> cppcoro::task<void> {
+            auto [nonce, rest] = Take<TagSize, 0>(unboxed);
+            auto output(self->outputs_.find(nonce));
+            if (output != self->outputs_.end()) {
+                co_await output->second->Send(rest);
+            } else {
+                auto [command, args] = Take<TagSize, 0>(rest);
+                if (false) {
+
+                } else if (command == CloseTag) {
+                    const auto [tag] = Take<TagSize>(args);
+                    self->outputs_.erase(tag);
+                    co_await self->Send(Tie(nonce));
+
+
+                } else if (command == ConnectTag) {
+                    const auto [tag, target] = Take<TagSize, 0>(args);
+                    auto string(target.str());
+                    auto colon(string.find(':'));
+                    _assert(colon != std::string::npos);
+                    auto host(string.substr(0, colon));
+                    auto port(string.substr(colon + 1));
+                    auto socket(std::make_unique<Socket>());
+                    co_await socket->_(host, port);
+                    self->outputs_[tag] = std::make_unique<Output>(self, tag, std::move(socket));
+                    co_await self->Send(Tie(nonce));
+
+
+                } else if (command == OfferTag) {
+                    const auto [handle] = Take<TagSize>(args);
+                    auto outstanding(std::make_shared<Outstanding>());
+                    self->outstandings_[handle] = outstanding;
+                    auto offer(co_await outstanding->Offer());
+                    co_await self->Send(Tie(nonce, Beam(offer)));
+
+                } else if (command == NegotiateTag) {
+                    const auto [handle, answer] = Take<TagSize, 0>(args);
+                    auto outstanding(self->outstandings_.find(handle));
+                    _assert(outstanding != self->outstandings_.end());
+                    co_await outstanding->second->Negotiate(answer.str());
+                    co_await self->Send(Tie(nonce));
+
+                } else if (command == ChannelTag) {
+                    const auto [handle, tag] = Take<TagSize, TagSize>(args);
+                    auto outstanding(self->outstandings_.find(handle));
+                    _assert(outstanding != self->outstandings_.end());
+                    auto channel(std::make_unique<Channel>(outstanding->second));
+                    self->outputs_[tag] = std::make_unique<Output>(self, tag, std::move(channel));
+                    co_await self->Send(Tie(nonce));
+
+                } else if (command == CancelTag) {
+                    const auto [handle] = Take<TagSize>(args);
+                    self->outstandings_.erase(handle);
+                    co_await self->Send(Tie(nonce));
+
+
+                } else if (command == AnswerTag) {
+                    const auto [offer] = Take<0>(args);
+                    auto answer(co_await self->node_->Respond(offer.str()));
+                    co_await self->Send(Tie(nonce, Beam(answer)));
+
+                } else _assert(false);
+            }
+        }());
     }
 };
 
 class Input :
-    public orc::Pipe
+    public std::enable_shared_from_this<Input>,
+    public Pipe
 {
   private:
-    H<Pipe> path_;
+    S<Pipe> path_;
     Tag tag_;
-    H<Account> account_;
+    S<Account> account_;
 
   public:
-    Input(const H<Pipe> &path, const Tag &tag, const H<Account> &account) :
+    Input(const S<Pipe> &path, const Tag &tag, const S<Account> &account) :
         path_(path),
         tag_(tag),
         account_(account)
     {
+        account_->Associate(this);
+    }
+
+    ~Input() {
+        account_->Dissociate(this);
     }
 
     cppcoro::task<void> Send(const Buffer &data) override {
-        return path_->Send(orc::Tie(tag_, data));
+        co_return co_await path_->Send(Tie(tag_, data));
     }
 
     void Land(const Buffer &data) {
@@ -119,117 +250,57 @@ class Input :
     }
 };
 
-class Node {
-  private:
-    std::map<Common, H<Account>> accounts_;
-
-    typedef std::pair<Pipe *, Tag> Key_;
-    std::map<Key_, H<Input>> inputs_;
-
-  public:
-    void Land(const H<Pipe> &path, const Buffer &data) {
-_trace();
-        if (data.empty()) {
-            for (auto [key, value] : inputs_)
-                if (key.first == path.get())
-                    inputs_.erase(key);
-        } else {
-_trace();
-            auto [command, tag, rest] = orc::Take<TagSize, TagSize, 0>(data);
-            auto key(std::make_pair(path.get(), tag));
-
-            if (false) {
-            } else if (command == AssociateTag) {
-_trace();
-                auto [common] = orc::Take<Common::Size>(rest);
-                auto &account(accounts_[common]);
-_trace();
-                if (!account)
-                    account = std::make_shared<Account>(common);
-_trace();
-                auto input(std::make_shared<Input>(path, tag, account));
-                inputs_[key] = input;
-_trace();
-                account->Associate(input);
-            } else if (command == DissociateTag) {
-_trace();
-                /*auto [] =*/ orc::Take<>(rest);
+void Node::Land(const S<Pipe> &path, const Buffer &data) {
+    if (data.empty()) {
+        for (const auto &[key, value] : inputs_)
+            if (key.first == path.get())
                 inputs_.erase(key);
-_trace();
-            } else if (command == DeliverTag) {
-_trace();
-                auto [boxed] = orc::Take<0>(rest);
-                auto input(inputs_.find(key));
-_trace();
-                _assert(input != inputs_.end());
-                input->second->Land(boxed);
-_trace();
-            }
-        }
+    } else {
+        auto [tag, command, rest] = Take<TagSize, TagSize, 0>(data);
+        auto key(std::make_pair(path.get(), tag));
+
+        if (false) {
+
+        } else if (command == AssociateTag) {
+            auto [common] = Take<Common::Size>(rest);
+            auto &account(accounts_[common]);
+            if (!account)
+                account = std::make_shared<Account>(shared_from_this(), common);
+            auto input(std::make_shared<Input>(path, tag, account));
+            inputs_[key] = input;
+
+        } else if (command == DissociateTag) {
+            /*auto [] =*/ Take<>(rest);
+            inputs_.erase(key);
+
+        } else if (command == DeliverTag) {
+            auto [boxed] = Take<0>(rest);
+            auto input(inputs_.find(key));
+            _assert(input != inputs_.end());
+            input->second->Land(boxed);
+
+        } else _assert(false);
     }
-};
-
-/*
-    std::unique_ptr<asio::ip::tcp::socket> socket_;
-    bool failed_;
-
-        if (failed_)
-            return;
-        if (data.empty()) {
-            self_.reset();
-            socket_->close();
-        } else if (socket_) {
-            Sequence sequence(data);
-            socket_->send(sequence);
-        } else {
-            auto string(data.str());
-            std::cerr << string << std::endl;
-            auto colon(string.find(':'));
-            _assert(colon != std::string::npos);
-            auto host(string.substr(0, colon));
-            auto port(string.substr(colon + 1));
-            socket_ = std::make_unique<asio::ip::tcp::socket>(io_context);
-
-            {
-                asio::ip::tcp::resolver resolver(io_context);
-                asio::ip::tcp::resolver::query query(host, port);
-
-                try {
-                    asio::connect(*socket_, resolver.resolve(query));
-                } catch (const asio::system_error &e) {
-                    cppcoro::sync_wait(Send(Null()));
-                    failed_ = true;
-                    return;
-                }
-            }
-
-            asio::experimental::co_spawn(io_context, [self = self_]() -> awaitable<void> {
-                auto token(co_await asio::experimental::this_coro::token());
-                try {
-                    for (;;) {
-                        char data[1024];
-                        size_t writ(co_await self->socket_->async_receive(asio::buffer(data), token));
-                        cppcoro::sync_wait(self->Send(Beam(data, writ)));
-                    }
-                } catch (const asio::system_error &e) {
-                    cppcoro::sync_wait(self->Send(Null()));
-                }
-            }, asio::experimental::detached);
-        }
-    }
-*/
+}
 
 class Conduit :
-    public std::enable_shared_from_this<Conduit>,
-    public Sink
+    public Pipe
 {
-  public:
-    H<Conduit> self_;
+  private:
+    S<Node> node_;
+    Sink<Channel> sink_;
 
-    Conduit(const H<Node> &node, const std::shared_ptr<Channel> &channel) :
-        Sink([this, node](const Buffer &data) {
-            node->Land(shared_from_this(), data);
-        }, channel)
+  public:
+    S<Pipe> self_;
+
+  public:
+    Conduit(const S<Node> &node, U<Channel> channel) :
+        node_(node),
+        sink_(std::move(channel), [this](const Buffer &data) {
+            node_->Land(self_, data);
+            if (data.empty())
+                self_.reset();
+        })
     {
         _trace();
     }
@@ -237,17 +308,21 @@ class Conduit :
     virtual ~Conduit() {
         _trace();
     }
+
+    cppcoro::task<void> Send(const Buffer &data) override {
+        co_return co_await sink_.Send(data);
+    }
 };
 
 class Client :
     public Connection
 {
   private:
-    H<Node> node_;
+    S<Node> node_;
 
   public:
-    Client(const H<Node> &node) :
-        node_(node)
+    Client(S<Node> node) :
+        node_(std::move(node))
     {
     }
 
@@ -255,14 +330,20 @@ class Client :
         _trace();
     }
 
-    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override {
-        auto client(shared_from_this());
-        auto conduit(std::make_shared<Conduit>(node_, std::make_shared<Channel>(client, channel)));
+    void OnChannel(U<Channel> channel) override {
+        auto conduit(std::make_shared<Conduit>(node_, std::move(channel)));
         conduit->self_ = conduit;
         // XXX: also automatically remove this after some timeout
-        clients_.erase(client);
+        node_->clients_.erase(shared_from_this());
     }
 };
+
+cppcoro::task<std::string> Node::Respond(const std::string &offer) {
+    auto client(std::make_shared<Client>(shared_from_this()));
+    auto answer(co_await client->Answer(offer));
+    clients_.emplace(client);
+    co_return answer;
+}
 
 }
 
@@ -270,7 +351,7 @@ class Client :
 static MHD_Daemon *http_;
 
 struct Internal {
-    orc::H<orc::Node> node_;
+    orc::S<orc::Node> node_;
 };
 
 struct Request {
@@ -307,31 +388,17 @@ static int Respond(void *arg, struct MHD_Connection *connection, const char *url
 
 
     try {
-        auto client(std::make_shared<orc::Client>(internal->node_));
+        auto answer(cppcoro::sync_wait(internal->node_->Respond(request->offer_)));
 
-        auto sdp(cppcoro::sync_wait([&]() -> cppcoro::task<std::string> {
-            co_await client->Negotiate("offer", request->offer_);
-
-            co_return co_await client->Negotiation(co_await [&]() -> cppcoro::task<webrtc::SessionDescriptionInterface *> {
-                rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
-                webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-                (*client)->CreateAnswer(observer, options);
-                co_await *observer;
-                co_return observer->description_;
-            }());
-        }()));
-
-        clients_.insert(client);
-
-        /*std::cerr << std::endl;
+        std::cerr << std::endl;
         std::cerr << "^^^^^^^^^^^^^^^^" << std::endl;
         std::cerr << request->offer_ << std::endl;
         std::cerr << "================" << std::endl;
-        std::cerr << sdp << std::endl;
+        std::cerr << answer << std::endl;
         std::cerr << "vvvvvvvvvvvvvvvv" << std::endl;
-        std::cerr << std::endl;*/
+        std::cerr << std::endl;
 
-        return Data(connection, "text/plain", sdp);
+        return Data(connection, "text/plain", answer);
     } catch (...) {
 _trace();
         return Data(connection, "text/plain", "", MHD_HTTP_NOT_FOUND);
@@ -355,6 +422,19 @@ static void LogMHD(void *, const char *format, va_list args) {
 int main() {
     //orc::Ethereum();
 
+    /*cppcoro::sync_wait([]() -> cppcoro::task<void> {
+        auto socket(std::make_unique<orc::Socket>());
+        co_await socket->_("localhost", "9090");
+        co_await socket->Send(orc::Beam("Hello\n"));
+        orc::Sink sink(std::move(socket), [](const orc::Buffer &data) {});
+        _trace();
+        //co_await orc::Request(std::move(socket), "POST", {"http", "localhost", "9090", "/"}, {}, "wow");
+        co_await orc::Request("POST", {"http", "localhost", "9090", "/"}, {}, "wow");
+        _trace();
+    }());
+    _trace();
+    return 0;*/
+
     orc::Block<4> block;
     orc::Hash hash(block);
 
@@ -369,10 +449,9 @@ int main() {
 
     _assert(http_ != NULL);
 
-    asio::signal_set signals(io_context, SIGINT, SIGTERM);
-    signals.async_wait([&](auto, auto) { io_context.stop(); });
+    asio::signal_set signals(orc::Context(), SIGINT, SIGTERM);
+    signals.async_wait([&](auto, auto) { orc::Context().stop(); });
 
-    io_context.run();
-_trace();
+    orc::Thread().join();
     return 0;
 }

@@ -24,6 +24,7 @@ cflags += -Wno-bitwise-op-parentheses
 cflags += -Wno-dangling-else
 cflags += -Wno-logical-op-parentheses
 cflags += -Wno-missing-selector-name
+cflags += -Wno-potentially-evaluated-expression
 
 cflags += -Wno-reorder # XXX: cppcoro/shared_task.hpp
 
@@ -44,6 +45,7 @@ source += $(pwd)/http.cpp
 source += $(pwd)/jsonrpc.cpp
 source += $(pwd)/link.cpp
 source += $(pwd)/socket.cpp
+source += $(pwd)/spawn.cpp
 source += $(pwd)/webrtc.cpp
 
 #source += $(wildcard $(pwd)/curl/lib/*.c $(pwd)/curl/lib/vauth/*.c $(pwd)/curl/lib/vtls/*.c)

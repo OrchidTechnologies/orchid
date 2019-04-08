@@ -24,8 +24,31 @@
 #define ORCHID_ADAPTER_HPP
 
 #include "link.hpp"
+#include "trace.hpp"
 
 namespace orc {
+
+// XXX: this is wrong, as the Subsets are temporary :/
+template <typename Buffers_>
+class Wrapper :
+    public Buffer
+{
+  private:
+    const Buffers_ &buffers_;
+
+  public:
+    Wrapper(const Buffers_ &buffers) :
+        buffers_(buffers)
+    {
+    }
+
+    void each(const std::function<void (const Region &)> &code) const override {
+        for (auto i(buffers_.begin()), e(buffers_.end()); i != e; ++i) {
+            const auto &buffer(*i);
+            code(Subset(static_cast<const uint8_t *>(buffer.data()), buffer.size()));
+        }
+    }
+};
 
 class Adapter {
   public:
@@ -34,12 +57,12 @@ class Adapter {
 
   private:
     boost::asio::io_context &context_;
-    Link &link_;
+    U<Link> link_;
 
   public:
-    Adapter(boost::asio::io_context &context, Link &link) :
+    Adapter(boost::asio::io_context &context, U<Link> link) :
         context_(context),
-        link_(link)
+        link_(std::move(link))
     {
     }
 
@@ -58,8 +81,8 @@ class Adapter {
 
     template <typename Buffers_, typename Handler_>
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
-        (void) link_;
-        //cppcoro::sync_wait(link_.Send(buffers));
+        Wrapper<Buffers_> wrapper(buffers);
+        cppcoro::sync_wait(link_->Send(wrapper));
         boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), 31337));
     }
 };

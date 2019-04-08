@@ -37,7 +37,10 @@ namespace orc {
 
 
 template <typename Type_>
-using H = std::shared_ptr<Type_>;
+using U = std::unique_ptr<Type_>;
+
+template <typename Type_>
+using S = std::shared_ptr<Type_>;
 
 template <typename Type_>
 using W = std::weak_ptr<Type_>;
@@ -60,6 +63,7 @@ typedef std::function<void (const Buffer &data)> Drain;
 class Link :
     public Pipe
 {
+    template <typename Type_>
     friend class Sink;
 
   public:
@@ -75,8 +79,8 @@ class Link :
     }
 
     virtual ~Link() {
-        // XXX: this should be verified
-        //_assert(drain_ == nullptr);
+        if (drain_ != nullptr)
+            std::terminate();
     }
 
   protected:
@@ -87,44 +91,59 @@ class Link :
     }
 };
 
-class Sink :
-    public Pipe
-{
+template <typename Type_ = Link>
+class Sink {
   private:
-    const H<Link> link_;
+    U<Type_> link_;
 
   public:
-    template <typename... Args_>
-    Sink(Drain drain, Args_ &&...args) :
-        link_(std::forward<Args_>(args)...)
+    Sink(U<Type_> link, Drain drain) :
+        link_(std::move(link))
     {
+        _assert(link_);
         std::lock_guard<std::mutex> lock(link_->mutex_);
         _assert(link_->drain_ == nullptr);
         link_->drain_ = std::move(drain);
     }
 
     ~Sink() {
-        std::lock_guard<std::mutex> lock(link_->mutex_);
-        link_->drain_ = nullptr;
+        if (link_) {
+            std::lock_guard<std::mutex> lock(link_->mutex_);
+            link_->drain_ = nullptr;
+        }
     }
 
-    cppcoro::task<void> Send(const Buffer &data) override {
-        return link_->Send(data);
+    cppcoro::task<void> Send(const Buffer &data) {
+        _assert(link_);
+        co_return co_await link_->Send(data);
+    }
+
+    U<Type_> Move() {
+        _assert(link_);
+        std::lock_guard<std::mutex> lock(link_->mutex_);
+        link_->drain_ = nullptr;
+        return std::move(link_);
+    }
+
+    Type_ *operator ->() {
+        return link_.get();
     }
 };
 
 
 class Router :
-    public Sink
+    public Pipe
 {
+    template <typename Type_>
     friend class Route;
 
   private:
     std::map<Tag, Drain> routes_;
+    Sink<> sink_;
 
   public:
-    Router(const H<Link> &link) :
-        Sink([this](const Buffer &data) {
+    Router(U<Link> link) :
+        sink_(std::move(link), [this](const Buffer &data) {
             if (data.empty())
                 for (const auto &[tag, drain] : routes_)
                     drain(data);
@@ -134,73 +153,59 @@ class Router :
                 _assert(route != routes_.end());
                 route->second(rest);
             }
-        }, link)
+        })
     {
+    }
+
+    ~Router() {
+        if (!routes_.empty())
+            std::terminate();
+    }
+
+    cppcoro::task<void> Send(const Buffer &data) override {
+        co_return co_await sink_.Send(data);
+    }
+
+    U<Link> Move() {
+        return sink_.Move();
     }
 };
 
-class Route {
-  protected:
-    const H<Router> router_;
-
+template <typename Type_>
+class Route :
+    public Link
+{
   public:
+    const S<Type_> router_;
     const Tag tag_;
 
   public:
-    Route(Drain drain, const H<Router> &router) :
+    Route(const S<Type_> router) :
         router_(router),
-        // XXX: ensure this tag isn't being used
-        tag_(NewTag())
+        tag_([this]() {
+            for (;;) {
+                auto tag(NewTag());
+                if (router_->routes_.emplace(tag, [this](const Buffer &data) {
+                    Land(data);
+                }).second)
+                    return tag;
+            }
+        }())
     {
-        router_->routes_.emplace(tag_, std::move(drain));
     }
 
     ~Route() {
         router_->routes_.erase(tag_);
     }
-};
-
-/*
-class Route :
-    public Link
-{
-  public:
-    const H<Router> router_;
-    const Tag tag_;
-
-  public:
-    virtual ~Route() {
-        _assert(router_->routes_.erase(tag_) == 1);
-    }
 
     cppcoro::task<void> Send(const Buffer &data) override {
-        std::make_tuple(tag_, tag_);
-        return router_->link_->Send(orc::Cat(tag_, tag_));//data));
+        co_return co_await router_->Send(Tie(tag_, data));
+    }
+
+    Type_ *operator ->() {
+        return router_.get();
     }
 };
-*/
-
-/*class Tunnel :
-    public Link
-{
-  private:
-    const H<Link> link_;
-    const Tag tag_;
-
-  public:
-    cppcoro::task<void> Send(const Buffer &data) override;
-};*/
-
-/*class Bridge {
-  private:
-    H<Route> route_;
-    std::map<Tag, H<Destination>> tunnels_;
-  public:
-    Bridge(const H<Link> &link);
-    virtual ~Bridge() {}
-    cppcoro::task<H<Tunnel>> Connect(const std::string &host, const std::string &port);
-};*/
-
 
 }
 

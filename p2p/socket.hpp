@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <asio/ip/tcp.hpp>
+
 #include "link.hpp"
 
 namespace orc {
@@ -27,14 +29,17 @@ namespace orc {
 class Socket :
     public Link
 {
+  private:
+    asio::ip::tcp::socket socket_;
+
   public:
-    int socket_;
+    Socket();
 
-    /*virtual cppcoro::task<void> Send(const Buffer &data) {
-    }*/
+    cppcoro::task<void> _(const std::string &host, const std::string &port);
 
-    virtual void Land(const Buffer &data) {
-    }
+    ~Socket();
+
+    cppcoro::task<void> Send(const Buffer &data) override;
 };
 
 }

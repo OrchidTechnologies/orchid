@@ -90,7 +90,7 @@ void Connection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConne
             for (auto current(channels_.begin()); current != channels_.end(); ) {
                 auto next(current);
                 ++next;
-                (*current)->shared_from_this()->Close();
+                (*current)->Close();
                 current = next;
             }
             _trace();
@@ -103,6 +103,10 @@ void Connection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConne
         default:
             break;
     }
+}
+
+void Connection::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> channel) {
+    OnChannel(std::make_unique<Channel>(shared_from_this(), channel));
 }
 
 }

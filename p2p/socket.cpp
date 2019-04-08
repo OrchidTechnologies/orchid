@@ -20,11 +20,50 @@
 /* }}} */
 
 
-#include "trace.hpp"
+#include "baton.hpp"
 #include "socket.hpp"
+#include "trace.hpp"
 
 namespace orc {
 
+Socket::Socket() :
+    socket_(Context())
+{
+}
 
+cppcoro::task<void> Socket::_(const std::string &host, const std::string &port) {
+    {
+        asio::ip::tcp::resolver resolver(Context());
+        asio::ip::tcp::resolver::query query(host, port);
+        co_await asio::async_connect(socket_, co_await resolver.async_resolve(query, Token()), Token());
+    }
+
+    // XXX: the memory management on this is incorrect
+    asio::experimental::co_spawn(Context(), [this]() -> Awaitable<void> {
+        auto token(co_await asio::experimental::this_coro::token());
+        try {
+            for (;;) {
+                char data[1024];
+                size_t writ(co_await socket_.async_receive(asio::buffer(data), token));
+                Land(Beam(data, writ));
+            }
+        } catch (const asio::system_error &e) {
+            Land();
+        }
+    }, asio::experimental::detached);
+}
+
+Socket::~Socket() {
+    // XXX: this feels (asynchronously) incorrect
+    socket_.close();
+}
+
+cppcoro::task<void> Socket::Send(const Buffer &data) {
+    if (data.empty())
+        // XXX: is there really no asynchronous shutdown?
+        socket_.shutdown(asio::ip::tcp::socket::shutdown_send);
+    else
+        co_await socket_.async_send(Sequence(data), Token());
+}
 
 }

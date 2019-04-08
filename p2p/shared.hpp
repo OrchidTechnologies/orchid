@@ -32,14 +32,12 @@ static const Tag DeliverTag{246, 228, 17, 134};
 static const Tag DissociateTag{87, 248, 93, 7};
 
 static const Tag AnswerTag{34, 162, 176, 208};
-static const Tag AttachTag{2, 118, 61, 172};
+static const Tag CancelTag{223, 49, 55, 9};
+static const Tag ChannelTag{159, 32, 166, 189};
 static const Tag CloseTag{129, 185, 120, 174};
 static const Tag ConnectTag{231, 40, 11, 3};
-static const Tag ForwardTag{129, 8, 25, 73};
-static const Tag GetTableTag{68, 51, 173, 59};
 static const Tag OfferTag{17, 59, 137, 94};
 static const Tag NegotiateTag{188, 73, 31, 143};
-static const Tag SubscribeTag{209, 229, 219, 22};
 
 }
 

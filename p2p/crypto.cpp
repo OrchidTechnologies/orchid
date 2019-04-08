@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#include "trace.hpp"
 #include "crypto.hpp"
+#include "trace.hpp"
 
 namespace orc {
 

@@ -86,7 +86,7 @@
     </array>
 
     <key>UIViewControllerBasedStatusBarAppearance</key>
-    <true/>
+    <false/>
 
     <key>CFBundleIconFiles</key>
     <array>

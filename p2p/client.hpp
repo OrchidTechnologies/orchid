@@ -25,6 +25,7 @@
 
 #include "shared.hpp"
 #include "spawn.hpp"
+#include "trace.hpp"
 
 namespace orc {
 
@@ -34,51 +35,48 @@ class Remote :
   private:
 
   public:
-    Remote(const H<Link> &link) :
-        Router(link)
+    Remote(U<Link> link) :
+        Router(std::move(link))
     {
     }
 };
 
 class Local :
-    public Link,
-    public Route
+    public std::enable_shared_from_this<Local>,
+    public Router
 {
   private:
-    Common common_;
 
   public:
-    Local(const H<Remote> &router, const Common &common) :
-        Route([this](const Buffer &data) {
-            Land(data);
-        }, router),
-        common_(common)
+    Local(const S<Remote> &remote) :
+        Router(std::make_unique<Route<Remote>>(remote))
     {
     }
 
+    cppcoro::task<void> _(const Common &common) {
+        co_await Router::Send(Tie(AssociateTag, common));
+    }
+
     ~Local() {
-        Spawn([pipe = router_, tag = tag_]() -> cppcoro::task<void> {
-            co_await pipe->Send(Tie(DissociateTag, tag));
+        Spawn([pipe = Move()]() -> cppcoro::task<void> {
+            co_await pipe->Send(Tie(DissociateTag));
         }());
     }
 
-    cppcoro::task<void> _() {
-        co_await router_->Send(Tie(AssociateTag, tag_, common_));
-    }
-
     cppcoro::task<void> Send(const Buffer &data) override {
-        co_await router_->Send(Tie(DeliverTag, tag_, data));
+        co_await Router::Send(Tie(DeliverTag, data));
     }
 
 
-    cppcoro::task<Beam> Request(const Tag &command, const Buffer &data);
+    cppcoro::task<Beam> Call(const Tag &command, const Buffer &data);
 
-    cppcoro::task<H<Link>> Connect(const std::string &host, const std::string &port);
+    cppcoro::task<S<Remote>> Indirect(const std::string &server);
+    cppcoro::task<U<Link>> Connect(const std::string &host, const std::string &port);
 };
 
-cppcoro::task<H<Remote>> Direct(const std::string &server);
+cppcoro::task<S<Remote>> Direct(const std::string &server);
 
-cppcoro::task<H<Link>> Setup(const std::string &host, const std::string &port);
+cppcoro::task<U<Link>> Setup(const std::string &host, const std::string &port);
 
 }
 
