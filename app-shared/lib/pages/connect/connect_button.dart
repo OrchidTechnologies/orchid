@@ -83,6 +83,18 @@ class ConnectButtonState extends State<ConnectButton>
     var rerouteImage = Image.asset('assets/images/reroute_button.png');
     double buttonWidth = 146;
 
+    // Drop shadow when needed
+    var buttonShadowDecoration =
+        (connectionState == OrchidConnectionState.Connecting ||
+                connectionState == OrchidConnectionState.Connected)
+            ? BoxDecoration(shape: BoxShape.circle, boxShadow: [
+                BoxShadow(
+                    blurRadius: 10.0,
+                    color: Colors.black.withAlpha(100),
+                    offset: Offset(2.0, 4.0))
+              ])
+            : null;
+
     double screenWidth = MediaQuery.of(context).size.width;
 
     Animation<double> _pulseSize = _pulseAnimationController
@@ -113,7 +125,8 @@ class ConnectButtonState extends State<ConnectButton>
             alignment: Alignment.center,
             children: <Widget>[
               buildPing(sizeAnim: _pulseSize, alphaAnim: _pulseAlpha),
-              buildPing(sizeAnim: _offsetPulseSize, alphaAnim: _offsetPulseAlpha),
+              buildPing(
+                  sizeAnim: _offsetPulseSize, alphaAnim: _offsetPulseAlpha),
             ],
           ),
         ),
@@ -131,13 +144,13 @@ class ConnectButtonState extends State<ConnectButton>
 
         // connect button
         Container(
+          decoration: buttonShadowDecoration,
           child: FlatButton(
-            //splashColor: Colors.transparent,
-            //highlightColor: Colors.transparent,
-            child: buttonImage,
-            onPressed: enabled ? widget.onConnectButtonPressed : null,
-            shape: new CircleBorder(),
-          ),
+              //splashColor: Colors.transparent,
+              //highlightColor: Colors.transparent,
+              child: buttonImage,
+              onPressed: enabled ? widget.onConnectButtonPressed : null,
+              shape: CircleBorder()),
         ),
 
         // re-route button
