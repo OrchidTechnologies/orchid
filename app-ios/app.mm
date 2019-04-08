@@ -63,7 +63,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 - (void) setVPN:(NSString *)status {
     status_ = status;
     NSLog(@"NEVPNStatus%@", status);
-    [feedback_ invokeMethod:@"VPN" arguments:status];
+    [feedback_ invokeMethod:@"status" arguments:status];
 }
 
 - (void) onVpnState:(NEVPNStatus)status {

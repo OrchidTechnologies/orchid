@@ -142,27 +142,27 @@ task<U<Link>> Setup(const std::string &host, const std::string &port) {
     S<Local> local;
 
     {
-        auto remote(co_await Direct("localhost"));
+        auto remote(co_await Direct("mac.saurik.com"));
         Identity identity;
         local = std::make_shared<Local>(remote);
         co_await local->_(identity.GetCommon());
     }
 
     {
-        auto remote(co_await local->Hop("localhost"));
+        auto remote(co_await local->Hop("mac.saurik.com"));
         Identity identity;
-        auto local(std::make_shared<Local>(remote));
+        local = std::make_shared<Local>(remote);
         co_await local->_(identity.GetCommon());
     }
 
     {
-        auto remote(co_await local->Hop("localhost"));
+        auto remote(co_await local->Hop("mac.saurik.com"));
         Identity identity;
-        auto local(std::make_shared<Local>(remote));
+        local = std::make_shared<Local>(remote);
         co_await local->_(identity.GetCommon());
     }
 
-    co_return co_await local->Connect("localhost", "9090");
+    co_return co_await local->Connect(host, port);
 }
 
 }
