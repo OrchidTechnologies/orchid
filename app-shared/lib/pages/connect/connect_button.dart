@@ -84,16 +84,14 @@ class ConnectButtonState extends State<ConnectButton>
     double buttonWidth = 146;
 
     // Drop shadow when needed
-    var buttonShadowDecoration =
-        (connectionState == OrchidConnectionState.Connecting ||
-                connectionState == OrchidConnectionState.Connected)
-            ? BoxDecoration(shape: BoxShape.circle, boxShadow: [
-                BoxShadow(
-                    blurRadius: 10.0,
-                    color: Colors.black.withAlpha(100),
-                    offset: Offset(2.0, 4.0))
-              ])
-            : null;
+    var buttonShadowDecoration = enabled
+        ? BoxDecoration(shape: BoxShape.circle, boxShadow: [
+            BoxShadow(
+                blurRadius: 10.0,
+                color: AppColors.dark_indego_45,
+                offset: Offset(3.0, 4.0))
+          ])
+        : null;
 
     double screenWidth = MediaQuery.of(context).size.width;
 

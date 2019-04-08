@@ -109,4 +109,5 @@ class AppColors {
   static const orange_2 = const Color(0xff9b2305);
   static const orange_1 = const Color(0xff6e1701);
 
+  static const dark_indego_45 = const Color(0x73221455);
 }
