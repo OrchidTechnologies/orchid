@@ -132,8 +132,8 @@ class ConnectButtonState extends State<ConnectButton>
         // connect button
         Container(
           child: FlatButton(
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
+            //splashColor: Colors.transparent,
+            //highlightColor: Colors.transparent,
             child: buttonImage,
             onPressed: enabled ? widget.onConnectButtonPressed : null,
             shape: new CircleBorder(),
