@@ -43,7 +43,7 @@
 #include "scope.hpp"
 #include "shared.hpp"
 #include "socket.hpp"
-#include "spawn.hpp"
+#include "task.hpp"
 #include "trace.hpp"
 #include "webrtc.hpp"
 
@@ -74,7 +74,7 @@ class Output :
     Output(const W<Pipe> &path, const Tag &tag, U<Type_> link) :
         sink_(std::move(link), [weak = path, tag](const Buffer &data) {
             if (auto strong = weak.lock())
-                Spawn([strong = std::move(strong), tag, data = Beam(data)]() -> task<void> {
+                Task([strong = std::move(strong), tag, data = Beam(data)]() -> task<void> {
                     co_await strong->Send(Tie(tag, data));
                 });
         })
@@ -159,7 +159,7 @@ class Account :
 
     void Land(const Buffer &data) {
         Beam unboxed(data);
-        Spawn([unboxed = std::move(unboxed), self = shared_from_this()]() -> task<void> {
+        Task([unboxed = std::move(unboxed), self = shared_from_this()]() -> task<void> {
             auto [nonce, rest] = Take<TagSize, 0>(unboxed);
             auto output(self->outputs_.find(nonce));
             if (output != self->outputs_.end()) {

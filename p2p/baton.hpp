@@ -34,7 +34,6 @@
 #include <iostream>
 
 #include <asio.hpp>
-#include "spawn.hpp"
 #include "task.hpp"
 
 namespace orc {

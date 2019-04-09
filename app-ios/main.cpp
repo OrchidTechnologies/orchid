@@ -52,7 +52,11 @@ int main() {
 
     //orc::Ethereum();
 
-    if (false)
+    orc::Task([&]() -> task<void> {
+        _trace();
+        co_return;
+    });
+
     return cppcoro::sync_wait([&]() -> task<int> {
         co_await orc::Schedule();
         co_await block;

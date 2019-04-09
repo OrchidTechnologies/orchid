@@ -23,7 +23,35 @@
 #ifndef ORCHID_TASK_HPP
 #define ORCHID_TASK_HPP
 
+#include <functional>
+#include <thread>
+
+#include <cppcoro/static_thread_pool.hpp>
+#include <cppcoro/sync_wait.hpp>
 #include <cppcoro/task.hpp>
+
+#include "task.hpp"
+
 using cppcoro::task;
+
+namespace orc {
+
+cppcoro::static_thread_pool &Scheduler();
+cppcoro::static_thread_pool::schedule_operation Schedule();
+
+bool Check();
+
+template <typename Code_>
+void Task(Code_ code) {
+    // XXX: I don't think I've ever been more upset by code
+    std::thread([code = std::move(code)]() mutable {
+        cppcoro::sync_wait([&code]() -> task<void> {
+            co_await Schedule();
+            co_await code();
+        }());
+    }).detach();
+}
+
+}
 
 #endif//ORCHID_TASK_HPP

@@ -61,7 +61,7 @@ class Tunnel :
     }
 
     ~Tunnel() {
-        Spawn([route = sink_.Move()]() -> task<void> {
+        Task([route = sink_.Move()]() -> task<void> {
             Take<>(co_await (*route)->Call(CloseTag, route->tag_));
             // XXX: co_await closed_
         });

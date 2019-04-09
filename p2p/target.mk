@@ -49,7 +49,7 @@ source += $(pwd)/http.cpp
 source += $(pwd)/jsonrpc.cpp
 source += $(pwd)/link.cpp
 source += $(pwd)/socket.cpp
-source += $(pwd)/spawn.cpp
+source += $(pwd)/task.cpp
 source += $(pwd)/webrtc.cpp
 
 #source += $(wildcard $(pwd)/curl/lib/*.c $(pwd)/curl/lib/vauth/*.c $(pwd)/curl/lib/vtls/*.c)

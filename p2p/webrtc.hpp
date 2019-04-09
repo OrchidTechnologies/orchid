@@ -34,7 +34,6 @@
 #include "error.hpp"
 #include "future.hpp"
 #include "link.hpp"
-#include "spawn.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 

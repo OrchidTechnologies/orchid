@@ -76,3 +76,6 @@
 [submodule "libmaxminddb"]
 	path = vpn-shared/libmaxminddb
 	url = https://github.com/maxmind/libmaxminddb.git
+[submodule "folly"]
+	path = p2p/folly
+	url = https://github.com/facebook/folly.git

@@ -24,7 +24,6 @@
 #define ORCHID_CLIENT_HPP
 
 #include "shared.hpp"
-#include "spawn.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 
@@ -66,7 +65,7 @@ class Account$ :
     }
 
     ~Account$() {
-        Spawn([pipe = Move()]() -> task<void> {
+        Task([pipe = Move()]() -> task<void> {
             co_await pipe->Send(Tie(DissociateTag));
         });
     }

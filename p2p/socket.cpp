@@ -22,7 +22,6 @@
 
 #include "baton.hpp"
 #include "socket.hpp"
-#include "spawn.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 
@@ -41,7 +40,7 @@ task<void> Socket::_(const std::string &host, const std::string &port) {
     }
 
     // XXX: the memory management on this is incorrect
-    Spawn([this]() -> task<void> {
+    Task([this]() -> task<void> {
         try {
             for (;;) {
                 char data[1024];
