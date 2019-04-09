@@ -70,5 +70,11 @@ class AppText {
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
       fontSize: 16.0);
-}
 
+  static TextStyle buttonStyle = TextStyle(
+      color: AppColors.grey_7,
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 14.0);
+}

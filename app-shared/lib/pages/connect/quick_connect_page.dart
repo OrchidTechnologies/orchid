@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/common/dialogs.dart';
+import 'package:orchid/pages/common/app_notifications.dart';
 import 'package:orchid/pages/connect/connect_button.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
@@ -39,12 +40,12 @@ class _QuickConnectPageState
   void initState() {
     super.initState();
 
-    initOrchidListeners();
+    initListeners();
     initAnimations();
   }
 
   /// Listen for changes in Orchid network status.
-  void initOrchidListeners() {
+  void initListeners() {
     // Monitor connection status
     OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
       _connectionStateChanged(state);
@@ -53,6 +54,10 @@ class _QuickConnectPageState
     // Monitor sync status
     OrchidAPI().syncStatus.listen((OrchidSyncStatus value) {
       _syncStateChanged(value);
+    });
+
+    AppNotifications().notification.listen((_) {
+      setState(() {}); // Trigger refresh of the UI
     });
   }
 
@@ -206,22 +211,36 @@ class _QuickConnectPageState
         // The page content including the button title, button, and route info when connected.
         buildPageContent(context),
 
-        // options bar
+        // Options bar with optional notification banner
         Align(
           alignment: Alignment.topCenter,
-          child: AnimatedBuilder(
-            builder: (context, child) {
-              // https://stackoverflow.com/questions/45424621/inkwell-not-showing-ripple-effect
-              //Material
-              return OptionsBar(
-                color: _iconColor.value,
-                menuPressed: () {
-                  Scaffold.of(context).openDrawer();
+          child: Column(
+            children: <Widget>[
+              // The optional notification banner
+              AnimatedSwitcher(
+                child: AppNotifications().notificationBanner() ?? Container(),
+                transitionBuilder: (widget, anim) {
+                  var tween = Tween<Offset>(begin: Offset(0.0, -1.0), end: Offset.zero).animate(anim);
+                  return SlideTransition(position: tween, child: widget);
                 },
-                morePressed: () {},
-              );
-            },
-            animation: _connectAnimController,
+                duration: Duration(milliseconds: 200),
+              ),
+              // The options bar. (Animated builder allows the color transition).
+              AnimatedBuilder(
+                builder: (context, child) {
+                  // https://stackoverflow.com/questions/45424621/inkwell-not-showing-ripple-effect
+                  //Material
+                  return OptionsBar(
+                    color: _iconColor.value,
+                    menuPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                    morePressed: () {},
+                  );
+                },
+                animation: _connectAnimController,
+              ),
+            ],
           ),
         ),
       ],
