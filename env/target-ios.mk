@@ -12,5 +12,6 @@
 include $(pwd)/target-apl.mk
 
 arch := arm64
+sdk := iphoneos
 
-cycc := $(xcode) clang++ -miphoneos-version-min=11.0 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk iphoneos -version Path) -idirafter $(shell $(xcode) xcodebuild -sdk macosx -version Path)/usr/include
+cycc := $(xcode) clang++ -miphoneos-version-min=11.0 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk $(sdk) -version Path) -idirafter $(shell $(xcode) xcodebuild -sdk macosx -version Path)/usr/include

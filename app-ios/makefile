@@ -46,6 +46,30 @@ include vpn/target.mk
 
 cflags += -I.
 
+frameworks := 
+frameworks += Flutter
+frameworks += SafariServices
+frameworks += UIKit
+
+local := 
+local += $(output)/app.o
+
+local += $(output)/ios/Runner/GeneratedPluginRegistrant.o
+$(output)/ios/Runner/GeneratedPluginRegistrant.o: ios/Runner/GeneratedPluginRegistrant.m ios/Pods/Manifest.lock
+app.o: ios/Runner/GeneratedPluginRegistrant.m
+
+cflags += -Iios/Pods/Headers/Public
+
+ios/Pods/Manifest.lock: ios/Podfile .flutter-plugins
+	cd ios && pod install
+
+out-$(target)/XCBuildData/build.db: ios/Pods/Manifest.lock
+	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(arch) -sdk $(sdk) SYMROOT=../../out-$(target)
+
+$(output)/%.o: /%.m ios/Pods/Manifest.lock
+	@mkdir -p $(dir $@)
+	@echo [CC] $<
+	$(cycc) -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
 
 resources += PureVPN.ovpn
 
@@ -89,10 +113,10 @@ endif
 
 
 signed += $(bundle)/$(name)
-$(bundle)/$(name): $(output)/app.o
+$(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycc) -o $@ $^ $(lflags) -rpath "@executable_path/Frameworks" -framework Flutter -framework UIKit
+	@$(cycc) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) out-$(target)/Release-$(sdk)/libPods-Runner.a out-$(target)/Release-$(sdk)/*/lib*.a
 
 signed += $(bundle)/Info.plist
 $(bundle)/Info.plist: info-main.plist.in

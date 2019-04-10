@@ -37,13 +37,6 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 @end
 
-@implementation GeneratedPluginRegistrant
-
-+ (void) registerWithRegistry:(NSObject<FlutterPluginRegistry> *)registry {
-}
-
-@end
-
 
 @interface AppDelegate : FlutterAppDelegate
 
@@ -143,14 +136,15 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 }
 
 - (BOOL) application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)options {
-    [GeneratedPluginRegistrant registerWithRegistry:self];
-
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [self.window makeKeyAndVisible];
     self.window.backgroundColor = [UIColor whiteColor];
 
     FlutterViewController *flutter([FlutterViewController new]);
     self.window.rootViewController = flutter;
+
+    // Flutter plugins use [UIApplication sharedApplication].delegate.window.rootViewController to get the FlutterViewController
+    [GeneratedPluginRegistrant registerWithRegistry:self];
 
     feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter];
 

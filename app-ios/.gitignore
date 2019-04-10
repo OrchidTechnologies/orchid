@@ -2,6 +2,10 @@
 /build
 /.flutter-plugins
 /identity.mk
-/ios
+/ios/.symlinks
+/ios/build
+/ios/Flutter
+/ios/Pods
+/ios/Runner
 /out-*
 /.packages
