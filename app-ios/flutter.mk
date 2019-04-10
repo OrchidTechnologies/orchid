@@ -32,7 +32,7 @@ $(bundle)/Frameworks/App.framework/App:
 	    -install_name '@rpath/App.framework/App'
 
 signed += $(bundle)/Frameworks/App.framework$(signature)
-$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App
+$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App
 	@rm -rf $(dir $@)
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
@@ -42,7 +42,8 @@ flutter/packages/flutter/pubspec.lock:
 
 $(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
-	$(xcode) lipo -thin arm64 $< -output $@
+	$(xcode) lipo -thin $(arch) $< -output $@
+	@touch $@
 
 $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%
 	@mkdir -p $(dir $@)
@@ -50,7 +51,9 @@ $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios
 	touch $@
 
 assets := $(bundle)/Frameworks/App.framework/flutter_assets
-build/app.dill: $(shell find lib/ -name '*.dart')
+signed += build/app.dill
+signed += out-sim/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin
+build/app%dill out-sim/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob%bin: $(shell find lib/ -name '*.dart')
 	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p $(dir $@)
 	$(xcode) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --debug --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
@@ -62,7 +65,7 @@ flutter := Flutter Info.plist icudtl.dat
 $(patsubst %,flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%,$(flutter)): flutter/packages/flutter/pubspec.lock
 
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
-$(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))
+$(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-$(target)-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))
 	@rm -rf $(dir $@)
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
 	@touch $@

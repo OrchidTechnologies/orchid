@@ -34,6 +34,9 @@ resources :=
 .PHONY: all
 all: $(output)/$(name).ipa
 
+.PHONY: app
+app: $(bundle)$(signature)
+
 .PHONY: test
 test: $(output)/orchid
 	$(output)/orchid
@@ -59,7 +62,6 @@ include vpn/shared/p2p/depend.mk
 cflags += -Fflutter/bin/cache/artifacts/engine/ios
 lflags += -Fflutter/bin/cache/artifacts/engine/ios
 
-signed += build/app.dill
 include flutter.mk
 
 
@@ -68,6 +70,7 @@ $(output)/ents-%.xml: ents-%.xml.in
 	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
 
 
+ifneq ($(target),sim)
 $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(output)/tunnel.o $(object)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
@@ -78,10 +81,11 @@ $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
 
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
-$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
+$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
 	@touch $@
+endif
 
 
 signed += $(bundle)/$(name)
@@ -107,7 +111,7 @@ $(bundle)/%: resource/%
 	@touch $@
 
 
-$(bundle)$(signature): $(output)/ents-main.xml $(signed)
+$(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	@rm -rf $(dir $@)
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
 	@touch $@

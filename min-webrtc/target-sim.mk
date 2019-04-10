@@ -11,6 +11,9 @@
 
 include $(pwd)/target-apl.mk
 
-arch := arm64
+cflags += -DWEBRTC_NS_FIXED
+cflags += -DWEBRTC_USE_BUILTIN_ISAC_FIX=1
+cflags += -DWEBRTC_USE_BUILTIN_ISAC_FLOAT=0
 
-cycc := $(xcode) clang++ -miphoneos-version-min=11.0 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk iphoneos -version Path) -idirafter $(shell $(xcode) xcodebuild -sdk macosx -version Path)/usr/include
+cflags += -DWEBRTC_MAC
+cflags += -DWEBRTC_IOS

@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+make target=sim app "$@"
+xcrun simctl install booted out-sim/Payload/Orchid.app
