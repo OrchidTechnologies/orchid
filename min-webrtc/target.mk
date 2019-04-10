@@ -108,6 +108,7 @@ webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/*.cc)
+cflags += -I$(pwd)/abseil-cpp
 
 webrtc += $(wildcard $(pwd)/boringssl/crypto/*.c)
 webrtc += $(wildcard $(pwd)/boringssl/crypto/*/*.c)
@@ -121,12 +122,17 @@ $(output)/err_data.c: $(pwd)/boringssl/crypto/err/err_data_generate.go
 webrtc += $(wildcard $(pwd)/third_party/boringssl/err_data.c)
 
 webrtc += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
+cflags += -I$(pwd)/jsoncpp/include
 
 webrtc += $(wildcard $(pwd)/libsrtp/srtp/*.c)
+cflags += -I$(pwd)/libsrtp/include
 webrtc += $(wildcard $(pwd)/libsrtp/crypto/*/*.c)
+cflags += -I$(pwd)/libsrtp/crypto/include
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c)
+cflags += -I$(pwd)/usrsctp/usrsctplib
+cflags += -I$(pwd)/sctp-idata/src
 
 
 webrtc := $(filter-out %_noop.cc,$(webrtc))
@@ -158,6 +164,8 @@ webrtc := $(filter-out %/unittest_main.cc,$(webrtc))
 
 webrtc := $(foreach v,$(webrtc),$(if $(findstring /test,$(v)),,$(v)))
 
+
+cflags += -I$(pwd)/webrtc
 
 source += $(webrtc)
 source += $(pwd)/stub.cc
@@ -211,7 +219,8 @@ cflags += -DWEBRTC_POSIX
 cflags += -Wno-deprecated-declarations
 cflags += -Wno-inconsistent-missing-override
 cflags += -Wno-unused-function
-cflags += $(patsubst %,-I%,$(wildcard $(pwd)/extra/*))
+
+cflags += -I$(pwd)/extra
 
 cflags += -D__Userspace__
 cflags += -DSCTP_USE_OPENSSL_SHA1

@@ -47,6 +47,9 @@
 #include "trace.hpp"
 #include "webrtc.hpp"
 
+#include <folly/futures/Future.h>
+#include <folly/executors/CPUThreadPoolExecutor.h>
+
 #define _disused \
     __attribute__((__unused__))
 
@@ -412,7 +415,7 @@ static int Respond(void *arg, struct MHD_Connection *connection, const char *url
 
 
     try {
-        auto answer(cppcoro::sync_wait(internal->node_->Respond(request->offer_)));
+        auto answer(orc::Wait(internal->node_->Respond(request->offer_)));
 
         std::cerr << std::endl;
         std::cerr << "^^^^^^^^^^^^^^^^" << std::endl;
@@ -443,10 +446,16 @@ static void LogMHD(void *, const char *format, va_list args) {
     vfprintf(stderr, format, args);
 }
 
+task<void> nop() {
+    sleep(1);
+    _trace();
+    co_return;
+}
+
 int main() {
     //orc::Ethereum();
 
-    /*cppcoro::sync_wait([]() -> task<void> {
+    /*orc::Wait([]() -> task<void> {
         auto socket(std::make_unique<orc::Socket>());
         co_await socket->_("localhost", "9090");
         co_await socket->Send(orc::Beam("Hello\n"));
@@ -459,13 +468,42 @@ int main() {
     _trace();
     return 0;*/
 
+#if 0
+    cppcoro::async_manual_reset_event barrier;
+
+    folly::Promise<int> promise;
+    auto future(promise.getFuture());
+
+    std::thread([&barrier, &promise]() {
+        sleep(2);
+        barrier.set();
+        sleep(2);
+        promise.setValue(3);
+    }).detach();
+
+    orc::Wait([&barrier, future = std::move(future)]() mutable -> task<void> {
+        _trace();
+        co_await barrier;
+        _trace();
+        std::cerr << co_await std::move(future) << std::endl;
+        _trace();
+        for (unsigned i(0); i != 10; ++i)
+            orc::Task([]() -> task<void> { co_await nop(); });
+        std::cerr << pthread_self() << std::endl;
+        co_await orc::Schedule();
+        std::cerr << pthread_self() << std::endl;
+        sleep(1);
+    }());
+    _trace();
+#endif
+
     orc::Block<4> block;
     orc::Hash hash(block);
 
     auto internal(new Internal{});
     internal->node_ = std::make_shared<orc::Node>();
 
-    http_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, 8080, NULL, NULL, &Respond, internal,
+    http_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, 8082, NULL, NULL, &Respond, internal,
         MHD_OPTION_EXTERNAL_LOGGER, &LogMHD, NULL,
         MHD_OPTION_NOTIFY_COMPLETED, &Complete, internal,
         MHD_OPTION_NOTIFY_CONNECTION, &Connect, internal,

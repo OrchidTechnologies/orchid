@@ -22,17 +22,18 @@ pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(M
 
 cflags += -Wno-bitwise-op-parentheses
 cflags += -Wno-dangling-else
+cflags += -Wno-empty-body
 cflags += -Wno-logical-op-parentheses
 cflags += -Wno-missing-selector-name
 cflags += -Wno-potentially-evaluated-expression
 
-cflags += -Wno-reorder # XXX: cppcoro/shared_task.hpp
-
 cflags += -fcoroutines-ts
 
 cflags += -I$(pwd)
-cflags += -I$(pwd)/cppcoro/include
+cflags += -I$(pwd)/extra
 cflags += -I$(output)/$(pwd)
+
+cflags += -I$(pwd)/cppcoro/include
 
 source += $(pwd)/cppcoro/lib/async_manual_reset_event.cpp
 source += $(pwd)/cppcoro/lib/auto_reset_event.cpp
@@ -99,4 +100,66 @@ cflags += -I$(pwd)/boost/libs/asio/include/boost
 #cflags += -DASIO_STANDALONE
 #cflags += -I$(pwd)/asio/asio/include
 
+
+cflags += -I$(pwd)/double-conversion
+cflags += -I$(pwd)/folly
+
+# XXX: BoringSSL and Folly conflict on sdallocx
+c_boringssl += -Dsdallocx=sdallocx_
+#cflags += -DFOLLY_HAVE_WEAK_SYMBOLS=1
+
+cflags += -DFOLLY_HAVE_CLOCK_GETTIME=1
+cflags += -DFOLLY_HAVE_PTHREAD=1
+cflags += -DFOLLY_HAVE_PTHREAD_ATFORK=1
+cflags += -DFOLLY_USE_LIBCPP=1
+c_folly += -Wno-unused-variable
+
+source += $(pwd)/folly/folly/Conv.cpp
+source += $(pwd)/folly/folly/Demangle.cpp
+source += $(pwd)/folly/folly/ExceptionWrapper.cpp
+source += $(pwd)/folly/folly/Executor.cpp
+source += $(pwd)/folly/folly/FileUtil.cpp
+source += $(pwd)/folly/folly/Format.cpp
+source += $(pwd)/folly/folly/ScopeGuard.cpp
+source += $(pwd)/folly/folly/SharedMutex.cpp
+source += $(pwd)/folly/folly/Singleton.cpp
+source += $(pwd)/folly/folly/SingletonThreadLocal.cpp
+source += $(pwd)/folly/folly/String.cpp
+
+source += $(pwd)/folly/folly/detail/AtFork.cpp
+source += $(pwd)/folly/folly/detail/Demangle.cpp
+source += $(pwd)/folly/folly/detail/Futex.cpp
+source += $(pwd)/folly/folly/detail/MemoryIdler.cpp
+source += $(pwd)/folly/folly/detail/SingletonStackTrace.cpp
+source += $(pwd)/folly/folly/detail/StaticSingletonManager.cpp
+source += $(pwd)/folly/folly/detail/ThreadLocalDetail.cpp
+
+source += $(pwd)/folly/folly/concurrency/CacheLocality.cpp
+source += $(pwd)/folly/folly/executors/CPUThreadPoolExecutor.cpp
+source += $(pwd)/folly/folly/executors/GlobalThreadPoolList.cpp
+source += $(pwd)/folly/folly/executors/InlineExecutor.cpp
+source += $(pwd)/folly/folly/executors/ManualExecutor.cpp
+source += $(pwd)/folly/folly/executors/ThreadPoolExecutor.cpp
+source += $(pwd)/folly/folly/fibers/Baton.cpp
+source += $(pwd)/folly/folly/futures/Future.cpp
+source += $(pwd)/folly/folly/io/async/Request.cpp
+source += $(pwd)/folly/folly/lang/Assume.cpp
+source += $(pwd)/folly/folly/lang/ColdClass.cpp
+source += $(pwd)/folly/folly/lang/SafeAssert.cpp
+source += $(pwd)/folly/folly/memory/MallctlHelper.cpp
+source += $(pwd)/folly/folly/memory/detail/MallocImpl.cpp
+source += $(pwd)/folly/folly/synchronization/AsymmetricMemoryBarrier.cpp
+source += $(pwd)/folly/folly/synchronization/LifoSem.cpp
+source += $(pwd)/folly/folly/synchronization/ParkingLot.cpp
+source += $(pwd)/folly/folly/system/ThreadName.cpp
+
+
+cflags += -DEVENT__HAVE_UINT64_T
+cflags += -DEVENT__HAVE_UINT32_T
+cflags += -DEVENT__HAVE_UINT16_T
+cflags += -DEVENT__SIZEOF_SIZE_T=8
+cflags += -I$(pwd)/libevent/include
+
+
+include $(pwd)/target-$(target).mk
 include $(pwd)/rtc/target.mk

@@ -52,10 +52,10 @@ $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios
 
 assets := $(bundle)/Frameworks/App.framework/flutter_assets
 signed += build/app.dill
-signed += out-sim/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin
-build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m out-sim/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob%bin: $(shell find lib/ -name '*.dart')
+signed += out-$(target)/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin
+build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m out-$(target)/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob%bin: $(shell find lib/ -name '*.dart')
 	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
-	@mkdir -p build out-sim
+	@mkdir -p build out-$(target)
 	$(xcode) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --debug --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
 
 # XXX: -include out-ios/snapshot_blob.bin.d

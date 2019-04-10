@@ -82,7 +82,7 @@ class Adapter {
     template <typename Buffers_, typename Handler_>
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
         Wrapper<Buffers_> wrapper(buffers);
-        cppcoro::sync_wait(link_->Send(wrapper));
+        Wait(link_->Send(wrapper));
         boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), 31337));
     }
 };

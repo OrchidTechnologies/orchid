@@ -61,7 +61,7 @@ class OrchidClient :
     {
     }
 
-    void transport_start() override { cppcoro::sync_wait([this]() -> task<void> {
+    void transport_start() override { orc::Wait([this]() -> task<void> {
         co_await orc::Schedule();
 
         /*NSLog(@"transport_start(): protocol:%s", config_.protocol.protocol_to_string());
@@ -100,7 +100,7 @@ class OrchidClient :
     }()); }
 
     void stop() override {
-        cppcoro::sync_wait([this]() -> task<void> {
+        orc::Wait([this]() -> task<void> {
             co_await orc::Schedule();
             co_await pipe_->Send(orc::Nothing());
             pipe_.reset();
@@ -112,7 +112,7 @@ class OrchidClient :
         packet.resize(data.size() + 2);
         memcpy(&packet[2], data.c_data(), data.size());
         *reinterpret_cast<uint16_t *>(&packet[0]) = htons(data.size());
-        cppcoro::sync_wait([this, packet = std::move(packet)]() -> task<void> {
+        orc::Wait([this, packet = std::move(packet)]() -> task<void> {
             co_await orc::Schedule();
             co_await pipe_->Send(orc::Beam(packet));
         }());

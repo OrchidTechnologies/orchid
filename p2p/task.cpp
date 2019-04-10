@@ -22,25 +22,37 @@
 
 #include <iostream>
 
+#include <folly/executors/CPUThreadPoolExecutor.h>
+
 #include "trace.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-static cppcoro::static_thread_pool pool_(1);
+#ifdef ORCHID_CPPCORO
 
-cppcoro::static_thread_pool &Scheduler() {
+cppcoro::static_thread_pool &Executor() {
+    static cppcoro::static_thread_pool pool_(1);
     return pool_;
 }
 
 cppcoro::static_thread_pool::schedule_operation Schedule() {
-    return Scheduler().schedule();
+    return Executor().schedule();
 }
+
+#else
+
+folly::Executor *Executor() {
+    static folly::CPUThreadPoolExecutor pool_(1);
+    return &pool_;
+}
+
+#endif
 
 static pthread_t thread_;
 
 static struct SetupThread { SetupThread() {
-    cppcoro::sync_wait([]() -> task<void> {
+    Wait([]() -> task<void> {
         co_await Schedule();
         thread_ = pthread_self();
     }());

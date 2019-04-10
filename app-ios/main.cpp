@@ -52,18 +52,7 @@ int main() {
 
     //orc::Ethereum();
 
-    orc::Task([&]() -> task<void> {
-        _trace();
-        co_return;
-    });
-
-    return cppcoro::sync_wait([&]() -> task<int> {
-        co_await orc::Schedule();
-        co_await block;
-        co_return 0;
-    }());
-
-    return cppcoro::sync_wait([&]() -> task<int> {
+    return orc::Wait([&]() -> task<int> {
         co_await orc::Schedule();
 
         //orc::Endpoint endpoint({"http", "localhost", "8545", "/"});
