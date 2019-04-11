@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/pages/common/notification_banner.dart';
-import 'package:orchid/pages/app_colors.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:connectivity/connectivity.dart';
-
 
 /// Manage user notifications for the app.  User notifications are prioritized
 /// and published, e.g. for display via a banner notification on the home screen.
@@ -27,24 +24,7 @@ class AppNotifications {
         .listen((AppNotificationType notificationType) {
       notification.add(notificationType);
     });
-
-    // TESTING
-    //_testScheduleNetworkConnectivityChange();
   }
-
-  // TESTING
-  /*
-  void _testScheduleNetworkConnectivityChange() {
-    Future.delayed(Duration(seconds: 2)).then((_){
-      if (_connectivity.value == ConnectivityResult.none) {
-        _connectivity.add(ConnectivityResult.mobile);
-      } else {
-        _connectivity.add(ConnectivityResult.none);
-      }
-      // again
-      _testScheduleNetworkConnectivityChange();
-    });
-  }*/
 
   factory AppNotifications() {
     return _singleton;
@@ -77,39 +57,6 @@ class AppNotifications {
 
     // No notifications
     return AppNotificationType.None;
-  }
-
-  /// Return the current notification banner or null if no banner should be shown.
-  Widget notificationBanner() {
-    switch (notification.value) {
-      case AppNotificationType.None:
-        return null;
-      case AppNotificationType.InternetRequired:
-        return _internetRequiredBanner();
-      case AppNotificationType.SyncRequired:
-        return _syncRequiredBanner();
-    }
-  }
-
-  NotificationBanner _internetRequiredBanner() {
-    return NotificationBanner(
-      title: 'No internet connection',
-      titleColor: AppColors.warning_banner1,
-      imageName: 'assets/images/error.png',
-      trailingActionTitle: 'RETRY',
-      trailingAction: () {},
-    );
-  }
-
-  // TODO:
-  NotificationBanner _syncRequiredBanner() {
-    return NotificationBanner(
-      title: 'Sync required',
-      titleColor: AppColors.teal_5,
-      imageName: 'assets/images/sync.png',
-      trailingActionTitle: 'SYNC',
-      trailingAction: () {},
-    );
   }
 
   /// Unused. Currently these live for the lifetime of the app.

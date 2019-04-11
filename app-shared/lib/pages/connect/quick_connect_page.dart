@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/app_notifications.dart';
+import 'package:orchid/api/notifications.dart';
+import 'package:orchid/pages/common/notification_banner.dart';
 import 'package:orchid/pages/connect/connect_button.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
@@ -218,7 +219,7 @@ class _QuickConnectPageState
             children: <Widget>[
               // The optional notification banner
               AnimatedSwitcher(
-                child: AppNotifications().notificationBanner() ?? Container(),
+                child: NotificationBannerFactory.current() ?? Container(),
                 transitionBuilder: (widget, anim) {
                   var tween = Tween<Offset>(begin: Offset(0.0, -1.0), end: Offset.zero).animate(anim);
                   return SlideTransition(position: tween, child: widget);
