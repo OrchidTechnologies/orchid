@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
@@ -27,10 +28,6 @@ class WalkthroughPages extends StatefulWidget {
 
   @override
   _IntroductionScreenState createState() => _IntroductionScreenState();
-
-  void onDone() {
-    debugPrint("done");
-  }
 
   Widget buildPage(BuildContext context,
       {String imageName, String titleText, String bodyText}) {
@@ -101,6 +98,11 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
     animateScroll(min(_currentPage + 1, widget.buildPages(context).length - 1));
   }
 
+  void onDone() {
+    UserPreferences().setWalkthroughCompleted(true);
+    Navigator.of(context).pop();
+  }
+
   Future<void> _onSkip() async {
     setState(() => _isSkipPressed = true);
     await animateScroll(widget.buildPages(context).length - 1);
@@ -138,7 +140,7 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
     final doneBtn = ControlButton(
       "DONE",
       color: AppColors.purple_2,
-      onPressed: widget.onDone,
+      onPressed: onDone,
     );
 
     return Scaffold(

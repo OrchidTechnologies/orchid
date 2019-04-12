@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/pages/app_transitions.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/notification_banner.dart';
@@ -10,7 +12,9 @@ import 'package:orchid/pages/common/options_bar.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:orchid/pages/connect/route_info.dart';
+import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:flutter/scheduler.dart';
 
 class QuickConnectPage extends StatefulWidget {
   QuickConnectPage({Key key}) : super(key: key);
@@ -41,6 +45,7 @@ class _QuickConnectPageState
   void initState() {
     super.initState();
 
+    checkOnboarding();
     initListeners();
     initAnimations();
   }
@@ -221,7 +226,9 @@ class _QuickConnectPageState
               AnimatedSwitcher(
                 child: NotificationBannerFactory.current() ?? Container(),
                 transitionBuilder: (widget, anim) {
-                  var tween = Tween<Offset>(begin: Offset(0.0, -1.0), end: Offset.zero).animate(anim);
+                  var tween =
+                      Tween<Offset>(begin: Offset(0.0, -1.0), end: Offset.zero)
+                          .animate(anim);
                   return SlideTransition(position: tween, child: widget);
                 },
                 duration: Duration(milliseconds: 200),
@@ -334,5 +341,16 @@ class _QuickConnectPageState
 
   void _rerouteButtonPressed() {
     OrchidAPI().reroute();
+  }
+
+  void checkOnboarding() {
+    UserPreferences()
+        .getWalkthroughCompleted()
+        .then((bool walkthroughCompleted) {
+      if (!(walkthroughCompleted ?? false)) {
+        Navigator.push(
+            context, AppTransitions.downToUpTransition(WalkthroughPages()));
+      }
+    });
   }
 }

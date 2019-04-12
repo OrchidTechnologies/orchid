@@ -48,7 +48,6 @@ class SideDrawer extends StatelessWidget {
               title: "Settings",
               imageName: 'assets/images/settings.png',
               onPressed: () {
-                //Navigator.of(context).pop();
                 Navigator.pushNamed(context, '/settings');
               },
             ),
