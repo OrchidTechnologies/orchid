@@ -20,8 +20,23 @@
 /* }}} */
 
 
-#include <Foundation/Foundation.h>
+#ifndef ORCHID_TRACE_HPP
+#define ORCHID_TRACE_HPP
+
 #include <pthread.h>
+
+#if defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+#ifndef __OBJC__
+typedef struct NSString NSString;
+#endif
+extern "C" void NSLog(NSString *, ...);
 #define _trace() \
-    NSLog(@ "[%p] _trace(%s:%u): %s", pthread_self(), __FILE__, __LINE__, __FUNCTION__)
-    //fprintf(stderr, "\e[31m_trace(%s:%u): %s\e[0m\n", __FILE__, __LINE__, __FUNCTION__)
+    NSLog((NSString *) CFSTR("[%lx] _trace(%s:%u): %s"), pthread_self(), __FILE__, __LINE__, __FUNCTION__)
+#else
+#include <stdio.h>
+#define _trace() \
+    fprintf(stderr, "\e[31m[%lx] _trace(%s:%u): %s\e[0m\n", pthread_self(), __FILE__, __LINE__, __FUNCTION__)
+#endif
+
+#endif//ORCHID_TRACE_HPP

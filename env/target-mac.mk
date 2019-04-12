@@ -9,6 +9,10 @@
 # }}}
 
 
-include $(pwd)/target-apl.mk
+arch := x86_64
+sdk := macosx
 
-cycc := $(xcode) g++
+host := $(arch)-apple-darwin
+more := -mmacosx-version-min=10.14 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk $(sdk) -version Path)
+
+include $(pwd)/target-apl.mk

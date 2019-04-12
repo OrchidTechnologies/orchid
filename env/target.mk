@@ -22,6 +22,8 @@ cflags :=
 lflags := 
 
 source := 
+linked := 
+header := 
 
 output := out-$(target)
 

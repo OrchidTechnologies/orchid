@@ -18,30 +18,30 @@ object := $(patsubst %.mm,$(output)/%.o,$(object))
 
 c_ = $(foreach dir,$(subst /, ,$*),$(c_$(dir))) $(cflags_$(basename $(notdir $<)))
 
-$(output)/%.o: %.c
+$(output)/%.o: %.c $(header)
 	@mkdir -p $(dir $@)
 	@echo [CC] $<
-	@$(cycc) -MD -c -o $@ -x c $< $(cflags) $(c_)
+	@$(cycc) -MD -c -o $@ $< $(cflags) $(c_)
 
-$(output)/%.o: %.m
+$(output)/%.o: %.m $(header)
 	@mkdir -p $(dir $@)
 	@echo [CC] $<
 	@$(cycc) -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
 
-$(output)/%.o: %.mm
+$(output)/%.o: %.mm $(header)
 	@mkdir -p $(dir $@)
 	@echo [CC] $<
-	@$(cycc) -std=gnu++17 -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycp) -std=gnu++17 -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
 
-$(output)/%.o: %.cc
+$(output)/%.o: %.cc $(header)
 	@mkdir -p $(dir $@)
 	@echo [CC] $<
-	@$(cycc) -std=c++11 -ObjC++ -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycp) -std=c++11 -MD -c -o $@ $< $(cflags) $(c_)
 
-$(output)/%.o: %.cpp
+$(output)/%.o: %.cpp $(header)
 	@mkdir -p $(dir $@)
 	@echo [CC] $<
-	@$(cycc) -std=c++2a -ObjC++ -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycp) -std=c++2a -MD -c -o $@ $< $(cflags) $(c_)
 
 .PHONY: clean
 clean:

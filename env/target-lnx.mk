@@ -9,6 +9,4 @@
 # }}}
 
 
-include $(pwd)/target-apl.mk
-
-source += $(pwd)/webrtc/rtc_base/logging_mac.mm
+ext := so

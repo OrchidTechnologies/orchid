@@ -22,8 +22,6 @@
 
 #include "protect.hpp"
 
-#include <Foundation/Foundation.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>

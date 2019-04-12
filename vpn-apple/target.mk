@@ -32,9 +32,11 @@ cflags += -I$(pwd)
 c_OpenVPNAdapter += -include external.hpp
 cflags_OpenVPNClient += -DOPENVPN_EXTERN=extern
 
+source += $(pwd)/external.mm
 source += $(pwd)/protect.cpp
 
-source += $(pwd)/external.cpp
-cflags_external += -fobjc-arc
+c_openvpn3 += -ObjC++
+cflags_transport += -ObjC++
+
 
 include $(pwd)/shared/target.mk

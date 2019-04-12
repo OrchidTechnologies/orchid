@@ -16,6 +16,8 @@
 #define DCHECK_LT(x,y)
 #define DCHECK_NE(x,y)
 
+#define PCHECK(x) if (!(x)) std::cerr
+
 #define LOG_WARNING std::cerr
 #define LOG_ERROR std::cerr
 #define LOG_FATAL std::abort(), std::cerr
@@ -26,5 +28,7 @@
 
 #define LOG_IF(x,y) if ((y)) LOG_ ## x
 #define LOG_FIRST_N(x,y) std::cerr
+
+#define PLOG_IF(x,y) if ((y)) LOG_ ## x
 
 #define VLOG(x) if ((x)>=10) std::cerr

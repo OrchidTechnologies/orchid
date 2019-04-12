@@ -9,9 +9,10 @@
 # }}}
 
 
-include $(pwd)/target-apl.mk
-
 arch := x86_64
 sdk := iphonesimulator
 
-cycc := $(xcode) clang++ -mios-simulator-version-min=11.0 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk $(sdk) -version Path) -idirafter $(shell $(xcode) xcodebuild -sdk macosx -version Path)/usr/include
+host := x86_64-apple-darwin
+more := -mios-simulator-version-min=11.0 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk $(sdk) -version Path) -idirafter $(shell $(xcode) xcodebuild -sdk macosx -version Path)/usr/include
+
+include $(pwd)/target-apl.mk

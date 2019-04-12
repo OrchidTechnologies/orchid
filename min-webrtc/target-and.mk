@@ -9,6 +9,9 @@
 # }}}
 
 
-include $(pwd)/target-apl.mk
+cflags += -D__Userspace_os_Linux
 
-source += $(pwd)/webrtc/rtc_base/logging_mac.mm
+cflags += -DWEBRTC_LINUX
+cflags += -DWEBRTC_ANDROID
+
+source += $(pwd)/webrtc/rtc_base/task_queue_libevent.cc

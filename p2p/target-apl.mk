@@ -18,3 +18,4 @@
 # }}}
 
 
+cflags += -DFOLLY_HAVE_MEMRCHR=0

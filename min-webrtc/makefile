@@ -34,4 +34,4 @@ $(output)/libwebrtc.a: $(object)
 $(output)/libwebrtc.$(ext): $(object)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycc) -dynamiclib -o $@ $^ $(lflags)
+	@$(cycp) -dynamiclib -o $@ $^ $(lflags)

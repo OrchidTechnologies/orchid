@@ -37,6 +37,7 @@
 #include <microhttpd.h>
 
 #include "baton.hpp"
+#include "channel.hpp"
 #include "crypto.hpp"
 //#include "ethereum.hpp"
 #include "http.hpp"
@@ -45,7 +46,6 @@
 #include "socket.hpp"
 #include "task.hpp"
 #include "trace.hpp"
-#include "webrtc.hpp"
 
 #include <folly/futures/Future.h>
 #include <folly/executors/CPUThreadPoolExecutor.h>

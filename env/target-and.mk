@@ -9,6 +9,19 @@
 # }}}
 
 
-include $(pwd)/target-apl.mk
+include $(pwd)/target-lnx.mk
 
-source += $(pwd)/webrtc/rtc_base/logging_mac.mm
+ndk := $(wildcard ~/Library/Android/sdk/ndk-bundle)
+
+arch := x86_64
+host := $(arch)-linux-android
+
+cycc := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android28-clang
+cycp := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android28-clang++
+
+cflags += -fdata-sections -ffunction-sections
+lflags += -Wl,--gc-sections
+
+lflags += -lm -llog
+
+ranlib := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-ranlib

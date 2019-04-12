@@ -44,6 +44,7 @@ source += $(pwd)/cppcoro/lib/static_thread_pool.cpp
 
 source += $(pwd)/baton.cpp
 source += $(pwd)/buffer.cpp
+source += $(pwd)/channel.cpp
 source += $(pwd)/client.cpp
 source += $(pwd)/crypto.cpp
 source += $(pwd)/http.cpp
@@ -51,7 +52,6 @@ source += $(pwd)/jsonrpc.cpp
 source += $(pwd)/link.cpp
 source += $(pwd)/socket.cpp
 source += $(pwd)/task.cpp
-source += $(pwd)/webrtc.cpp
 
 #source += $(wildcard $(pwd)/curl/lib/*.c $(pwd)/curl/lib/vauth/*.c $(pwd)/curl/lib/vtls/*.c)
 #cflags += -I$(pwd)/curl/include
@@ -75,15 +75,21 @@ source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_core/*/ref*/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_generichash/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_generichash/blake2b/ref/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_hash/*.c)
+#source += $(pwd)/libsodium/src/libsodium/crypto_hash/sha512/cp/hash_sha512_cp.c
 source += $(pwd)/libsodium/src/libsodium/crypto_onetimeauth/poly1305/onetimeauth_poly1305.c
 source += $(pwd)/libsodium/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c
 source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-core.c
+#source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
+#source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/blake2b-long.c
 source += $(pwd)/libsodium/src/libsodium/crypto_scalarmult/curve25519/scalarmult_curve25519.c
 source += $(pwd)/libsodium/src/libsodium/crypto_scalarmult/curve25519/ref10/x25519_ref10.c
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_secretbox/*.c)
+#source += $(pwd)/libsodium/src/libsodium/crypto_secretbox/xsalsa20poly1305/secretbox_xsalsa20poly1305.c
+#source += $(pwd)/libsodium/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
 source += $(pwd)/libsodium/src/libsodium/crypto_stream/chacha20/stream_chacha20.c
 source += $(pwd)/libsodium/src/libsodium/crypto_stream/salsa20/stream_salsa20.c
 source += $(pwd)/libsodium/src/libsodium/crypto_stream/salsa20/ref/salsa20_ref.c
+#source += $(pwd)/libsodium/src/libsodium/crypto_stream/xsalsa20/stream_xsalsa20.c
 source += $(pwd)/libsodium/src/libsodium/crypto_verify/sodium/verify.c
 source += $(wildcard $(pwd)/libsodium/src/libsodium/randombytes/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/randombytes/sysrandom/*.c)
@@ -95,6 +101,9 @@ cflags += -I$(pwd)/libsodium/src/libsodium/include
 cflags += -I$(pwd)/libsodium/src/libsodium/include/sodium
 cflags += -DCONFIGURED
 c_libsodium += -Wno-unused-variable
+
+# crypto_pwhash/argon2/argon2-fill-block-ref.c
+#c_libsodium += -Wno-unknown-pragmas
 
 cflags += -I$(pwd)/boost/libs/asio/include/boost
 #cflags += -DASIO_STANDALONE
@@ -148,18 +157,27 @@ source += $(pwd)/folly/folly/lang/ColdClass.cpp
 source += $(pwd)/folly/folly/lang/SafeAssert.cpp
 source += $(pwd)/folly/folly/memory/MallctlHelper.cpp
 source += $(pwd)/folly/folly/memory/detail/MallocImpl.cpp
+source += $(pwd)/folly/folly/portability/SysMembarrier.cpp
 source += $(pwd)/folly/folly/synchronization/AsymmetricMemoryBarrier.cpp
 source += $(pwd)/folly/folly/synchronization/LifoSem.cpp
 source += $(pwd)/folly/folly/synchronization/ParkingLot.cpp
 source += $(pwd)/folly/folly/system/ThreadName.cpp
 
+source += $(wildcard $(pwd)/double-conversion/double-conversion/*.cc)
 
-cflags += -DEVENT__HAVE_UINT64_T
-cflags += -DEVENT__HAVE_UINT32_T
-cflags += -DEVENT__HAVE_UINT16_T
-cflags += -DEVENT__SIZEOF_SIZE_T=8
-cflags += -I$(pwd)/libevent/include
-
+#source += $(pwd)/folly/folly/container/detail/F14Table.cpp
+#source += $(pwd)/folly/folly/executors/ExecutorWithPriority.cpp
+#source += $(pwd)/folly/folly/executors/TimedDrivableExecutor.cpp
+#source += $(pwd)/folly/folly/fibers/Fiber.cpp
+#source += $(pwd)/folly/folly/fibers/FiberManager.cpp
+#source += $(pwd)/folly/folly/fibers/GuardPageAllocator.cpp
+#source += $(pwd)/folly/folly/futures/ThreadWheelTimekeeper.cpp
+#source += $(pwd)/folly/folly/io/async/AsyncTimeout.cpp
+#source += $(pwd)/folly/folly/io/async/EventBase.cpp
+#source += $(pwd)/folly/folly/io/async/HHWheelTimer.cpp
+#source += $(pwd)/folly/folly/net/NetOps.cpp
+#source += $(pwd)/folly/folly/portability/Sockets.cpp
+#source += $(pwd)/folly/folly/synchronization/Hazptr.cpp
 
 include $(pwd)/target-$(target).mk
 include $(pwd)/rtc/target.mk

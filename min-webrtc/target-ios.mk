@@ -11,9 +11,4 @@
 
 include $(pwd)/target-apl.mk
 
-cflags += -DWEBRTC_NS_FIXED
-cflags += -DWEBRTC_USE_BUILTIN_ISAC_FIX=1
-cflags += -DWEBRTC_USE_BUILTIN_ISAC_FLOAT=0
-
-cflags += -DWEBRTC_MAC
 cflags += -DWEBRTC_IOS

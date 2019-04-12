@@ -13,6 +13,8 @@ pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(M
 
 webrtc := 
 
+c_webrtc += -Wundef
+
 
 webrtc += $(wildcard $(pwd)/webrtc/api/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/crypto/*.cc)
@@ -143,7 +145,10 @@ webrtc := $(filter-out %_mips.cc,$(webrtc))
 webrtc := $(filter-out %_neon.c,$(webrtc))
 webrtc := $(filter-out %_neon.cc,$(webrtc))
 
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/cocoa_%.mm,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_libevent.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_gcd.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_win.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win32%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win/%.cc,$(webrtc))
@@ -175,19 +180,7 @@ cflags += -DOPENSSL
 cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -D__FreeBSD_version=0
 
-cflags += -DCONFIG_MULTITHREAD=1
-cflags += -DHAVE_PTHREAD_H
-cflags += -DCONFIG_DEBUG=0
-cflags += -DCONFIG_BETTER_HW_COMPATIBILITY=0
-cflags += -DCONFIG_INTERNAL_STATS=0
-cflags += -DCONFIG_VP8=1
-cflags += -DCONFIG_VP9=1
-cflags += -DHAVE_MMX=0
-
-cflags += -DWEBRTC_OPUS_SUPPORT_120MS_PTIME=1
-cflags += -DWEBRTC_APM_DEBUG_DUMP=0
 cflags += -DABSL_ALLOCATOR_NOTHROW=0
-cflags += -DWEBRTC_ENABLE_PROTOBUF=0
 cflags += -DWEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0
 
 cflags += -DHAVE_SCTP
@@ -202,15 +195,6 @@ cflags += -DHAVE_UINT16_T
 cflags += -DHAVE_INT32_T
 cflags += -DHAVE_UINT32_T
 cflags += -DHAVE_UINT64_T
-
-ifneq (,)
-cflags += -DCONFIG_VP9_HIGHBITDEPTH=0
-cflags += -DCONFIG_MULTI_RES_ENCODING=0
-cflags += -DHAVE_NEON=0
-cflags += -DARCH_X86=0
-cflags += -DARCH_X86_64=1
-cflags += -DINLINE=inline
-endif
 
 cflags += -DPACKAGE_STRING='""'
 cflags += -DPACKAGE_VERSION='""'
@@ -227,4 +211,6 @@ cflags += -DSCTP_USE_OPENSSL_SHA1
 cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -DSCTP_PROCESS_LEVEL_LOCKS
 
+
+include $(pwd)/libevent.mk
 include $(pwd)/target-$(target).mk

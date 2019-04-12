@@ -32,6 +32,7 @@
 
 #include <cppcoro/sync_wait.hpp>
 
+#include "channel.hpp"
 #include "client.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
@@ -41,7 +42,6 @@
 #include "shared.hpp"
 #include "task.hpp"
 #include "trace.hpp"
-#include "webrtc.hpp"
 
 #include <boost/multiprecision/cpp_int.hpp>
 

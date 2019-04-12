@@ -15,3 +15,8 @@ lflags += -Wl,-dead_strip
 lflags += -Wl,-no_dead_strip_inits_and_terms
 
 signature := /_CodeSignature/CodeResources
+
+cycc := $(shell $(xcode) xcrun -f clang) $(more)
+cycp := $(shell $(xcode) xcrun -f clang++) $(more)
+
+ranlib := $(xcode) ranlib

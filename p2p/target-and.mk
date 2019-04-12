@@ -18,34 +18,6 @@
 # }}}
 
 
-target := mac
-include env/target.mk
-
-.PHONY: all
-all: $(output)/orchid
-
-.PHONY: test
-test: $(output)/orchid
-	$(output)/orchid
-
-
-include p2p/target.mk
-
-source += $(filter-out libmicrohttpd/src/microhttpd/test_%.c,$(wildcard libmicrohttpd/src/microhttpd/*.c))
-cflags += -Ilibmicrohttpd/src/include
-cflags += -Wno-tautological-constant-out-of-range-compare
-c_libmicrohttpd += -Wno-unused-variable
-
-cflags += -I.
-
-
-include env/output.mk
-include p2p/depend.mk
-
--include $(output)/orchid.d
-
-
-$(output)/orchid: $(output)/orchid.o $(object) $(linked)
-	@mkdir -p $(dir $@)
-	@echo [LD] $@
-	@$(cycp) -o $@ $^ $(lflags)
+cflags += -DFOLLY_HAVE_MEMRCHR=1
+cflags += -DFOLLY_HAVE_RECVMMSG=1
+cflags += -DFOLLY_HAVE_SENDMMSG=1

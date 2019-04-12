@@ -83,5 +83,5 @@
 	path = p2p/double-conversion
 	url = https://github.com/google/double-conversion.git
 [submodule "libevent"]
-	path = p2p/libevent
+	path = min-webrtc/libevent
 	url = https://github.com/libevent/libevent.git
