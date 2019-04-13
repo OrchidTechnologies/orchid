@@ -9,14 +9,8 @@
 # }}}
 
 
-arch := x86_64
-host := $(arch)-linux-android
+ndk := $(wildcard ~/Library/Android/sdk/ndk-bundle)
 
-include $(pwd)/target-ndk.mk
+ranlib := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/$(arch)-linux-android-ranlib
 
-more := 
-
-cycc := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/$(arch)-linux-android28-clang $(more)
-cycp := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/$(arch)-linux-android28-clang++ $(more)
-
-lflags += -lm -llog
+include $(pwd)/target-gnu.mk

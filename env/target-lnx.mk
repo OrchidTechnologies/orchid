@@ -9,4 +9,19 @@
 # }}}
 
 
-ext := so
+arch := x86_64
+host := $(arch)-linux-gnu
+
+include $(pwd)/target-ndk.mk
+
+more := -B $(wildcard ~/Library/Android/sdk/ndk-bundle/toolchains/llvm/prebuilt/darwin-x86_64/$(arch)-linux-android/bin) -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
+
+cycc := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang $(more)
+cycp := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
+
+lflags += -pthread
+
+$(output)/sysroot:
+	env/sysroot.sh
+
+linker += $(output)/sysroot

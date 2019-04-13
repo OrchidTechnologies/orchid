@@ -12,6 +12,9 @@
 .DELETE_ON_ERROR:
 .SECONDARY:
 
+.PHONY:
+all:
+
 pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 
 version := $(shell $(pwd)/version.sh)
@@ -24,6 +27,7 @@ lflags :=
 source := 
 linked := 
 header := 
+linker := 
 
 output := out-$(target)
 

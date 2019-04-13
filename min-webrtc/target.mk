@@ -119,6 +119,7 @@ webrtc += $(wildcard $(pwd)/boringssl/third_party/fiat/curve25519.c)
 
 source += $(output)/err_data.c
 $(output)/err_data.c: $(pwd)/boringssl/crypto/err/err_data_generate.go
+	@mkdir -p $(dir $@)
 	(cd $(dir $<); go run $(notdir $<)) >$@
 
 webrtc += $(wildcard $(pwd)/third_party/boringssl/err_data.c)
@@ -186,7 +187,10 @@ cflags += -DWEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0
 cflags += -DHAVE_SCTP
 
 cflags += -DOPENSSL_NO_ASM
+
+cflags += -DHAVE_STDINT_H
 cflags += -DHAVE_STDLIB_H
+
 cflags += -DHAVE_CONFIG_H
 cflags += -DHAVE_NETINET_IN_H
 

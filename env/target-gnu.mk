@@ -9,14 +9,7 @@
 # }}}
 
 
-arch := x86_64
-host := $(arch)-linux-android
+ext := so
 
-include $(pwd)/target-ndk.mk
-
-more := 
-
-cycc := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/$(arch)-linux-android28-clang $(more)
-cycp := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/$(arch)-linux-android28-clang++ $(more)
-
-lflags += -lm -llog
+cflags += -fdata-sections -ffunction-sections
+lflags += -Wl,--gc-sections

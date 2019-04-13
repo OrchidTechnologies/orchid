@@ -38,7 +38,7 @@
 #define HAVE_PTHREAD_PRIO_INHERIT 1
 #define HAVE_SEARCH_H 1
 
-#ifndef __ANDROID__
+#ifndef __linux__
 #define HAVE_SOCKADDR_IN_SIN_LEN 1
 #endif
 

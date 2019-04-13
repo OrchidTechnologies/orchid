@@ -20,7 +20,7 @@ $(output)/libevent/Makefile: host := $(host)
 $(output)/libevent/Makefile: cycc := $(cycc)
 $(output)/libevent/Makefile: output := $(output)
 $(output)/libevent/Makefile: pwd := $(pwd)
-$(output)/libevent/Makefile: $(pwd)/libevent/configure
+$(output)/libevent/Makefile: $(pwd)/libevent/configure $(linker)
 	mkdir -p $(output)/libevent
 	cd $(output)/libevent && ../../$(pwd)/libevent/configure --host=$(host) \
 	    CC="$(cycc)" RANLIB="$(ranlib)" \

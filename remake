@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+rm -rf */out-*
+make -j4
