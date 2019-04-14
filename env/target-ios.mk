@@ -13,6 +13,6 @@ arch := arm64
 sdk := iphoneos
 
 host := aarch64-apple-darwin
-more := -miphoneos-version-min=11.0 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk $(sdk) -version Path) -idirafter $(shell $(xcode) xcodebuild -sdk macosx -version Path)/usr/include
+more := -miphoneos-version-min=11.0
 
 include $(pwd)/target-apl.mk

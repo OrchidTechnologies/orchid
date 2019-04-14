@@ -42,7 +42,7 @@ flutter/packages/flutter/pubspec.lock:
 
 $(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
-	$(xcode) lipo -thin $(arch) $< -output $@
+	$(xcode) lipo $(patsubst %,-extract %,$(arch)) $< -output $@
 	@touch $@
 
 $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%

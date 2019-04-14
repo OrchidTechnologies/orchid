@@ -13,6 +13,6 @@ arch := x86_64
 sdk := macosx
 
 host := $(arch)-apple-darwin
-more := -mmacosx-version-min=10.14 -arch $(arch) -isysroot $(shell $(xcode) xcodebuild -sdk $(sdk) -version Path)
+more := -mmacosx-version-min=10.14
 
 include $(pwd)/target-apl.mk
