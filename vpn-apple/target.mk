@@ -36,7 +36,6 @@ source += $(pwd)/external.mm
 source += $(pwd)/protect.cpp
 
 c_openvpn3 += -ObjC++
-cflags_transport += -ObjC++
 
 
 include $(pwd)/shared/target.mk

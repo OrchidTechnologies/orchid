@@ -22,8 +22,6 @@
 
 #define OPENVPN_EXTERN extern
 
-#include <Foundation/Foundation.h>
-
 #include <ovpncli.hpp>
 
 #include "client.hpp"
@@ -63,11 +61,6 @@ class OrchidClient :
 
     void transport_start() override { orc::Wait([this]() -> task<void> {
         co_await orc::Schedule();
-
-        /*NSLog(@"transport_start(): protocol:%s", config_.protocol.protocol_to_string());
-        if (config_.frame) for (size_t i(0), e(config_.frame->n_contexts()); i != e; ++i)
-            NSLog(@"  frame[%zu]:%s", i, (*config_.frame)[i].info().c_str());
-        if (config_.remote_list) NSLog(@"  remote:%s", config_.remote_list->to_string().c_str());*/
 
         asio::dispatch(io_context, [parent = parent_]() {
             parent->transport_pre_resolve();
