@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#if 0
+
 #include "ethereum.hpp"
 
 namespace orc {
@@ -40,3 +42,5 @@ dev::p2p::Host &Ethereum() {
 }
 
 }
+
+#endif

@@ -29,7 +29,6 @@ cflags += -Wno-potentially-evaluated-expression
 
 cflags += -fcoroutines-ts
 
-cflags += -I$(pwd)
 cflags += -I$(pwd)/extra
 cflags += -I$(output)/$(pwd)
 
@@ -42,32 +41,15 @@ source += $(pwd)/cppcoro/lib/spin_mutex.cpp
 source += $(pwd)/cppcoro/lib/spin_wait.cpp
 source += $(pwd)/cppcoro/lib/static_thread_pool.cpp
 
-source += $(pwd)/baton.cpp
-source += $(pwd)/buffer.cpp
-source += $(pwd)/channel.cpp
-source += $(pwd)/client.cpp
-source += $(pwd)/crypto.cpp
-source += $(pwd)/http.cpp
-source += $(pwd)/jsonrpc.cpp
-source += $(pwd)/link.cpp
-source += $(pwd)/socket.cpp
-source += $(pwd)/task.cpp
+source += $(wildcard $(pwd)/source/*.cpp)
+cflags += -I$(pwd)/source
 
-#source += $(wildcard $(pwd)/curl/lib/*.c $(pwd)/curl/lib/vauth/*.c $(pwd)/curl/lib/vtls/*.c)
-#cflags += -I$(pwd)/curl/include
-#cflags += -I$(pwd)/curl/lib
-#cflags += -DBUILDING_LIBCURL
-#lflags += -lz
-
-ifneq (,)
-source += $(pwd)/ethereum.cpp
-include $(pwd)/aleth.mk
-endif
+#include $(pwd)/aleth.mk
 
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/*/include))
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))
 
-cflags += -include $(pwd)/byte.hpp
+cflags += -include $(pwd)/source/byte.hpp
 
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_box/*.c)
 source += $(pwd)/libsodium/src/libsodium/crypto_box/curve25519xsalsa20poly1305/box_curve25519xsalsa20poly1305.c

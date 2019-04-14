@@ -29,6 +29,9 @@ test: $(output)/orchid
 	$(output)/orchid
 
 
+source += $(wildcard source/*.cpp)
+cflags += -Isource
+
 include p2p/target.mk
 
 source += $(filter-out libmicrohttpd/src/microhttpd/test_%.c,$(wildcard libmicrohttpd/src/microhttpd/*.c))
@@ -36,16 +39,14 @@ cflags += -Ilibmicrohttpd/src/include
 cflags += -Wno-tautological-constant-out-of-range-compare
 c_libmicrohttpd += -Wno-unused-variable
 
-cflags += -I.
+cflags += -Iextra
 
 
 include env/output.mk
 include p2p/depend.mk
 
--include $(output)/orchid.d
 
-
-$(output)/orchid: $(output)/orchid.o $(object) $(linked)
+$(output)/orchid: $(object) $(linked)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cycp) -o $@ $^ $(lflags)
