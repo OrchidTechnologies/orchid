@@ -3,7 +3,7 @@ set -e
 set -o pipefail
 
 docker container rm orchid || true
-docker run -it --name orchid -v "${PWD}/env/setup.sh:/setup.sh" ubuntu:bionic /setup.sh
+docker run -i --name orchid -v "${PWD}/env/setup.sh:/setup.sh" ubuntu:bionic /setup.sh
 
 sysroot=out-lnx/sysroot
 rm -rf "${sysroot}"
