@@ -56,6 +56,11 @@
 
 namespace orc {
 
+class Back {
+  public:
+    virtual task<std::string> Respond(const std::string &offer) = 0;
+};
+
 class Client;
 
 class Outstanding :
@@ -98,37 +103,12 @@ class Output :
     }
 };
 
-class Account;
-class Input;
-
-class Node :
-    public std::enable_shared_from_this<Node>,
-    public Identity
-{
-    friend class Client;
-
-  private:
-    // XXX: this should be a weak set
-    std::map<Common, S<Account>> accounts_;
-
-    typedef std::pair<Pipe *, Tag> Key_;
-    std::map<Key_, S<Input>> inputs_;
-
-    std::set<S<Connection>> clients_;
-
-  public:
-    void Land(const S<Pipe> &path, const Buffer &data);
-
-    task<std::string> Respond(const std::string &offer);
-};
-
 class Account :
     public std::enable_shared_from_this<Account>,
-    public Link
+    public Pipe
 {
   private:
-    S<Node> node_;
-    Boxer boxer_;
+    S<Back> back_;
 
     Pipe *input_;
 
@@ -136,9 +116,8 @@ class Account :
     std::map<Tag, S<Outstanding>> outstandings_;
 
   public:
-    Account(const S<Node> &node, const Common &common) :
-        node_(node),
-        boxer_(node->GetSecret(), common)
+    Account(const S<Back> &back) :
+        back_(back)
     {
     }
 
@@ -236,7 +215,7 @@ class Account :
 
                 } else if (command == AnswerTag) {
                     const auto [offer] = Take<0>(args);
-                    auto answer(co_await self->node_->Respond(offer.str()));
+                    auto answer(co_await self->back_->Respond(offer.str()));
                     co_await self->Send(Tie(nonce, Beam(answer)));
 
                 } else _assert(false);
@@ -245,94 +224,63 @@ class Account :
     }
 };
 
-class Input :
-    public std::enable_shared_from_this<Input>,
-    public Pipe
+class Node :
+    public std::enable_shared_from_this<Node>,
+    public Identity,
+    public Back
 {
+    friend class Client;
+
   private:
-    S<Pipe> path_;
-    Tag tag_;
-    S<Account> account_;
+    std::map<Common, W<Account>> accounts_;
+    std::set<S<Connection>> clients_;
 
   public:
-    Input(const S<Pipe> &path, const Tag &tag, const S<Account> &account) :
-        path_(path),
-        tag_(tag),
-        account_(account)
-    {
-        account_->Associate(this);
+    virtual ~Node() {
     }
 
-    ~Input() {
-        account_->Dissociate(this);
+    S<Account> Find(const Common &common) {
+        auto &cache(accounts_[common]);
+        if (auto account = cache.lock())
+            return account;
+        auto account(std::make_shared<Account>(shared_from_this()));
+        cache = account;
+        return account;
     }
 
-    task<void> Send(const Buffer &data) override {
-        co_return co_await path_->Send(Tie(tag_, data));
-    }
-
-    void Land(const Buffer &data) {
-        account_->Land(data);
-    }
+    task<std::string> Respond(const std::string &offer) override;
 };
-
-void Node::Land(const S<Pipe> &path, const Buffer &data) {
-    if (data.empty()) {
-        for (const auto &[key, value] : inputs_)
-            if (key.first == path.get())
-                inputs_.erase(key);
-    } else {
-        auto [tag, command, rest] = Take<TagSize, TagSize, 0>(data);
-        auto key(std::make_pair(path.get(), tag));
-
-        if (false) {
-
-        } else if (command == AssociateTag) {
-            auto [common] = Take<Common::Size>(rest);
-            auto &account(accounts_[common]);
-            if (!account)
-                account = std::make_shared<Account>(shared_from_this(), common);
-            auto input(std::make_shared<Input>(path, tag, account));
-            inputs_[key] = input;
-
-        } else if (command == DissociateTag) {
-            /*auto [] =*/ Take<>(rest);
-            inputs_.erase(key);
-
-        } else if (command == DeliverTag) {
-            auto [boxed] = Take<0>(rest);
-            auto input(inputs_.find(key));
-            _assert(input != inputs_.end());
-            input->second->Land(boxed);
-
-        } else _assert(false);
-    }
-}
 
 class Conduit :
     public Pipe
 {
   private:
     S<Node> node_;
-    Sink<Channel> sink_;
+    Sink<> sink_;
+
+    S<Account> account_;
 
   public:
     S<Pipe> self_;
 
   public:
-    Conduit(const S<Node> &node, U<Channel> channel) :
+    Conduit(const S<Node> &node, U<Link> channel) :
         node_(node),
         sink_(std::move(channel), [this](const Buffer &data) {
-            node_->Land(self_, data);
             if (data.empty())
                 self_.reset();
+            else
+                account_->Land(data);
         })
     {
-        _trace();
+        Identity identity;
+        account_ = node_->Find(identity.GetCommon());
+        account_->Associate(this);
     }
 
     virtual ~Conduit() {
-        _trace();
+        if (account_)
+            account_->Dissociate(this);
     }
 
     task<void> Send(const Buffer &data) override {

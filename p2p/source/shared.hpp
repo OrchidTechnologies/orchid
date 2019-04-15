@@ -27,10 +27,6 @@
 
 namespace orc {
 
-static const Tag AssociateTag{93, 97, 102, 34};
-static const Tag DeliverTag{246, 228, 17, 134};
-static const Tag DissociateTag{87, 248, 93, 7};
-
 static const Tag AnswerTag{34, 162, 176, 208};
 static const Tag CancelTag{223, 49, 55, 9};
 static const Tag ChannelTag{159, 32, 166, 189};

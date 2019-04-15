@@ -29,21 +29,11 @@
 
 namespace orc {
 
-class Remote :
-    public Router
-{
-  private:
-
-  public:
-    Remote(U<Link> link) :
-        Router(std::move(link))
-    {
-    }
-};
+class Account$;
 
 class Connector {
   public:
-    virtual task<S<Remote>> Hop(const std::string &server) = 0;
+    virtual task<S<Account$>> Hop(const std::string &server) = 0;
     virtual task<U<Link>> Connect(const std::string &host, const std::string &port) = 0;
 };
 
@@ -55,33 +45,23 @@ class Account$ :
   private:
 
   public:
-    Account$(const S<Remote> &remote) :
-        Router(std::make_unique<Route<Remote>>(remote))
+    Account$(U<Link> link) :
+        Router(std::move(link))
     {
     }
 
     task<void> _(const Common &common) {
-        co_await Router::Send(Tie(AssociateTag, common));
-    }
-
-    ~Account$() {
-        Task([pipe = Move()]() -> task<void> {
-            co_await pipe->Send(Tie(DissociateTag));
-        });
-    }
-
-    task<void> Send(const Buffer &data) override {
-        co_await Router::Send(Tie(DeliverTag, data));
+        co_return;
     }
 
 
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<S<Remote>> Hop(const std::string &server) override;
+    task<S<Account$>> Hop(const std::string &server) override;
     task<U<Link>> Connect(const std::string &host, const std::string &port) override;
 };
 
-task<S<Remote>> Hop(const std::string &server);
+task<S<Account$>> Hop(const std::string &server);
 
 task<U<Link>> Setup(const std::string &host, const std::string &port);
 

@@ -95,7 +95,7 @@ task<Beam> Account$::Call(const Tag &command, const Buffer &args) {
     co_return response;
 }
 
-task<S<Remote>> Account$::Hop(const std::string &server) {
+task<S<Account$>> Account$::Hop(const std::string &server) {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
     co_await tunnel->_([&](const Tag &tag) -> task<void> {
         auto handle(NewTag()); // XXX: this is horribly wrong
@@ -106,7 +106,7 @@ task<S<Remote>> Account$::Hop(const std::string &server) {
         Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
         Take<>(co_await Call(FinishTag, Tie(tag)));
     });
-    co_return std::make_shared<Remote>(std::move(tunnel));
+    co_return std::make_shared<Account$>(std::move(tunnel));
 }
 
 task<U<Link>> Account$::Connect(const std::string &host, const std::string &port) {
@@ -118,7 +118,7 @@ task<U<Link>> Account$::Connect(const std::string &host, const std::string &port
     co_return std::move(tunnel);
 }
 
-task<S<Remote>> Hop(const std::string &server) {
+task<S<Account$>> Hop(const std::string &server) {
     auto client(std::make_shared<Actor>());
     auto channel(std::make_unique<Channel>(client));
 
@@ -136,7 +136,7 @@ task<S<Remote>> Hop(const std::string &server) {
     co_await client->Negotiate(answer);
     co_await *channel;
     co_await Schedule();
-    co_return std::make_shared<Remote>(std::move(channel));
+    co_return std::make_shared<Account$>(std::move(channel));
 }
 
 task<U<Link>> Setup(const std::string &host, const std::string &port) {
@@ -146,23 +146,20 @@ task<U<Link>> Setup(const std::string &host, const std::string &port) {
     //const char *server("localhost");
 
     {
-        auto remote(co_await Hop(server));
+        account = co_await Hop(server);
         Identity identity;
-        account = std::make_shared<Account$>(remote);
         co_await account->_(identity.GetCommon());
     }
 
     {
-        auto remote(co_await account->Hop(server));
+        account = co_await account->Hop(server);
         Identity identity;
-        account = std::make_shared<Account$>(remote);
         co_await account->_(identity.GetCommon());
     }
 
     {
-        auto remote(co_await account->Hop(server));
+        account = co_await account->Hop(server);
         Identity identity;
-        account = std::make_shared<Account$>(remote);
         co_await account->_(identity.GetCommon());
     }
 
