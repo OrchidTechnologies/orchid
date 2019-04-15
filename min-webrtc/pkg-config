@@ -1,0 +1,14 @@
+#!/bin/bash
+
+here=$(which "$0")
+if test -L "${here}"; then
+    here=$(readlink "${here}")
+fi
+here=${here%/*}
+
+case "$1" in
+    (--atleast-pkgconfig-version) ;;
+    (--libs) echo " "; ;;
+    (--cflags) echo "-I${here}/boringssl/include"; ;;
+    (*) exit 1; ;;
+esac
