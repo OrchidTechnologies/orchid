@@ -77,4 +77,27 @@ class AppText {
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
       fontSize: 14.0);
+
+  static TextStyle dialogTitle = const TextStyle(
+      color: const Color(0xff3a3149),
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 20.0);
+
+  static TextStyle dialogBody = const TextStyle(
+      color: const Color(0xff504960),
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 16.0);
+
+  static TextStyle dialogButton = const TextStyle(
+      letterSpacing: 1.25,
+      color: const Color(0xff5f45ba),
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 14.0);
+
 }

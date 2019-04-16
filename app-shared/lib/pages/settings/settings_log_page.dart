@@ -6,6 +6,7 @@ import 'package:orchid/api/log_file.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
@@ -38,7 +39,6 @@ class _SettingsLogPage extends State<SettingsLogPage> {
     LogFile().logChanged.add(null); // trigger an update
   }
 
-
   @override
   void dispose() {
     super.dispose();
@@ -59,7 +59,6 @@ class _SettingsLogPage extends State<SettingsLogPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-
             // The logging control switch
             Container(
               color: AppColors.white,
@@ -77,11 +76,15 @@ class _SettingsLogPage extends State<SettingsLogPage> {
               ),
             ),
 
-            Container(height: 1, color: AppColors.grey_1.withAlpha((0.12*255).round()),),
+            Container(
+              height: 1,
+              color: AppColors.grey_1.withAlpha((0.12 * 255).round()),
+            ),
 
             // Privacy description
             Padding(
-                padding: EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 12),
+                padding:
+                    EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 12),
                 child: AppText.body(
                   color: Color(0xff524862),
                   textAlign: TextAlign.left,
@@ -91,8 +94,8 @@ class _SettingsLogPage extends State<SettingsLogPage> {
             // The log text view
             Expanded(
               child: Padding(
-                padding:
-                    const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 32),
+                padding: const EdgeInsets.only(
+                    left: 20, right: 20, top: 12, bottom: 32),
                 child: Container(
                   padding: EdgeInsets.all(16.0),
                   child: SingleChildScrollView(
@@ -120,13 +123,22 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                 children: <Widget>[
                   Padding(
                       padding: const EdgeInsets.all(0),
-                      child: RoundTitledRaisedButton(title: "Copy", imageName: "assets/images/business.png", onPressed: _onCopyButton)),
+                      child: RoundTitledRaisedButton(
+                          title: "Copy",
+                          imageName: "assets/images/business.png",
+                          onPressed: _onCopyButton)),
                   Padding(
                       padding: const EdgeInsets.only(left: 0, right: 0),
-                      child: RoundTitledRaisedButton(title: "Delete", imageName: "assets/images/business.png", onPressed: _confirmDelete)),
+                      child: RoundTitledRaisedButton(
+                          title: "Delete",
+                          imageName: "assets/images/business.png",
+                          onPressed: _confirmDelete)),
                   Padding(
                       padding: const EdgeInsets.all(0),
-                      child: RoundTitledRaisedButton(title: "Save", imageName: "assets/images/business.png", onPressed: null)),
+                      child: RoundTitledRaisedButton(
+                          title: "Save",
+                          imageName: "assets/images/business.png",
+                          onPressed: null)),
                 ],
               ),
             )
@@ -148,37 +160,14 @@ class _SettingsLogPage extends State<SettingsLogPage> {
   void _onSave() {}
 
   void _confirmDelete() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Delete Log Data"),
-          content: Text("Remove all log data?"),
-          actions: <Widget>[
-            FlatButton(
-              child: Text(
-                "Cancel",
-                style: TextStyle(color: Colors.black),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            FlatButton(
-              child: Text(
-                "Delete",
-                style: TextStyle(color: Colors.red),
-              ),
-              onPressed: () {
-                _performDelete();
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+    Dialogs.showConfirmationDialog(
+        context: context,
+        //title: "Delete Log Data",
+        body: "Clear all log data?",
+        cancelText: "CANCEL",
+        actionText: "DELETE",
+        action: () {
+          _performDelete();
+        });
   }
 }
-
-
