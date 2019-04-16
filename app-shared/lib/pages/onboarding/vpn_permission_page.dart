@@ -22,12 +22,15 @@ class _VPNPermissionPageState extends State<VPNPermissionPage> {
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
           child: Stack(
             children: <Widget>[
-              WalkthroughContent(
-                imageAtBottom: true,
-                titleText: "Let's get you set up",
-                bodyText:
-                    "To fully utilize Orchid, you will need to grant permission for the VPN connection. Next up, you will see a dialog asking you to allow this connection.",
-                imageName: 'assets/images/illustration_4.png',
+              Align(
+                alignment: Alignment.center,
+                child: WalkthroughContent(
+                  imageAtBottom: true,
+                  titleText: "Let's get you set up",
+                  bodyText:
+                      "To fully utilize Orchid, you will need to grant permission for the VPN connection. Next up, you will see a dialog asking you to allow this connection.",
+                  imageName: 'assets/images/illustration_4.png',
+                ),
               ),
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
