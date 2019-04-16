@@ -62,8 +62,8 @@ class Dialogs {
                   fontSize: 16.0)),
           actions: <Widget>[
             linkSettings
-                ? new FlatButton(
-                    child: new Text(
+                ? FlatButton(
+                    child: Text(
                       "SETTINGS",
                       style: const TextStyle(
                           letterSpacing: 1.25,
@@ -79,8 +79,8 @@ class Dialogs {
                     },
                   )
                 : null,
-            new FlatButton(
-              child: new Text(
+            FlatButton(
+              child: Text(
                 "OK",
                 style: const TextStyle(
                     letterSpacing: 1.25,

@@ -7,7 +7,7 @@ class AppTransitions {
       pageBuilder: (context, anim1, anim2) => page,
       transitionsBuilder: (context, anim1, anim2, child) => SlideTransition(
             child: child,
-            position: new Tween<Offset>(begin: Offset(0, 1), end: Offset.zero)
+            position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero)
                 .animate(anim1),
           ),
       transitionDuration: Duration(milliseconds: 300),

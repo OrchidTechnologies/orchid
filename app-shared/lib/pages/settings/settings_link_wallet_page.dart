@@ -195,7 +195,7 @@ class _SettingsLinkWalletPageState extends State<SettingsLinkWalletPage> {
     assert(_walletPrivate != null);
 
     // dismiss the keyboard if present
-    FocusScope.of(context).requestFocus(new FocusNode());
+    FocusScope.of(context).requestFocus(FocusNode());
 
     // Save the wallet
     var public = OrchidWalletPublic(_walletPrivate.privateKey.substring(0, 3) + "xxx...");

@@ -6,7 +6,7 @@ import 'package:connectivity/connectivity.dart';
 /// Manage user notifications for the app.  User notifications are prioritized
 /// and published, e.g. for display via a banner notification on the home screen.
 class AppNotifications {
-  static final AppNotifications _singleton = new AppNotifications._internal();
+  static final AppNotifications _singleton = AppNotifications._internal();
 
   AppNotifications._internal() {
     debugPrint("constructed app notifications singleton");

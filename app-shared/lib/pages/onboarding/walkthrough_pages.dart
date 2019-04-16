@@ -4,7 +4,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_colors.dart';
-import 'package:orchid/pages/app_text.dart';
+import 'package:orchid/pages/app_gradients.dart';
+import 'package:orchid/pages/common/app_bar.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
+import 'package:orchid/pages/onboarding/app_onboarding.dart';
+import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 
 /// The paged introductory screens.
 /// Adapted from: https://github.com/pyozer/introduction_screen
@@ -29,50 +33,19 @@ class WalkthroughPages extends StatefulWidget {
   @override
   _IntroductionScreenState createState() => _IntroductionScreenState();
 
-  Widget buildPage(BuildContext context,
-      {String imageName, String titleText, String bodyText}) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          children: <Widget>[
-            // For large screens distribute the space a bit, else fixed margin.
-            screenWidth > 640 ? Spacer(flex: 1) : SizedBox(height: 40),
-            Image.asset('assets/images/name_logo.png'),
-            SizedBox(height: 28),
-            Image.asset(imageName),
-            SizedBox(height: 28),
-            ConstrainedBox(
-              constraints: BoxConstraints(minWidth: 280, maxWidth: 480),
-              child: Text(titleText,
-                  textAlign: TextAlign.center, style: AppText.headerStyle),
-            ),
-            SizedBox(height: 21),
-            ConstrainedBox(
-              constraints: BoxConstraints(minWidth: 280, maxWidth: 400),
-              child: Text(bodyText,
-                  textAlign: TextAlign.center,
-                  style: AppText.bodyStyle.copyWith(
-                      color: AppColors.neutral_2, letterSpacing: 0.25)),
-            ),
-            Spacer(flex: 2),
-          ],
-        ));
-  }
-
   List<Widget> buildPages(BuildContext context) {
     return [
-      buildPage(context,
+      WalkthroughContent(
           imageName: 'assets/images/illustration_1.png',
           titleText: "You've arrived at the natural internet",
           bodyText:
               "At Orchid, our mission is to create open internet access for everyone, everywhere.\n\nIt starts here with our decentralized, secure, private, open-source VPN."),
-      buildPage(context,
+      WalkthroughContent(
           imageName: 'assets/images/illustration_2.png',
           titleText: "We're breaking down information barriers",
           bodyText:
               "We believe in ad-free, unrestricted bandwidth without censorship and regional restrictions.\n\nOrchid is decentralized, which means that your information won't be stored or owned by any one corporation or person."),
-      buildPage(context,
+      WalkthroughContent(
           imageName: 'assets/images/illustration_3.png',
           titleText: "Thanks for being an Alpha user!",
           bodyText:
@@ -98,9 +71,9 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
     animateScroll(min(_currentPage + 1, widget.buildPages(context).length - 1));
   }
 
-  void onDone() {
-    UserPreferences().setWalkthroughCompleted(true);
-    Navigator.of(context).pop();
+  void onDone() async {
+    await UserPreferences().setWalkthroughCompleted(true);
+    AppOnboarding().pageComplete(context);
   }
 
   Future<void> _onSkip() async {
@@ -127,33 +100,26 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
 
     final skipBtn = Opacity(
       opacity: isSkipBtn ? 1.0 : 0.0,
-      child: ControlButton("SKIP", onPressed: _onSkip),
+      child: TextControlButton("SKIP", onPressed: _onSkip),
     );
 
-    final nextBtn = ControlButton(
+    final nextBtn = TextControlButton(
       "NEXT",
       color: AppColors.purple_2,
       alignment: TextAlign.right,
       onPressed: _isScrolling ? null : _onNext,
     );
 
-    final doneBtn = ControlButton(
+    final doneBtn = TextControlButton(
       "DONE",
       color: AppColors.purple_2,
       onPressed: onDone,
     );
 
     return Scaffold(
-      appBar: PreferredSize(
-          preferredSize: Size.fromHeight(4),
-          // Min space with no custom widgets
-          child: AppBar(backgroundColor: AppColors.purple, elevation: 0.0)),
+      appBar: SmallAppBar.build(context),
       body: Container(
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [AppColors.grey_7, AppColors.grey_6])),
+        decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
@@ -196,32 +162,6 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class ControlButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  String text;
-  TextAlign alignment;
-  Color color;
-
-  ControlButton(this.text,
-      {this.alignment = TextAlign.left,
-      this.onPressed,
-      this.color = AppColors.grey_3});
-
-  @override
-  Widget build(BuildContext context) {
-    var textStyle =
-        AppText.buttonStyle.copyWith(color: color, letterSpacing: 1.25);
-    var textChild = Text(text, textAlign: alignment, style: textStyle);
-
-    return FlatButton(
-      //color: Colors.green,
-      onPressed: onPressed,
-      child: textChild,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
     );
   }
 }

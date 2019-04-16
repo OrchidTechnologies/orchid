@@ -11,7 +11,7 @@ import 'package:rxdart/rxdart.dart';
 /// Mock Orchid App Channel API Implementation
 ///
 class MockOrchidAPI implements OrchidAPI {
-  static final MockOrchidAPI _singleton = new MockOrchidAPI._internal();
+  static final MockOrchidAPI _singleton = MockOrchidAPI._internal();
 
   factory MockOrchidAPI() {
     return _singleton;
@@ -60,13 +60,13 @@ class MockOrchidAPI implements OrchidAPI {
   // Application components receive updates with:
   //   connectionStatus.listen((state) { ... } )
   //
-  final connectionStatus = new BehaviorSubject<OrchidConnectionState>();
+  final connectionStatus = BehaviorSubject<OrchidConnectionState>();
 
   /// Publish the synchronization status.
-  final syncStatus = new BehaviorSubject<OrchidSyncStatus>();
+  final syncStatus = BehaviorSubject<OrchidSyncStatus>();
 
   /// Publish the network route status.
-  final routeStatus = new BehaviorSubject<OrchidRoute>();
+  final routeStatus = BehaviorSubject<OrchidRoute>();
 
   /// Publishes a status of true if the user has granted any necessary OS level permissions to allow
   /// installation and activation of the Orchid VPN networking extension.
@@ -75,7 +75,7 @@ class MockOrchidAPI implements OrchidAPI {
   final networkingPermissionStatus = BehaviorSubject<bool>();
 
   /// Publish development logging information from the channel implementation.
-  final log = new PublishSubject<String>();
+  final log = PublishSubject<String>();
 
   /// Trigger a request for OS level permissions required to allow installation and activation of the
   /// Orchid VPN networking extension, potentially causing the OS to prompt the user.

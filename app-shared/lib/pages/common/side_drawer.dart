@@ -8,7 +8,7 @@ class SideDrawer extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
             color: AppColors.dark_purple,
-            gradient: new LinearGradient(
+            gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [

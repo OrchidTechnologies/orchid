@@ -7,7 +7,7 @@ import 'package:rxdart/rxdart.dart';
 
 /// Provide access to the application level log file stored in the local filesystem.
 class LogFile {
-  static final LogFile _singleton = new LogFile._internal();
+  static final LogFile _singleton = LogFile._internal();
   static final String _fileName = "orchid_log.txt";
 
   factory LogFile() {

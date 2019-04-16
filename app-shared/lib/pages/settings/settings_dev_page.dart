@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/app_transitions.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
+import 'package:orchid/pages/onboarding/app_onboarding.dart';
 
 class SettingsDevPage extends StatefulWidget {
   @override
@@ -23,13 +22,17 @@ class _SettingsDevPage extends State<SettingsDevPage> {
           alignment: Alignment.centerLeft,
           padding: EdgeInsets.all(20),
           child: RaisedButton(
-              child: Text("Re-run walkthrough"),
+              child: Text("Re-run onboarding"),
               onPressed: () {
-                Navigator.push(context,
-                    AppTransitions.downToUpTransition(WalkthroughPages()));
+                _rerunOnboarding();
               }),
         ),
       ],
     );
+  }
+
+  void _rerunOnboarding() async {
+    await AppOnboarding().reset();
+    AppOnboarding().showPageIfNeeded(context);
   }
 }

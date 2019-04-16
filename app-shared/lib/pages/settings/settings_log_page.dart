@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/log_file.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
@@ -119,56 +120,19 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                 children: <Widget>[
                   Padding(
                       padding: const EdgeInsets.all(0),
-                      child: button(
-                          title: "Copy",
-                          imageName: "assets/images/business.png",
-                          onPressed: _onCopyButton)),
+                      child: RoundTitledRaisedButton(title: "Copy", imageName: "assets/images/business.png", onPressed: _onCopyButton)),
                   Padding(
                       padding: const EdgeInsets.only(left: 0, right: 0),
-                      child: button(
-                          title: "Delete",
-                          imageName: "assets/images/business.png",
-                          onPressed: _confirmDelete)),
+                      child: RoundTitledRaisedButton(title: "Delete", imageName: "assets/images/business.png", onPressed: _confirmDelete)),
                   Padding(
                       padding: const EdgeInsets.all(0),
-                      child: button(
-                          title: "Save",
-                          imageName: "assets/images/business.png",
-                          onPressed: null /*_onSave*/)),
+                      child: RoundTitledRaisedButton(title: "Save", imageName: "assets/images/business.png", onPressed: null)),
                 ],
               ),
             )
           ],
         ),
       ),
-    );
-  }
-
-  Widget button({String title, String imageName, VoidCallback onPressed}) {
-    return Column(
-      children: <Widget>[
-        RaisedButton(
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          padding: EdgeInsets.all(0),
-          color: AppColors.purple_3,
-          child: Column(
-            children: <Widget>[
-              Image.asset(imageName,
-                  color: AppColors.white, width: 40, height: 40),
-            ],
-          ),
-          onPressed: onPressed,
-          shape: new CircleBorder(),
-        ),
-        SizedBox(height: 8),
-        Text(
-          title,
-          style: TextStyle(
-              //height: 1.333,
-              fontSize: 13,
-              color: AppColors.purple_3),
-        )
-      ],
     );
   }
 
@@ -188,11 +152,11 @@ class _SettingsLogPage extends State<SettingsLogPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: new Text("Delete Log Data"),
-          content: new Text("Remove all log data?"),
+          title: Text("Delete Log Data"),
+          content: Text("Remove all log data?"),
           actions: <Widget>[
-            new FlatButton(
-              child: new Text(
+            FlatButton(
+              child: Text(
                 "Cancel",
                 style: TextStyle(color: Colors.black),
               ),
@@ -200,8 +164,8 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                 Navigator.of(context).pop();
               },
             ),
-            new FlatButton(
-              child: new Text(
+            FlatButton(
+              child: Text(
                 "Delete",
                 style: TextStyle(color: Colors.red),
               ),
@@ -216,3 +180,5 @@ class _SettingsLogPage extends State<SettingsLogPage> {
     );
   }
 }
+
+

@@ -10,7 +10,7 @@ void main() {
   // Force portrait orientation
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
-    runApp(new OrchidApp());
+    runApp(OrchidApp());
   });
 }
 

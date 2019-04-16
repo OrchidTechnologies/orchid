@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_transitions.dart';
+import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/notification_banner.dart';
@@ -12,6 +13,7 @@ import 'package:orchid/pages/common/options_bar.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:orchid/pages/connect/route_info.dart';
+import 'package:orchid/pages/onboarding/app_onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:flutter/scheduler.dart';
@@ -33,6 +35,11 @@ class _QuickConnectPageState
   // Interpolates 0-1 on connection
   AnimationController _connectAnimController;
 
+  static const qc_gradient_start = AppColors.grey_7;
+  static const qc_gradient_end = AppColors.grey_6;
+  static const qc_purple_gradient_start = AppColors.purple_2;
+  static const qc_purple_gradient_end = AppColors.purple_1;
+
   Animation<Color> _gradientStart;
   Animation<Color> _gradientEnd;
   Animation<Color> _iconColor; // The options bar icons
@@ -45,7 +52,7 @@ class _QuickConnectPageState
   void initState() {
     super.initState();
 
-    checkOnboarding();
+    AppOnboarding().showPageIfNeeded(context);
     initListeners();
     initAnimations();
   }
@@ -129,13 +136,13 @@ class _QuickConnectPageState
     //var _curvedAnim = _connectedStatusAnimationController.drive(CurveTween(curve: Curves.ease));
 
     _gradientStart = ColorTween(
-            begin: AppColors.qc_gradient_start,
-            end: AppColors.qc_purple_gradient_start)
+            begin: qc_gradient_start,
+            end: qc_purple_gradient_start)
         .animate(_connectAnimController);
 
     _gradientEnd = ColorTween(
-            begin: AppColors.qc_gradient_end,
-            end: AppColors.qc_purple_gradient_end)
+            begin: qc_gradient_end,
+            end: qc_purple_gradient_end)
         .animate(_connectAnimController);
 
     _iconColor = ColorTween(begin: AppColors.purple, end: AppColors.white)
@@ -148,10 +155,7 @@ class _QuickConnectPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-          preferredSize: Size.fromHeight(4),
-          // Min space with no custom widgets
-          child: AppBar(backgroundColor: AppColors.purple, elevation: 0.0)),
+      appBar: SmallAppBar.build(context),
       body: buildPageContainer(context),
       drawer: SideDrawer(),
     );
@@ -170,7 +174,7 @@ class _QuickConnectPageState
         AnimatedBuilder(
           builder: (context, child) => Container(
                   decoration: BoxDecoration(
-                gradient: new LinearGradient(
+                gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [_gradientStart.value, _gradientEnd.value]),
@@ -182,11 +186,11 @@ class _QuickConnectPageState
         Container(
             margin: EdgeInsets.only(bottom: 15.0),
             decoration: BoxDecoration(
-                image: new DecorationImage(
+                image: DecorationImage(
                     fit: BoxFit.fitWidth,
                     alignment: Alignment.bottomCenter,
                     image:
-                        new AssetImage('assets/images/world_map_purp.png')))),
+                        AssetImage('assets/images/world_map_purp.png')))),
 
         // The background animation
         Visibility(
@@ -343,14 +347,14 @@ class _QuickConnectPageState
     OrchidAPI().reroute();
   }
 
+  /*
   void checkOnboarding() {
     UserPreferences()
         .getWalkthroughCompleted()
         .then((bool walkthroughCompleted) {
       if (!(walkthroughCompleted ?? false)) {
-        Navigator.push(
-            context, AppTransitions.downToUpTransition(WalkthroughPages()));
+        Navigator.push(context, AppTransitions.downToUpTransition(WalkthroughPages()));
       }
     });
-  }
+  }*/
 }
