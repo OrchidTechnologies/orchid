@@ -14,7 +14,7 @@ cflags += -I$(output)/libevent/include
 
 $(pwd)/libevent/configure: pwd := $(pwd)
 $(pwd)/libevent/configure: $(pwd)/libevent/configure.ac
-	cd $(pwd)/libevent && ./autogen.sh
+	cd $(pwd)/libevent && ../env/autogen.sh
 
 $(output)/libevent/Makefile: host := $(host)
 $(output)/libevent/Makefile: cycc := $(cycc)
