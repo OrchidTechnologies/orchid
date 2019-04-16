@@ -30,13 +30,15 @@ static void SetupRandom() {
     _assert(sodium_init() != -1);
 }
 
-Hash::Hash(const Buffer &buffer) {
+Block<crypto_generichash_BYTES> Hash(const Buffer &data) {
+    Block<crypto_generichash_BYTES> hash;
     crypto_generichash_state state;
     crypto_generichash_init(&state, NULL, 0, crypto_generichash_BYTES);
-    buffer.each([&](const Region &region) {
+    data.each([&](const Region &region) {
         crypto_generichash_update(&state, region.data(), region.size());
     });
-    crypto_generichash_final(&state, data(), size());
+    crypto_generichash_final(&state, hash.data(), hash.size());
+    return hash;
 }
 
 }

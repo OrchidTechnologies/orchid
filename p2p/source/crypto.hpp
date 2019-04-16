@@ -44,12 +44,7 @@ Block<Size_> Random() {
     return value;
 }
 
-class Hash :
-    public Block<crypto_generichash_BYTES>
-{
-  public:
-    Hash(const Buffer &data);
-};
+Block<crypto_generichash_BYTES> Hash(const Buffer &data);
 
 typedef Block<crypto_box_SECRETKEYBYTES> Secret;
 typedef Block<crypto_box_PUBLICKEYBYTES> Common;

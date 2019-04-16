@@ -55,6 +55,9 @@ int main() {
     return orc::Wait([&]() -> task<int> {
         co_await orc::Schedule();
 
+        //std::cerr << co_await orc::GetLocal()->Request("GET", {"http", "cydia.saurik.com", "80", "/debug.txt"}, {}, "") << std::endl;
+        //co_return 0;
+
         //orc::Endpoint endpoint({"http", "localhost", "8545", "/"});
         //orc::Endpoint endpoint({"https", "mainnet.infura.io", "443", "/v3/" ORCHID_INFURA});
         /*orc::Endpoint endpoint({"https", "eth-mainnet.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
@@ -63,14 +66,12 @@ int main() {
         std::cerr << parsed << std::endl;
         co_return 0;*/
 
-        auto service(co_await orc::Setup("localhost", "9999"));
-        if (!service)
-            co_return 1;
-
-        orc::Sink sink(std::move(service), [](const orc::Buffer &data) {
+        auto delayed(co_await orc::Setup());
+        orc::Sink sink([](const orc::Buffer &data) {
             std::cerr << data << std::endl;
-        });
+        }, std::move(delayed.link_));
 
+        co_await delayed.code_("localhost", "9999");
         co_await sink.Send(orc::Beam("test\n"));
 
         co_await block;

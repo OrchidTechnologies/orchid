@@ -23,30 +23,36 @@
 #ifndef ORCHID_ADAPTER_HPP
 #define ORCHID_ADAPTER_HPP
 
+#include <queue>
+
+#include <cppcoro/async_auto_reset_event.hpp>
+
 #include "link.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
-// XXX: this is wrong, as the Subsets are temporary :/
 template <typename Buffers_>
-class Wrapper :
+class Converted final :
     public Buffer
 {
   private:
+    std::vector<Subset> regions_;
     const Buffers_ &buffers_;
 
   public:
-    Wrapper(const Buffers_ &buffers) :
+    Converted(const Buffers_ &buffers) :
         buffers_(buffers)
     {
+        for (auto i(buffers_.begin()), e(buffers_.end()); i != e; ++i) {
+            const auto &buffer(*i);
+            regions_.emplace_back(static_cast<const uint8_t *>(buffer.data()), buffer.size());
+        }
     }
 
     void each(const std::function<void (const Region &)> &code) const override {
-        for (auto i(buffers_.begin()), e(buffers_.end()); i != e; ++i) {
-            const auto &buffer(*i);
-            code(Subset(static_cast<const uint8_t *>(buffer.data()), buffer.size()));
-        }
+        for (const auto &region : regions_)
+            code(region);
     }
 };
 
@@ -57,12 +63,21 @@ class Adapter {
 
   private:
     boost::asio::io_context &context_;
-    U<Link> link_;
+    Sink<Link> sink_;
+
+    std::mutex mutex_;
+    std::queue<Beam> data_;
+    cppcoro::async_auto_reset_event ready_;
+    size_t offset_ = 0;
 
   public:
     Adapter(boost::asio::io_context &context, U<Link> link) :
         context_(context),
-        link_(std::move(link))
+        sink_([this](const Buffer &data) {
+            std::unique_lock<std::mutex> lock(mutex_);
+            data_.emplace(data);
+            ready_.set();
+        }, std::move(link))
     {
     }
 
@@ -76,14 +91,49 @@ class Adapter {
 
     template <typename Buffers_, typename Handler_>
     void async_read_some(const Buffers_ &buffers, Handler_ handler) {
-        boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), 31337));
+        Task([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
+            for (;; co_await ready_, co_await Schedule()) {
+                std::unique_lock<std::mutex> lock(mutex_);
+                if (!data_.empty()) {
+                    const auto &beam(data_.front());
+                    auto base(beam.data());
+                    auto rest(beam.size() - offset_);
+                    auto writ(0);
+
+                    const auto &buffer(buffers); do {
+                    //for (const auto &buffer : buffers) {
+                        if (rest == 0)
+                            break;
+
+                        auto copy(std::min(buffer.size(), rest));
+                        memcpy(buffer.data(), base + offset_, copy);
+
+                        // XXX: too many variables
+                        rest -= copy;
+                        offset_ += copy;
+                        writ += copy;
+                    //}
+                    } while (false);
+
+                    if (rest == 0) {
+                        data_.pop();
+                        offset_ = 0;
+                    }
+
+                    boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), writ));
+                    break;
+                }
+            }
+        });
     }
 
     template <typename Buffers_, typename Handler_>
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
-        Wrapper<Buffers_> wrapper(buffers);
-        Wait(link_->Send(wrapper));
-        boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), 31337));
+        Task([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
+            Converted<Buffers_> converted(buffers);
+            co_await sink_->Send(converted);
+            boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));
+        });
     }
 };
 

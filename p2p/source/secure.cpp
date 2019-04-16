@@ -20,40 +20,24 @@
 /* }}} */
 
 
-#ifndef ORCHID_HTTP_HPP
-#define ORCHID_HTTP_HPP
-
-#include <map>
-#include <string>
-
-#include "task.hpp"
+#include "secure.hpp"
 
 namespace orc {
 
-class Adapter;
-
-class URI {
-  public:
-    std::string schema_;
-    std::string host_;
-    std::string port_;
-    std::string path_;
-
-    URI(const std::string &uri);
-
-    URI(std::string schema, std::string host, std::string port, std::string path) :
-        schema_(schema),
-        host_(host),
-        port_(port),
-        path_(path)
-    {
-    }
-};
-
-task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
-
-task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
-
+Secure::Secure(bool server, U<Link> link, decltype(verify_) verify) :
+    sink_([this](const Buffer &data) {
+        Land(data);
+    }, std::move(link)),
+    verify_(std::move(verify))
+{
 }
 
-#endif//ORCHID_HTTP_HPP
+task<void> Secure::_() {
+    co_return;
+}
+
+task<void> Secure::Send(const Buffer &data) {
+    co_return co_await sink_->Send(data);
+}
+
+}

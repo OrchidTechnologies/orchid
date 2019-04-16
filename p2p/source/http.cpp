@@ -45,7 +45,7 @@
 namespace orc {
 
 template <typename Stream_>
-task<std::string> Request(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
+task<std::string> Request_(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
     (void) co_await boost::beast::http::async_write(stream, req, orc::Token());
 
     boost::beast::flat_buffer buffer;
@@ -57,7 +57,7 @@ task<std::string> Request(Stream_ &stream, boost::beast::http::request<boost::be
 }
 
 template <typename Socket_>
-task<std::string> Request(Socket_ &socket, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Request_(Socket_ &socket, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
     boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), uri.path_, 11};
     req.set(boost::beast::http::field::host, uri.host_);
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -72,7 +72,7 @@ task<std::string> Request(Socket_ &socket, const std::string &method, const URI 
 
     if (false) {
     } else if (uri.schema_ == "http") {
-        body = co_await Request(socket, req);
+        body = co_await Request_(socket, req);
     } else if (uri.schema_ == "https") {
         // XXX: this needs security
         boost::asio::ssl::context context{boost::asio::ssl::context::sslv23_client};
@@ -81,7 +81,7 @@ task<std::string> Request(Socket_ &socket, const std::string &method, const URI 
         boost::asio::ssl::stream<Socket_ &> stream{socket, context};
         co_await stream.async_handshake(boost::asio::ssl::stream_base::client, orc::Token());
 
-        body = co_await Request(stream, req);
+        body = co_await Request_(stream, req);
 
         try {
             co_await stream.async_shutdown(orc::Token());
@@ -98,9 +98,8 @@ task<std::string> Request(Socket_ &socket, const std::string &method, const URI 
     co_return body;
 }
 
-task<std::string> Request(U<Link> link, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
-    Adapter adapter(orc::Context(), std::move(link));
-    return Request(adapter, method, uri, headers, data);
+task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+    return Request_(adapter, method, uri, headers, data);
 }
 
 task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
@@ -110,7 +109,7 @@ task<std::string> Request(const std::string &method, const URI &uri, const std::
     boost::asio::ip::tcp::socket socket(orc::Context());
     (void) co_await boost::asio::async_connect(socket, results.begin(), results.end(), orc::Token());
 
-    auto body(co_await Request(socket, method, uri, headers, data));
+    auto body(co_await Request_(socket, method, uri, headers, data));
 
     boost::beast::error_code ec;
     socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);

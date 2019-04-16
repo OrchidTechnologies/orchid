@@ -27,7 +27,7 @@
 
 namespace orc {
 
-class Socket :
+class Socket final :
     public Link
 {
   private:

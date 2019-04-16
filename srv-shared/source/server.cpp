@@ -42,6 +42,7 @@
 //#include "ethereum.hpp"
 #include "http.hpp"
 #include "scope.hpp"
+#include "secure.hpp"
 #include "shared.hpp"
 #include "socket.hpp"
 #include "task.hpp"
@@ -80,12 +81,12 @@ class Output :
 
   public:
     Output(const W<Pipe> &path, const Tag &tag, U<Type_> link) :
-        sink_(std::move(link), [weak = path, tag](const Buffer &data) {
+        sink_([weak = path, tag](const Buffer &data) {
             if (auto strong = weak.lock())
                 Task([strong = std::move(strong), tag, data = Beam(data)]() -> task<void> {
                     co_await strong->Send(Tie(tag, data));
                 });
-        })
+        }, std::move(link))
     {
         _trace();
     }
@@ -209,7 +210,7 @@ class Account :
                     _assert(output != self->outputs_.end());
                     auto channel(dynamic_cast<Output<Channel> *>(output->second.get()));
                     _assert(channel != NULL);
-                    co_await *channel->operator ->();
+                    co_await (*channel)->_();
                     co_await self->Send(Tie(nonce));
 
 
@@ -256,7 +257,7 @@ class Conduit :
 {
   private:
     S<Node> node_;
-    Sink<> sink_;
+    Sink<Secure> sink_;
 
     S<Account> account_;
 
@@ -266,12 +267,16 @@ class Conduit :
   public:
     Conduit(const S<Node> &node, U<Link> channel) :
         node_(node),
-        sink_(std::move(channel), [this](const Buffer &data) {
+        sink_([this](const Buffer &data) {
             if (data.empty())
                 self_.reset();
-            else
+            else {
+                _assert(account_ != nullptr);
                 account_->Land(data);
-        })
+            }
+        }, std::make_unique<Secure>(true, std::move(channel), []() -> bool {
+            return true;
+        }))
     {
         Identity identity;
         account_ = node_->Find(identity.GetCommon());
@@ -279,7 +284,7 @@ class Conduit :
     }
 
     virtual ~Conduit() {
-        if (account_)
+        if (account_ != nullptr)
             account_->Dissociate(this);
     }
 
@@ -445,8 +450,8 @@ int main() {
     _trace();
 #endif
 
-    orc::Block<4> block;
-    orc::Hash hash(block);
+    //orc::Block<4> block;
+    //auto hash(orc::Hash(block));
 
     auto internal(new Internal{});
     internal->node_ = std::make_shared<orc::Node>();

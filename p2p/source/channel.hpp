@@ -188,12 +188,13 @@ _trace();
 
 class Channel :
     public Link,
-    public webrtc::DataChannelObserver,
-    public cppcoro::async_manual_reset_event
+    public webrtc::DataChannelObserver
 {
   private:
     const S<Connection> connection_;
     const rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
+
+    cppcoro::async_manual_reset_event opened_;
     cppcoro::async_manual_reset_event closed_;
 
   public:
@@ -208,10 +209,16 @@ class Channel :
     Channel(const S<Connection> &connection, const std::string &label = std::string(), const std::string &protocol = std::string()) :
         Channel(connection, [&]() {
             webrtc::DataChannelInit init;
+            init.ordered = false;
             init.protocol = protocol;
             return (*connection)->CreateDataChannel(label, &init);
         }())
     {
+    }
+
+    task<void> _() {
+        co_await opened_;
+        co_await Schedule();
     }
 
     virtual ~Channel() {
@@ -230,7 +237,7 @@ _trace();
                 break;
             case webrtc::DataChannelInterface::kOpen:
 _trace();
-                set();
+                opened_.set();
                 break;
             case webrtc::DataChannelInterface::kClosing:
 _trace();

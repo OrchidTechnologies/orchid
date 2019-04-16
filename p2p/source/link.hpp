@@ -94,7 +94,7 @@ class Sink {
     U<Type_> link_;
 
   public:
-    Sink(U<Type_> link, Drain drain) :
+    Sink(Drain drain, U<Type_> link) :
         link_(std::move(link))
     {
         _assert(link_);
@@ -124,19 +124,20 @@ class Sink {
 };
 
 
+template <typename Link_>
 class Router :
     public Pipe
 {
-    template <typename Type_>
+    template <typename Router_>
     friend class Route;
 
   private:
     std::map<Tag, Drain> routes_;
-    Sink<> sink_;
+    Sink<Link_> sink_;
 
   public:
-    Router(U<Link> link) :
-        sink_(std::move(link), [this](const Buffer &data) {
+    Router(U<Link_> link) :
+        sink_([this](const Buffer &data) {
             if (data.empty())
                 for (const auto &[tag, drain] : routes_)
                     drain(data);
@@ -146,11 +147,11 @@ class Router :
                 _assert(route != routes_.end());
                 route->second(rest);
             }
-        })
+        }, std::move(link))
     {
     }
 
-    ~Router() {
+    virtual ~Router() {
         if (!routes_.empty())
             std::terminate();
     }
@@ -159,21 +160,25 @@ class Router :
         co_return co_await sink_.Send(data);
     }
 
-    U<Link> Move() {
+    Link_ *operator ->() {
+        return sink_.operator ->();
+    }
+
+    U<Link_> Move() {
         return sink_.Move();
     }
 };
 
-template <typename Type_>
-class Route :
+template <typename Router_>
+class Route final :
     public Link
 {
   public:
-    const S<Type_> router_;
+    const S<Router_> router_;
     const Tag tag_;
 
   public:
-    Route(const S<Type_> router) :
+    Route(const S<Router_> router) :
         router_(router),
         tag_([this]() {
             for (;;) {
@@ -195,8 +200,8 @@ class Route :
         co_return co_await router_->Send(Tie(tag_, data));
     }
 
-    Type_ *operator ->() {
-        return router_.get();
+    const S<Router_> &operator ->() {
+        return router_;
     }
 };
 

@@ -69,7 +69,7 @@ class Region :
     }
 };
 
-class Subset :
+class Subset final :
     public Region
 {
   private:
@@ -93,7 +93,7 @@ class Subset :
 };
 
 template <size_t Size_>
-class Block :
+class Block final :
     public Region
 {
   public:
@@ -123,9 +123,6 @@ class Block :
     Block(const Block &rhs) :
         data_(rhs.data_)
     {
-    }
-
-    virtual ~Block() {
     }
 
     const uint8_t *data() const override {
@@ -238,7 +235,7 @@ inline bool operator ==(const Beam &lhs, const Beam &rhs) {
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
-class Nothing :
+class Nothing final :
     public Region
 {
   public:
@@ -252,7 +249,7 @@ class Nothing :
 };
 
 template <typename... Buffer_>
-class Knot :
+class Knot final :
     public Buffer
 {
   private:
@@ -301,7 +298,7 @@ auto Tie(Buffer_ &&...buffers) {
     return Knot<Buffer_...>(std::forward<Buffer_>(buffers)...);
 }
 
-class VectorBuffer :
+class VectorBuffer final :
     public Buffer
 {
   private:
@@ -314,7 +311,7 @@ class VectorBuffer :
     }
 };
 
-class Sequence :
+class Sequence final :
     public Buffer
 {
   private:
@@ -391,14 +388,14 @@ class Sequence :
     }
 };
 
-class Window :
+class Window final :
     public Buffer
 {
   private:
     size_t count_;
     std::unique_ptr<const Region *[]> regions_;
 
-    class Iterator :
+    class Iterator final :
         public Region
     {
         friend class Window;

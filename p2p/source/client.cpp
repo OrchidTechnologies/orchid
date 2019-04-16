@@ -23,14 +23,24 @@
 #include <iostream>
 #include <thread>
 
+#include "adapter.hpp"
+#include "baton.hpp"
 #include "channel.hpp"
 #include "client.hpp"
 #include "http.hpp"
 #include "link.hpp"
 #include "scope.hpp"
+#include "socket.hpp"
 #include "trace.hpp"
 
 namespace orc {
+
+task<std::string> Origin::Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+    auto delayed(co_await Connect());
+    Adapter adapter(orc::Context(), std::move(delayed.link_));
+    co_await delayed.code_(uri.host_, uri.port_);
+    co_return co_await orc::Request(adapter, method, uri, headers, data);
+}
 
 class Actor :
     public Connection
@@ -49,15 +59,19 @@ class Tunnel :
     public Link
 {
   private:
-    Sink<Route<Account$>> sink_;
+    Sink<Route<Remote>> sink_;
     cppcoro::async_manual_reset_event closed_;
 
   public:
-    Tunnel(const S<Account$> &account) :
-        sink_(std::make_unique<Route<Account$>>(account), [this](const Buffer &data) {
+    Tunnel(const S<Remote> &remote) :
+        sink_([this](const Buffer &data) {
             Land(data);
-        })
+        }, remote->Path())
     {
+    }
+
+    task<void> _(const std::function<task<void> (const Tag &tag)> &setup) {
+        co_await setup(sink_->tag_);
     }
 
     ~Tunnel() {
@@ -65,10 +79,6 @@ class Tunnel :
             Take<>(co_await (*route)->Call(CloseTag, route->tag_));
             // XXX: co_await closed_
         });
-    }
-
-    task<void> _(const std::function<task<void> (const Tag &tag)> &setup) {
-        co_await setup(sink_->tag_);
     }
 
     task<void> Send(const Buffer &data) override {
@@ -83,47 +93,55 @@ class Tunnel :
     }
 };
 
-task<Beam> Account$::Call(const Tag &command, const Buffer &args) {
+U<Route<Remote>> Remote::Path() {
+    return std::make_unique<Route<Remote>>(shared_from_this());
+}
+
+task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
     Beam response;
     cppcoro::async_manual_reset_event responded;
-    Sink sink(std::make_unique<Route<Account$>>(shared_from_this()), [&](const Buffer &data) {
+    Sink sink([&](const Buffer &data) {
         response = data;
         responded.set();
-    });
+    }, Path());
     co_await sink.Send(Tie(command, args));
     co_await responded;
     co_return response;
 }
 
-task<S<Account$>> Account$::Hop(const std::string &server) {
+task<S<Remote>> Remote::Hop(const std::string &server) {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
-    co_await tunnel->_([&](const Tag &tag) -> task<void> {
+    auto backup(tunnel.get());
+    auto remote(std::make_shared<Remote>(std::move(tunnel)));
+    co_await backup->_([&](const Tag &tag) -> task<void> {
         auto handle(NewTag()); // XXX: this is horribly wrong
         Take<>(co_await Call(EstablishTag, Tie(handle)));
         Take<>(co_await Call(ChannelTag, Tie(handle, tag)));
         auto offer(co_await Call(OfferTag, handle));
-        auto answer(co_await Request("POST", {"http", server, "8082", "/"}, {}, offer.str()));
+        auto answer(co_await orc::Request("POST", {"http", server, "8082", "/"}, {}, offer.str()));
         Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
         Take<>(co_await Call(FinishTag, Tie(tag)));
     });
-    co_return std::make_shared<Account$>(std::move(tunnel));
+    co_return remote;
 }
 
-task<U<Link>> Account$::Connect(const std::string &host, const std::string &port) {
+task<DelayedConnect> Remote::Connect() {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
-    co_await tunnel->_([&](const Tag &tag) -> task<void> {
-        auto res(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-        Take<>(res);
-    });
-    co_return std::move(tunnel);
+    auto backup(tunnel.get());
+    co_return {[this, backup](const std::string &host, const std::string &port) -> task<void> {
+        co_await backup->_([&](const Tag &tag) -> task<void> {
+            auto res(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+            Take<>(res);
+        });
+    }, std::move(tunnel)};
 }
 
-task<S<Account$>> Hop(const std::string &server) {
+task<S<Remote>> Local::Hop(const std::string &server) {
     auto client(std::make_shared<Actor>());
     auto channel(std::make_unique<Channel>(client));
 
     auto offer(co_await client->Offer());
-    auto answer(co_await Request("POST", {"http", server, "8082", "/"}, {}, offer));
+    auto answer(co_await orc::Request("POST", {"http", server, "8082", "/"}, {}, offer));
 
     std::cerr << std::endl;
     std::cerr << "^^^^^^^^^^^^^^^^" << std::endl;
@@ -134,36 +152,40 @@ task<S<Account$>> Hop(const std::string &server) {
     std::cerr << std::endl;
 
     co_await client->Negotiate(answer);
-    co_await *channel;
-    co_await Schedule();
-    co_return std::make_shared<Account$>(std::move(channel));
+
+    auto backup(channel.get());
+    auto remote(std::make_shared<Remote>(std::move(channel)));
+    co_await backup->_();
+    co_return remote;
 }
 
-task<U<Link>> Setup(const std::string &host, const std::string &port) {
-    S<Account$> account;
+task<DelayedConnect> Local::Connect() {
+    auto socket(std::make_unique<Socket>());
+    auto backup(socket.get());
+    co_return {[backup](const std::string &host, const std::string &port) -> task<void> {
+        co_await backup->_(host, port);
+    }, std::move(socket)};
+}
+
+S<Local> GetLocal() {
+    static auto local(std::make_shared<Local>());
+    return local;
+}
+
+task<DelayedConnect> Setup() {
+    S<Origin> origin(GetLocal());
 
     const char *server("mac.saurik.com");
     //const char *server("localhost");
 
-    {
-        account = co_await Hop(server);
+    for (unsigned i(0); i != 3; ++i) {
+        auto remote(co_await origin->Hop(server));
         Identity identity;
-        co_await account->_(identity.GetCommon());
+        co_await remote->_(identity.GetCommon());
+        origin = remote;
     }
 
-    {
-        account = co_await account->Hop(server);
-        Identity identity;
-        co_await account->_(identity.GetCommon());
-    }
-
-    {
-        account = co_await account->Hop(server);
-        Identity identity;
-        co_await account->_(identity.GetCommon());
-    }
-
-    co_return co_await account->Connect(host, port);
+    co_return co_await origin->Connect();
 }
 
 }

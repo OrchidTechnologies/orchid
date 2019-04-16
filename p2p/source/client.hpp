@@ -23,47 +23,75 @@
 #ifndef ORCHID_CLIENT_HPP
 #define ORCHID_CLIENT_HPP
 
+#include "http.hpp"
+#include "secure.hpp"
 #include "shared.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
-class Account$;
-
-class Connector {
-  public:
-    virtual task<S<Account$>> Hop(const std::string &server) = 0;
-    virtual task<U<Link>> Connect(const std::string &host, const std::string &port) = 0;
+template <typename... Args_>
+struct Delayed {
+    std::function<task<void> (Args_...)> code_;
+    U<Link> link_;
 };
 
-class Account$ :
-    public std::enable_shared_from_this<Account$>,
-    public Router,
-    public Connector
-{
-  private:
+typedef Delayed<const std::string &, const std::string &> DelayedConnect;
 
+class Remote;
+
+class Origin {
   public:
-    Account$(U<Link> link) :
-        Router(std::move(link))
+    virtual task<S<Remote>> Hop(const std::string &server) = 0;
+
+    virtual task<DelayedConnect> Connect() = 0;
+
+    task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
+};
+
+class Remote :
+    public std::enable_shared_from_this<Remote>,
+    public Origin,
+    public Router<Secure>
+{
+  public:
+    Remote(U<Link> link) :
+        Router(std::make_unique<Secure>(false, std::move(link), []() -> bool {
+            return true;
+        }))
     {
     }
 
     task<void> _(const Common &common) {
-        co_return;
+        co_return co_await (*this)->_();
+    }
+
+    virtual ~Remote() {
     }
 
 
+    U<Route<Remote>> Path();
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<S<Account$>> Hop(const std::string &server) override;
-    task<U<Link>> Connect(const std::string &host, const std::string &port) override;
+    task<S<Remote>> Hop(const std::string &server) override;
+    task<DelayedConnect> Connect() override;
 };
 
-task<S<Account$>> Hop(const std::string &server);
+class Local :
+    public Origin
+{
+  public:
+    virtual ~Local() {
+    }
 
-task<U<Link>> Setup(const std::string &host, const std::string &port);
+    task<S<Remote>> Hop(const std::string &server) override;
+    task<DelayedConnect> Connect() override;
+};
+
+S<Local> GetLocal();
+
+task<DelayedConnect> Setup();
 
 }
 

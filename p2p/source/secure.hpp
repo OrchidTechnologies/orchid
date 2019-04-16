@@ -20,40 +20,28 @@
 /* }}} */
 
 
-#ifndef ORCHID_HTTP_HPP
-#define ORCHID_HTTP_HPP
+#ifndef ORCHID_SECURE_HPP
+#define ORCHID_SECURE_HPP
 
-#include <map>
-#include <string>
-
-#include "task.hpp"
+#include "link.hpp"
 
 namespace orc {
 
-class Adapter;
+class Secure final :
+    public Link
+{
+  private:
+    Sink<> sink_;
+    std::function<bool ()> verify_;
 
-class URI {
   public:
-    std::string schema_;
-    std::string host_;
-    std::string port_;
-    std::string path_;
+    Secure(bool server, U<Link> link, decltype(verify_) verify);
 
-    URI(const std::string &uri);
+    task<void> _();
 
-    URI(std::string schema, std::string host, std::string port, std::string path) :
-        schema_(schema),
-        host_(host),
-        port_(port),
-        path_(path)
-    {
-    }
+    task<void> Send(const Buffer &data) override;
 };
-
-task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
-
-task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 
 }
 
-#endif//ORCHID_HTTP_HPP
+#endif//ORCHID_SECURE_HPP
