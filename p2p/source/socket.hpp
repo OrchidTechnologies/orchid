@@ -31,45 +31,48 @@ namespace orc {
 
 template <typename Type_>
 class Socket final :
+    public std::enable_shared_from_this<Socket<Type_>>,
     public Link
 {
   private:
-    Type_ socket_;
+    S<Type_> socket_;
 
   public:
     Socket() :
-        socket_(Context())
+        socket_(std::make_shared<Type_>(Context()))
     {
     }
 
     task<void> _(const std::string &host, const std::string &port) {
-        co_await asio::async_connect(socket_, co_await asio::ip::basic_resolver<typename Type_::protocol_type>(Context()).async_resolve({host, port}, Token()), Token());
+        co_await asio::async_connect(*socket_, co_await asio::ip::basic_resolver<typename Type_::protocol_type>(Context()).async_resolve({host, port}, Token()), Token());
 
-        // XXX: the memory management on this is incorrect
-        Task([this]() -> task<void> {
+        Task([socket = socket_, weak = this->weak_from_this()]() -> task<void> {
             try {
                 for (;;) {
                     char data[1024];
-                    size_t writ(co_await socket_.async_receive(asio::buffer(data), Token()));
-                    Land(Beam(data, writ));
+                    size_t writ(co_await socket->async_receive(asio::buffer(data), Token()));
+                    _assert(writ != 0);
+                    if (auto strong = weak.lock())
+                        strong->Land(Beam(data, writ));
                 }
-            } catch (const asio::system_error &e) {
-                Land();
+            } catch (const asio::error_code &error) {
+                if (error == boost::asio::error::eof) {
+                    if (auto strong = weak.lock())
+                        strong->Land();
+                }
             }
         });
     }
 
     ~Socket() {
-        // XXX: this feels (asynchronously) incorrect
-        socket_.close();
+        socket_->close();
     }
 
     task<void> Send(const Buffer &data) override {
         if (data.empty())
-            // XXX: is there really no asynchronous shutdown?
-            socket_.shutdown(Type_::protocol_type::socket::shutdown_send);
+            socket_->shutdown(Type_::protocol_type::socket::shutdown_send);
         else
-            co_await socket_.async_send(Sequence(data), Token());
+            co_await socket_->async_send(Sequence(data), Token());
     }
 };
 

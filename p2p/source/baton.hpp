@@ -48,10 +48,10 @@ template <typename Type_, typename... Args_>
 class Baton;
 
 template <typename Type_>
-class Baton<Type_, boost::system::error_code> {
+class Baton<Type_, asio::error_code> {
   public:
     typedef void Value;
-    boost::system::error_code error_;
+    asio::error_code error_;
 
   public:
     task<void> get() {
@@ -62,14 +62,14 @@ class Baton<Type_, boost::system::error_code> {
         }
     }
 
-    Type_ set(const boost::system::error_code &error) {
+    Type_ set(const asio::error_code &error) {
         error_ = error;
     }
 };
 
 template <typename Type_, typename Value_>
-class Baton<Type_, boost::system::error_code, Value_> :
-    public Baton<Type_, boost::system::error_code>
+class Baton<Type_, asio::error_code, Value_> :
+    public Baton<Type_, asio::error_code>
 {
   public:
     typedef Value_ Value;
@@ -77,14 +77,14 @@ class Baton<Type_, boost::system::error_code, Value_> :
 
   public:
     task<Value> get() {
-        co_await Baton<Type_, boost::system::error_code>::get();
+        co_await Baton<Type_, asio::error_code>::get();
         auto value(value_);
         co_await Schedule();
         co_return value;
     }
 
-    Type_ set(const boost::system::error_code &error, const Value &value) {
-        Baton<Type_, boost::system::error_code>::set(error);
+    Type_ set(const asio::error_code &error, const Value &value) {
+        Baton<Type_, asio::error_code>::set(error);
         value_ = value;
     }
 };
