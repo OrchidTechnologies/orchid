@@ -38,6 +38,7 @@ class LogFile {
   /// TODO: but I want to confirm that.
   /// Write the text to the persistent log file.
   void write(String text) async {
+    debugPrint("LOG: $text");
     text = text.endsWith('\n') ? text : (text+'\n');
     await (await _getFile()).writeAsString(text, mode: FileMode.writeOnlyAppend);
     logChanged.add(null);
