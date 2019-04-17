@@ -160,7 +160,7 @@ task<S<Remote>> Local::Hop(const std::string &server) {
 }
 
 task<DelayedConnect> Local::Connect() {
-    auto socket(std::make_unique<Socket>());
+    auto socket(std::make_unique<Socket<asio::ip::tcp::socket>>());
     auto backup(socket.get());
     co_return {[backup](const std::string &host, const std::string &port) -> task<void> {
         co_await backup->_(host, port);

@@ -164,8 +164,8 @@ class Account :
                     _assert(colon != std::string::npos);
                     auto host(string.substr(0, colon));
                     auto port(string.substr(colon + 1));
-                    auto socket(std::make_unique<Socket>());
-                    auto output(std::make_unique<Output<Socket>>(self, tag, std::move(socket)));
+                    auto socket(std::make_unique<Socket<asio::ip::tcp::socket>>());
+                    auto output(std::make_unique<Output<Socket<asio::ip::tcp::socket>>>(self, tag, std::move(socket)));
                     co_await (*output)->_(host, port);
                     self->outputs_[tag] = std::move(output);
                     co_await self->Send(Tie(nonce));
@@ -409,7 +409,7 @@ int main() {
     //orc::Ethereum();
 
     /*orc::Wait([]() -> task<void> {
-        auto socket(std::make_unique<orc::Socket>());
+        auto socket(std::make_unique<orc::Socket<asio::ip::tcp::socket>>());
         co_await socket->_("localhost", "9090");
         co_await socket->Send(orc::Beam("Hello\n"));
         orc::Sink sink(std::move(socket), [](const orc::Buffer &data) {});

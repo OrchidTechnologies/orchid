@@ -21,26 +21,56 @@
 
 
 #include <asio/ip/tcp.hpp>
+#include <asio/ip/udp.hpp>
 
+#include "baton.hpp"
 #include "link.hpp"
 #include "task.hpp"
 
 namespace orc {
 
+template <typename Type_>
 class Socket final :
     public Link
 {
   private:
-    asio::ip::tcp::socket socket_;
+    Type_ socket_;
 
   public:
-    Socket();
+    Socket() :
+        socket_(Context())
+    {
+    }
 
-    task<void> _(const std::string &host, const std::string &port);
+    task<void> _(const std::string &host, const std::string &port) {
+        co_await asio::async_connect(socket_, co_await asio::ip::basic_resolver<typename Type_::protocol_type>(Context()).async_resolve({host, port}, Token()), Token());
 
-    ~Socket();
+        // XXX: the memory management on this is incorrect
+        Task([this]() -> task<void> {
+            try {
+                for (;;) {
+                    char data[1024];
+                    size_t writ(co_await socket_.async_receive(asio::buffer(data), Token()));
+                    Land(Beam(data, writ));
+                }
+            } catch (const asio::system_error &e) {
+                Land();
+            }
+        });
+    }
 
-    task<void> Send(const Buffer &data) override;
+    ~Socket() {
+        // XXX: this feels (asynchronously) incorrect
+        socket_.close();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        if (data.empty())
+            // XXX: is there really no asynchronous shutdown?
+            socket_.shutdown(Type_::protocol_type::socket::shutdown_send);
+        else
+            co_await socket_.async_send(Sequence(data), Token());
+    }
 };
 
 }
