@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
+import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
@@ -64,94 +65,74 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
     });
   }
 
-  // This arrangement with the layout builder, scroll view, constrained box, and intrinsic height
-  // allows us to fill the screen normally while remaining in a list view.  The scroll view is
-  // necessary to accommodate the keyboard when the text field has focus.
-  // https://docs.flutter.io/flutter/widgets/SingleChildScrollView-class.html
   @override
   Widget buildPage(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        return SingleChildScrollView(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxWidth: 580, minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    screenWidth > 640 ? Spacer(flex: 1) : Container(),
-                    Padding(
-                        padding: EdgeInsets.only(
-                            left: 20, right: 20, top: 16, bottom: 15),
-                        child: AppText.body(
-                          textAlign: TextAlign.left,
-                          text:
-                              "For Alpha, we have partnered with [VPN Partner]. Enter your login credentials below and when you connect Orchid will pair you with the best available server.",
-                        )),
+    return AccommodateKeyboard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          screenWidth > 640 ? Spacer(flex: 1) : Container(),
+          Padding(
+              padding: EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 15),
+              child: AppText.body(
+                textAlign: TextAlign.left,
+                text:
+                    "For Alpha, we have partnered with [VPN Partner]. Enter your login credentials below and when you connect Orchid will pair you with the best available server.",
+              )),
 
-                    Padding(
-                      padding: EdgeInsets.only(left: 20, right: 20),
-                      child: RichText(
-                        textAlign: TextAlign.left,
-                        text: TextSpan(
-                          children: <TextSpan>[
-                            TextSpan(
-                              style: AppText.bodyStyle,
-                              text: "Don't have a [VPN Partner] account?\n",
-                            ),
-                            LinkTextSpan(
-                              text: "Sign up for a free trial.",
-                              style: AppText.bodyStyle.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.teal_3),
-                              url: 'https://orchid.com',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.only(left: 20, right: 20, top: 16),
-                      child: AppText.header(
-                          textAlign: TextAlign.left,
-                          text: "[VPN Partner] credentials",
-                          fontSize: 16.0),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: buildForm(context),
-                    ),
-
-                    // Move Save to the bottom
-                    Spacer(),
-                    SizedBox(height: 24),
-
-                    Spacer(flex: 3),
-                    // Save button
-                    Center(
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: 62),
-                        child: RoundedRectRaisedButton(
-                            text: "SAVE",
-                            onPressed: _saveButtonEnabled
-                                ? _onSaveButtonPressed
-                                : null),
-                      ),
-                    ),
-                  ],
-                ),
+          Padding(
+            padding: EdgeInsets.only(left: 20, right: 20),
+            child: RichText(
+              textAlign: TextAlign.left,
+              text: TextSpan(
+                children: <TextSpan>[
+                  TextSpan(
+                    style: AppText.bodyStyle,
+                    text: "Don't have a [VPN Partner] account?\n",
+                  ),
+                  LinkTextSpan(
+                    text: "Sign up for a free trial.",
+                    style: AppText.bodyStyle.copyWith(
+                        fontWeight: FontWeight.w700, color: AppColors.teal_3),
+                    url: 'https://orchid.com',
+                  ),
+                ],
               ),
             ),
           ),
-        );
-      },
+
+          Padding(
+            padding: EdgeInsets.only(left: 20, right: 20, top: 16),
+            child: AppText.header(
+                textAlign: TextAlign.left,
+                text: "[VPN Partner] credentials",
+                fontSize: 16.0),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: buildForm(context),
+          ),
+
+          // Move Save to the bottom
+          Spacer(),
+          SizedBox(height: 24),
+
+          Spacer(flex: 3),
+          // Save button
+          Center(
+            child: Container(
+              margin: EdgeInsets.only(bottom: 62),
+              child: RoundedRectRaisedButton(
+                  text: "SAVE",
+                  onPressed: _saveButtonEnabled ? _onSaveButtonPressed : null),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -16,32 +16,14 @@ class Dialogs {
         linkSettings: true);
   }
 
-  // TODO: Move to relevant screen
-  static void showWalletLinkedDialog(@required BuildContext context) {
-    showAppDialog(
-        context: context,
-        title: "Wallet linked!",
-        body:
-            "Your linked wallet will be used to pay for bandwidth on Orchid.");
-  }
-
-  // TODO: Move to relevant screen
-  static void showWalletLinkFailedDialog(@required BuildContext context) {
-    showAppDialog(
-        context: context,
-        title: "Whoops!",
-        body:
-            "Orchid was unable to connect to an Ethereum wallet using the private key you provided.\n\nPlease check and make sure the information you entered was correct.");
-  }
-
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
-  static void showAppDialog({
+  static Future<void> showAppDialog({
     @required BuildContext context,
     @required String title,
     @required String body,
     bool linkSettings = false,
   }) {
-    showDialog(
+    return showDialog(
       context: context,
       builder: (BuildContext context) {
         // return object of type Dialog

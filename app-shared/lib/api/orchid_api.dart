@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api_real.dart';
+import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -7,7 +7,10 @@ import 'package:rxdart/rxdart.dart';
 /// Orchid App Channel API
 ///
 abstract class OrchidAPI {
-  static final OrchidAPI _singleton = new RealOrchidAPI();
+  static bool mockAPI = false;
+
+  static final OrchidAPI _singleton =
+      mockAPI ? MockOrchidAPI() : RealOrchidAPI();
 
   factory OrchidAPI() {
     return _singleton;
@@ -40,10 +43,15 @@ abstract class OrchidAPI {
   /// NEVPNManager API.
   Future<bool> requestVPNPermission();
 
+  /// Remove the VPN networking extension.
+  Future<void> revokeVPNPermission();
+
   /// Set or update the user's wallet info.
   /// Returns true if the wallet was successfully saved.
-  /// TODO: Support more than one wallet?
   Future<bool> setWallet(OrchidWallet wallet);
+
+  /// Remove any stored wallet credentials.
+  Future<void> clearWallet();
 
   /// If a wallet has been configured this method returns the user-visible
   /// wallet info; otherwise this method returns null.
@@ -51,7 +59,6 @@ abstract class OrchidAPI {
 
   /// Set or update the user's external VPN config.
   /// Return true if the configuration was saved successfully.
-  /// TODO: Support more than one VPN config?
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig);
 
   /// If an extenral VPN has been configured this method returns the user-visible
@@ -66,7 +73,4 @@ abstract class OrchidAPI {
 
   /// Choose a new, randomized, network route.
   Future<void> reroute();
-
 }
-
-

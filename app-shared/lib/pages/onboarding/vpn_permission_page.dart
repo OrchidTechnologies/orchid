@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/common/app_bar.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/onboarding/app_onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
@@ -24,36 +22,20 @@ class _VPNPermissionPageState extends State<VPNPermissionPage> {
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
           child: Stack(
             children: <Widget>[
-              Align(
-                alignment: Alignment.center,
+              // Center horizontally (walkthrough content fills screen vertically)
+              Center(
                 child: WalkthroughContent(
-                  imageAtBottom: true,
+                  imageLocation: WalkthroughContentImageLocation.Bottom,
                   titleText: "Let's get you set up",
                   bodyText:
                       "To fully utilize Orchid, you will need to grant permission for the VPN connection. Next up, you will see a dialog asking you to allow this connection.",
                   imageName: 'assets/images/illustration_4.png',
                 ),
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.center,
-                    child: Container(
-                        width: 180,
-                        child: RoundedRectRaisedButton(
-                          text: 'NEXT',
-                          onPressed: _confirmNext,
-                        )),
-                  ),
-                  SizedBox(height: 4),
-                  LinkStyleTextButton(
-                    "I'll do this later",
-                    onPressed: _skip,
-                  ),
-                  SizedBox(height: 12)
-                ],
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: NextSkipButtons.build(
+                    onNext: _confirmNext, onSkip: _skip),
               )
             ],
           )),
@@ -70,9 +52,7 @@ class _VPNPermissionPageState extends State<VPNPermissionPage> {
             " allow it to monitor network traffic. Only allow this if you trust this source."
             "\n\nAn icon will be shown at the top of your screen while the VPN is in use. Allow?",
         cancelText: "CANCEL",
-        //cancelColor: AppColors.purple_3,
         actionText: "OK",
-        //actionColor: AppColors.purple_3,
         action: () {
           _next();
         });

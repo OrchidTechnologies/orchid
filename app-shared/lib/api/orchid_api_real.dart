@@ -1,8 +1,5 @@
 import 'dart:async';
 
-import 'package:async/async.dart';
-
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:orchid/api/orchid_api.dart';
@@ -68,10 +65,16 @@ class RealOrchidAPI implements OrchidAPI {
         return Future<bool>.value(true);
     }
 
+    Future<void> revokeVPNPermission() async { }
+
     @override
     Future<bool> setWallet(OrchidWallet wallet) {
         return Future<bool>.value(false);
     }
+
+    @override
+    Future<void> clearWallet() async { }
+
 
     @override
     Future<OrchidWalletPublic> getWallet() {

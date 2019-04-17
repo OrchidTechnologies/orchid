@@ -7,7 +7,6 @@ class AppColors {
   static const purple = purple_2;
   static const dark_purple = purple_1;
   static const text_header_purple = purple_3;
-  static const text_body = neutral_2;
   static const text_light = grey_6;
   static const text_dark = neutral_1;
   static const drawer_gradient_start = purple_2;

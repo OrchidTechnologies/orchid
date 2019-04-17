@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/app_transitions.dart';
+import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
 import 'package:orchid/pages/onboarding/vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 
@@ -22,6 +23,8 @@ class AppOnboarding {
   Future<void> reset() async {
     await UserPreferences().setWalkthroughCompleted(false);
     await UserPreferences().setPromptedForVPNPermission(false);
+    await UserPreferences().setPromptedToLinkWallet(false);
+    await OrchidAPI().clearWallet();
     OrchidAPI().networkingPermissionStatus.add(false);
   }
 
@@ -38,6 +41,12 @@ class AppOnboarding {
     bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
     if (!hasVPNPermission && !promptedForVPNPermission) {
       return AppRoutes.onboarding_vpn_permission;
+    }
+
+    bool hasLinkedWallet = (await OrchidAPI().getWallet()) != null;
+    bool promptedToLinkWallet = await UserPreferences().getPromptedToLinkWallet();
+    if (!hasLinkedWallet && !promptedToLinkWallet) {
+      return AppRoutes.onboarding_link_wallet;
     }
 
     return NO_PAGE;
@@ -79,6 +88,9 @@ class AppOnboarding {
         break;
       case AppRoutes.onboarding_vpn_permission:
         route = AppTransitions.downToUpTransition(VPNPermissionPage());
+        break;
+      case AppRoutes.onboarding_link_wallet:
+        route = AppTransitions.downToUpTransition(OnboardingLinkWalletPage());
         break;
       default:
         break;

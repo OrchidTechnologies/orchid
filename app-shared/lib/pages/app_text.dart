@@ -4,8 +4,7 @@ import 'package:orchid/pages/app_colors.dart';
 class AppText {
   static TextStyle headerStyle = TextStyle(
     letterSpacing: 0.0,
-    // Eyeballing this. What is in Zeplin doesn't seem to to line height / font size.
-    height: 1.32,
+    //height: 1.32,
     color: AppColors.text_header_purple,
     fontWeight: FontWeight.w500,
     fontFamily: "Roboto",
@@ -32,7 +31,7 @@ class AppText {
   }
 
   static TextStyle bodyStyle = TextStyle(
-      color: AppColors.text_body,
+      color: AppColors.neutral_2,
       letterSpacing: 0.0,
       height: 1.32,
       fontWeight: FontWeight.w400,
@@ -43,7 +42,7 @@ class AppText {
   static Text body(
       {text: "",
       textAlign: TextAlign.center,
-      color: AppColors.text_body,
+      color: AppColors.neutral_2,
       letterSpacing: 0.0,
       lineHeight: 1.32,
       fontWeight: FontWeight.w400,

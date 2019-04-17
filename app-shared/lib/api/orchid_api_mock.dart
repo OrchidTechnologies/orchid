@@ -83,11 +83,14 @@ class MockOrchidAPI implements OrchidAPI {
   /// Note: On iOS this corresponds to an attempt to save the Orchid VPN configuration via the
   /// NEVPNManager API.
   @override
-  Future<bool> requestVPNPermission() {
-    return Future<bool>(() {
-      networkingPermissionStatus.add(true);
-      return true;
-    });
+  Future<bool> requestVPNPermission() async {
+    networkingPermissionStatus.add(true);
+    return true;
+  }
+
+  /// Remove the VPN networking extension.
+  Future<void> revokeVPNPermission() async {
+    OrchidAPI().networkingPermissionStatus.add(false);
   }
 
   OrchidWallet _wallet;
@@ -99,9 +102,12 @@ class MockOrchidAPI implements OrchidAPI {
   Future<bool> setWallet(OrchidWallet wallet) async {
     this._wallet = wallet;
     log.add("Saved wallet");
-    return Future(() {
-      return wallet.private.privateKey.startsWith("fail") ? false : true;
-    });
+    return wallet.private.privateKey.startsWith("fail") ? false : true;
+  }
+
+  /// Remove any stored wallet credentials.
+  Future<void> clearWallet() async {
+    this._wallet = null;
   }
 
   /// If a wallet has been configured this method returns the user-visible
@@ -122,9 +128,7 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig) async {
     this._exitVPNConfig = vpnConfig;
-    return Future(() {
-      return vpnConfig.public.userName.startsWith("fail") ? false : true;
-    });
+    return vpnConfig.public.userName.startsWith("fail") ? false : true;
   }
 
   /// If an extenral VPN has been configured this method returns the user-visible
