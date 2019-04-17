@@ -162,5 +162,14 @@ source += $(wildcard $(pwd)/double-conversion/double-conversion/*.cc)
 #source += $(pwd)/folly/folly/portability/Sockets.cpp
 #source += $(pwd)/folly/folly/synchronization/Hazptr.cpp
 
+source += $(wildcard $(pwd)/lwip/src/api/*.c)
+source += $(wildcard $(pwd)/lwip/src/core/*.c)
+source += $(wildcard $(pwd)/lwip/src/core/ipv4/*.c)
+source += $(wildcard $(pwd)/lwip/src/core/ipv6/*.c)
+#source += $(wildcard $(pwd)/lwip/src/netif/*.c)
+
+cflags += -I$(pwd)/lwip/src/include
+cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
+
 include $(pwd)/target-$(target).mk
 include $(pwd)/rtc/target.mk
