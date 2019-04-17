@@ -10,10 +10,6 @@ class AppColors {
   static const text_body = neutral_2;
   static const text_light = grey_6;
   static const text_dark = neutral_1;
-  static const qc_gradient_start = grey_7;
-  static const qc_gradient_end = grey_6;
-  static const qc_purple_gradient_start = purple_2;
-  static const qc_purple_gradient_end = purple_1;
   static const drawer_gradient_start = purple_2;
   static const drawer_gradient_end = purple_1;
 

@@ -5,6 +5,7 @@ import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -53,7 +54,9 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
 
     // Get any current configuration.
     _api.getExitVPNConfig().then((VPNConfigPublic config) {
-      if (config == null) { return; }
+      if (config == null) {
+        return;
+      }
       _userNameTextController.text = config.userName;
       setState(() {
         this._vpnConfigPublic = config;
@@ -67,7 +70,6 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
   // https://docs.flutter.io/flutter/widgets/SingleChildScrollView-class.html
   @override
   Widget buildPage(BuildContext context) {
-
     double screenWidth = MediaQuery.of(context).size.width;
 
     return LayoutBuilder(
@@ -76,8 +78,7 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: 580,
-                  minHeight: constraints.maxHeight),
+                  maxWidth: 580, minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -137,18 +138,11 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
                     Center(
                       child: Container(
                         margin: EdgeInsets.only(bottom: 62),
-                        child: RaisedButton(
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(16))),
-                          child: AppText.body(
-                              text: "SAVE",
-                              color: AppColors.text_light,
-                              letterSpacing: 1.25,
-                              lineHeight: 1.14),
-                          color: AppColors.purple,
-                          onPressed: _saveButtonEnabled ? _onSaveButtonPressed : null,
-                        ),
+                        child: RoundedRectRaisedButton(
+                            text: "SAVE",
+                            onPressed: _saveButtonEnabled
+                                ? _onSaveButtonPressed
+                                : null),
                       ),
                     ),
                   ],
@@ -234,13 +228,18 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
 
   void _onSaveButtonPressed() {
     // dismiss the keyboard if present
-    FocusScope.of(context).requestFocus(new FocusNode());
+    FocusScope.of(context).requestFocus(FocusNode());
 
     // Save the credentials
     var private = VPNConfigPrivate(userPassword: _passwordTextController.text);
     String vpnConfig = null;
-    var public = VPNConfigPublic(id: "vpnConfig", userName: _userNameTextController.text, vpnConfig: vpnConfig);
-    _api.setExitVPNConfig(VPNConfig(private: private, public: public)).then((bool saved) {
+    var public = VPNConfigPublic(
+        id: "vpnConfig",
+        userName: _userNameTextController.text,
+        vpnConfig: vpnConfig);
+    _api
+        .setExitVPNConfig(VPNConfig(private: private, public: public))
+        .then((bool saved) {
       debugPrint("vpn config saved");
       setState(() {
         _saveButtonEnabled = false;
@@ -258,8 +257,7 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
     Dialogs.showAppDialog(
         context: context,
         title: "VPN Credentials Saved!",
-        body:
-        "Your credentials have been saved.");
+        body: "Your credentials have been saved.");
   }
 
   void _showCredentialsSaveFailedDialog(@required BuildContext context) {
@@ -267,8 +265,6 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
         context: context,
         title: "Whoops!",
         body:
-        "Orchid was unable to save your credentials.\n\nPlease check and make sure the information you entered was correct.");
+            "Orchid was unable to save your credentials.\n\nPlease check and make sure the information you entered was correct.");
   }
-
 }
-

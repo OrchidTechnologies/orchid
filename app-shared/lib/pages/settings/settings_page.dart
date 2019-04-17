@@ -23,6 +23,11 @@ class SettingsPage extends TitledPageBase {
             imageName: "assets/images/business.png",
             routeName: '/settings/vpn',
             context: context),
+        PageTile.route(
+            title: "Developer",
+            imageName: "assets/images/settings.png",
+            routeName: '/settings/dev',
+            context: context),
       ],
     );
   }

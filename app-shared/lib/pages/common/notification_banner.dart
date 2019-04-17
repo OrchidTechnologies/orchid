@@ -1,6 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
+
+/// Produce notification banners for various AppNotificationTypes.
+class NotificationBannerFactory {
+  /// Return the current notification banner or null if no banner should be shown.
+  static current() {
+    switch (AppNotifications().notification.value) {
+      case AppNotificationType.None:
+        return null;
+      case AppNotificationType.InternetRequired:
+        return _internetRequiredBanner();
+      case AppNotificationType.SyncRequired:
+        return _syncRequiredBanner();
+    }
+  }
+
+  static NotificationBanner _internetRequiredBanner() {
+    return NotificationBanner(
+      title: 'No internet connection',
+      titleColor: AppColors.warning_banner1,
+      imageName: 'assets/images/error.png',
+      trailingActionTitle: 'RETRY',
+      trailingAction: () {},
+    );
+  }
+
+  // TODO:
+  static NotificationBanner _syncRequiredBanner() {
+    return NotificationBanner(
+      title: 'Sync required',
+      titleColor: AppColors.teal_5,
+      imageName: 'assets/images/sync.png',
+      trailingActionTitle: 'SYNC',
+      trailingAction: () {},
+    );
+  }
+}
 
 /// A tile containing an image, title, and trailing button styled to
 /// appear at the top of a page for notifications.
@@ -37,7 +74,9 @@ class _NotificationBannerState extends State<NotificationBanner> {
         child: Row(
           children: <Widget>[
             widget.imageName != null
-                ? Image(color: widget.titleColor, image: AssetImage(widget.imageName))
+                ? Image(
+                    color: widget.titleColor,
+                    image: AssetImage(widget.imageName))
                 : Container(),
             SizedBox(width: 10),
             Text(widget.title,

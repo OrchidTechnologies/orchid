@@ -53,11 +53,11 @@ class ConnectButtonState extends State<ConnectButton>
       });
     });
 
-    _pulseAnimationController = new AnimationController(
+    _pulseAnimationController = AnimationController(
         vsync: this, duration: Duration(milliseconds: 4000));
     _pulseAnimationController.repeat();
 
-    _teeterAnimationController = new AnimationController(
+    _teeterAnimationController = AnimationController(
         vsync: this, duration: Duration(milliseconds: 600));
     _teeterAnimationController.repeat(reverse: true);
   }
@@ -167,7 +167,7 @@ class ConnectButtonState extends State<ConnectButton>
                   padding: EdgeInsets.all(0),
                   child: rerouteImage,
                   onPressed: enabled ? widget.onRerouteButtonPressed : null,
-                  shape: new CircleBorder(),
+                  shape: CircleBorder(),
                 ),
               ),
             ),

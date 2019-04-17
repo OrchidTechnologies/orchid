@@ -29,10 +29,10 @@ class OptionsBar extends StatelessWidget {
       onPressed: morePressed,
     ));
 
-    return new Container(
-        margin: new EdgeInsets.only(left: 12, right: 12),
+    return Container(
+        margin: EdgeInsets.only(left: 12, right: 12),
         height: 56,
-        child: new Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[drawerButton, moreButton],
         ));
