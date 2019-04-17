@@ -6,7 +6,7 @@ import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/link_text.dart';
-import 'package:orchid/pages/onboarding/app_onboarding.dart';
+import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 import 'package:orchid/pages/settings/wallet_key_entry.dart';
 

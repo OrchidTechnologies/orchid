@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/help/feedback_page.dart';
+import 'package:orchid/pages/help/help_feedback_page.dart';
 import 'package:orchid/pages/help/help_page.dart';
 import 'package:orchid/pages/connect/quick_connect_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
-import 'package:orchid/pages/onboarding/vpn_permission_page.dart';
+import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/settings_dev_page.dart';
 import 'package:orchid/pages/settings/settings_link_wallet_page.dart';
@@ -33,9 +33,9 @@ class AppRoutes {
     settings_log: (context) => SettingsLogPage(),
     settings_dev: (context) => SettingsDevPage(),
     help: (context) => HelpPage(),
-    feedback: (context) => FeedbackPage(),
+    feedback: (context) => HelpFeedbackPage(),
     onboarding_walkthrough: (context) => WalkthroughPages(),
-    onboarding_vpn_permission: (context) => VPNPermissionPage(),
+    onboarding_vpn_permission: (context) => OnboardingVPNPermissionPage(),
     onboarding_link_wallet: (context) => OnboardingLinkWalletPage(),
   };
 }

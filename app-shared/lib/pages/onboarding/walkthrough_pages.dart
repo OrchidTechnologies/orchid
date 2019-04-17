@@ -7,7 +7,7 @@ import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/onboarding/app_onboarding.dart';
+import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 
 /// The paged introductory screens.

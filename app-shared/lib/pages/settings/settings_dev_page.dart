@@ -4,7 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/onboarding/app_onboarding.dart';
+import 'package:orchid/pages/onboarding/onboarding.dart';
 
 class SettingsDevPage extends StatefulWidget {
   @override

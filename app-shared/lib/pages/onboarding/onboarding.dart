@@ -5,7 +5,7 @@ import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/app_transitions.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
-import 'package:orchid/pages/onboarding/vpn_permission_page.dart';
+import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 
 class AppOnboarding {
@@ -87,7 +87,7 @@ class AppOnboarding {
         route = AppTransitions.downToUpTransition(WalkthroughPages());
         break;
       case AppRoutes.onboarding_vpn_permission:
-        route = AppTransitions.downToUpTransition(VPNPermissionPage());
+        route = AppTransitions.downToUpTransition(OnboardingVPNPermissionPage());
         break;
       case AppRoutes.onboarding_link_wallet:
         route = AppTransitions.downToUpTransition(OnboardingLinkWalletPage());
