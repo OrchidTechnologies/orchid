@@ -59,7 +59,11 @@
     __attribute__((__unused__))
 
 
+namespace po = boost::program_options;
+
 namespace orc {
+
+static po::variables_map args;
 
 class Back {
   public:
@@ -403,9 +407,8 @@ static void LogMHD(void *, const char *format, va_list args) {
     vfprintf(stderr, format, args);
 }
 
-int main(int argc, const char *const argv[]) {
-    namespace po = boost::program_options;
-
+namespace orc {
+int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
         ("help", "produce help message")
@@ -419,8 +422,6 @@ int main(int argc, const char *const argv[]) {
     po::options_description hiddens("you can't see these");
     hiddens.add_options()
     ;
-
-    po::variables_map args;
 
     po::store(po::parse_command_line(argc, argv, po::options_description()
         .add(options)
@@ -461,4 +462,8 @@ int main(int argc, const char *const argv[]) {
 
     orc::Thread().join();
     return 0;
+} }
+
+int main(int argc, const char *const argv[]) {
+    return orc::Main(argc, argv);
 }

@@ -18,7 +18,6 @@
 # }}}
 
 
-target := mac
 include env/target.mk
 
 .PHONY: all
