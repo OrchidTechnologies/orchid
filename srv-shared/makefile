@@ -32,6 +32,8 @@ test: $(output)/orchid
 source += $(wildcard source/*.cpp)
 cflags += -Isource
 
+source += $(wildcard p2p/boost/libs/program_options/src/*.cpp)
+
 include p2p/target.mk
 
 source += $(filter-out libmicrohttpd/src/microhttpd/test_%.c,$(wildcard libmicrohttpd/src/microhttpd/*.c))

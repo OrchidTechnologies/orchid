@@ -25,6 +25,10 @@
 #include <iostream>
 #include <mutex>
 
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+
 #include <asio/connect.hpp>
 #include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
@@ -399,11 +403,52 @@ static void LogMHD(void *, const char *format, va_list args) {
     vfprintf(stderr, format, args);
 }
 
-int main() {
+int main(int argc, const char *const argv[]) {
+    namespace po = boost::program_options;
+
+    po::options_description options("command-line (only)");
+    options.add_options()
+        ("help", "produce help message")
+    ;
+
+    po::options_description configs("command-line / file");
+    configs.add_options()
+        ("rendezvous-port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
+    ;
+
+    po::options_description hiddens("you can't see these");
+    hiddens.add_options()
+    ;
+
+    po::variables_map args;
+
+    po::store(po::parse_command_line(argc, argv, po::options_description()
+        .add(options)
+        .add(configs)
+        .add(hiddens)
+    ), args);
+
+    if (auto path = getenv("ORCHID_CONFIG"))
+        po::store(po::parse_config_file(path, po::options_description()
+            .add(configs)
+            .add(hiddens)
+        ), args);
+
+    po::notify(args);
+
+    if (args.count("help")) {
+        std::cout << po::options_description()
+            .add(options)
+            .add(configs)
+        << std::endl;
+
+        return 0;
+    }
+
     auto internal(new Internal{});
     internal->node_ = std::make_shared<orc::Node>();
 
-    http_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, 8080, NULL, NULL, &Respond, internal,
+    http_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, args["rendezvous-port"].as<uint16_t>(), NULL, NULL, &Respond, internal,
         MHD_OPTION_EXTERNAL_LOGGER, &LogMHD, NULL,
         MHD_OPTION_NOTIFY_COMPLETED, &Complete, internal,
         MHD_OPTION_NOTIFY_CONNECTION, &Connect, internal,
