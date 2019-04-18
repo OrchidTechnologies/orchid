@@ -31,7 +31,6 @@ namespace orc {
 
 template <typename Type_>
 class Socket final :
-    public std::enable_shared_from_this<Socket<Type_>>,
     public Link
 {
   private:
@@ -46,20 +45,18 @@ class Socket final :
     task<void> _(const std::string &host, const std::string &port) {
         co_await asio::async_connect(*socket_, co_await asio::ip::basic_resolver<typename Type_::protocol_type>(Context()).async_resolve({host, port}, Token()), Token());
 
-        Task([socket = socket_, weak = this->weak_from_this()]() -> task<void> {
+        // XXX: the memory management here seems wrong
+        Task([socket = socket_, this]() -> task<void> {
             try {
                 for (;;) {
                     char data[1024];
                     size_t writ(co_await socket->async_receive(asio::buffer(data), Token()));
                     _assert(writ != 0);
-                    if (auto strong = weak.lock())
-                        strong->Land(Beam(data, writ));
+                    Land(Beam(data, writ));
                 }
             } catch (const asio::error_code &error) {
-                if (error == boost::asio::error::eof) {
-                    if (auto strong = weak.lock())
-                        strong->Land();
-                }
+                if (error == boost::asio::error::eof)
+                    Land();
             }
         });
     }
