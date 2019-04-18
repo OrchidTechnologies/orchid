@@ -13,7 +13,7 @@ import 'package:orchid/pages/common/options_bar.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:orchid/pages/connect/route_info.dart';
-import 'package:orchid/pages/onboarding/app_onboarding.dart';
+import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:flutter/scheduler.dart';

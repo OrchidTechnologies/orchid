@@ -50,10 +50,22 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.PromptedToLinkWallet.toString(), value);
   }
+
+  Future<bool> getLinkWalletAcknowledged() async {
+    return (await SharedPreferences.getInstance())
+            .getBool(UserPreferenceKey.LinkWalletAcknowledged.toString()) ??
+        false;
+  }
+
+  Future<bool> setLinkWalletAcknowledged(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.LinkWalletAcknowledged.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
   WalkthroughCompleted,
   PromptedForVPNPermission,
-  PromptedToLinkWallet
+  PromptedToLinkWallet,
+  LinkWalletAcknowledged
 }

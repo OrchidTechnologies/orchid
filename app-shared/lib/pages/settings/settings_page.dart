@@ -3,6 +3,8 @@ import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
 class SettingsPage extends TitledPageBase {
+  static bool showDeveloperSettings = true;
+
   SettingsPage() : super(title: "Settings");
 
   Widget buildPage(BuildContext context) {
@@ -23,11 +25,14 @@ class SettingsPage extends TitledPageBase {
             imageName: "assets/images/business.png",
             routeName: '/settings/vpn',
             context: context),
-        PageTile.route(
-            title: "Developer",
-            imageName: "assets/images/settings.png",
-            routeName: '/settings/dev',
-            context: context),
+        Visibility(
+          visible: showDeveloperSettings,
+          child: PageTile.route(
+              title: "Developer",
+              imageName: "assets/images/settings.png",
+              routeName: '/settings/dev',
+              context: context),
+        ),
       ],
     );
   }

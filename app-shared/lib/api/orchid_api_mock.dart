@@ -127,8 +127,11 @@ class MockOrchidAPI implements OrchidAPI {
   /// Return true if the configuration was saved successfully.
   @override
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig) async {
+    if (vpnConfig.public.userName.startsWith("fail")) {
+      return false;
+    }
     this._exitVPNConfig = vpnConfig;
-    return vpnConfig.public.userName.startsWith("fail") ? false : true;
+    return true;
   }
 
   /// If an extenral VPN has been configured this method returns the user-visible

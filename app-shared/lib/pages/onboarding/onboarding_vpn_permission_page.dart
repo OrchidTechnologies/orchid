@@ -4,15 +4,15 @@ import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/onboarding/app_onboarding.dart';
+import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 
-class VPNPermissionPage extends StatefulWidget {
+class OnboardingVPNPermissionPage extends StatefulWidget {
   @override
-  _VPNPermissionPageState createState() => _VPNPermissionPageState();
+  _OnboardingVPNPermissionPageState createState() => _OnboardingVPNPermissionPageState();
 }
 
-class _VPNPermissionPageState extends State<VPNPermissionPage> {
+class _OnboardingVPNPermissionPageState extends State<OnboardingVPNPermissionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

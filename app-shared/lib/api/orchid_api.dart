@@ -8,12 +8,20 @@ import 'package:rxdart/rxdart.dart';
 ///
 abstract class OrchidAPI {
   static bool mockAPI = false;
-
-  static final OrchidAPI _singleton =
-      mockAPI ? MockOrchidAPI() : RealOrchidAPI();
+  static OrchidAPI _apiSingleton;
+  static OrchidAPI _mockAPISingleton;
 
   factory OrchidAPI() {
-    return _singleton;
+    if (mockAPI) {
+      if (_mockAPISingleton == null) {
+        _mockAPISingleton = MockOrchidAPI();
+      }
+    } else {
+      if (_apiSingleton == null) {
+        _apiSingleton = RealOrchidAPI();
+      }
+    }
+    return mockAPI ? _mockAPISingleton : _apiSingleton;
   }
 
   /// Publish the connection status.
