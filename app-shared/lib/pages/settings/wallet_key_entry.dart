@@ -129,9 +129,8 @@ class _WalletKeyEntryState extends State<WalletKeyEntry> {
       });
       // Chain the success future to the dialog completion.
       if (success) {
-        return _showWalletLinkedDialog(context).then((_) {
-          return true;
-        });
+        //return _showWalletLinkedDialog(context).then((_) { return true; });
+        return true;
       } else {
         return _showWalletLinkFailedDialog(context).then((_) {
           return false;

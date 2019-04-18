@@ -3,6 +3,7 @@ import 'package:orchid/pages/help/help_feedback_page.dart';
 import 'package:orchid/pages/help/help_page.dart';
 import 'package:orchid/pages/connect/quick_connect_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
+import 'package:orchid/pages/onboarding/onboarding_link_wallet_success_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/settings_dev_page.dart';
@@ -24,6 +25,7 @@ class AppRoutes {
   static const String onboarding_walkthrough = "/onboarding/walkthrough";
   static const String onboarding_vpn_permission = "/onboarding/vpn_permission";
   static const String onboarding_link_wallet = "/onboarding/link_wallet";
+  static const String onboarding_link_wallet_success = "/onboarding/link_wallet/success";
 
   static final Map<String, WidgetBuilder> routes = {
     '/': (context) => QuickConnectPage(),
@@ -37,5 +39,6 @@ class AppRoutes {
     onboarding_walkthrough: (context) => WalkthroughPages(),
     onboarding_vpn_permission: (context) => OnboardingVPNPermissionPage(),
     onboarding_link_wallet: (context) => OnboardingLinkWalletPage(),
+    onboarding_link_wallet_success: (context) => OnboardingLinkWalletSuccessPage(),
   };
 }

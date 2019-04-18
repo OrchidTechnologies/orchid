@@ -5,6 +5,7 @@ import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/app_transitions.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
+import 'package:orchid/pages/onboarding/onboarding_link_wallet_success_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 
@@ -24,6 +25,7 @@ class AppOnboarding {
     await UserPreferences().setWalkthroughCompleted(false);
     await UserPreferences().setPromptedForVPNPermission(false);
     await UserPreferences().setPromptedToLinkWallet(false);
+    await UserPreferences().setLinkWalletAcknowledged(false);
     await OrchidAPI().clearWallet();
     OrchidAPI().networkingPermissionStatus.add(false);
   }
@@ -31,22 +33,30 @@ class AppOnboarding {
   /// Return the route for the next remaining page in the onboarding sequence or
   /// null if no pages remain to be shown.
   Future<String> _nextPage() async {
+
+    // Show the walkthrough
     bool walkthroughCompleted =
         await UserPreferences().getWalkthroughCompleted();
     if (!walkthroughCompleted) {
       return AppRoutes.onboarding_walkthrough;
     }
 
-    bool hasVPNPermission = OrchidAPI().networkingPermissionStatus.value;
-    bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
-    if (!hasVPNPermission && !promptedForVPNPermission) {
-      return AppRoutes.onboarding_vpn_permission;
-    }
-
+    // Link an external wallet
     bool hasLinkedWallet = (await OrchidAPI().getWallet()) != null;
     bool promptedToLinkWallet = await UserPreferences().getPromptedToLinkWallet();
     if (!hasLinkedWallet && !promptedToLinkWallet) {
       return AppRoutes.onboarding_link_wallet;
+    }
+    bool linkWalletAcknowledged = await UserPreferences().getLinkWalletAcknowledged();
+    if (hasLinkedWallet && !linkWalletAcknowledged) {
+      return AppRoutes.onboarding_link_wallet_success;
+    }
+
+    // Prompte for VPN permission
+    bool hasVPNPermission = OrchidAPI().networkingPermissionStatus.value;
+    bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
+    if (!hasVPNPermission && !promptedForVPNPermission) {
+      return AppRoutes.onboarding_vpn_permission;
     }
 
     return NO_PAGE;
@@ -91,6 +101,9 @@ class AppOnboarding {
         break;
       case AppRoutes.onboarding_link_wallet:
         route = AppTransitions.downToUpTransition(OnboardingLinkWalletPage());
+        break;
+      case AppRoutes.onboarding_link_wallet_success:
+        route = AppTransitions.downToUpTransition(OnboardingLinkWalletSuccessPage());
         break;
       default:
         break;

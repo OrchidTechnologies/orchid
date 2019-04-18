@@ -133,12 +133,7 @@ class NextSkipButtons {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Container(
-            width: 180,
-            child: RoundedRectRaisedButton(
-              text: 'NEXT',
-              onPressed: onNext,
-            )),
+        buildNextButton(onNext: onNext),
         SizedBox(height: 4),
         LinkStyleTextButton(
           "I'll do this later",
@@ -147,5 +142,14 @@ class NextSkipButtons {
         SizedBox(height: 12)
       ],
     );
+  }
+
+  static Container buildNextButton({VoidCallback onNext}) {
+    return Container(
+          width: 180,
+          child: RoundedRectRaisedButton(
+            text: 'NEXT',
+            onPressed: onNext,
+          ));
   }
 }
