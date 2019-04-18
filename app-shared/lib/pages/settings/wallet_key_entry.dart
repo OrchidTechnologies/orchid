@@ -19,7 +19,7 @@ class WalletKeyEntryController {
 /// A Text field customized for pasting or scanning a wallet private key and
 /// interacting with the Orchid API.  Use [WalletKeyEntryController] to
 /// observe the state of input validation and trigger the save operation
-/// (e.g. using an external "save" button)
+/// (e.g. in support of an external "save" button)
 class WalletKeyEntry extends StatefulWidget {
   final WalletKeyEntryController controller;
 
