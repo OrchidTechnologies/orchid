@@ -35,6 +35,8 @@
 
 namespace orc {
 
+static std::vector<std::string> ices_;
+
 task<std::string> Origin::Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
     auto delayed(co_await Connect());
     Adapter adapter(orc::Context(), std::move(delayed.link_));
@@ -46,6 +48,11 @@ class Actor :
     public Connection
 {
   public:
+    Actor() :
+        Connection(ices_)
+    {
+    }
+
     ~Actor() {
         _trace();
     }

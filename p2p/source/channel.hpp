@@ -82,7 +82,7 @@ class Connection :
     std::vector<std::string> candidates_;
 
   public:
-    Connection();
+    Connection(const std::vector<std::string> &ices);
 
     virtual ~Connection() {
 _trace();

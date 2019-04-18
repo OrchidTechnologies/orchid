@@ -58,7 +58,7 @@ struct SetupSSL {
     ~SetupSSL() { rtc::CleanupSSL(); }
 } setup_;
 
-Connection::Connection() :
+Connection::Connection(const std::vector<std::string> &ices) :
     peer_([&]() {
         static auto factory(webrtc::CreatePeerConnectionFactory(
             thread_, thread_, thread_,
@@ -66,6 +66,13 @@ Connection::Connection() :
         ));
 
         webrtc::PeerConnectionInterface::RTCConfiguration configuration;
+
+        for (const auto &ice : ices) {
+            webrtc::PeerConnectionInterface::IceServer server;
+            server.urls.emplace_back(ice);
+            configuration.servers.emplace_back(std::move(server));
+        }
+
         return factory->CreatePeerConnection(configuration, nullptr, nullptr, this);
     }())
 {

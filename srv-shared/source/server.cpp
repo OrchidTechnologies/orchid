@@ -65,17 +65,22 @@ namespace orc {
 
 static po::variables_map args;
 
+static std::vector<std::string> ices_;
+
 class Back {
   public:
     virtual task<std::string> Respond(const std::string &offer) = 0;
 };
 
-class Client;
-
-class Outstanding :
+class Outgoing :
     public Connection
 {
   public:
+    Outgoing() :
+        Connection(ices_)
+    {
+    }
+
     void OnChannel(U<Channel> channel) override {
     }
 };
@@ -122,7 +127,7 @@ class Account :
     Pipe *input_;
 
     std::map<Tag, U<Pipe>> outputs_;
-    std::map<Tag, S<Outstanding>> outstandings_;
+    std::map<Tag, S<Outgoing>> outgoing_;
 
   public:
     Account(const S<Back> &back) :
@@ -181,35 +186,35 @@ class Account :
 
                 } else if (command == EstablishTag) {
                     const auto [handle] = Take<TagSize>(args);
-                    auto outstanding(std::make_shared<Outstanding>());
-                    self->outstandings_[handle] = outstanding;
+                    auto outgoing(std::make_shared<Outgoing>());
+                    self->outgoing_[handle] = outgoing;
                     co_await self->Send(Tie(nonce));
 
                 } else if (command == OfferTag) {
                     const auto [handle] = Take<TagSize>(args);
-                    auto outstanding(self->outstandings_.find(handle));
-                    _assert(outstanding != self->outstandings_.end());
-                    auto offer(co_await outstanding->second->Offer());
+                    auto outgoing(self->outgoing_.find(handle));
+                    _assert(outgoing != self->outgoing_.end());
+                    auto offer(co_await outgoing->second->Offer());
                     co_await self->Send(Tie(nonce, Beam(offer)));
 
                 } else if (command == NegotiateTag) {
                     const auto [handle, answer] = Take<TagSize, 0>(args);
-                    auto outstanding(self->outstandings_.find(handle));
-                    _assert(outstanding != self->outstandings_.end());
-                    co_await outstanding->second->Negotiate(answer.str());
+                    auto outgoing(self->outgoing_.find(handle));
+                    _assert(outgoing != self->outgoing_.end());
+                    co_await outgoing->second->Negotiate(answer.str());
                     co_await self->Send(Tie(nonce));
 
                 } else if (command == ChannelTag) {
                     const auto [handle, tag] = Take<TagSize, TagSize>(args);
-                    auto outstanding(self->outstandings_.find(handle));
-                    _assert(outstanding != self->outstandings_.end());
-                    auto channel(std::make_unique<Channel>(outstanding->second));
+                    auto outgoing(self->outgoing_.find(handle));
+                    _assert(outgoing != self->outgoing_.end());
+                    auto channel(std::make_unique<Channel>(outgoing->second));
                     self->outputs_[tag] = std::make_unique<Output<Channel>>(self, tag, std::move(channel));
                     co_await self->Send(Tie(nonce));
 
                 } else if (command == CancelTag) {
                     const auto [handle] = Take<TagSize>(args);
-                    self->outstandings_.erase(handle);
+                    self->outgoing_.erase(handle);
                     co_await self->Send(Tie(nonce));
 
                 } else if (command == FinishTag) {
@@ -238,7 +243,7 @@ class Node :
     public Identity,
     public Back
 {
-    friend class Client;
+    friend class Incoming;
 
   private:
     std::map<Common, W<Account>> accounts_;
@@ -301,19 +306,20 @@ class Conduit :
     }
 };
 
-class Client :
+class Incoming :
     public Connection
 {
   private:
     S<Node> node_;
 
   public:
-    Client(S<Node> node) :
+    Incoming(S<Node> node) :
+        Connection(ices_),
         node_(std::move(node))
     {
     }
 
-    ~Client() {
+    ~Incoming() {
         _trace();
     }
 
@@ -327,7 +333,7 @@ class Client :
 };
 
 task<std::string> Node::Respond(const std::string &offer) {
-    auto client(std::make_shared<Client>(shared_from_this()));
+    auto client(std::make_shared<Incoming>(shared_from_this()));
     auto answer(co_await client->Answer(offer));
     clients_.emplace(client);
     co_return answer;
@@ -417,6 +423,7 @@ int Main(int argc, const char *const argv[]) {
     po::options_description configs("command-line / file");
     configs.add_options()
         ("rendezvous-port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
+        ("ice-stun-server", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
     ;
 
     po::options_description hiddens("you can't see these");
@@ -446,8 +453,10 @@ int Main(int argc, const char *const argv[]) {
         return 0;
     }
 
+    ices_.emplace_back(args["ice-stun-server"].as<std::string>());
+
     auto internal(new Internal{});
-    internal->node_ = std::make_shared<orc::Node>();
+    internal->node_ = std::make_shared<Node>();
 
     http_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, args["rendezvous-port"].as<uint16_t>(), NULL, NULL, &Respond, internal,
         MHD_OPTION_EXTERNAL_LOGGER, &LogMHD, NULL,
@@ -457,10 +466,10 @@ int Main(int argc, const char *const argv[]) {
 
     _assert(http_ != NULL);
 
-    asio::signal_set signals(orc::Context(), SIGINT, SIGTERM);
-    signals.async_wait([&](auto, auto) { orc::Context().stop(); });
+    asio::signal_set signals(Context(), SIGINT, SIGTERM);
+    signals.async_wait([&](auto, auto) { Context().stop(); });
 
-    orc::Thread().join();
+    Thread().join();
     return 0;
 } }
 
