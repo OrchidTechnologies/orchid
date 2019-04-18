@@ -399,60 +399,7 @@ static void LogMHD(void *, const char *format, va_list args) {
     vfprintf(stderr, format, args);
 }
 
-task<void> nop() {
-    sleep(1);
-    _trace();
-    co_return;
-}
-
 int main() {
-    //orc::Ethereum();
-
-    /*orc::Wait([]() -> task<void> {
-        auto socket(std::make_unique<orc::Socket<asio::ip::tcp::socket>>());
-        co_await socket->_("localhost", "9090");
-        co_await socket->Send(orc::Beam("Hello\n"));
-        orc::Sink sink(std::move(socket), [](const orc::Buffer &data) {});
-        _trace();
-        //co_await orc::Request(std::move(socket), "POST", {"http", "localhost", "9090", "/"}, {}, "wow");
-        co_await orc::Request("POST", {"http", "localhost", "9090", "/"}, {}, "wow");
-        _trace();
-    }());
-    _trace();
-    return 0;*/
-
-#if 0
-    cppcoro::async_manual_reset_event barrier;
-
-    folly::Promise<int> promise;
-    auto future(promise.getFuture());
-
-    std::thread([&barrier, &promise]() {
-        sleep(2);
-        barrier.set();
-        sleep(2);
-        promise.setValue(3);
-    }).detach();
-
-    orc::Wait([&barrier, future = std::move(future)]() mutable -> task<void> {
-        _trace();
-        co_await barrier;
-        _trace();
-        std::cerr << co_await std::move(future) << std::endl;
-        _trace();
-        for (unsigned i(0); i != 10; ++i)
-            orc::Task([]() -> task<void> { co_await nop(); });
-        std::cerr << pthread_self() << std::endl;
-        co_await orc::Schedule();
-        std::cerr << pthread_self() << std::endl;
-        sleep(1);
-    }());
-    _trace();
-#endif
-
-    //orc::Block<4> block;
-    //auto hash(orc::Hash(block));
-
     auto internal(new Internal{});
     internal->node_ = std::make_shared<orc::Node>();
 
