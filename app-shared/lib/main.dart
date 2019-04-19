@@ -22,7 +22,7 @@ class OrchidApp extends StatelessWidget {
 
         // Theme (overridden for most widgets)
         theme: ThemeData(
-          primarySwatch: Colors.purple,
+          primarySwatch: Colors.deepPurple,
         ),
 
         // Routing

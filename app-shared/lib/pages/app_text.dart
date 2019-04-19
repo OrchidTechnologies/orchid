@@ -61,10 +61,23 @@ class AppText {
             fontSize: fontSize));
   }
 
-  static TextStyle hintStyle = TextStyle(
+  static TextStyle textHintStyle = TextStyle(
       color: AppColors.neutral_1,
       letterSpacing: 0.15,
-      //height: 1.5,
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 16.0);
+
+  static TextStyle textLabelStyle = TextStyle(
+      color: AppColors.neutral_3,
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 16.0);
+
+  static TextStyle textEntryStyle = TextStyle(
+      color: AppColors.grey_3,
       fontWeight: FontWeight.w400,
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
@@ -99,4 +112,22 @@ class AppText {
       fontStyle: FontStyle.normal,
       fontSize: 14.0);
 
+  static TextStyle noteStyle = const TextStyle(
+      letterSpacing: 0.4,
+      color: AppColors.purple_1,
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 12.0);
+
+  static TextStyle logStyle = const TextStyle(
+      fontFamily: "VT323", fontSize: 16.0, color: AppColors.neutral_1);
+
+  static TextStyle switchLabelStyle = TextStyle(
+      color: AppColors.neutral_1,
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      letterSpacing: 0.25,
+      fontSize: 14.0);
 }
