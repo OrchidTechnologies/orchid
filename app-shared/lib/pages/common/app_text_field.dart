@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
@@ -64,10 +65,17 @@ class AppLabeledTextField extends StatefulWidget {
   final String hintText;
   final TextEditingController controller;
   final bool obscureText;
+  final TextInputType textInputType;
   final Widget trailing;
+  final FormFieldValidator<String> validator;
 
   AppLabeledTextField(
-      {@required this.labelText, this.controller, this.obscureText = false, this.trailing, this.hintText});
+      {@required this.labelText,
+      this.controller,
+      this.obscureText = false,
+      this.trailing,
+      this.hintText,
+      this.textInputType, this.validator});
 
   @override
   _AppLabeledTextFieldState createState() => _AppLabeledTextFieldState();
@@ -94,17 +102,18 @@ class _AppLabeledTextFieldState extends State<AppLabeledTextField> {
       decoration: _focusNode.hasFocus
           ? AppTextField.textFieldFocusedDecoration
           : AppTextField.textFieldEnabledDecoration,
-      child: TextField(
+      child: TextFormField(
         style: AppText.textEntryStyle,
         controller: widget.controller,
+        keyboardType: widget.textInputType,
         obscureText: widget.obscureText,
+        validator: widget.validator,
         decoration: InputDecoration(
-          border: InputBorder.none,
-          labelText: widget.labelText,
-          labelStyle: AppText.textLabelStyle,
-          hintText: widget.hintText,
-          suffix: widget.trailing
-        ),
+            border: InputBorder.none,
+            labelText: widget.labelText,
+            labelStyle: AppText.textLabelStyle,
+            hintText: widget.hintText,
+            suffix: widget.trailing),
         focusNode: _focusNode,
       ),
     );

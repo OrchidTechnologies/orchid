@@ -44,15 +44,21 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
     super.initState();
 
     _passwordTextController.addListener(() {
-      setState(() { }); // Update the UI on focus changes
+      setState(() {}); // Update the UI on focus changes
     });
 
     widget.controller.save = _save;
 
-    _userNameTextController
-        .addListener(() => _userNameText.add(_userNameTextController.text));
-    _passwordTextController
-        .addListener(() => _passwordText.add(_passwordTextController.text));
+    _userNameTextController.addListener(() {
+      if (_userNameTextController.text != _userNameText.value) {
+        _userNameText.add(_userNameTextController.text);
+      }
+    });
+    _passwordTextController.addListener(() {
+      if (_passwordTextController.text != _passwordText.value) {
+        _passwordText.add(_passwordTextController.text);
+      }
+    });
 
     // Validate the form data and update the save button.
     Observable.combineLatest2(_userNameText, _passwordText,
