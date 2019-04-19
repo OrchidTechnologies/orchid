@@ -5,6 +5,7 @@ import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:email_validator/email_validator.dart';
@@ -143,11 +144,19 @@ class _HelpFeedbackPageState extends State<HelpFeedbackPage> {
     );
   }
 
-  void _send() {
+  void _send() async {
     setState(() {
       // dismiss the keyboard if present
       FocusScope.of(context).requestFocus(FocusNode());
       _readyToSend = false;
     });
+    _showFeedbackSentDialog();
+  }
+
+  Future<void> _showFeedbackSentDialog() {
+    return Dialogs.showAppDialog(
+        context: context,
+        title: "Feedback Sent!",
+        body: "Your feedback has been submitted.");
   }
 }
