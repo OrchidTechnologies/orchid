@@ -56,4 +56,8 @@ c_openvpn3 += -Wno-vexing-parse
 source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
 cflags += -I$(pwd)/libmaxminddb/include
 
+%/GeoLite2-City.mmdb:
+	@mkdir -p $(dir $@)
+	curl https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz | tar -C $(dir $@) --strip-components 1 --exclude '*.txt' -zxvf-
+
 include $(pwd)/p2p/target.mk
