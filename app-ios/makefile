@@ -110,6 +110,16 @@ $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xm
 	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
 	@touch $@
+
+ifneq ($(provision),)
+$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision
+$(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision: $(provision)vpn.mobileprovision
+	cp -a $< $@
+
+signed += $(bundle)/embedded.mobileprovision
+$(bundle)/embedded.mobileprovision: $(provision)main.mobileprovision
+	cp -a $< $@
+endif
 endif
 
 
