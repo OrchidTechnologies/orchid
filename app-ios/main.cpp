@@ -55,7 +55,7 @@ int main() {
     return orc::Wait([&]() -> task<int> {
         co_await orc::Schedule();
 
-        //std::cerr << co_await orc::GetLocal()->Request("GET", {"http", "cydia.saurik.com", "80", "/debug.txt"}, {}, "") << std::endl;
+        //orc::Log() << co_await orc::GetLocal()->Request("GET", {"http", "cydia.saurik.com", "80", "/debug.txt"}, {}, "") << std::endl;
         //co_return 0;
 
         //orc::Endpoint endpoint({"http", "localhost", "8545", "/"});
@@ -63,12 +63,12 @@ int main() {
         /*orc::Endpoint endpoint({"https", "eth-mainnet.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
         std::string storage(co_await endpoint("eth_getStorageAt", {"0x295a70b2de5e3953354a6a8344e616ed314d7251", "0x6661e9d6d8b923d5bbaab1b96e1dd51ff6ea2a93520fdc9eb75d059238b8c5e9", "0x65a8db"}));
         uint256_t parsed(storage);
-        std::cerr << parsed << std::endl;
+        orc::Log() << parsed << std::endl;
         co_return 0;*/
 
         auto delayed(co_await orc::Setup());
         orc::Sink sink([](const orc::Buffer &data) {
-            std::cerr << data << std::endl;
+            orc::Log() << data << std::endl;
         }, std::move(delayed.link_));
 
         co_await delayed.code_("localhost", "9999");

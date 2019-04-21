@@ -251,17 +251,17 @@ _trace();
 
     void OnBufferedAmountChange(uint64_t previous) override {
         auto current(channel_->buffered_amount());
-        std::cerr << "channel: " << current << " (" << previous << ")" << std::endl;
+        Log() << "channel: " << current << " (" << previous << ")" << std::endl;
     }
 
     void OnMessage(const webrtc::DataBuffer &buffer) override {
         Beam data(reinterpret_cast<const char *>(buffer.data.data()), buffer.data.size());
-        //std::cerr << "WebRTC >>> " << this << " " << data << std::endl;
+        //Log() << "WebRTC >>> " << this << " " << data << std::endl;
         Land(data);
     }
 
     task<void> Send(const Buffer &data) override {
-        //std::cerr << "WebRTC <<< " << this << " " << data << std::endl;
+        //Log() << "WebRTC <<< " << this << " " << data << std::endl;
         Beam beam(data);
         channel_->Send(webrtc::DataBuffer(rtc::CopyOnWriteBuffer(beam.data(), beam.size()), true));
         co_return;

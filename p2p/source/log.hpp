@@ -20,43 +20,26 @@
 /* }}} */
 
 
-#ifndef ORCHID_ERROR_HPP
-#define ORCHID_ERROR_HPP
+#ifndef ORCHID_LOG_HPP
+#define ORCHID_LOG_HPP
 
-#include <iostream>
+#include <cstdarg>
 #include <sstream>
-#include <string>
 
 #include "log.hpp"
 
 namespace orc {
-class Error {
+
+class Log :
+    public std::ostringstream
+{
   public:
-    std::string file;
-    int line;
-    std::string message;
+    ~Log();
 
-    Error(const std::string &file, int line) :
-        file(file), line(line)
-    {
-    }
+    Log &operator ()(const char *format, va_list args);
+    Log &operator ()(const char *format, ...);
+};
 
-    template <typename Type_>
-    Error &operator <<(const Type_ &value) {
-        std::ostringstream data;
-        data << value;
-        message += data.str();
-        return *this;
-    }
-}; }
+}
 
-#define _assert_(code, message) do { \
-    if ((code)) break; \
-    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << message << std::endl; \
-    throw orc::Error{__FILE__, __LINE__} << message; \
-} while (false)
-
-#define _assert(code) \
-    _assert_(code, "_assert(" #code ")")
-
-#endif//ORCHID_ERROR_HPP
+#endif//ORCHID_LOG_HPP

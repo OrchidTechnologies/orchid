@@ -150,13 +150,13 @@ task<S<Remote>> Local::Hop(const std::string &server) {
     auto offer(co_await client->Offer());
     auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
 
-    std::cerr << std::endl;
-    std::cerr << "^^^^^^^^^^^^^^^^" << std::endl;
-    std::cerr << offer << std::endl;
-    std::cerr << "================" << std::endl;
-    std::cerr << answer << std::endl;
-    std::cerr << "vvvvvvvvvvvvvvvv" << std::endl;
-    std::cerr << std::endl;
+    Log() << std::endl;
+    Log() << "^^^^^^^^^^^^^^^^" << std::endl;
+    Log() << offer << std::endl;
+    Log() << "================" << std::endl;
+    Log() << answer << std::endl;
+    Log() << "vvvvvvvvvvvvvvvv" << std::endl;
+    Log() << std::endl;
 
     co_await client->Negotiate(answer);
 

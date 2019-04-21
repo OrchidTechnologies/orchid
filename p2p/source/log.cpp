@@ -20,37 +20,41 @@
 /* }}} */
 
 
-#include <json/json.h>
-
-#include "error.hpp"
-#include "http.hpp"
-#include "jsonrpc.hpp"
+#include "log.hpp"
+#include "scope.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
-task<std::string> Endpoint::operator ()(const std::string &method, const std::vector<std::string> &args) {
-    Json::Value root;
-    root["jsonrpc"] = "2.0";
-    root["method"] = method;
-    root["id"] = "";
+Log::~Log() {
+    auto log(str());
+#ifdef __APPLE__
+    if (!log.empty() && log[log.size() - 1] == '\n')
+        log.resize(log.size() - 1);
+    NSLog((NSString *)CFSTR("%s"), log.c_str());
+#else
+    fprintf(stderr, "%s", log.c_str());
+#endif
+}
 
-    Json::Value params;
-    for (size_t i(0); i != args.size(); ++i)
-        params[Json::ArrayIndex(i)] = args[i];
-    root["params"] = std::move(params);
+Log &Log::operator ()(const char *format, va_list args) {
+    char *data;
+    auto size(vasprintf(&data, format, args));
 
-    Json::FastWriter writer;
-    auto body(co_await Request("POST", uri_, {{"content-type", "application/json"}}, writer.write(root)));
-    Log() << "[[ " << body << " ]]" << std::endl;
+    if (size != -1) {
+        _scope({ free(data); });
+        *this << data;
+    }
 
-    Json::Value result;
-    Json::Reader reader;
-    _assert(reader.parse(std::move(body), result, false));
+    return *this;
+}
 
-    _assert(result["jsonrpc"] == "2.0");
-    _assert(result["id"] == "");
-    co_return result["result"].asString();
+Log &Log::operator ()(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    auto &log(operator ()(format, args));
+    va_end(args);
+    return log;
 }
 
 }

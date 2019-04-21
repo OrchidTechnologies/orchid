@@ -384,13 +384,13 @@ static int Respond(void *arg, struct MHD_Connection *connection, const char *url
     try {
         auto answer(orc::Wait(internal->node_->Respond(request->offer_)));
 
-        std::cerr << std::endl;
-        std::cerr << "^^^^^^^^^^^^^^^^" << std::endl;
-        std::cerr << request->offer_ << std::endl;
-        std::cerr << "================" << std::endl;
-        std::cerr << answer << std::endl;
-        std::cerr << "vvvvvvvvvvvvvvvv" << std::endl;
-        std::cerr << std::endl;
+        orc::Log() << std::endl;
+        orc::Log() << "^^^^^^^^^^^^^^^^" << std::endl;
+        orc::Log() << request->offer_ << std::endl;
+        orc::Log() << "================" << std::endl;
+        orc::Log() << answer << std::endl;
+        orc::Log() << "vvvvvvvvvvvvvvvv" << std::endl;
+        orc::Log() << std::endl;
 
         return Data(connection, "text/plain", answer);
     } catch (...) {
@@ -410,7 +410,7 @@ static void Connect(void *arg, MHD_Connection *connection, void **socket, MHD_Co
 }
 
 static void LogMHD(void *, const char *format, va_list args) {
-    vfprintf(stderr, format, args);
+    orc::Log()(format, args);
 }
 
 namespace orc {
