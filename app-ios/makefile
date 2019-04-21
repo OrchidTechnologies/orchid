@@ -107,6 +107,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
+	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
 	@touch $@
 endif
@@ -141,6 +142,7 @@ $(bundle)/%: resource/%
 
 $(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	@rm -rf $(dir $@)
+	xattr -cr $(bundle)
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
 	@touch $@
 
