@@ -64,10 +64,13 @@ struct SetupSSL {
 
 Connection::Connection(const std::vector<std::string> &ices) :
     peer_([&]() {
-        static auto factory(webrtc::CreatePeerConnectionFactory(
-            thread_, thread_, thread_,
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
-        ));
+        static auto factory(webrtc::CreateModularPeerConnectionFactory([]() {
+            webrtc::PeerConnectionFactoryDependencies dependencies;
+            dependencies.network_thread = thread_;
+            dependencies.worker_thread = thread_;
+            dependencies.signaling_thread = thread_;
+            return dependencies;
+        }()));
 
         webrtc::PeerConnectionInterface::RTCConfiguration configuration;
 

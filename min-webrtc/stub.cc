@@ -10,10 +10,6 @@
 
 
 #include <media/base/videobroadcaster.h>
-#include <media/engine/webrtcmediaengine.h>
-
-#include <call/callfactory.h>
-
 #include <pc/videocapturertracksource.h>
 
 namespace rtc {
@@ -33,33 +29,6 @@ namespace rtc {
     }
 
     void VideoBroadcaster::OnDiscardedFrame() {
-    }
-}
-
-namespace cricket {
-std::unique_ptr<MediaEngineInterface> WebRtcMediaEngineFactory::Create(
-    rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-    rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory,
-    rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory,
-    std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory,
-    std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory,
-    rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
-    rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing
-) {
-    return nullptr;
-} }
-
-namespace webrtc {
-std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
-    return nullptr;
-} }
-
-namespace webrtc {
-    AudioProcessingBuilder::AudioProcessingBuilder() = default;
-    AudioProcessingBuilder::~AudioProcessingBuilder() = default;
-
-    AudioProcessing *AudioProcessingBuilder::Create() {
-        return nullptr;
     }
 }
 
