@@ -38,13 +38,21 @@ size_t Buffer::size() const {
 std::string Buffer::str() const {
     std::string value;
     value.resize(size());
-    auto data(&value[0]);
-    each([&](const Region &region) {
-        auto size(region.size());
-        memcpy(data, region.data(), size);
-        data += size;
-    });
+    copy(&value[0], value.size());
     return value;
+}
+
+size_t Buffer::copy(uint8_t *data, size_t size) const {
+    auto here(data);
+
+    each([&](const Region &region) {
+        auto writ(region.size());
+        _assert(data + size - here >= writ);
+        memcpy(here, region.data(), writ);
+        here += writ;
+    });
+
+    return here - data;
 }
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
@@ -65,12 +73,7 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
 Beam::Beam(const Buffer &buffer) :
     Beam(buffer.size())
 {
-    auto data(data_);
-    buffer.each([&](const Region &region) {
-        auto size(region.size());
-        memcpy(data, region.data(), size);
-        data += size;
-    });
+    buffer.copy(data_, size_);
 }
 
 }

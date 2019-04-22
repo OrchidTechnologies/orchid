@@ -48,7 +48,6 @@ class OrchidClient :
     asio::io_context &io_context;
     openvpn::TransportClientParent *parent_;
 
-    std::string buffer_;
     orc::U<orc::Sink<>> pipe_;
 
   public:
@@ -71,20 +70,16 @@ class OrchidClient :
         auto remote(config_.remote_list->first_item());
         _assert(remote != NULL);
 
-        auto delayed(co_await orc::Setup());
+        auto origin(co_await orc::Setup());
+        auto delayed(origin->Connect());
 
         pipe_ = std::make_unique<orc::Sink<>>([&](const orc::Buffer &data) {
-            buffer_ += data.str();
-            while (buffer_.size() >= 2) {
-                auto size(ntohs(*reinterpret_cast<uint16_t *>(&buffer_[0])));
-                if (buffer_.size() < 2 + size)
-                    break;
-                openvpn::BufferAllocated buffer(reinterpret_cast<const uint8_t *>(buffer_.data() + 2), size, 0);
-                buffer_ = buffer_.substr(2 + size);
-                asio::dispatch(io_context, [parent = parent_, buffer]() mutable {
-                    parent->transport_recv(buffer);
-                });
-            }
+            //orc::Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
+            openvpn::BufferAllocated buffer(data.size(), openvpn::BufferAllocated::ARRAY);
+            data.copy(buffer.data(), buffer.size());
+            asio::dispatch(io_context, [parent = parent_, buffer = std::move(buffer)]() mutable {
+                parent->transport_recv(buffer);
+            });
         }, std::move(delayed.link_));
 
         co_await delayed.code_(remote->server_host, remote->server_port);
@@ -103,13 +98,11 @@ class OrchidClient :
     }
 
     bool transport_send_const(const openvpn::Buffer &data) override {
-        std::string packet;
-        packet.resize(data.size() + 2);
-        memcpy(&packet[2], data.c_data(), data.size());
-        *reinterpret_cast<uint16_t *>(&packet[0]) = htons(data.size());
-        orc::Wait([this, packet = std::move(packet)]() -> task<void> {
+        orc::Wait([&]() -> task<void> {
             co_await orc::Schedule();
-            co_await pipe_->Send(orc::Beam(packet));
+            orc::Subset buffer(data.c_data(), data.size());
+            //orc::Log() << "\e[35mSEND " << data.size() << " " << buffer << "\e[0m" << std::endl;
+            co_await pipe_->Send(buffer);
         }());
         return true;
     }
@@ -144,7 +137,7 @@ class OrchidClient :
     }
 
     openvpn::Protocol transport_protocol() const override {
-        return openvpn::Protocol(openvpn::Protocol::TCPv4);
+        return openvpn::Protocol(openvpn::Protocol::UDPv4);
     }
 
     void transport_reparent(openvpn::TransportClientParent *parent) override {

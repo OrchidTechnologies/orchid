@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <boost/algorithm/string.hpp>
+
 #include "log.hpp"
 #include "scope.hpp"
 #include "trace.hpp"
@@ -28,12 +30,13 @@ namespace orc {
 
 Log::~Log() {
     auto log(str());
-#ifdef __APPLE__
     if (!log.empty() && log[log.size() - 1] == '\n')
         log.resize(log.size() - 1);
+    boost::replace_all(log, "\n", " | ");
+#ifdef __APPLE__
     NSLog((NSString *)CFSTR("%s"), log.c_str());
 #else
-    fprintf(stderr, "%s", log.c_str());
+    fprintf(stderr, "%s\n", log.c_str());
 #endif
 }
 

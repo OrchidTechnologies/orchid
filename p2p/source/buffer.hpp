@@ -46,6 +46,12 @@ class Buffer {
     virtual size_t size() const;
     std::string str() const;
 
+    size_t copy(uint8_t *data, size_t size) const;
+
+    size_t copy(char *data, size_t size) const {
+        return copy(reinterpret_cast<uint8_t *>(data), size);
+    }
+
     virtual bool empty() const {
         return size() == 0;
     }

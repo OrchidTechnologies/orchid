@@ -45,7 +45,7 @@ class Origin {
   public:
     virtual task<S<Remote>> Hop(const std::string &server) = 0;
 
-    virtual task<DelayedConnect> Connect() = 0;
+    virtual DelayedConnect Connect() = 0;
 
     task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 };
@@ -75,7 +75,7 @@ class Remote :
     task<Beam> Call(const Tag &command, const Buffer &data);
 
     task<S<Remote>> Hop(const std::string &server) override;
-    task<DelayedConnect> Connect() override;
+    DelayedConnect Connect() override;
 };
 
 class Local :
@@ -86,12 +86,12 @@ class Local :
     }
 
     task<S<Remote>> Hop(const std::string &server) override;
-    task<DelayedConnect> Connect() override;
+    DelayedConnect Connect() override;
 };
 
 S<Local> GetLocal();
 
-task<DelayedConnect> Setup();
+task<S<Origin>> Setup();
 
 }
 

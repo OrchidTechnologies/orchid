@@ -27,6 +27,10 @@ namespace orc {
 
 static rtc::Thread *thread_;
 
+void Post(std::function<void ()> code) {
+    thread_->Invoke<void>(RTC_FROM_HERE, std::move(code));
+}
+
 __attribute__((__constructor__))
 static void SetupThread() {
     static std::mutex mutex_;
@@ -66,6 +70,9 @@ Connection::Connection(const std::vector<std::string> &ices) :
         ));
 
         webrtc::PeerConnectionInterface::RTCConfiguration configuration;
+
+        configuration.disable_link_local_networks = true;
+        configuration.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
 
         for (const auto &ice : ices) {
             webrtc::PeerConnectionInterface::IceServer server;

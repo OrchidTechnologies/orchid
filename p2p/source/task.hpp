@@ -30,6 +30,8 @@
 
 namespace orc {
 
+void Post(std::function<void ()> code);
+
 bool Check();
 
 }

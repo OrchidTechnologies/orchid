@@ -66,12 +66,13 @@ int main() {
         orc::Log() << parsed << std::endl;
         co_return 0;*/
 
-        auto delayed(co_await orc::Setup());
+        auto origin(co_await orc::Setup());
+        auto delayed(origin->Connect());
         orc::Sink sink([](const orc::Buffer &data) {
             orc::Log() << data << std::endl;
         }, std::move(delayed.link_));
 
-        co_await delayed.code_("localhost", "9999");
+        co_await delayed.code_("127.0.0.1", "9999");
         co_await sink.Send(orc::Beam("test\n"));
 
         co_await block;

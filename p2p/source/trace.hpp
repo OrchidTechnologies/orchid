@@ -32,11 +32,11 @@ typedef struct NSString NSString;
 #endif
 extern "C" void NSLog(NSString *, ...);
 #define _trace() \
-    NSLog((NSString *) CFSTR("[%lx] _trace(%s:%u): %s"), pthread_self(), __FILE__, __LINE__, __FUNCTION__)
+    NSLog((NSString *) CFSTR("[%llx] _trace(%s:%u): %s"), (long long) pthread_self(), __FILE__, __LINE__, __FUNCTION__)
 #else
 #include <stdio.h>
 #define _trace() \
-    fprintf(stderr, "\e[31m[%lx] _trace(%s:%u): %s\e[0m\n", pthread_self(), __FILE__, __LINE__, __FUNCTION__)
+    fprintf(stderr, "\e[31m[%llx] _trace(%s:%u): %s\e[0m\n", (long long) pthread_self(), __FILE__, __LINE__, __FUNCTION__)
 #endif
 
 #endif//ORCHID_TRACE_HPP

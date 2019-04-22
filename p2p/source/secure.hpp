@@ -23,6 +23,11 @@
 #ifndef ORCHID_SECURE_HPP
 #define ORCHID_SECURE_HPP
 
+#include <openssl/ssl.h>
+
+#include <cppcoro/async_manual_reset_event.hpp>
+#include <cppcoro/async_mutex.hpp>
+
 #include "link.hpp"
 
 namespace orc {
@@ -31,13 +36,39 @@ class Secure final :
     public Link
 {
   private:
+    bool server_;
     Sink<> sink_;
     std::function<bool ()> verify_;
+
+    bool eof_ = false;
+    const Buffer *data_ = NULL;
+    void (Secure::*land_)() = NULL;
+
+    cppcoro::async_mutex send_;
+
+    cppcoro::async_manual_reset_event opened_;
+    cppcoro::async_manual_reset_event closed_;
+
+    SSL *ssl_;
+
+  private:
+    static BIO_METHOD *Method();
+
+    int Write(BIO *bio, const char *data, int size);
+    int Read(BIO *bio, char *data, int size);
+    long Control(BIO *bio, int command, long arg1, void *arg2);
+    int Destroy(BIO *bio);
+
+    void Active();
+    void Server();
+    void Client();
 
   public:
     Secure(bool server, U<Link> link, decltype(verify_) verify);
 
     task<void> _();
+
+    virtual ~Secure();
 
     task<void> Send(const Buffer &data) override;
 };

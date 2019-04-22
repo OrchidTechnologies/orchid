@@ -38,7 +38,7 @@ namespace orc {
 static std::vector<std::string> ices_;
 
 task<std::string> Origin::Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
-    auto delayed(co_await Connect());
+    auto delayed(Connect());
     Adapter adapter(orc::Context(), std::move(delayed.link_));
     co_await delayed.code_(uri.host_, uri.port_);
     co_return co_await orc::Request(adapter, method, uri, headers, data);
@@ -132,10 +132,10 @@ task<S<Remote>> Remote::Hop(const std::string &server) {
     co_return remote;
 }
 
-task<DelayedConnect> Remote::Connect() {
+DelayedConnect Remote::Connect() {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
     auto backup(tunnel.get());
-    co_return {[this, backup](const std::string &host, const std::string &port) -> task<void> {
+    return {[this, backup](const std::string &host, const std::string &port) -> task<void> {
         co_await backup->_([&](const Tag &tag) -> task<void> {
             auto res(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
             Take<>(res);
@@ -166,10 +166,10 @@ task<S<Remote>> Local::Hop(const std::string &server) {
     co_return remote;
 }
 
-task<DelayedConnect> Local::Connect() {
+DelayedConnect Local::Connect() {
     auto socket(std::make_unique<Socket<asio::ip::tcp::socket>>());
     auto backup(socket.get());
-    co_return {[backup](const std::string &host, const std::string &port) -> task<void> {
+    return {[backup](const std::string &host, const std::string &port) -> task<void> {
         co_await backup->_(host, port);
     }, std::move(socket)};
 }
@@ -179,7 +179,7 @@ S<Local> GetLocal() {
     return local;
 }
 
-task<DelayedConnect> Setup() {
+task<S<Origin>> Setup() {
     S<Origin> origin(GetLocal());
 
     const char *server("mac.saurik.com");
@@ -192,7 +192,7 @@ task<DelayedConnect> Setup() {
         origin = remote;
     }
 
-    co_return co_await origin->Connect();
+    co_return origin;
 }
 
 }

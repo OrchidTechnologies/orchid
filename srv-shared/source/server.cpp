@@ -177,8 +177,8 @@ class Account :
                     _assert(colon != std::string::npos);
                     auto host(string.substr(0, colon));
                     auto port(string.substr(colon + 1));
-                    auto socket(std::make_unique<Socket<asio::ip::tcp::socket>>());
-                    auto output(std::make_unique<Output<Socket<asio::ip::tcp::socket>>>(self, tag, std::move(socket)));
+                    auto socket(std::make_unique<Socket<asio::ip::udp::socket>>());
+                    auto output(std::make_unique<Output<Socket<asio::ip::udp::socket>>>(self, tag, std::move(socket)));
                     co_await (*output)->_(host, port);
                     self->outputs_[tag] = std::move(output);
                     co_await self->Send(Tie(nonce));
@@ -232,7 +232,10 @@ class Account :
                     auto answer(co_await self->back_->Respond(offer.str()));
                     co_await self->Send(Tie(nonce, Beam(answer)));
 
-                } else _assert(false);
+                } else {
+                    Log() << self << " FAIL : " << unboxed << std::endl;
+                    _assert(false);
+                }
             }
         });
     }
@@ -296,6 +299,10 @@ class Conduit :
         account_->Associate(this);
     }
 
+    task<void> _() {
+        co_await sink_->_();
+    }
+
     virtual ~Conduit() {
         if (account_ != nullptr)
             account_->Dissociate(this);
@@ -324,11 +331,18 @@ class Incoming :
     }
 
     void OnChannel(U<Channel> channel) override {
+        auto backup(channel.get());
         auto conduit(std::make_shared<Conduit>(node_, std::move(channel)));
         conduit->self_ = conduit;
-        // XXX: also automatically remove this after some timeout
-        // XXX: this was temporarily removed due to thread issues
-        // node_->clients_.erase(shared_from_this());
+
+        Task([backup, conduit]() -> task<void> {
+            co_await backup->_();
+            co_await conduit->_();
+
+            // XXX: also automatically remove this after some timeout
+            // XXX: this was temporarily removed due to thread issues
+            // node_->clients_.erase(shared_from_this());
+        });
     }
 };
 

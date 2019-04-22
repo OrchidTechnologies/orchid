@@ -255,15 +255,18 @@ _trace();
     }
 
     void OnMessage(const webrtc::DataBuffer &buffer) override {
-        Beam data(reinterpret_cast<const char *>(buffer.data.data()), buffer.data.size());
+        Subset data(buffer.data.data(), buffer.data.size());
         //Log() << "WebRTC >>> " << this << " " << data << std::endl;
         Land(data);
     }
 
     task<void> Send(const Buffer &data) override {
         //Log() << "WebRTC <<< " << this << " " << data << std::endl;
-        Beam beam(data);
-        channel_->Send(webrtc::DataBuffer(rtc::CopyOnWriteBuffer(beam.data(), beam.size()), true));
+        rtc::CopyOnWriteBuffer buffer(data.size());
+        data.copy(buffer.data(), buffer.size());
+        Post([&]() {
+            channel_->Send(webrtc::DataBuffer(buffer, true));
+        });
         co_return;
     }
 
