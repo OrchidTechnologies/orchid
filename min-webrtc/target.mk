@@ -34,6 +34,8 @@ endif
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_format.cc
 
+webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
+
 webrtc += $(pwd)/webrtc/api/video/encoded_image.cc
 webrtc += $(pwd)/webrtc/api/video/hdr_metadata.cc
 webrtc += $(pwd)/webrtc/api/video/video_content_type.cc
@@ -43,24 +45,27 @@ webrtc += $(pwd)/webrtc/api/video/video_timing.cc
 webrtc += $(pwd)/webrtc/call/call_config.cc 
 webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
 
+webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_transport_state.cc
+webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_writable_state.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pair_config.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pair.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/output/rtc_event_log_output_file.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/icelogger.cc
+webrtc += $(pwd)/webrtc/logging/rtc_event_log/ice_logger.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log_factory.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log_impl.cc
 
 webrtc += $(pwd)/webrtc/media/base/codec.cc
 webrtc += $(pwd)/webrtc/media/base/h264_profile_level_id.cc
-webrtc += $(pwd)/webrtc/media/base/mediachannel.cc
-webrtc += $(pwd)/webrtc/media/base/mediaconstants.cc
-webrtc += $(pwd)/webrtc/media/base/mediaengine.cc
-webrtc += $(pwd)/webrtc/media/base/rtpdataengine.cc
-webrtc += $(pwd)/webrtc/media/base/rtputils.cc
-webrtc += $(pwd)/webrtc/media/base/streamparams.cc
-webrtc += $(pwd)/webrtc/media/base/turnutils.cc
-webrtc += $(pwd)/webrtc/media/base/videosourcebase.cc
+webrtc += $(pwd)/webrtc/media/base/media_channel.cc
+webrtc += $(pwd)/webrtc/media/base/media_constants.cc
+webrtc += $(pwd)/webrtc/media/base/media_engine.cc
+webrtc += $(pwd)/webrtc/media/base/rid_description.cc
+webrtc += $(pwd)/webrtc/media/base/rtp_data_engine.cc
+webrtc += $(pwd)/webrtc/media/base/rtp_utils.cc
+webrtc += $(pwd)/webrtc/media/base/stream_params.cc
+webrtc += $(pwd)/webrtc/media/base/turn_utils.cc
+webrtc += $(pwd)/webrtc/media/base/video_source_base.cc
 webrtc += $(pwd)/webrtc/media/base/vp9_profile.cc
 
 webrtc += $(wildcard $(pwd)/webrtc/media/sctp/*.cc)
@@ -87,8 +92,7 @@ webrtc += $(wildcard $(pwd)/webrtc/p2p/client/*.cc)
 
 webrtc += $(filter-out \
     %/bundlefilter.cc \
-    %/peerconnectionwrapper.cc \
-    %/videocapturertracksource.cc \
+    %/peer_connection_wrapper.cc \
 ,$(wildcard $(pwd)/webrtc/pc/*.cc))
 
 webrtc += $(filter-out \
@@ -146,8 +150,9 @@ webrtc := $(filter-out %_mips.cc,$(webrtc))
 webrtc := $(filter-out %_neon.c,$(webrtc))
 webrtc := $(filter-out %_neon.cc,$(webrtc))
 
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/cocoa_%.mm,$(webrtc))
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac%.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/%,$(webrtc))
+
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac_%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_libevent.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_gcd.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_win.cc,$(webrtc))
@@ -183,6 +188,8 @@ cflags += -D__FreeBSD_version=0
 
 cflags += -DABSL_ALLOCATOR_NOTHROW=0
 cflags += -DWEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0
+
+cflags += -DWEBRTC_OPUS_SUPPORT_120MS_PTIME=0
 
 cflags += -DHAVE_SCTP
 

@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include "rtc_base/ssl_adapter.h"
+
 #include "channel.hpp"
 #include "trace.hpp"
 

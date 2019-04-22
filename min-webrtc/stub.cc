@@ -9,14 +9,11 @@
 // }}}
 
 
-#include <media/base/videobroadcaster.h>
-#include <pc/videocapturertracksource.h>
+#include "api/video/builtin_video_bitrate_allocator_factory.h"
+#include "media/base/video_broadcaster.h"
 
 namespace rtc {
-    VideoBroadcaster::VideoBroadcaster() {
-        thread_checker_.DetachFromThread();
-    }
-
+    VideoBroadcaster::VideoBroadcaster() = default;
     VideoBroadcaster::~VideoBroadcaster() = default;
 
     void VideoBroadcaster::AddOrUpdateSink(VideoSinkInterface<webrtc::VideoFrame> *sink, const VideoSinkWants &wants) {
@@ -33,20 +30,6 @@ namespace rtc {
 }
 
 namespace webrtc {
-rtc::scoped_refptr<VideoTrackSourceInterface> VideoCapturerTrackSource::Create(
-    rtc::Thread* worker_thread,
-    std::unique_ptr<cricket::VideoCapturer> capturer,
-    const webrtc::MediaConstraintsInterface* constraints,
-    bool remote
-) {
-    return nullptr;
-} }
-
-namespace webrtc {
-rtc::scoped_refptr<VideoTrackSourceInterface> VideoCapturerTrackSource::Create(
-    rtc::Thread* worker_thread,
-    std::unique_ptr<cricket::VideoCapturer> capturer,
-    bool remote
-) {
-    return nullptr;
+std::unique_ptr<VideoBitrateAllocatorFactory> CreateBuiltinVideoBitrateAllocatorFactory() {
+  return nullptr;
 } }
