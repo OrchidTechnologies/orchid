@@ -82,7 +82,7 @@ class _WalletKeyEntryState extends State<WalletKeyEntry> {
                       hintText: (_walletPublic == null || _focusNode.hasFocus)
                           ? "Paste private key here"
                           : "Linked Wallet: ${_walletPublic.id}",
-                      hintStyle: AppText.hintStyle),
+                      hintStyle: AppText.textHintStyle),
                   onChanged: _keyTextChanged,
                   focusNode: _focusNode,
                 ),

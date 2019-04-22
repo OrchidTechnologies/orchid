@@ -88,7 +88,6 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
           // Save button
           Center(
             child: Container(
-              margin: EdgeInsets.only(bottom: 62),
               child: StreamBuilder<Object>(
                 stream: _vpnCredentialsEntryController.readyToSave.stream,
                 builder: (context, snapshot) {
@@ -101,6 +100,7 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
               ),
             ),
           ),
+          SizedBox(height: 62)
         ],
       ),
     );

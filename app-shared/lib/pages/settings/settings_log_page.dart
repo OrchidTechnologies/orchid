@@ -103,7 +103,7 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                     child: Text(
                       _logText,
                       textAlign: TextAlign.left,
-                      style: TextStyle(fontFamily: "VT323", fontSize: 16.0),
+                      style: AppText.logStyle,
                     ),
                   ),
                   decoration: BoxDecoration(
