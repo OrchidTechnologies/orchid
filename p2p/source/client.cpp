@@ -35,7 +35,9 @@
 
 namespace orc {
 
-static std::vector<std::string> ices_;
+static std::vector<std::string> ices_ {
+    "stun:stun.l.google.com:19302",
+};
 
 task<std::string> Origin::Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
     auto delayed(Connect());
