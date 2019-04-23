@@ -91,3 +91,12 @@
 [submodule "ics-openvpn"]
 	path = vpn-android/ics-openvpn
 	url = https://github.com/schwabe/ics-openvpn.git
+[submodule "BeastHttp"]
+	path = p2p/BeastHttp
+	url = https://github.com/0xdead4ead/BeastHttp.git
+[submodule "boringtun"]
+	path = vpn-shared/boringtun
+	url = https://github.com/cloudflare/boringtun.git
+[submodule "tor"]
+	path = vpn-shared/tor
+	url = https://git.torproject.org/tor.git
