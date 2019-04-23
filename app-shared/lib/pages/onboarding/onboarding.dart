@@ -41,6 +41,13 @@ class AppOnboarding {
       return AppRoutes.onboarding_walkthrough;
     }
 
+    // Prompt for VPN permission
+    bool hasVPNPermission = OrchidAPI().networkingPermissionStatus.value;
+    bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
+    if (!hasVPNPermission && !promptedForVPNPermission) {
+      return AppRoutes.onboarding_vpn_permission;
+    }
+
     // Link an external wallet
     bool hasLinkedWallet = (await OrchidAPI().getWallet()) != null;
     bool promptedToLinkWallet = await UserPreferences().getPromptedToLinkWallet();
@@ -50,13 +57,6 @@ class AppOnboarding {
     bool linkWalletAcknowledged = await UserPreferences().getLinkWalletAcknowledged();
     if (hasLinkedWallet && !linkWalletAcknowledged) {
       return AppRoutes.onboarding_link_wallet_success;
-    }
-
-    // Prompte for VPN permission
-    bool hasVPNPermission = OrchidAPI().networkingPermissionStatus.value;
-    bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
-    if (!hasVPNPermission && !promptedForVPNPermission) {
-      return AppRoutes.onboarding_vpn_permission;
     }
 
     return NO_PAGE;
