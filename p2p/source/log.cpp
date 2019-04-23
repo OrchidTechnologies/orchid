@@ -32,7 +32,8 @@ Log::~Log() {
     auto log(str());
     if (!log.empty() && log[log.size() - 1] == '\n')
         log.resize(log.size() - 1);
-    boost::replace_all(log, "\n", " | ");
+    boost::replace_all(log, "\r", "");
+    boost::replace_all(log, "\n", " || ");
 #ifdef __APPLE__
     NSLog((NSString *)CFSTR("%s"), log.c_str());
 #else
