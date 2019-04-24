@@ -14,4 +14,7 @@ cflags += -D__Userspace_os_Linux
 cflags += -DWEBRTC_LINUX
 cflags += -DWEBRTC_ANDROID
 
+source += $(pwd)/webrtc/rtc_base/ifaddrs_android.cc
+source += $(pwd)/webrtc/rtc_base/system/warn_current_thread_is_deadlocked.cc
 source += $(pwd)/webrtc/rtc_base/task_queue_libevent.cc
+source += $(pwd)/webrtc/sdk/android/native_api/stacktrace/stacktrace.cc
