@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_gradients.dart';
+import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/app_bar.dart';
@@ -22,7 +23,7 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: SmallAppBar.build(context),
@@ -30,25 +31,27 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
           decoration:
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
           child: AccommodateKeyboard(
-            child: Column(
-              children: <Widget>[
-                // For large screens distribute the space a bit, else fixed margin.
-                screenWidth > 640 ? Spacer(flex: 1) : SizedBox(height: 48),
-                buildDescription(),
-                SizedBox(height: 68),
-                WalletKeyEntry(controller: _walletKeyEntryController),
-                SizedBox(height: 20),
-                Spacer(flex: 2),
-                StreamBuilder<Object>(
-                    stream: _walletKeyEntryController.readyToSave.stream,
-                    builder: (context, snapshot) {
-                      return NextSkipButtons.build(
-                          onNext: _walletKeyEntryController.readyToSave.value
-                              ? _next
-                              : null,
-                          onSkip: _skip);
-                    })
-              ],
+            child: SafeArea(
+              child: Column(
+                children: <Widget>[
+                  // For large screens distribute the space a bit, else fixed margin.
+                  screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 48),
+                  buildDescription(),
+                  SizedBox(height: 68),
+                  WalletKeyEntry(controller: _walletKeyEntryController),
+                  SizedBox(height: 20),
+                  Spacer(flex: 2),
+                  StreamBuilder<Object>(
+                      stream: _walletKeyEntryController.readyToSave.stream,
+                      builder: (context, snapshot) {
+                        return NextSkipButtons.build(
+                            onNext: _walletKeyEntryController.readyToSave.value
+                                ? _next
+                                : null,
+                            onSkip: _skip);
+                      })
+                ],
+              ),
             ),
           )),
     );

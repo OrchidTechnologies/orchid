@@ -120,46 +120,46 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
       appBar: SmallAppBar.build(context),
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: BouncingScrollPhysics(),
-                children: pages,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-                  if (widget.onChange != null) widget.onChange(index);
-                },
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: BouncingScrollPhysics(),
+                  children: pages,
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                    if (widget.onChange != null) widget.onChange(index);
+                  },
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-              child: Row(
-                children: [
-                  skipBtn,
-                  Expanded(
-                    child: Center(
-                      child: widget.isProgress
-                          ? DotsIndicator(
-                              numberOfDot: pages.length,
-                              position: _currentPage,
-                              dotSpacing: widget.dotsSpacing,
-                              dotSize: widget.dotSize,
-                              dotActiveSize: widget.dotSize,
-                              dotActiveColor: AppColors.purple_3,
-                              dotColor: AppColors.purple_3.withOpacity(0.3),
-                            )
-                          : const SizedBox(),
+              Container(
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                child: Row(
+                  children: [
+                    skipBtn,
+                    Expanded(
+                      child: Center(
+                        child: widget.isProgress
+                            ? DotsIndicator(
+                                numberOfDot: pages.length,
+                                position: _currentPage,
+                                dotSpacing: widget.dotsSpacing,
+                                dotSize: widget.dotSize,
+                                dotActiveSize: widget.dotSize,
+                                dotActiveColor: AppColors.purple_3,
+                                dotColor: AppColors.purple_3.withOpacity(0.3),
+                              )
+                            : const SizedBox(),
+                      ),
                     ),
-                    flex: 36,
-                  ),
-                  isLastPage ? doneBtn : nextBtn,
-                ],
+                    isLastPage ? doneBtn : nextBtn,
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

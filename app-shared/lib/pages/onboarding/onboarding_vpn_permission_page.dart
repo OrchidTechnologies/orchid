@@ -20,24 +20,26 @@ class _OnboardingVPNPermissionPageState extends State<OnboardingVPNPermissionPag
       body: Container(
           decoration:
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-          child: Stack(
-            children: <Widget>[
-              // Center horizontally (walkthrough content fills screen vertically)
-              Center(
-                child: WalkthroughContent(
-                  imageLocation: WalkthroughContentImageLocation.Bottom,
-                  titleText: "Let's get you set up",
-                  bodyText:
-                      "To fully utilize Orchid, you will need to grant permission for the VPN connection. Next up, you will see a dialog asking you to allow this connection.",
-                  imageName: 'assets/images/illustration_4.png',
+          child: SafeArea(
+            child: Stack(
+              children: <Widget>[
+                // Center horizontally (walkthrough content fills screen vertically)
+                Center(
+                  child: WalkthroughContent(
+                    imageLocation: WalkthroughContentImageLocation.Bottom,
+                    titleText: "Let's get you set up",
+                    bodyText:
+                        "To fully utilize Orchid, you will need to grant permission for the VPN connection. Next up, you will see a dialog asking you to allow this connection.",
+                    imageName: 'assets/images/illustration_4.png',
+                  ),
                 ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: NextSkipButtons.build(
-                    onNext: _confirmNext, onSkip: _skip),
-              )
-            ],
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: NextSkipButtons.build(
+                      onNext: _confirmNext, onSkip: _skip),
+                )
+              ],
+            ),
           )),
     );
   }

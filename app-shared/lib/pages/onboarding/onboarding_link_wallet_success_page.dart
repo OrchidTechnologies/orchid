@@ -20,29 +20,31 @@ class _OnboardingLinkWalletSuccessPageState
       body: Container(
           decoration:
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-          child: Stack(
-            children: <Widget>[
-              // Center horizontally (walkthrough content fills screen vertically)
-              Center(
-                child: WalkthroughContent(
-                  imageLocation: WalkthroughContentImageLocation.Bottom,
-                  titleText: "Wallet linked!",
-                  bodyText:
-                      "You have successfully linked an Ethereum wallet to Orchid and "
-                      "will use this wallet to pay for bandwidth going forward.\n\n"
-                      "You may change or add an external wallet at any time from within the settings tab.",
-                  imageName: 'assets/images/illustration_5.png',
+          child: SafeArea(
+            child: Stack(
+              children: <Widget>[
+                // Center horizontally (walkthrough content fills screen vertically)
+                Center(
+                  child: WalkthroughContent(
+                    imageLocation: WalkthroughContentImageLocation.Bottom,
+                    titleText: "Wallet linked!",
+                    bodyText:
+                        "You have successfully linked an Ethereum wallet to Orchid and "
+                        "will use this wallet to pay for bandwidth going forward.\n\n"
+                        "You may change or add an external wallet at any time from within the settings tab.",
+                    imageName: 'assets/images/illustration_5.png',
+                  ),
                 ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child:
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 62),
-                      child: NextSkipButtons.buildNextButton(onNext: _complete),
-                    ),
-              )
-            ],
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child:
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 42),
+                        child: NextSkipButtons.buildNextButton(onNext: _complete),
+                      ),
+                )
+              ],
+            ),
           )),
     );
   }

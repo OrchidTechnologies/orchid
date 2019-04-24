@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/app_transitions.dart';
 import 'package:orchid/pages/common/app_bar.dart';
-import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/notification_banner.dart';
 import 'package:orchid/pages/connect/connect_button.dart';
@@ -14,9 +11,7 @@ import 'package:orchid/pages/app_colors.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:orchid/pages/connect/route_info.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
-import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:flutter/scheduler.dart';
 
 class QuickConnectPage extends StatefulWidget {
   QuickConnectPage({Key key}) : super(key: key);
@@ -29,6 +24,7 @@ class _QuickConnectPageState
     extends State<QuickConnectPage> //    with SingleTickerProviderStateMixin {
     with
         TickerProviderStateMixin {
+
   // Current state reflected by the page, driving color and animation.
   OrchidConnectionState _connectionState = OrchidConnectionState.NotConnected;
 
@@ -183,14 +179,16 @@ class _QuickConnectPageState
         ),
 
         // bottom map
-        Container(
-            margin: EdgeInsets.only(bottom: 15.0),
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    fit: BoxFit.fitWidth,
-                    alignment: Alignment.bottomCenter,
-                    image:
-                        AssetImage('assets/images/world_map_purp.png')))),
+        SafeArea(
+          child: Container(
+              margin: EdgeInsets.only(bottom: 15.0),
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      fit: BoxFit.fitWidth,
+                      alignment: Alignment.bottomCenter,
+                      image:
+                          AssetImage('assets/images/world_map_purp.png')))),
+        ),
 
         // The background animation
         Visibility(
