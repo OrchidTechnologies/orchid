@@ -52,9 +52,6 @@
 [submodule "webrtc"]
 	path = min-webrtc/webrtc
 	url = https://chromium.googlesource.com/external/webrtc
-[submodule "libmicrohttpd"]
-	path = srv-shared/libmicrohttpd
-	url = https://android.googlesource.com/platform/external/libmicrohttpd
 [submodule "openvpn"]
 	path = srv-shared/openvpn
 	url = https://github.com/OpenVPN/openvpn.git

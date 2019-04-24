@@ -35,11 +35,6 @@ source += $(wildcard p2p/boost/libs/program_options/src/*.cpp)
 
 include p2p/target.mk
 
-source += $(filter-out libmicrohttpd/src/microhttpd/test_%.c,$(wildcard libmicrohttpd/src/microhttpd/*.c))
-cflags += -Ilibmicrohttpd/src/include
-cflags += -Wno-tautological-constant-out-of-range-compare
-c_libmicrohttpd += -Wno-unused-variable
-
 cflags += -Iextra
 
 

@@ -172,5 +172,9 @@ source += $(wildcard $(pwd)/lwip/src/core/ipv6/*.c)
 cflags += -I$(pwd)/lwip/src/include
 cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
 
+cflags += -I$(pwd)/BeastHttp/include
+#source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
+source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
+
 include $(pwd)/target-$(target).mk
 include $(pwd)/rtc/target.mk

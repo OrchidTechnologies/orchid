@@ -25,6 +25,8 @@
 #include <iostream>
 #include <mutex>
 
+#include <unistd.h>
+
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -36,9 +38,13 @@
 
 #include <asio.hpp>
 
-#include <unistd.h>
-
-#include <microhttpd.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+#include <basic_router.hxx>
+#include <reactor/listener.hxx>
+#include <reactor/session.hxx>
+#include <out.hxx>
+#pragma clang diagnostic pop
 
 #include "baton.hpp"
 #include "channel.hpp"
@@ -59,6 +65,7 @@
     __attribute__((__unused__))
 
 
+namespace http = _0xdead4ead::http;
 namespace po = boost::program_options;
 
 namespace orc {
@@ -356,75 +363,22 @@ task<std::string> Node::Respond(const std::string &offer) {
 }
 
 
-static MHD_Daemon *http_;
+template<class Body_>
+auto Data(const boost::beast::http::request<Body_> &request, const std::string &type, typename Body_::value_type body, boost::beast::http::status status = boost::beast::http::status::ok) {
+    auto const size(body.size());
 
-struct Internal {
-    orc::S<orc::Node> node_;
-};
+    boost::beast::http::response<Body_> response{std::piecewise_construct,
+        std::make_tuple(std::move(body)),
+        std::make_tuple(status, request.version())
+    };
 
-struct Request {
-    std::string offer_;
+    response.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
+    response.set(boost::beast::http::field::content_type, type);
 
-    Request() {
-    }
-};
+    response.content_length(size);
+    response.keep_alive(request.keep_alive());
 
-static int Data(struct MHD_Connection *connection, const std::string &mime, const std::string &data, int status = MHD_HTTP_OK) {
-    auto response(MHD_create_response_from_buffer(data.size(), const_cast<char *>(data.data()), MHD_RESPMEM_MUST_COPY));
-    _scope({ MHD_destroy_response(response); });
-    MHD_add_response_header(response, "Content-Type", mime.c_str());
-    auto result(MHD_queue_response(connection, status, response));
-    return result;
-}
-
-static int Respond(void *arg, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *data, size_t *size, void **baton) {
-    _disused auto internal(static_cast<Internal *>(arg));
-    _disused auto request(static_cast<Request *>(*baton));
-    if (request == NULL) {
-        *baton = request = new Request();
-        return MHD_YES;
-    }
-
-    if (*size != 0) {
-        request->offer_.append(data, *size);
-        *size = 0;
-        return MHD_YES;
-    }
-
-    if (strcmp(url, "/") != 0)
-        return Data(connection, "text/plain", "", MHD_HTTP_NOT_FOUND);
-
-
-    try {
-        auto answer(orc::Wait(internal->node_->Respond(request->offer_)));
-
-        orc::Log() << std::endl;
-        orc::Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-        orc::Log() << request->offer_ << std::endl;
-        orc::Log() << "================" << std::endl;
-        orc::Log() << answer << std::endl;
-        orc::Log() << "vvvvvvvvvvvvvvvv" << std::endl;
-        orc::Log() << std::endl;
-
-        return Data(connection, "text/plain", answer);
-    } catch (...) {
-_trace();
-        return Data(connection, "text/plain", "", MHD_HTTP_NOT_FOUND);
-    }
-}
-
-static void Complete(void *arg, MHD_Connection *connection, void **baton, MHD_RequestTerminationCode code) {
-    _disused auto internal(static_cast<Internal *>(arg));
-    _disused std::unique_ptr<Request> request(static_cast<Request *>(*baton));
-    *baton = NULL;
-}
-
-static void Connect(void *arg, MHD_Connection *connection, void **socket, MHD_ConnectionNotificationCode code) {
-    _disused auto internal(static_cast<Internal *>(arg));
-}
-
-static void LogMHD(void *, const char *format, va_list args) {
-    orc::Log()(format, args);
+    return response;
 }
 
 namespace orc {
@@ -469,16 +423,54 @@ int Main(int argc, const char *const argv[]) {
 
     ices_.emplace_back(args["ice-stun-server"].as<std::string>());
 
-    auto internal(new Internal{});
-    internal->node_ = std::make_shared<Node>();
 
-    http_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, args["rendezvous-port"].as<uint16_t>(), NULL, NULL, &Respond, internal,
-        MHD_OPTION_EXTERNAL_LOGGER, &LogMHD, NULL,
-        MHD_OPTION_NOTIFY_COMPLETED, &Complete, internal,
-        MHD_OPTION_NOTIFY_CONNECTION, &Connect, internal,
-    MHD_OPTION_END);
+    auto node(std::make_shared<Node>());
 
-    _assert(http_ != NULL);
+
+    using HttpSession = http::reactor::_default::session_type;
+    using HttpListener = http::reactor::_default::listener_type;
+
+    static boost::asio::posix::stream_descriptor out{Context(), ::dup(STDOUT_FILENO)};
+
+    http::basic_router<HttpSession> router{boost::regex::ECMAScript};
+
+    router.post("/", [&](auto request, auto context) {
+        http::out::pushn<std::ostream>(out, request);
+
+        try {
+            auto offer(request.body());
+            auto answer(Wait(node->Respond(offer)));
+
+            Log() << std::endl;
+            Log() << "^^^^^^^^^^^^^^^^" << std::endl;
+            Log() << offer << std::endl;
+            Log() << "================" << std::endl;
+            Log() << answer << std::endl;
+            Log() << "vvvvvvvvvvvvvvvv" << std::endl;
+            Log() << std::endl;
+
+            context.send(Data(request, "text/plain", answer));
+        } catch (...) {
+            context.send(Data(request, "text/plain", "", boost::beast::http::status::not_found));
+        }
+    });
+
+    router.all(R"(^.*$)", [&](auto request, auto context) {
+        http::out::pushn<std::ostream>(out, request);
+        context.send(Data(request, "text/plain", ""));
+    });
+
+    auto fail([](auto code, auto from) {
+        Log() << "ERROR " << code << " " << from << std::endl;
+    });
+
+    HttpListener::launch(Context(), {
+        asio::ip::make_address("0.0.0.0"),
+        args["rendezvous-port"].as<uint16_t>()
+    }, [&](auto socket) {
+        HttpSession::recv(std::move(socket), router, fail);
+    }, fail);
+
 
     asio::signal_set signals(Context(), SIGINT, SIGTERM);
     signals.async_wait([&](auto, auto) { Context().stop(); });
