@@ -18,6 +18,8 @@
 # }}}
 
 
+assets := $(bundle)/Frameworks/App.framework/flutter_assets
+
 $(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
 	@mkdir -p $(dir $@)
 	cp -af $< $@
@@ -32,7 +34,7 @@ $(bundle)/Frameworks/App.framework/App:
 	    -install_name '@rpath/App.framework/App'
 
 signed += $(bundle)/Frameworks/App.framework$(signature)
-$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App
+$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App $(assets)/kernel_blob.bin
 	@rm -rf $(dir $@)
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
@@ -50,10 +52,8 @@ $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios
 	cp -af $< $@
 	touch $@
 
-assets := $(bundle)/Frameworks/App.framework/flutter_assets
 signed += build/app.dill
-signed += out-$(target)/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin
-build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m out-$(target)/Payload/Orchid.app/Frameworks/App.framework/flutter_assets/kernel_blob%bin: $(shell find lib/ -name '*.dart')
+build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m $(assets)/kernel_blob%bin: $(shell find lib/ -name '*.dart')
 	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
 	$(xcode) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --debug --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
