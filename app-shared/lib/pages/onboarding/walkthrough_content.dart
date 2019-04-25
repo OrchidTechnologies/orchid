@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 
@@ -29,7 +30,8 @@ class WalkthroughContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     assert(bodyText == null || bodyRichText == null);
-    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    debugPrint("screen width: $screenHeight");
 
     var headerTextBox = WalkthroughHeaderTextBox(titleText: titleText);
     var bodyTextBox = WalkthroughBodyTextBox(bodyText: bodyText, bodyRichText: bodyRichText);
@@ -41,7 +43,7 @@ class WalkthroughContent extends StatelessWidget {
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.
-              screenWidth > 640 ? Spacer(flex: 1) : SizedBox(height: 40),
+              screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 40),
               Image.asset('assets/images/name_logo.png'),
               SizedBox(height: 28),
               image,
@@ -58,13 +60,13 @@ class WalkthroughContent extends StatelessWidget {
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.
-              screenWidth > 640 ? Spacer(flex: 1) : SizedBox(height: 48),
+              screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 48),
               headerTextBox,
               SizedBox(height: 20),
               bodyTextBox,
               SizedBox(height: 68),
               image,
-              Spacer(flex: 2),
+              Spacer(flex: 3),
             ],
           ));
     }

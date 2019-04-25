@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 /// necessary to accommodate the keyboard when the text field has focus.
 /// https://docs.flutter.io/flutter/widgets/SingleChildScrollView-class.html
 class AccommodateKeyboard extends StatelessWidget {
-  final Column child;
+  final Widget child;
 
   AccommodateKeyboard({
     @required this.child,
