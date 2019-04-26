@@ -35,10 +35,6 @@
 
 namespace orc {
 
-static std::vector<std::string> ices_ {
-    "stun:stun.l.google.com:19302",
-};
-
 task<std::string> Origin::Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
     auto delayed(Connect());
     Adapter adapter(orc::Context(), std::move(delayed.link_));
@@ -51,7 +47,7 @@ class Actor :
 {
   public:
     Actor() :
-        Connection(ices_)
+        Connection()
     {
     }
 
@@ -149,7 +145,7 @@ task<S<Remote>> Local::Hop(const std::string &server) {
     auto client(std::make_shared<Actor>());
     auto channel(std::make_unique<Channel>(client));
 
-    auto offer(co_await client->Offer());
+    auto offer(Strip(co_await client->Offer()));
     auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
 
     Log() << std::endl;

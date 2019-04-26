@@ -76,7 +76,7 @@ class Outgoing :
 {
   public:
     Outgoing() :
-        Connection(ices_)
+        Connection()
     {
     }
 
@@ -193,7 +193,7 @@ class Account :
                     const auto [handle] = Take<TagSize>(args);
                     auto outgoing(self->outgoing_.find(handle));
                     _assert(outgoing != self->outgoing_.end());
-                    auto offer(co_await outgoing->second->Offer());
+                    auto offer(Strip(co_await outgoing->second->Offer()));
                     co_await self->Send(Tie(nonce, Beam(offer)));
 
                 } else if (command == NegotiateTag) {

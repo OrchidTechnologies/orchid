@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <boost/regex.hpp>
+
 #include "rtc_base/ssl_adapter.h"
 
 #include "channel.hpp"
@@ -131,6 +133,11 @@ void Connection::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> 
     auto self(shared_from_this());
     auto channel(std::make_unique<Channel>(self, interface));
     self->OnChannel(std::move(channel));
+}
+
+std::string Strip(std::string sdp) {
+    static boost::regex re("\r?\na=candidate:[^\r\n]*");
+    return boost::regex_replace(std::move(sdp), re, "");
 }
 
 }
