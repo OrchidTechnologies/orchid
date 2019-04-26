@@ -68,7 +68,7 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
           titleText: "Thanks for being an Alpha user!",
           bodyText:
           "We appreciate you taking part and would love to hear your feedback! Look for our feedback tab in the navigation drawer."),
-      OnboardingVPNPermissionPage(onComplete: _onComplete)
+      OnboardingVPNPermissionPage(onComplete: _onComplete, includeScaffold: false,)
     ];
   }
 
@@ -102,7 +102,7 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
   /// transition to the final page of the sequence.
   double _controlsVisibility(int pageCount) {
     double startFade = pageCount - 2.0;
-    double endFade = startFade + 0.2;
+    double endFade = startFade + 0.5;
     if (!_pageController.hasClients || _pageController.page < startFade) {
       return 1.0;
     }
@@ -143,51 +143,43 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
               // The paged content view
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: BouncingScrollPhysics(),
-                  children: pages,
-                  onPageChanged: (int index) {
-                    setState(() => _currentPage = index);
-                  },
-                ),
+              PageView(
+                controller: _pageController,
+                physics: BouncingScrollPhysics(),
+                children: pages,
+                onPageChanged: (int index) {
+                  setState(() => _currentPage = index);
+                },
               ),
 
-              // The mostly static skip/next and page indicator at the bottom.
-              // (These are removed for the last page by controlsVisibility.)
-              Visibility(
-                visible: controlsVisibility > 0.01,
-                child: Opacity(
-                  opacity: controlsVisibility,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-                    child: Row(
-                      children: [
-                        skipBtn,
-                        Expanded(
-                          child: Center(
-                            child: widget.isProgress
-                                ? DotsIndicator(
-                                    numberOfDot: pages.length,
-                                    // exclude last page
-                                    position: _currentPage,
-                                    dotSpacing: widget.dotsSpacing,
-                                    dotSize: widget.dotSize,
-                                    dotActiveSize: widget.dotSize,
-                                    dotActiveColor: AppColors.purple_3,
-                                    dotColor:
-                                        AppColors.purple_3.withOpacity(0.3),
-                                  )
-                                : const SizedBox(),
-                          ),
-                        ),
-                        isLastPage ? doneBtn : nextBtn,
-                      ],
-                    ),
+              // The mostly static skip/next and page indicator aligned at the bottom.
+              // (These are removed for the last page based on controlsVisibility.)
+              Opacity(
+                opacity: controlsVisibility,
+                child: Container(
+                  alignment: Alignment.bottomCenter,
+                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                  child: Row(
+                    children: [
+                      skipBtn,
+                      widget.isProgress
+                          ? DotsIndicator(
+                              numberOfDot: pages.length,
+                              // exclude last page
+                              position: _currentPage,
+                              dotSpacing: widget.dotsSpacing,
+                              dotSize: widget.dotSize,
+                              dotActiveSize: widget.dotSize,
+                              dotActiveColor: AppColors.purple_3,
+                              dotColor:
+                                  AppColors.purple_3.withOpacity(0.3),
+                            )
+                          : const SizedBox(),
+                      isLastPage ? doneBtn : nextBtn,
+                    ],
                   ),
                 ),
               ),

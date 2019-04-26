@@ -9,43 +9,51 @@ import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 
 class OnboardingVPNPermissionPage extends StatefulWidget {
   final VoidCallback onComplete;
+  final bool includeScaffold;
 
-  const OnboardingVPNPermissionPage({Key key, this.onComplete}) : super(key: key);
+  const OnboardingVPNPermissionPage(
+      {Key key, this.onComplete, this.includeScaffold = true})
+      : super(key: key);
 
   @override
-  _OnboardingVPNPermissionPageState createState() => _OnboardingVPNPermissionPageState();
+  _OnboardingVPNPermissionPageState createState() =>
+      _OnboardingVPNPermissionPageState();
 }
 
-class _OnboardingVPNPermissionPageState extends State<OnboardingVPNPermissionPage> {
+class _OnboardingVPNPermissionPageState
+    extends State<OnboardingVPNPermissionPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: SmallAppBar.build(context),
-      body: Container(
-          decoration:
-              BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-          child: SafeArea(
-            child: Stack(
-              children: <Widget>[
-                // Center horizontally (walkthrough content fills screen vertically)
-                Center(
-                  child: WalkthroughContent(
-                    imageLocation: WalkthroughContentImageLocation.Bottom,
-                    titleText: "Let's get you set up",
-                    bodyText:
-                        "To fully utilize Orchid, you will need to grant permission for the VPN connection. Next up, you will see a dialog asking you to allow this connection.",
-                    imageName: 'assets/images/illustration_4.png',
-                  ),
+    var body = buildBody(context);
+    return widget.includeScaffold
+        ? Scaffold(appBar: SmallAppBar.build(context), body: body)
+        : body;
+  }
+
+  Container buildBody(BuildContext context) {
+    return Container(
+        decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
+        child: SafeArea(
+          child: Stack(
+            children: <Widget>[
+              // Center horizontally (walkthrough content fills screen vertically)
+              Center(
+                child: WalkthroughContent(
+                  imageLocation: WalkthroughContentImageLocation.Bottom,
+                  titleText: "Let's get you set up",
+                  bodyText:
+                      "To fully utilize Orchid, you will need to grant permission for the VPN connection. Next up, you will see a dialog asking you to allow this connection.",
+                  imageName: 'assets/images/illustration_4.png',
                 ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: NextSkipButtons.build(
-                      onNext: _confirmNext, onSkip: _skip),
-                )
-              ],
-            ),
-          )),
-    );
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child:
+                    NextSkipButtons.build(onNext: _confirmNext, onSkip: _skip),
+              )
+            ],
+          ),
+        ));
   }
 
   // Show a confirmation dialog
