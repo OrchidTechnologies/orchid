@@ -39,6 +39,17 @@ class AppText {
       fontStyle: FontStyle.normal,
       fontSize: 14.0);
 
+  static TextStyle onboardingBodyStyle = bodyStyle.copyWith(
+      letterSpacing: 0.25,
+      // TODO: This is an approximation, the numbers in Zeplin would indicate 1.42 but
+      // TODO: that appears way too large.
+      height: 1.23);
+
+  static TextStyle linkStyle = bodyStyle.copyWith(
+      fontWeight: FontWeight.w700,
+      color: AppColors.teal_3,
+      decoration: TextDecoration.underline);
+
   static Text body(
       {text: "",
       textAlign: TextAlign.center,

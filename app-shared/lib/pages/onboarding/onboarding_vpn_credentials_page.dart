@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -9,20 +8,20 @@ import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
-import 'package:orchid/pages/settings/wallet_key_entry.dart';
+import 'package:orchid/pages/settings/vpn_credentials_entry.dart';
 
-class OnboardingLinkWalletPage extends StatefulWidget {
+class OnboardingVPNCredentialsPage extends StatefulWidget {
   @override
-  _OnboardingLinkWalletPageState createState() =>
-      _OnboardingLinkWalletPageState();
+  _OnboardingVPNCredentialsPageState createState() =>
+      _OnboardingVPNCredentialsPageState();
 }
 
-class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
-  WalletKeyEntryController _walletKeyEntryController =
-      WalletKeyEntryController();
+class _OnboardingVPNCredentialsPageState extends State<OnboardingVPNCredentialsPage> {
+  VPNCredentialsEntryController _vpnCredentialsEntryController = VPNCredentialsEntryController();
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Abstract out this placement logic for larger screens (repeated several places now)
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
@@ -38,14 +37,14 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
                   screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 48),
                   buildDescription(),
                   SizedBox(height: 68),
-                  WalletKeyEntry(controller: _walletKeyEntryController),
+                  VPNCredentialsEntry(controller: _vpnCredentialsEntryController),
                   SizedBox(height: 20),
                   Spacer(flex: 2),
                   StreamBuilder<Object>(
-                      stream: _walletKeyEntryController.readyToSave.stream,
+                      stream: _vpnCredentialsEntryController.readyToSave.stream,
                       builder: (context, snapshot) {
                         return WalkthroughNextSkipButtons(
-                            onNext: _walletKeyEntryController.readyToSave.value
+                            onNext: _vpnCredentialsEntryController.readyToSave.value
                                 ? _next
                                 : null,
                             onSkip: _skip);
@@ -58,7 +57,7 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
   }
 
   Widget buildDescription() {
-    var titleText = "Link an external wallet";
+    var titleText = "VPN Login";
     var bodyRichText = buildRichText();
 
     var headerTextBox = new WalkthroughHeaderTextBox(titleText: titleText);
@@ -82,16 +81,10 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
       children: <TextSpan>[
         TextSpan(
             text:
-                "You need to link Orchid to an Ethereum wallet in order to use the Alpha."
-                " Enter or scan a private key for the wallet you want to use to pay for bandwidth.",
+                "For Alpha, we have partnered with [VPN Partner]. Enter your login credentials below "
+                "and Orchid will pair you with the best available server. "
+                "If you don't have an account with [VPN Provider], you can sign up for a free trial.",
             style: AppText.onboardingBodyStyle),
-        TextSpan(text: "\n\n"),
-        TextSpan(
-          style: AppText.bodyStyle.copyWith(fontWeight: FontWeight.w700),
-          text:
-              "Make sure your wallet is on testnet and using test tokens while Orchid is in Alpha."
-              " If you do not have an Ethereum wallet on testnet, you can set one up ",
-        ),
         LinkTextSpan(
           text: "here.",
           style: AppText.linkStyle,
@@ -102,7 +95,7 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
   }
 
   void _next() async {
-    bool success = await _walletKeyEntryController.save();
+    bool success = await _vpnCredentialsEntryController.save();
     if (success) {
       _complete();
     }
@@ -114,7 +107,7 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
 
   // Note that the user has viewed this screen and move on.
   void _complete() async {
-    await UserPreferences().setPromptedToLinkWallet(true);
+    await UserPreferences().setPromptedForVPNCredentials(true);
     AppOnboarding().pageComplete(context);
   }
 }

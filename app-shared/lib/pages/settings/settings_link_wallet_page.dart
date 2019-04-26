@@ -54,8 +54,7 @@ class _SettingsLinkWalletPageState extends State<SettingsLinkWalletPage> {
                     ),
                     LinkTextSpan(
                       text: "here.",
-                      style: AppText.bodyStyle.copyWith(
-                          fontWeight: FontWeight.w700, color: AppColors.teal_3),
+                      style: AppText.linkStyle,
                       url: 'https://orchid.com',
                     ),
                   ],
