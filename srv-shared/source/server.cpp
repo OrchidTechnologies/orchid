@@ -38,15 +38,8 @@
 
 #include <asio.hpp>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
-#include <basic_router.hxx>
-#include <reactor/listener.hxx>
-#include <reactor/session.hxx>
-#include <out.hxx>
-#pragma clang diagnostic pop
-
 #include "baton.hpp"
+#include "beast.hpp"
 #include "channel.hpp"
 #include "crypto.hpp"
 //#include "ethereum.hpp"
@@ -65,7 +58,6 @@
     __attribute__((__unused__))
 
 
-namespace http = _0xdead4ead::http;
 namespace po = boost::program_options;
 
 namespace orc {
@@ -363,24 +355,6 @@ task<std::string> Node::Respond(const std::string &offer) {
 }
 
 
-template<class Body_>
-auto Data(const boost::beast::http::request<Body_> &request, const std::string &type, typename Body_::value_type body, boost::beast::http::status status = boost::beast::http::status::ok) {
-    auto const size(body.size());
-
-    boost::beast::http::response<Body_> response{std::piecewise_construct,
-        std::make_tuple(std::move(body)),
-        std::make_tuple(status, request.version())
-    };
-
-    response.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
-    response.set(boost::beast::http::field::content_type, type);
-
-    response.content_length(size);
-    response.keep_alive(request.keep_alive());
-
-    return response;
-}
-
 namespace orc {
 int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
@@ -427,9 +401,6 @@ int Main(int argc, const char *const argv[]) {
     auto node(std::make_shared<Node>());
 
 
-    using HttpSession = http::reactor::_default::session_type;
-    using HttpListener = http::reactor::_default::listener_type;
-
     static boost::asio::posix::stream_descriptor out{Context(), ::dup(STDOUT_FILENO)};
 
     http::basic_router<HttpSession> router{boost::regex::ECMAScript};
@@ -449,15 +420,15 @@ int Main(int argc, const char *const argv[]) {
             Log() << "vvvvvvvvvvvvvvvv" << std::endl;
             Log() << std::endl;
 
-            context.send(Data(request, "text/plain", answer));
+            context.send(Response(request, "text/plain", answer));
         } catch (...) {
-            context.send(Data(request, "text/plain", "", boost::beast::http::status::not_found));
+            context.send(Response(request, "text/plain", "", boost::beast::http::status::not_found));
         }
     });
 
     router.all(R"(^.*$)", [&](auto request, auto context) {
         http::out::pushn<std::ostream>(out, request);
-        context.send(Data(request, "text/plain", ""));
+        context.send(Response(request, "text/plain", ""));
     });
 
     auto fail([](auto code, auto from) {
