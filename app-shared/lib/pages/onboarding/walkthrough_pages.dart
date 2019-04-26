@@ -47,7 +47,6 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
     _pageController = PageController(initialPage: _currentPage);
     _pageController.addListener(() {
       setState(() {}); // redraw
-      debugPrint("page: ${_pageController.page}");
     });
   }
 

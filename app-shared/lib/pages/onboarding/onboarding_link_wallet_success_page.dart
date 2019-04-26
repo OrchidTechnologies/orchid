@@ -40,7 +40,7 @@ class _OnboardingLinkWalletSuccessPageState
                   child:
                       Padding(
                         padding: const EdgeInsets.only(bottom: 42),
-                        child: NextSkipButtons.buildNextButton(onNext: _complete),
+                        child: WalkthroughNextButton(onNext: _complete),
                       ),
                 )
               ],

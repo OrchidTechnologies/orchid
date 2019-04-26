@@ -58,8 +58,7 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
                     ),
                     LinkTextSpan(
                       text: "Sign up for a free trial.",
-                      style: AppText.bodyStyle.copyWith(
-                          fontWeight: FontWeight.w700, color: AppColors.teal_3),
+                      style: AppText.linkStyle,
                       url: 'https://orchid.com',
                     ),
                   ],

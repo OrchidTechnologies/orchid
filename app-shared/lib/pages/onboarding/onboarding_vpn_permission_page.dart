@@ -49,7 +49,7 @@ class _OnboardingVPNPermissionPageState
               Align(
                 alignment: Alignment.bottomCenter,
                 child:
-                    NextSkipButtons.build(onNext: _confirmNext, onSkip: _skip),
+                    WalkthroughNextSkipButtons(onNext: _confirmNext, onSkip: _skip),
               )
             ],
           ),

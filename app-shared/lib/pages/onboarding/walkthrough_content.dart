@@ -33,7 +33,8 @@ class WalkthroughContent extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
 
     var headerTextBox = WalkthroughHeaderTextBox(titleText: titleText);
-    var bodyTextBox = WalkthroughBodyTextBox(bodyText: bodyText, bodyRichText: bodyRichText);
+    var bodyTextBox =
+        WalkthroughBodyTextBox(bodyText: bodyText, bodyRichText: bodyRichText);
     var image = imageName != null ? Image.asset(imageName) : Container();
 
     if (imageLocation == WalkthroughContentImageLocation.Top) {
@@ -42,7 +43,9 @@ class WalkthroughContent extends StatelessWidget {
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.
-              screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 40),
+              screenHeight >= AppSizes.iphone_xs.height
+                  ? Spacer(flex: 1)
+                  : SizedBox(height: 40),
               Image.asset('assets/images/name_logo.png'),
               SizedBox(height: 28),
               image,
@@ -59,7 +62,9 @@ class WalkthroughContent extends StatelessWidget {
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.
-              screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 48),
+              screenHeight >= AppSizes.iphone_xs.height
+                  ? Spacer(flex: 1)
+                  : SizedBox(height: 48),
               headerTextBox,
               SizedBox(height: 20),
               bodyTextBox,
@@ -94,13 +99,7 @@ class WalkthroughBodyTextBox extends StatelessWidget {
       constraints: BoxConstraints(minWidth: 280, maxWidth: 400),
       child: bodyText != null
           ? Text(bodyText,
-              textAlign: TextAlign.center,
-              style: AppText.bodyStyle.copyWith(
-                  color: AppColors.neutral_2,
-                  letterSpacing: 0.25,
-                  // TODO: This is an approximation, the numbers in Zeplin would indicate 1.42 but
-                  // TODO: that appears way too large.
-                  height: 1.23))
+              textAlign: TextAlign.center, style: AppText.onboardingBodyStyle)
           : RichText(
               textAlign: TextAlign.center,
               text: bodyRichText,
@@ -128,13 +127,22 @@ class WalkthroughHeaderTextBox extends StatelessWidget {
 }
 
 /// A column of next / skip ("do this later") buttons used with walkthrough content.
-class NextSkipButtons {
-  static Column build(
-      {@required VoidCallback onNext, @required VoidCallback onSkip}) {
+class WalkthroughNextSkipButtons extends StatelessWidget {
+  const WalkthroughNextSkipButtons({
+    Key key,
+    @required this.onNext,
+    @required this.onSkip,
+  }) : super(key: key);
+
+  final VoidCallback onNext;
+  final VoidCallback onSkip;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        buildNextButton(onNext: onNext),
+        new WalkthroughNextButton(onNext: onNext),
         SizedBox(height: 4),
         LinkStyleTextButton(
           "I'll do this later",
@@ -144,13 +152,23 @@ class NextSkipButtons {
       ],
     );
   }
+}
 
-  static Container buildNextButton({VoidCallback onNext}) {
+class WalkthroughNextButton extends StatelessWidget {
+  const WalkthroughNextButton({
+    Key key,
+    @required this.onNext,
+  }) : super(key: key);
+
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-          width: 180,
-          child: RoundedRectRaisedButton(
-            text: 'NEXT',
-            onPressed: onNext,
-          ));
+        width: 180,
+        child: RoundedRectRaisedButton(
+          text: 'NEXT',
+          onPressed: onNext,
+        ));
   }
 }

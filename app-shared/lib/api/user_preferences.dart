@@ -12,6 +12,12 @@ class UserPreferences {
     debugPrint("constructed user prefs API");
   }
 
+
+  ///
+  /// Onboarding pages related preferences
+  /// TODO: Replace these with one StringList?
+  ///
+
   /// Was the user shown the introductory pages as part of onboarding
   Future<bool> getWalkthroughCompleted() async {
     return (await SharedPreferences.getInstance())
@@ -61,11 +67,24 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.LinkWalletAcknowledged.toString(), value);
   }
+
+
+  Future<bool> getPromptedForVPNCredentials() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.PromptedForVPNCredentials.toString()) ??
+        false;
+  }
+
+  Future<bool> setPromptedForVPNCredentials(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.PromptedForVPNCredentials.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
   WalkthroughCompleted,
   PromptedForVPNPermission,
   PromptedToLinkWallet,
-  LinkWalletAcknowledged
+  LinkWalletAcknowledged,
+  PromptedForVPNCredentials
 }
