@@ -249,8 +249,8 @@ _trace();
     }
 
     void OnBufferedAmountChange(uint64_t previous) override {
-        auto current(channel_->buffered_amount());
-        Log() << "channel: " << current << " (" << previous << ")" << std::endl;
+        //auto current(channel_->buffered_amount());
+        //Log() << "channel: " << current << " (" << previous << ")" << std::endl;
     }
 
     void OnMessage(const webrtc::DataBuffer &buffer) override {
