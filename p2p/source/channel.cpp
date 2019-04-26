@@ -85,7 +85,10 @@ Connection::Connection(const std::vector<std::string> &ices) :
             configuration.servers.emplace_back(std::move(server));
         }
 
-        return factory->CreatePeerConnection(configuration, nullptr, nullptr, this);
+        return factory->CreatePeerConnection(configuration, [&]() {
+            webrtc::PeerConnectionDependencies dependencies(this);
+            return dependencies;
+        }());
     }())
 {
 }
