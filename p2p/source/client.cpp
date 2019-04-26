@@ -135,8 +135,8 @@ DelayedConnect Remote::Connect() {
     auto backup(tunnel.get());
     return {[this, backup](const std::string &host, const std::string &port) -> task<void> {
         co_await backup->_([&](const Tag &tag) -> task<void> {
-            auto res(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-            Take<>(res);
+            auto endpoint(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+            Log() << "ENDPOINT " << endpoint << std::endl;
         });
     }, std::move(tunnel)};
 }

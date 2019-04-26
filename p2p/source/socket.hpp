@@ -45,11 +45,11 @@ class Socket final :
     {
     }
 
-    task<void> _(const std::string &host, const std::string &port) {
+    task<boost::asio::ip::basic_endpoint<typename Type_::protocol_type>> _(const std::string &host, const std::string &port) {
         auto endpoints(co_await asio::ip::basic_resolver<typename Type_::protocol_type>(Context()).async_resolve({host, port}, Token()));
         for (auto &endpoint : endpoints)
             Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
-        co_await asio::async_connect(*socket_, endpoints, Token());
+        auto endpoint(co_await asio::async_connect(*socket_, endpoints, Token()));
 
         // XXX: the memory management here seems wrong
         Task([socket = socket_, this]() -> task<void> {
@@ -70,6 +70,8 @@ class Socket final :
                 Land(beam);
             }
         });
+
+        co_return endpoint;
     }
 
     ~Socket() {

@@ -178,9 +178,9 @@ class Account :
                     auto port(string.substr(colon + 1));
                     auto socket(std::make_unique<Socket<asio::ip::udp::socket>>());
                     auto output(std::make_unique<Output<Socket<asio::ip::udp::socket>>>(self, tag, std::move(socket)));
-                    co_await (*output)->_(host, port);
+                    auto endpoint(co_await (*output)->_(host, port));
                     self->outputs_[tag] = std::move(output);
-                    co_await self->Send(Tie(nonce));
+                    co_await self->Send(Tie(nonce, Subset(reinterpret_cast<uint8_t *>(endpoint.data()), endpoint.size())));
 
 
                 } else if (command == EstablishTag) {
