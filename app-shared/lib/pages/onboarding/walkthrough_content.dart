@@ -31,7 +31,6 @@ class WalkthroughContent extends StatelessWidget {
   Widget build(BuildContext context) {
     assert(bodyText == null || bodyRichText == null);
     double screenHeight = MediaQuery.of(context).size.height;
-    debugPrint("screen width: $screenHeight");
 
     var headerTextBox = WalkthroughHeaderTextBox(titleText: titleText);
     var bodyTextBox = WalkthroughBodyTextBox(bodyText: bodyText, bodyRichText: bodyRichText);

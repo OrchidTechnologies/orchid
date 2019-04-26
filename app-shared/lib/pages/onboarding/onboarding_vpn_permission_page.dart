@@ -8,6 +8,10 @@ import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 
 class OnboardingVPNPermissionPage extends StatefulWidget {
+  final VoidCallback onComplete;
+
+  const OnboardingVPNPermissionPage({Key key, this.onComplete}) : super(key: key);
+
   @override
   _OnboardingVPNPermissionPageState createState() => _OnboardingVPNPermissionPageState();
 }
@@ -76,6 +80,9 @@ class _OnboardingVPNPermissionPageState extends State<OnboardingVPNPermissionPag
   // Note that the user has viewed this screen and move on.
   void _complete() async {
     await UserPreferences().setPromptedForVPNPermission(true);
+    if (widget.onComplete != null) {
+      return widget.onComplete();
+    }
     AppOnboarding().pageComplete(context);
   }
 }
