@@ -38,6 +38,7 @@ cleans :=
 cleans += $(output)
 
 cflags += -gfull -Os
+lflags += -Wl,-s
 
 cflags += -Wall
 cflags += -Werror
