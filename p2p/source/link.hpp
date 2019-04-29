@@ -30,19 +30,10 @@
 #include "buffer.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
+#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
-
-
-template <typename Type_>
-using U = std::unique_ptr<Type_>;
-
-template <typename Type_>
-using S = std::shared_ptr<Type_>;
-
-template <typename Type_>
-using W = std::weak_ptr<Type_>;
 
 
 typedef Block<sizeof(uint32_t)> Tag;

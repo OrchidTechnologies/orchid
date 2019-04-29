@@ -41,7 +41,7 @@ class Socket final :
 
   public:
     Socket() :
-        socket_(std::make_shared<Type_>(Context()))
+        socket_(Make<Type_>(Context()))
     {
     }
 

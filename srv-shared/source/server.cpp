@@ -41,12 +41,12 @@
 #include "baton.hpp"
 #include "beast.hpp"
 #include "channel.hpp"
+#include "commands.hpp"
 #include "crypto.hpp"
 //#include "ethereum.hpp"
 #include "http.hpp"
 #include "scope.hpp"
 #include "secure.hpp"
-#include "shared.hpp"
 #include "socket.hpp"
 #include "task.hpp"
 #include "trace.hpp"
@@ -185,7 +185,7 @@ class Account :
 
                 } else if (command == EstablishTag) {
                     const auto [handle] = Take<TagSize>(args);
-                    auto outgoing(std::make_shared<Outgoing>());
+                    auto outgoing(Make<Outgoing>());
                     self->outgoing_[handle] = outgoing;
                     co_await self->Send(Tie(nonce));
 
@@ -259,7 +259,7 @@ class Node :
         auto &cache(accounts_[common]);
         if (auto account = cache.lock())
             return account;
-        auto account(std::make_shared<Account>(shared_from_this()));
+        auto account(Make<Account>(shared_from_this()));
         cache = account;
         return account;
     }
@@ -331,7 +331,7 @@ class Incoming :
 
     void OnChannel(U<Channel> channel) override {
         auto backup(channel.get());
-        auto conduit(std::make_shared<Conduit>(node_, std::move(channel)));
+        auto conduit(Make<Conduit>(node_, std::move(channel)));
         conduit->self_ = conduit;
 
         Task([backup, conduit]() -> task<void> {
@@ -346,7 +346,7 @@ class Incoming :
 };
 
 task<std::string> Node::Respond(const std::string &offer) {
-    auto client(std::make_shared<Incoming>(shared_from_this()));
+    auto client(Make<Incoming>(shared_from_this()));
     auto answer(co_await client->Answer(offer));
     clients_.emplace(client);
     co_return answer;
@@ -398,7 +398,7 @@ int Main(int argc, const char *const argv[]) {
     ices_.emplace_back(args["ice-stun-server"].as<std::string>());
 
 
-    auto node(std::make_shared<Node>());
+    auto node(Make<Node>());
 
 
     static boost::asio::posix::stream_descriptor out{Context(), ::dup(STDOUT_FILENO)};

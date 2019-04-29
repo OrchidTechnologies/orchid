@@ -27,6 +27,7 @@
 #include "baton.hpp"
 #include "channel.hpp"
 #include "client.hpp"
+#include "commands.hpp"
 #include "http.hpp"
 #include "link.hpp"
 #include "scope.hpp"
@@ -117,7 +118,7 @@ task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
 task<S<Remote>> Remote::Hop(const std::string &server) {
     auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
     auto backup(tunnel.get());
-    auto remote(std::make_shared<Remote>(std::move(tunnel)));
+    auto remote(Make<Remote>(std::move(tunnel)));
     co_await backup->_([&](const Tag &tag) -> task<void> {
         auto handle(NewTag()); // XXX: this is horribly wrong
         Take<>(co_await Call(EstablishTag, Tie(handle)));
@@ -142,7 +143,7 @@ DelayedConnect Remote::Connect() {
 }
 
 task<S<Remote>> Local::Hop(const std::string &server) {
-    auto client(std::make_shared<Actor>());
+    auto client(Make<Actor>());
     auto channel(std::make_unique<Channel>(client));
 
     auto offer(Strip(co_await client->Offer()));
@@ -159,7 +160,7 @@ task<S<Remote>> Local::Hop(const std::string &server) {
     co_await client->Negotiate(answer);
 
     auto backup(channel.get());
-    auto remote(std::make_shared<Remote>(std::move(channel)));
+    auto remote(Make<Remote>(std::move(channel)));
     co_await backup->_();
     co_return remote;
 }
@@ -173,7 +174,7 @@ DelayedConnect Local::Connect() {
 }
 
 S<Local> GetLocal() {
-    static auto local(std::make_shared<Local>());
+    static auto local(Make<Local>());
     return local;
 }
 

@@ -25,7 +25,6 @@
 
 #include "http.hpp"
 #include "secure.hpp"
-#include "shared.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 

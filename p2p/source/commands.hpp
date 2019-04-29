@@ -20,28 +20,23 @@
 /* }}} */
 
 
-#ifndef ORCHID_SHARED_HPP
-#define ORCHID_SHARED_HPP
+#ifndef ORCHID_COMMANDS_HPP
+#define ORCHID_COMMANDS_HPP
 
-#include <memory>
-#include <utility>
+#include "link.hpp"
 
 namespace orc {
 
-template <typename Type_>
-using U = std::unique_ptr<Type_>;
-
-template <typename Type_>
-using S = std::shared_ptr<Type_>;
-
-template <typename Type_>
-using W = std::weak_ptr<Type_>;
-
-template <typename Type_, typename... Args_>
-inline S<Type_> Make(Args_ &&...args) {
-    return std::make_shared<Type_>(std::forward<Args_>(args)...);
-}
+static const Tag AnswerTag{34, 162, 176, 208};
+static const Tag CancelTag{223, 49, 55, 9};
+static const Tag ChannelTag{159, 32, 166, 189};
+static const Tag CloseTag{129, 185, 120, 174};
+static const Tag ConnectTag{231, 40, 11, 3};
+static const Tag EstablishTag{246, 205, 229, 74};
+static const Tag FinishTag{115, 80, 108, 75};
+static const Tag OfferTag{17, 59, 137, 94};
+static const Tag NegotiateTag{188, 73, 31, 143};
 
 }
 
-#endif//ORCHID_SHARED_HPP
+#endif//ORCHID_COMMANDS_HPP

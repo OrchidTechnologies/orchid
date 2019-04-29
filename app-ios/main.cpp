@@ -39,7 +39,6 @@
 //#include "ethereum.hpp"
 #include "jsonrpc.hpp"
 #include "scope.hpp"
-#include "shared.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 
