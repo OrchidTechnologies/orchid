@@ -39,10 +39,8 @@ abstract class OrchidAPI {
   /// NEVPNManager API.
   final BehaviorSubject<bool> networkingPermissionStatus;
 
-  /// Publish development logging information from the channel implementation to the application.
-  /// The application will automatically subscribe to this stream and persist the messages to the
-  /// app filesystem log which can be viewed and managed by the user.
-  final PublishSubject<String> log;
+  /// Get the logging API.
+  OrchidLogAPI logger();
 
   /// Trigger a request for OS level permission to allow installation and activation of the
   /// Orchid VPN networking extension, potentially causing the OS to prompt the user.
@@ -73,12 +71,31 @@ abstract class OrchidAPI {
   /// VPN configuration; otherwise this method returns null.
   Future<VPNConfigPublic> getExitVPNConfig();
 
-  /// Enable or disable log messages from the channel implementation.
-  Future<void> setLogging(bool enabled);
-
   /// Set the desired connection state: true for connected, false to disconnect.
   Future<void> setConnected(bool connect);
 
   /// Choose a new, randomized, network route.
   Future<void> reroute();
+}
+
+/// Logging support, if any, implemented by the channel API.
+abstract class OrchidLogAPI {
+
+  /// Notify observers when the log file has updated.
+  PublishSubject<void> logChanged = PublishSubject<void>();
+
+  /// Enable or disable logging.
+  Future<void> setEnabled(bool enabled);
+
+  /// Get the logging enabled status.
+  Future<bool> getEnabled();
+
+  /// Get the current log contents.
+  Future<String> get();
+
+  /// Write the text to the log.
+  void write(String text);
+
+  /// Clear the log file.
+  void clear();
 }

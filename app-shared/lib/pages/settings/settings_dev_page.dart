@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/log_file.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/common/page_tile.dart';
@@ -42,7 +41,7 @@ class _SettingsDevPage extends State<SettingsDevPage> {
                 onChanged: (bool value) {
                   setState(() {
                     OrchidAPI.mockAPI = !OrchidAPI.mockAPI;
-                    LogFile().write("Mock API: " + _mockAPIStatus());
+                    OrchidAPI().logger().write("Mock API: " + _mockAPIStatus());
                   });
                 },
               ),
