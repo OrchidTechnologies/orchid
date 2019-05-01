@@ -32,7 +32,7 @@ namespace orc {
 
 class Adapter;
 
-class URI {
+class URI final {
   public:
     std::string schema_;
     std::string host_;

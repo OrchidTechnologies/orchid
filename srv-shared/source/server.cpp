@@ -51,9 +51,6 @@
 #include "task.hpp"
 #include "trace.hpp"
 
-#include <folly/futures/Future.h>
-#include <folly/executors/CPUThreadPoolExecutor.h>
-
 #define _disused \
     __attribute__((__unused__))
 
@@ -71,44 +68,74 @@ class Back {
     virtual task<std::string> Respond(const std::string &offer) = 0;
 };
 
-class Outgoing :
+class Outgoing final :
     public Connection
 {
+  protected:
+    void Land(U<Channel> channel) override {
+    }
+
+    void Stop(const std::string &error) override {
+        std::terminate();
+    }
+
   public:
     Outgoing() :
         Connection()
     {
     }
 
-    void OnChannel(U<Channel> channel) override {
+    virtual ~Outgoing() {
+_trace();
+        Close();
     }
 };
 
+class Account {
+  public:
+    virtual void Land(const Buffer &data) = 0;
+    virtual void Bill(uint64_t amount) = 0;
+};
+
 template <typename Type_>
-class Output :
-    public Pipe
+class Output final :
+    public Pump<Account>,
+    protected BufferDrain
 {
   private:
+    Tag tag_;
     Sink<Type_> sink_;
 
+  protected:
+    void Land(const Buffer &data) override {
+        auto used(Use());
+        used->Bill(1);
+        used->Land(Tie(tag_, data));
+    }
+
+    void Stop(const std::string &error) override {
+        Pump<Account>::Stop();
+        // XXX: implement (efficiently ;P)
+    }
+
   public:
-    Output(const W<Pipe> &path, const Tag &tag, U<Type_> link) :
-        sink_([weak = path, tag](const Buffer &data) {
-            if (auto strong = weak.lock())
-                Task([strong = std::move(strong), tag, data = Beam(data)]() -> task<void> {
-                    co_await strong->Send(Tie(tag, data));
-                });
-        }, std::move(link))
+    Output(const Tag &tag, U<Type_> link) :
+        tag_(tag),
+        sink_(this, std::move(link))
     {
-        _trace();
+_trace();
     }
 
     virtual ~Output() {
-        _trace();
+_trace();
     }
 
     task<void> Send(const Buffer &data) override {
-        co_return co_await sink_.Send(data);
+        co_return co_await sink_->Send(data);
+    }
+
+    task<void> Shut() override {
+        co_return co_await sink_->Shut();
     }
 
     Type_ *operator ->() {
@@ -116,22 +143,44 @@ class Output :
     }
 };
 
-class Account :
-    public std::enable_shared_from_this<Account>,
-    public Pipe
+class Replay final :
+    public Pump<Account>
+{
+  private:
+    Beam request_;
+    Beam response_;
+
+  public:
+    task<void> Send(const Buffer &data) override {
+        _assert(request_ == data);
+        Use()->Land(response_);
+        co_return;
+    }
+};
+
+class Space final :
+    public std::enable_shared_from_this<Space>,
+    public Pipe,
+    public Account
 {
   private:
     S<Back> back_;
 
     Pipe *input_;
 
-    std::map<Tag, U<Pipe>> outputs_;
+    std::map<Tag, Sink<Pump<Account>>> outputs_;
     std::map<Tag, S<Outgoing>> outgoing_;
 
+    int64_t balance_;
+
   public:
-    Account(const S<Back> &back) :
-        back_(back)
+    Space(S<Back> back) :
+        back_(std::move(back))
     {
+    }
+
+    ~Space() {
+_trace();
     }
 
 
@@ -146,156 +195,202 @@ class Account :
             input_ = nullptr;
     }
 
+
     task<void> Send(const Buffer &data) override {
         _assert(input_ != nullptr);
+        Bill(1);
         co_return co_await input_->Send(data);
     }
 
-
-    void Land(const Buffer &data) {
-        Beam unboxed(data);
-        Task([unboxed = std::move(unboxed), self = shared_from_this()]() -> task<void> {
-            auto [nonce, rest] = Take<TagSize, 0>(unboxed);
-            auto output(self->outputs_.find(nonce));
-            if (output != self->outputs_.end()) {
-                co_await output->second->Send(rest);
-            } else {
-                auto [command, args] = Take<TagSize, 0>(rest);
-                if (false) {
-
-                } else if (command == CloseTag) {
-                    const auto [tag] = Take<TagSize>(args);
-                    self->outputs_.erase(tag);
-                    co_await self->Send(Tie(nonce));
+    task<void> Shut() {
+        for (auto &output : outputs_)
+            co_await output.second->Shut();
+    }
 
 
-                } else if (command == ConnectTag) {
-                    const auto [tag, target] = Take<TagSize, 0>(args);
-                    auto string(target.str());
-                    auto colon(string.find(':'));
-                    _assert(colon != std::string::npos);
-                    auto host(string.substr(0, colon));
-                    auto port(string.substr(colon + 1));
-                    auto socket(std::make_unique<Socket<asio::ip::udp::socket>>());
-                    auto output(std::make_unique<Output<Socket<asio::ip::udp::socket>>>(self, tag, std::move(socket)));
-                    auto endpoint(co_await (*output)->_(host, port));
-                    self->outputs_[tag] = std::move(output);
-                    co_await self->Send(Tie(nonce, Subset(reinterpret_cast<uint8_t *>(endpoint.data()), endpoint.size())));
-
-
-                } else if (command == EstablishTag) {
-                    const auto [handle] = Take<TagSize>(args);
-                    auto outgoing(Make<Outgoing>());
-                    self->outgoing_[handle] = outgoing;
-                    co_await self->Send(Tie(nonce));
-
-                } else if (command == OfferTag) {
-                    const auto [handle] = Take<TagSize>(args);
-                    auto outgoing(self->outgoing_.find(handle));
-                    _assert(outgoing != self->outgoing_.end());
-                    auto offer(Strip(co_await outgoing->second->Offer()));
-                    co_await self->Send(Tie(nonce, Beam(offer)));
-
-                } else if (command == NegotiateTag) {
-                    const auto [handle, answer] = Take<TagSize, 0>(args);
-                    auto outgoing(self->outgoing_.find(handle));
-                    _assert(outgoing != self->outgoing_.end());
-                    co_await outgoing->second->Negotiate(answer.str());
-                    co_await self->Send(Tie(nonce));
-
-                } else if (command == ChannelTag) {
-                    const auto [handle, tag] = Take<TagSize, TagSize>(args);
-                    auto outgoing(self->outgoing_.find(handle));
-                    _assert(outgoing != self->outgoing_.end());
-                    auto channel(std::make_unique<Channel>(outgoing->second));
-                    self->outputs_[tag] = std::make_unique<Output<Channel>>(self, tag, std::move(channel));
-                    co_await self->Send(Tie(nonce));
-
-                } else if (command == CancelTag) {
-                    const auto [handle] = Take<TagSize>(args);
-                    self->outgoing_.erase(handle);
-                    co_await self->Send(Tie(nonce));
-
-                } else if (command == FinishTag) {
-                    const auto [tag] = Take<TagSize>(args);
-                    auto output(self->outputs_.find(tag));
-                    _assert(output != self->outputs_.end());
-                    auto channel(dynamic_cast<Output<Channel> *>(output->second.get()));
-                    _assert(channel != NULL);
-                    co_await (*channel)->_();
-                    co_await self->Send(Tie(nonce));
-
-
-                } else if (command == AnswerTag) {
-                    const auto [offer] = Take<0>(args);
-                    auto answer(co_await self->back_->Respond(offer.str()));
-                    co_await self->Send(Tie(nonce, Beam(answer)));
-
-                } else {
-                    Log() << self << " FAIL : " << unboxed << std::endl;
-                    _assert(false);
-                }
-            }
+    void Land(const Buffer &data) override {
+        Task([self = shared_from_this(), data = Beam(data)]() -> task<void> {
+            co_await self->Send(data);
         });
     }
-};
 
-class Node :
-    public std::enable_shared_from_this<Node>,
-    public Identity,
-    public Back
-{
-    friend class Incoming;
-
-  private:
-    std::map<Common, W<Account>> accounts_;
-    std::set<S<Connection>> clients_;
-
-  public:
-    virtual ~Node() {
+    void Bill(uint64_t amount) override {
+        balance_ -= amount;
     }
 
-    S<Account> Find(const Common &common) {
-        auto &cache(accounts_[common]);
-        if (auto account = cache.lock())
-            return account;
-        auto account(Make<Account>(shared_from_this()));
-        cache = account;
-        return account;
+
+    task<void> Call(const Buffer &data, std::function<task<void> (const Buffer &)> code) {
+        auto [command, args] = Take<TagSize, 0>(data);
+        if (false) {
+
+
+        } else if (command == BatchTag) {
+            // XXX: make this more efficient
+            std::string builder;
+            Call(data, [&](const Buffer &data) -> task<void> {
+                builder += data.str();
+                co_return;
+            });
+            co_return co_await code(Tie(Strung(std::move(builder))));
+
+        } else if (command == DiscardTag) {
+            co_return;
+
+        } else if (command == CloseTag) {
+            const auto [tag] = Take<TagSize>(args);
+            auto output(outputs_.find(tag));
+            _assert(output != outputs_.end());
+            co_await output->second->Shut();
+            outputs_.erase(output);
+            co_return co_await code(Tie());
+
+
+        } else if (command == ConnectTag) {
+            // XXX: use something saner than : separation?
+            const auto [tag, target] = Take<TagSize, 0>(args);
+            auto string(target.str());
+            auto colon(string.rfind(':'));
+            _assert(colon != std::string::npos);
+            auto host(string.substr(0, colon));
+            auto port(string.substr(colon + 1));
+            auto socket(std::make_unique<Socket<asio::ip::udp::socket>>());
+            auto output(std::make_unique<Output<Socket<asio::ip::udp::socket>>>(tag, std::move(socket)));
+            auto backup(output.get());
+            auto place(outputs_.emplace(std::piecewise_construct, std::forward_as_tuple(tag), std::forward_as_tuple(this, std::move(output))));
+            _assert(place.second);
+            auto endpoint(co_await (*backup)->_(host, port));
+            co_return co_await code(Tie(Strung(std::move(endpoint))));
+
+
+        } else if (command == EstablishTag) {
+            const auto [handle] = Take<TagSize>(args);
+            auto outgoing(Make<Outgoing>());
+            outgoing_[handle] = outgoing;
+            co_return co_await code(Tie());
+
+        } else if (command == OfferTag) {
+            const auto [handle] = Take<TagSize>(args);
+            auto outgoing(outgoing_.find(handle));
+            _assert(outgoing != outgoing_.end());
+            auto offer(Strip(co_await outgoing->second->Offer()));
+            co_return co_await code(Tie(Strung(std::move(offer))));
+
+        } else if (command == NegotiateTag) {
+            const auto [handle, answer] = Take<TagSize, 0>(args);
+            auto outgoing(outgoing_.find(handle));
+            _assert(outgoing != outgoing_.end());
+            co_await outgoing->second->Negotiate(answer.str());
+            co_return co_await code(Tie());
+
+        } else if (command == ChannelTag) {
+            // XXX: add label, protocol, and maybe id arguments
+            const auto [handle, tag] = Take<TagSize, TagSize>(args);
+            auto outgoing(outgoing_.find(handle));
+            _assert(outgoing != outgoing_.end());
+            auto channel(std::make_unique<Channel>(outgoing->second));
+            auto output(std::make_unique<Output<Channel>>(tag, std::move(channel)));
+            auto place(outputs_.emplace(std::piecewise_construct, std::forward_as_tuple(tag), std::forward_as_tuple(this, std::move(output))));
+            _assert(place.second);
+            co_return co_await code(Tie());
+
+        } else if (command == CancelTag) {
+            const auto [handle] = Take<TagSize>(args);
+            outgoing_.erase(handle);
+            co_return co_await code(Tie());
+
+        } else if (command == FinishTag) {
+            const auto [tag] = Take<TagSize>(args);
+            auto output(outputs_.find(tag));
+            _assert(output != outputs_.end());
+            // XXX: this is extremely unfortunate
+            auto channel(dynamic_cast<Output<Channel> *>(output->second.get()));
+            _assert(channel != NULL);
+            co_await (*channel)->_();
+            co_return co_await code(Tie());
+
+
+        } else if (command == AnswerTag) {
+            const auto [offer] = Take<0>(args);
+            auto answer(co_await back_->Respond(offer.str()));
+            co_return co_await code(Tie(Strung(std::move(answer))));
+
+
+        } else {
+            _assert_(false, "unknown command: " << data);
+        }
     }
 
-    task<std::string> Respond(const std::string &offer) override;
+    task<void> Call(const Buffer &data) {
+        Bill(1);
+
+        auto [nonce, rest] = Take<TagSize, 0>(data);
+        auto output(outputs_.find(nonce));
+        if (output != outputs_.end()) {
+            Bill(1);
+            co_return co_await output->second->Send(rest);
+        } else {
+            try {
+                // reference to local binding 'nonce' declared in enclosing function 'orc::Space::Call'
+                co_return co_await Call(rest, [this, &nonce = nonce](const Buffer &data) -> task<void> {
+                    co_return co_await Send(Tie(nonce, data));
+                });
+            } catch (const Error &error) {
+                co_return co_await Send(Tie(Zero, nonce, Strung(error.message)));
+            }
+        }
+    }
 };
 
-class Conduit :
-    public Pipe
+class Ship {
+  public:
+    virtual S<Space> Find(const Common &common) = 0;
+};
+
+class Conduit final :
+    public Pipe,
+    protected BufferDrain
 {
   private:
-    S<Node> node_;
-    Sink<Secure> sink_;
-
-    S<Account> account_;
-
-  public:
     S<Pipe> self_;
 
+    Sink<Secure> sink_;
+    S<Space> space_;
+
+  protected:
+    void Land(const Buffer &data) override {
+        _assert(space_ != nullptr);
+        Task([space = space_, data = Beam(data)]() -> task<void> {
+            space->Bill(1);
+            co_return co_await space->Call(data);
+        });
+    }
+
+    void Stop(const std::string &error) override {
+        Task([this]() -> task<void> {
+            co_await sink_->Shut();
+            // XXX: space needs to be reference counted
+            co_await space_->Shut();
+            self_.reset();
+        });
+    }
+
   public:
-    Conduit(const S<Node> &node, U<Link> channel) :
-        node_(node),
-        sink_([this](const Buffer &data) {
-            if (data.empty())
-                self_.reset();
-            else {
-                _assert(account_ != nullptr);
-                account_->Land(data);
-            }
-        }, std::make_unique<Secure>(true, std::move(channel), []() -> bool {
+    Conduit(S<Ship> ship, U<Link> channel) :
+        sink_(this, std::make_unique<Secure>(true, std::move(channel), [this, ship = std::move(ship)]() -> bool {
+            // XXX: verify the certificate
+            Identity identity;
+            space_ = ship->Find(identity.GetCommon());
+            space_->Associate(this);
             return true;
         }))
     {
-        Identity identity;
-        account_ = node_->Find(identity.GetCommon());
-        account_->Associate(this);
+    }
+
+    template <typename... Args_>
+    static S<Conduit> Spawn(Args_ &&...args) {
+        auto self(Make<Conduit>(std::forward<Args_>(args)...));
+        self->self_ = self;
+        return self;
     }
 
     task<void> _() {
@@ -303,59 +398,91 @@ class Conduit :
     }
 
     virtual ~Conduit() {
-        if (account_ != nullptr)
-            account_->Dissociate(this);
+_trace();
+        if (space_ != nullptr)
+            space_->Dissociate(this);
     }
 
     task<void> Send(const Buffer &data) override {
-        co_return co_await sink_.Send(data);
+        space_->Bill(1);
+        co_return co_await sink_->Send(data);
     }
 };
 
-class Incoming :
+class Incoming final :
     public Connection
 {
   private:
-    S<Node> node_;
+    S<Incoming> self_;
 
-  public:
-    Incoming(S<Node> node) :
-        Connection(ices_),
-        node_(std::move(node))
-    {
-    }
+    S<Ship> ship_;
 
-    ~Incoming() {
-        _trace();
-    }
-
-    void OnChannel(U<Channel> channel) override {
+  protected:
+    void Land(U<Channel> channel) override {
         auto backup(channel.get());
-        auto conduit(Make<Conduit>(node_, std::move(channel)));
-        conduit->self_ = conduit;
+        auto conduit(Conduit::Spawn(ship_, std::move(channel)));
 
         Task([backup, conduit]() -> task<void> {
             co_await backup->_();
             co_await conduit->_();
-
-            // XXX: also automatically remove this after some timeout
-            // XXX: this was temporarily removed due to thread issues
-            // node_->clients_.erase(shared_from_this());
         });
+    }
+
+    void Stop(const std::string &error) override {
+        self_.reset();
+    }
+
+  public:
+    Incoming(S<Ship> ship) :
+        Connection(ices_),
+        ship_(std::move(ship))
+    {
+    }
+
+    template <typename... Args_>
+    static S<Incoming> Spawn(Args_ &&...args) {
+        auto self(Make<Incoming>(std::forward<Args_>(args)...));
+        self->self_ = self;
+        return self;
+    }
+
+    virtual ~Incoming() {
+_trace();
+        Close();
     }
 };
 
-task<std::string> Node::Respond(const std::string &offer) {
-    auto client(Make<Incoming>(shared_from_this()));
-    auto answer(co_await client->Answer(offer));
-    clients_.emplace(client);
-    co_return answer;
-}
+class Node final :
+    public std::enable_shared_from_this<Node>,
+    public Back,
+    public Ship,
+    public Identity
+{
+  private:
+    std::map<Common, W<Space>> spaces_;
 
-}
+  public:
+    virtual ~Node() {
+_trace();
+    }
 
+    S<Space> Find(const Common &common) override {
+        auto &cache(spaces_[common]);
+        if (auto space = cache.lock())
+            return space;
+        auto space(Make<Space>(shared_from_this()));
+        cache = space;
+        return space;
+    }
 
-namespace orc {
+    task<std::string> Respond(const std::string &offer) override {
+        auto incoming(Incoming::Spawn(shared_from_this()));
+        auto answer(co_await incoming->Answer(offer));
+        //answer = boost::regex_replace(std::move(answer), boost::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
+        co_return answer;
+    }
+};
+
 int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
@@ -448,7 +575,9 @@ int Main(int argc, const char *const argv[]) {
 
     Thread().join();
     return 0;
-} }
+}
+
+}
 
 int main(int argc, const char *const argv[]) {
     return orc::Main(argc, argv);

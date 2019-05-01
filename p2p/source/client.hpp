@@ -31,7 +31,7 @@
 namespace orc {
 
 template <typename... Args_>
-struct Delayed {
+struct Delayed final {
     std::function<task<void> (Args_...)> code_;
     U<Link> link_;
 };
@@ -49,7 +49,7 @@ class Origin {
     task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 };
 
-class Remote :
+class Remote final :
     public std::enable_shared_from_this<Remote>,
     public Origin,
     public Router<Secure>
@@ -57,6 +57,8 @@ class Remote :
   public:
     Remote(U<Link> link) :
         Router(std::make_unique<Secure>(false, std::move(link), []() -> bool {
+            // XXX: verify the certificate
+_trace();
             return true;
         }))
     {
@@ -77,7 +79,7 @@ class Remote :
     DelayedConnect Connect() override;
 };
 
-class Local :
+class Local final :
     public Origin
 {
   public:

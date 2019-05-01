@@ -67,7 +67,8 @@ class Channel;
 class Connection :
     public std::enable_shared_from_this<Connection>,
     //public cppcoro::async_manual_reset_event,
-    public webrtc::PeerConnectionObserver
+    public webrtc::PeerConnectionObserver,
+    protected Drain<U<Channel>>
 {
     friend class Channel;
 
@@ -80,12 +81,19 @@ class Connection :
     std::vector<std::string> gathering_;
     std::vector<std::string> candidates_;
 
+    cppcoro::async_manual_reset_event closed_;
+
+  protected:
+    void Close() {
+        peer_->Close();
+    }
+
   public:
     Connection(const std::vector<std::string> &ices = std::vector<std::string>());
 
     virtual ~Connection() {
 _trace();
-        peer_->Close();
+        _insist(closed_.is_set());
     }
 
     webrtc::PeerConnectionInterface *operator->() {
@@ -102,6 +110,7 @@ _trace();
     }
 
     void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) override;
+    void OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) override;
 
     void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state) override {
         switch (state) {
@@ -126,9 +135,7 @@ _trace();
     }
 
 
-    virtual void OnChannel(U<Channel> channel) = 0;
     void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override;
-
 
     task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
@@ -185,7 +192,7 @@ _trace();
     }
 };
 
-class Channel :
+class Channel final :
     public Link,
     public webrtc::DataChannelObserver
 {
@@ -194,7 +201,6 @@ class Channel :
     const rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
 
     cppcoro::async_manual_reset_event opened_;
-    cppcoro::async_manual_reset_event closed_;
 
   public:
     Channel(const S<Connection> &connection, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
@@ -221,6 +227,7 @@ class Channel :
     }
 
     virtual ~Channel() {
+_trace();
         connection_->channels_.erase(this);
         channel_->UnregisterObserver();
     }
@@ -232,18 +239,22 @@ class Channel :
     void OnStateChange() override {
         switch (channel_->state()) {
             case webrtc::DataChannelInterface::kConnecting:
-_trace();
+                if (Verbose)
+                    Log() << "OnStateChange(kConnecting)" << std::endl;
                 break;
             case webrtc::DataChannelInterface::kOpen:
-_trace();
+                if (Verbose)
+                    Log() << "OnStateChange(kOpen)" << std::endl;
                 opened_.set();
                 break;
             case webrtc::DataChannelInterface::kClosing:
-_trace();
+                if (Verbose)
+                    Log() << "OnStateChange(kClosing)" << std::endl;
                 break;
             case webrtc::DataChannelInterface::kClosed:
-_trace();
-                Close();
+                if (Verbose)
+                    Log() << "OnStateChange(kClosed)" << std::endl;
+                Stop();
                 break;
         }
     }
@@ -255,12 +266,14 @@ _trace();
 
     void OnMessage(const webrtc::DataBuffer &buffer) override {
         Subset data(buffer.data.data(), buffer.data.size());
-        //Log() << "WebRTC >>> " << this << " " << data << std::endl;
-        Land(data);
+        if (Verbose)
+            Log() << "WebRTC >>> " << this << " " << data << std::endl;
+        Link::Land(data);
     }
 
     task<void> Send(const Buffer &data) override {
-        //Log() << "WebRTC <<< " << this << " " << data << std::endl;
+        if (Verbose)
+            Log() << "WebRTC <<< " << this << " " << data << std::endl;
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
         Post([&]() {
@@ -269,10 +282,12 @@ _trace();
         co_return;
     }
 
-    void Close() {
-        closed_.set();
-        Land();
+    task<void> Shut() override {
+        channel_->Close();
+        co_await Link::Shut();
     }
+
+    using Link::Stop;
 };
 
 std::string Strip(std::string sdp);

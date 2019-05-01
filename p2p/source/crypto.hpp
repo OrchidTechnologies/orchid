@@ -78,7 +78,7 @@ typedef Block<crypto_box_BEFORENMBYTES> Shared;
 
 static const size_t NonceSize = crypto_box_NONCEBYTES;
 
-class Boxer {
+class Boxer final {
   private:
     Shared shared_;
 

@@ -37,21 +37,21 @@ class Secure final :
 {
   private:
     bool server_;
-    Sink<> sink_;
+    Sink<Link> sink_;
     std::function<bool ()> verify_;
 
     bool eof_ = false;
     const Buffer *data_ = NULL;
-    void (Secure::*land_)() = NULL;
+    void (Secure::*next_)() = NULL;
 
     cppcoro::async_mutex send_;
 
     cppcoro::async_manual_reset_event opened_;
-    cppcoro::async_manual_reset_event closed_;
 
     SSL *ssl_;
 
   private:
+    static Secure *Get(BIO *bio);
     static BIO_METHOD *Method();
 
     int Write(BIO *bio, const char *data, int size);
@@ -63,6 +63,10 @@ class Secure final :
     void Server();
     void Client();
 
+  protected:
+    void Land(const Buffer &data) override;
+    void Stop(const std::string &error) override;
+
   public:
     Secure(bool server, U<Link> link, decltype(verify_) verify);
 
@@ -71,6 +75,7 @@ class Secure final :
     virtual ~Secure();
 
     task<void> Send(const Buffer &data) override;
+    task<void> Shut() override;
 };
 
 }

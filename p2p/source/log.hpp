@@ -30,7 +30,9 @@
 
 namespace orc {
 
-class Log :
+extern bool Verbose;
+
+class Log final :
     public std::ostringstream
 {
   public:

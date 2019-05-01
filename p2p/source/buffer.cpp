@@ -31,6 +31,7 @@ size_t Buffer::size() const {
     size_t value(0);
     each([&](const Region &region) {
         value += region.size();
+        return true;
     });
     return value;
 }
@@ -50,6 +51,7 @@ size_t Buffer::copy(uint8_t *data, size_t size) const {
         _assert(data + size - here >= writ);
         memcpy(here, region.data(), writ);
         here += writ;
+        return true;
     });
 
     return here - data;
@@ -65,6 +67,7 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
         for (size_t i(0); i != size; ++i)
             out << std::setw(2) << int(data[i]);
         out << ',';
+        return true;
     });
     out << '}';
     return out;
@@ -74,6 +77,20 @@ Beam::Beam(const Buffer &buffer) :
     Beam(buffer.size())
 {
     buffer.copy(data_, size_);
+}
+
+bool operator ==(const Beam &lhs, const Buffer &rhs) {
+    auto data(lhs.data());
+    auto left(lhs.size());
+
+    return rhs.each([&](const Region &region) {
+        auto size(region.size());
+        if (size > left || memcmp(data, region.data(), size) != 0)
+            return false;
+        data += size;
+        left -= size;
+        return true;
+    }) && data == lhs.data() + lhs.size();
 }
 
 }

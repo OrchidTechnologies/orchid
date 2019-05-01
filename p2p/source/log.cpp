@@ -28,6 +28,8 @@
 
 namespace orc {
 
+bool Verbose(false);
+
 Log::~Log() {
     auto log(str());
     if (!log.empty() && log[log.size() - 1] == '\n')

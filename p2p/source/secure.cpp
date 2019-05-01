@@ -48,6 +48,7 @@ static int Call(SSL *ssl, bool write, Code_ code) {
             return value;
 
         case SSL_ERROR_SSL:
+        case SSL_ERROR_SYSCALL:
             Throw();
 
         case SSL_ERROR_WANT_READ:
@@ -66,24 +67,28 @@ static int Call(SSL *ssl, bool write, Code_ code) {
     }
 }
 
+Secure *Secure::Get(BIO *bio) {
+    return static_cast<Secure *>(BIO_get_data(bio));
+}
+
 BIO_METHOD *Secure::Method() {
     static auto method([]() {
         auto method(BIO_meth_new(BIO_TYPE_BIO, "orchid"));
 
         BIO_meth_set_write(method, [](BIO *bio, const char *data, int size) -> int {
-            return static_cast<Secure *>(BIO_get_data(bio))->Write(bio, data, size);
+            return Get(bio)->Write(bio, data, size);
         });
 
         BIO_meth_set_read(method, [](BIO *bio, char *data, int size) -> int {
-            return static_cast<Secure *>(BIO_get_data(bio))->Read(bio, data, size);
+            return Get(bio)->Read(bio, data, size);
         });
 
         BIO_meth_set_puts(method, [](BIO *bio, const char *data) -> int {
-            return static_cast<Secure *>(BIO_get_data(bio))->Write(bio, data, strlen(data));
+            return Get(bio)->Write(bio, data, strlen(data));
         });
 
         BIO_meth_set_ctrl(method, [](BIO *bio, int command, long arg1, void *arg2) -> long {
-            return static_cast<Secure *>(BIO_get_data(bio))->Control(bio, command, arg1, arg2);
+            return Get(bio)->Control(bio, command, arg1, arg2);
         });
 
         BIO_meth_set_create(method, [](BIO *bio) -> int {
@@ -96,7 +101,7 @@ BIO_METHOD *Secure::Method() {
         BIO_meth_set_destroy(method, [](BIO *bio) -> int {
             if (bio == NULL)
                 return 0;
-            return static_cast<Secure *>(BIO_get_data(bio))->Destroy(bio);
+            return Get(bio)->Destroy(bio);
         });
 
         return method;
@@ -160,22 +165,26 @@ void Secure::Active() {
             size = Call(ssl_, false, [&]() {
                 return SSL_read(ssl_, data, sizeof(data));
             });
-        } catch (...) {
-            land_ = NULL;
-            Land();
+        } catch (const Error &error) {
+            next_ = NULL;
+            auto message(error.message);
+            _assert(!message.empty());
+            Link::Stop(message);
             break;
         }
 
         if (size == -1)
             break;
         else if (size == 0) {
-            land_ = NULL;
-            Land();
+            next_ = NULL;
+            Link::Stop();
             break;
         }
 
-        //Log() << "\e[33;1mRECV " << size << " " << Subset(data, size) << "\e[0m" << std::endl;
-        Land(Subset(data, size));
+        if (Verbose)
+            Log() << "\e[33;1mRECV " << size << " " << Subset(data, size) << "\e[0m" << std::endl;
+
+        Link::Land(Subset(data, size));
     }
 }
 
@@ -183,9 +192,9 @@ void Secure::Server() {
     if (Call(ssl_, false, [&]() {
         return SSL_accept(ssl_);
     }) != -1) {
-        land_ = &Secure::Active;
-        (this->*land_)();
+        next_ = &Secure::Active;
         opened_.set();
+        (this->*next_)();
     }
 }
 
@@ -193,24 +202,30 @@ void Secure::Client() {
     if (Call(ssl_, false, [&]() {
         return SSL_connect(ssl_);
     }) != -1) {
-        land_ = &Secure::Active;
-        (this->*land_)();
+        next_ = &Secure::Active;
         opened_.set();
+        (this->*next_)();
     }
+}
+
+void Secure::Land(const Buffer &data) {
+    _assert(data_ == NULL);
+    data_ = &data;
+    _assert(next_ != NULL);
+    (this->*next_)();
+    _assert(data_ == NULL);
+}
+
+void Secure::Stop(const std::string &error) {
+    _assert(data_ == NULL);
+    eof_ = true;
+    _assert(next_ != NULL);
+    (this->*next_)();
 }
 
 Secure::Secure(bool server, U<Link> link, decltype(verify_) verify) :
     server_(server),
-    sink_([this](const Buffer &data) {
-        _assert(data_ == NULL);
-        if (data.empty())
-            eof_ = true;
-        else
-            data_ = &data;
-        _assert(land_ != NULL);
-        (this->*land_)();
-        _assert(data_ == NULL);
-    }, std::move(link)),
+    sink_(this, std::move(link)),
     verify_(std::move(verify))
 {
     auto context(SSL_CTX_new(server_ ? DTLS_method() : DTLS_client_method()));
@@ -218,7 +233,8 @@ Secure::Secure(bool server, U<Link> link, decltype(verify_) verify) :
 
     SSL_CTX_set_info_callback(context, [](const SSL *ssl, int where, int value) {
         auto self(static_cast<Secure *>(SSL_get_app_data(ssl)));
-        Log() << "\e[32;1mSSL :: " << self << " " << SSL_state_string_long(ssl) << "\e[0m" << std::endl;
+        if (Verbose || true)
+            Log() << "\e[32;1mSSL :: " << self << " " << SSL_state_string_long(ssl) << "\e[0m" << std::endl;
     });
 
     SSL_CTX_set_min_proto_version(context, DTLS1_VERSION);
@@ -251,18 +267,18 @@ Secure::Secure(bool server, U<Link> link, decltype(verify_) verify) :
     SSL_set_bio(ssl_, bio, bio);
 
     if (server_) {
-        land_ = &Secure::Server;
+        next_ = &Secure::Server;
         Post([&]() {
-            (this->*land_)();
+            (this->*next_)();
         });
     }
 }
 
 task<void> Secure::_() {
     if (!server_) {
-        land_ = &Secure::Client;
+        next_ = &Secure::Client;
         Post([&]() {
-            (this->*land_)();
+            (this->*next_)();
         });
     }
 
@@ -271,11 +287,13 @@ task<void> Secure::_() {
 }
 
 Secure::~Secure() {
+_trace();
     SSL_free(ssl_);
 }
 
 task<void> Secure::Send(const Buffer &data) {
-    //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
+    if (Verbose)
+        Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
     _assert(opened_.is_set());
     Beam beam(data);
     auto lock(co_await send_.scoped_lock_async());
@@ -284,6 +302,11 @@ task<void> Secure::Send(const Buffer &data) {
             return SSL_write(ssl_, beam.data(), beam.size());
         }) != -1);
     });
+}
+
+task<void> Secure::Shut() {
+    // XXX: implement
+    co_await Link::Shut();
 }
 
 }

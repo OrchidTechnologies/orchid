@@ -30,7 +30,7 @@
 
 namespace orc {
 
-class Endpoint {
+class Endpoint final {
   private:
     URI uri_;
 

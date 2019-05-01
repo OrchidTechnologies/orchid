@@ -27,6 +27,8 @@
 #include <map>
 #include <set>
 
+#include <cppcoro/async_manual_reset_event.hpp>
+
 #include "buffer.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
@@ -34,7 +36,6 @@
 #include "task.hpp"
 
 namespace orc {
-
 
 typedef Block<sizeof(uint32_t)> Tag;
 static const size_t TagSize = sizeof(uint32_t);
@@ -44,72 +45,125 @@ inline Tag NewTag() {
 
 class Pipe {
   public:
-    virtual ~Pipe() {}
+    static uint64_t Unique_;
+    uint64_t unique_ = ++Unique_;
+
+    static void Insert(Pipe *pipe);
+    static void Remove(Pipe *pipe);
+
+  public:
+    Pipe() {
+        Insert(this);
+    }
+
+    virtual ~Pipe() {
+        Remove(this);
+    }
+
     virtual task<void> Send(const Buffer &data) = 0;
 };
 
-typedef std::function<void (const Buffer &data)> Drain;
+template <typename Type_>
+class Drain {
+  public:
+    virtual void Land(Type_ data) = 0;
+    virtual void Stop(const std::string &error = std::string()) = 0;
+};
 
-class Link :
+using BufferDrain = Drain<const Buffer &>;
+
+template <typename Drain_>
+class Pump :
     public Pipe
 {
     template <typename Type_>
     friend class Sink;
 
-  public:
-    static uint64_t Unique_;
-    uint64_t unique_ = ++Unique_;
-
   private:
-    Drain drain_;
+    typedef Drain_ Drain;
+    Drain_ *drain_;
 
-  public:
-    Link() {
-    }
-
-    virtual ~Link() {
-        if (drain_ != nullptr)
-            std::terminate();
-    }
+    cppcoro::async_manual_reset_event shut_;
 
   protected:
-    void Land(const Buffer &data = Nothing()) {
+    Drain_ *Use() {
         _assert(drain_ != nullptr);
-        drain_(data);
+        return drain_;
+    }
+
+    void Stop() {
+        _assert(!shut_.is_set());
+        shut_.set();
+    }
+
+  public:
+    Pump() :
+        drain_(nullptr)
+    {
+    }
+
+    virtual ~Pump() {
+        Log() << "##### " << unique_ << std::endl;
+        _insist(drain_ == nullptr);
+        _insist(shut_.is_set());
+    }
+
+    virtual task<void> Shut() {
+        co_await shut_;
+        co_await Schedule();
     }
 };
 
-template <typename Type_ = Link>
+class Link :
+    public Pump<BufferDrain>,
+    protected BufferDrain
+{
+  protected:
+    void Land(const Buffer &data) override {
+        return Use()->Land(data);
+    }
+
+    void Stop(const std::string &error = std::string()) override {
+        Pump<BufferDrain>::Stop();
+        return Use()->Stop(error);
+    }
+};
+
+template <typename Link_>
 class Sink {
   private:
-    U<Type_> link_;
+    U<Link_> link_;
 
   public:
-    Sink(Drain drain, U<Type_> link) :
+    Sink(decltype(link_->drain_) drain, U<Link_> link) :
         link_(std::move(link))
     {
         _assert(link_);
         _assert(link_->drain_ == nullptr);
-        link_->drain_ = std::move(drain);
+        link_->drain_ = drain;
     }
+
+    /*Sink(Sink &&sink) :
+        link_(std::move(sink.link_))
+    {
+    }*/
 
     ~Sink() {
         if (link_)
             link_->drain_ = nullptr;
     }
 
-    task<void> Send(const Buffer &data) {
-        _assert(link_);
-        co_return co_await link_->Send(data);
+    // XXX: just inherit from U<Link_>
+
+    Link_ *operator ->() {
+        return link_.get();
     }
 
-    U<Type_> Move() {
-        _assert(link_);
-        link_->drain_ = nullptr;
-        return std::move(link_);
+    Link_ &operator *() {
+        return *link_;
     }
 
-    Type_ *operator ->() {
+    Link_ *get() {
         return link_.get();
     }
 };
@@ -117,46 +171,45 @@ class Sink {
 
 template <typename Link_>
 class Router :
-    public Pipe
+    public Pipe,
+    protected BufferDrain
 {
     template <typename Router_>
     friend class Route;
 
   private:
-    std::map<Tag, Drain> routes_;
+    std::map<Tag, BufferDrain *> routes_;
     Sink<Link_> sink_;
+
+  protected:
+    void Land(const Buffer &data) override {
+        auto [tag, rest] = Take<TagSize, 0>(data);
+        auto route(routes_.find(tag));
+        _assert(route != routes_.end());
+        route->second->Land(rest);
+    }
+
+    void Stop(const std::string &error) override {
+        for (const auto &[tag, drain] : routes_)
+            drain->Stop(error);
+    }
 
   public:
     Router(U<Link_> link) :
-        sink_([this](const Buffer &data) {
-            if (data.empty())
-                for (const auto &[tag, drain] : routes_)
-                    drain(data);
-            else {
-                auto [tag, rest] = Take<TagSize, 0>(data);
-                auto route(routes_.find(tag));
-                _assert(route != routes_.end());
-                route->second(rest);
-            }
-        }, std::move(link))
+        sink_(this, std::move(link))
     {
     }
 
     virtual ~Router() {
-        if (!routes_.empty())
-            std::terminate();
+        _insist(routes_.empty());
     }
 
     task<void> Send(const Buffer &data) override {
-        co_return co_await sink_.Send(data);
+        co_return co_await sink_->Send(data);
     }
 
     Link_ *operator ->() {
         return sink_.operator ->();
-    }
-
-    U<Link_> Move() {
-        return sink_.Move();
     }
 };
 
@@ -172,11 +225,10 @@ class Route final :
     Route(const S<Router_> router) :
         router_(router),
         tag_([this]() {
+            BufferDrain *drain(this);
             for (;;) {
                 auto tag(NewTag());
-                if (router_->routes_.emplace(tag, [this](const Buffer &data) {
-                    Land(data);
-                }).second)
+                if (router_->routes_.emplace(tag, drain).second)
                     return tag;
             }
         }())
@@ -189,6 +241,10 @@ class Route final :
 
     task<void> Send(const Buffer &data) override {
         co_return co_await router_->Send(Tie(tag_, data));
+    }
+
+    void Stop(const std::string &error = std::string()) override {
+        Link::Stop(error);
     }
 
     const S<Router_> &operator ->() {

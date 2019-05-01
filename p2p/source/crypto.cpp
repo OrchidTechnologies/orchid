@@ -36,6 +36,7 @@ Block<crypto_generichash_BYTES> Hash(const Buffer &data) {
     crypto_generichash_init(&state, NULL, 0, crypto_generichash_BYTES);
     data.each([&](const Region &region) {
         crypto_generichash_update(&state, region.data(), region.size());
+        return true;
     });
     crypto_generichash_final(&state, hash.data(), hash.size());
     return hash;

@@ -46,17 +46,21 @@ class Converted final :
     {
         for (auto i(buffers_.begin()), e(buffers_.end()); i != e; ++i) {
             const auto &buffer(*i);
-            regions_.emplace_back(static_cast<const uint8_t *>(buffer.data()), buffer.size());
+            regions_.emplace_back(reinterpret_cast<const uint8_t *>(buffer.data()), buffer.size());
         }
     }
 
-    void each(const std::function<void (const Region &)> &code) const override {
+    bool each(const std::function<bool (const Region &)> &code) const override {
         for (const auto &region : regions_)
-            code(region);
+            if (!code(region))
+                return false;
+        return true;
     }
 };
 
-class Adapter {
+class Adapter final :
+    protected BufferDrain
+{
   public:
     typedef Adapter lowest_layer_type;
     typedef boost::asio::io_context::executor_type executor_type;
@@ -70,14 +74,23 @@ class Adapter {
     cppcoro::async_auto_reset_event ready_;
     size_t offset_ = 0;
 
+  protected:
+    void Land(const Buffer &data) override {
+        std::unique_lock<std::mutex> lock(mutex_);
+        data_.emplace(data);
+        ready_.set();
+    }
+
+    void Stop(const std::string &error) override {
+        std::unique_lock<std::mutex> lock(mutex_);
+        data_.emplace(Nothing());
+        ready_.set();
+    }
+
   public:
     Adapter(boost::asio::io_context &context, U<Link> link) :
         context_(context),
-        sink_([this](const Buffer &data) {
-            std::unique_lock<std::mutex> lock(mutex_);
-            data_.emplace(data);
-            ready_.set();
-        }, std::move(link))
+        sink_(this, std::move(link))
     {
     }
 
@@ -96,6 +109,7 @@ class Adapter {
                 std::unique_lock<std::mutex> lock(mutex_);
                 if (!data_.empty()) {
                     const auto &beam(data_.front());
+                    // XXX: handle errors
                     auto base(beam.data());
                     auto rest(beam.size() - offset_);
                     auto writ(0);
@@ -130,7 +144,7 @@ class Adapter {
     template <typename Buffers_, typename Handler_>
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
         Task([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
-            Converted<Buffers_> converted(buffers);
+            Converted converted(buffers);
             co_await sink_->Send(converted);
             boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));
         });

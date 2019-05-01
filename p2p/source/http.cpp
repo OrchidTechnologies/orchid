@@ -75,21 +75,21 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
         body = co_await Request_(socket, req);
     } else if (uri.schema_ == "https") {
         // XXX: this needs security
-        boost::asio::ssl::context context{boost::asio::ssl::context::sslv23_client};
-        context.set_verify_mode(boost::asio::ssl::verify_none);
+        asio::ssl::context context{asio::ssl::context::sslv23_client};
+        context.set_verify_mode(asio::ssl::verify_none);
 
-        boost::asio::ssl::stream<Socket_ &> stream{socket, context};
-        co_await stream.async_handshake(boost::asio::ssl::stream_base::client, orc::Token());
+        asio::ssl::stream<Socket_ &> stream{socket, context};
+        co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
 
         body = co_await Request_(stream, req);
 
         try {
             co_await stream.async_shutdown(orc::Token());
-        } catch (const boost::system::error_code &error) {
+        } catch (const asio::error_code &error) {
             if (false);
-            else if (error == boost::asio::error::eof);
+            else if (error == asio::error::eof);
                 // XXX: this scenario is untested
-            else if (error == boost::asio::ssl::error::stream_truncated);
+            else if (error == asio::ssl::error::stream_truncated);
                 // XXX: this is because of infura
             else throw;
         }
@@ -103,16 +103,16 @@ task<std::string> Request(Adapter &adapter, const std::string &method, const URI
 }
 
 task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
-    boost::asio::ip::tcp::resolver resolver(orc::Context());
+    asio::ip::tcp::resolver resolver(orc::Context());
     const auto results(co_await resolver.async_resolve(uri.host_, uri.port_, orc::Token()));
 
-    boost::asio::ip::tcp::socket socket(orc::Context());
-    (void) co_await boost::asio::async_connect(socket, results.begin(), results.end(), orc::Token());
+    asio::ip::tcp::socket socket(orc::Context());
+    (void) co_await asio::async_connect(socket, results.begin(), results.end(), orc::Token());
 
     auto body(co_await Request_(socket, method, uri, headers, data));
 
     boost::beast::error_code ec;
-    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+    socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
     if (ec && ec != boost::beast::errc::not_connected)
         throw boost::beast::system_error{ec};
 

@@ -20,11 +20,48 @@
 /* }}} */
 
 
+#include <iomanip>
+
 #include "link.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
-uint64_t Link::Unique_ = 0;
+static const bool tracking_ = false;
+
+uint64_t Pipe::Unique_ = 0;
+
+static std::set<Pipe *> pipes_;
+static std::mutex mutex_;
+
+void Pipe::Insert(Pipe *pipe) {
+    if (!tracking_)
+        return;
+    std::unique_lock<std::mutex> lock(mutex_);
+    pipes_.insert(pipe);
+}
+
+void Pipe::Remove(Pipe *pipe) {
+    if (!tracking_)
+        return;
+    std::unique_lock<std::mutex> lock(mutex_);
+    pipes_.erase(pipe);
+}
+
+static struct SetupTracker { SetupTracker() {
+    if (!tracking_)
+        return;
+    std::thread([]() {
+        for (;;) {
+            sleep(5);
+
+            std::unique_lock<std::mutex> lock(mutex_);
+            Log() << "^^^^^^^^^^^^^^^^" << std::endl;
+            for (auto pipe : pipes_)
+                Log() << std::setw(5) << pipe->unique_ << ": " << typeid(*pipe).name() << std::endl;
+            Log() << "vvvvvvvvvvvvvvvv" << std::endl;
+        }
+    }).detach();
+} } SetupTracker;
 
 }

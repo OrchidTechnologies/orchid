@@ -41,7 +41,7 @@ class Beam;
 
 class Buffer {
   public:
-    virtual void each(const std::function<void (const Region &)> &code) const = 0;
+    virtual bool each(const std::function<bool (const Region &)> &code) const = 0;
 
     virtual size_t size() const;
     std::string str() const;
@@ -66,8 +66,8 @@ class Region :
     virtual const uint8_t *data() const = 0;
     size_t size() const override = 0;
 
-    void each(const std::function<void (const Region &)> &code) const override {
-        code(*this);
+    bool each(const std::function<bool (const Region &)> &code) const override {
+        return code(*this);
     }
 
     operator asio::const_buffer() const {
@@ -95,6 +95,28 @@ class Subset final :
 
     size_t size() const override {
         return size_;
+    }
+};
+
+template <typename Data_>
+class Strung final :
+    public Region
+{
+  private:
+    Data_ data_;
+
+  public:
+    Strung(Data_ data) :
+        data_(std::move(data))
+    {
+    }
+
+    const uint8_t *data() const override {
+        return reinterpret_cast<const uint8_t *>(data_.data());
+    }
+
+    size_t size() const override {
+        return data_.size();
     }
 };
 
@@ -129,6 +151,10 @@ class Block final :
     Block(const Block &rhs) :
         data_(rhs.data_)
     {
+    }
+
+    uint8_t &operator [](size_t index) {
+        return data_[index];
     }
 
     const uint8_t *data() const override {
@@ -236,9 +262,34 @@ class Beam :
     }
 };
 
+template <typename Data_>
+inline bool operator ==(const Beam &lhs, const std::string &rhs) {
+    auto size(lhs.size());
+    return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
+}
+
+template <typename Data_>
+inline bool operator ==(const Beam &lhs, const Strung<Data_> &rhs) {
+    auto size(lhs.size());
+    return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
+}
+
+template <size_t Size_>
+inline bool operator ==(const Beam &lhs, const Block<Size_> &rhs) {
+    auto size(lhs.size());
+    return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
+}
+
 inline bool operator ==(const Beam &lhs, const Beam &rhs) {
     auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
+}
+
+bool operator ==(const Beam &lhs, const Buffer &rhs);
+
+template <typename Buffer_>
+inline bool operator !=(const Beam &lhs, const Buffer_ &rhs) {
+    return !(lhs == rhs);
 }
 
 class Nothing final :
@@ -267,15 +318,19 @@ class Knot final :
     {
     }
 
+    // XXX: implement Cat (currently this is ambiguous)
+
     /*Knot(Buffer_ &&...buffers) :
         buffers_(std::forward<Buffer_>(buffers)...)
     {
     }*/
 
-    void each(const std::function<void (const Region &)> &code) const override {
+    bool each(const std::function<bool (const Region &)> &code) const override {
+        bool value(true);
         boost::mp11::tuple_for_each(buffers_, [&](const auto &buffer) {
-            buffer.each(code);
+            value &= buffer.each(code);
         });
+        return value;
     }
 };
 
@@ -311,9 +366,11 @@ class VectorBuffer final :
     std::vector<const Buffer *> buffers_;
 
   public:
-    void each(const std::function<void (const Region &)> &code) const override {
+    bool each(const std::function<bool (const Region &)> &code) const override {
         for (const auto *buffer : buffers_)
-            buffer->each(code);
+            if (!buffer->each(code))
+                return false;
+        return true;
     }
 };
 
@@ -354,6 +411,7 @@ class Sequence final :
             size_t count(0);
             buffer.each([&](const Region &region) {
                 ++count;
+                return true;
             });
             return count;
         }()),
@@ -363,6 +421,7 @@ class Sequence final :
         auto i(regions_.get());
         buffer.each([&](const Region &region) {
             *(i++) = &region;
+            return true;
         });
     }
 
@@ -388,9 +447,11 @@ class Sequence final :
         return regions_.get() + count_;
     }
 
-    void each(const std::function<void (const Region &)> &code) const override {
+    bool each(const std::function<bool (const Region &)> &code) const override {
         for (auto i(begin()), e(end()); i != e; ++i)
-            code(*i);
+            if (!code(*i))
+                return false;
+        return true;
     }
 };
 
@@ -443,6 +504,7 @@ class Window final :
             size_t count(0);
             buffer.each([&](const Region &region) {
                 ++count;
+                return true;
             });
             return count;
         }()),
@@ -454,28 +516,33 @@ class Window final :
         auto i(regions_.get());
         buffer.each([&](const Region &region) {
             *(i++) = &region;
+            return true;
         });
     }
 
     Window(Window &&rhs) = default;
     Window &operator =(Window &&rhs) = default;
 
-    void each(const std::function<void (const Region &)> &code) const override {
+    bool each(const std::function<bool (const Region &)> &code) const override {
         auto here(index_.region_);
         auto rest(regions_.get() + count_ - here);
         if (rest == 0)
-            return;
+            return true;
 
         size_t i;
         if (index_.offset_ == 0)
             i = 0;
         else {
             i = 1;
-            code(index_);
+            if (!code(index_))
+                return false;
         }
 
         for (; i != rest; ++i)
-            code(*here[i]);
+            if (!code(*here[i]))
+                return false;
+
+        return true;
     }
 
     template <size_t Size_>

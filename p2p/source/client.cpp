@@ -43,59 +43,67 @@ task<std::string> Origin::Request(const std::string &method, const URI &uri, con
     co_return co_await orc::Request(adapter, method, uri, headers, data);
 }
 
-class Actor :
+class Actor final :
     public Connection
 {
+  protected:
+    void Land(U<Channel> channel) override {
+        _assert(false);
+    }
+
+    void Stop(const std::string &error) override {
+        // XXX: how much does this matter?
+_trace();
+    }
+
   public:
     Actor() :
         Connection()
     {
     }
 
-    ~Actor() {
-        _trace();
-    }
-
-    void OnChannel(U<Channel> channel) override {
-        _trace();
+    virtual ~Actor() {
+_trace();
+        Close();
     }
 };
 
-class Tunnel :
+class Tunnel final :
     public Link
 {
   private:
     Sink<Route<Remote>> sink_;
-    cppcoro::async_manual_reset_event closed_;
+
+  protected:
+    void Land(const Buffer &data) override {
+        Link::Land(data);
+    }
+
+    void Stop(const std::string &error) override {
+        Link::Stop(error);
+    }
 
   public:
     Tunnel(const S<Remote> &remote) :
-        sink_([this](const Buffer &data) {
-            Land(data);
-        }, remote->Path())
+        sink_(this, remote->Path())
     {
+    }
+
+    ~Tunnel() {
+_trace();
     }
 
     task<void> _(const std::function<task<void> (const Tag &tag)> &setup) {
         co_await setup(sink_->tag_);
     }
 
-    ~Tunnel() {
-        Task([route = sink_.Move()]() -> task<void> {
-            Take<>(co_await (*route)->Call(CloseTag, route->tag_));
-            // XXX: co_await closed_
-        });
-    }
-
     task<void> Send(const Buffer &data) override {
         co_return co_await sink_->Send(data);
     }
 
-  protected:
-    void Land(const Buffer &data) {
-        Link::Land(data);
-        if (data.empty())
-            closed_.set();
+    task<void> Shut() override {
+        co_await (*sink_)->Call(CloseTag, sink_->tag_);
+        co_await Link::Shut();
     }
 };
 
@@ -104,15 +112,44 @@ U<Route<Remote>> Remote::Path() {
 }
 
 task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
-    Beam response;
-    cppcoro::async_manual_reset_event responded;
-    Sink sink([&](const Buffer &data) {
-        response = data;
-        responded.set();
-    }, Path());
-    co_await sink.Send(Tie(command, args));
-    co_await responded;
-    co_return response;
+    class Result final :
+        public Sink<Route<Remote>>,
+        protected BufferDrain
+    {
+      private:
+        Beam data_;
+        std::string error_;
+        cppcoro::async_manual_reset_event ready_;
+
+      protected:
+        void Land(const Buffer &data) {
+            data_ = data;
+            ready_.set();
+        }
+
+        void Stop(const std::string &error) {
+            error_ = error;
+            ready_.set();
+        }
+
+      public:
+        Result(U<Route<Remote>> link) :
+            Sink(this, std::move(link))
+        {
+        }
+
+        task<Beam> Wait() {
+            // XXX: retry after timeout
+            co_await ready_;
+            co_await Schedule();
+            operator ->()->Stop();
+            _assert_(error_.empty(), error_);
+            co_return std::move(data_);
+        }
+    } sink(Path());
+
+    co_await sink->Send(Tie(command, args));
+    co_return co_await sink.Wait();
 }
 
 task<S<Remote>> Remote::Hop(const std::string &server) {
@@ -121,10 +158,18 @@ task<S<Remote>> Remote::Hop(const std::string &server) {
     auto remote(Make<Remote>(std::move(tunnel)));
     co_await backup->_([&](const Tag &tag) -> task<void> {
         auto handle(NewTag()); // XXX: this is horribly wrong
+
         Take<>(co_await Call(EstablishTag, Tie(handle)));
         Take<>(co_await Call(ChannelTag, Tie(handle, tag)));
-        auto offer(co_await Call(OfferTag, handle));
-        auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer.str()));
+        auto offer((co_await Call(OfferTag, handle)).str());
+
+        auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
+
+        if (Verbose) {
+            Log() << "Offer: " << offer << std::endl;
+            Log() << "Answer: " << answer << std::endl;
+        }
+
         Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
         Take<>(co_await Call(FinishTag, Tie(tag)));
     });
@@ -149,13 +194,10 @@ task<S<Remote>> Local::Hop(const std::string &server) {
     auto offer(Strip(co_await client->Offer()));
     auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
 
-    Log() << std::endl;
-    Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-    Log() << offer << std::endl;
-    Log() << "================" << std::endl;
-    Log() << answer << std::endl;
-    Log() << "vvvvvvvvvvvvvvvv" << std::endl;
-    Log() << std::endl;
+    if (Verbose) {
+        Log() << "Offer: " << offer << std::endl;
+        Log() << "Answer: " << answer << std::endl;
+    }
 
     co_await client->Negotiate(answer);
 
@@ -182,6 +224,7 @@ task<S<Origin>> Setup() {
     S<Origin> origin(GetLocal());
 
     const char *server("mac.saurik.com");
+    //const char *server("node.orchid.dev");
     //const char *server("localhost");
 
     for (unsigned i(0); i != 3; ++i) {

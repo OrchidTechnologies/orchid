@@ -27,11 +27,15 @@
 
 namespace orc {
 
+static const Tag Zero{0, 0, 0, 0};
+
 static const Tag AnswerTag{34, 162, 176, 208};
+static const Tag BatchTag{108, 83, 147, 158};
 static const Tag CancelTag{223, 49, 55, 9};
 static const Tag ChannelTag{159, 32, 166, 189};
 static const Tag CloseTag{129, 185, 120, 174};
 static const Tag ConnectTag{231, 40, 11, 3};
+static const Tag DiscardTag{245, 216, 33, 201};
 static const Tag EstablishTag{246, 205, 229, 74};
 static const Tag FinishTag{115, 80, 108, 75};
 static const Tag OfferTag{17, 59, 137, 94};

@@ -40,26 +40,42 @@
 
 #include <cppcoro/sync_wait.hpp>
 
-class OrchidClient :
-    public openvpn::TransportClient
+namespace orc {
+
+class Transport :
+    public openvpn::TransportClient,
+    public orc::BufferDrain
 {
   private:
     openvpn::ExternalTransport::Config config_;
     asio::io_context &io_context;
     openvpn::TransportClientParent *parent_;
 
-    orc::U<orc::Sink<>> pipe_;
+    U<Sink<Link>> pipe_;
 
   public:
-    OrchidClient(const openvpn::ExternalTransport::Config config, asio::io_context &io_context, openvpn::TransportClientParent *parent) :
+    Transport(const openvpn::ExternalTransport::Config config, asio::io_context &io_context, openvpn::TransportClientParent *parent) :
         config_(config),
         io_context(io_context),
         parent_(parent)
     {
     }
 
-    void transport_start() override { orc::Wait([this]() -> task<void> {
-        co_await orc::Schedule();
+    void Land(const Buffer &data) override {
+        //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
+        openvpn::BufferAllocated buffer(data.size(), openvpn::BufferAllocated::ARRAY);
+        data.copy(buffer.data(), buffer.size());
+        asio::dispatch(io_context, [parent = parent_, buffer = std::move(buffer)]() mutable {
+            parent->transport_recv(buffer);
+        });
+    }
+
+    void Stop(const std::string &error) override {
+        std::terminate();
+    }
+
+    void transport_start() override { Wait([this]() -> task<void> {
+        co_await Schedule();
 
         asio::dispatch(io_context, [parent = parent_]() {
             parent->transport_pre_resolve();
@@ -70,17 +86,10 @@ class OrchidClient :
         auto remote(config_.remote_list->first_item());
         _assert(remote != NULL);
 
-        auto origin(co_await orc::Setup());
+        auto origin(co_await Setup());
         auto delayed(origin->Connect());
 
-        pipe_ = std::make_unique<orc::Sink<>>([&](const orc::Buffer &data) {
-            //orc::Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-            openvpn::BufferAllocated buffer(data.size(), openvpn::BufferAllocated::ARRAY);
-            data.copy(buffer.data(), buffer.size());
-            asio::dispatch(io_context, [parent = parent_, buffer = std::move(buffer)]() mutable {
-                parent->transport_recv(buffer);
-            });
-        }, std::move(delayed.link_));
+        pipe_ = std::make_unique<Sink<Link>>(this, std::move(delayed.link_));
 
         co_await delayed.code_(remote->server_host, remote->server_port);
 
@@ -90,19 +99,19 @@ class OrchidClient :
     }()); }
 
     void stop() override {
-        orc::Wait([this]() -> task<void> {
-            co_await orc::Schedule();
-            co_await pipe_->Send(orc::Nothing());
+        Wait([this]() -> task<void> {
+            co_await Schedule();
+            co_await (*pipe_)->Send(Nothing());
             pipe_.reset();
         }());
     }
 
     bool transport_send_const(const openvpn::Buffer &data) override {
-        orc::Wait([&]() -> task<void> {
-            co_await orc::Schedule();
-            orc::Subset buffer(data.c_data(), data.size());
-            //orc::Log() << "\e[35mSEND " << data.size() << " " << buffer << "\e[0m" << std::endl;
-            co_await pipe_->Send(buffer);
+        Wait([&]() -> task<void> {
+            co_await Schedule();
+            Subset buffer(data.c_data(), data.size());
+            //Log() << "\e[35mSEND " << data.size() << " " << buffer << "\e[0m" << std::endl;
+            co_await (*pipe_)->Send(buffer);
         }());
         return true;
     }
@@ -145,6 +154,8 @@ class OrchidClient :
     }
 };
 
+}
+
 class OrchidFactory :
     public openvpn::TransportClientFactory
 {
@@ -158,7 +169,7 @@ class OrchidFactory :
     }
 
     openvpn::TransportClient::Ptr new_transport_client_obj(asio::io_context &io_context, openvpn::TransportClientParent *parent) override {
-        return new OrchidClient(config_, io_context, parent);
+        return new orc::Transport(config_, io_context, parent);
     }
 };
 

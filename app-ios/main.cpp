@@ -32,6 +32,7 @@
 
 #include <cppcoro/sync_wait.hpp>
 
+#include "baton.hpp"
 #include "channel.hpp"
 #include "client.hpp"
 #include "crypto.hpp"
@@ -46,33 +47,61 @@
 
 using boost::multiprecision::uint256_t;
 
-int main() {
+namespace orc {
+int Main() {
     cppcoro::async_manual_reset_event block;
 
-    //orc::Ethereum();
+    //Ethereum();
 
-    return orc::Wait([&]() -> task<int> {
-        co_await orc::Schedule();
+    /*Wait([&]() -> task<void> {
+        boost::asio::system_timer timer(Context());
+        timer.expires_after(std::chrono::seconds(3));
+        co_await timer.async_wait(Token());
+        std::cerr << "WOOT" << std::endl;
+        timer.expires_after(std::chrono::seconds(3));
+        co_await timer.async_wait(Token());
+        std::cerr << "WOOT" << std::endl;
+    }());*/
 
-        //orc::Log() << co_await orc::GetLocal()->Request("GET", {"http", "cydia.saurik.com", "80", "/debug.txt"}, {}, "") << std::endl;
+    return Wait([&]() -> task<int> {
+        co_await Schedule();
+
+        //Log() << co_await GetLocal()->Request("GET", {"http", "cydia.saurik.com", "80", "/debug.txt"}, {}, "") << std::endl;
         //co_return 0;
 
-        //orc::Endpoint endpoint({"http", "localhost", "8545", "/"});
-        //orc::Endpoint endpoint({"https", "mainnet.infura.io", "443", "/v3/" ORCHID_INFURA});
-        /*orc::Endpoint endpoint({"https", "eth-mainnet.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
+        //Endpoint endpoint({"http", "localhost", "8545", "/"});
+        //Endpoint endpoint({"https", "mainnet.infura.io", "443", "/v3/" ORCHID_INFURA});
+        /*Endpoint endpoint({"https", "eth-mainnet.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
         std::string storage(co_await endpoint("eth_getStorageAt", {"0x295a70b2de5e3953354a6a8344e616ed314d7251", "0x6661e9d6d8b923d5bbaab1b96e1dd51ff6ea2a93520fdc9eb75d059238b8c5e9", "0x65a8db"}));
         uint256_t parsed(storage);
-        orc::Log() << parsed << std::endl;
+        Log() << parsed << std::endl;
         co_return 0;*/
 
-        auto origin(co_await orc::Setup());
+        auto origin(co_await Setup());
         auto delayed(origin->Connect());
-        orc::Sink sink([](const orc::Buffer &data) {
-            orc::Log() << data << std::endl;
-        }, std::move(delayed.link_));
+
+        class Watch :
+            public Sink<Link>,
+            public BufferDrain
+        {
+          protected:
+            void Land(const Buffer &data) override {
+                Log() << "Land" << data << std::endl;
+            }
+
+            void Stop(const std::string &error) override {
+                Log() << "Stop(" << error << ")" << std::endl;
+            }
+
+          public:
+            Watch(U<Link> link) :
+                Sink<Link>(this, std::move(link))
+            {
+            }
+        } sink(std::move(delayed.link_));
 
         co_await delayed.code_("127.0.0.1", "9999");
-        co_await sink.Send(orc::Beam("test\n"));
+        co_await sink->Send(Beam("test\n"));
 
         co_await block;
 
@@ -85,4 +114,8 @@ int main() {
 
         co_return 0;
     }());
+} }
+
+int main() {
+    return orc::Main();
 }

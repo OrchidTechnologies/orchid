@@ -30,7 +30,7 @@
 #include "log.hpp"
 
 namespace orc {
-class Error {
+class Error final {
   public:
     std::string file;
     int line;
@@ -49,6 +49,12 @@ class Error {
         return *this;
     }
 }; }
+
+#define _insist(code) do { \
+    if ((code)) break; \
+    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << "_insist(" #code ")" << std::endl; \
+    std::terminate(); \
+} while (false)
 
 #define _assert_(code, message) do { \
     if ((code)) break; \
