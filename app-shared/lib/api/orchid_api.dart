@@ -24,6 +24,9 @@ abstract class OrchidAPI {
     return mockAPI ? _mockAPISingleton : _apiSingleton;
   }
 
+  /// Publish the physical layer level network connectivity type.
+  final BehaviorSubject<NetworkConnectivityType> networkConnectivity;
+
   /// Publish the connection status.
   final BehaviorSubject<OrchidConnectionState> connectionStatus;
 

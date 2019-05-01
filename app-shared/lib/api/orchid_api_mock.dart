@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
@@ -54,13 +53,11 @@ class MockOrchidAPI implements OrchidAPI {
     ]);
   }
 
+  /// Publish the physical layer level network connectivity type.
+  final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
+      NetworkConnectivityType.Unknown);
+
   /// Publish the connection status.
-  //
-  // Usage: The channel implementation publishes with:
-  //   connectionStatus.add(latestState)
-  // Application components receive updates with:
-  //   connectionStatus.listen((state) { ... } )
-  //
   final connectionStatus = BehaviorSubject<OrchidConnectionState>();
 
   /// Publish the synchronization status.
@@ -205,7 +202,6 @@ class MemoryOrchidLogAPI extends OrchidLogAPI {
   // Note: All Dart code runs in a single Isolate by default so explicit
   // Note: locking or synchronization should not be needed here.
   List<String> _buffer = List<String>();
-
 
   /// Notify observers when the log file has updated.
   PublishSubject<void> logChanged = PublishSubject<void>();

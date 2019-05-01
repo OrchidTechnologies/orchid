@@ -21,7 +21,6 @@ dependencies:
   rxdart: ^0.21.0
   flare_flutter: ^1.0.0
   url_launcher: ^5.0.0
-  connectivity: ^0.4.2
   shared_preferences: ^0.5.2
   email_validator: ^1.0.0
 
