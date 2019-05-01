@@ -53,13 +53,11 @@ class MockOrchidAPI implements OrchidAPI {
     ]);
   }
 
+  /// Publish the physical layer level network connectivity type.
+  final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
+      NetworkConnectivityType.Unknown);
+
   /// Publish the connection status.
-  //
-  // Usage: The channel implementation publishes with:
-  //   connectionStatus.add(latestState)
-  // Application components receive updates with:
-  //   connectionStatus.listen((state) { ... } )
-  //
   final connectionStatus = BehaviorSubject<OrchidConnectionState>();
 
   /// Publish the synchronization status.
@@ -74,8 +72,13 @@ class MockOrchidAPI implements OrchidAPI {
   /// NEVPNManager API.
   final networkingPermissionStatus = BehaviorSubject<bool>();
 
-  /// Publish development logging information from the channel implementation.
-  final log = PublishSubject<String>();
+  OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
+
+  /// Get the logging API.
+  @override
+  OrchidLogAPI logger() {
+    return _logAPI;
+  }
 
   /// Trigger a request for OS level permissions required to allow installation and activation of the
   /// Orchid VPN networking extension, potentially causing the OS to prompt the user.
@@ -101,7 +104,7 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   Future<bool> setWallet(OrchidWallet wallet) async {
     this._wallet = wallet;
-    log.add("Saved wallet");
+    logger().write("Saved wallet");
     return wallet.private.privateKey.startsWith("fail") ? false : true;
   }
 
@@ -144,12 +147,6 @@ class MockOrchidAPI implements OrchidAPI {
     return _exitVPNConfig.public;
   }
 
-  /// Enable or disable log messages from the channel implementation.
-  @override
-  Future<void> setLogging(bool enabled) async {
-    // TODO:
-  }
-
   Future<void> _connectFuture;
 
   /// Set the desired connection state: true for connected, false to disconnect.
@@ -162,7 +159,7 @@ class MockOrchidAPI implements OrchidAPI {
       case OrchidConnectionState.NotConnected:
         if (connect) {
           _setConnectionState(OrchidConnectionState.Connecting);
-          _connectFuture = Future.delayed(Duration(seconds: 1), () {
+          _connectFuture = Future.delayed(Duration(milliseconds: 2500), () {
             _setConnectionState(OrchidConnectionState.Connected);
           });
         } else {
@@ -192,7 +189,59 @@ class MockOrchidAPI implements OrchidAPI {
   Future<void> reroute() async {}
 
   void _setConnectionState(OrchidConnectionState state) {
-    log.add("Connection state: $state");
+    logger().write("Connection state: $state");
     connectionStatus.add(state);
+  }
+}
+
+/// Transient, in-memory log implementation.
+class MemoryOrchidLogAPI extends OrchidLogAPI {
+  static int maxLines = 5000;
+  bool _enabled = true;
+
+  // Note: All Dart code runs in a single Isolate by default so explicit
+  // Note: locking or synchronization should not be needed here.
+  List<String> _buffer = List<String>();
+
+  /// Notify observers when the log file has updated.
+  PublishSubject<void> logChanged = PublishSubject<void>();
+
+  /// Enable or disable logging.
+  Future<void> setEnabled(bool enabled) async {
+    _enabled = enabled;
+    logChanged.add(null);
+  }
+
+  /// Get the logging enabled status.
+  Future<bool> getEnabled() async {
+    return _enabled;
+  }
+
+  /// Get the current log contents.
+  Future<String> get() async {
+    return _buffer.join();
+  }
+
+  /// Write the text to the log.
+  void write(String text) async {
+    debugPrint("LOG: $text");
+    if (!_enabled) {
+      return;
+    }
+
+    _buffer.add(text = text.endsWith('\n') ? text : (text + '\n'));
+
+    // truncate if needed
+    if (_buffer.length > maxLines) {
+      _buffer.removeAt(0);
+    }
+
+    logChanged.add(null);
+  }
+
+  /// Clear the log file.
+  void clear() {
+    _buffer.clear();
+    logChanged.add(null);
   }
 }

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/api/log_file.dart';
+import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
@@ -23,20 +23,35 @@ class _SettingsLogPage extends State<SettingsLogPage> {
 
   String _logText = "Loading ...";
   StreamSubscription<void> _logListener;
+  bool _loggingEnabled = false;
 
   @override
   void initState() {
     super.initState();
 
-    // Listen for changes in the log file
-    _logListener = LogFile().logChanged.listen((_) {
-      LogFile().get().then((String text) {
+    OrchidLogAPI logger = OrchidAPI().logger();
+
+    logger.getEnabled().then((bool value) {
+      setState(() {
+        _loggingEnabled = value;
+      });
+    });
+
+    void Function() fetchLog = () {
+      logger.get().then((String text) {
         setState(() {
           _logText = text;
         });
       });
+    };
+
+    // Fetch the initial log state
+    fetchLog();
+
+    // Listen for log changes
+    _logListener = logger.logChanged.listen((_) {
+      fetchLog();
     });
-    LogFile().logChanged.add(null); // trigger an update
   }
 
   @override
@@ -70,9 +85,11 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                   onTap: () {},
                   trailing: Switch(
                     activeColor: AppColors.purple_3,
-                    value: true,
-                    //onChanged: (bool value) {},
-                    onChanged: null,
+                    value: _loggingEnabled,
+                    onChanged: (bool value) {
+                      _loggingEnabled = value;
+                      OrchidAPI().logger().setEnabled(value);
+                    },
                   ),
                 ),
               ),
@@ -110,7 +127,8 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                      border: Border.all(width: 2.0, color: AppColors.neutral_5),
+                      border:
+                          Border.all(width: 2.0, color: AppColors.neutral_5),
                     ),
                   ),
                 ),
@@ -156,7 +174,7 @@ class _SettingsLogPage extends State<SettingsLogPage> {
   }
 
   void _performDelete() {
-    LogFile().clear();
+    OrchidAPI().logger().clear();
   }
 
   void _onSave() {}

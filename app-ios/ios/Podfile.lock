@@ -1,44 +1,25 @@
 PODS:
-  - connectivity (0.0.1):
-    - Flutter
-    - Reachability
   - Flutter (1.0.0)
-  - path_provider (0.0.1):
-    - Flutter
-  - Reachability (3.2)
   - shared_preferences (0.0.1):
     - Flutter
   - url_launcher (0.0.1):
     - Flutter
 
 DEPENDENCIES:
-  - connectivity (from `.symlinks/plugins/connectivity/ios`)
   - Flutter (from `.symlinks/flutter/ios`)
-  - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
 
-SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
-    - Reachability
-
 EXTERNAL SOURCES:
-  connectivity:
-    :path: ".symlinks/plugins/connectivity/ios"
   Flutter:
     :path: ".symlinks/flutter/ios"
-  path_provider:
-    :path: ".symlinks/plugins/path_provider/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
   url_launcher:
     :path: ".symlinks/plugins/url_launcher/ios"
 
 SPEC CHECKSUMS:
-  connectivity: c72716e202a1225ec4810740d5cb56b8ae3bf4cc
   Flutter: 58dd7d1b27887414a370fcccb9e645c08ffd7a6a
-  path_provider: f96fff6166a8867510d2c25fdcc346327cc4b259
-  Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
   shared_preferences: 1feebfa37bb57264736e16865e7ffae7fc99b523
   url_launcher: 0067ddb8f10d36786672aa0722a21717dba3a298
 
