@@ -159,7 +159,7 @@ class _QuickConnectPageState
 
   // The page body holding bacground and options bar
   Widget buildPageContainer(BuildContext context) {
-    var connectedAnimation = "assets/flare/Connection_screens_10.flr";
+    var connectedAnimation = "assets/flare/Connection_screens.flr";
     var animIntro = "connectedIntro";
     var animLoop = "connectedLoop";
     var connectedAnimationName = _showIntroAnimation ? animIntro : animLoop;
