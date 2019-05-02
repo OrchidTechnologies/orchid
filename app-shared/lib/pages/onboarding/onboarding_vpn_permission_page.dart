@@ -6,6 +6,7 @@ import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
+import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 
 class OnboardingVPNPermissionPage extends StatefulWidget {
   final VoidCallback onComplete;
@@ -36,7 +37,7 @@ class _OnboardingVPNPermissionPageState
         child: SafeArea(
           child: Stack(
             children: <Widget>[
-              // Center horizontally (walkthrough content fills screen vertically)
+              // Main content, fills the screen vertically centered horizontally.
               Center(
                 child: WalkthroughContent(
                   imageLocation: WalkthroughContentImageLocation.Bottom,
@@ -46,10 +47,16 @@ class _OnboardingVPNPermissionPageState
                   imageName: 'assets/images/illustration_4.png',
                 ),
               ),
+
+              // The next/skip buttons
               Align(
                 alignment: Alignment.bottomCenter,
-                child:
-                    WalkthroughNextSkipButtons(onNext: _confirmNext, onSkip: _skip),
+                child: WalkthroughNextSkipButtons(
+                  onNext: _confirmNext,
+                  onSkip: _skip,
+                  bottomPad:
+                      WalkthroughPages.BottomControlsPadding.value(context),
+                ),
               )
             ],
           ),
