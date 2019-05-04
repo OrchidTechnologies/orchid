@@ -19,6 +19,3 @@
 
 
 cflags += -D__USE_MINGW_ANSI_STDIO
-
-cflags += -DFOLLY_HAVE_PTHREAD=1
-cflags += -DFOLLY_HAVE_PTHREAD_ATFORK=1

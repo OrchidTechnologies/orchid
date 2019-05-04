@@ -73,12 +73,6 @@
 [submodule "libmaxminddb"]
 	path = vpn-shared/libmaxminddb
 	url = https://github.com/maxmind/libmaxminddb.git
-[submodule "folly"]
-	path = p2p/folly
-	url = https://github.com/facebook/folly.git
-[submodule "double-conversion"]
-	path = p2p/double-conversion
-	url = https://github.com/google/double-conversion.git
 [submodule "libevent"]
 	path = min-webrtc/libevent
 	url = https://github.com/libevent/libevent.git

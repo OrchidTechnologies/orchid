@@ -18,5 +18,3 @@
 # }}}
 
 
-cflags += -DFOLLY_HAVE_PTHREAD=1
-cflags += -DFOLLY_HAVE_PTHREAD_ATFORK=1

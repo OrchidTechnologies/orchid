@@ -27,23 +27,14 @@
 #include <thread>
 
 #include <cppcoro/static_thread_pool.hpp>
-
-namespace orc {
-
-void Post(std::function<void ()> code);
-
-bool Check();
-
-}
-
-#ifdef ORCHID_CPPCORO
-
-#include <cppcoro/task.hpp>
 #include <cppcoro/sync_wait.hpp>
+#include <cppcoro/task.hpp>
 
 using cppcoro::task;
 
 namespace orc {
+
+void Post(std::function<void ()> code);
 
 cppcoro::static_thread_pool &Executor();
 cppcoro::static_thread_pool::schedule_operation Schedule();
@@ -53,81 +44,40 @@ Type_ Wait(task<Type_> code) {
     return cppcoro::sync_wait(std::move(code));
 }
 
-template <typename Code_>
-void Task(Code_ code) {
-    // XXX: I don't think I've ever been more upset by code
-    std::thread([code = std::move(code)]() mutable {
-        Wait([&code]() -> task<void> {
-            co_await Schedule();
-            co_await code();
-        }());
-    }).detach();
-}
+struct Detached {
+    struct promise_type {
+        Detached get_return_object() {
+            return {};
+        }
 
-}
+        std::experimental::suspend_never initial_suspend() {
+            return {};
+        }
 
-#else
+        std::experimental::suspend_never final_suspend() {
+            return {};
+        }
 
-#include <folly/experimental/coro/Task.h>
-#include <folly/experimental/coro/BlockingWait.h>
+        void return_void() {
+        }
 
-namespace orc {
-
-folly::Executor *Executor();
-
-}
-
-#if 0
-
-template <typename Type_>
-using task = folly::coro::Task<Type_>;
-
-namespace orc {
-
-template <typename Type_>
-Type_ Wait(task<Type_> code) {
-    return folly::coro::blockingWait(std::move(code));
-}
+        [[noreturn]]
+        void unhandled_exception() {
+            std::terminate();
+        }
+    };
+};
 
 template <typename Code_>
 void Task(Code_ code) {
-    folly::coro::co_invoke(std::move(code)).scheduleOn(Executor()).start();
-}
-
-}
-
-#else
-
-#include <folly/experimental/coro/detail/InlineTask.h>
-
-template <typename Type_>
-using task = folly::coro::detail::InlineTask<Type_>;
-
-namespace orc {
-template <typename Type_>
-Type_ Wait(task<Type_> code) {
-    return folly::coro::blockingWait([code = std::move(code)]() mutable -> folly::coro::Task<Type_> {
-        co_return co_await std::move(code);
-    }());
-}
-
-template <typename Code_>
-void Task(Code_ code) {
-    folly::coro::co_invoke([code = std::move(code)]() mutable -> folly::coro::Task<void> {
+    [](Code_ code) mutable -> Detached {
+        co_await Schedule();
         co_await code();
-    }).scheduleOn(Executor()).start();
+    }(std::move(code));
 }
 
-inline task<void> Schedule() {
-    co_await []() -> folly::coro::Task<void> {
-        co_return;
-    }().scheduleOn(Executor());
-}
+bool Check();
 
 }
-
-#endif
-
-#endif
 
 #endif//ORCHID_TASK_HPP
