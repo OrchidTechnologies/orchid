@@ -34,10 +34,10 @@ class Adapter;
 
 class URI final {
   public:
-    std::string schema_;
-    std::string host_;
-    std::string port_;
-    std::string path_;
+    const std::string schema_;
+    const std::string host_;
+    const std::string port_;
+    const std::string path_;
 
     URI(const std::string &uri);
 

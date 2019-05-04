@@ -58,16 +58,18 @@ class Converted final :
     }
 };
 
-class Adapter final :
-    protected BufferDrain
+class Adapter :
+    public BufferDrain
 {
+    template <typename Base_, typename Inner_, typename Drain_>
+    friend class Sink;
+
   public:
     typedef Adapter lowest_layer_type;
     typedef boost::asio::io_context::executor_type executor_type;
 
   private:
     boost::asio::io_context &context_;
-    Sink<Link> sink_;
 
     std::mutex mutex_;
     std::queue<Beam> data_;
@@ -75,6 +77,8 @@ class Adapter final :
     size_t offset_ = 0;
 
   protected:
+    virtual Link *Inner() = 0;
+
     void Land(const Buffer &data) override {
         std::unique_lock<std::mutex> lock(mutex_);
         data_.emplace(data);
@@ -88,9 +92,8 @@ class Adapter final :
     }
 
   public:
-    Adapter(boost::asio::io_context &context, U<Link> link) :
-        context_(context),
-        sink_(this, std::move(link))
+    Adapter(boost::asio::io_context &context) :
+        context_(context)
     {
     }
 
@@ -145,7 +148,7 @@ class Adapter final :
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
         Task([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
             Converted converted(buffers);
-            co_await sink_->Send(converted);
+            co_await Inner()->Send(converted);
             boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));
         });
     }

@@ -72,7 +72,7 @@ class Outgoing final :
     public Connection
 {
   protected:
-    void Land(U<Channel> channel) override {
+    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
     }
 
     void Stop(const std::string &error) override {
@@ -98,17 +98,21 @@ class Account {
 };
 
 template <typename Type_>
-class Output final :
+class Output :
     public Pump<Account>,
-    protected BufferDrain
+    public BufferDrain
 {
+    template <typename Base_, typename Inner_, typename Drain_>
+    friend class Sink;
+
   private:
-    Tag tag_;
-    Sink<Type_> sink_;
+    const Tag tag_;
 
   protected:
+    virtual Type_ *Inner() = 0;
+
     void Land(const Buffer &data) override {
-        auto used(Use());
+        auto used(Outer());
         used->Bill(1);
         used->Land(Tie(tag_, data));
     }
@@ -119,9 +123,9 @@ class Output final :
     }
 
   public:
-    Output(const Tag &tag, U<Type_> link) :
-        tag_(tag),
-        sink_(this, std::move(link))
+    Output(Account *drain, const Tag &tag) :
+        Pump<Account>(drain),
+        tag_(tag)
     {
 _trace();
     }
@@ -131,15 +135,16 @@ _trace();
     }
 
     task<void> Send(const Buffer &data) override {
-        co_return co_await sink_->Send(data);
+        co_return co_await Inner()->Send(data);
     }
 
     task<void> Shut() override {
-        co_return co_await sink_->Shut();
+        co_await Inner()->Shut();
+        co_await Pump<Account>::Shut();
     }
 
     Type_ *operator ->() {
-        return sink_.operator ->();
+        return Inner();
     }
 };
 
@@ -153,7 +158,7 @@ class Replay final :
   public:
     task<void> Send(const Buffer &data) override {
         _assert(request_ == data);
-        Use()->Land(response_);
+        Outer()->Land(response_);
         co_return;
     }
 };
@@ -164,11 +169,11 @@ class Space final :
     public Account
 {
   private:
-    S<Back> back_;
+    const S<Back> back_;
 
     Pipe *input_;
 
-    std::map<Tag, Sink<Pump<Account>>> outputs_;
+    std::map<Tag, U<Pump<Account>>> outputs_;
     std::map<Tag, S<Outgoing>> outgoing_;
 
     int64_t balance_;
@@ -253,12 +258,11 @@ _trace();
             _assert(colon != std::string::npos);
             auto host(string.substr(0, colon));
             auto port(string.substr(colon + 1));
-            auto socket(std::make_unique<Socket<asio::ip::udp::socket>>());
-            auto output(std::make_unique<Output<Socket<asio::ip::udp::socket>>>(tag, std::move(socket)));
-            auto backup(output.get());
-            auto place(outputs_.emplace(std::piecewise_construct, std::forward_as_tuple(tag), std::forward_as_tuple(this, std::move(output))));
+            auto output(std::make_unique<Sink<Output<Socket<asio::ip::udp::socket>>, Socket<asio::ip::udp::socket>>>(this, tag));
+            auto socket(output->Wire<Socket<asio::ip::udp::socket>>());
+            auto endpoint(co_await socket->_(host, port));
+            auto place(outputs_.emplace(tag, std::move(output)));
             _assert(place.second);
-            auto endpoint(co_await (*backup)->_(host, port));
             co_return co_await code(Tie(Strung(std::move(endpoint))));
 
 
@@ -287,9 +291,9 @@ _trace();
             const auto [handle, tag] = Take<TagSize, TagSize>(args);
             auto outgoing(outgoing_.find(handle));
             _assert(outgoing != outgoing_.end());
-            auto channel(std::make_unique<Channel>(outgoing->second));
-            auto output(std::make_unique<Output<Channel>>(tag, std::move(channel)));
-            auto place(outputs_.emplace(std::piecewise_construct, std::forward_as_tuple(tag), std::forward_as_tuple(this, std::move(output))));
+            auto output(std::make_unique<Sink<Output<Channel>, Channel>>(this, tag));
+            output->Wire<Channel>(outgoing->second);
+            auto place(outputs_.emplace(tag, std::move(output)));
             _assert(place.second);
             co_return co_await code(Tie());
 
@@ -346,17 +350,22 @@ class Ship {
     virtual S<Space> Find(const Common &common) = 0;
 };
 
-class Conduit final :
+class Conduit :
     public Pipe,
-    protected BufferDrain
+    public BufferDrain
 {
   private:
     S<Pipe> self_;
-
-    Sink<Secure> sink_;
     S<Space> space_;
 
+    void Assign(S<Space> space) {
+        space_ = std::move(space);
+        space_->Associate(this);
+    }
+
   protected:
+    virtual Secure *Inner() = 0;
+
     void Land(const Buffer &data) override {
         _assert(space_ != nullptr);
         Task([space = space_, data = Beam(data)]() -> task<void> {
@@ -367,7 +376,7 @@ class Conduit final :
 
     void Stop(const std::string &error) override {
         Task([this]() -> task<void> {
-            co_await sink_->Shut();
+            co_await Inner()->Shut();
             // XXX: space needs to be reference counted
             co_await space_->Shut();
             self_.reset();
@@ -375,26 +384,20 @@ class Conduit final :
     }
 
   public:
-    Conduit(S<Ship> ship, U<Link> channel) :
-        sink_(this, std::make_unique<Secure>(true, std::move(channel), [this, ship = std::move(ship)]() -> bool {
-            // XXX: verify the certificate
+    static std::pair<S<Conduit>, Sink<Secure> *> Spawn(S<Ship> ship) {
+        auto conduit(Make<Sink<Conduit, Secure>>());
+        conduit->self_ = conduit;
+        auto secure(conduit->Wire<Sink<Secure>>(true, [ship, conduit = conduit.get()]() -> bool {
             Identity identity;
-            space_ = ship->Find(identity.GetCommon());
-            space_->Associate(this);
+            auto space(ship->Find(identity.GetCommon()));
+            conduit->Assign(std::move(space));
             return true;
-        }))
-    {
-    }
-
-    template <typename... Args_>
-    static S<Conduit> Spawn(Args_ &&...args) {
-        auto self(Make<Conduit>(std::forward<Args_>(args)...));
-        self->self_ = self;
-        return self;
+        }));
+        return {conduit, secure};
     }
 
     task<void> _() {
-        co_await sink_->_();
+        co_await Inner()->_();
     }
 
     virtual ~Conduit() {
@@ -405,7 +408,7 @@ _trace();
 
     task<void> Send(const Buffer &data) override {
         space_->Bill(1);
-        co_return co_await sink_->Send(data);
+        co_return co_await Inner()->Send(data);
     }
 };
 
@@ -415,15 +418,15 @@ class Incoming final :
   private:
     S<Incoming> self_;
 
-    S<Ship> ship_;
+    const S<Ship> ship_;
 
   protected:
-    void Land(U<Channel> channel) override {
-        auto backup(channel.get());
-        auto conduit(Conduit::Spawn(ship_, std::move(channel)));
+    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
+        auto [conduit, inner](Conduit::Spawn(ship_));
+        auto channel(inner->Wire<Channel>(shared_from_this(), interface));
 
-        Task([backup, conduit]() -> task<void> {
-            co_await backup->_();
+        Task([conduit = conduit, channel]() -> task<void> {
+            co_await channel->_();
             co_await conduit->_();
         });
     }
@@ -459,6 +462,7 @@ class Node final :
     public Identity
 {
   private:
+    std::mutex mutex_;
     std::map<Common, W<Space>> spaces_;
 
   public:
@@ -467,6 +471,7 @@ _trace();
     }
 
     S<Space> Find(const Common &common) override {
+        std::unique_lock<std::mutex> lock(mutex_);
         auto &cache(spaces_[common]);
         if (auto space = cache.lock())
             return space;

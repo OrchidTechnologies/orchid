@@ -37,9 +37,8 @@
 namespace orc {
 
 task<std::string> Origin::Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
-    auto delayed(Connect());
-    Adapter adapter(orc::Context(), std::move(delayed.link_));
-    co_await delayed.code_(uri.host_, uri.port_);
+    Sink<Adapter> adapter(orc::Context());
+    co_await Connect(&adapter, uri.host_, uri.port_);
     co_return co_await orc::Request(adapter, method, uri, headers, data);
 }
 
@@ -47,7 +46,7 @@ class Actor final :
     public Connection
 {
   protected:
-    void Land(U<Channel> channel) override {
+    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
         _assert(false);
     }
 
@@ -68,13 +67,15 @@ _trace();
     }
 };
 
-class Tunnel final :
+class Tunnel :
     public Link
 {
-  private:
-    Sink<Route<Remote>> sink_;
+    template <typename Base_, typename Inner_, typename Drain_>
+    friend class Sink;
 
   protected:
+    virtual Route<Remote> *Inner() = 0;
+
     void Land(const Buffer &data) override {
         Link::Land(data);
     }
@@ -84,8 +85,8 @@ class Tunnel final :
     }
 
   public:
-    Tunnel(const S<Remote> &remote) :
-        sink_(this, remote->Path())
+    Tunnel(BufferDrain *drain) :
+        Link(drain)
     {
     }
 
@@ -94,27 +95,38 @@ _trace();
     }
 
     task<void> _(const std::function<task<void> (const Tag &tag)> &setup) {
-        co_await setup(sink_->tag_);
+        co_await setup(Inner()->tag_);
     }
 
     task<void> Send(const Buffer &data) override {
-        co_return co_await sink_->Send(data);
+        co_return co_await Inner()->Send(data);
     }
 
     task<void> Shut() override {
-        co_await (*sink_)->Call(CloseTag, sink_->tag_);
+        auto &inner(*Inner());
+        co_await inner->Call(CloseTag, inner.tag_);
         co_await Link::Shut();
     }
 };
 
-U<Route<Remote>> Remote::Path() {
-    return std::make_unique<Route<Remote>>(shared_from_this());
+task<void> Remote::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &server) {
+    auto secure(sunk->Wire<Sink<Secure>>(false, []() -> bool {
+        // XXX: verify the certificate
+_trace();
+        return true;
+    }));
+
+    co_await origin->Hop(secure, server);
+    co_await secure->_();
+}
+
+U<Route<Remote>> Remote::Path(BufferDrain *drain) {
+    return std::make_unique<Route<Remote>>(drain, shared_from_this());
 }
 
 task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
-    class Result final :
-        public Sink<Route<Remote>>,
-        protected BufferDrain
+    class Result :
+        public BufferDrain
     {
       private:
         Beam data_;
@@ -122,6 +134,8 @@ task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
         cppcoro::async_manual_reset_event ready_;
 
       protected:
+        virtual BufferDrain *Inner() = 0;
+
         void Land(const Buffer &data) {
             data_ = data;
             ready_.set();
@@ -133,30 +147,28 @@ task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
         }
 
       public:
-        Result(U<Route<Remote>> link) :
-            Sink(this, std::move(link))
-        {
-        }
-
         task<Beam> Wait() {
             // XXX: retry after timeout
             co_await ready_;
             co_await Schedule();
-            operator ->()->Stop();
+            Inner()->Stop();
             _assert_(error_.empty(), error_);
             co_return std::move(data_);
         }
-    } sink(Path());
+    };
 
-    co_await sink->Send(Tie(command, args));
-    co_return co_await sink.Wait();
+    Sink<Result> result;
+
+    auto path(result.Give(Path(&result)));
+
+    co_await path->Send(Tie(command, args));
+    co_return co_await result.Wait();
 }
 
-task<S<Remote>> Remote::Hop(const std::string &server) {
-    auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
-    auto backup(tunnel.get());
-    auto remote(Make<Remote>(std::move(tunnel)));
-    co_await backup->_([&](const Tag &tag) -> task<void> {
+task<void> Remote::Hop(Sunk<> *sunk, const std::string &server) {
+    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Remote>>>());
+    tunnel->Give(Path(tunnel));
+    co_await tunnel->_([&](const Tag &tag) -> task<void> {
         auto handle(NewTag()); // XXX: this is horribly wrong
 
         Take<>(co_await Call(EstablishTag, Tie(handle)));
@@ -173,23 +185,20 @@ task<S<Remote>> Remote::Hop(const std::string &server) {
         Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
         Take<>(co_await Call(FinishTag, Tie(tag)));
     });
-    co_return remote;
 }
 
-DelayedConnect Remote::Connect() {
-    auto tunnel(std::make_unique<Tunnel>(shared_from_this()));
-    auto backup(tunnel.get());
-    return {[this, backup](const std::string &host, const std::string &port) -> task<void> {
-        co_await backup->_([&](const Tag &tag) -> task<void> {
-            auto endpoint(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-            Log() << "ENDPOINT " << endpoint << std::endl;
-        });
-    }, std::move(tunnel)};
+task<void> Remote::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Remote>>>());
+    tunnel->Give(Path(tunnel));
+    co_await tunnel->_([&](const Tag &tag) -> task<void> {
+        auto endpoint(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+        Log() << "ENDPOINT " << endpoint << std::endl;
+    });
 }
 
-task<S<Remote>> Local::Hop(const std::string &server) {
+task<void> Local::Hop(Sunk<> *sunk, const std::string &server) {
     auto client(Make<Actor>());
-    auto channel(std::make_unique<Channel>(client));
+    auto channel(sunk->Wire<Channel>(client));
 
     auto offer(Strip(co_await client->Offer()));
     auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
@@ -200,19 +209,12 @@ task<S<Remote>> Local::Hop(const std::string &server) {
     }
 
     co_await client->Negotiate(answer);
-
-    auto backup(channel.get());
-    auto remote(Make<Remote>(std::move(channel)));
-    co_await backup->_();
-    co_return remote;
+    co_await channel->_();
 }
 
-DelayedConnect Local::Connect() {
-    auto socket(std::make_unique<Socket<asio::ip::tcp::socket>>());
-    auto backup(socket.get());
-    return {[backup](const std::string &host, const std::string &port) -> task<void> {
-        co_await backup->_(host, port);
-    }, std::move(socket)};
+task<void> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto socket(sunk->Wire<Socket<asio::ip::tcp::socket>>());
+    co_await socket->_(host, port);
 }
 
 S<Local> GetLocal() {
@@ -228,9 +230,10 @@ task<S<Origin>> Setup() {
     //const char *server("localhost");
 
     for (unsigned i(0); i != 3; ++i) {
-        auto remote(co_await origin->Hop(server));
+        // XXX: this is all wrong right now as it doesn't support multiple routes
         Identity identity;
-        co_await remote->_(identity.GetCommon());
+        auto remote(std::make_shared<Sink<Remote, Secure>>(identity.GetCommon()));
+        co_await remote->Swing(remote.get(), origin, server);
         origin = remote;
     }
 

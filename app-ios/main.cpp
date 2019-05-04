@@ -77,14 +77,13 @@ int Main() {
         Log() << parsed << std::endl;
         co_return 0;*/
 
-        auto origin(co_await Setup());
-        auto delayed(origin->Connect());
-
         class Watch :
-            public Sink<Link>,
+            public Pipe,
             public BufferDrain
         {
           protected:
+            virtual Link *Inner() = 0;
+
             void Land(const Buffer &data) override {
                 Log() << "Land" << data << std::endl;
             }
@@ -94,14 +93,17 @@ int Main() {
             }
 
           public:
-            Watch(U<Link> link) :
-                Sink<Link>(this, std::move(link))
-            {
+            task<void> Send(const Buffer &data) override {
+                co_return co_await Inner()->Send(data);
             }
-        } sink(std::move(delayed.link_));
+        };
 
-        co_await delayed.code_("127.0.0.1", "9999");
-        co_await sink->Send(Beam("test\n"));
+        Sink<Watch> watch;
+
+        auto origin(co_await Setup());
+        co_await origin->Connect(&watch, "127.0.0.1", "9999");
+
+        co_await watch.Send(Beam("test\n"));
 
         co_await block;
 

@@ -32,8 +32,8 @@
 namespace orc {
 class Error final {
   public:
-    std::string file;
-    int line;
+    const std::string file;
+    const int line;
     std::string message;
 
     Error(const std::string &file, int line) :

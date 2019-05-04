@@ -41,7 +41,8 @@ class Socket final :
     cppcoro::async_mutex send_;
 
   public:
-    Socket() :
+    Socket(BufferDrain *drain) :
+        Link(drain),
         socket_(Context())
     {
     }

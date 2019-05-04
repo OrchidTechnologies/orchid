@@ -44,7 +44,7 @@ inline int uncaught_exceptions() noexcept {
 
 class scope {
   private:
-    int uncaught_;
+    const int uncaught_;
     std::function<void ()> function_;
 
   public:
@@ -65,7 +65,7 @@ class scope {
     }
 
     void operator()() {
-        std::function<void ()> function(function_);
+        auto function(std::move(function_));
         clear();
         function();
     }

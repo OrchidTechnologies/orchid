@@ -32,7 +32,7 @@ namespace orc {
 
 class Endpoint final {
   private:
-    URI uri_;
+    const URI uri_;
 
   public:
     Endpoint(URI uri) :

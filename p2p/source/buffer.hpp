@@ -79,8 +79,8 @@ class Subset final :
     public Region
 {
   private:
-    const uint8_t *data_;
-    size_t size_;
+    const uint8_t *const data_;
+    const size_t size_;
 
   public:
     Subset(const uint8_t *data, size_t size) :
@@ -103,7 +103,7 @@ class Strung final :
     public Region
 {
   private:
-    Data_ data_;
+    const Data_ data_;
 
   public:
     Strung(Data_ data) :
@@ -310,7 +310,7 @@ class Knot final :
     public Buffer
 {
   private:
-    std::tuple<Buffer_...> buffers_;
+    const std::tuple<Buffer_...> buffers_;
 
   public:
     Knot(const Buffer_ &...buffers) :
@@ -359,21 +359,6 @@ auto Tie(Buffer_ &&...buffers) {
     return Knot<Buffer_...>(std::forward<Buffer_>(buffers)...);
 }
 
-class VectorBuffer final :
-    public Buffer
-{
-  private:
-    std::vector<const Buffer *> buffers_;
-
-  public:
-    bool each(const std::function<bool (const Region &)> &code) const override {
-        for (const auto *buffer : buffers_)
-            if (!buffer->each(code))
-                return false;
-        return true;
-    }
-};
-
 class Sequence final :
     public Buffer
 {
@@ -383,7 +368,7 @@ class Sequence final :
 
     class Iterator {
       private:
-        const Region **region_;
+        const Region *const *region_;
 
       public:
         Iterator(const Region **region) :

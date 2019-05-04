@@ -30,53 +30,51 @@
 
 namespace orc {
 
-template <typename... Args_>
-struct Delayed final {
-    std::function<task<void> (Args_...)> code_;
-    U<Link> link_;
-};
-
-typedef Delayed<const std::string &, const std::string &> DelayedConnect;
-
 class Remote;
 
 class Origin {
   public:
-    virtual task<S<Remote>> Hop(const std::string &server) = 0;
+    virtual task<void> Hop(Sunk<> *sunk, const std::string &server) = 0;
 
-    virtual DelayedConnect Connect() = 0;
+    virtual task<void> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
 
     task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 };
 
-class Remote final :
+class Remote :
     public std::enable_shared_from_this<Remote>,
     public Origin,
     public Router<Secure>
 {
+  private:
+    const Common common_;
+
+  protected:
+    virtual Secure *Inner() = 0;
+
   public:
-    Remote(U<Link> link) :
-        Router(std::make_unique<Secure>(false, std::move(link), []() -> bool {
-            // XXX: verify the certificate
-_trace();
-            return true;
-        }))
+    Remote(Common common) :
+        common_(std::move(common))
     {
     }
 
-    task<void> _(const Common &common) {
-        co_return co_await (*this)->_();
-    }
-
-    virtual ~Remote() {
+    task<void> _() {
+        co_return co_await Inner()->_();
     }
 
 
-    U<Route<Remote>> Path();
+    task<void> Send(const Buffer &data) {
+        co_return co_await Inner()->Send(data);
+    }
+
+
+    task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &server);
+
+    U<Route<Remote>> Path(BufferDrain *drain);
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<S<Remote>> Hop(const std::string &server) override;
-    DelayedConnect Connect() override;
+    task<void> Hop(Sunk<> *sunk, const std::string &server) override;
+    task<void> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
 class Local final :
@@ -86,8 +84,8 @@ class Local final :
     virtual ~Local() {
     }
 
-    task<S<Remote>> Hop(const std::string &server) override;
-    DelayedConnect Connect() override;
+    task<void> Hop(Sunk<> *sunk, const std::string &server) override;
+    task<void> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
 S<Local> GetLocal();

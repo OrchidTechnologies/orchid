@@ -54,7 +54,7 @@ class Baton<Type_, asio::error_code> {
     asio::error_code error_;
 
   public:
-    task<void> get() {
+    task<void> get() const {
         if (error_) {
             auto error(error_);
             co_await Schedule();
@@ -76,16 +76,16 @@ class Baton<Type_, asio::error_code, Value_> :
     Value value_;
 
   public:
-    task<Value> get() {
+    task<Value> get() const {
         co_await Baton<Type_, asio::error_code>::get();
-        auto value(value_);
+        auto value(std::move(value_));
         co_await Schedule();
-        co_return value;
+        co_return std::move(value);
     }
 
-    Type_ set(const asio::error_code &error, const Value &value) {
+    Type_ set(const asio::error_code &error, Value &&value) {
         Baton<Type_, asio::error_code>::set(error);
-        value_ = value;
+        value_ = std::move(value);
     }
 };
 
@@ -100,8 +100,8 @@ struct Token {
     }
 
     template <typename Type_, typename... Args_>
-    void set(Args_... args) {
-        reinterpret_cast<Baton<Type_, Args_...> *>(baton_)->set(args...);
+    void set(Args_ &&... args) {
+        reinterpret_cast<Baton<Type_, Args_...> *>(baton_)->set(std::forward<Args_>(args)...);
         event_.set();
     }
 };
@@ -127,7 +127,7 @@ class Handler {
     }
 
     void operator()(Args_... args) {
-        token_->set<Type_, Args_...>(args...);
+        token_->set<Type_, Args_...>(std::forward<Args_>(args)...);
     }
 };
 

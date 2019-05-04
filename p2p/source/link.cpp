@@ -58,7 +58,7 @@ static struct SetupTracker { SetupTracker() {
             std::unique_lock<std::mutex> lock(mutex_);
             Log() << "^^^^^^^^^^^^^^^^" << std::endl;
             for (auto pipe : pipes_)
-                Log() << std::setw(5) << pipe->unique_ << ": " << typeid(*pipe).name() << std::endl;
+                Log() << std::setw(5) << pipe->unique_ << ": " << boost::core::demangle(typeid(*pipe).name()) << std::endl;
             Log() << "vvvvvvvvvvvvvvvv" << std::endl;
         }
     }).detach();

@@ -187,9 +187,7 @@ void Connection::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterfa
 }
 
 void Connection::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) {
-    auto self(shared_from_this());
-    auto channel(std::make_unique<Channel>(self, interface));
-    self->Land(std::move(channel));
+    Land(std::move(interface));
 }
 
 std::string Strip(std::string sdp) {

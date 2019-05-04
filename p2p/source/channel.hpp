@@ -68,7 +68,7 @@ class Connection :
     public std::enable_shared_from_this<Connection>,
     //public cppcoro::async_manual_reset_event,
     public webrtc::PeerConnectionObserver,
-    protected Drain<U<Channel>>
+    protected Drain<rtc::scoped_refptr<webrtc::DataChannelInterface>>
 {
     friend class Channel;
 
@@ -203,7 +203,8 @@ class Channel final :
     cppcoro::async_manual_reset_event opened_;
 
   public:
-    Channel(const S<Connection> &connection, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
+    Channel(BufferDrain *drain, const S<Connection> &connection, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
+        Link(drain),
         connection_(connection),
         channel_(channel)
     {
@@ -211,8 +212,8 @@ class Channel final :
         connection_->channels_.insert(this);
     }
 
-    Channel(const S<Connection> &connection, const std::string &label = std::string(), const std::string &protocol = std::string()) :
-        Channel(connection, [&]() {
+    Channel(BufferDrain *drain, const S<Connection> &connection, const std::string &label = std::string(), const std::string &protocol = std::string()) :
+        Channel(drain, connection, [&]() {
             webrtc::DataChannelInit init;
             init.ordered = false;
             init.protocol = protocol;

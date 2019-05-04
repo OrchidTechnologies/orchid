@@ -46,7 +46,7 @@ inline Tag NewTag() {
 class Pipe {
   public:
     static uint64_t Unique_;
-    uint64_t unique_ = ++Unique_;
+    const uint64_t unique_ = ++Unique_;
 
     static void Insert(Pipe *pipe);
     static void Remove(Pipe *pipe);
@@ -76,18 +76,14 @@ template <typename Drain_>
 class Pump :
     public Pipe
 {
-    template <typename Type_>
-    friend class Sink;
-
   private:
     typedef Drain_ Drain;
-    Drain_ *drain_;
+    Drain_ *const drain_;
 
     cppcoro::async_manual_reset_event shut_;
 
   protected:
-    Drain_ *Use() {
-        _assert(drain_ != nullptr);
+    Drain_ *Outer() {
         return drain_;
     }
 
@@ -97,14 +93,14 @@ class Pump :
     }
 
   public:
-    Pump() :
-        drain_(nullptr)
+    Pump(Drain_ *drain) :
+        drain_(drain)
     {
     }
 
     virtual ~Pump() {
-        Log() << "##### " << unique_ << std::endl;
-        _insist(drain_ == nullptr);
+        if (Verbose)
+            Log() << "##### " << unique_ << std::endl;
         _insist(shut_.is_set());
     }
 
@@ -116,70 +112,76 @@ class Pump :
 
 class Link :
     public Pump<BufferDrain>,
-    protected BufferDrain
+    public BufferDrain
 {
   protected:
     void Land(const Buffer &data) override {
-        return Use()->Land(data);
+        return Outer()->Land(data);
     }
 
     void Stop(const std::string &error = std::string()) override {
         Pump<BufferDrain>::Stop();
-        return Use()->Stop(error);
+        return Outer()->Stop(error);
     }
-};
-
-template <typename Link_>
-class Sink {
-  private:
-    U<Link_> link_;
 
   public:
-    Sink(decltype(link_->drain_) drain, U<Link_> link) :
-        link_(std::move(link))
+    Link(BufferDrain *drain) :
+        Pump<BufferDrain>(drain)
     {
-        _assert(link_);
-        _assert(link_->drain_ == nullptr);
-        link_->drain_ = drain;
-    }
-
-    /*Sink(Sink &&sink) :
-        link_(std::move(sink.link_))
-    {
-    }*/
-
-    ~Sink() {
-        if (link_)
-            link_->drain_ = nullptr;
-    }
-
-    // XXX: just inherit from U<Link_>
-
-    Link_ *operator ->() {
-        return link_.get();
-    }
-
-    Link_ &operator *() {
-        return *link_;
-    }
-
-    Link_ *get() {
-        return link_.get();
     }
 };
 
+template <typename Inner_ = Link, typename Drain_ = BufferDrain>
+class Sunk {
+  protected:
+    U<Inner_> inner_;
+
+  public:
+    virtual Drain_ *Gave() = 0;
+
+    template <typename Type_>
+    Type_ *Give(U<Type_> inner) {
+        auto backup(inner.get());
+        inner_ = std::move(inner);
+        return backup;
+    }
+
+    template <typename Type_, typename... Args_>
+    Type_ *Wire(Args_ &&...args) {
+        return Give(std::make_unique<Type_>(Gave(), std::forward<Args_>(args)...));
+    }
+};
+
+template <typename Base_, typename Inner_ = Link, typename Drain_ = BufferDrain>
+class Sink final :
+    public Base_,
+    public Sunk<Inner_, Drain_>
+{
+  protected:
+    Inner_ *Inner() override {
+        auto inner(this->inner_.get());
+        _insist(inner != nullptr);
+        return inner;
+    }
+
+    Drain_ *Gave() override {
+        return this;
+    }
+
+  public:
+    using Base_::Base_;
+};
 
 template <typename Link_>
 class Router :
     public Pipe,
-    protected BufferDrain
+    public BufferDrain
 {
     template <typename Router_>
     friend class Route;
 
   private:
     std::map<Tag, BufferDrain *> routes_;
-    Sink<Link_> sink_;
 
   protected:
     void Land(const Buffer &data) override {
@@ -195,21 +197,8 @@ class Router :
     }
 
   public:
-    Router(U<Link_> link) :
-        sink_(this, std::move(link))
-    {
-    }
-
     virtual ~Router() {
         _insist(routes_.empty());
-    }
-
-    task<void> Send(const Buffer &data) override {
-        co_return co_await sink_->Send(data);
-    }
-
-    Link_ *operator ->() {
-        return sink_.operator ->();
     }
 };
 
@@ -222,7 +211,8 @@ class Route final :
     const Tag tag_;
 
   public:
-    Route(const S<Router_> router) :
+    Route(BufferDrain *drain, const S<Router_> router) :
+        Link(drain),
         router_(router),
         tag_([this]() {
             BufferDrain *drain(this);

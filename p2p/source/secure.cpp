@@ -113,7 +113,7 @@ BIO_METHOD *Secure::Method() {
 int Secure::Write(BIO *bio, const char *data, int size) {
     // XXX: implement a true non-blocking zero-copy write
     Task([this, beam = Beam(data, size)]() -> task<void> {
-        co_await sink_->Send(beam);
+        co_await Inner()->Send(beam);
     });
     return size;
 }
@@ -223,9 +223,9 @@ void Secure::Stop(const std::string &error) {
     (this->*next_)();
 }
 
-Secure::Secure(bool server, U<Link> link, decltype(verify_) verify) :
+Secure::Secure(BufferDrain *drain, bool server, decltype(verify_) verify) :
+    Link(drain),
     server_(server),
-    sink_(this, std::move(link)),
     verify_(std::move(verify))
 {
     auto context(SSL_CTX_new(server_ ? DTLS_method() : DTLS_client_method()));
@@ -306,6 +306,7 @@ task<void> Secure::Send(const Buffer &data) {
 
 task<void> Secure::Shut() {
     // XXX: implement
+    co_await Inner()->Shut();
     co_await Link::Shut();
 }
 

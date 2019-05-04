@@ -42,6 +42,20 @@
 
 namespace orc {
 
+class Middle :
+    public Link
+{
+  protected:
+    virtual Link *Inner() = 0;
+
+  public:
+    using Link::Link;
+
+    task<void> Send(const Buffer &data) override {
+        co_return co_await Inner()->Send(data);
+    }
+};
+
 class Transport :
     public openvpn::TransportClient,
     public orc::BufferDrain
@@ -51,7 +65,7 @@ class Transport :
     asio::io_context &io_context;
     openvpn::TransportClientParent *parent_;
 
-    U<Sink<Link>> pipe_;
+    U<Pipe> pipe_;
 
   public:
     Transport(const openvpn::ExternalTransport::Config config, asio::io_context &io_context, openvpn::TransportClientParent *parent) :
@@ -60,6 +74,7 @@ class Transport :
         parent_(parent)
     {
     }
+
 
     void Land(const Buffer &data) override {
         //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
@@ -74,6 +89,7 @@ class Transport :
         std::terminate();
     }
 
+
     void transport_start() override { Wait([this]() -> task<void> {
         co_await Schedule();
 
@@ -86,12 +102,12 @@ class Transport :
         auto remote(config_.remote_list->first_item());
         _assert(remote != NULL);
 
+        auto middle(std::make_unique<Sink<Middle>>(this));
+
         auto origin(co_await Setup());
-        auto delayed(origin->Connect());
+        co_await origin->Connect(middle.get(), remote->server_host, remote->server_port);
 
-        pipe_ = std::make_unique<Sink<Link>>(this, std::move(delayed.link_));
-
-        co_await delayed.code_(remote->server_host, remote->server_port);
+        pipe_ = std::move(middle);
 
         asio::dispatch(io_context, [parent = parent_]() {
             parent->transport_connecting();
@@ -101,7 +117,7 @@ class Transport :
     void stop() override {
         Wait([this]() -> task<void> {
             co_await Schedule();
-            co_await (*pipe_)->Send(Nothing());
+            co_await pipe_->Send(Nothing());
             pipe_.reset();
         }());
     }
@@ -111,7 +127,7 @@ class Transport :
             co_await Schedule();
             Subset buffer(data.c_data(), data.size());
             //Log() << "\e[35mSEND " << data.size() << " " << buffer << "\e[0m" << std::endl;
-            co_await (*pipe_)->Send(buffer);
+            co_await pipe_->Send(buffer);
         }());
         return true;
     }

@@ -32,12 +32,14 @@
 
 namespace orc {
 
-class Secure final :
+class Secure :
     public Link
 {
+    template <typename Base_, typename Inner_, typename Drain_>
+    friend class Sink;
+
   private:
-    bool server_;
-    Sink<Link> sink_;
+    const bool server_;
     std::function<bool ()> verify_;
 
     bool eof_ = false;
@@ -64,11 +66,12 @@ class Secure final :
     void Client();
 
   protected:
+    virtual Link *Inner() = 0;
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) override;
 
   public:
-    Secure(bool server, U<Link> link, decltype(verify_) verify);
+    Secure(BufferDrain *drain, bool server, decltype(verify_) verify);
 
     task<void> _();
 
