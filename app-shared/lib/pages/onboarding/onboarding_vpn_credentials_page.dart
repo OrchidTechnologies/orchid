@@ -8,6 +8,7 @@ import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
+import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/vpn_credentials_entry.dart';
 
 class OnboardingVPNCredentialsPage extends StatefulWidget {
@@ -16,14 +17,13 @@ class OnboardingVPNCredentialsPage extends StatefulWidget {
       _OnboardingVPNCredentialsPageState();
 }
 
-class _OnboardingVPNCredentialsPageState extends State<OnboardingVPNCredentialsPage> {
-  VPNCredentialsEntryController _vpnCredentialsEntryController = VPNCredentialsEntryController();
+class _OnboardingVPNCredentialsPageState
+    extends State<OnboardingVPNCredentialsPage> {
+  VPNCredentialsEntryController _vpnCredentialsEntryController =
+      VPNCredentialsEntryController();
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Abstract out this placement logic for larger screens (repeated several places now)
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       appBar: SmallAppBar.build(context),
       body: Container(
@@ -34,20 +34,26 @@ class _OnboardingVPNCredentialsPageState extends State<OnboardingVPNCredentialsP
               child: Column(
                 children: <Widget>[
                   // For large screens distribute the space a bit, else fixed margin.
-                  screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 48),
+                  WalkthroughPages.TopContentPadding.value(context),
                   buildDescription(),
                   SizedBox(height: 68),
-                  VPNCredentialsEntry(controller: _vpnCredentialsEntryController),
+                  VPNCredentialsEntry(
+                      controller: _vpnCredentialsEntryController),
                   SizedBox(height: 20),
                   Spacer(flex: 2),
                   StreamBuilder<Object>(
                       stream: _vpnCredentialsEntryController.readyToSave.stream,
                       builder: (context, snapshot) {
                         return WalkthroughNextSkipButtons(
-                            onNext: _vpnCredentialsEntryController.readyToSave.value
-                                ? _next
-                                : null,
-                            onSkip: _skip);
+                          onNext:
+                              _vpnCredentialsEntryController.readyToSave.value
+                                  ? _next
+                                  : null,
+                          onSkip: _skip,
+                          bottomPad:
+                              WalkthroughPages.BottomControlsPadding.value(
+                                  context),
+                        );
                       })
                 ],
               ),

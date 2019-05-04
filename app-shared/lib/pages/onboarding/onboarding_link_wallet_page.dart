@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_gradients.dart';
-import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
+import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/wallet_key_entry.dart';
 
 class OnboardingLinkWalletPage extends StatefulWidget {
@@ -23,8 +22,6 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       appBar: SmallAppBar.build(context),
       body: Container(
@@ -35,7 +32,7 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
               child: Column(
                 children: <Widget>[
                   // For large screens distribute the space a bit, else fixed margin.
-                  screenHeight >= AppSizes.iphone_xs.height ? Spacer(flex: 1) : SizedBox(height: 48),
+                  WalkthroughPages.TopContentPadding.value(context),
                   buildDescription(),
                   SizedBox(height: 68),
                   WalletKeyEntry(controller: _walletKeyEntryController),
@@ -45,10 +42,14 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
                       stream: _walletKeyEntryController.readyToSave.stream,
                       builder: (context, snapshot) {
                         return WalkthroughNextSkipButtons(
-                            onNext: _walletKeyEntryController.readyToSave.value
-                                ? _next
-                                : null,
-                            onSkip: _skip);
+                          onNext: _walletKeyEntryController.readyToSave.value
+                              ? _next
+                              : null,
+                          onSkip: _skip,
+                          bottomPad:
+                              WalkthroughPages.BottomControlsPadding.value(
+                                  context),
+                        );
                       })
                 ],
               ),

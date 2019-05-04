@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
+import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 
 enum WalkthroughContentImageLocation { Top, Bottom }
 
@@ -62,9 +62,7 @@ class WalkthroughContent extends StatelessWidget {
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.
-              screenHeight >= AppSizes.iphone_xs.height
-                  ? Spacer(flex: 1)
-                  : SizedBox(height: 48),
+              WalkthroughPages.TopContentPadding.value(context),
               headerTextBox,
               SizedBox(height: 20),
               bodyTextBox,
@@ -128,14 +126,16 @@ class WalkthroughHeaderTextBox extends StatelessWidget {
 
 /// A column of next / skip ("do this later") buttons used with walkthrough content.
 class WalkthroughNextSkipButtons extends StatelessWidget {
+  final VoidCallback onNext;
+  final VoidCallback onSkip;
+  final double bottomPad;
+
   const WalkthroughNextSkipButtons({
     Key key,
     @required this.onNext,
     @required this.onSkip,
+    this.bottomPad = 12,
   }) : super(key: key);
-
-  final VoidCallback onNext;
-  final VoidCallback onSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +148,7 @@ class WalkthroughNextSkipButtons extends StatelessWidget {
           "I'll do this later",
           onPressed: onSkip,
         ),
-        SizedBox(height: 12)
+        SizedBox(height: bottomPad)
       ],
     );
   }

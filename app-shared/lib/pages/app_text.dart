@@ -131,6 +131,12 @@ class AppText {
       fontStyle: FontStyle.normal,
       fontSize: 12.0);
 
+  static TextStyle connectButtonMessageStyle = const TextStyle(
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 12.0);
+
   static TextStyle logStyle = const TextStyle(
       fontFamily: "VT323", fontSize: 16.0, color: AppColors.neutral_1);
 

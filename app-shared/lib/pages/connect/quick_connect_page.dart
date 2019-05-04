@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/notification_banner.dart';
@@ -21,10 +22,9 @@ class QuickConnectPage extends StatefulWidget {
 }
 
 class _QuickConnectPageState
-    extends State<QuickConnectPage> //    with SingleTickerProviderStateMixin {
+    extends State<QuickConnectPage> // with SingleTickerProviderStateMixin {
     with
         TickerProviderStateMixin {
-
   // Current state reflected by the page, driving color and animation.
   OrchidConnectionState _connectionState = OrchidConnectionState.NotConnected;
 
@@ -127,19 +127,14 @@ class _QuickConnectPageState
   void initAnimations() {
     _connectAnimController = AnimationController(
         duration: const Duration(milliseconds: 1000), vsync: this);
-    //_connectBgAnimController = AnimationController(
-    //duration: const Duration(milliseconds: 1800), vsync: this);
-    //var _curvedAnim = _connectedStatusAnimationController.drive(CurveTween(curve: Curves.ease));
 
-    _gradientStart = ColorTween(
-            begin: qc_gradient_start,
-            end: qc_purple_gradient_start)
-        .animate(_connectAnimController);
+    _gradientStart =
+        ColorTween(begin: qc_gradient_start, end: qc_purple_gradient_start)
+            .animate(_connectAnimController);
 
-    _gradientEnd = ColorTween(
-            begin: qc_gradient_end,
-            end: qc_purple_gradient_end)
-        .animate(_connectAnimController);
+    _gradientEnd =
+        ColorTween(begin: qc_gradient_end, end: qc_purple_gradient_end)
+            .animate(_connectAnimController);
 
     _iconColor = ColorTween(begin: AppColors.purple, end: AppColors.white)
         .animate(_connectAnimController);
@@ -159,10 +154,17 @@ class _QuickConnectPageState
 
   // The page body holding bacground and options bar
   Widget buildPageContainer(BuildContext context) {
-    var connectedAnimation = "assets/flare/Connection_screens_10.flr";
-    var animIntro = "connectedIntro";
-    var animLoop = "connectedLoop";
-    var connectedAnimationName = _showIntroAnimation ? animIntro : animLoop;
+    String connectedAnimation = "assets/flare/Connection_screens.flr";
+    String connectedAnimationIntroName = "connectedIntro";
+    String connectedAnimationLoopName = "connectedLoop";
+    String connectedAnimationName = _showIntroAnimation ? connectedAnimationIntroName : connectedAnimationLoopName;
+
+    // Calculate the animation size and position
+    double connectedAnimationAspectRatio = 360.0/340.0; // w/h
+    double connectedAnimationPosition = 0.34; // vertical screen height fraction of center
+    Size screenSize = MediaQuery.of(context).size;
+    Size animationSize = Size(screenSize.width, screenSize.width / connectedAnimationAspectRatio);
+    double animationTop = screenSize.height * connectedAnimationPosition - animationSize.height / 2;
 
     return Stack(
       children: <Widget>[
@@ -186,33 +188,34 @@ class _QuickConnectPageState
                   image: DecorationImage(
                       fit: BoxFit.fitWidth,
                       alignment: Alignment.bottomCenter,
-                      image:
-                          AssetImage('assets/images/world_map_purp.png')))),
+                      image: AssetImage('assets/images/world_map_purp.png')))),
         ),
 
         // The background animation
-        Visibility(
-          visible: _showConnectedBackground(),
-          child: AnimatedBuilder(
-            builder: (context, child) => Opacity(
-                child: Container(
-                  height: 370,
-                  child: FlareActor(
-                    connectedAnimation,
-                    //isPaused: true,
-                    fit: BoxFit.none,
-                    animation: connectedAnimationName,
-                    callback: (name) {
-                      if (name == animIntro) {
-                        setState(() {
-                          _showIntroAnimation = false;
-                        });
-                      }
-                    },
+        Positioned(
+          top: animationTop,
+          child: Visibility(
+            visible: _showConnectedBackground(),
+            child: AnimatedBuilder(
+              builder: (context, child) => Opacity(
+                  child: Container(
+                    width: animationSize.width, height: animationSize.height,
+                    child: FlareActor(
+                      connectedAnimation,
+                      fit: BoxFit.fitWidth,
+                      animation: connectedAnimationName,
+                      callback: (name) {
+                        if (name == connectedAnimationIntroName) {
+                          setState(() {
+                            _showIntroAnimation = false;
+                          });
+                        }
+                      },
+                    ),
                   ),
-                ),
-                opacity: _animOpacity.value),
-            animation: _connectAnimController,
+                  opacity: _animOpacity.value),
+              animation: _connectAnimController,
+            ),
           ),
         ),
 
@@ -263,39 +266,34 @@ class _QuickConnectPageState
     var buttonY = screenSize.height * 0.34;
     var buttonImageHeight = 142;
 
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) => Stack(
-            alignment: Alignment.center,
-            fit: StackFit.expand,
-            children: <Widget>[
-              Positioned(
-                  top: buttonY - buttonImageHeight * 1.05,
-                  child: _buildStatusMessage(context)),
-              Positioned(
-                top: -screenSize.width / 2 + buttonY,
-                width: screenSize.width,
-                height: screenSize.width,
-                child: ConnectButton(
-                  //key: GlobalKey(),
-                  connectionStatus: OrchidAPI().connectionStatus,
-                  enabledStatus: BehaviorSubject.seeded(true),
-                  // stand-in for later
-                  onConnectButtonPressed: _onConnectButtonPressed,
-                  onRerouteButtonPressed: _rerouteButtonPressed,
-                ),
-              ),
-              Positioned(
-                top: buttonY + buttonImageHeight * 1.11,
-                child: Visibility(
-                    visible: _showConnectedBackground(),
-                    //visible: false,
-                    maintainSize: true,
-                    maintainAnimation: true,
-                    maintainState: true,
-                    child: RouteInfo()),
-              ),
-            ],
+    return Stack(
+      alignment: Alignment.center,
+      fit: StackFit.expand,
+      children: <Widget>[
+        Positioned(
+            top: buttonY - buttonImageHeight * 1.05,
+            child: _buildStatusMessage(context)),
+        Positioned(
+          top: -screenSize.width / 2 + buttonY,
+          width: screenSize.width,
+          height: screenSize.width,
+          child: ConnectButton(
+            connectionStatus: OrchidAPI().connectionStatus,
+            enabledStatus: BehaviorSubject.seeded(true),
+            onConnectButtonPressed: _onConnectButtonPressed,
+            onRerouteButtonPressed: _rerouteButtonPressed,
           ),
+        ),
+        Positioned(
+          top: buttonY + buttonImageHeight * 1.11,
+          child: Visibility(
+              visible: _showConnectedBackground(),
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              child: RouteInfo()),
+        ),
+      ],
     );
   }
 
@@ -310,8 +308,8 @@ class _QuickConnectPageState
 
     String message = connectionStateMessage[_connectionState];
     Color color = (_connectionState == OrchidConnectionState.Connected
-        ? const Color(0xffe7eaf4) // light
-        : const Color(0xff3a3149)); // dark
+        ? AppColors.neutral_6 // light
+        : AppColors.neutral_1); // dark
 
     return Container(
       // Note: the emoji changes the baseline so we give this a couple of pixels
@@ -319,12 +317,7 @@ class _QuickConnectPageState
       height: 18.0,
       alignment: Alignment.bottomCenter,
       child: Text(message,
-          style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w400,
-              fontFamily: "Roboto",
-              fontStyle: FontStyle.normal,
-              fontSize: 12.0)),
+          style: AppText.connectButtonMessageStyle.copyWith(color: color)),
     );
   }
 
@@ -344,15 +337,4 @@ class _QuickConnectPageState
   void _rerouteButtonPressed() {
     OrchidAPI().reroute();
   }
-
-  /*
-  void checkOnboarding() {
-    UserPreferences()
-        .getWalkthroughCompleted()
-        .then((bool walkthroughCompleted) {
-      if (!(walkthroughCompleted ?? false)) {
-        Navigator.push(context, AppTransitions.downToUpTransition(WalkthroughPages()));
-      }
-    });
-  }*/
 }
