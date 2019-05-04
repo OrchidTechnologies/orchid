@@ -20,6 +20,10 @@
 /* }}} */
 
 
+#ifdef __MINGW32__
+#define _GNU_SOURCE
+#endif
+
 #include <boost/algorithm/string.hpp>
 
 #include "log.hpp"

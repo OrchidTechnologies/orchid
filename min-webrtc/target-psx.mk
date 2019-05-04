@@ -9,11 +9,6 @@
 # }}}
 
 
-cflags += -D__Userspace_os_Linux
+cflags += -DHAVE_NETINET_IN_H
 
-cflags += -DWEBRTC_POSIX
-cflags += -DWEBRTC_LINUX
-
-source += $(pwd)/webrtc/rtc_base/task_queue_libevent.cc
-
-include $(pwd)/target-psx.mk
+source += $(pwd)/webrtc/rtc_base/ifaddrs_converter.cc

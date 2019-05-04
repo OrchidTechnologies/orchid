@@ -533,7 +533,11 @@ int Main(int argc, const char *const argv[]) {
     auto node(Make<Node>());
 
 
-    static boost::asio::posix::stream_descriptor out{Context(), ::dup(STDOUT_FILENO)};
+#ifdef _WIN32
+    static boost::asio::windows::stream_handle out(Context(), GetStdHandle(STD_OUTPUT_HANDLE));
+#else
+    static boost::asio::posix::stream_descriptor out(Context(), ::dup(STDOUT_FILENO));
+#endif
 
     http::basic_router<HttpSession> router{boost::regex::ECMAScript};
 

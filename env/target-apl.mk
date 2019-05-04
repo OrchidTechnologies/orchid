@@ -9,7 +9,8 @@
 # }}}
 
 
-ext := dylib
+dll := dylib
+exe := 
 
 lflags += -Wl,-dead_strip
 lflags += -Wl,-no_dead_strip_inits_and_terms

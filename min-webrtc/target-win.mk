@@ -9,11 +9,12 @@
 # }}}
 
 
-cflags += -D__Userspace_os_Linux
+cflags += -D__Userspace_os_Windows
 
-cflags += -DWEBRTC_POSIX
-cflags += -DWEBRTC_LINUX
+cflags += -DWEBRTC_WIN
 
-source += $(pwd)/webrtc/rtc_base/task_queue_libevent.cc
+cflags += -DMINGW_HAS_SECURE_API
 
-include $(pwd)/target-psx.mk
+cflags += -DHAVE_WINSOCK2_H
+
+cflags += -DABSL_FORCE_THREAD_IDENTITY_MODE=ABSL_THREAD_IDENTITY_MODE_USE_TLS

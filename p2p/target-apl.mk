@@ -19,3 +19,5 @@
 
 
 cflags += -DFOLLY_HAVE_MEMRCHR=0
+
+include $(pwd)/target-psx.mk

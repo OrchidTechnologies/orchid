@@ -18,8 +18,7 @@
 # }}}
 
 
-cflags += -DFOLLY_HAVE_MEMRCHR=1
-cflags += -DFOLLY_HAVE_RECVMMSG=1
-cflags += -DFOLLY_HAVE_SENDMMSG=1
+cflags += -D__USE_MINGW_ANSI_STDIO
 
-include $(pwd)/target-psx.mk
+cflags += -DFOLLY_HAVE_PTHREAD=1
+cflags += -DFOLLY_HAVE_PTHREAD_ATFORK=1

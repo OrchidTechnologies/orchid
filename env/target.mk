@@ -26,6 +26,7 @@ version := $(word 2,$(version))
 
 cflags := 
 lflags := 
+wflags := 
 
 source := 
 linked := 

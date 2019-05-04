@@ -102,8 +102,6 @@ c_boringssl += -Dsdallocx=sdallocx_
 #cflags += -DFOLLY_HAVE_WEAK_SYMBOLS=1
 
 cflags += -DFOLLY_HAVE_CLOCK_GETTIME=1
-cflags += -DFOLLY_HAVE_PTHREAD=1
-cflags += -DFOLLY_HAVE_PTHREAD_ATFORK=1
 cflags += -DFOLLY_USE_LIBCPP=1
 c_folly += -Wno-unused-variable
 
@@ -171,6 +169,8 @@ source += $(wildcard $(pwd)/lwip/src/core/ipv6/*.c)
 
 cflags += -I$(pwd)/lwip/src/include
 cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
+
+cflags += -DLWIP_ERRNO_STDINCLUDE
 
 cflags += -I$(pwd)/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp

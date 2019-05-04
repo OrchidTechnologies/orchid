@@ -24,7 +24,7 @@ $(output)/libevent/Makefile: $(pwd)/libevent/configure $(linker)
 	rm -rf $(output)/libevent
 	mkdir -p $(output)/libevent
 	cd $(output)/libevent && ../../$(pwd)/libevent/configure --host=$(host) \
-	    CC="$(cycc)" RANLIB="$(ranlib)" PKG_CONFIG="$${PWD}/../../$(pwd)/pkg-config" \
+	    CC="$(cycc)" LDFLAGS="$(wflags)" RANLIB="$(ranlib)" PKG_CONFIG="$${PWD}/../../$(pwd)/pkg-config" \
 	    --enable-openssl --disable-samples --disable-libevent-regress \
 	    --enable-static --disable-shared
 

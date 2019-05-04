@@ -96,6 +96,7 @@ webrtc += $(filter-out \
 ,$(wildcard $(pwd)/webrtc/pc/*.cc))
 
 webrtc += $(filter-out \
+    %/ifaddrs_converter.cc \
     %/gunit.cc \
 ,$(wildcard $(pwd)/webrtc/rtc_base/*.cc))
 
@@ -199,7 +200,6 @@ cflags += -DHAVE_STDINT_H
 cflags += -DHAVE_STDLIB_H
 
 cflags += -DHAVE_CONFIG_H
-cflags += -DHAVE_NETINET_IN_H
 
 cflags += -DHAVE_UINT8_T
 cflags += -DHAVE_UINT16_T
@@ -210,7 +210,6 @@ cflags += -DHAVE_UINT64_T
 cflags += -DPACKAGE_STRING='""'
 cflags += -DPACKAGE_VERSION='""'
 
-cflags += -DWEBRTC_POSIX
 cflags += -Wno-deprecated-declarations
 cflags += -Wno-inconsistent-missing-override
 cflags += -Wno-unused-function

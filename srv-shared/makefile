@@ -21,11 +21,11 @@
 include env/target.mk
 
 .PHONY: all
-all: $(output)/orchid
+all: $(output)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/orchid
-	$(output)/orchid
+test: $(output)/orchid$(exe)
+	$(output)/orchid$(exe)
 
 
 source += $(wildcard source/*.cpp)
@@ -42,7 +42,7 @@ include env/output.mk
 include p2p/depend.mk
 
 
-$(output)/orchid: $(object) $(linked)
+$(output)/orchid$(exe): $(object) $(linked)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) -o $@ $^ $(lflags)
+	@$(cycp) $(wflags) -o $@ $^ $(lflags)

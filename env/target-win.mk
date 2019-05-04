@@ -9,11 +9,28 @@
 # }}}
 
 
-cflags += -D__Userspace_os_Linux
+dll := dll
+exe := .exe
 
-cflags += -DWEBRTC_POSIX
-cflags += -DWEBRTC_LINUX
+arch := i686
+host := $(arch)-w64-mingw32
 
-source += $(pwd)/webrtc/rtc_base/task_queue_libevent.cc
+include $(pwd)/target-ndk.mk
 
-include $(pwd)/target-psx.mk
+more := -target $(arch)-pc-windows-gnu --sysroot /usr/local/Cellar/mingw-w64/6.0.0_1/toolchain-i686
+more += -DWIN32_LEAN_AND_MEAN=
+more += -D_WIN32_WINNT=0x0600
+
+cycc := $(llvm)/clang $(more)
+cycp := $(llvm)/clang++ $(more) -stdlib=libc++ -isystem /usr/local/Cellar/llvm/8.0.0/include/c++/v1
+
+wflags += -fuse-ld=lld
+
+cflags += -DNOMINMAX
+
+#cflags += -fms-compatibility
+#cflags += -D__GNUC__
+
+# pragma comment(lib, "...lib")
+# pragma warning(disable : ...)
+cflags += -Wno-unknown-pragmas

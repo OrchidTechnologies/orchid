@@ -11,6 +11,8 @@
 
 ndk := $(wildcard ~/Library/Android/sdk/ndk-bundle)
 
-ranlib := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin/$(arch)-linux-android-ranlib
+llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin
+
+ranlib := $(llvm)/$(arch)-linux-android-ranlib
 
 include $(pwd)/target-gnu.mk

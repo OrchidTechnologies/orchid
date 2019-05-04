@@ -14,7 +14,7 @@ include env/target.mk
 
 
 .PHONY: all
-all: $(output)/libwebrtc.a $(output)/libwebrtc.$(ext)
+all: $(output)/libwebrtc.a $(output)/libwebrtc.$(dll)
 
 
 include target.mk
@@ -31,7 +31,7 @@ $(output)/libwebrtc.a: $(object)
 	@ar rcs $@ $^
 	@ranlib $@
 
-$(output)/libwebrtc.$(ext): $(object)
+$(output)/libwebrtc.$(dll): $(object)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) -dynamiclib -o $@ $^ $(lflags)
+	@$(cycp) $(wflags) -dynamiclib -o $@ $^ $(lflags)

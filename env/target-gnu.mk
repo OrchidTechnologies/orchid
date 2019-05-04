@@ -9,7 +9,5 @@
 # }}}
 
 
-ext := so
-
 cflags += -fdata-sections -ffunction-sections
 lflags += -Wl,--gc-sections

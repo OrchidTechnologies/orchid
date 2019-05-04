@@ -98,7 +98,7 @@ ifneq ($(target),sim)
 $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(output)/tunnel.o $(object) $(linked)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
+	@$(cycp) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
 
 $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	@mkdir -p $(dir $@)
@@ -133,7 +133,7 @@ signed += $(bundle)/$(name)
 $(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) out-$(target)/Release-$(sdk)/libPods-Runner.a out-$(target)/Release-$(sdk)/*/lib*.a
+	@$(cycp) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) out-$(target)/Release-$(sdk)/libPods-Runner.a out-$(target)/Release-$(sdk)/*/lib*.a
 
 signed += $(bundle)/Info.plist
 $(bundle)/Info.plist: info-main.plist.in
@@ -165,4 +165,4 @@ $(output)/$(name).ipa: $(bundle)$(signature)
 
 $(output)/orchid: $(output)/main.o $(object) $(linked)
 	@echo [LD] $@
-	@set -o pipefail; $(cycp) -o $@ $^ $(lflags) 2>&1 | nl
+	@set -o pipefail; $(cycp) $(wflags) -o $@ $^ $(lflags) 2>&1 | nl
