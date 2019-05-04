@@ -135,7 +135,7 @@ class Block final :
     }
 
     Block(const void *data, size_t size) {
-        _assert(size == Size_);
+        orc_assert(size == Size_);
         memcpy(data_.data(), data, Size_);
     }
 
@@ -540,7 +540,7 @@ class Window final :
         auto rest(regions_.get() + count_ - here);
 
         for (auto need(Size_); need != 0; step = 0, ++here, --rest) {
-            _assert(rest != 0);
+            orc_assert(rest != 0);
 
             auto size((*here)->size() - step);
             if (size == 0)
@@ -591,7 +591,7 @@ template <size_t Index_>
 struct Taker<Index_> {
 template <typename Type_>
 static void Take(Window &&window, Type_ &value) {
-    _assert(window.empty());
+    orc_assert(window.empty());
 } };
 
 template <size_t... Size_>

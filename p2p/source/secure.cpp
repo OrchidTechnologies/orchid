@@ -36,12 +36,12 @@ static void Throw() {
         Log() << "\e[31;1m" << ERR_reason_error_string(error) << " (e=" << error << ")" << "\e[0m" << std::endl;
     }
 
-    _assert(false);
+    orc_assert(false);
 }
 
 template <typename Code_>
 static int Call(SSL *ssl, bool write, Code_ code) {
-    _assert(ERR_get_error() == 0);
+    orc_assert(ERR_get_error() == 0);
     auto value(std::move(code)());
     switch (auto error = SSL_get_error(ssl, value)) {
         case SSL_ERROR_NONE:
@@ -52,18 +52,18 @@ static int Call(SSL *ssl, bool write, Code_ code) {
             Throw();
 
         case SSL_ERROR_WANT_READ:
-            _assert(!write);
+            orc_assert(!write);
             return -1;
 
         case SSL_ERROR_WANT_WRITE:
-            _assert(write);
+            orc_assert(write);
             return -1;
 
         case SSL_ERROR_ZERO_RETURN:
             // XXX: should this do anything special?
         default:
             Log()("SSL_get_error(%x) = %x\n", value, error);
-            _assert(false);
+            orc_assert(false);
     }
 }
 
@@ -120,7 +120,7 @@ int Secure::Write(BIO *bio, const char *data, int size) {
 
 int Secure::Read(BIO *bio, char *data, int size) {
     if (eof_) {
-        _assert(data_ == NULL);
+        orc_assert(data_ == NULL);
         return 0;
     } else if (data_ == NULL) {
         BIO_set_retry_read(bio);
@@ -168,7 +168,7 @@ void Secure::Active() {
         } catch (const Error &error) {
             next_ = NULL;
             auto message(error.message);
-            _assert(!message.empty());
+            orc_assert(!message.empty());
             Link::Stop(message);
             break;
         }
@@ -209,17 +209,17 @@ void Secure::Client() {
 }
 
 void Secure::Land(const Buffer &data) {
-    _assert(data_ == NULL);
+    orc_assert(data_ == NULL);
     data_ = &data;
-    _assert(next_ != NULL);
+    orc_assert(next_ != NULL);
     (this->*next_)();
-    _assert(data_ == NULL);
+    orc_assert(data_ == NULL);
 }
 
 void Secure::Stop(const std::string &error) {
-    _assert(data_ == NULL);
+    orc_assert(data_ == NULL);
     eof_ = true;
-    _assert(next_ != NULL);
+    orc_assert(next_ != NULL);
     (this->*next_)();
 }
 
@@ -294,11 +294,11 @@ _trace();
 task<void> Secure::Send(const Buffer &data) {
     if (Verbose)
         Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    _assert(opened_.is_set());
+    orc_assert(opened_.is_set());
     Beam beam(data);
     auto lock(co_await send_.scoped_lock_async());
     Post([&]() {
-        _assert(Call(ssl_, true, [&]() {
+        orc_assert(Call(ssl_, true, [&]() {
             return SSL_write(ssl_, beam.data(), beam.size());
         }) != -1);
     });

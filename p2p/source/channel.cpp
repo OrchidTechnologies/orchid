@@ -125,7 +125,7 @@ void Connection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConne
 
         case webrtc::PeerConnectionInterface::kIceConnectionMax:
         default:
-            _insist(false);
+            orc_insist(false);
         break;
     }
 }
@@ -176,12 +176,12 @@ void Connection::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterfa
             if (Verbose)
                 Log() << "OnStandardizedIceConnectionChange(kIceConnectionClosed)" << std::endl;
             // this is (annoyingly) only signaled via OnIceConnectionChange
-            _assert(false);
+            orc_assert(false);
         break;
 
         case webrtc::PeerConnectionInterface::kIceConnectionMax:
         default:
-            _insist(false);
+            orc_insist(false);
         break;
     }
 }

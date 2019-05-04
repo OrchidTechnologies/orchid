@@ -67,7 +67,7 @@ class Socket final :
                         Link::Stop();
                     else {
                         auto message(error.message());
-                        _assert(!message.empty());
+                        orc_assert(!message.empty());
                         Link::Stop(message);
                     }
                     break;
@@ -98,7 +98,7 @@ _trace();
         } else {
             auto lock(co_await send_.scoped_lock_async());
             auto writ(co_await socket_.async_send(Sequence(data), Token()));
-            _assert_(writ == data.size(), "_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
+            orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
         }
     }
 

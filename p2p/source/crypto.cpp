@@ -27,7 +27,7 @@ namespace orc {
 
 __attribute__((__constructor__))
 static void SetupRandom() {
-    _assert(sodium_init() != -1);
+    orc_assert(sodium_init() != -1);
 }
 
 Block<crypto_generichash_BYTES> Hash(const Buffer &data) {

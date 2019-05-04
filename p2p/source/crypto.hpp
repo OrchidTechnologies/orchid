@@ -28,7 +28,7 @@
 #include "buffer.hpp"
 
 #define _crycall(code) do { \
-    _assert((code) == 0); \
+    orc_assert((code) == 0); \
 } while (false)
 
 namespace orc {

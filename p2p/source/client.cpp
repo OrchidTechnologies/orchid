@@ -47,7 +47,7 @@ class Actor final :
 {
   protected:
     void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        _assert(false);
+        orc_assert(false);
     }
 
     void Stop(const std::string &error) override {
@@ -152,7 +152,7 @@ task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
             co_await ready_;
             co_await Schedule();
             Inner()->Stop();
-            _assert_(error_.empty(), error_);
+            orc_assert_(error_.empty(), error_);
             co_return std::move(data_);
         }
     };

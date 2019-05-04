@@ -46,10 +46,10 @@ task<std::string> Endpoint::operator ()(const std::string &method, const std::ve
 
     Json::Value result;
     Json::Reader reader;
-    _assert(reader.parse(std::move(body), result, false));
+    orc_assert(reader.parse(std::move(body), result, false));
 
-    _assert(result["jsonrpc"] == "2.0");
-    _assert(result["id"] == "");
+    orc_assert(result["jsonrpc"] == "2.0");
+    orc_assert(result["id"] == "");
     co_return result["result"].asString();
 }
 

@@ -52,7 +52,7 @@ task<std::string> Request_(Stream_ &stream, boost::beast::http::request<boost::b
     boost::beast::http::response<boost::beast::http::dynamic_body> res;
     (void) co_await boost::beast::http::async_read(stream, buffer, res, orc::Token());
 
-    _assert_(res.result() == boost::beast::http::status::ok, res.reason());
+    orc_assert_(res.result() == boost::beast::http::status::ok, res.reason());
     co_return boost::beast::buffers_to_string(res.body().data());
 }
 
@@ -93,7 +93,7 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
                 // XXX: this is because of infura
             else throw;
         }
-    } else _assert(false);
+    } else orc_assert(false);
 
     co_return body;
 }

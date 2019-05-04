@@ -157,7 +157,7 @@ class Replay final :
 
   public:
     task<void> Send(const Buffer &data) override {
-        _assert(request_ == data);
+        orc_assert(request_ == data);
         Outer()->Land(response_);
         co_return;
     }
@@ -202,7 +202,7 @@ _trace();
 
 
     task<void> Send(const Buffer &data) override {
-        _assert(input_ != nullptr);
+        orc_assert(input_ != nullptr);
         Bill(1);
         co_return co_await input_->Send(data);
     }
@@ -244,7 +244,7 @@ _trace();
         } else if (command == CloseTag) {
             const auto [tag] = Take<TagSize>(args);
             auto output(outputs_.find(tag));
-            _assert(output != outputs_.end());
+            orc_assert(output != outputs_.end());
             co_await output->second->Shut();
             outputs_.erase(output);
             co_return co_await code(Tie());
@@ -255,14 +255,14 @@ _trace();
             const auto [tag, target] = Take<TagSize, 0>(args);
             auto string(target.str());
             auto colon(string.rfind(':'));
-            _assert(colon != std::string::npos);
+            orc_assert(colon != std::string::npos);
             auto host(string.substr(0, colon));
             auto port(string.substr(colon + 1));
             auto output(std::make_unique<Sink<Output<Socket<asio::ip::udp::socket>>, Socket<asio::ip::udp::socket>>>(this, tag));
             auto socket(output->Wire<Socket<asio::ip::udp::socket>>());
             auto endpoint(co_await socket->_(host, port));
             auto place(outputs_.emplace(tag, std::move(output)));
-            _assert(place.second);
+            orc_assert(place.second);
             co_return co_await code(Tie(Strung(std::move(endpoint))));
 
 
@@ -275,14 +275,14 @@ _trace();
         } else if (command == OfferTag) {
             const auto [handle] = Take<TagSize>(args);
             auto outgoing(outgoing_.find(handle));
-            _assert(outgoing != outgoing_.end());
+            orc_assert(outgoing != outgoing_.end());
             auto offer(Strip(co_await outgoing->second->Offer()));
             co_return co_await code(Tie(Strung(std::move(offer))));
 
         } else if (command == NegotiateTag) {
             const auto [handle, answer] = Take<TagSize, 0>(args);
             auto outgoing(outgoing_.find(handle));
-            _assert(outgoing != outgoing_.end());
+            orc_assert(outgoing != outgoing_.end());
             co_await outgoing->second->Negotiate(answer.str());
             co_return co_await code(Tie());
 
@@ -290,11 +290,11 @@ _trace();
             // XXX: add label, protocol, and maybe id arguments
             const auto [handle, tag] = Take<TagSize, TagSize>(args);
             auto outgoing(outgoing_.find(handle));
-            _assert(outgoing != outgoing_.end());
+            orc_assert(outgoing != outgoing_.end());
             auto output(std::make_unique<Sink<Output<Channel>, Channel>>(this, tag));
             output->Wire<Channel>(outgoing->second);
             auto place(outputs_.emplace(tag, std::move(output)));
-            _assert(place.second);
+            orc_assert(place.second);
             co_return co_await code(Tie());
 
         } else if (command == CancelTag) {
@@ -305,10 +305,10 @@ _trace();
         } else if (command == FinishTag) {
             const auto [tag] = Take<TagSize>(args);
             auto output(outputs_.find(tag));
-            _assert(output != outputs_.end());
+            orc_assert(output != outputs_.end());
             // XXX: this is extremely unfortunate
             auto channel(dynamic_cast<Output<Channel> *>(output->second.get()));
-            _assert(channel != NULL);
+            orc_assert(channel != NULL);
             co_await (*channel)->_();
             co_return co_await code(Tie());
 
@@ -320,7 +320,7 @@ _trace();
 
 
         } else {
-            _assert_(false, "unknown command: " << data);
+            orc_assert_(false, "unknown command: " << data);
         }
     }
 
@@ -367,7 +367,7 @@ class Conduit :
     virtual Secure *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        _assert(space_ != nullptr);
+        orc_assert(space_ != nullptr);
         Task([space = space_, data = Beam(data)]() -> task<void> {
             space->Bill(1);
             co_return co_await space->Call(data);

@@ -88,7 +88,7 @@ class Pump :
     }
 
     void Stop() {
-        _assert(!shut_.is_set());
+        orc_assert(!shut_.is_set());
         shut_.set();
     }
 
@@ -101,7 +101,7 @@ class Pump :
     virtual ~Pump() {
         if (Verbose)
             Log() << "##### " << unique_ << std::endl;
-        _insist(shut_.is_set());
+        orc_insist(shut_.is_set());
     }
 
     virtual task<void> Shut() {
@@ -160,7 +160,7 @@ class Sink final :
   protected:
     Inner_ *Inner() override {
         auto inner(this->inner_.get());
-        _insist(inner != nullptr);
+        orc_insist(inner != nullptr);
         return inner;
     }
 
@@ -187,7 +187,7 @@ class Router :
     void Land(const Buffer &data) override {
         auto [tag, rest] = Take<TagSize, 0>(data);
         auto route(routes_.find(tag));
-        _assert(route != routes_.end());
+        orc_assert(route != routes_.end());
         route->second->Land(rest);
     }
 
@@ -198,7 +198,7 @@ class Router :
 
   public:
     virtual ~Router() {
-        _insist(routes_.empty());
+        orc_insist(routes_.empty());
     }
 };
 

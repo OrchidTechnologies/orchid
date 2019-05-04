@@ -35,8 +35,8 @@
 #include <OpenVPNAdapter/OpenVPNError.h>
 #include <OpenVPNAdapter/OpenVPNAdapterEvent.h>
 
-#define _assert(code) do { \
-    if (!(code)) [NSException raise:@"_assert" format:@"(%s)[%s:%u]", #code, __FILE__, __LINE__]; \
+#define orc_assert(code) do { \
+    if (!(code)) [NSException raise:@"orc_assert" format:@"(%s)[%s:%u]", #code, __FILE__, __LINE__]; \
 } while (false)
 
 @interface NEPacketTunnelFlow ()<OpenVPNAdapterPacketFlow>
@@ -79,13 +79,13 @@
     NSError *error;
 
     NETunnelProviderProtocol *proto = (NETunnelProviderProtocol *) self.protocolConfiguration;
-    _assert(proto != nil);
+    orc_assert(proto != nil);
 
     NSDictionary<NSString *, id> *provider(proto.providerConfiguration);
-    _assert(provider != nil);
+    orc_assert(provider != nil);
 
     NSData *fileContent = provider[@"ovpn"];
-    _assert(fileContent != nil);
+    orc_assert(fileContent != nil);
 
     OpenVPNConfiguration *configuration([[OpenVPNConfiguration alloc] init]);
     configuration.fileContent = fileContent;

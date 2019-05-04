@@ -98,9 +98,9 @@ class Transport :
             parent->transport_wait();
         });
 
-        _assert(config_.remote_list);
+        orc_assert(config_.remote_list);
         auto remote(config_.remote_list->first_item());
-        _assert(remote != NULL);
+        orc_assert(remote != NULL);
 
         auto middle(std::make_unique<Sink<Middle>>(this));
 

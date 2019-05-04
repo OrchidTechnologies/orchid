@@ -50,19 +50,19 @@ class Error final {
     }
 }; }
 
-#define _insist(code) do { \
+#define orc_insist(code) do { \
     if ((code)) break; \
-    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << "_insist(" #code ")" << std::endl; \
+    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << "orc_insist(" #code ")" << std::endl; \
     std::terminate(); \
 } while (false)
 
-#define _assert_(code, message) do { \
+#define orc_assert_(code, message) do { \
     if ((code)) break; \
     orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << message << std::endl; \
     throw orc::Error{__FILE__, __LINE__} << message; \
 } while (false)
 
-#define _assert(code) \
-    _assert_(code, "_assert(" #code ")")
+#define orc_assert(code) \
+    orc_assert_(code, "orc_assert(" #code ")")
 
 #endif//ORCHID_ERROR_HPP

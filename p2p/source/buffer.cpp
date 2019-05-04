@@ -48,7 +48,7 @@ size_t Buffer::copy(uint8_t *data, size_t size) const {
 
     each([&](const Region &region) {
         auto writ(region.size());
-        _assert(data + size - here >= writ);
+        orc_assert(data + size - here >= writ);
         memcpy(here, region.data(), writ);
         here += writ;
         return true;
