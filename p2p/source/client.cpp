@@ -104,7 +104,7 @@ _trace();
 
     task<void> Shut() override {
         auto &inner(*Inner());
-        co_await inner->Call(CloseTag, inner.tag_);
+        Take<>(co_await inner->Call(CloseTag, inner.tag_));
         co_await Link::Shut();
     }
 };
@@ -214,7 +214,8 @@ task<void> Local::Hop(Sunk<> *sunk, const std::string &server) {
 
 task<void> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto socket(sunk->Wire<Socket<asio::ip::tcp::socket>>());
-    co_await socket->_(host, port);
+    auto endpoint(co_await socket->_(host, port));
+    (void) endpoint;
 }
 
 S<Local> GetLocal() {

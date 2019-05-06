@@ -21,8 +21,8 @@ include $(pwd)/target-gnu.mk
 
 ranlib := ranlib
 
-cycc := clang-8
-cycp := clang++-8 -stdlib=libc++
+cycc := clang$(suffix)
+cycp := clang++$(suffix) -stdlib=libc++
 
 else
 

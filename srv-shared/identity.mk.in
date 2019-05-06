@@ -1,4 +1,5 @@
 teamid := XXX
 codesign := "Developer ID Application: XXX ($(teamid))"
 
-# xcode := DEVELOPER_DIR=/Applications/Xcode-XXX.app
+# export := DEVELOPER_DIR=/Applications/Xcode-XXX.app
+# suffix := -XXX
