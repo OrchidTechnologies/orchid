@@ -14,6 +14,4 @@ cflags += -D__Userspace_os_Linux
 cflags += -DWEBRTC_POSIX
 cflags += -DWEBRTC_LINUX
 
-source += $(pwd)/webrtc/rtc_base/task_queue_libevent.cc
-
 include $(pwd)/target-psx.mk

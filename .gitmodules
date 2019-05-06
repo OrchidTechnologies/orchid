@@ -73,9 +73,6 @@
 [submodule "libmaxminddb"]
 	path = vpn-shared/libmaxminddb
 	url = https://github.com/maxmind/libmaxminddb.git
-[submodule "libevent"]
-	path = min-webrtc/libevent
-	url = https://github.com/libevent/libevent.git
 [submodule "lwip"]
 	path = p2p/lwip
 	url = https://git.savannah.nongnu.org/git/lwip.git

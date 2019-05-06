@@ -147,8 +147,9 @@ webrtc := $(filter-out %_neon.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/%,$(webrtc))
 
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac_%.cc,$(webrtc))
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_libevent.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_gcd.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_libevent.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_stdlib.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_win.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win32%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win/%.cc,$(webrtc))
@@ -213,5 +214,4 @@ cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -DSCTP_PROCESS_LEVEL_LOCKS
 
 
-include $(pwd)/libevent.mk
 include $(pwd)/target-$(target).mk

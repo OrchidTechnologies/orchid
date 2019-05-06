@@ -25,6 +25,5 @@ cflags += -DWEBRTC_MAC
 source += $(pwd)/webrtc/rtc_base/mac_ifaddrs_converter.cc
 source += $(pwd)/webrtc/rtc_base/mac_utils.cc
 source += $(pwd)/webrtc/rtc_base/system/cocoa_threading.mm
-source += $(pwd)/webrtc/rtc_base/task_queue_gcd.cc
 
 include $(pwd)/target-psx.mk
