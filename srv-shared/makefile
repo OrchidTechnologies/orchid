@@ -46,3 +46,4 @@ $(output)/orchid$(exe): $(object) $(linked)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cycp) $(wflags) -o $@ $^ $(lflags)
+	@ls -la $@
