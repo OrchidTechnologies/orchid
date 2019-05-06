@@ -119,4 +119,7 @@ cflags += -I$(pwd)/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
 source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
 
+source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
+cflags += -I$(pwd)/jsoncpp/include
+
 include $(pwd)/rtc/target.mk

@@ -32,7 +32,7 @@
 	path = p2p/cppcoro
 	url = https://github.com/lewissbaker/cppcoro.git
 [submodule "jsoncpp"]
-	path = min-webrtc/jsoncpp
+	path = p2p/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
 [submodule "abseil-cpp"]
 	path = min-webrtc/abseil-cpp

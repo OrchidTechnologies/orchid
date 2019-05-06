@@ -11,25 +11,33 @@
 
 pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 
-webrtc := 
+source += $(pwd)/stub.cc
+
+cflags += -I$(pwd)/extra
+cflags += -I$(pwd)/webrtc
 
 c_webrtc += -Wundef
 
-cflags += -I$(pwd)/extra
+webrtc := 
 
 
-webrtc += $(filter-out %/create_peerconnection_factory.cc,$(wildcard $(pwd)/webrtc/api/*.cc))
+webrtc += $(filter-out \
+    %/create_peerconnection_factory.cc \
+,$(wildcard $(pwd)/webrtc/api/*.cc))
+
 webrtc += $(wildcard $(pwd)/webrtc/api/crypto/*.cc)
-webrtc += $(filter-out %/goog_cc_factory.cc,$(wildcard $(pwd)/webrtc/api/transport/*.cc))
+
+webrtc += $(filter-out \
+    %/goog_cc_factory.cc \
+,$(wildcard $(pwd)/webrtc/api/transport/*.cc))
+
 webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
-webrtc += $(pwd)/webrtc/api/audio_codecs/audio_format.cc
 
 webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
 
-source += $(pwd)/webrtc/api/video/color_space.cc
-webrtc += $(pwd)/webrtc/api/video/encoded_image.cc
+webrtc += $(pwd)/webrtc/api/video/color_space.cc
 webrtc += $(pwd)/webrtc/api/video/hdr_metadata.cc
 webrtc += $(pwd)/webrtc/api/video/video_content_type.cc
 webrtc += $(pwd)/webrtc/api/video/video_source_interface.cc
@@ -45,28 +53,20 @@ webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pai
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/output/rtc_event_log_output_file.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/ice_logger.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log_impl.cc
 
-webrtc += $(pwd)/webrtc/media/base/codec.cc
-webrtc += $(pwd)/webrtc/media/base/h264_profile_level_id.cc
-webrtc += $(pwd)/webrtc/media/base/media_channel.cc
-webrtc += $(pwd)/webrtc/media/base/media_constants.cc
-webrtc += $(pwd)/webrtc/media/base/media_engine.cc
-webrtc += $(pwd)/webrtc/media/base/rid_description.cc
-webrtc += $(pwd)/webrtc/media/base/rtp_data_engine.cc
-webrtc += $(pwd)/webrtc/media/base/rtp_utils.cc
-webrtc += $(pwd)/webrtc/media/base/stream_params.cc
-webrtc += $(pwd)/webrtc/media/base/turn_utils.cc
-webrtc += $(pwd)/webrtc/media/base/video_source_base.cc
-webrtc += $(pwd)/webrtc/media/base/vp9_profile.cc
+webrtc += $(filter-out \
+    %/adapted_video_track_source.cc \
+    %/video_broadcaster.cc \
+    %/video_adapter.cc \
+    %/video_common.cc \
+,$(wildcard $(pwd)/webrtc/media/base/*.cc))
 
 webrtc += $(wildcard $(pwd)/webrtc/media/sctp/*.cc)
 
 webrtc += $(pwd)/webrtc/modules/audio_processing/include/audio_processing_statistics.cc
-webrtc += $(wildcard $(pwd)/webrtc/modules/congestion_controller/bbr/*.cc)
-webrtc += $(wildcard $(pwd)/webrtc/modules/include/*.cc)
 
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.cc
+webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/include/*.cc)
+
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor_extension.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_header_extension_map.cc
@@ -76,20 +76,18 @@ webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_packet_received.cc
 
 webrtc += $(wildcard $(pwd)/webrtc/modules/utility/source/*.cc)
 
-webrtc += $(filter-out \
-    %/udptransport.cc \
-,$(wildcard $(pwd)/webrtc/p2p/base/*.cc))
-
+webrtc += $(wildcard $(pwd)/webrtc/p2p/base/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/p2p/client/*.cc)
 
 webrtc += $(filter-out \
-    %/bundlefilter.cc \
     %/peer_connection_wrapper.cc \
 ,$(wildcard $(pwd)/webrtc/pc/*.cc))
 
 webrtc += $(filter-out \
-    %/ifaddrs_converter.cc \
     %/gunit.cc \
+    %/ifaddrs_converter.cc \
+    %/nat_server.cc \
+    %/nat_socket_factory.cc \
 ,$(wildcard $(pwd)/webrtc/rtc_base/*.cc))
 
 webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*.cc)
@@ -97,7 +95,6 @@ webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*.mm)
 webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*/*.cc)
 
 webrtc += $(wildcard $(pwd)/webrtc/stats/*.cc)
-
 webrtc += $(wildcard $(pwd)/webrtc/system_wrappers/source/*.cc)
 
 
@@ -108,6 +105,7 @@ webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/*.cc)
 cflags += -I$(pwd)/abseil-cpp
+
 
 webrtc += $(wildcard $(pwd)/boringssl/crypto/*.c)
 webrtc += $(wildcard $(pwd)/boringssl/crypto/*/*.c)
@@ -121,13 +119,12 @@ $(output)/err_data.c: $(pwd)/boringssl/crypto/err/err_data_generate.go
 
 webrtc += $(wildcard $(pwd)/third_party/boringssl/err_data.c)
 
-webrtc += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
-cflags += -I$(pwd)/jsoncpp/include
 
 webrtc += $(wildcard $(pwd)/libsrtp/srtp/*.c)
 cflags += -I$(pwd)/libsrtp/include
 webrtc += $(wildcard $(pwd)/libsrtp/crypto/*/*.c)
 cflags += -I$(pwd)/libsrtp/crypto/include
+
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c)
@@ -144,6 +141,7 @@ webrtc := $(filter-out %_mips.cc,$(webrtc))
 webrtc := $(filter-out %_neon.c,$(webrtc))
 webrtc := $(filter-out %_neon.cc,$(webrtc))
 
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/strings/json.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/%,$(webrtc))
 
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac_%.cc,$(webrtc))
@@ -168,13 +166,13 @@ webrtc := $(filter-out %_unittest.cc,$(webrtc))
 webrtc := $(filter-out %_unittest_helper.cc,$(webrtc))
 webrtc := $(filter-out %/unittest_main.cc,$(webrtc))
 
+
+webrtc := $(foreach v,$(webrtc),$(if $(findstring /fake_,$(v)),,$(v)))
 webrtc := $(foreach v,$(webrtc),$(if $(findstring /test,$(v)),,$(v)))
-
-
-cflags += -I$(pwd)/webrtc
+webrtc := $(foreach v,$(webrtc),$(if $(findstring /virtual_,$(v)),,$(v)))
 
 source += $(webrtc)
-source += $(pwd)/stub.cc
+
 
 cflags += -DOPENSSL
 
