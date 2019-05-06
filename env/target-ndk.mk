@@ -9,7 +9,15 @@
 # }}}
 
 
+ndk := $(ANDROID_NDK_HOME)
+
+ifeq ($(ndk),)
 ndk := $(wildcard ~/Library/Android/sdk/ndk-bundle)
+endif
+
+ifeq ($(ndk),)
+$(error install Android NDK and export ANDROID_NDK_HOME)
+endif
 
 llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin
 
