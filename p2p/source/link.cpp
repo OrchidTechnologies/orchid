@@ -22,6 +22,8 @@
 
 #include <iomanip>
 
+#include <unistd.h>
+
 #include "link.hpp"
 #include "trace.hpp"
 

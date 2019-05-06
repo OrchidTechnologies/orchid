@@ -10,6 +10,7 @@
 
 
 dll := so
+lib := a
 exe := 
 
 arch := x86_64

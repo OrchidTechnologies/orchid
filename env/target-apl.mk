@@ -10,6 +10,7 @@
 
 
 dll := dylib
+lib := a
 exe := 
 
 lflags += -Wl,-dead_strip

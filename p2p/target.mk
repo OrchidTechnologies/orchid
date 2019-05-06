@@ -43,6 +43,10 @@ source += $(pwd)/cppcoro/lib/spin_mutex.cpp
 source += $(pwd)/cppcoro/lib/spin_wait.cpp
 source += $(pwd)/cppcoro/lib/static_thread_pool.cpp
 
+ifeq ($(target),win)
+source += $(pwd)/cppcoro/lib/win32.cpp
+endif
+
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
@@ -59,21 +63,21 @@ source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_core/*/ref*/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_generichash/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_generichash/blake2b/ref/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_hash/*.c)
-#source += $(pwd)/libsodium/src/libsodium/crypto_hash/sha512/cp/hash_sha512_cp.c
+source += $(pwd)/libsodium/src/libsodium/crypto_hash/sha512/cp/hash_sha512_cp.c
 source += $(pwd)/libsodium/src/libsodium/crypto_onetimeauth/poly1305/onetimeauth_poly1305.c
 source += $(pwd)/libsodium/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c
 source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-core.c
-#source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
-#source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/blake2b-long.c
+source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
+source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/blake2b-long.c
 source += $(pwd)/libsodium/src/libsodium/crypto_scalarmult/curve25519/scalarmult_curve25519.c
 source += $(pwd)/libsodium/src/libsodium/crypto_scalarmult/curve25519/ref10/x25519_ref10.c
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_secretbox/*.c)
-#source += $(pwd)/libsodium/src/libsodium/crypto_secretbox/xsalsa20poly1305/secretbox_xsalsa20poly1305.c
-#source += $(pwd)/libsodium/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
+source += $(pwd)/libsodium/src/libsodium/crypto_secretbox/xsalsa20poly1305/secretbox_xsalsa20poly1305.c
+source += $(pwd)/libsodium/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
 source += $(pwd)/libsodium/src/libsodium/crypto_stream/chacha20/stream_chacha20.c
 source += $(pwd)/libsodium/src/libsodium/crypto_stream/salsa20/stream_salsa20.c
 source += $(pwd)/libsodium/src/libsodium/crypto_stream/salsa20/ref/salsa20_ref.c
-#source += $(pwd)/libsodium/src/libsodium/crypto_stream/xsalsa20/stream_xsalsa20.c
+source += $(pwd)/libsodium/src/libsodium/crypto_stream/xsalsa20/stream_xsalsa20.c
 source += $(pwd)/libsodium/src/libsodium/crypto_verify/sodium/verify.c
 source += $(wildcard $(pwd)/libsodium/src/libsodium/randombytes/*.c)
 source += $(wildcard $(pwd)/libsodium/src/libsodium/randombytes/sysrandom/*.c)
@@ -87,17 +91,24 @@ cflags += -DCONFIGURED
 c_libsodium += -Wno-unused-variable
 
 # crypto_pwhash/argon2/argon2-fill-block-ref.c
-#c_libsodium += -Wno-unknown-pragmas
+c_libsodium += -Wno-unknown-pragmas
 
 cflags += -I$(pwd)/boost/libs/asio/include/boost
 #cflags += -DASIO_STANDALONE
 #cflags += -I$(pwd)/asio/asio/include
 
+ifneq (,)
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/ipv4/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/ipv6/*.c)
-#source += $(wildcard $(pwd)/lwip/src/netif/*.c)
+source += $(wildcard $(pwd)/lwip/src/netif/*.c)
+
+ifeq ($(target),win)
+#source += $(pwd)/lwip/contrib/ports/win32/sys_arch.c
+source += $(pwd)/lwip/contrib/ports/win32/sio.c
+endif
+endif
 
 cflags += -I$(pwd)/lwip/src/include
 cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
@@ -108,5 +119,4 @@ cflags += -I$(pwd)/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
 source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
 
-include $(pwd)/target-$(target).mk
 include $(pwd)/rtc/target.mk

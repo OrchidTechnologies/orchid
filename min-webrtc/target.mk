@@ -15,27 +15,20 @@ webrtc :=
 
 c_webrtc += -Wundef
 
+cflags += -I$(pwd)/extra
 
-webrtc += $(wildcard $(pwd)/webrtc/api/*.cc)
+
+webrtc += $(filter-out %/create_peerconnection_factory.cc,$(wildcard $(pwd)/webrtc/api/*.cc))
 webrtc += $(wildcard $(pwd)/webrtc/api/crypto/*.cc)
 webrtc += $(filter-out %/goog_cc_factory.cc,$(wildcard $(pwd)/webrtc/api/transport/*.cc))
 webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
-
-ifneq (,)
-webrtc += $(pwd)/webrtc/api/transport/goog_cc_factory.cc
-webrtc += $(wildcard $(pwd)/webrtc/modules/bitrate_controller/*.cc)
-webrtc += $(wildcard $(pwd)/webrtc/modules/congestion_controller/goog_cc/*.cc)
-webrtc += $(wildcard $(pwd)/webrtc/modules/pacing/*.cc)
-webrtc += $(wildcard $(pwd)/webrtc/modules/remote_bitrate_estimator/*.cc)
-webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/*.cc)
-webrtc += $(wildcard $(pwd)/webrtc/logging/rtc_event_log/events/*.cc)
-endif
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_format.cc
 
 webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
 
+source += $(pwd)/webrtc/api/video/color_space.cc
 webrtc += $(pwd)/webrtc/api/video/encoded_image.cc
 webrtc += $(pwd)/webrtc/api/video/hdr_metadata.cc
 webrtc += $(pwd)/webrtc/api/video/video_content_type.cc
@@ -52,7 +45,6 @@ webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pai
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/output/rtc_event_log_output_file.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/ice_logger.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log_factory.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log_impl.cc
 
 webrtc += $(pwd)/webrtc/media/base/codec.cc
@@ -139,6 +131,7 @@ cflags += -I$(pwd)/libsrtp/crypto/include
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c)
+cflags += -I$(pwd)/usrsctp
 cflags += -I$(pwd)/usrsctp/usrsctplib
 cflags += -I$(pwd)/sctp-idata/src
 
@@ -165,7 +158,7 @@ webrtc := $(filter-out %_dump.cc,$(webrtc))
 webrtc := $(filter-out %_integrationtest.cc,$(webrtc))
 webrtc := $(filter-out %_simulations.cc,$(webrtc))
 webrtc := $(filter-out %_slowtest.cc,$(webrtc))
-webrtc := $(filter-out %_test.cc,$(webrtc)) $(filter %_for_test.cc,$(webrtc))
+webrtc := $(filter-out %_test.cc,$(webrtc))
 webrtc := $(filter-out %_test_common.cc,$(webrtc))
 webrtc := $(filter-out %_test_helper.cc,$(webrtc))
 webrtc := $(filter-out %_testing.cc,$(webrtc))
@@ -213,8 +206,6 @@ cflags += -DPACKAGE_VERSION='""'
 cflags += -Wno-deprecated-declarations
 cflags += -Wno-inconsistent-missing-override
 cflags += -Wno-unused-function
-
-cflags += -I$(pwd)/extra
 
 cflags += -D__Userspace__
 cflags += -DSCTP_USE_OPENSSL_SHA1

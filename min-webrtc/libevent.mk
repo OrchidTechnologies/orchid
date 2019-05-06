@@ -29,8 +29,8 @@ $(output)/libevent/Makefile: $(pwd)/libevent/configure $(linker)
 	    --enable-static --disable-shared
 
 $(output)/libevent: output := $(output)
-$(output)/libevent/include/event2/event-config%h $(output)/libevent/.libs/libevent_core%a: $(output)/libevent/Makefile
+$(output)/libevent/include/event2/event-config%h $(output)/libevent/.libs/libevent_core%$(lib): $(output)/libevent/Makefile
 	$(MAKE) -C $(output)/libevent
 
-linked += $(output)/libevent/.libs/libevent_core.a
-header += $(output)/libevent/.libs/libevent_core.a
+linked += $(output)/libevent/.libs/libevent_core.$(lib)
+header += $(output)/libevent/.libs/libevent_core.$(lib)
