@@ -148,6 +148,36 @@ _trace();
     }
 };
 
+class Waiter :
+    public Link
+{
+  private:
+    S<Connection> connection_;
+
+  protected:
+    virtual Channel *Inner() = 0;
+
+  public:
+    Waiter(BufferDrain *drain, S<Connection> connection) :
+        Link(drain),
+        connection_(connection)
+    {
+    }
+
+    task<void> _(const std::string &sdp) {
+        co_await connection_->Negotiate(sdp);
+        co_await Inner()->_();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        co_return co_await Inner()->Send(data);
+    }
+
+    task<void> Shut() {
+        co_await Inner()->Shut();
+    }
+};
+
 class Replay final :
     public Pump<Account>
 {
@@ -174,7 +204,6 @@ class Space final :
     Pipe *input_;
 
     std::map<Tag, U<Pump<Account>>> outputs_;
-    std::map<Tag, S<Outgoing>> outgoing_;
 
     int64_t balance_;
 
@@ -266,50 +295,25 @@ _trace();
             co_return co_await code(Tie(Strung(std::move(endpoint))));
 
 
-        } else if (command == EstablishTag) {
-            const auto [handle] = Take<TagSize>(args);
-            auto outgoing(Make<Outgoing>());
-            outgoing_[handle] = outgoing;
-            co_return co_await code(Tie());
-
         } else if (command == OfferTag) {
-            const auto [handle] = Take<TagSize>(args);
-            auto outgoing(outgoing_.find(handle));
-            orc_assert(outgoing != outgoing_.end());
-            auto offer(Strip(co_await outgoing->second->Offer()));
+            const auto [tag] = Take<TagSize>(args);
+            auto outgoing(Make<Outgoing>());
+            auto output(std::make_unique<Sink<Output<Waiter>, Waiter>>(this, tag));
+            auto waiter(output->Wire<Sink<Waiter, Channel>>(outgoing));
+            waiter->Wire<Channel>(outgoing);
+            auto offer(Strip(co_await outgoing->Offer()));
+            auto place(outputs_.emplace(tag, std::move(output)));
+            orc_assert(place.second);
             co_return co_await code(Tie(Strung(std::move(offer))));
 
         } else if (command == NegotiateTag) {
-            const auto [handle, answer] = Take<TagSize, 0>(args);
-            auto outgoing(outgoing_.find(handle));
-            orc_assert(outgoing != outgoing_.end());
-            co_await outgoing->second->Negotiate(answer.str());
-            co_return co_await code(Tie());
-
-        } else if (command == ChannelTag) {
-            // XXX: add label, protocol, and maybe id arguments
-            const auto [handle, tag] = Take<TagSize, TagSize>(args);
-            auto outgoing(outgoing_.find(handle));
-            orc_assert(outgoing != outgoing_.end());
-            auto output(std::make_unique<Sink<Output<Channel>, Channel>>(this, tag));
-            output->Wire<Channel>(outgoing->second);
-            auto place(outputs_.emplace(tag, std::move(output)));
-            orc_assert(place.second);
-            co_return co_await code(Tie());
-
-        } else if (command == CancelTag) {
-            const auto [handle] = Take<TagSize>(args);
-            outgoing_.erase(handle);
-            co_return co_await code(Tie());
-
-        } else if (command == FinishTag) {
-            const auto [tag] = Take<TagSize>(args);
+            const auto [tag, answer] = Take<TagSize, 0>(args);
             auto output(outputs_.find(tag));
             orc_assert(output != outputs_.end());
             // XXX: this is extremely unfortunate
-            auto channel(dynamic_cast<Output<Channel> *>(output->second.get()));
-            orc_assert(channel != NULL);
-            co_await (*channel)->_();
+            auto waiter(dynamic_cast<Output<Waiter> *>(output->second.get()));
+            orc_assert(waiter != NULL);
+            co_await (*waiter)->_(answer.str());
             co_return co_await code(Tie());
 
 

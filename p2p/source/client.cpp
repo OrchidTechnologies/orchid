@@ -169,12 +169,7 @@ task<void> Remote::Hop(Sunk<> *sunk, const std::string &server) {
     auto tunnel(sunk->Wire<Sink<Tunnel, Route<Remote>>>());
     tunnel->Give(Path(tunnel));
     co_await tunnel->_([&](const Tag &tag) -> task<void> {
-        auto handle(NewTag()); // XXX: this is horribly wrong
-
-        Take<>(co_await Call(EstablishTag, Tie(handle)));
-        Take<>(co_await Call(ChannelTag, Tie(handle, tag)));
-        auto offer((co_await Call(OfferTag, handle)).str());
-
+        auto offer((co_await Call(OfferTag, tag)).str());
         auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
 
         if (Verbose) {
@@ -182,8 +177,7 @@ task<void> Remote::Hop(Sunk<> *sunk, const std::string &server) {
             Log() << "Answer: " << answer << std::endl;
         }
 
-        Take<>(co_await Call(NegotiateTag, Tie(handle, Beam(answer))));
-        Take<>(co_await Call(FinishTag, Tie(tag)));
+        Take<>(co_await Call(NegotiateTag, Tie(tag, Beam(answer))));
     });
 }
 
