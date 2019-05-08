@@ -73,7 +73,7 @@ class Secure :
   public:
     Secure(BufferDrain *drain, bool server, decltype(verify_) verify);
 
-    task<void> _();
+    task<void> Connect();
 
     virtual ~Secure();
 

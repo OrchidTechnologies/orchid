@@ -44,7 +44,10 @@ class Buffer {
     virtual bool each(const std::function<bool (const Region &)> &code) const = 0;
 
     virtual size_t size() const;
-    std::string str() const;
+
+    virtual bool empty() const {
+        return size() == 0;
+    }
 
     size_t copy(uint8_t *data, size_t size) const;
 
@@ -52,9 +55,7 @@ class Buffer {
         return copy(reinterpret_cast<uint8_t *>(data), size);
     }
 
-    virtual bool empty() const {
-        return size() == 0;
-    }
+    std::string str() const;
 };
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer);
@@ -72,6 +73,13 @@ class Region :
 
     operator asio::const_buffer() const {
         return asio::const_buffer(data(), size());
+    }
+
+    template <typename Type_>
+    typename std::enable_if<std::is_arithmetic<Type_>::value, Type_>::type num() const {
+        Type_ value;
+        orc_assert(size() == sizeof(value));
+        return *reinterpret_cast<const Type_ *>(data());
     }
 };
 
@@ -117,6 +125,32 @@ class Strung final :
 
     size_t size() const override {
         return data_.size();
+    }
+};
+
+template <typename Type_, typename = typename std::enable_if<std::is_arithmetic<Type_>::value, Type_>::type>
+class Number final :
+    public Region
+{
+  private:
+    const Type_ value_;
+
+  public:
+    Number(Type_ value) :
+        value_(value)
+    {
+    }
+
+    operator Type_() const {
+        return value_;
+    }
+
+    const uint8_t *data() const override {
+        return reinterpret_cast<const uint8_t *>(&value_);
+    }
+
+    size_t size() const override {
+        return sizeof(Type_);
     }
 };
 

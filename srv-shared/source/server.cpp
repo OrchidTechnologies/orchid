@@ -38,6 +38,8 @@
 
 #include <asio.hpp>
 
+#include <pc/webrtc_sdp.h>
+
 #include "baton.hpp"
 #include "beast.hpp"
 #include "channel.hpp"
@@ -164,9 +166,12 @@ class Waiter :
     {
     }
 
-    task<void> _(const std::string &sdp) {
-        co_await connection_->Negotiate(sdp);
-        co_await Inner()->_();
+    task<std::string> Connect(const std::string &sdp) {
+        auto connection(std::move(connection_));
+        orc_assert(connection != nullptr);
+        co_await connection->Negotiate(sdp);
+        co_await Inner()->Connect();
+        co_return webrtc::SdpSerializeCandidate(connection->Candidate());
     }
 
     task<void> Send(const Buffer &data) override {
@@ -289,10 +294,10 @@ _trace();
             auto port(string.substr(colon + 1));
             auto output(std::make_unique<Sink<Output<Socket<asio::ip::udp::socket>>, Socket<asio::ip::udp::socket>>>(this, tag));
             auto socket(output->Wire<Socket<asio::ip::udp::socket>>());
-            auto endpoint(co_await socket->_(host, port));
+            auto endpoint(co_await socket->Connect(host, port));
             auto place(outputs_.emplace(tag, std::move(output)));
             orc_assert(place.second);
-            co_return co_await code(Tie(Strung(std::move(endpoint))));
+            co_return co_await code(Tie(Number<uint16_t>(endpoint.port()), Strung(endpoint.address().to_string())));
 
 
         } else if (command == OfferTag) {
@@ -313,8 +318,8 @@ _trace();
             // XXX: this is extremely unfortunate
             auto waiter(dynamic_cast<Output<Waiter> *>(output->second.get()));
             orc_assert(waiter != NULL);
-            co_await (*waiter)->_(answer.str());
-            co_return co_await code(Tie());
+            auto candidate(co_await (*waiter)->Connect(answer.str()));
+            co_return co_await code(Tie(Strung(std::move(candidate))));
 
 
         } else if (command == AnswerTag) {
@@ -400,8 +405,8 @@ class Conduit :
         return {conduit, secure};
     }
 
-    task<void> _() {
-        co_await Inner()->_();
+    task<void> Connect() {
+        co_await Inner()->Connect();
     }
 
     virtual ~Conduit() {
@@ -430,8 +435,8 @@ class Incoming final :
         auto channel(inner->Wire<Channel>(shared_from_this(), interface));
 
         Task([conduit = conduit, channel]() -> task<void> {
-            co_await channel->_();
-            co_await conduit->_();
+            co_await channel->Connect();
+            co_await conduit->Connect();
         });
     }
 

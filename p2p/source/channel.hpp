@@ -100,6 +100,8 @@ _trace();
         return peer_;
     }
 
+    cricket::Candidate Candidate();
+
 
     void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) override {
         _trace();
@@ -134,8 +136,8 @@ _trace();
         gathering_.push_back(sdp);
     }
 
-
     void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override;
+
 
     task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
@@ -222,7 +224,7 @@ class Channel final :
     {
     }
 
-    task<void> _() {
+    task<void> Connect() {
         co_await opened_;
         co_await Schedule();
     }

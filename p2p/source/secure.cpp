@@ -274,7 +274,7 @@ Secure::Secure(BufferDrain *drain, bool server, decltype(verify_) verify) :
     }
 }
 
-task<void> Secure::_() {
+task<void> Secure::Connect() {
     if (!server_) {
         next_ = &Secure::Client;
         Post([&]() {

@@ -47,7 +47,7 @@ class Socket final :
     {
     }
 
-    task<boost::asio::ip::basic_endpoint<typename Socket_::protocol_type>> _(const std::string &host, const std::string &port) {
+    task<boost::asio::ip::basic_endpoint<typename Socket_::protocol_type>> Connect(const std::string &host, const std::string &port) {
         auto endpoints(co_await asio::ip::basic_resolver<typename Socket_::protocol_type>(Context()).async_resolve({host, port}, Token()));
 
         if (Verbose)

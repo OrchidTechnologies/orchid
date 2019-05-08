@@ -163,6 +163,6 @@ $(output)/$(name).ipa: $(bundle)$(signature)
 	cd $(output); zip -r9Xy $(name).ipa Payload
 
 
-$(output)/orchid: $(output)/main.o $(object) $(linked)
+$(output)/orchid: $(output)/main.o $(object) $(linked) $(output)/GeoLite2-City.mmdb
 	@echo [LD] $@
 	@set -o pipefail; $(cycp) $(wflags) -o $@ $^ $(lflags) 2>&1 | nl

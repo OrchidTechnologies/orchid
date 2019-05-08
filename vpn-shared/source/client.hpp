@@ -23,6 +23,7 @@
 #ifndef ORCHID_CLIENT_HPP
 #define ORCHID_CLIENT_HPP
 
+#include "address.hpp"
 #include "http.hpp"
 #include "secure.hpp"
 #include "task.hpp"
@@ -34,9 +35,9 @@ class Remote;
 
 class Origin {
   public:
-    virtual task<void> Hop(Sunk<> *sunk, const std::string &server) = 0;
+    virtual task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
 
-    virtual task<void> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
+    virtual task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
 
     task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 };
@@ -48,6 +49,7 @@ class Remote :
 {
   private:
     const Common common_;
+    Address address_;
 
   protected:
     virtual Secure *Inner() = 0;
@@ -58,8 +60,8 @@ class Remote :
     {
     }
 
-    task<void> _() {
-        co_return co_await Inner()->_();
+    task<void> Connect() {
+        co_return co_await Inner()->Connect();
     }
 
 
@@ -68,13 +70,13 @@ class Remote :
     }
 
 
-    task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &server);
+    task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port);
 
     U<Route<Remote>> Path(BufferDrain *drain);
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<void> Hop(Sunk<> *sunk, const std::string &server) override;
-    task<void> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
 class Local final :
@@ -84,8 +86,8 @@ class Local final :
     virtual ~Local() {
     }
 
-    task<void> Hop(Sunk<> *sunk, const std::string &server) override;
-    task<void> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
 S<Local> GetLocal();

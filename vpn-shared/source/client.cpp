@@ -23,6 +23,15 @@
 #include <iostream>
 #include <thread>
 
+#include <dlfcn.h>
+
+#include <netdb.h>
+#include <netinet/in.h>
+
+#include <pc/webrtc_sdp.h>
+
+#include <maxminddb.h>
+
 #include "adapter.hpp"
 #include "baton.hpp"
 #include "channel.hpp"
@@ -33,6 +42,10 @@
 #include "scope.hpp"
 #include "socket.hpp"
 #include "trace.hpp"
+
+#define mmdb_check(code) [&](int error) { \
+    orc_assert_(error == MMDB_SUCCESS, MMDB_strerror(error)); \
+}(code)
 
 namespace orc {
 
@@ -94,8 +107,8 @@ class Tunnel :
 _trace();
     }
 
-    task<void> _(const std::function<task<void> (const Tag &tag)> &setup) {
-        co_await setup(Inner()->tag_);
+    task<Address> Connect(const std::function<task<Address> (const Tag &tag)> &setup) {
+        co_return co_await setup(Inner()->tag_);
     }
 
     task<void> Send(const Buffer &data) override {
@@ -109,15 +122,26 @@ _trace();
     }
 };
 
-task<void> Remote::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &server) {
+static task<std::string> Answer(const std::string &offer, const std::string &host, const std::string &port) {
+    auto answer(co_await orc::Request("POST", {"http", host, port, "/"}, {}, offer));
+
+    if (true || Verbose) {
+        Log() << "Offer: " << offer << std::endl;
+        Log() << "Answer: " << answer << std::endl;
+    }
+
+    co_return answer;
+}
+
+task<void> Remote::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port) {
     auto secure(sunk->Wire<Sink<Secure>>(false, []() -> bool {
         // XXX: verify the certificate
 _trace();
         return true;
     }));
 
-    co_await origin->Hop(secure, server);
-    co_await secure->_();
+    address_ = co_await origin->Hop(secure, host, port);
+    co_await secure->Connect();
 }
 
 U<Route<Remote>> Remote::Path(BufferDrain *drain) {
@@ -165,51 +189,46 @@ task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
     co_return co_await result.Wait();
 }
 
-task<void> Remote::Hop(Sunk<> *sunk, const std::string &server) {
+task<Address> Remote::Hop(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto tunnel(sunk->Wire<Sink<Tunnel, Route<Remote>>>());
     tunnel->Give(Path(tunnel));
-    co_await tunnel->_([&](const Tag &tag) -> task<void> {
-        auto offer((co_await Call(OfferTag, tag)).str());
-        auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
+    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
+        auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port));
+        auto description((co_await Call(NegotiateTag, Tie(tag, Beam(answer)))).str());
 
-        if (Verbose) {
-            Log() << "Offer: " << offer << std::endl;
-            Log() << "Answer: " << answer << std::endl;
-        }
+        cricket::Candidate candidate;
+        webrtc::SdpParseError error;
+        orc_assert_(webrtc::SdpDeserializeCandidate("", description, &candidate, &error), "`" << error.line << "` " << error.description);
 
-        Take<>(co_await Call(NegotiateTag, Tie(tag, Beam(answer))));
+        const auto &address(candidate.address());
+        co_return Address(address.ipaddr().ToString(), address.port());
     });
 }
 
-task<void> Remote::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Address> Remote::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto tunnel(sunk->Wire<Sink<Tunnel, Route<Remote>>>());
     tunnel->Give(Path(tunnel));
-    co_await tunnel->_([&](const Tag &tag) -> task<void> {
-        auto endpoint(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-        Log() << "ENDPOINT " << endpoint << std::endl;
+    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
+        auto [service, address] = Take<2, 0>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+        co_return Address(address.str(), service.num<uint16_t>());
     });
 }
 
-task<void> Local::Hop(Sunk<> *sunk, const std::string &server) {
+task<Address> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto client(Make<Actor>());
     auto channel(sunk->Wire<Channel>(client));
-
-    auto offer(Strip(co_await client->Offer()));
-    auto answer(co_await orc::Request("POST", {"http", server, "8080", "/"}, {}, offer));
-
-    if (Verbose) {
-        Log() << "Offer: " << offer << std::endl;
-        Log() << "Answer: " << answer << std::endl;
-    }
-
+    auto answer(co_await Answer(Strip(co_await client->Offer()), host, port));
     co_await client->Negotiate(answer);
-    co_await channel->_();
+    co_await channel->Connect();
+    auto candidate(client->Candidate());
+    const auto &address(candidate.address());
+    co_return Address(address.ipaddr().ToString(), address.port());
 }
 
-task<void> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Address> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto socket(sunk->Wire<Socket<asio::ip::tcp::socket>>());
-    auto endpoint(co_await socket->_(host, port));
-    (void) endpoint;
+    auto endpoint(co_await socket->Connect(host, port));
+    co_return Address(endpoint.address().to_string(), endpoint.port());
 }
 
 S<Local> GetLocal() {
@@ -224,11 +243,11 @@ task<S<Origin>> Setup() {
     //const char *server("node.orchid.dev");
     //const char *server("localhost");
 
-    for (unsigned i(0); i != 3; ++i) {
+    for (const char *host : {server, server, server}) {
         // XXX: this is all wrong right now as it doesn't support multiple routes
         Identity identity;
         auto remote(std::make_shared<Sink<Remote, Secure>>(identity.GetCommon()));
-        co_await remote->Swing(remote.get(), origin, server);
+        co_await remote->Swing(remote.get(), origin, host, "8080");
         origin = remote;
     }
 

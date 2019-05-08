@@ -22,6 +22,9 @@
 
 #include <boost/regex.hpp>
 
+#include <api/sctp_transport_interface.h>
+#include <p2p/base/ice_transport_internal.h>
+
 #include "rtc_base/ssl_adapter.h"
 
 #include "channel.hpp"
@@ -86,6 +89,22 @@ Connection::Connection(const std::vector<std::string> &ices) :
         }());
     }())
 {
+}
+
+cricket::Candidate Connection::Candidate() {
+    return network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
+        auto sctp(peer_->GetSctpTransport());
+        orc_assert(sctp != nullptr);
+        auto dtls(sctp->dtls_transport());
+        orc_assert(dtls != nullptr);
+        auto ice(dtls->ice_transport());
+        orc_assert(ice != nullptr);
+        auto internal(ice->internal());
+        orc_assert(internal != nullptr);
+        auto connection(internal->selected_connection());
+        orc_assert(connection != nullptr);
+        return connection->remote_candidate();
+    });
 }
 
 void Connection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
