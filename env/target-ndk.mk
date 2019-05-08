@@ -16,6 +16,10 @@ ndk := $(wildcard ~/Library/Android/sdk/ndk-bundle)
 endif
 
 ifeq ($(ndk),)
+ndk := $(wildcard /usr/local/share/android-ndk)
+endif
+
+ifeq ($(ndk),)
 $(error install Android NDK and export ANDROID_NDK_HOME)
 endif
 
