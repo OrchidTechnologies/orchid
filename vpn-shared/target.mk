@@ -23,10 +23,9 @@ pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(M
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
-cflags += -I$(pwd)
+cflags += -I$(pwd)/extra
 
 cflags += -include interface.hpp
-source += $(pwd)/interface.cpp
 
 source += $(wildcard $(pwd)/lz4/lib/*.c)
 cflags += -I$(pwd)/lz4/lib
@@ -47,7 +46,6 @@ cflags += -I$(pwd)/openvpn3
 cflags += -I$(pwd)/openvpn3/client
 
 cflags += -DOPENVPN_EXTERNAL_TRANSPORT_FACTORY
-source += $(pwd)/transport.cpp
 
 cflags_transport += -Wno-unused-private-field
 
