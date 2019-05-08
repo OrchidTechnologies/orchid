@@ -20,6 +20,9 @@
 
 pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 
+source += $(wildcard $(pwd)/source/*.cpp)
+cflags += -I$(pwd)/source
+
 cflags += -I$(pwd)
 
 cflags += -include interface.hpp
