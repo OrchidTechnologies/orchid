@@ -122,4 +122,20 @@ source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
 source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include
 
+
+source += $(filter-out \
+    %/libutp_inet_ntop.cpp \
+,$(wildcard $(pwd)/libutp/*.cpp))
+
+cflags += -I$(pwd)/libutp
+c_libutp += -Wno-unused-const-variable
+
+ifeq ($(target),win)
+source += $(pwd)/libutp/libutp_inet_ntop.cpp
+cflags += -DWIN32
+else
+cflags += -DPOSIX
+endif
+
+
 include $(pwd)/rtc/target.mk

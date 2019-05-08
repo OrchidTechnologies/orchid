@@ -88,3 +88,6 @@
 [submodule "tor"]
 	path = vpn-shared/tor
 	url = https://git.torproject.org/tor.git
+[submodule "libutp"]
+	path = p2p/libutp
+	url = https://github.com/bittorrent/libutp.git
