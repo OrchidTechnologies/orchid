@@ -48,6 +48,7 @@ cflags += -fmessage-length=0
 cflags += -ferror-limit=0
 cflags += -ftemplate-backtrace-limit=0
 
--include identity.mk
+include ../default.mk
+-include ../identity.mk
 
 include $(pwd)/target-$(target).mk
