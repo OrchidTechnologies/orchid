@@ -7,8 +7,9 @@ class PageTile extends StatelessWidget {
   final String imageName;
   Widget trailing;
   GestureTapCallback onTap;
+  Color color;
 
-  PageTile({this.title, this.imageName, @required this.onTap, this.trailing});
+  PageTile({this.title, this.imageName, @required this.onTap, this.trailing, this.color = Colors.white});
 
   PageTile.route(
       {this.title,
@@ -24,7 +25,7 @@ class PageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         height: 46,
-        color: Colors.white,
+        color: color,
         child: ListTile(
             title: Text(title),
             leading: imageName != null

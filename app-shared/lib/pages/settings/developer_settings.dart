@@ -1,0 +1,187 @@
+import 'dart:collection';
+import 'package:flutter/material.dart';
+import 'package:orchid/pages/common/app_text_field.dart';
+import 'package:orchid/pages/common/page_tile.dart';
+
+/// Support for a dynamic list of name-value pairs as developer settings.
+/// A list of "well-known" developer settings is provided as defaults with optional
+/// labels and restricted values, however arbitrary name-value settings may be
+/// returned by the API and will be presented in the UI using their name as the label.
+class DeveloperSettings {
+
+  /// The default list of settings to display.
+  static List<NameValueSetting> defaults = [
+    // @formatter:off
+    NameValueSetting(label: "Foo", name: "foo"),
+    NameValueSetting(label: "Bar", name: "bar", initialValue: "someValue"),
+    NameValueSetting(label: "Baz", name: "baz", options: ["one", "two", "three"], initialValue: "one")
+    // @formatter:on
+  ];
+
+  /// Parse a map of name-value pairs and return a list of NameValueSettings,
+  /// annotating the metadata for any recognized names from the defaults list.
+  /// All items from [defaults] will be returned, in order, first followed by
+  /// any additional pairs from the supplied map.
+  static List<NameValueSetting> fromMap(Map<String, String> map, {
+    Function({String name, String value}) onChanged}) {
+    // Default settings by name
+    Map<String, NameValueSetting> defaultSettings = Map.fromIterable(defaults,
+        key: (item) => item.name, value: (item) => item);
+
+    // Map settings by name
+    LinkedHashMap<String, NameValueSetting> mapSettings =
+    LinkedHashMap.fromIterable(
+        map.entries.map((MapEntry<String, String> entry) {
+          var setting = defaultSettings[entry.key];
+          return NameValueSetting(
+            label: setting?.label,
+            options: setting?.options,
+            name: entry.key,
+            initialValue: entry.value,
+            onChanged: onChanged,
+          );
+        }),
+        key: (item) => item.name, value: (item) => item);
+
+    // The merged result list, ordered first by defaults order and secondarily by map order
+    Iterable<NameValueSetting> knownSettings = defaults.map((setting) =>
+      mapSettings[setting.name] ?? defaultSettings[setting.name].cloneWith(onChanged));
+
+    Iterable<NameValueSetting> unknownSettings = mapSettings.entries
+        .where((setting) => !defaultSettings.containsKey(setting.key))
+        .map((entry) => entry.value);
+
+    return knownSettings.followedBy(unknownSettings).toList();
+  }
+}
+
+/// A configurable setting widget representing a name-value pair with an optional
+/// user readable label and option list of allowed values.
+class NameValueSetting extends StatefulWidget {
+  // The name of the name-value pair.
+  String name;
+
+  // The value of the name-value pair.
+  String initialValue;
+
+  // An optional label for the field.  If null the [name] field will be used.
+  String label;
+
+  // An optional list of allowed values for [value].
+  List<String> options;
+
+  // Callback for changes in this value
+  Function({String name, String value}) onChanged;
+
+  NameValueSetting(
+      {@required this.name, this.initialValue, this.label, this.options, this.onChanged}) {
+    // Default to [name] if label is not specified.
+    if (label == null) {
+      label = name;
+    }
+    // Default to the first option.
+    if (initialValue == null && options != null) {
+      initialValue = options[0];
+    }
+  }
+
+  NameValueSetting cloneWith(Function({String name, String value}) onChanged) {
+    return NameValueSetting(
+        name: this.name,
+        initialValue: this.initialValue,
+        label: this.label,
+        options: this.options,
+        onChanged: onChanged);
+  }
+
+  @override
+  _NameValueSettingState createState() => _NameValueSettingState();
+}
+
+class _NameValueSettingState extends State<NameValueSetting> {
+  String _lastValue;
+  TextEditingController _controller = TextEditingController();
+  FocusNode _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _lastValue = widget.initialValue;
+    _controller.text = widget.initialValue;
+    // Save text field values on focus change
+    _focus.addListener(() {
+      if (!_focus.hasFocus && _controller.text != _lastValue) {
+        if (widget.onChanged != null) {
+          widget.onChanged(name: widget.name, value: _controller.text);
+        }
+        _lastValue = _controller.text;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.options != null &&
+        widget.options.contains(widget.initialValue)) {
+      return buildChoiceEntry(context);
+    } else {
+      return buildTextEntry(context);
+    }
+  }
+
+  Widget buildTextEntry(BuildContext context) {
+    return PageTile(
+      color: Colors.transparent,
+      title: widget.label,
+      trailing: Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: AppTextField.textFieldEnabledDecoration,
+          width: 300,
+          height: 36,
+          child: TextField(
+            controller: _controller,
+            decoration: null,
+            maxLines: null,
+            focusNode: _focus,
+          )), onTap: () {},
+    );
+  }
+
+  Widget buildChoiceEntry(BuildContext context) {
+    List<DropdownMenuItem<String>> items = widget.options.map((value) {
+      return DropdownMenuItem<String>(child: Text(value), value: value);
+    }).toList();
+
+    return PageTile(
+      color: Colors.transparent,
+      title: widget.label,
+      trailing: Container(
+        height: 36,
+        decoration: AppTextField.textFieldEnabledDecoration,
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _lastValue,
+            items: items,
+            onChanged: (String value) {
+              if (value != _lastValue) {
+                widget.onChanged(name: widget.name, value: value);
+                setState(() {
+                  _lastValue = value;
+                });
+              }
+            },
+          ),
+        ),
+      ), onTap: () {},
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+}
+
