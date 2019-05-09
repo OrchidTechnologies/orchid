@@ -29,7 +29,7 @@ else
 
 include $(pwd)/target-ndk.mk
 
-more := -B $(wildcard ~/Library/Android/sdk/ndk-bundle/toolchains/llvm/prebuilt/darwin-x86_64/$(arch)-linux-android/bin) -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
+more := -B $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/$(arch)-linux-android/bin -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
 
 cycc := $(llvm)/clang $(more)
 cycp := $(llvm)/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
