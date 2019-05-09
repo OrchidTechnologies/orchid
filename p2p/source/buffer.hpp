@@ -215,18 +215,8 @@ class Beam :
     size_t size_;
     uint8_t *data_;
 
-    uint8_t &count() {
-        return data_[size_];
-    }
-
-    void subsume() {
-        if (data_ != nullptr)
-            ++count();
-    }
-
     void destroy() {
-        if (data_ != nullptr && --count() == 0)
-            delete [] data_;
+        delete [] data_;
     }
 
   public:
@@ -238,9 +228,8 @@ class Beam :
 
     Beam(size_t size) :
         size_(size),
-        data_(new uint8_t[size_ + 1])
+        data_(new uint8_t[size_])
     {
-        count() = 1;
     }
 
     Beam(const void *data, size_t size) :
@@ -264,22 +253,18 @@ class Beam :
         rhs.data_ = nullptr;
     }
 
-    Beam(const Beam &rhs) :
-        size_(rhs.size_),
-        data_(rhs.data_)
-    {
-        subsume();
-    }
+    Beam(const Beam &rhs) = delete;
 
     virtual ~Beam() {
         destroy();
     }
 
-    Beam &operator =(const Beam &rhs) {
+    Beam &operator =(Beam &&rhs) {
         destroy();
         size_ = rhs.size_;
         data_ = rhs.data_;
-        subsume();
+        rhs.size_ = 0;
+        rhs.data_ = nullptr;
         return *this;
     }
 
@@ -344,20 +329,13 @@ class Knot final :
     public Buffer
 {
   private:
-    const std::tuple<Buffer_...> buffers_;
+    const std::tuple<const Buffer_ &...> buffers_;
 
   public:
     Knot(const Buffer_ &...buffers) :
         buffers_(buffers...)
     {
     }
-
-    // XXX: implement Cat (currently this is ambiguous)
-
-    /*Knot(Buffer_ &&...buffers) :
-        buffers_(std::forward<Buffer_>(buffers)...)
-    {
-    }*/
 
     bool each(const std::function<bool (const Region &)> &code) const override {
         bool value(true);
@@ -367,26 +345,6 @@ class Knot final :
         return value;
     }
 };
-
-template <typename Type_>
-struct Decay_ {
-    typedef Type_ type;
-};
-
-template <typename Type_>
-struct Decay_<std::reference_wrapper<Type_>> {
-    typedef Type_ &type;
-};
-
-template <typename Type_>
-struct Decay {
-    typedef typename Decay_<typename std::decay<Type_>::type>::type type;
-};
-
-template <typename... Buffer_>
-auto Cat(Buffer_ &&...buffers) {
-    return Knot<typename Decay<Buffer_>::type...>(std::forward<Buffer_>(buffers)...);
-}
 
 template <typename... Buffer_>
 auto Tie(Buffer_ &&...buffers) {
