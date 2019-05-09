@@ -19,7 +19,11 @@ dependencies:
   cupertino_icons: ^0.1.2
 
   rxdart: ^0.21.0
-  flare_flutter: ^1.0.0
+  flare_flutter:
+    git:
+      url: git://github.com/2d-inc/Flare-Flutter.git
+      ref: d8defc4c07571ce8287f26791cf38992fffaef75
+      path: flare_flutter
   url_launcher: ^5.0.0
   shared_preferences: ^0.5.2
   email_validator: ^1.0.0

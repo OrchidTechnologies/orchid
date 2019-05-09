@@ -91,3 +91,9 @@
 [submodule "libutp"]
 	path = p2p/libutp
 	url = https://github.com/bittorrent/libutp.git
+[submodule "flutter-desktop-embedding"]
+	path = app-shared/flutter-desktop-embedding
+	url = https://github.com/google/flutter-desktop-embedding
+[submodule "flutter_web"]
+	path = pmp-ethereum/flutter_web
+	url = https://github.com/flutter/flutter_web.git

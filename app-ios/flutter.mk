@@ -45,7 +45,7 @@ $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xm
 	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
 
-flutter/packages/flutter/pubspec.lock:
+flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml
 	cd flutter && $(xcode) bin/flutter update-packages
 
 $(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter
@@ -58,8 +58,8 @@ $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios
 	cp -af $< $@
 	touch $@
 
-signed += build/app.dill
-build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m $(assets)/kernel_blob%bin: $(shell find lib/ -name '*.dart')
+signed += $(assets)/kernel_blob.bin
+build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m $(assets)/kernel_blob%bin: $(shell find lib/ -name '*.dart') flutter/packages/flutter/pubspec.lock pubspec.lock
 	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
 	$(xcode) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --$(mode) --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
@@ -68,7 +68,7 @@ build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m $(assets)
 
 flutter := Flutter Info.plist icudtl.dat
 
-$(patsubst %,flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%,$(flutter)): flutter/packages/flutter/pubspec.lock
+$(patsubst %,flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%,$(flutter)): .flutter-plugins
 
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
 $(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-$(target)-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))
