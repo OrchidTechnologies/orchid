@@ -192,6 +192,19 @@ class MockOrchidAPI implements OrchidAPI {
     logger().write("Connection state: $state");
     connectionStatus.add(state);
   }
+
+  Map<String,String> _developerSettings = Map();
+
+  @override
+  Future<Map<String, String>> getDeveloperSettings() async {
+    return _developerSettings;
+  }
+
+  @override
+  void setDeveloperSetting({String name, String value}) {
+    debugPrint("Set developer setting: $name, $value");
+    _developerSettings[name] = value;
+  }
 }
 
 /// Transient, in-memory log implementation.

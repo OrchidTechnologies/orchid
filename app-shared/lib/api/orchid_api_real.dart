@@ -112,4 +112,14 @@ class RealOrchidAPI implements OrchidAPI {
   Future<void> reroute() async {
     await _platform.invokeMethod('reroute');
   }
+
+  @override
+  Future<Map<String, String>> getDeveloperSettings() async {
+    return Map();
+  }
+
+  @override
+  void setDeveloperSetting({String name, String value}) {
+    // TODO:
+  }
 }

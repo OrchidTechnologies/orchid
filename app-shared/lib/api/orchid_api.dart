@@ -1,6 +1,7 @@
 import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/pages/settings/developer_settings.dart';
 import 'package:rxdart/rxdart.dart';
 
 ///
@@ -79,6 +80,13 @@ abstract class OrchidAPI {
 
   /// Choose a new, randomized, network route.
   Future<void> reroute();
+
+  /// Get a map of name-value pairs representing dynamic developer settings.
+  /// See [DeveloperSettings] for the list of default settings.
+  Future<Map<String,String>> getDeveloperSettings();
+
+  /// Set a name-value pair representing a dynamic developer settings
+  void setDeveloperSetting({String name, String value});
 }
 
 /// Logging support, if any, implemented by the channel API.
