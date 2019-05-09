@@ -108,7 +108,7 @@ signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
-	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
+	$(export) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
 	@touch $@
 
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.appex/GeoLite2-City.mmdb
@@ -146,7 +146,7 @@ $(bundle)/Info.plist: info-main.plist.in
 
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
-	$(xcode) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
+	$(export) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
 
 
 signed += $(patsubst %,$(bundle)/%,$(resources))
@@ -159,7 +159,7 @@ $(bundle)/%: resource/%
 $(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
-	$(xcode) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
+	$(export) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
 	@touch $@
 
 $(output)/$(name).ipa: $(bundle)$(signature)
