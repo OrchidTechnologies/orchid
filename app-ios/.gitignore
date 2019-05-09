@@ -1,7 +1,6 @@
 /android
 /build
 /.flutter-plugins
-/identity.mk
 /ios/.symlinks
 /ios/build
 /ios/Flutter
