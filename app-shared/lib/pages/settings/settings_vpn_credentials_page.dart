@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
+import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/settings/vpn_credentials_entry.dart';
 
@@ -19,7 +19,8 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return TitledPage(title: "VPN credentials", child: buildPage(context));
+    return TapClearsFocus(
+        child: TitledPage(title: "VPN credentials", child: buildPage(context)));
   }
 
   @override
@@ -30,9 +31,10 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            screenHeight > AppSizes.iphone_xs.height ? Spacer(flex: 1) : Container(),
+            screenHeight > AppSizes.iphone_xs.height
+                ? Spacer(flex: 1)
+                : Container(),
 
             // Explanatory text
             Padding(
@@ -61,6 +63,7 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
                       style: AppText.linkStyle,
                       url: 'https://orchid.com',
                     ),
+                    TextSpan(text: " ") // close the previous span
                   ],
                 ),
               ),
@@ -78,8 +81,8 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
             // Form fields
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child:
-                  VPNCredentialsEntry(controller: _vpnCredentialsEntryController),
+              child: VPNCredentialsEntry(
+                  controller: _vpnCredentialsEntryController),
             ),
 
             Spacer(), // Position remaining at the bottom
@@ -90,15 +93,15 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
             Center(
               child: Container(
                 child: StreamBuilder<Object>(
-                  stream: _vpnCredentialsEntryController.readyToSave.stream,
-                  builder: (context, snapshot) {
-                    return RoundedRectRaisedButton(
-                        text: "SAVE",
-                        onPressed: _vpnCredentialsEntryController.readyToSave.value
-                            ? _vpnCredentialsEntryController.save
-                            : null);
-                  }
-                ),
+                    stream: _vpnCredentialsEntryController.readyToSave.stream,
+                    builder: (context, snapshot) {
+                      return RoundedRectRaisedButton(
+                          text: "SAVE",
+                          onPressed:
+                              _vpnCredentialsEntryController.readyToSave.value
+                                  ? _vpnCredentialsEntryController.save
+                                  : null);
+                    }),
               ),
             ),
             SizedBox(height: 42)
@@ -108,5 +111,3 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
     );
   }
 }
-
-

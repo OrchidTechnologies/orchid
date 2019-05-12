@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/dialogs.dart';
+import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// A controller for the [VPNCredentialsEntry] supporting observation of validation
@@ -35,6 +38,8 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
   final _userNameText = BehaviorSubject<String>();
   final _passwordTextController = TextEditingController();
   final _passwordText = BehaviorSubject<String>();
+  final _vpnConfigFileTextController = TextEditingController();
+  final _vpnConfigFileText = BehaviorSubject<String>.seeded(null);
 
   // If the user has stored a vpn config this is the public portion.
   VPNConfigPublic _vpnConfigPublic;
@@ -60,9 +65,16 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
       }
     });
 
+    _vpnConfigFileTextController.addListener(() {
+      if (_vpnConfigFileTextController.text != _vpnConfigFileText.value) {
+        _vpnConfigFileText.add(_vpnConfigFileTextController.text);
+      }
+    });
+
     // Validate the form data and update the save button.
-    Observable.combineLatest2(_userNameText, _passwordText,
-        (String userName, String password) {
+    Observable.combineLatest3(_userNameText, _passwordText, _vpnConfigFileText,
+        (String userName, String password, String vpnConfigFileText) {
+      debugPrint("config text: $vpnConfigFileText");
       // TODO: update validation
       return userName.length > 2 && password.length > 2;
     }).listen((enabled) {
@@ -75,6 +87,7 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
         return;
       }
       _userNameTextController.text = config.userName;
+      _vpnConfigFileTextController.text = config.vpnConfig;
       setState(() {
         this._vpnConfigPublic = config;
       });
@@ -87,38 +100,47 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: <Widget>[
-          // username
+
+          // Username
           AppLabeledTextField(
               labelText: "Username", controller: _userNameTextController),
-          // password
-          Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: buildPasswordFormField(
-                context: context,
-                labelText: "Password",
-                // TODO: We need the password field's focus node to do this
-                // Switch the label to a hint text showing fake obscured password.
-                //hintText: _vpnConfigPublic == null ? null : "xxxxxxxxxx",
-                controller: _passwordTextController),
+          SizedBox(height: 12),
+
+          // Password
+          AppPasswordField(
+              labelText: "Password",
+              // TODO: We need the password field's focus node to do this
+              // Switch the label to a hint text showing fake obscured password.
+              //hintText: _vpnConfigPublic == null ? null : "xxxxxxxxxx",
+              controller: _passwordTextController),
+          SizedBox(height: 12),
+
+          // VPN config text file
+          ConstrainedBox(
+            constraints: BoxConstraints(minHeight: 0, maxHeight: 365),
+            child: IntrinsicHeight(
+              child: AppLabeledTextField(
+                  //hintText: "Paste OVPN file contents",
+                  labelText: "Paste OVPN file contents",
+                  maxLines: null, // unlimited
+                  controller: _vpnConfigFileTextController),
+            ),
           ),
+
+          // Instructional text associated with the above text field
+          // TODO: If we use this again integrate it into AppLebeledTextField
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16.0, top: 5.0),
+              child: Text("Optional",
+                  textAlign: TextAlign.left,
+                  style: AppText.noteStyle.copyWith(color: AppColors.neutral_1)),
+            ),
+          )
         ],
       ),
     );
-  }
-
-  Widget buildPasswordFormField(
-      {BuildContext context,
-      String labelText,
-      String hintText,
-      TextEditingController controller}) {
-    return AppLabeledTextField(
-        labelText: labelText,
-        hintText: hintText,
-        controller: controller,
-        obscureText: true,
-        trailing: Container(
-            margin: EdgeInsets.only(right: 13.0),
-            child: Image.asset("assets/images/visibility.png")));
   }
 
   Future<bool> _save() {
@@ -127,11 +149,10 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
 
     // Save the credentials
     var private = VPNConfigPrivate(userPassword: _passwordTextController.text);
-    String vpnConfig = null;
     VPNConfigPublic public = VPNConfigPublic(
         id: "vpnConfig",
         userName: _userNameTextController.text,
-        vpnConfig: vpnConfig);
+        vpnConfig: _vpnConfigFileTextController.text);
 
     return OrchidAPI()
         .setExitVPNConfig(VPNConfig(private: private, public: public))

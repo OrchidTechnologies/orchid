@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/page_tile.dart';
+import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/settings/developer_settings.dart';
@@ -17,10 +18,7 @@ class _SettingsDevPage extends State<SettingsDevPage> {
   Widget build(BuildContext context) {
     // Dismiss the keyboard on tap outside of the text areas.
     // (The body text has a "Return" button instead of a "Done").
-    return GestureDetector(
-        onTap: () {
-          FocusScope.of(context).requestFocus(new FocusNode());
-        },
+    return new TapClearsFocus(
         child: TitledPage(title: "Developer", child: buildPage(context)));
   }
 

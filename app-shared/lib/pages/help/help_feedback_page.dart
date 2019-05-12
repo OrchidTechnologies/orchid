@@ -6,6 +6,7 @@ import 'package:orchid/pages/common/accomodate_keyboard.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/dialogs.dart';
+import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:email_validator/email_validator.dart';
@@ -57,10 +58,7 @@ class _HelpFeedbackPageState extends State<HelpFeedbackPage> {
   Widget build(BuildContext context) {
     // Dismiss the keyboard on tap outside of the text areas.
     // (The body text has a "Return" button instead of a "Done").
-    return GestureDetector(
-        onTap: () {
-          FocusScope.of(context).requestFocus(new FocusNode());
-        },
+    return TapClearsFocus(
         child: TitledPage(title: "Feedback", child: buildPage(context)));
   }
 

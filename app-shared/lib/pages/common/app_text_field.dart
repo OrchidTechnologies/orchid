@@ -5,16 +5,18 @@ import 'package:orchid/pages/app_text.dart';
 
 /// A styled text field
 class AppTextField extends StatelessWidget {
-  String hintText;
-  Widget trailing;
-  TextEditingController controller;
-  bool obscureText = false;
+  final String hintText;
+  final Widget trailing;
+  final TextEditingController controller;
+  final bool obscureText;
+  final int maxLines;
 
   AppTextField(
       {this.hintText,
       this.trailing,
       this.controller,
-      this.obscureText = false});
+      this.obscureText = false,
+      this.maxLines = 1});
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,7 @@ class AppTextField extends StatelessWidget {
                   controller: controller,
                   autocorrect: false,
                   textAlign: TextAlign.left,
+                  maxLines: maxLines,
                   decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: hintText,
@@ -68,6 +71,7 @@ class AppLabeledTextField extends StatefulWidget {
   final TextInputType textInputType;
   final Widget trailing;
   final FormFieldValidator<String> validator;
+  final int maxLines;
 
   AppLabeledTextField(
       {@required this.labelText,
@@ -75,7 +79,9 @@ class AppLabeledTextField extends StatefulWidget {
       this.obscureText = false,
       this.trailing,
       this.hintText,
-      this.textInputType, this.validator});
+      this.textInputType,
+      this.validator,
+      this.maxLines = 1});
 
   @override
   _AppLabeledTextFieldState createState() => _AppLabeledTextFieldState();
@@ -108,6 +114,7 @@ class _AppLabeledTextFieldState extends State<AppLabeledTextField> {
         keyboardType: widget.textInputType,
         obscureText: widget.obscureText,
         validator: widget.validator,
+        maxLines: widget.maxLines,
         decoration: InputDecoration(
             border: InputBorder.none,
             labelText: widget.labelText,
@@ -116,6 +123,30 @@ class _AppLabeledTextFieldState extends State<AppLabeledTextField> {
             suffix: widget.trailing),
         focusNode: _focusNode,
       ),
+    );
+  }
+}
+
+class AppPasswordField extends StatelessWidget {
+  final String labelText;
+  final String hintText;
+  final TextEditingController controller;
+
+  const AppPasswordField(
+      {Key key, this.labelText, this.hintText, this.controller})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppLabeledTextField(
+        labelText: labelText,
+        hintText: hintText,
+        controller: controller,
+        obscureText: true,
+        // TODO: This is causing overlfow on the page containing this widget for some reason.
+        //trailing: Container(
+            //margin: EdgeInsets.only(right: 13.0),
+            //child: Image.asset("assets/images/visibility.png"))
     );
   }
 }

@@ -126,7 +126,6 @@ class MockOrchidAPI implements OrchidAPI {
   VPNConfig _exitVPNConfig;
 
   /// Set or update the user's exit VPN config.
-  /// TODO: Support more than one VPN config?
   /// Return true if the configuration was saved successfully.
   @override
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig) async {
