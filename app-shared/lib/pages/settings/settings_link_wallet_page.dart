@@ -28,6 +28,7 @@ class _SettingsLinkWalletPageState extends State<SettingsLinkWalletPage> {
         child: Column(
           children: <Widget>[
             Spacer(flex: 1),
+            SizedBox(height: 8),
 
             Padding(
               padding: EdgeInsets.only(left: 40, right: 40, top: 1, bottom: 18),

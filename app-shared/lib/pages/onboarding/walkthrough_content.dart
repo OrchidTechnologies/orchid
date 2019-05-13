@@ -35,11 +35,17 @@ class WalkthroughContent extends StatelessWidget {
     var headerTextBox = WalkthroughHeaderTextBox(titleText: titleText);
     var bodyTextBox =
         WalkthroughBodyTextBox(bodyText: bodyText, bodyRichText: bodyRichText);
-    var image = imageName != null ? Image.asset(imageName) : Container();
+
+    var imageHeight = screenHeight > AppSizes.iphone_se.height ? null : 100.0;
+    var image = imageName != null
+        ? Image.asset(imageName, fit: BoxFit.contain, height: imageHeight)
+        : Container();
+
+    double horizontalPadding = screenHeight > AppSizes.iphone_se.height ? 40.0 : 16.0;
 
     if (imageLocation == WalkthroughContentImageLocation.Top) {
       return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 42),
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding + 2.0),
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.
@@ -58,7 +64,7 @@ class WalkthroughContent extends StatelessWidget {
           ));
     } else {
       return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.

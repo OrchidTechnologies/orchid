@@ -169,7 +169,7 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
                 opacity: controlsVisibility,
                 child: Container(
                   alignment: Alignment.bottomCenter,
-                  padding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0,
+                  padding: EdgeInsets.only(bottom:
                       WalkthroughPages.BottomControlsPadding.value(context)),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

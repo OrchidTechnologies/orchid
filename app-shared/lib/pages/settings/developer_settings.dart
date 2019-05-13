@@ -137,7 +137,7 @@ class _NameValueSettingState extends State<NameValueSetting> {
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: 16),
           decoration: AppTextField.textFieldEnabledDecoration,
-          width: 300,
+          width: 220,
           height: 36,
           child: TextField(
             controller: _controller,
