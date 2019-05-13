@@ -40,6 +40,8 @@
 
 #include <asio.hpp>
 
+#include <openssl/pkcs8.h>
+
 #include <pc/webrtc_sdp.h>
 #include <rtc_base/message_digest.h>
 
@@ -526,6 +528,12 @@ _trace();
     }
 };
 
+std::string Stringify(bssl::UniquePtr<BIO> bio) {
+    char *data;
+    size_t size(BIO_get_mem_data(bio.get(), &data));
+    return {data, size};
+}
+
 int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
@@ -534,13 +542,12 @@ int Main(int argc, const char *const argv[]) {
 
     po::options_description configs("command-line / file");
     configs.add_options()
-        ("diffie-hellman", po::value<std::string>(), "diffie hellman (.pem encoded)")
-        ("ethereum-api-url", po::value<std::string>(), "ethereum json/rpc and websocket endpoint")
-        ("ice-stun-server", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
-        ("rendezvous-port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
-        ("tls-certificate", po::value<std::string>(), "tls certificate (.pem encoded)")
-        ("tls-private-key", po::value<std::string>(), "tls private key (.pem encoded)")
-        ("ovpn-config-file", po::value<std::string>(), "openvpn .ovpn configuration file")
+        ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+        ("rpc", po::value<std::string>(), "ethereum json/rpc and websocket endpoint")
+        ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+        ("port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
+        ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
+        ("ovpn", po::value<std::string>(), "openvpn .ovpn configuration file")
     ;
 
     po::options_description hiddens("you can't see these");
@@ -570,17 +577,83 @@ int Main(int argc, const char *const argv[]) {
         return 0;
     }
 
-    ice_.emplace_back(args["ice-stun-server"].as<std::string>());
+    ice_.emplace_back(args["stun"].as<std::string>());
 
 
-    std::string chain;
-    boost::filesystem::load_string_file(args["tls-certificate"].as<std::string>(), chain);
+    std::string params;
+
+    auto dh(args["dh"].as<std::string>());
+    if (dh.empty())
+        params =
+            "-----BEGIN DH PARAMETERS-----\n"
+            "MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb\n"
+            "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft\n"
+            "awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT\n"
+            "mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh\n"
+            "fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq\n"
+            "5RXSJhiY+gUQFXKOWoqsqmj//////////wIBAg==\n"
+            "-----END DH PARAMETERS-----\n"
+        ;
+    else
+        boost::filesystem::load_string_file(dh, params);
+
 
     std::string key;
-    boost::filesystem::load_string_file(args["tls-private-key"].as<std::string>(), key);
+    std::string chain;
 
-    std::string dh;
-    boost::filesystem::load_string_file(args["diffie-hellman"].as<std::string>(), dh);
+    auto tls(args["tls"].as<std::string>());
+    if (tls.empty()) {
+        auto pem(rtc::RTCCertificate::Create(std::unique_ptr<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
+            "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
+        )))->ToPEM());
+
+        key = pem.private_key();
+        chain = pem.certificate();
+    } else {
+        bssl::UniquePtr<PKCS12> p12([&]() {
+            std::string str;
+            boost::filesystem::load_string_file(tls, str);
+
+            bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(str.data(), str.size()));
+            orc_assert(bio);
+
+            return d2i_PKCS12_bio(bio.get(), NULL);
+        }());
+
+        orc_assert(p12);
+
+        bssl::UniquePtr<EVP_PKEY> pkey;
+        bssl::UniquePtr<X509> x509;
+        bssl::UniquePtr<STACK_OF(X509)> stack;
+
+        std::tie(pkey, x509, stack) = [&]() {
+            EVP_PKEY *pkey(nullptr);
+            X509 *x509(nullptr);
+            STACK_OF(X509) *stack(nullptr);
+            orc_assert(PKCS12_parse(p12.get(), "", &pkey, &x509, &stack));
+
+            return std::tuple<
+                bssl::UniquePtr<EVP_PKEY>,
+                bssl::UniquePtr<X509>,
+                bssl::UniquePtr<STACK_OF(X509)>
+            >(pkey, x509, stack);
+        }();
+
+        orc_assert(pkey);
+        orc_assert(x509);
+
+        key = Stringify([&]() {
+            bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
+            orc_assert(PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL));
+            return bio;
+        }());
+
+        chain = Stringify([&]() {
+            bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
+            orc_assert(PEM_write_bio_X509(bio.get(), x509.get()));
+            return bio;
+        }());
+    }
 
 
     auto node(Make<Node>(key, chain));
@@ -596,7 +669,7 @@ int Main(int argc, const char *const argv[]) {
 
     context.use_certificate_chain(boost::asio::buffer(chain.data(), chain.size()));
     context.use_private_key(boost::asio::buffer(key.data(), key.size()), boost::asio::ssl::context::file_format::pem);
-    context.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
+    context.use_tmp_dh(boost::asio::buffer(params.data(), params.size()));
 
 
 #ifdef _WIN32
@@ -639,7 +712,7 @@ int Main(int argc, const char *const argv[]) {
 
     HttpListener::launch(Context(), {
         asio::ip::make_address("0.0.0.0"),
-        args["rendezvous-port"].as<uint16_t>()
+        args["port"].as<uint16_t>()
     }, [&](auto socket) {
         SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
             context.recv();
