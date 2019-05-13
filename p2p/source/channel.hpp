@@ -64,6 +64,11 @@ class SetObserver :
 
 class Channel;
 
+struct Configuration final {
+    std::vector<std::string> ice_;
+    rtc::scoped_refptr<rtc::RTCCertificate> tls_;
+};
+
 class Connection :
     public std::enable_shared_from_this<Connection>,
     //public cppcoro::async_manual_reset_event,
@@ -89,7 +94,7 @@ class Connection :
     }
 
   public:
-    Connection(const std::vector<std::string> &ices = std::vector<std::string>());
+    Connection(Configuration configuration = Configuration());
 
     virtual ~Connection() {
 _trace();

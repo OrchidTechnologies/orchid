@@ -25,7 +25,7 @@ all: $(output)/orchid$(exe)
 
 .PHONY: test
 test: $(output)/orchid$(exe)
-	$(output)/orchid$(exe)
+	$(output)/orchid$(exe) --tls-certificate public.pem --tls-private-key private.pem --diffie-hellman dh.pem 
 
 
 source += $(wildcard source/*.cpp)

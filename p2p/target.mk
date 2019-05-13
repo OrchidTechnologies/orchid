@@ -115,9 +115,15 @@ cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
 
 cflags += -DLWIP_ERRNO_STDINCLUDE
 
-cflags += -I$(pwd)/BeastHttp/include
+cflags += -I$(pwd)/BeastHttp/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
+source += $(wildcard $(pwd)/boost/libs/filesystem/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
+
+ifeq ($(target),win)
+c_operations += -Wno-unused-const-variable
+endif
+
 
 source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include

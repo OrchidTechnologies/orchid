@@ -62,7 +62,7 @@ struct SetupSSL {
     ~SetupSSL() { rtc::CleanupSSL(); }
 } setup_;
 
-Connection::Connection(const std::vector<std::string> &ices) :
+Connection::Connection(Configuration configuration) :
     peer_([&]() {
         static auto factory(webrtc::CreateModularPeerConnectionFactory([]() {
             webrtc::PeerConnectionFactoryDependencies dependencies;
@@ -72,18 +72,21 @@ Connection::Connection(const std::vector<std::string> &ices) :
             return dependencies;
         }()));
 
-        webrtc::PeerConnectionInterface::RTCConfiguration configuration;
+        webrtc::PeerConnectionInterface::RTCConfiguration rtc;
 
-        configuration.disable_link_local_networks = true;
-        configuration.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+        if (configuration.tls_)
+            rtc.certificates.emplace_back(std::move(configuration.tls_));
 
-        for (const auto &ice : ices) {
+        rtc.disable_link_local_networks = true;
+        rtc.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+
+        for (const auto &ice : configuration.ice_) {
             webrtc::PeerConnectionInterface::IceServer server;
             server.urls.emplace_back(ice);
-            configuration.servers.emplace_back(std::move(server));
+            rtc.servers.emplace_back(std::move(server));
         }
 
-        return factory->CreatePeerConnection(configuration, [&]() {
+        return factory->CreatePeerConnection(rtc, [&]() {
             webrtc::PeerConnectionDependencies dependencies(this);
             return dependencies;
         }());

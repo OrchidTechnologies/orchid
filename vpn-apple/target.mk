@@ -32,6 +32,7 @@ cflags += -I$(pwd)
 c_OpenVPNAdapter += -include external.hpp
 cflags_OpenVPNClient += -DOPENVPN_EXTERN=extern
 
+source += $(pwd)/directory.mm
 source += $(pwd)/external.mm
 source += $(pwd)/protect.cpp
 

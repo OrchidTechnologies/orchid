@@ -27,6 +27,8 @@
 
 #include <unistd.h>
 
+#include <boost/filesystem/string_file.hpp>
+
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -39,6 +41,7 @@
 #include <asio.hpp>
 
 #include <pc/webrtc_sdp.h>
+#include <rtc_base/message_digest.h>
 
 #include "baton.hpp"
 #include "beast.hpp"
@@ -63,7 +66,7 @@ namespace orc {
 
 static po::variables_map args;
 
-static std::vector<std::string> ices_;
+static std::vector<std::string> ice_;
 
 class Back {
   public:
@@ -82,11 +85,6 @@ class Outgoing final :
     }
 
   public:
-    Outgoing() :
-        Connection()
-    {
-    }
-
     virtual ~Outgoing() {
 _trace();
         Close();
@@ -355,8 +353,29 @@ _trace();
 };
 
 class Ship {
+  private:
+    rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
+    U<rtc::OpenSSLIdentity> identity_;
+
   public:
-    virtual S<Space> Find(const Common &common) = 0;
+    Ship(const std::string &key, const std::string &chain) :
+        certificate_(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(key, chain))),
+        // CAST: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
+        identity_(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(key, chain)))
+    {
+        auto fingerprint(rtc::SSLFingerprint::CreateFromCertificate(*certificate_));
+        std::cerr << fingerprint->GetRfc4572Fingerprint() << std::endl;
+    }
+
+    virtual S<Space> Find(const std::string &fingerprint) = 0;
+
+    rtc::scoped_refptr<rtc::RTCCertificate> Certificate() const {
+        return certificate_;
+    }
+
+    rtc::OpenSSLIdentity *Identity() const {
+        return identity_.get();
+    }
 };
 
 class Conduit :
@@ -396,9 +415,9 @@ class Conduit :
     static std::pair<S<Conduit>, Sink<Secure> *> Spawn(S<Ship> ship) {
         auto conduit(Make<Sink<Conduit, Secure>>());
         conduit->self_ = conduit;
-        auto secure(conduit->Wire<Sink<Secure>>(true, [ship, conduit = conduit.get()]() -> bool {
-            Identity identity;
-            auto space(ship->Find(identity.GetCommon()));
+        auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship, conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
+            auto fingerprint(rtc::SSLFingerprint::Create(rtc::DIGEST_SHA_256, certificate));
+            auto space(ship->Find(fingerprint->GetRfc4572Fingerprint()));
             conduit->Assign(std::move(space));
             return true;
         }));
@@ -446,7 +465,12 @@ class Incoming final :
 
   public:
     Incoming(S<Ship> ship) :
-        Connection(ices_),
+        Connection([&]() {
+            Configuration configuration;
+            configuration.ice_ = ice_;
+            configuration.tls_ = ship->Certificate();
+            return configuration;
+        }()),
         ship_(std::move(ship))
     {
     }
@@ -472,16 +496,21 @@ class Node final :
 {
   private:
     std::mutex mutex_;
-    std::map<Common, W<Space>> spaces_;
+    std::map<std::string, W<Space>> spaces_;
 
   public:
+    Node(const std::string &key, const std::string &chain) :
+        Ship(key, chain)
+    {
+    }
+
     virtual ~Node() {
 _trace();
     }
 
-    S<Space> Find(const Common &common) override {
+    S<Space> Find(const std::string &fingerprint) override {
         std::unique_lock<std::mutex> lock(mutex_);
-        auto &cache(spaces_[common]);
+        auto &cache(spaces_[fingerprint]);
         if (auto space = cache.lock())
             return space;
         auto space(Make<Space>(shared_from_this()));
@@ -505,8 +534,13 @@ int Main(int argc, const char *const argv[]) {
 
     po::options_description configs("command-line / file");
     configs.add_options()
-        ("rendezvous-port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
+        ("diffie-hellman", po::value<std::string>(), "diffie hellman (.pem encoded)")
+        ("ethereum-api-url", po::value<std::string>(), "ethereum json/rpc and websocket endpoint")
         ("ice-stun-server", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+        ("rendezvous-port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
+        ("tls-certificate", po::value<std::string>(), "tls certificate (.pem encoded)")
+        ("tls-private-key", po::value<std::string>(), "tls private key (.pem encoded)")
+        ("ovpn-config-file", po::value<std::string>(), "openvpn .ovpn configuration file")
     ;
 
     po::options_description hiddens("you can't see these");
@@ -536,10 +570,33 @@ int Main(int argc, const char *const argv[]) {
         return 0;
     }
 
-    ices_.emplace_back(args["ice-stun-server"].as<std::string>());
+    ice_.emplace_back(args["ice-stun-server"].as<std::string>());
 
 
-    auto node(Make<Node>());
+    std::string chain;
+    boost::filesystem::load_string_file(args["tls-certificate"].as<std::string>(), chain);
+
+    std::string key;
+    boost::filesystem::load_string_file(args["tls-private-key"].as<std::string>(), key);
+
+    std::string dh;
+    boost::filesystem::load_string_file(args["diffie-hellman"].as<std::string>(), dh);
+
+
+    auto node(Make<Node>(key, chain));
+
+
+    boost::asio::ssl::context context{boost::asio::ssl::context::tlsv12};
+
+    context.set_options(
+        boost::asio::ssl::context::default_workarounds |
+        boost::asio::ssl::context::no_sslv2 |
+        boost::asio::ssl::context::single_dh_use |
+    0);
+
+    context.use_certificate_chain(boost::asio::buffer(chain.data(), chain.size()));
+    context.use_private_key(boost::asio::buffer(key.data(), key.size()), boost::asio::ssl::context::file_format::pem);
+    context.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
 
 
 #ifdef _WIN32
@@ -548,7 +605,7 @@ int Main(int argc, const char *const argv[]) {
     static boost::asio::posix::stream_descriptor out(Context(), ::dup(STDOUT_FILENO));
 #endif
 
-    http::basic_router<HttpSession> router{boost::regex::ECMAScript};
+    http::basic_router<SslHttpSession> router{boost::regex::ECMAScript};
 
     router.post("/", [&](auto request, auto context) {
         http::out::pushn<std::ostream>(out, request);
@@ -584,7 +641,9 @@ int Main(int argc, const char *const argv[]) {
         asio::ip::make_address("0.0.0.0"),
         args["rendezvous-port"].as<uint16_t>()
     }, [&](auto socket) {
-        HttpSession::recv(std::move(socket), router, fail);
+        SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
+            context.recv();
+        }, fail);
     }, fail);
 
 
