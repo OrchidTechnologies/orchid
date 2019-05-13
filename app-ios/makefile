@@ -29,7 +29,6 @@ cflags += '-DORCHID_NAME="$(name)"'
 
 bundle := $(output)/Payload/$(name).app
 signed := 
-resources := 
 
 .PHONY: all
 all: $(output)/$(name).ipa
@@ -70,8 +69,6 @@ $(output)/%.o: /%.m ios/Pods/Manifest.lock
 	@mkdir -p $(dir $@)
 	@echo [CC] $<
 	$(cycc) -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
-
-resources += PureVPN.ovpn
 
 
 include env/output.mk
@@ -129,10 +126,6 @@ signed += $(bundle)/AppIcon.png
 $(bundle)/AppIcon.png: AppIcon.png
 	cp -a $< $@
 
-signed += $(bundle)/LaunchImage@3x.png
-$(bundle)/LaunchImage@3x.png: LaunchImage@3x.png
-	cp -a $< $@
-
 signed += $(bundle)/$(name)
 $(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
 	@mkdir -p $(dir $@)
@@ -149,7 +142,7 @@ $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
 	$(export) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
 
 
-signed += $(patsubst %,$(bundle)/%,$(resources))
+signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))
 $(bundle)/%: resource/%
 	@mkdir -p $(dir $@)
 	cp -af $< $@
