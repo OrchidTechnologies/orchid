@@ -117,8 +117,8 @@ _trace();
     }
 };
 
-static task<std::string> Answer(const std::string &offer, const std::string &host, const std::string &port) {
-    auto answer(co_await orc::Request("POST", {"https", host, port, "/"}, {}, offer));
+static task<std::string> Answer(const std::string &offer, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+    auto answer(co_await orc::Request("POST", {"https", host, port, "/"}, {}, offer, verify));
 
     if (true || Verbose) {
         Log() << "Offer: " << offer << std::endl;
@@ -129,11 +129,12 @@ static task<std::string> Answer(const std::string &offer, const std::string &hos
 }
 
 task<void> Server::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port) {
-    auto secure(sunk->Wire<Sink<Secure>>(false, local_.get(), [this](const rtc::OpenSSLCertificate &certificate) -> bool {
+    auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
         return *remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate);
-    }));
+    });
 
-    address_ = co_await origin->Hop(secure, host, port);
+    auto secure(sunk->Wire<Sink<Secure>>(false, local_.get(), verify));
+    address_ = co_await origin->Hop(secure, host, port, verify);
     co_await secure->Connect();
 }
 
@@ -182,11 +183,11 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
     co_return co_await result.Wait();
 }
 
-task<Address> Server::Hop(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Address> Server::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
     tunnel->Give(Path(tunnel));
     co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
-        auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port));
+        auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port, verify));
         auto description((co_await Call(NegotiateTag, Tie(tag, Beam(answer)))).str());
 
         cricket::Candidate candidate;
@@ -207,10 +208,10 @@ task<Address> Server::Connect(Sunk<> *sunk, const std::string &host, const std::
     });
 }
 
-task<Address> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Address> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     auto client(Make<Actor>());
     auto channel(sunk->Wire<Channel>(client));
-    auto answer(co_await Answer(Strip(co_await client->Offer()), host, port));
+    auto answer(co_await Answer(Strip(co_await client->Offer()), host, port, verify));
     co_await client->Negotiate(answer);
     co_await channel->Connect();
     auto candidate(client->Candidate());

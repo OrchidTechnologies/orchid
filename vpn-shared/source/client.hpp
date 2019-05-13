@@ -38,7 +38,7 @@ class Server;
 
 class Origin {
   public:
-    virtual task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
+    virtual task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) = 0;
 
     virtual task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
 
@@ -82,7 +82,7 @@ class Server :
     U<Route<Server>> Path(BufferDrain *drain);
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
     task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
@@ -93,7 +93,7 @@ class Local final :
     virtual ~Local() {
     }
 
-    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
     task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 

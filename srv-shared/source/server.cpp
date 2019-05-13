@@ -582,8 +582,7 @@ int Main(int argc, const char *const argv[]) {
 
     std::string params;
 
-    auto dh(args["dh"].as<std::string>());
-    if (dh.empty())
+    if (!args.count("dh"))
         params =
             "-----BEGIN DH PARAMETERS-----\n"
             "MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb\n"
@@ -595,14 +594,13 @@ int Main(int argc, const char *const argv[]) {
             "-----END DH PARAMETERS-----\n"
         ;
     else
-        boost::filesystem::load_string_file(dh, params);
+        boost::filesystem::load_string_file(args["dh"].as<std::string>(), params);
 
 
     std::string key;
     std::string chain;
 
-    auto tls(args["tls"].as<std::string>());
-    if (tls.empty()) {
+    if (!args.count("tls")) {
         auto pem(rtc::RTCCertificate::Create(std::unique_ptr<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
             "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
         )))->ToPEM());
@@ -612,7 +610,7 @@ int Main(int argc, const char *const argv[]) {
     } else {
         bssl::UniquePtr<PKCS12> p12([&]() {
             std::string str;
-            boost::filesystem::load_string_file(tls, str);
+            boost::filesystem::load_string_file(args["tls"].as<std::string>(), str);
 
             bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(str.data(), str.size()));
             orc_assert(bio);
