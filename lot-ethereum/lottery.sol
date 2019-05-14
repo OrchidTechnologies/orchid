@@ -59,7 +59,7 @@ contract OrchidLottery is IOrchidLottery {
 
     mapping(bytes32 => bool) tickets_;
 
-    function claim(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public {
+    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
 
@@ -81,7 +81,7 @@ contract OrchidLottery is IOrchidLottery {
     }
 
 
-    function unlock() public {
+    function warn() public {
         Pot storage pot = pots_[msg.sender];
         pot.unlock_ = block.timestamp + 1 days;
         emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
