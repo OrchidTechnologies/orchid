@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <ethash/keccak.hpp>
+
 #include "crypto.hpp"
 #include "trace.hpp"
 
@@ -30,16 +32,12 @@ static void SetupRandom() {
     orc_assert(sodium_init() != -1);
 }
 
-Block<crypto_generichash_BYTES> Hash(const Buffer &data) {
-    Block<crypto_generichash_BYTES> hash;
-    crypto_generichash_state state;
-    crypto_generichash_init(&state, NULL, 0, crypto_generichash_BYTES);
-    data.each([&](const Region &region) {
-        crypto_generichash_update(&state, region.data(), region.size());
-        return true;
-    });
-    crypto_generichash_final(&state, hash.data(), hash.size());
-    return hash;
+Block<32> Hash(const Buffer &data) {
+    Beam beam(data);
+    auto hash(ethash_keccak256(beam.data(), beam.size()));
+    Block<sizeof(hash)> value;
+    memcpy(value.data(), hash.bytes, sizeof(hash));
+    return value;
 }
 
 }
