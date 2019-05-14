@@ -42,6 +42,8 @@
 
 #include <openssl/pkcs8.h>
 
+//#include <api/jsep_session_description.h>
+//#include <pc/session_description.h>
 #include <pc/webrtc_sdp.h>
 #include <rtc_base/message_digest.h>
 
@@ -524,7 +526,38 @@ _trace();
     task<std::string> Respond(const std::string &offer) override {
         auto incoming(Incoming::Spawn(shared_from_this()));
         auto answer(co_await incoming->Answer(offer));
-        //answer = boost::regex_replace(std::move(answer), boost::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
+
+#if 0
+        if (false) {
+            webrtc::JsepSessionDescription jsep(webrtc::SdpType::kAnswer);
+            webrtc::SdpParseError error;
+            orc_assert(webrtc::SdpDeserialize(answer, &jsep, &error));
+            auto description(jsep.description());
+            orc_assert(description != NULL);
+
+            std::vector<cricket::Candidate> privates;
+
+            for (size_t i(0); ; ++i) {
+                auto ices(jsep.candidates(i));
+                if (ices == NULL)
+                    break;
+                for (size_t i(0), e(ices->count()); i != e; ++i) {
+                    auto ice(ices->at(i));
+                    orc_assert(ice != NULL);
+                    const auto &candidate(ice->candidate());
+                    if (candidate.address().IsPrivateIP())
+                        privates.push_back(candidate);
+                }
+            }
+
+            for (auto &p : privates)
+                p.set_transport_name("0");
+            orc_assert(jsep.RemoveCandidates(privates) == privates.size());
+
+            answer = webrtc::SdpSerialize(jsep);
+        }
+#endif
+
         co_return answer;
     }
 };
@@ -544,7 +577,7 @@ int Main(int argc, const char *const argv[]) {
     po::options_description configs("command-line / file");
     configs.add_options()
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
-        ("rpc", po::value<std::string>(), "ethereum json/rpc and websocket endpoint")
+        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
         ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
         ("port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")

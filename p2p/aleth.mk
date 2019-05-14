@@ -94,8 +94,5 @@ cflags += -DUSE_SCALAR_4X64
 cflags += -DHAVE_BUILTIN_EXPECT
 cflags += -DHAVE___INT128
 
-source += $(wildcard $(pwd)/ethash/lib/ethash/*.c)
-cflags += -I$(pwd)/ethash/include
-
 cflags += -I$(pwd)/leveldb/include
 cflags += -I$(pwd)/rocksdb/include

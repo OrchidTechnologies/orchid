@@ -34,6 +34,7 @@ static const Tag BatchTag{108, 83, 147, 158};
 static const Tag CloseTag{129, 185, 120, 174};
 static const Tag ConnectTag{231, 40, 11, 3};
 static const Tag DiscardTag{245, 216, 33, 201};
+static const Tag ExitTag{211, 46, 197, 75};
 static const Tag OfferTag{227, 169, 144, 57};
 static const Tag NegotiateTag{93, 138, 109, 150};
 

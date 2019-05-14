@@ -129,6 +129,10 @@ source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include
 
 
+source += $(wildcard $(pwd)/ethash/lib/ethash/*.c)
+cflags += -I$(pwd)/ethash/include
+
+
 source += $(filter-out \
     %/libutp_inet_ntop.cpp \
 ,$(wildcard $(pwd)/libutp/*.cpp))
