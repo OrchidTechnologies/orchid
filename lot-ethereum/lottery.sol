@@ -44,7 +44,7 @@ contract OrchidLottery is IOrchidLottery {
 
     mapping(address => Pot) pots_;
 
-    event Update(address signer);
+    event Update(address signer, uint64 amount, uint64 escrow, uint256 unlock);
 
     // signer must be a simple account, to support signing tickets
     function fund(address signer, uint64 amount, uint64 total) public {
@@ -52,7 +52,7 @@ contract OrchidLottery is IOrchidLottery {
         Pot storage pot = pots_[signer];
         pot.amount_ += amount;
         pot.escrow_ += total - amount;
-        emit Update(signer);
+        emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
         require(orchid_.transferFrom(msg.sender, address(this), total));
     }
 
@@ -76,7 +76,7 @@ contract OrchidLottery is IOrchidLottery {
         }
 
         pot.amount_ -= amount;
-        emit Update(signer);
+        emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
         require(orchid_.transfer(target, amount));
     }
 
@@ -84,7 +84,7 @@ contract OrchidLottery is IOrchidLottery {
     function unlock() public {
         Pot storage pot = pots_[msg.sender];
         pot.unlock_ = block.timestamp + 1 days;
-        emit Update(msg.sender);
+        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
     }
 
     function take(address payable target) public {
@@ -92,7 +92,7 @@ contract OrchidLottery is IOrchidLottery {
         require(pot.unlock_ <= block.timestamp);
         uint64 amount = pot.amount_ + pot.escrow_;
         delete pots_[msg.sender];
-        emit Update(msg.sender);
+        emit Update(msg.sender, 0, 0, 0);
         require(orchid_.transfer(target, amount));
     }
 
