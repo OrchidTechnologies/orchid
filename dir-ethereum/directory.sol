@@ -137,32 +137,24 @@ contract OrchidDirectory is IOrchidDirectory {
         require(orchid_.transferFrom(msg.sender, address(this), amount));
     }
 
-    function make(address stakee, uint64 amount) public {
-        address staker = msg.sender;
-        bytes32 key = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
-        require(medallion.amount_ == 0);
-
-        bytes32 parent = bytes32(0);
-        Primary storage primary = root_;
-
-        while (!nope(primary)) {
-            parent = name(primary);
-            Medallion storage current = medallions_[parent];
-            primary = current.before_ < current.after_ ? current.left_ : current.right_;
-        }
-
-        medallion.parent_ = parent;
-        copy(primary, staker, stakee);
-
-        done(key, medallion, amount);
-    }
-
     function push(address stakee, uint64 amount) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
-        require(medallion.amount_ != 0);
+
+        if (medallion.amount_ != 0) {
+            bytes32 parent = bytes32(0);
+            Primary storage primary = root_;
+
+            while (!nope(primary)) {
+                parent = name(primary);
+                Medallion storage current = medallions_[parent];
+                primary = current.before_ < current.after_ ? current.left_ : current.right_;
+            }
+
+            medallion.parent_ = parent;
+            copy(primary, staker, stakee);
+        }
 
         done(key, medallion, amount);
     }
