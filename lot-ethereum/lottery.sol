@@ -44,7 +44,7 @@ contract OrchidLottery is IOrchidLottery {
 
     mapping(address => Pot) pots_;
 
-    event Update(address signer);
+    event Update(address signer, uint64 amount, uint64 escrow, uint256 unlock);
 
     // signer must be a simple account, to support signing tickets
     function fund(address signer, uint64 amount, uint64 total) public {
@@ -52,14 +52,14 @@ contract OrchidLottery is IOrchidLottery {
         Pot storage pot = pots_[signer];
         pot.amount_ += amount;
         pot.escrow_ += total - amount;
-        emit Update(signer);
+        emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
         require(orchid_.transferFrom(msg.sender, address(this), total));
     }
 
 
     mapping(bytes32 => bool) tickets_;
 
-    function claim(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public {
+    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
 
@@ -76,23 +76,24 @@ contract OrchidLottery is IOrchidLottery {
         }
 
         pot.amount_ -= amount;
-        emit Update(signer);
+        emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
         require(orchid_.transfer(target, amount));
     }
 
 
-    function unlock() public {
+    function warn() public {
         Pot storage pot = pots_[msg.sender];
         pot.unlock_ = block.timestamp + 1 days;
-        emit Update(msg.sender);
+        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
     }
 
     function take(address payable target) public {
         Pot storage pot = pots_[msg.sender];
+        require(pot.unlock_ != 0);
         require(pot.unlock_ <= block.timestamp);
         uint64 amount = pot.amount_ + pot.escrow_;
         delete pots_[msg.sender];
-        emit Update(msg.sender);
+        emit Update(msg.sender, 0, 0, 0);
         require(orchid_.transfer(target, amount));
     }
 
