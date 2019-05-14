@@ -25,10 +25,55 @@
 
 #include <string>
 
+#include <boost/multiprecision/cpp_int.hpp>
+
+#include <json/json.h>
+
 #include "http.hpp"
 #include "task.hpp"
 
 namespace orc {
+
+using boost::multiprecision::uint256_t;
+
+class Argument final {
+  private:
+    Json::Value value_;
+
+  public:
+    Argument(uint256_t value) :
+        value_(value.str())
+    {
+        std::cerr << value_ << std::endl;
+    }
+
+    Argument(const char *value) :
+        value_(value)
+    {
+    }
+
+    Argument(const std::string &value) :
+        value_(value)
+    {
+    }
+
+    Argument(std::initializer_list<Argument> args) {
+        int index(0);
+        for (auto arg(args.begin()); arg != args.end(); ++arg)
+            value_[index++] = std::move(arg->value_);
+    }
+
+    Argument(std::map<std::string, Argument> args) {
+        for (auto arg(args.begin()); arg != args.end(); ++arg)
+            value_[std::move(arg->first)] = std::move(arg->second);
+    }
+
+    operator Json::Value &&() && {
+        return std::move(value_);
+    }
+};
+
+typedef std::map<std::string, Argument> Map;
 
 class Endpoint final {
   private:
@@ -38,13 +83,9 @@ class Endpoint final {
     Endpoint(URI uri) :
         uri_(std::move(uri))
     {
-        std::cout << "Endpoint();" << std::endl;
     }
 
-    task<std::string> operator ()(const std::string &method, const std::vector<std::string> &args);
-
-    task<std::string> eth_call(const std::string& to, const std::string& data);
-
+    task<std::string> operator ()(const std::string &method, Argument args);
 };
 
 }
