@@ -241,7 +241,7 @@ task<S<Origin>> Setup() {
         U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15"));
         orc_assert(fingerprint != nullptr);
         auto server(std::make_shared<Sink<Server, Secure>>(std::move(fingerprint)));
-        co_await server->Swing(server.get(), origin, host, "8080");
+        co_await server->Swing(server.get(), origin, host, "8082");
         origin = server;
     }
 
