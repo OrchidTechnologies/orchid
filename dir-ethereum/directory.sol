@@ -42,6 +42,14 @@ contract OrchidDirectory is IOrchidDirectory {
         bytes32 value_;
     }
 
+    function name(address staker, address stakee) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(staker, stakee));
+    }
+
+    function name(Primary storage primary) private view returns (bytes32) {
+        return primary.value_;
+    }
+
     function copy(Primary storage primary, address staker, address stakee) private {
         primary.value_ = name(staker, stakee);
     }
@@ -56,14 +64,6 @@ contract OrchidDirectory is IOrchidDirectory {
 
     function nope(Primary storage primary) private view returns (bool) {
         return primary.value_ == bytes32(0);
-    }
-
-    function name(address staker, address stakee) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(staker, stakee));
-    }
-
-    function name(Primary storage primary) private view returns (bytes32) {
-        return primary.value_;
     }
 
 
