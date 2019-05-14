@@ -20,33 +20,11 @@
 /* }}} */
 
 
-#ifndef ORCHID_JSONRPC_HPP
-#define ORCHID_JSONRPC_HPP
-
-#include <string>
-
-#include "http.hpp"
-#include "task.hpp"
 
 namespace orc {
 
-class Endpoint final {
-  private:
-    const URI uri_;
-
-  public:
-    Endpoint(URI uri) :
-        uri_(std::move(uri))
-    {
-        std::cout << "Endpoint();" << std::endl;
-    }
-
-    task<std::string> operator ()(const std::string &method, const std::vector<std::string> &args);
-
-    task<std::string> eth_call(const std::string& to, const std::string& data);
-
-};
+    void test_mpay();
 
 }
 
-#endif//ORCHID_JSONRPC_HPP
+
