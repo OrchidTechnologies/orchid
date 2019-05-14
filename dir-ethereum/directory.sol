@@ -176,6 +176,14 @@ contract OrchidDirectory is IOrchidDirectory {
 
     mapping(address => mapping(uint => Pending)) private pendings_;
 
+    function take(uint256 index, address payable target) public {
+        Pending memory pending = pendings_[msg.sender][index];
+        require(pending.amount_ != 0);
+        require(pending.time_ <= block.timestamp);
+        delete pendings_[msg.sender][index];
+        require(orchid_.transfer(target, pending.amount_));
+    }
+
     function pull(address stakee, uint64 amount, uint256 index) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
@@ -231,14 +239,6 @@ contract OrchidDirectory is IOrchidDirectory {
         require(pending.amount_ == 0);
         pending.time_ = block.timestamp + 30 days;
         pending.amount_ = amount;
-    }
-
-    function take(uint256 index, address payable target) public {
-        Pending memory pending = pendings_[msg.sender][index];
-        require(pending.amount_ != 0);
-        require(pending.time_ <= block.timestamp);
-        delete pendings_[msg.sender][index];
-        require(orchid_.transfer(target, pending.amount_));
     }
 
 
