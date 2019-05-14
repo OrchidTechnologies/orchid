@@ -59,10 +59,8 @@ contract OrchidLottery is IOrchidLottery {
 
     mapping(bytes32 => bool) tickets_;
 
-    function claim(uint256 secret, bytes32 hash, address target, uint256 nonce, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public {
+    function claim(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
-        require(msg.sender == target);
-
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
 
         bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, ratio, amount));
