@@ -38,34 +38,34 @@ contract OrchidDirectory is IOrchidDirectory {
 
 
 
-    struct Pointer {
+    struct Primary {
         address staker_;
         address stakee_;
     }
 
-    function copy(Pointer storage pointer, address staker, address stakee) private {
-        pointer.staker_ = staker;
-        pointer.stakee_ = stakee;
+    function copy(Primary storage primary, address staker, address stakee) private {
+        primary.staker_ = staker;
+        primary.stakee_ = stakee;
     }
 
-    function copy(Pointer storage pointer, Pointer storage other) private {
-        copy(pointer, other.staker_, other.stakee_);
+    function copy(Primary storage primary, Primary storage other) private {
+        copy(primary, other.staker_, other.stakee_);
     }
 
-    function kill(Pointer storage pointer) private {
-        copy(pointer, address(0), address(0));
+    function kill(Primary storage primary) private {
+        copy(primary, address(0), address(0));
     }
 
-    function nope(Pointer storage pointer) private view returns (bool) {
-        return pointer.staker_ == address(0);
+    function nope(Primary storage primary) private view returns (bool) {
+        return primary.staker_ == address(0);
     }
 
     function name(address staker, address stakee) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(staker, stakee));
     }
 
-    function name(Pointer storage pointer) private view returns (bytes32) {
-        return name(pointer.staker_, pointer.stakee_);
+    function name(Primary storage primary) private view returns (bytes32) {
+        return name(primary.staker_, primary.stakee_);
     }
 
 
@@ -77,13 +77,13 @@ contract OrchidDirectory is IOrchidDirectory {
         uint64 amount_;
 
         bytes32 parent_;
-        Pointer left_;
-        Pointer right_;
+        Primary left_;
+        Primary right_;
     }
 
     mapping(bytes32 => Medallion) private medallions_;
 
-    Pointer private root_;
+    Primary private root_;
 
 
     function have() public view returns (uint64 amount) {
@@ -96,24 +96,24 @@ contract OrchidDirectory is IOrchidDirectory {
     function scan(uint128 percent) public view returns (address) {
         uint64 point = uint64(have() * uint256(percent) / 2**128);
 
-        Pointer storage pointer = root_;
+        Primary storage primary = root_;
         for (;;) {
-            require(!nope(pointer));
-            Medallion storage medallion = medallions_[name(pointer)];
+            require(!nope(primary));
+            Medallion storage medallion = medallions_[name(primary)];
 
             if (point < medallion.before_) {
-                pointer = medallion.left_;
+                primary = medallion.left_;
                 continue;
             }
 
             point -= medallion.before_;
 
             if (point < medallion.amount_)
-                return pointer.stakee_;
+                return primary.stakee_;
 
             point -= medallion.amount_;
 
-            pointer = medallion.right_;
+            primary = medallion.right_;
         }
     }
 
@@ -144,16 +144,16 @@ contract OrchidDirectory is IOrchidDirectory {
         require(medallion.amount_ == 0);
 
         bytes32 parent = bytes32(0);
-        Pointer storage pointer = root_;
+        Primary storage primary = root_;
 
-        while (!nope(pointer)) {
-            parent = name(pointer);
+        while (!nope(primary)) {
+            parent = name(primary);
             Medallion storage current = medallions_[parent];
-            pointer = current.before_ < current.after_ ? current.left_ : current.right_;
+            primary = current.before_ < current.after_ ? current.left_ : current.right_;
         }
 
         medallion.parent_ = parent;
-        copy(pointer, staker, stakee);
+        copy(primary, staker, stakee);
 
         done(key, medallion, amount);
     }
@@ -192,16 +192,16 @@ contract OrchidDirectory is IOrchidDirectory {
                 delete root_;
             else {
                 Medallion storage current = medallions_[medallion.parent_];
-                Pointer storage pivot = name(current.left_) == key ? current.left_ : current.right_;
-                Pointer storage child = medallion.before_ > medallion.after_ ? medallion.left_ : medallion.right_;
+                Primary storage pivot = name(current.left_) == key ? current.left_ : current.right_;
+                Primary storage child = medallion.before_ > medallion.after_ ? medallion.left_ : medallion.right_;
 
                 if (nope(child))
                     kill(pivot);
                 else {
-                    Pointer storage last = child;
+                    Primary storage last = child;
                     for (;;) {
                         current = medallions_[name(last)];
-                        Pointer storage next = current.before_ > current.after_ ? current.left_ : current.right_;
+                        Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
                         if (nope(next)) {
                             if (current.parent_ != key)
                                 medallions_[name(child)].parent_ = name(last);
