@@ -69,11 +69,6 @@ _trace();
     }
 
   public:
-    Actor() :
-        Connection()
-    {
-    }
-
     virtual ~Actor() {
 _trace();
         Close();
@@ -87,7 +82,7 @@ class Tunnel :
     friend class Sink;
 
   protected:
-    virtual Route<Remote> *Inner() = 0;
+    virtual Route<Server> *Inner() = 0;
 
     void Land(const Buffer &data) override {
         Link::Land(data);
@@ -122,8 +117,8 @@ _trace();
     }
 };
 
-static task<std::string> Answer(const std::string &offer, const std::string &host, const std::string &port) {
-    auto answer(co_await orc::Request("POST", {"http", host, port, "/"}, {}, offer));
+static task<std::string> Answer(const std::string &offer, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+    auto answer(co_await orc::Request("POST", {"https", host, port, "/"}, {}, offer, verify));
 
     if (true || Verbose) {
         Log() << "Offer: " << offer << std::endl;
@@ -133,22 +128,21 @@ static task<std::string> Answer(const std::string &offer, const std::string &hos
     co_return answer;
 }
 
-task<void> Remote::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port) {
-    auto secure(sunk->Wire<Sink<Secure>>(false, []() -> bool {
-        // XXX: verify the certificate
-_trace();
-        return true;
-    }));
+task<void> Server::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port) {
+    auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
+        return *remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate);
+    });
 
-    address_ = co_await origin->Hop(secure, host, port);
+    auto secure(sunk->Wire<Sink<Secure>>(false, local_.get(), verify));
+    address_ = co_await origin->Hop(secure, host, port, verify);
     co_await secure->Connect();
 }
 
-U<Route<Remote>> Remote::Path(BufferDrain *drain) {
-    return std::make_unique<Route<Remote>>(drain, shared_from_this());
+U<Route<Server>> Server::Path(BufferDrain *drain) {
+    return std::make_unique<Route<Server>>(drain, shared_from_this());
 }
 
-task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
+task<Beam> Server::Call(const Tag &command, const Buffer &args) {
     class Result :
         public BufferDrain
     {
@@ -189,11 +183,11 @@ task<Beam> Remote::Call(const Tag &command, const Buffer &args) {
     co_return co_await result.Wait();
 }
 
-task<Address> Remote::Hop(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Remote>>>());
+task<Address> Server::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
     tunnel->Give(Path(tunnel));
     co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
-        auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port));
+        auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port, verify));
         auto description((co_await Call(NegotiateTag, Tie(tag, Beam(answer)))).str());
 
         cricket::Candidate candidate;
@@ -205,8 +199,8 @@ task<Address> Remote::Hop(Sunk<> *sunk, const std::string &host, const std::stri
     });
 }
 
-task<Address> Remote::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Remote>>>());
+task<Address> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
     tunnel->Give(Path(tunnel));
     co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
         auto [service, address] = Take<2, 0>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
@@ -214,10 +208,10 @@ task<Address> Remote::Connect(Sunk<> *sunk, const std::string &host, const std::
     });
 }
 
-task<Address> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Address> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     auto client(Make<Actor>());
     auto channel(sunk->Wire<Channel>(client));
-    auto answer(co_await Answer(Strip(co_await client->Offer()), host, port));
+    auto answer(co_await Answer(Strip(co_await client->Offer()), host, port, verify));
     co_await client->Negotiate(answer);
     co_await channel->Connect();
     auto candidate(client->Candidate());
@@ -244,11 +238,11 @@ task<S<Origin>> Setup() {
     //const char *server("localhost");
 
     for (const char *host : {server, server, server}) {
-        // XXX: this is all wrong right now as it doesn't support multiple routes
-        Identity identity;
-        auto remote(std::make_shared<Sink<Remote, Secure>>(identity.GetCommon()));
-        co_await remote->Swing(remote.get(), origin, host, "8080");
-        origin = remote;
+        U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15"));
+        orc_assert(fingerprint != nullptr);
+        auto server(std::make_shared<Sink<Server, Secure>>(std::move(fingerprint)));
+        co_await server->Swing(server.get(), origin, host, "8082");
+        origin = server;
     }
 
     co_return origin;

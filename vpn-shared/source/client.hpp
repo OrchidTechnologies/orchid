@@ -23,6 +23,9 @@
 #ifndef ORCHID_CLIENT_HPP
 #define ORCHID_CLIENT_HPP
 
+#include <rtc_base/openssl_identity.h>
+#include <rtc_base/ssl_fingerprint.h>
+
 #include "address.hpp"
 #include "http.hpp"
 #include "secure.hpp"
@@ -31,32 +34,36 @@
 
 namespace orc {
 
-class Remote;
+class Server;
 
 class Origin {
   public:
-    virtual task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
+    virtual task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) = 0;
 
     virtual task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
 
     task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 };
 
-class Remote :
-    public std::enable_shared_from_this<Remote>,
+class Server :
+    public std::enable_shared_from_this<Server>,
     public Origin,
     public Router<Secure>
 {
   private:
-    const Common common_;
+    U<rtc::SSLFingerprint> remote_;
+
+    U<rtc::OpenSSLIdentity> local_;
+
     Address address_;
 
   protected:
     virtual Secure *Inner() = 0;
 
   public:
-    Remote(Common common) :
-        common_(std::move(common))
+    Server(U<rtc::SSLFingerprint> remote) :
+        remote_(std::move(remote)),
+        local_(rtc::OpenSSLIdentity::GenerateWithExpiration("WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24))
     {
     }
 
@@ -72,10 +79,10 @@ class Remote :
 
     task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port);
 
-    U<Route<Remote>> Path(BufferDrain *drain);
+    U<Route<Server>> Path(BufferDrain *drain);
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
     task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
@@ -86,7 +93,7 @@ class Local final :
     virtual ~Local() {
     }
 
-    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
     task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 

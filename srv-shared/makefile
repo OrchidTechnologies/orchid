@@ -25,7 +25,7 @@ all: $(output)/orchid$(exe)
 
 .PHONY: test
 test: $(output)/orchid$(exe)
-	$(output)/orchid$(exe)
+	$(output)/orchid$(exe) --tls ../network.p12 --dh ../dh.pem
 
 
 source += $(wildcard source/*.cpp)

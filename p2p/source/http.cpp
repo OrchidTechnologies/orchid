@@ -31,6 +31,7 @@
 
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/error.hpp>
+#include <boost/asio/ssl/rfc2818_verification.hpp>
 #include <boost/asio/ssl/stream.hpp>
 
 #include <asio/experimental/co_spawn.hpp>
@@ -57,7 +58,7 @@ task<std::string> Request_(Stream_ &stream, boost::beast::http::request<boost::b
 }
 
 template <typename Socket_>
-task<std::string> Request_(Socket_ &socket, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Request_(Socket_ &socket, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), uri.path_, 11};
     req.set(boost::beast::http::field::host, uri.host_);
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -76,7 +77,18 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
     } else if (uri.schema_ == "https") {
         // XXX: this needs security
         asio::ssl::context context{asio::ssl::context::sslv23_client};
-        context.set_verify_mode(asio::ssl::verify_none);
+
+        context.set_verify_mode(asio::ssl::verify_peer);
+
+        if (!verify)
+            context.set_verify_callback(asio::ssl::rfc2818_verification(uri.host_));
+        else {
+            context.set_verify_callback([&](bool preverified, boost::asio::ssl::verify_context &context) {
+                auto store(context.native_handle());
+                const rtc::OpenSSLCertificate certificate(X509_STORE_CTX_get0_cert(store));
+                return verify(certificate);
+            });
+        }
 
         asio::ssl::stream<Socket_ &> stream{socket, context};
         co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
@@ -98,18 +110,18 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
     co_return body;
 }
 
-task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
-    return Request_(adapter, method, uri, headers, data);
+task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+    return Request_(adapter, method, uri, headers, data, verify);
 }
 
-task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     asio::ip::tcp::resolver resolver(orc::Context());
     const auto results(co_await resolver.async_resolve(uri.host_, uri.port_, orc::Token()));
 
     asio::ip::tcp::socket socket(orc::Context());
     (void) co_await asio::async_connect(socket, results.begin(), results.end(), orc::Token());
 
-    auto body(co_await Request_(socket, method, uri, headers, data));
+    auto body(co_await Request_(socket, method, uri, headers, data, verify));
 
     boost::beast::error_code ec;
     socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);

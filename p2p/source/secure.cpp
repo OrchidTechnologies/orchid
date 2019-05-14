@@ -20,8 +20,6 @@
 /* }}} */
 
 
-#include "rtc_base/openssl_identity.h"
-
 #include "secure.hpp"
 #include "scope.hpp"
 
@@ -223,7 +221,7 @@ void Secure::Stop(const std::string &error) {
     (this->*next_)();
 }
 
-Secure::Secure(BufferDrain *drain, bool server, decltype(verify_) verify) :
+Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, decltype(verify_) verify) :
     Link(drain),
     server_(server),
     verify_(std::move(verify))
@@ -240,21 +238,19 @@ Secure::Secure(BufferDrain *drain, bool server, decltype(verify_) verify) :
     SSL_CTX_set_min_proto_version(context, DTLS1_VERSION);
     SSL_CTX_set_cipher_list(context, "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
 
-    {
-        long one_day(60 * 60 * 24);
-        time_t now(time(nullptr));
-        rtc::SSLIdentityParams params;
-        params.key_params = rtc::KeyParams(rtc::KT_DEFAULT);
-        params.common_name = "client";
-        params.not_before = now - one_day;
-        params.not_after = now + one_day;
-        auto identity(rtc::OpenSSLIdentity::GenerateForTest(params));
-        identity->ConfigureIdentity(context);
-    }
+    orc_assert(identity->ConfigureIdentity(context));
 
-    SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
+    SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
     SSL_CTX_set_cert_verify_callback(context, [](X509_STORE_CTX *store, void *arg) -> int {
-        return static_cast<Secure *>(arg)->verify_() ? 1 : 0;
+        auto secure(static_cast<Secure *>(arg));
+
+        /*std::vector<U<rtc::SSLCertificate>> chain;
+        for (X509 *certificate : SSL_get_peer_full_cert_chain(secure->ssl_))
+          chain.emplace_back(new rtc::OpenSSLCertificate(certificate));
+        stream->peer_cert_chain_.reset(new SSLCertChain(std::move(cert_chain)));*/
+
+        const rtc::OpenSSLCertificate certificate(X509_STORE_CTX_get0_cert(store));
+        return secure->verify_(certificate) ? 1 : 0;
     }, this);
 
     ssl_ = SSL_new(context);

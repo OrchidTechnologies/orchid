@@ -25,10 +25,11 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-#include <basic_router.hxx>
-#include <reactor/listener.hxx>
-#include <reactor/session.hxx>
-#include <out.hxx>
+#include <http/basic_router.hxx>
+#include <http/out.hxx>
+#include <http/reactor/listener.hxx>
+#include <http/reactor/session.hxx>
+#include <http/reactor/ssl/session.hxx>
 #pragma clang diagnostic pop
 
 namespace http = _0xdead4ead::http;
@@ -37,6 +38,7 @@ namespace orc {
 
 using HttpSession = http::reactor::_default::session_type;
 using HttpListener = http::reactor::_default::listener_type;
+using SslHttpSession = http::reactor::ssl::_default::session_type;
 
 template<class Body_>
 auto Response(const boost::beast::http::request<Body_> &request, const std::string &type, typename Body_::value_type body, boost::beast::http::status status = boost::beast::http::status::ok) {

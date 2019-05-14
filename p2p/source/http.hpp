@@ -26,6 +26,8 @@
 #include <map>
 #include <string>
 
+#include <rtc_base/openssl_certificate.h>
+
 #include "task.hpp"
 
 namespace orc {
@@ -50,9 +52,9 @@ class URI final {
     }
 };
 
-task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
+task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
 
-task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
+task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
 
 }
 

@@ -25,6 +25,9 @@
 
 #include <openssl/ssl.h>
 
+#include <rtc_base/openssl_certificate.h>
+#include <rtc_base/openssl_identity.h>
+
 #include <cppcoro/async_manual_reset_event.hpp>
 #include <cppcoro/async_mutex.hpp>
 
@@ -40,7 +43,7 @@ class Secure :
 
   private:
     const bool server_;
-    std::function<bool ()> verify_;
+    std::function<bool (const rtc::OpenSSLCertificate &)> verify_;
 
     bool eof_ = false;
     const Buffer *data_ = NULL;
@@ -71,7 +74,7 @@ class Secure :
     void Stop(const std::string &error) override;
 
   public:
-    Secure(BufferDrain *drain, bool server, decltype(verify_) verify);
+    Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, decltype(verify_) verify);
 
     task<void> Connect();
 

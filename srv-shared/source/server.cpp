@@ -27,6 +27,8 @@
 
 #include <unistd.h>
 
+#include <boost/filesystem/string_file.hpp>
+
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -38,7 +40,10 @@
 
 #include <asio.hpp>
 
+#include <openssl/pkcs8.h>
+
 #include <pc/webrtc_sdp.h>
+#include <rtc_base/message_digest.h>
 
 #include "baton.hpp"
 #include "beast.hpp"
@@ -64,7 +69,7 @@ namespace orc {
 
 static po::variables_map args;
 
-static std::vector<std::string> ices_;
+static std::vector<std::string> ice_;
 
 class Back {
   public:
@@ -83,11 +88,6 @@ class Outgoing final :
     }
 
   public:
-    Outgoing() :
-        Connection()
-    {
-    }
-
     virtual ~Outgoing() {
 _trace();
         Close();
@@ -356,8 +356,29 @@ _trace();
 };
 
 class Ship {
+  private:
+    rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
+    U<rtc::OpenSSLIdentity> identity_;
+
   public:
-    virtual S<Space> Find(const Common &common) = 0;
+    Ship(const std::string &key, const std::string &chain) :
+        certificate_(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(key, chain))),
+        // CAST: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
+        identity_(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(key, chain)))
+    {
+        auto fingerprint(rtc::SSLFingerprint::CreateFromCertificate(*certificate_));
+        std::cerr << fingerprint->GetRfc4572Fingerprint() << std::endl;
+    }
+
+    virtual S<Space> Find(const std::string &fingerprint) = 0;
+
+    rtc::scoped_refptr<rtc::RTCCertificate> Certificate() const {
+        return certificate_;
+    }
+
+    rtc::OpenSSLIdentity *Identity() const {
+        return identity_.get();
+    }
 };
 
 class Conduit :
@@ -397,9 +418,9 @@ class Conduit :
     static std::pair<S<Conduit>, Sink<Secure> *> Spawn(S<Ship> ship) {
         auto conduit(Make<Sink<Conduit, Secure>>());
         conduit->self_ = conduit;
-        auto secure(conduit->Wire<Sink<Secure>>(true, [ship, conduit = conduit.get()]() -> bool {
-            Identity identity;
-            auto space(ship->Find(identity.GetCommon()));
+        auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship, conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
+            auto fingerprint(rtc::SSLFingerprint::Create(rtc::DIGEST_SHA_256, certificate));
+            auto space(ship->Find(fingerprint->GetRfc4572Fingerprint()));
             conduit->Assign(std::move(space));
             return true;
         }));
@@ -447,7 +468,12 @@ class Incoming final :
 
   public:
     Incoming(S<Ship> ship) :
-        Connection(ices_),
+        Connection([&]() {
+            Configuration configuration;
+            configuration.ice_ = ice_;
+            configuration.tls_ = ship->Certificate();
+            return configuration;
+        }()),
         ship_(std::move(ship))
     {
     }
@@ -473,16 +499,21 @@ class Node final :
 {
   private:
     std::mutex mutex_;
-    std::map<Common, W<Space>> spaces_;
+    std::map<std::string, W<Space>> spaces_;
 
   public:
+    Node(const std::string &key, const std::string &chain) :
+        Ship(key, chain)
+    {
+    }
+
     virtual ~Node() {
 _trace();
     }
 
-    S<Space> Find(const Common &common) override {
+    S<Space> Find(const std::string &fingerprint) override {
         std::unique_lock<std::mutex> lock(mutex_);
-        auto &cache(spaces_[common]);
+        auto &cache(spaces_[fingerprint]);
         if (auto space = cache.lock())
             return space;
         auto space(Make<Space>(shared_from_this()));
@@ -498,6 +529,12 @@ _trace();
     }
 };
 
+std::string Stringify(bssl::UniquePtr<BIO> bio) {
+    char *data;
+    size_t size(BIO_get_mem_data(bio.get(), &data));
+    return {data, size};
+}
+
 int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
@@ -506,8 +543,12 @@ int Main(int argc, const char *const argv[]) {
 
     po::options_description configs("command-line / file");
     configs.add_options()
-        ("rendezvous-port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
-        ("ice-stun-server", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+        ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+        ("rpc", po::value<std::string>(), "ethereum json/rpc and websocket endpoint")
+        ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+        ("port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
+        ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
+        ("ovpn", po::value<std::string>(), "openvpn .ovpn configuration file")
     ;
 
     po::options_description hiddens("you can't see these");
@@ -541,10 +582,97 @@ int Main(int argc, const char *const argv[]) {
         return 0;
     }
 
-    ices_.emplace_back(args["ice-stun-server"].as<std::string>());
+    ice_.emplace_back(args["stun"].as<std::string>());
 
 
-    auto node(Make<Node>());
+    std::string params;
+
+    if (!args.count("dh"))
+        params =
+            "-----BEGIN DH PARAMETERS-----\n"
+            "MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb\n"
+            "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft\n"
+            "awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT\n"
+            "mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh\n"
+            "fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq\n"
+            "5RXSJhiY+gUQFXKOWoqsqmj//////////wIBAg==\n"
+            "-----END DH PARAMETERS-----\n"
+        ;
+    else
+        boost::filesystem::load_string_file(args["dh"].as<std::string>(), params);
+
+
+    std::string key;
+    std::string chain;
+
+    if (!args.count("tls")) {
+        auto pem(rtc::RTCCertificate::Create(std::unique_ptr<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
+            "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
+        )))->ToPEM());
+
+        key = pem.private_key();
+        chain = pem.certificate();
+    } else {
+        bssl::UniquePtr<PKCS12> p12([&]() {
+            std::string str;
+            boost::filesystem::load_string_file(args["tls"].as<std::string>(), str);
+
+            bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(str.data(), str.size()));
+            orc_assert(bio);
+
+            return d2i_PKCS12_bio(bio.get(), NULL);
+        }());
+
+        orc_assert(p12);
+
+        bssl::UniquePtr<EVP_PKEY> pkey;
+        bssl::UniquePtr<X509> x509;
+        bssl::UniquePtr<STACK_OF(X509)> stack;
+
+        std::tie(pkey, x509, stack) = [&]() {
+            EVP_PKEY *pkey(nullptr);
+            X509 *x509(nullptr);
+            STACK_OF(X509) *stack(nullptr);
+            orc_assert(PKCS12_parse(p12.get(), "", &pkey, &x509, &stack));
+
+            return std::tuple<
+                bssl::UniquePtr<EVP_PKEY>,
+                bssl::UniquePtr<X509>,
+                bssl::UniquePtr<STACK_OF(X509)>
+            >(pkey, x509, stack);
+        }();
+
+        orc_assert(pkey);
+        orc_assert(x509);
+
+        key = Stringify([&]() {
+            bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
+            orc_assert(PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL));
+            return bio;
+        }());
+
+        chain = Stringify([&]() {
+            bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
+            orc_assert(PEM_write_bio_X509(bio.get(), x509.get()));
+            return bio;
+        }());
+    }
+
+
+    auto node(Make<Node>(key, chain));
+
+
+    boost::asio::ssl::context context{boost::asio::ssl::context::tlsv12};
+
+    context.set_options(
+        boost::asio::ssl::context::default_workarounds |
+        boost::asio::ssl::context::no_sslv2 |
+        boost::asio::ssl::context::single_dh_use |
+    0);
+
+    context.use_certificate_chain(boost::asio::buffer(chain.data(), chain.size()));
+    context.use_private_key(boost::asio::buffer(key.data(), key.size()), boost::asio::ssl::context::file_format::pem);
+    context.use_tmp_dh(boost::asio::buffer(params.data(), params.size()));
 
 
 #ifdef _WIN32
@@ -553,7 +681,7 @@ int Main(int argc, const char *const argv[]) {
     static boost::asio::posix::stream_descriptor out(Context(), ::dup(STDOUT_FILENO));
 #endif
 
-    http::basic_router<HttpSession> router{boost::regex::ECMAScript};
+    http::basic_router<SslHttpSession> router{boost::regex::ECMAScript};
 
     router.post("/", [&](auto request, auto context) {
         http::out::pushn<std::ostream>(out, request);
@@ -587,9 +715,11 @@ int Main(int argc, const char *const argv[]) {
 
     HttpListener::launch(Context(), {
         asio::ip::make_address("0.0.0.0"),
-        args["rendezvous-port"].as<uint16_t>()
+        args["port"].as<uint16_t>()
     }, [&](auto socket) {
-        HttpSession::recv(std::move(socket), router, fail);
+        SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
+            context.recv();
+        }, fail);
     }, fail);
 
 
