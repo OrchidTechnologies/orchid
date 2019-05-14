@@ -89,6 +89,7 @@ contract OrchidLottery is IOrchidLottery {
 
     function take(address payable target) public {
         Pot storage pot = pots_[msg.sender];
+        require(pot.unlock_ != 0);
         require(pot.unlock_ <= block.timestamp);
         uint64 amount = pot.amount_ + pot.escrow_;
         delete pots_[msg.sender];
