@@ -219,15 +219,11 @@ class Channel final :
         connection_->channels_.insert(this);
     }
 
-    Channel(BufferDrain *drain, const S<Connection> &connection, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string()) :
+    Channel(BufferDrain *drain, const S<Connection> &connection, const std::string &label = std::string(), const std::string &protocol = std::string()) :
         Channel(drain, connection, [&]() {
             webrtc::DataChannelInit init;
             init.ordered = false;
             init.protocol = protocol;
-            if (id != -1) {
-                init.negotiated = true;
-                init.id = id;
-            }
             return (*connection)->CreateDataChannel(label, &init);
         }())
     {

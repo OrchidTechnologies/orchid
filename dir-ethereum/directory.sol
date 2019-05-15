@@ -39,7 +39,8 @@ contract OrchidDirectory is IOrchidDirectory {
 
 
     struct Primary {
-        bytes32 value_;
+        address staker_;
+        address stakee_;
     }
 
     function name(address staker, address stakee) private pure returns (bytes32) {
@@ -47,23 +48,24 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
     function name(Primary storage primary) private view returns (bytes32) {
-        return primary.value_;
+        return name(primary.staker_, primary.stakee_);
     }
 
     function copy(Primary storage primary, address staker, address stakee) private {
-        primary.value_ = name(staker, stakee);
+        primary.staker_ = staker;
+        primary.stakee_ = stakee;
     }
 
     function copy(Primary storage primary, Primary storage other) private {
-        primary.value_ = other.value_;
+        copy(primary, other.staker_, other.stakee_);
     }
 
     function kill(Primary storage primary) private {
-        primary.value_ = bytes32(0);
+        copy(primary, address(0), address(0));
     }
 
     function nope(Primary storage primary) private view returns (bool) {
-        return primary.value_ == bytes32(0);
+        return primary.staker_ == address(0);
     }
 
 
@@ -73,7 +75,6 @@ contract OrchidDirectory is IOrchidDirectory {
         uint64 after_;
 
         uint64 amount_;
-        address stakee_;
 
         bytes32 parent_;
         Primary left_;
@@ -108,7 +109,7 @@ contract OrchidDirectory is IOrchidDirectory {
             point -= medallion.before_;
 
             if (point < medallion.amount_)
-                return medallion.stakee_;
+                return primary.stakee_;
 
             point -= medallion.amount_;
 
