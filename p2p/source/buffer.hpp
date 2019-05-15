@@ -30,11 +30,14 @@
 #include <asio.hpp>
 
 #include <boost/mp11/tuple.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 #include "error.hpp"
 #include "trace.hpp"
 
 namespace orc {
+
+using boost::multiprecision::uint256_t;
 
 class Region;
 class Beam;
@@ -56,9 +59,31 @@ class Buffer {
     }
 
     std::string str() const;
+    std::string hex() const;
 };
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer);
+
+template <typename Type_, bool Arithmetic = std::is_arithmetic<Type_>::value>
+struct Cast;
+
+template <typename Type_>
+struct Cast<Type_, true> {
+    static Type_ Load(const uint8_t *data, size_t size) {
+        orc_assert(size == sizeof(Type_));
+        return *reinterpret_cast<const Type_ *>(data);
+    }
+};
+
+template <>
+struct Cast<uint256_t, false> {
+    static uint256_t Load(const uint8_t *data, size_t size) {
+        orc_assert(size == 32);
+        uint256_t value;
+        boost::multiprecision::import_bits(value, std::reverse_iterator(data + size), std::reverse_iterator(data), 8, false);
+        return value;
+    }
+};
 
 class Region :
     public Buffer
@@ -76,10 +101,8 @@ class Region :
     }
 
     template <typename Type_>
-    typename std::enable_if<std::is_arithmetic<Type_>::value, Type_>::type num() const {
-        Type_ value;
-        orc_assert(size() == sizeof(value));
-        return *reinterpret_cast<const Type_ *>(data());
+    Type_ num() const {
+        return Cast<Type_>::Load(data(), size());
     }
 };
 
@@ -133,8 +156,87 @@ class Strung final :
     }
 };
 
-template <typename Type_, typename = typename std::enable_if<std::is_arithmetic<Type_>::value, Type_>::type>
-class Number final :
+template <size_t Size_>
+class Data :
+    public Region
+{
+  protected:
+    std::array<uint8_t, Size_> data_;
+
+  public:
+    Data() {
+    }
+
+    Data(const std::array<uint8_t, Size_> &data) :
+        data_(data)
+    {
+    }
+
+    const uint8_t *data() const override {
+        return data_.data();
+    }
+
+    uint8_t *data() {
+        return data_.data();
+    }
+
+    size_t size() const override {
+        return Size_;
+    }
+
+    bool operator <(const Data<Size_> &rhs) const {
+        return data_ < rhs.data_;
+    }
+};
+
+template <size_t Size_>
+class Block final :
+    public Data<Size_>
+{
+  public:
+    static const size_t Size = Size_;
+
+  public:
+    Block() {
+    }
+
+    Block(const void *data, size_t size) {
+        orc_assert(size == Size_);
+        memcpy(this->data_.data(), data, Size_);
+    }
+
+    Block(const std::string &data) :
+        Block(data.data(), data.size())
+    {
+    }
+
+    Block(std::initializer_list<uint8_t> list) {
+        std::copy(list.begin(), list.end(), this->data_.begin());
+    }
+
+    Block(const Block &rhs) :
+        Data<Size_>(rhs.data_)
+    {
+    }
+
+    uint8_t &operator [](size_t index) {
+        return this->data_[index];
+    }
+
+    template <size_t Clip_>
+    typename std::enable_if<Clip_ <= Size_, Block<Clip_>>::type Clip() {
+        Block<Clip_> value;
+        for (size_t i(0); i != Clip_; ++i)
+            value[i] = this->data_[i];
+        return value;
+    }
+};
+
+template <typename Type_, bool Arithmetic_ = std::is_arithmetic<Type_>::value>
+class Number;
+
+template <typename Type_>
+class Number<Type_, true> final :
     public Region
 {
   private:
@@ -159,58 +261,13 @@ class Number final :
     }
 };
 
-template <size_t Size_>
-class Block final :
-    public Region
+template <>
+class Number<uint256_t, false> final :
+    public Data<32>
 {
   public:
-    static const size_t Size = Size_;
-
-  private:
-    std::array<uint8_t, Size_> data_;
-
-  public:
-    Block() {
-    }
-
-    Block(const void *data, size_t size) {
-        orc_assert(size == Size_);
-        memcpy(data_.data(), data, Size_);
-    }
-
-    Block(const std::string &data) :
-        Block(data.data(), data.size())
-    {
-    }
-
-    Block(std::initializer_list<uint8_t> list) {
-        std::copy(list.begin(), list.end(), data_.begin());
-    }
-
-    Block(const Block &rhs) :
-        data_(rhs.data_)
-    {
-    }
-
-    uint8_t &operator [](size_t index) {
-        return data_[index];
-    }
-
-    const uint8_t *data() const override {
-        return data_.data();
-    }
-
-    uint8_t *data() {
-        return data_.data();
-    }
-
-    size_t size() const override {
-        return Size_;
-    }
-
-    bool operator <(const Block<Size_> &rhs) const {
-        return data_ < rhs.data_;
-    }
+    Number(uint256_t value);
+    Number(const std::string &value);
 };
 
 class Beam :
@@ -284,7 +341,17 @@ class Beam :
     size_t size() const override {
         return size_;
     }
+
+    const uint8_t &operator [](size_t index) const {
+        return data_[index];
+    }
+
+    uint8_t &operator [](size_t index) {
+        return data_[index];
+    }
 };
+
+Beam Bless(const std::string &data);
 
 template <typename Data_>
 inline bool operator ==(const Beam &lhs, const std::string &rhs) {

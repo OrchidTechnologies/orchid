@@ -73,10 +73,51 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     return out;
 }
 
+Number<uint256_t, false>::Number(uint256_t value) {
+    boost::multiprecision::export_bits(value, data_.rbegin(), 8, false);
+}
+
+Number<uint256_t, false>::Number(const std::string &value) :
+    Number(uint256_t(value))
+{
+}
+
 Beam::Beam(const Buffer &buffer) :
     Beam(buffer.size())
 {
     buffer.copy(data_, size_);
+}
+
+static uint8_t Bless(char value) {
+    if (value >= '0' && value <= '9')
+        return value - '0';
+    if (value >= 'a' && value <= 'f')
+        return value - 'a' + 10;
+    if (value >= 'A' && value <= 'F')
+        return value - 'A' + 10;
+    orc_assert(false);
+}
+
+Beam Bless(const std::string &data) {
+    size_t size(data.size());
+    orc_assert((size & 1) == 0);
+    size >>= 1;
+
+    if (size == 0)
+        return Beam();
+
+    size_t offset;
+    if (data[0] != '0' || data[1] != 'x') {
+        offset = 0;
+    } else {
+        offset = 2;
+        --size;
+    }
+
+    Beam beam(size);
+    for (size_t i(0); i != size; ++i)
+        beam[i] = (Bless(data[offset + i * 2]) << 4) + Bless(data[offset + i * 2 + 1]);
+    return beam;
 }
 
 bool operator ==(const Beam &lhs, const Buffer &rhs) {

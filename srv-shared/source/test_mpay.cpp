@@ -59,8 +59,8 @@ namespace orc {
         }) << std::endl;
 
         std::cerr << co_await endpoint("eth_call", {Map{
-            {"to", "0x9561C133DD8580860B6b7E504bC5Aa500f0f06a7"},
-            {"data", "0xf826c0350000000000000000000000002b1ce95573ec1b927a90cb488db113b40eeb064a"},
+            {"to", uint256_t("0xd87e0ee1a59841de2ac78c17209db97e27651985")},
+            {"data", Tie(Hash("look(address)").Clip<4>(), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a"))},
         }, "latest"}) << std::endl;
 
         // 0xc6cecaa40000000000000000000000000000000000000000000000000000000000000003

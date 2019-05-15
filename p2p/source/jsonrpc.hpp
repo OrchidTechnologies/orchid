@@ -25,8 +25,6 @@
 
 #include <string>
 
-#include <boost/multiprecision/cpp_int.hpp>
-
 #include <json/json.h>
 
 #include "buffer.hpp"
@@ -36,8 +34,6 @@
 namespace orc {
 
 // XXX: none of this is REMOTELY efficient
-
-using boost::multiprecision::uint256_t;
 
 class Nested {
   protected:
