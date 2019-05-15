@@ -139,11 +139,11 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg)
 
     Json::FastWriter writer;
     auto body(co_await Request("POST", uri_, {{"content-type", "application/json"}}, writer.write(root)));
-    Log() << "[[ " << body << " ]]" << std::endl;
 
     Json::Value result;
     Json::Reader reader;
     orc_assert(reader.parse(std::move(body), result, false));
+    Log() << root << " -> " << result << "" << std::endl;
 
     orc_assert(result["jsonrpc"] == "2.0");
     orc_assert(result["id"] == "");

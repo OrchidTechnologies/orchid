@@ -29,6 +29,7 @@
 
 #include <asio.hpp>
 
+#include <boost/endian/conversion.hpp>
 #include <boost/mp11/tuple.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -71,7 +72,7 @@ template <typename Type_>
 struct Cast<Type_, true> {
     static Type_ Load(const uint8_t *data, size_t size) {
         orc_assert(size == sizeof(Type_));
-        return *reinterpret_cast<const Type_ *>(data);
+        return boost::endian::big_to_native(*reinterpret_cast<const Type_ *>(data));
     }
 };
 
@@ -120,8 +121,14 @@ class Subset final :
     {
     }
 
+    Subset(const char *data, size_t size) :
+        data_(reinterpret_cast<const uint8_t *>(data)),
+        size_(size)
+    {
+    }
+
     Subset(const std::string &data) :
-        Subset(reinterpret_cast<const uint8_t *>(data.data()), data.size())
+        Subset(data.data(), data.size())
     {
     }
 
@@ -244,7 +251,7 @@ class Number<Type_, true> final :
 
   public:
     Number(Type_ value) :
-        value_(value)
+        value_(boost::endian::native_to_big(value))
     {
     }
 
@@ -261,13 +268,19 @@ class Number<Type_, true> final :
     }
 };
 
-template <>
-class Number<uint256_t, false> final :
-    public Data<32>
+template <unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_>
+class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>, false> final :
+    public Data<(Bits_ >> 3)>
 {
   public:
-    Number(uint256_t value);
-    Number(const std::string &value);
+    Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value) {
+        boost::multiprecision::export_bits(value, this->data_.rbegin(), 8, false);
+    }
+
+    Number(const std::string &value) :
+        Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>(value))
+    {
+    }
 };
 
 class Beam :

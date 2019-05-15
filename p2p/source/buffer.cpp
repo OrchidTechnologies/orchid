@@ -73,15 +73,6 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     return out;
 }
 
-Number<uint256_t, false>::Number(uint256_t value) {
-    boost::multiprecision::export_bits(value, data_.rbegin(), 8, false);
-}
-
-Number<uint256_t, false>::Number(const std::string &value) :
-    Number(uint256_t(value))
-{
-}
-
 Beam::Beam(const Buffer &buffer) :
     Beam(buffer.size())
 {

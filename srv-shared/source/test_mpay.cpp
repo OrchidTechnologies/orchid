@@ -52,16 +52,16 @@ namespace orc {
         //std::string data = "{\"to\": \"0x9561C133DD8580860B6b7E504bC5Aa500f0f06a7\", \"data\": \"0x38b51ce10000000000000000000000000000000000000000000000000000000000000003\"}";
         //std::cout << data << std::endl;
 
+        auto block(co_await endpoint.Block());
+
         std::cerr << co_await endpoint("eth_getProof", {
-            "0x7F0d15C7FAae65896648C8273B6d7E43f58Fa842",
-            {"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"},
-            "latest",
+            uint256_t("0x7F0d15C7FAae65896648C8273B6d7E43f58Fa842"),
+            {uint256_t("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")},
+            block,
         }) << std::endl;
 
-        std::cerr << co_await endpoint("eth_call", {Map{
-            {"to", uint256_t("0xd87e0ee1a59841de2ac78c17209db97e27651985")},
-            {"data", Tie(Hash("look(address)").Clip<4>(), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a"))},
-        }, "latest"}) << std::endl;
+        Selector look("look(address)");
+        std::cerr << co_await endpoint.Call(block, uint256_t("0xd87e0ee1a59841de2ac78c17209db97e27651985"), look, Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a")) << std::endl;
 
         // 0xc6cecaa40000000000000000000000000000000000000000000000000000000000000003
         // 0x38b51ce1000000000000000000000000142E2fDd2188Bb0005adD957D100cDCc1ad7F55A

@@ -28,6 +28,7 @@
 #include <json/json.h>
 
 #include "buffer.hpp"
+#include "crypto.hpp"
 #include "http.hpp"
 #include "task.hpp"
 
@@ -187,9 +188,68 @@ class Argument final {
 
 typedef std::map<std::string, Argument> Map;
 
+class Proven final {
+  private:
+  public:
+};
+
+template <typename Type_>
+struct Result final {
+    typedef uint256_t type;
+};
+
+class Selector final :
+    public Region
+{
+  private:
+    uint32_t value_;
+
+  public:
+    Selector(uint32_t value) :
+        value_(boost::endian::native_to_big(value))
+    {
+    }
+
+    Selector(const char *data, size_t size) :
+        Selector(Hash(Subset(data, size)).Clip<4>().num<uint32_t>())
+    {
+    }
+
+    Selector(const char *signature) :
+        Selector(signature, strlen(signature))
+    {
+    }
+
+    Selector(const std::string &signature) :
+        Selector(signature.data(), signature.size())
+    {
+    }
+
+    const uint8_t *data() const override {
+        return reinterpret_cast<const uint8_t *>(&value_);
+    }
+
+    size_t size() const override {
+        return sizeof(value_);
+    }
+};
+
 class Endpoint final {
   private:
     const URI uri_;
+
+    template <int Index_, typename Result_, typename... Args_>
+    void Get(Result_ &result, Json::Value &storage) {
+    }
+
+    template <int Index_, typename Result_, typename... Args_>
+    void Get(Result_ &result, Json::Value &storage, const uint256_t &key, Args_ &&...args) {
+        auto proof(storage[Index_]);
+        orc_assert(uint256_t(proof["key"].asString()) == key);
+        uint256_t value(proof["value"].asString());
+        std::get<Index_ + 1>(result) = value;
+        Get<Index_ + 1>(result, storage, std::forward<Args_>(args)...);
+    }
 
   public:
     Endpoint(URI uri) :
@@ -198,6 +258,26 @@ class Endpoint final {
     }
 
     task<Json::Value> operator ()(const std::string &method, Argument args);
+
+    task<uint256_t> Block() {
+        co_return uint256_t((co_await operator ()("eth_blockNumber", {})).asString());
+    }
+
+    template <typename... Args_>
+    task<Beam> Call(const Argument &block, uint256_t account, const Selector &selector, Args_ &&...args) {
+        co_return Bless((co_await operator ()("eth_call", {Map{
+            {"to", account},
+            {"data", Tie(selector, std::forward<Args_>(args)...)},
+        }, block})).asString());
+    }
+
+    template <typename... Args_>
+    task<std::tuple<Proven, typename Result<Args_>::type...>> Get(const Argument &block, uint256_t account, Args_ &&...args) {
+        auto proof(co_await operator ()("eth_getProof", {account, {std::forward<Args_>(args)...}, block}));
+        std::tuple<Proven, typename Result<Args_>::type...> result;
+        Get<0>(result, proof["storageProof"], std::forward<Args_>(args)...);
+        co_return result;
+    }
 };
 
 }
