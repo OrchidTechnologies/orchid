@@ -40,4 +40,8 @@ Block<32> Hash(const Buffer &data) {
     return value;
 }
 
+Block<32> Hash(const std::string &data) {
+    return Hash(Subset(data));
+}
+
 }

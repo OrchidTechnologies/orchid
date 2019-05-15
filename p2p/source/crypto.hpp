@@ -45,6 +45,7 @@ Block<Size_> Random() {
 }
 
 Block<32> Hash(const Buffer &data);
+Block<32> Hash(const std::string &data);
 
 typedef Block<crypto_box_SECRETKEYBYTES> Secret;
 typedef Block<crypto_box_PUBLICKEYBYTES> Common;

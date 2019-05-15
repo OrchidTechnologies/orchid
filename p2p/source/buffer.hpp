@@ -97,6 +97,11 @@ class Subset final :
     {
     }
 
+    Subset(const std::string &data) :
+        Subset(reinterpret_cast<const uint8_t *>(data.data()), data.size())
+    {
+    }
+
     const uint8_t *data() const override {
         return data_;
     }
@@ -522,16 +527,15 @@ class Window final :
         return true;
     }
 
-    template <size_t Size_>
-    void Take(Block<Size_> &value) {
-        auto data(value.data());
+    void Take(uint8_t *data, size_t size) {
+        Beam beam(size);
 
         auto &here(index_.region_);
         auto &step(index_.offset_);
 
         auto rest(regions_.get() + count_ - here);
 
-        for (auto need(Size_); need != 0; step = 0, ++here, --rest) {
+        for (auto need(size); need != 0; step = 0, ++here, --rest) {
             orc_assert(rest != 0);
 
             auto size((*here)->size() - step);
@@ -548,6 +552,27 @@ class Window final :
             data += size;
             need -= size;
         }
+    }
+
+    void Take(std::string &data) {
+        Take(reinterpret_cast<uint8_t *>(data.data()), data.size());
+    }
+
+    uint8_t Take() {
+        uint8_t value;
+        Take(&value, 1);
+        return value;
+    }
+
+    template <size_t Size_>
+    void Take(Block<Size_> &value) {
+        Take(value.data(), value.size());
+    }
+
+    Beam Take(size_t size) {
+        Beam beam(size);
+        Take(beam.data(), beam.size());
+        return beam;
     }
 };
 

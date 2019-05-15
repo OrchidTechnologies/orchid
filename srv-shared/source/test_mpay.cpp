@@ -19,13 +19,15 @@
 **/
 /* }}} */
 
+
 #include <cstdio>
 #include <iostream>
 #include <future>
 
-#include "test_mpay.h"
+#include "crypto.hpp"
 #include "jsonrpc.hpp"
 
+#include "test_mpay.h"
 
 
 namespace orc {
@@ -49,6 +51,12 @@ namespace orc {
 
         //std::string data = "{\"to\": \"0x9561C133DD8580860B6b7E504bC5Aa500f0f06a7\", \"data\": \"0x38b51ce10000000000000000000000000000000000000000000000000000000000000003\"}";
         //std::cout << data << std::endl;
+
+        std::cerr << co_await endpoint("eth_getProof", {
+            "0x7F0d15C7FAae65896648C8273B6d7E43f58Fa842",
+            {"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"},
+            "latest",
+        }) << std::endl;
 
         std::cerr << co_await endpoint("eth_call", {Map{
             {"to", "0x9561C133DD8580860B6b7E504bC5Aa500f0f06a7"},

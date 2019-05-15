@@ -27,7 +27,110 @@
 
 namespace orc {
 
-task<std::string> Endpoint::operator ()(const std::string &method, Argument arg) {
+void Nested::enc(std::string &data, unsigned length) {
+    if (length == 0)
+        return;
+    enc(data, length >> 8);
+    data += char(length & 0xff);
+}
+
+void Nested::enc(std::string &data, unsigned length, uint8_t offset) {
+    if (length < 57)
+        data += char(length + offset);
+    else {
+        std::string binary;
+        enc(binary, length);
+        data += char(binary.size() + offset + 55);
+        data += std::move(binary);
+    }
+}
+
+void Nested::enc(std::string &data) const {
+    if (!scalar_) {
+        std::string list;
+        for (auto &item : array_)
+            item.enc(list);
+        enc(data, list.size(), 0xc0);
+        data += std::move(list);
+    } else if (value_.size() == 1 && uint8_t(value_[0]) < 0x80) {
+        data += value_[0];
+    } else {
+        enc(data, value_.size(), 0x80);
+        data += value_;
+    }
+}
+
+std::string Implode(Nested nested) {
+    std::string data;
+    nested.enc(data);
+    return data;
+}
+
+std::ostream &operator <<(std::ostream &out, const Nested &value) {
+    if (value.scalar()) {
+        out << '"';
+        for (uint8_t c : value.str())
+            if (c >= 0x20 && c < 0x80)
+                out << c;
+            else {
+                out << std::hex << std::setfill('0');
+                out << "\\x" << std::setw(2) << unsigned(c);
+            }
+        out << '"';
+    } else {
+        out << '{';
+        for (size_t i(0), e(value.size()); i != e; ++i)
+            out << value[i] << ',';
+        out << '}';
+    }
+
+    return out;
+}
+
+Explode::Explode(Window &window) {
+    auto first(window.Take());
+
+    if (first < 0x80) {
+        scalar_ = true;
+        value_ = char(first);
+    } else if (first < 0xb8) {
+        scalar_ = true;
+        value_.resize(first - 0x80);
+        window.Take(value_);
+    } else if (first < 0xc0) {
+        scalar_ = true;
+        uint32_t length(0);
+        auto size(first - 0xb7);
+        orc_assert(size <= sizeof(length));
+        window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
+        value_.resize(ntohl(length));
+        window.Take(value_);
+    } else if (first < 0xf8) {
+        scalar_ = false;
+        auto beam(window.Take(first - 0xc0));
+        Window sub(beam);
+        while (!sub.empty())
+            array_.emplace_back(Explode(sub));
+    } else {
+        scalar_ = false;
+        uint32_t length(0);
+        auto size(first - 0xf7);
+        orc_assert(size <= sizeof(length));
+        window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
+        auto beam(window.Take(ntohl(length)));
+        Window sub(beam);
+        while (!sub.empty())
+            array_.emplace_back(Explode(sub));
+    }
+}
+
+Explode::Explode(Window &&window) :
+    Explode(window)
+{
+    orc_assert(window.empty());
+}
+
+task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg) {
     Json::Value root;
     root["jsonrpc"] = "2.0";
     root["method"] = method;
@@ -44,7 +147,7 @@ task<std::string> Endpoint::operator ()(const std::string &method, Argument arg)
 
     orc_assert(result["jsonrpc"] == "2.0");
     orc_assert(result["id"] == "");
-    co_return result["result"].asString();
+    co_return result["result"];
 }
 
 }

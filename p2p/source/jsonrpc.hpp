@@ -29,22 +29,123 @@
 
 #include <json/json.h>
 
+#include "buffer.hpp"
 #include "http.hpp"
 #include "task.hpp"
 
 namespace orc {
 
+// XXX: none of this is REMOTELY efficient
+
 using boost::multiprecision::uint256_t;
+
+class Nested {
+  protected:
+    bool scalar_;
+    mutable std::string value_;
+    mutable std::vector<Nested> array_;
+
+  private:
+    static void enc(std::string &data, unsigned length);
+    static void enc(std::string &data, unsigned length, uint8_t offset);
+
+  public:
+    Nested() :
+        scalar_(false)
+    {
+    }
+
+    Nested(bool scalar, std::string value, std::vector<Nested> array) :
+        scalar_(scalar),
+        value_(std::move(value)),
+        array_(std::move(array))
+    {
+    }
+
+    Nested(uint8_t value) :
+        scalar_(true),
+        value_(1, char(value))
+    {
+    }
+
+    Nested(std::string value) :
+        scalar_(true),
+        value_(std::move(value))
+    {
+    }
+
+    Nested(const char *value) :
+        Nested(std::string(value))
+    {
+    }
+
+    Nested(const Buffer &buffer) :
+        Nested(buffer.str())
+    {
+    }
+
+    Nested(std::initializer_list<Nested> list) :
+        scalar_(false)
+    {
+        for (auto nested(list.begin()); nested != list.end(); ++nested)
+            array_.emplace_back(nested->scalar_, std::move(nested->value_), std::move(nested->array_));
+    }
+
+    Nested(Nested &&rhs) :
+        scalar_(rhs.scalar_),
+        value_(std::move(rhs.value_)),
+        array_(std::move(rhs.array_))
+    {
+    }
+
+    bool scalar() const {
+        return scalar_;
+    }
+
+    size_t size() const {
+        orc_assert(!scalar_);
+        return array_.size();
+    }
+
+    const Nested &operator [](unsigned i) const {
+        orc_assert(!scalar_);
+        orc_assert(i < size());
+        return array_[i];
+    }
+
+    Subset buf() const {
+        orc_assert(scalar_);
+        return Subset(value_);
+    }
+
+    const std::string &str() const {
+        orc_assert(scalar_);
+        return value_;
+    }
+
+    void enc(std::string &data) const;
+};
+
+std::ostream &operator <<(std::ostream &out, const Nested &value);
+
+class Explode final :
+    public Nested
+{
+  public:
+    Explode(Window &window);
+    Explode(Window &&window);
+};
+
+std::string Implode(Nested value);
 
 class Argument final {
   private:
-    Json::Value value_;
+    mutable Json::Value value_;
 
   public:
     Argument(uint256_t value) :
-        value_(value.str())
+        value_("0x" + value.str(0, std::ios::hex))
     {
-        std::cerr << value_ << std::endl;
     }
 
     Argument(const char *value) :
@@ -54,6 +155,21 @@ class Argument final {
 
     Argument(const std::string &value) :
         value_(value)
+    {
+    }
+
+    Argument(const Buffer &buffer) :
+        value_([&]() {
+            std::ostringstream value;
+            value << "0x" << std::hex << std::setfill('0');
+            buffer.each([&](const Region &region) {
+                auto data(region.data());
+                for (size_t i(0), e(region.size()); i != e; ++i)
+                    value << std::setw(2) << unsigned(uint8_t(data[i]));
+                return true;
+            });
+            return value.str();
+        }())
     {
     }
 
@@ -85,7 +201,7 @@ class Endpoint final {
     {
     }
 
-    task<std::string> operator ()(const std::string &method, Argument args);
+    task<Json::Value> operator ()(const std::string &method, Argument args);
 };
 
 }
