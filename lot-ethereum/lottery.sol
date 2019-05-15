@@ -89,7 +89,8 @@ contract OrchidLottery is IOrchidLottery {
 
         pot.amount_ -= amount;
         emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
-        require(orchid_.transfer(target, amount));
+        if (amount != 0)
+            require(orchid_.transfer(target, amount));
     }
 
 
