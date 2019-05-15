@@ -190,7 +190,17 @@ typedef std::map<std::string, Argument> Map;
 
 class Proven final {
   private:
+    uint256_t balance_;
+
   public:
+    Proven(Json::Value value) :
+        balance_(value["balance"].asString())
+    {
+    }
+
+    const uint256_t &Balance() {
+        return balance_;
+    }
 };
 
 template <typename Type_>
@@ -274,7 +284,7 @@ class Endpoint final {
     template <typename... Args_>
     task<std::tuple<Proven, typename Result<Args_>::type...>> Get(const Argument &block, uint256_t account, Args_ &&...args) {
         auto proof(co_await operator ()("eth_getProof", {account, {std::forward<Args_>(args)...}, block}));
-        std::tuple<Proven, typename Result<Args_>::type...> result;
+        std::tuple<Proven, typename Result<Args_>::type...> result(proof);
         Get<0>(result, proof["storageProof"], std::forward<Args_>(args)...);
         co_return result;
     }
