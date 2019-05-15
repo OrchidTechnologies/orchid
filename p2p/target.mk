@@ -148,4 +148,21 @@ cflags += -DPOSIX
 endif
 
 
+source += $(pwd)/secp256k1/src/secp256k1.c
+cflags += -I$(pwd)/secp256k1
+cflags += -I$(pwd)/secp256k1/include
+cflags += -I$(pwd)/secp256k1/src
+
+cflags += -DENABLE_MODULE_RECOVERY
+cflags += -DENABLE_MODULE_ECDH
+cflags += -DUSE_ECMULT_STATIC_PRECOMPUTATION
+cflags += -DUSE_FIELD_INV_BUILTIN
+cflags += -DUSE_NUM_NONE
+cflags += -DUSE_SCALAR_INV_BUILTIN
+cflags += -DUSE_FIELD_5X52
+cflags += -DUSE_SCALAR_4X64
+cflags += -DHAVE_BUILTIN_EXPECT
+cflags += -DHAVE___INT128
+
+
 include $(pwd)/rtc/target.mk
