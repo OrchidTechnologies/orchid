@@ -57,15 +57,27 @@ contract OrchidLottery is IOrchidLottery {
     }
 
 
-    mapping(bytes32 => bool) tickets_;
+    struct Track {
+        uint256 until_;
+    }
 
-    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public {
+    mapping(address => mapping(bytes32 => Track)) tracks_;
+
+    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
+        require(until > block.timestamp);
 
-        bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, ratio, amount));
-        require(!tickets_[ticket]);
-        tickets_[ticket] = true;
+        bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, until, ratio, amount));
+
+        require(tracks_[target][ticket].until_ == 0);
+        tracks_[target][ticket].until_ = until;
+
+        for (uint256 i = 0; i != old.length; ++i) {
+            Track storage track = tracks_[target][old[i]];
+            require(track.until_ <= block.timestamp);
+            delete track.until_;
+        }
 
         address signer = ecrecover(ticket, v, r, s);
         Pot storage pot = pots_[signer];
