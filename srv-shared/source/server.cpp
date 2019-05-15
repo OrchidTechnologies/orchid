@@ -544,7 +544,7 @@ int Main(int argc, const char *const argv[]) {
     po::options_description configs("command-line / file");
     configs.add_options()
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
-        ("rpc", po::value<std::string>(), "ethereum json/rpc and websocket endpoint")
+        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
         ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
         ("port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
