@@ -38,17 +38,17 @@ inline void Random(void *data, size_t size) {
 }
 
 template <size_t Size_>
-Block<Size_> Random() {
-    Block<Size_> value;
+Brick<Size_> Random() {
+    Brick<Size_> value;
     Random(value.data(), value.size());
     return value;
 }
 
-Block<32> Hash(const Buffer &data);
-Block<32> Hash(const std::string &data);
+Brick<32> Hash(const Buffer &data);
+Brick<32> Hash(const std::string &data);
 
-typedef Block<crypto_box_SECRETKEYBYTES> Secret;
-typedef Block<crypto_box_PUBLICKEYBYTES> Common;
+typedef Brick<crypto_box_SECRETKEYBYTES> Secret;
+typedef Brick<crypto_box_PUBLICKEYBYTES> Common;
 
 class Identity {
   private:
@@ -75,7 +75,7 @@ class Identity {
     }
 };
 
-typedef Block<crypto_box_BEFORENMBYTES> Shared;
+typedef Brick<crypto_box_BEFORENMBYTES> Shared;
 
 static const size_t NonceSize = crypto_box_NONCEBYTES;
 

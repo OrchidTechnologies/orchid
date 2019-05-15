@@ -197,31 +197,31 @@ class Data :
 };
 
 template <size_t Size_>
-class Block final :
+class Brick final :
     public Data<Size_>
 {
   public:
     static const size_t Size = Size_;
 
   public:
-    Block() {
+    Brick() {
     }
 
-    Block(const void *data, size_t size) {
+    Brick(const void *data, size_t size) {
         orc_assert(size == Size_);
         memcpy(this->data_.data(), data, Size_);
     }
 
-    Block(const std::string &data) :
-        Block(data.data(), data.size())
+    Brick(const std::string &data) :
+        Brick(data.data(), data.size())
     {
     }
 
-    Block(std::initializer_list<uint8_t> list) {
+    Brick(std::initializer_list<uint8_t> list) {
         std::copy(list.begin(), list.end(), this->data_.begin());
     }
 
-    Block(const Block &rhs) :
+    Brick(const Brick &rhs) :
         Data<Size_>(rhs.data_)
     {
     }
@@ -231,8 +231,8 @@ class Block final :
     }
 
     template <size_t Clip_>
-    typename std::enable_if<Clip_ <= Size_, Block<Clip_>>::type Clip() {
-        Block<Clip_> value;
+    typename std::enable_if<Clip_ <= Size_, Brick<Clip_>>::type Clip() {
+        Brick<Clip_> value;
         for (size_t i(0); i != Clip_; ++i)
             value[i] = this->data_[i];
         return value;
@@ -379,7 +379,7 @@ inline bool operator ==(const Beam &lhs, const Strung<Data_> &rhs) {
 }
 
 template <size_t Size_>
-inline bool operator ==(const Beam &lhs, const Block<Size_> &rhs) {
+inline bool operator ==(const Beam &lhs, const Brick<Size_> &rhs) {
     auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
@@ -645,7 +645,7 @@ class Window final :
     }
 
     template <size_t Size_>
-    void Take(Block<Size_> &value) {
+    void Take(Brick<Size_> &value) {
         Take(value.data(), value.size());
     }
 
@@ -658,7 +658,7 @@ class Window final :
 
 template <size_t Size_>
 struct Taken {
-    typedef Block<Size_> type;
+    typedef Brick<Size_> type;
 };
 
 template <>

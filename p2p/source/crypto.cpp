@@ -32,15 +32,15 @@ static void SetupRandom() {
     orc_assert(sodium_init() != -1);
 }
 
-Block<32> Hash(const Buffer &data) {
+Brick<32> Hash(const Buffer &data) {
     Beam beam(data);
     auto hash(ethash_keccak256(beam.data(), beam.size()));
-    Block<sizeof(hash)> value;
+    Brick<sizeof(hash)> value;
     memcpy(value.data(), hash.bytes, sizeof(hash));
     return value;
 }
 
-Block<32> Hash(const std::string &data) {
+Brick<32> Hash(const std::string &data) {
     return Hash(Subset(data));
 }
 
