@@ -217,7 +217,7 @@ class Brick final :
     {
     }
 
-    Brick(std::initializer_list<uint8_t> list) {
+    explicit Brick(std::initializer_list<uint8_t> list) {
         std::copy(list.begin(), list.end(), this->data_.begin());
     }
 
@@ -607,6 +607,10 @@ class Window final :
         return true;
     }
 
+    void Stop() {
+        orc_assert(empty());
+    }
+
     void Take(uint8_t *data, size_t size) {
         Beam beam(size);
 
@@ -654,6 +658,12 @@ class Window final :
         Take(beam.data(), beam.size());
         return beam;
     }
+
+    void Skip(size_t size) {
+        auto data(Take(size));
+        for (size_t i(0); i != size; ++i)
+            orc_assert(data[i] == 0);
+    }
 };
 
 template <size_t Size_>
@@ -688,7 +698,7 @@ template <size_t Index_>
 struct Taker<Index_> {
 template <typename Type_>
 static void Take(Window &&window, Type_ &value) {
-    orc_assert(window.empty());
+    window.Stop();
 } };
 
 template <size_t... Size_>
