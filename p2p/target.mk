@@ -153,6 +153,29 @@ cflags += -I$(pwd)/secp256k1
 cflags += -I$(pwd)/secp256k1/include
 cflags += -I$(pwd)/secp256k1/src
 
+secp256k1 := ac8ccf29b8c6b2b793bc734661ce43d1f952977a
+
+$(pwd)/secp256k1-$(secp256k1).tar.gz:
+	curl -Lo $@ https://github.com/chfast/secp256k1/archive/$(secp256k1).tar.gz
+
+$(pwd)/secp256k1: pwd := $(pwd)
+$(pwd)/secp256k1: $(pwd)/secp256k1-$(secp256k1).tar.gz
+	rm -rf $@
+	mkdir -p $@
+	tar -C $(pwd)/secp256k1 --strip-components=1 -zxvf $< || rm -rf $@
+
+$(output)/gen_context: pwd := $(pwd)
+$(output)/gen_context: $(pwd)/secp256k1/src/gen_context.c
+	gcc -o $@ $< -I$(pwd)/secp256k1
+
+$(pwd)/secp256k1/src/ecmult_static_context.h: pwd := $(pwd)
+$(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
+	cd $(pwd)/secp256k1 && $(PWD)/$(output)/gen_context
+
+$(output)/$(pwd)/secp256k1/src/secp256k1.o: $(pwd)/secp256k1/src/ecmult_static_context.h
+
+header += $(pwd)/secp256k1
+
 cflags += -DENABLE_MODULE_RECOVERY
 cflags += -DENABLE_MODULE_ECDH
 cflags += -DUSE_ECMULT_STATIC_PRECOMPUTATION

@@ -29,7 +29,7 @@
 
 namespace orc {
 
-static const bool tracking_ = true;
+static const bool tracking_ = false;
 
 uint64_t Pipe::Unique_ = 0;
 

@@ -42,8 +42,6 @@
 
 #include <openssl/pkcs8.h>
 
-//#include <api/jsep_session_description.h>
-//#include <pc/session_description.h>
 #include <pc/webrtc_sdp.h>
 #include <rtc_base/message_digest.h>
 
@@ -526,38 +524,7 @@ _trace();
     task<std::string> Respond(const std::string &offer) override {
         auto incoming(Incoming::Spawn(shared_from_this()));
         auto answer(co_await incoming->Answer(offer));
-
-#if 0
-        if (false) {
-            webrtc::JsepSessionDescription jsep(webrtc::SdpType::kAnswer);
-            webrtc::SdpParseError error;
-            orc_assert(webrtc::SdpDeserialize(answer, &jsep, &error));
-            auto description(jsep.description());
-            orc_assert(description != NULL);
-
-            std::vector<cricket::Candidate> privates;
-
-            for (size_t i(0); ; ++i) {
-                auto ices(jsep.candidates(i));
-                if (ices == NULL)
-                    break;
-                for (size_t i(0), e(ices->count()); i != e; ++i) {
-                    auto ice(ices->at(i));
-                    orc_assert(ice != NULL);
-                    const auto &candidate(ice->candidate());
-                    if (candidate.address().IsPrivateIP())
-                        privates.push_back(candidate);
-                }
-            }
-
-            for (auto &p : privates)
-                p.set_transport_name("0");
-            orc_assert(jsep.RemoveCandidates(privates) == privates.size());
-
-            answer = webrtc::SdpSerialize(jsep);
-        }
-#endif
-
+        //answer = boost::regex_replace(std::move(answer), boost::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
         co_return answer;
     }
 };

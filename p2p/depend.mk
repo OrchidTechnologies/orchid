@@ -18,24 +18,6 @@
 # }}}
 
 
-$(output)/orchid-lib/aleth/buildinfo.%: orchid-lib/aleth/cmake/cable/buildinfo/buildinfo.%.in
+$(output)/$(pwd)/aleth/buildinfo.%: $(pwd)/aleth/cmake/cable/buildinfo/buildinfo.%.in
 	sed -e 's/@FUNCTION_NAME@/aleth_get_buildinfo/g' $< >$@
-$(output)/orchid-lib/aleth/libdevcore/Common.o: $(output)/orchid-lib/aleth/buildinfo.h
-
-secp256k1 := ac8ccf29b8c6b2b793bc734661ce43d1f952977a
-
-orchid-lib/secp256k1-$(secp256k1).tar.gz:
-	curl -Lo $@ https://github.com/chfast/secp256k1/archive/$(secp256k1).tar.gz
-
-orchid-lib/secp256k1: orchid-lib/secp256k1-$(secp256k1).tar.gz
-	rm -rf $@
-	mkdir -p $@
-	tar -C orchid-lib/secp256k1 --strip-components=1 -zxvf $<
-
-$(output)/gen_context: orchid-lib/secp256k1/src/gen_context.c
-	gcc -o $@ $< -Iorchid-lib/secp256k1
-
-orchid-lib/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
-	cd orchid-lib/secp256k1 && $(PWD)/$(output)/gen_context
-
-$(output)/orchid-lib/secp256k1/src/secp256k1.o: orchid-lib/secp256k1/src/ecmult_static_context.h
+$(output)/$(pwd)/aleth/libdevcore/Common.o: $(output)/$(pwd)/aleth/buildinfo.h
