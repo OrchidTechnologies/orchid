@@ -1,3 +1,3 @@
 #!/bin/bash
 set -e
-solc --allow-paths . "$@" lottery.sol
+solc --bin --optimize --overwrite --allow-paths . "$@" -o build lottery.sol
