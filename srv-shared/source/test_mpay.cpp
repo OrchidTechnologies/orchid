@@ -120,6 +120,9 @@ namespace orc {
    		string test_contract_bin2 = file_to_string("test_contract.bin");
         auto test_contract_addr2  = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(orchid_address)},{"data",test_contract_bin2}, {"gas","300000"}, {"gasPrice","0"}}} );
 
+  		string ERC20_bin = file_to_string("tok-ethereum/build/ERC20.bin");
+  		assert(ERC20_bin.size() > 0);
+        auto ERC20_addr = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(orchid_address)},{"data",ERC20_bin}, {"gas","300000"}, {"gasPrice","0"}}} );
 
    		 string OrchidToken_bin = file_to_string("tok-ethereum/build/OrchidToken.bin");
    		//std::cout << OrchidToken_bin << std::endl;
