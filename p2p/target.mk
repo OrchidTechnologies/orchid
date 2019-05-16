@@ -164,9 +164,11 @@ $(pwd)/secp256k1: $(pwd)/secp256k1-$(secp256k1).tar.gz
 	mkdir -p $@
 	tar -C $(pwd)/secp256k1 --strip-components=1 -zxvf $< || rm -rf $@
 
+$(output)/gen_context: pwd := $(pwd)
 $(output)/gen_context: $(pwd)/secp256k1/src/gen_context.c
 	gcc -o $@ $< -I$(pwd)/secp256k1
 
+$(pwd)/secp256k1/src/ecmult_static_context.h: pwd := $(pwd)
 $(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
 	cd $(pwd)/secp256k1 && $(PWD)/$(output)/gen_context
 
