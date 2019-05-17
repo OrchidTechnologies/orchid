@@ -607,6 +607,10 @@ int Main(int argc, const char *const argv[]) {
 
         key = pem.private_key();
         chain = pem.certificate();
+
+        // XXX: generate .p12 file (for Nathan)
+        std::cerr << key << std::endl;
+        std::cerr << chain << std::endl;
     } else {
         bssl::UniquePtr<PKCS12> p12([&]() {
             std::string str;
