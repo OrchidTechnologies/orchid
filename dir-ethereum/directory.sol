@@ -141,7 +141,7 @@ contract OrchidDirectory is IOrchidDirectory {
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
 
-        if (medallion.amount_ != 0) {
+        if (medallion.amount_ == 0) {
             bytes32 parent = bytes32(0);
             Primary storage primary = root_;
 
