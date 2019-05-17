@@ -153,6 +153,8 @@ contract OrchidDirectory is IOrchidDirectory {
 
             medallion.parent_ = parent;
             copy(primary, staker, stakee);
+
+            medallion.stakee_ = stakee;
         }
 
         done(key, medallion, amount);
