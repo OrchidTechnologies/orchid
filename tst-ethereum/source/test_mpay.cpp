@@ -194,4 +194,7 @@ namespace orc {
 
 }
 
-
+int main() {
+    orc::test_mpay();
+    return 0;
+}

@@ -8,6 +8,9 @@ all: all-srv-lnx
 all: all-srv-mac
 #all: all-srv-win
 
+tst-ethereum:
+	$(MAKE) -C tst-ethereum test
+
 all-srv-and:
 	$(MAKE) -C srv-shared target=and
 

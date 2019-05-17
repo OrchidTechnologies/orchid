@@ -57,7 +57,6 @@
 #include "socket.hpp"
 #include "task.hpp"
 #include "trace.hpp"
-#include "test_mpay.h"
 
 #define _disused \
     __attribute__((__unused__))
@@ -575,10 +574,6 @@ int Main(int argc, const char *const argv[]) {
             .add(configs)
         << std::endl;
 
-        return 0;
-    }
-    else if (std::string(argv[1]) == std::string("test-mpay")) {
-        test_mpay();
         return 0;
     }
 
