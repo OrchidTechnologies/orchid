@@ -130,8 +130,7 @@ namespace orc {
 
    		{
 			auto block(co_await endpoint.Block());
-			auto OrchidToken_addr_rv_	= co_await endpoint.eth_call(block, uint256_t(OrchidToken_addr), Selector("get_address(address)"), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a") );
-			string OrchidToken_addr_rv 	= OrchidToken_addr_rv_.asString();
+			auto OrchidToken_addr_rv	= co_await endpoint.Call(block, uint256_t(OrchidToken_addr), Selector("get_address(address)"), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a") );
 	   		std::cout << "OrchidToken_addr: " << OrchidToken_addr << "  " << OrchidToken_addr_rv << std::endl;
    		}
 

@@ -282,30 +282,6 @@ class Endpoint final {
     }
 
     template <typename... Args_>
-    task<Beam> Call(uint256_t account, const Selector &selector, Args_ &&...args) {
-        co_return Bless((co_await operator ()("eth_call", {Map{
-            {"to", account},
-            {"data", Tie(selector, std::forward<Args_>(args)...)},
-        } })).asString());
-    }
-
-    template <typename... Args_>
-    task<Json::Value> eth_call(const Argument &block, uint256_t account, const Selector &selector, Args_ &&...args) {
-        co_return co_await operator ()("eth_call", {Map{
-            {"to", account},
-            {"data", Tie(selector, std::forward<Args_>(args)...)},
-        }, block });
-    }
-
-    template <typename... Args_>
-    task<Json::Value> eth_call(uint256_t account, const Selector &selector, Args_ &&...args) {
-        co_return co_await operator ()("eth_call", {Map{
-            {"to", account},
-            {"data", Tie(selector, std::forward<Args_>(args)...)},
-        } });
-    }
-
-    template <typename... Args_>
     task<std::tuple<Proven, typename Result<Args_>::type...>> Get(const Argument &block, uint256_t account, Args_ &&...args) {
         auto proof(co_await operator ()("eth_getProof", {account, {std::forward<Args_>(args)...}, block}));
         std::tuple<Proven, typename Result<Args_>::type...> result(proof);
