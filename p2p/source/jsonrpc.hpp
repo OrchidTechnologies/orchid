@@ -156,17 +156,7 @@ class Argument final {
     }
 
     Argument(const Buffer &buffer) :
-        value_([&]() {
-            std::ostringstream value;
-            value << "0x" << std::hex << std::setfill('0');
-            buffer.each([&](const Region &region) {
-                auto data(region.data());
-                for (size_t i(0), e(region.size()); i != e; ++i)
-                    value << std::setw(2) << unsigned(uint8_t(data[i]));
-                return true;
-            });
-            return value.str();
-        }())
+        value_(buffer.hex())
     {
     }
 

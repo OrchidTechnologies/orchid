@@ -40,6 +40,8 @@
 
 #include <asio.hpp>
 
+#include <json/json.h>
+
 #include <openssl/pkcs8.h>
 
 #include <pc/webrtc_sdp.h>
@@ -358,15 +360,15 @@ class Ship {
   private:
     rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
     U<rtc::OpenSSLIdentity> identity_;
+    U<rtc::SSLFingerprint> fingerprint_;
 
   public:
     Ship(const std::string &key, const std::string &chain) :
         certificate_(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(key, chain))),
         // CAST: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
-        identity_(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(key, chain)))
+        identity_(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(key, chain))),
+        fingerprint_(rtc::SSLFingerprint::CreateFromCertificate(*certificate_))
     {
-        auto fingerprint(rtc::SSLFingerprint::CreateFromCertificate(*certificate_));
-        std::cerr << fingerprint->GetRfc4572Fingerprint() << std::endl;
     }
 
     virtual S<Space> Find(const std::string &fingerprint) = 0;
@@ -377,6 +379,10 @@ class Ship {
 
     rtc::OpenSSLIdentity *Identity() const {
         return identity_.get();
+    }
+
+    rtc::SSLFingerprint *Fingerprint() const {
+        return fingerprint_.get();
     }
 };
 
@@ -545,6 +551,7 @@ int Main(int argc, const char *const argv[]) {
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
         ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
         ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+        ("host", po::value<std::string>(), "hostname to access this server")
         ("port", po::value<uint16_t>()->default_value(8080), "port to advertise on blockchain")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
         ("ovpn", po::value<std::string>(), "openvpn .ovpn configuration file")
@@ -660,6 +667,26 @@ int Main(int argc, const char *const argv[]) {
 
     auto node(Make<Node>(key, chain));
 
+    auto fingerprint(node->Fingerprint());
+    std::cerr << fingerprint->GetRfc4572Fingerprint() << std::endl;
+
+    std::string host;
+    if (args.count("host"))
+        host = args["host"].as<std::string>();
+    else
+        host = boost::asio::ip::host_name();
+
+    auto port(args["port"].as<uint16_t>());
+
+    {
+        Json::Value descriptor;
+        descriptor["host"] = host;
+        descriptor["port"] = port;
+        descriptor["tls-algorithm"] = fingerprint->algorithm;
+        descriptor["tls-fingerprint"] = fingerprint->GetRfc4572Fingerprint();
+        std::cerr << Strung(Json::FastWriter().write(descriptor)).hex() << std::endl;
+    }
+
 
     boost::asio::ssl::context context{boost::asio::ssl::context::tlsv12};
 
@@ -714,7 +741,7 @@ int Main(int argc, const char *const argv[]) {
 
     HttpListener::launch(Context(), {
         asio::ip::make_address("0.0.0.0"),
-        args["port"].as<uint16_t>()
+        port
     }, [&](auto socket) {
         SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
             context.recv();
