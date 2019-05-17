@@ -165,9 +165,9 @@ void Secure::Active() {
             });
         } catch (const Error &error) {
             next_ = NULL;
-            auto message(error.message);
-            orc_assert(!message.empty());
-            Link::Stop(message);
+            auto text(error.text);
+            orc_assert(!text.empty());
+            Link::Stop(text);
             break;
         }
 

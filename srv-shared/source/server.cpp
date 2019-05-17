@@ -349,7 +349,7 @@ _trace();
                     co_return co_await Send(Tie(nonce, data));
                 });
             } catch (const Error &error) {
-                co_return co_await Send(Tie(Zero, nonce, Strung(error.message)));
+                co_return co_await Send(Tie(Zero, nonce, Strung(error.text)));
             }
         }
     }

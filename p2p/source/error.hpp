@@ -34,7 +34,7 @@ class Error final {
   public:
     const std::string file;
     const int line;
-    std::string message;
+    std::string text;
 
     Error(const std::string &file, int line) :
         file(file), line(line)
@@ -45,7 +45,7 @@ class Error final {
     Error &operator <<(const Type_ &value) {
         std::ostringstream data;
         data << value;
-        message += data.str();
+        text += data.str();
         return *this;
     }
 }; }
@@ -56,10 +56,10 @@ class Error final {
     std::terminate(); \
 } while (false)
 
-#define orc_assert_(code, message) do { \
+#define orc_assert_(code, text) do { \
     if ((code)) break; \
-    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << message << std::endl; \
-    throw orc::Error{__FILE__, __LINE__} << message; \
+    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text << std::endl; \
+    throw orc::Error{__FILE__, __LINE__} << text; \
 } while (false)
 
 #define orc_assert(code) \
