@@ -73,6 +73,15 @@ namespace orc {
         //return Wait([&]() -> task<int> { co_await Schedule(); Endpoint endpoint({"http", "localhost", "8545", "/"}); /* code here */ }() );
     }
 
+    inline task<string> deploy(Endpoint& endpoint, const string& address, const string& bin)
+    {
+   		assert(bin.size() > 0);
+        auto trans_hash = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(address)},{"data",bin}, {"gas","300000"}, {"gasPrice","0"}}} );
+        // todo: this currently works on EthereumJS TestRPC v6.0.3, but on a live network you'd need to wait for the transaction to be mined
+   		auto result     = co_await endpoint("eth_getTransactionReceipt", {trans_hash.asString()} );
+   		string contractAddress = result["contractAddress"].asString();
+        co_return contractAddress;
+    }
 
     task<int> test_lottery()
     {
@@ -112,23 +121,31 @@ namespace orc {
    		}
 
 
-   		string test_contract_bin = "6060604052341561000c57fe5b5b6101598061001c6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063cfae32171461003b575bfe5b341561004357fe5b61004b6100d4565b604051808060200182810382528381815181526020019150805190602001908083836000831461009a575b80518252602083111561009a57602082019150602081019050602083039250610076565b505050905090810190601f1680156100c65780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6100dc610119565b604060405190810160405280600381526020017f486921000000000000000000000000000000000000000000000000000000000081525090505b90565b6020604051908101604052806000815250905600a165627a7a72305820ed71008611bb64338581c5758f96e31ac3b0c57e1d8de028b72f0b8173ff93a10029";
-        auto test_contract_addr  = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(orchid_address)},{"data",test_contract_bin}, {"gas","300000"}, {"gasPrice","0"}}} );
+   		string test_contract_bin  	= "6060604052341561000c57fe5b5b6101598061001c6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063cfae32171461003b575bfe5b341561004357fe5b61004b6100d4565b604051808060200182810382528381815181526020019150805190602001908083836000831461009a575b80518252602083111561009a57602082019150602081019050602083039250610076565b505050905090810190601f1680156100c65780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6100dc610119565b604060405190810160405280600381526020017f486921000000000000000000000000000000000000000000000000000000000081525090505b90565b6020604051908101604052806000815250905600a165627a7a72305820ed71008611bb64338581c5758f96e31ac3b0c57e1d8de028b72f0b8173ff93a10029";
+        string test_contract_addr 	= co_await deploy(endpoint, orchid_address, test_contract_bin);
+
+        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, file_to_string("tok-ethereum/build/ERC20.bin"));
+
+        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, file_to_string("tok-ethereum/build/OrchidToken.bin"));
+
+   		{
+			auto block(co_await endpoint.Block());
+			auto OrchidToken_addr_rv_	= co_await endpoint.eth_call(block, uint256_t(OrchidToken_addr), Selector("get_address(address)"), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a") );
+			string OrchidToken_addr_rv 	= OrchidToken_addr_rv_.asString();
+	   		std::cout << "OrchidToken_addr: " << OrchidToken_addr << "  " << OrchidToken_addr_rv << std::endl;
+   		}
 
 
-   		string_to_file(test_contract_bin, "test_contract.bin");
-   		string test_contract_bin2 = file_to_string("test_contract.bin");
-        auto test_contract_addr2  = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(orchid_address)},{"data",test_contract_bin2}, {"gas","300000"}, {"gasPrice","0"}}} );
+   		/*
+        string lottery_addr		 	= co_await deploy(endpoint, orchid_address, file_to_string("lot-ethereum/build/OrchidLottery.bin"));
+   		std::cout << "lottery_addr: \n" << lottery_addr << std::endl;
 
-  		string ERC20_bin = file_to_string("tok-ethereum/build/ERC20.bin");
-  		assert(ERC20_bin.size() > 0);
-        auto ERC20_addr = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(orchid_address)},{"data",ERC20_bin}, {"gas","300000"}, {"gasPrice","0"}}} );
+        //lotteryAddr_rv = await c.lottery.methods.get_address().call();
 
-   		 string OrchidToken_bin = file_to_string("tok-ethereum/build/OrchidToken.bin");
-   		//std::cout << OrchidToken_bin << std::endl;
-   		assert(OrchidToken_bin.size() > 0);
-        auto OrchidToken_addr = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(orchid_address)},{"data",OrchidToken_bin}, {"gas","300000"}, {"gasPrice","0"}}} );
-
+   		auto lottery_addr_rv_		= co_await endpoint.eth_call(uint256_t(lottery_addr), Selector("get_address(address)"), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a") );
+   		string lottery_addr_rv  	= lottery_addr_rv_.asString();
+   		//string OrchidToken_addr_rv 	= ( co_await endpoint.eth_call(uint256_t(OrchidToken_addr), Selector("get_address()"))).asString();
+   		*/
 
         co_return 0;
     }

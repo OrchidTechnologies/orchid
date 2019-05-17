@@ -29,4 +29,11 @@ contract OrchidToken is ERC20, ERC20Detailed {
     constructor() ERC20Detailed("Orchid Token", "OCT", 18) public {
         // _mint(msg.sender, 1000000000*10**uint256(decimals()));
     }
+
+    function get_address(address x) public view returns (address) {
+        //return address(this);
+        return x;
+    }
+
+
 }

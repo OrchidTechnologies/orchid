@@ -289,6 +289,21 @@ class Endpoint final {
         } })).asString());
     }
 
+    template <typename... Args_>
+    task<Json::Value> eth_call(const Argument &block, uint256_t account, const Selector &selector, Args_ &&...args) {
+        co_return co_await operator ()("eth_call", {Map{
+            {"to", account},
+            {"data", Tie(selector, std::forward<Args_>(args)...)},
+        }, block });
+    }
+
+    template <typename... Args_>
+    task<Json::Value> eth_call(uint256_t account, const Selector &selector, Args_ &&...args) {
+        co_return co_await operator ()("eth_call", {Map{
+            {"to", account},
+            {"data", Tie(selector, std::forward<Args_>(args)...)},
+        } });
+    }
 
     template <typename... Args_>
     task<std::tuple<Proven, typename Result<Args_>::type...>> Get(const Argument &block, uint256_t account, Args_ &&...args) {

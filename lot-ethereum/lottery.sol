@@ -46,6 +46,12 @@ contract OrchidLottery is IOrchidLottery {
 
     event Update(address indexed signer, uint64 amount, uint64 escrow, uint256 unlock);
 
+
+    function get_address(address) public view returns (address) {
+        return address(this);
+    }
+
+
     // signer must be a simple account, to support signing tickets
     function fund(address signer, uint64 amount, uint64 total) public {
         require(total >= amount);
