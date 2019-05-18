@@ -185,7 +185,7 @@ class Router :
 
   protected:
     void Land(const Buffer &data) override {
-        auto [tag, rest] = Take<TagSize, 0>(data);
+        auto [tag, rest] = Take<Tag, Window>(data);
         auto route(routes_.find(tag));
         orc_assert(route != routes_.end());
         route->second->Land(rest);

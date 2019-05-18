@@ -37,7 +37,7 @@ class Converted final :
     public Buffer
 {
   private:
-    std::vector<Subset> regions_;
+    std::vector<Range> ranges_;
     const Buffers_ &buffers_;
 
   public:
@@ -46,13 +46,13 @@ class Converted final :
     {
         for (auto i(buffers_.begin()), e(buffers_.end()); i != e; ++i) {
             const auto &buffer(*i);
-            regions_.emplace_back(reinterpret_cast<const uint8_t *>(buffer.data()), buffer.size());
+            ranges_.emplace_back(reinterpret_cast<const uint8_t *>(buffer.data()), buffer.size());
         }
     }
 
-    bool each(const std::function<bool (const Region &)> &code) const override {
-        for (const auto &region : regions_)
-            if (!code(region))
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
+        for (const auto &range : ranges_)
+            if (!code(range.data(), range.size()))
                 return false;
         return true;
     }

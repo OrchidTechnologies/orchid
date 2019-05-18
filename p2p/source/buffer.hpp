@@ -46,7 +46,7 @@ class Beam;
 
 class Buffer {
   public:
-    virtual bool each(const std::function<bool (const Region &)> &code) const = 0;
+    virtual bool each(const std::function<bool (const uint8_t *, size_t)> &code) const = 0;
 
     virtual size_t size() const;
 
@@ -66,22 +66,22 @@ class Buffer {
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer);
 
-template <typename Type_, bool Arithmetic = std::is_arithmetic<Type_>::value>
+template <typename Type_, typename Enable_ = void>
 struct Cast;
 
 template <typename Type_>
-struct Cast<Type_, true> {
-    static Type_ Load(const uint8_t *data, size_t size) {
+struct Cast<Type_, typename std::enable_if<std::is_arithmetic<Type_>::value>::type> {
+    static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == sizeof(Type_));
         return boost::endian::big_to_native(*reinterpret_cast<const Type_ *>(data));
     }
 };
 
-template <>
-struct Cast<uint256_t, false> {
-    static uint256_t Load(const uint8_t *data, size_t size) {
-        orc_assert(size == 32);
-        uint256_t value;
+template <unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_>
+struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> {
+    static auto Load(const uint8_t *data, size_t size) {
+        orc_assert(size == Bits_ / 8);
+        boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value;
         boost::multiprecision::import_bits(value, std::reverse_iterator(data + size), std::reverse_iterator(data), 8, false);
         return value;
     }
@@ -94,8 +94,8 @@ class Region :
     virtual const uint8_t *data() const = 0;
     size_t size() const override = 0;
 
-    bool each(const std::function<bool (const Region &)> &code) const override {
-        return code(*this);
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
+        return code(data(), size());
     }
 
     operator asio::const_buffer() const {
@@ -108,23 +108,65 @@ class Region :
     }
 };
 
-class Subset final :
-    public Region
-{
+class Range {
   private:
-    const uint8_t *const data_;
-    const size_t size_;
+    const uint8_t *data_;
+    size_t size_;
 
   public:
-    Subset(const uint8_t *data, size_t size) :
+    Range() {
+    }
+
+    Range(const Range &range) :
+        data_(range.data()),
+        size_(range.size())
+    {
+    }
+
+    Range(const uint8_t *data, size_t size) :
         data_(data),
         size_(size)
     {
     }
 
-    Subset(const char *data, size_t size) :
+    Range(const char *data, size_t size) :
         data_(reinterpret_cast<const uint8_t *>(data)),
         size_(size)
+    {
+    }
+
+    const uint8_t *data() const {
+        return data_;
+    }
+
+    size_t size() const {
+        return size_;
+    }
+
+    operator asio::const_buffer() const {
+        return asio::const_buffer(data(), size());
+    }
+};
+
+class Subset final :
+    public Region
+{
+  private:
+    const Range range_;
+
+  public:
+    Subset(const Range &range) :
+        range_(range)
+    {
+    }
+
+    Subset(const uint8_t *data, size_t size) :
+        range_(data, size)
+    {
+    }
+
+    Subset(const char *data, size_t size) :
+        range_(data, size)
     {
     }
 
@@ -134,11 +176,11 @@ class Subset final :
     }
 
     const uint8_t *data() const override {
-        return data_;
+        return range_.data();
     }
 
     size_t size() const override {
-        return size_;
+        return range_.size();
     }
 };
 
@@ -150,7 +192,7 @@ class Strung final :
     const Data_ data_;
 
   public:
-    Strung(Data_ data) :
+    explicit Strung(Data_ data) :
         data_(std::move(data))
     {
     }
@@ -423,7 +465,7 @@ class Knot final :
     {
     }
 
-    bool each(const std::function<bool (const Region &)> &code) const override {
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
         bool value(true);
         boost::mp11::tuple_for_each(buffers_, [&](const auto &buffer) {
             value &= buffer.each(code);
@@ -442,29 +484,33 @@ class Sequence final :
 {
   private:
     size_t count_;
-    std::unique_ptr<const Region *[]> regions_;
+    std::unique_ptr<Range[]> ranges_;
 
     class Iterator {
       private:
-        const Region *const *region_;
+        const Range *range_;
 
       public:
-        Iterator(const Region **region) :
-            region_(region)
+        Iterator(const Range *range) :
+            range_(range)
         {
         }
 
-        const Region &operator *() const {
-            return **region_;
+        const Range &operator *() const {
+            return *range_;
+        }
+
+        const Range *operator ->() const {
+            return range_;
         }
 
         Iterator &operator ++() {
-            ++region_;
+            ++range_;
             return *this;
         }
 
         bool operator !=(const Iterator &rhs) const {
-            return region_ != rhs.region_;
+            return range_ != rhs.range_;
         }
     };
 
@@ -472,137 +518,129 @@ class Sequence final :
     Sequence(const Buffer &buffer) :
         count_([&]() {
             size_t count(0);
-            buffer.each([&](const Region &region) {
+            buffer.each([&](const uint8_t *data, size_t size) {
                 ++count;
                 return true;
             });
             return count;
         }()),
 
-        regions_(new const Region *[count_])
+        ranges_(new Range[count_])
     {
-        auto i(regions_.get());
-        buffer.each([&](const Region &region) {
-            *(i++) = &region;
+        auto i(ranges_.get());
+        buffer.each([&](const uint8_t *data, size_t size) {
+            *(i++) = Range(data, size);
             return true;
         });
     }
 
     Sequence(Sequence &&sequence) :
         count_(sequence.count_),
-        regions_(std::move(sequence.regions_))
+        ranges_(std::move(sequence.ranges_))
     {
     }
 
     Sequence(const Sequence &sequence) :
         count_(sequence.count_),
-        regions_(new const Region *[count_])
+        ranges_(new Range[count_])
     {
-        auto old(sequence.regions_.get());
-        std::copy(old, old + count_, regions_.get());
+        auto old(sequence.ranges_.get());
+        std::copy(old, old + count_, ranges_.get());
     }
 
     Iterator begin() const {
-        return regions_.get();
+        return ranges_.get();
     }
 
     Iterator end() const {
-        return regions_.get() + count_;
+        return ranges_.get() + count_;
     }
 
-    bool each(const std::function<bool (const Region &)> &code) const override {
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
         for (auto i(begin()), e(end()); i != e; ++i)
-            if (!code(*i))
+            if (!code(i->data(), i->size()))
                 return false;
         return true;
     }
 };
 
-class Window final :
+template <size_t Size_>
+class Pad :
+    public Data<Size_>
+{
+  public:
+    Pad() {
+        this->data_.fill(0);
+    }
+};
+
+class Window :
     public Buffer
 {
   private:
     size_t count_;
-    std::unique_ptr<const Region *[]> regions_;
+    std::unique_ptr<Range[]> ranges_;
 
-    class Iterator final :
-        public Region
-    {
-        friend class Window;
-
-      private:
-        const Region **region_;
-        size_t offset_;
-
-      public:
-        Iterator() :
-            region_(NULL),
-            offset_(0)
-        {
-        }
-
-        Iterator(const Region **region, size_t offset) :
-            region_(region),
-            offset_(offset)
-        {
-        }
-
-        const uint8_t *data() const override {
-            return (*region_)->data() + offset_;
-        }
-
-        size_t size() const override {
-            return (*region_)->size() - offset_;
-        }
-    } index_;
+    const Range *range_;
+    size_t offset_;
 
   public:
     Window() :
-        count_(0)
+        count_(0),
+        range_(NULL),
+        offset_(0)
     {
     }
 
     Window(const Buffer &buffer) :
         count_([&]() {
             size_t count(0);
-            buffer.each([&](const Region &region) {
+            buffer.each([&](const uint8_t *data, size_t size) {
                 ++count;
                 return true;
             });
             return count;
         }()),
 
-        regions_(new const Region *[count_]),
+        ranges_(new Range[count_]),
 
-        index_(regions_.get(), 0)
+        range_(ranges_.get()),
+        offset_(0)
     {
-        auto i(regions_.get());
-        buffer.each([&](const Region &region) {
-            *(i++) = &region;
+        auto i(ranges_.get());
+        buffer.each([&](const uint8_t *data, size_t size) {
+            *(i++) = Range(data, size);
             return true;
         });
+    }
+
+    Window(const Window &window) :
+        Window([](const Buffer &buffer) -> const Buffer & {
+            return buffer;
+        }(window))
+    {
     }
 
     Window(Window &&rhs) = default;
     Window &operator =(Window &&rhs) = default;
 
-    bool each(const std::function<bool (const Region &)> &code) const override {
-        auto here(index_.region_);
-        auto rest(regions_.get() + count_ - here);
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
+        auto here(range_);
+        auto rest(ranges_.get() + count_ - here);
         if (rest == 0)
             return true;
 
         size_t i;
-        if (index_.offset_ == 0)
+        if (offset_ == 0)
             i = 0;
         else {
             i = 1;
-            if (!code(index_))
+            if (!code(here->data() + offset_, here->size() - offset_))
                 return false;
         }
 
         for (; i != rest; ++i)
-            if (!code(*here[i]))
+            if (!code(here[i].data(), here[i].size()))
                 return false;
 
         return true;
@@ -615,25 +653,25 @@ class Window final :
     void Take(uint8_t *data, size_t size) {
         Beam beam(size);
 
-        auto &here(index_.region_);
-        auto &step(index_.offset_);
+        auto &here(range_);
+        auto &step(offset_);
 
-        auto rest(regions_.get() + count_ - here);
+        auto rest(ranges_.get() + count_ - here);
 
         for (auto need(size); need != 0; step = 0, ++here, --rest) {
             orc_assert(rest != 0);
 
-            auto size((*here)->size() - step);
+            auto size(here->size() - step);
             if (size == 0)
                 continue;
 
             if (need < size) {
-                memcpy(data, (*here)->data() + step, need);
+                memcpy(data, here->data() + step, need);
                 step += need;
                 break;
             }
 
-            memcpy(data, (*here)->data() + step, size);
+            memcpy(data, here->data() + step, size);
             data += size;
             need -= size;
         }
@@ -665,49 +703,135 @@ class Window final :
         for (size_t i(0); i != size; ++i)
             orc_assert(data[i] == 0);
     }
+
+    template <size_t Size_>
+    void Take(Pad<Size_> &value) {
+        Skip(Size_);
+    }
 };
 
-template <size_t Size_>
-struct Taken {
-    typedef Brick<Size_> type;
+class Rest final :
+    public Window
+{
+  private:
+    Beam data_;
+
+  public:
+    Rest() {
+    }
+
+    Rest(Window &&window, Beam &&data) :
+        Window(std::move(window)),
+        data_(std::move(data))
+    {
+    }
 };
 
-template <>
-struct Taken<0> {
-    typedef Window type;
-};
 
-template <size_t Index_, size_t... Size_>
-struct Taker {};
+template <size_t Index_, typename Next_, typename Enable_, typename... Taking_>
+struct Taking;
 
-template <size_t Index_, size_t Size_, size_t... Rest_>
-struct Taker<Index_, Size_, Rest_...> {
-template <typename Type_>
-static void Take(Window &&window, Type_ &value) {
-    window.Take(std::get<Index_>(value));
-    Taker<Index_ + 1, Rest_...>::Take(std::move(window), value);
+template <size_t Index_, typename... Taking_>
+struct Taker;
+
+template <size_t Index_, size_t Size_, typename... Taking_>
+struct Taking<Index_, Pad<Size_>, void, Taking_...> final {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    window.Skip(Size_);
+    return Taker<Index_, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
+} };
+
+template <size_t Index_, size_t Size_, typename... Taking_>
+struct Taking<Index_, Brick<Size_>, void, Taking_...> final {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    window.Take(std::get<Index_>(tuple));
+    return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
+} };
+
+template <size_t Index_, unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_, typename... Taking_>
+struct Taking<Index_, boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type, Taking_...> final {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    Brick<Bits_ / 8> brick;
+    window.Take(brick);
+    std::get<Index_>(tuple) = brick.template num<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>>();
+    return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
+} };
+
+template <size_t Index_, typename Next_, typename... Taking_>
+struct Taking<Index_, Next_, typename std::enable_if<std::is_arithmetic<Next_>::value>::type, Taking_...> {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    Brick<sizeof(Next_)> brick;
+    window.Take(brick);
+    std::get<Index_>(tuple) = brick.template num<Next_>();
+    return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
 
 template <size_t Index_>
-struct Taker<Index_, 0> {
-template <typename Type_>
-static void Take(Window &&window, Type_ &value) {
-    std::get<Index_>(value) = std::move(window);
+struct Taking<Index_, Window, void> {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    static_assert(!std::is_rvalue_reference<Buffer_ &&>::value);
+    std::get<Index_>(tuple) = std::move(window);
+} };
+
+template <size_t Index_>
+struct Taking<Index_, Rest, void> {
+template <typename Tuple_>
+static void Take(Tuple_ &tuple, Window &window, Beam &&buffer) {
+    std::get<Index_>(tuple) = Rest(std::move(window), std::move(buffer));
+} };
+
+template <size_t Index_>
+struct Taking<Index_, Beam, void> {
+template <typename Tuple_>
+static void Take(Tuple_ &tuple, Window &window, Beam &&buffer) {
+    std::get<Index_>(tuple) = Beam(window);
+} };
+
+template <size_t Index_, typename Next_, typename... Taking_>
+struct Taker<Index_, Next_, Taking_...> {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    return Taking<Index_, Next_, void, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
 
 template <size_t Index_>
 struct Taker<Index_> {
-template <typename Type_>
-static void Take(Window &&window, Type_ &value) {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     window.Stop();
 } };
 
-template <size_t... Size_>
-auto Take(const Buffer &buffer) {
-    std::tuple<typename Taken<Size_>::type...> value;
-    Taker<0, Size_...>::Take(buffer, value);
-    return value;
+template <typename Tuple_, typename... Taking_>
+struct Taken;
+
+template <typename Tuple_, typename Type_, typename... Taking_>
+struct Taken<Tuple_, Type_, Taking_...> {
+    typedef typename Taken<decltype(std::tuple_cat(Tuple_(), std::tuple<Type_>())), Taking_...>::type type;
+};
+
+template <typename Tuple_, size_t Size_, typename... Taking_>
+struct Taken<Tuple_, Pad<Size_>, Taking_...> {
+    typedef typename Taken<Tuple_, Taking_...>::type type;
+};
+
+template <typename Tuple_>
+struct Taken<Tuple_> {
+    typedef Tuple_ type;
+};
+
+template <typename... Taking_, typename Buffer_>
+auto Take(Buffer_ &&buffer) {
+    typename Taken<std::tuple<>, Taking_...>::type tuple;
+    Window window(buffer);
+    Taker<0, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
+    return tuple;
 }
+
 
 }
 

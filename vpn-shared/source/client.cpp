@@ -207,8 +207,8 @@ task<Address> Server::Connect(Sunk<> *sunk, const std::string &host, const std::
     auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
     tunnel->Give(Path(tunnel));
     co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
-        auto [service, address] = Take<2, 0>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-        co_return Address(address.str(), service.num<uint16_t>());
+        auto [service, address] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+        co_return Address(address.str(), service);
     });
 }
 
@@ -250,13 +250,13 @@ task<S<Origin>> Setup() {
 
     for (unsigned i(0); i != 3; ++i) {
         static Selector scan("scan(uint128)");
-        auto [address] = Take<32>(co_await endpoint.Call(block, directory, scan, Number<uint256_t>(generator())));
+        auto [address] = Take<Pad<12>, uint160_t>(co_await endpoint.Call(block, directory, scan, Tie(Pad<16>(), Number<uint128_t>(generator()))));
+        orc_assert(address != 0);
 
         static Selector look("look(address)");
-        auto result(co_await endpoint.Call(block, directory, look, address));
-        auto [time, offset, size, rest] = Take<32, 32, 32, 0>(result);
-        orc_assert(offset.num<uint256_t>() == 0x40);
-        auto data(rest.Take(size.num<uint256_t>().convert_to<size_t>()));
+        auto [time, offset, size, rest] = Take<uint256_t, uint256_t, uint256_t, Rest>(co_await endpoint.Call(block, directory, look, Number<uint256_t>(address)));
+        orc_assert(offset == 0x40);
+        auto data(rest.Take(size.convert_to<size_t>()));
         rest.Skip(31 - (data.size() - 1) % 32);
         rest.Stop();
 

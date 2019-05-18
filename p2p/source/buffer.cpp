@@ -29,8 +29,8 @@ namespace orc {
 
 size_t Buffer::size() const {
     size_t value(0);
-    each([&](const Region &region) {
-        value += region.size();
+    each([&](const uint8_t *data, size_t size) {
+        value += size;
         return true;
     });
     return value;
@@ -46,10 +46,9 @@ std::string Buffer::str() const {
 std::string Buffer::hex() const {
     std::ostringstream value;
     value << "0x" << std::hex << std::setfill('0');
-    each([&](const Region &region) {
-        auto data(region.data());
-        for (size_t i(0), e(region.size()); i != e; ++i)
-            value << std::setw(2) << unsigned(uint8_t(data[i]));
+    each([&](const uint8_t *data, size_t size) {
+        for (size_t i(0), e(size); i != e; ++i)
+            value << std::setw(2) << unsigned(data[i]);
         return true;
     });
     return value.str();
@@ -58,10 +57,9 @@ std::string Buffer::hex() const {
 size_t Buffer::copy(uint8_t *data, size_t size) const {
     auto here(data);
 
-    each([&](const Region &region) {
-        auto writ(region.size());
+    each([&](const uint8_t *next, size_t writ) {
         orc_assert(data + size - here >= writ);
-        memcpy(here, region.data(), writ);
+        memcpy(here, next, writ);
         here += writ;
         return true;
     });
@@ -71,9 +69,7 @@ size_t Buffer::copy(uint8_t *data, size_t size) const {
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     out << '{';
-    buffer.each([&](const Region &region) {
-        auto data(region.data());
-        auto size(region.size());
+    buffer.each([&](const uint8_t *data, size_t size) {
         out << std::setfill('0');
         out << std::setbase(16);
         for (size_t i(0); i != size; ++i)
@@ -124,17 +120,16 @@ Beam Bless(const std::string &data) {
 }
 
 bool operator ==(const Beam &lhs, const Buffer &rhs) {
-    auto data(lhs.data());
+    auto here(lhs.data());
     auto left(lhs.size());
 
-    return rhs.each([&](const Region &region) {
-        auto size(region.size());
-        if (size > left || memcmp(data, region.data(), size) != 0)
+    return rhs.each([&](const uint8_t *data, size_t size) {
+        if (size > left || memcmp(here, data, size) != 0)
             return false;
-        data += size;
+        here += size;
         left -= size;
         return true;
-    }) && data == lhs.data() + lhs.size();
+    }) && here == lhs.data() + lhs.size();
 }
 
 }

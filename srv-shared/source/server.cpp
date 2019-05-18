@@ -261,7 +261,7 @@ _trace();
 
 
     task<void> Call(const Buffer &data, std::function<task<void> (const Buffer &)> code) {
-        auto [command, args] = Take<TagSize, 0>(data);
+        auto [command, args] = Take<Tag, Window>(data);
         if (false) {
 
 
@@ -278,7 +278,7 @@ _trace();
             co_return;
 
         } else if (command == CloseTag) {
-            const auto [tag] = Take<TagSize>(args);
+            const auto [tag] = Take<Tag>(args);
             auto output(outputs_.find(tag));
             orc_assert(output != outputs_.end());
             co_await output->second->Shut();
@@ -288,7 +288,7 @@ _trace();
 
         } else if (command == ConnectTag) {
             // XXX: use something saner than : separation?
-            const auto [tag, target] = Take<TagSize, 0>(args);
+            const auto [tag, target] = Take<Tag, Window>(args);
             auto string(target.str());
             auto colon(string.rfind(':'));
             orc_assert(colon != std::string::npos);
@@ -303,7 +303,7 @@ _trace();
 
 
         } else if (command == OfferTag) {
-            const auto [tag] = Take<TagSize>(args);
+            const auto [tag] = Take<Tag>(args);
             auto outgoing(Make<Outgoing>());
             auto output(std::make_unique<Sink<Output<Waiter>, Waiter>>(this, tag));
             auto waiter(output->Wire<Sink<Waiter, Channel>>(outgoing));
@@ -314,7 +314,7 @@ _trace();
             co_return co_await code(Tie(Strung(std::move(offer))));
 
         } else if (command == NegotiateTag) {
-            const auto [tag, answer] = Take<TagSize, 0>(args);
+            const auto [tag, answer] = Take<Tag, Window>(args);
             auto output(outputs_.find(tag));
             orc_assert(output != outputs_.end());
             // XXX: this is extremely unfortunate
@@ -325,7 +325,7 @@ _trace();
 
 
         } else if (command == AnswerTag) {
-            const auto [offer] = Take<0>(args);
+            const auto [offer] = Take<Window>(args);
             auto answer(co_await back_->Respond(offer.str()));
             co_return co_await code(Tie(Strung(std::move(answer))));
 
@@ -338,7 +338,7 @@ _trace();
     task<void> Call(const Buffer &data) {
         Bill(1);
 
-        auto [nonce, rest] = Take<TagSize, 0>(data);
+        auto [nonce, rest] = Take<Tag, Window>(data);
         auto output(outputs_.find(nonce));
         if (output != outputs_.end()) {
             Bill(1);
