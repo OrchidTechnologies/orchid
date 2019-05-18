@@ -436,6 +436,7 @@ class Selector final :
 {
   private:
     uint32_t value_;
+    uint256_t gas_;
 
     template <bool Comma_, typename... Rest_>
     struct Args;
@@ -454,39 +455,10 @@ class Selector final :
     static void Write(std::ostringstream &signature) {
     } };
 
-    struct Caller {
-      private:
-        Endpoint &endpoint_;
-        Address contract_;
-        const Selector &selector_;
-        Argument block_;
-
-      public:
-        Caller(Endpoint &endpoint, Address contract, const Selector &selector, const Argument &block) :
-            endpoint_(endpoint),
-            contract_(std::move(contract)),
-            selector_(selector),
-            block_(block)
-        {
-        }
-
-        task<Result_> operator ()(const Args_ &...args) {
-            Builder builder;
-            Encode<Args_...>(builder, std::forward<const Args_>(args)...);
-            auto data(Bless((co_await endpoint_("eth_call", {Map{
-                {"to", contract_},
-                {"data", Tie(selector_, builder)},
-            }, block_})).asString()));
-            Window window(data);
-            auto result(Coded<Result_>::Decode(window));
-            window.Stop();
-            co_return std::move(result);
-        }
-    };
-
   public:
-    Selector(uint32_t value) :
-        value_(boost::endian::native_to_big(value))
+    Selector(uint32_t value, uint256_t gas = 90000) :
+        value_(boost::endian::native_to_big(value)),
+        gas_(gas)
     {
     }
 
@@ -510,8 +482,30 @@ class Selector final :
         return sizeof(value_);
     }
 
-    Caller operator()(Endpoint &endpoint, Address contract, const Argument &block) {
-        return Caller(endpoint, contract, *this, block);
+    task<Result_> Call(Endpoint &endpoint, const Argument &block, const Address &contract, const Args_ &...args) {
+        Builder builder;
+        Encode<Args_...>(builder, std::forward<const Args_>(args)...);
+        auto data(Bless((co_await endpoint("eth_call", {Map{
+            {"to", contract},
+            {"gas", gas_},
+            {"data", Tie(*this, builder)},
+        }, block})).asString()));
+        Window window(data);
+        auto result(Coded<Result_>::Decode(window));
+        window.Stop();
+        co_return std::move(result);
+    }
+
+    task<uint256_t> Send(Endpoint &endpoint, const Address &from, const Address &contract, const Args_ &...args) {
+        Builder builder;
+        Encode<Args_...>(builder, std::forward<const Args_>(args)...);
+        auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Map{
+            {"from", from},
+            {"to", contract},
+            {"gas", gas_},
+            {"data", Tie(*this, builder)},
+        }})).asString()).template num<uint256_t>());
+        co_return std::move(transaction);
     }
 };
 

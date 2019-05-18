@@ -250,11 +250,11 @@ task<S<Origin>> Setup() {
 
     for (unsigned i(0); i != 3; ++i) {
         static Selector<Address, uint128_t> scan("scan");
-        auto address = co_await scan(endpoint, directory, block)(generator());
+        auto address = co_await scan.Call(endpoint, block, directory, generator());
         orc_assert(address != 0);
 
         static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
-        auto [time, data] = co_await look(endpoint, directory, block)(address);
+        auto [time, data] = co_await look.Call(endpoint, block, directory, address);
 
         Json::Value descriptor;
         Json::Reader reader;
