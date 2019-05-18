@@ -36,6 +36,8 @@ namespace orc {
 
 // XXX: none of this is REMOTELY efficient
 
+typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>> uint160_t;
+
 class Nested {
   protected:
     bool scalar_;
@@ -160,13 +162,17 @@ class Argument final {
     {
     }
 
-    Argument(std::initializer_list<Argument> args) {
+    Argument(std::initializer_list<Argument> args) :
+        value_(Json::arrayValue)
+    {
         int index(0);
         for (auto arg(args.begin()); arg != args.end(); ++arg)
             value_[index++] = std::move(arg->value_);
     }
 
-    Argument(std::map<std::string, Argument> args) {
+    Argument(std::map<std::string, Argument> args) :
+        value_(Json::objectValue)
+    {
         for (auto arg(args.begin()); arg != args.end(); ++arg)
             value_[std::move(arg->first)] = std::move(arg->second);
     }

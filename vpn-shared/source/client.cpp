@@ -28,6 +28,9 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
+
 #include <pc/webrtc_sdp.h>
 
 #include <maxminddb.h>
@@ -38,6 +41,7 @@
 #include "client.hpp"
 #include "commands.hpp"
 #include "http.hpp"
+#include "jsonrpc.hpp"
 #include "link.hpp"
 #include "scope.hpp"
 #include "socket.hpp"
@@ -233,15 +237,37 @@ S<Local> GetLocal() {
 task<S<Origin>> Setup() {
     S<Origin> origin(GetLocal());
 
-    const char *server("mac.saurik.com");
-    //const char *server("node.orchid.dev");
-    //const char *server("localhost");
+    //Endpoint endpoint({"https", "eth-ropsten.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
+    Endpoint endpoint({"https", "ropsten.infura.io", "443", "/v3/" ORCHID_INFURA});
 
-    for (const char *host : {server, server, server}) {
-        U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15"));
+    boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator;
+    generator.seed(boost::random::random_device()());
+
+    auto block(co_await endpoint.Block());
+
+    uint160_t directory("0xd87e0ee1a59841de2ac78c17209db97e27651985");
+    //uint160_t directory("0x9170a3b999884ec3514f181ad092587c2269ff30");
+
+    for (unsigned i(0); i != 3; ++i) {
+        static Selector scan("scan(uint128)");
+        auto [address] = Take<32>(co_await endpoint.Call(block, directory, scan, Number<uint256_t>(generator())));
+
+        static Selector look("look(address)");
+        auto result(co_await endpoint.Call(block, directory, look, address));
+        auto [time, offset, size, rest] = Take<32, 32, 32, 0>(result);
+        orc_assert(offset.num<uint256_t>() == 0x40);
+        auto data(rest.Take(size.num<uint256_t>().convert_to<size_t>()));
+        rest.Skip(31 - (data.size() - 1) % 32);
+        rest.Stop();
+
+        Json::Value descriptor;
+        Json::Reader reader;
+        orc_assert(reader.parse(data.str(), descriptor, false));
+
+        U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateUniqueFromRfc4572(descriptor["tls-algorithm"].asString(), descriptor["tls-fingerprint"].asString()));
         orc_assert(fingerprint != nullptr);
         auto server(std::make_shared<Sink<Server, Secure>>(std::move(fingerprint)));
-        co_await server->Swing(server.get(), origin, host, "8082");
+        co_await server->Swing(server.get(), origin, descriptor["host"].asString(), descriptor["port"].asString());
         origin = server;
     }
 

@@ -38,6 +38,7 @@
 
 namespace orc {
 
+using boost::multiprecision::uint128_t;
 using boost::multiprecision::uint256_t;
 
 class Region;

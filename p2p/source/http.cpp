@@ -78,11 +78,12 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
         // XXX: this needs security
         asio::ssl::context context{asio::ssl::context::sslv23_client};
 
-        context.set_verify_mode(asio::ssl::verify_peer);
-
         if (!verify)
-            context.set_verify_callback(asio::ssl::rfc2818_verification(uri.host_));
+            // XXX: verification did not work against infura
+            /*context.set_verify_callback(asio::ssl::rfc2818_verification(uri.host_))*/;
         else {
+            context.set_verify_mode(asio::ssl::verify_peer);
+
             context.set_verify_callback([&](bool preverified, boost::asio::ssl::verify_context &context) {
                 auto store(context.native_handle());
                 const rtc::OpenSSLCertificate certificate(X509_STORE_CTX_get0_cert(store));
@@ -91,7 +92,12 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
         }
 
         asio::ssl::stream<Socket_ &> stream{socket, context};
-        co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
+
+        try {
+            co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
+        } catch (const asio::error_code &error) {
+            orc_assert_(false, error.message());
+        }
 
         body = co_await Request_(stream, req);
 
@@ -103,7 +109,7 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
                 // XXX: this scenario is untested
             else if (error == asio::ssl::error::stream_truncated);
                 // XXX: this is because of infura
-            else throw;
+            else orc_assert_(false, error.message());
         }
     } else orc_assert(false);
 
