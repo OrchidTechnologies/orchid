@@ -147,7 +147,8 @@ class Argument final {
     {
     }
 
-    Argument(uint256_t value) :
+    template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+    Argument(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
         value_("0x" + value.str(0, std::ios::hex))
     {
     }
@@ -473,7 +474,7 @@ class Selector final :
             Builder builder;
             Encode<Args_...>(builder, std::forward<const Args_>(args)...);
             auto data(Bless((co_await endpoint_("eth_call", {Map{
-                {"to", Number<uint160_t>(contract_)},
+                {"to", contract_},
                 {"data", Tie(selector_, builder)},
             }, block_})).asString()));
             Window window(data);
