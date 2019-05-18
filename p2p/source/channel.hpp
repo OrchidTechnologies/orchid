@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#ifndef ORCHID_WEBRTC_HPP
-#define ORCHID_WEBRTC_HPP
+#ifndef ORCHID_CHANNEL_HPP
+#define ORCHID_CHANNEL_HPP
 
 #include "api/peer_connection_interface.h"
 
@@ -69,8 +69,8 @@ struct Configuration final {
     rtc::scoped_refptr<rtc::RTCCertificate> tls_;
 };
 
-class Connection :
-    public std::enable_shared_from_this<Connection>,
+class Peer :
+    public std::enable_shared_from_this<Peer>,
     //public cppcoro::async_manual_reset_event,
     public webrtc::PeerConnectionObserver,
     protected Drain<rtc::scoped_refptr<webrtc::DataChannelInterface>>
@@ -94,9 +94,9 @@ class Connection :
     }
 
   public:
-    Connection(Configuration configuration = Configuration());
+    Peer(Configuration configuration = Configuration());
 
-    virtual ~Connection() {
+    virtual ~Peer() {
 _trace();
         orc_insist(closed_.is_set());
     }
@@ -204,23 +204,23 @@ class Channel final :
     public webrtc::DataChannelObserver
 {
   private:
-    const S<Connection> connection_;
+    const S<Peer> peer_;
     const rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
 
     cppcoro::async_manual_reset_event opened_;
 
   public:
-    Channel(BufferDrain *drain, const S<Connection> &connection, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
+    Channel(BufferDrain *drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
         Link(drain),
-        connection_(connection),
+        peer_(peer),
         channel_(channel)
     {
         channel_->RegisterObserver(this);
-        connection_->channels_.insert(this);
+        peer_->channels_.insert(this);
     }
 
-    Channel(BufferDrain *drain, const S<Connection> &connection, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string()) :
-        Channel(drain, connection, [&]() {
+    Channel(BufferDrain *drain, const S<Peer> &peer, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string()) :
+        Channel(drain, peer, [&]() {
             webrtc::DataChannelInit init;
             init.ordered = false;
             init.protocol = protocol;
@@ -228,7 +228,7 @@ class Channel final :
                 init.negotiated = true;
                 init.id = id;
             }
-            return (*connection)->CreateDataChannel(label, &init);
+            return (*peer)->CreateDataChannel(label, &init);
         }())
     {
     }
@@ -240,12 +240,12 @@ class Channel final :
 
     virtual ~Channel() {
 _trace();
-        connection_->channels_.erase(this);
+        peer_->channels_.erase(this);
         channel_->UnregisterObserver();
     }
 
-    S<Connection> Connection() {
-        return connection_;
+    S<Peer> Peer() {
+        return peer_;
     }
 
     void OnStateChange() override {
@@ -306,4 +306,4 @@ std::string Strip(std::string sdp);
 
 }
 
-#endif//ORCHID_WEBRTC_HPP
+#endif//ORCHID_CHANNEL_HPP

@@ -20,92 +20,44 @@
 /* }}} */
 
 
-#include <asio/ip/tcp.hpp>
-#include <asio/ip/udp.hpp>
+#ifndef ORCHID_SOCKET_HPP
+#define ORCHID_SOCKET_HPP
 
-#include <cppcoro/async_manual_reset_event.hpp>
-#include <cppcoro/async_mutex.hpp>
-
-#include "baton.hpp"
-#include "link.hpp"
-#include "task.hpp"
+#include <iostream>
+#include <string>
 
 namespace orc {
 
-template <typename Socket_>
-class Socket final :
-    public Link
-{
+class Socket final {
   private:
-    Socket_ socket_;
-    cppcoro::async_mutex send_;
+    std::string host_;
+    uint16_t port_;
 
   public:
-    Socket(BufferDrain *drain) :
-        Link(drain),
-        socket_(Context())
+    Socket() :
+        port_(0)
     {
     }
 
-    task<boost::asio::ip::basic_endpoint<typename Socket_::protocol_type>> Connect(const std::string &host, const std::string &port) {
-        auto endpoints(co_await asio::ip::basic_resolver<typename Socket_::protocol_type>(Context()).async_resolve({host, port}, Token()));
-
-        if (Verbose)
-            for (auto &endpoint : endpoints)
-                Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
-
-        auto endpoint(co_await asio::async_connect(socket_, endpoints, Token()));
-
-        Task([this]() -> task<void> {
-            for (;;) {
-                char data[2048];
-                size_t writ;
-                try {
-                    writ = co_await socket_.async_receive(asio::buffer(data), Token());
-                } catch (const asio::error_code &error) {
-                    if (error == asio::error::eof)
-                        Link::Stop();
-                    else {
-                        auto message(error.message());
-                        orc_assert(!message.empty());
-                        Link::Stop(message);
-                    }
-                    break;
-                }
-
-                Beam beam(data, writ);
-
-                if (Verbose)
-                    Log() << "\e[33mRECV " << writ << " " << beam << "\e[0m" << std::endl;
-
-                Land(beam);
-            }
-        });
-
-        co_return endpoint;
+    Socket(std::string host, uint16_t port) :
+        host_(std::move(host)),
+        port_(port)
+    {
     }
 
-    virtual ~Socket() {
-_trace();
+    const std::string &Host() const {
+        return host_;
     }
 
-    task<void> Send(const Buffer &data) override {
-        if (Verbose)
-            Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-
-        if (data.empty()) {
-            socket_.shutdown(Socket_::protocol_type::socket::shutdown_send);
-        } else {
-            auto lock(co_await send_.scoped_lock_async());
-            auto writ(co_await socket_.async_send(Sequence(data), Token()));
-            orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
-        }
-    }
-
-    task<void> Shut() override {
-        socket_.close();
-        co_await Link::Shut();
+    uint16_t Port() const {
+        return port_;
     }
 };
 
+std::ostream &operator <<(std::ostream &out, const Socket &socket) {
+    return out << socket.Host() << ":" << socket.Port();
 }
+
+}
+
+#endif//ORCHID_SOCKET_HPP

@@ -40,11 +40,11 @@
 #include "channel.hpp"
 #include "client.hpp"
 #include "commands.hpp"
+#include "connection.hpp"
 #include "http.hpp"
 #include "jsonrpc.hpp"
 #include "link.hpp"
 #include "scope.hpp"
-#include "socket.hpp"
 #include "trace.hpp"
 
 #define mmdb_check(code) [&](int error) { \
@@ -60,7 +60,7 @@ task<std::string> Origin::Request(const std::string &method, const URI &uri, con
 }
 
 class Actor final :
-    public Connection
+    public Peer
 {
   protected:
     void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
@@ -106,7 +106,7 @@ class Tunnel :
 _trace();
     }
 
-    task<Address> Connect(const std::function<task<Address> (const Tag &tag)> &setup) {
+    task<Socket> Connect(const std::function<task<Socket> (const Tag &tag)> &setup) {
         co_return co_await setup(Inner()->tag_);
     }
 
@@ -138,7 +138,7 @@ task<void> Server::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std:
     });
 
     auto secure(sunk->Wire<Sink<Secure>>(false, local_.get(), verify));
-    address_ = co_await origin->Hop(secure, host, port, verify);
+    socket_ = co_await origin->Hop(secure, host, port, verify);
     co_await secure->Connect();
 }
 
@@ -187,10 +187,10 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
     co_return co_await result.Wait();
 }
 
-task<Address> Server::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Socket> Server::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
     tunnel->Give(Path(tunnel));
-    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
+    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Socket> {
         auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port, verify));
         auto description((co_await Call(NegotiateTag, Tie(tag, Beam(answer)))).str());
 
@@ -198,35 +198,35 @@ task<Address> Server::Hop(Sunk<> *sunk, const std::string &host, const std::stri
         webrtc::SdpParseError error;
         orc_assert_(webrtc::SdpDeserializeCandidate("", description, &candidate, &error), "`" << error.line << "` " << error.description);
 
-        const auto &address(candidate.address());
-        co_return Address(address.ipaddr().ToString(), address.port());
+        const auto &socket(candidate.address());
+        co_return Socket(socket.ipaddr().ToString(), socket.port());
     });
 }
 
-task<Address> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
     tunnel->Give(Path(tunnel));
-    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Address> {
-        auto [service, address] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-        co_return Address(address.str(), service);
+    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Socket> {
+        auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+        co_return Socket(socket.str(), service);
     });
 }
 
-task<Address> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Socket> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     auto client(Make<Actor>());
     auto channel(sunk->Wire<Channel>(client));
     auto answer(co_await Answer(Strip(co_await client->Offer()), host, port, verify));
     co_await client->Negotiate(answer);
     co_await channel->Connect();
     auto candidate(client->Candidate());
-    const auto &address(candidate.address());
-    co_return Address(address.ipaddr().ToString(), address.port());
+    const auto &socket(candidate.address());
+    co_return Socket(socket.ipaddr().ToString(), socket.port());
 }
 
-task<Address> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto socket(sunk->Wire<Socket<asio::ip::tcp::socket>>());
+task<Socket> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto socket(sunk->Wire<Connection<asio::ip::tcp::socket>>());
     auto endpoint(co_await socket->Connect(host, port));
-    co_return Address(endpoint.address().to_string(), endpoint.port());
+    co_return Socket(endpoint.address().to_string(), endpoint.port());
 }
 
 S<Local> GetLocal() {
@@ -245,20 +245,16 @@ task<S<Origin>> Setup() {
 
     auto block(co_await endpoint.Block());
 
-    uint160_t directory("0xd87e0ee1a59841de2ac78c17209db97e27651985");
-    //uint160_t directory("0x9170a3b999884ec3514f181ad092587c2269ff30");
+    Address directory("0xd87e0ee1a59841de2ac78c17209db97e27651985");
+    //Address directory("0x9170a3b999884ec3514f181ad092587c2269ff30");
 
     for (unsigned i(0); i != 3; ++i) {
-        static Selector scan("scan(uint128)");
-        auto [address] = Take<Pad<12>, uint160_t>(co_await endpoint.Call(block, directory, scan, Tie(Pad<16>(), Number<uint128_t>(generator()))));
+        static Selector<Address, uint128_t> scan("scan");
+        auto address = co_await scan(endpoint, directory, block)(generator());
         orc_assert(address != 0);
 
-        static Selector look("look(address)");
-        auto [time, offset, size, rest] = Take<uint256_t, uint256_t, uint256_t, Rest>(co_await endpoint.Call(block, directory, look, Number<uint256_t>(address)));
-        orc_assert(offset == 0x40);
-        auto data(rest.Take(size.convert_to<size_t>()));
-        rest.Skip(31 - (data.size() - 1) % 32);
-        rest.Stop();
+        static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
+        auto [time, data] = co_await look(endpoint, directory, block)(address);
 
         Json::Value descriptor;
         Json::Reader reader;

@@ -26,9 +26,9 @@
 #include <rtc_base/openssl_identity.h>
 #include <rtc_base/ssl_fingerprint.h>
 
-#include "address.hpp"
 #include "http.hpp"
 #include "secure.hpp"
+#include "socket.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 
@@ -38,9 +38,9 @@ class Server;
 
 class Origin {
   public:
-    virtual task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) = 0;
+    virtual task<Socket> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) = 0;
 
-    virtual task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
+    virtual task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
 
     task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
 };
@@ -55,7 +55,7 @@ class Server :
 
     U<rtc::OpenSSLIdentity> local_;
 
-    Address address_;
+    Socket socket_;
 
   protected:
     virtual Secure *Inner() = 0;
@@ -82,8 +82,8 @@ class Server :
     U<Route<Server>> Path(BufferDrain *drain);
     task<Beam> Call(const Tag &command, const Buffer &data);
 
-    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
-    task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Socket> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
+    task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
 class Local final :
@@ -93,8 +93,8 @@ class Local final :
     virtual ~Local() {
     }
 
-    task<Address> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
-    task<Address> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Socket> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
+    task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };
 
 S<Local> GetLocal();

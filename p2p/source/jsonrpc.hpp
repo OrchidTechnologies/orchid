@@ -142,6 +142,11 @@ class Argument final {
     mutable Json::Value value_;
 
   public:
+    Argument(Json::Value value) :
+        value_(value)
+    {
+    }
+
     Argument(uint256_t value) :
         value_("0x" + value.str(0, std::ios::hex))
     {
@@ -168,6 +173,15 @@ class Argument final {
         int index(0);
         for (auto arg(args.begin()); arg != args.end(); ++arg)
             value_[index++] = std::move(arg->value_);
+    }
+
+    template <typename Type_>
+    Argument(const std::vector<Type_> &args) :
+        value_(Json::arrayValue)
+    {
+        int index(0);
+        for (auto arg(args.begin()); arg != args.end(); ++arg)
+            value_[index] = Argument(arg->value_);
     }
 
     Argument(std::map<std::string, Argument> args) :
@@ -199,50 +213,180 @@ class Proven final {
     }
 };
 
+class Address :
+    public uint160_t
+{
+  public:
+    using uint160_t::uint160_t;
+
+    Address(uint160_t &&value) :
+        uint160_t(std::move(value))
+    {
+    }
+};
+
+typedef Beam Bytes;
+typedef Brick<32> Bytes32;
+
+template <typename Type_, typename Enable_ = void>
+struct Coded;
+
+void Encode(Builder &builder) {
+}
+
+template <typename Type_, typename... Args_>
+void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
+    Coded<Type_>::Encode(builder, value);
+    Encode(builder, args...);
+}
+
+template <bool Sign_, size_t Size_, typename Type_>
+struct Numeric;
+
+template <size_t Size_, typename Type_>
+struct Numeric<false, Size_, Type_> {
+    static Type_ Decode(Window &window) {
+        window.Skip(32 - Size_);
+        Brick<Size_> brick;
+        window.Take(brick);
+        return brick.template num<Type_>();
+    }
+
+    static void Encode(Builder &builder, const Type_ &value) {
+        builder += Number<uint256_t>(value);
+    }
+};
+
+// XXX: these conversions only just barely work
+template <size_t Size_, typename Type_>
+struct Numeric<true, Size_, Type_> {
+    static Type_ Decode(Window &window) {
+        Brick<32> brick;
+        window.Take(brick);
+        return brick.template num<uint256_t>().convert_to<Type_>();
+    }
+
+    static void Encode(Builder &builder, const Type_ &value) {
+        builder += Number<uint256_t>(value, signbit(value) ? 0xff : 0x00);
+    }
+};
+
+template <typename Type_>
+struct Coded<Type_, typename std::enable_if<std::is_unsigned<Type_>::value>::type> :
+    public Numeric<false, sizeof(Type_), Type_>
+{
+    static void Name(std::ostringstream &signature) {
+        signature << "uint" << std::dec << sizeof(Type_) * 8;
+    }
+};
+
+template <typename Type_>
+struct Coded<Type_, typename std::enable_if<std::is_signed<Type_>::value>::type> :
+    public Numeric<true, sizeof(Type_), Type_>
+{
+    static void Name(std::ostringstream &signature) {
+        signature << "int" << std::dec << sizeof(Type_) * 8;
+    }
+};
+
+template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> :
+    public Numeric<false, (Bits_ >> 3), boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>>
+{
+    static void Name(std::ostringstream &signature) {
+        signature << "uint" << std::dec << Bits_;
+    }
+};
+
+/*template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::signed_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> :
+    public Numeric<true, (Bits_ >> 3), boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::signed_magnitude, Check_, void>>>
+{
+    static void Name(std::ostringstream &signature) {
+        signature << "int" << std::dec << Bits_;
+    }
+};*/
+
+template <>
+struct Coded<Address, void> {
+    static void Name(std::ostringstream &signature) {
+        signature << "address";
+    }
+
+    static Address Decode(Window &window) {
+        return Coded<uint160_t>::Decode(window);
+    }
+
+    static void Encode(Builder &builder, const Address &value) {
+        return Coded<uint160_t>::Encode(builder, value);
+    }
+};
+
+template <>
+struct Coded<Beam, void> {
+    static void Name(std::ostringstream &signature) {
+        signature << "bytes";
+    }
+
+    static Beam Decode(Window &window) {
+        auto size(Coded<uint256_t>::Decode(window).convert_to<size_t>());
+        auto data(window.Take(size));
+        window.Skip(31 - (size + 31) % 32);
+        return data;
+    }
+
+    static void Encode(Builder &builder, const Beam &data) {
+        auto size(data.size());
+        Coded<uint256_t>::Encode(builder, size);
+        builder += data;
+        Beam pad(31 - (size + 31) % 32);
+        memset(pad.data(), 0, pad.size());
+        builder += std::move(pad);
+    }
+};
+
+// XXX: provide a more complete implementation
+
+template <typename Type_>
+struct Coded<std::vector<Type_>, void> {
+    static void Name(std::ostringstream &signature) {
+        Coded<Type_>::Name(signature);
+        signature << "[]";
+    }
+
+    static void Encode(Builder &builder, const std::vector<Type_> &values) {
+        Coded<uint256_t>::Encode(builder, values.size());
+        for (const auto &value : values)
+            Coded<Type_>::Encode(builder, value);
+    }
+};
+
+template <>
+struct Coded<std::tuple<uint256_t, Bytes>, void> {
+    static std::tuple<uint256_t, Bytes> Decode(Window &window) {
+        std::tuple<uint256_t, Bytes> value;
+        std::get<0>(value) = Coded<uint256_t>::Decode(window);
+        orc_assert(Coded<uint256_t>::Decode(window) == 0x40);
+        std::get<1>(value) = Coded<Bytes>::Decode(window);
+        return value;
+    }
+};
+
 template <typename Type_>
 struct Result final {
     typedef uint256_t type;
 };
 
-class Selector final :
-    public Region
-{
-  private:
-    uint32_t value_;
-
-  public:
-    Selector(uint32_t value) :
-        value_(boost::endian::native_to_big(value))
-    {
-    }
-
-    Selector(const char *data, size_t size) :
-        Selector(Hash(Subset(data, size)).Clip<4>().num<uint32_t>())
-    {
-    }
-
-    Selector(const char *signature) :
-        Selector(signature, strlen(signature))
-    {
-    }
-
-    Selector(const std::string &signature) :
-        Selector(signature.data(), signature.size())
-    {
-    }
-
-    const uint8_t *data() const override {
-        return reinterpret_cast<const uint8_t *>(&value_);
-    }
-
-    size_t size() const override {
-        return sizeof(value_);
-    }
-};
-
 class Endpoint final {
   private:
     const URI uri_;
+
+    auto Get(int index, Json::Value &storage, const uint256_t &key) {
+        auto proof(storage[index]);
+        orc_assert(uint256_t(proof["key"].asString()) == key);
+        uint256_t value(proof["value"].asString());
+        return value;
+    }
 
     template <int Index_, typename Result_, typename... Args_>
     void Get(Result_ &result, Json::Value &storage) {
@@ -250,10 +394,7 @@ class Endpoint final {
 
     template <int Index_, typename Result_, typename... Args_>
     void Get(Result_ &result, Json::Value &storage, const uint256_t &key, Args_ &&...args) {
-        auto proof(storage[Index_]);
-        orc_assert(uint256_t(proof["key"].asString()) == key);
-        uint256_t value(proof["value"].asString());
-        std::get<Index_ + 1>(result) = value;
+        std::get<Index_ + 1>(result) = Get(Index_, storage, key);
         Get<Index_ + 1>(result, storage, std::forward<Args_>(args)...);
     }
 
@@ -270,19 +411,106 @@ class Endpoint final {
     }
 
     template <typename... Args_>
-    task<Beam> Call(const Argument &block, uint256_t account, const Selector &selector, Args_ &&...args) {
-        co_return Bless((co_await operator ()("eth_call", {Map{
-            {"to", account},
-            {"data", Tie(selector, std::forward<Args_>(args)...)},
-        }, block})).asString());
-    }
-
-    template <typename... Args_>
-    task<std::tuple<Proven, typename Result<Args_>::type...>> Get(const Argument &block, uint256_t account, Args_ &&...args) {
+    task<std::tuple<Proven, typename Result<Args_>::type...>> Get(const Argument &block, const uint256_t &account, Args_ &&...args) {
         auto proof(co_await operator ()("eth_getProof", {account, {std::forward<Args_>(args)...}, block}));
         std::tuple<Proven, typename Result<Args_>::type...> result(proof);
         Get<0>(result, proof["storageProof"], std::forward<Args_>(args)...);
         co_return result;
+    }
+
+    template <typename... Args_>
+    task<std::tuple<Proven, std::vector<uint256_t>>> Get(const Argument &block, const uint256_t &account, const std::vector<uint256_t> &args) {
+        auto proof(co_await operator ()("eth_getProof", {account, {std::forward<Args_>(args)...}, block}));
+        std::tuple<Proven, std::vector<uint256_t>> result(proof);
+        auto storage(proof["storageProof"]);
+        for (unsigned i(0); i != args.size(); ++i)
+            std::get<1>(result).emplace_back(Get(i, storage, args[i]));
+        co_return result;
+    }
+};
+
+template <typename Result_, typename... Args_>
+class Selector final :
+    public Region
+{
+  private:
+    uint32_t value_;
+
+    template <bool Comma_, typename... Rest_>
+    struct Args;
+
+    template <bool Comma_, typename Next_, typename... Rest_>
+    struct Args<Comma_, Next_, Rest_...> {
+    static void Write(std::ostringstream &signature) {
+        if (Comma_)
+            signature << ',';
+        Coded<Next_>::Name(signature);
+        Args<true, Rest_...>::Write(signature);
+    } };
+
+    template <bool Comma_>
+    struct Args<Comma_> {
+    static void Write(std::ostringstream &signature) {
+    } };
+
+    struct Caller {
+      private:
+        Endpoint &endpoint_;
+        Address contract_;
+        const Selector &selector_;
+        Argument block_;
+
+      public:
+        Caller(Endpoint &endpoint, Address contract, const Selector &selector, const Argument &block) :
+            endpoint_(endpoint),
+            contract_(std::move(contract)),
+            selector_(selector),
+            block_(block)
+        {
+        }
+
+        task<Result_> operator ()(const Args_ &...args) {
+            Builder builder;
+            Encode<Args_...>(builder, std::forward<const Args_>(args)...);
+            auto data(Bless((co_await endpoint_("eth_call", {Map{
+                {"to", Number<uint160_t>(contract_)},
+                {"data", Tie(selector_, builder)},
+            }, block_})).asString()));
+            Window window(data);
+            auto result(Coded<Result_>::Decode(window));
+            window.Stop();
+            co_return std::move(result);
+        }
+    };
+
+  public:
+    Selector(uint32_t value) :
+        value_(boost::endian::native_to_big(value))
+    {
+    }
+
+    Selector(const std::string &name) :
+        Selector([&]() {
+            std::ostringstream signature;
+            signature << name << '(';
+            Args<false, Args_...>::Write(signature);
+            signature << ')';
+            std::cerr << signature.str() << std::endl;
+            return Hash(Strung(signature.str())).Clip<4>().num<uint32_t>();
+        }())
+    {
+    }
+
+    const uint8_t *data() const override {
+        return reinterpret_cast<const uint8_t *>(&value_);
+    }
+
+    size_t size() const override {
+        return sizeof(value_);
+    }
+
+    Caller operator()(Endpoint &endpoint, Address contract, const Argument &block) {
+        return Caller(endpoint, contract, *this, block);
     }
 };
 

@@ -51,12 +51,12 @@
 #include "beast.hpp"
 #include "channel.hpp"
 #include "commands.hpp"
+#include "connection.hpp"
 #include "crypto.hpp"
 //#include "ethereum.hpp"
 #include "http.hpp"
 #include "scope.hpp"
 #include "secure.hpp"
-#include "socket.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 
@@ -78,7 +78,7 @@ class Back {
 };
 
 class Outgoing final :
-    public Connection
+    public Peer
 {
   protected:
     void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
@@ -156,24 +156,24 @@ class Waiter :
     public Link
 {
   private:
-    S<Connection> connection_;
+    S<Peer> peer_;
 
   protected:
     virtual Channel *Inner() = 0;
 
   public:
-    Waiter(BufferDrain *drain, S<Connection> connection) :
+    Waiter(BufferDrain *drain, S<Peer> peer) :
         Link(drain),
-        connection_(connection)
+        peer_(peer)
     {
     }
 
     task<std::string> Connect(const std::string &sdp) {
-        auto connection(std::move(connection_));
-        orc_assert(connection != nullptr);
-        co_await connection->Negotiate(sdp);
+        auto peer(std::move(peer_));
+        orc_assert(peer != nullptr);
+        co_await peer->Negotiate(sdp);
         co_await Inner()->Connect();
-        co_return webrtc::SdpSerializeCandidate(connection->Candidate());
+        co_return webrtc::SdpSerializeCandidate(peer->Candidate());
     }
 
     task<void> Send(const Buffer &data) override {
@@ -294,8 +294,8 @@ _trace();
             orc_assert(colon != std::string::npos);
             auto host(string.substr(0, colon));
             auto port(string.substr(colon + 1));
-            auto output(std::make_unique<Sink<Output<Socket<asio::ip::udp::socket>>, Socket<asio::ip::udp::socket>>>(this, tag));
-            auto socket(output->Wire<Socket<asio::ip::udp::socket>>());
+            auto output(std::make_unique<Sink<Output<Connection<asio::ip::udp::socket>>, Connection<asio::ip::udp::socket>>>(this, tag));
+            auto socket(output->Wire<Connection<asio::ip::udp::socket>>());
             auto endpoint(co_await socket->Connect(host, port));
             auto place(outputs_.emplace(tag, std::move(output)));
             orc_assert(place.second);
@@ -449,7 +449,7 @@ _trace();
 };
 
 class Incoming final :
-    public Connection
+    public Peer
 {
   private:
     S<Incoming> self_;
@@ -473,7 +473,7 @@ class Incoming final :
 
   public:
     Incoming(S<Ship> ship) :
-        Connection([&]() {
+        Peer([&]() {
             Configuration configuration;
             configuration.ice_ = ice_;
             configuration.tls_ = ship->Certificate();

@@ -26,6 +26,7 @@
 #include <deque>
 #include <functional>
 #include <iostream>
+#include <list>
 
 #include <asio.hpp>
 
@@ -316,8 +317,9 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     public Data<(Bits_ >> 3)>
 {
   public:
-    Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value) {
-        boost::multiprecision::export_bits(value, this->data_.rbegin(), 8, false);
+    Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value, uint8_t pad = 0) {
+        for (auto i(boost::multiprecision::export_bits(value, this->data_.rbegin(), 8, false)), e(this->data_.rend()); i != e; ++i)
+            *i = pad;
     }
 
     Number(const std::string &value) :
@@ -724,6 +726,30 @@ class Rest final :
         Window(std::move(window)),
         data_(std::move(data))
     {
+    }
+};
+
+
+class Builder :
+    public Buffer
+{
+  private:
+    std::list<Beam> ranges_;
+
+  public:
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
+        for (const auto &range : ranges_)
+            if (!code(range.data(), range.size()))
+                return false;
+        return true;
+    }
+
+    void operator +=(const Buffer &buffer) {
+        ranges_.emplace_back(buffer);
+    }
+
+    void operator +=(Beam &&beam) {
+        ranges_.emplace_back(std::move(beam));
     }
 };
 

@@ -62,7 +62,7 @@ struct SetupSSL {
     ~SetupSSL() { rtc::CleanupSSL(); }
 } setup_;
 
-Connection::Connection(Configuration configuration) :
+Peer::Peer(Configuration configuration) :
     peer_([&]() {
         static auto factory(webrtc::CreateModularPeerConnectionFactory([]() {
             webrtc::PeerConnectionFactoryDependencies dependencies;
@@ -94,7 +94,7 @@ Connection::Connection(Configuration configuration) :
 {
 }
 
-cricket::Candidate Connection::Candidate() {
+cricket::Candidate Peer::Candidate() {
     return network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
         auto sctp(peer_->GetSctpTransport());
         orc_assert(sctp != nullptr);
@@ -110,7 +110,7 @@ cricket::Candidate Connection::Candidate() {
     });
 }
 
-void Connection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
+void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
     switch (state) {
         case webrtc::PeerConnectionInterface::kIceConnectionNew:
             if (Verbose)
@@ -152,7 +152,7 @@ void Connection::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConne
     }
 }
 
-void Connection::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
+void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
     switch (state) {
         case webrtc::PeerConnectionInterface::kIceConnectionNew:
             if (Verbose)
@@ -208,7 +208,7 @@ void Connection::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterfa
     }
 }
 
-void Connection::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) {
+void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) {
     Land(std::move(interface));
 }
 
