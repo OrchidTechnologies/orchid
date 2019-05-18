@@ -232,11 +232,11 @@ typedef Brick<32> Bytes32;
 template <typename Type_, typename Enable_ = void>
 struct Coded;
 
-void Encode(Builder &builder) {
+inline void Encode(Builder &builder) {
 }
 
 template <typename Type_, typename... Args_>
-void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
+inline void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
     Coded<Type_>::Encode(builder, value);
     Encode(builder, args...);
 }
