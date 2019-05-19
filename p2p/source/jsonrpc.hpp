@@ -123,6 +123,16 @@ class Nested {
         return value_;
     }
 
+    uint256_t num() const {
+        orc_assert(scalar_);
+        uint256_t value;
+        if (value_.empty())
+            value = 0;
+        else
+            boost::multiprecision::import_bits(value, value_.rbegin(), value_.rend(), 8, false);
+        return value;
+    }
+
     void enc(std::string &data) const;
 };
 
@@ -151,6 +161,11 @@ class Argument final {
     template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
     Argument(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
         value_("0x" + value.str(0, std::ios::hex))
+    {
+    }
+
+    Argument(bool value) :
+        value_(value)
     {
     }
 
@@ -199,21 +214,6 @@ class Argument final {
 };
 
 typedef std::map<std::string, Argument> Map;
-
-class Proven final {
-  private:
-    uint256_t balance_;
-
-  public:
-    Proven(Json::Value value) :
-        balance_(value["balance"].asString())
-    {
-    }
-
-    const uint256_t &Balance() {
-        return balance_;
-    }
-};
 
 class Address :
     public uint160_t
@@ -379,25 +379,36 @@ struct Result final {
     typedef uint256_t type;
 };
 
+struct Block {
+    const uint256_t number_;
+    const uint256_t state_;
+
+    Block(Json::Value &&value);
+};
+
+struct Account final {
+    const uint256_t nonce_;
+    const uint256_t balance_;
+    const uint256_t storage_;
+    const uint256_t code_;
+
+    Account(const Block &block, Json::Value &value);
+};
+
 class Endpoint final {
   private:
     const Locator locator_;
 
-    auto Get(int index, Json::Value &storage, const uint256_t &key) {
-        auto proof(storage[index]);
-        orc_assert(uint256_t(proof["key"].asString()) == key);
-        uint256_t value(proof["value"].asString());
-        return value;
+    uint256_t Get(int index, Json::Value &storages, const Region &root, const uint256_t &key);
+
+    template <int Index_, typename Result_, typename... Args_>
+    void Get(Result_ &result, Json::Value &storages, const Region &root) {
     }
 
     template <int Index_, typename Result_, typename... Args_>
-    void Get(Result_ &result, Json::Value &storage) {
-    }
-
-    template <int Index_, typename Result_, typename... Args_>
-    void Get(Result_ &result, Json::Value &storage, const uint256_t &key, Args_ &&...args) {
-        std::get<Index_ + 1>(result) = Get(Index_, storage, key);
-        Get<Index_ + 1>(result, storage, std::forward<Args_>(args)...);
+    void Get(Result_ &result, Json::Value &storages, const Region &root, const uint256_t &key, Args_ &&...args) {
+        std::get<Index_ + 1>(result) = Get(Index_, storages, root, key);
+        Get<Index_ + 1>(result, storages, root, std::forward<Args_>(args)...);
     }
 
   public:
@@ -408,25 +419,31 @@ class Endpoint final {
 
     task<Json::Value> operator ()(const std::string &method, Argument args);
 
-    task<uint256_t> Block() {
+    task<uint256_t> Latest() {
         co_return uint256_t((co_await operator ()("eth_blockNumber", {})).asString());
     }
 
+    task<Block> Header(uint256_t number) {
+        co_return co_await operator ()("eth_getBlockByNumber", {number, false});
+    }
+
     template <typename... Args_>
-    task<std::tuple<Proven, typename Result<Args_>::type...>> Get(const Argument &block, const uint256_t &account, Args_ &&...args) {
-        auto proof(co_await operator ()("eth_getProof", {account, {std::forward<Args_>(args)...}, block}));
-        std::tuple<Proven, typename Result<Args_>::type...> result(proof);
-        Get<0>(result, proof["storageProof"], std::forward<Args_>(args)...);
+    task<std::tuple<Account, typename Result<Args_>::type...>> Get(const Block &block, const Address &contract, Args_ &&...args) {
+        auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        std::tuple<Account, typename Result<Args_>::type...> result(Account(block, proof));
+        Number<uint256_t> root(proof["storageHash"].asString());
+        Get<0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
         co_return result;
     }
 
     template <typename... Args_>
-    task<std::tuple<Proven, std::vector<uint256_t>>> Get(const Argument &block, const uint256_t &account, const std::vector<uint256_t> &args) {
-        auto proof(co_await operator ()("eth_getProof", {account, {std::forward<Args_>(args)...}, block}));
-        std::tuple<Proven, std::vector<uint256_t>> result(proof);
-        auto storage(proof["storageProof"]);
+    task<std::tuple<Account, std::vector<uint256_t>>> Get(const Block &block, const Address &contract, const std::vector<uint256_t> &args) {
+        auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        std::tuple<Account, std::vector<uint256_t>> result(Account(block, proof));
+        Number<uint256_t> root(proof["storageHash"].asString());
+        auto storages(proof["storageProof"]);
         for (unsigned i(0); i != args.size(); ++i)
-            std::get<1>(result).emplace_back(Get(i, storage, args[i]));
+            std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
         co_return result;
     }
 };

@@ -69,12 +69,16 @@ size_t Buffer::copy(uint8_t *data, size_t size) const {
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     out << '{';
+    bool comma(false);
     buffer.each([&](const uint8_t *data, size_t size) {
+        if (comma)
+            out << ',';
+        else
+            comma = true;
         out << std::setfill('0');
         out << std::setbase(16);
         for (size_t i(0); i != size; ++i)
             out << std::setw(2) << int(data[i]);
-        out << ',';
         return true;
     });
     out << '}';

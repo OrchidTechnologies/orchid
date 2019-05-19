@@ -243,18 +243,19 @@ task<S<Origin>> Setup() {
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator;
     generator.seed(boost::random::random_device()());
 
-    auto block(co_await endpoint.Block());
+    auto latest(co_await endpoint.Latest());
+    //auto block(co_await endpoint.Header(latest));
 
     Address directory("0xd87e0ee1a59841de2ac78c17209db97e27651985");
     //Address directory("0x9170a3b999884ec3514f181ad092587c2269ff30");
 
     for (unsigned i(0); i != 3; ++i) {
         static Selector<Address, uint128_t> scan("scan");
-        auto address = co_await scan.Call(endpoint, block, directory, generator());
+        auto address = co_await scan.Call(endpoint, latest, directory, generator());
         orc_assert(address != 0);
 
         static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
-        auto [time, data] = co_await look.Call(endpoint, block, directory, address);
+        auto [time, data] = co_await look.Call(endpoint, latest, directory, address);
 
         Json::Value descriptor;
         Json::Reader reader;

@@ -99,6 +99,10 @@ class Region :
         return code(data(), size());
     }
 
+    uint8_t operator [](size_t index) const {
+        return data()[index];
+    }
+
     operator asio::const_buffer() const {
         return asio::const_buffer(data(), size());
     }
@@ -107,9 +111,18 @@ class Region :
     Type_ num() const {
         return Cast<Type_>::Load(data(), size());
     }
+
+    unsigned nib(size_t index) const {
+        orc_assert((index >> 1) < size());
+        auto value(data()[index >> 1]);
+        if ((index & 0x1) == 0)
+            return value >> 4;
+        else
+            return value & 0xf;
+    }
 };
 
-class Range {
+class Range final {
   private:
     const uint8_t *data_;
     size_t size_;
@@ -121,6 +134,12 @@ class Range {
     Range(const Range &range) :
         data_(range.data()),
         size_(range.size())
+    {
+    }
+
+    Range(const Region &region) :
+        data_(region.data()),
+        size_(region.size())
     {
     }
 
@@ -136,12 +155,33 @@ class Range {
     {
     }
 
+    Range &operator =(const Region &region) {
+        data_ = region.data();
+        size_ = region.size();
+        return *this;
+    }
+
     const uint8_t *data() const {
         return data_;
     }
 
     size_t size() const {
         return size_;
+    }
+
+    Range &operator +=(size_t offset) {
+        orc_assert(size_ >= offset);
+        data_ += offset;
+        size_ -= offset;
+        return *this;
+    }
+
+    Range &operator ++() {
+        return *this += 1;
+    }
+
+    uint8_t operator [](size_t index) const {
+        return data_[index];
     }
 
     operator asio::const_buffer() const {
@@ -173,6 +213,11 @@ class Subset final :
 
     Subset(const std::string &data) :
         Subset(data.data(), data.size())
+    {
+    }
+
+    Subset(const Region &region) :
+        Subset(region.data(), region.size())
     {
     }
 
@@ -218,9 +263,33 @@ class Data :
     Data() {
     }
 
+    Data(const void *data, size_t size) {
+        copy(data, size);
+    }
+
+    Data(const Region &region) :
+        Data(region.data(), region.size())
+    {
+    }
+
     Data(const std::array<uint8_t, Size_> &data) :
         data_(data)
     {
+    }
+
+    void copy(const void *data, size_t size) {
+        orc_assert(size == Size_);
+        memcpy(data_.data(), data, Size_);
+    }
+
+    Data &operator =(const Region &region) {
+        copy(region.data(), region.size());
+        return *this;
+    }
+
+    Data &operator =(const Range &range) {
+        copy(range.data(), range.size());
+        return *this;
     }
 
     const uint8_t *data() const override {
@@ -248,13 +317,8 @@ class Brick final :
     static const size_t Size = Size_;
 
   public:
-    Brick() {
-    }
-
-    Brick(const void *data, size_t size) {
-        orc_assert(size == Size_);
-        memcpy(this->data_.data(), data, Size_);
-    }
+    using Data<Size_>::Data;
+    using Data<Size_>::operator =;
 
     Brick(const std::string &data) :
         Brick(data.data(), data.size())
@@ -317,6 +381,8 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     public Data<(Bits_ >> 3)>
 {
   public:
+    using Data<(Bits_ >> 3)>::Data;
+
     Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value, uint8_t pad = 0) {
         for (auto i(boost::multiprecision::export_bits(value, this->data_.rbegin(), 8, false)), e(this->data_.rend()); i != e; ++i)
             *i = pad;
@@ -400,10 +466,6 @@ class Beam :
         return size_;
     }
 
-    const uint8_t &operator [](size_t index) const {
-        return data_[index];
-    }
-
     uint8_t &operator [](size_t index) {
         return data_[index];
     }
@@ -425,6 +487,11 @@ inline bool operator ==(const Beam &lhs, const Strung<Data_> &rhs) {
 
 template <size_t Size_>
 inline bool operator ==(const Beam &lhs, const Brick<Size_> &rhs) {
+    auto size(lhs.size());
+    return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
+}
+
+inline bool operator ==(const Beam &lhs, const Range &rhs) {
     auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
@@ -614,6 +681,15 @@ class Window :
             *(i++) = Range(data, size);
             return true;
         });
+    }
+
+    Window(const Range &range) :
+        count_(1),
+        ranges_(new Range[count_]),
+        range_(ranges_.get()),
+        offset_(0)
+    {
+        ranges_.get()[0] = range;
     }
 
     Window(const Window &window) :

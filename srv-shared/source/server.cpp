@@ -95,7 +95,7 @@ _trace();
     }
 };
 
-class Account {
+class Balance {
   public:
     virtual void Land(const Buffer &data) = 0;
     virtual void Bill(uint64_t amount) = 0;
@@ -103,7 +103,7 @@ class Account {
 
 template <typename Type_>
 class Output :
-    public Pump<Account>,
+    public Pump<Balance>,
     public BufferDrain
 {
     template <typename Base_, typename Inner_, typename Drain_>
@@ -122,13 +122,13 @@ class Output :
     }
 
     void Stop(const std::string &error) override {
-        Pump<Account>::Stop();
+        Pump<Balance>::Stop();
         // XXX: implement (efficiently ;P)
     }
 
   public:
-    Output(Account *drain, const Tag &tag) :
-        Pump<Account>(drain),
+    Output(Balance *drain, const Tag &tag) :
+        Pump<Balance>(drain),
         tag_(tag)
     {
 _trace();
@@ -144,7 +144,7 @@ _trace();
 
     task<void> Shut() override {
         co_await Inner()->Shut();
-        co_await Pump<Account>::Shut();
+        co_await Pump<Balance>::Shut();
     }
 
     Type_ *operator ->() {
@@ -186,7 +186,7 @@ class Waiter :
 };
 
 class Replay final :
-    public Pump<Account>
+    public Pump<Balance>
 {
   private:
     Beam request_;
@@ -203,14 +203,14 @@ class Replay final :
 class Space final :
     public std::enable_shared_from_this<Space>,
     public Pipe,
-    public Account
+    public Balance
 {
   private:
     const S<Back> back_;
 
     Pipe *input_;
 
-    std::map<Tag, U<Pump<Account>>> outputs_;
+    std::map<Tag, U<Pump<Balance>>> outputs_;
 
     int64_t balance_;
 
