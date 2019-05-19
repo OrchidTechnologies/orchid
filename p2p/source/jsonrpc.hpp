@@ -324,6 +324,23 @@ struct Coded<Address, void> {
     }
 };
 
+template <size_t Size_>
+struct Coded<Brick<Size_>, typename std::enable_if<Size_ == 32>::type> {
+    static void Name(std::ostringstream &signature) {
+        signature << "bytes" << std::dec << Size_;
+    }
+
+    static Bytes32 Decode(Window &window) {
+        Brick<Size_> value;
+        window.Take(value);
+        return value;
+    }
+
+    static void Encode(Builder &builder, const Brick<Size_> &data) {
+        builder += data;
+    }
+};
+
 template <>
 struct Coded<Beam, void> {
     static void Name(std::ostringstream &signature) {
