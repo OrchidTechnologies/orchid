@@ -52,6 +52,8 @@ cflags += -I$(pwd)/source
 
 #include $(pwd)/aleth.mk
 
+cflags += -I$(pwd)/url/include
+
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/*/include))
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))
 

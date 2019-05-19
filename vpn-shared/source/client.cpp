@@ -53,10 +53,10 @@
 
 namespace orc {
 
-task<std::string> Origin::Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data) {
     Sink<Adapter> adapter(orc::Context());
-    co_await Connect(&adapter, uri.host_, uri.port_);
-    co_return co_await orc::Request(adapter, method, uri, headers, data);
+    co_await Connect(&adapter, locator.host_, locator.port_);
+    co_return co_await orc::Request(adapter, method, locator, headers, data);
 }
 
 class Actor final :

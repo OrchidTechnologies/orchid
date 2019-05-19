@@ -20,25 +20,21 @@
 /* }}} */
 
 
-#ifndef ORCHID_HTTP_HPP
-#define ORCHID_HTTP_HPP
+#include <skyr/url.hpp>
 
-#include <map>
-#include <string>
-
-#include <rtc_base/openssl_certificate.h>
-
-#include "task.hpp"
+#include "error.hpp"
+#include "locator.hpp"
 
 namespace orc {
 
-class Adapter;
-class Locator;
-
-task<std::string> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
-
-task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
-
+Locator Locator::Parse(const std::string &url) {
+    auto base(skyr::make_url(url));
+    orc_assert_(base, base.error().message());
+    auto &value(base.value());
+    auto scheme(value.protocol());
+    orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');
+    scheme.resize(scheme.size() - 1);
+    return Locator(std::move(scheme), value.host(), value.port(), value.pathname());
 }
 
-#endif//ORCHID_HTTP_HPP
+}

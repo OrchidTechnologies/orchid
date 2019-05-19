@@ -138,7 +138,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg)
     root["params"] = std::move(arg);
 
     Json::FastWriter writer;
-    auto body(co_await Request("POST", uri_, {{"content-type", "application/json"}}, writer.write(root)));
+    auto body(co_await Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root)));
 
     Json::Value result;
     Json::Reader reader;

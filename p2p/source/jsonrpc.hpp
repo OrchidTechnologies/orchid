@@ -30,6 +30,7 @@
 #include "buffer.hpp"
 #include "crypto.hpp"
 #include "http.hpp"
+#include "locator.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -380,7 +381,7 @@ struct Result final {
 
 class Endpoint final {
   private:
-    const URI uri_;
+    const Locator locator_;
 
     auto Get(int index, Json::Value &storage, const uint256_t &key) {
         auto proof(storage[index]);
@@ -400,8 +401,8 @@ class Endpoint final {
     }
 
   public:
-    Endpoint(URI uri) :
-        uri_(std::move(uri))
+    Endpoint(Locator locator) :
+        locator_(std::move(locator))
     {
     }
 

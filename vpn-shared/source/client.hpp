@@ -42,7 +42,7 @@ class Origin {
 
     virtual task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
 
-    task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data);
+    task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data);
 };
 
 class Server :

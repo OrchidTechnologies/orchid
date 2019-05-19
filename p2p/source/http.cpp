@@ -41,6 +41,7 @@
 #include "baton.hpp"
 #include "error.hpp"
 #include "http.hpp"
+#include "locator.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -58,9 +59,9 @@ task<std::string> Request_(Stream_ &stream, boost::beast::http::request<boost::b
 }
 
 template <typename Socket_>
-task<std::string> Request_(Socket_ &socket, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), uri.path_, 11};
-    req.set(boost::beast::http::field::host, uri.host_);
+task<std::string> Request_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+    boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), locator.path_, 11};
+    req.set(boost::beast::http::field::host, locator.host_);
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
     for (auto &[name, value] : headers)
@@ -72,15 +73,15 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
     std::string body;
 
     if (false) {
-    } else if (uri.schema_ == "http") {
+    } else if (locator.scheme_ == "http") {
         body = co_await Request_(socket, req);
-    } else if (uri.schema_ == "https") {
+    } else if (locator.scheme_ == "https") {
         // XXX: this needs security
         asio::ssl::context context{asio::ssl::context::sslv23_client};
 
         if (!verify)
             // XXX: verification did not work against infura
-            /*context.set_verify_callback(asio::ssl::rfc2818_verification(uri.host_))*/;
+            /*context.set_verify_callback(asio::ssl::rfc2818_verification(locator.host_))*/;
         else {
             context.set_verify_mode(asio::ssl::verify_peer);
 
@@ -116,18 +117,18 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const URI
     co_return body;
 }
 
-task<std::string> Request(Adapter &adapter, const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    return Request_(adapter, method, uri, headers, data, verify);
+task<std::string> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+    return Request_(adapter, method, locator, headers, data, verify);
 }
 
-task<std::string> Request(const std::string &method, const URI &uri, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     asio::ip::tcp::resolver resolver(orc::Context());
-    const auto results(co_await resolver.async_resolve(uri.host_, uri.port_, orc::Token()));
+    const auto results(co_await resolver.async_resolve(locator.host_, locator.port_, orc::Token()));
 
     asio::ip::tcp::socket socket(orc::Context());
     (void) co_await asio::async_connect(socket, results.begin(), results.end(), orc::Token());
 
-    auto body(co_await Request_(socket, method, uri, headers, data, verify));
+    auto body(co_await Request_(socket, method, locator, headers, data, verify));
 
     boost::beast::error_code ec;
     socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);

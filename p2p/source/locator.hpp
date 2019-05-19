@@ -20,25 +20,31 @@
 /* }}} */
 
 
-#ifndef ORCHID_HTTP_HPP
-#define ORCHID_HTTP_HPP
+#ifndef ORCHID_LOCATOR_HPP
+#define ORCHID_LOCATOR_HPP
 
-#include <map>
 #include <string>
-
-#include <rtc_base/openssl_certificate.h>
-
-#include "task.hpp"
 
 namespace orc {
 
-class Adapter;
-class Locator;
+class Locator final {
+  public:
+    const std::string scheme_;
+    const std::string host_;
+    const std::string port_;
+    const std::string path_;
 
-task<std::string> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
+    static Locator Parse(const std::string &url);
 
-task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
+    Locator(std::string scheme, std::string host, std::string port, std::string path) :
+        scheme_(std::move(scheme)),
+        host_(std::move(host)),
+        port_(std::move(port)),
+        path_(std::move(path))
+    {
+    }
+};
 
 }
 
-#endif//ORCHID_HTTP_HPP
+#endif//ORCHID_LOCATOR_HPP

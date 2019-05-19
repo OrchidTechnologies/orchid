@@ -97,3 +97,6 @@
 [submodule "flutter_web"]
 	path = pmp-ethereum/flutter_web
 	url = https://github.com/flutter/flutter_web.git
+[submodule "url"]
+	path = p2p/url
+	url = https://github.com/cpp-netlib/url
