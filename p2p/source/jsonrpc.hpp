@@ -233,14 +233,20 @@ typedef Brick<32> Bytes32;
 template <typename Type_, typename Enable_ = void>
 struct Coded;
 
-inline void Encode(Builder &builder) {
-}
+template <typename... Args_>
+struct Coder;
+
+template <>
+struct Coder<> {
+static void Encode(Builder &builder) {
+} };
 
 template <typename Type_, typename... Args_>
-inline void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
+struct Coder<Type_, Args_...> {
+static void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
     Coded<Type_>::Encode(builder, value);
-    Encode(builder, args...);
-}
+    Coder<Args_...>::Encode(builder, args...);
+} };
 
 template <bool Sign_, size_t Size_, typename Type_>
 struct Numeric;
@@ -519,7 +525,7 @@ class Selector final :
 
     task<Result_> Call(Endpoint &endpoint, const Argument &block, const Address &contract, const Args_ &...args) {
         Builder builder;
-        Encode(builder, std::forward<const Args_>(args)...);
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
             {"to", contract},
             {"gas", gas_},
@@ -533,7 +539,7 @@ class Selector final :
 
     task<uint256_t> Send(Endpoint &endpoint, const Address &from, const Address &contract, const Args_ &...args) {
         Builder builder;
-        Encode(builder, std::forward<const Args_>(args)...);
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Map{
             {"from", from},
             {"to", contract},
