@@ -29,12 +29,20 @@ test: $(output)/orchid$(exe)
 
 source += $(wildcard source/*.cpp)
 cflags += -Isource
+cflags += -I$(pwd)/aleth
+cflags += -Ip2p/aleth
+
+#header += "aleth/"
+
 
 include p2p/target.mk
 include env/output.mk
 include p2p/depend.mk
 
 $(output)/orchid$(exe): $(object) $(linked)
+	@echo $(pwd)
+	@echo $(output)
+	@echo $(header)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cycp) $(wflags) -o $@ $^ $(lflags)

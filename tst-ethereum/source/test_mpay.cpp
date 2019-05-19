@@ -28,13 +28,112 @@
 
 #include "crypto.hpp"
 #include "jsonrpc.hpp"
+#include "buffer.hpp"
 
 #include "test_mpay.h"
 
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#include "libdevcrypto/Common.h"
 
-namespace orc {
+#include <secp256k1.h>
+#include <secp256k1_ecdh.h>
+#include <secp256k1_recovery.h>
+#include <secp256k1_sha256.h>
+
+
+
+namespace orc
+{
+
+	using boost::multiprecision::cpp_int_backend;
+	using boost::multiprecision::unsigned_magnitude;
+	using boost::multiprecision::unchecked;
+
+	typedef boost::multiprecision::number<cpp_int_backend<160, 160, unsigned_magnitude, unchecked, void>> uint160_t;
 
 	using std::string;
+
+
+
+
+	using Signature = Brick<65>;
+	using h256		= Brick<32>;
+	using Secret	= Brick<32>;
+
+	struct SignatureStruct
+	{
+		SignatureStruct() = default;
+		SignatureStruct(Signature const& _s) { *((Signature*)this) = _s; }
+		SignatureStruct(h256 const& _r, h256 const& _s, byte _v): r(_r), s(_s), v(_v) {}
+		operator Signature() const { return *(Signature const*)this; }
+
+		/// @returns true if r,s,v values are valid, otherwise false
+		bool isValid() const noexcept;
+
+		h256 r;
+		h256 s;
+		byte v = 0;
+	};
+
+	inline h256 h256_(const uint256_t& x)
+	{
+		auto t = Number<uint256_t>(x);
+		Brick<32> r(t);
+		return r;
+	}
+
+
+	secp256k1_context const* getCtx()
+	{
+		static std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)> s_ctx{
+			secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY),
+			&secp256k1_context_destroy
+		};
+		return s_ctx.get();
+	}
+
+	static const uint256_t c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
+
+	Signature sign(Secret const& _k, h256 const& _hash)
+	{
+		auto* ctx = getCtx();
+		secp256k1_ecdsa_recoverable_signature rawSig;
+		if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr))
+			return Signature();
+
+		Signature s;
+		int v = 0;
+		secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, s.data(), &v, &rawSig);
+
+		SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
+		ss.v = static_cast<byte>(v);
+		if (ss.s.num<uint256_t>() > c_secp256k1n / 2)
+		{
+			ss.v = static_cast<byte>(ss.v ^ 1);
+			ss.s = h256_(c_secp256k1n - ss.s.num<uint256_t>());
+		}
+		assert(ss.s.num<uint256_t>() <= c_secp256k1n / 2);
+		return s;
+	}
+
+
+
+
+    template <class E, class... SAs, class... Args_>
+    task<Json::Value> eth_call(E& endpoint, const Argument &block, uint256_t account, const Selector<SAs...>& selector, Args_ &&...args) {
+        co_return co_await endpoint("eth_call", {Map{
+            {"to", account},
+            {"data", Tie(selector, std::forward<Args_>(args)...)},
+        }, block });
+    }
+
+    template <class E, class... SAs, class... Args_>
+    task<Json::Value> eth_call(E& endpoint, uint256_t account, const Selector<SAs...>& selector, Args_ &&...args) {
+        co_return co_await endpoint("eth_call", {Map{
+            {"to", account},
+            {"data", Tie(selector, std::forward<Args_>(args)...)},
+        } });
+    }
 
 
 	std::string file_to_string(std::string fn)
@@ -104,8 +203,9 @@ namespace orc {
         const string orchid_address = "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1";
         const string orchid_privkey = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d";
 
-        const string server_address = "0xffcf8fdee72ac11b5c542428b35eef5769c409f0";
-        const string server_privkey = "6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1";
+        const string server_address  = "0xffcf8fdee72ac11b5c542428b35eef5769c409f0";
+        const string server_address_ = "000000000000000000000000ffcf8fdee72ac11b5c542428b35eef5769c409f0";
+        const string server_privkey  = "6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1";
 
    		const string client_address = "0x22d491bde2303f2f43325b2108d26f1eaba1e32b";
    		const string client_privkey = "6370fd033278c143179d81c5526140625662b8daa446c22ee2d73db3707e620c";
@@ -120,68 +220,145 @@ namespace orc {
    			co_return 3;
    		}
 
+   		printf("[%d] Deploying some contracts! \n", __LINE__ );
+
+   		auto block(co_await endpoint.Latest());
+   		Json::Value result;
 
    		string test_contract_bin  	= "6060604052341561000c57fe5b5b6101598061001c6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063cfae32171461003b575bfe5b341561004357fe5b61004b6100d4565b604051808060200182810382528381815181526020019150805190602001908083836000831461009a575b80518252602083111561009a57602082019150602081019050602083039250610076565b505050905090810190601f1680156100c65780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6100dc610119565b604060405190810160405280600381526020017f486921000000000000000000000000000000000000000000000000000000000081525090505b90565b6020604051908101604052806000815250905600a165627a7a72305820ed71008611bb64338581c5758f96e31ac3b0c57e1d8de028b72f0b8173ff93a10029";
-        string test_contract_addr 	= co_await deploy(endpoint, orchid_address, test_contract_bin);
-
+   		string test_contract_addr 	= co_await deploy(endpoint, orchid_address, test_contract_bin);
         string ERC20_addr 			= co_await deploy(endpoint, orchid_address, file_to_string("tok-ethereum/build/ERC20.bin"));
-
         string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, file_to_string("tok-ethereum/build/OrchidToken.bin"));
 
+		printf("[%d] OrchidToken_addr(%s,%s) \n", __LINE__, OrchidToken_addr.c_str(), OrchidToken_addr.c_str());
+
+
+        string lottery_addr		 	= co_await deploy(endpoint, orchid_address, file_to_string("lot-ethereum/build/TestOrchidLottery.bin"));
+   		printf("[%d] lottery_addr(%s,%s) \n", __LINE__, lottery_addr.c_str(), lottery_addr.c_str());
+
+
+        //set the orchid address (todo: figure out contract constructor args)
+   		static Selector<uint256_t, Address> set_orchid("set_orchid");
+   		co_await set_orchid.Send(endpoint, Address(orchid_address), Address(lottery_addr), Address(OrchidToken_addr) );
+
+
+   		block = co_await endpoint.Latest();
+
+   		static Selector<Address,uint256_t> get_address("get_address");
+   		auto lottery_addr_ = co_await get_address.Call(endpoint, block, Address(lottery_addr), uint256_t("3")  );
+
+   		static Selector<Address,uint256_t> get_orchid("get_orchid");
+   		auto lottery_orchid = co_await get_orchid.Call(endpoint, block, Address(lottery_addr), uint256_t("4") );
+		printf("[%d] lottery_orchid: ", __LINE__); std::cout << std::hex << lottery_orchid << std::endl;
+
+
+
+	    //const source_OCT = await c.ledger.methods.balanceOf(source.address).call();
+	    Selector<uint256_t,Address> balanceOf("balanceOf");
+   		auto origin_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(orchid_address) );
+		printf("[%d] origin_balance: ", __LINE__); std::cout << std::dec << origin_balance << std::endl;
+
+
+	    uint64_t one_eth = 1000000000000000000;
+   		// send some tokens to the client
+   		static Selector<uint256_t, Address, uint256_t> transfer("transfer");
+   		co_await transfer.Send(endpoint, Address(orchid_address), Address(OrchidToken_addr), Address(client_address), uint256_t(10*one_eth) );
+
+
+   		block = co_await endpoint.Latest();
+   		auto client_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(client_address) );
+		printf("[%d] client_balance: ", __LINE__); std::cout << std::dec << client_balance << std::endl;
+
+
+   		static Selector<uint256_t, Address, uint256_t> approve("approve");
+   		co_await approve.Send(endpoint, Address(client_address), Address(OrchidToken_addr), Address(lottery_addr), uint256_t(10*one_eth) );
+
+
+   		// approve and fund the client account
+        //const allow_val = await c.ledger.methods.allowance(source.address, lotteryAddr).call();
+   		block = co_await endpoint.Latest();
+   		static Selector<uint256_t, Address, Address> allowance_f("allowance");
+   		auto allowance 				= co_await allowance_f.Call(endpoint, block, Address(OrchidToken_addr), Address(client_address), Address(lottery_addr) );
+		printf("[%d] allowance: ", __LINE__); std::cout << std::dec << allowance << std::endl;
+
+
+   		static Selector<uint256_t, Address,uint64_t,uint64_t> fund_f("fund");
+   		co_await fund_f.Send(endpoint, Address(client_address), Address(lottery_addr), Address(client_address), uint64_t(1*one_eth), uint64_t(2*one_eth) );
+        //result					= co_await endpoint("eth_sendTransaction", {Map{{"to", uint256_t(lottery_addr)},    {"from",uint256_t(client_address)},{"data", Tie(Selector("fund(address,uint64,uint64)"),Number<uint256_t>(client_address),Number<uint256_t>(1*one_eth),Number<uint256_t>(2*one_eth)) }, {"gas","100000"}, {"gasPrice","100000000000"}}} );
+
+
+   		static Selector<uint256_t, Address> get_amount("get_amount");
+   		static Selector<uint256_t, Address> get_escrow("get_escrow");
+   		static Selector<uint256_t, Address> get_unlock("get_unlock");
+
+   		block = co_await endpoint.Latest();
+   		auto amount	= co_await get_amount.Call(endpoint, block, Address(lottery_addr), Address(client_address));
+   		auto escrow	= co_await get_escrow.Call(endpoint, block, Address(lottery_addr), Address(client_address));
+   		auto unlock	= co_await get_unlock.Call(endpoint, block, Address(lottery_addr), Address(client_address));
+
+		printf("[%d] amount: ", __LINE__); std::cout << std::dec << amount << std::endl;
+		printf("[%d] escrow: ", __LINE__); std::cout << std::dec << escrow << std::endl;
+		printf("[%d] unlock: ", __LINE__); std::cout << std::dec << unlock << std::endl;
+
+	    // simple hash consistency check
    		{
-			auto block(co_await endpoint.Block());
-			auto OrchidToken_addr_rv	= co_await endpoint.Call(block, uint256_t(OrchidToken_addr), Selector("get_address(address)"), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a") );
-	   		std::cout << "OrchidToken_addr: " << OrchidToken_addr << "  " << OrchidToken_addr_rv << std::endl;
+			Brick<32> hash		 	= Hash(Tie(Number<uint160_t>(server_address)));
+	   		static Selector<uint256_t, Address> hash_test_("hash_test_");
+	   		auto hash2				= co_await hash_test_.Call(endpoint, block, Address(lottery_addr), Address(server_address));
+			//string hash2; result = co_await eth_call(endpoint, uint256_t(lottery_addr), Selector("hash_test_(address)"), Number<uint256_t>(server_address) ); hash2 = result.asString();
+
+			printf("[%d] hash: ", __LINE__);  std::cout << std::hex << hash << "  " << hash2 << std::endl;
+			assert( hash.num<uint256_t>() == uint256_t(hash2) );
    		}
 
 
+
+   		uint256_t secret		= 1;
+   		Brick<32> secret_hash 	= Hash(Tie(Number<uint256_t>(secret)));
+	    uint64_t faceValue 		= one_eth / 10;
+	    uint256_t until			= block + 1000;
+	    uint256_t winProb     	= uint256_t("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+	    uint256_t nonce       	= uint256_t("0x24a025cfe44e8cca34ee5028817704a213dedf2108cdb1c1717270646c8f26b1");
+
+
+	    Brick<32> hash		 	= Hash(Tie(secret_hash, Number<uint160_t>(server_address), Number<uint256_t>(nonce), Number<uint256_t>(until), Number<uint256_t>(winProb), Number<uint64_t>(faceValue)));
+
+
+		// todo: sign the ticket hash using aleth/libdevcrypto
+
+		sign(h256_(uint256_t("0x" + server_privkey)), hash);
+
+
+	    /*
+	    // full hash consistency check
+	    {
+	   		static Selector<uint256_t, Bytes32, Address, uint256_t, uint256_t, uint256_t, uint64_t> hash_test("hash_test");
+	   		auto hash2				= co_await hash_test.Call(endpoint, block, Address(lottery_addr), secret_hash, Address(server_address), uint256_t(nonce), uint256_t(until), uint256_t(winProb), uint64_t(faceValue) );
+
+		    //string hash2; result = co_await eth_call(endpoint, uint256_t(lottery_addr), Selector("hash_test(bytes32,address,uint256,uint256,uint256,uint64)"), secret_hash, Number<uint256_t>(server_address), Number<uint256_t>(nonce), Number<uint256_t>(until), Number<uint256_t>(winProb), Number<uint256_t>(faceValue) ); hash2 = result.asString();
+
+			printf("[%d] hash: ", __LINE__);  std::cout << std::hex << hash << "  " << hash2 << std::endl;
+			assert( hash.num<uint256_t>() == uint256_t(hash2) );
+	    }
+	    */
+
+
+
+
    		/*
-        string lottery_addr		 	= co_await deploy(endpoint, orchid_address, file_to_string("lot-ethereum/build/OrchidLottery.bin"));
-   		std::cout << "lottery_addr: \n" << lottery_addr << std::endl;
 
-        //lotteryAddr_rv = await c.lottery.methods.get_address().call();
 
-   		auto lottery_addr_rv_		= co_await endpoint.eth_call(uint256_t(lottery_addr), Selector("get_address(address)"), Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a") );
-   		string lottery_addr_rv  	= lottery_addr_rv_.asString();
-   		//string OrchidToken_addr_rv 	= ( co_await endpoint.eth_call(uint256_t(OrchidToken_addr), Selector("get_address()"))).asString();
+	    // function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public
+		//result = co_await eth_call(endpoint, uint256_t(lottery_addr), Selector("grab(uint256,bytes32,address,uint256,uint256,uint256,uint64,uint8,bytes32,bytes32)"), Number<uint256_t>(secret), secret_hash, Number<uint256_t>(server_address), Number<uint256_t>(nonce), Number<uint256_t>(until), Number<uint256_t>(winProb), Number<uint256_t>(faceValue) ); hash2 = result.asString();
+
+
    		*/
 
-        co_return 0;
+   		std::cout << "Done." << std::endl;
+
+   		co_return 0;
     }
 
-
-    task<int> test_mpay_()
-    {
-    	co_await Schedule();
-
-        Endpoint endpoint({"http", "localhost", "8545", "/"});
-
-        //endpoint("blah", {"booh"});
-        
-        co_await endpoint("web3_clientVersion", {});
-        //co_await endpoint("eth_getStorageAt", {"0x295a70b2de5e3953354a6a8344e616ed314d7251", "0x6661e9d6d8b923d5bbaab1b96e1dd51ff6ea2a93520fdc9eb75d059238b8c5e9", "0x65a8db"});
-
-        //std::string data = "{\"to\": \"0x9561C133DD8580860B6b7E504bC5Aa500f0f06a7\", \"data\": \"0x38b51ce10000000000000000000000000000000000000000000000000000000000000003\"}";
-        //std::cout << data << std::endl;
-
-        auto block(co_await endpoint.Block());
-
-        std::cerr << co_await endpoint("eth_getProof", {
-            uint256_t("0x7F0d15C7FAae65896648C8273B6d7E43f58Fa842"),
-            {uint256_t("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")},
-            block,
-        }) << std::endl;
-
-        Selector look("look(address)");
-        std::cerr << co_await endpoint.Call(block, uint256_t("0xd87e0ee1a59841de2ac78c17209db97e27651985"), look, Number<uint256_t>("0x2b1ce95573ec1b927a90cb488db113b40eeb064a")) << std::endl;
-
-        // 0xc6cecaa40000000000000000000000000000000000000000000000000000000000000003
-        // 0x38b51ce1000000000000000000000000142E2fDd2188Bb0005adD957D100cDCc1ad7F55A
-        // 0xc6cecaa4000000000000000000000000DE621d026DE07c9a6a25EB341776924455E85422
-        // 0xf8f45f0f000000000000000000000000142E2fDd2188Bb0005adD957D100cDCc1ad7F55A
-
-        co_return 0;
-    }
 
     void test_mpay()
     {
