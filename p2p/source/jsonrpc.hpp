@@ -502,7 +502,7 @@ class Selector final :
 
     task<Result_> Call(Endpoint &endpoint, const Argument &block, const Address &contract, const Args_ &...args) {
         Builder builder;
-        Encode<Args_...>(builder, std::forward<const Args_>(args)...);
+        Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
             {"to", contract},
             {"gas", gas_},
@@ -516,7 +516,7 @@ class Selector final :
 
     task<uint256_t> Send(Endpoint &endpoint, const Address &from, const Address &contract, const Args_ &...args) {
         Builder builder;
-        Encode<Args_...>(builder, std::forward<const Args_>(args)...);
+        Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Map{
             {"from", from},
             {"to", contract},
