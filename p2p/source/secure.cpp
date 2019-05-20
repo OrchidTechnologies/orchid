@@ -91,13 +91,13 @@ BIO_METHOD *Secure::Method() {
 
         BIO_meth_set_create(method, [](BIO *bio) -> int {
             BIO_set_shutdown(bio, 0);
-            BIO_set_data(bio, 0);
+            BIO_set_data(bio, nullptr);
             BIO_set_init(bio, 1);
             return 1;
         });
 
         BIO_meth_set_destroy(method, [](BIO *bio) -> int {
-            if (bio == NULL)
+            if (bio == nullptr)
                 return 0;
             return Get(bio)->Destroy(bio);
         });
@@ -118,14 +118,14 @@ int Secure::Write(BIO *bio, const char *data, int size) {
 
 int Secure::Read(BIO *bio, char *data, int size) {
     if (eof_) {
-        orc_assert(data_ == NULL);
+        orc_assert(data_ == nullptr);
         return 0;
-    } else if (data_ == NULL) {
+    } else if (data_ == nullptr) {
         BIO_set_retry_read(bio);
         return -1;
     } else {
         auto writ(data_->copy(data, size));
-        data_ = NULL;
+        data_ = nullptr;
         return writ;
     }
 }
@@ -164,7 +164,7 @@ void Secure::Active() {
                 return SSL_read(ssl_, data, sizeof(data));
             });
         } catch (const Error &error) {
-            next_ = NULL;
+            next_ = nullptr;
             auto text(error.text);
             orc_assert(!text.empty());
             Link::Stop(text);
@@ -174,7 +174,7 @@ void Secure::Active() {
         if (size == -1)
             break;
         else if (size == 0) {
-            next_ = NULL;
+            next_ = nullptr;
             Link::Stop();
             break;
         }
@@ -207,17 +207,17 @@ void Secure::Client() {
 }
 
 void Secure::Land(const Buffer &data) {
-    orc_assert(data_ == NULL);
+    orc_assert(data_ == nullptr);
     data_ = &data;
-    orc_assert(next_ != NULL);
+    orc_assert(next_ != nullptr);
     (this->*next_)();
-    orc_assert(data_ == NULL);
+    orc_assert(data_ == nullptr);
 }
 
 void Secure::Stop(const std::string &error) {
-    orc_assert(data_ == NULL);
+    orc_assert(data_ == nullptr);
     eof_ = true;
-    orc_assert(next_ != NULL);
+    orc_assert(next_ != nullptr);
     (this->*next_)();
 }
 

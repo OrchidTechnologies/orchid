@@ -123,7 +123,7 @@ class Handler {
         token_(rhs.token_)
     {
         token_->baton_ = &baton_;
-        rhs.token_ = NULL;
+        rhs.token_ = nullptr;
     }
 
     void operator()(Args_... args) {

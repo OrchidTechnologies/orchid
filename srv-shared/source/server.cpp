@@ -319,7 +319,7 @@ _trace();
             orc_assert(output != outputs_.end());
             // XXX: this is extremely unfortunate
             auto waiter(dynamic_cast<Output<Waiter> *>(output->second.get()));
-            orc_assert(waiter != NULL);
+            orc_assert(waiter != nullptr);
             auto candidate(co_await (*waiter)->Connect(answer.str()));
             co_return co_await code(Tie(Strung(std::move(candidate))));
 
@@ -626,7 +626,7 @@ int Main(int argc, const char *const argv[]) {
             bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(str.data(), str.size()));
             orc_assert(bio);
 
-            return d2i_PKCS12_bio(bio.get(), NULL);
+            return d2i_PKCS12_bio(bio.get(), nullptr);
         }());
 
         orc_assert(p12);
@@ -653,7 +653,7 @@ int Main(int argc, const char *const argv[]) {
 
         key = Stringify([&]() {
             bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
-            orc_assert(PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL));
+            orc_assert(PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr));
             return bio;
         }());
 

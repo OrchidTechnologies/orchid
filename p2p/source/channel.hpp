@@ -175,7 +175,7 @@ _trace();
     task<void> Negotiate(const char *type, const std::string &sdp) {
         webrtc::SdpParseError error;
         auto answer(webrtc::CreateSessionDescription(type, sdp, &error));
-        orc_assert(answer != NULL);
+        orc_assert(answer != nullptr);
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetRemoteDescription(observer, answer);
         co_await *observer;

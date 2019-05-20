@@ -419,7 +419,7 @@ class Beam :
   public:
     Beam() :
         size_(0),
-        data_(NULL)
+        data_(nullptr)
     {
     }
 
@@ -526,7 +526,7 @@ class Nothing final :
 {
   public:
     const uint8_t *data() const override {
-        return NULL;
+        return nullptr;
     }
 
     size_t size() const override {
@@ -669,7 +669,7 @@ class Window :
   public:
     Window() :
         count_(0),
-        range_(NULL),
+        range_(nullptr),
         offset_(0)
     {
     }
