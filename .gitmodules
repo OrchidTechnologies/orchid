@@ -76,3 +76,6 @@
 [submodule "url"]
 	path = p2p/url
 	url = https://github.com/cpp-netlib/url
+[submodule "secp256k1"]
+	path = p2p/secp256k1
+	url = https://github.com/bitcoin-core/secp256k1.git
