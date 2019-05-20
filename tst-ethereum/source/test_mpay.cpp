@@ -324,12 +324,6 @@ namespace orc
 	    Brick<32> hash		 	= Hash(Tie(secret_hash, Number<uint160_t>(server_address), Number<uint256_t>(nonce), Number<uint256_t>(until), Number<uint256_t>(winProb), Number<uint64_t>(faceValue)));
 
 
-		// todo: sign the ticket hash using aleth/libdevcrypto
-
-		sign(h256_(uint256_t("0x" + server_privkey)), hash);
-
-
-	    /*
 	    // full hash consistency check
 	    {
 	   		static Selector<uint256_t, Bytes32, Address, uint256_t, uint256_t, uint256_t, uint64_t> hash_test("hash_test");
@@ -340,7 +334,13 @@ namespace orc
 			printf("[%d] hash: ", __LINE__);  std::cout << std::hex << hash << "  " << hash2 << std::endl;
 			assert( hash.num<uint256_t>() == uint256_t(hash2) );
 	    }
+	    /*
 	    */
+
+
+		// todo: sign the ticket hash using aleth/libdevcrypto
+
+		sign(h256_(uint256_t("0x" + server_privkey)), hash);
 
 
 
