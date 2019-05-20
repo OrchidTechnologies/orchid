@@ -98,7 +98,7 @@ class Pump :
     {
     }
 
-    virtual ~Pump() {
+    ~Pump() override {
         if (Verbose)
             Log() << "##### " << unique_ << std::endl;
         orc_insist(shut_.is_set());
@@ -197,7 +197,7 @@ class Router :
     }
 
   public:
-    virtual ~Router() {
+    ~Router() override {
         orc_insist(routes_.empty());
     }
 };
@@ -225,7 +225,7 @@ class Route final :
     {
     }
 
-    ~Route() {
+    ~Route() override {
         router_->routes_.erase(tag_);
     }
 

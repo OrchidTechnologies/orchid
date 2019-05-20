@@ -73,7 +73,7 @@ _trace();
     }
 
   public:
-    virtual ~Actor() {
+    ~Actor() override {
 _trace();
         Close();
     }
@@ -102,7 +102,7 @@ class Tunnel :
     {
     }
 
-    ~Tunnel() {
+    ~Tunnel() override {
 _trace();
     }
 
@@ -158,12 +158,12 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
       protected:
         virtual BufferDrain *Inner() = 0;
 
-        void Land(const Buffer &data) {
+        void Land(const Buffer &data) override {
             data_ = data;
             ready_.set();
         }
 
-        void Stop(const std::string &error) {
+        void Stop(const std::string &error) override {
             error_ = error;
             ready_.set();
         }

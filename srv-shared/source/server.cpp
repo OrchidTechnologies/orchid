@@ -89,7 +89,7 @@ class Outgoing final :
     }
 
   public:
-    virtual ~Outgoing() {
+    ~Outgoing() override {
 _trace();
         Close();
     }
@@ -134,7 +134,7 @@ class Output :
 _trace();
     }
 
-    virtual ~Output() {
+    ~Output() override {
 _trace();
     }
 
@@ -180,7 +180,7 @@ class Waiter :
         co_return co_await Inner()->Send(data);
     }
 
-    task<void> Shut() {
+    task<void> Shut() override {
         co_await Inner()->Shut();
     }
 };
@@ -220,7 +220,7 @@ class Space final :
     {
     }
 
-    ~Space() {
+    ~Space() override {
 _trace();
     }
 
@@ -436,7 +436,7 @@ class Conduit :
         co_await Inner()->Connect();
     }
 
-    virtual ~Conduit() {
+    ~Conduit() override {
 _trace();
         if (space_ != nullptr)
             space_->Dissociate(this);
@@ -490,7 +490,7 @@ class Incoming final :
         return self;
     }
 
-    virtual ~Incoming() {
+    ~Incoming() override {
 _trace();
         Close();
     }
@@ -758,6 +758,8 @@ int Main(int argc, const char *const argv[]) {
 
 }
 
-int main(int argc, const char *const argv[]) {
+int main(int argc, const char *const argv[]) { try {
     return orc::Main(argc, argv);
-}
+} catch (const std::exception &error) {
+    return 1;
+} }

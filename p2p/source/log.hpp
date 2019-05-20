@@ -36,7 +36,7 @@ class Log final :
     public std::ostringstream
 {
   public:
-    ~Log();
+    ~Log() override;
 
     Log &operator ()(const char *format, va_list args);
     Log &operator ()(const char *format, ...);

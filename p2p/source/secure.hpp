@@ -78,7 +78,7 @@ class Secure :
 
     task<void> Connect();
 
-    virtual ~Secure();
+    ~Secure() override;
 
     task<void> Send(const Buffer &data) override;
     task<void> Shut() override;

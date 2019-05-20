@@ -57,7 +57,7 @@ class SetObserver :
     public webrtc::SetSessionDescriptionObserver
 {
   protected:
-    virtual void OnSuccess() {
+    void OnSuccess() override {
         set();
     }
 };
@@ -96,7 +96,7 @@ class Peer :
   public:
     Peer(Configuration configuration = Configuration());
 
-    virtual ~Peer() {
+    ~Peer() override {
 _trace();
         orc_insist(closed_.is_set());
     }
@@ -238,7 +238,7 @@ class Channel final :
         co_await Schedule();
     }
 
-    virtual ~Channel() {
+    ~Channel() override {
 _trace();
         peer_->channels_.erase(this);
         channel_->UnregisterObserver();
