@@ -128,8 +128,7 @@ class Range final {
     size_t size_;
 
   public:
-    Range() {
-    }
+    Range() = default;
 
     Range(const Range &range) :
         data_(range.data()),
@@ -260,8 +259,7 @@ class Data :
     std::array<uint8_t, Size_> data_;
 
   public:
-    Data() {
-    }
+    Data() = default;
 
     Data(const void *data, size_t size) {
         copy(data, size);
@@ -320,6 +318,8 @@ class Brick final :
     using Data<Size_>::Data;
     using Data<Size_>::operator =;
 
+    Brick() = default;
+
     Brick(const std::string &data) :
         Brick(data.data(), data.size())
     {
@@ -358,8 +358,7 @@ class Number<Type_, true> final :
     Type_ value_;
 
   public:
-    Number() {
-    }
+    Number() = default;
 
     constexpr Number(Type_ value) noexcept :
         value_(boost::endian::native_to_big(value))
@@ -456,6 +455,8 @@ class Beam :
     virtual ~Beam() {
         destroy();
     }
+
+    Beam &operator =(const Beam &) = delete;
 
     Beam &operator =(Beam &&rhs) noexcept {
         destroy();
@@ -812,8 +813,7 @@ class Rest final :
     Beam data_;
 
   public:
-    Rest() {
-    }
+    Rest() = default;
 
     Rest(Window &&window, Beam &&data) :
         Window(std::move(window)),
