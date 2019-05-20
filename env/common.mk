@@ -9,44 +9,9 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-include $(pwd)/common.mk
+.DELETE_ON_ERROR:
+.SECONDARY:
 
-.PHONY:
-all:
-
-uname := $(shell uname -s)
--include $(pwd)/uname-$(uname).mk
-
-version := $(shell $(pwd)/version.sh)
-monotonic := $(word 1,$(version))
-version := $(word 2,$(version))
-
-cflags := 
-lflags := 
-wflags := 
-
-source := 
-linked := 
-header := 
-linker := 
-
-output := out-$(target)
-
-cleans := 
-cleans += $(output)
-
-cflags += -gfull -Os
-lflags += -Wl,-s
-
-cflags += -Wall
-cflags += -Werror
-
-cflags += -fmessage-length=0
-cflags += -ferror-limit=0
-cflags += -ftemplate-backtrace-limit=0
-
-include ../default.mk
--include ../identity.mk
-
-include $(pwd)/target-$(target).mk
+null := 
+space := $(null) #
+comma := ,
