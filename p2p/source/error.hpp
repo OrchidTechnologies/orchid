@@ -51,11 +51,11 @@ class Error final :
     }
 
     template <typename Type_>
-    Error &operator <<(const Type_ &value) {
+    Error operator <<(const Type_ &value) && {
         std::ostringstream data;
         data << value;
         text += data.str();
-        return *this;
+        return std::move(*this);
     }
 }; }
 
