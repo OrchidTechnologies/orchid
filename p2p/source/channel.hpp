@@ -31,7 +31,6 @@
 #include <cppcoro/async_manual_reset_event.hpp>
 
 #include "error.hpp"
-#include "future.hpp"
 #include "link.hpp"
 #include "task.hpp"
 #include "trace.hpp"
@@ -57,7 +56,7 @@ class SetObserver :
     public webrtc::SetSessionDescriptionObserver
 {
   protected:
-    virtual void OnSuccess() {
+    void OnSuccess() override {
         set();
     }
 };
@@ -96,7 +95,7 @@ class Peer :
   public:
     Peer(Configuration configuration = Configuration());
 
-    virtual ~Peer() {
+    ~Peer() override {
 _trace();
         orc_insist(closed_.is_set());
     }
@@ -175,7 +174,7 @@ _trace();
     task<void> Negotiate(const char *type, const std::string &sdp) {
         webrtc::SdpParseError error;
         auto answer(webrtc::CreateSessionDescription(type, sdp, &error));
-        orc_assert(answer != NULL);
+        orc_assert(answer != nullptr);
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetRemoteDescription(observer, answer);
         co_await *observer;
@@ -238,7 +237,7 @@ class Channel final :
         co_await Schedule();
     }
 
-    virtual ~Channel() {
+    ~Channel() override {
 _trace();
         peer_->channels_.erase(this);
         channel_->UnregisterObserver();
@@ -302,7 +301,7 @@ _trace();
     using Link::Stop;
 };
 
-std::string Strip(std::string sdp);
+std::string Strip(const std::string &sdp);
 
 }
 

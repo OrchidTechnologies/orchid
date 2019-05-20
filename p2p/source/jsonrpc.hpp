@@ -91,7 +91,7 @@ class Nested {
             array_.emplace_back(nested->scalar_, std::move(nested->value_), std::move(nested->array_));
     }
 
-    Nested(Nested &&rhs) :
+    Nested(Nested &&rhs) noexcept :
         scalar_(rhs.scalar_),
         value_(std::move(rhs.value_)),
         array_(std::move(rhs.array_))
@@ -146,7 +146,7 @@ class Explode final :
     Explode(Window &&window);
 };
 
-std::string Implode(Nested value);
+std::string Implode(Nested nested);
 
 class Argument final {
   private:
@@ -154,7 +154,7 @@ class Argument final {
 
   public:
     Argument(Json::Value value) :
-        value_(value)
+        value_(std::move(value))
     {
     }
 
@@ -205,7 +205,7 @@ class Argument final {
         value_(Json::objectValue)
     {
         for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[std::move(arg->first)] = std::move(arg->second);
+            value_[arg->first] = std::move(arg->second);
     }
 
     operator Json::Value &&() && {
@@ -233,14 +233,20 @@ typedef Brick<32> Bytes32;
 template <typename Type_, typename Enable_ = void>
 struct Coded;
 
-inline void Encode(Builder &builder) {
-}
+template <typename... Args_>
+struct Coder;
+
+template <>
+struct Coder<> {
+static void Encode(Builder &builder) {
+} };
 
 template <typename Type_, typename... Args_>
-inline void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
+struct Coder<Type_, Args_...> {
+static void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
     Coded<Type_>::Encode(builder, value);
-    Encode(builder, args...);
-}
+    Coder<Args_...>::Encode(builder, args...);
+} };
 
 template <bool Sign_, size_t Size_, typename Type_>
 struct Numeric;
@@ -493,7 +499,7 @@ class Selector final :
   public:
     Selector(uint32_t value, uint256_t gas = 90000) :
         value_(boost::endian::native_to_big(value)),
-        gas_(gas)
+        gas_(std::move(gas))
     {
     }
 
@@ -519,7 +525,7 @@ class Selector final :
 
     task<Result_> Call(Endpoint &endpoint, const Argument &block, const Address &contract, const Args_ &...args) {
         Builder builder;
-        Encode(builder, std::forward<const Args_>(args)...);
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
             {"to", contract},
             {"gas", gas_},
@@ -533,7 +539,7 @@ class Selector final :
 
     task<uint256_t> Send(Endpoint &endpoint, const Address &from, const Address &contract, const Args_ &...args) {
         Builder builder;
-        Encode(builder, std::forward<const Args_>(args)...);
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Map{
             {"from", from},
             {"to", contract},

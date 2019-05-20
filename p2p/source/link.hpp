@@ -37,7 +37,7 @@
 
 namespace orc {
 
-typedef Brick<sizeof(uint32_t)> Tag;
+typedef Number<uint32_t> Tag;
 static const size_t TagSize = sizeof(uint32_t);
 inline Tag NewTag() {
     return Random<TagSize>();
@@ -98,7 +98,7 @@ class Pump :
     {
     }
 
-    virtual ~Pump() {
+    ~Pump() override {
         if (Verbose)
             Log() << "##### " << unique_ << std::endl;
         orc_insist(shut_.is_set());
@@ -197,7 +197,7 @@ class Router :
     }
 
   public:
-    virtual ~Router() {
+    ~Router() override {
         orc_insist(routes_.empty());
     }
 };
@@ -225,7 +225,7 @@ class Route final :
     {
     }
 
-    ~Route() {
+    ~Route() override {
         router_->routes_.erase(tag_);
     }
 

@@ -46,8 +46,8 @@ class Secure :
     std::function<bool (const rtc::OpenSSLCertificate &)> verify_;
 
     bool eof_ = false;
-    const Buffer *data_ = NULL;
-    void (Secure::*next_)() = NULL;
+    const Buffer *data_ = nullptr;
+    void (Secure::*next_)() = nullptr;
 
     cppcoro::async_mutex send_;
 
@@ -78,7 +78,7 @@ class Secure :
 
     task<void> Connect();
 
-    virtual ~Secure();
+    ~Secure() override;
 
     task<void> Send(const Buffer &data) override;
     task<void> Shut() override;

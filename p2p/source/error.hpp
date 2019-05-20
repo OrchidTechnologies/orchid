@@ -23,6 +23,7 @@
 #ifndef ORCHID_ERROR_HPP
 #define ORCHID_ERROR_HPP
 
+#include <exception>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -30,7 +31,9 @@
 #include "log.hpp"
 
 namespace orc {
-class Error final {
+class Error final :
+    public std::exception
+{
   public:
     const std::string file;
     const int line;
@@ -41,12 +44,18 @@ class Error final {
     {
     }
 
+    Error(Error &&error) = default;
+
+    const char *what() const noexcept override {
+        return text.c_str();
+    }
+
     template <typename Type_>
-    Error &operator <<(const Type_ &value) {
+    Error operator <<(const Type_ &value) && {
         std::ostringstream data;
         data << value;
         text += data.str();
-        return *this;
+        return std::move(*this);
     }
 }; }
 

@@ -37,7 +37,6 @@ cflags += -Ip2p/aleth
 
 include p2p/target.mk
 include env/output.mk
-include p2p/depend.mk
 
 $(output)/orchid$(exe): $(object) $(linked)
 	@echo $(pwd)

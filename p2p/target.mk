@@ -50,54 +50,11 @@ endif
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
-#include $(pwd)/aleth.mk
-
 cflags += -I$(pwd)/url/include
 
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/*/include))
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))
-
-cflags += -include $(pwd)/source/byte.hpp
-
-source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_box/*.c)
-source += $(pwd)/libsodium/src/libsodium/crypto_box/curve25519xsalsa20poly1305/box_curve25519xsalsa20poly1305.c
-source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_core/*/ref*/*.c)
-source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_generichash/*.c)
-source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_generichash/blake2b/ref/*.c)
-source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_hash/*.c)
-source += $(pwd)/libsodium/src/libsodium/crypto_hash/sha512/cp/hash_sha512_cp.c
-source += $(pwd)/libsodium/src/libsodium/crypto_onetimeauth/poly1305/onetimeauth_poly1305.c
-source += $(pwd)/libsodium/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c
-source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-core.c
-source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
-source += $(pwd)/libsodium/src/libsodium/crypto_pwhash/argon2/blake2b-long.c
-source += $(pwd)/libsodium/src/libsodium/crypto_scalarmult/curve25519/scalarmult_curve25519.c
-source += $(pwd)/libsodium/src/libsodium/crypto_scalarmult/curve25519/ref10/x25519_ref10.c
-source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_secretbox/*.c)
-source += $(pwd)/libsodium/src/libsodium/crypto_secretbox/xsalsa20poly1305/secretbox_xsalsa20poly1305.c
-source += $(pwd)/libsodium/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
-source += $(pwd)/libsodium/src/libsodium/crypto_stream/chacha20/stream_chacha20.c
-source += $(pwd)/libsodium/src/libsodium/crypto_stream/salsa20/stream_salsa20.c
-source += $(pwd)/libsodium/src/libsodium/crypto_stream/salsa20/ref/salsa20_ref.c
-source += $(pwd)/libsodium/src/libsodium/crypto_stream/xsalsa20/stream_xsalsa20.c
-source += $(pwd)/libsodium/src/libsodium/crypto_verify/sodium/verify.c
-source += $(wildcard $(pwd)/libsodium/src/libsodium/randombytes/*.c)
-source += $(wildcard $(pwd)/libsodium/src/libsodium/randombytes/sysrandom/*.c)
-source += $(pwd)/libsodium/src/libsodium/sodium/core.c
-source += $(pwd)/libsodium/src/libsodium/sodium/runtime.c
-source += $(pwd)/libsodium/src/libsodium/sodium/utils.c
-
-cflags += -I$(pwd)/libsodium/src/libsodium/include
-cflags += -I$(pwd)/libsodium/src/libsodium/include/sodium
-cflags += -DCONFIGURED
-c_libsodium += -Wno-unused-variable
-
-# crypto_pwhash/argon2/argon2-fill-block-ref.c
-c_libsodium += -Wno-unknown-pragmas
-
 cflags += -I$(pwd)/boost/libs/asio/include/boost
-#cflags += -DASIO_STANDALONE
-#cflags += -I$(pwd)/asio/asio/include
 
 ifneq (,)
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
@@ -156,17 +113,6 @@ cflags += -I$(pwd)/secp256k1
 cflags += -I$(pwd)/secp256k1/include
 cflags += -I$(pwd)/secp256k1/src
 
-secp256k1 := ac8ccf29b8c6b2b793bc734661ce43d1f952977a
-
-$(pwd)/secp256k1-$(secp256k1).tar.gz:
-	curl -Lo $@ https://github.com/chfast/secp256k1/archive/$(secp256k1).tar.gz
-
-$(pwd)/secp256k1: pwd := $(pwd)
-$(pwd)/secp256k1: $(pwd)/secp256k1-$(secp256k1).tar.gz
-	rm -rf $@
-	mkdir -p $@
-	tar -C $(pwd)/secp256k1 --strip-components=1 -zxvf $< || rm -rf $@
-
 $(output)/gen_context: pwd := $(pwd)
 $(output)/gen_context: $(pwd)/secp256k1/src/gen_context.c
 	gcc -o $@ $< -I$(pwd)/secp256k1
@@ -177,8 +123,6 @@ $(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
 
 $(output)/$(pwd)/secp256k1/src/secp256k1.o: $(pwd)/secp256k1/src/ecmult_static_context.h
 
-header += $(pwd)/secp256k1
-
 cflags += -DENABLE_MODULE_RECOVERY
 cflags += -DENABLE_MODULE_ECDH
 cflags += -DUSE_ECMULT_STATIC_PRECOMPUTATION
@@ -187,7 +131,6 @@ cflags += -DUSE_NUM_NONE
 cflags += -DUSE_SCALAR_INV_BUILTIN
 cflags += -DUSE_FIELD_5X52
 cflags += -DUSE_SCALAR_4X64
-cflags += -DHAVE_BUILTIN_EXPECT
 cflags += -DHAVE___INT128
 
 

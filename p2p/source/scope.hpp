@@ -50,10 +50,12 @@ class scope {
   public:
     scope(std::function<void ()> function) :
         uncaught_(std::uncaught_exceptions()),
-        function_(function)
+        function_(std::move(function))
     {
     }
 
+    // XXX: consider if this Impactor behavior is sane
+    // NOLINTNEXTLINE (bugprone-exception-escape)
     ~scope() noexcept(false) {
         if (!function_);
         else if (std::uncaught_exceptions() == uncaught_)

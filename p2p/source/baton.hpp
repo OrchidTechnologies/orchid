@@ -58,7 +58,7 @@ class Baton<Type_, asio::error_code> {
         if (error_) {
             auto error(error_);
             co_await Schedule();
-            throw error;
+            throw std::move(error);
         }
     }
 
@@ -119,11 +119,11 @@ class Handler {
         token_->baton_ = &baton_;
     }
 
-    Handler(orc::Handler<Type_, Args_...> &&rhs) :
+    Handler(orc::Handler<Type_, Args_...> &&rhs) noexcept :
         token_(rhs.token_)
     {
         token_->baton_ = &baton_;
-        rhs.token_ = NULL;
+        rhs.token_ = nullptr;
     }
 
     void operator()(Args_... args) {

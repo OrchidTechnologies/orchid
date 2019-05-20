@@ -55,7 +55,6 @@
 #include "crypto.hpp"
 //#include "ethereum.hpp"
 #include "http.hpp"
-#include "scope.hpp"
 #include "secure.hpp"
 #include "task.hpp"
 #include "trace.hpp"
@@ -89,7 +88,7 @@ class Outgoing final :
     }
 
   public:
-    virtual ~Outgoing() {
+    ~Outgoing() override {
 _trace();
         Close();
     }
@@ -134,7 +133,7 @@ class Output :
 _trace();
     }
 
-    virtual ~Output() {
+    ~Output() override {
 _trace();
     }
 
@@ -164,7 +163,7 @@ class Waiter :
   public:
     Waiter(BufferDrain *drain, S<Peer> peer) :
         Link(drain),
-        peer_(peer)
+        peer_(std::move(peer))
     {
     }
 
@@ -180,7 +179,7 @@ class Waiter :
         co_return co_await Inner()->Send(data);
     }
 
-    task<void> Shut() {
+    task<void> Shut() override {
         co_await Inner()->Shut();
     }
 };
@@ -220,7 +219,7 @@ class Space final :
     {
     }
 
-    ~Space() {
+    ~Space() override {
 _trace();
     }
 
@@ -319,7 +318,7 @@ _trace();
             orc_assert(output != outputs_.end());
             // XXX: this is extremely unfortunate
             auto waiter(dynamic_cast<Output<Waiter> *>(output->second.get()));
-            orc_assert(waiter != NULL);
+            orc_assert(waiter != nullptr);
             auto candidate(co_await (*waiter)->Connect(answer.str()));
             co_return co_await code(Tie(Strung(std::move(candidate))));
 
@@ -365,7 +364,8 @@ class Ship {
   public:
     Ship(const std::string &key, const std::string &chain) :
         certificate_(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(key, chain))),
-        // CAST: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
+        // XXX: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
         identity_(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(key, chain))),
         fingerprint_(rtc::SSLFingerprint::CreateFromCertificate(*certificate_))
     {
@@ -423,7 +423,7 @@ class Conduit :
     static std::pair<S<Conduit>, Sink<Secure> *> Spawn(S<Ship> ship) {
         auto conduit(Make<Sink<Conduit, Secure>>());
         conduit->self_ = conduit;
-        auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship, conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
+        auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship = std::move(ship), conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
             auto fingerprint(rtc::SSLFingerprint::Create(rtc::DIGEST_SHA_256, certificate));
             auto space(ship->Find(fingerprint->GetRfc4572Fingerprint()));
             conduit->Assign(std::move(space));
@@ -436,7 +436,7 @@ class Conduit :
         co_await Inner()->Connect();
     }
 
-    virtual ~Conduit() {
+    ~Conduit() override {
 _trace();
         if (space_ != nullptr)
             space_->Dissociate(this);
@@ -490,7 +490,7 @@ class Incoming final :
         return self;
     }
 
-    virtual ~Incoming() {
+    ~Incoming() override {
 _trace();
         Close();
     }
@@ -499,8 +499,7 @@ _trace();
 class Node final :
     public std::enable_shared_from_this<Node>,
     public Back,
-    public Ship,
-    public Identity
+    public Ship
 {
   private:
     std::mutex mutex_;
@@ -575,7 +574,7 @@ int Main(int argc, const char *const argv[]) {
 
     po::notify(args);
 
-    if (args.count("help")) {
+    if (args.count("help") != 0) {
         std::cout << po::options_description()
             .add(options)
             .add(configs)
@@ -589,7 +588,7 @@ int Main(int argc, const char *const argv[]) {
 
     std::string params;
 
-    if (!args.count("dh"))
+    if (args.count("dh") == 0)
         params =
             "-----BEGIN DH PARAMETERS-----\n"
             "MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb\n"
@@ -607,7 +606,7 @@ int Main(int argc, const char *const argv[]) {
     std::string key;
     std::string chain;
 
-    if (!args.count("tls")) {
+    if (args.count("tls") == 0) {
         auto pem(rtc::RTCCertificate::Create(std::unique_ptr<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
             "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
         )))->ToPEM());
@@ -626,7 +625,7 @@ int Main(int argc, const char *const argv[]) {
             bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(str.data(), str.size()));
             orc_assert(bio);
 
-            return d2i_PKCS12_bio(bio.get(), NULL);
+            return d2i_PKCS12_bio(bio.get(), nullptr);
         }());
 
         orc_assert(p12);
@@ -653,7 +652,7 @@ int Main(int argc, const char *const argv[]) {
 
         key = Stringify([&]() {
             bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
-            orc_assert(PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL));
+            orc_assert(PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr));
             return bio;
         }());
 
@@ -671,7 +670,7 @@ int Main(int argc, const char *const argv[]) {
     std::cerr << fingerprint->GetRfc4572Fingerprint() << std::endl;
 
     std::string host;
-    if (args.count("host"))
+    if (args.count("host") != 0)
         host = args["host"].as<std::string>();
     else
         host = boost::asio::ip::host_name();
@@ -758,6 +757,8 @@ int Main(int argc, const char *const argv[]) {
 
 }
 
-int main(int argc, const char *const argv[]) {
+int main(int argc, const char *const argv[]) { try {
     return orc::Main(argc, argv);
-}
+} catch (const std::exception &error) {
+    return 1;
+} }

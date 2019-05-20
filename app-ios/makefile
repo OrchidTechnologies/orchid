@@ -73,8 +73,6 @@ $(output)/%.o: /%.m ios/Pods/Manifest.lock
 
 include env/output.mk
 
-include vpn/shared/p2p/depend.mk
-
 -include $(output)/app.d
 -include $(output)/main.d
 -include $(output)/tunnel.d

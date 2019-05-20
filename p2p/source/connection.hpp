@@ -88,7 +88,7 @@ class Connection final :
         co_return endpoint;
     }
 
-    virtual ~Connection() {
+    ~Connection() override {
 _trace();
     }
 

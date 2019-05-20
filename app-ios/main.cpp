@@ -39,7 +39,6 @@
 #include "error.hpp"
 //#include "ethereum.hpp"
 #include "jsonrpc.hpp"
-#include "scope.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 

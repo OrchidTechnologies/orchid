@@ -39,7 +39,6 @@ cflags += -Iextra
 
 
 include env/output.mk
-include p2p/depend.mk
 
 
 $(output)/orchid$(exe): $(object) $(linked)

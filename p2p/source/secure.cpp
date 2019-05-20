@@ -21,7 +21,6 @@
 
 
 #include "secure.hpp"
-#include "scope.hpp"
 
 namespace orc {
 
@@ -60,7 +59,7 @@ static int Call(SSL *ssl, bool write, Code_ code) {
         case SSL_ERROR_ZERO_RETURN:
             // XXX: should this do anything special?
         default:
-            Log()("SSL_get_error(%x) = %x\n", value, error);
+            Log() << std::hex << "SSL_get_error(" << value << ") = " << error << std::endl;
             orc_assert(false);
     }
 }
@@ -91,13 +90,13 @@ BIO_METHOD *Secure::Method() {
 
         BIO_meth_set_create(method, [](BIO *bio) -> int {
             BIO_set_shutdown(bio, 0);
-            BIO_set_data(bio, 0);
+            BIO_set_data(bio, nullptr);
             BIO_set_init(bio, 1);
             return 1;
         });
 
         BIO_meth_set_destroy(method, [](BIO *bio) -> int {
-            if (bio == NULL)
+            if (bio == nullptr)
                 return 0;
             return Get(bio)->Destroy(bio);
         });
@@ -118,14 +117,14 @@ int Secure::Write(BIO *bio, const char *data, int size) {
 
 int Secure::Read(BIO *bio, char *data, int size) {
     if (eof_) {
-        orc_assert(data_ == NULL);
+        orc_assert(data_ == nullptr);
         return 0;
-    } else if (data_ == NULL) {
+    } else if (data_ == nullptr) {
         BIO_set_retry_read(bio);
         return -1;
     } else {
         auto writ(data_->copy(data, size));
-        data_ = NULL;
+        data_ = nullptr;
         return writ;
     }
 }
@@ -164,7 +163,7 @@ void Secure::Active() {
                 return SSL_read(ssl_, data, sizeof(data));
             });
         } catch (const Error &error) {
-            next_ = NULL;
+            next_ = nullptr;
             auto text(error.text);
             orc_assert(!text.empty());
             Link::Stop(text);
@@ -174,7 +173,7 @@ void Secure::Active() {
         if (size == -1)
             break;
         else if (size == 0) {
-            next_ = NULL;
+            next_ = nullptr;
             Link::Stop();
             break;
         }
@@ -207,17 +206,17 @@ void Secure::Client() {
 }
 
 void Secure::Land(const Buffer &data) {
-    orc_assert(data_ == NULL);
+    orc_assert(data_ == nullptr);
     data_ = &data;
-    orc_assert(next_ != NULL);
+    orc_assert(next_ != nullptr);
     (this->*next_)();
-    orc_assert(data_ == NULL);
+    orc_assert(data_ == nullptr);
 }
 
 void Secure::Stop(const std::string &error) {
-    orc_assert(data_ == NULL);
+    orc_assert(data_ == nullptr);
     eof_ = true;
-    orc_assert(next_ != NULL);
+    orc_assert(next_ != nullptr);
     (this->*next_)();
 }
 
@@ -226,22 +225,21 @@ Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, 
     server_(server),
     verify_(std::move(verify))
 {
-    auto context(SSL_CTX_new(server_ ? DTLS_method() : DTLS_client_method()));
-    _scope({ SSL_CTX_free(context); });
+    std::unique_ptr<SSL_CTX, decltype(SSL_CTX_free) *> context(SSL_CTX_new(server_ ? DTLS_method() : DTLS_client_method()), &SSL_CTX_free);
 
-    SSL_CTX_set_info_callback(context, [](const SSL *ssl, int where, int value) {
+    SSL_CTX_set_info_callback(context.get(), [](const SSL *ssl, int where, int value) {
         auto self(static_cast<Secure *>(SSL_get_app_data(ssl)));
         if (Verbose || true)
             Log() << "\e[32;1mSSL :: " << self << " " << SSL_state_string_long(ssl) << "\e[0m" << std::endl;
     });
 
-    SSL_CTX_set_min_proto_version(context, DTLS1_VERSION);
-    SSL_CTX_set_cipher_list(context, "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
+    SSL_CTX_set_min_proto_version(context.get(), DTLS1_VERSION);
+    SSL_CTX_set_cipher_list(context.get(), "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
 
-    orc_assert(identity->ConfigureIdentity(context));
+    orc_assert(identity->ConfigureIdentity(context.get()));
 
-    SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
-    SSL_CTX_set_cert_verify_callback(context, [](X509_STORE_CTX *store, void *arg) -> int {
+    SSL_CTX_set_verify(context.get(), SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
+    SSL_CTX_set_cert_verify_callback(context.get(), [](X509_STORE_CTX *store, void *arg) -> int {
         auto secure(static_cast<Secure *>(arg));
 
         /*std::vector<U<rtc::SSLCertificate>> chain;
@@ -253,8 +251,8 @@ Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, 
         return secure->verify_(certificate) ? 1 : 0;
     }, this);
 
-    ssl_ = SSL_new(context);
-    SSL_set_app_data(ssl_, this);
+    ssl_ = SSL_new(context.get());
+    SSL_set_app_data(ssl_, reinterpret_cast<char *>(this));
 
     //DTLSv1_set_initial_timeout_duration(ssl_, ...);
 

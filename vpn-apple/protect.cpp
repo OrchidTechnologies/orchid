@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <memory>
+
 #include "protect.hpp"
 
 #include <sys/types.h>
@@ -29,7 +31,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "scope.hpp"
+#include "error.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -37,17 +39,20 @@ namespace orc {
 void Protect(int socket) {
     return;
 
-    ifaddrs *interfaces;
-    if (getifaddrs(&interfaces) != -1) {
-        _scope({ freeifaddrs(interfaces); });
+    std::unique_ptr<ifaddrs, decltype(freeifaddrs) *> interfaces([]() {
+        ifaddrs *interfaces;
+        orc_assert(getifaddrs(&interfaces) != -1);
+        return interfaces;
+    }(), &freeifaddrs);
 
+    if (interfaces != nullptr) {
         /*for (ifaddrs *i(interfaces); i != NULL; i = i->ifa_next) {
             NSLog(@ "ifa_name: %u %s", i->ifa_addr->sa_family, i->ifa_name);
             if (i->ifa_addr->sa_family == AF_INET)
                 NSLog(@ "addr: %s", inet_ntoa(((sockaddr_in &)(i->ifa_addr)).sin_addr));
         }*/
 
-        for (ifaddrs *i(interfaces); i != NULL; i = i->ifa_next) {
+        for (auto i(interfaces.get()); i != NULL; i = i->ifa_next) {
             if (i->ifa_addr->sa_family == AF_INET && strncmp(i->ifa_name, "en0", 3) == 0) {
                 int index(if_nametoindex(i->ifa_name));
                 setsockopt(socket, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));

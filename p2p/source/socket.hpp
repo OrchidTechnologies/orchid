@@ -54,7 +54,7 @@ class Socket final {
     }
 };
 
-std::ostream &operator <<(std::ostream &out, const Socket &socket) {
+inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
     return out << socket.Host() << ":" << socket.Port();
 }
 

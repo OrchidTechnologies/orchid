@@ -41,7 +41,7 @@ void Nested::enc(std::string &data, unsigned length, uint8_t offset) {
         std::string binary;
         enc(binary, length);
         data += char(binary.size() + offset + 55);
-        data += std::move(binary);
+        data += binary;
     }
 }
 
@@ -51,7 +51,7 @@ void Nested::enc(std::string &data) const {
         for (auto &item : array_)
             item.enc(list);
         enc(data, list.size(), 0xc0);
-        data += std::move(list);
+        data += list;
     } else if (value_.size() == 1 && uint8_t(value_[0]) < 0x80) {
         data += value_[0];
     } else {
@@ -107,7 +107,7 @@ Explode::Explode(Window &window) {
         auto size(first - 0xb7);
         orc_assert(size <= sizeof(length));
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
-        value_.resize(ntohl(length));
+        value_.resize(boost::endian::big_to_native(length));
         window.Take(value_);
     } else if (first < 0xf8) {
         scalar_ = false;
@@ -121,7 +121,7 @@ Explode::Explode(Window &window) {
         auto size(first - 0xf7);
         orc_assert(size <= sizeof(length));
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
-        auto beam(window.Take(ntohl(length)));
+        auto beam(window.Take(boost::endian::big_to_native(length)));
         Window sub(beam);
         while (!sub.empty())
             array_.emplace_back(Explode(sub));
@@ -209,7 +209,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg)
 
     Json::Value result;
     Json::Reader reader;
-    orc_assert(reader.parse(std::move(body), result, false));
+    orc_assert(reader.parse(body, result, false));
     Log() << root << " -> " << result << "" << std::endl;
 
     orc_assert(result["jsonrpc"] == "2.0");
@@ -221,7 +221,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg)
 
     orc_assert_(error.isNull(), [&]() {
         auto text(writer.write(error));
-        orc_assert(text.size() != 0);
+        orc_assert(!text.empty());
         orc_assert(text[text.size() - 1] == '\n');
         text.resize(text.size() - 1);
         return text;

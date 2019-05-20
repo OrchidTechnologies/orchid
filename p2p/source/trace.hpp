@@ -33,6 +33,11 @@ typedef struct NSString NSString;
 extern "C" void NSLog(NSString *, ...);
 #define _trace() \
     NSLog((NSString *) CFSTR("[%llx] _trace(%s:%u): %s"), (long long) pthread_self(), __FILE__, __LINE__, __FUNCTION__)
+#elif defined(__cplusplus)
+#include <cstdio>
+#define _trace() do { \
+    std::cerr << "\e[31m[" << std::hex << pthread_self() << "] _trace(" << __FILE__ << ":" << std::dec << __LINE__ << "): " << __FUNCTION__ << "\e[0m" << std::endl; \
+} while (false)
 #else
 #include <stdio.h>
 #define _trace() \

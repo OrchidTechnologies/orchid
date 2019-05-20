@@ -128,8 +128,7 @@ class Range final {
     size_t size_;
 
   public:
-    Range() {
-    }
+    Range() = default;
 
     Range(const Range &range) :
         data_(range.data()),
@@ -260,8 +259,7 @@ class Data :
     std::array<uint8_t, Size_> data_;
 
   public:
-    Data() {
-    }
+    Data() = default;
 
     Data(const void *data, size_t size) {
         copy(data, size);
@@ -320,12 +318,14 @@ class Brick final :
     using Data<Size_>::Data;
     using Data<Size_>::operator =;
 
+    Brick() = default;
+
     Brick(const std::string &data) :
         Brick(data.data(), data.size())
     {
     }
 
-    explicit Brick(std::initializer_list<uint8_t> list) {
+    explicit constexpr Brick(std::initializer_list<uint8_t> list) noexcept {
         std::copy(list.begin(), list.end(), this->data_.begin());
     }
 
@@ -355,11 +355,18 @@ class Number<Type_, true> final :
     public Region
 {
   private:
-    const Type_ value_;
+    Type_ value_;
 
   public:
-    Number(Type_ value) :
+    Number() = default;
+
+    constexpr Number(Type_ value) noexcept :
         value_(boost::endian::native_to_big(value))
+    {
+    }
+
+    Number(const Brick<sizeof(Type_)> &brick) :
+        Number(brick.template num<Type_>())
     {
     }
 
@@ -369,6 +376,10 @@ class Number<Type_, true> final :
 
     const uint8_t *data() const override {
         return reinterpret_cast<const uint8_t *>(&value_);
+    }
+
+    uint8_t *data() {
+        return reinterpret_cast<uint8_t *>(&value_);
     }
 
     size_t size() const override {
@@ -408,7 +419,7 @@ class Beam :
   public:
     Beam() :
         size_(0),
-        data_(NULL)
+        data_(nullptr)
     {
     }
 
@@ -445,7 +456,9 @@ class Beam :
         destroy();
     }
 
-    Beam &operator =(Beam &&rhs) {
+    Beam &operator =(const Beam &) = delete;
+
+    Beam &operator =(Beam &&rhs) noexcept {
         destroy();
         size_ = rhs.size_;
         data_ = rhs.data_;
@@ -513,7 +526,7 @@ class Nothing final :
 {
   public:
     const uint8_t *data() const override {
-        return NULL;
+        return nullptr;
     }
 
     size_t size() const override {
@@ -603,7 +616,7 @@ class Sequence final :
         });
     }
 
-    Sequence(Sequence &&sequence) :
+    Sequence(Sequence &&sequence) noexcept :
         count_(sequence.count_),
         ranges_(std::move(sequence.ranges_))
     {
@@ -656,7 +669,7 @@ class Window :
   public:
     Window() :
         count_(0),
-        range_(NULL),
+        range_(nullptr),
         offset_(0)
     {
     }
@@ -770,6 +783,11 @@ class Window :
         Take(value.data(), value.size());
     }
 
+    template <typename Type_>
+    void Take(Number<Type_> &value) {
+        Take(value.data(), value.size());
+    }
+
     Beam Take(size_t size) {
         Beam beam(size);
         Take(beam.data(), beam.size());
@@ -795,8 +813,7 @@ class Rest final :
     Beam data_;
 
   public:
-    Rest() {
-    }
+    Rest() = default;
 
     Rest(Window &&window, Beam &&data) :
         Window(std::move(window)),
@@ -846,6 +863,14 @@ static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
 
 template <size_t Index_, size_t Size_, typename... Taking_>
 struct Taking<Index_, Brick<Size_>, void, Taking_...> final {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    window.Take(std::get<Index_>(tuple));
+    return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
+} };
+
+template <size_t Index_, typename Type_, typename... Taking_>
+struct Taking<Index_, Number<Type_>, void, Taking_...> final {
 template <typename Tuple_, typename Buffer_>
 static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     window.Take(std::get<Index_>(tuple));
