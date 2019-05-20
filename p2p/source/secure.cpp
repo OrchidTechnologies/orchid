@@ -60,7 +60,7 @@ static int Call(SSL *ssl, bool write, Code_ code) {
         case SSL_ERROR_ZERO_RETURN:
             // XXX: should this do anything special?
         default:
-            Log()("SSL_get_error(%x) = %x\n", value, error);
+            Log() << std::hex << "SSL_get_error(" << value << ") = " << error << std::endl;
             orc_assert(false);
     }
 }

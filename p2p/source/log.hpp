@@ -37,9 +37,6 @@ class Log final :
 {
   public:
     ~Log() override;
-
-    Log &operator ()(const char *format, va_list args);
-    Log &operator ()(const char *format, ...);
 };
 
 }

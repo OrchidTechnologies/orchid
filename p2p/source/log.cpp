@@ -24,6 +24,8 @@
 #define _GNU_SOURCE
 #endif
 
+#include <iostream>
+
 #include <boost/algorithm/string.hpp>
 
 #include "log.hpp"
@@ -43,28 +45,8 @@ Log::~Log() {
 #ifdef __APPLE__
     NSLog((NSString *)CFSTR("%s"), log.c_str());
 #else
-    fprintf(stderr, "%s\n", log.c_str());
+    std::cerr << log << std::endl;
 #endif
-}
-
-Log &Log::operator ()(const char *format, va_list args) {
-    char *data;
-    auto size(vasprintf(&data, format, args));
-
-    if (size != -1) {
-        _scope({ free(data); });
-        *this << data;
-    }
-
-    return *this;
-}
-
-Log &Log::operator ()(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    auto &log(operator ()(format, args));
-    va_end(args);
-    return log;
 }
 
 }
