@@ -107,7 +107,7 @@ Explode::Explode(Window &window) {
         auto size(first - 0xb7);
         orc_assert(size <= sizeof(length));
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
-        value_.resize(ntohl(length));
+        value_.resize(boost::endian::big_to_native(length));
         window.Take(value_);
     } else if (first < 0xf8) {
         scalar_ = false;
@@ -121,7 +121,7 @@ Explode::Explode(Window &window) {
         auto size(first - 0xf7);
         orc_assert(size <= sizeof(length));
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
-        auto beam(window.Take(ntohl(length)));
+        auto beam(window.Take(boost::endian::big_to_native(length)));
         Window sub(beam);
         while (!sub.empty())
             array_.emplace_back(Explode(sub));
