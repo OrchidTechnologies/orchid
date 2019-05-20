@@ -41,7 +41,7 @@ void Nested::enc(std::string &data, unsigned length, uint8_t offset) {
         std::string binary;
         enc(binary, length);
         data += char(binary.size() + offset + 55);
-        data += std::move(binary);
+        data += binary;
     }
 }
 
@@ -51,7 +51,7 @@ void Nested::enc(std::string &data) const {
         for (auto &item : array_)
             item.enc(list);
         enc(data, list.size(), 0xc0);
-        data += std::move(list);
+        data += list;
     } else if (value_.size() == 1 && uint8_t(value_[0]) < 0x80) {
         data += value_[0];
     } else {

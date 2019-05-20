@@ -212,9 +212,9 @@ void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interf
     Land(std::move(interface));
 }
 
-std::string Strip(std::string sdp) {
+std::string Strip(const std::string &sdp) {
     static boost::regex re("\r?\na=candidate:[^\r\n]*");
-    return boost::regex_replace(std::move(sdp), re, "");
+    return boost::regex_replace(sdp, re, "");
 }
 
 }

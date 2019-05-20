@@ -302,7 +302,7 @@ _trace();
     using Link::Stop;
 };
 
-std::string Strip(std::string sdp);
+std::string Strip(const std::string &sdp);
 
 }
 
