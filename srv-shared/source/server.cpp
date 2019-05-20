@@ -55,7 +55,6 @@
 #include "crypto.hpp"
 //#include "ethereum.hpp"
 #include "http.hpp"
-#include "scope.hpp"
 #include "secure.hpp"
 #include "task.hpp"
 #include "trace.hpp"

@@ -21,7 +21,6 @@
 
 
 #include "secure.hpp"
-#include "scope.hpp"
 
 namespace orc {
 
@@ -226,22 +225,21 @@ Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, 
     server_(server),
     verify_(std::move(verify))
 {
-    auto context(SSL_CTX_new(server_ ? DTLS_method() : DTLS_client_method()));
-    _scope({ SSL_CTX_free(context); });
+    std::unique_ptr<SSL_CTX, decltype(SSL_CTX_free) *> context(SSL_CTX_new(server_ ? DTLS_method() : DTLS_client_method()), &SSL_CTX_free);
 
-    SSL_CTX_set_info_callback(context, [](const SSL *ssl, int where, int value) {
+    SSL_CTX_set_info_callback(context.get(), [](const SSL *ssl, int where, int value) {
         auto self(static_cast<Secure *>(SSL_get_app_data(ssl)));
         if (Verbose || true)
             Log() << "\e[32;1mSSL :: " << self << " " << SSL_state_string_long(ssl) << "\e[0m" << std::endl;
     });
 
-    SSL_CTX_set_min_proto_version(context, DTLS1_VERSION);
-    SSL_CTX_set_cipher_list(context, "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
+    SSL_CTX_set_min_proto_version(context.get(), DTLS1_VERSION);
+    SSL_CTX_set_cipher_list(context.get(), "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
 
-    orc_assert(identity->ConfigureIdentity(context));
+    orc_assert(identity->ConfigureIdentity(context.get()));
 
-    SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
-    SSL_CTX_set_cert_verify_callback(context, [](X509_STORE_CTX *store, void *arg) -> int {
+    SSL_CTX_set_verify(context.get(), SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
+    SSL_CTX_set_cert_verify_callback(context.get(), [](X509_STORE_CTX *store, void *arg) -> int {
         auto secure(static_cast<Secure *>(arg));
 
         /*std::vector<U<rtc::SSLCertificate>> chain;
@@ -253,7 +251,7 @@ Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, 
         return secure->verify_(certificate) ? 1 : 0;
     }, this);
 
-    ssl_ = SSL_new(context);
+    ssl_ = SSL_new(context.get());
     SSL_set_app_data(ssl_, reinterpret_cast<char *>(this));
 
     //DTLSv1_set_initial_timeout_duration(ssl_, ...);

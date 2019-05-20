@@ -29,7 +29,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include "log.hpp"
-#include "scope.hpp"
 #include "trace.hpp"
 
 namespace orc {

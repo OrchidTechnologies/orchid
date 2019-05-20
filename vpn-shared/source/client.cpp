@@ -44,7 +44,6 @@
 #include "http.hpp"
 #include "jsonrpc.hpp"
 #include "link.hpp"
-#include "scope.hpp"
 #include "trace.hpp"
 
 #define mmdb_check(code) [&](int error) { \
