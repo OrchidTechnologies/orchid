@@ -254,7 +254,7 @@ Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, 
     }, this);
 
     ssl_ = SSL_new(context);
-    SSL_set_app_data(ssl_, this);
+    SSL_set_app_data(ssl_, reinterpret_cast<char *>(this));
 
     //DTLSv1_set_initial_timeout_duration(ssl_, ...);
 
