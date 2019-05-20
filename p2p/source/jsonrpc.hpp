@@ -154,7 +154,7 @@ class Argument final {
 
   public:
     Argument(Json::Value value) :
-        value_(value)
+        value_(std::move(value))
     {
     }
 
@@ -205,7 +205,7 @@ class Argument final {
         value_(Json::objectValue)
     {
         for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[std::move(arg->first)] = std::move(arg->second);
+            value_[arg->first] = std::move(arg->second);
     }
 
     operator Json::Value &&() && {
@@ -499,7 +499,7 @@ class Selector final :
   public:
     Selector(uint32_t value, uint256_t gas = 90000) :
         value_(boost::endian::native_to_big(value)),
-        gas_(gas)
+        gas_(std::move(gas))
     {
     }
 

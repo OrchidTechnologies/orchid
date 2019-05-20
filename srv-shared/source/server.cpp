@@ -164,7 +164,7 @@ class Waiter :
   public:
     Waiter(BufferDrain *drain, S<Peer> peer) :
         Link(drain),
-        peer_(peer)
+        peer_(std::move(peer))
     {
     }
 
@@ -423,7 +423,7 @@ class Conduit :
     static std::pair<S<Conduit>, Sink<Secure> *> Spawn(S<Ship> ship) {
         auto conduit(Make<Sink<Conduit, Secure>>());
         conduit->self_ = conduit;
-        auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship, conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
+        auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship = std::move(ship), conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
             auto fingerprint(rtc::SSLFingerprint::Create(rtc::DIGEST_SHA_256, certificate));
             auto space(ship->Find(fingerprint->GetRfc4572Fingerprint()));
             conduit->Assign(std::move(space));

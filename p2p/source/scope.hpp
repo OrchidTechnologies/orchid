@@ -50,7 +50,7 @@ class scope {
   public:
     scope(std::function<void ()> function) :
         uncaught_(std::uncaught_exceptions()),
-        function_(function)
+        function_(std::move(function))
     {
     }
 

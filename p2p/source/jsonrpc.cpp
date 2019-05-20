@@ -209,7 +209,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg)
 
     Json::Value result;
     Json::Reader reader;
-    orc_assert(reader.parse(std::move(body), result, false));
+    orc_assert(reader.parse(body, result, false));
     Log() << root << " -> " << result << "" << std::endl;
 
     orc_assert(result["jsonrpc"] == "2.0");
