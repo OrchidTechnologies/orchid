@@ -499,8 +499,7 @@ _trace();
 class Node final :
     public std::enable_shared_from_this<Node>,
     public Back,
-    public Ship,
-    public Identity
+    public Ship
 {
   private:
     std::mutex mutex_;

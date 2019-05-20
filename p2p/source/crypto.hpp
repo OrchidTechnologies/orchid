@@ -23,8 +23,6 @@
 #ifndef ORCHID_CRYPTO_HPP
 #define ORCHID_CRYPTO_HPP
 
-#include <sodium.h>
-
 #include "buffer.hpp"
 
 #define _crycall(code) do { \
@@ -33,9 +31,7 @@
 
 namespace orc {
 
-inline void Random(void *data, size_t size) {
-    randombytes_buf(data, size);
-}
+void Random(uint8_t *data, size_t size);
 
 template <size_t Size_>
 Brick<Size_> Random() {
@@ -46,63 +42,6 @@ Brick<Size_> Random() {
 
 Brick<32> Hash(const Buffer &data);
 Brick<32> Hash(const std::string &data);
-
-typedef Brick<crypto_box_SECRETKEYBYTES> Secret;
-typedef Brick<crypto_box_PUBLICKEYBYTES> Common;
-
-class Identity {
-  private:
-    Secret secret_;
-    Common common_;
-
-  public:
-    Identity() {
-        _crycall(crypto_box_keypair(common_.data(), secret_.data()));
-    }
-
-    Identity(const Secret &secret, const Common &common) :
-        secret_(secret),
-        common_(common)
-    {
-    }
-
-    const Secret &GetSecret() {
-        return secret_;
-    }
-
-    const Common &GetCommon() {
-        return common_;
-    }
-};
-
-typedef Brick<crypto_box_BEFORENMBYTES> Shared;
-
-static const size_t NonceSize = crypto_box_NONCEBYTES;
-
-class Boxer final {
-  private:
-    Shared shared_;
-
-  public:
-    Boxer(const Secret &secret, const Common &target) {
-        _crycall(crypto_box_beforenm(shared_.data(), target.data(), secret.data()));
-    }
-
-    Beam Close(const Buffer &buffer) {
-        Beam beam(buffer);
-        Beam value(beam.size() + NonceSize + crypto_box_MACBYTES);
-        Random(value.data(), NonceSize);
-        _crycall(crypto_box_easy_afternm(value.data() + NonceSize, beam.data(), beam.size(), value.data(), shared_.data()));
-        return value;
-    }
-
-    Beam Open(const Buffer &buffer) {
-        Beam beam(buffer);
-        Beam value(beam.size() - NonceSize - crypto_box_MACBYTES);
-        _crycall(crypto_box_open_easy_afternm(value.data(), beam.data() + NonceSize, beam.size() - NonceSize, beam.data(), shared_.data()));
-        return value;
-    }
-};
 
 }
 

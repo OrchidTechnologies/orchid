@@ -1,33 +1,12 @@
 [submodule "flutter"]
 	path = app-shared/flutter
 	url = https://github.com/flutter/flutter.git
-[submodule "libff"]
-	path = p2p/libff
-	url = https://github.com/scipr-lab/libff.git
-[submodule "rocksdb"]
-	path = p2p/rocksdb
-	url = https://github.com/facebook/rocksdb.git
-[submodule "leveldb"]
-	path = p2p/leveldb
-	url = https://github.com/google/leveldb.git
-[submodule "aleth"]
-	path = p2p/aleth
-	url = https://github.com/ethereum/aleth.git
-[submodule "cryptopp"]
-	path = p2p/cryptopp
-	url = https://github.com/weidai11/cryptopp.git
 [submodule "ethash"]
 	path = p2p/ethash
 	url = https://github.com/chfast/ethash.git
 [submodule "boost"]
 	path = p2p/boost
 	url = https://github.com/boostorg/boost.git
-[submodule "libscrypt"]
-	path = p2p/libscrypt
-	url = https://github.com/technion/libscrypt.git
-[submodule "libsodium"]
-	path = p2p/libsodium
-	url = https://github.com/jedisct1/libsodium.git
 [submodule "cppcoro"]
 	path = p2p/cppcoro
 	url = https://github.com/lewissbaker/cppcoro.git

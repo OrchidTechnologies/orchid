@@ -20,6 +20,9 @@
 /* }}} */
 
 
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
+
 #include <ethash/keccak.hpp>
 
 #include "crypto.hpp"
@@ -27,9 +30,13 @@
 
 namespace orc {
 
-__attribute__((__constructor__))
-static void SetupRandom() {
-    orc_assert(sodium_init() != -1);
+void Random(uint8_t *data, size_t size) {
+    static auto generator([]() {
+        boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator;
+        generator.seed(boost::random::random_device()());
+        return generator;
+    }());
+    generator.generate(data, data + size);
 }
 
 Brick<32> Hash(const Buffer &data) {

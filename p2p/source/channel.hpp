@@ -31,7 +31,6 @@
 #include <cppcoro/async_manual_reset_event.hpp>
 
 #include "error.hpp"
-#include "future.hpp"
 #include "link.hpp"
 #include "task.hpp"
 #include "trace.hpp"
