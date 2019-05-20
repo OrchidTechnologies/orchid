@@ -57,7 +57,7 @@ cflags += -I$(pwd)/url/include
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/*/include))
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))
 
-cflags += -include $(pwd)/source/byte.hpp
+cflags += -include $(pwd)/byte.hpp
 
 source += $(wildcard $(pwd)/libsodium/src/libsodium/crypto_box/*.c)
 source += $(pwd)/libsodium/src/libsodium/crypto_box/curve25519xsalsa20poly1305/box_curve25519xsalsa20poly1305.c
