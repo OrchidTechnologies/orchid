@@ -91,7 +91,7 @@ class Nested {
             array_.emplace_back(nested->scalar_, std::move(nested->value_), std::move(nested->array_));
     }
 
-    Nested(Nested &&rhs) :
+    Nested(Nested &&rhs) noexcept :
         scalar_(rhs.scalar_),
         value_(std::move(rhs.value_)),
         array_(std::move(rhs.array_))

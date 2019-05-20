@@ -119,7 +119,7 @@ class Handler {
         token_->baton_ = &baton_;
     }
 
-    Handler(orc::Handler<Type_, Args_...> &&rhs) :
+    Handler(orc::Handler<Type_, Args_...> &&rhs) noexcept :
         token_(rhs.token_)
     {
         token_->baton_ = &baton_;

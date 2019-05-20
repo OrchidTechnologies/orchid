@@ -325,7 +325,7 @@ class Brick final :
     {
     }
 
-    explicit Brick(std::initializer_list<uint8_t> list) {
+    explicit constexpr Brick(std::initializer_list<uint8_t> list) noexcept {
         std::copy(list.begin(), list.end(), this->data_.begin());
     }
 
@@ -361,7 +361,7 @@ class Number<Type_, true> final :
     Number() {
     }
 
-    Number(Type_ value) :
+    constexpr Number(Type_ value) noexcept :
         value_(boost::endian::native_to_big(value))
     {
     }
@@ -457,7 +457,7 @@ class Beam :
         destroy();
     }
 
-    Beam &operator =(Beam &&rhs) {
+    Beam &operator =(Beam &&rhs) noexcept {
         destroy();
         size_ = rhs.size_;
         data_ = rhs.data_;
@@ -615,7 +615,7 @@ class Sequence final :
         });
     }
 
-    Sequence(Sequence &&sequence) :
+    Sequence(Sequence &&sequence) noexcept :
         count_(sequence.count_),
         ranges_(std::move(sequence.ranges_))
     {
