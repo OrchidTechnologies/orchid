@@ -177,6 +177,26 @@ namespace orc
 	    return x;
 	}
 
+
+	void test_SignAndRecover()
+	{
+	    // This basic test that compares **fixed** results. Useful to test new
+	    // implementations or changes to implementations.
+	    auto sec = Secret{Hash("sec")};
+	    auto msg = Hash("msg");
+	    Signature sig = sign(sec, msg);
+	    auto expectedSig = "0xb826808a8c41e00b7c5d71f211f005a84a7b97949d5e765831e1da4e34c9b8295d2a622eee50f25af78241c1cb7cfff11bcf2a13fe65dee1e3b86fd79a4e3ed000";
+	    std::cout << " sig  : " << sig.hex()  << std::endl;
+	    std::cout << " esig : " << expectedSig << std::endl;
+	    assert(sig.hex() == ( expectedSig));
+
+	    auto pub = recover(sig, msg);
+	    auto expectedPub = "0xe40930c838d6cca526795596e368d16083f0672f4ab61788277abfa23c3740e1cc84453b0b24f49086feba0bd978bb4446bae8dff1e79fcc1e9cf482ec2d07c3";
+	    std::cout << " pub  : " << pub.hex()  << std::endl;
+	    std::cout << " epub : " << expectedPub << std::endl;
+	    assert(pub.hex() == ( expectedPub));
+	}
+
 // ============================ ===================================
 
 
@@ -234,6 +254,8 @@ namespace orc
 
     task<int> test_lottery()
     {
+    	test_SignAndRecover();
+
         Endpoint endpoint({"http", "localhost", "8545", "/"});
 
         co_await endpoint("web3_clientVersion", {});
@@ -246,6 +268,17 @@ namespace orc
 	    // https://github.com/ethereum/web3.js/issues/932 (wtf)
 
         printf("[%d] Example start\n", __LINE__);
+
+
+   		auto is_syncing = co_await endpoint("eth_syncing", {});
+   		std::cout << "result: \n" << is_syncing << std::endl;
+   		if (is_syncing != false) {
+   			std::cout << "Host unavailable/not working" << std::endl;
+   			co_return 3;
+   		}
+
+
+
 
 
         // this is the account which sets up the orchid contracts
@@ -263,14 +296,6 @@ namespace orc
    		const string test_privkey = "9c7a42cd9603bd9b7baee8b37281b2f483de254ccca34b9d764e72e89addfb64";
 
 
-   		auto is_syncing = co_await endpoint("eth_syncing", {});
-
-   		std::cout << "result: \n" << is_syncing << std::endl;
-
-   		if (is_syncing != false) {
-   			std::cout << "Host unavailable/not working" << std::endl;
-   			co_return 3;
-   		}
 
    		printf("[%d] Deploying some contracts! \n", __LINE__ );
 
@@ -289,12 +314,32 @@ namespace orc
    		printf("[%d] lottery_addr(%s,%s) \n", __LINE__, lottery_addr.c_str(), lottery_addr.c_str());
 
 
+   		block = co_await endpoint.Latest();
+
+        // test ecrecover
+   		{
+   		    auto sec  = Secret{Hash("sec")};
+   		    auto msg  = Hash("msg");
+   		    auto sig  = sign(sec, msg);
+   		    auto pub  = recover(sig, msg);
+   		    auto addr = toAddress(pub);
+
+   		    static Selector<uint256_t, Bytes32, uint8_t, Bytes32, Bytes32, Address> test_ecrecover("test_ecrecover");
+   		    // sig.v + 27 is necessary, doesn't make any sense
+   		    // https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethsign
+			auto raddr	= co_await test_ecrecover.Call(endpoint, block, Address(lottery_addr), msg, sig.v + 27, sig.r, sig.s, addr);
+
+			std::cout << " sig(" << uint(sig.v) << ", " << sig.r << ", " << sig.s << std::endl;
+			std::cout << std::hex << " raddr: " << raddr << " " << addr << std::endl;
+   		}
+
+
+
         //set the orchid address (todo: figure out contract constructor args)
    		static Selector<uint256_t, Address> set_orchid("set_orchid");
    		co_await set_orchid.Send(endpoint, Address(orchid_address), Address(lottery_addr), Address(OrchidToken_addr) );
 
 
-   		block = co_await endpoint.Latest();
 
    		static Selector<Address,uint256_t> get_address("get_address");
    		auto lottery_addr_ = co_await get_address.Call(endpoint, block, Address(lottery_addr), uint256_t("3")  );
@@ -375,12 +420,12 @@ namespace orc
 	    Brick<32> hash		 	= Hash(Tie(secret_hash, Number<uint160_t>(server_address), Number<uint256_t>(nonce), Number<uint256_t>(until), Number<uint256_t>(winProb), Number<uint64_t>(faceValue)));
 
 	    // test signatures
+    	auto csig 		= sign(h256_(uint256_t("0x" + client_privkey)), hash);
 	    {
 
-	    	auto sig 		= sign(h256_(uint256_t("0x" + client_privkey)), hash);
-	    	auto rpubkey 	= recover(sig, hash);
+	    	auto rpubkey 	= recover(csig, hash);
 	    	auto raddress   = toAddress(rpubkey);
-	   		std::cout << "sign(" << std::hex << client_privkey << ", " << hash << ") = " << sig << std::endl;
+	   		std::cout << "sign(" << std::hex << client_privkey << ", " << hash << ") = " << csig << std::endl;
 	   		std::cout << " rpubkey: "  << rpubkey  << std::endl;
 	   		std::cout << " raddress: " << raddress << std::endl;
 	   		//assert(raddress == Address(client_address) );
@@ -400,17 +445,14 @@ namespace orc
 	    }
 
 
-		// sign the ticket hash using aleth/libdevcrypto
-		auto recv_sig = sign(h256_(uint256_t("0x" + client_privkey)), hash);
-   		std::cout << "sign(" << std::hex << client_privkey << ", " << hash << ") = " << recv_sig << std::endl;
-
 
    		static Selector<uint256_t, uint256_t, Bytes32, Address, uint256_t, uint256_t, uint256_t, uint64_t, uint8_t, Bytes32, Bytes32, Address, Bytes32> grab2("grab2");
    	    //function grab2(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s) public
-   		co_await grab2.Send(endpoint, Address(server_address), Address(lottery_addr), secret, secret_hash, Address(server_address), uint256_t(nonce), uint256_t(until), uint256_t(winProb), uint64_t(faceValue), recv_sig.v, recv_sig.r, recv_sig.s, Address(client_address), hash);
+   		co_await grab2.Send(endpoint, Address(server_address), Address(lottery_addr), secret, secret_hash, Address(server_address), uint256_t(nonce), uint256_t(until), uint256_t(winProb), uint64_t(faceValue), csig.v + 27, csig.r, csig.s, Address(client_address), hash);
 
 
    		std::cout << "Done." << std::endl;
+
 
    		co_return 0;
     }
