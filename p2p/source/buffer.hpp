@@ -355,11 +355,19 @@ class Number<Type_, true> final :
     public Region
 {
   private:
-    const Type_ value_;
+    Type_ value_;
 
   public:
+    Number() {
+    }
+
     Number(Type_ value) :
         value_(boost::endian::native_to_big(value))
+    {
+    }
+
+    Number(const Brick<sizeof(Type_)> &brick) :
+        Number(brick.template num<Type_>())
     {
     }
 
@@ -369,6 +377,10 @@ class Number<Type_, true> final :
 
     const uint8_t *data() const override {
         return reinterpret_cast<const uint8_t *>(&value_);
+    }
+
+    uint8_t *data() {
+        return reinterpret_cast<uint8_t *>(&value_);
     }
 
     size_t size() const override {
@@ -770,6 +782,11 @@ class Window :
         Take(value.data(), value.size());
     }
 
+    template <typename Type_>
+    void Take(Number<Type_> &value) {
+        Take(value.data(), value.size());
+    }
+
     Beam Take(size_t size) {
         Beam beam(size);
         Take(beam.data(), beam.size());
@@ -846,6 +863,14 @@ static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
 
 template <size_t Index_, size_t Size_, typename... Taking_>
 struct Taking<Index_, Brick<Size_>, void, Taking_...> final {
+template <typename Tuple_, typename Buffer_>
+static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    window.Take(std::get<Index_>(tuple));
+    return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
+} };
+
+template <size_t Index_, typename Type_, typename... Taking_>
+struct Taking<Index_, Number<Type_>, void, Taking_...> final {
 template <typename Tuple_, typename Buffer_>
 static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     window.Take(std::get<Index_>(tuple));

@@ -27,15 +27,15 @@
 
 namespace orc {
 
-static const Tag Zero{0, 0, 0, 0};
+static const Tag Zero{0x00000000};
 
-static const Tag AnswerTag{34, 162, 176, 208};
-static const Tag BatchTag{108, 83, 147, 158};
-static const Tag CloseTag{129, 185, 120, 174};
-static const Tag ConnectTag{231, 40, 11, 3};
-static const Tag DiscardTag{245, 216, 33, 201};
-static const Tag OfferTag{227, 169, 144, 57};
-static const Tag NegotiateTag{93, 138, 109, 150};
+static const Tag AnswerTag{0x22a2b0d0};
+static const Tag BatchTag{0x6c53939e};
+static const Tag CloseTag{0x81b978ae};
+static const Tag ConnectTag{0xe7280b03};
+static const Tag DiscardTag{0xf5d821c9};
+static const Tag OfferTag{0xe3a99039};
+static const Tag NegotiateTag{0x5d8a6d96};
 
 }
 

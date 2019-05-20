@@ -37,7 +37,7 @@
 
 namespace orc {
 
-typedef Brick<sizeof(uint32_t)> Tag;
+typedef Number<uint32_t> Tag;
 static const size_t TagSize = sizeof(uint32_t);
 inline Tag NewTag() {
     return Random<TagSize>();
