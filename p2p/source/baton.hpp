@@ -58,7 +58,7 @@ class Baton<Type_, asio::error_code> {
         if (error_) {
             auto error(error_);
             co_await Schedule();
-            throw error;
+            throw std::move(error);
         }
     }
 
