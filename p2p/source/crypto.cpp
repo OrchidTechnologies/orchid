@@ -36,6 +36,8 @@ Brick<32> Hash(const Buffer &data) {
     Beam beam(data);
     auto hash(ethash_keccak256(beam.data(), beam.size()));
     Brick<sizeof(hash)> value;
+    // the ethash_keccak56 API fundamentally requires a union
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
     memcpy(value.data(), hash.bytes, sizeof(hash));
     return value;
 }

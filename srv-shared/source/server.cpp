@@ -365,7 +365,8 @@ class Ship {
   public:
     Ship(const std::string &key, const std::string &chain) :
         certificate_(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(key, chain))),
-        // CAST: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
+        // XXX: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
         identity_(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(key, chain))),
         fingerprint_(rtc::SSLFingerprint::CreateFromCertificate(*certificate_))
     {
