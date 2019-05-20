@@ -146,7 +146,7 @@ class Explode final :
     Explode(Window &&window);
 };
 
-std::string Implode(Nested value);
+std::string Implode(Nested nested);
 
 class Argument final {
   private:

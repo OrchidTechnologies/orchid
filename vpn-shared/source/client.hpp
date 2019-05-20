@@ -80,7 +80,7 @@ class Server :
     task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port);
 
     U<Route<Server>> Path(BufferDrain *drain);
-    task<Beam> Call(const Tag &command, const Buffer &data);
+    task<Beam> Call(const Tag &command, const Buffer &args);
 
     task<Socket> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
     task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
