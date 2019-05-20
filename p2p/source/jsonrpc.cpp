@@ -221,7 +221,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg)
 
     orc_assert_(error.isNull(), [&]() {
         auto text(writer.write(error));
-        orc_assert(text.size() != 0);
+        orc_assert(!text.empty());
         orc_assert(text[text.size() - 1] == '\n');
         text.resize(text.size() - 1);
         return text;
