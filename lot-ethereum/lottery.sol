@@ -29,7 +29,7 @@ interface IOrchidLottery {
 
 contract OrchidLottery is IOrchidLottery {
 
-    ERC20 private orchid_;
+    ERC20 orchid_;
 
     constructor(address orchid) public {
         orchid_ = ERC20(orchid);
