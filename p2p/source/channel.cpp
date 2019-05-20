@@ -74,7 +74,7 @@ Peer::Peer(Configuration configuration) :
 
         webrtc::PeerConnectionInterface::RTCConfiguration rtc;
 
-        if (configuration.tls_)
+        if (configuration.tls_ != nullptr)
             rtc.certificates.emplace_back(std::move(configuration.tls_));
 
         rtc.disable_link_local_networks = true;

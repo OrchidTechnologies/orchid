@@ -575,7 +575,7 @@ int Main(int argc, const char *const argv[]) {
 
     po::notify(args);
 
-    if (args.count("help")) {
+    if (args.count("help") != 0) {
         std::cout << po::options_description()
             .add(options)
             .add(configs)
@@ -589,7 +589,7 @@ int Main(int argc, const char *const argv[]) {
 
     std::string params;
 
-    if (!args.count("dh"))
+    if (args.count("dh") == 0)
         params =
             "-----BEGIN DH PARAMETERS-----\n"
             "MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb\n"
@@ -607,7 +607,7 @@ int Main(int argc, const char *const argv[]) {
     std::string key;
     std::string chain;
 
-    if (!args.count("tls")) {
+    if (args.count("tls") == 0) {
         auto pem(rtc::RTCCertificate::Create(std::unique_ptr<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
             "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
         )))->ToPEM());
@@ -671,7 +671,7 @@ int Main(int argc, const char *const argv[]) {
     std::cerr << fingerprint->GetRfc4572Fingerprint() << std::endl;
 
     std::string host;
-    if (args.count("host"))
+    if (args.count("host") != 0)
         host = args["host"].as<std::string>();
     else
         host = boost::asio::ip::host_name();
