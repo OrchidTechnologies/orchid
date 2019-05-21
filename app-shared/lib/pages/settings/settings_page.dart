@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
+/// The main settings page.
 class SettingsPage extends TitledPageBase {
   static bool showDeveloperSettings = true;
 

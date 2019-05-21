@@ -14,6 +14,7 @@ import 'package:orchid/pages/connect/route_info.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:rxdart/rxdart.dart';
 
+/// The main page containing the connect button.
 class QuickConnectPage extends StatefulWidget {
   QuickConnectPage({Key key}) : super(key: key);
 
@@ -146,7 +147,7 @@ class _QuickConnectPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: SmallAppBar.build(context),
+      appBar: SmallAppBar(),
       body: buildPageContainer(context),
       drawer: SideDrawer(),
     );

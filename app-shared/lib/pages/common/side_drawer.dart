@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_colors.dart';
 
+/// The application side drawer
 class SideDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

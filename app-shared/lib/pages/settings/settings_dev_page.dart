@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
-import 'package:orchid/pages/common/accomodate_keyboard.dart';
+import 'package:orchid/pages/common/accommodate_keyboard.dart';
+import 'package:orchid/pages/common/name_value_setting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/settings/developer_settings.dart';
 
+/// The developer settings page
 class SettingsDevPage extends StatefulWidget {
   @override
   _SettingsDevPage createState() => _SettingsDevPage();

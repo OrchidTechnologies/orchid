@@ -79,12 +79,6 @@ class WalkthroughContent extends StatelessWidget {
           ));
     }
   }
-
-  Widget buildText(BuildContext context) {
-    return Column(
-      children: <Widget>[],
-    );
-  }
 }
 
 class WalkthroughBodyTextBox extends StatelessWidget {

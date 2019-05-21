@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
-/// A styled text field
+/// A styled text field with an optional custom trailing component.
 class AppTextField extends StatelessWidget {
   final String hintText;
   final Widget trailing;

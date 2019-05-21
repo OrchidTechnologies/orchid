@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppSizes {
   static const Size iphone_se = Size(320, 568);
-  static const Size iphone_xs = Size(375, 812);
-  static const Size iphone_xs_max = Size(414, 896);
+  static const Size iphone_xs = Size(375, 812); // Original X and Xs
+  static const Size iphone_xs_max = Size(414, 896); // Xs Max And Xr
 }
 
 /// Encapsulate a decision about a value or component that depends on screen height

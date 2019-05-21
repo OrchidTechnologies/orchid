@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class OptionsBar extends StatelessWidget {
   final Color color;
-  VoidCallback menuPressed;
-  VoidCallback morePressed;
+  final VoidCallback menuPressed;
+  final VoidCallback morePressed;
 
   OptionsBar(
       {@required this.color,
