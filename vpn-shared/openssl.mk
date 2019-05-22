@@ -9,38 +9,9 @@
 # }}}
 
 
-dll := so
-lib := a
-exe := 
-
-arch := x86_64
-ossl := linux-x86_64 -fPIC
-
-host := $(arch)-linux-gnu
-
-ifeq ($(uname),Linux)
-
-include $(pwd)/target-gnu.mk
-
-ranlib := ranlib
-
-cycc := clang$(suffix)
-cycp := clang++$(suffix) -stdlib=libc++
-
-else
-
-include $(pwd)/target-ndk.mk
-
-more := -B $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/$(arch)-linux-android/bin -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
-
-cycc := $(llvm)/clang $(more)
-cycp := $(llvm)/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
-
-$(output)/sysroot:
-	env/sysroot.sh
-
-linker += $(output)/sysroot
-
-endif
-
-lflags += -pthread
+$(output)/%/include/openssl/opensslconf.h $(output)/%/libssl.$(lib) $(output)/%/libcrypto.$(lib): pwd := $(pwd)
+$(output)/%/include/openssl/opensslconf.h $(output)/%/libssl.$(lib) $(output)/%/libcrypto.$(lib): $(pwd)/%/Configure
+	rm -rf $(output)/openssl
+	mkdir -p $(output)/openssl
+	cd $(output)/openssl && $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-shared
+	$(MAKE) -C $(output)/openssl

@@ -14,7 +14,11 @@ lib := lib
 exe := .exe
 
 #arch := i686
+#ossl := mingw
+
 arch := x86_64
+ossl := mingw64
+
 host := $(arch)-w64-mingw32
 
 include $(pwd)/target-ndk.mk

@@ -82,3 +82,6 @@
 [submodule "secp256k1"]
 	path = p2p/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1.git
+[submodule "openssl"]
+	path = vpn-shared/openssl
+	url = https://github.com/openssl/openssl
