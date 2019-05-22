@@ -18,23 +18,24 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
+target := mac
+include env/target.mk
 
-source += $(wildcard $(pwd)/OpenVPNAdapter/Sources/OpenVPNAdapter/*.m)
-source += $(wildcard $(pwd)/OpenVPNAdapter/Sources/OpenVPNAdapter/*.mm)
-cflags += -I$(pwd)/OpenVPNAdapter/Sources
-cflags += -I$(pwd)/OpenVPNAdapter/Sources/OpenVPNAdapter
-c_OpenVPNAdapter += -Wno-objc-missing-super-calls
-lflags += -framework NetworkExtension
-lflags += -framework SystemConfiguration
+version := 0.9
 
-cflags += -I$(pwd)
-c_OpenVPNAdapter += -include external.hpp
-cflags_OpenVPNClient += -DOPENVPN_EXTERN=extern
+.PHONY: all
+all: $(output)/orchid
 
-source += $(pwd)/external.mm
-source += $(pwd)/protect.cpp
-source += $(pwd)/tunnel.mm
+.PHONY: test
+test: $(output)/orchid
+	$(output)/orchid
 
+include vpn/target.mk
 
-include $(pwd)/shared/target.mk
+source += main.cpp
+
+include env/output.mk
+
+$(output)/orchid: $(output)/main.o $(object) $(linked) $(output)/GeoLite2-City.mmdb
+	@echo [LD] $@
+	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(lflags) 2>&1 | nl

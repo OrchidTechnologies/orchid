@@ -36,10 +36,6 @@ all: $(output)/$(name).ipa
 .PHONY: app
 app: $(bundle)$(signature)
 
-.PHONY: test
-test: $(output)/orchid
-	$(output)/orchid
-
 
 include vpn/target.mk
 
@@ -74,8 +70,6 @@ $(output)/%.o: /%.m ios/Pods/Manifest.lock
 include env/output.mk
 
 -include $(output)/app.d
--include $(output)/main.d
--include $(output)/tunnel.d
 
 
 cflags += -Fflutter/bin/cache/artifacts/engine/ios
@@ -90,7 +84,7 @@ $(output)/ents-%.xml: ents-%.xml.in
 
 
 ifneq ($(target),sim)
-$(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(output)/tunnel.o $(object) $(linked)
+$(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(object) $(linked)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cycp) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
@@ -156,8 +150,3 @@ $(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 $(output)/$(name).ipa: $(bundle)$(signature)
 	@rm -f $@
 	cd $(output); zip -r9Xy $(name).ipa Payload
-
-
-$(output)/orchid: $(output)/main.o $(object) $(linked) $(output)/GeoLite2-City.mmdb
-	@echo [LD] $@
-	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(lflags) 2>&1 | nl
