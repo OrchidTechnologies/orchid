@@ -85,3 +85,6 @@
 [submodule "openssl"]
 	path = vpn-shared/openssl
 	url = https://github.com/openssl/openssl
+[submodule "libssh"]
+	path = vpn-shared/libssh
+	url = https://git.libssh.org/projects/libssh.git

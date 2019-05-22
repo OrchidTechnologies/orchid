@@ -65,10 +65,14 @@ class Error final :
     std::terminate(); \
 } while (false)
 
-#define orc_assert_(code, text) do { \
-    if ((code)) break; \
+#define orc_throw(text) do { \
     orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text << std::endl; \
     throw orc::Error{__FILE__, __LINE__} << text; \
+} while (false)
+
+#define orc_assert_(code, text) do { \
+    if ((code)) break; \
+    orc_throw(text); \
 } while (false)
 
 #define orc_assert(code) \

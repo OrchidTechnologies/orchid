@@ -64,7 +64,7 @@ $(output)/tor/Makefile: $(pwd)/tor/configure $(linker) $(parts)
 
 $(output)/tor: output := $(output)
 $(output)/tor/libtor.o: pwd := $(pwd)
-$(output)/tor/libtor.o: $(output)/tor/Makefile $(output)/openssl/libssl.a $(output)/openssl/libcrypto.a
+$(output)/tor/libtor.o: $(output)/tor/Makefile $(output)/openssl/libssl.a $(output)/openssl/libcrypto.a $(pwd)/tor.sym $(shell find $(pwd)/tor -name '*.c')
 	$(MAKE) -C $(output)/tor
 	@$(cycp) $(wflags) -o $@ $(tor) -Wl,-r,-s -nostdlib -exported_symbols_list $(pwd)/tor.sym
 

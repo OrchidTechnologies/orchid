@@ -29,12 +29,14 @@ lflags += -framework NetworkExtension
 lflags += -framework SystemConfiguration
 
 cflags += -I$(pwd)
+cflags += -I$(pwd)/extra
+
 c_OpenVPNAdapter += -include external.hpp
 cflags_OpenVPNClient += -DOPENVPN_EXTERN=extern
 
+source += $(pwd)/directory.mm
 source += $(pwd)/external.mm
 source += $(pwd)/protect.cpp
 source += $(pwd)/tunnel.mm
-
 
 include $(pwd)/shared/target.mk
