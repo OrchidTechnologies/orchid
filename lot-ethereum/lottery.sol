@@ -24,10 +24,7 @@ pragma solidity ^0.5.7;
 
 import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
-interface IOrchidLottery {
-}
-
-contract OrchidLottery is IOrchidLottery {
+contract OrchidLottery {
 
     ERC20 orchid_;
 
