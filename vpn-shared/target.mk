@@ -65,4 +65,5 @@ endif
 	@mkdir -p $(dir $@)
 	curl https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz | tar -C $(dir $@) --strip-components 1 --exclude '*.txt' -zxvf-
 
+include $(pwd)/libevent.mk
 include $(pwd)/p2p/target.mk
