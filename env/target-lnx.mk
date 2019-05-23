@@ -14,7 +14,7 @@ lib := a
 exe := 
 
 arch := x86_64
-ossl := linux-x86_64 -fPIC
+ossl := linux-x86_64
 
 host := $(arch)-linux-gnu
 
@@ -23,6 +23,7 @@ ifeq ($(uname),Linux)
 include $(pwd)/target-gnu.mk
 
 ranlib := ranlib
+ar := ar
 
 cycc := clang$(suffix)
 cycp := clang++$(suffix) -stdlib=libc++

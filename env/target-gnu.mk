@@ -9,5 +9,5 @@
 # }}}
 
 
-cflags += -fdata-sections -ffunction-sections
+qflags += -fdata-sections -ffunction-sections
 lflags += -Wl,--gc-sections

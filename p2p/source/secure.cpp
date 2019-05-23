@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <openssl/err.h>
+
 #include "secure.hpp"
 
 namespace orc {

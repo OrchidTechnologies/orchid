@@ -36,8 +36,12 @@ all: $(output)/$(name).ipa
 .PHONY: app
 app: $(bundle)$(signature)
 
-
+ifeq ($(target),sim)
+cflags += -Wno-deprecated-declarations
+lflags += -framework NetworkExtension
+else
 include vpn/target.mk
+endif
 
 cflags += -I.
 
@@ -64,7 +68,7 @@ out-$(target)/XCBuildData/build.db: ios/Pods/Manifest.lock
 $(output)/%.o: /%.m ios/Pods/Manifest.lock
 	@mkdir -p $(dir $@)
 	@echo [CC] $<
-	$(cycc) -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
+	$(cycc) -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
 
 include env/output.mk

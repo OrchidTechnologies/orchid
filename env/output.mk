@@ -21,27 +21,27 @@ c_ = $(foreach dir,$(subst /, ,$*),$(c_$(dir))) $(cflags_$(basename $(notdir $<)
 $(output)/%.o: %.c $(header) $(linker)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
-	@$(cycc) -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycc) -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
 $(output)/%.o: %.m $(header) $(linker)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
-	@$(cycc) -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycc) -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
 $(output)/%.o: %.mm $(header) $(linker)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
-	@$(cycp) -std=gnu++17 -fobjc-arc -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycp) -std=gnu++17 -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
 $(output)/%.o: %.cc $(header) $(linker)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
-	@$(cycp) -std=c++11 -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycp) -std=c++11 -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
 $(output)/%.o: %.cpp $(header) $(linker)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
-	@$(cycp) -std=c++2a -MD -c -o $@ $< $(cflags) $(c_)
+	@$(cycp) -std=c++2a -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
 .PHONY: clean
 clean:

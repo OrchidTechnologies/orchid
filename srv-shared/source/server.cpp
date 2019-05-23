@@ -40,9 +40,10 @@
 
 #include <asio.hpp>
 
-#include <json/json.h>
+#include <openssl/base.h>
+#include <openssl/pkcs12.h>
 
-#include <openssl/pkcs8.h>
+#include <json/json.h>
 
 #include <pc/webrtc_sdp.h>
 #include <rtc_base/message_digest.h>
@@ -64,6 +65,11 @@
 
 
 namespace po = boost::program_options;
+
+namespace bssl {
+    BORINGSSL_MAKE_DELETER(PKCS12, PKCS12_free)
+    BORINGSSL_MAKE_STACK_DELETER(X509, X509_free)
+}
 
 namespace orc {
 

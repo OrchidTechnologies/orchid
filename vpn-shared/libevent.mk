@@ -19,13 +19,16 @@ $(output)/libevent/Makefile: $(pwd)/libevent/configure $(linker)
 	rm -rf $(output)/libevent
 	mkdir -p $(output)/libevent
 	cd $(output)/libevent && $(export) ../../$(pwd)/libevent/configure --host=$(host) --prefix=$(CURDIR)/$(output)/usr \
-	    CC="$(cycc)" LDFLAGS="$(wflags)" RANLIB="$(ranlib)" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
+	    CC="$(cycc)" CFLAGS="$(qflags)" LDFLAGS="$(wflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
 	    --disable-openssl --disable-samples --disable-libevent-regress \
 	    --enable-static --disable-shared
+	sed -i -e 's/libext=lib/libext=a/' $(output)/libevent/libtool
 
-$(output)/%/include/event2/event-config.h $(output)/%/.libs/libevent_core.$(lib): $(output)/%/Makefile $(linker)
+$(output)/%/include/event2/event-config.h $(output)/%/.libs/libevent_core.a $(output)/%/.libs/libevent_extra.$(lib): $(output)/%/Makefile $(linker)
 	$(export) $(MAKE) -C $(output)/libevent
 
-#cflags += -I$(pwd)/libevent/include
-#cflags += -I$(output)/libevent/include
-#linked += $(output)/libevent/.libs/libevent_core.$(lib)
+cflags += -I$(pwd)/libevent/include
+cflags += -I$(output)/libevent/include
+
+linked += $(output)/libevent/.libs/libevent_core.a
+linked += $(output)/libevent/.libs/libevent_extra.$(lib)

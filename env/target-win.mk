@@ -34,6 +34,9 @@ more += -DWIN32_LEAN_AND_MEAN=
 cycc := $(llvm)/clang $(more)
 cycp := $(llvm)/clang++ $(more) -stdlib=libc++
 
+ranlib := $(arch)-w64-mingw32-ranlib
+ar := $(arch)-w64-mingw32-ar
+
 lflags += -static
 lflags += -lc++
 lflags += -lc++abi

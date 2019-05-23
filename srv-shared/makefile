@@ -36,6 +36,7 @@ source += $(wildcard p2p/boost/libs/program_options/src/*.cpp)
 include p2p/target.mk
 
 cflags += -Iextra
+cflags += -Ip2p/rtc/openssl/test/ossl_shim/include
 
 
 include env/output.mk

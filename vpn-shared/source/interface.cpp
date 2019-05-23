@@ -20,9 +20,11 @@
 /* }}} */
 
 
+#include <sys/socket.h>
+
 #include "protect.hpp"
 
-extern "C" int hooked_socket(int domain, int type, int protocol) __asm__("_socket");
+extern "C" int hooked_socket(int domain, int type, int protocol) __asm__(ORC_SYMBOL "socket");
 
 extern "C" int orchid_socket(int domain, int type, int protocol) {
     auto socket(hooked_socket(domain, type, protocol));

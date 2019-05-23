@@ -28,4 +28,5 @@ endif
 cycc := $(shell $(export) xcrun -f clang) $(more)
 cycp := $(shell $(export) xcrun -f clang++) $(more)
 
-ranlib := $(export) ranlib
+ranlib := ranlib
+ar := ar

@@ -20,11 +20,19 @@
 
 pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 
-source += $(wildcard $(pwd)/OpenVPNAdapter/Sources/OpenVPNAdapter/*.m)
+source += $(filter-out \
+    %/NSError+OpenVPNError.m \
+    %/OpenVPNCertificate.m \
+    %/OpenVPNPrivateKey.m \
+,$(wildcard $(pwd)/OpenVPNAdapter/Sources/OpenVPNAdapter/*.m))
+
 source += $(wildcard $(pwd)/OpenVPNAdapter/Sources/OpenVPNAdapter/*.mm)
+
 cflags += -I$(pwd)/OpenVPNAdapter/Sources
 cflags += -I$(pwd)/OpenVPNAdapter/Sources/OpenVPNAdapter
+
 c_OpenVPNAdapter += -Wno-objc-missing-super-calls
+
 lflags += -framework NetworkExtension
 lflags += -framework SystemConfiguration
 

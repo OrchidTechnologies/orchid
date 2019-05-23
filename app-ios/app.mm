@@ -24,8 +24,6 @@
 #include <UIKit/UIKit.h>
 #include <NetworkExtension/NetworkExtension.h>
 
-#include "trace.hpp"
-
 
 static NSString * const username_ = @ ORCHID_USERNAME;
 static NSString * const password_ = @ ORCHID_PASSWORD;

@@ -24,7 +24,13 @@
 #include_next <sys/socket.h>
 #undef socket
 
+#ifdef __linux__
+#define ORC_SYMBOL ""
+#else
+#define ORC_SYMBOL "_"
+#endif
+
 #ifdef __cplusplus
 extern "C"
 #endif
-int socket(int domain, int type, int protocol) __asm__("_orchid_socket");
+int socket(int domain, int type, int protocol) __asm__(ORC_SYMBOL "orchid_socket");

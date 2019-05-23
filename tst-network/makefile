@@ -38,4 +38,4 @@ include env/output.mk
 
 $(output)/orchid: $(output)/main.o $(object) $(linked) $(output)/GeoLite2-City.mmdb
 	@echo [LD] $@
-	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(lflags) 2>&1 | nl
+	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl

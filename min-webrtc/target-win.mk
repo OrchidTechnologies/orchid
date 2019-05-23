@@ -22,6 +22,7 @@ cflags += -DABSL_FORCE_THREAD_IDENTITY_MODE=ABSL_THREAD_IDENTITY_MODE_USE_TLS
 # XXX: technically for boost
 lflags += -lmswsock
 
+lflags += -lcrypt32
 lflags += -liphlpapi
 lflags += -lpsapi
 lflags += -lsecur32
@@ -36,5 +37,4 @@ c_platform_thread_types += -include $(pwd)/setname.hpp
 c_thread_identity += -include pthread.h
 
 source += $(pwd)/webrtc/rtc_base/synchronization/rw_lock_win.cc
-source += $(pwd)/webrtc/rtc_base/system/file_wrapper.cc
 source += $(pwd)/webrtc/rtc_base/win32.cc
