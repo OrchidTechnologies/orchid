@@ -82,3 +82,6 @@
 [submodule "libssh"]
 	path = vpn-shared/libssh
 	url = https://git.libssh.org/projects/libssh.git
+[submodule "zlib"]
+	path = vpn-shared/zlib
+	url = https://github.com/madler/zlib.git

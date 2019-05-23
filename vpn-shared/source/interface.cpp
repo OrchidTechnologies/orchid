@@ -20,7 +20,11 @@
 /* }}} */
 
 
+#ifdef __WIN32__
+#define ORC_SYMBOL
+#else
 #include <sys/socket.h>
+#endif
 
 #include "protect.hpp"
 

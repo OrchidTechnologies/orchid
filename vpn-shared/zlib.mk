@@ -9,40 +9,17 @@
 # }}}
 
 
-dll := so
-lib := a
-exe := 
+$(output)/zlib/Makefile: cycc := $(cycc)
+$(output)/zlib/Makefile: pwd := $(pwd)
+$(output)/zlib/Makefile: $(pwd)/zlib/configure $(linker) $(parts)
+	rm -rf $(output)/zlib
+	mkdir -p $(output)/zlib
+	cd $(output)/zlib && $(export) CC="$(cycc)" CFLAGS="$(qflags)" ../../$(pwd)/zlib/configure --static
 
-arch := x86_64
-ossl := linux-x86_64
+$(output)/zlib/libz.a: output := $(output)
+$(output)/zlib/libz.a: pwd := $(pwd)
+$(output)/zlib/libz.a: $(output)/zlib/Makefile $(linker)
+	$(export) $(MAKE) -C $(output)/zlib libz.a RANLIB="$(ranlib)" AR="$(ar)" ARFLAGS="-r"
 
-host := $(arch)-linux-gnu
-
-ifeq ($(uname),Linux)
-
-include $(pwd)/target-gnu.mk
-
-ranlib := ranlib
-ar := ar
-
-cycc := clang$(suffix)
-cycp := clang++$(suffix) -stdlib=libc++
-
-else
-
-include $(pwd)/target-ndk.mk
-
-more := -B $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/$(arch)-linux-android/bin -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
-
-cycc := $(llvm)/clang $(more)
-cycp := $(llvm)/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
-
-$(output)/sysroot:
-	env/sysroot.sh
-
-linker += $(output)/sysroot
-
-endif
-
-lflags += -pthread
-qflags += -fPIC
+cflags += -I$(pwd)/zlib/include
+linked += $(output)/zlib/libz.a

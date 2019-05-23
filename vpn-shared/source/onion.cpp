@@ -25,6 +25,10 @@
 #include <thread>
 #include <vector>
 
+#ifdef __WIN32__
+#include <winsock2.h>
+#endif
+
 extern "C" {
 #include <feature/api/tor_api.h>
 }

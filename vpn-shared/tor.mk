@@ -16,16 +16,34 @@ config += --disable-unittests
 
 cfgc := 
 cfgl := 
+deps := 
 
-cfgc += -I$(CURDIR)/$(pwd)/libevent/include
 cfgc += -I$(CURDIR)/$(output)/libevent/include
+cfgc += -I$(CURDIR)/$(pwd)/libevent/include
+deps += $(output)/libevent/include/event2/event-config.h
 cfgl += -L$(CURDIR)/$(output)/libevent/.libs
-config += tor_cv_library_libevent_dir="(system)"
+deps += $(output)/libevent/.libs/libevent_core.a
+config += tor_cv_library_zlib_dir="(system)"
 
-cfgc += -I$(CURDIR)/$(pwd)/p2p/rtc/openssl/include
 cfgc += -I$(CURDIR)/$(output)/openssl/include
+cfgc += -I$(CURDIR)/$(pwd)/p2p/rtc/openssl/include
+deps += $(output)/openssl/include/openssl/opensslconf.h
 cfgl += -L$(CURDIR)/$(output)/openssl
+deps += $(output)/openssl/libssl.a
+deps += $(output)/openssl/libcrypto.a
 config += tor_cv_library_openssl_dir="(system)"
+
+cfgc += -I$(CURDIR)/$(output)/zlib
+cfgc += -I$(CURDIR)/$(pwd)/zlib
+cfgl += -L$(CURDIR)/$(output)/zlib
+deps += $(output)/zlib/libz.a
+config += tor_cv_library_zlib_dir="(system)"
+
+ifeq ($(target),win)
+cfgl += -lcrypt32
+cfgl += -lws2_32
+config += --disable-gcc-hardening
+endif
 
 config += CPPFLAGS="$(cfgc)" LDFLAGS="$(wflags) $(cfgl)"
 
@@ -71,20 +89,13 @@ tor += ext/ed25519/ref10/libed25519_ref10.$(lib)
 tor += ext/keccak-tiny/libkeccak-tiny.$(lib)
 tor := $(patsubst %,$(output)/tor/src/%,$(tor))
 
-parts := 
-parts += $(output)/openssl/include/openssl/opensslconf.h
-parts += $(output)/openssl/libssl.a
-parts += $(output)/openssl/libcrypto.a
-parts += $(output)/libevent/include/event2/event-config.h
-parts += $(output)/libevent/.libs/libevent_core.a
-
 $(pwd)/tor/configure: pwd := $(pwd)
 $(pwd)/tor/configure: $(pwd)/tor/configure.ac
 	cd $(pwd)/tor && ../env/autogen.sh
 
 $(output)/tor/Makefile: cycc := $(cycc)
 $(output)/tor/Makefile: pwd := $(pwd)
-$(output)/tor/Makefile: $(pwd)/tor/configure $(linker) $(parts)
+$(output)/tor/Makefile: $(pwd)/tor/configure $(deps) $(linker)
 	rm -rf $(output)/tor
 	mkdir -p $(output)/tor
 	cd $(output)/tor && $(export) ../../$(pwd)/tor/configure --host=$(host) --prefix=$(out)/usr --disable-tool-name-check \
@@ -92,9 +103,8 @@ $(output)/tor/Makefile: $(pwd)/tor/configure $(linker) $(parts)
 
 $(tor): output := $(output)
 $(tor): pwd := $(pwd)
-$(tor): $(output)/tor/Makefile $(linker) $(output)/openssl/libssl.a $(output)/openssl/libcrypto.a $(pwd)/tor.sym $(shell find $(pwd)/tor -name '*.c')
+$(tor): $(output)/tor/Makefile $(deps) $(linker) $(pwd)/tor.sym $(shell find $(pwd)/tor -name '*.c')
 	$(export) $(MAKE) -C $(output)/tor
 
 cflags += -I$(pwd)/tor/src
-lflags += -lz
 linked += $(tor)
