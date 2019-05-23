@@ -10,8 +10,8 @@
 
 
 $(output)/%/include/openssl/opensslconf.h $(output)/%/libssl.$(lib) $(output)/%/libcrypto.$(lib): pwd := $(pwd)
-$(output)/%/include/openssl/opensslconf.h $(output)/%/libssl.$(lib) $(output)/%/libcrypto.$(lib): $(pwd)/%/Configure
+$(output)/%/include/openssl/opensslconf.h $(output)/%/libssl.$(lib) $(output)/%/libcrypto.$(lib): $(pwd)/%/Configure $(linker)
 	rm -rf $(output)/openssl
 	mkdir -p $(output)/openssl
-	cd $(output)/openssl && $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-shared
-	$(MAKE) -C $(output)/openssl
+	cd $(output)/openssl && $(export) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-shared CC="$(cycc)" RANLIB="$(ranlib)"
+	$(export) $(MAKE) -C $(output)/openssl

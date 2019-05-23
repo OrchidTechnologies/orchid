@@ -13,7 +13,19 @@ dll := so
 lib := a
 exe := 
 
-arch := x86_64
+#arch := arm
+#ossl := android-arm
+
+arch := aarch64
+ossl := android-arm64
+
+#ossl := android-mips
+#ossl := android-mip64
+#ossl := android-x86
+
+#arch := x86_64
+#ossl := android-x86_64
+
 host := $(arch)-linux-android
 
 include $(pwd)/target-ndk.mk

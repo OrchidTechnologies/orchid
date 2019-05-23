@@ -23,7 +23,13 @@ ifeq ($(ndk),)
 $(error install Android NDK and export ANDROID_NDK_HOME)
 endif
 
+ifeq ($(ANDROID_NDK_HOME),)
+export += ANDROID_NDK_HOME=$(ndk)
+endif
+
 llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin
+
+export += PATH="$(llvm):$${PATH}"
 
 ranlib := $(llvm)/$(arch)-linux-android-ranlib
 

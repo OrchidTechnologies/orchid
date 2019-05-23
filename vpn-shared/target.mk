@@ -25,13 +25,15 @@ cflags += -I$(pwd)/source
 
 cflags += -I$(pwd)/extra
 
-cflags += -include interface.hpp
-
 source += $(wildcard $(pwd)/lz4/lib/*.c)
 cflags += -I$(pwd)/lz4/lib
 
 source += $(wildcard $(pwd)/mbedtls/library/*.c)
 cflags += -I$(pwd)/mbedtls/include
+
+ifeq ($(target),and)
+c_mbedtls += -Wno-pointer-sign
+endif
 
 cflags += -DUSE_ASIO
 cflags += -DUSE_ASIO_THREADLOCAL

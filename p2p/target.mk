@@ -26,6 +26,7 @@ cflags += -Wno-empty-body
 cflags += -Wno-logical-op-parentheses
 cflags += -Wno-missing-selector-name
 cflags += -Wno-potentially-evaluated-expression
+cflags += -Wno-tautological-constant-out-of-range-compare
 
 cflags += -fcoroutines-ts
 

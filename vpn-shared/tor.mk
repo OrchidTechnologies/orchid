@@ -59,14 +59,15 @@ $(output)/tor/Makefile: pwd := $(pwd)
 $(output)/tor/Makefile: $(pwd)/tor/configure $(linker) $(parts)
 	rm -rf $(output)/tor
 	mkdir -p $(output)/tor
-	cd $(output)/tor && ../../$(pwd)/tor/configure --host=$(host) --prefix=$(out)/usr --disable-tool-name-check \
+	cd $(output)/tor && $(export) ../../$(pwd)/tor/configure --host=$(host) --prefix=$(out)/usr --disable-tool-name-check \
 	    CC="$(cycc)" LDFLAGS="$(wflags)" RANLIB="$(ranlib)" PKG_CONFIG="$(CURDIR)/env/pkg-config" $(config)
 
 $(output)/tor: output := $(output)
 $(output)/tor/libtor.o: pwd := $(pwd)
-$(output)/tor/libtor.o: $(output)/tor/Makefile $(output)/openssl/libssl.a $(output)/openssl/libcrypto.a $(pwd)/tor.sym $(shell find $(pwd)/tor -name '*.c')
-	$(MAKE) -C $(output)/tor
-	@$(cycp) $(wflags) -o $@ $(tor) -Wl,-r,-s -nostdlib -exported_symbols_list $(pwd)/tor.sym
+$(output)/tor/libtor.o: $(output)/tor/Makefile $(linker) $(output)/openssl/libssl.a $(output)/openssl/libcrypto.a $(pwd)/tor.sym $(shell find $(pwd)/tor -name '*.c')
+	$(export) $(MAKE) -C $(output)/tor
+	@$(cycp) $(wflags) -o $@ $(tor) -nostdlib -Wl,-r,-s -nostdlib -exported_symbols_list $(pwd)/tor.sym
+	#-Wl,-r,-flinker-output=pie,--retain-symbols-file,$(pwd)/tor.sym
 
 cflags += -I$(pwd)/tor/src
 linked += $(output)/tor/libtor.o

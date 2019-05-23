@@ -21,7 +21,7 @@
 
 
 #define socket cy_socket
-#include <sys/socket.h>
+#include_next <sys/socket.h>
 #undef socket
 
 #ifdef __cplusplus

@@ -31,6 +31,7 @@ linked :=
 header := 
 linker := 
 
+export := 
 output := out-$(target)
 
 cleans := 
