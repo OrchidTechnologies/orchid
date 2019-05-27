@@ -20,35 +20,13 @@
 /* }}} */
 
 
-#include <thread>
-
-#include <boost/asio/executor_work_guard.hpp>
-
-#include "baton.hpp"
-#include "memory.hpp"
-#include "trace.hpp"
+#ifndef ORCHID_MEMORY_HPP
+#define ORCHID_MEMORY_HPP
 
 namespace orc {
 
-static asio::io_context context_;
-static std::thread thread_;
-
-static auto work_(asio::make_work_guard(context_));
-
-static struct SetupContext { SetupContext() {
-    Hook();
-
-    thread_ = std::thread([]() {
-        context_.run();
-    });
-} } SetupContext_;
-
-asio::io_context &Context() {
-    return context_;
-}
-
-std::thread &Thread() {
-    return thread_;
-}
+void Hook();
 
 }
+
+#endif//ORCHID_MEMORY_HPP

@@ -28,6 +28,7 @@
 #include "rtc_base/ssl_adapter.h"
 
 #include "channel.hpp"
+#include "memory.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -42,6 +43,8 @@ void Post(std::function<void ()> code) {
 
 __attribute__((__constructor__))
 static void SetupThread() {
+    Hook();
+
     signals_ = rtc::Thread::Create();
     signals_->SetName("Orchid WebRTC Signals", nullptr);
     signals_->Start();
