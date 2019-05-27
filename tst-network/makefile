@@ -23,12 +23,18 @@ include env/target.mk
 
 version := 0.9
 
+args := mac.saurik.com 9999
+
 .PHONY: all
 all: $(output)/orchid
 
 .PHONY: test
-test: $(output)/orchid
-	$(output)/orchid mac.saurik.com 9999
+test: $(output)/orchid$(exe)
+	$(output)/orchid$(exe) $(args)
+
+.PHONY: debug
+debug: $(output)/orchid$(exe)
+	lldb -o 'run $(args)' $(output)/orchid$(exe)
 
 include vpn/target.mk
 
