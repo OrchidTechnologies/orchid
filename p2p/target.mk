@@ -133,6 +133,7 @@ cflags += -DUSE_SCALAR_INV_BUILTIN
 cflags += -DUSE_FIELD_5X52
 cflags += -DUSE_SCALAR_4X64
 cflags += -DHAVE___INT128
+cflags += -DECMULT_WINDOW_SIZE=15
 
 
 include $(pwd)/rtc/target.mk

@@ -273,7 +273,7 @@ _trace();
         } else if (command == BatchTag) {
             // XXX: make this more efficient
             std::string builder;
-            Call(data, [&](const Buffer &data) -> task<void> {
+            co_await Call(data, [&](const Buffer &data) -> task<void> {
                 builder += data.str();
                 co_return;
             });
