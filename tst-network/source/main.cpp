@@ -37,7 +37,6 @@
 #include "client.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
-//#include "ethereum.hpp"
 #include "jsonrpc.hpp"
 #include "task.hpp"
 #include "trace.hpp"
@@ -47,10 +46,10 @@
 using boost::multiprecision::uint256_t;
 
 namespace orc {
-int Main() {
-    cppcoro::async_manual_reset_event block;
-
-    //Ethereum();
+int Main(int argc, const char *const argv[]) {
+    orc_assert(argc == 3);
+    std::string host(argv[1]);
+    std::string port(argv[2]);
 
     /*Wait([&]() -> task<void> {
         boost::asio::system_timer timer(Context());
@@ -65,21 +64,14 @@ int Main() {
     return Wait([&]() -> task<int> {
         co_await Schedule();
 
-        //Log() << co_await GetLocal()->Request("GET", {"http", "cydia.saurik.com", "80", "/debug.txt"}, {}, "") << std::endl;
-        //co_return 0;
-
-        //Endpoint endpoint({"http", "localhost", "8545", "/"});
-        //Endpoint endpoint({"https", "mainnet.infura.io", "443", "/v3/" ORCHID_INFURA});
-        /*Endpoint endpoint({"https", "eth-mainnet.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
-        std::string storage(co_await endpoint("eth_getStorageAt", {"0x295a70b2de5e3953354a6a8344e616ed314d7251", "0x6661e9d6d8b923d5bbaab1b96e1dd51ff6ea2a93520fdc9eb75d059238b8c5e9", "0x65a8db"}));
-        uint256_t parsed(storage);
-        Log() << parsed << std::endl;
-        co_return 0;*/
-
         class Watch :
             public Pipe,
             public BufferDrain
         {
+          private:
+            std::string error_;
+            cppcoro::async_manual_reset_event done_;
+
           protected:
             virtual Link *Inner() = 0;
 
@@ -89,34 +81,35 @@ int Main() {
 
             void Stop(const std::string &error) override {
                 Log() << "Stop(" << error << ")" << std::endl;
+                error_ = error;
+                done_.set();
             }
 
           public:
             task<void> Send(const Buffer &data) override {
                 co_return co_await Inner()->Send(data);
             }
+
+            task<void> Done() {
+                co_await done_;
+                orc_assert_(error_.empty(), error_);
+            }
         };
 
         Sink<Watch> watch;
 
         auto origin(co_await Setup());
-        co_await origin->Connect(&watch, "127.0.0.1", "9999");
+        co_await origin->Connect(&watch, host, port);
 
         co_await watch.Send(Beam("test\n"));
 
-        co_await block;
-
-        /*co_await service->Connect("cydia.saurik.com", "80");
-
-        for (;;) {
-            sleep(3);
-            co_await service->Connect("cydia.saurik.com", "80");
-        }*/
-
+        co_await watch.Done();
         co_return 0;
     }());
 } }
 
-int main() {
-    return orc::Main();
-}
+int main(int argc, const char *const argv[]) { try {
+    return orc::Main(argc, argv);
+} catch (const std::exception &error) {
+    return 1;
+} }

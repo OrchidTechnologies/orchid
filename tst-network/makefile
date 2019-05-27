@@ -28,7 +28,7 @@ all: $(output)/orchid
 
 .PHONY: test
 test: $(output)/orchid
-	$(output)/orchid
+	$(output)/orchid mac.saurik.com 9999
 
 include vpn/target.mk
 
