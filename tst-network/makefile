@@ -32,11 +32,11 @@ test: $(output)/orchid
 
 include vpn/target.mk
 
-source += main.cpp
+source += $(wildcard source/*.cpp)
 
 include env/output.mk
 
-$(output)/orchid: $(output)/main.o $(object) $(linked) $(output)/GeoLite2-City.mmdb
+$(output)/orchid: $(object) $(linked) $(output)/GeoLite2-City.mmdb
 	@echo [LD] $@
 	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
 	@ls -la $(output)/orchid

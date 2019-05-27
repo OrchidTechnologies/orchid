@@ -541,6 +541,8 @@ _trace();
 
 std::string Stringify(bssl::UniquePtr<BIO> bio) {
     char *data;
+    // BIO_get_mem_data is an inline macro with a char * cast
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     size_t size(BIO_get_mem_data(bio.get(), &data));
     return {data, size};
 }
