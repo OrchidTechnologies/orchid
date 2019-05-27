@@ -3,3 +3,10 @@ apt-get install curl make autoconf libtool git clang-8 libc++-8-dev libc++abi-8-
 git submodule update --init --recursive
 
 https://faucet.ropsten.be/
+
+https://lewissbaker.github.io/2017/09/25/coroutine-theory
+https://lewissbaker.github.io/2017/11/17/understanding-operator-co-await
+https://lewissbaker.github.io/2018/09/05/understanding-the-promise-type
+https://github.com/lewissbaker/coroutines_ts_v1_experience
+http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1241r0.html
+https://github.com/lewissbaker/cppcoro/blob/master/README.md
