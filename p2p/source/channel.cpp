@@ -25,7 +25,8 @@
 #include <api/sctp_transport_interface.h>
 #include <p2p/base/ice_transport_internal.h>
 
-#include "rtc_base/ssl_adapter.h"
+#include <rtc_base/async_invoker.h>
+#include <rtc_base/ssl_adapter.h>
 
 #include "channel.hpp"
 #include "memory.hpp"
@@ -37,8 +38,15 @@ static std::unique_ptr<rtc::Thread> signals_;
 static std::unique_ptr<rtc::Thread> network_;
 static std::unique_ptr<rtc::Thread> working_;
 
-void Post(std::function<void ()> code) {
-    signals_->Invoke<void>(RTC_FROM_HERE, std::move(code));
+task<void> Post(std::function<void ()> code) {
+    rtc::AsyncInvoker invoker;
+    cppcoro::async_manual_reset_event done;
+    invoker.AsyncInvoke<void>(RTC_FROM_HERE, signals_.get(), [&]() {
+        code();
+        done.set();
+    });
+    co_await done;
+    co_await Schedule();
 }
 
 __attribute__((__constructor__))
@@ -184,7 +192,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
 
             // you can't close a PeerConnection if it is blocked in a signal
             Task([this]() -> task<void> {
-                co_return Post([this]() {
+                co_await Post([this]() {
                     for (auto current(channels_.begin()); current != channels_.end(); ) {
                         auto next(current);
                         ++next;

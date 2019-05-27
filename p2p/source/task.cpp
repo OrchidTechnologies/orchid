@@ -22,6 +22,8 @@
 
 #include <iostream>
 
+#include <rtc_base/thread.h>
+
 #include "trace.hpp"
 #include "task.hpp"
 
@@ -42,6 +44,7 @@ static struct SetupThread { SetupThread() {
     Wait([]() -> task<void> {
         co_await Schedule();
         thread_ = pthread_self();
+        rtc::ThreadManager::Instance()->WrapCurrentThread();
     }());
 } } SetupThread_;
 

@@ -34,7 +34,7 @@ using cppcoro::task;
 
 namespace orc {
 
-void Post(std::function<void ()> code);
+task<void> Post(std::function<void ()> code);
 
 cppcoro::static_thread_pool &Executor();
 cppcoro::static_thread_pool::schedule_operation Schedule();

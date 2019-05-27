@@ -264,16 +264,14 @@ Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, 
 
     if (server_) {
         next_ = &Secure::Server;
-        Post([&]() {
-            (this->*next_)();
-        });
+        (this->*next_)();
     }
 }
 
 task<void> Secure::Connect() {
     if (!server_) {
         next_ = &Secure::Client;
-        Post([&]() {
+        co_await Post([&]() {
             (this->*next_)();
         });
     }
@@ -293,7 +291,7 @@ task<void> Secure::Send(const Buffer &data) {
     orc_assert(opened_.is_set());
     Beam beam(data);
     auto lock(co_await send_.scoped_lock_async());
-    Post([&]() {
+    co_await Post([&]() {
         orc_assert(Call(ssl_, true, [&]() {
             return SSL_write(ssl_, beam.data(), beam.size());
         }) != -1);

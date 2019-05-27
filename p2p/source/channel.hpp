@@ -287,10 +287,9 @@ _trace();
             Log() << "WebRTC <<< " << this << " " << data << std::endl;
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
-        Post([&]() {
+        co_await Post([&]() {
             channel_->Send(webrtc::DataBuffer(buffer, true));
         });
-        co_return;
     }
 
     task<void> Shut() override {
