@@ -1,0 +1,12 @@
+[Unit]
+Description=Orchid Linux Server Node
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=/usr/bin/orchid
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
