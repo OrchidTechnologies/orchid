@@ -34,8 +34,8 @@
 #include <boost/asio/ssl/rfc2818_verification.hpp>
 #include <boost/asio/ssl/stream.hpp>
 
-#include <asio/experimental/co_spawn.hpp>
-#include <asio/experimental/detached.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/detached.hpp>
 
 #include "adapter.hpp"
 #include "baton.hpp"

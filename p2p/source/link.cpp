@@ -24,6 +24,8 @@
 
 #include <unistd.h>
 
+#include <boost/core/demangle.hpp>
+
 #include "link.hpp"
 #include "trace.hpp"
 

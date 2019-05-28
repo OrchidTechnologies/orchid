@@ -20,7 +20,7 @@
 /* }}} */
 
 
-#include <boost/regex.hpp>
+#include <regex>
 
 #include <api/sctp_transport_interface.h>
 #include <p2p/base/ice_transport_internal.h>
@@ -221,8 +221,8 @@ void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interf
 }
 
 std::string Strip(const std::string &sdp) {
-    static boost::regex re("\r?\na=candidate:[^\r\n]*");
-    return boost::regex_replace(sdp, re, "");
+    static std::regex re("\r?\na=candidate:[^\r\n]*");
+    return std::regex_replace(sdp, re, "");
 }
 
 }
