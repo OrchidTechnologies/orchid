@@ -107,7 +107,7 @@ class Adapter :
 
     template <typename Buffers_, typename Handler_>
     void async_read_some(const Buffers_ &buffers, Handler_ handler) {
-        Task([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
+        Spawn([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
             for (;; co_await ready_, co_await Schedule()) {
                 std::unique_lock<std::mutex> lock(mutex_);
                 if (!data_.empty()) {
@@ -146,7 +146,7 @@ class Adapter :
 
     template <typename Buffers_, typename Handler_>
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
-        Task([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
+        Spawn([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
             Converted converted(buffers);
             co_await Inner()->Send(converted);
             boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));

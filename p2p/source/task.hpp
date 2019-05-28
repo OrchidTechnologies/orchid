@@ -69,7 +69,7 @@ struct Detached {
 };
 
 template <typename Code_>
-void Task(Code_ code) {
+void Spawn(Code_ code) {
     [](Code_ code) mutable -> Detached {
         co_await Schedule();
         co_await code();

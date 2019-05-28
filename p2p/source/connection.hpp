@@ -59,7 +59,7 @@ class Connection final :
 
         auto endpoint(co_await asio::async_connect(connection_, endpoints, Token()));
 
-        Task([this]() -> task<void> {
+        Spawn([this]() -> task<void> {
             for (;;) {
                 char data[2048];
                 size_t writ;

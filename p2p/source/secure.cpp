@@ -111,7 +111,7 @@ BIO_METHOD *Secure::Method() {
 
 int Secure::Write(BIO *bio, const char *data, int size) {
     // XXX: implement a true non-blocking zero-copy write
-    Task([this, beam = Beam(data, size)]() -> task<void> {
+    Spawn([this, beam = Beam(data, size)]() -> task<void> {
         co_await Inner()->Send(beam);
     });
     return size;

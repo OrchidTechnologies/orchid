@@ -255,7 +255,7 @@ _trace();
 
 
     void Land(const Buffer &data) override {
-        Task([self = shared_from_this(), data = Beam(data)]() -> task<void> {
+        Spawn([self = shared_from_this(), data = Beam(data)]() -> task<void> {
             co_await self->Send(data);
         });
     }
@@ -410,14 +410,14 @@ class Conduit :
 
     void Land(const Buffer &data) override {
         orc_assert(space_ != nullptr);
-        Task([space = space_, data = Beam(data)]() -> task<void> {
+        Spawn([space = space_, data = Beam(data)]() -> task<void> {
             space->Bill(1);
             co_return co_await space->Call(data);
         });
     }
 
     void Stop(const std::string &error) override {
-        Task([this]() -> task<void> {
+        Spawn([this]() -> task<void> {
             co_await Inner()->Shut();
             // XXX: space needs to be reference counted
             co_await space_->Shut();
@@ -426,7 +426,7 @@ class Conduit :
     }
 
   public:
-    static std::pair<S<Conduit>, Sink<Secure> *> Spawn(S<Ship> ship) {
+    static std::pair<S<Conduit>, Sink<Secure> *> Create(S<Ship> ship) {
         auto conduit(Make<Sink<Conduit, Secure>>());
         conduit->self_ = conduit;
         auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship = std::move(ship), conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
@@ -464,10 +464,10 @@ class Incoming final :
 
   protected:
     void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        auto [conduit, inner](Conduit::Spawn(ship_));
+        auto [conduit, inner](Conduit::Create(ship_));
         auto channel(inner->Wire<Channel>(shared_from_this(), interface));
 
-        Task([conduit = conduit, channel]() -> task<void> {
+        Spawn([conduit = conduit, channel]() -> task<void> {
             co_await channel->Connect();
             co_await conduit->Connect();
         });
@@ -490,7 +490,7 @@ class Incoming final :
     }
 
     template <typename... Args_>
-    static S<Incoming> Spawn(Args_ &&...args) {
+    static S<Incoming> Create(Args_ &&...args) {
         auto self(Make<Incoming>(std::forward<Args_>(args)...));
         self->self_ = self;
         return self;
@@ -532,7 +532,7 @@ _trace();
     }
 
     task<std::string> Respond(const std::string &offer) override {
-        auto incoming(Incoming::Spawn(shared_from_this()));
+        auto incoming(Incoming::Create(shared_from_this()));
         auto answer(co_await incoming->Answer(offer));
         //answer = boost::regex_replace(std::move(answer), boost::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
         co_return answer;
