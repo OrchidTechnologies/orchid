@@ -35,14 +35,9 @@ cflags += -I$(output)/$(pwd)
 
 cflags += -I$(pwd)/cppcoro/include
 
-source += $(pwd)/cppcoro/lib/async_auto_reset_event.cpp
 source += $(pwd)/cppcoro/lib/async_manual_reset_event.cpp
 source += $(pwd)/cppcoro/lib/async_mutex.cpp
-source += $(pwd)/cppcoro/lib/auto_reset_event.cpp
 source += $(pwd)/cppcoro/lib/lightweight_manual_reset_event.cpp
-source += $(pwd)/cppcoro/lib/spin_mutex.cpp
-source += $(pwd)/cppcoro/lib/spin_wait.cpp
-source += $(pwd)/cppcoro/lib/static_thread_pool.cpp
 
 ifeq ($(target),win)
 source += $(pwd)/cppcoro/lib/win32.cpp

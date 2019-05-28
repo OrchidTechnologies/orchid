@@ -26,7 +26,6 @@
 #include <functional>
 #include <thread>
 
-#include <cppcoro/static_thread_pool.hpp>
 #include <cppcoro/sync_wait.hpp>
 #include <cppcoro/task.hpp>
 
@@ -36,8 +35,36 @@ namespace orc {
 
 task<void> Post(std::function<void ()> code);
 
-cppcoro::static_thread_pool &Executor();
-cppcoro::static_thread_pool::schedule_operation Schedule();
+class Pool;
+
+struct Stacked {
+    Stacked *next_ = nullptr;
+    std::experimental::coroutine_handle<> code_;
+};
+
+class Scheduled :
+    protected Stacked
+{
+  private:
+    Pool *pool_;
+
+  public:
+    Scheduled(Pool *pool) :
+        pool_(pool)
+    {
+    }
+
+    bool await_ready() noexcept {
+        return false;
+    }
+
+    void await_suspend(std::experimental::coroutine_handle<> code) noexcept;
+
+    void await_resume() noexcept {
+    }
+};
+
+Scheduled Schedule();
 
 template <typename Type_>
 Type_ Wait(task<Type_> code) {

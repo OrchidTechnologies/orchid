@@ -24,28 +24,67 @@
 
 #include <rtc_base/thread.h>
 
+#include "error.hpp"
 #include "trace.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-cppcoro::static_thread_pool &Executor() {
-    static cppcoro::static_thread_pool pool_(1);
-    return pool_;
+// XXX: audit and correct the std::atomic usage in Pool
+
+class Pool {
+  private:
+    std::atomic<Stacked *> stack_ = nullptr;
+    std::mutex mutex_;
+    std::condition_variable ready_;
+
+  public:
+    void Drain() {
+        for (;;) {
+            auto stacked(stack_.load()); do {
+                if (stacked == nullptr)
+                    return;
+            } while (!stack_.compare_exchange_strong(stacked, stacked->next_));
+            stacked->code_.resume();
+        }
+    }
+
+    void Run() {
+        for (;;) {
+            Drain();
+            std::unique_lock<std::mutex> lock(mutex_);
+            ready_.wait(lock);
+        }
+    }
+
+    void Stack(Stacked *stacked) noexcept {
+        orc_insist(stacked->next_ == nullptr);
+
+        auto stack(stack_.load()); do {
+            stacked->next_ = stack;
+        } while (!stack_.compare_exchange_strong(stack, stacked));
+
+        ready_.notify_one();
+    }
+} pool_;
+
+void Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexcept {
+    code_ = code;
+    pool_->Stack(this);
 }
 
-cppcoro::static_thread_pool::schedule_operation Schedule() {
-    return Executor().schedule();
+Scheduled Schedule() {
+    return {&pool_};
 }
 
 static pthread_t thread_;
 
 static struct SetupThread { SetupThread() {
-    Wait([]() -> task<void> {
-        co_await Schedule();
+    std::thread([]() {
         thread_ = pthread_self();
         rtc::ThreadManager::Instance()->WrapCurrentThread();
-    }());
+        pool_.Run();
+    }).detach();
 } } SetupThread_;
 
 bool Check() {
