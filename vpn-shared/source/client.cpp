@@ -217,7 +217,7 @@ task<Socket> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string
     auto answer(co_await Answer(Strip(co_await client->Offer()), host, port, verify));
     co_await client->Negotiate(answer);
     co_await channel->Connect();
-    auto candidate(client->Candidate());
+    auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ToString(), socket.port());
 }

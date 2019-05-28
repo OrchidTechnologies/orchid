@@ -33,8 +33,6 @@ using cppcoro::task;
 
 namespace orc {
 
-task<void> Post(std::function<void ()> code);
-
 class Pool;
 
 struct Stacked {

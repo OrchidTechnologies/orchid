@@ -178,7 +178,7 @@ class Waiter :
         orc_assert(peer != nullptr);
         co_await peer->Negotiate(sdp);
         co_await Inner()->Connect();
-        co_return webrtc::SdpSerializeCandidate(peer->Candidate());
+        co_return webrtc::SdpSerializeCandidate(co_await peer->Candidate());
     }
 
     task<void> Send(const Buffer &data) override {

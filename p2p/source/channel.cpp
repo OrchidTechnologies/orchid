@@ -38,38 +38,8 @@ static std::unique_ptr<rtc::Thread> signals_;
 static std::unique_ptr<rtc::Thread> network_;
 static std::unique_ptr<rtc::Thread> working_;
 
-template <typename Code_>
-class Invoker :
-    public rtc::MessageHandler
-{
-  private:
-    Code_ code_;
-    cppcoro::async_manual_reset_event done_;
-
-  protected:
-    void OnMessage(rtc::Message *message) override {
-        code_();
-        done_.set();
-    }
-
-  public:
-    Invoker(Code_ code) :
-        code_(code)
-    {
-    }
-
-    task<void> operator ()(rtc::Thread *thread) {
-        // potentially pass done as MessageData
-        orc_assert(!done_.is_set());
-        thread->Post(RTC_FROM_HERE, this);
-        co_await done_;
-    }
-};
-
-task<void> Post(std::function<void ()> code) {
-    Invoker invoker(std::move(code));
-    co_await invoker(signals_.get());
-    co_await Schedule();
+rtc::Thread *Signal() {
+    return signals_.get();
 }
 
 __attribute__((__constructor__))
@@ -128,10 +98,14 @@ Peer::Peer(Configuration configuration) :
 {
 }
 
-cricket::Candidate Peer::Candidate() {
-    return network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
-        auto sctp(peer_->GetSctpTransport());
-        orc_assert(sctp != nullptr);
+task<cricket::Candidate> Peer::Candidate() {
+    auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
+        return peer_->GetSctpTransport();
+    }));
+
+    orc_assert(sctp != nullptr);
+
+    co_return network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
         auto dtls(sctp->dtls_transport());
         orc_assert(dtls != nullptr);
         auto ice(dtls->ice_transport());

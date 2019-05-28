@@ -22,6 +22,7 @@
 
 #include <openssl/err.h>
 
+#include "channel.hpp"
 #include "secure.hpp"
 
 namespace orc {
