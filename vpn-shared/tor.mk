@@ -82,11 +82,11 @@ tor += lib/libtor-tls.a
 tor += lib/libtor-trace.a
 tor += lib/libtor-version.a
 tor += lib/libtor-wallclock.a
-tor += lib/libcurve25519_donna.$(lib)
-tor += trunnel/libor-trunnel.$(lib)
-tor += ext/ed25519/donna/libed25519_donna.$(lib)
-tor += ext/ed25519/ref10/libed25519_ref10.$(lib)
-tor += ext/keccak-tiny/libkeccak-tiny.$(lib)
+tor += lib/libcurve25519_donna.a
+tor += trunnel/libor-trunnel.a
+tor += ext/ed25519/donna/libed25519_donna.a
+tor += ext/ed25519/ref10/libed25519_ref10.a
+tor += ext/keccak-tiny/libkeccak-tiny.a
 tor := $(patsubst %,$(output)/tor/src/%,$(tor))
 
 $(pwd)/tor/configure: pwd := $(pwd)
@@ -101,9 +101,11 @@ $(output)/tor/Makefile: $(pwd)/tor/configure $(deps) $(linker)
 	cd $(output)/tor && $(export) ../../$(pwd)/tor/configure --host=$(host) --prefix=$(out)/usr --disable-tool-name-check \
 	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" $(config)
 
-$(tor): output := $(output)
-$(tor): pwd := $(pwd)
-$(tor): $(output)/tor/Makefile $(deps) $(linker) $(pwd)/tor.sym $(shell find $(pwd)/tor -name '*.c')
+temp := $(patsubst %.a,%$(percent)a,$(tor))
+
+$(temp): output := $(output)
+$(temp): pwd := $(pwd)
+$(temp): $(pwd)/tor%sym $(output)/tor/Makefile $(deps) $(linker) $(shell find $(pwd)/tor -name '*.c')
 	$(export) $(MAKE) -C $(output)/tor
 
 cflags += -I$(pwd)/tor/src
