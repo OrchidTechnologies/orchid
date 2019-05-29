@@ -258,21 +258,28 @@ task<S<Origin>> Setup() {
     //Address directory("0x9170a3b999884ec3514f181ad092587c2269ff30");
 
     for (unsigned i(0); i != 3; ++i) {
-        static Selector<Address, uint128_t> scan("scan");
-        auto address = co_await scan.Call(endpoint, latest, directory, generator());
-        orc_assert(address != 0);
+        typedef std::tuple<std::string, std::string, U<rtc::SSLFingerprint>> Descriptor;
+        auto [host, port, fingerprint] = co_await [&]() -> task<Descriptor> {
+            //co_return Descriptor{"mac.saurik.com", "8082", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
 
-        static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
-        auto [time, data] = co_await look.Call(endpoint, latest, directory, address);
+            static Selector<Address, uint128_t> scan("scan");
+            auto address = co_await scan.Call(endpoint, latest, directory, generator());
+            orc_assert(address != 0);
 
-        Json::Value descriptor;
-        Json::Reader reader;
-        orc_assert(reader.parse(data.str(), descriptor, false));
+            static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
+            auto [time, data] = co_await look.Call(endpoint, latest, directory, address);
 
-        U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateUniqueFromRfc4572(descriptor["tls-algorithm"].asString(), descriptor["tls-fingerprint"].asString()));
+            Json::Value descriptor;
+            Json::Reader reader;
+            orc_assert(reader.parse(data.str(), descriptor, false));
+
+            co_return Descriptor{descriptor["host"].asString(), descriptor["port"].asString(),
+                rtc::SSLFingerprint::CreateUniqueFromRfc4572(descriptor["tls-algorithm"].asString(), descriptor["tls-fingerprint"].asString())};
+        }();
+
         orc_assert(fingerprint != nullptr);
         auto server(std::make_shared<Sink<Server, Secure>>(std::move(fingerprint)));
-        co_await server->Swing(server.get(), origin, descriptor["host"].asString(), descriptor["port"].asString());
+        co_await server->Swing(server.get(), origin, host, port);
         origin = server;
     }
 
