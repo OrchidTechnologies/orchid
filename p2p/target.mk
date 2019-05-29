@@ -115,7 +115,7 @@ $(output)/gen_context: $(pwd)/secp256k1/src/gen_context.c
 
 $(pwd)/secp256k1/src/ecmult_static_context.h: pwd := $(pwd)
 $(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
-	cd $(pwd)/secp256k1 && $(PWD)/$(output)/gen_context
+	cd $(pwd)/secp256k1 && $(CURDIR)/$(output)/gen_context
 
 $(output)/$(pwd)/secp256k1/src/secp256k1.o: $(pwd)/secp256k1/src/ecmult_static_context.h
 
