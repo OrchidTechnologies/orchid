@@ -101,8 +101,6 @@ void Spawn(Code_ code) {
     }(std::move(code));
 }
 
-bool Check();
-
 }
 
 #endif//ORCHID_TASK_HPP

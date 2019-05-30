@@ -30,25 +30,21 @@
 
 namespace orc {
 
-static asio::io_context context_;
-static std::thread thread_;
-
-static auto work_(asio::make_work_guard(context_));
-
-static struct SetupContext { SetupContext() {
-    Hook();
-
-    thread_ = std::thread([]() {
-        context_.run();
-    });
-} } SetupContext_;
-
 asio::io_context &Context() {
-    return context_;
+    static asio::io_context context;
+    static auto work(asio::make_work_guard(context));
+    Thread();
+    return context;
 }
 
 std::thread &Thread() {
-    return thread_;
+    static std::thread thread([]() {
+        Context().run();
+    });
+    return thread;
 }
+
+    //asio::signal_set signals(Context(), SIGINT, SIGTERM);
+    //signals.async_wait([&](auto, auto) { _trace(); Context().stop(); });
 
 }

@@ -66,7 +66,7 @@ class Pool {
 
         ready_.notify_one();
     }
-} pool_;
+};
 
 void Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexcept {
     code_ = code;
@@ -74,21 +74,12 @@ void Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexce
 }
 
 Scheduled Schedule() {
-    return {&pool_};
-}
-
-static pthread_t thread_;
-
-static struct SetupThread { SetupThread() {
-    std::thread([]() {
-        thread_ = pthread_self();
+    static Pool pool;
+    static std::thread thread([]() {
         rtc::ThreadManager::Instance()->WrapCurrentThread();
-        pool_.Run();
-    }).detach();
-} } SetupThread_;
-
-bool Check() {
-    return pthread_self() == thread_;
+        pool.Run();
+    });
+    return {&pool};
 }
 
 }

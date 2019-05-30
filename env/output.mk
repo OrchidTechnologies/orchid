@@ -51,6 +51,7 @@ checks += cppcoreguidelines-slicing
 # XXX: it isn't clear to me whether this is overkill or not
 #checks += cppcoreguidelines-special-member-functions
 # XXX: boost native_to_big is not marked constexpr, for Tag
+# https://github.com/boostorg/endian/issues/34
 #checks += fuchsia-statically-constructed-objects
 checks += fuchsia-virtual-inheritance
 checks += google-build-namespaces

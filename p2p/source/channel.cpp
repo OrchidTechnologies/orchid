@@ -34,18 +34,12 @@
 
 namespace orc {
 
-static std::unique_ptr<rtc::Thread> signals_;
-static std::unique_ptr<rtc::Thread> network_;
-static std::unique_ptr<rtc::Thread> working_;
-
-rtc::Thread *Signal() {
-    return signals_.get();
+const Threads &Threads::Get() {
+    static Threads threads;
+    return threads;
 }
 
-__attribute__((__constructor__))
-static void SetupThread() {
-    Hook();
-
+Threads::Threads() {
     signals_ = rtc::Thread::Create();
     signals_->SetName("Orchid WebRTC Signals", nullptr);
     signals_->Start();
@@ -61,6 +55,8 @@ static void SetupThread() {
     _trace();
 }
 
+// XXX: should this task really be delegated to WebRTC?
+// NOLINTNEXTLINE (fuchsia-statically-constructed-objects)
 struct SetupSSL {
     SetupSSL() { rtc::InitializeSSL(); }
     ~SetupSSL() { rtc::CleanupSSL(); }
@@ -69,10 +65,11 @@ struct SetupSSL {
 Peer::Peer(Configuration configuration) :
     peer_([&]() {
         static auto factory(webrtc::CreateModularPeerConnectionFactory([]() {
+            const auto &threads(Threads::Get());
             webrtc::PeerConnectionFactoryDependencies dependencies;
-            dependencies.network_thread = network_.get();
-            dependencies.worker_thread = working_.get();
-            dependencies.signaling_thread = signals_.get();
+            dependencies.network_thread = threads.network_.get();
+            dependencies.worker_thread = threads.working_.get();
+            dependencies.signaling_thread = threads.signals_.get();
             return dependencies;
         }()));
 
@@ -105,7 +102,7 @@ task<cricket::Candidate> Peer::Candidate() {
 
     orc_assert(sctp != nullptr);
 
-    co_return network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
+    co_return Threads::Get().network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
         auto dtls(sctp->dtls_transport());
         orc_assert(dtls != nullptr);
         auto ice(dtls->ice_transport());

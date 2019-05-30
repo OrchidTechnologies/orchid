@@ -756,9 +756,6 @@ int Main(int argc, const char *const argv[]) {
     }, fail);
 
 
-    asio::signal_set signals(Context(), SIGINT, SIGTERM);
-    signals.async_wait([&](auto, auto) { Context().stop(); });
-
     Thread().join();
     return 0;
 }

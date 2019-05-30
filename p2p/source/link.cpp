@@ -35,37 +35,54 @@ static const bool tracking_ = false;
 
 uint64_t Pipe::Unique_ = 0;
 
-static std::set<Pipe *> pipes_;
-static std::mutex mutex_;
+struct Tracker {
+    std::mutex mutex_;
+    std::set<Pipe *> pipes_;
+};
+
+class Track {
+  private:
+    Tracker &tracker_;
+    std::unique_lock<std::mutex> lock_;
+
+  public:
+    Track() :
+        tracker_([]() -> Tracker & {
+            static Tracker tracker;
+
+            static std::thread thread([]() {
+                for (;;) {
+                    sleep(5);
+
+                    std::unique_lock<std::mutex> lock(tracker.mutex_);
+                    Log() << "^^^^^^^^^^^^^^^^" << std::endl;
+                    for (auto pipe : tracker.pipes_)
+                        Log() << std::setw(5) << pipe->unique_ << ": " << boost::core::demangle(typeid(*pipe).name()) << std::endl;
+                    Log() << "vvvvvvvvvvvvvvvv" << std::endl;
+                }
+            });
+
+            return tracker;
+        }()),
+        lock_(tracker_.mutex_)
+    {
+    }
+
+    std::set<Pipe *> *operator ->() {
+        return &tracker_.pipes_;
+    }
+};
 
 void Pipe::Insert(Pipe *pipe) {
     if (!tracking_)
         return;
-    std::unique_lock<std::mutex> lock(mutex_);
-    pipes_.insert(pipe);
+    Track()->insert(pipe);
 }
 
 void Pipe::Remove(Pipe *pipe) {
     if (!tracking_)
         return;
-    std::unique_lock<std::mutex> lock(mutex_);
-    pipes_.erase(pipe);
+    Track()->erase(pipe);
 }
-
-static struct SetupTracker { SetupTracker() {
-    if (!tracking_)
-        return;
-    std::thread([]() {
-        for (;;) {
-            sleep(5);
-
-            std::unique_lock<std::mutex> lock(mutex_);
-            Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-            for (auto pipe : pipes_)
-                Log() << std::setw(5) << pipe->unique_ << ": " << boost::core::demangle(typeid(*pipe).name()) << std::endl;
-            Log() << "vvvvvvvvvvvvvvvv" << std::endl;
-        }
-    }).detach();
-} } SetupTracker;
 
 }

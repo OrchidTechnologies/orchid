@@ -97,12 +97,22 @@ class Invoker :
     }
 };
 
-rtc::Thread *Signal();
+class Threads {
+  public:
+    std::unique_ptr<rtc::Thread> signals_;
+    std::unique_ptr<rtc::Thread> network_;
+    std::unique_ptr<rtc::Thread> working_;
+
+    static const Threads &Get();
+
+  private:
+    Threads();
+};
 
 template <typename Code_>
 auto Post(Code_ code) -> task<decltype(code())> {
     Invoker invoker(std::move(code));
-    auto value(co_await invoker(Signal()));
+    auto value(co_await invoker(Threads::Get().signals_.get()));
     co_await Schedule();
     co_return value.get();
 }
