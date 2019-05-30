@@ -6,6 +6,7 @@ import 'package:orchid/pages/common/name_value_setting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/pages/connect/connect_page.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/settings/developer_settings.dart';
 
@@ -51,31 +52,28 @@ class _SettingsDevPage extends State<SettingsDevPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            // The logging control switch
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0, top: 16.0),
-              child: Container(
-                color: AppColors.white,
-                height: 56,
-                child: PageTile(
-                  title: "Mock API " + _mockAPIStatus(),
-                  //imageName: "assets/images/assignment.png",
-                  onTap: () {},
-                  trailing: Switch(
-                    activeColor: AppColors.purple_3,
-                    value: OrchidAPI.mockAPI,
-                    onChanged: (bool value) {
-                      setState(() {
-                        OrchidAPI.mockAPI = !OrchidAPI.mockAPI;
-                        OrchidAPI()
-                            .logger()
-                            .write("Mock API: " + _mockAPIStatus());
-                      });
-                    },
-                  ),
-                ),
-              ),
-            ),
+            SizedBox(height: 16),
+            
+            // The mock API control switch
+            _buildSwitch(
+                title: "Mock API " + _mockAPIStatus(),
+                initialValue: OrchidAPI.mockAPI,
+                onChanged: (bool value) {
+                  setState(() {
+                    OrchidAPI.mockAPI = value;
+                    OrchidAPI().logger().write("Mock API: " + _mockAPIStatus());
+                  });
+                }),
+
+            // experimental scrolling
+            _buildSwitch(
+                title: "Connect Screen Scrolls",
+                initialValue: QuickConnectPage.allowScrolling,
+                onChanged: (bool value) {
+                  setState(() {
+                    QuickConnectPage.allowScrolling = value;
+                  });
+                }),
 
             // Allow running the onboarding flow again.
             Container(
@@ -93,6 +91,30 @@ class _SettingsDevPage extends State<SettingsDevPage> {
             // Dynamic set of controls driven by the developer settings API
             Column(children: _developerSettings)
           ],
+        ),
+      ),
+    );
+  }
+
+  Padding _buildSwitch({
+    String title,
+    bool initialValue,
+    ValueChanged<bool> onChanged
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Container(
+        height: 56,
+        child: PageTile(
+          //color: AppColors.white,
+          color: Colors.transparent,
+          title: title,
+          onTap: () {},
+          trailing: Switch(
+            activeColor: AppColors.purple_3,
+            value: initialValue,
+            onChanged: onChanged,
+          ),
         ),
       ),
     );

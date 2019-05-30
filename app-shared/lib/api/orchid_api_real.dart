@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/util/ip_address.dart';
+import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
 
 class RealOrchidAPI implements OrchidAPI {
@@ -44,7 +45,7 @@ class RealOrchidAPI implements OrchidAPI {
           routeStatus.add(call.arguments
               .map((route) => OrchidNode(
                     ip: IPAddress(route),
-                    location: OrchidNodeLocation(),
+                    location: Location(),
                   ))
               .toList());
           break;

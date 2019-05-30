@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:orchid/util/ip_address.dart';
+import 'package:orchid/util/location.dart';
 
 /// Physical layer level network connectivity type.
 enum NetworkConnectivityType { Unknown, Wifi, Mobile, NoConnectivity }
@@ -32,7 +33,7 @@ class OrchidRoute {
 @immutable
 class OrchidNode {
   final IPAddress ip;
-  final OrchidNodeLocation location;
+  final Location location;
 
   OrchidNode({this.ip, this.location});
 }
