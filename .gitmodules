@@ -85,3 +85,6 @@
 [submodule "zlib"]
 	path = vpn-shared/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "eEVM"]
+	path = p2p/eEVM
+	url = https://github.com/microsoft/eEVM.git

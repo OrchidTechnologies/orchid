@@ -131,4 +131,18 @@ cflags += -DHAVE___INT128
 cflags += -DECMULT_WINDOW_SIZE=15
 
 
+c_eEVM := 
+
+source += $(pwd)/eEVM/evm/account.cpp
+source += $(pwd)/eEVM/evm/processor.cpp
+source += $(pwd)/eEVM/evm/stack.cpp
+source += $(pwd)/eEVM/evm/util.cpp
+c_eEVM += -I$(pwd)/eEVM/include
+
+source += $(pwd)/eEVM/3rdparty/keccak/KeccakHash.c
+source += $(pwd)/eEVM/3rdparty/keccak/KeccakSpongeWidth1600.c
+source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c
+c_eEVM += -I$(pwd)/eEVM/3rdparty
+
+
 include $(pwd)/rtc/target.mk
