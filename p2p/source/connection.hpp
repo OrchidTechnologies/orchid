@@ -44,21 +44,18 @@ class Connection final :
     cppcoro::async_mutex send_;
 
   public:
-    Connection(BufferDrain *drain) :
+    template <typename... Args_>
+    Connection(BufferDrain *drain, Args_ &&...args) :
         Link(drain),
-        connection_(Context())
+        connection_(Context(), std::forward<Args_>(args)...)
     {
     }
 
-    task<boost::asio::ip::basic_endpoint<typename Connection_::protocol_type>> Connect(const std::string &host, const std::string &port) {
-        auto endpoints(co_await asio::ip::basic_resolver<typename Connection_::protocol_type>(Context()).async_resolve({host, port}, Token()));
+    Connection_ *operator ->() {
+        return &connection_;
+    }
 
-        if (Verbose)
-            for (auto &endpoint : endpoints)
-                Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
-
-        auto endpoint(co_await asio::async_connect(connection_, endpoints, Token()));
-
+    void Start() {
         Spawn([this]() -> task<void> {
             for (;;) {
                 char data[2048];
@@ -84,6 +81,18 @@ class Connection final :
                 Land(beam);
             }
         });
+    }
+
+    task<boost::asio::ip::basic_endpoint<typename Connection_::protocol_type>> Connect(const std::string &host, const std::string &port) {
+        auto endpoints(co_await asio::ip::basic_resolver<typename Connection_::protocol_type>(Context()).async_resolve({host, port}, Token()));
+
+        if (Verbose)
+            for (auto &endpoint : endpoints)
+                Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
+
+        auto endpoint(co_await asio::async_connect(connection_, endpoints, Token()));
+
+        Start();
 
         co_return endpoint;
     }
