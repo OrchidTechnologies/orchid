@@ -12,7 +12,8 @@ class Location {
 
   // Some Geographically recognizable locations for map alignment.
   static Location StraightOfGibralter = Location(lat: 35.9, long: -5.6);
-  static Location SoutherTipOfAfrica = Location(lat: -34.83, long: 20.001);
+  static Location SoutherTipOfAfrica = Location(lat: -34.53, long: 20.001);
+  static Location CapeHorn = Location(lat: -55.9833, long: -67.2667);
 
   /// The latitude and longitude in degrees.
   double lat;
@@ -24,7 +25,7 @@ class Location {
   /// normalized x,y coordinates (0-1, 0-1).
   /// https://stackoverflow.com/a/14457180/74975
   Offset toMercatorProjection() {
-    double latRad = lat * pi / 180;
+    double latRad = _rad(lat);
     double x = (long + 180) * (1.0 / 360);
     double mercN = log(tan((pi / 4) + (latRad / 2)));
     double y = 0.5 - (mercN / (2 * pi));
@@ -35,7 +36,13 @@ class Location {
   /// normalized x,y coordinates (0-1, 0-1).
   /// https://en.wikipedia.org/wiki/Gall_stereographic_projection
   Offset toGallProjection() {
-    // TODO:
+    // The projection
+    double px = _rad(long) / sqrt2;
+    double py = (1 + sqrt2 / 2) * tan(_rad(lat) / 2);
+    // Normalized
+    double xmax = 2.2214414691; // pi/sqrt2
+    double ymax = 1.7071067812; // (1 + sqrt2 / 2) * tan((pi/2)/ 2)
+    return Offset( (px/xmax+1)/2, (-py/ymax+1)/2);
   }
 
   /// Calculate the mid-point of the great circle path between the
@@ -54,6 +61,10 @@ class Location {
     midlat = midlat * 180 / pi;
     midlong = (midlong * 180 / pi + 540) % 360 - 180;
     return Location(lat: midlat, long: midlong);
+  }
+
+  static double _rad(double degrees) {
+    return degrees * pi / 180;
   }
 
   String toString() {

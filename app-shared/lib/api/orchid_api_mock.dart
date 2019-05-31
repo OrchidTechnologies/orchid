@@ -53,6 +53,7 @@ class MockOrchidAPI implements OrchidAPI {
       OrchidNode(ip: IPAddress.random(), location: Location.StraightOfGibralter),
       OrchidNode(ip: IPAddress.random(), location: Location.PEK),
       OrchidNode(ip: IPAddress.random(), location: Location.SoutherTipOfAfrica),
+      OrchidNode(ip: IPAddress.random(), location: Location.CapeHorn),
       OrchidNode(ip: IPAddress.random(), location: Location.STL),
       // @formatter:on
     ]);

@@ -8,17 +8,38 @@ import 'package:orchid/pages/common/paths.dart';
 import '../app_colors.dart';
 import 'dart:ui' as ui;
 
+class WorldMapImage {
+  final projectionType = MapProjectionType.Gall;
+
+  /// Map asset and size
+  final asset = 'assets/images/3.0x/world_map.png';
+  final double aspectRatio = 2459.0 / 1350.0;
+
+  /// An normalized (0-1) offset for tweaking the map image to align
+  /// with real world locations.
+  final Offset offset = Offset(-0.032, -0.021);
+
+  /// The latitudes at which the map is cropped at the top and bottom.
+  final double northernLatitudeCrop = 83;
+  final double southernLatitudeCrop = -55;
+
+  Offset project(Location location) {
+    switch (projectionType) {
+      case MapProjectionType.Mercator:
+        return location.toMercatorProjection();
+      case MapProjectionType.Gall:
+        return location.toGallProjection();
+    }
+  }
+}
+
 /// The shaded world map and route visualization for the connect page.
 /// The provided [width] and [height] determine the widget size. The map image
 /// is centered and scaled to fit the [height].
-/// Note: [mapAspectRatio] is current used in the calculations for the map overlay.
+/// Note: [aspectRatio] is current used in the calculations for the map overlay.
 class ConnectWorldMap extends StatefulWidget {
-  /// Map image
-  static final mapAsset = 'assets/images/3.0x/world_map.png';
-  static final double mapAspectRatio = 2459.0 / 1350.0;
-
-  /// An offset for tweaking the map image to align with real world locations.
-  static Offset mapImageOffset = Offset(-0.03, 0.01);
+  // The map image and its parameters
+  static final WorldMapImage worldMapImage = WorldMapImage();
 
   // The ordered list of hop locations
   final List<Location> locations;
@@ -45,7 +66,6 @@ class _ConnectWorldMapState extends State<ConnectWorldMap>
     with SingleTickerProviderStateMixin {
   AnimationController _masterAnimController;
   Animation<double> _drawRouteAnimation;
-
   ui.Image pinImage;
 
   @override
@@ -54,9 +74,8 @@ class _ConnectWorldMapState extends State<ConnectWorldMap>
     _masterAnimController = AnimationController(
         duration: Duration(milliseconds: 4000), vsync: this);
 
-    _drawRouteAnimation = CurvedAnimation(
-        parent: _masterAnimController,
-        curve: Interval(0, 0.5));
+    _drawRouteAnimation =
+        CurvedAnimation(parent: _masterAnimController, curve: Interval(0, 0.5));
 
     Images.loadImage('assets/images/3.0x/map_pin.png').then((image) {
       setState(() {
@@ -96,7 +115,7 @@ class _ConnectWorldMapState extends State<ConnectWorldMap>
                         Rect.fromLTRB(0, 0, rect.width, rect.height));
                   },
                   blendMode: BlendMode.srcIn,
-                  child: Image.asset(ConnectWorldMap.mapAsset,
+                  child: Image.asset(ConnectWorldMap.worldMapImage.asset,
                       fit: BoxFit.fitHeight),
                 ),
               ),
@@ -110,12 +129,12 @@ class _ConnectWorldMapState extends State<ConnectWorldMap>
 /// [locations] should contain at least two Locations.
 class _ConnectWorldMapOverlayPainter extends CustomPainter {
   final List<Location> locations;
-
   final double strokeWidth;
   final Color color;
   final bool dashed;
   final ui.Image pinImage;
   final double fraction;
+  final WorldMapImage map = ConnectWorldMap.worldMapImage;
 
   _ConnectWorldMapOverlayPainter(this.locations,
       {this.strokeWidth = 1.1,
@@ -126,13 +145,27 @@ class _ConnectWorldMapOverlayPainter extends CustomPainter {
 
   /// Transform a Location to canvas coordinates.
   Offset toCanvasCoordinate(Size canvasSize, Location location) {
-    Offset mapOffset = location.toMercatorProjection();
+    // Get the normalized map location
+    Offset locationOffset = map.project(location);
+
+    // Adjust for map top and bottom cropping
+    Offset topOffset =
+        map.project(Location(lat: map.northernLatitudeCrop, long: 0));
+    Offset bottomOffset =
+        map.project(Location(lat: map.southernLatitudeCrop, long: 0));
+    double cropRange = bottomOffset.dy - topOffset.dy;
+    locationOffset = Offset(
+        locationOffset.dx, (locationOffset.dy / cropRange) - topOffset.dy);
+
+    // Arbitrary final adjustment for map alignment
+    locationOffset += map.offset;
+
+    // The map image is always as tall as the canvas but will be wider than the
+    // screen when zoomed.
     double mapHeight = canvasSize.height;
-    double mapWidth = canvasSize.height * ConnectWorldMap.mapAspectRatio;
-    // The map image is as tall as the canvas but may be wider or narrower.
-    double x = mapWidth * (mapOffset.dx + ConnectWorldMap.mapImageOffset.dx) -
-        (mapWidth - canvasSize.width) / 2;
-    double y = mapHeight * (mapOffset.dy + ConnectWorldMap.mapImageOffset.dy);
+    double mapWidth = canvasSize.height * map.aspectRatio;
+    double x = mapWidth * locationOffset.dx - (mapWidth - canvasSize.width) / 2;
+    double y = mapHeight * locationOffset.dy;
     return Offset(x, y);
   }
 
@@ -142,7 +175,7 @@ class _ConnectWorldMapOverlayPainter extends CustomPainter {
       return;
     }
 
-    double scale = (size.height * ConnectWorldMap.mapAspectRatio) / size.width;
+    double scale = (size.height * map.aspectRatio) / size.width;
 
     // Generate the path segments between each location pair.
     Path path = Path();
@@ -171,6 +204,8 @@ class _ConnectWorldMapOverlayPainter extends CustomPainter {
     }
   }
 
+  /// Generate a quadratic bezier path that approximates the great circle arc
+  /// between the specified locations.
   Path _pathSegment(Path pathIn, Location startLocation, Location endLocation,
       Size size, double scale) {
     Location midLocation = Location.midPoint(startLocation, endLocation);
@@ -186,6 +221,7 @@ class _ConnectWorldMapOverlayPainter extends CustomPainter {
     return path;
   }
 
+  /// Draw the scaled location pin at the specified point.
   void _drawPin(double scale, Offset pinPoint, Canvas canvas) {
     if (pinImage != null) {
       var pinPaint = Paint();
@@ -208,3 +244,5 @@ class _ConnectWorldMapOverlayPainter extends CustomPainter {
     return false;
   }
 }
+
+enum MapProjectionType { Mercator, Gall }

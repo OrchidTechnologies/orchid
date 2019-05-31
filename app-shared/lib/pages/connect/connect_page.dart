@@ -155,7 +155,7 @@ class _QuickConnectPageState
     Size screenSize = MediaQuery.of(context).size;
     var mapHorizontalMargins = 5;
     var mapStartHeight = (screenSize.width - mapHorizontalMargins * 2) /
-        ConnectWorldMap.mapAspectRatio;
+        ConnectWorldMap.worldMapImage.aspectRatio;
 
     // The map center starting vertical position as fraction of screen height.
     double mapStartPosition = 0.69;
