@@ -165,7 +165,7 @@ contract OrchidDirectory is IOrchidDirectory {
         uint64 amount_;
     }
 
-    mapping(address => mapping(uint => Pending)) private pendings_;
+    mapping(address => mapping(uint256 => Pending)) private pendings_;
 
     function take(uint256 index, address payable target) public {
         Pending memory pending = pendings_[msg.sender][index];
