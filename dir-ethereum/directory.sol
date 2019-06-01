@@ -93,11 +93,12 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
     function scan(uint128 percent) public view returns (address) {
+        require(!nope(root_));
+
         uint64 point = uint64(have() * uint256(percent) / 2**128);
 
         Primary storage primary = root_;
         for (;;) {
-            require(!nope(primary));
             Medallion storage medallion = medallions_[name(primary)];
 
             if (point < medallion.before_) {
