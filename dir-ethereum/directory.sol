@@ -169,7 +169,6 @@ contract OrchidDirectory is IOrchidDirectory {
 
     function take(uint256 index, address payable target) public {
         Pending memory pending = pendings_[msg.sender][index];
-        require(pending.amount_ != 0);
         require(pending.time_ <= block.timestamp);
         delete pendings_[msg.sender][index];
         require(orchid_.transfer(target, pending.amount_));
