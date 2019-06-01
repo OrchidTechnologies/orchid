@@ -205,19 +205,39 @@ contract OrchidDirectory is IOrchidDirectory {
                         last = next;
                     }
 
-                    if (current.parent_ != key)
-                        medallions_[name(child)].parent_ = name(last);
-                    (medallion.parent_, current.parent_) = (current.parent_, medallion.parent_);
-
-                    current.before_ = medallion.before_;
-                    current.after_ = medallion.after_;
-                    current.left_ = medallion.left_;
-                    current.right_ = medallion.right_;
-
+                    bytes32 direct = current.parent_;
                     copy(pivot, last);
-                    copy(last, staker, stakee);
-                    step(key, medallion, -current.amount_, current.parent_);
-                    kill(last);
+                    current.parent_ = medallion.parent_;
+
+                    if (direct == key) {
+                        Primary storage other = medallion.before_ > medallion.after_ ? medallion.right_ : medallion.left_;
+                        if (!nope(other))
+                            medallions_[name(other)].parent_ = name(last);
+
+                        if (name(medallion.left_) == key) {
+                            current.right_ = medallion.right_;
+                            current.after_ = medallion.after_;
+                        } else {
+                            current.left_ = medallion.left_;
+                            current.before_ = medallion.before_;
+                        }
+                    } else {
+                        if (!nope(medallion.left_))
+                            medallions_[name(medallion.left_)].parent_ = name(last);
+                        if (!nope(medallion.right_))
+                            medallions_[name(medallion.right_)].parent_ = name(last);
+
+                        current.right_ = medallion.right_;
+                        current.after_ = medallion.after_;
+
+                        current.left_ = medallion.left_;
+                        current.before_ = medallion.before_;
+
+                        medallion.parent_ = direct;
+                        copy(last, staker, stakee);
+                        step(key, medallion, -current.amount_, current.parent_);
+                        kill(last);
+                    }
                 }
             }
 
