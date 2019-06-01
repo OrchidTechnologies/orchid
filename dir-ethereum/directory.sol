@@ -130,12 +130,6 @@ contract OrchidDirectory is IOrchidDirectory {
         }
     }
 
-    function done(bytes32 key, Medallion storage medallion, uint64 amount) private {
-        medallion.amount_ += amount;
-        step(key, medallion, amount, bytes32(0));
-        require(orchid_.transferFrom(msg.sender, address(this), amount));
-    }
-
     function push(address stakee, uint64 amount) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
@@ -159,7 +153,9 @@ contract OrchidDirectory is IOrchidDirectory {
             medallion.stakee_ = stakee;
         }
 
-        done(key, medallion, amount);
+        medallion.amount_ += amount;
+        step(key, medallion, amount, bytes32(0));
+        require(orchid_.transferFrom(msg.sender, address(this), amount));
     }
 
 
