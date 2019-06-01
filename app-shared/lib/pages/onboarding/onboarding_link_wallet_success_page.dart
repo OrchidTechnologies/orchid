@@ -16,7 +16,7 @@ class _OnboardingLinkWalletSuccessPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: SmallAppBar.build(context),
+      appBar: SmallAppBar(),
       body: Container(
           decoration:
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
@@ -37,11 +37,10 @@ class _OnboardingLinkWalletSuccessPageState
                 ),
                 Align(
                   alignment: Alignment.bottomCenter,
-                  child:
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 42),
-                        child: WalkthroughNextButton(onNext: _complete),
-                      ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 42),
+                    child: WalkthroughNextButton(onNext: _complete),
+                  ),
                 )
               ],
             ),
@@ -55,4 +54,3 @@ class _OnboardingLinkWalletSuccessPageState
     AppOnboarding().pageComplete(context);
   }
 }
-

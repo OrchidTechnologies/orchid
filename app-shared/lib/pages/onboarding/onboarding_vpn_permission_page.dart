@@ -27,7 +27,7 @@ class _OnboardingVPNPermissionPageState
   Widget build(BuildContext context) {
     var body = buildBody(context);
     return widget.includeScaffold
-        ? Scaffold(appBar: SmallAppBar.build(context), body: body)
+        ? Scaffold(appBar: SmallAppBar(), body: body)
         : body;
   }
 

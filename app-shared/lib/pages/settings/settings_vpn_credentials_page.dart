@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/accomodate_keyboard.dart';
+import 'package:orchid/pages/common/accommodate_keyboard.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';

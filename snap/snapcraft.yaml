@@ -1,0 +1,46 @@
+name: orchid
+base: core18
+version: 'latest'
+summary: Orchid Server Binary
+description: |
+  This snap allows you to run an Orchid Server node to allow clients
+  to utilize your extra bandwidth.
+
+grade: devel
+confinement: devmode
+
+apps:
+  orchid:
+    command: orchid
+    daemon: simple
+    plugs: [network, network-bind]
+
+parts:
+  orchid:
+    override-pull: |
+      snapcraftctl pull
+      git submodule update --init --recursive -j $(getconf _NPROCESSORS_ONLN)
+    plugin: make
+    artifacts:
+      - out-lnx/orchid
+    source: .
+    source-subdir: srv-shared
+    source-type: git
+    build-packages:
+      - curl
+      - make
+      - autoconf
+      - libtool
+      - git
+      - clang
+      - libc++-dev
+      - libc++abi-dev
+      - golang-go
+    stage-packages:
+      - libc++1
+    organize:
+      out-lnx/orchid: orchid
+    stage:
+      - orchid
+    prime:
+      - orchid

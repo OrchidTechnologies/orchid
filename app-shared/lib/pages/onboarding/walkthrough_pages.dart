@@ -37,10 +37,10 @@ class WalkthroughPages extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _IntroductionScreenState createState() => _IntroductionScreenState();
+  _WalkthroughPagesState createState() => _WalkthroughPagesState();
 }
 
-class _IntroductionScreenState extends State<WalkthroughPages> {
+class _WalkthroughPagesState extends State<WalkthroughPages> {
   PageController _pageController;
   int _currentPage = 0;
   bool _isSkipPressed = false;
@@ -147,7 +147,7 @@ class _IntroductionScreenState extends State<WalkthroughPages> {
     final controlsVisibility = _controlsVisibility(pages.length);
 
     return Scaffold(
-      appBar: SmallAppBar.build(context),
+      appBar: SmallAppBar(),
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
         child: SafeArea(

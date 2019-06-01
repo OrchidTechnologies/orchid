@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_colors.dart';
 
-/// A list tile containing an optional image, title, and a tap gesture.
+/// A list tile containing an optional image, trailing component, title,
+/// and a tap gesture callback.
 class PageTile extends StatelessWidget {
   final String title;
   final String imageName;
@@ -9,13 +10,18 @@ class PageTile extends StatelessWidget {
   GestureTapCallback onTap;
   Color color;
 
-  PageTile({this.title, this.imageName, @required this.onTap, this.trailing, this.color = Colors.white});
+  PageTile(
+      {this.title,
+      this.imageName,
+      @required this.onTap,
+      this.trailing,
+      this.color = Colors.white});
 
   PageTile.route(
       {this.title,
-        this.imageName,
-        @required BuildContext context,
-        @required String routeName}) {
+      this.imageName,
+      @required BuildContext context,
+      @required String routeName}) {
     this.onTap = () {
       Navigator.pushNamed(context, routeName);
     };
@@ -31,7 +37,9 @@ class PageTile extends StatelessWidget {
             leading: imageName != null
                 ? Image(color: AppColors.purple, image: AssetImage(imageName))
                 : null,
-            trailing: trailing != null ? trailing : Icon(Icons.chevron_right, color: AppColors.purple),
+            trailing: trailing != null
+                ? trailing
+                : Icon(Icons.chevron_right, color: AppColors.purple),
             onTap: onTap));
   }
 }

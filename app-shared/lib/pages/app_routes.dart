@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/help/help_feedback_page.dart';
 import 'package:orchid/pages/help/help_page.dart';
-import 'package:orchid/pages/connect/quick_connect_page.dart';
+import 'package:orchid/pages/connect/connect_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_success_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_credentials_page.dart';

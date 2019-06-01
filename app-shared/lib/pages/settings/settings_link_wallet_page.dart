@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/accomodate_keyboard.dart';
+import 'package:orchid/pages/common/accommodate_keyboard.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/settings/wallet_key_entry.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// The link wallet settings page
 class SettingsLinkWalletPage extends StatefulWidget {
   @override
   _SettingsLinkWalletPageState createState() => _SettingsLinkWalletPageState();

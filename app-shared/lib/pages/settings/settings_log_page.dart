@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
@@ -10,6 +9,7 @@ import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
+/// The logging settings page
 class SettingsLogPage extends StatefulWidget {
   @override
   _SettingsLogPage createState() => _SettingsLogPage();

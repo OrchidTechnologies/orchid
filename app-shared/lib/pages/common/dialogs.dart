@@ -3,18 +3,6 @@ import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
 class Dialogs {
-  static final String syncRequiredTitle = "Sync required";
-  static final String syncRequiredText =
-      "Orchid needs to sync with the server directory, but you have elected to only sync when connected to WiFi. You may continue using Orchid once you have passed the minimum sync threshold.\n\nYour syncing options can always be changed in settings.";
-
-  // TODO: Move to relevant screen
-  static void showSyncRequiredDialog(@required BuildContext context) {
-    showAppDialog(
-        context: context,
-        title: syncRequiredTitle,
-        body: syncRequiredText,
-        linkSettings: true);
-  }
 
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
   static Future<void> showAppDialog({
