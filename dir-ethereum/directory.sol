@@ -179,7 +179,7 @@ contract OrchidDirectory is IOrchidDirectory {
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
 
-        require(amount != 0);
+        require(medallion.amount_ != 0);
         require(medallion.amount_ >= amount);
         medallion.amount_ -= amount;
 
