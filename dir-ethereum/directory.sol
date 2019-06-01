@@ -31,9 +31,11 @@ interface IOrchidDirectory {
 contract OrchidDirectory is IOrchidDirectory {
 
     ERC20 private orchid_;
+    uint256 delay_;
 
-    constructor(address orchid) public {
+    constructor(address orchid, uint256 delay) public {
         orchid_ = ERC20(orchid);
+        delay_ = delay;
     }
 
 
@@ -245,7 +247,7 @@ contract OrchidDirectory is IOrchidDirectory {
         }
 
         Pending storage pending = pendings_[msg.sender][index];
-        pending.time_ = block.timestamp + 30 days;
+        pending.time_ = block.timestamp + delay_;
         pending.amount_ += amount;
     }
 
