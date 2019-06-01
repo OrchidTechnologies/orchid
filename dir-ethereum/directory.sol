@@ -200,25 +200,24 @@ contract OrchidDirectory is IOrchidDirectory {
                     for (;;) {
                         current = medallions_[name(last)];
                         Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
-                        if (nope(next)) {
-                            if (current.parent_ != key)
-                                medallions_[name(child)].parent_ = name(last);
-                            (medallion.parent_, current.parent_) = (current.parent_, medallion.parent_);
-
-                            current.before_ = medallion.before_;
-                            current.after_ = medallion.after_;
-                            current.left_ = medallion.left_;
-                            current.right_ = medallion.right_;
-
-                            copy(pivot, last);
-                            copy(last, staker, stakee);
-                            step(key, medallion, -current.amount_, current.parent_);
-                            kill(last);
+                        if (nope(next))
                             break;
-                        }
-
                         last = next;
                     }
+
+                    if (current.parent_ != key)
+                        medallions_[name(child)].parent_ = name(last);
+                    (medallion.parent_, current.parent_) = (current.parent_, medallion.parent_);
+
+                    current.before_ = medallion.before_;
+                    current.after_ = medallion.after_;
+                    current.left_ = medallion.left_;
+                    current.right_ = medallion.right_;
+
+                    copy(pivot, last);
+                    copy(last, staker, stakee);
+                    step(key, medallion, -current.amount_, current.parent_);
+                    kill(last);
                 }
             }
 
