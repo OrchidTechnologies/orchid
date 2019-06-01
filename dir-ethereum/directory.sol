@@ -227,9 +227,8 @@ contract OrchidDirectory is IOrchidDirectory {
         }
 
         Pending storage pending = pendings_[msg.sender][index];
-        require(pending.amount_ == 0);
         pending.time_ = block.timestamp + 30 days;
-        pending.amount_ = amount;
+        pending.amount_ += amount;
     }
 
 
