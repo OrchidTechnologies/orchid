@@ -131,7 +131,6 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
     function done(bytes32 key, Medallion storage medallion, uint64 amount) private {
-        require(amount != 0);
         medallion.amount_ += amount;
         step(key, medallion, amount, bytes32(0));
         require(orchid_.transferFrom(msg.sender, address(this), amount));
@@ -143,6 +142,8 @@ contract OrchidDirectory is IOrchidDirectory {
         Medallion storage medallion = medallions_[key];
 
         if (medallion.amount_ == 0) {
+            require(amount != 0);
+
             bytes32 parent = bytes32(0);
             Primary storage primary = root_;
 
