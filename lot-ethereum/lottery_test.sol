@@ -35,7 +35,7 @@ contract TestOrchidLottery is OrchidLottery
     function test_ecrecover(bytes32 hdata, uint8 v, bytes32 r, bytes32 s, address signer)   public view returns (address)
     { 
         address signer2 = ecrecover(hdata, v, r, s);
-        //require(signer2 == signer); // this is currently failing, not sure why yet
+        require(signer2 == signer); // this is currently failing, not sure why yet
         return signer2; 
     }
 
@@ -51,7 +51,7 @@ contract TestOrchidLottery is OrchidLottery
         require(ticket == thash);
 
         address signer = ecrecover(ticket, v, r, s);
-        require(sender == signer); // this is currently failing, not sure why yet
+        require(sender == signer);
         
         Pot storage pot = pots_[signer];
 

@@ -20,10 +20,16 @@
 /* }}} */
 
 
+#include <string>
+
+	std::string file_to_string(std::string fn);
+	bool string_to_file(std::string x, std::string fn);
+
 
 namespace orc {
 
-    void test_mpay();
+    int test_lot();
+    int test_dir();
 
 }
 

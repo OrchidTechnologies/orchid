@@ -21,8 +21,6 @@
 
 
 #include <cstdio>
-#include <iostream>
-#include <fstream>
 #include <future>
 #include <string>
 
@@ -30,7 +28,7 @@
 #include "jsonrpc.hpp"
 #include "buffer.hpp"
 
-#include "test_mpay.h"
+#include "tests.h"
 
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
@@ -197,40 +195,6 @@ namespace orc
 	    assert(pub.hex() == ( expectedPub));
 	}
 
-// ============================ ===================================
-
-
-
-	std::string file_to_string(std::string fn)
-	{
-		std::ifstream myfile;
-		myfile.open(fn.c_str());
-		if (myfile.is_open()) {
-			std::stringstream buffer;
-			buffer << myfile.rdbuf();
-			return buffer.str();
-		} else {
-			printf("failed to open infile %s \n", fn.c_str());
-			return "";
-		}
-		myfile.close();
-		return "";
-	}
-
-	bool string_to_file(std::string x, std::string fn) {
-		bool bresult;
-		std::ofstream myfile;
-		myfile.open(fn);
-		if (myfile.is_open()) {
-			myfile << x;
-			bresult = true;
-		} else {
-			printf("failed to open outfile %s \n", fn.c_str());
-			bresult = false;
-		}
-		myfile.close();
-		return bresult;
-	}
 
 
 
@@ -452,24 +416,18 @@ namespace orc
 
 
    		std::cout << "Done." << std::endl;
-
-
    		co_return 0;
     }
 
 
-    void test_mpay()
+    int test_lot()
     {
-        std::cout << "test_mpay()" << std::endl;
+        std::cout << "test_lot()" << std::endl;
         auto t = test_lottery();
         sync_wait(t);        
-        std::cout << "test_mpay(): done" << std::endl;
+        std::cout << "test_lot(): done" << std::endl;
+        return 0;
     }
 
-
 }
 
-int main() {
-    orc::test_mpay();
-    return 0;
-}
