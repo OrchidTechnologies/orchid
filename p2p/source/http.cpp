@@ -34,8 +34,8 @@
 #include <boost/asio/ssl/rfc2818_verification.hpp>
 #include <boost/asio/ssl/stream.hpp>
 
-#include <asio/experimental/co_spawn.hpp>
-#include <asio/experimental/detached.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/detached.hpp>
 
 #include "adapter.hpp"
 #include "baton.hpp"
@@ -104,13 +104,14 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const Loc
 
         try {
             co_await stream.async_shutdown(orc::Token());
-        } catch (const asio::error_code &error) {
+        } catch (const asio::system_error &error) {
+            auto code(error.code());
             if (false);
-            else if (error == asio::error::eof);
+            else if (code == asio::error::eof);
                 // XXX: this scenario is untested
-            else if (error == asio::ssl::error::stream_truncated);
+            else if (code == asio::ssl::error::stream_truncated);
                 // XXX: this is because of infura
-            else orc_assert_(false, error.message());
+            else orc_assert_(false, code.message());
         }
     } else orc_assert(false);
 

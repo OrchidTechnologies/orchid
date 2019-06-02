@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/util/ip_address.dart';
+import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
 
 ///
@@ -35,9 +36,9 @@ class MockOrchidAPI implements OrchidAPI {
         OrchidSyncStatus(state: OrchidSyncState.InProgress, progress: 0.5));
 
     // fake route updates
-    routeStatus.add(_randomRoute());
+    routeStatus.add(_fakeRoute());
     _routeTimer = Timer.periodic(Duration(seconds: 3), (timer) {
-      routeStatus.add(_randomRoute());
+      routeStatus.add(_fakeRoute());
     });
 
     // vpn configuration / permission status
@@ -45,11 +46,16 @@ class MockOrchidAPI implements OrchidAPI {
   }
 
   // fake route
-  OrchidRoute _randomRoute() {
+  OrchidRoute _fakeRoute() {
     return OrchidRoute([
-      OrchidNode(ip: IPAddress.random(), location: OrchidNodeLocation()),
-      OrchidNode(ip: IPAddress.random(), location: OrchidNodeLocation()),
-      OrchidNode(ip: IPAddress.random(), location: OrchidNodeLocation())
+      // @formatter:off
+      OrchidNode(ip: IPAddress.random(), location: Location.SFO),
+      OrchidNode(ip: IPAddress.random(), location: Location.StraightOfGibralter),
+      OrchidNode(ip: IPAddress.random(), location: Location.PEK),
+      OrchidNode(ip: IPAddress.random(), location: Location.SoutherTipOfAfrica),
+      OrchidNode(ip: IPAddress.random(), location: Location.CapeHorn),
+      OrchidNode(ip: IPAddress.random(), location: Location.STL),
+      // @formatter:on
     ]);
   }
 
@@ -167,8 +173,8 @@ class MockOrchidAPI implements OrchidAPI {
         break;
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Connected:
-        // TODO: This does not seem to work.  How do we cancel here?
-        // Cancel any pending connect
+      // TODO: This does not seem to work.  How do we cancel here?
+      // Cancel any pending connect
         if (_connectFuture != null) {
           CancelableOperation.fromFuture(_connectFuture).cancel();
           _connectFuture = null;
@@ -192,7 +198,7 @@ class MockOrchidAPI implements OrchidAPI {
     connectionStatus.add(state);
   }
 
-  Map<String,String> _developerSettings = Map();
+  Map<String, String> _developerSettings = Map();
 
   @override
   Future<Map<String, String>> getDeveloperSettings() async {

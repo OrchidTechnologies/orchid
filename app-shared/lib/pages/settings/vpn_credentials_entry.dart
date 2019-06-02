@@ -5,7 +5,6 @@ import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// A controller for the [VPNCredentialsEntry] supporting observation of validation

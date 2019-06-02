@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/accomodate_keyboard.dart';
+import 'package:orchid/pages/common/accommodate_keyboard.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
@@ -23,7 +23,7 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: SmallAppBar.build(context),
+      appBar: SmallAppBar(),
       body: Container(
           decoration:
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
@@ -33,7 +33,7 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
                 children: <Widget>[
                   // For large screens distribute the space a bit, else fixed margin.
                   WalkthroughPages.TopContentPadding.value(context),
-                  buildDescription(),
+                  _LinkWalletDescription(),
                   SizedBox(height: 68),
                   WalletKeyEntry(controller: _walletKeyEntryController),
                   SizedBox(height: 20),
@@ -58,28 +58,31 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
     );
   }
 
-  Widget buildDescription() {
-    var titleText = "Link an external wallet";
-    var bodyRichText = buildRichText();
-
-    var headerTextBox = new WalkthroughHeaderTextBox(titleText: titleText);
-    var bodyTextBox = new WalkthroughBodyTextBox(bodyRichText: bodyRichText);
-
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Center(
-          child: Column(
-            children: <Widget>[
-              headerTextBox,
-              SizedBox(height: 20),
-              bodyTextBox,
-            ],
-          ),
-        ));
+  void _next() async {
+    bool success = await _walletKeyEntryController.save();
+    if (success) {
+      _complete();
+    }
   }
 
-  TextSpan buildRichText() {
-    return TextSpan(
+  void _skip() {
+    _complete();
+  }
+
+  // Note that the user has viewed this screen and move on.
+  void _complete() async {
+    await UserPreferences().setPromptedToLinkWallet(true);
+    AppOnboarding().pageComplete(context);
+  }
+}
+
+class _LinkWalletDescription extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    var titleText = "Link an external wallet";
+
+    var bodyRichText = TextSpan(
       children: <TextSpan>[
         TextSpan(
             text:
@@ -100,22 +103,20 @@ class _OnboardingLinkWalletPageState extends State<OnboardingLinkWalletPage> {
         ),
       ],
     );
-  }
 
-  void _next() async {
-    bool success = await _walletKeyEntryController.save();
-    if (success) {
-      _complete();
-    }
-  }
+    var headerTextBox = new WalkthroughHeaderTextBox(titleText: titleText);
+    var bodyTextBox = new WalkthroughBodyTextBox(bodyRichText: bodyRichText);
 
-  void _skip() {
-    _complete();
-  }
-
-  // Note that the user has viewed this screen and move on.
-  void _complete() async {
-    await UserPreferences().setPromptedToLinkWallet(true);
-    AppOnboarding().pageComplete(context);
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Center(
+          child: Column(
+            children: <Widget>[
+              headerTextBox,
+              SizedBox(height: 20),
+              bodyTextBox,
+            ],
+          ),
+        ));
   }
 }

@@ -25,19 +25,14 @@ cflags += -I$(pwd)/source
 
 cflags += -I$(pwd)/extra
 
-cflags += -include interface.hpp
-
 source += $(wildcard $(pwd)/lz4/lib/*.c)
 cflags += -I$(pwd)/lz4/lib
-
-source += $(wildcard $(pwd)/mbedtls/library/*.c)
-cflags += -I$(pwd)/mbedtls/include
 
 cflags += -DUSE_ASIO
 cflags += -DUSE_ASIO_THREADLOCAL
 cflags += -DASIO_NO_DEPRECATED
 cflags += -DHAVE_LZ4
-cflags += -DUSE_MBEDTLS
+cflags += -DUSE_OPENSSL
 cflags += -DOPENVPN_FORCE_TUN_NULL
 cflags += -DUSE_TUN_BUILDER
 
@@ -57,8 +52,16 @@ c_openvpn3 += -Wno-vexing-parse
 source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
 cflags += -I$(pwd)/libmaxminddb/include
 
+ifeq ($(target),ios)
+c_openvpn3 += -ObjC++
+endif
+
 %/GeoLite2-City.mmdb:
 	@mkdir -p $(dir $@)
 	curl https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz | tar -C $(dir $@) --strip-components 1 --exclude '*.txt' -zxvf-
+
+include $(pwd)/zlib.mk
+include $(pwd)/libevent.mk
+include $(pwd)/tor.mk
 
 include $(pwd)/p2p/target.mk

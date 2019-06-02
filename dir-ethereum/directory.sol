@@ -31,9 +31,11 @@ interface IOrchidDirectory {
 contract OrchidDirectory is IOrchidDirectory {
 
     ERC20 private orchid_;
+    uint256 delay_;
 
-    constructor(address orchid) public {
+    constructor(address orchid, uint256 delay) public {
         orchid_ = ERC20(orchid);
+        delay_ = delay;
     }
 
 
@@ -93,11 +95,12 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
     function scan(uint128 percent) public view returns (address) {
+        require(!nope(root_));
+
         uint64 point = uint64(have() * uint256(percent) / 2**128);
 
         Primary storage primary = root_;
         for (;;) {
-            require(!nope(primary));
             Medallion storage medallion = medallions_[name(primary)];
 
             if (point < medallion.before_) {
@@ -129,19 +132,14 @@ contract OrchidDirectory is IOrchidDirectory {
         }
     }
 
-    function done(bytes32 key, Medallion storage medallion, uint64 amount) private {
-        require(amount != 0);
-        medallion.amount_ += amount;
-        step(key, medallion, amount, bytes32(0));
-        require(orchid_.transferFrom(msg.sender, address(this), amount));
-    }
-
     function push(address stakee, uint64 amount) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
 
         if (medallion.amount_ == 0) {
+            require(amount != 0);
+
             bytes32 parent = bytes32(0);
             Primary storage primary = root_;
 
@@ -157,7 +155,9 @@ contract OrchidDirectory is IOrchidDirectory {
             medallion.stakee_ = stakee;
         }
 
-        done(key, medallion, amount);
+        medallion.amount_ += amount;
+        step(key, medallion, amount, bytes32(0));
+        require(orchid_.transferFrom(msg.sender, address(this), amount));
     }
 
 
@@ -167,11 +167,10 @@ contract OrchidDirectory is IOrchidDirectory {
         uint64 amount_;
     }
 
-    mapping(address => mapping(uint => Pending)) private pendings_;
+    mapping(address => mapping(uint256 => Pending)) private pendings_;
 
     function take(uint256 index, address payable target) public {
         Pending memory pending = pendings_[msg.sender][index];
-        require(pending.amount_ != 0);
         require(pending.time_ <= block.timestamp);
         delete pendings_[msg.sender][index];
         require(orchid_.transfer(target, pending.amount_));
@@ -182,7 +181,7 @@ contract OrchidDirectory is IOrchidDirectory {
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
 
-        require(amount != 0);
+        require(medallion.amount_ != 0);
         require(medallion.amount_ >= amount);
         medallion.amount_ -= amount;
 
@@ -203,24 +202,43 @@ contract OrchidDirectory is IOrchidDirectory {
                     for (;;) {
                         current = medallions_[name(last)];
                         Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
-                        if (nope(next)) {
-                            if (current.parent_ != key)
-                                medallions_[name(child)].parent_ = name(last);
-                            (medallion.parent_, current.parent_) = (current.parent_, medallion.parent_);
-
-                            current.before_ = medallion.before_;
-                            current.after_ = medallion.after_;
-                            current.left_ = medallion.left_;
-                            current.right_ = medallion.right_;
-
-                            copy(pivot, last);
-                            copy(last, staker, stakee);
-                            step(key, medallion, -current.amount_, current.parent_);
-                            kill(last);
+                        if (nope(next))
                             break;
-                        }
-
                         last = next;
+                    }
+
+                    bytes32 direct = current.parent_;
+                    copy(pivot, last);
+                    current.parent_ = medallion.parent_;
+
+                    if (direct == key) {
+                        Primary storage other = medallion.before_ > medallion.after_ ? medallion.right_ : medallion.left_;
+                        if (!nope(other))
+                            medallions_[name(other)].parent_ = name(last);
+
+                        if (name(medallion.left_) == key) {
+                            current.right_ = medallion.right_;
+                            current.after_ = medallion.after_;
+                        } else {
+                            current.left_ = medallion.left_;
+                            current.before_ = medallion.before_;
+                        }
+                    } else {
+                        if (!nope(medallion.left_))
+                            medallions_[name(medallion.left_)].parent_ = name(last);
+                        if (!nope(medallion.right_))
+                            medallions_[name(medallion.right_)].parent_ = name(last);
+
+                        current.right_ = medallion.right_;
+                        current.after_ = medallion.after_;
+
+                        current.left_ = medallion.left_;
+                        current.before_ = medallion.before_;
+
+                        medallion.parent_ = direct;
+                        copy(last, staker, stakee);
+                        step(key, medallion, -current.amount_, current.parent_);
+                        kill(last);
                     }
                 }
             }
@@ -229,9 +247,8 @@ contract OrchidDirectory is IOrchidDirectory {
         }
 
         Pending storage pending = pendings_[msg.sender][index];
-        require(pending.amount_ == 0);
-        pending.time_ = block.timestamp + 30 days;
-        pending.amount_ = amount;
+        pending.time_ = block.timestamp + delay_;
+        pending.amount_ += amount;
     }
 
 

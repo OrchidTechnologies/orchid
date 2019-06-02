@@ -26,6 +26,7 @@ cflags += -Wno-empty-body
 cflags += -Wno-logical-op-parentheses
 cflags += -Wno-missing-selector-name
 cflags += -Wno-potentially-evaluated-expression
+cflags += -Wno-tautological-constant-out-of-range-compare
 
 cflags += -fcoroutines-ts
 
@@ -34,14 +35,9 @@ cflags += -I$(output)/$(pwd)
 
 cflags += -I$(pwd)/cppcoro/include
 
-source += $(pwd)/cppcoro/lib/async_auto_reset_event.cpp
 source += $(pwd)/cppcoro/lib/async_manual_reset_event.cpp
 source += $(pwd)/cppcoro/lib/async_mutex.cpp
-source += $(pwd)/cppcoro/lib/auto_reset_event.cpp
 source += $(pwd)/cppcoro/lib/lightweight_manual_reset_event.cpp
-source += $(pwd)/cppcoro/lib/spin_mutex.cpp
-source += $(pwd)/cppcoro/lib/spin_wait.cpp
-source += $(pwd)/cppcoro/lib/static_thread_pool.cpp
 
 ifeq ($(target),win)
 source += $(pwd)/cppcoro/lib/win32.cpp
@@ -119,7 +115,7 @@ $(output)/gen_context: $(pwd)/secp256k1/src/gen_context.c
 
 $(pwd)/secp256k1/src/ecmult_static_context.h: pwd := $(pwd)
 $(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
-	cd $(pwd)/secp256k1 && $(PWD)/$(output)/gen_context
+	cd $(pwd)/secp256k1 && $(CURDIR)/$(output)/gen_context
 
 $(output)/$(pwd)/secp256k1/src/secp256k1.o: $(pwd)/secp256k1/src/ecmult_static_context.h
 
@@ -132,6 +128,21 @@ cflags += -DUSE_SCALAR_INV_BUILTIN
 cflags += -DUSE_FIELD_5X52
 cflags += -DUSE_SCALAR_4X64
 cflags += -DHAVE___INT128
+cflags += -DECMULT_WINDOW_SIZE=15
+
+
+c_eEVM := 
+
+source += $(pwd)/eEVM/evm/account.cpp
+source += $(pwd)/eEVM/evm/processor.cpp
+source += $(pwd)/eEVM/evm/stack.cpp
+source += $(pwd)/eEVM/evm/util.cpp
+c_eEVM += -I$(pwd)/eEVM/include
+
+source += $(pwd)/eEVM/3rdparty/keccak/KeccakHash.c
+source += $(pwd)/eEVM/3rdparty/keccak/KeccakSpongeWidth1600.c
+source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c
+c_eEVM += -I$(pwd)/eEVM/3rdparty
 
 
 include $(pwd)/rtc/target.mk

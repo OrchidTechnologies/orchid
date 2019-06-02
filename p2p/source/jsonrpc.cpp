@@ -219,13 +219,13 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg)
     auto id(result["id"]);
     orc_assert(!id.isNull() || !error.isNull());
 
-    orc_assert_(error.isNull(), [&]() {
+    orc_assert_(error.isNull(), ([&]() {
         auto text(writer.write(error));
         orc_assert(!text.empty());
         orc_assert(text[text.size() - 1] == '\n');
         text.resize(text.size() - 1);
         return text;
-    }());
+    }()));
 
     orc_assert(result["id"] == "");
     co_return result["result"];

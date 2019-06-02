@@ -20,6 +20,9 @@
 /* }}} */
 
 
+#include <openssl/err.h>
+
+#include "channel.hpp"
 #include "secure.hpp"
 
 namespace orc {
@@ -109,7 +112,7 @@ BIO_METHOD *Secure::Method() {
 
 int Secure::Write(BIO *bio, const char *data, int size) {
     // XXX: implement a true non-blocking zero-copy write
-    Task([this, beam = Beam(data, size)]() -> task<void> {
+    Spawn([this, beam = Beam(data, size)]() -> task<void> {
         co_await Inner()->Send(beam);
     });
     return size;
@@ -262,16 +265,14 @@ Secure::Secure(BufferDrain *drain, bool server, rtc::OpenSSLIdentity *identity, 
 
     if (server_) {
         next_ = &Secure::Server;
-        Post([&]() {
-            (this->*next_)();
-        });
+        (this->*next_)();
     }
 }
 
 task<void> Secure::Connect() {
     if (!server_) {
         next_ = &Secure::Client;
-        Post([&]() {
+        co_await Post([&]() {
             (this->*next_)();
         });
     }
@@ -291,7 +292,7 @@ task<void> Secure::Send(const Buffer &data) {
     orc_assert(opened_.is_set());
     Beam beam(data);
     auto lock(co_await send_.scoped_lock_async());
-    Post([&]() {
+    co_await Post([&]() {
         orc_assert(Call(ssl_, true, [&]() {
             return SSL_write(ssl_, beam.data(), beam.size());
         }) != -1);

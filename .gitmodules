@@ -16,9 +16,6 @@
 [submodule "abseil-cpp"]
 	path = min-webrtc/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp.git
-[submodule "boringssl"]
-	path = min-webrtc/boringssl
-	url = https://boringssl.googlesource.com/boringssl
 [submodule "libsrtp"]
 	path = min-webrtc/libsrtp
 	url = https://chromium.googlesource.com/chromium/deps/libsrtp
@@ -37,9 +34,6 @@
 [submodule "openvpn3"]
 	path = vpn-shared/openvpn3
 	url = https://github.com/OpenVPN/openvpn3.git
-[submodule "mbedtls"]
-	path = vpn-shared/mbedtls
-	url = https://github.com/ARMmbed/mbedtls.git
 [submodule "lz4"]
 	path = vpn-shared/lz4
 	url = https://github.com/lz4/lz4.git
@@ -49,6 +43,9 @@
 [submodule "libmaxminddb"]
 	path = vpn-shared/libmaxminddb
 	url = https://github.com/maxmind/libmaxminddb.git
+[submodule "libevent"]
+	path = vpn-shared/libevent
+	url = https://github.com/libevent/libevent.git
 [submodule "lwip"]
 	path = p2p/lwip
 	url = https://git.savannah.nongnu.org/git/lwip.git
@@ -79,3 +76,15 @@
 [submodule "secp256k1"]
 	path = p2p/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1.git
+[submodule "openssl"]
+	path = min-webrtc/openssl
+	url = https://github.com/openssl/openssl
+[submodule "libssh"]
+	path = vpn-shared/libssh
+	url = https://git.libssh.org/projects/libssh.git
+[submodule "zlib"]
+	path = vpn-shared/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "eEVM"]
+	path = p2p/eEVM
+	url = https://github.com/microsoft/eEVM.git

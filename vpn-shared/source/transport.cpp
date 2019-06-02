@@ -68,6 +68,7 @@ class Transport :
     U<Pipe> pipe_;
 
   public:
+    // NOLINTNEXTLINE (performance-unnecessary-value-param)
     Transport(const openvpn::ExternalTransport::Config config, asio::io_context &io_context, openvpn::TransportClientParent *parent) :
         config_(config),
         io_context(io_context),
@@ -100,7 +101,7 @@ class Transport :
 
         orc_assert(config_.remote_list);
         auto remote(config_.remote_list->first_item());
-        orc_assert(remote != NULL);
+        orc_assert(remote != nullptr);
 
         auto middle(std::make_unique<Sink<Middle>>(this));
 

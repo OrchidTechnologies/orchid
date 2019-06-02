@@ -23,6 +23,7 @@ monotonic := $(word 1,$(version))
 version := $(word 2,$(version))
 
 cflags := 
+qflags := 
 lflags := 
 wflags := 
 
@@ -31,12 +32,13 @@ linked :=
 header := 
 linker := 
 
+export := 
 output := out-$(target)
 
 cleans := 
 cleans += $(output)
 
-cflags += -gfull -Os
+qflags += -gfull -Os
 lflags += -Wl,-s
 
 cflags += -Wall

@@ -15,3 +15,4 @@
 null := 
 space := $(null) #
 comma := ,
+percent := %

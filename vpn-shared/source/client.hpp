@@ -38,6 +38,8 @@ class Server;
 
 class Origin {
   public:
+    virtual ~Origin() = default;
+
     virtual task<Socket> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) = 0;
 
     virtual task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
@@ -72,7 +74,7 @@ class Server :
     }
 
 
-    task<void> Send(const Buffer &data) {
+    task<void> Send(const Buffer &data) override {
         co_return co_await Inner()->Send(data);
     }
 
@@ -90,9 +92,6 @@ class Local final :
     public Origin
 {
   public:
-    virtual ~Local() {
-    }
-
     task<Socket> Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) override;
     task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
 };

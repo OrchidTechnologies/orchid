@@ -25,8 +25,8 @@
 
 #include <cppcoro/async_manual_reset_event.hpp>
 
-#include <asio/experimental/co_spawn.hpp>
-#include <asio/experimental/detached.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/detached.hpp>
 
 #include <boost/asio/async_result.hpp>
 #include <boost/asio/io_context.hpp>
@@ -34,100 +34,93 @@
 #include <iostream>
 
 #include <asio.hpp>
+#include "error.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-template <typename Type_>
-using Awaitable = asio::experimental::awaitable<Type_, asio::io_context::executor_type>;
-
-boost::asio::io_context &Context();
+asio::io_context &Context();
 std::thread &Thread();
 
-template <typename Type_, typename... Args_>
+template <typename Type_, typename... Values_>
 class Baton;
 
-template <typename Type_>
-class Baton<Type_, asio::error_code> {
-  public:
-    typedef void Value;
-    asio::error_code error_;
+template <>
+class Baton<void> {
+  private:
+    cppcoro::async_manual_reset_event ready_;
 
   public:
-    task<void> get() const {
-        if (error_) {
-            auto error(error_);
-            co_await Schedule();
-            throw std::move(error);
-        }
+    Baton() = default;
+
+    Baton(const Baton<void> &) = delete;
+    Baton(Baton<void> &&) = delete;
+
+    void set() {
+        ready_.set();
     }
 
-    Type_ set(const asio::error_code &error) {
-        error_ = error;
+    task<void> get() {
+        co_await ready_;
+        co_await Schedule();
     }
 };
 
-template <typename Type_, typename Value_>
-class Baton<Type_, asio::error_code, Value_> :
-    public Baton<Type_, asio::error_code>
+template <>
+class Baton<void, asio::error_code> :
+    public Baton<void>
 {
-  public:
-    typedef Value_ Value;
-    Value value_;
+  private:
+    asio::error_code error_;
 
   public:
-    task<Value> get() const {
-        co_await Baton<Type_, asio::error_code>::get();
-        auto value(std::move(value_));
-        co_await Schedule();
-        co_return std::move(value);
+    void set(const asio::error_code &error) {
+        error_ = error;
+        Baton<void>::set();
     }
 
-    Type_ set(const asio::error_code &error, Value &&value) {
-        Baton<Type_, asio::error_code>::set(error);
+    task<void> get() {
+        co_await Baton<void>::get();
+        if (error_)
+            throw asio::system_error(error_);
+    }
+};
+
+template <typename Value_>
+class Baton<void, asio::error_code, Value_> :
+    public Baton<void, asio::error_code>
+{
+  private:
+    Value_ value_;
+
+  public:
+    void set(const asio::error_code &error, Value_ &&value) {
         value_ = std::move(value);
+        Baton<void, asio::error_code>::set(error);
+    }
+
+    task<Value_> get() {
+        co_await Baton<void, asio::error_code>::get();
+        co_return std::move(value_);
     }
 };
 
 struct Token {
-    cppcoro::async_manual_reset_event event_;
-    void *baton_;
-
-    template <typename Type_, typename... Args_>
-    auto get() -> task<typename Baton<Type_, Args_...>::Value> {
-        co_await event_;
-        co_return co_await reinterpret_cast<Baton<Type_, Args_...> *>(baton_)->get();
-    }
-
-    template <typename Type_, typename... Args_>
-    void set(Args_ &&... args) {
-        reinterpret_cast<Baton<Type_, Args_...> *>(baton_)->set(std::forward<Args_>(args)...);
-        event_.set();
-    }
 };
 
-template <typename Type_, typename... Args_>
+template <typename Type_, typename... Values_>
 class Handler {
   public:
-    Token *token_;
-    Baton<Type_, Args_...> baton_;
+    Baton<Type_, Values_...> *baton_;
 
   public:
-    Handler(orc::Token &&token) :
-        token_(&token)
+    Handler(Baton<Type_, Values_...> *baton) :
+        baton_(baton)
     {
-        token_->baton_ = &baton_;
     }
 
-    Handler(orc::Handler<Type_, Args_...> &&rhs) noexcept :
-        token_(rhs.token_)
-    {
-        token_->baton_ = &baton_;
-        rhs.token_ = nullptr;
-    }
-
-    void operator()(Args_... args) {
-        token_->set<Type_, Args_...>(std::forward<Args_>(args)...);
+    void operator()(Values_... values) {
+        baton_->set(std::move(values)...);
     }
 };
 
@@ -136,24 +129,17 @@ class Handler {
 namespace boost {
 namespace asio {
 
-template <typename Type_, typename... Args_>
-class async_result<orc::Token, Type_ (Args_...)> {
-  public:
-    typedef orc::Handler<Type_, Args_...> completion_handler_type;
+template <typename Type_, typename... Values_>
+struct async_result<orc::Token, Type_ (Values_...)> {
+    async_result() = delete;
 
-  private:
-    orc::Token *token_;
+    typedef decltype(std::declval<orc::Baton<Type_, Values_...>>().get()) return_type;
 
-  public:
-    async_result(completion_handler_type &handler) :
-        token_(handler.token_)
-    {
-    }
-
-    typedef task<typename orc::Baton<Type_, Args_...>::Value> return_type;
-
-    return_type get() {
-        return token_->get<Type_, Args_...>();
+    template <typename Initiation_, typename... Args_>
+    static return_type initiate(Initiation_ initiation, orc::Token &&, Args_... args) {
+        orc::Baton<Type_, Values_...> baton;
+        std::move(initiation)(orc::Handler<Type_, Values_...>(&baton), std::move(args)...);
+        co_return co_await baton.get();
     }
 };
 

@@ -26,8 +26,6 @@
 #include <cstdarg>
 #include <sstream>
 
-#include "log.hpp"
-
 namespace orc {
 
 extern bool Verbose;

@@ -20,12 +20,21 @@
 
 include env/target.mk
 
+args := 
+args += --tls ../network.p12
+args += --dh ../dh.pem
+args += --ovpn ../app-ios/resource/PureVPN.ovpn
+
 .PHONY: all
 all: $(output)/orchid$(exe)
 
 .PHONY: test
 test: $(output)/orchid$(exe)
-	$(output)/orchid$(exe) --tls ../network.p12 --dh ../dh.pem
+	$(output)/orchid$(exe) $(args)
+
+.PHONY: debug
+debug: $(output)/orchid$(exe)
+	lldb -o 'run $(args)' $(output)/orchid$(exe)
 
 
 source += $(wildcard source/*.cpp)
@@ -36,6 +45,7 @@ source += $(wildcard p2p/boost/libs/program_options/src/*.cpp)
 include p2p/target.mk
 
 cflags += -Iextra
+cflags += -Ip2p/rtc/openssl/test/ossl_shim/include
 
 
 include env/output.mk

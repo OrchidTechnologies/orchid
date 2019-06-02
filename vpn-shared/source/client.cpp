@@ -217,7 +217,7 @@ task<Socket> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string
     auto answer(co_await Answer(Strip(co_await client->Offer()), host, port, verify));
     co_await client->Negotiate(answer);
     co_await channel->Connect();
-    auto candidate(client->Candidate());
+    auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ToString(), socket.port());
 }
@@ -238,6 +238,15 @@ task<S<Origin>> Setup() {
 
     //Endpoint endpoint({"https", "eth-ropsten.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
     Endpoint endpoint({"https", "ropsten.infura.io", "443", "/v3/" ORCHID_INFURA});
+    //Endpoint endpoint({"https", "api.myetherwallet.com", "443", "/rop"});
+    //Endpoint endpoint({"http", "localhost", "8545", "/"});
+
+    // https://github.com/Blockchair/Blockchair.Support/blob/master/API_DOCUMENTATION_EN.md
+    // https://api.blockchair.com/ethereum/blocks
+
+    // https://etherscan.io/apis https://ropsten.etherscan.io/apis#proxy
+    // https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken
+    // https://api.etherscan.io/api?module=proxy&action=eth_getBlockByNumber&tag=0x10d4f&boolean=true&apikey=YourApiKeyToken
 
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator;
     generator.seed(boost::random::random_device()());
@@ -249,21 +258,28 @@ task<S<Origin>> Setup() {
     //Address directory("0x9170a3b999884ec3514f181ad092587c2269ff30");
 
     for (unsigned i(0); i != 3; ++i) {
-        static Selector<Address, uint128_t> scan("scan");
-        auto address = co_await scan.Call(endpoint, latest, directory, generator());
-        orc_assert(address != 0);
+        typedef std::tuple<std::string, std::string, U<rtc::SSLFingerprint>> Descriptor;
+        auto [host, port, fingerprint] = co_await [&]() -> task<Descriptor> {
+            //co_return Descriptor{"mac.saurik.com", "8082", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
 
-        static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
-        auto [time, data] = co_await look.Call(endpoint, latest, directory, address);
+            static Selector<Address, uint128_t> scan("scan");
+            auto address = co_await scan.Call(endpoint, latest, directory, generator());
+            orc_assert(address != 0);
 
-        Json::Value descriptor;
-        Json::Reader reader;
-        orc_assert(reader.parse(data.str(), descriptor, false));
+            static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
+            auto [time, data] = co_await look.Call(endpoint, latest, directory, address);
 
-        U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateUniqueFromRfc4572(descriptor["tls-algorithm"].asString(), descriptor["tls-fingerprint"].asString()));
+            Json::Value descriptor;
+            Json::Reader reader;
+            orc_assert(reader.parse(data.str(), descriptor, false));
+
+            co_return Descriptor{descriptor["host"].asString(), descriptor["port"].asString(),
+                rtc::SSLFingerprint::CreateUniqueFromRfc4572(descriptor["tls-algorithm"].asString(), descriptor["tls-fingerprint"].asString())};
+        }();
+
         orc_assert(fingerprint != nullptr);
         auto server(std::make_shared<Sink<Server, Secure>>(std::move(fingerprint)));
-        co_await server->Swing(server.get(), origin, descriptor["host"].asString(), descriptor["port"].asString());
+        co_await server->Swing(server.get(), origin, host, port);
         origin = server;
     }
 

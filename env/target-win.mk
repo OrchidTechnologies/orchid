@@ -14,7 +14,11 @@ lib := lib
 exe := .exe
 
 #arch := i686
+#ossl := mingw
+
 arch := x86_64
+ossl := mingw64
+
 host := $(arch)-w64-mingw32
 
 include $(pwd)/target-ndk.mk
@@ -29,6 +33,9 @@ more += -DWIN32_LEAN_AND_MEAN=
 
 cycc := $(llvm)/clang $(more)
 cycp := $(llvm)/clang++ $(more) -stdlib=libc++
+
+ranlib := $(arch)-w64-mingw32-ranlib
+ar := $(arch)-w64-mingw32-ar
 
 lflags += -static
 lflags += -lc++
@@ -50,6 +57,7 @@ cflags += -Wno-unknown-pragmas
 
 msys2 := 
 msys2 += crt-git-7.0.0.5397.291c4f8d-1
+msys2 += dlfcn-1.1.2-1
 msys2 += gcc-8.3.0-2
 msys2 += headers-git-7.0.0.5397.291c4f8d-1
 msys2 += libc++-8.0.0-2

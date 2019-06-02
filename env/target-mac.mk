@@ -9,10 +9,16 @@
 # }}}
 
 
-arch := x86_64
 sdk := macosx
 
+#arch := i386
+#ossl := darwin-i386-cc
+
+arch := x86_64
+ossl := darwin64-x86_64-cc
+
 host := $(arch)-apple-darwin
+
 more := -mmacosx-version-min=10.14
 
 include $(pwd)/target-apl.mk

@@ -20,28 +20,26 @@
 /* }}} */
 
 
-#include <boost/regex.hpp>
+#include <regex>
 
 #include <api/sctp_transport_interface.h>
 #include <p2p/base/ice_transport_internal.h>
 
-#include "rtc_base/ssl_adapter.h"
+#include <rtc_base/async_invoker.h>
+#include <rtc_base/ssl_adapter.h>
 
 #include "channel.hpp"
+#include "memory.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
-static std::unique_ptr<rtc::Thread> signals_;
-static std::unique_ptr<rtc::Thread> network_;
-static std::unique_ptr<rtc::Thread> working_;
-
-void Post(std::function<void ()> code) {
-    signals_->Invoke<void>(RTC_FROM_HERE, std::move(code));
+const Threads &Threads::Get() {
+    static Threads threads;
+    return threads;
 }
 
-__attribute__((__constructor__))
-static void SetupThread() {
+Threads::Threads() {
     signals_ = rtc::Thread::Create();
     signals_->SetName("Orchid WebRTC Signals", nullptr);
     signals_->Start();
@@ -57,6 +55,8 @@ static void SetupThread() {
     _trace();
 }
 
+// XXX: should this task really be delegated to WebRTC?
+// NOLINTNEXTLINE (fuchsia-statically-constructed-objects)
 struct SetupSSL {
     SetupSSL() { rtc::InitializeSSL(); }
     ~SetupSSL() { rtc::CleanupSSL(); }
@@ -65,10 +65,11 @@ struct SetupSSL {
 Peer::Peer(Configuration configuration) :
     peer_([&]() {
         static auto factory(webrtc::CreateModularPeerConnectionFactory([]() {
+            const auto &threads(Threads::Get());
             webrtc::PeerConnectionFactoryDependencies dependencies;
-            dependencies.network_thread = network_.get();
-            dependencies.worker_thread = working_.get();
-            dependencies.signaling_thread = signals_.get();
+            dependencies.network_thread = threads.network_.get();
+            dependencies.worker_thread = threads.working_.get();
+            dependencies.signaling_thread = threads.signals_.get();
             return dependencies;
         }()));
 
@@ -94,10 +95,14 @@ Peer::Peer(Configuration configuration) :
 {
 }
 
-cricket::Candidate Peer::Candidate() {
-    return network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
-        auto sctp(peer_->GetSctpTransport());
-        orc_assert(sctp != nullptr);
+task<cricket::Candidate> Peer::Candidate() {
+    auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
+        return peer_->GetSctpTransport();
+    }));
+
+    orc_assert(sctp != nullptr);
+
+    co_return Threads::Get().network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
         auto dtls(sctp->dtls_transport());
         orc_assert(dtls != nullptr);
         auto ice(dtls->ice_transport());
@@ -180,8 +185,8 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
                 Log() << "OnStandardizedIceConnectionChange(kIceConnectionFailed)" << std::endl;
 
             // you can't close a PeerConnection if it is blocked in a signal
-            Task([this]() -> task<void> {
-                co_return Post([this]() {
+            Spawn([this]() -> task<void> {
+                co_await Post([this]() {
                     for (auto current(channels_.begin()); current != channels_.end(); ) {
                         auto next(current);
                         ++next;
@@ -213,8 +218,8 @@ void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interf
 }
 
 std::string Strip(const std::string &sdp) {
-    static boost::regex re("\r?\na=candidate:[^\r\n]*");
-    return boost::regex_replace(sdp, re, "");
+    static std::regex re("\r?\na=candidate:[^\r\n]*");
+    return std::regex_replace(sdp, re, "");
 }
 
 }

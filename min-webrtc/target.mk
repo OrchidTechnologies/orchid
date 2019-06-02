@@ -35,6 +35,9 @@ webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
 
+webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event.cc
+webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event_log.cc
+
 webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
 
 webrtc += $(pwd)/webrtc/api/video/color_space.cc
@@ -50,9 +53,7 @@ webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_transport_st
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_writable_state.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pair_config.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pair.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/output/rtc_event_log_output_file.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/ice_logger.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_event_log.cc
 
 webrtc += $(filter-out \
     %/adapted_video_track_source.cc \
@@ -107,17 +108,22 @@ webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/*.cc)
 cflags += -I$(pwd)/abseil-cpp
 
 
-webrtc += $(wildcard $(pwd)/boringssl/crypto/*.c)
-webrtc += $(wildcard $(pwd)/boringssl/crypto/*/*.c)
-webrtc += $(wildcard $(pwd)/boringssl/ssl/*.cc)
-webrtc += $(wildcard $(pwd)/boringssl/third_party/fiat/curve25519.c)
+$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: pwd := $(pwd)
+$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(linker)
+	rm -rf $(output)/openssl
+	mkdir -p $(output)/openssl
+	cd $(output)/openssl && $(export) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-dso no-shared \
+	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)"
+	$(export) $(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
 
-source += $(output)/err_data.c
-$(output)/err_data.c: $(pwd)/boringssl/crypto/err/err_data_generate.go
-	@mkdir -p $(dir $@)
-	(cd $(dir $<); go run $(notdir $<)) >$@
+$(output)/%/libssl.a $(output)/%/libcrypto.a: $(output)/%/Makefile $(linker)
+	$(export) $(MAKE) -C $(output)/openssl build_libs
 
-webrtc += $(wildcard $(pwd)/third_party/boringssl/err_data.c)
+cflags += -I$(pwd)/openssl/include
+cflags += -I$(output)/openssl/include
+linked += $(output)/openssl/libssl.a
+linked += $(output)/openssl/libcrypto.a
+header += $(output)/openssl/include/openssl/opensslconf.h
 
 
 webrtc += $(wildcard $(pwd)/libsrtp/srtp/*.c)
@@ -143,6 +149,7 @@ webrtc := $(filter-out %_neon.cc,$(webrtc))
 
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/strings/json.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/%,$(webrtc))
+source += $(pwd)/webrtc/rtc_base/system/file_wrapper.cc
 
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac_%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_gcd.cc,$(webrtc))

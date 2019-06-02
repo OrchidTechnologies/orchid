@@ -40,9 +40,10 @@
 
 #include <asio.hpp>
 
-#include <json/json.h>
+#include <openssl/base.h>
+#include <openssl/pkcs12.h>
 
-#include <openssl/pkcs8.h>
+#include <json/json.h>
 
 #include <pc/webrtc_sdp.h>
 #include <rtc_base/message_digest.h>
@@ -64,6 +65,11 @@
 
 
 namespace po = boost::program_options;
+
+namespace bssl {
+    BORINGSSL_MAKE_DELETER(PKCS12, PKCS12_free)
+    BORINGSSL_MAKE_STACK_DELETER(X509, X509_free)
+}
 
 namespace orc {
 
@@ -172,7 +178,7 @@ class Waiter :
         orc_assert(peer != nullptr);
         co_await peer->Negotiate(sdp);
         co_await Inner()->Connect();
-        co_return webrtc::SdpSerializeCandidate(peer->Candidate());
+        co_return webrtc::SdpSerializeCandidate(co_await peer->Candidate());
     }
 
     task<void> Send(const Buffer &data) override {
@@ -249,7 +255,7 @@ _trace();
 
 
     void Land(const Buffer &data) override {
-        Task([self = shared_from_this(), data = Beam(data)]() -> task<void> {
+        Spawn([self = shared_from_this(), data = Beam(data)]() -> task<void> {
             co_await self->Send(data);
         });
     }
@@ -267,7 +273,7 @@ _trace();
         } else if (command == BatchTag) {
             // XXX: make this more efficient
             std::string builder;
-            Call(data, [&](const Buffer &data) -> task<void> {
+            co_await Call(data, [&](const Buffer &data) -> task<void> {
                 builder += data.str();
                 co_return;
             });
@@ -404,14 +410,14 @@ class Conduit :
 
     void Land(const Buffer &data) override {
         orc_assert(space_ != nullptr);
-        Task([space = space_, data = Beam(data)]() -> task<void> {
+        Spawn([space = space_, data = Beam(data)]() -> task<void> {
             space->Bill(1);
             co_return co_await space->Call(data);
         });
     }
 
     void Stop(const std::string &error) override {
-        Task([this]() -> task<void> {
+        Spawn([this]() -> task<void> {
             co_await Inner()->Shut();
             // XXX: space needs to be reference counted
             co_await space_->Shut();
@@ -420,7 +426,7 @@ class Conduit :
     }
 
   public:
-    static std::pair<S<Conduit>, Sink<Secure> *> Spawn(S<Ship> ship) {
+    static std::pair<S<Conduit>, Sink<Secure> *> Create(S<Ship> ship) {
         auto conduit(Make<Sink<Conduit, Secure>>());
         conduit->self_ = conduit;
         auto secure(conduit->Wire<Sink<Secure>>(true, ship->Identity(), [ship = std::move(ship), conduit = conduit.get()](const rtc::OpenSSLCertificate &certificate) -> bool {
@@ -458,10 +464,10 @@ class Incoming final :
 
   protected:
     void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        auto [conduit, inner](Conduit::Spawn(ship_));
+        auto [conduit, inner](Conduit::Create(ship_));
         auto channel(inner->Wire<Channel>(shared_from_this(), interface));
 
-        Task([conduit = conduit, channel]() -> task<void> {
+        Spawn([conduit = conduit, channel]() -> task<void> {
             co_await channel->Connect();
             co_await conduit->Connect();
         });
@@ -484,7 +490,7 @@ class Incoming final :
     }
 
     template <typename... Args_>
-    static S<Incoming> Spawn(Args_ &&...args) {
+    static S<Incoming> Create(Args_ &&...args) {
         auto self(Make<Incoming>(std::forward<Args_>(args)...));
         self->self_ = self;
         return self;
@@ -526,15 +532,17 @@ _trace();
     }
 
     task<std::string> Respond(const std::string &offer) override {
-        auto incoming(Incoming::Spawn(shared_from_this()));
+        auto incoming(Incoming::Create(shared_from_this()));
         auto answer(co_await incoming->Answer(offer));
-        //answer = boost::regex_replace(std::move(answer), boost::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
+        //answer = std::regex_replace(std::move(answer), std::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
         co_return answer;
     }
 };
 
 std::string Stringify(bssl::UniquePtr<BIO> bio) {
     char *data;
+    // BIO_get_mem_data is an inline macro with a char * cast
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     size_t size(BIO_get_mem_data(bio.get(), &data));
     return {data, size};
 }
@@ -706,7 +714,7 @@ int Main(int argc, const char *const argv[]) {
     static boost::asio::posix::stream_descriptor out(Context(), ::dup(STDOUT_FILENO));
 #endif
 
-    http::basic_router<SslHttpSession> router{boost::regex::ECMAScript};
+    http::basic_router<SslHttpSession> router{std::regex::ECMAScript};
 
     router.post("/", [&](auto request, auto context) {
         http::out::pushn<std::ostream>(out, request);
@@ -747,9 +755,6 @@ int Main(int argc, const char *const argv[]) {
         }, fail);
     }, fail);
 
-
-    asio::signal_set signals(Context(), SIGINT, SIGTERM);
-    signals.async_wait([&](auto, auto) { Context().stop(); });
 
     Thread().join();
     return 0;

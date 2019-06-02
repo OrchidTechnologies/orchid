@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
-import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/accomodate_keyboard.dart';
+import 'package:orchid/pages/common/accommodate_keyboard.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
@@ -25,7 +24,7 @@ class _OnboardingVPNCredentialsPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: SmallAppBar.build(context),
+      appBar: SmallAppBar(),
       body: Container(
           decoration:
               BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
@@ -35,7 +34,7 @@ class _OnboardingVPNCredentialsPageState
                 children: <Widget>[
                   // For large screens distribute the space a bit, else fixed margin.
                   WalkthroughPages.TopContentPadding.value(context),
-                  buildDescription(),
+                  _VPNCredentialsDescription(),
                   SizedBox(height: 68),
                   VPNCredentialsEntry(
                       controller: _vpnCredentialsEntryController),
@@ -62,44 +61,6 @@ class _OnboardingVPNCredentialsPageState
     );
   }
 
-  Widget buildDescription() {
-    var titleText = "VPN Login";
-    var bodyRichText = buildRichText();
-
-    var headerTextBox = new WalkthroughHeaderTextBox(titleText: titleText);
-    var bodyTextBox = new WalkthroughBodyTextBox(bodyRichText: bodyRichText);
-
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Center(
-          child: Column(
-            children: <Widget>[
-              headerTextBox,
-              SizedBox(height: 20),
-              bodyTextBox,
-            ],
-          ),
-        ));
-  }
-
-  TextSpan buildRichText() {
-    return TextSpan(
-      children: <TextSpan>[
-        TextSpan(
-            text:
-                "For Alpha, we have partnered with [VPN Partner]. Enter your login credentials below "
-                "and Orchid will pair you with the best available server. "
-                "If you don't have an account with [VPN Provider], you can sign up for a free trial.",
-            style: AppText.onboardingBodyStyle),
-        LinkTextSpan(
-          text: "here.",
-          style: AppText.linkStyle,
-          url: 'https://orchid.com',
-        ),
-      ],
-    );
-  }
-
   void _next() async {
     bool success = await _vpnCredentialsEntryController.save();
     if (success) {
@@ -115,5 +76,43 @@ class _OnboardingVPNCredentialsPageState
   void _complete() async {
     await UserPreferences().setPromptedForVPNCredentials(true);
     AppOnboarding().pageComplete(context);
+  }
+}
+
+class _VPNCredentialsDescription extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    var titleText = "VPN Login";
+    var bodyRichText = TextSpan(
+      children: <TextSpan>[
+        TextSpan(
+            text:
+                "For Alpha, we have partnered with [VPN Partner]. Enter your login credentials below "
+                "and Orchid will pair you with the best available server. "
+                "If you don't have an account with [VPN Provider], you can sign up for a free trial.",
+            style: AppText.onboardingBodyStyle),
+        LinkTextSpan(
+          text: "here.",
+          style: AppText.linkStyle,
+          url: 'https://orchid.com',
+        ),
+      ],
+    );
+
+    var headerTextBox = new WalkthroughHeaderTextBox(titleText: titleText);
+    var bodyTextBox = new WalkthroughBodyTextBox(bodyRichText: bodyRichText);
+
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Center(
+          child: Column(
+            children: <Widget>[
+              headerTextBox,
+              SizedBox(height: 20),
+              bodyTextBox,
+            ],
+          ),
+        ));
   }
 }

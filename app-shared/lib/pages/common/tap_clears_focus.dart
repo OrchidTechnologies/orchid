@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Wrap the child in a tap gesture detector that clears focus.
+/// A widget that wraps its child in a tap gesture detector that clears focus.
 /// The effect is that taps that are not handled by child widgets (e.g. taps
 /// "outside" the active components) cause focus to clear, removing the keyboard.
 ///
