@@ -12,5 +12,8 @@ provision :=
 cflags += '-DORCHID_INFURA="XXX"'
 cflags += '-DORCHID_ALCHEMY="XXX"'
 
+username := XXX
+password := XXX
+
 cflags += '-DORCHID_USERNAME="XXX"'
 cflags += '-DORCHID_PASSWORD="XXX"'

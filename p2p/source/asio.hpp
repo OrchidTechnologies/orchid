@@ -26,6 +26,7 @@
 namespace asio {
     using namespace boost::asio;
     using boost::system::error_code;
+    using boost::system::system_category;
     using boost::system::system_error;
 }
 #endif
