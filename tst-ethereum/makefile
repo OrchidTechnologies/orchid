@@ -29,9 +29,8 @@ test: $(output)/orchid$(exe)
 
 source += $(wildcard source/*.cpp)
 cflags += -Isource
-cflags += -I$(pwd)/aleth
-cflags += -Ip2p/aleth
-
+#cflags += -I$(pwd)/aleth
+#cflags += -Ip2p/aleth
 #header += "aleth/"
 
 
