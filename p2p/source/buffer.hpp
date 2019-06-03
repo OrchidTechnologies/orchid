@@ -386,7 +386,7 @@ class Number<Type_, true> final :
     }
 
     operator Type_() const {
-        return value_;
+        return boost::endian::big_to_native(value_);
     }
 
     const uint8_t *data() const override {
