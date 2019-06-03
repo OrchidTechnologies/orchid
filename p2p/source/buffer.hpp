@@ -122,45 +122,28 @@ class Region :
     }
 };
 
-class Range final {
-  private:
-    const uint8_t *data_;
+template <typename Type_ = uint8_t>
+class Span {
+  protected:
+    Type_ *data_;
     size_t size_;
 
   public:
-    Range() = default;
+    Span() = default;
 
-    Range(const Range &range) :
-        data_(range.data()),
-        size_(range.size())
+    Span(const Span &span) :
+        data_(span.data()),
+        size_(span.size())
     {
     }
 
-    Range(const Region &region) :
-        data_(region.data()),
-        size_(region.size())
-    {
-    }
-
-    Range(const uint8_t *data, size_t size) :
+    Span(Type_ *data, size_t size) :
         data_(data),
         size_(size)
     {
     }
 
-    Range(const char *data, size_t size) :
-        data_(reinterpret_cast<const uint8_t *>(data)),
-        size_(size)
-    {
-    }
-
-    Range &operator =(const Region &region) {
-        data_ = region.data();
-        size_ = region.size();
-        return *this;
-    }
-
-    const uint8_t *data() const {
+    Type_ *data() const {
         return data_;
     }
 
@@ -168,19 +151,51 @@ class Range final {
         return size_;
     }
 
-    Range &operator +=(size_t offset) {
+    template <typename Cast_>
+    Cast_ &cast(size_t offset = 0) {
+        static_assert(sizeof(Type_) == 1);
+        orc_assert(size() >= offset + sizeof(Cast_));
+        return *reinterpret_cast<Cast_ *>(data() + offset);
+    }
+
+    Span &operator +=(size_t offset) {
         orc_assert(size_ >= offset);
         data_ += offset;
         size_ -= offset;
         return *this;
     }
 
-    Range &operator ++() {
+    Span &operator ++() {
         return *this += 1;
     }
 
     uint8_t operator [](size_t index) const {
         return data_[index];
+    }
+};
+
+class Range final :
+    public Span<const uint8_t>
+{
+  public:
+    using Span<const uint8_t>::Span;
+
+    Range() = default;
+
+    Range(const Region &region) :
+        Span(region.data(), region.size())
+    {
+    }
+
+    Range(const char *data, size_t size) :
+        Span(reinterpret_cast<const uint8_t *>(data), size)
+    {
+    }
+
+    Range &operator =(const Region &region) {
+        data_ = region.data();
+        size_ = region.size();
+        return *this;
     }
 
     operator asio::const_buffer() const {
