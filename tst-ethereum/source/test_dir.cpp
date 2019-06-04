@@ -222,9 +222,9 @@ namespace orc
 
         for (int i(0); i < int(node_address.size()); i++) {
             auto ntokens  = node_ntokens[uint256_t(node_address[i])];
-            float rtokens = double(ntokens) / double(tot_ntokens);
+            float rtokens = float(double(ntokens) / double(tot_ntokens));
             int cnt       = cnts[uint256_t(node_address[i])];
-            float rcnt    = double(cnt) / double(nsamples);
+            float rcnt    = float(double(cnt) / double(nsamples));
             printf("[%d] node[%i]: ", __LINE__, i); std::cout << std::hex << node_address[i] << "  " << std::dec << node_ntokens[uint256_t(node_address[i])] << " " << rtokens << " " << rcnt << std::endl;
         }
         

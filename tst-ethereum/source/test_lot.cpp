@@ -65,7 +65,7 @@ namespace orc
 		//operator Signature() const 			{ return *(Signature const*)this; }
 
 
-		SignatureStruct(Signature const& _s) : r(), s() {
+		SignatureStruct(Signature const& _s) {
 			auto [tr, ts, tv] = Take<Brick<32>, Brick<32>, Number<uint8_t>>(_s);
 			r = tr; s = ts; v = tv;
 		}
@@ -75,14 +75,14 @@ namespace orc
 		}
 
 		/// @returns true if r,s,v values are valid, otherwise false
-		bool isValid() const noexcept;
+		bool isValid() const;
 
 		h256 r;
 		h256 s;
 		byte v = 0;
 	};
 
-	bool SignatureStruct::isValid() const noexcept
+	bool SignatureStruct::isValid() const
 	{
 	    static const uint256_t s_max{"0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"};
 	    static const uint256_t s_zero;
@@ -116,7 +116,7 @@ namespace orc
 	{
 		auto* ctx = getCtx();
 		secp256k1_ecdsa_recoverable_signature rawSig;
-		if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr))
+		if (!bool(secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr)))
 			return Signature();
 
 		Signature s;
@@ -146,11 +146,11 @@ namespace orc
 
 	    auto* ctx = getCtx();
 	    secp256k1_ecdsa_recoverable_signature rawSig;
-	    if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, _sig.data(), v))
+	    if (!bool(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, _sig.data(), v)))
 	        return {};
 
 	    secp256k1_pubkey rawPubkey;
-	    if (!secp256k1_ecdsa_recover(ctx, &rawPubkey, &rawSig, _message.data()))
+	    if (!bool(secp256k1_ecdsa_recover(ctx, &rawPubkey, &rawSig, _message.data())))
 	        return {};
 
 	    std::array<byte, 65> serializedPubkey;
@@ -377,7 +377,7 @@ namespace orc
    		uint256_t secret		= 1;
    		Brick<32> secret_hash 	= Hash(Tie(Number<uint256_t>(secret)));
 	    uint64_t faceValue 		= one_eth / 10;
-	    uint256_t until			= std::time(0) + 1000000;
+	    uint256_t until			= std::time(nullptr) + 1000000;
 	    uint256_t winProb     	= uint256_t("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 	    uint256_t nonce       	= uint256_t("0x24a025cfe44e8cca34ee5028817704a213dedf2108cdb1c1717270646c8f26b1");
 
