@@ -30,7 +30,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
 
 #include <net/if_utun.h>
@@ -84,11 +84,15 @@ class Transport :
     virtual Link *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
+        Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
         openvpn::BufferAllocated buffer(data.size(), openvpn::BufferAllocated::ARRAY);
+_trace();
         data.copy(buffer.data(), buffer.size());
+_trace();
         asio::dispatch(context_, [parent = parent_, buffer = std::move(buffer)]() mutable {
+            std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
             parent->transport_recv(buffer);
+_trace();
         });
     }
 
@@ -109,6 +113,7 @@ class Transport :
     }
 
     void stop() override {
+_trace();
         Wait([&]() -> task<void> {
             co_await Inner()->Shut();
         }());
@@ -117,7 +122,7 @@ class Transport :
     bool transport_send_const(const openvpn::Buffer &data) override {
         Spawn([this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
             co_await Schedule();
-            //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
+            Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
             co_await Inner()->Send(buffer);
         });
 
@@ -128,7 +133,7 @@ class Transport :
         Spawn([this, buffer = std::move(buffer)]() -> task<void> {
             co_await Schedule();
             Subset data(buffer.c_data(), buffer.size());
-            //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
+            Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
             co_await Inner()->Send(data);
         });
 
@@ -183,8 +188,10 @@ class Factory :
             co_await Schedule();
 
             asio::dispatch(context, [parent]() {
+_trace();
                 parent->transport_pre_resolve();
                 parent->transport_wait();
+_trace();
             });
 
             orc_assert(config_.remote_list);
@@ -194,11 +201,15 @@ class Factory :
             co_await origin_->Connect(transport.get(), remote->server_host, remote->server_port);
 
             asio::dispatch(context, [parent]() {
+_trace();
                 parent->transport_connecting();
+_trace();
             });
         } catch (const std::exception &error) {
             asio::dispatch(context, [parent, what = error.what()]() {
+_trace();
                 parent->transport_error(openvpn::Error::UNDEF, what);
+_trace();
             });
         } });
 
@@ -417,7 +428,12 @@ class Client :
 
     task<void> Connect() {
         thread_ = std::thread([this]() {
-            connect();
+            try {
+                connect();
+            } catch (...) {
+                _trace();
+            }
+            orc_insist(false);
         });
 
         // XXX: put this in the right place
@@ -453,6 +469,7 @@ class Capture :
     void Land(const Buffer &data) override {
         if (!client_)
             return;
+        Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
         auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
         client_->Send(packet);
     }
@@ -464,6 +481,7 @@ class Capture :
     void Liberate(const Buffer &data) override {
         uint32_t family(2);
         Spawn([this, beam = Beam(Tie(Number<uint32_t>(family), data))]() -> task<void> {
+            Log() << "\e[33;1mRECV " << beam.size() << " " << beam << "\e[0m" << std::endl;
             co_await Inner()->Send(beam);
         });
     }
