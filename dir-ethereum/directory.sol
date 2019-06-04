@@ -25,12 +25,12 @@ pragma solidity ^0.5.7;
 import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 interface IOrchidDirectory {
-    function have() external view returns (uint64 amount);
+    function have() external view returns (uint128 amount);
 }
 
 contract OrchidDirectory is IOrchidDirectory {
 
-    ERC20 private orchid_;
+    ERC20   orchid_;
     uint256 delay_;
 
     constructor(address orchid, uint256 delay) public {
@@ -71,10 +71,10 @@ contract OrchidDirectory is IOrchidDirectory {
 
 
     struct Medallion {
-        uint64 before_;
-        uint64 after_;
+        uint128 before_;
+        uint128 after_;
 
-        uint64 amount_;
+        uint128 amount_;
         address stakee_;
 
         bytes32 parent_;
@@ -82,12 +82,12 @@ contract OrchidDirectory is IOrchidDirectory {
         Primary right_;
     }
 
-    mapping(bytes32 => Medallion) private medallions_;
+    mapping(bytes32 => Medallion) medallions_;
 
     Primary private root_;
 
 
-    function have() public view returns (uint64 amount) {
+    function have() public view returns (uint128 amount) {
         if (nope(root_))
             return 0;
         Medallion storage medallion = medallions_[name(root_)];
@@ -97,7 +97,7 @@ contract OrchidDirectory is IOrchidDirectory {
     function scan(uint128 percent) public view returns (address) {
         require(!nope(root_));
 
-        uint64 point = uint64(have() * uint256(percent) / 2**128);
+        uint128 point = uint128(have() * uint256(percent) / 2**128);
 
         Primary storage primary = root_;
         for (;;) {
@@ -120,7 +120,7 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
 
-    function step(bytes32 key, Medallion storage medallion, uint64 amount, bytes32 root) private {
+    function step(bytes32 key, Medallion storage medallion, uint128 amount, bytes32 root) private {
         while (medallion.parent_ != root) {
             bytes32 parent = medallion.parent_;
             medallion = medallions_[parent];
@@ -132,7 +132,7 @@ contract OrchidDirectory is IOrchidDirectory {
         }
     }
 
-    function push(address stakee, uint64 amount) public {
+    function push(address stakee, uint128 amount) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
@@ -164,7 +164,7 @@ contract OrchidDirectory is IOrchidDirectory {
 
     struct Pending {
         uint256 time_;
-        uint64 amount_;
+        uint128 amount_;
     }
 
     mapping(address => mapping(uint256 => Pending)) private pendings_;
@@ -176,7 +176,7 @@ contract OrchidDirectory is IOrchidDirectory {
         require(orchid_.transfer(target, pending.amount_));
     }
 
-    function pull(address stakee, uint64 amount, uint256 index) public {
+    function pull(address stakee, uint128 amount, uint256 index) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];

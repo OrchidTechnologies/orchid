@@ -503,7 +503,7 @@ class Selector final :
     {
     }
 
-    Selector(const std::string &name) :
+    Selector(const std::string &name, uint256_t gas = 90000) :
         Selector([&]() {
             std::ostringstream signature;
             signature << name << '(';
@@ -511,7 +511,7 @@ class Selector final :
             signature << ')';
             std::cerr << signature.str() << std::endl;
             return Hash(Strung(signature.str())).Clip<4>().num<uint32_t>();
-        }())
+        }(), std::move(gas))
     {
     }
 
@@ -527,6 +527,21 @@ class Selector final :
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
+            {"to", contract},
+            {"gas", gas_},
+            {"data", Tie(*this, builder)},
+        }, block})).asString()));
+        Window window(data);
+        auto result(Coded<Result_>::Decode(window));
+        window.Stop();
+        co_return std::move(result);
+    }
+
+    task<Result_> Call(Endpoint &endpoint, const Address &from, const Argument &block, const Address &contract, const Args_ &...args) {
+        Builder builder;
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
+        auto data(Bless((co_await endpoint("eth_call", {Map{
+            {"from", from},
             {"to", contract},
             {"gas", gas_},
             {"data", Tie(*this, builder)},
