@@ -26,7 +26,7 @@ import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 contract OrchidLottery {
 
-    ERC20 orchid_;
+    ERC20 internal orchid_;
 
     constructor(address orchid) public {
         orchid_ = ERC20(orchid);
@@ -39,7 +39,7 @@ contract OrchidLottery {
         uint256 unlock_;
     }
 
-    mapping(address => Pot) pots_;
+    mapping(address => Pot) internal pots_;
 
     event Update(address indexed signer, uint64 amount, uint64 escrow, uint256 unlock);
 
@@ -58,7 +58,7 @@ contract OrchidLottery {
         uint256 until_;
     }
 
-    mapping(address => mapping(bytes32 => Track)) tracks_;
+    mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
     function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(secret)) == hash);

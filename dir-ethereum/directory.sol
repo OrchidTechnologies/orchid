@@ -30,8 +30,8 @@ interface IOrchidDirectory {
 
 contract OrchidDirectory is IOrchidDirectory {
 
-    ERC20   orchid_;
-    uint256 delay_;
+    ERC20 internal orchid_;
+    uint256 internal delay_;
 
     constructor(address orchid, uint256 delay) public {
         orchid_ = ERC20(orchid);
@@ -82,7 +82,7 @@ contract OrchidDirectory is IOrchidDirectory {
         Primary right_;
     }
 
-    mapping(bytes32 => Medallion) medallions_;
+    mapping(bytes32 => Medallion) internal medallions_;
 
     Primary private root_;
 
