@@ -14,12 +14,12 @@ $(output)/zlib/Makefile: pwd := $(pwd)
 $(output)/zlib/Makefile: $(pwd)/zlib/configure $(linker) $(parts)
 	rm -rf $(output)/zlib
 	mkdir -p $(output)/zlib
-	cd $(output)/zlib && $(export) CC="$(cycc)" CFLAGS="$(qflags)" ../../$(pwd)/zlib/configure --static
+	cd $(output)/zlib && $(environ) CC="$(cycc)" CFLAGS="$(qflags)" ../../$(pwd)/zlib/configure --static
 
 $(output)/zlib/libz.a: output := $(output)
 $(output)/zlib/libz.a: pwd := $(pwd)
 $(output)/zlib/libz.a: $(output)/zlib/Makefile $(linker)
-	$(export) $(MAKE) -C $(output)/zlib libz.a RANLIB="$(ranlib)" AR="$(ar)" ARFLAGS="-r"
+	$(environ) $(MAKE) -C $(output)/zlib libz.a RANLIB="$(ranlib)" AR="$(ar)" ARFLAGS="-r"
 
 cflags += -I$(pwd)/zlib/include
 linked += $(output)/zlib/libz.a

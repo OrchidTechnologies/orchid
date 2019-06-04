@@ -98,7 +98,7 @@ $(output)/tor/Makefile: pwd := $(pwd)
 $(output)/tor/Makefile: $(pwd)/tor/configure $(deps) $(linker)
 	rm -rf $(output)/tor
 	mkdir -p $(output)/tor
-	cd $(output)/tor && $(export) ../../$(pwd)/tor/configure --host=$(host) --prefix=$(out)/usr --disable-tool-name-check \
+	cd $(output)/tor && $(environ) ../../$(pwd)/tor/configure --host=$(host) --prefix=$(out)/usr --disable-tool-name-check \
 	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" $(config)
 
 temp := $(subst /tor/,/%/,$(tor))
@@ -106,7 +106,7 @@ temp := $(subst /tor/,/%/,$(tor))
 $(temp): output := $(output)
 $(temp): pwd := $(pwd)
 $(temp): $(output)/%/Makefile $(deps) $(linker) $(shell find $(pwd)/tor -name '*.c')
-	$(export) $(MAKE) -C $(output)/tor
+	$(environ) $(MAKE) -C $(output)/tor
 
 cflags += -I$(pwd)/tor/src
 linked += $(tor)

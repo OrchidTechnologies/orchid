@@ -32,7 +32,7 @@ linked :=
 header := 
 linker := 
 
-export := 
+environ := 
 output := out-$(target)
 
 cleans := 

@@ -112,12 +112,12 @@ $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: pwd := $(pwd)
 $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(linker)
 	rm -rf $(output)/openssl
 	mkdir -p $(output)/openssl
-	cd $(output)/openssl && $(export) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-dso no-shared \
+	cd $(output)/openssl && $(environ) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-dso no-shared \
 	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)"
-	$(export) $(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
+	$(environ) $(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
 
 $(output)/%/libssl.a $(output)/%/libcrypto.a: $(output)/%/Makefile $(linker)
-	$(export) $(MAKE) -C $(output)/openssl build_libs
+	$(environ) $(MAKE) -C $(output)/openssl build_libs
 
 cflags += -I$(pwd)/openssl/include
 cflags += -I$(output)/openssl/include

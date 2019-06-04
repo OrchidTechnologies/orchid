@@ -19,14 +19,14 @@ lflags += -Wl,-no_dead_strip_inits_and_terms
 signature := /_CodeSignature/CodeResources
 
 more += $(patsubst %,-arch %,$(arch))
-more += -isysroot $(shell $(export) xcodebuild -sdk $(sdk) -version Path)
+more += -isysroot $(shell $(environ) xcodebuild -sdk $(sdk) -version Path)
 
 ifneq ($(sdk),macosx)
-more += -idirafter $(shell $(export) xcodebuild -sdk macosx -version Path)/usr/include
+more += -idirafter $(shell $(environ) xcodebuild -sdk macosx -version Path)/usr/include
 endif
 
-cycc := $(shell $(export) xcrun -f clang) $(more)
-cycp := $(shell $(export) xcrun -f clang++) $(more)
+cycc := $(shell $(environ) xcrun -f clang) $(more)
+cycp := $(shell $(environ) xcrun -f clang++) $(more)
 
 ranlib := ranlib
 ar := ar
