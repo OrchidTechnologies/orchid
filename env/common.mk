@@ -12,6 +12,8 @@
 .DELETE_ON_ERROR:
 .SECONDARY:
 
+SHELL := /bin/bash
+
 null := 
 space := $(null) #
 comma := ,
