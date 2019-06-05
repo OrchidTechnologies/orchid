@@ -1,0 +1,7 @@
+/README.md	export-ignore
+.gitignore	export-ignore
+.gitattributes	export-ignore
+/buildlib	text eol=lf
+/buildlib-osx	text eol=lf
+/checktests	text eol=lf
+/installlib	text eol=lf

@@ -1,0 +1,108 @@
+#!/bin/sh
+
+# Attempt to build a universal library for OSX
+
+set -e
+
+done=
+dp="$(xcode-select -print-path 2>/dev/null)"
+: "${dp:=/Developer}"
+
+gc40="$(command -v gcc-4.0 2>/dev/null)"
+gc42="$(command -v gcc-4.2 2>/dev/null)"
+mp42="$(command -v gcc-apple-4.2 2>/dev/null)"
+lv42="$(command -v llvm-gcc-4.2 2>/dev/null)"
+gca0=
+gca2=
+if [ -n "$gc42" ]; then
+	gca2="$gc42"
+elif [ -n "$mp42" ]; then
+	gca2="$mp42"
+elif [ -n "$lv42" ]; then
+	gca2="$lv42"
+fi
+if [ -n "$gc40" ]; then
+	gca0="$gc40"
+elif [ -n "$gca2" ]; then
+	gca0="$gca2"
+fi
+
+if [ -d "$dp/SDKs" ]; then
+	# First see if 10.4u is available and gcc-4.0
+	if [ -z "$done" -a -r "$dp/SDKs/MacOSX10.4u.sdk/SDKSettings.plist" -a -n "$gc40" ]; then
+		done=1
+		NEWCC="$gc40"
+		NEWCFLAGS="-arch x86_64 -arch ppc64 -arch i386 -arch ppc"
+		NEWCFLAGS="$NEWCFLAGS -isysroot$dp/SDKs/MacOSX10.4u.sdk"
+	fi
+	# Or see if 10.5 is available, any compiler will do
+	if [ -z "$done" -a -r "$dp/SDKs/MacOSX10.5.sdk/SDKSettings.plist" -a -n "$gca0" ]; then
+		done=1
+		NEWCC="$gca0"
+		NEWCFLAGS="-arch x86_64 -arch ppc64 -arch i386 -arch ppc"
+		NEWCFLAGS="$NEWCFLAGS -isysroot$dp/SDKs/MacOSX10.5.sdk"
+	fi
+	# Or see if 10.6 is available, any 4.2 compiler will do
+	if [ -z "$done" -a -r "$dp/SDKs/MacOSX10.6.sdk/SDKSettings.plist" -a -n "$gca2" ]; then
+		done=1
+		NEWCC="$gca2"
+		NEWCFLAGS="-arch x86_64 -arch i386 -arch ppc"
+		NEWCFLAGS="$NEWCFLAGS -isysroot$dp/SDKs/MacOSX10.6.sdk"
+	fi
+	# Or see if 10.7 is available, any 4.2 compiler will do
+	if [ -z "$done" -a -r "$dp/SDKs/MacOSX10.7.sdk/SDKSettings.plist" -a -n "$gca2" ]; then
+		done=1
+		NEWCC="$gca2"
+		NEWCFLAGS="-arch x86_64 -arch i386"
+		NEWCFLAGS="$NEWCFLAGS -isysroot$dp/SDKs/MacOSX10.7.sdk"
+	fi
+fi
+
+if [ -z "$done" ]; then
+	# Select by OS version as we have no SDKs
+	dv="$(sysctl -n kern.osrelease 2>/dev/null | cut -d. -f1 2>/dev/null)"
+	if [ -z "$done" -a "$dv" = "8" ]; then
+		# Tiger 10.4.x
+		done=1
+		NEWCC="$gca0"
+		# Tiger's system libraries are not guaranteed to be universal
+	fi
+	if [ -z "$done" -a "$dv" = "9" ]; then
+		# Leopard 10.5.x
+		done=1
+		NEWCC="$gca0"
+		NEWCFLAGS="-arch x86_64 -arch ppc64 -arch i386 -arch ppc"
+	fi
+	if [ -z "$done" -a "$dv" = "10" ]; then
+		# Snow Leopard 10.6.x
+		done=1
+		NEWCC="$gca2"
+		NEWCFLAGS="-arch x86_64 -arch i386 -arch ppc"
+	fi
+	if [ -z "$done" -a "$dv" = "11" ]; then
+		# Lion 10.7.x
+		done=1
+		NEWCC="$gca2"
+		NEWCFLAGS="-arch x86_64 -arch i386"
+	fi
+fi
+if [ -n "$NEWCC" -a -z "$CC" ]; then
+	CC="$NEWCC" && export CC
+fi
+if [ -n "$done" ]; then
+	if [ -z "$MACOSX_DEPLOYMENT_TARGET" ]; then
+		MACOSX_DEPLOYMENT_TARGET=10.4 && export MACOSX_DEPLOYMENT_TARGET
+	fi
+fi
+if [ -n "$NEWCFLAGS" ]; then
+	if [ -z "$CFLAGS" ]; then
+		CFLAGS="-O2 $NEWCFLAGS" && export CFLAGS
+	else
+		CFLAGS="$CFLAGS $NEWCFLAGS" && export CFLAGS
+	fi
+fi
+build="$(dirname "$0")/buildlib"
+if [ -n "$MACOSX_DEPLOYMENT_TARGET" ]; then
+	echo "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
+fi
+exec "$build" "$@"

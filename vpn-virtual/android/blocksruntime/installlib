@@ -1,0 +1,95 @@
+#!/bin/sh
+
+set -e
+
+: "${prefix:=/usr/local}"
+: "${includedir:=$prefix/include}"
+: "${libdir:=$prefix/lib}"
+: "${DESTDIR:=}"
+
+HEADER=BlocksRuntime/Block.h
+LIB=libBlocksRuntime.a
+SHLIB=
+
+docmd()
+{
+	echo "$*"
+	if [ -z "$dryrun" ]; then eval "$*"; fi
+}
+
+if ! myid="$(id -u)"; then
+	echo "Cannot run id, aborting!"
+	exit 1
+fi
+if [ ! -r $HEADER ]; then
+	echo "Cannot find $HEADER, aborting!"
+	exit 1
+fi
+dryrun=
+if [ "$1" = '-n' ] || [ "$1" = '--dry-run' ]; then
+	dryrun=1
+	shift
+fi
+static=1
+shared=1
+case "$1" in
+	"-static"|"--static")
+		shift
+		shared=
+		;;
+	"-shared"|"--shared")
+		shift
+		static=
+		;;
+esac
+if [ "$#" != 0 ]; then
+	echo "Usage: [prefix=prefixdir] $0 [-n | --dry-run] [-shared | -static]"
+	exit 1
+fi
+if [ -n "$shared" ]; then
+	UNAME_S="$(uname -s 2>/dev/null)" || :
+	case "$UNAME_S" in
+		Darwin)
+			SHLIB="${LIB%.a}.dylib"
+			SHLIBMODE=755
+			;;
+		*)
+			SHLIB="${LIB%.a}.so"
+			SHLIBMODE=644
+			;;
+	esac
+	if [ -n "$static" ]; then
+		# ignore a missing shared library
+		[ -e "$SHLIB" ] || SHLIB=
+	else
+		LIB=
+	fi
+fi
+if [ -n "$LIB" ] && [ ! -r "$LIB" ]; then
+	echo "Cannot find $LIB, did you run \`buildlib\` or \`buildlib-osx\`?"
+	exit 1
+fi
+if [ -n "$SHLIB" ] && [ ! -r "$SHLIB" ]; then
+	echo "Cannot find $SHLIB, did you run \`buildlib -shared\` or \`buildlib-osx -shared\`?"
+	exit 1
+fi
+
+[ -z "$DESTDIR" ] ||
+echo "Destination Root(\$DESTDIR):     $DESTDIR (default is \"\")"
+echo "Install Prefix(\$prefix):        $prefix (default is /usr/local)"
+echo "Include Directory(\$includedir): $includedir (default is \$prefix/include)"
+echo "Library Directory(\$libdir):     $libdir (default is \$prefix/lib)"
+echo "(use prefix=prefixdir $0 [or similar] to change)"
+echo ''
+
+if [ -z "$DESTDIR" -a -z "$dryrun" -a "$myid" != 0 ]; then
+	echo "Must be root to install, use sudo $0"
+	echo "(Or try using the --dry-run option)"
+	exit 1
+fi
+docmd "install -d "$DESTDIR"$includedir "$DESTDIR"$libdir"
+docmd "install -m 644 $HEADER "$DESTDIR"$includedir/"
+[ -z "$LIB" ] ||
+docmd "install -m 644 $LIB "$DESTDIR"$libdir/"
+[ -z "$SHLIB" ] ||
+docmd "install -m $SHLIBMODE $SHLIB "$DESTDIR"$libdir/"

@@ -1,0 +1,112 @@
+#!/bin/sh
+
+case "$1" in -h|-H|-help|--help)
+	cat <<EOT
+Usage: ${0##*/} [-shared]
+       -shared  also attempt to build a shared library
+Env:   CC       explicit "cc" compiler to use
+       AR       explicit "ar" to use
+       RANLIB   explicit "ranlib" to use
+       CFLAGS   explicit compiler options to use
+       FPIC     explicit -fPIC/-fpic (or none) option to use
+EOT
+	exit 0
+esac
+
+set -e
+
+LIB=libBlocksRuntime.a
+SRC=BlocksRuntime
+
+shared=
+[ z"$1" != z"-shared" -a z"$1" != z"--shared" ] || shared=1
+
+if [ -n "$shared" ]; then
+	UNAME_S="$(uname -s 2>/dev/null)" || :
+	case "$UNAME_S" in
+		Darwin)
+			SHLIB="${LIB%.a}.dylib"
+			SHOPT="-dynamiclib -Wl,-all_load"
+			SHOPT2=
+			;;
+		*)
+			SHLIB="${LIB%.a}.so"
+			SHOPT="-shared -Wl,-whole-archive"
+			SHOPT2="-Wl,-no-whole-archive"
+			;;
+	esac
+fi
+
+if [ -z "$CC" ]; then
+	if command -v gcc > /dev/null; then
+		CC=gcc
+	elif command -v clang > /dev/null; then
+		CC=clang
+	elif command -v cc > /dev/null; then
+		CC=cc
+	else
+		echo "Could not guess name of compiler, please set CC" >&2
+		exit 2
+	fi
+fi
+
+echo "CC=$CC"
+: ${AR:=ar}
+echo "AR=$AR"
+: ${RANLIB:=ranlib}
+echo "RANLIB=$RANLIB"
+
+if [ "${CFLAGS+set}" != "set" ]; then
+	case "$CC" in
+		*gcc*|*clang*)
+			CFLAGS=-O2
+			;;
+		*)
+			CFLAGS=-O
+			;;
+	esac
+fi
+
+has_cc_opt()
+{
+	"$CC" "$1" -o /tmp/cc.$$ -c -x c /dev/null >/dev/null 2>&1 &&
+	rm -f /tmp/cc.$$
+}
+if [ "${FPIC+set}" != "set" ]; then
+	if has_cc_opt "-fPIC"; then
+		FPIC="-fPIC"
+	elif has_cc_opt "-fpic"; then
+		FPIC="-fpic"
+	fi
+fi
+[ -z "$FPIC" ] || echo "FPIC=$FPIC"
+
+echo "CFLAGS=$CFLAGS"
+
+echo "LIB=$LIB"
+[ -z "$shared" ] || echo "SHLIB=$SHLIB"
+[ -z "$shared" ] || echo "SHOPT=$SHOPT"
+[ -z "$shared" ] || [ -z "$SHOPT2" ] || echo "SHOPT2=$SHOPT2"
+echo "SRC=$SRC"
+
+(
+	PS4= && set -ex
+	! test -e $LIB || rm $LIB
+) || exit
+[ -z "$shared" ] ||
+(
+	PS4= && set -ex
+	! test -e $SHLIB || rm $SHLIB
+) || exit
+(
+	PS4= && set -ex
+	"$CC" -c $FPIC $CFLAGS -o $SRC/data.o $SRC/data.c &&
+	"$CC" -c $FPIC $CFLAGS -o $SRC/runtime.o -I . $SRC/runtime.c &&
+	"$AR" cr $LIB $SRC/data.o $SRC/runtime.o &&
+	"$RANLIB" $LIB
+) || exit
+[ -z "$shared" ] ||
+(
+	PS4= && set -ex
+	"$CC" $FPIC $CFLAGS -o "$SHLIB" $SHOPT $LIB $SHOPT2
+) || exit
