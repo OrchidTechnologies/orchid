@@ -30,6 +30,7 @@
 #include "buffer.hpp"
 
 #include "tests.h"
+#include <boost/filesystem/string_file.hpp>
 
 
 typedef uint8_t byte;
@@ -47,6 +48,14 @@ namespace orc
 	using std::vector;
 	using std::map;
 
+
+	std::string load_solcbin_as_string(std::string fn)
+	{
+        string result;
+        boost::filesystem::load_string_file(fn, result);
+        if (result.substr(0,2) != string("0x")) result = "0x" + result;
+        return result;
+	}
 
     inline task<string> deploy(Endpoint& endpoint, const string& address, const string& bin)
     {
@@ -158,11 +167,9 @@ namespace orc
 
 
         
-   		string test_contract_bin  	= "6060604052341561000c57fe5b5b6101598061001c6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063cfae32171461003b575bfe5b341561004357fe5b61004b6100d4565b604051808060200182810382528381815181526020019150805190602001908083836000831461009a575b80518252602083111561009a57602082019150602081019050602083039250610076565b505050905090810190601f1680156100c65780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6100dc610119565b604060405190810160405280600381526020017f486921000000000000000000000000000000000000000000000000000000000081525090505b90565b6020604051908101604052806000815250905600a165627a7a72305820ed71008611bb64338581c5758f96e31ac3b0c57e1d8de028b72f0b8173ff93a10029";
-   		string test_contract_addr 	= co_await deploy(endpoint, orchid_address, "0x" + test_contract_bin);
-        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("tok-ethereum/build/ERC20.bin"));
-        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("tok-ethereum/build/OrchidToken.bin"));
-        string directory_addr	 	= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("dir-ethereum/build/TestOrchidDirectory.bin"));
+        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/ERC20.bin"));
+        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/OrchidToken.bin"));
+        string directory_addr	 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("dir-ethereum/build/TestOrchidDirectory.bin"));
 		
 		printf("[%d] OrchidToken_addr(%s,%s) \n",   __LINE__, OrchidToken_addr.c_str(), OrchidToken_addr.c_str());
    		printf("[%d] directory_addr(%s,%s) \n",     __LINE__, directory_addr.c_str(),   directory_addr.c_str());
