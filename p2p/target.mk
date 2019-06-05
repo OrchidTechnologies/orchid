@@ -125,10 +125,16 @@ cflags += -DUSE_ECMULT_STATIC_PRECOMPUTATION
 cflags += -DUSE_FIELD_INV_BUILTIN
 cflags += -DUSE_NUM_NONE
 cflags += -DUSE_SCALAR_INV_BUILTIN
+cflags += -DECMULT_WINDOW_SIZE=15
+
+ifeq ($(target)-$(arch),and-armv7a)
+cflags += -DUSE_FIELD_10X26
+cflags += -DUSE_SCALAR_8X32
+else
 cflags += -DUSE_FIELD_5X52
 cflags += -DUSE_SCALAR_4X64
 cflags += -DHAVE___INT128
-cflags += -DECMULT_WINDOW_SIZE=15
+endif
 
 
 c_eEVM := 

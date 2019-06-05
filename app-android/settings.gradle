@@ -1,0 +1,13 @@
+def root = rootProject.projectDir.toPath()
+
+def plugins = new Properties()
+def file = new File(root.toFile(), '.flutter-plugins')
+if (file.exists()) {
+    file.withReader('UTF-8') { reader -> plugins.load(reader) }
+}
+
+plugins.each { name, path ->
+    def plugin = root.resolve(path).resolve('android').toFile()
+    include ":$name"
+    project(":$name").projectDir = plugin
+}

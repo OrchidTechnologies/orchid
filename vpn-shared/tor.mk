@@ -14,6 +14,8 @@ config += --disable-asciidoc
 config += --disable-system-torrc
 config += --disable-unittests
 
+config += --enable-pic
+
 cfgc := 
 cfgl := 
 deps := 

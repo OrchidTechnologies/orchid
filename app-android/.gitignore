@@ -1,0 +1,8 @@
+/android/local.properties
+/build
+/*.keystore
+/.flutter-plugins
+/.gradle
+/out-*
+/.packages
+/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java

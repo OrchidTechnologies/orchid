@@ -26,6 +26,8 @@ endif
 
 assets := $(bundle)/Frameworks/App.framework/flutter_assets
 
+include shared/flutter.mk
+
 $(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
 	@mkdir -p $(dir $@)
 	cp -af $< $@
@@ -45,9 +47,6 @@ $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xm
 	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
 
-flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml
-	cd flutter && $(environ) bin/flutter update-packages
-
 $(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
 	$(environ) lipo $(patsubst %,-extract %,$(arch)) $< -output $@
@@ -59,7 +58,7 @@ $(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios
 	touch $@
 
 signed += $(assets)/kernel_blob.bin
-build/app%dill %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m $(assets)/kernel_blob%bin: $(shell find lib/ -name '*.dart') flutter/packages/flutter/pubspec.lock pubspec.lock
+build/app%dill %flutter-plugins $(assets)/kernel_blob%bin ios/Runner/GeneratedPluginRegistrant%m: $(shell find lib/ -name '*.dart') flutter/packages/flutter/pubspec%lock pubspec%lock
 	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
 	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --$(mode) --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"

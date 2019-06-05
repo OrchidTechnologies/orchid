@@ -52,6 +52,8 @@ c_openvpn3 += -Wno-vexing-parse
 source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
 cflags += -I$(pwd)/libmaxminddb/include
 
+cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
+
 ifeq ($(target),ios)
 c_openvpn3 += -ObjC++
 endif
