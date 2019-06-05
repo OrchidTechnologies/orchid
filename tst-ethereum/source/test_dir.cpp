@@ -35,6 +35,11 @@
 
 typedef uint8_t byte;
 
+
+const float PullFraction = 0.1; // rand fraction of nodes to withdraw
+const int   NumNodes = 64;
+const int   nsamples = 1000;
+
 namespace orc
 {
 
@@ -70,7 +75,7 @@ namespace orc
     
     //const uint128_t one_eth = 1000000000000000000;
 
-    task<int> fund_medallion(Endpoint& endpoint, Address orchid_address, Address OrchidToken_addr, Address directory_addr, Address server_addr, uint128_t ntokens, Address dst_addr = 0)
+    task<int> fund_medallion(Endpoint& endpoint, Address orchid_address, Address OrchidToken_addr, Address directory_addr, Address server_addr, uint128_t& ntokens, Address dst_addr = 0)
     {
         if (dst_addr == 0) dst_addr = server_addr;
         
@@ -96,6 +101,20 @@ namespace orc
    		static Selector<uint256_t, Address,uint128_t> push_f("push", uint128_t(300000));
    		co_await push_f.Send(endpoint, Address(server_addr), Address(directory_addr), Address(dst_addr), uint128_t(ntokens) );
    		block = co_await endpoint.Latest();
+
+
+        static int idx(0);
+
+        float rval = float(rand() % 10000) / float(10000.0);
+        if (rval < PullFraction)
+        {
+       		static Selector<uint256_t, Address,uint128_t,uint256_t> pull_f("pull", uint128_t(300000));
+       		co_await pull_f.Send(endpoint, Address(server_addr), Address(directory_addr), Address(dst_addr), uint128_t(ntokens), uint256_t(0) );
+       		block = co_await endpoint.Latest();
+       		ntokens = 0;
+        }
+        idx++;
+
 
         Selector<uint256_t> have_f("have");
         auto total = co_await have_f.Call(endpoint, block, Address(directory_addr) );
@@ -127,7 +146,6 @@ namespace orc
         const string orchid_address = "0x1df62f291b2e969fb0849d99d9ce41e2f137006e";
         const string orchid_privkey = "0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773";
         
-        const int NumNodes = 16;
         //vector<uint128_t>         node_ntokens;
         vector<Address>             node_address;
         map<uint256_t,uint128_t>    node_ntokens;
@@ -192,24 +210,32 @@ namespace orc
    		auto origin_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(orchid_address) );
 		printf("[%d] origin_balance: ", __LINE__); std::cout << std::dec << origin_balance << std::endl;
  
- 
- 
+
         // fund the medallions
         for (int i(0); i < int(node_address.size()); i++)
         {
 	        Address saddr = Address(server_address[i%NumAccounts]);
 	        Address raddr = node_address[i];
 	        //uint128_t ntokens = node_ntokens[i];
-	        uint128_t ntokens = node_ntokens[uint256_t(raddr)];
+	        uint128_t& ntokens = node_ntokens[uint256_t(raddr)];
             co_await fund_medallion(endpoint, Address(orchid_address), Address(OrchidToken_addr), Address(directory_addr), saddr, ntokens, raddr);
         }
    		block = co_await endpoint.Latest();
         
         Selector<uint256_t> have_f("have");
         auto tot_ntokens = co_await have_f.Call(endpoint, block, Address(directory_addr) );
+ 
+ 
+        /*
+        // withdraw one medallion
+ 	    printf("[%d] pull \n", __LINE__);
+   		static Selector<uint256_t, Address,uint128_t,uint256_t> pull_f("pull", uint128_t(300000));
+   		co_await pull_f.Send(endpoint, Address(orchid_address), Address(directory_addr), Address(server_address[5%NumAccounts]), node_ntokens[uint256_t(node_address[5])], uint256_t(0) );
+   		block = co_await endpoint.Latest();
+   		*/
+ 
         
         // sample
-
         printf("[%d] Testing scan() \n\n\n", __LINE__);
         Selector<Address, uint128_t> scan_f("scan");
 
@@ -217,7 +243,6 @@ namespace orc
         printf("[%d] scan(1): ", __LINE__); std::cout << std::hex << result1 << std::endl;
         
         map<uint256_t, int> cnts;
-        const int nsamples = 300;
         
         for (int i(0); i < int(nsamples); i++) {
             double rv      = double(rand()%10000) / double(10000);
