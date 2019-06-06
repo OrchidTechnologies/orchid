@@ -51,6 +51,7 @@ c_openvpn3 += -Wno-vexing-parse
 
 source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
 cflags += -I$(pwd)/libmaxminddb/include
+c_libmaxminddb := -DUNICODE
 
 cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 

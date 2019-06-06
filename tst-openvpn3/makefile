@@ -56,9 +56,6 @@ c_openvpn3 += -Wno-delete-non-virtual-dtor
 c_openvpn3 += -Wno-unused-private-field
 c_openvpn3 += -Wno-vexing-parse
 
-source += $(wildcard vpn/libmaxminddb/src/*.c)
-cflags += -Ivpn/libmaxminddb/include
-
 ifeq ($(target),ios)
 c_openvpn3 += -ObjC++
 endif

@@ -35,6 +35,7 @@ cflags += -I$(output)/$(pwd)
 
 cflags += -I$(pwd)/cppcoro/include
 
+source += $(pwd)/cppcoro/lib/async_auto_reset_event.cpp
 source += $(pwd)/cppcoro/lib/async_manual_reset_event.cpp
 source += $(pwd)/cppcoro/lib/async_mutex.cpp
 source += $(pwd)/cppcoro/lib/lightweight_manual_reset_event.cpp
@@ -47,6 +48,9 @@ source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
 cflags += -I$(pwd)/url/include
+source += $(filter-out \
+    %/filesystem.cpp \
+,$(wildcard $(pwd)/url/src/*.cpp))
 
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/*/include))
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))

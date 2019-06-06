@@ -25,8 +25,10 @@
 
 #include <dlfcn.h>
 
+#ifndef _WIN32
 #include <netdb.h>
 #include <netinet/in.h>
+#endif
 
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
