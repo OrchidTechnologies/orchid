@@ -65,7 +65,7 @@ namespace orc
 		//operator Signature() const 			{ return *(Signature const*)this; }
 
 
-		SignatureStruct(Signature const& _s) : r(), s() {
+		SignatureStruct(Signature const& _s) {
 			auto [tr, ts, tv] = Take<Brick<32>, Brick<32>, Number<uint8_t>>(_s);
 			r = tr; s = ts; v = tv;
 		}
@@ -75,14 +75,14 @@ namespace orc
 		}
 
 		/// @returns true if r,s,v values are valid, otherwise false
-		bool isValid() const noexcept;
+		bool isValid() const;
 
 		h256 r;
 		h256 s;
 		byte v = 0;
 	};
 
-	bool SignatureStruct::isValid() const noexcept
+	bool SignatureStruct::isValid() const
 	{
 	    static const uint256_t s_max{"0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"};
 	    static const uint256_t s_zero;
@@ -116,7 +116,7 @@ namespace orc
 	{
 		auto* ctx = getCtx();
 		secp256k1_ecdsa_recoverable_signature rawSig;
-		if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr))
+		if (!bool(secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr)))
 			return Signature();
 
 		Signature s;
@@ -146,11 +146,11 @@ namespace orc
 
 	    auto* ctx = getCtx();
 	    secp256k1_ecdsa_recoverable_signature rawSig;
-	    if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, _sig.data(), v))
+	    if (!bool(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, _sig.data(), v)))
 	        return {};
 
 	    secp256k1_pubkey rawPubkey;
-	    if (!secp256k1_ecdsa_recover(ctx, &rawPubkey, &rawSig, _message.data()))
+	    if (!bool(secp256k1_ecdsa_recover(ctx, &rawPubkey, &rawSig, _message.data())))
 	        return {};
 
 	    std::array<byte, 65> serializedPubkey;
@@ -269,13 +269,13 @@ namespace orc
 
    		string test_contract_bin  	= "6060604052341561000c57fe5b5b6101598061001c6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063cfae32171461003b575bfe5b341561004357fe5b61004b6100d4565b604051808060200182810382528381815181526020019150805190602001908083836000831461009a575b80518252602083111561009a57602082019150602081019050602083039250610076565b505050905090810190601f1680156100c65780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6100dc610119565b604060405190810160405280600381526020017f486921000000000000000000000000000000000000000000000000000000000081525090505b90565b6020604051908101604052806000815250905600a165627a7a72305820ed71008611bb64338581c5758f96e31ac3b0c57e1d8de028b72f0b8173ff93a10029";
    		string test_contract_addr 	= co_await deploy(endpoint, orchid_address, "0x" + test_contract_bin);
-        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("tok-ethereum/build/ERC20.bin"));
-        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("tok-ethereum/build/OrchidToken.bin"));
+        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/ERC20.bin"));
+        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/OrchidToken.bin"));
 
 		printf("[%d] OrchidToken_addr(%s,%s) \n", __LINE__, OrchidToken_addr.c_str(), OrchidToken_addr.c_str());
 
 
-        string lottery_addr		 	= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("lot-ethereum/build/TestOrchidLottery.bin"));
+        string lottery_addr		 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("lot-ethereum/build/TestOrchidLottery.bin"));
    		printf("[%d] lottery_addr(%s,%s) \n", __LINE__, lottery_addr.c_str(), lottery_addr.c_str());
 
 
@@ -377,7 +377,7 @@ namespace orc
    		uint256_t secret		= 1;
    		Brick<32> secret_hash 	= Hash(Tie(Number<uint256_t>(secret)));
 	    uint64_t faceValue 		= one_eth / 10;
-	    uint256_t until			= std::time(0) + 1000000;
+	    uint256_t until			= std::time(nullptr) + 1000000;
 	    uint256_t winProb     	= uint256_t("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 	    uint256_t nonce       	= uint256_t("0x24a025cfe44e8cca34ee5028817704a213dedf2108cdb1c1717270646c8f26b1");
 

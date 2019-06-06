@@ -30,40 +30,7 @@
 
 
 
-// ============================ ===================================
 
-
-
-	std::string file_to_string(std::string fn)
-	{
-		std::ifstream myfile;
-		myfile.open(fn.c_str());
-		if (myfile.is_open()) {
-			std::stringstream buffer;
-			buffer << myfile.rdbuf();
-			return buffer.str();
-		} else {
-			printf("failed to open infile %s \n", fn.c_str());
-			return "";
-		}
-		myfile.close();
-		return "";
-	}
-
-	bool string_to_file(std::string x, std::string fn) {
-		bool bresult;
-		std::ofstream myfile;
-		myfile.open(fn);
-		if (myfile.is_open()) {
-			myfile << x;
-			bresult = true;
-		} else {
-			printf("failed to open outfile %s \n", fn.c_str());
-			bresult = false;
-		}
-		myfile.close();
-		return bresult;
-	}
 
 
 // ============================ ===================================

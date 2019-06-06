@@ -30,9 +30,15 @@
 #include "buffer.hpp"
 
 #include "tests.h"
+#include <boost/filesystem/string_file.hpp>
 
 
 typedef uint8_t byte;
+
+
+const float PullFraction = 0.1; // rand fraction of nodes to withdraw
+const int   NumNodes = 64;
+const int   nsamples = 1000;
 
 namespace orc
 {
@@ -48,6 +54,14 @@ namespace orc
 	using std::map;
 
 
+	std::string load_solcbin_as_string(std::string fn)
+	{
+        string result;
+        boost::filesystem::load_string_file(fn, result);
+        if (result.substr(0,2) != string("0x")) result = "0x" + result;
+        return result;
+	}
+
     inline task<string> deploy(Endpoint& endpoint, const string& address, const string& bin)
     {
         printf("[%d] deploy [%i] \n", __LINE__, int(bin.size()) );
@@ -61,7 +75,7 @@ namespace orc
     
     //const uint128_t one_eth = 1000000000000000000;
 
-    task<int> fund_medallion(Endpoint& endpoint, Address orchid_address, Address OrchidToken_addr, Address directory_addr, Address server_addr, uint128_t ntokens, Address dst_addr = 0)
+    task<int> fund_medallion(Endpoint& endpoint, Address orchid_address, Address OrchidToken_addr, Address directory_addr, Address server_addr, uint128_t& ntokens, Address dst_addr = 0)
     {
         if (dst_addr == 0) dst_addr = server_addr;
         
@@ -87,6 +101,20 @@ namespace orc
    		static Selector<uint256_t, Address,uint128_t> push_f("push", uint128_t(300000));
    		co_await push_f.Send(endpoint, Address(server_addr), Address(directory_addr), Address(dst_addr), uint128_t(ntokens) );
    		block = co_await endpoint.Latest();
+
+
+        static int idx(0);
+
+        float rval = float(rand() % 10000) / float(10000.0);
+        if (rval < PullFraction)
+        {
+       		static Selector<uint256_t, Address,uint128_t,uint256_t> pull_f("pull", uint128_t(300000));
+       		co_await pull_f.Send(endpoint, Address(server_addr), Address(directory_addr), Address(dst_addr), uint128_t(ntokens), uint256_t(0) );
+       		block = co_await endpoint.Latest();
+       		ntokens = 0;
+        }
+        idx++;
+
 
         Selector<uint256_t> have_f("have");
         auto total = co_await have_f.Call(endpoint, block, Address(directory_addr) );
@@ -118,7 +146,6 @@ namespace orc
         const string orchid_address = "0x1df62f291b2e969fb0849d99d9ce41e2f137006e";
         const string orchid_privkey = "0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773";
         
-        const int NumNodes = 16;
         //vector<uint128_t>         node_ntokens;
         vector<Address>             node_address;
         map<uint256_t,uint128_t>    node_ntokens;
@@ -158,11 +185,9 @@ namespace orc
 
 
         
-   		string test_contract_bin  	= "6060604052341561000c57fe5b5b6101598061001c6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063cfae32171461003b575bfe5b341561004357fe5b61004b6100d4565b604051808060200182810382528381815181526020019150805190602001908083836000831461009a575b80518252602083111561009a57602082019150602081019050602083039250610076565b505050905090810190601f1680156100c65780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6100dc610119565b604060405190810160405280600381526020017f486921000000000000000000000000000000000000000000000000000000000081525090505b90565b6020604051908101604052806000815250905600a165627a7a72305820ed71008611bb64338581c5758f96e31ac3b0c57e1d8de028b72f0b8173ff93a10029";
-   		string test_contract_addr 	= co_await deploy(endpoint, orchid_address, "0x" + test_contract_bin);
-        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("tok-ethereum/build/ERC20.bin"));
-        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("tok-ethereum/build/OrchidToken.bin"));
-        string directory_addr	 	= co_await deploy(endpoint, orchid_address, "0x" + file_to_string("dir-ethereum/build/TestOrchidDirectory.bin"));
+        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/ERC20.bin"));
+        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/OrchidToken.bin"));
+        string directory_addr	 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("dir-ethereum/build/TestOrchidDirectory.bin"));
 		
 		printf("[%d] OrchidToken_addr(%s,%s) \n",   __LINE__, OrchidToken_addr.c_str(), OrchidToken_addr.c_str());
    		printf("[%d] directory_addr(%s,%s) \n",     __LINE__, directory_addr.c_str(),   directory_addr.c_str());
@@ -185,24 +210,32 @@ namespace orc
    		auto origin_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(orchid_address) );
 		printf("[%d] origin_balance: ", __LINE__); std::cout << std::dec << origin_balance << std::endl;
  
- 
- 
+
         // fund the medallions
         for (int i(0); i < int(node_address.size()); i++)
         {
 	        Address saddr = Address(server_address[i%NumAccounts]);
 	        Address raddr = node_address[i];
 	        //uint128_t ntokens = node_ntokens[i];
-	        uint128_t ntokens = node_ntokens[uint256_t(raddr)];
+	        uint128_t& ntokens = node_ntokens[uint256_t(raddr)];
             co_await fund_medallion(endpoint, Address(orchid_address), Address(OrchidToken_addr), Address(directory_addr), saddr, ntokens, raddr);
         }
    		block = co_await endpoint.Latest();
         
         Selector<uint256_t> have_f("have");
         auto tot_ntokens = co_await have_f.Call(endpoint, block, Address(directory_addr) );
+ 
+ 
+        /*
+        // withdraw one medallion
+ 	    printf("[%d] pull \n", __LINE__);
+   		static Selector<uint256_t, Address,uint128_t,uint256_t> pull_f("pull", uint128_t(300000));
+   		co_await pull_f.Send(endpoint, Address(orchid_address), Address(directory_addr), Address(server_address[5%NumAccounts]), node_ntokens[uint256_t(node_address[5])], uint256_t(0) );
+   		block = co_await endpoint.Latest();
+   		*/
+ 
         
         // sample
-
         printf("[%d] Testing scan() \n\n\n", __LINE__);
         Selector<Address, uint128_t> scan_f("scan");
 
@@ -210,7 +243,6 @@ namespace orc
         printf("[%d] scan(1): ", __LINE__); std::cout << std::hex << result1 << std::endl;
         
         map<uint256_t, int> cnts;
-        const int nsamples = 300;
         
         for (int i(0); i < int(nsamples); i++) {
             double rv      = double(rand()%10000) / double(10000);
@@ -222,9 +254,9 @@ namespace orc
 
         for (int i(0); i < int(node_address.size()); i++) {
             auto ntokens  = node_ntokens[uint256_t(node_address[i])];
-            float rtokens = double(ntokens) / double(tot_ntokens);
+            float rtokens = float(double(ntokens) / double(tot_ntokens));
             int cnt       = cnts[uint256_t(node_address[i])];
-            float rcnt    = double(cnt) / double(nsamples);
+            float rcnt    = float(double(cnt) / double(nsamples));
             printf("[%d] node[%i]: ", __LINE__, i); std::cout << std::hex << node_address[i] << "  " << std::dec << node_ntokens[uint256_t(node_address[i])] << " " << rtokens << " " << rcnt << std::endl;
         }
         
