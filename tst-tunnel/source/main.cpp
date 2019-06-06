@@ -65,7 +65,6 @@
 #include "task.hpp"
 
 #define Transport Transport2
-#define Tunnel Tunnel2
 
 namespace orc {
 

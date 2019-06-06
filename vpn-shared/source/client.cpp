@@ -80,7 +80,7 @@ _trace();
     }
 };
 
-class Tunnel :
+class Remote :
     public Link
 {
     template <typename Base_, typename Inner_, typename Drain_>
@@ -98,12 +98,12 @@ class Tunnel :
     }
 
   public:
-    Tunnel(BufferDrain *drain) :
+    Remote(BufferDrain *drain) :
         Link(drain)
     {
     }
 
-    ~Tunnel() override {
+    ~Remote() override {
 _trace();
     }
 
@@ -189,9 +189,9 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
 }
 
 task<Socket> Server::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
-    tunnel->Give(Path(tunnel));
-    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Socket> {
+    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
+    remote->Give(Path(remote));
+    co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
         auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port, verify));
         auto description((co_await Call(NegotiateTag, Tie(tag, Beam(answer)))).str());
 
@@ -205,9 +205,9 @@ task<Socket> Server::Hop(Sunk<> *sunk, const std::string &host, const std::strin
 }
 
 task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto tunnel(sunk->Wire<Sink<Tunnel, Route<Server>>>());
-    tunnel->Give(Path(tunnel));
-    co_return co_await tunnel->Connect([&](const Tag &tag) -> task<Socket> {
+    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
+    remote->Give(Path(remote));
+    co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
         auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
         co_return Socket(socket.str(), service);
     });
