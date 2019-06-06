@@ -23,9 +23,16 @@
 #ifndef ORCHID_PROTECT_HPP
 #define ORCHID_PROTECT_HPP
 
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#endif
+
 namespace orc {
 
-void Protect(int socket);
+int Bind(int socket, const sockaddr *address, socklen_t length);
+int Protect(int socket, const sockaddr *address, socklen_t length);
 
 }
 

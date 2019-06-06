@@ -47,13 +47,17 @@
 #include <asio.hpp>
 #include "connection.hpp"
 #include "error.hpp"
+#include "protect.hpp"
 #include "syscall.hpp"
 #include "transport.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-void Protect(int socket) {
+int Protect(int socket, const sockaddr *address, socklen_t length) {
+    if (address == nullptr)
+        return 0;
+    return Bind(socket, address, length);
 }
 
 int Main(int argc, const char *const argv[]) {

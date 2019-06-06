@@ -20,20 +20,79 @@
 /* }}} */
 
 
-#ifdef __WIN32__
-#define ORC_SYMBOL
+#ifdef _WIN32
+#include <ws2tcpip.h>
 #else
-#include <sys/socket.h>
+typedef int SOCKET;
+#include <netinet/in.h>
 #endif
 
+#include "log.hpp"
 #include "protect.hpp"
+#include "syscall.hpp"
+#include "trace.hpp"
 
-extern "C" int hooked_socket(int domain, int type, int protocol) __asm__(ORC_SYMBOL "socket");
+#ifdef __cplusplus
+extern "C"
+#endif
+int hooked_bind(SOCKET socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "bind");
 
-extern "C" int orchid_socket(int domain, int type, int protocol) {
-    auto socket(hooked_socket(domain, type, protocol));
-    return socket;
+#ifdef __cplusplus
+extern "C"
+#endif
+int hooked_connect(SOCKET socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "connect");
 
-    orc::Protect(socket);
-    return socket;
+namespace orc {
+int Bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
+    return hooked_bind(socket, address, length);
+} }
+
+extern "C" int orchid_bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
+    if (orc::Verbose) {
+        orc::Log() << "bind(" << socket << ", " << length << ")" << std::endl;
+        orc::Log() << "Protect(" << socket << ")" << std::endl;
+    }
+
+    return orc::Protect(socket, address, length);
+}
+
+extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, socklen_t length) {
+    if (orc::Verbose)
+        orc::Log() << "connect(" << socket << ", " << length << ")" << std::endl;
+
+    union {
+        sockaddr sa;
+        sockaddr_in in;
+        sockaddr_in6 in6;
+    } data;
+
+    socklen_t size(sizeof(data));
+#ifdef _WIN32
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
+    if (orc_syscall(getsockname(socket, &data.sa, &size), WSAEINVAL) != 0)
+        size = 0;
+#else
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
+    if (orc_syscall(getsockname(socket, &data.sa, &size), EOPNOTSUPP) != 0)
+        goto connect;
+#endif
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
+    if (size == 0 || [&]() { switch (data.sa.sa_family) {
+        case AF_INET:
+            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
+            return data.in.sin_port == 0;
+        case AF_INET6:
+            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
+            return data.in6.sin6_port == 0;
+        default:
+            return false;
+    } }()) {
+        if (orc::Verbose)
+            orc::Log() << "Protect(" << socket << ")" << std::endl;
+        if (auto error = orc::Protect(socket, nullptr, 0))
+            return error;
+    }
+
+  connect:
+    return hooked_connect(socket, address, length);
 }

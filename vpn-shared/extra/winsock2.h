@@ -20,14 +20,22 @@
 /* }}} */
 
 
-#include "protect.hpp"
+#define bind cy_socket
+#define connect cy_socket
 
-namespace orc {
+#include_next <winsock2.h>
 
-int Protect(int socket, const sockaddr *address, socklen_t length) {
-    if (address == nullptr)
-        return 0;
-    return Bind(socket, address, length);
-}
+#undef bind
+#undef connect
 
-}
+#define ORC_SYMBOL "_"
+
+#ifdef __cplusplus
+extern "C"
+#endif
+int bind(SOCKET socket, const struct sockaddr *address, int length) __asm__(ORC_SYMBOL "orchid_bind");
+
+#ifdef __cplusplus
+extern "C"
+#endif
+int connect(SOCKET socket, const struct sockaddr *address, int length) __asm__(ORC_SYMBOL "orchid_connect");

@@ -20,9 +20,13 @@
 /* }}} */
 
 
-#define socket cy_socket
+#define bind cy_socket
+#define connect cy_socket
+
 #include_next <sys/socket.h>
-#undef socket
+
+#undef bind
+#undef connect
 
 #ifdef __linux__
 #define ORC_SYMBOL ""
@@ -33,4 +37,9 @@
 #ifdef __cplusplus
 extern "C"
 #endif
-int socket(int domain, int type, int protocol) __asm__(ORC_SYMBOL "orchid_socket");
+int bind(int socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "orchid_bind");
+
+#ifdef __cplusplus
+extern "C"
+#endif
+int connect(int socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "orchid_connect");
