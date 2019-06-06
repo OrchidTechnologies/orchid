@@ -425,8 +425,12 @@ void Capture::Land(const Buffer &data) {
     if (!client_)
         return;
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
+#ifdef __APPLE__
     auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
     client_->Send(packet);
+#else
+    client_->Send(data);
+#endif
 }
 
 void Capture::Stop(const std::string &error) {
@@ -434,8 +438,12 @@ void Capture::Stop(const std::string &error) {
 }
 
 void Capture::Liberate(const Buffer &data) {
+#ifdef __APPLE__
     uint32_t family(2);
     Spawn([this, beam = Beam(Tie(Number<uint32_t>(family), data))]() -> task<void> {
+#else
+    Spawn([this, beam = Beam(data)]() -> task<void> {
+#endif
         //Log() << "\e[33;1mRECV " << beam.size() << " " << beam << "\e[0m" << std::endl;
         co_await Inner()->Send(beam);
     });
