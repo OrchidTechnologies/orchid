@@ -38,8 +38,6 @@ debug: $(output)/orchid$(exe)
 
 include vpn/target.mk
 
-cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
-
 ifeq ($(target),win)
 cflags += -I../vpn-windows/tap-windows6/src
 endif

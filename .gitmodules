@@ -28,9 +28,6 @@
 [submodule "webrtc"]
 	path = min-webrtc/webrtc
 	url = https://chromium.googlesource.com/external/webrtc
-[submodule "OpenVPNAdapter"]
-	path = vpn-apple/OpenVPNAdapter
-	url = https://github.com/ss-abramchuk/OpenVPNAdapter.git
 [submodule "openvpn3"]
 	path = vpn-shared/openvpn3
 	url = https://github.com/OpenVPN/openvpn3.git

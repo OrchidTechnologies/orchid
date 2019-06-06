@@ -23,9 +23,40 @@
 #ifndef ORCHID_TRANSPORT_HPP
 #define ORCHID_TRANSPORT_HPP
 
+#include "link.hpp"
+
 namespace orc {
 
-openvpn::TransportClientFactory *NewTransportFactory(const openvpn::ExternalTransport::Config &config);
+void Initialize();
+
+class Client;
+
+class Liberator {
+  public:
+    virtual void Liberate(const Buffer &data) = 0;
+};
+
+class Capture :
+    public Liberator,
+    public BufferDrain
+{
+  public:
+    U<Client> client_;
+
+  protected:
+    virtual Link *Inner() = 0;
+
+    void Land(const Buffer &data) override;
+    void Stop(const std::string &error) override;
+
+    void Liberate(const Buffer &data) override;
+
+  public:
+    Capture(const std::string &ip4);
+    ~Capture();
+
+    task<void> Start(std::string ovpnfile, std::string username, std::string password);
+};
 
 }
 

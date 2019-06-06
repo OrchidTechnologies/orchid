@@ -41,6 +41,7 @@ cflags += -I$(pwd)/openvpn3
 cflags += -I$(pwd)/openvpn3/client
 
 cflags += -DOPENVPN_EXTERNAL_TRANSPORT_FACTORY
+cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
 
 cflags_transport += -Wno-unused-private-field
 

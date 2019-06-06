@@ -92,7 +92,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     NSURL *url([[NSBundle mainBundle] URLForResource:@"PureVPN" withExtension:@"ovpn"]);
     NSData *data([[NSData alloc] initWithContentsOfURL:url]);
 
-    protocol.providerConfiguration = @{@"ovpn": data};
+    protocol.providerConfiguration = @{@"ovpnfile": data};
     protocol.providerBundleIdentifier = @ ORCHID_DOMAIN "." ORCHID_NAME ".VPN";
     protocol.serverAddress = @"mac.saurik.com";
     //protocol.serverAddress = @"ukl2-ovpn-tcp.pointtoserver.com";
