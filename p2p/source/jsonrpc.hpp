@@ -497,13 +497,13 @@ class Selector final :
     } };
 
   public:
-    Selector(uint32_t value, const uint256_t& gas = 90000) :
+    Selector(uint32_t value, uint256_t gas = 90000) :
         value_(boost::endian::native_to_big(value)),
-        gas_(gas)
+        gas_(std::move(gas))
     {
     }
 
-    Selector(const std::string &name, const uint256_t& gas = 90000) :
+    Selector(const std::string &name, uint256_t gas = 90000) :
         Selector([&]() {
             std::ostringstream signature;
             signature << name << '(';
@@ -511,7 +511,7 @@ class Selector final :
             signature << ')';
             std::cerr << signature.str() << std::endl;
             return Hash(Strung(signature.str())).Clip<4>().num<uint32_t>();
-        }(), gas)
+        }(), std::move(gas))
     {
     }
 
