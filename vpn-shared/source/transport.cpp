@@ -155,7 +155,7 @@ class Factory :
     openvpn::ExternalTransport::Config config_;
 
   public:
-    Factory(S<Origin> origin, const openvpn::ExternalTransport::Config config) :
+    Factory(S<Origin> origin, const openvpn::ExternalTransport::Config &config) :
         origin_(std::move(origin)),
         config_(config)
     {
@@ -187,7 +187,7 @@ class Factory :
             });
         } });
 
-        return std::move(transport);
+        return transport;
     }
 };
 
@@ -327,7 +327,7 @@ class Client :
   public:
     Client(Liberator *liberator, S<Origin> origin) :
         liberator_(liberator),
-        origin_(origin)
+        origin_(std::move(origin))
     {
     }
 
@@ -357,7 +357,7 @@ class Client :
 
 
     bool socket_protect(int socket, std::string remote, bool ipv6) override {
-        Protect(socket);
+        // we do this by hooking the internal implementation of bind/connect
         return true;
     }
 
@@ -387,11 +387,11 @@ class Client :
         return true; }
     bool tun_builder_reroute_gw(bool ipv4, bool ipv6, unsigned int flags) override {
         return true; }
-    bool tun_builder_set_mtu(int mtu) {
+    bool tun_builder_set_mtu(int mtu) override {
         return true; }
     bool tun_builder_set_remote_address(const std::string &address, bool ipv6) override {
         return true; }
-    bool tun_builder_set_session_name(const std::string &name) {
+    bool tun_builder_set_session_name(const std::string &name) override {
         return true; }
 
 
@@ -452,8 +452,7 @@ void Capture::Liberate(const Buffer &data) {
 Capture::Capture(const std::string &ip4) {
 }
 
-Capture::~Capture() {
-}
+Capture::~Capture() = default;
 
 task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
     auto origin(co_await Setup());
