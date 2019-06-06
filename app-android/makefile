@@ -63,8 +63,13 @@ keyextra :=
 
 verbose := 
 
+zipalign := $(word 1,$(wildcard $(ANDROID_HOME)/build-tools/*/zipalign))
+ifeq ($(zipalign),)
+$(error unable to find zipalign)
+endif
+
 $(output)/Orchid.apk: $(apk) $(keystore).keystore $(keyextra)
 	cp -af $(apk) $(output)/signed.apk
 	jarsigner -digestalg SHA1 -sigalg MD5withRSA $(if $(verbose),-verbose) -sigfile CERT -keystore $(keystore).keystore -storepass android -tsa http://timestamp.digicert.com/ $(output)/signed.apk $(keyalias)
-	zipalign -f $(if $(verbose),-v) 4 $(output)/signed.apk $@
+	$(zipalign) -f $(if $(verbose),-v) 4 $(output)/signed.apk $@
 	@rm -rf $(output)/signed.apk
