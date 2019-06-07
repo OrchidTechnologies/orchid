@@ -35,8 +35,6 @@ test: $(output)/orchid$(exe)
 debug: $(output)/orchid$(exe)
 	sudo lldb -o 'run $(args)' $(output)/orchid$(exe)
 
-cflags += -Ivpn/extra
-
 source += $(wildcard vpn/lz4/lib/*.c)
 cflags += -Ivpn/lz4/lib
 
@@ -49,26 +47,24 @@ cflags += -DUSE_OPENSSL
 cflags += -Ivpn/openvpn3
 cflags += -Ivpn/openvpn3/client
 
-cflags_transport += -Wno-unused-private-field
-
 c_openvpn3 += -Wno-address-of-temporary
 c_openvpn3 += -Wno-delete-non-virtual-dtor
-c_openvpn3 += -Wno-unused-private-field
-c_openvpn3 += -Wno-vexing-parse
+c_openvpn3 += -Wno-inconsistent-missing-override
 
 ifeq ($(target),ios)
 c_openvpn3 += -ObjC++
 endif
 
-include vpn/p2p/target.mk
-#cflags += $(patsubst %,-I%,$(wildcard vpn/p2p/boost/libs/*/include))
-#cflags += $(patsubst %,-I%,$(wildcard vpn/p2p/boost/libs/numeric/*/include))
-#cflags += -Ivpn/p2p/boost/libs/asio/include/boost
+cflags += -Ivpn/p2p/source
+
+include vpn/p2p/asio.mk
+include vpn/p2p/rtc/openssl.mk
 
 source += vpn/openvpn3/test/ovpncli/cli.cpp
-source += vpn/source/interface.cpp
+source += vpn/p2p/source/log.cpp
 
 lflags += -framework CoreServices
+lflags += -framework Foundation
 lflags += -framework IOKit
 lflags += -framework SystemConfiguration
 

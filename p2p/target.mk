@@ -52,12 +52,6 @@ source += $(filter-out \
     %/filesystem.cpp \
 ,$(wildcard $(pwd)/url/src/*.cpp))
 
-cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/*/include))
-cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))
-cflags += -I$(pwd)/boost/libs/asio/include/boost
-
-cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
-
 ifneq (,)
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/*.c)
@@ -157,4 +151,5 @@ source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c
 c_eEVM += -I$(pwd)/eEVM/3rdparty
 
 
+include $(pwd)/asio.mk
 include $(pwd)/rtc/target.mk

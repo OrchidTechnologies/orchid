@@ -108,24 +108,6 @@ webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/*.cc)
 cflags += -I$(pwd)/abseil-cpp
 
 
-$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: pwd := $(pwd)
-$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(linker)
-	rm -rf $(output)/openssl
-	mkdir -p $(output)/openssl
-	cd $(output)/openssl && $(environ) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-dso no-shared \
-	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)"
-	$(environ) $(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
-
-$(output)/%/libssl.a $(output)/%/libcrypto.a: $(output)/%/Makefile $(linker)
-	$(environ) $(MAKE) -C $(output)/openssl build_libs
-
-cflags += -I$(pwd)/openssl/include
-cflags += -I$(output)/openssl/include
-linked += $(output)/openssl/libssl.a
-linked += $(output)/openssl/libcrypto.a
-header += $(output)/openssl/include/openssl/opensslconf.h
-
-
 webrtc += $(wildcard $(pwd)/libsrtp/srtp/*.c)
 cflags += -I$(pwd)/libsrtp/include
 webrtc += $(wildcard $(pwd)/libsrtp/crypto/*/*.c)
@@ -193,8 +175,6 @@ cflags += -DWEBRTC_OPUS_SUPPORT_120MS_PTIME=0
 
 cflags += -DHAVE_SCTP
 
-cflags += -DOPENSSL_NO_ASM
-
 cflags += -DHAVE_STDINT_H
 cflags += -DHAVE_STDLIB_H
 
@@ -219,5 +199,7 @@ cflags += -DSCTP_USE_OPENSSL_SHA1
 cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -DSCTP_PROCESS_LEVEL_LOCKS
 
+
+include $(pwd)/openssl.mk
 
 include $(pwd)/target-$(target).mk
