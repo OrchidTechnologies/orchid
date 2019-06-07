@@ -41,7 +41,6 @@ class TitledPage extends StatelessWidget {
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                 ),
                 title: Text(this.title),
-                centerTitle: false,
                 titleSpacing: 0,
                 backgroundColor: AppColors.purple,
                 elevation: 0.0)),
