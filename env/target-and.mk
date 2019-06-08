@@ -32,8 +32,8 @@ include $(pwd)/target-ndk.mk
 
 more := 
 
-cycc := $(llvm)/$(arch)-linux-android$(aabi)28-clang $(more)
-cycp := $(llvm)/$(arch)-linux-android$(aabi)28-clang++ $(more)
+cycc := $(llvm)/bin/$(arch)-linux-android$(aabi)28-clang $(more)
+cycp := $(llvm)/bin/$(arch)-linux-android$(aabi)28-clang++ $(more)
 
 lflags += -lm -llog
 lflags += -Wl,--no-undefined

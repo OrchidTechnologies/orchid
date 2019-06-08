@@ -32,10 +32,10 @@ else
 
 include $(pwd)/target-ndk.mk
 
-more := -B $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/$(arch)-linux-android/bin -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
+more := -B $(llvm)/$(arch)-linux-android/bin -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
 
-cycc := $(llvm)/clang $(more)
-cycp := $(llvm)/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
+cycc := $(llvm)/bin/clang $(more)
+cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
 
 $(output)/sysroot:
 	env/sysroot.sh

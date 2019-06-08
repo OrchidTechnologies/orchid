@@ -27,9 +27,9 @@ ifeq ($(ANDROID_NDK_HOME),)
 environ += ANDROID_NDK_HOME=$(ndk)
 endif
 
-llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64/bin
+llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64
 
-environ += PATH='$(llvm):$(PATH)'
+environ += PATH='$(llvm)/bin:$(PATH)'
 
 ifeq ($(arch),armv7a)
 aabi := eabi
@@ -39,7 +39,7 @@ aabi :=
 temp := $(arch)
 endif
 
-ranlib := $(llvm)/$(temp)-linux-android$(aabi)-ranlib
-ar := $(llvm)/$(temp)-linux-android$(aabi)-ar
+ranlib := $(llvm)/bin/$(temp)-linux-android$(aabi)-ranlib
+ar := $(llvm)/bin/$(temp)-linux-android$(aabi)-ar
 
 include $(pwd)/target-gnu.mk

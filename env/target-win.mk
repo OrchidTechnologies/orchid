@@ -31,8 +31,8 @@ more += -D_WIN32_WINNT=0x0600
 # XXX: this is needed to compile libevent :/
 more += -DWIN32_LEAN_AND_MEAN=
 
-cycc := $(llvm)/clang $(more)
-cycp := $(llvm)/clang++ $(more) -stdlib=libc++
+cycc := $(llvm)/bin/clang $(more)
+cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
 
 ranlib := $(arch)-w64-mingw32-ranlib
 ar := $(arch)-w64-mingw32-ar
