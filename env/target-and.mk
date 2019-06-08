@@ -39,5 +39,6 @@ cycc := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang $(more)
 cycp := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang++ $(more)
 
 lflags += -lm -llog
+lflags += -static-libstdc++
 lflags += -Wl,--no-undefined
 qflags += -fPIC
