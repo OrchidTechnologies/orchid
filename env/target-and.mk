@@ -36,4 +36,5 @@ cycc := $(llvm)/$(arch)-linux-android$(aabi)28-clang $(more)
 cycp := $(llvm)/$(arch)-linux-android$(aabi)28-clang++ $(more)
 
 lflags += -lm -llog
+lflags += -Wl,--no-undefined
 qflags += -fPIC
