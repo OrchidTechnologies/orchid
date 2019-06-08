@@ -13,8 +13,11 @@ dll := so
 lib := a
 exe := 
 
+aver := 28
+
 arch := armv7a
 ossl := android-arm
+alib := armeabi-v7a
 
 #arch := aarch64
 #ossl := android-arm64
@@ -32,8 +35,8 @@ include $(pwd)/target-ndk.mk
 
 more := 
 
-cycc := $(llvm)/bin/$(arch)-linux-android$(aabi)28-clang $(more)
-cycp := $(llvm)/bin/$(arch)-linux-android$(aabi)28-clang++ $(more)
+cycc := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang $(more)
+cycp := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang++ $(more)
 
 lflags += -lm -llog
 lflags += -Wl,--no-undefined

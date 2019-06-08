@@ -32,14 +32,14 @@ llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64
 environ += PATH='$(llvm)/bin:$(PATH)'
 
 ifeq ($(arch),armv7a)
-aabi := eabi
-temp := arm
+asuf := eabi
+apre := arm
 else
-aabi := 
-temp := $(arch)
+asuf := 
+apre := $(arch)
 endif
 
-ranlib := $(llvm)/bin/$(temp)-linux-android$(aabi)-ranlib
-ar := $(llvm)/bin/$(temp)-linux-android$(aabi)-ar
+ranlib := $(llvm)/bin/$(apre)-linux-android$(asuf)-ranlib
+ar := $(llvm)/bin/$(apre)-linux-android$(asuf)-ar
 
 include $(pwd)/target-gnu.mk
