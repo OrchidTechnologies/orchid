@@ -42,9 +42,11 @@ lflags += -lc++
 lflags += -lc++abi
 lflags += -pthread
 
-lflags += -Wl,/errorlimit:0
-
-wflags += -fuse-ld=lld
+temp := $(shell which $(arch)-w64-mingw32-ld)
+ifeq ($(temp),)
+$(error $(arch)-w64-mingw32-ld must be on your path)
+endif
+wflags += -fuse-ld=ld -B$(dir $(temp))$(arch)-w64-mingw32-
 
 cflags += -DNOMINMAX
 
