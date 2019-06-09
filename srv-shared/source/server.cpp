@@ -708,16 +708,10 @@ int Main(int argc, const char *const argv[]) {
     context.use_tmp_dh(boost::asio::buffer(params.data(), params.size()));
 
 
-#ifdef _WIN32
-    static boost::asio::windows::stream_handle out(Context(), GetStdHandle(STD_OUTPUT_HANDLE));
-#else
-    static boost::asio::posix::stream_descriptor out(Context(), ::dup(STDOUT_FILENO));
-#endif
-
     http::basic_router<SslHttpSession> router{std::regex::ECMAScript};
 
     router.post("/", [&](auto request, auto context) {
-        http::out::pushn<std::ostream>(out, request);
+        Log() << request << std::endl;
 
         try {
             auto offer(request.body());
@@ -738,7 +732,7 @@ int Main(int argc, const char *const argv[]) {
     });
 
     router.all(R"(^.*$)", [&](auto request, auto context) {
-        http::out::pushn<std::ostream>(out, request);
+        Log() << request << std::endl;
         context.send(Response(request, "text/plain", ""));
     });
 
