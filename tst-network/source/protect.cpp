@@ -24,7 +24,7 @@
 
 namespace orc {
 
-int Protect(int socket, const sockaddr *address, socklen_t length) {
+int Protect(SOCKET socket, const sockaddr *address, socklen_t length) {
     if (address == nullptr)
         return 0;
     return Bind(socket, address, length);

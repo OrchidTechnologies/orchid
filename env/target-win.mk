@@ -28,9 +28,6 @@ more += -target $(arch)-pc-windows-gnu
 more += --sysroot $(CURDIR)/$(output)/mingw64
 more += -D_WIN32_WINNT=0x0600
 
-# XXX: this is needed to compile libevent :/
-more += -DWIN32_LEAN_AND_MEAN=
-
 cycc := $(llvm)/bin/clang $(more)
 cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
 
@@ -49,6 +46,7 @@ endif
 wflags += -fuse-ld=ld -B$(dir $(temp))$(arch)-w64-mingw32-
 
 cflags += -DNOMINMAX
+cflags += -DWIN32_LEAN_AND_MEAN=
 
 #cflags += -fms-compatibility
 #cflags += -D__GNUC__

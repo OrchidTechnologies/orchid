@@ -42,6 +42,7 @@ deps += $(output)/zlib/libz.a
 config += tor_cv_library_zlib_dir="(system)"
 
 ifeq ($(target),win)
+cfgl += -Wl,--start-group
 cfgl += -lcrypt32
 cfgl += -lws2_32
 config += --disable-gcc-hardening
@@ -50,7 +51,7 @@ endif
 config += CPPFLAGS="$(cfgc)" LDFLAGS="$(wflags) $(cfgl)"
 
 tor := 
-tor += core/libtor-app.$(lib)
+tor += core/libtor-app.a
 tor += lib/libtor-buf.a
 tor += lib/libtor-compress.a
 tor += lib/libtor-crypt-ops.a
@@ -108,7 +109,8 @@ temp := $(subst /tor/,/%/,$(tor))
 $(temp): output := $(output)
 $(temp): pwd := $(pwd)
 $(temp): $(output)/%/Makefile $(deps) $(linker) $(shell find $(pwd)/tor -name '*.c')
-	$(environ) $(MAKE) -C $(output)/tor src/app/tor src/core/libtor-app.a
+	$(environ) $(MAKE) -C $(output)/tor src/app/tor$(exe) src/core/libtor-app.a
+	@touch $@
 
 cflags += -I$(pwd)/tor/src
 linked += $(tor)

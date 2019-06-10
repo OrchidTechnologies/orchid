@@ -24,11 +24,12 @@ $(output)/libevent/Makefile: $(pwd)/libevent/configure $(linker)
 	    --enable-static --disable-shared
 	sed -i -e 's/libext=lib/libext=a/' $(output)/libevent/libtool
 
-$(output)/%/include/event2/event-config.h $(output)/%/.libs/libevent_core.a $(output)/%/.libs/libevent_extra.$(lib): $(output)/%/Makefile $(linker)
+$(output)/%/include/event2/event-config.h $(output)/%/.libs/libevent_core.a $(output)/%/.libs/libevent_extra.a: $(output)/%/Makefile $(linker)
 	$(environ) $(MAKE) -C $(output)/libevent
+	@touch $@
 
 cflags += -I$(pwd)/libevent/include
 cflags += -I$(output)/libevent/include
 
 linked += $(output)/libevent/.libs/libevent_core.a
-linked += $(output)/libevent/.libs/libevent_extra.$(lib)
+linked += $(output)/libevent/.libs/libevent_extra.a

@@ -20,26 +20,13 @@
 /* }}} */
 
 
-#define bind system_bind
-#define connect system_connect
+#include "directory.hpp"
+#include "error.hpp"
 
-#include_next <sys/socket.h>
+namespace orc {
 
-#undef bind
-#undef connect
+std::string Group() {
+    orc_assert(false);
+}
 
-#ifdef __linux__
-#define ORC_SYMBOL ""
-#else
-#define ORC_SYMBOL "_"
-#endif
-
-#ifdef __cplusplus
-extern "C"
-#endif
-int bind(int socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "orchid_bind");
-
-#ifdef __cplusplus
-extern "C"
-#endif
-int connect(int socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "orchid_connect");
+}

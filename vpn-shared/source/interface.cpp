@@ -23,7 +23,6 @@
 #ifdef _WIN32
 #include <ws2tcpip.h>
 #else
-typedef int SOCKET;
 #include <netinet/in.h>
 #endif
 
@@ -35,12 +34,12 @@ typedef int SOCKET;
 #ifdef __cplusplus
 extern "C"
 #endif
-int hooked_bind(SOCKET socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "bind");
+decltype(system_bind) hooked_bind __asm__(ORC_SYMBOL "bind");
 
 #ifdef __cplusplus
 extern "C"
 #endif
-int hooked_connect(SOCKET socket, const struct sockaddr *address, socklen_t length) __asm__(ORC_SYMBOL "connect");
+decltype(system_connect) hooked_connect __asm__(ORC_SYMBOL "connect");
 
 namespace orc {
 int Bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
@@ -93,6 +92,8 @@ extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, soc
             return error;
     }
 
+#ifndef _WIN32
   connect:
+#endif
     return hooked_connect(socket, address, length);
 }

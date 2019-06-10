@@ -25,14 +25,16 @@
 
 #ifdef _WIN32
 #include <winsock2.h>
+typedef int socklen_t;
 #else
 #include <sys/socket.h>
+typedef int SOCKET;
 #endif
 
 namespace orc {
 
-int Bind(int socket, const sockaddr *address, socklen_t length);
-int Protect(int socket, const sockaddr *address, socklen_t length);
+int Bind(SOCKET socket, const sockaddr *address, socklen_t length);
+int Protect(SOCKET socket, const sockaddr *address, socklen_t length);
 
 }
 

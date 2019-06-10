@@ -26,7 +26,7 @@ version := 0.9
 args := 127.0.0.1 9999
 
 .PHONY: all
-all: $(output)/orchid
+all: $(output)/orchid$(exe)
 
 .PHONY: test
 test: $(output)/orchid$(exe)
@@ -40,9 +40,13 @@ include vpn/target.mk
 
 source += $(wildcard source/*.cpp)
 
+ifeq ($(target),win)
+cflags += -I../vpn-windows/tap-windows6/src
+endif
+
 include env/output.mk
 
-$(output)/orchid: $(object) $(linked) $(output)/GeoLite2-City.mmdb
+$(output)/orchid$(exe): $(object) $(linked) $(output)/GeoLite2-City.mmdb
 	@echo [LD] $@
 	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
-	@ls -la $(output)/orchid
+	@ls -la $(output)/orchid$(exe)
