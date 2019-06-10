@@ -13,7 +13,7 @@ dll := so
 lib := a
 exe := 
 
-aver := 28
+aver := 21
 
 arch := armv7a
 ossl := android-arm

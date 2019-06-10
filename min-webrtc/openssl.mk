@@ -15,7 +15,14 @@ $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: pwd := $(pwd)
 $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(linker)
 	rm -rf $(output)/openssl
 	mkdir -p $(output)/openssl
-	cd $(output)/openssl && $(environ) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) no-dso no-shared \
+	cd $(output)/openssl && $(environ) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) \
+	    no-dso \
+	    no-engine \
+	    no-shared \
+	    no-stdio \
+	    no-ui-console \
+	    no-unit-test \
+	    no-weak-ssl-ciphers \
 	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)"
 	$(environ) $(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
 

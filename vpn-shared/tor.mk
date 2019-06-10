@@ -108,7 +108,7 @@ temp := $(subst /tor/,/%/,$(tor))
 $(temp): output := $(output)
 $(temp): pwd := $(pwd)
 $(temp): $(output)/%/Makefile $(deps) $(linker) $(shell find $(pwd)/tor -name '*.c')
-	$(environ) $(MAKE) -C $(output)/tor
+	$(environ) $(MAKE) -C $(output)/tor src/app/tor src/core/libtor-app.a
 
 cflags += -I$(pwd)/tor/src
 linked += $(tor)
