@@ -3,6 +3,7 @@ Description=Orchid Linux Server Node
 After=network.target
 
 [Service]
+Environment=ORCHID_CONFIG=/etc/orchid.conf
 Type=simple
 User=ubuntu
 ExecStart=/usr/bin/orchid
