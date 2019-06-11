@@ -26,7 +26,8 @@
 namespace orc {
 
 std::string Group() {
-    orc_assert(false);
+    // XXX: should be getFilesDir().getAbsolutePath()
+    return "/data/data/com.example.orchid/files";
 }
 
 }

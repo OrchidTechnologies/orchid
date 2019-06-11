@@ -49,7 +49,7 @@ build/app%dill %flutter-plugins $(assets)/kernel_blob%bin src/main/java/io/flutt
 	@mkdir -p build $(output) $(assets)
 	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=android-arm --target=lib/main.dart --$(mode) --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
 
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(output)/$(alib)/liborchid.so $(assets)/kernel_blob.bin src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle $(output)/$(alib)/liborchid.so $(assets)/kernel_blob.bin src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose
 	exit 0
 	touch $@

@@ -54,6 +54,12 @@ android {
 
     dependencies {
         implementation flutter
+        implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    }
+
+    compileOptions {
+       sourceCompatibility 1.8
+       targetCompatibility 1.8
     }
 }
 
