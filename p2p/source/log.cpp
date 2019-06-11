@@ -26,6 +26,10 @@
 
 #include <iostream>
 
+#if __ANDROID__
+#include <android/log.h>
+#endif
+
 #include <boost/algorithm/string.hpp>
 
 #include "log.hpp"
@@ -43,6 +47,8 @@ Log::~Log() {
     boost::replace_all(log, "\n", " || ");
 #ifdef __APPLE__
     NSLog((NSString *)CFSTR("%s"), log.c_str());
+#elif __ANDROID__
+    __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "%s", log.c_str());
 #else
     std::cerr << log << std::endl;
 #endif
