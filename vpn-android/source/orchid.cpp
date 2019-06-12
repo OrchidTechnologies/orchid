@@ -17,20 +17,24 @@ using namespace orc;
 }
 
 static JavaVM *g_jvm;
+std::string files_dir;
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file)
+Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
 {
-    Verbose = true;
     __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "runTunnel:%d", file);
 
     Initialize();
 
     orc_assert(file != -1);
 
-    std::string ovpnfile = "./assets/PureVPN.ovpn";
-    std::string username = ORCHID_USERNAME;
-    std::string password = ORCHID_PASSWORD;
+    const char* cDir = env->GetStringUTFChars(dir, NULL);
+    files_dir = std::string(cDir);
+    env->ReleaseStringUTFChars(dir, cDir);
+
+    std::string ovpnfile = files_dir + std::string("/PureVPN.ovpn");
+    std::string username(ORCHID_USERNAME);
+    std::string password(ORCHID_PASSWORD);
 
     auto capture(std::make_unique<Sink<Capture>>("10.7.0.3"));
     auto connection(capture->Wire<File<asio::posix::stream_descriptor>>(file));

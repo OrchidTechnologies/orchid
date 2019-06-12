@@ -1,8 +1,16 @@
 package com.example.orchid;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import android.app.Application;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
@@ -19,6 +27,33 @@ public class OrchidVpnService extends VpnService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand: intent:" + intent + " flags:" + flags + " startId:" + startId);
         return START_STICKY;
+    }
+
+    public static void copyTo(InputStream in, File dst) throws IOException {
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[4096];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
+        }
+    }
+
+    private static Application app() {
+        try {
+            return (Application) Class.forName("android.app.ActivityThread")
+                    .getMethod("currentApplication").invoke(null, (Object[]) null);
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     @Override
@@ -39,7 +74,17 @@ public class OrchidVpnService extends VpnService {
                 vpnService = this;
                 startForeground();
                 new Thread(new Runnable() { public void run() {
-                    OrchidNative.runTunnel(fd);
+
+                    File f = app().getFilesDir();
+                    AssetManager assetManager = app().getAssets();
+                    try {
+                        InputStream in = assetManager.open("PureVPN.ovpn");
+                        copyTo(in, new File(f, "PureVPN.ovpn"));
+                    } catch (IOException e) {
+                        Log.e(TAG, "onCreate", e);
+                    }
+
+                    OrchidNative.runTunnel(fd, f.getAbsolutePath());
                     stopSelfResult(1);
                 }}).start();
             }

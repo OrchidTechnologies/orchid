@@ -23,11 +23,12 @@
 #include "directory.hpp"
 #include "error.hpp"
 
+extern std::string files_dir;
+
 namespace orc {
 
 std::string Group() {
-    // XXX: should be getFilesDir().getAbsolutePath()
-    return "/data/data/com.example.orchid/files";
+    return files_dir;
 }
 
 }

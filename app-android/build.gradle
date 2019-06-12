@@ -47,7 +47,7 @@ android {
 
     sourceSets {
         main {
-            assets.srcDirs = ['out-and/assets']
+            assets.srcDirs += ['out-and/assets']
             jniLibs.srcDirs = ['out-and']
         }
     }
@@ -60,6 +60,12 @@ android {
     compileOptions {
        sourceCompatibility 1.8
        targetCompatibility 1.8
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
     }
 }
 
