@@ -22,9 +22,13 @@
 
 #include "protect.hpp"
 
+bool vpn_protect(int s);
+
 namespace orc {
 
 int Protect(int socket, const sockaddr *address, socklen_t length) {
+    if (!vpn_protect(socket))
+        return -1;
     if (address == nullptr)
         return 0;
     return Bind(socket, address, length);
