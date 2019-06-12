@@ -17,6 +17,7 @@ using namespace orc;
 }
 
 static JavaVM *g_jvm;
+static asio::io_context *executor_;
 std::string files_dir;
 
 extern "C" JNIEXPORT void JNICALL
@@ -40,10 +41,18 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
     auto connection(capture->Wire<File<asio::posix::stream_descriptor>>(file));
     connection->Start();
 
-    Wait([&]() -> task<void> {
+    asio::io_context executor;
+    Spawn([
+        capture = std::move(capture),
+        ovpnfile = std::move(ovpnfile),
+        username = std::move(username),
+        password = std::move(password)
+    ]() mutable -> task<void> { try {
         co_await Schedule();
         co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
-    }());
+    } ORC_CATCH() });
+    executor_ = &executor;
+    executor_->run();
 }
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
@@ -62,14 +71,18 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 bool vpn_protect(int s)
 {
-    JNIEnv *env;
-    if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
-        return false;
-    }
-    IMPORT(com/example/orchid, OrchidVpnService);
-    CATCH(return false);
-    jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
-    CATCH(return false);
-    jboolean success = env->CallStaticBooleanMethod(cOrchidVpnService, mVpnProtect, s);
-    return success;
+    Log() << "vpn_protect: " << s << std::endl;
+    return boost::asio::post(*executor_, std::packaged_task<bool()>([s=s]{
+        Log() << "vpn_protect_inner: " << s << std::endl;
+        JNIEnv *env;
+        if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
+            return false;
+        }
+        IMPORT(com/example/orchid, OrchidVpnService);
+        CATCH(return false);
+        jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
+        CATCH(return false);
+        jboolean success = env->CallStaticBooleanMethod(cOrchidVpnService, mVpnProtect, s);
+        return (bool)success;
+    })).get();
 }
