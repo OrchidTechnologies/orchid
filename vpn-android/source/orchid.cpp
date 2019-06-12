@@ -73,7 +73,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 bool vpn_protect(int s)
 {
     Log() << "vpn_protect: " << s << std::endl;
-    return boost::asio::post(*executor_, std::packaged_task<bool()>([s=s]{
+    return boost::asio::post(*executor_, std::packaged_task<bool()>([&]{
         Log() << "vpn_protect_inner: " << s << std::endl;
         JNIEnv *env;
         if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
