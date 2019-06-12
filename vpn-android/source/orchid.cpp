@@ -42,6 +42,7 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
     connection->Start();
 
     asio::io_context executor;
+    auto work(asio::make_work_guard(executor));
     Spawn([
         capture = std::move(capture),
         ovpnfile = std::move(ovpnfile),
