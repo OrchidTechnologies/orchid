@@ -27,6 +27,9 @@
 
 #ifdef __APPLE__
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <malloc/malloc.h>
 
 namespace orc {

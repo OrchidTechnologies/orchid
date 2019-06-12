@@ -25,23 +25,10 @@
 
 #include <pthread.h>
 
-#if defined(__APPLE__)
-#include <CoreFoundation/CoreFoundation.h>
-#ifndef __OBJC__
-typedef struct NSString NSString;
-#endif
-extern "C" void NSLog(NSString *, ...);
-#define _trace() \
-    NSLog((NSString *) CFSTR("[%llx] _trace(%s:%u): %s"), (long long) pthread_self(), __FILE__, __LINE__, __FUNCTION__)
-#elif defined(__cplusplus)
-#include <cstdio>
+#include "log.hpp"
+
 #define _trace() do { \
-    std::cerr << "\e[31m[" << std::hex << pthread_self() << "] _trace(" << __FILE__ << ":" << std::dec << __LINE__ << "): " << __FUNCTION__ << "\e[0m" << std::endl; \
+    Log() << "\e[31m[" << std::hex << pthread_self() << "] _trace(" << __FILE__ << ":" << std::dec << __LINE__ << "): " << __FUNCTION__ << "\e[0m" << std::endl; \
 } while (false)
-#else
-#include <stdio.h>
-#define _trace() \
-    fprintf(stderr, "\e[31m[%llx] _trace(%s:%u): %s\e[0m\n", (long long) pthread_self(), __FILE__, __LINE__, __FUNCTION__)
-#endif
 
 #endif//ORCHID_TRACE_HPP

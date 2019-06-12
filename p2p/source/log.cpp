@@ -26,14 +26,18 @@
 
 #include <iostream>
 
-#if __ANDROID__
+#if 0
+#elif defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+typedef struct NSString NSString;
+extern "C" void NSLog(NSString *, ...);
+#elif defined(__ANDROID__)
 #include <android/log.h>
 #endif
 
 #include <boost/algorithm/string.hpp>
 
 #include "log.hpp"
-#include "trace.hpp"
 
 namespace orc {
 
@@ -45,9 +49,10 @@ Log::~Log() {
         log.resize(log.size() - 1);
     boost::replace_all(log, "\r", "");
     boost::replace_all(log, "\n", " || ");
-#ifdef __APPLE__
+#if 0
+#elif defined(__APPLE__)
     NSLog((NSString *)CFSTR("%s"), log.c_str());
-#elif __ANDROID__
+#elif defined(__ANDROID__)
     __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "%s", log.c_str());
 #else
     std::cerr << log << std::endl;
