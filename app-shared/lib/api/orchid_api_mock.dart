@@ -129,6 +129,12 @@ class MockOrchidAPI implements OrchidAPI {
     return _wallet.public;
   }
 
+  /// Get the user's wallet balance in OXT
+  /// This method may return null to indicate that no funding source is defined.
+  Future<double> getBalance() async {
+    return 8.25;
+  }
+
   VPNConfig _exitVPNConfig;
 
   /// Set or update the user's exit VPN config.

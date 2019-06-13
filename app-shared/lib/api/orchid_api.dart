@@ -67,6 +67,10 @@ abstract class OrchidAPI {
   /// wallet info; otherwise this method returns null.
   Future<OrchidWalletPublic> getWallet();
 
+  /// Get the user's wallet balance in OXT.
+  /// This method may return null to indicate that no funding source is defined.
+  Future<double> getBalance();
+
   /// Set or update the user's external VPN config.
   /// Return true if the configuration was saved successfully.
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig);

@@ -56,7 +56,7 @@ class _SettingsDevPage extends State<SettingsDevPage> {
             
             // The mock API control switch
             _buildSwitch(
-                title: "Mock API " + _mockAPIStatus(),
+                title: "Mock API: " + _mockAPIStatus(),
                 initialValue: OrchidAPI.mockAPI,
                 onChanged: (bool value) {
                   setState(() {

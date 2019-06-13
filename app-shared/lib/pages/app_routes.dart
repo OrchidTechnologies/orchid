@@ -12,10 +12,9 @@ import 'package:orchid/pages/settings/settings_link_wallet_page.dart';
 import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'package:orchid/pages/settings/settings_vpn_credentials_page.dart';
-
+import 'balance/balance_page.dart';
 
 class AppRoutes {
-
   static const String settings = "/settings";
   static const String settings_wallet = "/settings/wallet";
   static const String settings_vpn = "/settings/vpn";
@@ -28,6 +27,7 @@ class AppRoutes {
   static const String onboarding_link_wallet = "/onboarding/link_wallet";
   static const String onboarding_link_wallet_success = "/onboarding/link_wallet/success";
   static const String onboarding_vpn_credentials = "/onboarding/vpn_credentials";
+  static const String balance = "/balance";
 
   static final Map<String, WidgetBuilder> routes = {
     '/': (context) => QuickConnectPage(),
@@ -43,5 +43,6 @@ class AppRoutes {
     onboarding_link_wallet: (context) => OnboardingLinkWalletPage(),
     onboarding_link_wallet_success: (context) => OnboardingLinkWalletSuccessPage(),
     onboarding_vpn_credentials: (context) => OnboardingVPNCredentialsPage(),
+    balance: (context) => BalancePage(),
   };
 }

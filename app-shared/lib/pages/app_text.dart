@@ -140,11 +140,18 @@ class AppText {
   static TextStyle logStyle = const TextStyle(
       fontFamily: "VT323", fontSize: 16.0, color: AppColors.neutral_1);
 
-  static TextStyle switchLabelStyle = TextStyle(
+  static TextStyle switchLabelStyle = const TextStyle(
       color: AppColors.neutral_1,
       fontWeight: FontWeight.w400,
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
       letterSpacing: 0.25,
       fontSize: 14.0);
+
+  static TextStyle sideDrawerTitleStyle = const TextStyle(
+      color: AppColors.grey_7,
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 16.0);
 }

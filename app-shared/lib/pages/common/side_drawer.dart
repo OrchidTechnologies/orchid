@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
+
+import '../app_text.dart';
 
 /// The application side drawer
 class SideDrawer extends StatelessWidget {
@@ -33,46 +36,40 @@ class SideDrawer extends StatelessWidget {
             ),
 
             divider(),
-
-            tile(
-              title: "Connect",
-              imageName:
-                  'assets/images/connect.png',
-              onPressed: () {
-                Navigator.pushNamed(context, '/');
-              },
-            ),
-
+            SideDrawerTile(
+                title: "Connect",
+                imageName: 'assets/images/connect.png',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/');
+                }),
             divider(),
-
-            tile(
-              title: "Settings",
-              imageName: 'assets/images/settings.png',
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-              },
-            ),
-
+            BalanceSideDrawerTile(
+                title: "Balance",
+                imageName: 'assets/images/wallet.png',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/balance');
+                }),
             divider(),
-
-            tile(
-              title: "Help",
-              imageName: 'assets/images/help.png',
-              onPressed: () {
-                Navigator.pushNamed(context, '/help');
-              },
-            ),
-
+            SideDrawerTile(
+                title: "Settings",
+                imageName: 'assets/images/settings.png',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/settings');
+                }),
             divider(),
-
-            tile(
-              title: "Feedback",
-              imageName: 'assets/images/feedback.png',
-              onPressed: () {
-                Navigator.pushNamed(context, '/feedback');
-              },
-            ),
-
+            SideDrawerTile(
+                title: "Help",
+                imageName: 'assets/images/help.png',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/help');
+                }),
+            divider(),
+            SideDrawerTile(
+                title: "Feedback",
+                imageName: 'assets/images/feedback.png',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/feedback');
+                }),
             divider(),
           ],
         )
@@ -86,8 +83,21 @@ class SideDrawer extends StatelessWidget {
       height: 1.0,
     );
   }
+}
 
-  Widget tile({String title, String imageName, VoidCallback onPressed}) {
+class SideDrawerTile extends StatelessWidget {
+  final String title;
+  final String imageName;
+  final VoidCallback onPressed;
+
+  const SideDrawerTile({
+    @required this.title,
+    @required this.imageName,
+    @required this.onPressed,
+  }) : super();
+
+  @override
+  Widget build(BuildContext context) {
     return ListTile(
         contentPadding: EdgeInsets.only(left: 20),
         leading: Image(
@@ -98,13 +108,65 @@ class SideDrawer extends StatelessWidget {
             color: Colors.white,
             image: AssetImage(imageName)),
         title: Text(title,
-            textAlign: TextAlign.left,
-            style: const TextStyle(
-                color: const Color(0xffffffff),
-                fontWeight: FontWeight.w500,
-                fontFamily: "Roboto",
-                fontStyle: FontStyle.normal,
-                fontSize: 16.0)),
+            textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
         onTap: onPressed);
+  }
+}
+
+class BalanceSideDrawerTile extends StatefulWidget {
+  final String title;
+  final String imageName;
+  final VoidCallback onPressed;
+
+  const BalanceSideDrawerTile({
+    @required this.title,
+    @required this.imageName,
+    @required this.onPressed,
+  }) : super();
+
+  @override
+  _BalanceSideDrawerTileState createState() => _BalanceSideDrawerTileState();
+}
+
+class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
+  /// The user's balance in OXT or null if there are no funding sources.
+  double balance;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch the balance
+    OrchidAPI().getBalance().then((balance) {
+      setState(() {
+        this.balance = balance;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+        contentPadding: EdgeInsets.only(left: 20),
+        leading: Image(
+            height: 32,
+            width: 32,
+            fit: BoxFit.fill,
+            alignment: Alignment.center,
+            color: Colors.white,
+            image: AssetImage(widget.imageName)),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(widget.title,
+                textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
+            Text(
+                balance == null
+                    ? "(Setup)"
+                    : "${balance.toStringAsFixed(2)} OXT",
+                textAlign: TextAlign.left,
+                style: AppText.sideDrawerTitleStyle.copyWith(fontSize: 12, height: 1.2)),
+          ],
+        ),
+        onTap: widget.onPressed);
   }
 }

@@ -91,6 +91,11 @@ class RealOrchidAPI implements OrchidAPI {
     return Future<OrchidWalletPublic>.value(null);
   }
 
+  /// This method may return null to indicate that no funding source is defined.
+  Future<double> getBalance() async {
+    return null;
+  }
+
   @override
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig) {
     return Future<bool>.value(false);
