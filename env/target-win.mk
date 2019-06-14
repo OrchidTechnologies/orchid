@@ -60,8 +60,8 @@ msys2 += crt-git-7.0.0.5397.291c4f8d-1
 msys2 += dlfcn-1.1.2-1
 msys2 += gcc-8.3.0-2
 msys2 += headers-git-7.0.0.5397.291c4f8d-1
-msys2 += libc++-8.0.0-2
-msys2 += libc++abi-8.0.0-2
+msys2 += libc++-8.0.0-8
+msys2 += libc++abi-8.0.0-8
 msys2 += winpthreads-git-7.0.0.5325.11a5459d-1
 
 $(output)/%.msys2:
