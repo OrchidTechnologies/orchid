@@ -7,7 +7,7 @@ docker := docker run -i --rm --name "orchid" -v "${PWD}:/workdir" ubuntu:bionic
 
 fpm_deb := fpm -s dir -t deb -n 'orchid-server' -v ${version} -a all --url 'https://www.orchid.com' --description 'Orchid Server Binary' --deb-no-default-config-files --deb-systemd orchid.service -d libc++1 orchid-server=/usr/bin/orchid orchid.8=/usr/share/man/man8/orchid.8 orchid.conf=/etc/orchid.conf
 
-fpm_rpm := fpm -s dir -t rpm -n 'orchid-server' -v ${version} --url 'https://www.orchid.com' --description 'Orchid Server Binary' -d libc++1 orchid-server=/usr/bin/ orchid.8=/usr/share/man/man8/orchid.8 orchid.conf=/etc/orchid.conf
+fpm_rpm := fpm -s dir -t rpm -n 'orchid-server' -v $(subst +,.,${version}) --url 'https://www.orchid.com' --description 'Orchid Server Binary' -d libcxx orchid-server=/usr/bin/ orchid.8=/usr/share/man/man8/orchid.8 orchid.conf=/etc/orchid.conf orchid.service=/lib/systemd/system/orchid.service
 
 .PHONY : all
 all : deb rpm
