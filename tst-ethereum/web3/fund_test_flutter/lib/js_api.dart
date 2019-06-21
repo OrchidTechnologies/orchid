@@ -21,7 +21,7 @@ class OrchidJS {
     return _isAddress(str);
   }
   static Promise<String> fundPot(String addr, int amount) {
-    return _fundPot(addr, "$amount");
+    return _fundPot(addr, amount);
   }
   static Promise<void> debug() {
     return _debug();
@@ -45,7 +45,7 @@ external Promise<List<String>> _getAccounts();
 external bool _isAddress(String str);
 
 @JS('fundPot')
-external Promise<String> _fundPot(String addr, String amount);
+external Promise<String> _fundPot(String addr, int amount);
 
 @JS('debug')
 external Promise<void> _debug();

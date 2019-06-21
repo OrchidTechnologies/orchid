@@ -63,9 +63,9 @@ async function fundPot(addr, amount) {
 
     try {
         await Orchid.token.methods.approve(Orchid.lottery_addr, total).send({from: accounts[0]});
-        console.log("approved");
+        console.log("approved: ", total);
         const result = await Orchid.lottery.methods.fund(addr, value, total).send({from: accounts[0]});
-        console.log("fund: result = ", result);
+        console.log("fund result: ", result);
         return JSON.stringify(result);
     } catch (err) {
         console.log("error:", err);
