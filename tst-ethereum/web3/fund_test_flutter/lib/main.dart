@@ -7,13 +7,14 @@ void main() => runApp(FundOrchidApp());
 class FundOrchidApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var title = 'Orchid: Lottery Funding';
     return MaterialApp(
-      title: 'Fund Orchid',
+      title: title,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepPurple,
       ),
-      home: FundingPage(title: 'Orchid'),
+      home: FundingPage(title: title),
     );
   }
 }
@@ -43,7 +44,8 @@ class _FundingPageState extends State<FundingPage> {
       setState(() {
         this._account = account;
       });
-      debugPrint( "account: address=${account.address}, oxt=${account.oxtBalance}");
+      debugPrint(
+          "account: address=${account.address}, oxt=${account.oxtBalance}");
     });
     _focusNode.addListener(() {
       setState(() {});
@@ -53,41 +55,38 @@ class _FundingPageState extends State<FundingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
         floatingActionButton: RaisedButton(
+          elevation: 0,
           child: Text("Debug"),
           onPressed: () {
             OrchidJS.debug();
           },
         ),
-        body: buildAccountView(context));
+        body: buildContent(context));
   }
 
-  Widget buildAccountView(BuildContext context) {
+  Widget buildContent(BuildContext context) {
     var labelTheme = Theme.of(context).textTheme.headline;
     var valueTheme =
         Theme.of(context).textTheme.title.copyWith(color: Colors.deepPurple);
 
     return Center(
-      child: Container(
-        width: 550,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 530),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(height: 180),
-
+            Spacer(flex: 1),
+            buildLogo(),
+            SizedBox(height: 24),
             Text('Account: ', textAlign: TextAlign.left, style: labelTheme),
             Text(_account?.address?.toUpperCase() ?? "<No Accounts Found>",
                 textAlign: TextAlign.left, style: valueTheme),
             SizedBox(height: 12),
-
             Text('ETH Balance: ', textAlign: TextAlign.left, style: labelTheme),
             Text((_account?.ethBalance ?? "") + " Ξ",
                 textAlign: TextAlign.left, style: valueTheme),
             SizedBox(height: 12),
-
             Text('OXT Balance: ', textAlign: TextAlign.left, style: labelTheme),
             Text((_account?.oxtBalance ?? "") + " X",
                 textAlign: TextAlign.left, style: valueTheme),
@@ -122,37 +121,60 @@ class _FundingPageState extends State<FundingPage> {
               ),
             ),
 
+            // Amount entry and transfer button
             AbsorbPointer(
               absorbing: _accountKeyToFund == null,
               child: Opacity(
                   opacity: _accountKeyToFund != null ? 1.0 : 0.4,
                   child: buildAmountEntry(labelTheme)),
             ),
-
             SizedBox(height: 36),
 
+            // Log view
             Visibility(
               visible: _logText.length > 0,
-              child: Container(
-                constraints: BoxConstraints(maxHeight: 300),
-                width: double.infinity,
-                padding: EdgeInsets.all(16.0),
-                child: SingleChildScrollView(
-                  child: Text(
-                    _logText,
-                    textAlign: TextAlign.left,
-                    style: logStyle,
-                  ),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                  border: Border.all(width: 2.0, color: neutral_5),
-                ),
-              ),
-            )
+              child: buildLog(),
+            ),
+            Spacer(flex: 2),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget buildLog() {
+    return Container(
+      constraints: BoxConstraints(maxHeight: 400),
+      width: double.infinity,
+      padding: EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        child: Text(
+          _logText,
+          textAlign: TextAlign.left,
+          style: logStyle,
+        ),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(4.0)),
+        border: Border.all(width: 2.0, color: neutral_5),
+      ),
+    );
+  }
+
+  Widget buildLogo() {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: neutral_5, width: 2))),
+      child: Row(
+        children: <Widget>[
+          Image.asset("name_logo.png", height: 50),
+          SizedBox(
+            width: 10,
+          ),
+          Image.asset("wallet.png", height: 46),
+        ],
       ),
     );
   }
@@ -196,8 +218,14 @@ class _FundingPageState extends State<FundingPage> {
             SizedBox(width: 16),
             Container(
               child: RaisedButton(
+                  disabledColor: Colors.grey,
+                  color: teal_4,
                   elevation: 0,
-                  child: Text("Transfer"),
+                  child: Text(
+                    "Transfer",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
                   onPressed: _amountToFund != null ? onTransactPressed : null),
             )
           ],
