@@ -1,7 +1,9 @@
-const Token_addr = '0xe33AE66a0411764935CEf8a92f018a0CA439130d';
-const Lottery_addr = '0x36e80CF8bF497242A86994DF168A480A3E386780';
+window.Orchid = Object();
 
-const Token_abi = [{
+Orchid.token_addr = '0xe33AE66a0411764935CEf8a92f018a0CA439130d';
+Orchid.lottery_addr = '0x36e80CF8bF497242A86994DF168A480A3E386780';
+
+Orchid.token_abi = [{
     "constant": true,
     "inputs": [],
     "name": "name",
@@ -120,7 +122,7 @@ const Token_abi = [{
     "type": "event"
 }];
 
-const Lottery_abi = [{
+Orchid.lottery_abi = [{
     "constant": false,
     "inputs": [{"name": "secret", "type": "uint256"}, {
         "name": "hash",

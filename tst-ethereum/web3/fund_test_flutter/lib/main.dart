@@ -42,8 +42,7 @@ class _FundingPageState extends State<FundingPage> {
       setState(() {
         this._account = account;
       });
-      debugPrint(
-          "account: address=${account.address}, oxt=${account.oxtBalance}");
+      debugPrint( "account: address=${account.address}, oxt=${account.oxtBalance}");
     });
     _focusNode.addListener(() {
       setState(() {});
@@ -55,6 +54,12 @@ class _FundingPageState extends State<FundingPage> {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
+        ),
+        floatingActionButton: RaisedButton(
+          child: Text("Debug"),
+          onPressed: () {
+            OrchidJS.debug();
+          },
         ),
         body: buildAccountView(context));
   }
@@ -189,10 +194,9 @@ class _FundingPageState extends State<FundingPage> {
             SizedBox(width: 16),
             Container(
               child: RaisedButton(
-                elevation: 0,
-                child: Text("Transfer"),
-                onPressed: _amountToFund != null ? onTransactPressed : null
-              ),
+                  elevation: 0,
+                  child: Text("Transfer"),
+                  onPressed: _amountToFund != null ? onTransactPressed : null),
             )
           ],
         ),
@@ -201,14 +205,16 @@ class _FundingPageState extends State<FundingPage> {
   }
 
   void onTransactPressed() {
-    OrchidJS.fundPot(_accountKeyToFund, _amountToFund)
-        .then((success) {
-      debugPrint("fund call returned: $success");
+    OrchidJS.fundPot(_accountKeyToFund, _amountToFund).then((result) {
       setState(() {
-        _logText += success
-            ? "Transaction succeeded: $_amountToFund OXT\n"
-            : "Error in transaction.\n";
+        _logText += "Transaction transfer: $_amountToFund OXT\n";
+        _logText += result;
         _amountToFund = null;
+      });
+      OrchidJS.getAccount().then((Account account) {
+        setState(() {
+          this._account = account;
+        });
       });
     });
   }
