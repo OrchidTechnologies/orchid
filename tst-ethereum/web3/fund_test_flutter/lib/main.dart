@@ -29,6 +29,7 @@ class FundingPage extends StatefulWidget {
 
 class _FundingPageState extends State<FundingPage> {
   FocusNode _focusNode = FocusNode();
+  TextEditingController _amountTextController = TextEditingController();
   Account _account;
   String _accountKeyToFund;
   int _amountToFund;
@@ -174,6 +175,7 @@ class _FundingPageState extends State<FundingPage> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
+                    controller: _amountTextController,
                     keyboardType: TextInputType.number,
                     autocorrect: false,
                     textAlign: TextAlign.left,
@@ -210,6 +212,7 @@ class _FundingPageState extends State<FundingPage> {
         _logText += "Transaction transfer: $_amountToFund OXT\n";
         _logText += result;
         _amountToFund = null;
+        _amountTextController.clear();
       });
       OrchidJS.getAccount().then((Account account) {
         setState(() {
