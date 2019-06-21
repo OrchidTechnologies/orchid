@@ -1,81 +1,215 @@
-@JS() // sets the context, in this case being `window`
-library main; // required library declaration
-
+import 'package:flutter_site/style.dart';
 import 'package:flutter_web/material.dart';
-import 'package:js/js.dart';
-import 'interop.dart';
+import 'js_api.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(FundOrchidApp());
 
-class MyApp extends StatelessWidget {
+class FundOrchidApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Fund Orchid',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Orchid'),
+      home: FundingPage(title: 'Orchid'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class FundingPage extends StatefulWidget {
+  FundingPage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _FundingPageState createState() => _FundingPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-
-  List<String> accounts = [];
+class _FundingPageState extends State<FundingPage> {
+  FocusNode _focusNode = FocusNode();
+  Account _account;
+  String _accountKeyToFund;
+  int _amountToFund;
+  String _logText = "";
 
   @override
   void initState() {
     super.initState();
+    _focusNode.requestFocus();
+    OrchidJS.getAccount().then((Account account) {
+      setState(() {
+        this._account = account;
+      });
+      debugPrint(
+          "account: address=${account.address}, oxt=${account.oxtBalance}");
+    });
+    _focusNode.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: buildAccountView(context));
+  }
+
+  Widget buildAccountView(BuildContext context) {
+    var labelTheme = Theme.of(context).textTheme.headline;
+    var valueTheme =
+        Theme.of(context).textTheme.title.copyWith(color: Colors.deepPurple);
+
+    return Center(
+      child: Container(
+        width: 550,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text( 'Accounts:',
-              style: Theme.of(context).textTheme.title,
-            ),
-            Text(
-              '${accounts}',
-              style: Theme.of(context).textTheme.body1,
-            ),
+            SizedBox(height: 180),
+
+            Text('Account: ', textAlign: TextAlign.left, style: labelTheme),
+            Text(_account?.address?.toUpperCase() ?? "<No Accounts Found>",
+                textAlign: TextAlign.left, style: valueTheme),
+            SizedBox(height: 12),
+
+            Text('ETH Balance: ', textAlign: TextAlign.left, style: labelTheme),
+            Text((_account?.ethBalance ?? "") + " Ξ",
+                textAlign: TextAlign.left, style: valueTheme),
+            SizedBox(height: 12),
+
+            Text('OXT Balance: ', textAlign: TextAlign.left, style: labelTheme),
+            Text((_account?.oxtBalance ?? "") + " X",
+                textAlign: TextAlign.left, style: valueTheme),
+
+            // Address Entry
             SizedBox(height: 24),
-            RaisedButton(
-              child: Text("Fetch Accounts"),
-              onPressed: () {
-                getAccounts().then((List<String> arg) {
-                  debugPrint("here: accounts: $arg");
-                  setState(() {
-                    accounts = arg;
-                  });
-                });
-              },
+            Text('Lottery Pot Address to Fund:',
+                textAlign: TextAlign.left, style: labelTheme),
+            SizedBox(height: 12),
+            Container(
+              decoration: _accountKeyToFund != null
+                  ? textFieldFocusedDecoration
+                  : textFieldEnabledDecoration,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  autocorrect: false,
+                  textAlign: TextAlign.left,
+                  maxLines: 1,
+                  focusNode: _focusNode,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: "Paste address...",
+                  ),
+                  onChanged: (text) {
+                    setState(() {
+                      _accountKeyToFund =
+                          OrchidJS.isAddress(text) ? text : null;
+                    });
+                  },
+                ),
+              ),
             ),
+
+            AbsorbPointer(
+              absorbing: _accountKeyToFund == null,
+              child: Opacity(
+                  opacity: _accountKeyToFund != null ? 1.0 : 0.4,
+                  child: buildAmountEntry(labelTheme)),
+            ),
+
+            SizedBox(height: 36),
+
+            Visibility(
+              visible: _logText.length > 0,
+              child: Container(
+                constraints: BoxConstraints(maxHeight: 300),
+                width: double.infinity,
+                padding: EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  child: Text(
+                    _logText,
+                    textAlign: TextAlign.left,
+                    style: logStyle,
+                  ),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  border: Border.all(width: 2.0, color: neutral_5),
+                ),
+              ),
+            )
           ],
         ),
       ),
     );
   }
+
+  Widget buildAmountEntry(TextStyle labelTheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SizedBox(height: 24),
+        Text('Amount to Transfer:',
+            textAlign: TextAlign.left, style: labelTheme),
+        SizedBox(height: 12),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Container(
+                decoration: _amountToFund != null
+                    ? textFieldFocusedDecoration
+                    : textFieldEnabledDecoration,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    autocorrect: false,
+                    textAlign: TextAlign.left,
+                    maxLines: 1,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Amount in OXT",
+                    ),
+                    onChanged: (text) {
+                      setState(() {
+                        _amountToFund = int.tryParse(text); // null if not int
+                      });
+                    },
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 16),
+            Container(
+              child: RaisedButton(
+                elevation: 0,
+                child: Text("Transfer"),
+                onPressed: _amountToFund != null ? onTransactPressed : null
+              ),
+            )
+          ],
+        ),
+      ],
+    );
+  }
+
+  void onTransactPressed() {
+    OrchidJS.fundPot(_accountKeyToFund, _amountToFund)
+        .then((success) {
+      debugPrint("fund call returned: $success");
+      setState(() {
+        _logText += success
+            ? "Transaction succeeded: $_amountToFund OXT\n"
+            : "Error in transaction.\n";
+        _amountToFund = null;
+      });
+    });
+  }
 }
-
-@JS('getAccounts')
-external Promise<List<String>> getAccounts();
-
-

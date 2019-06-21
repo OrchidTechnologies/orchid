@@ -5,33 +5,10 @@
   <title></title>
   <script defer src="main.dart.js" type="application/javascript"></script>
   <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+  <script src="contracts.js"></script>
+  <script src="orchid.js"></script>
   <script>
-      window.addEventListener('load', async () => {
-          // Modern DAPP browsers.
-          if (window.ethereum) {
-              window.web3 = new Web3(ethereum);
-              try {
-                  await ethereum.enable();
-              } catch (error) {
-                  console.log("User denied account access...");
-              }
-          }
-          // Legacy DAPP browsers.
-          else if (window.web3) {
-              window.web3 = new Web3(web3.currentProvider);
-          }
-          // Non-dapp browsers...
-          else {
-              console.log('Non-Ethereum browser. Please install MetaMask.');
-          }
-
-      });
-
-      async function getAccounts() {
-          const accounts = await web3.eth.getAccounts();
-          console.log("accounts: ", accounts);
-          return accounts;
-      }
+    init_ethereum();
   </script>
 </head>
 <body>
