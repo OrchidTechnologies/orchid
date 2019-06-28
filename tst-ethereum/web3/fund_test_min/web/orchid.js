@@ -1,3 +1,4 @@
+const Web3 = require('web3');
 
 /// Capture console and error output to an element named "log" in the page.
 function captureLogsTo(logId) {
@@ -21,6 +22,8 @@ function captureLogsTo(logId) {
         console.log("Loaded.");
     };
 }
+
+window.captureLogsTo = captureLogsTo;
 
 function init_ethereum() {
     return new Promise(function (resolve, reject) {
@@ -56,6 +59,8 @@ function init_ethereum() {
     });
 }
 
+window.init_ethereum = init_ethereum;
+
 class Account {
     constructor() {
         this.address = "";
@@ -81,35 +86,80 @@ async function getAccount() {
     return account;
 }
 
-async function getAccounts() {
-    const accounts = await web3.eth.getAccounts();
-    console.log("accounts: ", accounts);
-    return accounts;
-}
+window.getAccount = getAccount;
 
 function isAddress(str) {
     return web3.utils.isAddress(str);
 }
 
+window.isAddress = isAddress;
+
 async function fundPot(addr, amount) {
     const accounts = await web3.eth.getAccounts();
 
-    // Convert the amount to/from wei
+    // Lottery funding amount
     const value = amount;
     const escrow = 0;
     const total = value + escrow;
 
-    try {
-        let result = await Orchid.token.methods.approve(Orchid.lottery_addr, total).send({from: accounts[0]});
-        console.log("Approval result: ", JSON.stringify(result));
-        result = await Orchid.lottery.methods.fund(addr, value, total).send({from: accounts[0]});
-        let jsonResult = JSON.stringify(result);
-        console.log("Fund result: ", jsonResult);
-        return jsonResult;
-    } catch (err) {
-        console.log("error:", err);
-        throw new Error("Error in transaction.");
-    }
+    // Gas price
+    const gwei = 1e9;
+    const gasPrice = 20;
+    console.log("Setting gas price (gwei): ", gasPrice);
+
+    return new Promise(function (resolve, reject) {
+        try {
+            Orchid.token.methods.approve(Orchid.lottery_addr, total)
+                .estimateGas({from: accounts[0]})
+                .then((gas) => {
+                    console.log("Approval gas estimate: ", gas);
+                });
+
+            Orchid.token.methods.approve(Orchid.lottery_addr, total).send({
+                from: accounts[0],
+                gas: 50000,
+                gasPrice: gasPrice * gwei
+            })
+                .on("transactionHash", (hash) => {
+                    console.log("Approval hash: ", hash);
+                })
+                .on('confirmation', (confirmationNumber, receipt) => {
+                    console.log("Approval confirmation: ", confirmationNumber, receipt);
+                })
+                .on('error', (err) => {
+                    console.log("Approval error: ", err);
+                    reject(err);
+                });
+
+            Orchid.lottery.methods.fund(addr, value, total)
+                .estimateGas({from: accounts[0]})
+                .then((gas) => {
+                    console.log("Funding gas estimate: ", gas);
+                });
+
+            Orchid.lottery.methods.fund(addr, value, total).send({
+                from: accounts[0],
+                gas: 100000,
+                gasPrice: gasPrice * gwei
+            })
+                .on("transactionHash", (hash) => {
+                    console.log("Fund hash: ", hash);
+                    resolve(hash);
+                })
+                .on('confirmation', (confirmationNumber, receipt) => {
+                    console.log("Fund confirmation: ", confirmationNumber, receipt);
+                })
+                .on('error', (err) => {
+                    console.log("Fund error: ", err);
+                    reject(err);
+                });
+        } catch (err) {
+            console.log("error:", err);
+            reject("error: " + err);
+        }
+    });
 }
+
+window.fundPot = fundPot;
 
 

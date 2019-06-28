@@ -1,3 +1,5 @@
+const $ = require('jquery');
+
 async function showBalance() {
     let account = await getAccount();
     console.log("Funding from account: ", account.address);
@@ -12,6 +14,7 @@ async function showBalance() {
         $('#oxt-balance-error').removeClass('hidden');
     }
 }
+window.showBalance = showBalance;
 
 async function submitTx() {
     console.log("Submit...");
@@ -38,6 +41,7 @@ async function submitTx() {
     spinner.slideUp();
     $("#results").slideDown();
 }
+window.submitTx = submitTx;
 
 async function init_app() {
     await init_ethereum();
@@ -57,4 +61,5 @@ async function init_app() {
     }
     $('#amount').val(amount);
 }
+window.init_app = init_app;
 
