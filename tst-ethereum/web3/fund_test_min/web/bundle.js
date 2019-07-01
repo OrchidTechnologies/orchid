@@ -66003,6 +66003,9 @@ async function init_app() {
     // e.g. http://192.168.1.2:8123/web/index.html?pot=0x405BC10E04e3f487E9925ad5815E4406D78B769e&amount=2
     let params = new URLSearchParams(document.location.search);
     window.potAddress = params.get("pot");
+    // if (!window.potAddress.toLowerCase().startsWith("0x")) {
+    //     window.potAddress = "0x"+window.potAddress;
+    // }
     if (!isAddress(potAddress)) {
         console.log("Pot address is invalid");
         $('#pot-error').removeClass('hidden');
