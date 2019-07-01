@@ -18,6 +18,6 @@ scripts/build.sh
 
 e.g.
 ```bash
-php -S 192.168..2:8123
+php -S 192.168.1.2:8123
 ```
 

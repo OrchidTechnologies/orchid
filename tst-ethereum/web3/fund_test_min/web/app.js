@@ -35,7 +35,7 @@ async function submitTx() {
         } catch (err) { }
         await showBalance();
     } catch (err) {
-        console.log("Error: ", err);
+        console.log("Fund pot error: ", JSON.stringify(err));
         $("#result-text").text("Transaction Failed");
     }
     spinner.slideUp();

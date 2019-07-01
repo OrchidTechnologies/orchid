@@ -1,7 +1,10 @@
 window.Orchid = Object();
 
 Orchid.token_addr = '0xe33AE66a0411764935CEf8a92f018a0CA439130d';
+Orchid.token_approval_max_gas = 50000;
+
 Orchid.lottery_addr = '0x36e80CF8bF497242A86994DF168A480A3E386780';
+Orchid.lottery_fund_max_gas = 100000;
 
 Orchid.token_abi = [{
     "constant": true,

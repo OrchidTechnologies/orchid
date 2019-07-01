@@ -17,6 +17,7 @@ function captureLogsTo(logId) {
     window.onerror = function (message, source, lineno, colno, error) {
         if (error) message = error.stack;
         console.log('Error: ' + message + ": " + error);
+        console.log('Error json: ', JSON.stringify(error));
     };
     window.onload = function () {
         console.log("Loaded.");
@@ -117,17 +118,18 @@ async function fundPot(addr, amount) {
 
             Orchid.token.methods.approve(Orchid.lottery_addr, total).send({
                 from: accounts[0],
-                gas: 50000,
+                gas: Orchid.token_approval_max_gas,
                 gasPrice: gasPrice * gwei
             })
                 .on("transactionHash", (hash) => {
                     console.log("Approval hash: ", hash);
                 })
                 .on('confirmation', (confirmationNumber, receipt) => {
-                    console.log("Approval confirmation: ", confirmationNumber, receipt);
+                    console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
                 })
                 .on('error', (err) => {
-                    console.log("Approval error: ", err);
+                    console.log("Approval error: ", JSON.stringify(err));
+                    // If there is an error in the approval assume Funding will fail.
                     reject(err);
                 });
 
@@ -139,22 +141,24 @@ async function fundPot(addr, amount) {
 
             Orchid.lottery.methods.fund(addr, value, total).send({
                 from: accounts[0],
-                gas: 100000,
+                gas: Orchid.lottery_fund_max_gas,
                 gasPrice: gasPrice * gwei
             })
                 .on("transactionHash", (hash) => {
                     console.log("Fund hash: ", hash);
-                    resolve(hash);
                 })
                 .on('confirmation', (confirmationNumber, receipt) => {
-                    console.log("Fund confirmation: ", confirmationNumber, receipt);
+                    console.log("Fund confirmation ", confirmationNumber, JSON.stringify(receipt));
+                    // Wait for one confirmation on the funding tx.
+                    const hash = JSON.stringify(receipt)['transactionHash'];
+                    resolve(hash);
                 })
                 .on('error', (err) => {
-                    console.log("Fund error: ", err);
+                    console.log("Fund error: ", JSON.stringify(err));
                     reject(err);
                 });
         } catch (err) {
-            console.log("error:", err);
+            console.log("error:", JSON.stringify(err));
             reject("error: " + err);
         }
     });
