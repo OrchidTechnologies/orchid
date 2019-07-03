@@ -43,6 +43,11 @@ contract OrchidLottery {
 
     event Update(address indexed signer, uint64 amount, uint64 escrow, uint256 unlock);
 
+    function balance(address signer) public view returns(uint64, uint64) {
+        Pot storage pot = pots_[signer];
+        return (pot.amount_, pot.escrow_);
+    }
+
     // signer must be a simple account, to support signing tickets
     function fund(address signer, uint64 amount, uint64 total) public {
         require(total >= amount);
@@ -106,5 +111,4 @@ contract OrchidLottery {
         emit Update(msg.sender, 0, 0, 0);
         require(orchid_.transfer(target, amount));
     }
-
 }
