@@ -65954,7 +65954,34 @@ XMLHttpRequest.prototype.nodejsBaseUrl = null;
 },{"./errors":490,"./progress-event":492,"./xml-http-request-event-target":493,"./xml-http-request-upload":494,"_process":19,"buffer":7,"cookiejar":94,"http":40,"https":11,"os":17,"url":47}],496:[function(require,module,exports){
 const $ = require('jquery');
 
+async function init_app() {
+    await init_ethereum();
+    // e.g. http://192.168.1.2:8123/web/index.html?pot=0x405BC10E04e3f487E9925ad5815E4406D78B769e&amount=2
+    let params = new URLSearchParams(document.location.search);
+    window.potAddress = params.get("pot");
+    // Not strictly necessary but for consistency
+    if (!window.potAddress.toLowerCase().startsWith("0x")) {
+        window.potAddress = "0x"+window.potAddress;
+    }
+    if (!isAddress(potAddress)) {
+        console.log("Pot address is invalid");
+        $('#pot-error').removeClass('hidden');
+    }
+    $('#pot').val(potAddress);
+    window.amount = params.get("amount");
+    if (amount <= 0 || amount > 10) {
+        console.log("Fund amount is invalid");
+        $('#amount-error').removeClass('hidden');
+    }
+    $('#amount').val(amount);
+
+    await showBalance();
+
+}
+window.init_app = init_app;
+
 async function showBalance() {
+    // Show the wallet balances
     let account = await getAccount();
     console.log("Funding from account: ", account.address);
     console.log("Balance: ", account.ethBalance);
@@ -65967,6 +65994,9 @@ async function showBalance() {
     if (account.oxtBalance <= 0) {
         $('#oxt-balance-error').removeClass('hidden');
     }
+    // Show the pot balance
+    let potBalance = await getPotBalance(window.potAddress);
+    $('#pot-balance').val(potBalance);
 }
 window.showBalance = showBalance;
 
@@ -65997,28 +66027,6 @@ async function submitTx() {
 }
 window.submitTx = submitTx;
 
-async function init_app() {
-    await init_ethereum();
-    await showBalance();
-    // e.g. http://192.168.1.2:8123/web/index.html?pot=0x405BC10E04e3f487E9925ad5815E4406D78B769e&amount=2
-    let params = new URLSearchParams(document.location.search);
-    window.potAddress = params.get("pot");
-    // if (!window.potAddress.toLowerCase().startsWith("0x")) {
-    //     window.potAddress = "0x"+window.potAddress;
-    // }
-    if (!isAddress(potAddress)) {
-        console.log("Pot address is invalid");
-        $('#pot-error').removeClass('hidden');
-    }
-    $('#pot').val(potAddress);
-    window.amount = params.get("amount");
-    if (amount <= 0 || amount > 10) {
-        console.log("Fund amount is invalid");
-        $('#amount-error').removeClass('hidden');
-    }
-    $('#amount').val(amount);
-}
-window.init_app = init_app;
 
 
 },{"jquery":163}],497:[function(require,module,exports){
@@ -66027,8 +66035,9 @@ window.Orchid = Object();
 Orchid.token_addr = '0xe33AE66a0411764935CEf8a92f018a0CA439130d';
 Orchid.token_approval_max_gas = 50000;
 
-Orchid.lottery_addr = '0x36e80CF8bF497242A86994DF168A480A3E386780';
+Orchid.lottery_addr = '0x670d978c48acbbbcf9e9ff6657a40fd6ee605ed0';
 Orchid.lottery_fund_max_gas = 100000;
+Orchid.lottery_balance_max_gas = 50000;
 
 Orchid.token_abi = [{
     "constant": true,
@@ -66151,70 +66160,165 @@ Orchid.token_abi = [{
 
 Orchid.lottery_abi = [{
     "constant": false,
-    "inputs": [{"name": "secret", "type": "uint256"}, {
-        "name": "hash",
-        "type": "bytes32"
-    }, {"name": "target", "type": "address"}, {
-        "name": "nonce",
-        "type": "uint256"
-    }, {"name": "until", "type": "uint256"}, {
-        "name": "ratio",
-        "type": "uint256"
-    }, {"name": "amount", "type": "uint64"}, {"name": "v", "type": "uint8"}, {
-        "name": "r",
-        "type": "bytes32"
-    }, {"name": "s", "type": "bytes32"}, {"name": "old", "type": "bytes32[]"}],
-    "name": "grab",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "target", "type": "address"}],
-    "name": "take",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [],
-    "name": "warn",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "signer", "type": "address"}, {
-        "name": "amount",
-        "type": "uint64"
-    }, {"name": "total", "type": "uint64"}],
+    "inputs": [
+        {
+            "name": "signer",
+            "type": "address"
+        },
+        {
+            "name": "amount",
+            "type": "uint64"
+        },
+        {
+            "name": "total",
+            "type": "uint64"
+        }
+    ],
     "name": "fund",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
-}, {
-    "inputs": [{"name": "orchid", "type": "address"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-}, {
-    "anonymous": false,
-    "inputs": [{"indexed": true, "name": "signer", "type": "address"}, {
-        "indexed": false,
-        "name": "amount",
-        "type": "uint64"
-    }, {"indexed": false, "name": "escrow", "type": "uint64"}, {
-        "indexed": false,
-        "name": "unlock",
-        "type": "uint256"
-    }],
-    "name": "Update",
-    "type": "event"
-}];
+},
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "secret",
+                "type": "uint256"
+            },
+            {
+                "name": "hash",
+                "type": "bytes32"
+            },
+            {
+                "name": "target",
+                "type": "address"
+            },
+            {
+                "name": "nonce",
+                "type": "uint256"
+            },
+            {
+                "name": "until",
+                "type": "uint256"
+            },
+            {
+                "name": "ratio",
+                "type": "uint256"
+            },
+            {
+                "name": "amount",
+                "type": "uint64"
+            },
+            {
+                "name": "v",
+                "type": "uint8"
+            },
+            {
+                "name": "r",
+                "type": "bytes32"
+            },
+            {
+                "name": "s",
+                "type": "bytes32"
+            },
+            {
+                "name": "old",
+                "type": "bytes32[]"
+            }
+        ],
+        "name": "grab",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "target",
+                "type": "address"
+            }
+        ],
+        "name": "take",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "signer",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "amount",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "name": "escrow",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "name": "unlock",
+                "type": "uint256"
+            }
+        ],
+        "name": "Update",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "name": "orchid",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "warn",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "signer",
+                "type": "address"
+            }
+        ],
+        "name": "balance",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64"
+            },
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    }
+];
 
 
 },{}],498:[function(require,module,exports){
@@ -66387,5 +66491,15 @@ async function fundPot(addr, amount) {
 window.fundPot = fundPot;
 
 
+async function getPotBalance(addr) {
+    const accounts = await web3.eth.getAccounts();
+    let result = await Orchid.lottery.methods.balance(addr).call({ from: accounts[0], });
+    const balance = result[0].toNumber();
+    const escrow = result[1].toNumber();
+    console.log("Get pot balance: ", balance, "escrow: ", escrow);
+    return balance;
+}
+
+window.getPotBalance = getPotBalance;
 
 },{"web3":486}]},{},[496,497,498]);

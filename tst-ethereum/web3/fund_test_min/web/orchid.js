@@ -1,6 +1,6 @@
 const Web3 = require('web3');
 
-/// Capture console and error output to an element named "log" in the page.
+/// Capture console and error output to an element with id `logId` in the page.
 function captureLogsTo(logId) {
     window.orgLog = console.log;
     window.logText = "";
@@ -26,6 +26,7 @@ function captureLogsTo(logId) {
 
 window.captureLogsTo = captureLogsTo;
 
+/// Init the Web3 environment and the Orchid contracts
 function init_ethereum() {
     return new Promise(function (resolve, reject) {
         window.addEventListener('load', async () => {
@@ -70,6 +71,7 @@ class Account {
     }
 }
 
+/// Get the user's ETH wallet balance and OXT token balance.
 async function getAccount() {
     const accounts = await web3.eth.getAccounts();
     const account = new Account();
@@ -95,6 +97,7 @@ function isAddress(str) {
 
 window.isAddress = isAddress;
 
+/// Transfer the amount in OXT from the user to the specified lottery pot address.
 async function fundPot(addr, amount) {
     const accounts = await web3.eth.getAccounts();
 
@@ -166,4 +169,16 @@ async function fundPot(addr, amount) {
 
 window.fundPot = fundPot;
 
+
+/// Get the lottery pot balance for the specified address.
+async function getPotBalance(addr) {
+    const accounts = await web3.eth.getAccounts();
+    let result = await Orchid.lottery.methods.balance(addr).call({ from: accounts[0], });
+    const balance = result[0].toNumber();
+    const escrow = result[1].toNumber();
+    console.log("Get pot balance: ", balance, "escrow: ", escrow);
+    return balance;
+}
+
+window.getPotBalance = getPotBalance;
 

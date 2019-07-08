@@ -22,16 +22,18 @@
     </div>
     <div style="margin-top:24px"></div>
     <fieldset>
-      <label>Fund From Address<span id="from-account-error" class="hidden error"> *</span></label>
-      <input type="text" id="from-account" placeholder="Address">
+      <label>Wallet Address<span id="from-account-error" class="hidden error"> *</span></label>
+      <input type="text" id="from-account" placeholder="Address" readonly>
       <label>ETH Balance<span id="eth-balance-error" class="hidden error"> *</span></label>
-      <input type="text" id="eth-balance">
+      <input type="text" id="eth-balance" readonly>
       <label>OXT Balance<span id="oxt-balance-error" class="hidden error"> *</span></label>
-      <input type="text" id="oxt-balance">
-      <label>Orchid Lottery Pot Address<span id="pot-error" class="hidden error"> *</span></label>
-      <input type="text" id="pot" placeholder="Address">
-      <label>Amount<span id="amount-error" class="hidden error"> *</span></label>
-      <input type="number" id="amount" placeholder="Amount in OXT">
+      <input type="text" id="oxt-balance" readonly>
+      <label>Lottery Pot Address<span id="pot-error" class="hidden error"> *</span></label>
+      <input type="text" id="pot" placeholder="Address" readonly>
+      <label>Lottery Pot Balance<span id="pot-balance-error" class="hidden error"> *</span></label>
+      <input type="number" id="pot-balance" readonly>
+      <label>Lottery Pot Add Amount<span id="amount-error" class="hidden error"> *</span></label>
+      <input type="number" id="amount" placeholder="Amount in OXT" readonly>
     </fieldset>
     <input id="fund-button" type="submit" value="Fund" onclick="submitTx(); return false;"/>
     <div id="spinner" class="spinner hidden"></div>
@@ -49,11 +51,6 @@
         <div id="log-output" style="color: gray; font-size: 8pt; font-family: monospace">
         </div>
       </div>
-      <!--
-      <div style="margin-top: 8px;">
-        <button style="" onclick="$('#log-output').select(); document.execCommand('copy'); return false;">copy to clipboard</button>
-      </div>
-      -->
     </div>
   </form>
 </div>

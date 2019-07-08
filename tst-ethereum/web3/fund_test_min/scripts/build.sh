@@ -1,2 +1,2 @@
-browserify web/app.js web/contracts.js web/orchid.js -o web/bundle.js
+browserify web/app.js web/orchid-contracts.js web/orchid.js -o web/bundle.js
 
