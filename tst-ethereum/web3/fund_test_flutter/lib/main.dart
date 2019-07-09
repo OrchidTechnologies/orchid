@@ -1,6 +1,7 @@
 import 'package:flutter_site/style.dart';
 import 'package:flutter_web/material.dart';
-import 'js_api.dart';
+import 'orchid_api.dart';
+import 'log_view.dart';
 
 void main() => runApp(FundOrchidApp());
 
@@ -29,27 +30,35 @@ class FundingPage extends StatefulWidget {
 }
 
 class _FundingPageState extends State<FundingPage> {
-  FocusNode _focusNode = FocusNode();
-  TextEditingController _amountTextController = TextEditingController();
-  Account _account;
-  String _accountKeyToFund;
-  int _amountToFund;
-  String _logText = "";
+  final LogViewController _logViewController = LogViewController();
+
+  TextEditingController _fundAmountTextController = TextEditingController();
+  Account _fundFromAccount;
+  double _amountToFund;
+
+  TextEditingController _potAddressTextController = TextEditingController();
+  FocusNode _potAddressFocusNode = FocusNode();
+  String _potAddressToFund;
+  double _potCurrentBalance;
 
   @override
   void initState() {
     super.initState();
-    _focusNode.requestFocus();
-    OrchidJS.getAccount().then((Account account) {
-      setState(() {
-        this._account = account;
-      });
-      debugPrint(
-          "account: address=${account.address}, oxt=${account.oxtBalance}");
+
+    var params = OrchidAPI.getURLParams();
+    setState(() {
+      _potAddressToFund = params.potAddress;
+      _potAddressTextController.text = _potAddressToFund;
+      _amountToFund = params.amount;
+      _fundAmountTextController.text = "$_amountToFund";
     });
-    _focusNode.addListener(() {
-      setState(() {});
-    });
+
+    _updateBalances();
+
+    //_potAddressFocusNode.requestFocus();
+    //_potAddressFocusNode.addListener(() {
+    //setState(() {});
+    //});
   }
 
   @override
@@ -59,82 +68,62 @@ class _FundingPageState extends State<FundingPage> {
           elevation: 0,
           child: Text("Debug"),
           onPressed: () {
-            OrchidJS.debug();
+            OrchidAPI.debug();
           },
         ),
-        body: buildContent(context));
+        body: _buildContent(context));
   }
 
-  Widget buildContent(BuildContext context) {
-    var labelTheme = Theme.of(context).textTheme.headline;
-    var valueTheme =
-        Theme.of(context).textTheme.title.copyWith(color: Colors.deepPurple);
-
+  Widget _buildContent(BuildContext context) {
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 530),
+        constraints: BoxConstraints(maxWidth: 550),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Spacer(flex: 1),
-            buildLogo(),
-            SizedBox(height: 24),
-            Text('Account: ', textAlign: TextAlign.left, style: labelTheme),
-            Text(_account?.address?.toUpperCase() ?? "<No Accounts Found>",
-                textAlign: TextAlign.left, style: valueTheme),
-            SizedBox(height: 12),
-            Text('ETH Balance: ', textAlign: TextAlign.left, style: labelTheme),
-            Text((_account?.ethBalance ?? "") + " Ξ",
-                textAlign: TextAlign.left, style: valueTheme),
-            SizedBox(height: 12),
-            Text('OXT Balance: ', textAlign: TextAlign.left, style: labelTheme),
-            Text((_account?.oxtBalance ?? "") + " X",
-                textAlign: TextAlign.left, style: valueTheme),
 
-            // Address Entry
-            SizedBox(height: 24),
-            Text('Lottery Pot Address to Fund:',
-                textAlign: TextAlign.left, style: labelTheme),
-            SizedBox(height: 12),
-            Container(
-              decoration: _accountKeyToFund != null
-                  ? textFieldFocusedDecoration
-                  : textFieldEnabledDecoration,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  autocorrect: false,
-                  textAlign: TextAlign.left,
-                  maxLines: 1,
-                  focusNode: _focusNode,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: "Paste address...",
-                  ),
-                  onChanged: (text) {
-                    setState(() {
-                      _accountKeyToFund =
-                          OrchidJS.isAddress(text) ? text : null;
-                    });
-                  },
-                ),
-              ),
-            ),
+            // Logo
+            _buildLogo(),
 
-            // Amount entry and transfer button
+            // Account balance
+            _buildField(
+                topMargin: 24,
+                label: 'Account: ',
+                initialValue: _fundFromAccount?.address?.toUpperCase() ??
+                    "<No Accounts Found>"),
+            _buildField(
+                label: 'ETH Balance: ',
+                initialValue:
+                    (_fundFromAccount?.ethBalance.toString() ?? "") + " Ξ"),
+            _buildField(
+                label: 'OXT Balance: ',
+                initialValue:
+                    (_fundFromAccount?.oxtBalance.toString() ?? "") + " X"),
+
+            // Pot address entry
+            ..._buildPotAddressEntry(),
+
+            // Current pot balance
+            Opacity(
+                opacity: _potAddressToFund != null ? 1.0 : 0.4,
+                child: _buildField(
+                    label: 'Pot Current OXT Balance: ',
+                    initialValue: _potAddressToFund != null
+                        ? _potCurrentBalance.toString() + "X"
+                        : "")),
+
+            // Pot funding amount entry and transfer button
             AbsorbPointer(
-              absorbing: _accountKeyToFund == null,
+              absorbing: _potAddressToFund == null,
               child: Opacity(
-                  opacity: _accountKeyToFund != null ? 1.0 : 0.4,
-                  child: buildAmountEntry(labelTheme)),
+                  opacity: _potAddressToFund != null ? 1.0 : 0.4,
+                  child: _buildAmountEntry()),
             ),
             SizedBox(height: 36),
 
             // Log view
-            Visibility(
-              visible: _logText.length > 0,
-              child: buildLog(),
-            ),
+            LogView(controller: _logViewController),
             Spacer(flex: 2),
           ],
         ),
@@ -142,27 +131,65 @@ class _FundingPageState extends State<FundingPage> {
     );
   }
 
-  Widget buildLog() {
-    return Container(
-      constraints: BoxConstraints(maxHeight: 400),
-      width: double.infinity,
-      padding: EdgeInsets.all(16.0),
-      child: SingleChildScrollView(
-        child: Text(
-          _logText,
-          textAlign: TextAlign.left,
-          style: logStyle,
+  // Build the labeld display fields
+  Widget _buildField(
+      {double topMargin = 12, String label, String initialValue}) {
+    var labelTheme = Theme.of(context).textTheme.headline;
+    var valueTheme =
+        Theme.of(context).textTheme.title.copyWith(color: Colors.deepPurple);
+    return Padding(
+      padding: EdgeInsets.only(top: topMargin),
+      child: Row(children: [
+        Text(label,
+            textAlign: TextAlign.left,
+            style: labelTheme),
+        Expanded(
+          child: Text(initialValue,
+              textAlign: TextAlign.left,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: valueTheme),
         ),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(4.0)),
-        border: Border.all(width: 2.0, color: neutral_5),
-      ),
+      ]),
     );
   }
 
-  Widget buildLogo() {
+  List<Widget> _buildPotAddressEntry() {
+    var labelTheme = Theme.of(context).textTheme.headline;
+    return [
+      SizedBox(height: 24),
+      Text('Lottery Pot Address to Fund:',
+          textAlign: TextAlign.left, style: labelTheme),
+      SizedBox(height: 12),
+      Container(
+        decoration: _potAddressToFund != null
+            ? textFieldFocusedDecoration
+            : textFieldEnabledDecoration,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextField(
+            controller: _potAddressTextController,
+            autocorrect: false,
+            textAlign: TextAlign.left,
+            maxLines: 1,
+            focusNode: _potAddressFocusNode,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: "Paste address...",
+            ),
+            onChanged: (text) {
+              setState(() {
+                _potAddressToFund = OrchidAPI.isAddress(text) ? text : null;
+                _updateBalances();
+              });
+            },
+          ),
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildLogo() {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
@@ -179,7 +206,8 @@ class _FundingPageState extends State<FundingPage> {
     );
   }
 
-  Widget buildAmountEntry(TextStyle labelTheme) {
+  Widget _buildAmountEntry() {
+    var labelTheme = Theme.of(context).textTheme.headline;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -197,7 +225,7 @@ class _FundingPageState extends State<FundingPage> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
-                    controller: _amountTextController,
+                    controller: _fundAmountTextController,
                     keyboardType: TextInputType.number,
                     autocorrect: false,
                     textAlign: TextAlign.left,
@@ -208,7 +236,8 @@ class _FundingPageState extends State<FundingPage> {
                     ),
                     onChanged: (text) {
                       setState(() {
-                        _amountToFund = int.tryParse(text); // null if not int
+                        _amountToFund =
+                            double.tryParse(text); // null if not int
                       });
                     },
                   ),
@@ -226,7 +255,7 @@ class _FundingPageState extends State<FundingPage> {
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.w600),
                   ),
-                  onPressed: _amountToFund != null ? onTransactPressed : null),
+                  onPressed: _amountToFund != null ? _onTransactPressed : null),
             )
           ],
         ),
@@ -234,19 +263,40 @@ class _FundingPageState extends State<FundingPage> {
     );
   }
 
-  void onTransactPressed() {
-    OrchidJS.fundPot(_accountKeyToFund, _amountToFund).then((result) {
+  void _onTransactPressed() {
+    OrchidAPI.fundPot(_potAddressToFund, _amountToFund).then((result) {
+      debugPrint("fund pot result: $result");
+      _logViewController.log("Transaction transfer: $_amountToFund OXT");
+      _logViewController.log(result);
       setState(() {
-        _logText += "Transaction transfer: $_amountToFund OXT\n";
-        _logText += result;
         _amountToFund = null;
-        _amountTextController.clear();
+        _fundAmountTextController.clear();
       });
-      OrchidJS.getAccount().then((Account account) {
+      OrchidAPI.getAccount().then((Account account) {
         setState(() {
-          this._account = account;
+          this._fundFromAccount = account;
+          _updateBalances();
         });
       });
+    });
+  }
+
+  void _updateBalances() {
+    if (_potAddressToFund != null) {
+      OrchidAPI.getPotBalance(_potAddressToFund).then((double balance) {
+        setState(() {
+          this._potCurrentBalance = balance;
+        });
+        debugPrint("pot current balance=${_potCurrentBalance}");
+      });
+    }
+
+    OrchidAPI.getAccount().then((Account account) {
+      setState(() {
+        this._fundFromAccount = account;
+      });
+      debugPrint(
+          "account: address=${account.address}, oxt=${account.oxtBalance}");
     });
   }
 }

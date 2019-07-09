@@ -1,7 +1,11 @@
 window.Orchid = Object();
 
 Orchid.token_addr = '0xe33AE66a0411764935CEf8a92f018a0CA439130d';
-Orchid.lottery_addr = '0x36e80CF8bF497242A86994DF168A480A3E386780';
+Orchid.token_approval_max_gas = 50000;
+
+Orchid.lottery_addr = '0x670d978c48acbbbcf9e9ff6657a40fd6ee605ed0';
+Orchid.lottery_fund_max_gas = 100000;
+Orchid.lottery_balance_max_gas = 50000;
 
 Orchid.token_abi = [{
     "constant": true,
@@ -124,68 +128,163 @@ Orchid.token_abi = [{
 
 Orchid.lottery_abi = [{
     "constant": false,
-    "inputs": [{"name": "secret", "type": "uint256"}, {
-        "name": "hash",
-        "type": "bytes32"
-    }, {"name": "target", "type": "address"}, {
-        "name": "nonce",
-        "type": "uint256"
-    }, {"name": "until", "type": "uint256"}, {
-        "name": "ratio",
-        "type": "uint256"
-    }, {"name": "amount", "type": "uint64"}, {"name": "v", "type": "uint8"}, {
-        "name": "r",
-        "type": "bytes32"
-    }, {"name": "s", "type": "bytes32"}, {"name": "old", "type": "bytes32[]"}],
-    "name": "grab",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "target", "type": "address"}],
-    "name": "take",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [],
-    "name": "warn",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "signer", "type": "address"}, {
-        "name": "amount",
-        "type": "uint64"
-    }, {"name": "total", "type": "uint64"}],
+    "inputs": [
+        {
+            "name": "signer",
+            "type": "address"
+        },
+        {
+            "name": "amount",
+            "type": "uint64"
+        },
+        {
+            "name": "total",
+            "type": "uint64"
+        }
+    ],
     "name": "fund",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
-}, {
-    "inputs": [{"name": "orchid", "type": "address"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-}, {
-    "anonymous": false,
-    "inputs": [{"indexed": true, "name": "signer", "type": "address"}, {
-        "indexed": false,
-        "name": "amount",
-        "type": "uint64"
-    }, {"indexed": false, "name": "escrow", "type": "uint64"}, {
-        "indexed": false,
-        "name": "unlock",
-        "type": "uint256"
-    }],
-    "name": "Update",
-    "type": "event"
-}];
+},
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "secret",
+                "type": "uint256"
+            },
+            {
+                "name": "hash",
+                "type": "bytes32"
+            },
+            {
+                "name": "target",
+                "type": "address"
+            },
+            {
+                "name": "nonce",
+                "type": "uint256"
+            },
+            {
+                "name": "until",
+                "type": "uint256"
+            },
+            {
+                "name": "ratio",
+                "type": "uint256"
+            },
+            {
+                "name": "amount",
+                "type": "uint64"
+            },
+            {
+                "name": "v",
+                "type": "uint8"
+            },
+            {
+                "name": "r",
+                "type": "bytes32"
+            },
+            {
+                "name": "s",
+                "type": "bytes32"
+            },
+            {
+                "name": "old",
+                "type": "bytes32[]"
+            }
+        ],
+        "name": "grab",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "target",
+                "type": "address"
+            }
+        ],
+        "name": "take",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "signer",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "amount",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "name": "escrow",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "name": "unlock",
+                "type": "uint256"
+            }
+        ],
+        "name": "Update",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "name": "orchid",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "warn",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "signer",
+                "type": "address"
+            }
+        ],
+        "name": "balance",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64"
+            },
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    }
+];
 
