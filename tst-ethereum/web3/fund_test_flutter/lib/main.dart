@@ -264,20 +264,16 @@ class _FundingPageState extends State<FundingPage> {
   }
 
   void _onTransactPressed() {
+    _logViewController.log("Transaction submitted");
     OrchidAPI.fundPot(_potAddressToFund, _amountToFund).then((result) {
-      debugPrint("fund pot result: $result");
+      _logViewController.log("fund transaction: $result");
       _logViewController.log("Transaction transfer: $_amountToFund OXT");
       _logViewController.log(result);
       setState(() {
         _amountToFund = null;
         _fundAmountTextController.clear();
       });
-      OrchidAPI.getAccount().then((Account account) {
-        setState(() {
-          this._fundFromAccount = account;
-          _updateBalances();
-        });
-      });
+      _updateBalances();
     });
   }
 
