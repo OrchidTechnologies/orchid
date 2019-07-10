@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:flutter_site/accommodate_keyboard.dart';
 import 'package:flutter_site/style.dart';
 import 'package:flutter_web/material.dart';
 import 'orchid_api.dart';
@@ -75,57 +78,64 @@ class _FundingPageState extends State<FundingPage> {
   }
 
   Widget _buildContent(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 550),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Spacer(flex: 1),
+    const double horizontalPad = 16;
+    double availableScreenWidth =
+        MediaQuery.of(context).size.width - 2 * horizontalPad;
 
-            // Logo
-            _buildLogo(),
+    // Note: the keyboard accommodation is working in the flutter mobile but not web.
+    return AccommodateKeyboard(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: min(availableScreenWidth, 550)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Spacer(flex: 1),
 
-            // Account balance
-            _buildField(
-                topMargin: 24,
-                label: 'Account: ',
-                initialValue: _fundFromAccount?.address?.toUpperCase() ??
-                    "<No Accounts Found>"),
-            _buildField(
-                label: 'ETH Balance: ',
-                initialValue:
-                    (_fundFromAccount?.ethBalance.toString() ?? "") + " Ξ"),
-            _buildField(
-                label: 'OXT Balance: ',
-                initialValue:
-                    (_fundFromAccount?.oxtBalance.toString() ?? "") + " X"),
+              // Logo
+              _buildLogo(),
 
-            // Pot address entry
-            ..._buildPotAddressEntry(),
+              // Account balance
+              _buildField(
+                  topMargin: 24,
+                  label: 'Account: ',
+                  initialValue: _fundFromAccount?.address?.toUpperCase() ??
+                      "<No Accounts Found>"),
+              _buildField(
+                  label: 'ETH Balance: ',
+                  initialValue:
+                      (_fundFromAccount?.ethBalance?.toString() ?? "") + " Ξ"),
+              _buildField(
+                  label: 'OXT Balance: ',
+                  initialValue:
+                      (_fundFromAccount?.oxtBalance?.toString() ?? "") + " X"),
 
-            // Current pot balance
-            Opacity(
-                opacity: _potAddressToFund != null ? 1.0 : 0.4,
-                child: _buildField(
-                    label: 'Pot Current OXT Balance: ',
-                    initialValue: _potAddressToFund != null
-                        ? _potCurrentBalance.toString() + "X"
-                        : "")),
+              // Pot address entry
+              ..._buildPotAddressEntry(),
 
-            // Pot funding amount entry and transfer button
-            AbsorbPointer(
-              absorbing: _potAddressToFund == null,
-              child: Opacity(
+              // Current pot balance
+              Opacity(
                   opacity: _potAddressToFund != null ? 1.0 : 0.4,
-                  child: _buildAmountEntry()),
-            ),
-            SizedBox(height: 36),
+                  child: _buildField(
+                      label: 'Pot Current OXT Balance: ',
+                      initialValue: _potAddressToFund != null
+                          ? _potCurrentBalance.toString() + "X"
+                          : "")),
 
-            // Log view
-            LogView(controller: _logViewController),
-            Spacer(flex: 2),
-          ],
+              // Pot funding amount entry and transfer button
+              AbsorbPointer(
+                absorbing: _potAddressToFund == null,
+                child: Opacity(
+                    opacity: _potAddressToFund != null ? 1.0 : 0.4,
+                    child: _buildAmountEntry()),
+              ),
+              SizedBox(height: 36),
+
+              // Log view
+              LogView(controller: _logViewController),
+              Spacer(flex: 2),
+            ],
+          ),
         ),
       ),
     );
@@ -140,9 +150,7 @@ class _FundingPageState extends State<FundingPage> {
     return Padding(
       padding: EdgeInsets.only(top: topMargin),
       child: Row(children: [
-        Text(label,
-            textAlign: TextAlign.left,
-            style: labelTheme),
+        Text(label, textAlign: TextAlign.left, style: labelTheme),
         Expanded(
           child: Text(initialValue,
               textAlign: TextAlign.left,

@@ -173,7 +173,10 @@ window.fundPot = fundPot;
 /// Get the lottery pot balance for the specified address.
 async function getPotBalance(addr) {
     const accounts = await web3.eth.getAccounts();
-    let result = await Orchid.lottery.methods.balance(addr).call({ from: accounts[0], });
+    let result = await Orchid.lottery.methods.balance(addr).call({from: accounts[0],});
+    if (result == null || result._length < 2) {
+        return null;
+    }
     const balance = result[0].toNumber();
     const escrow = result[1].toNumber();
     console.log("Get pot balance: ", balance, "escrow: ", escrow);
