@@ -53,7 +53,7 @@ class _SettingsDevPage extends State<SettingsDevPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             SizedBox(height: 16),
-            
+
             // The mock API control switch
             _buildSwitch(
                 title: "Mock API: " + _mockAPIStatus(),
@@ -76,15 +76,9 @@ class _SettingsDevPage extends State<SettingsDevPage> {
                 }),
 
             // Allow running the onboarding flow again.
-            Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.only(left: 20, top: 8.0),
-              child: RaisedButton(
-                  child: Text("Re-run onboarding"),
-                  onPressed: () {
-                    _rerunOnboarding();
-                  }),
-            ),
+            _buildButton(
+                label: "Re-run onboarding",
+                onPressed: () => _rerunOnboarding()),
 
             SizedBox(height: 16),
 
@@ -96,11 +90,15 @@ class _SettingsDevPage extends State<SettingsDevPage> {
     );
   }
 
-  Padding _buildSwitch({
-    String title,
-    bool initialValue,
-    ValueChanged<bool> onChanged
-  }) {
+  Container _buildButton({String label, VoidCallback onPressed}) {
+    return Container(
+        alignment: Alignment.centerLeft,
+        padding: EdgeInsets.only(left: 20, top: 8.0),
+        child: RaisedButton(child: Text(label), onPressed: onPressed));
+  }
+
+  Padding _buildSwitch(
+      {String title, bool initialValue, ValueChanged<bool> onChanged}) {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
       child: Container(

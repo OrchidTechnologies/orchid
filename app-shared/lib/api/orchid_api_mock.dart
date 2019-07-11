@@ -42,7 +42,7 @@ class MockOrchidAPI implements OrchidAPI {
     });
 
     // vpn configuration / permission status
-    networkingPermissionStatus.add(false);
+    vpnPermissionStatus.add(false);
   }
 
   // fake route
@@ -76,7 +76,7 @@ class MockOrchidAPI implements OrchidAPI {
   /// installation and activation of the Orchid VPN networking extension.
   /// Note: On iOS this corresponds to having successfully saved the Orchid VPN configuration via the
   /// NEVPNManager API.
-  final networkingPermissionStatus = BehaviorSubject<bool>();
+  final vpnPermissionStatus = BehaviorSubject<bool>();
 
   OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
 
@@ -93,13 +93,13 @@ class MockOrchidAPI implements OrchidAPI {
   /// NEVPNManager API.
   @override
   Future<bool> requestVPNPermission() async {
-    networkingPermissionStatus.add(true);
+    vpnPermissionStatus.add(true);
     return true;
   }
 
   /// Remove the VPN networking extension.
   Future<void> revokeVPNPermission() async {
-    OrchidAPI().networkingPermissionStatus.add(false);
+    OrchidAPI().vpnPermissionStatus.add(false);
   }
 
   OrchidWallet _wallet;

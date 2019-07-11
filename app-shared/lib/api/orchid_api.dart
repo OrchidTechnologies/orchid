@@ -41,7 +41,7 @@ abstract class OrchidAPI {
   /// installation and activation of the Orchid VPN networking extension.
   /// Note: On iOS this corresponds to having successfully saved the Orchid VPN configuration via the
   /// NEVPNManager API.
-  final BehaviorSubject<bool> networkingPermissionStatus;
+  final BehaviorSubject<bool> vpnPermissionStatus;
 
   /// Get the logging API.
   OrchidLogAPI logger();

@@ -18,7 +18,7 @@ class RealOrchidAPI implements OrchidAPI {
   RealOrchidAPI._internal() {
     _platform.setMethodCallHandler((MethodCall call) async {
       switch (call.method) {
-        case 'status':
+        case 'connectionStatus':
           switch (call.arguments) {
             case 'Invalid':
               connectionStatus.add(OrchidConnectionState.NotConnected);
@@ -41,6 +41,10 @@ class RealOrchidAPI implements OrchidAPI {
           }
           break;
 
+        case 'providerStatus':
+          vpnPermissionStatus.add(call.arguments);
+          break;
+
         case 'route':
           routeStatus.add(call.arguments
               .map((route) => OrchidNode(
@@ -51,8 +55,6 @@ class RealOrchidAPI implements OrchidAPI {
           break;
       }
     });
-
-    networkingPermissionStatus.add(true);
   }
 
   final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
@@ -60,7 +62,7 @@ class RealOrchidAPI implements OrchidAPI {
   final connectionStatus = BehaviorSubject<OrchidConnectionState>();
   final syncStatus = BehaviorSubject<OrchidSyncStatus>();
   final routeStatus = BehaviorSubject<OrchidRoute>();
-  final networkingPermissionStatus = BehaviorSubject<bool>();
+  final vpnPermissionStatus = BehaviorSubject<bool>();
 
   /// Transient, in-memory log implementation.
   OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
@@ -73,10 +75,14 @@ class RealOrchidAPI implements OrchidAPI {
 
   @override
   Future<bool> requestVPNPermission() {
+    _platform.invokeMethod('install');
+    // TODO: Return a Future from the objc code.
     return Future<bool>.value(true);
   }
 
-  Future<void> revokeVPNPermission() async {}
+  Future<void> revokeVPNPermission() async {
+    // TODO:
+  }
 
   @override
   Future<bool> setWallet(OrchidWallet wallet) {

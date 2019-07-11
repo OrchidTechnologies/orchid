@@ -311,8 +311,16 @@ class _QuickConnectPageState
 
   /// Listen for changes in Orchid network status.
   void _initListeners() {
+    OrchidAPI().logger().write("Init listeners...");
+
+    // Monitor VPN permission status
+    OrchidAPI().vpnPermissionStatus.listen((bool installed) {
+      OrchidAPI().logger().write("VPN Perm status changed: $installed");
+    });
+
     // Monitor connection status
     OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
+      OrchidAPI().logger().write("Connection status changed: $state");
       _connectionStateChanged(state);
     });
 

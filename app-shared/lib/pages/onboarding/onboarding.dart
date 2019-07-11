@@ -23,7 +23,7 @@ class AppOnboarding {
     await UserPreferences().setWalkthroughCompleted(false);
     await UserPreferences().setPromptedForVPNPermission(false);
     await OrchidAPI().clearWallet();
-    OrchidAPI().networkingPermissionStatus.add(false);
+    OrchidAPI().vpnPermissionStatus.add(false);
   }
 
   /// Return the route for the next remaining page in the onboarding sequence or
@@ -38,7 +38,7 @@ class AppOnboarding {
     }
 
     // Prompt for VPN permission
-    bool hasVPNPermission = OrchidAPI().networkingPermissionStatus.value;
+    bool hasVPNPermission = OrchidAPI().vpnPermissionStatus.value;
     bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
     if (!hasVPNPermission && !promptedForVPNPermission) {
       return AppRoutes.onboarding_vpn_permission;
