@@ -11,9 +11,10 @@ import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 class OnboardingVPNPermissionPage extends StatefulWidget {
   final VoidCallback onComplete;
   final bool includeScaffold;
+  final bool allowSkip;
 
   const OnboardingVPNPermissionPage(
-      {Key key, this.onComplete, this.includeScaffold = true})
+      {Key key, this.onComplete, this.includeScaffold = true, this.allowSkip = true})
       : super(key: key);
 
   @override
@@ -54,6 +55,7 @@ class _OnboardingVPNPermissionPageState
                 child: WalkthroughNextSkipButtons(
                   onNext: _confirmNext,
                   onSkip: _skip,
+                  allowSkip: widget.allowSkip,
                   bottomPad:
                       WalkthroughPages.BottomControlsPadding.value(context),
                 ),
@@ -82,6 +84,7 @@ class _OnboardingVPNPermissionPageState
   // Accept the permission check.
   void _next() async {
     bool ok = await OrchidAPI().requestVPNPermission();
+    OrchidAPI().logger().write("requestVPNPermission returned: $ok");
     if (ok) {
       _complete();
     }
@@ -98,6 +101,7 @@ class _OnboardingVPNPermissionPageState
     if (widget.onComplete != null) {
       return widget.onComplete();
     }
+    OrchidAPI().logger().write("dismissing vpn perm page");
     AppOnboarding().pageComplete(context);
   }
 }

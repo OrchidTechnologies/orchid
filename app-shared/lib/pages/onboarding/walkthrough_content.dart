@@ -41,7 +41,8 @@ class WalkthroughContent extends StatelessWidget {
         ? Image.asset(imageName, fit: BoxFit.contain, height: imageHeight)
         : Container();
 
-    double horizontalPadding = screenHeight > AppSizes.iphone_se.height ? 40.0 : 16.0;
+    double horizontalPadding =
+        screenHeight > AppSizes.iphone_se.height ? 40.0 : 16.0;
 
     if (imageLocation == WalkthroughContentImageLocation.Top) {
       return Padding(
@@ -129,12 +130,14 @@ class WalkthroughNextSkipButtons extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onSkip;
   final double bottomPad;
+  final bool allowSkip;
 
   const WalkthroughNextSkipButtons({
     Key key,
     @required this.onNext,
     @required this.onSkip,
     this.bottomPad = 12,
+    this.allowSkip = true,
   }) : super(key: key);
 
   @override
@@ -144,10 +147,11 @@ class WalkthroughNextSkipButtons extends StatelessWidget {
       children: <Widget>[
         new WalkthroughNextButton(onNext: onNext),
         SizedBox(height: 4),
-        LinkStyleTextButton(
-          "I'll do this later",
-          onPressed: onSkip,
-        ),
+        if (allowSkip)
+          LinkStyleTextButton(
+            "I'll do this later",
+            onPressed: onSkip,
+          ),
         SizedBox(height: bottomPad)
       ],
     );

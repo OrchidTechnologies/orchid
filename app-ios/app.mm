@@ -49,7 +49,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     NSString *connectionStatus_;
     
     // VPN Provider installed status
-    bool providerStatus_;
+    NSNumber *providerStatus_;
 }
 
 @end
@@ -92,15 +92,15 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 - (void) setVPN:(NSString *)status {
     if (connectionStatus_ != nil && [connectionStatus_ isEqualToString:status]) { return; }
     connectionStatus_ = status;
-    NSLog(@"NEVPNStatus%@", status);
+    NSLog(@"NEVPNStatus change%@", status);
     [feedback_ invokeMethod:@"connectionStatus" arguments:status];
 }
 
 #pragma mark - VPN Provider State
 
-// Note: onProviderStateChange() is *not* fired if the user deletes the VPN configuration in settings,
-// Note: however onVPNStateChange is called in that case and we updateProviderStatus() directly.
-- (void) onProviderStateChange:(NSNotification *)notification {
+// Note: This does *not_ seem to fire if the user adds or removes the vpn config in settings, so
+// Note: I'm not sure under what circumstances it is called.
+- (void) onConfigurationChange:(NSNotification *)notification {
     NSLog(@"Provider state changed.");
     [self updateProviderStatus];
 }
@@ -135,16 +135,16 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 }
 
 // Publish the provider initialization state to the app.
-- (void) setProviderState:(bool)installed{
-    if (providerStatus_ == installed) { return; }
-    providerStatus_ = installed;
+- (void) setProviderState: (bool)installed {
+    if (providerStatus_ != nil && [providerStatus_ boolValue] == installed) { return; }
+    providerStatus_ = [NSNumber numberWithBool: installed];
     NSLog(@"VPN Provider Status %d", installed);
     [feedback_ invokeMethod:@"providerStatus" arguments: @(installed)];
 }
 
 #pragma mark - App Initialization
 
-- (void) initProvider {
+- (void) initProvider: (FlutterResult)result {
     NETunnelProviderProtocol *protocol([[NETunnelProviderProtocol alloc] init]);
 
     NSURL *url([[NSBundle mainBundle] URLForResource:@"PureVPN" withExtension:@"ovpn"]);
@@ -160,11 +160,13 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     [self.providerManager setProtocolConfiguration:protocol];
     self.providerManager.localizedDescription = @ ORCHID_NAME;
     [self.providerManager saveToPreferencesWithCompletionHandler:^(NSError *error) {
-        if (error)
+        if (error) {
             NSLog(@"Save error: %@", error);
-        else {
+            result([NSNumber numberWithBool: false]);
+        } else {
             NSLog(@"add success");
             [self updateProviderStatus];
+            result([NSNumber numberWithBool: true]);
         }
     }];
 
@@ -210,7 +212,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
             [weakSelf.providerManager.connection stopVPNTunnel];
         } else if ([@"reroute" isEqualToString:call.method]) {
         } else if ([@"install" isEqualToString:call.method]) {
-            [weakSelf initProvider];
+            [weakSelf initProvider: result];
         }
     }];
 
@@ -224,7 +226,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onVpnStateChange:) name:NEVPNStatusDidChangeNotification object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onProviderStateChange:) name:NEVPNConfigurationChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onConfigurationChange:) name:NEVPNConfigurationChangeNotification object:nil];
 
     return [super application:application didFinishLaunchingWithOptions:options];
 }
@@ -238,6 +240,8 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 
 - (void) applicationWillEnterForeground:(UIApplication *)application {
+    NSLog(@"Orchid entered foreground.");
+    [self updateProviderStatus];
 }
 
 

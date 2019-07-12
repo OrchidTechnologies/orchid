@@ -75,9 +75,7 @@ class RealOrchidAPI implements OrchidAPI {
 
   @override
   Future<bool> requestVPNPermission() {
-    _platform.invokeMethod('install');
-    // TODO: Return a Future from the objc code.
-    return Future<bool>.value(true);
+    return _platform.invokeMethod('install');
   }
 
   Future<void> revokeVPNPermission() async {

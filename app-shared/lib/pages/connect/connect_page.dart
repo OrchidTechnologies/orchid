@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/api/notifications.dart';
@@ -12,8 +13,10 @@ import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
+import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../app_transitions.dart';
 import 'connect_world_map.dart';
 
 /// The main page containing the connect button.
@@ -316,6 +319,12 @@ class _QuickConnectPageState
     // Monitor VPN permission status
     OrchidAPI().vpnPermissionStatus.listen((bool installed) {
       OrchidAPI().logger().write("VPN Perm status changed: $installed");
+      if (!installed) {
+        String currentPage = ModalRoute.of(context).settings.name;
+        OrchidAPI().logger().write("Current page: $currentPage");
+        var route = AppTransitions.downToUpTransition(OnboardingVPNPermissionPage(allowSkip: false));
+        Navigator.push(context, route);
+      }
     });
 
     // Monitor connection status

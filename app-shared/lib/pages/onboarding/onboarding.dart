@@ -52,7 +52,7 @@ class AppOnboarding {
   Future<void> showPageIfNeeded(BuildContext context) async {
     String nextPage = await _nextPage();
     if (nextPage != NO_PAGE) {
-      _showPage(context, nextPage);
+      showPage(context, nextPage);
     }
   }
 
@@ -64,7 +64,7 @@ class AppOnboarding {
   Future<void> pageComplete(BuildContext context) async {
     var nextPage = await _nextPage();
     if (nextPage != NO_PAGE) {
-      return _showPage(context, nextPage, replace: true);
+      return showPage(context, nextPage, replace: true);
     } else {
       // onboarding complete
       return Navigator.pop(context);
@@ -74,7 +74,7 @@ class AppOnboarding {
 
   // TODO: Currently applying custom transitions here.
   // TODO: We should be able to encapsulate these in AppRoutes.
-  void _showPage(BuildContext context, String nextPage,
+  static void showPage(BuildContext context, String nextPage,
       {bool replace = false}) async {
     PageRouteBuilder route;
     switch (nextPage) {
