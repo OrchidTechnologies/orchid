@@ -39,6 +39,7 @@
 
 #include "adapter.hpp"
 #include "baton.hpp"
+#include "dns.hpp"
 #include "error.hpp"
 #include "http.hpp"
 #include "locator.hpp"
@@ -123,9 +124,7 @@ task<std::string> Request(Adapter &adapter, const std::string &method, const Loc
 }
 
 task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    asio::ip::tcp::resolver resolver(orc::Context());
-    const auto results(co_await resolver.async_resolve(locator.host_, locator.port_, orc::Token()));
-
+    const auto results(co_await Resolve(locator.host_, locator.port_));
     asio::ip::tcp::socket socket(orc::Context());
     (void) co_await asio::async_connect(socket, results.begin(), results.end(), orc::Token());
 
