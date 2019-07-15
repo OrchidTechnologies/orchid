@@ -22,7 +22,7 @@ public class OrchidVpnService extends VpnService {
     private static OrchidVpnService vpnService;
 
     static boolean vpnProtect(int fd) {
-        return vpnService.vpnProtect(fd);
+        return vpnService.protect(fd);
     }
 
     @Override
