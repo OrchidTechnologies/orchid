@@ -57,10 +57,6 @@ android {
         implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     }
 
-    compileOptions {
-       sourceCompatibility 1.8
-       targetCompatibility 1.8
-    }
     lintOptions {
         checkReleaseBuilds false
         // Or, if you prefer, you can continue to check for errors in release builds,
