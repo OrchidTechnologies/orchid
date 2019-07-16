@@ -68,7 +68,11 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 #define STR(A) #A
 #define IMPORT(pkg, class) jclass c ## class = env->FindClass(STR(pkg) "/" STR(class));
-#define CATCH(code) if (env->ExceptionOccurred()) { /*(*env)->ExceptionClear(env);*/ code; }
+#define CATCH(code) if (env->ExceptionOccurred()) { \
+    env->ExceptionDescribe(); \
+    env->ExceptionClear(); \
+    code; \
+}
 
 bool vpn_protect(int s)
 {
@@ -84,6 +88,8 @@ bool vpn_protect(int s)
         jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
         CATCH(return false);
         jboolean success = env->CallStaticBooleanMethod(cOrchidVpnService, mVpnProtect, s);
+        CATCH(return false);
+        Log() << "vpn_protect fd:" << s << " success:" << (bool)success << std::endl;
         return (bool)success;
     })).get();
 }
