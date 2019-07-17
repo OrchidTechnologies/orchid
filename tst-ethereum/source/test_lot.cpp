@@ -246,10 +246,10 @@ namespace orc
 
 
 
-        // this is the account which sets up the orchid contracts
+        // this is the account which sets up the token contracts
         // taken from testrpc
-        const string orchid_address = "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1";
-        const string orchid_privkey = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d";
+        const string token_address = "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1";
+        const string token_privkey = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d";
 
         const string server_address  = "0xffcf8fdee72ac11b5c542428b35eef5769c409f0";
         const string server_address_ = "000000000000000000000000ffcf8fdee72ac11b5c542428b35eef5769c409f0";
@@ -268,14 +268,14 @@ namespace orc
    		Json::Value result;
 
    		string test_contract_bin  	= "6060604052341561000c57fe5b5b6101598061001c6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063cfae32171461003b575bfe5b341561004357fe5b61004b6100d4565b604051808060200182810382528381815181526020019150805190602001908083836000831461009a575b80518252602083111561009a57602082019150602081019050602083039250610076565b505050905090810190601f1680156100c65780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6100dc610119565b604060405190810160405280600381526020017f486921000000000000000000000000000000000000000000000000000000000081525090505b90565b6020604051908101604052806000815250905600a165627a7a72305820ed71008611bb64338581c5758f96e31ac3b0c57e1d8de028b72f0b8173ff93a10029";
-   		string test_contract_addr 	= co_await deploy(endpoint, orchid_address, "0x" + test_contract_bin);
-        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/ERC20.bin"));
-        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/OrchidToken.bin"));
+   		string test_contract_addr 	= co_await deploy(endpoint, token_address, "0x" + test_contract_bin);
+        string ERC20_addr 			= co_await deploy(endpoint, token_address, load_solcbin_as_string("tok-ethereum/build/ERC20.bin"));
+        string OrchidToken_addr 	= co_await deploy(endpoint, token_address, load_solcbin_as_string("tok-ethereum/build/OrchidToken.bin"));
 
 		printf("[%d] OrchidToken_addr(%s,%s) \n", __LINE__, OrchidToken_addr.c_str(), OrchidToken_addr.c_str());
 
 
-        string lottery_addr		 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("lot-ethereum/build/TestOrchidLottery.bin"));
+        string lottery_addr		 	= co_await deploy(endpoint, token_address, load_solcbin_as_string("lot-ethereum/build/TestOrchidLottery.bin"));
    		printf("[%d] lottery_addr(%s,%s) \n", __LINE__, lottery_addr.c_str(), lottery_addr.c_str());
 
 
@@ -300,31 +300,31 @@ namespace orc
 
 
 
-        //set the orchid address (todo: figure out contract constructor args)
-   		static Selector<uint256_t, Address> set_orchid("set_orchid");
-   		co_await set_orchid.Send(endpoint, Address(orchid_address), Address(lottery_addr), Address(OrchidToken_addr) );
+        //set the token address (todo: figure out contract constructor args)
+   		static Selector<uint256_t, Address> set_token("set_token");
+   		co_await set_token.Send(endpoint, Address(token_address), Address(lottery_addr), Address(OrchidToken_addr) );
 
 
 
    		static Selector<Address,uint256_t> get_address("get_address");
    		auto lottery_addr_ = co_await get_address.Call(endpoint, block, Address(lottery_addr), uint256_t("3")  );
 
-   		static Selector<Address,uint256_t> get_orchid("get_orchid");
-   		auto lottery_orchid = co_await get_orchid.Call(endpoint, block, Address(lottery_addr), uint256_t("4") );
-		printf("[%d] lottery_orchid: ", __LINE__); std::cout << std::hex << lottery_orchid << std::endl;
+   		static Selector<Address,uint256_t> get_token("get_token");
+   		auto lottery_token = co_await get_token.Call(endpoint, block, Address(lottery_addr), uint256_t("4") );
+		printf("[%d] lottery_token: ", __LINE__); std::cout << std::hex << lottery_token << std::endl;
 
 
 
 	    //const source_OCT = await c.ledger.methods.balanceOf(source.address).call();
 	    Selector<uint256_t,Address> balanceOf("balanceOf");
-   		auto origin_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(orchid_address) );
+   		auto origin_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(token_address) );
 		printf("[%d] origin_balance: ", __LINE__); std::cout << std::dec << origin_balance << std::endl;
 
 
 	    uint64_t one_eth = 1000000000000000000;
    		// send some tokens to the client
    		static Selector<uint256_t, Address, uint256_t> transfer("transfer");
-   		co_await transfer.Send(endpoint, Address(orchid_address), Address(OrchidToken_addr), Address(client_address), uint256_t(10*one_eth) );
+   		co_await transfer.Send(endpoint, Address(token_address), Address(OrchidToken_addr), Address(client_address), uint256_t(10*one_eth) );
 
 
    		block = co_await endpoint.Latest();

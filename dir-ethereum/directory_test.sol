@@ -28,15 +28,15 @@ import "directory.sol";
 contract TestOrchidDirectory is OrchidDirectory
 {
 
-    constructor(address orchid, uint256 delay) public OrchidDirectory(orchid, delay) {}
+    constructor(address token, uint256 delay) public OrchidDirectory(token, delay) {}
 
-    function set(address orchid, uint256 delay) public returns (uint256) {
-        orchid_ = ERC20(orchid);
+    function set(address token, uint256 delay) public returns (uint256) {
+        token_ = ERC20(token);
         delay_ = delay;
         return delay;
     }
 
-    function get_orchid(uint256)    public view returns (address)    { return address(orchid_); }
+    function get_token(uint256)     public view returns (address)    { return address(token_); }
 
 
     function get_amount(address stakee) public view returns (uint256)

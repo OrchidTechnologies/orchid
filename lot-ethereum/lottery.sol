@@ -26,10 +26,10 @@ import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 contract OrchidLottery {
 
-    ERC20 internal orchid_;
+    ERC20 internal token_;
 
-    constructor(address orchid) public {
-        orchid_ = ERC20(orchid);
+    constructor(address token) public {
+        token_ = ERC20(token);
     }
 
 
@@ -55,7 +55,7 @@ contract OrchidLottery {
         pot.amount_ += amount;
         pot.escrow_ += total - amount;
         emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
-        require(orchid_.transferFrom(msg.sender, address(this), total));
+        require(token_.transferFrom(msg.sender, address(this), total));
     }
 
 
@@ -92,7 +92,7 @@ contract OrchidLottery {
         pot.amount_ -= amount;
         emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
         if (amount != 0)
-            require(orchid_.transfer(target, amount));
+            require(token_.transfer(target, amount));
     }
 
 
@@ -109,6 +109,6 @@ contract OrchidLottery {
         uint64 amount = pot.amount_ + pot.escrow_;
         delete pots_[msg.sender];
         emit Update(msg.sender, 0, 0, 0);
-        require(orchid_.transfer(target, amount));
+        require(token_.transfer(target, amount));
     }
 }
