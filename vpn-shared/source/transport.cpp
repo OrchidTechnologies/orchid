@@ -397,7 +397,9 @@ class Client :
 
     task<void> Connect() {
         thread_ = std::thread([this]() {
-            connect();
+            auto v = connect();
+            Log() << __func__ << " " << __FILE__ << ":" << __LINE__ << " " << v.status << " " << v.message << " " << v.error << std::endl;
+_trace();
             orc_insist(false);
         });
 
