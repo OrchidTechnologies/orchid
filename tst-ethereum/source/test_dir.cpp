@@ -75,7 +75,7 @@ namespace orc
     
     //const uint128_t one_eth = 1000000000000000000;
 
-    task<int> fund_medallion(Endpoint& endpoint, Address orchid_address, Address OrchidToken_addr, Address directory_addr, Address server_addr, uint128_t& ntokens, Address dst_addr = 0)
+    task<int> fund_medallion(Endpoint& endpoint, Address token_address, Address OrchidToken_addr, Address directory_addr, Address server_addr, uint128_t& ntokens, Address dst_addr = 0)
     {
         if (dst_addr == 0) dst_addr = server_addr;
         
@@ -84,7 +84,7 @@ namespace orc
    		// send some tokens to the node
 	    printf("[%d] transfer: ", __LINE__);  std::cout << std::dec << ntokens  << std::endl;
    		static Selector<uint256_t, Address, uint256_t> transfer("transfer");
-   		co_await transfer.Send(endpoint, Address(orchid_address), Address(OrchidToken_addr), Address(server_addr), uint256_t(ntokens) );
+   		co_await transfer.Send(endpoint, Address(token_address), Address(OrchidToken_addr), Address(server_addr), uint256_t(ntokens) );
    		block = co_await endpoint.Latest();
 
         Selector<uint256_t,Address> balanceOf("balanceOf");
@@ -143,8 +143,8 @@ namespace orc
         printf("[%d] Example start\n", __LINE__);
 
 
-        const string orchid_address = "0x1df62f291b2e969fb0849d99d9ce41e2f137006e";
-        const string orchid_privkey = "0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773";
+        const string token_address = "0x1df62f291b2e969fb0849d99d9ce41e2f137006e";
+        const string token_privkey = "0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773";
         
         //vector<uint128_t>         node_ntokens;
         vector<Address>             node_address;
@@ -185,9 +185,9 @@ namespace orc
 
 
         
-        string ERC20_addr 			= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/ERC20.bin"));
-        string OrchidToken_addr 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("tok-ethereum/build/OrchidToken.bin"));
-        string directory_addr	 	= co_await deploy(endpoint, orchid_address, load_solcbin_as_string("dir-ethereum/build/TestOrchidDirectory.bin"));
+        string ERC20_addr 			= co_await deploy(endpoint, token_address, load_solcbin_as_string("tok-ethereum/build/ERC20.bin"));
+        string OrchidToken_addr 	= co_await deploy(endpoint, token_address, load_solcbin_as_string("tok-ethereum/build/OrchidToken.bin"));
+        string directory_addr	 	= co_await deploy(endpoint, token_address, load_solcbin_as_string("dir-ethereum/build/TestOrchidDirectory.bin"));
 		
 		printf("[%d] OrchidToken_addr(%s,%s) \n",   __LINE__, OrchidToken_addr.c_str(), OrchidToken_addr.c_str());
    		printf("[%d] directory_addr(%s,%s) \n",     __LINE__, directory_addr.c_str(),   directory_addr.c_str());
@@ -195,19 +195,19 @@ namespace orc
    		auto block = co_await endpoint.Latest();
  
  
-        //set the orchid address (todo: figure out contract constructor args)
+        //set the token address (todo: figure out contract constructor args)
    		static Selector<uint256_t, Address,uint256_t> set_f("set");
-   		co_await set_f.Send(endpoint, Address(orchid_address), Address(directory_addr), Address(OrchidToken_addr), uint256_t(0) );
+   		co_await set_f.Send(endpoint, Address(token_address), Address(directory_addr), Address(OrchidToken_addr), uint256_t(0) );
 
    		block = co_await endpoint.Latest();
 
-   		static Selector<Address,uint256_t> get_orchid("get_orchid");
-   		auto directory_orchid = co_await get_orchid.Call(endpoint, block, Address(directory_addr), uint256_t("4") );
-		printf("[%d] directory_orchid: ", __LINE__); std::cout << std::hex << directory_orchid << std::endl;
+   		static Selector<Address,uint256_t> get_token("get_token");
+   		auto directory_token = co_await get_token.Call(endpoint, block, Address(directory_addr), uint256_t("4") );
+		printf("[%d] directory_token: ", __LINE__); std::cout << std::hex << directory_token << std::endl;
  
         
    	    Selector<uint256_t,Address> balanceOf("balanceOf");
-   		auto origin_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(orchid_address) );
+   		auto origin_balance = co_await balanceOf.Call(endpoint, block, Address(OrchidToken_addr), Address(token_address) );
 		printf("[%d] origin_balance: ", __LINE__); std::cout << std::dec << origin_balance << std::endl;
  
 
@@ -218,7 +218,7 @@ namespace orc
 	        Address raddr = node_address[i];
 	        //uint128_t ntokens = node_ntokens[i];
 	        uint128_t& ntokens = node_ntokens[uint256_t(raddr)];
-            co_await fund_medallion(endpoint, Address(orchid_address), Address(OrchidToken_addr), Address(directory_addr), saddr, ntokens, raddr);
+            co_await fund_medallion(endpoint, Address(token_address), Address(OrchidToken_addr), Address(directory_addr), saddr, ntokens, raddr);
         }
    		block = co_await endpoint.Latest();
         
@@ -230,7 +230,7 @@ namespace orc
         // withdraw one medallion
  	    printf("[%d] pull \n", __LINE__);
    		static Selector<uint256_t, Address,uint128_t,uint256_t> pull_f("pull", uint128_t(300000));
-   		co_await pull_f.Send(endpoint, Address(orchid_address), Address(directory_addr), Address(server_address[5%NumAccounts]), node_ntokens[uint256_t(node_address[5])], uint256_t(0) );
+   		co_await pull_f.Send(endpoint, Address(token_address), Address(directory_addr), Address(server_address[5%NumAccounts]), node_ntokens[uint256_t(node_address[5])], uint256_t(0) );
    		block = co_await endpoint.Latest();
    		*/
  
