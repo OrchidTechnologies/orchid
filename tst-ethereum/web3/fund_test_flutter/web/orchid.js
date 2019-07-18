@@ -40,7 +40,7 @@ window.init_ethereum = init_ethereum;
 
 class URLParams {
     constructor() {
-        this.potAddress= "";
+        this.potAddress = "";
         this.amount = 0;
     }
 }
@@ -58,23 +58,23 @@ window.getURLParams = getURLParams;
 class Account {
     constructor() {
         this.address = "";
-        this.ethBalance = 0;
-        this.oxtBalance = 0;
+        this.ethBalance = ""; // wei as string
+        this.oxtBalance = ""; // OXT-wei as string
     }
 }
 
-/// Get the user's ETH wallet balance and OXT token balance.
+/// Get the user's ETH wallet balance and OXT-wei token balance (1e18 parts OXT).
 async function getAccount() {
     const accounts = await web3.eth.getAccounts();
     const account = new Account();
     account.address = accounts[0];
     try {
-        account.ethBalance = await web3.eth.getBalance(accounts[0]);
+        account.ethBalance = (await web3.eth.getBalance(accounts[0])).toString();
     } catch (err) {
         console.log("Error getting eth balance");
     }
     try {
-        account.oxtBalance = await Orchid.token.methods.balanceOf(accounts[0]).call();
+        account.oxtBalance = (await Orchid.token.methods.balanceOf(accounts[0]).call()).toString();
     } catch (err) {
         console.log("Error getting oxt balance");
     }
@@ -89,14 +89,14 @@ function isAddress(str) {
 
 window.isAddress = isAddress;
 
-/// Transfer the amount in OXT from the user to the specified lottery pot address.
+/// Transfer the amount in OXT-wei string value from the user to the specified lottery pot address.
 async function fundPot(addr, amount) {
     console.log("Fund address: ", addr, " amount: ", amount);
     const accounts = await web3.eth.getAccounts();
 
     // Lottery funding amount
-    const value = amount;
-    const escrow = 0;
+    const value = BigInt(amount);
+    const escrow = BigInt(0);
     const total = value + escrow;
 
     // Gas price
@@ -106,13 +106,13 @@ async function fundPot(addr, amount) {
 
     return new Promise(function (resolve, reject) {
         try {
-            Orchid.token.methods.approve(Orchid.lottery_addr, total)
+            Orchid.token.methods.approve(Orchid.lottery_addr, total.toString())
                 .estimateGas({from: accounts[0]})
                 .then((gas) => {
                     console.log("Approval gas estimate: ", gas);
                 });
 
-            Orchid.token.methods.approve(Orchid.lottery_addr, total).send({
+            Orchid.token.methods.approve(Orchid.lottery_addr, total.toString()).send({
                 from: accounts[0],
                 gas: Orchid.token_approval_max_gas,
                 gasPrice: gasPrice * gwei
@@ -129,13 +129,13 @@ async function fundPot(addr, amount) {
                     reject(err);
                 });
 
-            Orchid.lottery.methods.fund(addr, value, total)
+            Orchid.lottery.methods.fund(addr, value.toString(), total.toString())
                 .estimateGas({from: accounts[0]})
                 .then((gas) => {
                     console.log("Funding gas estimate: ", gas);
                 });
 
-            Orchid.lottery.methods.fund(addr, value, total).send({
+            Orchid.lottery.methods.fund(addr, value.toString(), total.toString()).send({
                 from: accounts[0],
                 gas: Orchid.lottery_fund_max_gas,
                 gasPrice: gasPrice * gwei
@@ -146,7 +146,7 @@ async function fundPot(addr, amount) {
                 .on('confirmation', (confirmationNumber, receipt) => {
                     console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
                     // Wait for one confirmation on the funding tx.
-                    window.receipt=receipt;
+                    window.receipt = receipt;
                     const hash = receipt['transactionHash'];
                     resolve(hash);
                 })
@@ -167,14 +167,14 @@ window.fundPot = fundPot;
 /// Get the lottery pot balance for the specified address.
 async function getPotBalance(addr) {
     const accounts = await web3.eth.getAccounts();
-    let result = await Orchid.lottery.methods.balance(addr).call({ from: accounts[0], });
+    let result = await Orchid.lottery.methods.balance(addr).call({from: accounts[0],});
     if (result == null || result._length < 2) {
         return null;
     }
-    const balance = result[0].toNumber();
-    const escrow = result[1].toNumber();
-    console.log("Get pot balance: ", balance, "escrow: ", escrow);
-    return balance;
+    const balance = result[0]; // web3.util.BN
+    const escrow = result[1]; // web3.util.BN
+    console.log("Get pot balance: ", balance.toString(), "escrow: ", escrow.toString());
+    return balance.toString();
 }
 
 window.getPotBalance = getPotBalance;
