@@ -32,24 +32,23 @@ contract OrchidLottery {
         token_ = ERC20(token);
     }
 
-
     struct Pot {
-        uint64 amount_;
-        uint64 escrow_;
+        uint128 amount_;
+        uint128 escrow_;
         uint256 unlock_;
     }
 
     mapping(address => Pot) internal pots_;
 
-    event Update(address indexed signer, uint64 amount, uint64 escrow, uint256 unlock);
+    event Update(address indexed signer, uint128 amount, uint128 escrow, uint256 unlock);
 
-    function balance(address signer) public view returns(uint64, uint64) {
+    function balance(address signer) public view returns(uint128, uint128) {
         Pot storage pot = pots_[signer];
         return (pot.amount_, pot.escrow_);
     }
 
     // signer must be a simple account, to support signing tickets
-    function fund(address signer, uint64 amount, uint64 total) public {
+    function fund(address signer, uint128 amount, uint128 total) public {
         require(total >= amount);
         Pot storage pot = pots_[signer];
         pot.amount_ += amount;
@@ -65,7 +64,7 @@ contract OrchidLottery {
 
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
-    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
+    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
         require(until > block.timestamp);
@@ -106,7 +105,7 @@ contract OrchidLottery {
         Pot storage pot = pots_[msg.sender];
         require(pot.unlock_ != 0);
         require(pot.unlock_ <= block.timestamp);
-        uint64 amount = pot.amount_ + pot.escrow_;
+        uint128 amount = pot.amount_ + pot.escrow_;
         delete pots_[msg.sender];
         emit Update(msg.sender, 0, 0, 0);
         require(token_.transfer(target, amount));

@@ -6,7 +6,13 @@ function captureLogsTo(logId) {
     window.orgLog = console.log;
     window.logText = "";
     console.log = function (...args) {
-        // window.logText += "<span style='font-size: 18px'>Logger: " + args.join(" ") + "</span><br/>";
+        args = args.map(arg => {
+            if (typeof arg == "string" || typeof arg == "number") {
+                return arg
+            } else {
+                return JSON.stringify(arg)
+            }
+        });
         window.logText += "<span>Log: " + args.join(" ") + "</span><br/>";
         let log = document.getElementById(logId);
         if (log) {

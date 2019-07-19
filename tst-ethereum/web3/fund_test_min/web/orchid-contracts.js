@@ -6,7 +6,7 @@ Orchid.token_approval_max_gas = 50000;
 Orchid.token_decimals = 33;
 
 //Orchid.lottery_addr = '0x68b87dda12fcd108c601b754574bfc80ed51ff89'; // Ganache
-Orchid.lottery_addr = '0x8dc41faf5e528c48e041ce5da0708643fb8470ca'; // Main net
+Orchid.lottery_addr = '0xd4779b223797ecb6b8833f6f1545f2d94b29219c'; // Main net
 Orchid.lottery_fund_max_gas = 100000;
 Orchid.lottery_balance_max_gas = 50000;
 
@@ -288,11 +288,11 @@ Orchid.lottery_abi = [{
         },
         {
             "name": "amount",
-            "type": "uint64"
+            "type": "uint128"
         },
         {
             "name": "total",
-            "type": "uint64"
+            "type": "uint128"
         }
     ],
     "name": "fund",
@@ -301,6 +301,20 @@ Orchid.lottery_abi = [{
     "stateMutability": "nonpayable",
     "type": "function"
 },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "target",
+                "type": "address"
+            }
+        ],
+        "name": "take",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
     {
         "constant": false,
         "inputs": [
@@ -330,7 +344,7 @@ Orchid.lottery_abi = [{
             },
             {
                 "name": "amount",
-                "type": "uint64"
+                "type": "uint128"
             },
             {
                 "name": "v",
@@ -357,58 +371,6 @@ Orchid.lottery_abi = [{
     },
     {
         "constant": false,
-        "inputs": [
-            {
-                "name": "target",
-                "type": "address"
-            }
-        ],
-        "name": "take",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "name": "signer",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "name": "amount",
-                "type": "uint64"
-            },
-            {
-                "indexed": false,
-                "name": "escrow",
-                "type": "uint64"
-            },
-            {
-                "indexed": false,
-                "name": "unlock",
-                "type": "uint256"
-            }
-        ],
-        "name": "Update",
-        "type": "event"
-    },
-    {
-        "inputs": [
-            {
-                "name": "token",
-                "type": "address"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
-        "constant": false,
         "inputs": [],
         "name": "warn",
         "outputs": [],
@@ -428,18 +390,54 @@ Orchid.lottery_abi = [{
         "outputs": [
             {
                 "name": "",
-                "type": "uint64"
+                "type": "uint128"
             },
             {
                 "name": "",
-                "type": "uint64"
+                "type": "uint128"
             }
         ],
         "payable": false,
         "stateMutability": "view",
         "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "token",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "signer",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "amount",
+                "type": "uint128"
+            },
+            {
+                "indexed": false,
+                "name": "escrow",
+                "type": "uint128"
+            },
+            {
+                "indexed": false,
+                "name": "unlock",
+                "type": "uint256"
+            }
+        ],
+        "name": "Update",
+        "type": "event"
     }
 ];
-
-
 
