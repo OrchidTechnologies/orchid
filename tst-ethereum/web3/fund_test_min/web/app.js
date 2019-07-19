@@ -1,9 +1,11 @@
 const $ = require('jquery');
+const BigInt = require("big-integer");
 
 async function init_app() {
     await init_ethereum();
     // e.g. http://192.168.1.2:8123/web/index.html?pot=0x405BC10E04e3f487E9925ad5815E4406D78B769e&amount=2
     let params = new URLSearchParams(document.location.search);
+
     window.potAddress = params.get("pot");
     // Not strictly necessary but for consistency
     if (!window.potAddress.toLowerCase().startsWith("0x")) {
@@ -14,17 +16,24 @@ async function init_app() {
         $('#pot-error').removeClass('hidden');
     }
     $('#pot').val(potAddress);
-    window.amount = params.get("amount");
-    if (amount <= 0 || amount > 10) {
+
+    window.initial_amount = params.get("amount");
+    if (initial_amount <= 0 || initial_amount > 10) {
         console.log("Fund amount is invalid");
         $('#amount-error').removeClass('hidden');
     }
-    $('#amount').val(amount);
+    $('#amount').val(initial_amount);
 
     await showBalance();
-
 }
+
 window.init_app = init_app;
+
+/// Return the value converted from wei, rounded to four decimals.
+function fromWei(wei) {
+    let val = web3.utils.fromWei(wei);
+    return Math.round(val * 1e4)/1e4;
+}
 
 async function showBalance() {
     // Show the wallet balances
@@ -32,16 +41,18 @@ async function showBalance() {
     console.log("Funding from account: ", account.address);
     console.log("Balance: ", account.ethBalance);
     $('#from-account').val(account.address);
-    $('#eth-balance').val(account.ethBalance);
+    let ethBalance = fromWei(account.ethBalance);
+    $('#eth-balance').val(ethBalance);
     if (account.ethBalance <= 0) {
         $('#eth-balance-error').removeClass('hidden');
     }
-    $('#oxt-balance').val(account.oxtBalance);
+    let oxtBalance = fromWei(account.oxtBalance);
+    $('#oxt-balance').val(oxtBalance);
     if (account.oxtBalance <= 0) {
         $('#oxt-balance-error').removeClass('hidden');
     }
     // Show the pot balance
-    let potBalance = await getPotBalance(window.potAddress);
+    let potBalance = fromWei(await getPotBalance(window.potAddress));
     $('#pot-balance').val(potBalance);
 }
 window.showBalance = showBalance;
@@ -53,8 +64,15 @@ async function submitTx() {
     let spinner = $('#spinner');
     fundButton.toggle();
     spinner.slideDown();
+    let amount = $('#amount').val();
+    console.log("submit amount = ", amount);
+
     try {
-        let tx = await fundPot(potAddress, amount);
+        // TODO: change to submit amount after validation
+        const amountWei = BigInt(amount * 1e18).toString();
+        console.log("fund amount wei = ", amountWei);
+        let tx = await fundPot(potAddress, amountWei);
+
         window.tx=tx; // debug
         console.log("Funded.");
         $("#result-text").text("Successful Transaction");
@@ -63,7 +81,7 @@ async function submitTx() {
         } catch (err) { }
         await showBalance();
     } catch (err) {
-        console.log("Fund pot error: ", JSON.stringify(err));
+        console.log("Fund pot error: ", err);
         $("#result-text").text("Transaction Failed");
     }
     spinner.slideUp();

@@ -1,4 +1,5 @@
 const Web3 = require('web3');
+const BigInt = require("big-integer");
 
 /// Capture console and error output to an element with id `logId` in the page.
 function captureLogsTo(logId) {
@@ -56,6 +57,7 @@ function init_ethereum() {
             } catch (err) {
                 console.log("Error constructing contracts");
             }
+
             resolve();
         });
     });
@@ -63,28 +65,45 @@ function init_ethereum() {
 
 window.init_ethereum = init_ethereum;
 
-class Account {
+class URLParams {
     constructor() {
-        this.address = "";
-        this.ethBalance = 0;
-        this.oxtBalance = 0;
+        this.potAddress = "";
+        this.amount = 0;
     }
 }
 
-/// Get the user's ETH wallet balance and OXT token balance.
+function getURLParams() {
+    let result = new URLParams();
+    let params = new URLSearchParams(document.location.search);
+    result.potAddress = params.get("pot");
+    result.amount = params.get("amount");
+    return result;
+}
+
+window.getURLParams = getURLParams;
+
+class Account {
+    constructor() {
+        this.address = "";
+        this.ethBalance = ""; // wei as string
+        this.oxtBalance = ""; // OXT-wei as string
+    }
+}
+
+/// Get the user's ETH wallet balance and OXT-wei token balance (1e18 parts OXT).
 async function getAccount() {
     const accounts = await web3.eth.getAccounts();
     const account = new Account();
     account.address = accounts[0];
     try {
-        account.ethBalance = await web3.eth.getBalance(accounts[0]);
+        account.ethBalance = (await web3.eth.getBalance(accounts[0])).toString();
     } catch (err) {
-        console.log("Error getting eth balance");
+        console.log("Error getting eth balance", err);
     }
     try {
-        account.oxtBalance = await Orchid.token.methods.balanceOf(accounts[0]).call();
+        account.oxtBalance = (await Orchid.token.methods.balanceOf(accounts[0]).call()).toString();
     } catch (err) {
-        console.log("Error getting oxt balance");
+        console.log("Error getting oxt balance", err);
     }
     return account;
 }
@@ -97,35 +116,38 @@ function isAddress(str) {
 
 window.isAddress = isAddress;
 
-/// Transfer the amount in OXT from the user to the specified lottery pot address.
-async function fundPot(addr, amount) {
+/// Transfer the amount in OXT-wei string value from the user to the specified lottery pot address.
+async function fundPot(addr, /*String*/amount) {
+    console.log("Fund address: ", addr, " amount: ", amount);
     const accounts = await web3.eth.getAccounts();
 
     // Lottery funding amount
-    const value = amount;
-    const escrow = 0;
+    const value = BigInt(amount);
+    const escrow = BigInt(0);
     const total = value + escrow;
 
     // Gas price
-    const gwei = 1e9;
-    const gasPrice = 20;
-    console.log("Setting gas price (gwei): ", gasPrice);
+    //const gwei = 1e9;
+    //const gasPrice = 20;
+    //console.log("Setting gas price (gwei): ", gasPrice);
 
     return new Promise(function (resolve, reject) {
-        try {
-            Orchid.token.methods.approve(Orchid.lottery_addr, total)
-                .estimateGas({from: accounts[0]})
-                .then((gas) => {
-                    console.log("Approval gas estimate: ", gas);
-                });
 
-            Orchid.token.methods.approve(Orchid.lottery_addr, total).send({
+        function doApproveTx(onComplete) {
+            //Orchid.token.methods.approve(Orchid.lottery_addr, total.toString())
+            //.estimateGas({from: accounts[0]})
+            //.then((gas) => {
+            //console.log("Approval gas estimate: ", gas);
+            //});
+
+            Orchid.token.methods.approve(Orchid.lottery_addr, total.toString()).send({
                 from: accounts[0],
                 gas: Orchid.token_approval_max_gas,
-                gasPrice: gasPrice * gwei
+                //gasPrice: gasPrice * gwei
             })
                 .on("transactionHash", (hash) => {
                     console.log("Approval hash: ", hash);
+                    onComplete()
                 })
                 .on('confirmation', (confirmationNumber, receipt) => {
                     console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
@@ -135,31 +157,38 @@ async function fundPot(addr, amount) {
                     // If there is an error in the approval assume Funding will fail.
                     reject(err);
                 });
+        }
 
-            Orchid.lottery.methods.fund(addr, value, total)
-                .estimateGas({from: accounts[0]})
-                .then((gas) => {
-                    console.log("Funding gas estimate: ", gas);
-                });
+        function doFundTx() {
+            //Orchid.lottery.methods.fund(addr, value.toString(), total.toString())
+            //.estimateGas({from: accounts[0]})
+            //.then((gas) => {
+            //console.log("Funding gas estimate: ", gas);
+            //});
 
-            Orchid.lottery.methods.fund(addr, value, total).send({
+            Orchid.lottery.methods.fund(addr, value.toString(), total.toString()).send({
                 from: accounts[0],
                 gas: Orchid.lottery_fund_max_gas,
-                gasPrice: gasPrice * gwei
+                //gasPrice: gasPrice * gwei
             })
                 .on("transactionHash", (hash) => {
                     console.log("Fund hash: ", hash);
                 })
                 .on('confirmation', (confirmationNumber, receipt) => {
-                    console.log("Fund confirmation ", confirmationNumber, JSON.stringify(receipt));
+                    console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
                     // Wait for one confirmation on the funding tx.
-                    const hash = JSON.stringify(receipt)['transactionHash'];
+                    window.receipt = receipt;
+                    const hash = receipt['transactionHash'];
                     resolve(hash);
                 })
                 .on('error', (err) => {
                     console.log("Fund error: ", JSON.stringify(err));
                     reject(err);
                 });
+        }
+
+        try {
+            doApproveTx(doFundTx);
         } catch (err) {
             console.log("error:", JSON.stringify(err));
             reject("error: " + err);
@@ -177,10 +206,10 @@ async function getPotBalance(addr) {
     if (result == null || result._length < 2) {
         return null;
     }
-    const balance = result[0].toNumber();
-    const escrow = result[1].toNumber();
-    console.log("Get pot balance: ", balance, "escrow: ", escrow);
-    return balance;
+    const balance = result[0]; // web3.util.BN
+    const escrow = result[1]; // web3.util.BN
+    console.log("Get pot balance: ", balance.toString(), "escrow: ", escrow.toString());
+    return balance.toString();
 }
 
 window.getPotBalance = getPotBalance;
