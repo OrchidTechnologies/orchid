@@ -13,14 +13,14 @@ class OrchidBudgetAPI {
   BehaviorSubject<List<LotteryPotUpdateEvent>> events = BehaviorSubject();
 
   /// A total balance in OXT of the user's funded lottery pots.
-  ReplayObservable<double> balance;
+  Observable<double> balance;
 
   Timer _pollTimer;
 
   OrchidBudgetAPI._init() {
     this.balance = events.map((events) {
       return (events != null && events.length > 0) ? events.first.balance : 0.0;
-    }).shareReplay(maxSize: 1);
+    });
   }
 
   factory OrchidBudgetAPI() {
