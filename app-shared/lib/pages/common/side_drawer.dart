@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
-
 import '../app_text.dart';
 
 /// The application side drawer
@@ -129,16 +129,17 @@ class BalanceSideDrawerTile extends StatefulWidget {
 }
 
 class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
-  /// The user's balance in OXT or null if there are no funding sources.
-  double balance;
+  /// The user's balance in OXT or null if unavailable.
+  double _balance;
 
   @override
   void initState() {
     super.initState();
-    // Fetch the balance
-    OrchidAPI().getBalance().then((balance) {
+    // Listen to the funding balance.
+    OrchidAPI().budget().balance.listen((balance) {
+      //OrchidAPI().logger().write("Balance update: $balance.");
       setState(() {
-        this.balance = balance;
+        this._balance = balance;
       });
     });
   }
@@ -160,13 +161,14 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
             Text(widget.title,
                 textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
             Text(
-                balance == null
+                _balance == null
                     ? "(Setup)"
-                    : "${balance.toStringAsFixed(2)} OXT",
+                    : "${_balance.toStringAsFixed(2)} OXT",
                 textAlign: TextAlign.left,
                 style: AppText.sideDrawerTitleStyle.copyWith(fontSize: 12, height: 1.2)),
           ],
         ),
         onTap: widget.onPressed);
   }
+
 }

@@ -3,6 +3,8 @@ import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/settings/developer_settings.dart';
 import 'package:rxdart/rxdart.dart';
+import 'orchid_budget_api.dart';
+import 'orchid_log_api.dart';
 
 ///
 /// Orchid App Channel API
@@ -67,10 +69,6 @@ abstract class OrchidAPI {
   /// wallet info; otherwise this method returns null.
   Future<OrchidWalletPublic> getWallet();
 
-  /// Get the user's wallet balance in OXT.
-  /// This method may return null to indicate that no funding source is defined.
-  Future<double> getBalance();
-
   /// Set or update the user's external VPN config.
   /// Return true if the configuration was saved successfully.
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig);
@@ -91,26 +89,9 @@ abstract class OrchidAPI {
 
   /// Set a name-value pair representing a dynamic developer settings
   void setDeveloperSetting({String name, String value});
+
+  // Placeholder API for funds and budgeting
+  OrchidBudgetAPI budget();
 }
 
-/// Logging support, if any, implemented by the channel API.
-abstract class OrchidLogAPI {
 
-  /// Notify observers when the log file has updated.
-  PublishSubject<void> logChanged = PublishSubject<void>();
-
-  /// Enable or disable logging.
-  Future<void> setEnabled(bool enabled);
-
-  /// Get the logging enabled status.
-  Future<bool> getEnabled();
-
-  /// Get the current log contents.
-  Future<String> get();
-
-  /// Write the text to the log.
-  void write(String text);
-
-  /// Clear the log file.
-  void clear();
-}

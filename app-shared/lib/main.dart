@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/pages/app_routes.dart';
 
+import 'api/orchid_api.dart';
+
 void main() {
+  OrchidAPI().logger().write("App Startup");
+  OrchidAPI().budget().appStartup();
+
   // Force portrait orientation
   // Note: There is a bug causing this to fail on iPad, so we have locked
   // Note: the orientation in the main plist:
