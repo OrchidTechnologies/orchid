@@ -20,6 +20,11 @@
 /* }}} */
 
 
+#include <openvpn/ip/csum.hpp>
+#include <openvpn/ip/ip4.hpp>
+#include <openvpn/ip/tcp.hpp>
+#include <openvpn/ip/udp.hpp>
+
 #include "capture.hpp"
 #include "transport.hpp"
 
@@ -55,11 +60,22 @@ class Route :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
+    Beam beam(data);
+    Span span(beam.data(), beam.size());
 
     // analyze/monitor data
 
-    if (route_) Spawn([this, data = Beam(data)]() -> task<void> {
-        co_return co_await route_->Send(data);
+    auto &ip4(span.cast<openvpn::IPv4Header>());
+    if (ip4.protocol == openvpn::IPCommon::TCP) {
+        auto length(openvpn::IPv4Header::length(ip4.version_len));
+        auto &tcp(span.cast<openvpn::TCPHeader>(length));
+        if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) != 0) {
+            Log() << "TCP=" << std::hex << boost::endian::big_to_native(ip4.daddr) << ":" << std::dec << boost::endian::big_to_native(tcp.dest) << std::endl;
+        }
+    }
+
+    if (route_) Spawn([this, beam = std::move(beam)]() -> task<void> {
+        co_return co_await route_->Send(beam);
     });
 }
 
