@@ -23,18 +23,21 @@
 #ifndef ORCHID_TRANSPORT_HPP
 #define ORCHID_TRANSPORT_HPP
 
+#include <string>
+
+#include "client.hpp"
 #include "link.hpp"
 
 namespace orc {
 
 void Initialize();
 
-class Client;
-
 class Sync {
   public:
     virtual void Send(const Buffer &data) = 0;
 };
+
+task<U<Sync>> Connect(Sync *sync, S<Origin> origin, std::string ovpnfile, std::string username, std::string password);
 
 class Capture :
     public Sync,

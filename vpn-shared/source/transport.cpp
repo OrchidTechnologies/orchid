@@ -424,6 +424,27 @@ _trace();
     }
 };
 
+task<U<Sync>> Connect(Sync *sync, S<Origin> origin, std::string ovpnfile, std::string username, std::string password) {
+    auto client(std::make_unique<Client>(sync, std::move(origin)));
+
+    {
+        openvpn::ClientAPI::Config config;
+        config.content = std::move(ovpnfile);
+        config.disableClientCert = true;
+        client->eval_config(config);
+    }
+
+    {
+        openvpn::ClientAPI::ProvideCreds credentials;
+        credentials.username = std::move(username);
+        credentials.password = std::move(password);
+        client->provide_creds(credentials);
+    }
+
+    co_await client->Connect();
+    co_return std::move(client);
+}
+
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
@@ -451,24 +472,7 @@ Capture::~Capture() = default;
 
 task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
     auto origin(co_await Setup());
-    auto client(std::make_unique<Client>(this, origin));
-
-    {
-        openvpn::ClientAPI::Config config;
-        config.content = std::move(ovpnfile);
-        config.disableClientCert = true;
-        client->eval_config(config);
-    }
-
-    {
-        openvpn::ClientAPI::ProvideCreds credentials;
-        credentials.username = std::move(username);
-        credentials.password = std::move(password);
-        client->provide_creds(credentials);
-    }
-
-    co_await client->Connect();
-    sync_ = std::move(client);
+    sync_ = co_await Connect(this, std::move(origin), std::move(ovpnfile), std::move(username), std::move(password));
 }
 
 }
