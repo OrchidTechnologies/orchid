@@ -28,11 +28,11 @@
 namespace orc {
 
 class Capture :
-    public Pipe,
+    public Sync,
     public BufferDrain
 {
   public:
-    U<Sync> sync_;
+    U<Pipe> route_;
 
   protected:
     virtual Link *Inner() = 0;
@@ -44,7 +44,7 @@ class Capture :
     Capture();
     ~Capture();
 
-    task<void> Send(const Buffer &data) override;
+    void Send(const Buffer &data) override;
 
     task<void> Start(std::string ovpnfile, std::string username, std::string password);
 };

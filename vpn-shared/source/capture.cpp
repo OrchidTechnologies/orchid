@@ -25,22 +25,54 @@
 
 namespace orc {
 
+class Route :
+    public BufferDrain,
+    public Pipe
+{
+  private:
+    Sync *const sync_;
+
+  protected:
+    virtual Link *Inner() = 0;
+
+    void Land(const Buffer &data) override {
+        return sync_->Send(data);
+    }
+
+    void Stop(const std::string &error) override {
+    }
+
+  public:
+    Route(Sync *sync) :
+        sync_(sync)
+    {
+    }
+
+    task<void> Send(const Buffer &data) override {
+        co_return co_await Inner()->Send(data);
+    }
+};
+
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
     // analyze/monitor data
 
-    if (sync_)
-        sync_->Send(data);
+    if (route_) Spawn([this, data = Beam(data)]() -> task<void> {
+        co_return co_await route_->Send(data);
+    });
 }
 
 void Capture::Stop(const std::string &error) {
     orc_insist(false);
 }
 
-task<void> Capture::Send(const Buffer &data) {
+void Capture::Send(const Buffer &data) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-    co_return co_await Inner()->Send(data);
+
+    Spawn([this, data = Beam(data)]() -> task<void> {
+        co_return co_await Inner()->Send(data);
+    });
 }
 
 Capture::Capture() {
@@ -50,7 +82,9 @@ Capture::~Capture() = default;
 
 task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
     auto origin(co_await Setup());
-    sync_ = co_await Connect(this, std::move(origin), std::move(ovpnfile), std::move(username), std::move(password));
+    auto route(std::make_unique<Sink<Route>>(this));
+    co_await Connect(route.get(), std::move(origin), std::move(ovpnfile), std::move(username), std::move(password));
+    route_ = std::move(route);
 }
 
 }

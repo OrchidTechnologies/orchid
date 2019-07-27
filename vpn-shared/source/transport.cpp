@@ -191,56 +191,6 @@ class Factory :
     }
 };
 
-class Hole :
-    public Drain<openvpn::BufferAllocated &>
-{
-  public:
-    virtual void Start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) = 0;
-};
-
-class Tunnel :
-    public openvpn::TunClient
-{
-  private:
-    Hole *hole_;
-
-  public:
-    Tunnel(Hole *hole) :
-        hole_(hole)
-    {
-    }
-
-    void tun_start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) override {
-        hole_->Start(options, transport, settings);
-    }
-
-    void stop() override {
-        hole_->Stop();
-    }
-
-    void set_disconnect() override {
-        orc_assert(false);
-    }
-
-    bool tun_send(openvpn::BufferAllocated &buffer) override {
-        hole_->Land(buffer);
-        return true;
-    }
-
-    std::string tun_name() const override {
-        return "tun_name()"; }
-
-    std::string vpn_ip4() const override {
-        return "vpn_ip4()"; }
-    std::string vpn_ip6() const override {
-        return "vpn_ip6()"; }
-
-    std::string vpn_gw4() const override {
-        return "vpn_gw4()"; }
-    std::string vpn_gw6() const override {
-        return "vpn_gw6()"; }
-};
-
 static uint32_t Forge4(openvpn::BufferAllocated &buffer, uint32_t (openvpn::IPv4Header::*field), uint32_t value) {
     Span data(buffer.data(), buffer.size());
     auto &ip4(data.cast<openvpn::IPv4Header>());
@@ -288,11 +238,68 @@ static uint32_t Forge4(openvpn::BufferAllocated &buffer, uint32_t (openvpn::IPv4
 class Client :
     public openvpn::ClientAPI::OpenVPNClient,
     public openvpn::TunClientFactory,
-    public Hole,
-    public Sync
+    public Link
 {
   private:
-    Pipe *const pipe_;
+    class Tunnel :
+        public openvpn::TunClient
+    {
+      private:
+        Client *client_;
+
+      public:
+        Tunnel(Client *client) :
+            client_(client)
+        {
+        }
+
+        void tun_start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) override {
+            client_->Start(options, transport, settings);
+        }
+
+        void stop() override {
+            client_->Stop(std::string());
+        }
+
+        void set_disconnect() override {
+            orc_assert(false);
+        }
+
+        bool tun_send(openvpn::BufferAllocated &buffer) override {
+            client_->Forge(buffer);
+            Subset data(buffer.c_data(), buffer.size());
+            client_->Land(data);
+            return true;
+        }
+
+        std::string tun_name() const override {
+            return "tun_name()"; }
+
+        std::string vpn_ip4() const override {
+            return "vpn_ip4()"; }
+        std::string vpn_ip6() const override {
+            return "vpn_ip6()"; }
+
+        std::string vpn_gw4() const override {
+            return "vpn_gw4()"; }
+        std::string vpn_gw6() const override {
+            return "vpn_gw6()"; }
+    };
+
+    void Start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) {
+        parent_->tun_pre_tun_config();
+        parent_->tun_pre_route_config();
+
+        openvpn::TunProp::configure_builder(this, nullptr, config_.stats.get(), transport.server_endpoint_addr(), config_.tun_prop, options, nullptr, false);
+
+        parent_->tun_connected();
+    }
+
+    void Forge(openvpn::BufferAllocated &buffer) {
+        Forge4(buffer, &openvpn::IPv4Header::daddr, local_);
+    }
+
+  private:
     S<Origin> origin_;
 
     std::thread thread_;
@@ -305,32 +312,20 @@ class Client :
     uint32_t local_;
 
   protected:
-    void Start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) override {
-        parent_->tun_pre_tun_config();
-        parent_->tun_pre_route_config();
+    virtual Pipe *Inner() = 0;
 
-        openvpn::TunProp::configure_builder(this, nullptr, config_.stats.get(), transport.server_endpoint_addr(), config_.tun_prop, options, nullptr, false);
-
-        parent_->tun_connected();
-    }
-
-    void Land(openvpn::BufferAllocated &buffer) override {
-        Forge4(buffer, &openvpn::IPv4Header::daddr, local_);
-        // XXX: I should be able to avoid a copy here
-        Subset data(buffer.c_data(), buffer.size());
+    void Land(const Buffer &data) override {
         //std::cerr << data << std::endl;
-        Spawn([this, beam = Beam(data)]() -> task<void> {
-            co_await pipe_->Send(beam);
-        });
+        Link::Land(data);
     }
 
     void Stop(const std::string &error) override {
-        orc_assert_(false, error);
+        orc_insist(false);
     }
 
   public:
-    Client(Pipe *pipe, S<Origin> origin) :
-        pipe_(pipe),
+    Client(BufferDrain *drain, S<Origin> origin) :
+        Link(drain),
         origin_(std::move(origin))
     {
     }
@@ -412,9 +407,7 @@ _trace();
         co_await ready_;
     }
 
-    void Send(const orc::Buffer &data) override {
-        if (parent_ == nullptr)
-            return;
+    task<void> Send(const orc::Buffer &data) override {
         static size_t headroom(512);
         openvpn::BufferAllocated buffer(data.size() + headroom, openvpn::BufferAllocated::ARRAY);
         buffer.reset_offset(headroom);
@@ -423,12 +416,14 @@ _trace();
         local_ = Forge4(buffer, &openvpn::IPv4Header::saddr, ip4_.to_uint32());
 
         //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
-        parent_->tun_recv(buffer);
+        if (parent_ != nullptr)
+            parent_->tun_recv(buffer);
+        co_return;
     }
 };
 
-task<U<Sync>> Connect(Pipe *pipe, S<Origin> origin, std::string ovpnfile, std::string username, std::string password) {
-    auto client(std::make_unique<Client>(pipe, std::move(origin)));
+task<void> Connect(Sunk<> *sunk, S<Origin> origin, std::string ovpnfile, std::string username, std::string password) {
+    auto client(sunk->Wire<Sink<Client>>(std::move(origin)));
 
     {
         openvpn::ClientAPI::Config config;
@@ -445,7 +440,6 @@ task<U<Sync>> Connect(Pipe *pipe, S<Origin> origin, std::string ovpnfile, std::s
     }
 
     co_await client->Connect();
-    co_return std::move(client);
 }
 
 }
