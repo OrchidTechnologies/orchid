@@ -192,8 +192,8 @@ class Factory :
 };
 
 static uint32_t Forge4(openvpn::BufferAllocated &buffer, uint32_t (openvpn::IPv4Header::*field), uint32_t value) {
-    Span data(buffer.data(), buffer.size());
-    auto &ip4(data.cast<openvpn::IPv4Header>());
+    Span span(buffer.data(), buffer.size());
+    auto &ip4(span.cast<openvpn::IPv4Header>());
 
     auto before(boost::endian::big_to_native(ip4.*field));
     auto adjust((int32_t(before >> 16) + int32_t(before & 0xffff)) - (int32_t(value >> 16) + int32_t(value & 0xffff)));
@@ -204,25 +204,25 @@ static uint32_t Forge4(openvpn::BufferAllocated &buffer, uint32_t (openvpn::IPv4
     boost::endian::native_to_big_inplace(ip4.check);
 
     auto length(openvpn::IPv4Header::length(ip4.version_len));
-    orc_assert(data.size() >= length);
+    orc_assert(span.size() >= length);
 
 #if 0
     auto check(ip4.check);
     ip4.check = 0;
-    orc_insist(openvpn::IPChecksum::checksum(data.data(), length) == check);
+    orc_insist(openvpn::IPChecksum::checksum(span.data(), length) == check);
     ip4.check = check;
 #endif
 
     switch (ip4.protocol) {
         case openvpn::IPCommon::TCP: {
-            auto &tcp(data.cast<openvpn::TCPHeader>(length));
+            auto &tcp(span.cast<openvpn::TCPHeader>(length));
             boost::endian::big_to_native_inplace(tcp.check);
             openvpn::tcp_adjust_checksum(adjust, tcp.check);
             boost::endian::native_to_big_inplace(tcp.check);
         } break;
 
         case openvpn::IPCommon::UDP: {
-            auto &udp(data.cast<openvpn::UDPHeader>(length));
+            auto &udp(span.cast<openvpn::UDPHeader>(length));
             boost::endian::big_to_native_inplace(udp.check);
             openvpn::tcp_adjust_checksum(adjust, udp.check);
             boost::endian::native_to_big_inplace(udp.check);
