@@ -20,44 +20,41 @@
 /* }}} */
 
 
-#ifndef ORCHID_TRANSPORT_HPP
-#define ORCHID_TRANSPORT_HPP
+#ifndef ORCHID_FAMILY_HPP
+#define ORCHID_FAMILY_HPP
 
 #include "link.hpp"
 
 namespace orc {
 
-void Initialize();
-
-class Client;
-
-class Sync {
-  public:
-    virtual void Send(const Buffer &data) = 0;
-};
-
-class Capture :
-    public Sync,
-    public BufferDrain
+class Family :
+    public Link
 {
-  public:
-    U<Sync> sync_;
+  private:
+    uint32_t Analyze(const Buffer &data) {
+        return 2;
+    }
 
   protected:
     virtual Link *Inner() = 0;
 
-    void Land(const Buffer &data) override;
-    void Stop(const std::string &error) override;
-
-    void Send(const Buffer &data) override;
+    void Land(const Buffer &data) override {
+        auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
+        orc_assert(protocol == Analyze(data));
+        return Link::Land(packet);
+    }
 
   public:
-    Capture();
-    ~Capture();
+    Family(BufferDrain *drain) :
+        Link(drain)
+    {
+    }
 
-    task<void> Start(std::string ovpnfile, std::string username, std::string password);
+    task<void> Send(const Buffer &data) {
+        co_return co_await Inner()->Send(Tie(Number<uint32_t>(Analyze(data)), data));
+    }
 };
 
 }
 
-#endif//ORCHID_TRANSPORT_HPP
+#endif//ORCHID_FAMILY_HPP

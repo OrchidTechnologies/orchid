@@ -44,7 +44,7 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
     std::string username(ORCHID_USERNAME);
     std::string password(ORCHID_PASSWORD);
 
-    auto capture(std::make_unique<Sink<Capture>>("10.7.0.3"));
+    auto capture(std::make_unique<Sink<Capture>>());
     auto connection(capture->Wire<File<asio::posix::stream_descriptor>>(file));
     connection->Start();
 

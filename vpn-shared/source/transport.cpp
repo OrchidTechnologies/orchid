@@ -426,16 +426,11 @@ _trace();
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-#ifdef __APPLE__
-    auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
-#else
-    auto &packet(data);
-#endif
 
-    // analyze/monitor packet
+    // analyze/monitor data
 
     if (sync_)
-        sync_->Send(packet);
+        sync_->Send(data);
 }
 
 void Capture::Stop(const std::string &error) {
@@ -443,18 +438,13 @@ void Capture::Stop(const std::string &error) {
 }
 
 void Capture::Send(const Buffer &data) {
-#ifdef __APPLE__
-    uint32_t family(2);
-    Spawn([this, beam = Beam(Tie(Number<uint32_t>(family), data))]() -> task<void> {
-#else
+    //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
     Spawn([this, beam = Beam(data)]() -> task<void> {
-#endif
-        //Log() << "\e[33;1mRECV " << beam.size() << " " << beam << "\e[0m" << std::endl;
         co_await Inner()->Send(beam);
     });
 }
 
-Capture::Capture(const std::string &ip4) {
+Capture::Capture() {
 }
 
 Capture::~Capture() = default;

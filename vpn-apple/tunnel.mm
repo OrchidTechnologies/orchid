@@ -26,6 +26,7 @@
 #include <NetworkExtension/NetworkExtension.h>
 
 #include "connection.hpp"
+#include "family.hpp"
 #include "transport.hpp"
 
 //if (!(code)) [NSException raise:@"orc_assert" format:@"(%s)[%s:%u]", #code, __FILE__, __LINE__];
@@ -91,8 +92,10 @@ static std::string cfs(NSString *data) {
         int file([value intValue]);
         orc_assert(file != -1);
 
-        auto capture(std::make_unique<Sink<Capture>>("10.7.0.3"));
-        auto connection(capture->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
+        auto capture(std::make_unique<Sink<Capture>>());
+
+        auto family(capture->Wire<Sink<Family>>());
+        auto connection(family->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
         connection->Start();
 
         Spawn([
