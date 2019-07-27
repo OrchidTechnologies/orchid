@@ -58,7 +58,7 @@ class Remote :
     friend class Sink;
 
   protected:
-    virtual Route<Server> *Inner() = 0;
+    virtual Prefix<Server> *Inner() = 0;
 
     void Land(const Buffer &data) override {
         Link::Land(data);
@@ -114,8 +114,8 @@ task<void> Server::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std:
     co_await secure->Connect();
 }
 
-U<Route<Server>> Server::Path(BufferDrain *drain) {
-    return std::make_unique<Route<Server>>(drain, shared_from_this());
+U<Prefix<Server>> Server::Path(BufferDrain *drain) {
+    return std::make_unique<Prefix<Server>>(drain, shared_from_this());
 }
 
 task<Beam> Server::Call(const Tag &command, const Buffer &args) {
@@ -160,7 +160,7 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
 }
 
 task<Socket> Server::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
+    auto remote(sunk->Wire<Sink<Remote, Prefix<Server>>>());
     remote->Give(Path(remote));
     co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
         auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
@@ -173,7 +173,7 @@ task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::s
 }
 
 task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) {
-    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
+    auto remote(sunk->Wire<Sink<Remote, Prefix<Server>>>());
     remote->Give(Path(remote));
     co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
         auto answer(co_await respond((co_await Call(OfferTag, tag)).str()));

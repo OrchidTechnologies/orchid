@@ -181,72 +181,72 @@ class Sink final :
 };
 
 template <typename Link_>
-class Router :
+class Prefixed :
     public Pipe,
     public BufferDrain
 {
-    template <typename Router_>
-    friend class Route;
+    template <typename Prefixed_>
+    friend class Prefix;
 
   private:
-    std::map<Tag, BufferDrain *> routes_;
+    std::map<Tag, BufferDrain *> prefixes_;
 
   protected:
     void Land(const Buffer &data) override {
         auto [tag, rest] = Take<Tag, Window>(data);
-        auto route(routes_.find(tag));
-        orc_assert(route != routes_.end());
-        route->second->Land(rest);
+        auto prefix(prefixes_.find(tag));
+        orc_assert(prefix != prefixes_.end());
+        prefix->second->Land(rest);
     }
 
     void Stop(const std::string &error) override {
-        for (const auto &[tag, drain] : routes_)
+        for (const auto &[tag, drain] : prefixes_)
             drain->Stop(error);
     }
 
   public:
-    ~Router() override {
-        orc_insist(routes_.empty());
+    ~Prefixed() override {
+        orc_insist(prefixes_.empty());
     }
 };
 
-template <typename Router_>
-class Route final :
+template <typename Prefixed_>
+class Prefix final :
     public Link
 {
   public:
-    const S<Router_> router_;
+    const S<Prefixed_> prefixed_;
     const Tag tag_;
 
   public:
-    Route(BufferDrain *drain, const S<Router_> router) :
+    Prefix(BufferDrain *drain, const S<Prefixed_> prefixed) :
         Link(drain),
-        router_(router),
+        prefixed_(prefixed),
         tag_([this]() {
             BufferDrain *drain(this);
             for (;;) {
                 auto tag(NewTag());
-                if (router_->routes_.emplace(tag, drain).second)
+                if (prefixed_->prefixes_.emplace(tag, drain).second)
                     return tag;
             }
         }())
     {
     }
 
-    ~Route() override {
-        router_->routes_.erase(tag_);
+    ~Prefix() override {
+        prefixed_->prefixes_.erase(tag_);
     }
 
     task<void> Send(const Buffer &data) override {
-        co_return co_await router_->Send(Tie(tag_, data));
+        co_return co_await prefixed_->Send(Tie(tag_, data));
     }
 
     void Stop(const std::string &error = std::string()) override {
         Link::Stop(error);
     }
 
-    const S<Router_> &operator ->() {
-        return router_;
+    const S<Prefixed_> &operator ->() {
+        return prefixed_;
     }
 };
 

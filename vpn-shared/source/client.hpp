@@ -34,7 +34,7 @@ namespace orc {
 class Server :
     public std::enable_shared_from_this<Server>,
     public Origin,
-    public Router<Secure>
+    public Prefixed<Secure>
 {
   private:
     U<rtc::SSLFingerprint> remote_;
@@ -65,7 +65,7 @@ class Server :
 
     task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port);
 
-    U<Route<Server>> Path(BufferDrain *drain);
+    U<Prefix<Server>> Path(BufferDrain *drain);
     task<Beam> Call(const Tag &command, const Buffer &args);
 
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
