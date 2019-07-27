@@ -159,6 +159,19 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
     co_return co_await result.Wait();
 }
 
+task<Socket> Server::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
+    remote->Give(Path(remote));
+    co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
+        auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+        co_return Socket(socket.str(), service);
+    });
+}
+
+task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    orc_assert(false);
+}
+
 task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) {
     auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
     remote->Give(Path(remote));
@@ -172,15 +185,6 @@ task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (st
 
         const auto &socket(candidate.address());
         co_return Socket(socket.ipaddr().ToString(), socket.port());
-    });
-}
-
-task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
-    remote->Give(Path(remote));
-    co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
-        auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-        co_return Socket(socket.str(), service);
     });
 }
 

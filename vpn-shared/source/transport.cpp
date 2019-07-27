@@ -176,7 +176,7 @@ class Factory :
             auto remote(config_.remote_list->first_item());
             orc_assert(remote != nullptr);
 
-            co_await origin_->Connect(transport.get(), remote->server_host, remote->server_port);
+            co_await origin_->Associate(transport.get(), remote->server_host, remote->server_port);
 
             asio::dispatch(context, [parent]() {
                 parent->transport_connecting();

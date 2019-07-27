@@ -55,6 +55,18 @@ _trace();
     }
 };
 
+task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto socket(sunk->Wire<Connection<asio::ip::udp::socket>>());
+    auto endpoint(co_await socket->Connect(host, port));
+    co_return Socket(endpoint.address().to_string(), endpoint.port());
+}
+
+task<Socket> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto socket(sunk->Wire<Connection<asio::ip::tcp::socket>>());
+    auto endpoint(co_await socket->Connect(host, port));
+    co_return Socket(endpoint.address().to_string(), endpoint.port());
+}
+
 task<Socket> Local::Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) {
     auto client(Make<Actor>());
     auto channel(sunk->Wire<Channel>(client));
@@ -64,12 +76,6 @@ task<Socket> Local::Hop(Sunk<> *sunk, const std::function<task<std::string> (std
     auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ToString(), socket.port());
-}
-
-task<Socket> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto socket(sunk->Wire<Connection<asio::ip::tcp::socket>>());
-    auto endpoint(co_await socket->Connect(host, port));
-    co_return Socket(endpoint.address().to_string(), endpoint.port());
 }
 
 S<Local> GetLocal() {

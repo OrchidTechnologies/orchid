@@ -68,8 +68,9 @@ class Server :
     U<Route<Server>> Path(BufferDrain *drain);
     task<Beam> Call(const Tag &command, const Buffer &args);
 
-    task<Socket> Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) override;
+    task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Socket> Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) override;
 };
 
 task<S<Origin>> Setup();
