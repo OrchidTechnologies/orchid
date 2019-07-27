@@ -20,20 +20,37 @@
 /* }}} */
 
 
-#ifndef ORCHID_TRANSPORT_HPP
-#define ORCHID_TRANSPORT_HPP
-
-#include <string>
-
-#include "client.hpp"
-#include "link.hpp"
+#include "capture.hpp"
+#include "transport.hpp"
 
 namespace orc {
 
-void Initialize();
+void Capture::Land(const Buffer &data) {
+    //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-task<U<Sync>> Connect(Pipe *pipe, S<Origin> origin, std::string ovpnfile, std::string username, std::string password);
+    // analyze/monitor data
 
+    if (sync_)
+        sync_->Send(data);
 }
 
-#endif//ORCHID_TRANSPORT_HPP
+void Capture::Stop(const std::string &error) {
+    orc_insist(false);
+}
+
+task<void> Capture::Send(const Buffer &data) {
+    //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
+    co_return co_await Inner()->Send(data);
+}
+
+Capture::Capture() {
+}
+
+Capture::~Capture() = default;
+
+task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
+    auto origin(co_await Setup());
+    sync_ = co_await Connect(this, std::move(origin), std::move(ovpnfile), std::move(username), std::move(password));
+}
+
+}

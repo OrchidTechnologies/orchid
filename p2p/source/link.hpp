@@ -43,6 +43,14 @@ inline Tag NewTag() {
     return Random<TagSize>();
 }
 
+class Sync {
+  public:
+    virtual ~Sync() {
+    }
+
+    virtual void Send(const Buffer &data) = 0;
+};
+
 class Pipe {
   public:
     static uint64_t Unique_;

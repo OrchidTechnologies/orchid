@@ -25,6 +25,7 @@
 
 #include <NetworkExtension/NetworkExtension.h>
 
+#include "capture.hpp"
 #include "connection.hpp"
 #include "family.hpp"
 #include "transport.hpp"

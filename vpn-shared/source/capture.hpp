@@ -20,20 +20,35 @@
 /* }}} */
 
 
-#ifndef ORCHID_TRANSPORT_HPP
-#define ORCHID_TRANSPORT_HPP
+#ifndef ORCHID_CAPTURE_HPP
+#define ORCHID_CAPTURE_HPP
 
-#include <string>
-
-#include "client.hpp"
 #include "link.hpp"
 
 namespace orc {
 
-void Initialize();
+class Capture :
+    public Pipe,
+    public BufferDrain
+{
+  public:
+    U<Sync> sync_;
 
-task<U<Sync>> Connect(Pipe *pipe, S<Origin> origin, std::string ovpnfile, std::string username, std::string password);
+  protected:
+    virtual Link *Inner() = 0;
+
+    void Land(const Buffer &data) override;
+    void Stop(const std::string &error) override;
+
+  public:
+    Capture();
+    ~Capture();
+
+    task<void> Send(const Buffer &data) override;
+
+    task<void> Start(std::string ovpnfile, std::string username, std::string password);
+};
 
 }
 
-#endif//ORCHID_TRANSPORT_HPP
+#endif//ORCHID_CAPTURE_HPP

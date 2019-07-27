@@ -45,12 +45,13 @@
 #include <boost/filesystem/string_file.hpp>
 
 #include <asio.hpp>
+#include "capture.hpp"
 #include "connection.hpp"
 #include "error.hpp"
 #include "protect.hpp"
 #include "syscall.hpp"
-#include "transport.hpp"
 #include "task.hpp"
+#include "transport.hpp"
 
 #if 0
 #elif defined(__APPLE__)

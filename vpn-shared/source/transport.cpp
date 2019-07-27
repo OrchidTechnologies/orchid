@@ -292,7 +292,7 @@ class Client :
     public Sync
 {
   private:
-    Sync *const sync_;
+    Pipe *const pipe_;
     S<Origin> origin_;
 
     std::thread thread_;
@@ -316,9 +316,12 @@ class Client :
 
     void Land(openvpn::BufferAllocated &buffer) override {
         Forge4(buffer, &openvpn::IPv4Header::daddr, local_);
+        // XXX: I should be able to avoid a copy here
         Subset data(buffer.c_data(), buffer.size());
         //std::cerr << data << std::endl;
-        sync_->Send(data);
+        Spawn([this, beam = Beam(data)]() -> task<void> {
+            co_await pipe_->Send(beam);
+        });
     }
 
     void Stop(const std::string &error) override {
@@ -326,8 +329,8 @@ class Client :
     }
 
   public:
-    Client(Sync *sync, S<Origin> origin) :
-        sync_(sync),
+    Client(Pipe *pipe, S<Origin> origin) :
+        pipe_(pipe),
         origin_(std::move(origin))
     {
     }
@@ -424,8 +427,8 @@ _trace();
     }
 };
 
-task<U<Sync>> Connect(Sync *sync, S<Origin> origin, std::string ovpnfile, std::string username, std::string password) {
-    auto client(std::make_unique<Client>(sync, std::move(origin)));
+task<U<Sync>> Connect(Pipe *pipe, S<Origin> origin, std::string ovpnfile, std::string username, std::string password) {
+    auto client(std::make_unique<Client>(pipe, std::move(origin)));
 
     {
         openvpn::ClientAPI::Config config;
@@ -443,36 +446,6 @@ task<U<Sync>> Connect(Sync *sync, S<Origin> origin, std::string ovpnfile, std::s
 
     co_await client->Connect();
     co_return std::move(client);
-}
-
-void Capture::Land(const Buffer &data) {
-    //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-
-    // analyze/monitor data
-
-    if (sync_)
-        sync_->Send(data);
-}
-
-void Capture::Stop(const std::string &error) {
-    orc_insist(false);
-}
-
-void Capture::Send(const Buffer &data) {
-    //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-    Spawn([this, beam = Beam(data)]() -> task<void> {
-        co_await Inner()->Send(beam);
-    });
-}
-
-Capture::Capture() {
-}
-
-Capture::~Capture() = default;
-
-task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
-    auto origin(co_await Setup());
-    sync_ = co_await Connect(this, std::move(origin), std::move(ovpnfile), std::move(username), std::move(password));
 }
 
 }
