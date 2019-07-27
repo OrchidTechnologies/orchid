@@ -424,15 +424,17 @@ _trace();
 };
 
 void Capture::Land(const Buffer &data) {
-    if (!client_)
-        return;
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 #ifdef __APPLE__
     auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
-    client_->Send(packet);
 #else
-    client_->Send(data);
+    auto &packet(data);
 #endif
+
+    // analyze/monitor packet
+
+    if (client_)
+        client_->Send(packet);
 }
 
 void Capture::Stop(const std::string &error) {
