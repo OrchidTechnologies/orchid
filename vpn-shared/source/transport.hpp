@@ -31,17 +31,17 @@ void Initialize();
 
 class Client;
 
-class Liberator {
+class Sync {
   public:
-    virtual void Liberate(const Buffer &data) = 0;
+    virtual void Send(const Buffer &data) = 0;
 };
 
 class Capture :
-    public Liberator,
+    public Sync,
     public BufferDrain
 {
   public:
-    U<Client> client_;
+    U<Sync> sync_;
 
   protected:
     virtual Link *Inner() = 0;
@@ -49,7 +49,7 @@ class Capture :
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) override;
 
-    void Liberate(const Buffer &data) override;
+    void Send(const Buffer &data) override;
 
   public:
     Capture(const std::string &ip4);

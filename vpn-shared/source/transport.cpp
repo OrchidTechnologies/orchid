@@ -288,10 +288,11 @@ static uint32_t Forge4(openvpn::BufferAllocated &buffer, uint32_t (openvpn::IPv4
 class Client :
     public openvpn::ClientAPI::OpenVPNClient,
     public openvpn::TunClientFactory,
-    public Hole
+    public Hole,
+    public Sync
 {
   private:
-    Liberator *const liberator_;
+    Sync *const sync_;
     S<Origin> origin_;
 
     std::thread thread_;
@@ -317,7 +318,7 @@ class Client :
         Forge4(buffer, &openvpn::IPv4Header::daddr, local_);
         Subset data(buffer.c_data(), buffer.size());
         //std::cerr << data << std::endl;
-        liberator_->Liberate(data);
+        sync_->Send(data);
     }
 
     void Stop(const std::string &error) override {
@@ -325,8 +326,8 @@ class Client :
     }
 
   public:
-    Client(Liberator *liberator, S<Origin> origin) :
-        liberator_(liberator),
+    Client(Sync *sync, S<Origin> origin) :
+        sync_(sync),
         origin_(std::move(origin))
     {
     }
@@ -408,7 +409,7 @@ _trace();
         co_await ready_;
     }
 
-    void Send(const orc::Buffer &data) {
+    void Send(const orc::Buffer &data) override {
         if (parent_ == nullptr)
             return;
         static size_t headroom(512);
@@ -433,15 +434,15 @@ void Capture::Land(const Buffer &data) {
 
     // analyze/monitor packet
 
-    if (client_)
-        client_->Send(packet);
+    if (sync_)
+        sync_->Send(packet);
 }
 
 void Capture::Stop(const std::string &error) {
     orc_insist(false);
 }
 
-void Capture::Liberate(const Buffer &data) {
+void Capture::Send(const Buffer &data) {
 #ifdef __APPLE__
     uint32_t family(2);
     Spawn([this, beam = Beam(Tie(Number<uint32_t>(family), data))]() -> task<void> {
@@ -460,23 +461,24 @@ Capture::~Capture() = default;
 
 task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
     auto origin(co_await Setup());
-    client_ = std::make_unique<Client>(this, origin);
+    auto client(std::make_unique<Client>(this, origin));
 
     {
         openvpn::ClientAPI::Config config;
         config.content = std::move(ovpnfile);
         config.disableClientCert = true;
-        client_->eval_config(config);
+        client->eval_config(config);
     }
 
     {
         openvpn::ClientAPI::ProvideCreds credentials;
         credentials.username = std::move(username);
         credentials.password = std::move(password);
-        client_->provide_creds(credentials);
+        client->provide_creds(credentials);
     }
 
-    co_await client_->Connect();
+    co_await client->Connect();
+    sync_ = std::move(client);
 }
 
 }
