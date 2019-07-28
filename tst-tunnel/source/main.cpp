@@ -60,6 +60,11 @@
 
 namespace orc {
 
+std::string Group() {
+    // XXX: I am just not feeling this today
+    return "/Users/saurik/orchid/tst-tunnel";
+}
+
 int Protect(int socket, const sockaddr *address, socklen_t length) {
     if (address == nullptr)
         return 0;

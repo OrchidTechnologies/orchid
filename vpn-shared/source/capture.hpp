@@ -27,11 +27,20 @@
 
 namespace orc {
 
+class Analyzer {
+  public:
+    virtual ~Analyzer();
+
+    virtual void Analyze(Span<> &span) = 0;
+};
+
 class Capture :
     public Sync,
     public BufferDrain
 {
   public:
+    U<Analyzer> analyzer_;
+
     uint32_t local_;
     U<Pipe> route_;
 
@@ -47,6 +56,7 @@ class Capture :
 
     void Send(const Buffer &data) override;
 
+    task<void> Start();
     task<void> Start(std::string ovpnfile, std::string username, std::string password);
 };
 

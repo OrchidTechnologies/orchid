@@ -20,13 +20,133 @@
 /* }}} */
 
 
+#include <sqlite3.h>
+
 #include <openvpn/addr/ipv4.hpp>
 
 #include "capture.hpp"
+#include "directory.hpp"
 #include "forge.hpp"
 #include "transport.hpp"
 
+#define orc_sqlstep(expr) ({ \
+    auto _value(expr); \
+    orc_assert_(_value == 0 || _value >= 100 && _value < 200, "orc_sqlcall(" #expr ") " << _value << ":" << sqlite3_errmsg(database_)); \
+_value; })
+
+#define orc_sqlcall(expr) \
+    orc_assert(orc_sqlstep(expr) == SQLITE_OK)
+
 namespace orc {
+
+Analyzer::~Analyzer() {
+}
+
+class Statement {
+  private:
+    sqlite3 *database_;
+    sqlite3_stmt *statement_;
+
+  public:
+    Statement() :
+        statement_(nullptr)
+    {
+    }
+
+    Statement(sqlite3 *database, const char *code) :
+        database_(database)
+    {
+        orc_sqlcall(sqlite3_prepare_v2(database_, code, -1, &statement_, NULL));
+    }
+
+    ~Statement() { try {
+        if (statement_ != nullptr)
+            orc_sqlcall(sqlite3_finalize(statement_));
+    } catch (...) {
+        orc_insist(false);
+    } }
+
+    void operator ()() {
+        orc_sqlcall(sqlite3_reset(statement_));
+        orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
+    }
+
+    void operator ()(int64_t value) {
+        orc_sqlcall(sqlite3_reset(statement_));
+        orc_sqlcall(sqlite3_bind_int64(statement_, 1, value));
+        orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
+    }
+};
+
+class Database {
+  private:
+    sqlite3 *database_;
+
+  public:
+    Database(const std::string &path) {
+        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL));
+    }
+
+    ~Database() { try {
+        orc_sqlcall(sqlite3_close(database_));
+    } catch (...) {
+        orc_insist(false);
+    } }
+
+    operator sqlite3 *() const {
+        return database_;
+    }
+};
+
+class LoggerDatabase :
+    public Database
+{
+  public:
+    LoggerDatabase(const std::string &path) :
+        Database(path)
+    {
+        Statement(*this, R"(
+            create table if not exists "flow" (
+                "start" real,
+                "address" integer
+            );
+        )")();
+    }
+};
+
+class Logger :
+    public Analyzer
+{
+  private:
+    LoggerDatabase database_;
+    Statement insert_;
+
+  public:
+    Logger(const std::string &path) :
+        database_(path),
+        insert_(database_, R"(
+            insert into flow (
+                "start", "address"
+            ) values (
+                julianday('now'), ?
+            )
+        )")
+    {
+    }
+
+    void Analyze(Span<> &span) override {
+        auto &ip4(span.cast<openvpn::IPv4Header>());
+        if (ip4.protocol == openvpn::IPCommon::TCP) {
+            auto length(openvpn::IPv4Header::length(ip4.version_len));
+            auto &tcp(span.cast<openvpn::TCPHeader>(length));
+            if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) != 0) {
+                auto destination(boost::endian::big_to_native(ip4.daddr));
+                Log() << "TCP=" << std::hex << destination << ":" << std::dec << boost::endian::big_to_native(tcp.dest) << std::endl;
+                insert_(destination);
+            }
+        }
+    }
+};
 
 class Route :
     public BufferDrain,
@@ -63,14 +183,7 @@ void Capture::Land(const Buffer &data) {
 
     // analyze/monitor data
 
-    auto &ip4(span.cast<openvpn::IPv4Header>());
-    if (ip4.protocol == openvpn::IPCommon::TCP) {
-        auto length(openvpn::IPv4Header::length(ip4.version_len));
-        auto &tcp(span.cast<openvpn::TCPHeader>(length));
-        if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) != 0) {
-            Log() << "TCP=" << std::hex << boost::endian::big_to_native(ip4.daddr) << ":" << std::dec << boost::endian::big_to_native(tcp.dest) << std::endl;
-        }
-    }
+    analyzer_->Analyze(span);
 
     if (route_) Spawn([this, beam = std::move(beam)]() -> task<void> {
         co_return co_await route_->Send(beam);
@@ -90,11 +203,16 @@ void Capture::Send(const Buffer &data) {
 }
 
 Capture::Capture(const std::string &local) :
+    analyzer_(std::make_unique<Logger>(Group() + "/analysis.db")),
     local_(openvpn::IPv4::Addr::from_string(local).to_uint32())
 {
 }
 
 Capture::~Capture() = default;
+
+task<void> Capture::Start() {
+    co_return;
+}
 
 task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
     auto origin(co_await Setup());
