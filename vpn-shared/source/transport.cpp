@@ -280,9 +280,10 @@ class Client :
     }
 
   public:
-    Client(BufferDrain *drain, S<Origin> origin) :
+    Client(BufferDrain *drain, S<Origin> origin, uint32_t local) :
         Link(drain),
-        origin_(std::move(origin))
+        origin_(std::move(origin)),
+        local_(local)
     {
     }
 
@@ -370,7 +371,7 @@ _trace();
         data.copy(buffer.data(), buffer.size());
 
         Span span(buffer.data(), buffer.size());
-        local_ = Forge4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32());
+        orc_assert(Forge4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32()) == local_);
 
         //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
         if (parent_ != nullptr)
@@ -379,8 +380,8 @@ _trace();
     }
 };
 
-task<void> Connect(Sunk<> *sunk, S<Origin> origin, std::string ovpnfile, std::string username, std::string password) {
-    auto client(sunk->Wire<Sink<Client>>(std::move(origin)));
+task<void> Connect(Sunk<> *sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password) {
+    auto client(sunk->Wire<Sink<Client>>(std::move(origin), local));
 
     {
         openvpn::ClientAPI::Config config;

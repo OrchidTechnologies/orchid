@@ -34,6 +34,8 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
 
     orc_assert(file != -1);
 
+    std::string local("10.7.0.3");
+
     const char* cDir = env->GetStringUTFChars(dir, NULL);
     files_dir = std::string(cDir);
     env->ReleaseStringUTFChars(dir, cDir);
@@ -45,7 +47,7 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
     std::string username(ORCHID_USERNAME);
     std::string password(ORCHID_PASSWORD);
 
-    auto capture(std::make_unique<Sink<Capture>>());
+    auto capture(std::make_unique<Sink<Capture>>(local));
     auto connection(capture->Wire<File<asio::posix::stream_descriptor>>(file));
     connection->Start();
 

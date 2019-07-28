@@ -77,7 +77,7 @@ int Main(int argc, const char *const argv[]) {
 
     std::string local("10.7.0.3");
 
-    auto capture(Make<Sink<Capture>>());
+    auto capture(Make<Sink<Capture>>(local));
 
 #if 0
 #elif defined(__APPLE__)

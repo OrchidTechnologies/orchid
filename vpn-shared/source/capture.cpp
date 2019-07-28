@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <openvpn/addr/ipv4.hpp>
+
 #include "capture.hpp"
 #include "forge.hpp"
 #include "transport.hpp"
@@ -87,7 +89,9 @@ void Capture::Send(const Buffer &data) {
     });
 }
 
-Capture::Capture() {
+Capture::Capture(const std::string &local) :
+    local_(openvpn::IPv4::Addr::from_string(local).to_uint32())
+{
 }
 
 Capture::~Capture() = default;
@@ -95,7 +99,7 @@ Capture::~Capture() = default;
 task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
     auto origin(co_await Setup());
     auto route(std::make_unique<Sink<Route>>(this));
-    co_await Connect(route.get(), std::move(origin), std::move(ovpnfile), std::move(username), std::move(password));
+    co_await Connect(route.get(), std::move(origin), local_, std::move(ovpnfile), std::move(username), std::move(password));
     route_ = std::move(route);
 }
 

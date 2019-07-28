@@ -32,6 +32,7 @@ class Capture :
     public BufferDrain
 {
   public:
+    uint32_t local_;
     U<Pipe> route_;
 
   protected:
@@ -41,7 +42,7 @@ class Capture :
     void Stop(const std::string &error) override;
 
   public:
-    Capture();
+    Capture(const std::string &local);
     ~Capture();
 
     void Send(const Buffer &data) override;
