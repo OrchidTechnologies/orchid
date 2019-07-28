@@ -20,12 +20,8 @@
 /* }}} */
 
 
-#include <openvpn/ip/csum.hpp>
-#include <openvpn/ip/ip4.hpp>
-#include <openvpn/ip/tcp.hpp>
-#include <openvpn/ip/udp.hpp>
-
 #include "capture.hpp"
+#include "forge.hpp"
 #include "transport.hpp"
 
 namespace orc {

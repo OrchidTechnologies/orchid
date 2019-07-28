@@ -28,11 +28,6 @@
 #define OPENVPN_LOG_INFO openvpn::ClientAPI::LogInfo
 #include <openvpn/log/logthread.hpp>
 
-#include <openvpn/ip/csum.hpp>
-#include <openvpn/ip/ip4.hpp>
-#include <openvpn/ip/tcp.hpp>
-#include <openvpn/ip/udp.hpp>
-
 #include <openvpn/transport/client/extern/config.hpp>
 
 #include <openvpn/tun/client/tunbase.hpp>
@@ -42,6 +37,7 @@
 
 #include "client.hpp"
 #include "error.hpp"
+#include "forge.hpp"
 #include "protect.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
@@ -191,47 +187,6 @@ class Factory :
     }
 };
 
-static uint32_t Forge4(openvpn::BufferAllocated &buffer, uint32_t (openvpn::IPv4Header::*field), uint32_t value) {
-    Span span(buffer.data(), buffer.size());
-    auto &ip4(span.cast<openvpn::IPv4Header>());
-
-    auto before(boost::endian::big_to_native(ip4.*field));
-    auto adjust((int32_t(before >> 16) + int32_t(before & 0xffff)) - (int32_t(value >> 16) + int32_t(value & 0xffff)));
-
-    ip4.*field = boost::endian::native_to_big(value);
-    boost::endian::big_to_native_inplace(ip4.check);
-    openvpn::tcp_adjust_checksum(adjust, ip4.check);
-    boost::endian::native_to_big_inplace(ip4.check);
-
-    auto length(openvpn::IPv4Header::length(ip4.version_len));
-    orc_assert(span.size() >= length);
-
-#if 0
-    auto check(ip4.check);
-    ip4.check = 0;
-    orc_insist(openvpn::IPChecksum::checksum(span.data(), length) == check);
-    ip4.check = check;
-#endif
-
-    switch (ip4.protocol) {
-        case openvpn::IPCommon::TCP: {
-            auto &tcp(span.cast<openvpn::TCPHeader>(length));
-            boost::endian::big_to_native_inplace(tcp.check);
-            openvpn::tcp_adjust_checksum(adjust, tcp.check);
-            boost::endian::native_to_big_inplace(tcp.check);
-        } break;
-
-        case openvpn::IPCommon::UDP: {
-            auto &udp(span.cast<openvpn::UDPHeader>(length));
-            boost::endian::big_to_native_inplace(udp.check);
-            openvpn::tcp_adjust_checksum(adjust, udp.check);
-            boost::endian::native_to_big_inplace(udp.check);
-        } break;
-    }
-
-    return before;
-}
-
 // tunnels to the left of me, transports to the right;
 // here I am, stuck in the middle with you... - Client
 
@@ -296,7 +251,8 @@ class Client :
     }
 
     void Forge(openvpn::BufferAllocated &buffer) {
-        Forge4(buffer, &openvpn::IPv4Header::daddr, local_);
+        Span span(buffer.data(), buffer.size());
+        Forge4(span, &openvpn::IPv4Header::daddr, local_);
     }
 
   private:
@@ -413,7 +369,8 @@ _trace();
         buffer.reset_offset(headroom);
         data.copy(buffer.data(), buffer.size());
 
-        local_ = Forge4(buffer, &openvpn::IPv4Header::saddr, ip4_.to_uint32());
+        Span span(buffer.data(), buffer.size());
+        local_ = Forge4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32());
 
         //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
         if (parent_ != nullptr)
