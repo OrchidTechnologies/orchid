@@ -42,10 +42,29 @@ namespace orc {
 Analyzer::~Analyzer() {
 }
 
+template <typename... Args_>
 class Statement {
   private:
     sqlite3 *database_;
     sqlite3_stmt *statement_;
+
+    template <unsigned Index_>
+    void Bind() {
+    }
+
+#define orc_bind(name, type, ...) \
+    template <unsigned Index_, typename... Rest_> \
+    void Bind(type value, Rest_ &&...rest) { \
+        orc_sqlcall(sqlite3_bind_ ## name(statement_, Index_, ## __VA_ARGS__)); \
+        return Bind<Index_ + 1>(std::forward<Rest_>(rest)...); \
+    }
+
+    orc_bind(double, double, value)
+    orc_bind(int, int, value)
+    orc_bind(int64, int64_t, value)
+    orc_bind(null, nullptr_t)
+    orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
+    orc_bind(text, const std::string &, value.c_str(), value.size(), SQLITE_TRANSIENT)
 
   public:
     Statement() :
@@ -66,15 +85,11 @@ class Statement {
         orc_insist(false);
     } }
 
-    void operator ()() {
+    void operator ()(Args_ &&...args) {
         orc_sqlcall(sqlite3_reset(statement_));
+        Bind<1>(std::forward<Args_>(args)...);
         orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
-    }
-
-    void operator ()(int64_t value) {
-        orc_sqlcall(sqlite3_reset(statement_));
-        orc_sqlcall(sqlite3_bind_int64(statement_, 1, value));
-        orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
+        orc_sqlcall(sqlite3_clear_bindings(statement_));
     }
 };
 
@@ -105,7 +120,7 @@ class LoggerDatabase :
     LoggerDatabase(const std::string &path) :
         Database(path)
     {
-        Statement(*this, R"(
+        Statement<>(*this, R"(
             create table if not exists "flow" (
                 "start" real,
                 "address" integer
@@ -119,7 +134,7 @@ class Logger :
 {
   private:
     LoggerDatabase database_;
-    Statement insert_;
+    Statement<int64_t> insert_;
 
   public:
     Logger(const std::string &path) :
