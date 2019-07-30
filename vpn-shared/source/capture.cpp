@@ -28,6 +28,7 @@
 #include "directory.hpp"
 #include "forge.hpp"
 #include "transport.hpp"
+#include "monitor.hpp"
 
 #define orc_sqlstep(expr) ({ \
     auto _value(expr); \
@@ -145,6 +146,7 @@ class Logger :
                 insert_(destination);
             }
         }
+        monitor(beam.data(), beam.size());
     }
 };
 
