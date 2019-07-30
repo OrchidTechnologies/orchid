@@ -17,11 +17,13 @@ $(output)/sqlite/Makefile: $(pwd)/sqlite/configure
 	mkdir -p $(output)/sqlite
 	cd $(output)/sqlite && $(CURDIR)/$(pwd)/sqlite/configure --enable-static --disable-shared --disable-tcl
 
-$(output)/sqlite/sqlit%3.h $(output)/sqlite/sqlit%3.c: pwd := $(pwd)
-$(output)/sqlite/sqlit%3.h $(output)/sqlite/sqlit%3.c: $(output)/sqlite/Makefil%
+$(output)/$(pwd)/sqlit%3.h $(output)/sqlite/sqlit%3.c: pwd := $(pwd)
+$(output)/$(pwd)/sqlit%3.h $(output)/sqlite/sqlit%3.c: $(output)/sqlite/Makefil%
 	touch $(pwd)/sqlite/manifest{,.uuid}
 	$(MAKE) -C $(output)/sqlite sqlite3.c
 	rm -f $(pwd)/sqlite/manifest{,.uuid}
+	mkdir -p $(output)/$(pwd)
+	cp -af $(output)/sqlite/sqlite3.h $(output)/$(pwd)/sqlite3.h
 
 cflags += -DSQLITE_DQS=0
 cflags += -DSQLITE_ENABLE_RTREE
@@ -32,6 +34,6 @@ cflags += -DSQLITE_OMIT_TCL_VARIABLE
 
 source += $(output)/sqlite/sqlite3.c
 
-cflags += -I$(output)/sqlite
-header += $(output)/sqlite/sqlite3.h
+cflags += -I$(output)/$(pwd)
+header += $(output)/$(pwd)/sqlite3.h
 endif
