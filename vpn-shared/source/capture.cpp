@@ -67,15 +67,17 @@ class Statement {
         orc_insist(false);
     } }
 
-    void operator ()() {
+    sqlite3_int64 operator ()() {
         orc_sqlcall(sqlite3_reset(statement_));
         orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
+        return sqlite3_last_insert_rowid(database_);
     }
 
-    void operator ()(int64_t value) {
+    sqlite3_int64 operator ()(int64_t value) {
         orc_sqlcall(sqlite3_reset(statement_));
         orc_sqlcall(sqlite3_bind_int64(statement_, 1, value));
         orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
+        return sqlite3_last_insert_rowid(database_);
     }
 };
 
