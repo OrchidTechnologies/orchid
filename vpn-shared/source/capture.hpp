@@ -34,6 +34,15 @@ class Analyzer {
     virtual void Analyze(Span<> &span) = 0;
 };
 
+typedef std::tuple<std::string, asio::ip::address, uint16_t, asio::ip::address, uint16_t> FiveTuple;
+
+class MonitorLogger
+{
+  public:
+    virtual void AddFlow(FiveTuple const &flow) = 0;
+    virtual void GotHostname(FiveTuple const &flow, std::string hostname) = 0;
+};
+
 class Capture :
     public Sync,
     public BufferDrain

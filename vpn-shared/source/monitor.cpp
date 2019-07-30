@@ -6,12 +6,15 @@
 #include <openvpn/ip/udp.hpp>
 
 #include "buffer.hpp"
+#include "monitor.hpp"
 
 using namespace openvpn;
+using namespace asio::ip;
 
 
 namespace orc {
 
+typedef std::function<void (std::string)> sni_callback;
 
 #define MAX_DNSMSG_SIZE 	512			/**< Maximum size of DNS message */
 #define MAX_DOMAINNAME_LEN	50			/**< Maximum size of domain name */
@@ -110,7 +113,7 @@ void get_DNS_questions(const uint8_t *data, int end)
     }
 }
 
-void get_quic_SNI(const uint8_t *data, size_t len)
+void get_quic_SNI(const uint8_t *data, size_t len, const sni_callback callback)
 {
     // CID
     if (len < 1) {
@@ -206,16 +209,18 @@ void get_quic_SNI(const uint8_t *data, size_t len)
         }
 
         if (memcmp(subTag, "SNI\x00", 4) == 0) {
-            const char *sni = (const char*)(&tagDataStart[start]);
+            const char *snidata = (const char*)(&tagDataStart[start]);
             size_t snilen = endOffset - start;
-            Log() << "QUIC SNI(" << snilen << "): \"" << std::string(sni, snilen) << "\"" << std::endl;
+            std::string sni(snidata, snilen);
+            Log() << "QUIC SNI(" << snilen << "): \"" << sni << "\"" << std::endl;
+            callback(sni);
         }
         start = endOffset;
         tagLen--;
     }
 }
 
-void get_TLS_SNI(const uint8_t *data, int end)
+void get_TLS_SNI(const uint8_t *data, int end, const sni_callback callback)
 {
     /*
     From https://tools.ietf.org/html/rfc5246:
@@ -388,7 +393,9 @@ void get_TLS_SNI(const uint8_t *data, int end)
                 // verify we have enough bytes
                 if (n > end - nameLength) return;
 
-                Log() << "TLS SNI(" << nameLength << "): \"" << std::string((char*)&data[n], nameLength) << "\"" << std::endl;
+                std::string sni((char*)&data[n], nameLength);
+                Log() << "TLS SNI(" << nameLength << "): \"" << sni << "\"" << std::endl;
+                callback(sni);
                 return;
             }
 
@@ -398,7 +405,7 @@ void get_TLS_SNI(const uint8_t *data, int end)
 }
 
 
-void monitor(const uint8_t *buf, size_t len)
+void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
 {
     if (len < 1) {
         return;
@@ -431,8 +438,12 @@ void monitor(const uint8_t *buf, size_t len)
         }
         auto tcp_payload_len = ip_payload_len - tcphlen;
         Log() << "TCP(" << tcp_payload_len << ") dest:" << ntohs(tcphdr->dest) << std::endl;
+        auto flow = FiveTuple("TCP", address_v4(ntohl(iphdr->daddr)), ntohs(tcphdr->dest), address_v4(ntohl(iphdr->saddr)), ntohs(tcphdr->source));
+        logger.AddFlow(flow);
         auto tcpbuf = ((const uint8_t *)tcphdr) + tcphlen;
-        get_TLS_SNI(tcpbuf, tcp_payload_len);
+        get_TLS_SNI(tcpbuf, tcp_payload_len, [&](auto sni) {
+            logger.GotHostname(flow, sni);
+        });
         break;
     }
     case IPCommon::UDP: {
@@ -443,10 +454,14 @@ void monitor(const uint8_t *buf, size_t len)
         auto udp_payload_len = ip_payload_len - sizeof(UDPHeader);
         Log() << "UDP(" << udp_payload_len << ") dest:" << ntohs(udphdr->dest) << std::endl;
         auto udpbuf = ((const uint8_t *)udphdr) + sizeof(UDPHeader);
+        auto flow = FiveTuple("UDP", address_v4(ntohl(iphdr->daddr)), ntohs(udphdr->dest), address_v4(ntohl(iphdr->saddr)), ntohs(udphdr->source));
+        logger.AddFlow(flow);
         if (ntohs(udphdr->dest) == 53) {
             get_DNS_questions(udpbuf, udp_payload_len);
         }
-        get_quic_SNI(udpbuf, udp_payload_len);
+        get_quic_SNI(udpbuf, udp_payload_len, [&](auto sni) {
+            logger.GotHostname(flow, sni);
+        });
         break;
     }
     }

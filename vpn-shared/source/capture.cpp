@@ -62,6 +62,7 @@ class Statement {
 
     orc_bind(double, double, value)
     orc_bind(int, int, value)
+    orc_bind(int, uint, value)
     orc_bind(int64, int64_t, value)
     orc_bind(null, nullptr_t)
     orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
@@ -125,28 +126,45 @@ class LoggerDatabase :
         Statement<>(*this, R"(
             create table if not exists "flow" (
                 "start" real,
-                "address" integer
+                "protocol" text,
+                "src_addr" integer,
+                "src_port" integer,
+                "dst_addr" integer,
+                "dst_port" integer,
+                "hostname" text
             );
         )")();
     }
 };
 
+// five_tuple => sqlite row
+typedef std::map<FiveTuple, sqlite3_int64> FiveTupleMap;
+// IP => hostname (most recent)
+typedef std::map<asio::ip::address, std::string> DnsLog;
+
 class Logger :
-    public Analyzer
+    public Analyzer,
+    public MonitorLogger
 {
   private:
     LoggerDatabase database_;
-    Statement<int64_t> insert_;
+    Statement<std::string&, uint32_t&, uint16_t&, uint32_t&, uint16_t&> insert_;
+    Statement<std::string&, sqlite3_int64&> update_;
+    DnsLog dns_log_;
+    FiveTupleMap five_tuple_map_;
 
   public:
     Logger(const std::string &path) :
         database_(path),
         insert_(database_, R"(
             insert into flow (
-                "start", "address"
+                "start", "protocol", "src_addr", "src_port", "dst_addr", "dst_port"
             ) values (
-                julianday('now'), ?
+                julianday('now'), ?, ?, ?, ?, ?
             )
+        )"),
+        update_(database_, R"(
+            update flow set hostname = ? where _rowid_ = ?
         )")
     {
     }
@@ -159,10 +177,37 @@ class Logger :
             if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) != 0) {
                 auto destination(boost::endian::big_to_native(ip4.daddr));
                 Log() << "TCP=" << std::hex << destination << ":" << std::dec << boost::endian::big_to_native(tcp.dest) << std::endl;
-                insert_(destination);
+                //insert_(destination);
             }
         }
-        monitor(span.data(), span.size());
+        monitor(span.data(), span.size(), *this);
+    }
+
+    void AddFlow(FiveTuple const &flow) {
+        auto it = five_tuple_map_.find(flow);
+        if (it != five_tuple_map_.end()) {
+            return;
+        }
+        auto protocol = std::get<0>(flow);
+        auto src_addr = std::get<1>(flow);
+        auto src_port = std::get<2>(flow);
+        auto dst_addr = std::get<3>(flow);
+        auto dst_port = std::get<4>(flow);
+        // TODO: IPv6
+        auto src = src_addr.to_v4().to_uint();
+        auto dst = dst_addr.to_v4().to_uint();
+        auto row_id = insert_(protocol, src, src_port, dst, dst_port);
+        five_tuple_map_.insert({flow, row_id});
+    }
+
+    void GotHostname(FiveTuple const &flow, std::string hostname) {
+        auto it = five_tuple_map_.find(flow);
+        if (it == five_tuple_map_.end()) {
+            orc_assert(false);
+            return;
+        }
+        auto row_id = it->second;
+        update_(hostname, row_id);
     }
 };
 
