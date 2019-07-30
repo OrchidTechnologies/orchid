@@ -146,7 +146,7 @@ class Logger :
                 insert_(destination);
             }
         }
-        monitor(beam.data(), beam.size());
+        monitor(span.data(), span.size());
     }
 };
 
