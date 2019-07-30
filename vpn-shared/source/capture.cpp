@@ -86,11 +86,12 @@ class Statement {
         orc_insist(false);
     } }
 
-    void operator ()(Args_ &&...args) {
+    sqlite3_int64 operator ()(Args_ &&...args) {
         orc_sqlcall(sqlite3_reset(statement_));
         Bind<1>(std::forward<Args_>(args)...);
         orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
         orc_sqlcall(sqlite3_clear_bindings(statement_));
+        return sqlite3_last_insert_rowid(database_);
     }
 };
 
