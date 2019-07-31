@@ -61,7 +61,7 @@ class Capture :
 
   public:
     Capture(const std::string &local);
-    ~Capture();
+    ~Capture() override;
 
     void Send(const Buffer &data) override;
 

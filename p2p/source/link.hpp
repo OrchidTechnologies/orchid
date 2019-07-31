@@ -45,8 +45,7 @@ inline Tag NewTag() {
 
 class Sync {
   public:
-    virtual ~Sync() {
-    }
+    virtual ~Sync() = default;
 
     virtual void Send(const Buffer &data) = 0;
 };

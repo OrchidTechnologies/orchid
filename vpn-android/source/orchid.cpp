@@ -1,13 +1,14 @@
 #include <fcntl.h>
 #include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <stdio.h>
-#include <jni.h>
-#include <android/log.h>
 
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <string>
+
+#include <android/log.h>
+#include <jni.h>
 
 #include "capture.hpp"
 #include "file.hpp"
@@ -36,7 +37,7 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
 
     std::string local("10.7.0.3");
 
-    const char* cDir = env->GetStringUTFChars(dir, NULL);
+    const char* cDir = env->GetStringUTFChars(dir, nullptr);
     files_dir = std::string(cDir);
     env->ReleaseStringUTFChars(dir, cDir);
 

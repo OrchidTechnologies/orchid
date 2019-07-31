@@ -40,8 +40,7 @@ _value; })
 
 namespace orc {
 
-Analyzer::~Analyzer() {
-}
+Analyzer::~Analyzer() = default;
 
 template <typename... Args_>
 class Statement {
@@ -65,7 +64,10 @@ class Statement {
     orc_bind(int, uint, value)
     orc_bind(int64, int64_t, value)
     orc_bind(null, nullptr_t)
+
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const std::string &, value.c_str(), value.size(), SQLITE_TRANSIENT)
 
   public:
@@ -77,7 +79,7 @@ class Statement {
     Statement(sqlite3 *database, const char *code) :
         database_(database)
     {
-        orc_sqlcall(sqlite3_prepare_v2(database_, code, -1, &statement_, NULL));
+        orc_sqlcall(sqlite3_prepare_v2(database_, code, -1, &statement_, nullptr));
     }
 
     ~Statement() { try {
@@ -87,9 +89,9 @@ class Statement {
         orc_insist(false);
     } }
 
-    sqlite3_int64 operator ()(Args_ &&...args) {
+    sqlite3_int64 operator ()(const Args_ &...args) {
         orc_sqlcall(sqlite3_reset(statement_));
-        Bind<1>(std::forward<Args_>(args)...);
+        Bind<1>(args...);
         orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
         orc_sqlcall(sqlite3_clear_bindings(statement_));
         return sqlite3_last_insert_rowid(database_);
@@ -102,7 +104,7 @@ class Database {
 
   public:
     Database(const std::string &path) {
-        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL));
+        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr));
     }
 
     ~Database() { try {
@@ -148,8 +150,8 @@ class Logger :
 {
   private:
     LoggerDatabase database_;
-    Statement<std::string&, uint32_t&, uint16_t&, uint32_t&, uint16_t&> insert_;
-    Statement<std::string&, sqlite3_int64&> update_;
+    Statement<std::string, uint32_t, uint16_t, uint32_t, uint16_t> insert_;
+    Statement<std::string, sqlite3_int64> update_;
     DnsLog dns_log_;
     FiveTupleMap five_tuple_map_;
 
@@ -183,16 +185,16 @@ class Logger :
         monitor(span.data(), span.size(), *this);
     }
 
-    void AddFlow(FiveTuple const &flow) {
+    void AddFlow(FiveTuple const &flow) override {
         auto it = five_tuple_map_.find(flow);
         if (it != five_tuple_map_.end()) {
             return;
         }
-        auto protocol = std::get<0>(flow);
-        auto src_addr = std::get<1>(flow);
-        auto src_port = std::get<2>(flow);
-        auto dst_addr = std::get<3>(flow);
-        auto dst_port = std::get<4>(flow);
+        const auto &protocol = std::get<0>(flow);
+        const auto &src_addr = std::get<1>(flow);
+        const auto &src_port = std::get<2>(flow);
+        const auto &dst_addr = std::get<3>(flow);
+        const auto &dst_port = std::get<4>(flow);
         // TODO: IPv6
         auto src = src_addr.to_v4().to_uint();
         auto dst = dst_addr.to_v4().to_uint();
@@ -200,7 +202,7 @@ class Logger :
         five_tuple_map_.insert({flow, row_id});
     }
 
-    void GotHostname(FiveTuple const &flow, std::string hostname) {
+    void GotHostname(FiveTuple const &flow, std::string hostname) override {
         auto it = five_tuple_map_.find(flow);
         if (it == five_tuple_map_.end()) {
             orc_assert(false);
