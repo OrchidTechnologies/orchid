@@ -96,12 +96,12 @@ inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
 
 class Five final {
   private:
-    unsigned protocol_;
+    uint8_t protocol_;
     Socket source_;
     Socket target_;
 
   public:
-    Five(unsigned protocol, Socket source, Socket target) :
+    Five(uint8_t protocol, Socket source, Socket target) :
         protocol_(protocol),
         source_(std::move(source)),
         target_(std::move(target))
@@ -122,7 +122,7 @@ class Five final {
     {
     }
 
-    unsigned Protocol() const {
+    uint8_t Protocol() const {
         return protocol_;
     }
 
