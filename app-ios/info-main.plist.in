@@ -16,7 +16,7 @@
     <string>@NAME@</string>
 
     <key>CFBundleIdentifier</key>
-    <string>@DOMAIN@.@NAME@.App</string>
+    <string>@DOMAIN@.@NAME@</string>
     <key>CFBundleName</key>
     <string>@NAME@</string>
     <key>CFBundleShortVersionString</key>
