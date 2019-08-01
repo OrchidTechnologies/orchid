@@ -20,103 +20,18 @@
 /* }}} */
 
 
-#include <sqlite3.h>
-
 #include <openvpn/addr/ipv4.hpp>
 
 #include "capture.hpp"
+#include "database.hpp"
 #include "directory.hpp"
 #include "forge.hpp"
 #include "transport.hpp"
 #include "monitor.hpp"
 
-#define orc_sqlstep(expr) ({ \
-    auto _value(expr); \
-    orc_assert_(_value == 0 || _value >= 100 && _value < 200, "orc_sqlcall(" #expr ") " << _value << ":" << sqlite3_errmsg(database_)); \
-_value; })
-
-#define orc_sqlcall(expr) \
-    orc_assert(orc_sqlstep(expr) == SQLITE_OK)
-
 namespace orc {
 
 Analyzer::~Analyzer() = default;
-
-template <typename... Args_>
-class Statement {
-  private:
-    sqlite3 *database_;
-    sqlite3_stmt *statement_;
-
-    template <unsigned Index_>
-    void Bind() {
-    }
-
-#define orc_bind(name, type, ...) \
-    template <unsigned Index_, typename... Rest_> \
-    void Bind(type value, Rest_ &&...rest) { \
-        orc_sqlcall(sqlite3_bind_ ## name(statement_, Index_, ## __VA_ARGS__)); \
-        return Bind<Index_ + 1>(std::forward<Rest_>(rest)...); \
-    }
-
-    orc_bind(double, double, value)
-    orc_bind(int, int, value)
-    orc_bind(int, uint, value)
-    orc_bind(int64, int64_t, value)
-    orc_bind(null, nullptr_t)
-
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
-    orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
-    orc_bind(text, const std::string &, value.c_str(), value.size(), SQLITE_TRANSIENT)
-
-  public:
-    Statement() :
-        statement_(nullptr)
-    {
-    }
-
-    Statement(sqlite3 *database, const char *code) :
-        database_(database)
-    {
-        orc_sqlcall(sqlite3_prepare_v2(database_, code, -1, &statement_, nullptr));
-    }
-
-    ~Statement() { try {
-        if (statement_ != nullptr)
-            orc_sqlcall(sqlite3_finalize(statement_));
-    } catch (...) {
-        orc_insist(false);
-    } }
-
-    sqlite3_int64 operator ()(const Args_ &...args) {
-        orc_sqlcall(sqlite3_reset(statement_));
-        Bind<1>(args...);
-        orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
-        orc_sqlcall(sqlite3_clear_bindings(statement_));
-        return sqlite3_last_insert_rowid(database_);
-    }
-};
-
-class Database {
-  private:
-    sqlite3 *database_;
-
-  public:
-    Database(const std::string &path) {
-        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr));
-    }
-
-    ~Database() { try {
-        orc_sqlcall(sqlite3_close(database_));
-    } catch (...) {
-        orc_insist(false);
-    } }
-
-    operator sqlite3 *() const {
-        return database_;
-    }
-};
 
 class LoggerDatabase :
     public Database
