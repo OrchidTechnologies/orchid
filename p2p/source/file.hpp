@@ -73,12 +73,10 @@ class File final :
                     break;
                 }
 
-                Beam beam(data, writ);
-
+                Subset region(data, writ);
                 if (Verbose)
-                    Log() << "\e[33mRECV " << writ << " " << beam << "\e[0m" << std::endl;
-
-                Land(beam);
+                    Log() << "\e[33mRECV " << writ << " " << region << "\e[0m" << std::endl;
+                Land(region);
             }
         });
     }
