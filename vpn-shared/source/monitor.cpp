@@ -7,6 +7,7 @@
 
 #include "buffer.hpp"
 #include "monitor.hpp"
+#include "socket.hpp"
 
 using namespace openvpn;
 using namespace asio::ip;
@@ -438,7 +439,7 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         }
         auto tcp_payload_len = ip_payload_len - tcphlen;
         Log() << "TCP(" << tcp_payload_len << ") dest:" << ntohs(tcphdr->dest) << std::endl;
-        auto flow = FiveTuple("TCP", address_v4(ntohl(iphdr->daddr)), ntohs(tcphdr->dest), address_v4(ntohl(iphdr->saddr)), ntohs(tcphdr->source));
+        auto flow = Five(IPCommon::TCP, {address_v4(ntohl(iphdr->daddr)), ntohs(tcphdr->dest)}, {address_v4(ntohl(iphdr->saddr)), ntohs(tcphdr->source)});
         logger.AddFlow(flow);
         auto tcpbuf = ((const uint8_t *)tcphdr) + tcphlen;
         get_TLS_SNI(tcpbuf, tcp_payload_len, [&](auto sni) {
@@ -454,7 +455,7 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         auto udp_payload_len = ip_payload_len - sizeof(UDPHeader);
         Log() << "UDP(" << udp_payload_len << ") dest:" << ntohs(udphdr->dest) << std::endl;
         auto udpbuf = ((const uint8_t *)udphdr) + sizeof(UDPHeader);
-        auto flow = FiveTuple("UDP", address_v4(ntohl(iphdr->daddr)), ntohs(udphdr->dest), address_v4(ntohl(iphdr->saddr)), ntohs(udphdr->source));
+        auto flow = Five(IPCommon::UDP, {address_v4(ntohl(iphdr->daddr)), ntohs(udphdr->dest)}, {address_v4(ntohl(iphdr->saddr)), ntohs(udphdr->source)});
         logger.AddFlow(flow);
         if (ntohs(udphdr->dest) == 53) {
             get_DNS_questions(udpbuf, udp_payload_len);

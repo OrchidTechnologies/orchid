@@ -26,11 +26,13 @@
 #include <iostream>
 #include <string>
 
+#include <asio.hpp>
+
 namespace orc {
 
 class Socket final {
   private:
-    std::string host_;
+    asio::ip::address host_;
     uint16_t port_;
 
   public:
@@ -39,23 +41,106 @@ class Socket final {
     {
     }
 
-    Socket(std::string host, uint16_t port) :
+    Socket(asio::ip::address host, uint16_t port) :
         host_(std::move(host)),
         port_(port)
     {
     }
 
-    const std::string &Host() const {
+    Socket(const std::string &host, uint16_t port) :
+        host_(asio::ip::make_address(host)),
+        port_(port)
+    {
+    }
+
+    Socket(const Socket &rhs) :
+        host_(rhs.host_),
+        port_(rhs.port_)
+    {
+    }
+
+    Socket(Socket &&rhs) :
+        host_(std::move(rhs.host_)),
+        port_(rhs.port_)
+    {
+    }
+
+    Socket &operator =(const Socket &rhs) {
+        host_ = rhs.host_;
+        port_ = rhs.port_;
+        return *this;
+    }
+
+    Socket &operator =(Socket &&rhs) {
+        host_ = std::move(rhs.host_);
+        port_ = rhs.port_;
+        return *this;
+    }
+
+    const asio::ip::address &Host() const {
         return host_;
     }
 
     uint16_t Port() const {
         return port_;
     }
+
+    bool operator <(const Socket &rhs) const {
+        return std::tie(host_, port_) < std::tie(rhs.host_, rhs.port_);
+    }
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
     return out << socket.Host() << ":" << socket.Port();
+}
+
+class Five final {
+  private:
+    unsigned protocol_;
+    Socket source_;
+    Socket target_;
+
+  public:
+    Five(unsigned protocol, Socket source, Socket target) :
+        protocol_(protocol),
+        source_(std::move(source)),
+        target_(std::move(target))
+    {
+    }
+
+    Five(const Five &rhs) :
+        protocol_(rhs.protocol_),
+        source_(rhs.source_),
+        target_(rhs.target_)
+    {
+    }
+
+    Five(Five &&rhs) :
+        protocol_(rhs.protocol_),
+        source_(std::move(rhs.source_)),
+        target_(std::move(rhs.target_))
+    {
+    }
+
+    unsigned Protocol() const {
+        return protocol_;
+    }
+
+    const Socket &Source() const {
+        return source_;
+    }
+
+    const Socket &Target() const {
+        return target_;
+    }
+
+    bool operator <(const Five &rhs) const {
+        return std::tie(protocol_, source_, target_) < std::tie(rhs.protocol_, rhs.source_, rhs.target_);
+    }
+};
+
+inline std::ostream &operator <<(std::ostream &out, const Five &five) {
+    return out << five.Protocol() << "[" << five.Source() << " -> " << five.Target() << "]";
 }
 
 }

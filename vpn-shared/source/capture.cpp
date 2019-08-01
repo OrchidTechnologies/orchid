@@ -43,7 +43,7 @@ class LoggerDatabase :
         Statement<>(*this, R"(
             create table if not exists "flow" (
                 "start" real,
-                "protocol" text,
+                "protocol" integer,
                 "src_addr" integer,
                 "src_port" integer,
                 "dst_addr" integer,
@@ -54,8 +54,6 @@ class LoggerDatabase :
     }
 };
 
-// five_tuple => sqlite row
-typedef std::map<FiveTuple, sqlite3_int64> FiveTupleMap;
 // IP => hostname (most recent)
 typedef std::map<asio::ip::address, std::string> DnsLog;
 
@@ -65,10 +63,10 @@ class Logger :
 {
   private:
     LoggerDatabase database_;
-    Statement<std::string, uint32_t, uint16_t, uint32_t, uint16_t> insert_;
+    Statement<uint8_t, uint32_t, uint16_t, uint32_t, uint16_t> insert_;
     Statement<std::string, sqlite3_int64> update_;
     DnsLog dns_log_;
-    FiveTupleMap five_tuple_map_;
+    std::map<Five, sqlite3_int64> flows_;
 
   public:
     Logger(const std::string &path) :
@@ -100,31 +98,26 @@ class Logger :
         monitor(span.data(), span.size(), *this);
     }
 
-    void AddFlow(FiveTuple const &flow) override {
-        auto it = five_tuple_map_.find(flow);
-        if (it != five_tuple_map_.end()) {
+    void AddFlow(Five const &five) override {
+        auto flow(flows_.find(five));
+        if (flow != flows_.end())
             return;
-        }
-        const auto &protocol = std::get<0>(flow);
-        const auto &src_addr = std::get<1>(flow);
-        const auto &src_port = std::get<2>(flow);
-        const auto &dst_addr = std::get<3>(flow);
-        const auto &dst_port = std::get<4>(flow);
-        // TODO: IPv6
-        auto src = src_addr.to_v4().to_uint();
-        auto dst = dst_addr.to_v4().to_uint();
-        auto row_id = insert_(protocol, src, src_port, dst, dst_port);
-        five_tuple_map_.insert({flow, row_id});
+        const auto &source(five.Source());
+        const auto &target(five.Target());
+        // XXX: IPv6
+        flows_.emplace(five, insert_(five.Protocol(),
+            source.Host().to_v4().to_uint(), source.Port(),
+            target.Host().to_v4().to_uint(), target.Port()
+        ));
     }
 
-    void GotHostname(FiveTuple const &flow, std::string hostname) override {
-        auto it = five_tuple_map_.find(flow);
-        if (it == five_tuple_map_.end()) {
+    void GotHostname(Five const &five, const std::string &hostname) override {
+        auto flow(flows_.find(five));
+        if (flow == flows_.end()) {
             orc_assert(false);
             return;
         }
-        auto row_id = it->second;
-        update_(hostname, row_id);
+        update_(hostname, flow->second);
     }
 };
 
