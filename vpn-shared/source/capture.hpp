@@ -33,6 +33,7 @@ class Analyzer {
     virtual ~Analyzer();
 
     virtual void Analyze(Span<> &span) = 0;
+    virtual void AnalyzeIncoming(Span<> &span) = 0;
 };
 
 class MonitorLogger
