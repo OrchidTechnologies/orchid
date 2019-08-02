@@ -1,4 +1,3 @@
-
 #include <openvpn/ip/ipcommon.hpp>
 #include <openvpn/ip/ip4.hpp>
 #include <openvpn/ip/ip6.hpp>
@@ -16,103 +15,6 @@ using namespace asio::ip;
 namespace orc {
 
 typedef std::function<void (std::string)> sni_callback;
-
-#define MAX_DNSMSG_SIZE 	512			/**< Maximum size of DNS message */
-#define MAX_DOMAINNAME_LEN	50			/**< Maximum size of domain name */
-#define MAX_QNAME_LEN		128			/**< Maximum size of qname */
-
-struct DNSHeader {
-    unsigned short id; // identification number
-    unsigned char rd :1; // recursion desired
-    unsigned char tc :1; // truncated message
-    unsigned char aa :1; // authoritive answer
-    unsigned char opcode :4; // purpose of message
-    unsigned char qr :1; // query/response flag
-    unsigned char rcode :4; // response code
-    unsigned char cd :1; // checking disabled
-    unsigned char ad :1; // authenticated data
-    unsigned char z :1; // its z! reserved
-    unsigned char ra :1; // recursion available
-    unsigned short q_count; // number of question entries
-    unsigned short ans_count; // number of answer entries
-    unsigned short auth_count; // number of authority entries
-    unsigned short add_count; // number of resource entries
-};
-
-
-int parse_name(const uint8_t* dns_buf, char* cp, char* qname, u_int qname_maxlen)
-{
-    u_int slen;
-    int clen = 0;
-    int indirect = 0;
-    int nseg = 0;
-
-    for (;;) {
-        slen = *cp++;
-        if (!indirect) clen++;
-        
-        if ((slen & 0xc0) == 0xc0) {
-            cp = (char *)&dns_buf[((slen & 0x3f)<<8) + *cp];
-            if (!indirect) clen++;
-            indirect = 1;
-            slen = *cp++;
-        }
-
-        if (slen == 0)
-            break;
-
-        if (!indirect) clen += slen;
-
-        if ((qname_maxlen -= slen+1) < 0) {
-            return 0;
-        }
-        while (slen-- != 0) *qname++ = (char)*cp++;
-        *qname++ = '.';
-
-        nseg++;
-    }
-
-    if (nseg == 0) *qname++ = '.';
-    else --qname;
-
-    *qname = '\0';
-    return clen;
-}
-
-const u_char * dns_parse_question(const uint8_t* dns_buf, const u_char * cp)
-{
-    char name[MAX_QNAME_LEN];
-
-    int len = parse_name(dns_buf, (char*)cp, name, sizeof(name));
-    if (!len) {
-        return 0;
-    }
-
-    cp += len;
-    cp += 2;
-    cp += 2;
-    Log() << "DNS (Q)NAME field value: " << name << std::endl;
-    return cp;
-}
-
-void get_DNS_questions(const uint8_t *data, int end)
-{
-    if (sizeof(DNSHeader) > end) {
-        return;
-    }
-    DNSHeader *dnshdr = (DNSHeader*)data;
-    if (dnshdr->qr) {
-        return;
-    }
-    const uint8_t *cur_ptr = data + sizeof(DNSHeader);
-    for (size_t i = 0; i < ntohs(dnshdr->q_count); i++) {
-        // Question section
-        cur_ptr = dns_parse_question(data, cur_ptr);
-        if (!cur_ptr) {
-            return;
-        }
-    }
-}
 
 void get_quic_SNI(const uint8_t *data, size_t len, const sni_callback callback)
 {
@@ -439,7 +341,7 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         }
         auto tcp_payload_len = ip_payload_len - tcphlen;
         Log() << "TCP(" << tcp_payload_len << ") dest:" << ntohs(tcphdr->dest) << std::endl;
-        auto flow = Five(IPCommon::TCP, {address_v4(ntohl(iphdr->daddr)), ntohs(tcphdr->dest)}, {address_v4(ntohl(iphdr->saddr)), ntohs(tcphdr->source)});
+        auto flow = Five(IPCommon::TCP, {address_v4(ntohl(iphdr->saddr)), ntohs(tcphdr->source)}, {address_v4(ntohl(iphdr->daddr)), ntohs(tcphdr->dest)});
         logger.AddFlow(flow);
         auto tcpbuf = ((const uint8_t *)tcphdr) + tcphlen;
         get_TLS_SNI(tcpbuf, tcp_payload_len, [&](auto sni) {
@@ -455,11 +357,8 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         auto udp_payload_len = ip_payload_len - sizeof(UDPHeader);
         Log() << "UDP(" << udp_payload_len << ") dest:" << ntohs(udphdr->dest) << std::endl;
         auto udpbuf = ((const uint8_t *)udphdr) + sizeof(UDPHeader);
-        auto flow = Five(IPCommon::UDP, {address_v4(ntohl(iphdr->daddr)), ntohs(udphdr->dest)}, {address_v4(ntohl(iphdr->saddr)), ntohs(udphdr->source)});
+        auto flow = Five(IPCommon::UDP, {address_v4(ntohl(iphdr->saddr)), ntohs(udphdr->source)}, {address_v4(ntohl(iphdr->daddr)), ntohs(udphdr->dest)});
         logger.AddFlow(flow);
-        if (ntohs(udphdr->dest) == 53) {
-            get_DNS_questions(udpbuf, udp_payload_len);
-        }
         get_quic_SNI(udpbuf, udp_payload_len, [&](auto sni) {
             logger.GotHostname(flow, sni);
         });

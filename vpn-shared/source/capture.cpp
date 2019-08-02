@@ -22,6 +22,8 @@
 
 #include <openvpn/addr/ipv4.hpp>
 
+#include <dns.h>
+
 #include "capture.hpp"
 #include "database.hpp"
 #include "directory.hpp"
@@ -85,17 +87,45 @@ class Logger :
     }
 
     void Analyze(Span<> &span) override {
-        auto &ip4(span.cast<openvpn::IPv4Header>());
-        if (ip4.protocol == openvpn::IPCommon::TCP) {
-            auto length(openvpn::IPv4Header::length(ip4.version_len));
-            auto &tcp(span.cast<openvpn::TCPHeader>(length));
-            if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) != 0) {
-                auto destination(boost::endian::big_to_native(ip4.daddr));
-                Log() << "TCP=" << std::hex << destination << ":" << std::dec << boost::endian::big_to_native(tcp.dest) << std::endl;
-                //insert_(destination);
+        monitor(span.data(), span.size(), *this);
+    }
+
+    void get_DNS_answers(const uint8_t *data, int end) {
+        dns_decoded_t decoded[DNS_DECODEBUF_4K];
+        size_t decodesize = sizeof(decoded);
+
+        // From the author:
+        // And while passing in a char * declared buffer to dns_decode() may appear to
+        // work, it only works on *YOUR* system; it may not work on other systems.
+        dns_rcode rc = dns_decode(decoded, &decodesize, (const dns_packet_t *const)data, end);
+
+        if (rc != RCODE_OKAY) {
+            return;
+        }
+
+        dns_query_t *result = (dns_query_t *)decoded;
+        for (size_t i = 0; i < result->ancount; i++) {
+            // TODO: IPv6
+            if (result->answers[i].generic.type == RR_A) {
+                auto ip = asio::ip::address_v4(ntohl(result->answers[i].a.address));
+                auto hostname = std::string(result->answers[i].a.name);
+                hostname.pop_back();
+                Log() << "DNS " << hostname << " " << ip << std::endl;
+                dns_log_[ip] = hostname;
             }
         }
-        monitor(span.data(), span.size(), *this);
+    }
+
+    void AnalyzeIncoming(Span<> &span) override {
+        auto &ip4(span.cast<openvpn::IPv4Header>());
+        if (ip4.protocol == openvpn::IPCommon::UDP) {
+            auto length(openvpn::IPv4Header::length(ip4.version_len));
+            auto &udp(span.cast<openvpn::UDPHeader>(length));
+            if (ntohs(udp.source) == 53) {
+                auto skip = length + sizeof(openvpn::UDPHeader);
+                get_DNS_answers((span.data() + skip), span.size() - skip);
+            }
+        }
     }
 
     void AddFlow(Five const &five) override {
@@ -105,10 +135,16 @@ class Logger :
         const auto &source(five.Source());
         const auto &target(five.Target());
         // XXX: IPv6
-        flows_.emplace(five, insert_(five.Protocol(),
+        auto row_id = insert_(five.Protocol(),
             source.Host().to_v4().to_uint(), source.Port(),
             target.Host().to_v4().to_uint(), target.Port()
-        ));
+        );
+        flows_.emplace(five, row_id);
+
+        auto hostname(dns_log_.find(target.Host()));
+        if (hostname != dns_log_.end()) {
+            update_(hostname->second, row_id);
+        }
     }
 
     void GotHostname(Five const &five, const std::string &hostname) override {
@@ -169,6 +205,10 @@ void Capture::Stop(const std::string &error) {
 
 void Capture::Send(const Buffer &data) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
+
+    Beam beam(data);
+    Span span(beam.data(), beam.size());
+    analyzer_->AnalyzeIncoming(span);
 
     Spawn([this, data = Beam(data)]() -> task<void> {
         co_return co_await Inner()->Send(data);
