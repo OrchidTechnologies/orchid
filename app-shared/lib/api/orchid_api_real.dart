@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
+
+import 'orchid_budget_api.dart';
+import 'orchid_log_api.dart';
 
 class RealOrchidAPI implements OrchidAPI {
   static final RealOrchidAPI _singleton = RealOrchidAPI._internal();
@@ -95,11 +97,6 @@ class RealOrchidAPI implements OrchidAPI {
     return Future<OrchidWalletPublic>.value(null);
   }
 
-  /// This method may return null to indicate that no funding source is defined.
-  Future<double> getBalance() async {
-    return null;
-  }
-
   @override
   Future<bool> setExitVPNConfig(VPNConfig vpnConfig) {
     return Future<bool>.value(false);
@@ -131,5 +128,10 @@ class RealOrchidAPI implements OrchidAPI {
   @override
   void setDeveloperSetting({String name, String value}) {
     // TODO:
+  }
+
+  @override
+  OrchidBudgetAPI budget() {
+    return OrchidBudgetAPI();
   }
 }

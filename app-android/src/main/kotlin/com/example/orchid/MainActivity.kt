@@ -31,7 +31,7 @@ class MainActivity(): FlutterActivity() {
         }
     }
 
-    override fun onActivityResult(request: Int, result: Int, data: Intent) {
+    override fun onActivityResult(request: Int, result: Int, data: Intent?) {
         if (result == RESULT_OK) {
             startService(getServiceIntent());
         }

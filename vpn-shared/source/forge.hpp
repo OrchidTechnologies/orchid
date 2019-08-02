@@ -20,31 +20,20 @@
 /* }}} */
 
 
-pragma solidity ^0.5.7;
+#ifndef ORCHID_FORGE_HPP
+#define ORCHID_FORGE_HPP
 
-import "directory.sol";
+#include <openvpn/ip/csum.hpp>
+#include <openvpn/ip/ip4.hpp>
+#include <openvpn/ip/tcp.hpp>
+#include <openvpn/ip/udp.hpp>
 
+#include "buffer.hpp"
 
-contract TestOrchidDirectory is OrchidDirectory
-{
+namespace orc {
 
-    constructor(address token, uint256 delay) public OrchidDirectory(token, delay) {}
+uint32_t Forge4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
 
-    function set(address token, uint256 delay) public returns (uint256) {
-        token_ = ERC20(token);
-        delay_ = delay;
-        return delay;
-    }
-
-    function get_token(uint256)     public view returns (address)    { return address(token_); }
-
-
-    function get_amount(address stakee) public view returns (uint256)
-    {
-        address staker  = msg.sender;
-        bytes32 key     = keccak256(abi.encodePacked(staker, stakee));
-        //bytes32 key     = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
-        return medallion.amount_;
-    }
 }
+
+#endif//ORCHID_FORGE_HPP

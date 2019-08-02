@@ -38,6 +38,10 @@ debug: $(output)/orchid$(exe)
 
 include vpn/target.mk
 
+ifeq ($(target),mac)
+cflags += -I../vpn-apple
+endif
+
 ifeq ($(target),win)
 cflags += -I../vpn-windows/tap-windows6/src
 endif

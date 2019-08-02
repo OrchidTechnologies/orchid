@@ -37,12 +37,9 @@
 
 #include <maxminddb.h>
 
-#include "adapter.hpp"
-#include "baton.hpp"
 #include "channel.hpp"
 #include "client.hpp"
 #include "commands.hpp"
-#include "connection.hpp"
 #include "http.hpp"
 #include "jsonrpc.hpp"
 #include "link.hpp"
@@ -54,32 +51,6 @@
 
 namespace orc {
 
-task<std::string> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data) {
-    Sink<Adapter> adapter(orc::Context());
-    co_await Connect(&adapter, locator.host_, locator.port_);
-    co_return co_await orc::Request(adapter, method, locator, headers, data);
-}
-
-class Actor final :
-    public Peer
-{
-  protected:
-    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        orc_assert(false);
-    }
-
-    void Stop(const std::string &error) override {
-        // XXX: how much does this matter?
-_trace();
-    }
-
-  public:
-    ~Actor() override {
-_trace();
-        Close();
-    }
-};
-
 class Remote :
     public Link
 {
@@ -87,7 +58,7 @@ class Remote :
     friend class Sink;
 
   protected:
-    virtual Route<Server> *Inner() = 0;
+    virtual Prefix<Server> *Inner() = 0;
 
     void Land(const Buffer &data) override {
         Link::Land(data);
@@ -122,29 +93,29 @@ _trace();
     }
 };
 
-static task<std::string> Answer(const std::string &offer, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    auto answer(co_await orc::Request("POST", {"https", host, port, "/"}, {}, offer, verify));
-
-    if (true || Verbose) {
-        Log() << "Offer: " << offer << std::endl;
-        Log() << "Answer: " << answer << std::endl;
-    }
-
-    co_return answer;
-}
-
 task<void> Server::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port) {
     auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
         return *remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate);
     });
 
     auto secure(sunk->Wire<Sink<Secure>>(false, local_.get(), verify));
-    socket_ = co_await origin->Hop(secure, host, port, verify);
+
+    socket_ = co_await origin->Hop(secure, [&](std::string offer) -> task<std::string> {
+        auto answer(co_await orc::Request("POST", {"https", host, port, "/"}, {}, offer, verify));
+
+        if (true || Verbose) {
+            Log() << "Offer: " << offer << std::endl;
+            Log() << "Answer: " << answer << std::endl;
+        }
+
+        co_return answer;
+    });
+
     co_await secure->Connect();
 }
 
-U<Route<Server>> Server::Path(BufferDrain *drain) {
-    return std::make_unique<Route<Server>>(drain, shared_from_this());
+U<Prefix<Server>> Server::Path(BufferDrain *drain) {
+    return std::make_unique<Prefix<Server>>(drain, shared_from_this());
 }
 
 task<Beam> Server::Call(const Tag &command, const Buffer &args) {
@@ -188,11 +159,24 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
     co_return co_await result.Wait();
 }
 
-task<Socket> Server::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
+task<Socket> Server::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    auto remote(sunk->Wire<Sink<Remote, Prefix<Server>>>());
     remote->Give(Path(remote));
     co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
-        auto answer(co_await Answer((co_await Call(OfferTag, tag)).str(), host, port, verify));
+        auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
+        co_return Socket(socket.str(), service);
+    });
+}
+
+task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+    orc_assert(false);
+}
+
+task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) {
+    auto remote(sunk->Wire<Sink<Remote, Prefix<Server>>>());
+    remote->Give(Path(remote));
+    co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
+        auto answer(co_await respond((co_await Call(OfferTag, tag)).str()));
         auto description((co_await Call(NegotiateTag, Tie(tag, Beam(answer)))).str());
 
         cricket::Candidate candidate;
@@ -202,37 +186,6 @@ task<Socket> Server::Hop(Sunk<> *sunk, const std::string &host, const std::strin
         const auto &socket(candidate.address());
         co_return Socket(socket.ipaddr().ToString(), socket.port());
     });
-}
-
-task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto remote(sunk->Wire<Sink<Remote, Route<Server>>>());
-    remote->Give(Path(remote));
-    co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
-        auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
-        co_return Socket(socket.str(), service);
-    });
-}
-
-task<Socket> Local::Hop(Sunk<> *sunk, const std::string &host, const std::string &port, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    auto client(Make<Actor>());
-    auto channel(sunk->Wire<Channel>(client));
-    auto answer(co_await Answer(Strip(co_await client->Offer()), host, port, verify));
-    co_await client->Negotiate(answer);
-    co_await channel->Connect();
-    auto candidate(co_await client->Candidate());
-    const auto &socket(candidate.address());
-    co_return Socket(socket.ipaddr().ToString(), socket.port());
-}
-
-task<Socket> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto socket(sunk->Wire<Connection<asio::ip::tcp::socket>>());
-    auto endpoint(co_await socket->Connect(host, port));
-    co_return Socket(endpoint.address().to_string(), endpoint.port());
-}
-
-S<Local> GetLocal() {
-    static auto local(Make<Local>());
-    return local;
 }
 
 task<S<Origin>> Setup() {

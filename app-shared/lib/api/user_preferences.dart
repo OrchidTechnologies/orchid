@@ -12,7 +12,6 @@ class UserPreferences {
     debugPrint("constructed user prefs API");
   }
 
-
   ///
   /// Onboarding pages related preferences
   /// TODO: Replace these with one StringList?
@@ -79,6 +78,23 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.PromptedForVPNCredentials.toString(), value);
   }
+
+
+  /// Get the user's lottery pots primary address.  The value should have been
+  /// set once upon app initialization.
+  Future<String> getLotteryPotsPrimaryAddress() async {
+    return (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.LotteryPotsPrimaryAddress.toString());
+  }
+
+  /// Set the lottery pots primary address. This should be called once upon
+  /// app initialization. This method is currently guarded to prevent
+  /// overwriting the stored value.
+  Future<bool> setLotteryPotsPrimaryAddress(String value) async {
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.LotteryPotsPrimaryAddress.toString(), value);
+  }
+
 }
 
 enum UserPreferenceKey {
@@ -86,5 +102,6 @@ enum UserPreferenceKey {
   PromptedForVPNPermission,
   PromptedToLinkWallet,
   LinkWalletAcknowledged,
-  PromptedForVPNCredentials
+  PromptedForVPNCredentials,
+  LotteryPotsPrimaryAddress
 }

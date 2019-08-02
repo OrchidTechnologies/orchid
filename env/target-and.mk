@@ -38,6 +38,14 @@ more :=
 cycc := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang $(more)
 cycp := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang++ $(more)
 
+#dotidy := yes
+tflags += -target $(arch)-unknown-linux-android$(asuf)$(aver)
+tflags += -I$(llvm)/sysroot/usr/include/c++/v1
+tflags += -I$(llvm)/sysroot/usr/local/include
+tflags += -I$(llvm)/lib64/clang/8.0.2/include
+tflags += -I$(llvm)/sysroot/usr/include/arm-linux-androideabi
+tflags += -I$(llvm)/sysroot/usr/include
+
 lflags += -lm -llog
 lflags += -static-libstdc++
 lflags += -Wl,--no-undefined

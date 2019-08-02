@@ -37,12 +37,12 @@ class _FundingPageState extends State<FundingPage> {
 
   TextEditingController _fundAmountTextController = TextEditingController();
   Account _fundFromAccount;
-  double _amountToFund;
+  double _amountToFund; // OXT
 
   TextEditingController _potAddressTextController = TextEditingController();
   FocusNode _potAddressFocusNode = FocusNode();
   String _potAddressToFund;
-  double _potCurrentBalance;
+  double _potCurrentBalance; // OXT
 
   @override
   void initState() {
@@ -82,6 +82,9 @@ class _FundingPageState extends State<FundingPage> {
     double availableScreenWidth =
         MediaQuery.of(context).size.width - 2 * horizontalPad;
 
+    String ethBalance = weiToEth(_fundFromAccount?.ethBalance);
+    String oxtBalance = weiToOxt(_fundFromAccount?.oxtBalance);
+
     // Note: the keyboard accommodation is working in the flutter mobile but not web.
     return AccommodateKeyboard(
       child: Center(
@@ -102,13 +105,10 @@ class _FundingPageState extends State<FundingPage> {
                   initialValue: _fundFromAccount?.address?.toUpperCase() ??
                       "<No Accounts Found>"),
               _buildField(
-                  label: 'ETH Balance: ',
-                  initialValue:
-                      (_fundFromAccount?.ethBalance?.toString() ?? "") + " Ξ"),
+                  label: 'ETH Balance: ', initialValue: ethBalance + " Ξ"),
+
               _buildField(
-                  label: 'OXT Balance: ',
-                  initialValue:
-                      (_fundFromAccount?.oxtBalance?.toString() ?? "") + " X"),
+                  label: 'OXT Balance: ', initialValue: oxtBalance + " X"),
 
               // Pot address entry
               ..._buildPotAddressEntry(),
@@ -117,7 +117,7 @@ class _FundingPageState extends State<FundingPage> {
               Opacity(
                   opacity: _potAddressToFund != null ? 1.0 : 0.4,
                   child: _buildField(
-                      label: 'Pot Current OXT Balance: ',
+                      label: 'Current Balance: ',
                       initialValue: _potAddressToFund != null
                           ? _potCurrentBalance.toString() + "X"
                           : "")),
@@ -273,7 +273,8 @@ class _FundingPageState extends State<FundingPage> {
 
   void _onTransactPressed() {
     _logViewController.log("Transaction submitted");
-    OrchidAPI.fundPot(_potAddressToFund, _amountToFund).then((result) {
+    String amount = BigInt.from(_amountToFund * 1e18).toString();
+    OrchidAPI.fundPot(_potAddressToFund, amount).then((result) {
       _logViewController.log("fund transaction: $result");
       _logViewController.log("Transaction transfer: $_amountToFund OXT");
       _logViewController.log(result);
@@ -287,9 +288,10 @@ class _FundingPageState extends State<FundingPage> {
 
   void _updateBalances() {
     if (_potAddressToFund != null) {
-      OrchidAPI.getPotBalance(_potAddressToFund).then((double balance) {
+      OrchidAPI.getPotBalance(_potAddressToFund).then((String balance) {
         setState(() {
-          this._potCurrentBalance = balance;
+          this._potCurrentBalance =
+              BigInt.parse(balance).toDouble() / 1e18; // wei->unit
         });
         debugPrint("pot current balance=${_potCurrentBalance}");
       });
@@ -302,5 +304,23 @@ class _FundingPageState extends State<FundingPage> {
       debugPrint(
           "account: address=${account.address}, oxt=${account.oxtBalance}");
     });
+  }
+
+  // Convert a string value representing wei to an ETH value with the specified
+  // number of decimal places of precision retained.
+  String weiToEth(/*@Nullable*/ String wei, {int digits = 4}) {
+    if (wei == null) {
+      return "0";
+    }
+    double val = (BigInt.parse(wei) / BigInt.from(1e18));
+    // Round to 'digits'
+    int fac = pow(10, digits);
+    return ((val * fac).round() / fac).toString();
+  }
+
+  // Convert OXT-wei to an OXT value with the specified
+  // number of decimal places of precision retained.
+  String weiToOxt(/*@Nullable*/ String wei, {int digits = 4}) {
+    return weiToEth(wei, digits: digits);
   }
 }

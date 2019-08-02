@@ -55412,10 +55412,13 @@ XMLHttpRequest.prototype.nodejsBaseUrl = null;
 },{"./errors":489,"./progress-event":491,"./xml-http-request-event-target":492,"./xml-http-request-upload":493,"_process":19,"buffer":7,"cookiejar":94,"http":40,"https":11,"os":17,"url":47}],495:[function(require,module,exports){
 window.Orchid = Object();
 
-Orchid.token_addr = '0xe33AE66a0411764935CEf8a92f018a0CA439130d';
+Orchid.token_addr = '0xfce893d1266dd888802e5d822abe36bdc8b97598' // Ganache
+//Orchid.token_addr = '0x53e71f4dec7f0753920a3e039289fdec616ad5b4'; // Main net
 Orchid.token_approval_max_gas = 50000;
+Orchid.token_decimals = 33;
 
-Orchid.lottery_addr = '0x670d978c48acbbbcf9e9ff6657a40fd6ee605ed0';
+Orchid.lottery_addr = '0x68b87dda12fcd108c601b754574bfc80ed51ff89'; // Ganache
+//Orchid.lottery_addr = '0x8dc41faf5e528c48e041ce5da0708643fb8470ca'; // Main net
 Orchid.lottery_fund_max_gas = 100000;
 Orchid.lottery_balance_max_gas = 50000;
 
@@ -55423,120 +55426,270 @@ Orchid.token_abi = [{
     "constant": true,
     "inputs": [],
     "name": "name",
-    "outputs": [{"name": "", "type": "string"}],
+    "outputs": [
+        {
+            "name": "",
+            "type": "string"
+        }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "spender", "type": "address"}, {"name": "value", "type": "uint256"}],
-    "name": "approve",
-    "outputs": [{"name": "", "type": "bool"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": true,
-    "inputs": [],
-    "name": "totalSupply",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "from", "type": "address"}, {
-        "name": "to",
-        "type": "address"
-    }, {"name": "value", "type": "uint256"}],
-    "name": "transferFrom",
-    "outputs": [{"name": "", "type": "bool"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": true,
-    "inputs": [],
-    "name": "decimals",
-    "outputs": [{"name": "", "type": "uint8"}],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "spender", "type": "address"}, {"name": "addedValue", "type": "uint256"}],
-    "name": "increaseAllowance",
-    "outputs": [{"name": "", "type": "bool"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": true,
-    "inputs": [{"name": "owner", "type": "address"}],
-    "name": "balanceOf",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-}, {
-    "constant": true,
-    "inputs": [],
-    "name": "symbol",
-    "outputs": [{"name": "", "type": "string"}],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "spender", "type": "address"}, {
-        "name": "subtractedValue",
-        "type": "uint256"
-    }],
-    "name": "decreaseAllowance",
-    "outputs": [{"name": "", "type": "bool"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": false,
-    "inputs": [{"name": "to", "type": "address"}, {"name": "value", "type": "uint256"}],
-    "name": "transfer",
-    "outputs": [{"name": "", "type": "bool"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-}, {
-    "constant": true,
-    "inputs": [{"name": "owner", "type": "address"}, {"name": "spender", "type": "address"}],
-    "name": "allowance",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-}, {
-    "inputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-}, {
-    "anonymous": false,
-    "inputs": [{"indexed": true, "name": "from", "type": "address"}, {
-        "indexed": true,
-        "name": "to",
-        "type": "address"
-    }, {"indexed": false, "name": "value", "type": "uint256"}],
-    "name": "Transfer",
-    "type": "event"
-}, {
-    "anonymous": false,
-    "inputs": [{"indexed": true, "name": "owner", "type": "address"}, {
-        "indexed": true,
-        "name": "spender",
-        "type": "address"
-    }, {"indexed": false, "name": "value", "type": "uint256"}],
-    "name": "Approval",
-    "type": "event"
-}];
+},
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "approve",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "totalSupply",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "transferFrom",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "decimals",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "name": "addedValue",
+                "type": "uint256"
+            }
+        ],
+        "name": "increaseAllowance",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "symbol",
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "name": "subtractedValue",
+                "type": "uint256"
+            }
+        ],
+        "name": "decreaseAllowance",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "transfer",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "name": "spender",
+                "type": "address"
+            }
+        ],
+        "name": "allowance",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "Transfer",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "Approval",
+        "type": "event"
+    }
+];
 
 Orchid.lottery_abi = [{
     "constant": false,
@@ -55658,7 +55811,7 @@ Orchid.lottery_abi = [{
     {
         "inputs": [
             {
-                "name": "orchid",
+                "name": "token",
                 "type": "address"
             }
         ],
@@ -55699,6 +55852,8 @@ Orchid.lottery_abi = [{
         "type": "function"
     }
 ];
+
+
 
 
 },{}],496:[function(require,module,exports){
@@ -55744,7 +55899,7 @@ window.init_ethereum = init_ethereum;
 
 class URLParams {
     constructor() {
-        this.potAddress= "";
+        this.potAddress = "";
         this.amount = 0;
     }
 }
@@ -55762,23 +55917,23 @@ window.getURLParams = getURLParams;
 class Account {
     constructor() {
         this.address = "";
-        this.ethBalance = 0;
-        this.oxtBalance = 0;
+        this.ethBalance = ""; // wei as string
+        this.oxtBalance = ""; // OXT-wei as string
     }
 }
 
-/// Get the user's ETH wallet balance and OXT token balance.
+/// Get the user's ETH wallet balance and OXT-wei token balance (1e18 parts OXT).
 async function getAccount() {
     const accounts = await web3.eth.getAccounts();
     const account = new Account();
     account.address = accounts[0];
     try {
-        account.ethBalance = await web3.eth.getBalance(accounts[0]);
+        account.ethBalance = (await web3.eth.getBalance(accounts[0])).toString();
     } catch (err) {
         console.log("Error getting eth balance");
     }
     try {
-        account.oxtBalance = await Orchid.token.methods.balanceOf(accounts[0]).call();
+        account.oxtBalance = (await Orchid.token.methods.balanceOf(accounts[0]).call()).toString();
     } catch (err) {
         console.log("Error getting oxt balance");
     }
@@ -55793,14 +55948,14 @@ function isAddress(str) {
 
 window.isAddress = isAddress;
 
-/// Transfer the amount in OXT from the user to the specified lottery pot address.
+/// Transfer the amount in OXT-wei string value from the user to the specified lottery pot address.
 async function fundPot(addr, amount) {
     console.log("Fund address: ", addr, " amount: ", amount);
     const accounts = await web3.eth.getAccounts();
 
     // Lottery funding amount
-    const value = amount;
-    const escrow = 0;
+    const value = BigInt(amount);
+    const escrow = BigInt(0);
     const total = value + escrow;
 
     // Gas price
@@ -55810,13 +55965,13 @@ async function fundPot(addr, amount) {
 
     return new Promise(function (resolve, reject) {
         try {
-            Orchid.token.methods.approve(Orchid.lottery_addr, total)
+            Orchid.token.methods.approve(Orchid.lottery_addr, total.toString())
                 .estimateGas({from: accounts[0]})
                 .then((gas) => {
                     console.log("Approval gas estimate: ", gas);
                 });
 
-            Orchid.token.methods.approve(Orchid.lottery_addr, total).send({
+            Orchid.token.methods.approve(Orchid.lottery_addr, total.toString()).send({
                 from: accounts[0],
                 gas: Orchid.token_approval_max_gas,
                 gasPrice: gasPrice * gwei
@@ -55833,13 +55988,13 @@ async function fundPot(addr, amount) {
                     reject(err);
                 });
 
-            Orchid.lottery.methods.fund(addr, value, total)
+            Orchid.lottery.methods.fund(addr, value.toString(), total.toString())
                 .estimateGas({from: accounts[0]})
                 .then((gas) => {
                     console.log("Funding gas estimate: ", gas);
                 });
 
-            Orchid.lottery.methods.fund(addr, value, total).send({
+            Orchid.lottery.methods.fund(addr, value.toString(), total.toString()).send({
                 from: accounts[0],
                 gas: Orchid.lottery_fund_max_gas,
                 gasPrice: gasPrice * gwei
@@ -55850,7 +56005,7 @@ async function fundPot(addr, amount) {
                 .on('confirmation', (confirmationNumber, receipt) => {
                     console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
                     // Wait for one confirmation on the funding tx.
-                    window.receipt=receipt;
+                    window.receipt = receipt;
                     const hash = receipt['transactionHash'];
                     resolve(hash);
                 })
@@ -55871,14 +56026,14 @@ window.fundPot = fundPot;
 /// Get the lottery pot balance for the specified address.
 async function getPotBalance(addr) {
     const accounts = await web3.eth.getAccounts();
-    let result = await Orchid.lottery.methods.balance(addr).call({ from: accounts[0], });
+    let result = await Orchid.lottery.methods.balance(addr).call({from: accounts[0],});
     if (result == null || result._length < 2) {
         return null;
     }
-    const balance = result[0].toNumber();
-    const escrow = result[1].toNumber();
-    console.log("Get pot balance: ", balance, "escrow: ", escrow);
-    return balance;
+    const balance = result[0]; // web3.util.BN
+    const escrow = result[1]; // web3.util.BN
+    console.log("Get pot balance: ", balance.toString(), "escrow: ", escrow.toString());
+    return balance.toString();
 }
 
 window.getPotBalance = getPotBalance;

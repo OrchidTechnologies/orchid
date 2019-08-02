@@ -56,6 +56,11 @@ c_libmaxminddb := -DUNICODE
 
 cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 
+source += $(pwd)/SPCDNS/src/codec.c
+source += $(pwd)/SPCDNS/src/mappings.c
+source += $(pwd)/SPCDNS/src/output.c
+cflags += -I$(pwd)/SPCDNS/src
+
 ifeq ($(target),ios)
 c_openvpn3 += -ObjC++
 endif
@@ -63,6 +68,8 @@ endif
 %/GeoLite2-City.mmdb:
 	@mkdir -p $(dir $@)
 	curl https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz | tar -C $(dir $@) --strip-components 1 --exclude '*.txt' -zxvf-
+
+include $(pwd)/sqlite.mk
 
 include $(pwd)/tor.mk
 include $(pwd)/libevent.mk

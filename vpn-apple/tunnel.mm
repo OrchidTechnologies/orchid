@@ -25,7 +25,9 @@
 
 #include <NetworkExtension/NetworkExtension.h>
 
+#include "capture.hpp"
 #include "connection.hpp"
+#include "family.hpp"
 #include "transport.hpp"
 
 //if (!(code)) [NSException raise:@"orc_assert" format:@"(%s)[%s:%u]", #code, __FILE__, __LINE__];
@@ -70,13 +72,15 @@ static std::string cfs(NSString *data) {
     auto provider(protocol.providerConfiguration);
     orc_assert(provider != nil);
 
+    std::string local("10.7.0.3");
+
     auto ovpnfile(cfs((NSData *) provider[@"ovpnfile"]));
     auto username(cfs((NSString *) [options objectForKey:@"username"]));
     auto password(cfs((NSString *) [options objectForKey:@"password"]));
 
     auto settings([NEPacketTunnelNetworkSettings.alloc initWithTunnelRemoteAddress:@"127.0.0.1"]);
 
-    settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[@"10.7.0.3"] subnetMasks:@[@"255.255.255.0"]];
+    settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[[NSString stringWithUTF8String:local.c_str()]] subnetMasks:@[@"255.255.255.0"]];
     settings.IPv4Settings.includedRoutes = @[NEIPv4Route.defaultRoute];
 
     settings.DNSSettings = [NEDNSSettings.alloc initWithServers:@[@"8.8.8.8", @"8.8.4.4"]];
@@ -91,8 +95,10 @@ static std::string cfs(NSString *data) {
         int file([value intValue]);
         orc_assert(file != -1);
 
-        auto capture(std::make_unique<Sink<Capture>>("10.7.0.3"));
-        auto connection(capture->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
+        auto capture(std::make_unique<Sink<Capture>>(local));
+
+        auto family(capture->Wire<Sink<Family>>());
+        auto connection(family->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
         connection->Start();
 
         Spawn([

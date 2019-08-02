@@ -30,11 +30,11 @@ interface IOrchidDirectory {
 
 contract OrchidDirectory is IOrchidDirectory {
 
-    ERC20 internal orchid_;
+    ERC20 internal token_;
     uint256 internal delay_;
 
-    constructor(address orchid, uint256 delay) public {
-        orchid_ = ERC20(orchid);
+    constructor(address token, uint256 delay) public {
+        token_ = ERC20(token);
         delay_ = delay;
     }
 
@@ -157,7 +157,7 @@ contract OrchidDirectory is IOrchidDirectory {
 
         medallion.amount_ += amount;
         step(key, medallion, amount, bytes32(0));
-        require(orchid_.transferFrom(msg.sender, address(this), amount));
+        require(token_.transferFrom(msg.sender, address(this), amount));
     }
 
 
@@ -173,7 +173,7 @@ contract OrchidDirectory is IOrchidDirectory {
         Pending memory pending = pendings_[msg.sender][index];
         require(pending.time_ <= block.timestamp);
         delete pendings_[msg.sender][index];
-        require(orchid_.transfer(target, pending.amount_));
+        require(token_.transfer(target, pending.amount_));
     }
 
     function pull(address stakee, uint128 amount, uint256 index) public {

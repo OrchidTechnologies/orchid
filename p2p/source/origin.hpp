@@ -20,61 +20,41 @@
 /* }}} */
 
 
-#ifndef ORCHID_CLIENT_HPP
-#define ORCHID_CLIENT_HPP
+#ifndef ORCHID_ORIGIN_HPP
+#define ORCHID_ORIGIN_HPP
 
 #include <rtc_base/openssl_identity.h>
 #include <rtc_base/ssl_fingerprint.h>
 
-#include "origin.hpp"
-#include "secure.hpp"
+#include "http.hpp"
+#include "link.hpp"
+#include "socket.hpp"
+#include "task.hpp"
 
 namespace orc {
 
-class Server :
-    public std::enable_shared_from_this<Server>,
-    public Origin,
-    public Prefixed<Secure>
-{
-  private:
-    U<rtc::SSLFingerprint> remote_;
-
-    U<rtc::OpenSSLIdentity> local_;
-
-    Socket socket_;
-
-  protected:
-    virtual Secure *Inner() = 0;
-
+class Origin {
   public:
-    Server(U<rtc::SSLFingerprint> remote) :
-        remote_(std::move(remote)),
-        local_(rtc::OpenSSLIdentity::GenerateWithExpiration("WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24))
-    {
-    }
+    virtual ~Origin() = default;
 
-    task<void> Connect() {
-        co_return co_await Inner()->Connect();
-    }
+    virtual task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
+    virtual task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
+    virtual task<Socket> Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) = 0;
 
+    task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data);
+};
 
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(data);
-    }
-
-
-    task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port);
-
-    U<Prefix<Server>> Path(BufferDrain *drain);
-    task<Beam> Call(const Tag &command, const Buffer &args);
-
+class Local final :
+    public Origin
+{
+  public:
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Connect(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) override;
 };
 
-task<S<Origin>> Setup();
+S<Local> GetLocal();
 
 }
 
-#endif//ORCHID_CLIENT_HPP
+#endif//ORCHID_ORIGIN_HPP

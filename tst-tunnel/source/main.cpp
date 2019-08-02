@@ -45,14 +45,25 @@
 #include <boost/filesystem/string_file.hpp>
 
 #include <asio.hpp>
+#include "capture.hpp"
 #include "connection.hpp"
 #include "error.hpp"
 #include "protect.hpp"
 #include "syscall.hpp"
-#include "transport.hpp"
 #include "task.hpp"
+#include "transport.hpp"
+
+#if 0
+#elif defined(__APPLE__)
+#include "family.hpp"
+#endif
 
 namespace orc {
+
+std::string Group() {
+    // XXX: I am just not feeling this today
+    return "/Users/saurik/orchid/tst-tunnel";
+}
 
 int Protect(int socket, const sockaddr *address, socklen_t length) {
     if (address == nullptr)
@@ -72,11 +83,13 @@ int Main(int argc, const char *const argv[]) {
     std::string local("10.7.0.3");
 
     auto capture(Make<Sink<Capture>>(local));
-    auto connection(capture->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
-    auto file((*connection)->native_handle());
 
 #if 0
 #elif defined(__APPLE__)
+    auto family(capture->Wire<Sink<Family>>());
+    auto connection(family->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+    auto file((*connection)->native_handle());
+
     ctl_info info;
     memset(&info, 0, sizeof(info));
     orc_assert(strlcpy(info.ctl_name, UTUN_CONTROL_NAME, sizeof(info.ctl_name)) < sizeof(info.ctl_name));
@@ -91,11 +104,11 @@ int Main(int argc, const char *const argv[]) {
 
     do ++address.sc_unit;
     while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
+
+    connection->Start();
 #else
 #error
 #endif
-
-    connection->Start();
 
     Wait([&]() -> task<void> {
         co_await Schedule();

@@ -1,6 +1,5 @@
 @JS() // sets the context, in this case being `window`
 library main; // required library declaration
-import 'dart:html';
 
 import 'package:js/js.dart';
 
@@ -23,6 +22,15 @@ class JSPromise<T> {
   }
 }
 
+@JS()
+// Note: Account balances are passed as strings because there is no shared BigInt
+// Note: representation between JS and Dart.
+class Account {
+  String address;
+  String ethBalance; // in wei
+  String oxtBalance; // in Oxt-wei
+}
+
 class OrchidAPI {
   static JSPromise<Account> getAccount() {
     return JSPromise(_getAccount());
@@ -30,7 +38,7 @@ class OrchidAPI {
   static bool isAddress(String str) {
     return _isAddress(str);
   }
-  static JSPromise<String> fundPot(String addr, double amount) {
+  static JSPromise<String> fundPot(String addr, String amount) {
     return JSPromise(_fundPot(addr, amount));
   }
   static JSPromise<void> debug() {
@@ -39,16 +47,10 @@ class OrchidAPI {
   static URLParams getURLParams() {
       return _getURLParams();
   }
-  static JSPromise<double> getPotBalance(addr) {
+  // Get the pot balance in OXT-wei
+  static JSPromise<String> getPotBalance(addr) {
     return JSPromise(_getPotBalance(addr));
   }
-}
-
-@JS()
-class Account {
-  String address;
-  double ethBalance;
-  double oxtBalance;
 }
 
 @JS('getAccount')
@@ -58,7 +60,7 @@ external Promise<Account> _getAccount();
 external bool _isAddress(String str);
 
 @JS('fundPot')
-external Promise<String> _fundPot(String addr, double amount);
+external Promise<String> _fundPot(String addr, String amount);
 
 @JS('debug')
 external Promise<void> _debug();
@@ -73,5 +75,5 @@ class URLParams {
 external URLParams _getURLParams();
 
 @JS('getPotBalance')
-external Promise<double> _getPotBalance(addr);
+external Promise<String> _getPotBalance(addr);
 

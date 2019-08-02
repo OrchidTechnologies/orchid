@@ -44,5 +44,7 @@ linker += $(output)/sysroot
 
 endif
 
+dotidy := yes
+
 lflags += -pthread
 qflags += -fPIC

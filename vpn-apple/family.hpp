@@ -20,31 +20,41 @@
 /* }}} */
 
 
-pragma solidity ^0.5.7;
+#ifndef ORCHID_FAMILY_HPP
+#define ORCHID_FAMILY_HPP
 
-import "directory.sol";
+#include "link.hpp"
 
+namespace orc {
 
-contract TestOrchidDirectory is OrchidDirectory
+class Family :
+    public Link
 {
-
-    constructor(address token, uint256 delay) public OrchidDirectory(token, delay) {}
-
-    function set(address token, uint256 delay) public returns (uint256) {
-        token_ = ERC20(token);
-        delay_ = delay;
-        return delay;
+  private:
+    uint32_t Analyze(const Buffer &data) {
+        return 2;
     }
 
-    function get_token(uint256)     public view returns (address)    { return address(token_); }
+  protected:
+    virtual Link *Inner() = 0;
 
+    void Land(const Buffer &data) override {
+        auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
+        orc_assert(protocol == Analyze(data));
+        return Link::Land(packet);
+    }
 
-    function get_amount(address stakee) public view returns (uint256)
+  public:
+    Family(BufferDrain *drain) :
+        Link(drain)
     {
-        address staker  = msg.sender;
-        bytes32 key     = keccak256(abi.encodePacked(staker, stakee));
-        //bytes32 key     = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
-        return medallion.amount_;
     }
+
+    task<void> Send(const Buffer &data) {
+        co_return co_await Inner()->Send(Tie(Number<uint32_t>(Analyze(data)), data));
+    }
+};
+
 }
+
+#endif//ORCHID_FAMILY_HPP

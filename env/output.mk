@@ -129,9 +129,9 @@ $(output)/%.o: %.cc $(header) $(linker)
 $(output)/%.o: %.cpp $(header) $(linker)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
-ifeq ($(target),lnx)
+ifeq ($(dotidy),yes)
 	@[[ ! $< =~ $(tidy) ]] || $(llvm)/bin/clang-tidy $< -quiet -warnings-as-errors='*' -header-filter='$(tidy)' -checks='$(checks)' -- \
-	    $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_)
+	    $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_) $(tflags)
 endif
 	@$(cycp) -std=c++2a -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
