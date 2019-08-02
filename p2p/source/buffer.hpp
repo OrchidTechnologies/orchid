@@ -172,6 +172,16 @@ class Span {
     uint8_t operator [](size_t index) const {
         return data_[index];
     }
+
+    void copy(size_t offset, const Buffer &data) {
+        orc_assert(offset <= size_);
+        data.each([&](const uint8_t *data, size_t size) {
+            orc_assert(size_ - offset >= size);
+            memcpy(data_ + offset, data, size);
+            offset += size;
+            return true;
+        });
+    }
 };
 
 class Range final :
@@ -492,6 +502,16 @@ class Beam :
 
     size_t size() const override {
         return size_;
+    }
+
+    Span<uint8_t> span() {
+        return {data(), size()};
+    }
+
+    Subset subset(size_t offset, size_t size) const {
+        orc_assert(offset <= size_);
+        orc_assert(size_ - offset >= size);
+        return {data_ + offset, size};
     }
 
     uint8_t &operator [](size_t index) {

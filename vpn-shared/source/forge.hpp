@@ -32,7 +32,23 @@
 
 namespace orc {
 
-uint32_t Forge4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
+// XXX: I can do much better than this
+
+template <typename Header_>
+static void Forge(Header_ &header, int adjust) {
+    boost::endian::big_to_native_inplace(header.check);
+    openvpn::tcp_adjust_checksum(adjust, header.check);
+    boost::endian::native_to_big_inplace(header.check);
+}
+
+template <typename Header_>
+void Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
+    auto before(boost::endian::big_to_native(header.*field));
+    header.*field = boost::endian::native_to_big(value);
+    Forge(header, before - value);
+}
+
+uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
 
 }
 

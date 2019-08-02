@@ -188,6 +188,10 @@ task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (st
     });
 }
 
+task<Socket> Server::Open(Sunk<Opening, ExtendedDrain> *sunk) {
+    orc_assert(false);
+}
+
 task<S<Origin>> Setup() {
     S<Origin> origin(GetLocal());
 

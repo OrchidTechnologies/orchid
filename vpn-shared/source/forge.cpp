@@ -24,16 +24,13 @@
 
 namespace orc {
 
-uint32_t Forge4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value) {
+uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value) {
     auto &ip4(span.cast<openvpn::IPv4Header>());
-
     auto before(boost::endian::big_to_native(ip4.*field));
-    auto adjust((int32_t(before >> 16) + int32_t(before & 0xffff)) - (int32_t(value >> 16) + int32_t(value & 0xffff)));
-
     ip4.*field = boost::endian::native_to_big(value);
-    boost::endian::big_to_native_inplace(ip4.check);
-    openvpn::tcp_adjust_checksum(adjust, ip4.check);
-    boost::endian::native_to_big_inplace(ip4.check);
+
+    auto adjust((int32_t(before >> 16) + int32_t(before & 0xffff)) - (int32_t(value >> 16) + int32_t(value & 0xffff)));
+    Forge(ip4, adjust);
 
     auto length(openvpn::IPv4Header::length(ip4.version_len));
     orc_assert(span.size() >= length);
@@ -46,19 +43,14 @@ uint32_t Forge4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t v
 #endif
 
     switch (ip4.protocol) {
-        case openvpn::IPCommon::TCP: {
-            auto &tcp(span.cast<openvpn::TCPHeader>(length));
-            boost::endian::big_to_native_inplace(tcp.check);
-            openvpn::tcp_adjust_checksum(adjust, tcp.check);
-            boost::endian::native_to_big_inplace(tcp.check);
-        } break;
-
-        case openvpn::IPCommon::UDP: {
-            auto &udp(span.cast<openvpn::UDPHeader>(length));
-            boost::endian::big_to_native_inplace(udp.check);
-            openvpn::tcp_adjust_checksum(adjust, udp.check);
-            boost::endian::native_to_big_inplace(udp.check);
-        } break;
+        case openvpn::IPCommon::TCP:
+            Forge(span.cast<openvpn::TCPHeader>(length), adjust);
+            break;
+        case openvpn::IPCommon::UDP:
+            Forge(span.cast<openvpn::UDPHeader>(length), adjust);
+            break;
+        default:
+            orc_assert(false);
     }
 
     return before;

@@ -53,6 +53,18 @@ class Socket final {
     {
     }
 
+    Socket(uint32_t host, uint16_t port) :
+        host_(asio::ip::address_v4(host)),
+        port_(port)
+    {
+    }
+
+    Socket(asio::ip::udp::endpoint endpoint) :
+        host_(endpoint.address()),
+        port_(endpoint.port())
+    {
+    }
+
     Socket(const Socket &rhs) :
         host_(rhs.host_),
         port_(rhs.port_)
@@ -94,36 +106,28 @@ inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
     return out << socket.Host() << ":" << socket.Port();
 }
 
-class Five final {
+class Four {
   private:
-    uint8_t protocol_;
     Socket source_;
     Socket target_;
 
   public:
-    Five(uint8_t protocol, Socket source, Socket target) :
-        protocol_(protocol),
+    Four(Socket source, Socket target) :
         source_(std::move(source)),
         target_(std::move(target))
     {
     }
 
-    Five(const Five &rhs) :
-        protocol_(rhs.protocol_),
+    Four(const Four &rhs) :
         source_(rhs.source_),
         target_(rhs.target_)
     {
     }
 
-    Five(Five &&rhs) :
-        protocol_(rhs.protocol_),
+    Four(Four &&rhs) :
         source_(std::move(rhs.source_)),
         target_(std::move(rhs.target_))
     {
-    }
-
-    uint8_t Protocol() const {
-        return protocol_;
     }
 
     const Socket &Source() const {
@@ -134,8 +138,42 @@ class Five final {
         return target_;
     }
 
+    bool operator <(const Four &rhs) const {
+        return std::tie(source_, target_) < std::tie(rhs.source_, rhs.target_);
+    }
+};
+
+class Five final :
+    public Four
+{
+  private:
+    uint8_t protocol_;
+
+  public:
+    Five(uint8_t protocol, Socket source, Socket target) :
+        Four(std::move(source), std::move(target)),
+        protocol_(protocol)
+    {
+    }
+
+    Five(const Five &rhs) :
+        Four(rhs),
+        protocol_(rhs.protocol_)
+    {
+    }
+
+    Five(Five &&rhs) :
+        Four(std::move(rhs)),
+        protocol_(rhs.protocol_)
+    {
+    }
+
+    uint8_t Protocol() const {
+        return protocol_;
+    }
+
     bool operator <(const Five &rhs) const {
-        return std::tie(protocol_, source_, target_) < std::tie(rhs.protocol_, rhs.source_, rhs.target_);
+        return std::tie(protocol_, Source(), Target()) < std::tie(rhs.protocol_, rhs.Source(), rhs.Target());
     }
 };
 

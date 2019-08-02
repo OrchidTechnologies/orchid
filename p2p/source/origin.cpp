@@ -78,6 +78,12 @@ task<Socket> Local::Hop(Sunk<> *sunk, const std::function<task<std::string> (std
     co_return Socket(socket.ipaddr().ToString(), socket.port());
 }
 
+task<Socket> Local::Open(Sunk<Opening, ExtendedDrain> *sunk) {
+    auto opening(sunk->Wire<Opening>());
+    opening->Connect({asio::ip::address_v4::any(), 0});
+    co_return opening->Local();
+}
+
 S<Local> GetLocal() {
     static auto local(Make<Local>());
     return local;
