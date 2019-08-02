@@ -39,11 +39,11 @@ debug: $(output)/orchid$(exe)
 include vpn/target.mk
 
 ifeq ($(target),mac)
-cflags += -I../vpn-apple
-source += ../vpn-apple/protect.cpp
+cflags += -Iall/vpn-apple
+source += all/vpn-apple/protect.cpp
 endif
 ifeq ($(target),win)
-cflags += -I../vpn-windows/tap-windows6/src
+cflags += -Iall/vpn-windows/tap-windows6/src
 endif
 
 source += $(wildcard source/*.cpp)
