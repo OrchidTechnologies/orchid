@@ -65,12 +65,6 @@ std::string Group() {
     return "/Users/saurik/orchid/tst-tunnel";
 }
 
-int Protect(int socket, const sockaddr *address, socklen_t length) {
-    if (address == nullptr)
-        return 0;
-    return Bind(socket, address, length);
-}
-
 int Main(int argc, const char *const argv[]) {
     Initialize();
 

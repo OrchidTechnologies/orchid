@@ -37,10 +37,6 @@
 namespace orc {
 
 int Protect(int socket, const sockaddr *address, socklen_t length) {
-    if (address == nullptr)
-        return 0;
-    return Bind(socket, address, length);
-
     std::unique_ptr<ifaddrs, decltype(freeifaddrs) *> interfaces([]() {
         ifaddrs *interfaces;
         orc_assert(getifaddrs(&interfaces) != -1);
@@ -48,10 +44,10 @@ int Protect(int socket, const sockaddr *address, socklen_t length) {
     }(), &freeifaddrs);
 
     if (interfaces != nullptr) {
-        /*for (ifaddrs *i(interfaces); i != NULL; i = i->ifa_next) {
-            NSLog(@ "ifa_name: %u %s", i->ifa_addr->sa_family, i->ifa_name);
+        /*for (ifaddrs *i(interfaces.get()); i != NULL; i = i->ifa_next) {
+            Log() << "ifa_name: " << i->ifa_addr->sa_family << " " << i->ifa_name << std::endl;
             if (i->ifa_addr->sa_family == AF_INET)
-                NSLog(@ "addr: %s", inet_ntoa(((sockaddr_in &)(i->ifa_addr)).sin_addr));
+                Log() << "addr: " << inet_ntoa(((sockaddr_in &)(i->ifa_addr)).sin_addr) << std::endl;
         }*/
 
         for (auto i(interfaces.get()); i != NULL; i = i->ifa_next) {
@@ -62,6 +58,10 @@ int Protect(int socket, const sockaddr *address, socklen_t length) {
             }
         }
     }
+
+    if (address == nullptr)
+        return 0;
+    return Bind(socket, address, length);
 }
 
 }
