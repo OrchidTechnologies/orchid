@@ -36,6 +36,10 @@ all: $(output)/$(name).ipa
 .PHONY: app
 app: $(bundle)$(signature)
 
+.PHONY: install
+install: $(output)/$(name).ipa
+	ideviceinstaller -i $<
+
 ifeq ($(target),sim)
 cflags += -Wno-deprecated-declarations
 lflags += -framework NetworkExtension
