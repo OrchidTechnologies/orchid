@@ -29,10 +29,12 @@
 
     <key>DTCompiler</key>
     <string></string>
+    <key>DTPlatformName</key>
+    <string>iphoneos</string>
+    <key>DTPlatformVersion</key>
+    <string>8.0</string>
     <key>DTPlatformBuild</key>
     <string>4H1003</string>
-    <key>DTPlatformVersion</key>
-    <string>GM</string>
     <key>DTSDKBuild</key>
     <string>12D75</string>
     <key>DTSDKName</key>
@@ -55,14 +57,13 @@
     <key>SBUsesNetwork</key>
     <integer>11</integer>
 
-    <key>DTSDKName</key>
-    <string>iphoneos2.0.saurik</string>
-
-    <key>DTPlatformVersion</key>
-    <string>8.0</string>
-
     <key>MinimumOSVersion</key>
     <string>11.0</string>
+
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
 
     <key>UIDeviceFamily</key>
     <array>
