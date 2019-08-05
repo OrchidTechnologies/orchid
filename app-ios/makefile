@@ -113,11 +113,11 @@ $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.a
 ifneq ($(provision),)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision
 $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision: $(provision)vpn.mobileprovision
-	cp -a $< $@
+	cp -f $< $@
 
 signed += $(bundle)/embedded.mobileprovision
 $(bundle)/embedded.mobileprovision: $(provision)main.mobileprovision
-	cp -a $< $@
+	cp -f $< $@
 endif
 endif
 
