@@ -4,6 +4,8 @@
 #include <openvpn/ip/tcp.hpp>
 #include <openvpn/ip/udp.hpp>
 
+#include <openssl/ssl.h>
+
 #include "buffer.hpp"
 #include "monitor.hpp"
 #include "socket.hpp"
@@ -14,9 +16,10 @@ using namespace asio::ip;
 
 namespace orc {
 
-typedef std::function<void (std::string)> sni_callback;
+typedef std::function<void (std::string)> hostname_callback;
+typedef std::function<void (std::string)> protocol_callback;
 
-void get_quic_SNI(const uint8_t *data, size_t len, const sni_callback callback)
+void get_quic_SNI(const uint8_t *data, size_t len, const hostname_callback hostname_cb, const protocol_callback protocol_cb)
 {
     // CID
     if (len < 1) {
@@ -116,14 +119,33 @@ void get_quic_SNI(const uint8_t *data, size_t len, const sni_callback callback)
             size_t snilen = endOffset - start;
             std::string sni(snidata, snilen);
             Log() << "QUIC SNI(" << snilen << "): \"" << sni << "\"" << std::endl;
-            callback(sni);
+            hostname_cb(sni);
+
+            std::ostringstream protocol;
+            protocol << "quic v" << version;
+            protocol_cb(protocol.str());
         }
         start = endOffset;
         tagLen--;
     }
 }
 
-void get_TLS_SNI(const uint8_t *data, int end, const sni_callback callback)
+std::string ssl_protocol_to_string(int version)
+{
+    switch(version) {
+    case TLS1_3_VERSION: return "TLSv1.3";
+    case TLS1_2_VERSION: return "TLSv1.2";
+    case TLS1_1_VERSION: return "TLSv1.1";
+    case TLS1_VERSION: return "TLSv1";
+    case SSL3_VERSION: return "SSLv3";
+    case DTLS1_BAD_VER: return "DTLSv0.9";
+    case DTLS1_VERSION: return "DTLSv1";
+    case DTLS1_2_VERSION: return "DTLSv1.2";
+    default: return "unknown";
+    }
+}
+
+void get_TLS_SNI(const uint8_t *data, int end, const hostname_callback hostname_cb, const protocol_callback protocol_cb)
 {
     /*
     From https://tools.ietf.org/html/rfc5246:
@@ -194,8 +216,10 @@ void get_TLS_SNI(const uint8_t *data, int end, const sni_callback callback)
     // skip handshake length
     pos += 3;
 
-    // skip protocol version (you should already have verified this)
-    pos += 2;
+    // protocol version
+    if (pos > end - sizeof(uint16_t)) return;
+    uint16_t version = *(uint16_t*)&data[pos];
+    pos += sizeof(uint16_t);
 
     // skip Random
     pos += 32;
@@ -298,7 +322,10 @@ void get_TLS_SNI(const uint8_t *data, int end, const sni_callback callback)
 
                 std::string sni((char*)&data[n], nameLength);
                 Log() << "TLS SNI(" << nameLength << "): \"" << sni << "\"" << std::endl;
-                callback(sni);
+                hostname_cb(sni);
+
+                std::string protocol(ssl_protocol_to_string(version));
+                protocol_cb(protocol);
                 return;
             }
 
@@ -346,6 +373,8 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         auto tcpbuf = ((const uint8_t *)tcphdr) + tcphlen;
         get_TLS_SNI(tcpbuf, tcp_payload_len, [&](auto sni) {
             logger.GotHostname(flow, sni);
+        }, [&](auto protocol) {
+            logger.GotProtocol(flow, protocol);
         });
         break;
     }
@@ -359,8 +388,14 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         auto udpbuf = ((const uint8_t *)udphdr) + sizeof(UDPHeader);
         auto flow = Five(IPCommon::UDP, {address_v4(ntohl(iphdr->saddr)), ntohs(udphdr->source)}, {address_v4(ntohl(iphdr->daddr)), ntohs(udphdr->dest)});
         logger.AddFlow(flow);
+        if (ntohs(udphdr->dest) == 53) {
+            // TODO: verify the packet is DNS
+            logger.GotProtocol(flow, "DNS");
+        }
         get_quic_SNI(udpbuf, udp_payload_len, [&](auto sni) {
             logger.GotHostname(flow, sni);
+        }, [&](auto protocol) {
+            logger.GotProtocol(flow, protocol);
         });
         break;
     }

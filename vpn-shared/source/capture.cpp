@@ -45,7 +45,8 @@ class LoggerDatabase :
         Statement<>(*this, R"(
             create table if not exists "flow" (
                 "start" real,
-                "protocol" integer,
+                "l4_protocol" integer,
+                "protocol" string,
                 "src_addr" integer,
                 "src_port" integer,
                 "dst_addr" integer,
@@ -66,7 +67,8 @@ class Logger :
   private:
     LoggerDatabase database_;
     Statement<uint8_t, uint32_t, uint16_t, uint32_t, uint16_t> insert_;
-    Statement<std::string, sqlite3_int64> update_;
+    Statement<std::string, sqlite3_int64> update_hostname_;
+    Statement<std::string, sqlite3_int64> update_protocol_;
     DnsLog dns_log_;
     std::map<Five, sqlite3_int64> flows_;
 
@@ -75,13 +77,16 @@ class Logger :
         database_(path),
         insert_(database_, R"(
             insert into flow (
-                "start", "protocol", "src_addr", "src_port", "dst_addr", "dst_port"
+                "start", "l4_protocol", "src_addr", "src_port", "dst_addr", "dst_port"
             ) values (
                 julianday('now'), ?, ?, ?, ?, ?
             )
         )"),
-        update_(database_, R"(
+        update_hostname_(database_, R"(
             update flow set hostname = ? where _rowid_ = ?
+        )"),
+        update_protocol_(database_, R"(
+            update flow set protocol = ? where _rowid_ = ?
         )")
     {
     }
@@ -128,6 +133,16 @@ class Logger :
         }
     }
 
+    std::string L4ProtocolToString(uint8_t protocol) {
+        switch (protocol) {
+        case IPPROTO_UDP: return "UDP";
+        case IPPROTO_TCP: return "TCP";
+        case IPPROTO_ICMP: return "ICMP";
+        case IPPROTO_IGMP: return "IGMP";
+        default: return "???";
+        }
+    }
+
     void AddFlow(Five const &five) override {
         auto flow(flows_.find(five));
         if (flow != flows_.end())
@@ -141,9 +156,12 @@ class Logger :
         );
         flows_.emplace(five, row_id);
 
+
+        update_protocol_(L4ProtocolToString(five.Protocol()), row_id);
+
         auto hostname(dns_log_.find(target.Host()));
         if (hostname != dns_log_.end()) {
-            update_(hostname->second, row_id);
+            update_hostname_(hostname->second, row_id);
         }
     }
 
@@ -153,7 +171,16 @@ class Logger :
             orc_assert(false);
             return;
         }
-        update_(hostname, flow->second);
+        update_hostname_(hostname, flow->second);
+    }
+
+    void GotProtocol(Five const &five, const std::string &protocol) override {
+        auto flow(flows_.find(five));
+        if (flow == flows_.end()) {
+            orc_assert(false);
+            return;
+        }
+        update_protocol_(protocol, flow->second);
     }
 };
 

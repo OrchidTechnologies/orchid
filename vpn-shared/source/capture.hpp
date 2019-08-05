@@ -41,6 +41,7 @@ class MonitorLogger
   public:
     virtual void AddFlow(Five const &five) = 0;
     virtual void GotHostname(Five const &five, const std::string &hostname) = 0;
+    virtual void GotProtocol(Five const &five, const std::string &protocol) = 0;
 };
 
 class Capture :
