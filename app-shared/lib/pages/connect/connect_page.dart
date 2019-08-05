@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/api/notifications.dart';

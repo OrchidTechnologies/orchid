@@ -14,7 +14,7 @@ class OnboardingVPNPermissionPage extends StatefulWidget {
   final bool allowSkip;
 
   const OnboardingVPNPermissionPage(
-      {Key key, this.onComplete, this.includeScaffold = true, this.allowSkip = true})
+      {Key key, this.onComplete, this.includeScaffold = true, this.allowSkip = false})
       : super(key: key);
 
   @override

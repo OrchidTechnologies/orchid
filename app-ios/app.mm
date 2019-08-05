@@ -24,7 +24,6 @@
 #include <UIKit/UIKit.h>
 #include <NetworkExtension/NetworkExtension.h>
 
-
 static NSString * const username_ = @ ORCHID_USERNAME;
 static NSString * const password_ = @ ORCHID_PASSWORD;
 
@@ -191,6 +190,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 }
 
 - (BOOL) application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)options {
+
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [self.window makeKeyAndVisible];
     self.window.backgroundColor = [UIColor whiteColor];
@@ -213,6 +213,8 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
         } else if ([@"reroute" isEqualToString:call.method]) {
         } else if ([@"install" isEqualToString:call.method]) {
             [weakSelf initProvider: result];
+        } else if ([@"group_path" isEqualToString:call.method]) {
+            [weakSelf groupPath: result];
         }
     }];
 
@@ -229,6 +231,13 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onConfigurationChange:) name:NEVPNConfigurationChangeNotification object:nil];
 
     return [super application:application didFinishLaunchingWithOptions:options];
+}
+
+// Get the shared group container path
+- (void) groupPath: (FlutterResult)result {
+    NSString *group = @("group." ORCHID_DOMAIN "." ORCHID_NAME);
+    NSURL *groupURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier: group];
+    result(groupURL.path);
 }
 
 - (void) applicationWillResignActive:(UIApplication *)application {

@@ -36,11 +36,12 @@ class SideDrawer extends StatelessWidget {
             ),
 
             divider(),
+            /*
             SideDrawerTile(
                 title: "Connect",
                 imageName: 'assets/images/connect.png',
                 onPressed: () {
-                  Navigator.pushNamed(context, '/');
+                  Navigator.pushNamed(context, '/connect');
                 }),
             divider(),
             BalanceSideDrawerTile(
@@ -71,6 +72,13 @@ class SideDrawer extends StatelessWidget {
                   Navigator.pushNamed(context, '/feedback');
                 }),
             divider(),
+             */
+            SideDrawerTile(
+                title: "Legal",
+                imageName: 'assets/images/feedback.png',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/legal');
+                }),
           ],
         )
       ],
