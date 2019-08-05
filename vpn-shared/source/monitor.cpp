@@ -124,6 +124,7 @@ void get_quic_SNI(const uint8_t *data, size_t len, const hostname_callback hostn
             std::ostringstream protocol;
             protocol << "quic v" << version;
             protocol_cb(protocol.str());
+            return;
         }
         start = endOffset;
         tagLen--;
