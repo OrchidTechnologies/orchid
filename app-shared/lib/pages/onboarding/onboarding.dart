@@ -31,11 +31,11 @@ class AppOnboarding {
   Future<String> _nextPage() async {
 
     // Show the walkthrough
-    bool walkthroughCompleted =
-        await UserPreferences().getWalkthroughCompleted();
+    /*
+    bool walkthroughCompleted = await UserPreferences().getWalkthroughCompleted();
     if (!walkthroughCompleted) {
       return AppRoutes.onboarding_walkthrough;
-    }
+    }*/
 
     // Prompt for VPN permission
     bool hasVPNPermission = OrchidAPI().vpnPermissionStatus.value;

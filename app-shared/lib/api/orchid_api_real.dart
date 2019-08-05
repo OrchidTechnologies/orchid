@@ -134,4 +134,9 @@ class RealOrchidAPI implements OrchidAPI {
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
   }
+
+  Future<String> groupContainerPath() async {
+    return _platform.invokeMethod('group_path');
+  }
 }
+
