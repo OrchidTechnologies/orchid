@@ -122,10 +122,6 @@ endif
 endif
 
 
-signed += $(bundle)/AppIcon.png
-$(bundle)/AppIcon.png: AppIcon.png
-	cp -a $< $@
-
 signed += $(bundle)/$(name)
 $(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
 	@mkdir -p $(dir $@)
