@@ -35,14 +35,17 @@ class AppOnboarding {
     bool walkthroughCompleted = await UserPreferences().getWalkthroughCompleted();
     if (!walkthroughCompleted) {
       return AppRoutes.onboarding_walkthrough;
-    }*/
+    }
 
     // Prompt for VPN permission
+    // TODO: race condition here.
     bool hasVPNPermission = OrchidAPI().vpnPermissionStatus.value;
     bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
-    if (!hasVPNPermission && !promptedForVPNPermission) {
+    debugPrint("XXX: hasVPNPerm: $hasVPNPermission, prompted: $promptedForVPNPermission");
+    if (!(hasVPNPermission == true) && !promptedForVPNPermission) {
       return AppRoutes.onboarding_vpn_permission;
     }
+    */
 
     return NO_PAGE;
   }

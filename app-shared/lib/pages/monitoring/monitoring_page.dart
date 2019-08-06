@@ -44,7 +44,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
   }
 
   Switch _buildSwitch() {
-    var _currentStatus = OrchidAPI().connectionStatus.value;
+    var _currentStatus = OrchidAPI().connectionStatus.value ?? OrchidConnectionState.NotConnected;
     return Switch(
       activeColor: AppColors.purple_5,
       // TODO: We should replace this switch with something that represents the
@@ -82,10 +82,9 @@ class _MonitoringPageState extends State<MonitoringPage> {
       OrchidAPI().logger().write("VPN Perm status changed: $installed");
 
       // Ignore changes until the first walkthrough has been completed
-      bool walkthroughCompleted =
-          await UserPreferences().getWalkthroughCompleted();
+      //bool walkthroughCompleted = await UserPreferences().getWalkthroughCompleted();
 
-      if (!installed && walkthroughCompleted) {
+      if (!installed /*&& walkthroughCompleted*/) {
         String currentPage = ModalRoute.of(context).settings.name;
         OrchidAPI().logger().write("Current page: $currentPage");
         var route = AppTransitions.downToUpTransition(
