@@ -35,6 +35,10 @@ class _TrafficViewState extends State<TrafficView> {
 
     // Update first view
     _performQuery();
+
+    AnalysisDb().update.listen((_){
+      _performQuery();
+    });
   }
 
   @override

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import '../app_text.dart';
+import 'dialogs.dart';
 
 /// The application side drawer
 class SideDrawer extends StatelessWidget {
@@ -74,6 +76,12 @@ class SideDrawer extends StatelessWidget {
             divider(),
              */
             SideDrawerTile(
+                title: "Clear All Data",
+                imageName: 'assets/images/error.png',
+                onPressed: () {
+                  _confirmDelete(context);
+                }),
+            SideDrawerTile(
                 title: "Legal",
                 imageName: 'assets/images/feedback.png',
                 onPressed: () {
@@ -83,6 +91,19 @@ class SideDrawer extends StatelessWidget {
         )
       ],
     );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    Dialogs.showConfirmationDialog(
+        context: context,
+        title: "Delete all data?",
+        body:
+        "This will delete all recorded data within the app.",
+        cancelText: "CANCEL",
+        actionText: "OK",
+        action: () async {
+          await AnalysisDb().clear();
+        });
   }
 
   Widget divider() {

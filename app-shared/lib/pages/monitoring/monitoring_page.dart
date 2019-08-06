@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
