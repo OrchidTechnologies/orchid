@@ -78,7 +78,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
     OrchidAPI().logger().write("Init listeners...");
 
     // Monitor VPN permission status
-    OrchidAPI().vpnPermissionStatus.listen((bool installed) async {
+    OrchidAPI().vpnPermissionStatus.listen((bool installed) {
       OrchidAPI().logger().write("VPN Perm status changed: $installed");
 
       // Ignore changes until the first walkthrough has been completed

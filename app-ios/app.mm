@@ -91,7 +91,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 - (void) setVPN:(NSString *)status {
     if (connectionStatus_ != nil && [connectionStatus_ isEqualToString:status]) { return; }
     connectionStatus_ = status;
-    NSLog(@"NEVPNStatus change%@", status);
+    NSLog(@"NEVPNStatus change %@", status);
     [feedback_ invokeMethod:@"connectionStatus" arguments:status];
 }
 
@@ -135,7 +135,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 // Publish the provider initialization state to the app.
 - (void) setProviderState: (bool)installed {
-    if (providerStatus_ != nil && [providerStatus_ boolValue] == installed) { return; }
+    //if (providerStatus_ != nil && [providerStatus_ boolValue] == installed) { return; }
     providerStatus_ = [NSNumber numberWithBool: installed];
     NSLog(@"VPN Provider Status %d", installed);
     [feedback_ invokeMethod:@"providerStatus" arguments: @(installed)];
@@ -219,8 +219,10 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     }];
 
     [NETunnelProviderManager loadAllFromPreferencesWithCompletionHandler:^(NSArray<NETunnelProviderManager *> * _Nullable managers, NSError * _Nullable error) {
-        if (error != nil)
+        if (error != nil) {
+            NSLog(@"Error loading NE tunnel prefs.");
             return;
+        }
         self.providerManager = managers.firstObject?managers.firstObject:[NETunnelProviderManager new];
         [self onVpnState:self.providerManager.connection.status];
         [self updateProviderStatus];
@@ -229,6 +231,11 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onVpnStateChange:) name:NEVPNStatusDidChangeNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onConfigurationChange:) name:NEVPNConfigurationChangeNotification object:nil];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        NSLog(@"Updating provider status");
+        [self updateProviderStatus];
+    });
 
     return [super application:application didFinishLaunchingWithOptions:options];
 }

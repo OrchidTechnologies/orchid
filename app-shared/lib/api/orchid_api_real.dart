@@ -19,6 +19,7 @@ class RealOrchidAPI implements OrchidAPI {
 
   RealOrchidAPI._internal() {
     _platform.setMethodCallHandler((MethodCall call) async {
+      //print("Method call handler: $call");
       switch (call.method) {
         case 'connectionStatus':
           switch (call.arguments) {
@@ -44,6 +45,7 @@ class RealOrchidAPI implements OrchidAPI {
           break;
 
         case 'providerStatus':
+          //print("ProviderStatus called in API: ${call.arguments}");
           vpnPermissionStatus.add(call.arguments);
           break;
 
