@@ -77,13 +77,15 @@ class SideDrawer extends StatelessWidget {
              */
             SideDrawerTile(
                 title: "Clear All Data",
-                imageName: 'assets/images/error.png',
+                imageName: 'assets/images/sync.png',
                 onPressed: () {
                   _confirmDelete(context);
                 }),
+            divider(),
             SideDrawerTile(
                 title: "Legal",
                 imageName: 'assets/images/feedback.png',
+                showDetail: true,
                 onPressed: () {
                   Navigator.pushNamed(context, '/legal');
                 }),
@@ -118,17 +120,19 @@ class SideDrawerTile extends StatelessWidget {
   final String title;
   final String imageName;
   final VoidCallback onPressed;
+  final bool showDetail;
 
   const SideDrawerTile({
     @required this.title,
     @required this.imageName,
     @required this.onPressed,
+    this.showDetail = false,
   }) : super();
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-        contentPadding: EdgeInsets.only(left: 20),
+        contentPadding: EdgeInsets.only(left: 20, right: 20),
         leading: Image(
             height: 32,
             width: 32,
@@ -136,6 +140,7 @@ class SideDrawerTile extends StatelessWidget {
             alignment: Alignment.center,
             color: Colors.white,
             image: AssetImage(imageName)),
+        trailing: showDetail ? Icon(Icons.chevron_right, color: AppColors.white) : null,
         title: Text(title,
             textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
         onTap: onPressed);
