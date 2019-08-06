@@ -31,21 +31,18 @@ class _PrivacyPageState extends State<PrivacyPage> {
 
   Widget buildPage(BuildContext context) {
     return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 600),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              SizedBox(height: 24),
-              Text(
-                title,
-                textAlign: TextAlign.left,
-              ),
-              PlainTextBox(text: _privacyText),
-            ],
-          ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            SizedBox(height: 24),
+            Text(
+              title,
+              textAlign: TextAlign.left,
+            ),
+            PlainTextBox(text: _privacyText),
+          ],
         ),
       ),
     );

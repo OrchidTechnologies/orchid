@@ -71,6 +71,7 @@
         <integer>2</integer>
     </array>
 
+    <!--
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
@@ -81,6 +82,7 @@
         <string>UIInterfaceOrientationPortrait</string>
         <string>UIInterfaceOrientationPortraitUpsideDown</string>
     </array>
+    -->
 
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
@@ -98,11 +100,13 @@
     <key>UIApplicationExitsOnSuspend</key>
     <false/>
 
+    <!--
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsArbitraryLoads</key>
         <true/>
     </dict>
+    -->
 
     <key>UILaunchStoryboardName</key>
     <string>LaunchScreen</string>

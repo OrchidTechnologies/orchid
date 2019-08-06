@@ -31,21 +31,18 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
 
   Widget buildPage(BuildContext context) {
     return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 600),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              SizedBox(height: 24),
-              Text(
-                title,
-                textAlign: TextAlign.left,
-              ),
-              PlainTextBox(text: _licenseText),
-            ],
-          ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            SizedBox(height: 24),
+            Text(
+              title,
+              textAlign: TextAlign.left,
+            ),
+            PlainTextBox(text: _licenseText),
+          ],
         ),
       ),
     );
