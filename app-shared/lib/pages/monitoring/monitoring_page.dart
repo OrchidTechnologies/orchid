@@ -30,7 +30,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Orchid Monitoring"),
+        //title: Text("Orchid"),
+        title: Image.asset("assets/images/name_logo.png", color: Colors.white, height: 24),
         actions: <Widget>[_buildSwitch()],
       ),
       body: Container(
