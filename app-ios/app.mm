@@ -232,11 +232,6 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onConfigurationChange:) name:NEVPNConfigurationChangeNotification object:nil];
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        NSLog(@"Updating provider status");
-        [self updateProviderStatus];
-    });
-
     return [super application:application didFinishLaunchingWithOptions:options];
 }
 
@@ -256,12 +251,12 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 
 - (void) applicationWillEnterForeground:(UIApplication *)application {
-    NSLog(@"Orchid entered foreground.");
-    [self updateProviderStatus];
 }
 
 
 - (void) applicationDidBecomeActive:(UIApplication *)application {
+    NSLog(@"Updating provider status");
+    [self updateProviderStatus];
 }
 
 
