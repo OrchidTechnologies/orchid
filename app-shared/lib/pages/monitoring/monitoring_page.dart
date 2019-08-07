@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_api.dart' as prefix0;
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
@@ -44,7 +42,6 @@ class _MonitoringPageState extends State<MonitoringPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        //title: Text("Orchid"),
         title: Image.asset("assets/images/name_logo.png",
             color: Colors.white, height: 24),
         actions: <Widget>[_buildSwitch()],

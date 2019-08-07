@@ -15,7 +15,6 @@ class _TrafficViewState extends State<TrafficView> {
   String _query = "";
   List<FlowEntry> _resultList;
   Timer _pollTimer;
-  ScrollController _scrollController = ScrollController(keepScrollOffset: true);
 
   @override
   void initState() {
@@ -91,14 +90,15 @@ class _TrafficViewState extends State<TrafficView> {
         },
         child: ListView.builder(
             key: PageStorageKey('traffic list view'),
-            controller: _scrollController,
+            primary: true,
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
               var item = _resultList[index];
               var hostname = (item.hostname == null || item.hostname.isEmpty)
                   ? item.dst_addr
                   : item.hostname;
-              var date = DateFormat("MM/dd/yyyy HH:mm:ss.SSS").format(item.start.toLocal());
+              var date = DateFormat("MM/dd/yyyy HH:mm:ss.SSS")
+                  .format(item.start.toLocal());
               var protStyle = AppText.logStyle.copyWith(fontSize: 12.0);
               return Card(
                   color: Colors.white,
@@ -174,6 +174,5 @@ class _TrafficViewState extends State<TrafficView> {
   void dispose() {
     super.dispose();
     _pollTimer.cancel();
-    _scrollController.dispose();
   }
 }
