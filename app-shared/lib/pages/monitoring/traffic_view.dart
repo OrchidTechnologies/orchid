@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/analysis_db.dart';
-
 import '../app_colors.dart';
 import '../app_text.dart';
 
@@ -31,7 +29,7 @@ class _TrafficViewState extends State<TrafficView> {
     });
 
     // Update periodically
-    _pollTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+    _pollTimer = Timer.periodic(Duration(seconds: 3), (timer) {
       _performQuery();
     });
 
@@ -40,12 +38,6 @@ class _TrafficViewState extends State<TrafficView> {
 
     AnalysisDb().update.listen((_) {
       _performQuery();
-    });
-
-    _scrollController.addListener(() {
-      debugPrint("scroll position: ${_scrollController.position}");
-      // Clear keyboard on scroll
-      FocusScope.of(context).requestFocus(FocusNode());
     });
   }
 

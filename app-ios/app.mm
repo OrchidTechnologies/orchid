@@ -43,12 +43,6 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 @interface AppDelegate () {
     FlutterMethodChannel *feedback_;
-    
-    // Connection status
-    NSString *connectionStatus_;
-    
-    // VPN Provider installed status
-    NSNumber *providerStatus_;
 }
 
 @end
@@ -89,8 +83,6 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 // Publish the VPN connection status to the app.
 - (void) setVPN:(NSString *)status {
-    if (connectionStatus_ != nil && [connectionStatus_ isEqualToString:status]) { return; }
-    connectionStatus_ = status;
     NSLog(@"NEVPNStatus change %@", status);
     [feedback_ invokeMethod:@"connectionStatus" arguments:status];
 }
@@ -106,37 +98,42 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 // Get the initialization state of the tunnel provider and publish it to the app.
 - (void) updateProviderStatus {
+    [self providerStatus: ^(bool result) {
+        [self setProviderState: result];
+    }];
+}
+
+// Get the initialization state of the tunnel provider
+- (void) providerStatus: (void(^)(bool)) completionHandler {
     [self.providerManager loadFromPreferencesWithCompletionHandler:^(NSError * _Nullable error) {
         // Is the provider enabled?
         if (!self.providerManager.enabled) {
             NSLog(@"Provider enabled: %d", self.providerManager.enabled);
-            [self setProviderState: false];
+            completionHandler(false);
             return;
         }
         // Is it a tunnel provider?
         NEVPNProtocol *providerConfig = self.providerManager.protocolConfiguration;
         if (![providerConfig isKindOfClass:[NETunnelProviderProtocol class]]) {
             NSLog(@"Provider protocol is not a tunnel protocol");
-            [self setProviderState: false];
+            completionHandler(false);
             return;
         }
         // Is it our tunnel provider?
         NETunnelProviderProtocol *tunnelConfig = (NETunnelProviderProtocol *)providerConfig;
         if (![tunnelConfig.providerBundleIdentifier hasPrefix:@ORCHID_DOMAIN]) {
             NSLog(@"Provider bundle id: %@", tunnelConfig.providerBundleIdentifier);
-            [self setProviderState: false];
+            completionHandler(false);
             return;
         }
         // Check for the correct version here?
         // ...
-        [self setProviderState: true];
+        completionHandler(true);
     }];
 }
 
 // Publish the provider initialization state to the app.
 - (void) setProviderState: (bool)installed {
-    if (providerStatus_ != nil && [providerStatus_ boolValue] == installed) { return; }
-    providerStatus_ = [NSNumber numberWithBool: installed];
     NSLog(@"VPN Provider Status %d", installed);
     [feedback_ invokeMethod:@"providerStatus" arguments: @(installed)];
 }

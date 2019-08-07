@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_api.dart' as prefix0;
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
@@ -17,7 +18,6 @@ class MonitoringPage extends StatefulWidget {
 }
 
 class _MonitoringPageState extends State<MonitoringPage> {
-
   @override
   void initState() {
     super.initState();
@@ -26,12 +26,27 @@ class _MonitoringPageState extends State<MonitoringPage> {
     _initListeners();
   }
 
+  /// Listen for changes in Orchid network status.
+  void _initListeners() {
+    OrchidAPI().logger().write("Init listeners...");
+
+    //_monitorVPNStatus();
+
+    // Monitor connection status
+    OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
+      OrchidAPI().logger().write("Connection status changed: $state");
+      // Update the UI
+      setState(() {});
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         //title: Text("Orchid"),
-        title: Image.asset("assets/images/name_logo.png", color: Colors.white, height: 24),
+        title: Image.asset("assets/images/name_logo.png",
+            color: Colors.white, height: 24),
         actions: <Widget>[_buildSwitch()],
       ),
       body: Container(
@@ -45,60 +60,91 @@ class _MonitoringPageState extends State<MonitoringPage> {
   }
 
   Switch _buildSwitch() {
-    var _currentStatus = OrchidAPI().connectionStatus.value ?? OrchidConnectionState.NotConnected;
+    var currentValue = OrchidAPI().connectionStatus.value ??
+        OrchidConnectionState.NotConnected;
     return Switch(
-      activeColor: AppColors.purple_5,
-      // TODO: We should replace this switch with something that represents the
-      // TODO: connecting state as well.
-      // Note: The switch has some weird requirements that complicate this logic.
-      // Note: If the user toggles it to "on" we must rebuild it with the "true"
-      // Note: value before it can be toggled off again programmatically.
-      // Note: This makes a failed "connecting" state problematic.  So I have
-      // Note: inverted the logic to show connected immediately and fall back.
-      value: _currentStatus != OrchidConnectionState.NotConnected,
-      onChanged: (bool newSwitchValue) {
-        switch (_currentStatus) {
-          case OrchidConnectionState.NotConnected:
-            if (newSwitchValue == true) {
-              OrchidAPI().setConnected(true);
-            }
-            break;
-          case OrchidConnectionState.Connecting:
-          case OrchidConnectionState.Connected:
-            if (newSwitchValue == false) {
-              OrchidAPI().setConnected(false);
-            }
-            break;
-        }
-      },
-    );
+        activeColor: AppColors.purple_5,
+        // TODO: We should replace this switch with something that represents the
+        // TODO: connecting state as well.
+        // Note: The switch has some weird requirements that complicate this logic.
+        // Note: If the user toggles it to "on" we must rebuild it with the "true"
+        // Note: value before it can be toggled off again programmatically.
+        // Note: This makes a failed "connecting" state problematic.  So I have
+        // Note: inverted the logic to show connected immediately and fall back.
+        value: currentValue != OrchidConnectionState.NotConnected,
+        onChanged: (bool newValue) {
+          _switchChanged(currentValue, newValue);
+        });
   }
 
-  /// Listen for changes in Orchid network status.
-  void _initListeners() {
-    OrchidAPI().logger().write("Init listeners...");
+  void _switchChanged(OrchidConnectionState currentValue, bool newValue) {
+    switch (currentValue) {
+      case OrchidConnectionState.NotConnected:
+        if (newValue == true) {
+          _checkPermissionAndEnableConnection();
+        }
+        break;
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Connected:
+        if (newValue == false) {
+          _disableConnection();
+        }
+        break;
+    }
+  }
 
-    // Monitor VPN permission status
-    OrchidAPI().vpnPermissionStatus.listen((bool installed) {
-      OrchidAPI().logger().write("VPN Perm status changed: $installed");
-
-      // Ignore changes until the first walkthrough has been completed
-      //bool walkthroughCompleted = await UserPreferences().getWalkthroughCompleted();
-
-      if (!installed /*&& walkthroughCompleted*/) {
-        String currentPage = ModalRoute.of(context).settings.name;
-        OrchidAPI().logger().write("Current page: $currentPage");
-        var route = AppTransitions.downToUpTransition(
-            OnboardingVPNPermissionPage(allowSkip: false));
-        Navigator.push(context, route);
+  void _checkPermissionAndEnableConnection() {
+    // Get the most recent status, blocking if needed.
+    OrchidAPI().vpnPermissionStatus.take(1).listen((installed) {
+      debugPrint("vpn: current perm: $installed");
+      if (installed) {
+        debugPrint("vpn: already installed");
+        OrchidAPI().setConnected(true);
+        setState(() {});
+      } else {
+        _showVPNPermissionPage(
+            allowSkip: true,
+            onComplete: (installed) {
+              if (installed) {
+                debugPrint("vpn: user chose to install");
+                // Note: It appears that trying to enable the connection too quickly
+                // Note: after installing the vpn permission / config fails.
+                // Note: Introducing a short artificial delay.
+                Future.delayed(Duration(milliseconds: 500)).then((_) {
+                  OrchidAPI().setConnected(true);
+                  Navigator.pop(context);
+                  setState(() {});
+                });
+              } else {
+                debugPrint("vpn: user skipped");
+                Navigator.pop(context);
+                setState(() {});
+              }
+            });
       }
     });
+  }
 
-    // Monitor connection status
-    OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
-      OrchidAPI().logger().write("Connection status changed: $state");
-      // Update the UI
-      setState(() { });
+  void _disableConnection() {
+    OrchidAPI().setConnected(false);
+  }
+
+  // Continously monitor VPN permission status and show the permission page as needed.
+  void _monitorVPNStatus() {
+    OrchidAPI().vpnPermissionStatus.distinct().listen((bool installed) {
+      OrchidAPI().logger().write("VPN Perm status changed: $installed");
+      if (!installed) {
+        _showVPNPermissionPage();
+      }
     });
+  }
+
+  void _showVPNPermissionPage(
+      {bool allowSkip = false, Function(bool) onComplete}) {
+    var route = AppTransitions.downToUpTransition(OnboardingVPNPermissionPage(
+      allowSkip: allowSkip,
+      onComplete: onComplete,
+    ));
+    Navigator.push(context, route);
   }
 }

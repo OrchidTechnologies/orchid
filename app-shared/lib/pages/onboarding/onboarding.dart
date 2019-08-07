@@ -30,8 +30,8 @@ class AppOnboarding {
   /// null if no pages remain to be shown.
   Future<String> _nextPage() async {
 
-    // Show the walkthrough
     /*
+    // Show the walkthrough
     bool walkthroughCompleted = await UserPreferences().getWalkthroughCompleted();
     if (!walkthroughCompleted) {
       return AppRoutes.onboarding_walkthrough;

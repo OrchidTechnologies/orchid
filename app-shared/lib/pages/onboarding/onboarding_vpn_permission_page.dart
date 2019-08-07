@@ -9,7 +9,7 @@ import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 
 class OnboardingVPNPermissionPage extends StatefulWidget {
-  final VoidCallback onComplete;
+  final Function(bool) onComplete;
   final bool includeScaffold;
   final bool allowSkip;
 
@@ -71,8 +71,8 @@ class _OnboardingVPNPermissionPageState
         context: context,
         title: "Allow Connection",
         body:
-            "Orchid VPN is requesting permission to set up a VPN connection that will"
-            " allow it to monitor network traffic. Only allow this if you trust this source."
+            "Orchid VPN is requesting permission to set up a VPN extension that will"
+            " allow it to show you your network traffic. Only allow this if you trust this source."
             "\n\nAn icon will be shown at the top of your screen while the VPN is in use. Allow?",
         cancelText: "CANCEL",
         actionText: "OK",
@@ -86,20 +86,20 @@ class _OnboardingVPNPermissionPageState
     bool ok = await OrchidAPI().requestVPNPermission();
     OrchidAPI().logger().write("requestVPNPermission returned: $ok");
     if (ok) {
-      _complete();
+      _complete(true);
     }
   }
 
   // Skip the permission check for now.
   void _skip() {
-    _complete();
+    _complete(false);
   }
 
   // Note that the user has viewed this screen and move on.
-  void _complete() async {
+  void _complete(bool result) async {
     await UserPreferences().setPromptedForVPNPermission(true);
     if (widget.onComplete != null) {
-      return widget.onComplete();
+      return widget.onComplete(result);
     }
     OrchidAPI().logger().write("dismissing vpn perm page");
     AppOnboarding().pageComplete(context);

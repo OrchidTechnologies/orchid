@@ -74,7 +74,7 @@ class _WalkthroughPagesState extends State<WalkthroughPages> {
           bodyText:
               "We appreciate you taking part and would love to hear your feedback! Look for our feedback tab in the navigation drawer."),
       OnboardingVPNPermissionPage(
-        onComplete: _onComplete,
+        onComplete: (result) { _onComplete(); },
         includeScaffold: false,
       )
     ];
