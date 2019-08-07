@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/pages/help/help_feedback_page.dart';
 import 'package:orchid/pages/help/help_page.dart';
 import 'package:orchid/pages/connect/connect_page.dart';
+import 'package:orchid/pages/help/open_source_page.dart';
+import 'package:orchid/pages/help/privacy_page.dart';
 import 'package:orchid/pages/monitoring/monitoring_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_success_page.dart';
@@ -24,6 +26,8 @@ class AppRoutes {
   static const String settings_log = "/settings/log";
   static const String settings_dev = "/settings/dev";
   static const String help = "/help";
+  static const String privacy = "/help/privacy";
+  static const String open_source = "/help/open_source";
   static const String legal = "/legal";
   static const String feedback = "/feedback";
   static const String onboarding_walkthrough = "/onboarding/walkthrough";
@@ -44,6 +48,8 @@ class AppRoutes {
     settings_log: (context) => SettingsLogPage(),
     settings_dev: (context) => SettingsDevPage(),
     help: (context) => HelpPage(),
+    privacy: (context) => PrivacyPage(),
+    open_source: (context) => OpenSourcePage(),
     legal: (context) => LegalPage(),
     feedback: (context) => HelpFeedbackPage(),
     onboarding_walkthrough: (context) => WalkthroughPages(),

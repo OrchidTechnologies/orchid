@@ -135,7 +135,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 // Publish the provider initialization state to the app.
 - (void) setProviderState: (bool)installed {
-    //if (providerStatus_ != nil && [providerStatus_ boolValue] == installed) { return; }
+    if (providerStatus_ != nil && [providerStatus_ boolValue] == installed) { return; }
     providerStatus_ = [NSNumber numberWithBool: installed];
     NSLog(@"VPN Provider Status %d", installed);
     [feedback_ invokeMethod:@"providerStatus" arguments: @(installed)];

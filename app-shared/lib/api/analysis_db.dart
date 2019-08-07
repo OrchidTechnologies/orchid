@@ -1,23 +1,26 @@
 import 'package:flutter/cupertino.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
 import 'iana.dart';
 import 'orchid_api.dart';
 
 class AnalysisDb {
   static AnalysisDb _shared = AnalysisDb._init();
-  Database _db;
   static final String unknown = "???"; // Localize
+
+  final BehaviorSubject<bool> update = BehaviorSubject();
+  Database _db;
 
   AnalysisDb._init();
 
-  Future _getDb() async {
+  Future<Database> _getDb() async {
     if (_db != null && _db.isOpen) {
       return _db;
     }
     String dbPath = (await OrchidAPI().groupContainerPath()) + '/analysis.db';
     debugPrint("analysis db path: $dbPath");
     try {
-      _db = await openDatabase(dbPath, readOnly: true);
+      _db = await openDatabase(dbPath, readOnly: false);
     } catch (err) {
       debugPrint("Error opening analysis db: $err");
       return null;
@@ -54,7 +57,22 @@ class AnalysisDb {
     }).toList(growable: false);
   }
 
+  Future<void> clear() async {
+    Database db = await _getDb();
+    await db.rawDelete('DELETE FROM flow');
+    _notifyUpdate();
+    return null;
+  }
+
+  void _notifyUpdate() {
+    update.add(null);
+  }
+
   String _fromAddr(int addr) {
+    // Interpret negative values as unsigned
+    if (addr < 0) {
+      addr += (1 << 32);
+    }
     var a1 = addr >> 24;
     var a2 = addr >> 16 & 255;
     var a3 = addr >> 8 & 255;

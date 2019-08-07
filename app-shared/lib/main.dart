@@ -6,16 +6,17 @@ import 'api/orchid_api.dart';
 
 void main() {
   OrchidAPI().logger().write("App Startup");
-  OrchidAPI().budget().appStartup();
+  //OrchidAPI().budget().appStartup();
 
   // Force portrait orientation
   // Note: There is a bug causing this to fail on iPad, so we have locked
   // Note: the orientation in the main plist:
   // Note: https://github.com/flutter/flutter/issues/27235
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
-      .then((_) {
-    runApp(OrchidApp());
-  });
+//  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+//      .then((_) {
+//    runApp(OrchidApp());
+//  });
+  runApp(OrchidApp());
 }
 
 class OrchidApp extends StatelessWidget {

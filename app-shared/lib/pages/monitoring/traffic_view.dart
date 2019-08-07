@@ -35,6 +35,10 @@ class _TrafficViewState extends State<TrafficView> {
 
     // Update first view
     _performQuery();
+
+    AnalysisDb().update.listen((_) {
+      _performQuery();
+    });
   }
 
   @override
@@ -104,9 +108,13 @@ class _TrafficViewState extends State<TrafficView> {
                         children: <Widget>[
                           Row(
                             children: <Widget>[
-                              Text("$hostname",
-                                  style: AppText.textLabelStyle
-                                      .copyWith(fontWeight: FontWeight.bold)),
+                              Expanded(
+                                flex: 10,
+                                child: Text("$hostname",
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppText.textLabelStyle
+                                        .copyWith(fontWeight: FontWeight.bold)),
+                              ),
                               Spacer(),
                               Text("${item.protocol}",
                                   style: AppText.textLabelStyle.copyWith(
