@@ -98,7 +98,7 @@ class _TrafficViewState extends State<TrafficView> {
               var hostname = (item.hostname == null || item.hostname.isEmpty)
                   ? item.dst_addr
                   : item.hostname;
-              var date = DateFormat.yMd().add_jm().format(item.start.toLocal());
+              var date = DateFormat("MM/dd/yyyy HH:mm:ss.SSS").format(item.start.toLocal());
               var protStyle = AppText.logStyle.copyWith(fontSize: 12.0);
               return Card(
                   color: Colors.white,
