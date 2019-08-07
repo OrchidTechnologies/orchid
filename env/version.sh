@@ -14,10 +14,10 @@
 set -o pipefail
 
 monotonic=$(git log -1 --pretty=format:%ct)
-version=$(git describe --tags --match="v*" "$@" 2>/dev/null | sed -e 's@-\([^-]*\)-\([^-]*\)$@+\1.\2@;s@^v@@;s@%@~@g' || echo 0.9)
+version=$(git describe --tags --match="v*" "$@" 2>/dev/null | sed -e 's@-\([^-]*\)-\([^-]*\)$@.p\1.\2@;s@^v@@;s@%@~@g' || echo 0.9)
 
 if git status --ignore-submodules=dirty -s | cut -c 1-2 | grep M >/dev/null; then
-    version+='+'
+    version+='.x'
 fi
 
 echo "${monotonic}" "${version}"
