@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/analysis_db.dart';
+import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_types.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 
@@ -13,7 +15,7 @@ class TrafficView extends StatefulWidget {
 class _TrafficViewState extends State<TrafficView> {
   var _searchTextController = TextEditingController();
   String _query = "";
-  List<FlowEntry> _resultList;
+  List<FlowEntry> _resultList = List();
   Timer _pollTimer;
 
   @override
@@ -42,8 +44,16 @@ class _TrafficViewState extends State<TrafficView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[_buildSearchView(), _buildResultListView()],
+    return Stack(
+      children: <Widget>[
+        Visibility(visible: _resultList.isEmpty, child: TrafficViewEmpty()),
+        Visibility(
+          visible: !_resultList.isEmpty,
+          child: Column(
+            children: <Widget>[_buildSearchView(), _buildResultListView()],
+          ),
+        )
+      ],
     );
   }
 
@@ -73,7 +83,6 @@ class _TrafficViewState extends State<TrafficView> {
   Future<void> _performQuery() async {
     Completer<void> completer = Completer();
     AnalysisDb().query(filterText: _query).then((results) {
-      //print("got rows: ${results.length}");
       setState(() {
         _resultList = results;
       });
@@ -174,5 +183,41 @@ class _TrafficViewState extends State<TrafficView> {
   void dispose() {
     super.dispose();
     _pollTimer.cancel();
+  }
+}
+
+class TrafficViewEmpty extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(left: 32, right: 32, bottom: 128),
+        child: StreamBuilder<OrchidConnectionState>(
+            stream: OrchidAPI().connectionStatus,
+            builder: (context, snapshot) {
+              return IntrinsicHeight(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: Column(
+                    children: <Widget>[
+                      AppText.header(text: "Welcome to Orchid!"),
+                      SizedBox(height: 8),
+                      snapshot.data == OrchidConnectionState.NotConnected
+                          ? AppText.body(
+                              text:
+                                  "Enable the VPN configuration at the top-right to begin analyzing traffic.")
+                          : SizedBox(),
+                    ],
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    border: Border.all(width: 1.0, color: AppColors.neutral_5),
+                  ),
+                ),
+              );
+            }),
+      ),
+    );
   }
 }
