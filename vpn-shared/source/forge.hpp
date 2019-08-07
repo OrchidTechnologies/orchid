@@ -24,6 +24,7 @@
 #define ORCHID_FORGE_HPP
 
 #include <openvpn/ip/csum.hpp>
+#include <openvpn/ip/icmp4.hpp>
 #include <openvpn/ip/ip4.hpp>
 #include <openvpn/ip/tcp.hpp>
 #include <openvpn/ip/udp.hpp>
@@ -39,6 +40,12 @@ static void Forge(Header_ &header, int adjust) {
     boost::endian::big_to_native_inplace(header.check);
     openvpn::tcp_adjust_checksum(adjust, header.check);
     boost::endian::native_to_big_inplace(header.check);
+}
+
+static void Forge(openvpn::ICMPv4 &header, int adjust) {
+    boost::endian::big_to_native_inplace(header.checksum);
+    openvpn::tcp_adjust_checksum(adjust, header.checksum);
+    boost::endian::native_to_big_inplace(header.checksum);
 }
 
 template <typename Header_>

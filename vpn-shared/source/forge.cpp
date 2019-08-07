@@ -49,6 +49,8 @@ uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t
         case openvpn::IPCommon::UDP:
             Forge(span.cast<openvpn::UDPHeader>(length), adjust);
             break;
+        case openvpn::IPCommon::ICMPv4:
+            break;
         default:
             orc_assert(false);
     }
