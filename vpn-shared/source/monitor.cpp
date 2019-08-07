@@ -6,18 +6,22 @@
 
 #include <openssl/ssl.h>
 
+#include <boost/beast.hpp>
+
 #include "buffer.hpp"
 #include "monitor.hpp"
 #include "socket.hpp"
 
 using namespace openvpn;
 using namespace asio::ip;
+using namespace boost::beast;
+using namespace boost::beast::http;
 
 
 namespace orc {
 
-typedef std::function<void (std::string)> hostname_callback;
-typedef std::function<void (std::string)> protocol_callback;
+typedef std::function<void (const std::string_view)> hostname_callback;
+typedef std::function<void (const std::string_view)> protocol_callback;
 
 void get_quic_SNI(const uint8_t *data, size_t len, const hostname_callback hostname_cb, const protocol_callback protocol_cb)
 {
@@ -117,7 +121,7 @@ void get_quic_SNI(const uint8_t *data, size_t len, const hostname_callback hostn
         if (memcmp(subTag, "SNI\x00", 4) == 0) {
             const char *snidata = (const char*)(&tagDataStart[start]);
             size_t snilen = endOffset - start;
-            std::string sni(snidata, snilen);
+            std::string_view sni(snidata, snilen);
             Log() << "QUIC SNI(" << snilen << "): \"" << sni << "\"" << std::endl;
             hostname_cb(sni);
 
@@ -162,9 +166,34 @@ void get_DTLS(const uint8_t *data, int end, const protocol_callback protocol_cb)
         return;
     }
     uint16_t client_hello_version = ntohs(*(uint16_t*)&data[25]);
-    std::string protocol(ssl_protocol_to_string(client_hello_version));
+    auto protocol = ssl_protocol_to_string(client_hello_version);
     Log() << "DTLS " << protocol << std::endl;
     protocol_cb(protocol);
+}
+
+void get_HTTP(const uint8_t *data, int end, const hostname_callback hostname_cb, const protocol_callback protocol_cb)
+{
+    request_parser<string_body> parser;
+    error_code ec;
+    parser.put(boost::asio::buffer(data, end), ec);
+    if (ec) {
+        return;
+    }
+    auto fields = parser.get();
+    auto version = fields.version();
+    std::ostringstream protocol;
+    protocol << "HTTP/" << version / 10 << "." << version % 10;
+    Log() << "HTTP " << protocol.str() << std::endl;
+    protocol_cb(protocol.str());
+    auto host_field = fields.find("Host");
+    if (host_field != fields.end()) {
+        // sigh https://github.com/boostorg/utility/pull/51
+        auto boost_view = host_field->value();
+        auto host = std::string_view(boost_view.begin(), boost_view.size());
+
+        Log() << "HTTP Host " << host << std::endl;
+        hostname_cb(host);
+    }
 }
 
 void get_TLS_SNI(const uint8_t *data, int end, const hostname_callback hostname_cb, const protocol_callback protocol_cb)
@@ -342,11 +371,11 @@ void get_TLS_SNI(const uint8_t *data, int end, const hostname_callback hostname_
                 // verify we have enough bytes
                 if (n > end - nameLength) return;
 
-                std::string sni((char*)&data[n], nameLength);
+                std::string_view sni((char*)&data[n], nameLength);
                 Log() << "TLS SNI(" << nameLength << "): \"" << sni << "\"" << std::endl;
                 hostname_cb(sni);
 
-                std::string protocol(ssl_protocol_to_string(version));
+                auto protocol = ssl_protocol_to_string(version);
                 protocol_cb(protocol);
                 return;
             }
@@ -393,6 +422,11 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         auto flow = Five(IPCommon::TCP, {address_v4(ntohl(iphdr->saddr)), ntohs(tcphdr->source)}, {address_v4(ntohl(iphdr->daddr)), ntohs(tcphdr->dest)});
         logger.AddFlow(flow);
         auto tcpbuf = ((const uint8_t *)tcphdr) + tcphlen;
+        get_HTTP(tcpbuf, tcp_payload_len, [&](auto sni) {
+            logger.GotHostname(flow, sni);
+        }, [&](auto protocol) {
+            logger.GotProtocol(flow, protocol);
+        });
         get_TLS_SNI(tcpbuf, tcp_payload_len, [&](auto sni) {
             logger.GotHostname(flow, sni);
         }, [&](auto protocol) {
