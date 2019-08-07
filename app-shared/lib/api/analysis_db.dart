@@ -69,6 +69,10 @@ class AnalysisDb {
   }
 
   String _fromAddr(int addr) {
+    // Interpret negative values as unsigned
+    if (addr < 0) {
+      addr += (1 << 32);
+    }
     var a1 = addr >> 24;
     var a2 = addr >> 16 & 255;
     var a3 = addr >> 8 & 255;
