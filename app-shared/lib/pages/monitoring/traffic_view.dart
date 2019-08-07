@@ -13,18 +13,20 @@ class TrafficView extends StatefulWidget {
 }
 
 class _TrafficViewState extends State<TrafficView> {
-  var _searchview = TextEditingController();
+  var _searchTextController = TextEditingController();
   String _query = "";
   List<FlowEntry> _resultList;
   Timer _pollTimer;
+  ScrollController _scrollController = ScrollController(keepScrollOffset: true);
 
   @override
   void initState() {
     super.initState();
 
     // Update on search text
-    _searchview.addListener(() {
-      _query = _searchview.text.isEmpty ? "" : _searchview.text;
+    _searchTextController.addListener(() {
+      _query =
+          _searchTextController.text.isEmpty ? "" : _searchTextController.text;
       _performQuery();
     });
 
@@ -39,6 +41,12 @@ class _TrafficViewState extends State<TrafficView> {
     AnalysisDb().update.listen((_) {
       _performQuery();
     });
+
+    _scrollController.addListener(() {
+      debugPrint("scroll position: ${_scrollController.position}");
+      // Clear keyboard on scroll
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
   }
 
   @override
@@ -52,11 +60,19 @@ class _TrafficViewState extends State<TrafficView> {
     return Container(
       padding: EdgeInsets.only(left: 8.0),
       //decoration: BoxDecoration(border: Border.all(width: 1.0)),
-      child: TextField(
-        controller: _searchview,
+      child: TextFormField(
+        controller: _searchTextController,
         decoration: InputDecoration(
           hintText: "Search",
           hintStyle: TextStyle(color: AppColors.neutral_5),
+          suffixIcon: _searchTextController.text.isEmpty
+              ? null
+              : IconButton(
+                  icon: Icon(Icons.clear),
+                  onPressed: () {
+                    _searchTextController.clear();
+                    FocusScope.of(context).requestFocus(FocusNode());
+                  }),
         ),
         textAlign: TextAlign.left,
       ),
@@ -83,7 +99,7 @@ class _TrafficViewState extends State<TrafficView> {
         },
         child: ListView.builder(
             key: PageStorageKey('traffic list view'),
-            controller: ScrollController(keepScrollOffset: true),
+            controller: _scrollController,
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
               var item = _resultList[index];
@@ -166,5 +182,6 @@ class _TrafficViewState extends State<TrafficView> {
   void dispose() {
     super.dispose();
     _pollTimer.cancel();
+    _scrollController.dispose();
   }
 }
