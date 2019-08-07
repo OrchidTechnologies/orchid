@@ -146,6 +146,27 @@ std::string ssl_protocol_to_string(int version)
     }
 }
 
+void get_DTLS(const uint8_t *data, int end, const protocol_callback protocol_cb)
+{
+    if (end < 27) {
+        return;
+    }
+    if (data[0] != 0x16) {
+        return;
+    }
+    uint16_t handshake_version = ntohs(*(uint16_t*)&data[1]);
+    if (handshake_version != DTLS1_VERSION && handshake_version != DTLS1_2_VERSION) {
+        return;
+    }
+    if (data[13] != 0x01 && data[13] != 0x02) {
+        return;
+    }
+    uint16_t client_hello_version = ntohs(*(uint16_t*)&data[25]);
+    std::string protocol(ssl_protocol_to_string(client_hello_version));
+    Log() << "DTLS " << protocol << std::endl;
+    protocol_cb(protocol);
+}
+
 void get_TLS_SNI(const uint8_t *data, int end, const hostname_callback hostname_cb, const protocol_callback protocol_cb)
 {
     /*
@@ -219,7 +240,7 @@ void get_TLS_SNI(const uint8_t *data, int end, const hostname_callback hostname_
 
     // protocol version
     if (pos > end - sizeof(uint16_t)) return;
-    uint16_t version = *(uint16_t*)&data[pos];
+    uint16_t version = ntohs(*(uint16_t*)&data[pos]);
     pos += sizeof(uint16_t);
 
     // skip Random
@@ -393,6 +414,9 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
             // TODO: verify the packet is DNS
             logger.GotProtocol(flow, "DNS");
         }
+        get_DTLS(udpbuf, udp_payload_len, [&](auto protocol) {
+            logger.GotProtocol(flow, protocol);
+        });
         get_quic_SNI(udpbuf, udp_payload_len, [&](auto sni) {
             logger.GotHostname(flow, sni);
         }, [&](auto protocol) {
