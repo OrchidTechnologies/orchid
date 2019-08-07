@@ -371,12 +371,13 @@ _trace();
         data.copy(buffer.data(), buffer.size());
 
         Span span(buffer.data(), buffer.size());
-        orc_assert(ForgeIP4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32()) == local_);
-
+        if (ForgeIP4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32()) != local_)
+            co_return;
         //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
-        if (parent_ != nullptr)
-            parent_->tun_recv(buffer);
-        co_return;
+
+        if (parent_ == nullptr)
+            co_return;
+        parent_->tun_recv(buffer);
     }
 };
 
