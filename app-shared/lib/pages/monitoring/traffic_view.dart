@@ -65,7 +65,7 @@ class _TrafficViewState extends State<TrafficView> {
 
   Future<void> _performQuery() async {
     Completer<void> completer = Completer();
-    AnalysisDb().query(textFilter: _query).then((results) {
+    AnalysisDb().query(filterText: _query).then((results) {
       //print("got rows: ${results.length}");
       setState(() {
         _resultList = results;
@@ -82,6 +82,8 @@ class _TrafficViewState extends State<TrafficView> {
           return _performQuery();
         },
         child: ListView.builder(
+            key: PageStorageKey('traffic list view'),
+            controller: ScrollController(keepScrollOffset: true),
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
               var item = _resultList[index];
@@ -111,7 +113,10 @@ class _TrafficViewState extends State<TrafficView> {
                               Expanded(
                                 flex: 10,
                                 child: Text("$hostname",
-                                    overflow: TextOverflow.ellipsis,
+                                    // Note: I'd prefer ellipses but they brake soft wrap control.
+                                    // Note: (Watch for the case of "-" dashes in domain names.)
+                                    overflow: TextOverflow.fade,
+                                    softWrap: false,
                                     style: AppText.textLabelStyle
                                         .copyWith(fontWeight: FontWeight.bold)),
                               ),

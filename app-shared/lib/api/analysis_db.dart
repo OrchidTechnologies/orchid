@@ -29,16 +29,28 @@ class AnalysisDb {
     return _db;
   }
 
-  Future<List<FlowEntry>> query({String textFilter}) async {
+  Future<List<FlowEntry>> query({String filterText}) async {
     var db = await _getDb();
     if (db == null) {
       return List();
     }
-    var filter =
-        textFilter.replaceAll(new RegExp(r'[^\w\s]+'), ''); // Safe query string
-    var queryClaus = (textFilter == null || textFilter.isEmpty)
-        ? ""
-        : " WHERE hostname LIKE '%${filter}%'";
+
+    String queryClaus;
+    // Placeholder for filter parser
+    if (filterText.startsWith("prot:") && filterText.length > 5) {
+      var protName = filterText.substring(5);
+      queryClaus = " WHERE protocol LIKE '%${protName}%'";
+    } else if (filterText.startsWith("-prot:") && filterText.length> 6) {
+      var protName = filterText.substring(6);
+      queryClaus = " WHERE protocol NOT LIKE '%${protName}%'";
+    } else {
+      var filter = filterText.replaceAll(
+          new RegExp(r'[^\w\s]+'), ''); // Safe query string
+      queryClaus = (filterText == null || filterText.isEmpty)
+          ? ""
+          : " WHERE hostname LIKE '%${filter}%'";
+    }
+
     var orderBy = ' ORDER BY "start" DESC';
     var limitClaus = ' LIMIT 1000'; // ?
     List<Map> list = await db.rawQuery(
