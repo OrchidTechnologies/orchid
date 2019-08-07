@@ -84,6 +84,8 @@ class Statement {
     orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const std::string &, value.c_str(), value.size(), SQLITE_TRANSIENT)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    orc_bind(text, const std::string_view, value.data(), value.size(), SQLITE_TRANSIENT)
 
   public:
     Statement() :
