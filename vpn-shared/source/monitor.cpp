@@ -364,7 +364,7 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         }
         TCPHeader* tcphdr = (TCPHeader*)(buf + ipv4hlen);
         int tcphlen = TCPHeader::length(tcphdr->doff_res);
-        if (tcphlen <= sizeof(TCPHeader) || tcphlen > ip_payload_len) {
+        if (tcphlen < sizeof(TCPHeader) || tcphlen > ip_payload_len) {
             return;
         }
         auto tcp_payload_len = ip_payload_len - tcphlen;
