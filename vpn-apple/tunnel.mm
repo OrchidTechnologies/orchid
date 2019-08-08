@@ -26,8 +26,8 @@
 #include <NetworkExtension/NetworkExtension.h>
 
 #include "capture.hpp"
-#include "connection.hpp"
 #include "family.hpp"
+#include "sync.hpp"
 #include "transport.hpp"
 
 //if (!(code)) [NSException raise:@"orc_assert" format:@"(%s)[%s:%u]", #code, __FILE__, __LINE__];
@@ -98,9 +98,8 @@ static std::string cfs(NSString *data) {
         auto capture(std::make_unique<Sink<Capture>>(local));
 
         auto family(capture->Wire<Sink<Family>>());
-        auto connection(std::make_unique<Connection<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
-        auto inverted(family->Wire<Inverted>(std::move(connection)));
-        inverted->Start();
+        auto sync(family->Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
+        sync->Start();
 
         Spawn([
             capture = std::move(capture),
