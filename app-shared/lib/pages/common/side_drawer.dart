@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
@@ -7,7 +6,25 @@ import '../app_text.dart';
 import 'dialogs.dart';
 
 /// The application side drawer
-class SideDrawer extends StatelessWidget {
+class SideDrawer extends StatefulWidget {
+  @override
+  _SideDrawerState createState() => _SideDrawerState();
+}
+
+class _SideDrawerState extends State<SideDrawer> {
+  String _version;
+
+  @override
+  void initState() {
+    super.initState();
+    OrchidAPI().versionString().then((value) {
+      debugPrint("got version: $value");
+      setState(() {
+        _version = value;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -76,7 +93,7 @@ class SideDrawer extends StatelessWidget {
             divider(),
              */
             SideDrawerTile(
-                title: "Clear All Data",
+                title: "Clear Data",
                 imageName: 'assets/images/sync.png',
                 onPressed: () {
                   _confirmDelete(context);
@@ -89,6 +106,20 @@ class SideDrawer extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushNamed(context, '/legal');
                 }),
+
+            Spacer(),
+            SafeArea(
+              child: Column(
+                children: <Widget>[
+                  divider(),
+                  SizedBox(height: 16),
+                  Text("Version: " + (_version ?? ""),
+                      style: AppText.noteStyle
+                          .copyWith(color: AppColors.neutral_4)),
+                  SizedBox(height: 32)
+                ],
+              ),
+            )
           ],
         )
       ],
@@ -99,8 +130,7 @@ class SideDrawer extends StatelessWidget {
     Dialogs.showConfirmationDialog(
         context: context,
         title: "Delete all data?",
-        body:
-        "This will delete all recorded data within the app.",
+        body: "This will delete all recorded data within the app.",
         cancelText: "CANCEL",
         actionText: "OK",
         action: () async {
@@ -140,7 +170,9 @@ class SideDrawerTile extends StatelessWidget {
             alignment: Alignment.center,
             color: Colors.white,
             image: AssetImage(imageName)),
-        trailing: showDetail ? Icon(Icons.chevron_right, color: AppColors.white) : null,
+        trailing: showDetail
+            ? Icon(Icons.chevron_right, color: AppColors.white)
+            : null,
         title: Text(title,
             textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
         onTap: onPressed);
@@ -169,6 +201,8 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
   @override
   void initState() {
     super.initState();
+
+    /*
     // Listen to the funding balance.
     OrchidAPI().budget().balance.listen((balance) {
       //OrchidAPI().logger().write("Balance update: $balance.");
@@ -176,6 +210,7 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
         this._balance = balance;
       });
     });
+     */
   }
 
   @override
@@ -199,10 +234,10 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
                     ? "(Setup)"
                     : "${_balance.toStringAsFixed(2)} OXT",
                 textAlign: TextAlign.left,
-                style: AppText.sideDrawerTitleStyle.copyWith(fontSize: 12, height: 1.2)),
+                style: AppText.sideDrawerTitleStyle
+                    .copyWith(fontSize: 12, height: 1.2)),
           ],
         ),
         onTap: widget.onPressed);
   }
-
 }

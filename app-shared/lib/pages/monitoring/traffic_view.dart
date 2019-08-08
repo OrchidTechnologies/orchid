@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/analysis_db.dart';
+import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_types.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 
@@ -15,7 +17,6 @@ class _TrafficViewState extends State<TrafficView> {
   String _query = "";
   List<FlowEntry> _resultList;
   Timer _pollTimer;
-  ScrollController _scrollController = ScrollController(keepScrollOffset: true);
 
   @override
   void initState() {
@@ -43,9 +44,22 @@ class _TrafficViewState extends State<TrafficView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[_buildSearchView(), _buildResultListView()],
+    return Stack(
+      children: <Widget>[
+        Visibility(visible: _noData(), child: TrafficViewEmpty()),
+        Visibility(
+          visible: !_noData(),
+          child: Column(
+            children: <Widget>[_buildSearchView(), _buildResultListView()],
+          ),
+        )
+      ],
     );
+  }
+
+  /// Return true if there is no data. (Not including empty filtered results)
+  bool _noData() {
+    return _resultList != null && _resultList.isEmpty && _query.length < 1;
   }
 
   Widget _buildSearchView() {
@@ -53,6 +67,7 @@ class _TrafficViewState extends State<TrafficView> {
       padding: EdgeInsets.only(left: 8.0),
       //decoration: BoxDecoration(border: Border.all(width: 1.0)),
       child: TextFormField(
+        autocorrect: false,
         controller: _searchTextController,
         decoration: InputDecoration(
           hintText: "Search",
@@ -74,7 +89,6 @@ class _TrafficViewState extends State<TrafficView> {
   Future<void> _performQuery() async {
     Completer<void> completer = Completer();
     AnalysisDb().query(filterText: _query).then((results) {
-      //print("got rows: ${results.length}");
       setState(() {
         _resultList = results;
       });
@@ -91,14 +105,15 @@ class _TrafficViewState extends State<TrafficView> {
         },
         child: ListView.builder(
             key: PageStorageKey('traffic list view'),
-            controller: _scrollController,
+            primary: true,
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
               var item = _resultList[index];
               var hostname = (item.hostname == null || item.hostname.isEmpty)
                   ? item.dst_addr
                   : item.hostname;
-              var date = DateFormat.yMd().add_jm().format(item.start.toLocal());
+              var date = DateFormat("MM/dd/yyyy HH:mm:ss.SSS")
+                  .format(item.start.toLocal());
               var protStyle = AppText.logStyle.copyWith(fontSize: 12.0);
               return Card(
                   color: Colors.white,
@@ -109,10 +124,12 @@ class _TrafficViewState extends State<TrafficView> {
                     data: ThemeData(accentColor: AppColors.purple_3),
                     child: ExpansionTile(
                       key: PageStorageKey<int>(item.rowId), // unique key
-                      leading: Icon(
-                        Icons.check_circle_outline,
-                        color: AppColors.purple,
-                      ),
+
+                      //leading: Icon(
+                        //Icons.check_circle_outline,
+                        //color: AppColors.purple,
+                      //),
+
                       title: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -174,6 +191,41 @@ class _TrafficViewState extends State<TrafficView> {
   void dispose() {
     super.dispose();
     _pollTimer.cancel();
-    _scrollController.dispose();
+  }
+}
+
+class TrafficViewEmpty extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(left: 32, right: 32, bottom: 128),
+        child: StreamBuilder<OrchidConnectionState>(
+            stream: OrchidAPI().connectionStatus,
+            builder: (context, snapshot) {
+              return IntrinsicHeight(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: Column(
+                    children: <Widget>[
+                      AppText.header(text: "Welcome to Orchid!"),
+                      SizedBox(height: 8),
+                      snapshot.data == OrchidConnectionState.NotConnected
+                          ? AppText.body(
+                              text:
+                                  "Enable the VPN configuration at the top-right to begin analyzing traffic.")
+                          : SizedBox(),
+                    ],
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    border: Border.all(width: 1.0, color: AppColors.neutral_5),
+                  ),
+                ),
+              );
+            }),
+      ),
+    );
   }
 }

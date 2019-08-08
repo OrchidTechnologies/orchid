@@ -34,27 +34,9 @@ class AnalysisDb {
     if (db == null) {
       return List();
     }
-
-    String queryClaus;
-    // Placeholder for filter parser
-    if (filterText.startsWith("prot:") && filterText.length > 5) {
-      var protName = filterText.substring(5);
-      queryClaus = " WHERE protocol LIKE '%${protName}%'";
-    } else if (filterText.startsWith("-prot:") && filterText.length> 6) {
-      var protName = filterText.substring(6);
-      queryClaus = " WHERE protocol NOT LIKE '%${protName}%'";
-    } else {
-      var filter = filterText.replaceAll(
-          new RegExp(r'[^\w\s]+'), ''); // Safe query string
-      queryClaus = (filterText == null || filterText.isEmpty)
-          ? ""
-          : " WHERE hostname LIKE '%${filter}%'";
-    }
-
-    var orderBy = ' ORDER BY "start" DESC';
-    var limitClaus = ' LIMIT 1000'; // ?
-    List<Map> list = await db.rawQuery(
-        'SELECT rowid, * FROM flow' + queryClaus + orderBy + limitClaus);
+    var query = QueryParser(filterText).parse();
+    print("query: $query");
+    List<Map> list = await db.rawQuery(query);
     return list.map((row) {
       return FlowEntry(
           rowId: row['rowid'],
@@ -139,3 +121,58 @@ class FlowEntry {
       this.dst_port,
       this.hostname});
 }
+
+class QueryParser {
+  static const String UNSAFE_CHARS = r'[^\w\s]+';
+  static const String PROTOCOL = r'^prot:([\w]+)$';
+
+  String queryText;
+
+  QueryParser(this.queryText);
+
+  String _safe(String text) {
+    return text.replaceAll(RegExp(UNSAFE_CHARS), '');
+  }
+
+  String _like(bool not, String text) {
+    return (not ? 'NOT LIKE ' : 'LIKE ') + "'%${_safe(text)}%'";
+  }
+
+  String _hostname(bool not, String text) {
+    return "hostname ${_like(not, text)}";
+  }
+
+  String _protocol(bool not, String text) {
+    return "protocol ${_like(not, text)}";
+  }
+
+  String _parseWord(String text) {
+    bool not = false;
+    if (text.startsWith('-')) {
+      text = text.substring(1);
+      not = true;
+    }
+    var match = RegExp(PROTOCOL).firstMatch(text);
+    if (match != null) {
+      return _protocol(not, match.group(1) ?? '');
+    }
+    return _hostname(not, text);
+  }
+
+  String _compose(Iterable<String> clauses) {
+    return " WHERE (" + clauses.join(" AND ") + ")";
+  }
+
+  String parse() {
+    String restrictions = "";
+    if (queryText.trim().isNotEmpty) {
+      var words = queryText.trim().split(RegExp(r'\s+'));
+      var clauses = words.map(_parseWord);
+      restrictions = _compose(clauses);
+    }
+    var orderBy = ' ORDER BY "start" DESC';
+    var limit = ' LIMIT 1000'; // ?
+    return 'SELECT rowid, * FROM flow' + restrictions + orderBy + limit;
+  }
+}
+

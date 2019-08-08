@@ -140,5 +140,9 @@ class RealOrchidAPI implements OrchidAPI {
   Future<String> groupContainerPath() async {
     return _platform.invokeMethod('group_path');
   }
+
+  Future<String> versionString() async {
+    return _platform.invokeMethod('version');
+  }
 }
 

@@ -73,8 +73,8 @@ class Logger :
   private:
     LoggerDatabase database_;
     Statement<uint8_t, uint32_t, uint16_t, uint32_t, uint16_t> insert_;
-    Statement<std::string, sqlite3_int64> update_hostname_;
-    Statement<std::string, sqlite3_int64> update_protocol_;
+    Statement<std::string_view, sqlite3_int64> update_hostname_;
+    Statement<std::string_view, sqlite3_int64> update_protocol_;
     DnsLog dns_log_;
     std::map<Five, sqlite3_int64> flows_;
 
@@ -162,7 +162,6 @@ class Logger :
         );
         flows_.emplace(five, row_id);
 
-
         update_protocol_(L4ProtocolToString(five.Protocol()), row_id);
 
         auto hostname(dns_log_.find(target.Host()));
@@ -171,7 +170,7 @@ class Logger :
         }
     }
 
-    void GotHostname(Five const &five, const std::string &hostname) override {
+    void GotHostname(Five const &five, const std::string_view hostname) override {
         auto flow(flows_.find(five));
         if (flow == flows_.end()) {
             orc_assert(false);
@@ -180,7 +179,7 @@ class Logger :
         update_hostname_(hostname, flow->second);
     }
 
-    void GotProtocol(Five const &five, const std::string &protocol) override {
+    void GotProtocol(Five const &five, const std::string_view protocol) override {
         auto flow(flows_.find(five));
         if (flow == flows_.end()) {
             orc_assert(false);
