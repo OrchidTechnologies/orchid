@@ -95,6 +95,9 @@ abstract class OrchidAPI {
 
   /// The the path for files shared between the 
   Future<String> groupContainerPath();
+
+  /// The build version
+  Future<String> versionString();
 }
 
 

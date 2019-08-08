@@ -15,7 +15,7 @@ class TrafficView extends StatefulWidget {
 class _TrafficViewState extends State<TrafficView> {
   var _searchTextController = TextEditingController();
   String _query = "";
-  List<FlowEntry> _resultList = List();
+  List<FlowEntry> _resultList;
   Timer _pollTimer;
 
   @override
@@ -46,9 +46,9 @@ class _TrafficViewState extends State<TrafficView> {
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
-        Visibility(visible: _resultList.isEmpty, child: TrafficViewEmpty()),
+        Visibility(visible: _resultList != null && _resultList.isEmpty, child: TrafficViewEmpty()),
         Visibility(
-          visible: !_resultList.isEmpty,
+          visible: _resultList != null && _resultList.isNotEmpty,
           child: Column(
             children: <Widget>[_buildSearchView(), _buildResultListView()],
           ),

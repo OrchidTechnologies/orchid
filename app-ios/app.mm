@@ -212,6 +212,8 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
             [weakSelf initProvider: result];
         } else if ([@"group_path" isEqualToString:call.method]) {
             [weakSelf groupPath: result];
+        } else if ([@"version" isEqualToString:call.method]) {
+            result([[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"]);
         }
     }];
 
