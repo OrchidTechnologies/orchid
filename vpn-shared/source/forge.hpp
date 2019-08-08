@@ -30,6 +30,7 @@
 #include <openvpn/ip/udp.hpp>
 
 #include "buffer.hpp"
+#include "socket.hpp"
 
 namespace orc {
 
@@ -52,10 +53,17 @@ template <typename Header_>
 void Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
     auto before(boost::endian::big_to_native(header.*field));
     header.*field = boost::endian::native_to_big(value);
-    Forge(header, before - value);
+    Forge(header, int32_t(before) - int32_t(value));
 }
 
 uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
+
+static void Forge(Span<> &span, openvpn::TCPHeader &tcp, const Socket &source, const Socket &target) {
+    ForgeIP4(span, &openvpn::IPv4Header::saddr, source.Host().to_v4().to_uint());
+    Forge(tcp, &openvpn::TCPHeader::source, source.Port());
+    ForgeIP4(span, &openvpn::IPv4Header::daddr, target.Host().to_v4().to_uint());
+    Forge(tcp, &openvpn::TCPHeader::dest, target.Port());
+}
 
 }
 

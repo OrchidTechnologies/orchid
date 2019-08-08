@@ -62,13 +62,14 @@ class File final :
                 size_t writ;
                 try {
                     writ = co_await file_.async_read_some(asio::buffer(data), Token());
-                } catch (const asio::error_code &error) {
-                    if (error == asio::error::eof)
+                } catch (const asio::system_error &error) {
+                    auto code(error.code());
+                    if (code == asio::error::eof)
                         Link::Stop();
                     else {
-                        auto message(error.message());
-                        orc_assert(!message.empty());
-                        Link::Stop(message);
+                        std::string what(error.what());
+                        orc_assert(!what.empty());
+                        Link::Stop(what);
                     }
                     break;
                 }
@@ -89,11 +90,9 @@ _trace();
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-        if (!data.empty()) {
-            auto lock(co_await send_.scoped_lock_async());
-            auto writ(co_await file_.async_write_some(Sequence(data), Token()));
-            orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
-        }
+        auto lock(co_await send_.scoped_lock_async());
+        auto writ(co_await file_.async_write_some(Sequence(data), Token()));
+        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 
     task<void> Shut() override {

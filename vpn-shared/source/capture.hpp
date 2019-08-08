@@ -55,15 +55,18 @@ class MonitorLogger
     virtual void GotProtocol(Five const &five, const std::string &protocol) = 0;
 };
 
-class Flow;
+class Hole {
+  public:
+    virtual ~Hole() = default;
+
+    virtual void Drop(Beam data) = 0;
+};
 
 class Capture :
-    public Sync,
+    public Hole,
     public BufferDrain
 {
   public:
-    U<Analyzer> analyzer_;
-
     uint32_t local_;
     U<Internal> internal_;
 
@@ -77,7 +80,7 @@ class Capture :
     Capture(const std::string &local);
     ~Capture() override;
 
-    void Send(const Buffer &data) override;
+    void Drop(Beam data) override;
 
     task<void> Start(S<Origin> origin);
     task<void> Start(std::string ovpnfile, std::string username, std::string password);

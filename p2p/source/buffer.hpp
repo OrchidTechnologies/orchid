@@ -154,7 +154,7 @@ class Span {
     template <typename Cast_>
     Cast_ &cast(size_t offset = 0) {
         static_assert(sizeof(Type_) == 1);
-        orc_assert(size() >= offset + sizeof(Cast_));
+        orc_assert_(size() >= offset + sizeof(Cast_), "orc_assert(" << size() << " {size()} >= " << offset << " {offset} + " << sizeof(Cast_) << " {sizeof(" << typeid(Cast_).name() << ")})");
         return *reinterpret_cast<Cast_ *>(data() + offset);
     }
 

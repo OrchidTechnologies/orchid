@@ -70,6 +70,13 @@ class Error final :
     throw orc::Error{__FILE__, __LINE__} << text; \
 } while (false)
 
+#define orc_adapt(error) do { \
+    auto what(error.what()); \
+    orc_insist(what != nullptr); \
+    orc_insist(*what != '\0'); \
+    orc_throw(what); \
+} while (false)
+
 #define orc_assert_(code, text) do { \
     if ((code)) break; \
     orc_throw(text); \

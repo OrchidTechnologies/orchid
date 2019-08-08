@@ -81,7 +81,8 @@ int Main(int argc, const char *const argv[]) {
 #if 0
 #elif defined(__APPLE__)
     auto family(capture->Wire<Sink<Family>>());
-    auto connection(family->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+    auto connection(std::make_unique<Connection<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+
     auto file((*connection)->native_handle());
 
     ctl_info info;
@@ -99,17 +100,22 @@ int Main(int argc, const char *const argv[]) {
     do ++address.sc_unit;
     while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
 
-    connection->Start();
+    (*connection)->non_blocking(true);
+    auto inverted(family->Wire<Inverted>(std::move(connection)));
+    inverted->Start();
 #else
 #error
 #endif
 
+    auto utun("utun" + std::to_string(address.sc_unit - 1));
+    orc_assert(system(("ifconfig " + utun + " inet " + local + " " + local + " mtu 1500 up").c_str()) == 0);
+    orc_assert(system("route -n add 207.254.46.169 -interface utun2") == 0);
+    orc_assert(system("route -n add 10.7.0.4 -interface utun2") == 0);
+
     Wait([&]() -> task<void> {
         co_await Schedule();
-        co_await capture->Start(std::move(ovpn), std::move(username), std::move(password));
-
-        auto utun("utun" + std::to_string(address.sc_unit - 1));
-        orc_assert(system(("ifconfig " + utun + " inet " + local + " 207.254.46.169 mtu 1500 up").c_str()) == 0);
+        co_await capture->Start(GetLocal());
+        //co_await capture->Start(std::move(ovpn), std::move(username), std::move(password));
     }());
 
     Thread().join();

@@ -44,21 +44,35 @@ int Protect(int socket, const sockaddr *address, socklen_t length) {
     }(), &freeifaddrs);
 
     if (interfaces != nullptr) {
-        /*for (ifaddrs *i(interfaces.get()); i != NULL; i = i->ifa_next) {
-            Log() << "ifa_name: " << i->ifa_addr->sa_family << " " << i->ifa_name << std::endl;
+#if 0
+        for (ifaddrs *i(interfaces.get()); i != NULL; i = i->ifa_next) {
+            Log() << "ifa_name: " << unsigned(i->ifa_addr->sa_family) << " " << i->ifa_name << std::endl;
             if (i->ifa_addr->sa_family == AF_INET)
-                Log() << "addr: " << inet_ntoa(((sockaddr_in &)(i->ifa_addr)).sin_addr) << std::endl;
-        }*/
+                Log() << "addr: " << inet_ntoa(reinterpret_cast<sockaddr_in *>(i->ifa_addr)->sin_addr) << std::endl;
+        }
+#endif
+
+        if (address != nullptr && address->sa_family == AF_INET) {
+            auto address4(reinterpret_cast<const sockaddr_in *>(address));
+            for (auto i(interfaces.get()); i != NULL; i = i->ifa_next)
+                if (i->ifa_addr->sa_family == AF_INET)
+                    if (reinterpret_cast<sockaddr_in *>(i->ifa_addr)->sin_addr.s_addr == address4->sin_addr.s_addr) {
+                        int index(if_nametoindex(i->ifa_name));
+                        setsockopt(socket, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
+                        goto done;
+                    }
+        }
 
         for (auto i(interfaces.get()); i != NULL; i = i->ifa_next) {
             if (i->ifa_addr->sa_family == AF_INET && strncmp(i->ifa_name, "en0", 3) == 0) {
                 int index(if_nametoindex(i->ifa_name));
                 setsockopt(socket, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-                break;
+                goto done;
             }
         }
     }
 
+  done:
     if (address == nullptr)
         return 0;
     return Bind(socket, address, length);

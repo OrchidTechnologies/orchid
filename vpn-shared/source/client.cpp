@@ -168,7 +168,7 @@ task<Socket> Server::Associate(Sunk<> *sunk, const std::string &host, const std:
     });
 }
 
-task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Socket> Server::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {
     orc_assert(false);
 }
 
@@ -188,7 +188,7 @@ task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (st
     });
 }
 
-task<Socket> Server::Open(Sunk<Opening, ExtendedDrain> *sunk) {
+task<Socket> Server::Open(Sunk<Opening, BufferSewer> *sunk) {
     orc_assert(false);
 }
 

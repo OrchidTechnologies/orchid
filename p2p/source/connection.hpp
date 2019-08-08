@@ -31,23 +31,23 @@
 
 #include "baton.hpp"
 #include "link.hpp"
+#include "reader.hpp"
 #include "task.hpp"
 
 namespace orc {
 
 template <typename Connection_>
 class Connection final :
-    public Link
+    public Stream
 {
-  private:
+  protected:
     Connection_ connection_;
     cppcoro::async_mutex send_;
 
   public:
     template <typename... Args_>
-    Connection(BufferDrain *drain, Args_ &&...args) :
-        Link(drain),
-        connection_(Context(), std::forward<Args_>(args)...)
+    Connection(Args_ &&...args) :
+        connection_(std::forward<Args_>(args)...)
     {
     }
 
@@ -55,66 +55,63 @@ class Connection final :
         return &connection_;
     }
 
-    void Start() {
-        Spawn([this]() -> task<void> {
-            for (;;) {
-                char data[2048];
-                size_t writ;
-                try {
-                    writ = co_await connection_.async_receive(asio::buffer(data), Token());
-                } catch (const asio::error_code &error) {
-                    if (error == asio::error::eof)
-                        Link::Stop();
-                    else {
-                        auto message(error.message());
-                        orc_assert(!message.empty());
-                        Link::Stop(message);
-                    }
-                    break;
-                }
+    task<size_t> Read(Beam &beam) {
+        size_t writ;
+        try {
+            writ = co_await connection_.async_receive(asio::buffer(beam.data(), beam.size()), Token());
+        } catch (const asio::system_error &error) {
+            auto code(error.code());
+            if (code == asio::error::eof)
+                co_return 0;
+            orc_adapt(error);
+        }
 
-                Subset region(data, writ);
-                if (Verbose)
-                    Log() << "\e[33mRECV " << writ << " " << region << "\e[0m" << std::endl;
-                Land(region);
-            }
-        });
+        if (Verbose)
+            Log() << "\e[33mRECV " << writ << " " << beam.subset(0, writ) << "\e[0m" << std::endl;
+        co_return writ;
     }
 
     task<boost::asio::ip::basic_endpoint<typename Connection_::protocol_type>> Connect(const std::string &host, const std::string &port) {
         auto endpoints(co_await asio::ip::basic_resolver<typename Connection_::protocol_type>(Context()).async_resolve({host, port}, Token()));
-
         if (Verbose)
             for (auto &endpoint : endpoints)
                 Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
-
         auto endpoint(co_await asio::async_connect(connection_, endpoints, Token()));
-
-        Start();
-
+        connection_.non_blocking(true);
         co_return endpoint;
-    }
-
-    ~Connection() override {
-_trace();
     }
 
     task<void> Send(const Buffer &data) override {
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-        if (data.empty()) {
+        /*if (data.empty()) {
             connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
-        } else {
+        } else*/ {
             auto lock(co_await send_.scoped_lock_async());
-            auto writ(co_await connection_.async_send(Sequence(data), Token()));
+            size_t writ;
+            try {
+                writ = co_await connection_.async_send(Sequence(data), Token());
+            } catch (const asio::system_error &error) {
+                orc_adapt(error);
+            }
             orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
         }
     }
 
     task<void> Shut() override {
+        try {
+            connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
+        } catch (const asio::system_error &error) {
+            auto code(error.code());
+            if (code == asio::error::not_connected)
+                co_return;
+            orc_adapt(error);
+        }
+    }
+
+    void Close() override {
         connection_.close();
-        co_await Link::Shut();
     }
 };
 

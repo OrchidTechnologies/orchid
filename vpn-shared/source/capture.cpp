@@ -20,11 +20,15 @@
 /* }}} */
 
 
+#include <cppcoro/async_latch.hpp>
+
 #include <openvpn/addr/ipv4.hpp>
 
 #include <dns.h>
 
+#include "acceptor.hpp"
 #include "capture.hpp"
+#include "connection.hpp"
 #include "database.hpp"
 #include "directory.hpp"
 #include "forge.hpp"
@@ -188,10 +192,8 @@ class Logger :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    Beam beam(data);
-    analyzer_->Analyze(beam.span());
-    if (internal_) Spawn([this, beam = std::move(beam)]() mutable -> task<void> {
-        co_return co_await internal_->Send(std::move(beam));
+    if (internal_) Spawn([this, data = Beam(data)]() mutable -> task<void> {
+        co_return co_await internal_->Send(std::move(data));
     });
 }
 
@@ -199,17 +201,14 @@ void Capture::Stop(const std::string &error) {
     orc_insist(false);
 }
 
-void Capture::Send(const Buffer &data) {
+void Capture::Drop(Beam data) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-    Beam beam(data);
-    analyzer_->AnalyzeIncoming(beam.span());
-    Spawn([this, beam = std::move(beam)]() -> task<void> {
-        co_return co_await Inner()->Send(beam);
+    Spawn([this, data = std::move(data)]() -> task<void> {
+        co_return co_await Inner()->Send(data);
     });
 }
 
 Capture::Capture(const std::string &local) :
-    analyzer_(std::make_unique<Logger>(Group() + "/analysis.db")),
     local_(openvpn::IPv4::Addr::from_string(local).to_uint32())
 {
 }
@@ -217,41 +216,11 @@ Capture::Capture(const std::string &local) :
 Capture::~Capture() = default;
 
 
-class Flow :
-    public BufferDrain
-{
-  private:
-    Sync *const sync_;
-
-  protected:
-    virtual Link *Inner() = 0;
-
-    void Land(const Buffer &data) override {
-        (void) sync_;
-        Log() << "Land" << data << std::endl;
-    }
-
-    void Stop(const std::string &error) override {
-    }
-
-  public:
-    Flow(Sync *sync) :
-        sync_(sync)
-    {
-    }
-
-    virtual ~Flow() = default;
-
-    task<uint16_t> Ephemeral() {
-        co_return 0;
-    }
-};
-
 class Punch :
-    public ExtendedDrain
+    public BufferSewer
 {
   private:
-    Sync *const sync_;
+    Hole *const hole_;
     Socket socket_;
 
     virtual Opening *Inner() = 0;
@@ -292,12 +261,16 @@ class Punch :
             reinterpret_cast<uint8_t *>(&header.ip4.daddr)
         ));
 
-        sync_->Send(std::move(beam));
+        hole_->Drop(std::move(beam));
+    }
+
+    void Stop(const std::string &error) override {
+        orc_insist(false);
     }
 
   public:
-    Punch(Sync *sync, Socket socket) :
-        sync_(sync),
+    Punch(Hole *hole, Socket socket) :
+        hole_(hole),
         socket_(std::move(socket))
     {
     }
@@ -309,34 +282,147 @@ class Punch :
     }
 };
 
+struct Ephemeral {
+    Socket socket_;
+    std::string error_;
+    cppcoro::async_manual_reset_event ready_;
+
+    Ephemeral(Socket socket) :
+        socket_(std::move(socket))
+    {
+    }
+};
+
+class Plant {
+  public:
+    virtual task<void> Pull(const Four &four) = 0;
+};
+
+class Flow {
+  public:
+    Plant *plant_;
+    Four four_;
+    cppcoro::async_latch latch_;
+    U<Stream> up_;
+    U<Stream> down_;
+
+  private:
+    void Splice(Stream *input, Stream *output) {
+        Spawn([input, output, &latch = latch_]() -> task<void> {
+            Beam beam(2048);
+            for (;;) {
+                size_t writ;
+                try {
+                    writ = co_await input->Read(beam);
+                } catch (const Error &error) {
+                    break;
+                }
+
+                if (writ == 0)
+                    break;
+
+                try {
+                    co_await output->Send(beam.subset(0, writ));
+                } catch (const Error &error) {
+                    break;
+                }
+            }
+
+            co_await output->Shut();
+            latch.count_down();
+        });
+    }
+
+  public:
+    Flow(Plant *plant, Four four) :
+        plant_(plant),
+        four_(std::move(four)),
+        latch_(2)
+    {
+    }
+
+    void Start() {
+        Spawn([this]() -> task<void> {
+            co_await latch_;
+            up_->Close();
+            down_->Close();
+            co_await plant_->Pull(four_);
+        });
+
+        Splice(up_.get(), down_.get());
+        Splice(down_.get(), up_.get());
+    }
+};
+
 class Split :
-    public Internal
+    public Acceptor,
+    public Plant,
+    public Internal,
+    public Hole
 {
   private:
-    Sync *const sync_;
+    Hole *const hole_;
     S<Origin> origin_;
+    U<Analyzer> analyzer_;
 
     Socket local_;
     asio::ip::address_v4 remote_;
 
     cppcoro::async_mutex meta_;
-    std::map<Four, U<Flow>> tcp_;
+    std::map<Four, S<Ephemeral>> ephemerals_;
+    uint16_t ephemeral_ = 0;
+    std::map<Socket, S<Flow>> flows_;
+
     std::map<Socket, U<Punch>> udp_;
 
+  protected:
+    void Land(asio::ip::tcp::socket connection, Socket socket) override {
+        Spawn([this, connection = std::move(connection), socket = std::move(socket)]() mutable -> task<void> {
+            auto flow(co_await [&]() -> task<S<Flow>> {
+                auto lock(co_await meta_.scoped_lock_async());
+                auto flow(flows_.find(socket));
+                if (flow == flows_.end())
+                    co_return nullptr;
+                co_return flow->second;
+            }());
+            if (flow == nullptr)
+                co_return;
+            flow->down_ = std::make_unique<Connection<asio::ip::tcp::socket>>(std::move(connection));
+            flow->Start();
+        });
+    }
+
+    void Stop(const std::string &error) override {
+        orc_insist(false);
+    }
+
   public:
-    Split(Sync *sync, S<Origin> origin) :
-        sync_(sync),
-        origin_(std::move(origin))
+    Split(Hole *hole, S<Origin> origin) :
+        hole_(hole),
+        origin_(std::move(origin)),
+        analyzer_(std::make_unique<Logger>(Group() + "/analysis.db"))
     {
     }
 
-    void Start();
+    void Connect(uint32_t local);
 
+    void Drop(Beam data);
     task<void> Send(Beam data);
+
+    task<void> Pull(const Four &four) override {
+        auto lock(co_await meta_.scoped_lock_async());
+        auto ephemeral(ephemerals_.find(four));
+        orc_insist(ephemeral != ephemerals_.end());
+        auto flow(flows_.find(ephemeral->second->socket_));
+        orc_insist(flow != flows_.end());
+        ephemerals_.erase(ephemeral);
+        flows_.erase(flow);
+_trace();
+    }
 
     // https://www.snellman.net/blog/archive/2016-02-01-tcp-rst/
     // https://superuser.com/questions/1056492/rst-sequence-number-and-window-size/1075512
-    void Reset(const Socket &source, const Socket &target, uint32_t sequence) {
+    void Reset(const Socket &source, const Socket &target, uint32_t sequence, uint32_t acknowledge) {
         struct Header {
             openvpn::IPv4Header ip4;
             openvpn::TCPHeader tcp;
@@ -344,7 +430,7 @@ class Split :
 
         Beam beam(sizeof(Header));
         auto span(beam.span());
-        auto &header(span.cast<Header>(0));
+        auto &header(span.cast<Header>());
 
         header.ip4.version_len = openvpn::IPv4Header::ver_len(4, sizeof(header.ip4));
         header.ip4.tos = 0;
@@ -362,25 +448,37 @@ class Split :
         header.tcp.source = boost::endian::native_to_big(source.Port());
         header.tcp.dest = boost::endian::native_to_big(target.Port());
         header.tcp.seq = boost::endian::native_to_big(sequence);
-        header.tcp.ack_seq = 0;
+        header.tcp.ack_seq = boost::endian::native_to_big(acknowledge);
         header.tcp.doff_res = sizeof(header.tcp) << 2;
-        header.tcp.flags = 4; // XXX: openvpn::TCPHeader::FLAG_RST
-        //header.tcp.window = ;
+        header.tcp.flags = 4 | 16; // XXX: RST | ACK
+        header.tcp.window = 0;
         header.tcp.check = 0;
         header.tcp.urgent_p = 0;
 
-        header.tcp.check = boost::endian::native_to_big(openvpn::udp_checksum(
+        header.tcp.check = openvpn::udp_checksum(
             reinterpret_cast<uint8_t *>(&header.tcp),
             sizeof(header.tcp),
             reinterpret_cast<uint8_t *>(&header.ip4.saddr),
             reinterpret_cast<uint8_t *>(&header.ip4.daddr)
-        ));
+        );
 
-        sync_->Send(std::move(beam));
+        openvpn::tcp_adjust_checksum(openvpn::IPCommon::UDP - openvpn::IPCommon::TCP, header.tcp.check);
+        header.tcp.check = boost::endian::native_to_big(header.tcp.check);
+
+        Drop(std::move(beam));
     }
 };
 
-void Split::Start() {
+void Split::Connect(uint32_t local) {
+    Acceptor::Connect({asio::ip::address_v4(local), 0});
+    local_ = Local();
+    // XXX: this is sickening
+    remote_ = asio::ip::address_v4(local_.Host().to_v4().to_uint() + 1);
+}
+
+void Split::Drop(Beam data) {
+    analyzer_->AnalyzeIncoming(data.span());
+    return hole_->Drop(std::move(data));
 }
 
 task<void> Split::Send(Beam beam) {
@@ -390,7 +488,8 @@ task<void> Split::Send(Beam beam) {
 
     switch (ip4.protocol) {
         case openvpn::IPCommon::TCP: {
-            Log() << "TCP:" << beam << std::endl;
+            if (Verbose)
+                Log() << "TCP:" << beam << std::endl;
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
 
             Four four(
@@ -398,34 +497,66 @@ task<void> Split::Send(Beam beam) {
                 {boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(tcp.dest)}
             );
 
-            auto ephemeral(co_await [&]() -> task<uint16_t> {
-                auto &flow(co_await [&]() -> task<U<Flow> &> {
+            bool analyze(false);
+
+            if (four.Source() == local_) {
+                auto lock(co_await meta_.scoped_lock_async());
+                auto flow(flows_.find(four.Target()));
+                if (flow == flows_.end())
+                    break;
+                orc_insist(flow->second != nullptr);
+                const auto &original(flow->second->four_);
+                Forge(span, tcp, original.Target(), original.Source());
+                analyze = true;
+            } else if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) == 0) {
+                analyzer_->Analyze(span);
+                auto lock(co_await meta_.scoped_lock_async());
+                auto ephemeral(ephemerals_.find(four));
+                if (ephemeral == ephemerals_.end())
+                    break;
+                Forge(span, tcp, ephemeral->second->socket_, local_);
+            } else {
+                auto ephemeral(co_await [&]() -> task<S<Ephemeral>> {
                     auto lock(co_await meta_.scoped_lock_async());
-                    co_return tcp_[four];
+                    auto &ephemeral(ephemerals_[four]);
+                    if (ephemeral == nullptr) {
+                        // XXX: this only supports 65k sockets
+                        Socket socket(remote_, ++ephemeral_);
+                        auto &flow(flows_[socket]);
+                        orc_insist(flow == nullptr);
+                        flow = Make<Flow>(this, four);
+                        ephemeral = Make<Ephemeral>(std::move(socket));
+                        Spawn([this, ephemeral, flow, target = four.Target()]() -> task<void> {
+                            try {
+                                co_await origin_->Connect(flow->up_, target.Host().to_string(), std::to_string(target.Port()));
+                            } catch (const std::exception &error) {
+                                ephemeral->error_ = error.what();
+                                orc_insist(!ephemeral->error_.empty());
+                                Log() << ephemeral->error_ << std::endl;
+                            }
+                            ephemeral->ready_.set();
+                        });
+                    }
+                    co_return ephemeral;
                 }());
 
-                if (flow != nullptr)
-                    co_return co_await flow->Ephemeral();
-                else if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) == 0)
-                    co_return 0;
-                else {
-                    auto sink(std::make_unique<Sink<Flow>>(sync_));
-                    auto &target(four.Target());
-                    co_await origin_->Connect(sink.get(), target.Host().to_string(), std::to_string(target.Port()));
-                    flow = std::move(sink);
-                    co_return 0;
-                }
-            }());
+                co_await ephemeral->ready_;
+                analyzer_->Analyze(span);
 
-            /*if (ephemeral == 0)
-                Reset();
-            else*/ {
-                ForgeIP4(span, &openvpn::IPv4Header::saddr, remote_.to_uint());
-                Forge(tcp, &openvpn::TCPHeader::source, ephemeral);
-                ForgeIP4(span, &openvpn::IPv4Header::daddr, local_.Host().to_v4().to_uint());
-                Forge(tcp, &openvpn::TCPHeader::dest, local_.Port());
-                sync_->Send(std::move(beam));
+                if (!ephemeral->error_.empty()) {
+                    Reset(four.Target(), four.Source(), 0, boost::endian::big_to_native(tcp.seq) + 1);
+                    break;
+                }
+
+                Forge(span, tcp, ephemeral->socket_, local_);
             }
+
+            if (Verbose)
+                Log() << "OUT " << beam << std::endl;
+            hole_->Drop(std::move(beam));
+
+            if (analyze)
+                analyzer_->AnalyzeIncoming(span);
         } break;
 
         case openvpn::IPCommon::UDP: {
@@ -434,7 +565,7 @@ task<void> Split::Send(Beam beam) {
             Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
             auto &punch(udp_[source]);
             if (punch == nullptr) {
-                auto sink(std::make_unique<Sink<Punch, Opening, ExtendedDrain>>(sync_, source));
+                auto sink(std::make_unique<Sink<Punch, Opening, BufferSewer>>(this, source));
                 co_await origin_->Open(sink.get());
                 punch = std::move(sink);
             }
@@ -443,17 +574,20 @@ task<void> Split::Send(Beam beam) {
             uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
             Socket target(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
             co_await punch->Send(beam.subset(offset, size), target);
+            analyzer_->Analyze(span);
         } break;
 
         case openvpn::IPCommon::ICMPv4: {
-            Log() << "ICMP" << beam << std::endl;
+            analyzer_->Analyze(span);
+            if (Verbose)
+                Log() << "ICMP" << beam << std::endl;
         } break;
     }
 }
 
 task<void> Capture::Start(S<Origin> origin) {
     auto split(std::make_unique<Split>(this, std::move(origin)));
-    split->Start();
+    split->Connect(local_);
     internal_ = std::move(split);
     co_return;
 }
@@ -464,25 +598,30 @@ class Pass :
     public Internal
 {
   private:
-    Sync *const sync_;
+    Hole *const hole_;
+    U<Analyzer> analyzer_;
 
   protected:
     virtual Link *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        return sync_->Send(data);
+        Beam beam(data);
+        analyzer_->AnalyzeIncoming(beam.span());
+        return hole_->Drop(std::move(beam));
     }
 
     void Stop(const std::string &error) override {
     }
 
   public:
-    Pass(Sync *sync) :
-        sync_(sync)
+    Pass(Hole *hole) :
+        hole_(hole),
+        analyzer_(std::make_unique<Logger>(Group() + "/analysis.db"))
     {
     }
 
     task<void> Send(Beam beam) override {
+        analyzer_->Analyze(beam.span());
         co_return co_await Inner()->Send(beam);
     }
 };

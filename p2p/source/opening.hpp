@@ -30,24 +30,20 @@
 
 #include "baton.hpp"
 #include "link.hpp"
+#include "sewer.hpp"
 #include "socket.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-class ExtendedDrain {
-  public:
-    virtual void Land(const Buffer &buffer, Socket socket) = 0;
-};
-
 class Opening final {
   private:
-    ExtendedDrain *const drain_;
+    BufferSewer *const drain_;
     asio::ip::udp::socket connection_;
 
   public:
     template <typename... Args_>
-    Opening(ExtendedDrain *drain, Args_ &&...args) :
+    Opening(BufferSewer *drain, Args_ &&...args) :
         drain_(drain),
         connection_(Context(), std::forward<Args_>(args)...)
     {
@@ -66,10 +62,8 @@ class Opening final {
                 size_t writ;
                 try {
                     writ = co_await connection_.async_receive_from(asio::buffer(data), endpoint, Token());
-                } catch (const asio::error_code &error) {
-                    auto message(error.message());
-                    orc_assert(!message.empty());
-                    orc_assert_(false, message);
+                } catch (const asio::system_error &error) {
+                    orc_adapt(error);
                 }
 
                 Subset region(data, writ);
@@ -82,6 +76,7 @@ class Opening final {
 
     void Connect(const Socket &socket) {
         connection_.open(asio::ip::udp::v4());
+        connection_.non_blocking(true);
         connection_.bind({socket.Host(), socket.Port()});
         Start();
     }

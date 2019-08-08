@@ -98,8 +98,9 @@ static std::string cfs(NSString *data) {
         auto capture(std::make_unique<Sink<Capture>>(local));
 
         auto family(capture->Wire<Sink<Family>>());
-        auto connection(family->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
-        connection->Start();
+        auto connection(std::make_unique<Connection<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
+        auto inverted(family->Wire<Inverted>(std::move(connection)));
+        inverted->Start();
 
         Spawn([
             capture = std::move(capture),
@@ -109,7 +110,8 @@ static std::string cfs(NSString *data) {
             handler = handler,
         self]() mutable -> task<void> { try {
             co_await Schedule();
-            co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
+            co_await capture->Start(GetLocal());
+            //co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
             capture_ = std::move(capture);
             handler(nil);
         } ORC_CATCH(handler) });

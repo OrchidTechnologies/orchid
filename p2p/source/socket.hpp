@@ -59,7 +59,8 @@ class Socket final {
     {
     }
 
-    Socket(asio::ip::udp::endpoint endpoint) :
+    template <typename Protocol_>
+    Socket(const asio::ip::basic_endpoint<Protocol_> &endpoint) :
         host_(endpoint.address()),
         port_(endpoint.port())
     {
@@ -99,6 +100,10 @@ class Socket final {
 
     bool operator <(const Socket &rhs) const {
         return std::tie(host_, port_) < std::tie(rhs.host_, rhs.port_);
+    }
+
+    bool operator ==(const Socket &rhs) const {
+        return std::tie(host_, port_) == std::tie(rhs.host_, rhs.port_);
     }
 };
 
@@ -141,7 +146,15 @@ class Four {
     bool operator <(const Four &rhs) const {
         return std::tie(source_, target_) < std::tie(rhs.source_, rhs.target_);
     }
+
+    bool operator ==(const Four &rhs) const {
+        return std::tie(source_, target_) == std::tie(rhs.source_, rhs.target_);
+    }
 };
+
+inline std::ostream &operator <<(std::ostream &out, const Four &four) {
+    return out << "[" << four.Source() << "|" << four.Target() << "]";
+}
 
 class Five final :
     public Four
@@ -175,10 +188,14 @@ class Five final :
     bool operator <(const Five &rhs) const {
         return std::tie(protocol_, Source(), Target()) < std::tie(rhs.protocol_, rhs.Source(), rhs.Target());
     }
+
+    bool operator ==(const Five &rhs) const {
+        return std::tie(protocol_, Source(), Target()) == std::tie(rhs.protocol_, rhs.Source(), rhs.Target());
+    }
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Five &five) {
-    return out << five.Protocol() << "[" << five.Source() << " -> " << five.Target() << "]";
+    return out << "[" << five.Protocol() << "|" << five.Source() << "|" << five.Target() << "]";
 }
 
 }
