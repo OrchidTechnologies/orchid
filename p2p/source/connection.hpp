@@ -42,7 +42,6 @@ class Connection final :
 {
   protected:
     Connection_ connection_;
-    cppcoro::async_mutex send_;
 
   public:
     template <typename... Args_>
@@ -88,7 +87,6 @@ class Connection final :
         /*if (data.empty()) {
             connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
         } else*/ {
-            auto lock(co_await send_.scoped_lock_async());
             size_t writ;
             try {
                 writ = co_await connection_.async_send(Sequence(data), Token());

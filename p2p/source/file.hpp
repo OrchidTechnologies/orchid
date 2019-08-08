@@ -41,7 +41,6 @@ class File final :
 {
   private:
     File_ file_;
-    cppcoro::async_mutex send_;
 
   public:
     template <typename... Args_>
@@ -90,7 +89,6 @@ _trace();
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-        auto lock(co_await send_.scoped_lock_async());
         auto writ(co_await file_.async_write_some(Sequence(data), Token()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
