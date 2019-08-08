@@ -123,10 +123,12 @@ class _TrafficViewState extends State<TrafficView> {
                     data: ThemeData(accentColor: AppColors.purple_3),
                     child: ExpansionTile(
                       key: PageStorageKey<int>(item.rowId), // unique key
-                      leading: Icon(
-                        Icons.check_circle_outline,
-                        color: AppColors.purple,
-                      ),
+
+                      //leading: Icon(
+                        //Icons.check_circle_outline,
+                        //color: AppColors.purple,
+                      //),
+
                       title: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
