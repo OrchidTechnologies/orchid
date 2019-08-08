@@ -67,6 +67,7 @@ class _TrafficViewState extends State<TrafficView> {
       padding: EdgeInsets.only(left: 8.0),
       //decoration: BoxDecoration(border: Border.all(width: 1.0)),
       child: TextFormField(
+        autocorrect: false,
         controller: _searchTextController,
         decoration: InputDecoration(
           hintText: "Search",
