@@ -25,12 +25,21 @@ typedef std::function<void (const std::string_view)> protocol_callback;
 
 void get_quic_SNI(const uint8_t *data, size_t len, const hostname_callback hostname_cb, const protocol_callback protocol_cb)
 {
-    // CID
     if (len < 1) {
         return;
     }
-    int offset = 1;
-    if (data[0] & 0x08) {
+
+    uint8_t flags = data[0];
+
+    int offset = sizeof(uint8_t);
+
+#define PUFLAGS_VRSN    0x01
+#define PUFLAGS_RST     0x02
+#define PUFLAGS_CID     0x08
+#define PUFLAGS_PKN     0x30
+
+    // CID
+    if (flags & PUFLAGS_CID) {
         offset += 8;
     }
 
@@ -40,7 +49,7 @@ void get_quic_SNI(const uint8_t *data, size_t len, const hostname_callback hostn
 
     // Get version
     int version = -1;
-    if (data[0] & 0x01 && data[offset] == 'Q') {
+    if (flags & PUFLAGS_VRSN && data[offset] == 'Q') {
         version = (data[offset+1] - '0') * 100 +
                   (data[offset+2] - '0') * 10 +
                   (data[offset+3] - '0');
@@ -55,10 +64,10 @@ void get_quic_SNI(const uint8_t *data, size_t len, const hostname_callback hostn
     // Diversification only is from server to client, so we can ignore
 
     // Packet number size
-    if ((data[0] & 0x30) == 0) {
+    if ((flags & PUFLAGS_PKN) == 0) {
         offset++;
     } else {
-        offset += ((data[0] & 0x30) >> 4) * 2;
+        offset += ((flags & PUFLAGS_PKN) >> 4) * 2;
     }
 
     // Hash
