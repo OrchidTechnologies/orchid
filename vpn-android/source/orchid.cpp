@@ -61,7 +61,7 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
         password = std::move(password)
     ]() mutable -> task<void> { try {
         co_await Schedule();
-        co_await capture->Start();
+        co_await capture->Start(GetLocal());
         //co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
         capture_ = std::move(capture);
     } ORC_CATCH() });
