@@ -46,9 +46,6 @@
 [submodule "lwip"]
 	path = p2p/lwip
 	url = https://git.savannah.nongnu.org/git/lwip.git
-[submodule "ics-openvpn"]
-	path = vpn-android/ics-openvpn
-	url = https://github.com/schwabe/ics-openvpn.git
 [submodule "BeastHttp"]
 	path = p2p/BeastHttp
 	url = https://github.com/0xdead4ead/BeastHttp.git
