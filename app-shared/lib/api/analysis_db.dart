@@ -25,6 +25,9 @@ class AnalysisDb {
       debugPrint("Error opening analysis db: $err");
       return null;
     }
+    await _db.execute("PRAGMA journal_mode = wal");
+    await _db.execute("PRAGMA secure_delete = on");
+    await _db.execute("PRAGMA synchronous = full");
     debugPrint("analysis db result: $_db");
     return _db;
   }
@@ -41,7 +44,7 @@ class AnalysisDb {
       return FlowEntry(
           rowId: row['rowid'],
           start: fromJulianDate(row['start']),
-          l4_protocol: _fromProtocol(row['l4_protocol']),
+          layer4: _fromProtocol(row['layer4']),
           protocol: row['protocol'],
           src_addr: _fromAddr(row['src_addr']),
           src_port: row['src_port'],
@@ -102,7 +105,7 @@ class AnalysisDb {
 class FlowEntry {
   final int rowId;
   final DateTime start;
-  final String l4_protocol;
+  final String layer4;
   final String protocol;
   final String src_addr;
   final int src_port;
@@ -113,7 +116,7 @@ class FlowEntry {
   FlowEntry(
       {this.rowId,
       this.start,
-      this.l4_protocol,
+      this.layer4,
       this.protocol,
       this.src_addr,
       this.src_port,

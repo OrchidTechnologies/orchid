@@ -48,18 +48,39 @@ class LoggerDatabase :
     LoggerDatabase(const std::string &path) :
         Database(path)
     {
-        Statement<>(*this, R"(
-            create table if not exists "flow" (
-                "start" real,
-                "l4_protocol" integer,
-                "protocol" string,
-                "src_addr" integer,
-                "src_port" integer,
-                "dst_addr" integer,
-                "dst_port" integer,
-                "hostname" text
-            );
-        )")();
+        auto application(std::get<0>(Statement<One<int32_t>>(*this, R"(pragma application_id)")()));
+        orc_assert(application == 0);
+
+        Statement<Skip>(*this, R"(pragma journal_mode = wal)")();
+        Statement<Skip>(*this, R"(pragma secure_delete = on)")();
+        Statement<None>(*this, R"(pragma synchronous = full)")();
+
+        Statement<None>(*this, R"(begin)")();
+
+        auto version(std::get<0>(Statement<One<int32_t>>(*this, R"(pragma user_version)")()));
+        switch (version) {
+            case 0:
+                Statement<None>(*this, R"(
+                    create table "flow" (
+                        "id" integer primary key autoincrement,
+                        "start" real,
+                        "layer4" integer,
+                        "src_addr" integer,
+                        "src_port" integer,
+                        "dst_addr" integer,
+                        "dst_port" integer,
+                        "protocol" string,
+                        "hostname" text
+                    )
+                )")();
+            case 1:
+                break;
+            default:
+                orc_assert(false);
+        }
+
+        Statement<None>(*this, R"(pragma user_version = 1)")();
+        Statement<None>(*this, R"(commit)")();
     }
 };
 
@@ -72,9 +93,9 @@ class Logger :
 {
   private:
     LoggerDatabase database_;
-    Statement<uint8_t, uint32_t, uint16_t, uint32_t, uint16_t> insert_;
-    Statement<std::string_view, sqlite3_int64> update_hostname_;
-    Statement<std::string_view, sqlite3_int64> update_protocol_;
+    Statement<Last, uint8_t, uint32_t, uint16_t, uint32_t, uint16_t> insert_;
+    Statement<None, std::string_view, sqlite3_int64> update_hostname_;
+    Statement<None, std::string_view, sqlite3_int64> update_protocol_;
     DnsLog dns_log_;
     std::map<Five, sqlite3_int64> flows_;
 
@@ -82,17 +103,23 @@ class Logger :
     Logger(const std::string &path) :
         database_(path),
         insert_(database_, R"(
-            insert into flow (
-                "start", "l4_protocol", "src_addr", "src_port", "dst_addr", "dst_port"
+            insert into "flow" (
+                "start", "layer4", "src_addr", "src_port", "dst_addr", "dst_port"
             ) values (
                 julianday('now'), ?, ?, ?, ?, ?
             )
         )"),
         update_hostname_(database_, R"(
-            update flow set hostname = ? where _rowid_ = ?
+            update "flow" set
+                "hostname" = ?
+            where
+                "id" = ?
         )"),
         update_protocol_(database_, R"(
-            update flow set protocol = ? where _rowid_ = ?
+            update "flow" set
+                "protocol" = ?
+            where
+                "id" = ?
         )")
     {
     }
@@ -156,7 +183,7 @@ class Logger :
         const auto &source(five.Source());
         const auto &target(five.Target());
         // XXX: IPv6
-        auto row_id = insert_(five.Protocol(),
+        int64_t row_id = insert_(five.Protocol(),
             source.Host().to_v4().to_uint(), source.Port(),
             target.Host().to_v4().to_uint(), target.Port()
         );
