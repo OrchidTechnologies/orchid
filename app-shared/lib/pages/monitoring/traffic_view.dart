@@ -59,7 +59,7 @@ class _TrafficViewState extends State<TrafficView> {
 
   /// Return true if there is no data. (Not including empty filtered results)
   bool _noData() {
-    return _resultList != null && _resultList.isEmpty && _query.length < 1;
+    return _resultList == null || _resultList != null && _resultList.isEmpty && _query.length < 1;
   }
 
   Widget _buildSearchView() {
