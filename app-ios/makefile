@@ -94,7 +94,7 @@ include flutter.mk
 
 $(output)/ents-%.xml: ents-%.xml.in
 	@mkdir -p $(dir $@)
-	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
+	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
 
 
 ifneq ($(target),sim)
@@ -105,7 +105,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(object) $(linked)
 
 $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	@mkdir -p $(dir $@)
-	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
+	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
 
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
@@ -137,7 +137,7 @@ $(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
 signed += $(bundle)/Info.plist
 $(bundle)/Info.plist: info-main.plist.in
 	@mkdir -p $(dir $@)
-	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
+	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
 
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard

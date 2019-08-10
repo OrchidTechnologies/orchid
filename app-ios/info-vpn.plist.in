@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleVersion</key>
-    <string>@MONOTONIC@</string>
+    <string>@REVISION@</string>
     <key>CFBundleSignature</key>
     <string>????</string>
 

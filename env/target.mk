@@ -20,7 +20,9 @@ uname := $(shell uname -s)
 
 version := $(shell $(pwd)/version.sh)
 monotonic := $(word 1,$(version))
-version := $(word 2,$(version))
+revision := $(word 2,$(version))
+package := $(word 3,$(version))
+version := $(word 4,$(version))
 
 cflags := 
 qflags := 
