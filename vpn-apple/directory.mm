@@ -22,8 +22,6 @@
 
 #include <Foundation/Foundation.h>
 
-#include <sys/codesign.h>
-
 #include "directory.hpp"
 #include "syscall.hpp"
 
