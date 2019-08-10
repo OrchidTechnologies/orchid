@@ -88,6 +88,9 @@
     </array>
     -->
 
+    <key>UIRequiresFullScreen</key>
+    <true/>
+
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
 
