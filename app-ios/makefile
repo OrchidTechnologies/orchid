@@ -90,7 +90,7 @@ include env/output.mk
 -include $(output)/app.d
 
 
-replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
+replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
 
 
 cflags += -Fflutter/bin/cache/artifacts/engine/ios

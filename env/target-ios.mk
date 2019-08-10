@@ -20,5 +20,6 @@ ossl := ios64-xcrun
 host := aarch64-apple-darwin
 
 more := -miphoneos-version-min=11.0
+support := iPhoneOS
 
 include $(pwd)/target-apl.mk
