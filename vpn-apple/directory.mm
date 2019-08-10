@@ -29,26 +29,8 @@
 
 namespace orc {
 
-static std::string Blob(unsigned int ops) {
-    struct {
-        uint32_t magic;
-        uint32_t size;
-    } orc_packed header;
-
-    if (orc_syscall(csops(0, ops, &header, sizeof(header)), ERANGE) == 0)
-        return std::string();
-
-    size_t size(ntohl(header.size));
-    char data[size];
-    memset(data, 0xff, sizeof(data));
-    orc_syscall(csops(0, ops, data, sizeof(data)));
-    return std::string(data + sizeof(header), size - sizeof(header));
-}
-
 std::string Group() {
-    auto blob(Blob(CS_OPS_ENTITLEMENTS_BLOB));
-    NSDictionary *plist([NSPropertyListSerialization propertyListWithData:[NSData dataWithBytesNoCopy:&blob[0] length:blob.size() freeWhenDone:NO] options:NSPropertyListImmutable format:NULL error:NULL]);
-    NSString *group([[plist objectForKey:@"com.apple.security.application-groups"] objectAtIndex:0]);
+    NSString *group(@"group." ORCHID_DOMAIN "." ORCHID_NAME);
     return [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:group].path.UTF8String;
 }
 
