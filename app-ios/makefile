@@ -46,6 +46,10 @@ install: $(output)/$(name).ipa
 validate: $(output)/$(name).ipa
 	$(altool) --validate-app -f $< -t ios -u "$(aluser)" -p $(alpass)
 
+.PHONY: upload
+upload: $(output)/$(name).ipa
+	$(altool) --upload-app -f $< -t ios -u "$(aluser)" -p $(alpass)
+
 ifeq ($(target),sim)
 cflags += -Wno-deprecated-declarations
 lflags += -framework NetworkExtension
