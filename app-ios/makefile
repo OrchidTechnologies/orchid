@@ -151,6 +151,18 @@ $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
 	$(environ) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
 
 
+signed += $(bundle)/Assets.car
+$(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
+	@mkdir -p $(output)/info
+	# XXX: --launch-image LaunchImage
+	actool --output-format human-readable-text --notices --warnings \
+	    --app-icon AppIcon \
+	    --compress-pngs --enable-on-demand-resources YES \
+	    --platform iphoneos --minimum-deployment-target 11.0 \
+	    --target-device iphone --target-device ipad \
+	    --output-partial-info-plist out-ios/info/actool.plist \
+	    --compile $(bundle) Images.xcassets
+
 signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))
 $(bundle)/%: resource/%
 	@mkdir -p $(dir $@)

@@ -95,15 +95,31 @@
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
 
-    <key>CFBundleIconFiles</key>
-    <array>
-        <string>Icon-60</string>
-        <string>Icon-76</string>
-        <string>Icon-83.5</string>
-        <string>Icon-Small</string>
-        <string>Icon-Small-40</string>
-        <string>Icon-Notification</string>
-    </array>
+    <key>CFBundleIcons</key>
+    <dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array>
+                <string>AppIcon60x60</string>
+            </array>
+            <key>CFBundleIconName</key>
+            <string>AppIcon</string>
+        </dict>
+    </dict>
+    <key>CFBundleIcons~ipad</key>
+    <dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array>
+                <string>AppIcon60x60</string>
+                <string>AppIcon76x76</string>
+            </array>
+            <key>CFBundleIconName</key>
+            <string>AppIcon</string>
+        </dict>
+    </dict>
 
     <key>UIApplicationExitsOnSuspend</key>
     <false/>
