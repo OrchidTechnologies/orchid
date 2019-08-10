@@ -107,8 +107,8 @@ int Main(int argc, const char *const argv[]) {
 
     auto utun("utun" + std::to_string(address.sc_unit - 1));
     orc_assert(system(("ifconfig " + utun + " inet " + local + " " + local + " mtu 1500 up").c_str()) == 0);
-    orc_assert(system("route -n add 207.254.46.169 -interface utun2") == 0);
-    orc_assert(system("route -n add 10.7.0.4 -interface utun2") == 0);
+    orc_assert(system(("route -n add 207.254.46.169 -interface " + utun).c_str()) == 0);
+    orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 
     Wait([&]() -> task<void> {
         co_await Schedule();
