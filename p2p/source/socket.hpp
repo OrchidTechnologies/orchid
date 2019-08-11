@@ -66,25 +66,17 @@ class Socket final {
     {
     }
 
-    Socket(const Socket &rhs) :
-        host_(rhs.host_),
-        port_(rhs.port_)
-    {
-    }
+    Socket(const Socket &rhs) = default;
 
-    Socket(Socket &&rhs) :
+    Socket(Socket &&rhs) noexcept :
         host_(std::move(rhs.host_)),
         port_(rhs.port_)
     {
     }
 
-    Socket &operator =(const Socket &rhs) {
-        host_ = rhs.host_;
-        port_ = rhs.port_;
-        return *this;
-    }
+    Socket &operator =(const Socket &rhs) = default;
 
-    Socket &operator =(Socket &&rhs) {
+    Socket &operator =(Socket &&rhs) noexcept {
         host_ = std::move(rhs.host_);
         port_ = rhs.port_;
         return *this;
@@ -123,13 +115,9 @@ class Four {
     {
     }
 
-    Four(const Four &rhs) :
-        source_(rhs.source_),
-        target_(rhs.target_)
-    {
-    }
+    Four(const Four &rhs) = default;
 
-    Four(Four &&rhs) :
+    Four(Four &&rhs) noexcept :
         source_(std::move(rhs.source_)),
         target_(std::move(rhs.target_))
     {
@@ -169,13 +157,9 @@ class Five final :
     {
     }
 
-    Five(const Five &rhs) :
-        Four(rhs),
-        protocol_(rhs.protocol_)
-    {
-    }
+    Five(const Five &rhs) = default;
 
-    Five(Five &&rhs) :
+    Five(Five &&rhs) noexcept :
         Four(std::move(rhs)),
         protocol_(rhs.protocol_)
     {

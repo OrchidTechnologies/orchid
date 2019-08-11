@@ -54,7 +54,7 @@ class Connection final :
         return &connection_;
     }
 
-    task<size_t> Read(Beam &beam) {
+    task<size_t> Read(Beam &beam) override {
         size_t writ;
         try {
             writ = co_await connection_.async_receive(asio::buffer(beam.data(), beam.size()), Token());

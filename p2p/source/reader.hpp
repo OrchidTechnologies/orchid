@@ -34,8 +34,7 @@ class Reader {
     virtual task<size_t> Read(Beam &beam) = 0;
     virtual void Close() = 0;
 
-    virtual ~Reader() {
-    }
+    virtual ~Reader() = default;
 };
 
 class Stream :
@@ -43,8 +42,7 @@ class Stream :
     public Pipe
 {
   public:
-    virtual ~Stream() override {
-    }
+    ~Stream() override = default;
 
     virtual task<void> Shut() = 0;
 };

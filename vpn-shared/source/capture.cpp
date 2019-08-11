@@ -135,14 +135,14 @@ class Logger :
         // From the author:
         // And while passing in a char * declared buffer to dns_decode() may appear to
         // work, it only works on *YOUR* system; it may not work on other systems.
-        dns_rcode rc = dns_decode(decoded, &decodesize, (const dns_packet_t *const)data, end);
+        dns_rcode rc = dns_decode(decoded, &decodesize, reinterpret_cast<const dns_packet_t *>(data), end);
 
         if (rc != RCODE_OKAY) {
             return;
         }
 
-        dns_query_t *result = (dns_query_t *)decoded;
-        for (size_t i = 0; i < result->ancount; i++) {
+        dns_query_t *result = reinterpret_cast<dns_query_t *>(decoded);
+        for (size_t i = 0; i != result->ancount; ++i) {
             // TODO: IPv6
             if (result->answers[i].generic.type == RR_A) {
                 auto ip = asio::ip::address_v4(ntohl(result->answers[i].a.address));
@@ -432,8 +432,8 @@ class Split :
 
     void Connect(uint32_t local);
 
-    void Drop(Beam data);
-    task<void> Send(Beam data);
+    void Drop(Beam data) override;
+    task<void> Send(Beam data) override;
 
     task<void> Pull(const Four &four) override {
         auto lock(co_await meta_.scoped_lock_async());
@@ -507,15 +507,15 @@ void Split::Drop(Beam data) {
     return hole_->Drop(std::move(data));
 }
 
-task<void> Split::Send(Beam beam) {
-    auto span(beam.span());
+task<void> Split::Send(Beam data) {
+    auto span(data.span());
     auto &ip4(span.cast<openvpn::IPv4Header>());
     auto length(openvpn::IPv4Header::length(ip4.version_len));
 
     switch (ip4.protocol) {
         case openvpn::IPCommon::TCP: {
             if (Verbose)
-                Log() << "TCP:" << beam << std::endl;
+                Log() << "TCP:" << data << std::endl;
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
 
             Four four(
@@ -578,8 +578,8 @@ task<void> Split::Send(Beam beam) {
             }
 
             if (Verbose)
-                Log() << "OUT " << beam << std::endl;
-            hole_->Drop(std::move(beam));
+                Log() << "OUT " << data << std::endl;
+            hole_->Drop(std::move(data));
 
             if (analyze)
                 analyzer_->AnalyzeIncoming(span);
@@ -599,14 +599,14 @@ task<void> Split::Send(Beam beam) {
             uint16_t offset(length + sizeof(openvpn::UDPHeader));
             uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
             Socket target(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
-            co_await punch->Send(beam.subset(offset, size), target);
+            co_await punch->Send(data.subset(offset, size), target);
             analyzer_->Analyze(span);
         } break;
 
         case openvpn::IPCommon::ICMPv4: {
             analyzer_->Analyze(span);
             if (Verbose)
-                Log() << "ICMP" << beam << std::endl;
+                Log() << "ICMP" << data << std::endl;
         } break;
     }
 }
