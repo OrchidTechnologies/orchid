@@ -20,6 +20,9 @@
 
 pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 
+cflags += '-DORCHID_USERNAME="$(username)"'
+cflags += '-DORCHID_PASSWORD="$(password)"'
+
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 

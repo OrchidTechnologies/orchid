@@ -24,9 +24,6 @@ include env/target.mk
 cflags += '-DORCHID_DOMAIN="$(domain)"'
 cflags += '-DORCHID_NAME="$(name)"'
 
-cflags += '-DORCHID_USERNAME="$(username)"'
-cflags += '-DORCHID_PASSWORD="$(password)"'
-
 bundle := $(output)/Payload/$(name).app
 signed := 
 

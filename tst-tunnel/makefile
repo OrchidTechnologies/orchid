@@ -21,9 +21,6 @@
 target := mac
 include env/target.mk
 
-cflags += '-DORCHID_USERNAME="$(username)"'
-cflags += '-DORCHID_PASSWORD="$(password)"'
-
 version := 0.9
 
 args := 
