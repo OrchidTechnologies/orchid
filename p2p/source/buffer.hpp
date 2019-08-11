@@ -158,6 +158,21 @@ class Span {
         return *reinterpret_cast<Cast_ *>(data() + offset);
     }
 
+    template <typename Cast_>
+    Cast_ &take() {
+        static_assert(sizeof(Type_) == 1);
+        orc_assert(size_ >= sizeof(Type_));
+        auto value(reinterpret_cast<Cast_ *>(data()));
+        data_ += sizeof(Type_);
+        size_ -= sizeof(Type_);
+        return *value;
+    }
+
+    Span operator +(size_t offset) {
+        orc_assert(size_ >= offset);
+        return Span(data_ + offset, size_ - offset);
+    }
+
     Span &operator +=(size_t offset) {
         orc_assert(size_ >= offset);
         data_ += offset;
