@@ -13,25 +13,35 @@ dll := so
 lib := a
 exe := 
 
+msys := linux
+
 aver := 21
 
 arch := armv7a
 ossl := android-arm
 alib := armeabi-v7a
+mfam := arm
 
 #arch := aarch64
 #ossl := android-arm64
+#mfam := aarch64
 
 #ossl := android-mips
+#mfam := mips
+
 #ossl := android-mip64
+#mfam := mips64
+
 #ossl := android-x86
+#mfam := x86
 
 #arch := x86_64
 #ossl := android-x86_64
-
-host := $(arch)-linux-android
+#mfam := x86_64
 
 include $(pwd)/target-ndk.mk
+
+host := $(arch)-linux-android$(asuf)
 
 more := 
 

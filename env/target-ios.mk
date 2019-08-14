@@ -18,6 +18,7 @@ sdk := iphoneos
 arch := arm64
 ossl := ios64-xcrun
 host := aarch64-apple-darwin
+mfam := aarch64
 
 more := -miphoneos-version-min=11.0
 support := iPhoneOS

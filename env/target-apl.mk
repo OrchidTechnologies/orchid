@@ -13,6 +13,8 @@ dll := dylib
 lib := a
 exe := 
 
+msys := darwin
+
 lflags += -Wl,-dead_strip
 lflags += -Wl,-no_dead_strip_inits_and_terms
 
@@ -30,3 +32,4 @@ cycp := $(shell $(environ) xcrun -f clang++) $(more)
 
 ranlib := ranlib
 ar := ar
+strip := strip

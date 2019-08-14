@@ -13,6 +13,8 @@ dll := so
 lib := a
 exe := 
 
+msys := linux
+
 arch := x86_64
 ossl := linux-x86_64
 
@@ -24,6 +26,7 @@ include $(pwd)/target-gnu.mk
 
 ranlib := ranlib
 ar := ar
+strip := strip
 
 cycc := clang$(suffix)
 cycp := clang++$(suffix) -stdlib=libc++
@@ -40,7 +43,7 @@ cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/us
 $(output)/sysroot:
 	env/sysroot.sh
 
-linker += $(output)/sysroot
+sysroot += $(output)/sysroot
 
 endif
 

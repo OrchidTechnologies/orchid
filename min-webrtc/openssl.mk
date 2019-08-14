@@ -12,7 +12,7 @@
 pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 
 $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: pwd := $(pwd)
-$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(linker)
+$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(sysroot)
 	rm -rf $(output)/openssl
 	mkdir -p $(output)/openssl
 	cd $(output)/openssl && $(environ) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) \
@@ -26,7 +26,7 @@ $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configu
 	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)"
 	$(environ) $(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
 
-$(output)/%/libssl.a $(output)/%/libcrypto.a: $(output)/%/Makefile $(linker)
+$(output)/%/libssl.a $(output)/%/libcrypto.a: $(output)/%/Makefile $(sysroot)
 	$(environ) $(MAKE) -C $(output)/openssl build_libs
 
 cflags += -I$(pwd)/openssl/include

@@ -35,7 +35,7 @@ tflags :=
 source := 
 linked := 
 header := 
-linker := 
+sysroot := 
 
 environ := 
 output := out-$(target)
@@ -52,6 +52,8 @@ cflags += -Werror
 cflags += -fmessage-length=0
 cflags += -ferror-limit=0
 cflags += -ftemplate-backtrace-limit=0
+
+cflags += -I$(output)/usr/include
 
 beta := false
 
