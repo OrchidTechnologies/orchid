@@ -128,10 +128,9 @@ $(output)/$(pwd)/wireshark/tools/lemon/lemon: $(pwd)/wireshark/tools/lemon/lemon
 	@mkdir -p $(dir $@)
 	gcc -o $@ $<
 
-$(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: pwd := $(pwd)
-$(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.lemon $(output)/$(pwd)/wireshark/tools/lemon/lemon
-	@mkdir -p $(dir $(output)/$(pwd)/$*)
-	$(output)/$(pwd)/wireshark/tools/lemon/lemon -T$(pwd)/wireshark/tools/lemon/lempar.c -d$(dir $(output)/$(pwd)/$*) $(pwd)/$*.lemon
+$(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(output)/$(pwd)/wireshark/tools/lemon/lemon $(pwd)/%.lemon
+	@mkdir -p $(dir $@)
+	$^ -T$(pwd)/wireshark/tools/lemon/lempar.c -d$(dir $@)
 
 source += $(output)/$(pwd)/wireshark/epan/dtd_preparse.c
 source += $(output)/$(pwd)/wireshark/epan/diam_dict.c
