@@ -27,7 +27,7 @@ std::string files_dir;
 U<Sink<Capture>> capture_;
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
+Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
 {
     __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "runTunnel:%d", file);
 
