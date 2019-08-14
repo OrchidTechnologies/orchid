@@ -1,6 +1,7 @@
 package net.orchid.Orchid
 
 import android.os.Bundle
+import android.util.Log
 
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
@@ -13,14 +14,23 @@ class MainActivity(): FlutterActivity() {
         super.onCreate(savedInstanceState)
         GeneratedPluginRegistrant.registerWith(this)
 
-        MethodChannel(flutterView, "orchid.com/feedback").setMethodCallHandler { call, result ->
+        val feedback = MethodChannel(flutterView, "orchid.com/feedback")
+
+        // XXX: ?
+        //feedback.invokeMethod("providerStatus", true)
+
+        feedback.setMethodCallHandler { call, result ->
+            Log.d("Orchid", call.method)
             when (call.method) {
+                "group_path" -> {
+                    result.success(getFilesDir().getAbsolutePath())
+                }
                 "connect" -> {
                     val intent = VpnService.prepare(this);
                     if (intent != null) {
-                        startActivityForResult(intent, 0);
+                        startActivityForResult(intent, 0)
                     } else {
-                        startService(getServiceIntent());
+                        startService(getServiceIntent())
                     }
                 }
                 "disconnect" -> {
