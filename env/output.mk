@@ -106,6 +106,10 @@ tidy :=
 tidy += source/.*\.[ch]pp
 tidy := (^|/)($(subst $(space),|,$(patsubst %,%,($(strip $(tidy))))))$$
 
+.PHONY: printenv
+printenv:
+	printenv
+
 $(output)/%.o: %.c $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
