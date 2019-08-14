@@ -10,12 +10,13 @@ import android.content.Intent;
 import android.net.VpnService;
 
 class MainActivity(): FlutterActivity() {
+    lateinit var feedback: MethodChannel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         GeneratedPluginRegistrant.registerWith(this)
 
-        val feedback = MethodChannel(flutterView, "orchid.com/feedback")
-
+        feedback = MethodChannel(flutterView, "orchid.com/feedback")
         feedback.setMethodCallHandler { call, result ->
             Log.d("Orchid", call.method)
             when (call.method) {
@@ -29,9 +30,12 @@ class MainActivity(): FlutterActivity() {
                         startActivityForResult(intent, 0)
                     } else {
                         startService(getServiceIntent())
+                        feedback.invokeMethod("connectionStatus", "Connected")
                     }
                 }
                 "disconnect" -> {
+                    // TODO:
+                    //feedback.invokeMethod("connectionStatus", "Disconnected")
                 }
                 "reroute" -> {
                 }
@@ -42,6 +46,7 @@ class MainActivity(): FlutterActivity() {
     override fun onActivityResult(request: Int, result: Int, data: Intent?) {
         if (result == RESULT_OK) {
             startService(getServiceIntent());
+            feedback.invokeMethod("connectionStatus", "Connected")
         }
     }
 
