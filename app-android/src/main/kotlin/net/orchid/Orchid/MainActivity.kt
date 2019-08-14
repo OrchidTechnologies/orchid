@@ -16,14 +16,12 @@ class MainActivity(): FlutterActivity() {
 
         val feedback = MethodChannel(flutterView, "orchid.com/feedback")
 
-        // XXX: ?
-        //feedback.invokeMethod("providerStatus", true)
-
         feedback.setMethodCallHandler { call, result ->
             Log.d("Orchid", call.method)
             when (call.method) {
                 "group_path" -> {
                     result.success(getFilesDir().getAbsolutePath())
+                    feedback.invokeMethod("providerStatus", true)
                 }
                 "connect" -> {
                     val intent = VpnService.prepare(this);
