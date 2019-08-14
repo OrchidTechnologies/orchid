@@ -138,7 +138,7 @@ void wireshark_setup()
     char *errmsg = NULL;
     prefs_set_pref(strdup("gui.column.format:\"Protocol\",\"%p\""), &errmsg);
     if (errmsg) {
-        std::cout << __func__ << " " << errmsg << std::endl;
+        orc::Log() << __func__ << " " << errmsg << std::endl;
     }
 
     prefs_apply_all();
