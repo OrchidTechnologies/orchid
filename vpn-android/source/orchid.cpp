@@ -96,7 +96,7 @@ bool vpn_protect(int s)
         if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
             return false;
         }
-        IMPORT(com/example/orchid, OrchidVpnService);
+        IMPORT(net/orchid/Orchid, OrchidVpnService);
         CATCH(return false);
         jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
         CATCH(return false);
