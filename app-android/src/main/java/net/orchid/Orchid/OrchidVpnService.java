@@ -17,9 +17,14 @@ import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import io.flutter.plugin.common.BinaryMessenger;
+
+
 public class OrchidVpnService extends VpnService {
     private static final String TAG = "OrchidVpnService";
     private static OrchidVpnService vpnService;
+
+    private int fd = -1;
 
     static boolean vpnProtect(int fd) {
         return vpnService.protect(fd);
@@ -28,6 +33,11 @@ public class OrchidVpnService extends VpnService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand: intent:" + intent + " flags:" + flags + " startId:" + startId);
+        if (intent != null && "disconnect".equals(intent.getAction())) {
+            closeFd();
+            stopForeground(true);
+            return START_NOT_STICKY;
+        }
         return START_STICKY;
     }
 
@@ -64,6 +74,7 @@ public class OrchidVpnService extends VpnService {
         Builder builder = new Builder();
         builder.addAddress("10.7.0.3", 32);
         builder.addRoute("0.0.0.0", 0);
+        builder.addRoute("10.7.0.4", 32);
         builder.addDnsServer("8.8.8.8");
         builder.addDnsServer("8.8.4.4");
         builder.setSession("Orchid");
@@ -71,7 +82,7 @@ public class OrchidVpnService extends VpnService {
         try {
             ParcelFileDescriptor p = builder.establish();
             if (p != null) {
-                final int fd = p.detachFd();
+                fd = p.detachFd();
                 Log.w(TAG, "Success: " + fd);
                 vpnService = this;
                 startForeground();
@@ -86,7 +97,9 @@ public class OrchidVpnService extends VpnService {
                         Log.e(TAG, "onCreate", e);
                     }
 
+                    Log.d(TAG, "OrchidNative starting");
                     OrchidNative.runTunnel(fd, f.getAbsolutePath());
+                    Log.d(TAG, "OrchidNative stopped");
                     stopSelfResult(1);
                 }}).start();
             }
@@ -95,11 +108,22 @@ public class OrchidVpnService extends VpnService {
         }
     }
 
+    void closeFd() {
+        if (fd == -1) {
+            return;
+        }
+        try {
+            ParcelFileDescriptor.adoptFd(fd).close();
+        } catch (IOException e) {
+        }
+        fd = -1;
+    }
+
     @Override
     public void onRevoke() {
         Log.d(TAG, "onRevoke");
-        // TODO: close fd
         super.onRevoke();
+        closeFd();
     }
 
     @Override
@@ -115,6 +139,7 @@ public class OrchidVpnService extends VpnService {
     @Override
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
+        closeFd();
     }
 
     public void startForeground() {
