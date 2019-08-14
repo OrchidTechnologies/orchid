@@ -1,4 +1,4 @@
-package com.example.orchid;
+package net.orchid.Orchid;
 
 import java.io.File;
 import java.io.FileOutputStream;
