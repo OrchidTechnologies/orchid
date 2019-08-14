@@ -1,5 +1,7 @@
 package net.orchid.Orchid
 
+import net.orchid.Orchid.BuildConfig;
+
 import android.os.Bundle
 import android.util.Log
 
@@ -34,13 +36,20 @@ class MainActivity(): FlutterActivity() {
                     }
                 }
                 "disconnect" -> {
-                    // TODO:
-                    //feedback.invokeMethod("connectionStatus", "Disconnected")
+                    startService(getServiceIntent().setAction("disconnect"))
+                    feedback.invokeMethod("connectionStatus", "Disconnected")
                 }
                 "reroute" -> {
                 }
+                "version" -> {
+                    result.success("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                }
             }
         }
+
+        // we *could* hook feedback "connectionStatus" up to ConnectivityService:
+        // NetworkAgentInfo [VPN () - 112] EVENT_NETWORK_INFO_CHANGED, going from CONNECTING to CONNECTED
+        // but we'd need to make sure it's the Orchid VPN.
     }
 
     override fun onActivityResult(request: Int, result: Int, data: Intent?) {
