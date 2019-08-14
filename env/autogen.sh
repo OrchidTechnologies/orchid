@@ -6,5 +6,5 @@ if [[ $(autom4te --version | head -n 1) == "autom4te (GNU Autoconf) 2.69" ]]; th
     cd "${src}"
     exec ./autogen.sh "$@"
 else
-    exec docker run --rm -i -v "${PWD}/../env/autogen_.sh:/init" -v "${PWD}:/mnt" ubuntu:bionic /init "$@"
+    exec docker run --rm -i -v "${PWD}/env/autogen_.sh:/init" -v "${PWD}/${src}:/mnt" ubuntu:bionic /init "$@"
 fi
