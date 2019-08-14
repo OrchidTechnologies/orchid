@@ -3,6 +3,8 @@ set -e
 src=$1
 shift
 if [[ $(autom4te --version | head -n 1) == "autom4te (GNU Autoconf) 2.69" ]]; then
+    unset MAKEFLAGS
+    unset MFLAGS
     cd "${src}"
     exec ./autogen.sh "$@"
 else
