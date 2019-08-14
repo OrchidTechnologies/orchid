@@ -18,7 +18,7 @@ class AnalysisDb {
       return _db;
     }
     String dbPath = (await OrchidAPI().groupContainerPath()) + '/analysis.db';
-    debugPrint("analysis db path: $dbPath");
+    //debugPrint("Analysis db path: $dbPath");
     try {
       _db = await openDatabase(dbPath, readOnly: false);
     } catch (err) {
@@ -28,7 +28,6 @@ class AnalysisDb {
     await _db.execute("PRAGMA journal_mode = wal");
     await _db.execute("PRAGMA secure_delete = on");
     await _db.execute("PRAGMA synchronous = full");
-    debugPrint("analysis db result: $_db");
     return _db;
   }
 
@@ -38,20 +37,24 @@ class AnalysisDb {
       return List();
     }
     var query = QueryParser(filterText).parse();
-    print("query: $query");
-    List<Map> list = await db.rawQuery(query);
-    return list.map((row) {
-      return FlowEntry(
-          rowId: row['rowid'],
-          start: fromJulianDate(row['start']),
-          layer4: _fromProtocol(row['layer4']),
-          protocol: row['protocol'],
-          src_addr: _fromAddr(row['src_addr']),
-          src_port: row['src_port'],
-          dst_addr: _fromAddr(row['dst_addr']),
-          dst_port: row['dst_port'],
-          hostname: row['hostname']);
-    }).toList(growable: false);
+    try {
+      List<Map> list = await db.rawQuery(query);
+      return list.map((row) {
+        return FlowEntry(
+            rowId: row['rowid'],
+            start: fromJulianDate(row['start']),
+            layer4: _fromProtocol(row['layer4']),
+            protocol: row['protocol'],
+            src_addr: _fromAddr(row['src_addr']),
+            src_port: row['src_port'],
+            dst_addr: _fromAddr(row['dst_addr']),
+            dst_port: row['dst_port'],
+            hostname: row['hostname']);
+      }).toList(growable: false);
+    } catch (err) {
+      debugPrint("Analysis db: Error in query: $err");
+      return List();
+    }
   }
 
   Future<void> clear() async {
@@ -178,4 +181,3 @@ class QueryParser {
     return 'SELECT rowid, * FROM flow' + restrictions + orderBy + limit;
   }
 }
-

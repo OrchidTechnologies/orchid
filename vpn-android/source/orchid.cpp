@@ -27,7 +27,7 @@ std::string files_dir;
 U<Sink<Capture>> capture_;
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
+Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
 {
     Log() << "runTunnel:" << file << std::endl;
 
@@ -96,7 +96,7 @@ bool vpn_protect(int s)
         if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
             return false;
         }
-        IMPORT(com/example/orchid, OrchidVpnService);
+        IMPORT(net/orchid/Orchid, OrchidVpnService);
         CATCH(return false);
         jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
         CATCH(return false);

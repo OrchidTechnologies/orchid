@@ -1,4 +1,4 @@
-package com.example.orchid;
+package net.orchid.Orchid;
 
 class OrchidNative {
     public static native void runTunnel(int fd, String dir);

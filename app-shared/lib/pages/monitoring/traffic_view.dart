@@ -46,9 +46,9 @@ class _TrafficViewState extends State<TrafficView> {
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
-        Visibility(visible: _noData(), child: TrafficViewEmpty()),
+        Visibility(visible: _showEmptyView(), child: TrafficViewEmpty()),
         Visibility(
-          visible: !_noData(),
+          visible: !_showEmptyView(),
           child: Column(
             children: <Widget>[_buildSearchView(), _buildResultListView()],
           ),
@@ -57,9 +57,10 @@ class _TrafficViewState extends State<TrafficView> {
     );
   }
 
-  /// Return true if there is no data. (Not including empty filtered results)
-  bool _noData() {
-    return _resultList == null || _resultList != null && _resultList.isEmpty && _query.length < 1;
+  /// Return true if there is no data to be displayed and the empty state view should
+  /// be shown.  Note that this does not include empty query results.
+  bool _showEmptyView() {
+    return _resultList != null && _resultList.isEmpty && _query.length < 1;
   }
 
   Widget _buildSearchView() {
