@@ -97,7 +97,8 @@ class Logger :
     Statement<None, std::string_view, sqlite3_int64> update_hostname_;
     Statement<None, std::string_view, sqlite3_int64> update_protocol_;
     DnsLog dns_log_;
-    std::map<Five, sqlite3_int64> flows_;
+    std::map<Five, sqlite3_int64> flow_to_row_;
+    std::map<Five, std::string> flow_to_protocol_chain_;
 
   public:
     Logger(const std::string &path) :
@@ -166,19 +167,9 @@ class Logger :
         }
     }
 
-    std::string L4ProtocolToString(uint8_t protocol) {
-        switch (protocol) {
-        case IPPROTO_UDP: return "UDP";
-        case IPPROTO_TCP: return "TCP";
-        case IPPROTO_ICMP: return "ICMP";
-        case IPPROTO_IGMP: return "IGMP";
-        default: return "???";
-        }
-    }
-
     void AddFlow(Five const &five) override {
-        auto flow(flows_.find(five));
-        if (flow != flows_.end())
+        auto flow(flow_to_row_.find(five));
+        if (flow != flow_to_row_.end())
             return;
         const auto &source(five.Source());
         const auto &target(five.Target());
@@ -187,9 +178,7 @@ class Logger :
             source.Host().to_v4().to_uint(), source.Port(),
             target.Host().to_v4().to_uint(), target.Port()
         );
-        flows_.emplace(five, row_id);
-
-        update_protocol_(L4ProtocolToString(five.Protocol()), row_id);
+        flow_to_row_.emplace(five, row_id);
 
         auto hostname(dns_log_.find(target.Host()));
         if (hostname != dns_log_.end()) {
@@ -198,21 +187,31 @@ class Logger :
     }
 
     void GotHostname(Five const &five, const std::string_view hostname) override {
-        auto flow(flows_.find(five));
-        if (flow == flows_.end()) {
+        auto flow_row(flow_to_row_.find(five));
+        if (flow_row == flow_to_row_.end()) {
             orc_assert(false);
             return;
         }
-        update_hostname_(hostname, flow->second);
+        update_hostname_(hostname, flow_row->second);
     }
 
-    void GotProtocol(Five const &five, const std::string_view protocol) override {
-        auto flow(flows_.find(five));
-        if (flow == flows_.end()) {
+    void GotProtocol(Five const &five, const std::string_view protocol, const std::string_view protocol_chain) override {
+        auto flow_row(flow_to_row_.find(five));
+        if (flow_row == flow_to_row_.end()) {
             orc_assert(false);
             return;
         }
-        update_protocol_(protocol, flow->second);
+        auto flow_protocol_chain(flow_to_protocol_chain_.find(five));
+        if (flow_protocol_chain != flow_to_protocol_chain_.end()) {
+            auto s = flow_protocol_chain->second;
+            size_t specificity = std::count(protocol_chain.begin(), protocol_chain.end(), ':');
+            size_t current_specificity = std::count(s.begin(), s.end(), ':');
+            if (specificity < current_specificity) {
+                return;
+            }
+        }
+        flow_to_protocol_chain_.emplace(five, protocol_chain);
+        update_protocol_(protocol, flow_row->second);
     }
 };
 

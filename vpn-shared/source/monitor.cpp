@@ -34,7 +34,7 @@ using namespace asio::ip;
 
 namespace orc {
 typedef std::function<void (const std::string_view)> hostname_callback;
-typedef std::function<void (const std::string_view)> protocol_callback;
+typedef std::function<void (const std::string_view, const std::string_view)> protocol_callback;
 }
 
 capture_file cf;
@@ -143,8 +143,7 @@ void wireshark_setup()
 
     prefs_apply_all();
 
-    // COL_PROTOCOL is better
-    //tap_frame("frame.protocols");
+    tap_frame("frame.protocols");
     tap_frame("tls.handshake.extensions_server_name");
     tap_frame("gquic.tag.sni");
     tap_frame("gquic.version");
@@ -208,7 +207,7 @@ std::string get_tree_field(epan_dissect_t *edt, const char *field)
         }
         int fs_len = fvalue_string_repr_len(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display);
         std::string field_value;
-        field_value.resize(fs_len + 1);
+        field_value.resize(fs_len);
         finfo->value.ftype->val_to_string_repr(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display, &field_value[0], fs_len + 1);
         return field_value;
     }
@@ -249,20 +248,21 @@ void wireshark_analyze(const uint8_t *buf, size_t packet_len, const orc::hostnam
                                &fdata, &cf.cinfo);
     epan_dissect_fill_in_columns(&edt, FALSE, TRUE);
 
-    std::string gquic_ver = get_tree_field(&edt, "gquic.version");
-    std::string http_ver = get_tree_field(&edt, "http.request.version");
+    auto protocol_chain = get_tree_field(&edt, "frame.protocols");
+    auto gquic_ver = get_tree_field(&edt, "gquic.version");
+    auto http_ver = get_tree_field(&edt, "http.request.version");
 
     for (int i = 0; i < cf.cinfo.num_cols; i++) {
         col_item_t* col_item = &cf.cinfo.columns[i];
         if (col_item->col_fmt == COL_PROTOCOL) {
             if (!http_ver.empty()) {
-                protocol_cb(http_ver);
+                protocol_cb(http_ver, protocol_chain);
             } else if (!gquic_ver.empty()) {
                 std::ostringstream protocol;
                 protocol << col_item->col_data << " " << gquic_ver;
-                protocol_cb(protocol.str());
+                protocol_cb(protocol.str(), protocol_chain);
             } else {
-                protocol_cb(col_item->col_data);
+                protocol_cb(col_item->col_data, protocol_chain);
             }
             break;
         }
@@ -353,9 +353,9 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
     wireshark_analyze(buf, len, [&](auto hostname) {
         Log() << "hostname: " << hostname << std::endl;
         logger.GotHostname(flow, hostname);
-    }, [&](auto protocol) {
-        Log() << "protocol: " << protocol << std::endl;
-        logger.GotProtocol(flow, protocol);
+    }, [&](auto protocol, auto protocol_chain) {
+        Log() << "protocol: " << protocol << " (" << protocol_chain << ")" << std::endl;
+        logger.GotProtocol(flow, protocol, protocol_chain);
     });
 }
 
