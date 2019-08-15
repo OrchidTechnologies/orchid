@@ -255,28 +255,4 @@ contract OrchidDirectory is IOrchidDirectory {
         pending.amount_ += amount;
     }
 
-
-
-    struct Location {
-        uint256 time_;
-        bytes data_;
-    }
-
-    mapping(address => Location) private locations_;
-
-    function move(bytes memory data) public {
-        Location storage location = locations_[msg.sender];
-        location.time_ = block.timestamp;
-        location.data_ = data;
-    }
-
-    function stop() public {
-        delete locations_[msg.sender];
-    }
-
-    function look(address stakee) public view returns (uint256 time, bytes memory data) {
-        Location storage location = locations_[stakee];
-        return (location.time_, location.data_);
-    }
-
 }
