@@ -42,7 +42,7 @@ contract TestOrchidDirectory is OrchidDirectory
         address staker  = msg.sender;
         bytes32 key     = keccak256(abi.encodePacked(staker, stakee));
         //bytes32 key     = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
-        return medallion.amount_;
+        Stake storage stake = stakes_[key];
+        return stake.amount_;
     }
 }

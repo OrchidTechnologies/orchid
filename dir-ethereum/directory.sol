@@ -68,7 +68,7 @@ contract OrchidDirectory is IOrchidDirectory {
 
 
 
-    struct Medallion {
+    struct Stake {
         uint128 before_;
         uint128 after_;
 
@@ -82,7 +82,7 @@ contract OrchidDirectory is IOrchidDirectory {
         Primary right_;
     }
 
-    mapping(bytes32 => Medallion) internal medallions_;
+    mapping(bytes32 => Stake) internal stakes_;
 
     Primary private root_;
 
@@ -90,8 +90,8 @@ contract OrchidDirectory is IOrchidDirectory {
     function have() public view returns (uint128 amount) {
         if (nope(root_))
             return 0;
-        Medallion storage medallion = medallions_[name(root_)];
-        return medallion.before_ + medallion.after_ + medallion.amount_;
+        Stake storage stake = stakes_[name(root_)];
+        return stake.before_ + stake.after_ + stake.amount_;
     }
 
     function scan(uint128 percent) public view returns (address) {
@@ -101,33 +101,33 @@ contract OrchidDirectory is IOrchidDirectory {
 
         Primary storage primary = root_;
         for (;;) {
-            Medallion storage medallion = medallions_[name(primary)];
+            Stake storage stake = stakes_[name(primary)];
 
-            if (point < medallion.before_) {
-                primary = medallion.left_;
+            if (point < stake.before_) {
+                primary = stake.left_;
                 continue;
             }
 
-            point -= medallion.before_;
+            point -= stake.before_;
 
-            if (point < medallion.amount_)
-                return medallion.stakee_;
+            if (point < stake.amount_)
+                return stake.stakee_;
 
-            point -= medallion.amount_;
+            point -= stake.amount_;
 
-            primary = medallion.right_;
+            primary = stake.right_;
         }
     }
 
 
-    function step(bytes32 key, Medallion storage medallion, uint128 amount, bytes32 root) private {
-        while (medallion.parent_ != root) {
-            bytes32 parent = medallion.parent_;
-            medallion = medallions_[parent];
-            if (name(medallion.left_) == key)
-                medallion.before_ += amount;
+    function step(bytes32 key, Stake storage stake, uint128 amount, bytes32 root) private {
+        while (stake.parent_ != root) {
+            bytes32 parent = stake.parent_;
+            stake = stakes_[parent];
+            if (name(stake.left_) == key)
+                stake.before_ += amount;
             else
-                medallion.after_ += amount;
+                stake.after_ += amount;
             key = parent;
         }
     }
@@ -135,12 +135,12 @@ contract OrchidDirectory is IOrchidDirectory {
     function more(address stakee, uint128 amount, uint128 delay) private {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
+        Stake storage stake = stakes_[key];
 
-        require(delay >= medallion.delay_);
-        medallion.delay_ = delay;
+        require(delay >= stake.delay_);
+        stake.delay_ = delay;
 
-        if (medallion.amount_ == 0) {
+        if (stake.amount_ == 0) {
             require(amount != 0);
 
             bytes32 parent = bytes32(0);
@@ -148,18 +148,18 @@ contract OrchidDirectory is IOrchidDirectory {
 
             while (!nope(primary)) {
                 parent = name(primary);
-                Medallion storage current = medallions_[parent];
+                Stake storage current = stakes_[parent];
                 primary = current.before_ < current.after_ ? current.left_ : current.right_;
             }
 
-            medallion.parent_ = parent;
+            stake.parent_ = parent;
             copy(primary, staker, stakee);
 
-            medallion.stakee_ = stakee;
+            stake.stakee_ = stakee;
         }
 
-        medallion.amount_ += amount;
-        step(key, medallion, amount, bytes32(0));
+        stake.amount_ += amount;
+        step(key, stake, amount, bytes32(0));
     }
 
     function push(address stakee, uint128 amount, uint128 delay) public {
@@ -170,10 +170,11 @@ contract OrchidDirectory is IOrchidDirectory {
     function wait(address stakee, uint128 delay) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
+        Stake storage stake = stakes_[key];
+        require(stake.amount_ != 0);
 
-        require(delay >= medallion.delay_);
-        medallion.delay_ = delay;
+        require(delay >= stake.delay_);
+        stake.delay_ = delay;
     }
 
 
@@ -202,29 +203,29 @@ contract OrchidDirectory is IOrchidDirectory {
     function pull(address stakee, uint128 amount, uint256 index) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
-        uint128 delay = medallion.delay_;
+        Stake storage stake = stakes_[key];
+        uint128 delay = stake.delay_;
 
-        require(medallion.amount_ != 0);
-        require(medallion.amount_ >= amount);
-        medallion.amount_ -= amount;
+        require(stake.amount_ != 0);
+        require(stake.amount_ >= amount);
+        stake.amount_ -= amount;
 
-        step(key, medallion, -amount, bytes32(0));
+        step(key, stake, -amount, bytes32(0));
 
-        if (medallion.amount_ == 0) {
-            if (medallion.parent_ == bytes32(0))
+        if (stake.amount_ == 0) {
+            if (stake.parent_ == bytes32(0))
                 delete root_;
             else {
-                Medallion storage current = medallions_[medallion.parent_];
+                Stake storage current = stakes_[stake.parent_];
                 Primary storage pivot = name(current.left_) == key ? current.left_ : current.right_;
-                Primary storage child = medallion.before_ > medallion.after_ ? medallion.left_ : medallion.right_;
+                Primary storage child = stake.before_ > stake.after_ ? stake.left_ : stake.right_;
 
                 if (nope(child))
                     kill(pivot);
                 else {
                     Primary storage last = child;
                     for (;;) {
-                        current = medallions_[name(last)];
+                        current = stakes_[name(last)];
                         Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
                         if (nope(next))
                             break;
@@ -233,41 +234,41 @@ contract OrchidDirectory is IOrchidDirectory {
 
                     bytes32 direct = current.parent_;
                     copy(pivot, last);
-                    current.parent_ = medallion.parent_;
+                    current.parent_ = stake.parent_;
 
                     if (direct == key) {
-                        Primary storage other = medallion.before_ > medallion.after_ ? medallion.right_ : medallion.left_;
+                        Primary storage other = stake.before_ > stake.after_ ? stake.right_ : stake.left_;
                         if (!nope(other))
-                            medallions_[name(other)].parent_ = name(last);
+                            stakes_[name(other)].parent_ = name(last);
 
-                        if (name(medallion.left_) == key) {
-                            current.right_ = medallion.right_;
-                            current.after_ = medallion.after_;
+                        if (name(stake.left_) == key) {
+                            current.right_ = stake.right_;
+                            current.after_ = stake.after_;
                         } else {
-                            current.left_ = medallion.left_;
-                            current.before_ = medallion.before_;
+                            current.left_ = stake.left_;
+                            current.before_ = stake.before_;
                         }
                     } else {
-                        if (!nope(medallion.left_))
-                            medallions_[name(medallion.left_)].parent_ = name(last);
-                        if (!nope(medallion.right_))
-                            medallions_[name(medallion.right_)].parent_ = name(last);
+                        if (!nope(stake.left_))
+                            stakes_[name(stake.left_)].parent_ = name(last);
+                        if (!nope(stake.right_))
+                            stakes_[name(stake.right_)].parent_ = name(last);
 
-                        current.right_ = medallion.right_;
-                        current.after_ = medallion.after_;
+                        current.right_ = stake.right_;
+                        current.after_ = stake.after_;
 
-                        current.left_ = medallion.left_;
-                        current.before_ = medallion.before_;
+                        current.left_ = stake.left_;
+                        current.before_ = stake.before_;
 
-                        medallion.parent_ = direct;
+                        stake.parent_ = direct;
                         copy(last, staker, stakee);
-                        step(key, medallion, -current.amount_, current.parent_);
+                        step(key, stake, -current.amount_, current.parent_);
                         kill(last);
                     }
                 }
             }
 
-            delete medallions_[key];
+            delete stakes_[key];
         }
 
         Pending storage pending = pendings_[msg.sender][index];
