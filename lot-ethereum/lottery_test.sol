@@ -39,8 +39,8 @@ contract TestOrchidLottery is OrchidLottery
         return signer2; 
     }
 
-    //function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public 
-    function grab2(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount, uint8 v, bytes32 r, bytes32 s, 
+    //function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public 
+    function grab2(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint128 amount, uint8 v, bytes32 r, bytes32 s, 
     address sender, bytes32 thash) public 
     {
         require(keccak256(abi.encodePacked(secret)) == hash);
@@ -78,8 +78,8 @@ contract TestOrchidLottery is OrchidLottery
     function get_token(uint256)     public view returns (address)    { return address(token_); }
     function set_token(address x)   public                           { token_ = ERC20(x); }
 
-    function get_amount(address x)  public view returns (uint64)     { return pots_[x].amount_; }
-    function get_escrow(address x)  public view returns (uint64)     { return pots_[x].escrow_; }
+    function get_amount(address x)  public view returns (uint128)    { return pots_[x].amount_; }
+    function get_escrow(address x)  public view returns (uint128)    { return pots_[x].escrow_; }
     function get_unlock(address x)  public view returns (uint256)    { return pots_[x].unlock_; }
 
     function hash_test_(address payable target) public view returns (bytes32)
