@@ -22,27 +22,31 @@
 
 pragma solidity ^0.5.7;
 
-import "directory.sol";
+interface IOrchidProperty {
+}
 
+contract OrchidProperty is IOrchidProperty {
 
-contract TestOrchidDirectory is OrchidDirectory
-{
-
-    constructor(address token) public OrchidDirectory(token) {}
-
-    function set(address token) public {
-        token_ = ERC20(token);
+    struct Location {
+        uint256 time_;
+        bytes data_;
     }
 
-    function get_token(uint256)     public view returns (address)    { return address(token_); }
+    mapping(address => Location) private locations_;
 
-
-    function get_amount(address stakee) public view returns (uint256)
-    {
-        address staker  = msg.sender;
-        bytes32 key     = keccak256(abi.encodePacked(staker, stakee));
-        //bytes32 key     = name(staker, stakee);
-        Medallion storage medallion = medallions_[key];
-        return medallion.amount_;
+    function move(bytes memory data) public {
+        Location storage location = locations_[msg.sender];
+        location.time_ = block.timestamp;
+        location.data_ = data;
     }
+
+    function stop() public {
+        delete locations_[msg.sender];
+    }
+
+    function look(address stakee) public view returns (uint256 time, bytes memory data) {
+        Location storage location = locations_[stakee];
+        return (location.time_, location.data_);
+    }
+
 }

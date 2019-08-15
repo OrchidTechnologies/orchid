@@ -36,9 +36,15 @@ contract OrchidLottery {
         uint128 amount_;
         uint128 escrow_;
         uint256 unlock_;
+        uint128 winprob_;
+        uint128 faceval_;
+        uint128 expval_;
+        uint128 lastWinner_;
     }
-
     mapping(address => Pot) internal pots_;
+
+    mapping(address => int256) internal dbalances_;
+
 
     event Update(address indexed signer, uint128 amount, uint128 escrow, uint256 unlock);
 
@@ -48,70 +54,61 @@ contract OrchidLottery {
     }
 
     // signer must be a simple account, to support signing tickets
-    function fund(address signer, uint128 amount, uint128 total) public {
+    function fund(address signer, uint128 amount, uint128 total, uint128 winprob, uint128 faceval, uint128 expval) public {
         require(total >= amount);
         Pot storage pot = pots_[signer];
         pot.amount_ += amount;
         pot.escrow_ += total - amount;
+        pot.lastWinner_ = 0;
+        pot.winprob_ = winprob;
+        pot.faceval_ = faceval;
+        pot.expval_  = expval;
         emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
         require(token_.transferFrom(msg.sender, address(this), total));
     }
 
-    function move(uint128 amount) public {
-        Pot storage pot = pots_[msg.sender];
-        require(pot.amount_ >= amount);
-        pot.amount_ -= amount;
-        pot.escrow_ += amount;
-        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
-    }
 
+    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint8 v, bytes32 r, bytes32 s, uint128 lastWinner, uint128 newWinner) public {
 
-    struct Track {
-        uint256 until_;
-    }
-
-    mapping(address => mapping(bytes32 => Track)) internal tracks_;
-
-    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
-        require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
         require(until > block.timestamp);
 
-        bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, until, ratio, amount));
+        bytes32 ticket  = keccak256(abi.encodePacked(hash, target, nonce, until, lastWinner));
 
-        require(tracks_[target][ticket].until_ == 0);
-        tracks_[target][ticket].until_ = until;
-
-        for (uint256 i = 0; i != old.length; ++i) {
-            Track storage track = tracks_[target][old[i]];
-            require(track.until_ <= block.timestamp);
-            delete track.until_;
-        }
-
-        address signer = ecrecover(ticket, v, r, s);
+        address signer  = ecrecover(ticket, v, r, s);
         Pot storage pot = pots_[signer];
 
-        if (pot.amount_ < amount) {
-            amount = pot.amount_;
+        require(uint256(keccak256(abi.encodePacked(secret, nonce))) < pot.winprob_);
+        
+        uint256 faceval  = pot.faceval_;
+        uint256 toteval  = (newWinner - lastWinner) * pot.expval_; 
+
+        require(newWinner > pot.lastWinner_); // to prevent replay       
+		//require(lastWinner == pot.lastWinner_);
+		//if (lastWinner != pot.lastWinner_) { pot.amount_ = 0; }
+
+        if (pot.amount_ < toteval) {
+            faceval 	= toteval = pot.amount_;
             pot.escrow_ = 0;
         }
+        
+        pot.amount_    -= toteval;
+        pot.lastWinner_ = newWinner;
 
-        pot.amount_ -= amount;
+		int256 dbal  = dbalances_[target] + toteval;
+		faceval      = min(faceval,  dbal);
+		dbalances_[target] = dbal - faceval;
+
         emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
-        if (amount != 0)
-            require(token_.transfer(target, amount));
+
+        if (faceval != 0)
+            require(token_.transfer(target, faceval));
     }
 
 
     function warn() public {
         Pot storage pot = pots_[msg.sender];
         pot.unlock_ = block.timestamp + 1 days;
-        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
-    }
-
-    function lock() public {
-        Pot storage pot = pots_[msg.sender];
-        pot.unlock_ = 0;
         emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
     }
 
