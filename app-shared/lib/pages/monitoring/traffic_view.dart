@@ -160,24 +160,25 @@ class _TrafficViewState extends State<TrafficView> {
                         ],
                       ),
                       children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 73, top: 4.0, bottom: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: <Widget>[
-                              Text('Source Addr: ${item.src_addr}',
-                                  style: protStyle),
-                              SizedBox(height: 2),
-                              Text('Source Port : ${item.src_port}',
-                                  style: protStyle),
-                              SizedBox(height: 2),
-                              Text('Dest Addr: ${item.dst_addr}',
-                                  style: protStyle),
-                              SizedBox(height: 2),
-                              Text('Dest Port: ${item.dst_port}',
-                                  style: protStyle),
-                            ],
+                        ListTile(
+                          title: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: <Widget>[
+                                Text('Source Addr: ${item.src_addr}',
+                                    style: protStyle),
+                                SizedBox(height: 2),
+                                Text('Source Port : ${item.src_port}',
+                                    style: protStyle),
+                                SizedBox(height: 2),
+                                Text('Dest Addr: ${item.dst_addr}',
+                                    style: protStyle),
+                                SizedBox(height: 2),
+                                Text('Dest Port: ${item.dst_port}',
+                                    style: protStyle),
+                              ],
+                            ),
                           ),
                         )
                       ],
