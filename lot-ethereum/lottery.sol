@@ -109,6 +109,12 @@ contract OrchidLottery {
         emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
     }
 
+    function lock() public {
+        Pot storage pot = pots_[msg.sender];
+        pot.unlock_ = 0;
+        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
+    }
+
     function take(address payable target) public {
         Pot storage pot = pots_[msg.sender];
         require(pot.unlock_ != 0);
