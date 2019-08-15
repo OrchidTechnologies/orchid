@@ -57,6 +57,14 @@ contract OrchidLottery {
         require(token_.transferFrom(msg.sender, address(this), total));
     }
 
+    function move(uint128 amount) public {
+        Pot storage pot = pots_[msg.sender];
+        require(pot.amount_ >= amount);
+        pot.amount_ -= amount;
+        pot.escrow_ += amount;
+        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
+    }
+
 
     struct Track {
         uint256 until_;
