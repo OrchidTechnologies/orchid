@@ -130,7 +130,9 @@ $(output)/$(pwd)/wireshark/tools/lemon/lemon: $(pwd)/wireshark/tools/lemon/lemon
 
 $(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.lemon $(output)/$(pwd)/wireshark/tools/lemon/lemon
 	@mkdir -p $(dir $@)
-	$(word 2,$^) -T$(pwd)/wireshark/tools/lemon/lempar.c -d$(dir $@) $(word 1,$^)
+	@echo [LM] $(target) $<
+	@$(word 2,$^) -T$(pwd)/wireshark/tools/lemon/lempar.c -d$(dir $@) $(word 1,$^)
+	@touch $(basename $@).h
 
 source += $(output)/$(pwd)/wireshark/epan/dtd_preparse.c
 source += $(output)/$(pwd)/wireshark/epan/diam_dict.c
