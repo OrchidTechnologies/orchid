@@ -72,6 +72,15 @@ contract OrchidLottery {
 
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
+    function burn(Pot storage pot, uint128 amount) private returns (uint128) {
+        if (pot.amount_ >= amount)
+            return amount;
+        else {
+            pot.escrow_ = 0;
+            return pot.amount_;
+        }
+    }
+
     function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
@@ -90,16 +99,19 @@ contract OrchidLottery {
 
         address signer = ecrecover(ticket, v, r, s);
         Pot storage pot = pots_[signer];
-
-        if (pot.amount_ < amount) {
-            amount = pot.amount_;
-            pot.escrow_ = 0;
-        }
-
+        amount = burn(pot, amount);
         pot.amount_ -= amount;
         emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
         if (amount != 0)
             require(token_.transfer(target, amount));
+    }
+
+    function pull(address payable target, uint128 amount) public {
+        Pot storage pot = pots_[msg.sender];
+        amount = burn(pot, amount);
+        pot.amount_ -= amount;
+        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
+        require(token_.transfer(target, amount));
     }
 
 
