@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
+import '../orchid_api.dart';
 import 'iana.dart';
-import 'orchid_api.dart';
+import 'query_parser.dart';
 
 class AnalysisDb {
   static AnalysisDb _shared = AnalysisDb._init();
@@ -36,7 +37,8 @@ class AnalysisDb {
     if (db == null) {
       return List();
     }
-    var query = QueryParser(filterText).parse();
+    String query = QueryParser(filterText).parse();
+    debugPrint("Query: $query");
     try {
       List<Map> list = await db.rawQuery(query);
       return list.map((row) {
@@ -128,56 +130,3 @@ class FlowEntry {
       this.hostname});
 }
 
-class QueryParser {
-  static const String UNSAFE_CHARS = r'[^\w\s]+';
-  static const String PROTOCOL = r'^prot:([\w]+)$';
-
-  String queryText;
-
-  QueryParser(this.queryText);
-
-  String _safe(String text) {
-    return text.replaceAll(RegExp(UNSAFE_CHARS), '');
-  }
-
-  String _like(bool not, String text) {
-    return (not ? 'NOT LIKE ' : 'LIKE ') + "'%${_safe(text)}%'";
-  }
-
-  String _hostname(bool not, String text) {
-    return "hostname ${_like(not, text)}";
-  }
-
-  String _protocol(bool not, String text) {
-    return "protocol ${_like(not, text)}";
-  }
-
-  String _parseWord(String text) {
-    bool not = false;
-    if (text.startsWith('-')) {
-      text = text.substring(1);
-      not = true;
-    }
-    var match = RegExp(PROTOCOL).firstMatch(text);
-    if (match != null) {
-      return _protocol(not, match.group(1) ?? '');
-    }
-    return _hostname(not, text);
-  }
-
-  String _compose(Iterable<String> clauses) {
-    return " WHERE (" + clauses.join(" AND ") + ")";
-  }
-
-  String parse() {
-    String restrictions = "";
-    if (queryText.trim().isNotEmpty) {
-      var words = queryText.trim().split(RegExp(r'\s+'));
-      var clauses = words.map(_parseWord);
-      restrictions = _compose(clauses);
-    }
-    var orderBy = ' ORDER BY "start" DESC';
-    var limit = ' LIMIT 1000'; // ?
-    return 'SELECT rowid, * FROM flow' + restrictions + orderBy + limit;
-  }
-}
