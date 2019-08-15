@@ -203,25 +203,14 @@ std::string get_tree_field(epan_dissect_t *edt, const char *field)
     }
     for (guint i = 0; i < gp->len; i++) {
         field_info *finfo = (field_info *)gp->pdata[i];
-
         if (!finfo->value.ftype->val_to_string_repr) {
             continue;
         }
-
-        // XXX: copies into fs_buf, then copies into the std::string
-        int fs_len = fvalue_string_repr_len(&finfo->value, FTREPR_DFILTER, finfo->hfinfo->display);
-        char *fs_buf = fvalue_to_string_repr(NULL, &finfo->value, FTREPR_DFILTER, finfo->hfinfo->display);
-        char *fs_ptr = fs_buf;
-
-        // String types are quoted. Remove them.
-        if (IS_FT_STRING(finfo->value.ftype->ftype) && fs_len > 2) {
-            fs_buf[fs_len - 1] = '\0';
-            fs_ptr++;
-        }
-
-        std::string v(fs_ptr);
-        wmem_free(NULL, fs_buf);
-        return v;
+        int fs_len = fvalue_string_repr_len(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display);
+        std::string field_value;
+        field_value.resize(fs_len + 1);
+        finfo->value.ftype->val_to_string_repr(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display, &field_value[0], fs_len + 1);
+        return field_value;
     }
     return "";
 }
