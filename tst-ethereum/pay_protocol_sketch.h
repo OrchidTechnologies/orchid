@@ -94,7 +94,7 @@ struct Client
 struct Server
 {
 	// Server Hyperparams - from a config file or something
-	upay_freq_;		// desired frequency of micropayments, in hertz
+	upay_freq_;		// requested max frequency of micropayments, in hertz
 	data_price_;	// server's OXT/byte price
 
 	// Internal
