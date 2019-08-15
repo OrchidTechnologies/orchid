@@ -132,7 +132,7 @@ contract OrchidDirectory is IOrchidDirectory {
         }
     }
 
-    function push(address stakee, uint128 amount, uint128 delay) public {
+    function more(address stakee, uint128 amount, uint128 delay) private {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
@@ -160,13 +160,17 @@ contract OrchidDirectory is IOrchidDirectory {
 
         medallion.amount_ += amount;
         step(key, medallion, amount, bytes32(0));
+    }
+
+    function push(address stakee, uint128 amount, uint128 delay) public {
+        more(stakee, amount, delay);
         require(token_.transferFrom(msg.sender, address(this), amount));
     }
 
 
-
     struct Pending {
         uint256 time_;
+        address stakee_;
         uint128 amount_;
     }
 
@@ -177,6 +181,13 @@ contract OrchidDirectory is IOrchidDirectory {
         require(pending.time_ <= block.timestamp);
         delete pendings_[msg.sender][index];
         require(token_.transfer(target, pending.amount_));
+    }
+
+    function stop(uint256 index, uint128 delay) public {
+        Pending memory pending = pendings_[msg.sender][index];
+        require(pending.time_ <= block.timestamp + delay);
+        delete pendings_[msg.sender][index];
+        more(pending.stakee_, pending.amount_, delay);
     }
 
     function pull(address stakee, uint128 amount, uint256 index) public {
@@ -252,6 +263,7 @@ contract OrchidDirectory is IOrchidDirectory {
 
         Pending storage pending = pendings_[msg.sender][index];
         pending.time_ = block.timestamp + delay;
+        pending.stakee_ = stakee;
         pending.amount_ += amount;
     }
 
