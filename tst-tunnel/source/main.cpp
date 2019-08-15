@@ -61,8 +61,9 @@
 namespace orc {
 
 std::string Group() {
-    // XXX: I am just not feeling this today
-    return "/Users/saurik/orchid/tst-tunnel";
+    // UGH: error: 'current_path' is unavailable: introduced in macOS 10.15
+    //return std::filesystem::current_path();
+    return boost::filesystem::current_path().string();
 }
 
 int Main(int argc, const char *const argv[]) {
