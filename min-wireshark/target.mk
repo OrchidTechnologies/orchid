@@ -99,12 +99,16 @@ $(output)/$(pwd)/wireshark/epan/ps.c: $(pwd)/wireshark/tools/rdps.py $(pwd)/wire
 source += $(output)/$(pwd)/wireshark/epan/ps.c
 
 
+ifeq ($(msys),darwin)
+source += $(pwd)/wireshark.c
+else
 $(output)/$(pwd)/wireshark/epan/dissectors.c: $(pwd)/wireshark/tools/make-regs.py $(filter $(pwd)/wireshark/epan/dissectors/%.c,$(wireshark))
 	@mkdir -p $(dir $@)
 	@echo [EX] $(target) $<
 	@python3 $< dissectors $@ $(filter %.c,$^)
 
 source += $(output)/$(pwd)/wireshark/epan/dissectors.c
+endif
 
 
 $(output)/$(pwd)/wireshark/epan/dissectors/packet-ncp2222.c: $(pwd)/wireshark/tools/ncp2222.py

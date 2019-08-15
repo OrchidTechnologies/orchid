@@ -53,4 +53,5 @@ include env/output.mk
 $(output)/orchid: $(object) $(linked) $(output)/GeoLite2-City.mmdb
 	@echo [LD] $@
 	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
-	@ls -la $(output)/orchid
+	@ls -la $@
+	@otool -lah $@ | grep '^  s.*__DATA' -A8 -B2
