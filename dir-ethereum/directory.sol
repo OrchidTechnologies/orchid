@@ -31,11 +31,9 @@ interface IOrchidDirectory {
 contract OrchidDirectory is IOrchidDirectory {
 
     ERC20 internal token_;
-    uint256 internal delay_;
 
-    constructor(address token, uint256 delay) public {
+    constructor(address token) public {
         token_ = ERC20(token);
-        delay_ = delay;
     }
 
 
@@ -75,6 +73,8 @@ contract OrchidDirectory is IOrchidDirectory {
         uint128 after_;
 
         uint128 amount_;
+        uint128 delay_;
+
         address stakee_;
 
         bytes32 parent_;
@@ -132,10 +132,13 @@ contract OrchidDirectory is IOrchidDirectory {
         }
     }
 
-    function push(address stakee, uint128 amount) public {
+    function push(address stakee, uint128 amount, uint128 delay) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
+
+        require(delay >= medallion.delay_);
+        medallion.delay_ = delay;
 
         if (medallion.amount_ == 0) {
             require(amount != 0);
@@ -180,6 +183,7 @@ contract OrchidDirectory is IOrchidDirectory {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Medallion storage medallion = medallions_[key];
+        uint128 delay = medallion.delay_;
 
         require(medallion.amount_ != 0);
         require(medallion.amount_ >= amount);
@@ -247,7 +251,7 @@ contract OrchidDirectory is IOrchidDirectory {
         }
 
         Pending storage pending = pendings_[msg.sender][index];
-        pending.time_ = block.timestamp + delay_;
+        pending.time_ = block.timestamp + delay;
         pending.amount_ += amount;
     }
 
