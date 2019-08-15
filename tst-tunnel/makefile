@@ -39,11 +39,11 @@ debug: $(output)/orchid$(exe)
 include vpn/target.mk
 
 ifeq ($(target),mac)
-cflags += -I../vpn-apple
+cflags += -Iall/vpn-apple
+source += all/vpn-apple/protect.cpp
 endif
-
 ifeq ($(target),win)
-cflags += -I../vpn-windows/tap-windows6/src
+cflags += -Iall/vpn-windows/tap-windows6/src
 endif
 
 source += $(wildcard source/*.cpp)
@@ -53,4 +53,5 @@ include env/output.mk
 $(output)/orchid: $(object) $(linked) $(output)/GeoLite2-City.mmdb
 	@echo [LD] $@
 	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
-	@ls -la $(output)/orchid
+	@ls -la $@
+	@otool -lah $@ | grep '^  s.*__DATA' -A8 -B2

@@ -27,9 +27,9 @@ std::string files_dir;
 U<Sink<Capture>> capture_;
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
+Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
 {
-    __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "runTunnel:%d", file);
+    Log() << "runTunnel:" << file << std::endl;
 
     Initialize();
 
@@ -61,7 +61,8 @@ Java_com_example_orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint f
         password = std::move(password)
     ]() mutable -> task<void> { try {
         co_await Schedule();
-        co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
+        co_await capture->Start(GetLocal());
+        //co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
         capture_ = std::move(capture);
     } ORC_CATCH() });
     executor_ = &executor;
@@ -95,7 +96,7 @@ bool vpn_protect(int s)
         if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
             return false;
         }
-        IMPORT(com/example/orchid, OrchidVpnService);
+        IMPORT(net/orchid/Orchid, OrchidVpnService);
         CATCH(return false);
         jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
         CATCH(return false);

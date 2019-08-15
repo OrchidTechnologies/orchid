@@ -23,35 +23,52 @@
 #ifndef ORCHID_CAPTURE_HPP
 #define ORCHID_CAPTURE_HPP
 
+#include <map>
+
 #include "link.hpp"
 #include "socket.hpp"
 
 namespace orc {
 
+class Origin;
+
 class Analyzer {
   public:
     virtual ~Analyzer();
 
-    virtual void Analyze(Span<> &span) = 0;
-    virtual void AnalyzeIncoming(Span<> &span) = 0;
+    virtual void Analyze(Span<> span) = 0;
+    virtual void AnalyzeIncoming(Span<> span) = 0;
+};
+
+class Internal {
+  public:
+    virtual ~Internal();
+
+    virtual task<void> Send(Beam beam) = 0;
 };
 
 class MonitorLogger
 {
   public:
     virtual void AddFlow(Five const &five) = 0;
-    virtual void GotHostname(Five const &five, const std::string &hostname) = 0;
+    virtual void GotHostname(Five const &five, const std::string_view hostname) = 0;
+    virtual void GotProtocol(Five const &five, const std::string_view protocol) = 0;
+};
+
+class Hole {
+  public:
+    virtual ~Hole() = default;
+
+    virtual void Drop(Beam data) = 0;
 };
 
 class Capture :
-    public Sync,
+    public Hole,
     public BufferDrain
 {
   public:
-    U<Analyzer> analyzer_;
-
     uint32_t local_;
-    U<Pipe> route_;
+    U<Internal> internal_;
 
   protected:
     virtual Link *Inner() = 0;
@@ -63,9 +80,9 @@ class Capture :
     Capture(const std::string &local);
     ~Capture() override;
 
-    void Send(const Buffer &data) override;
+    void Drop(Beam data) override;
 
-    task<void> Start();
+    task<void> Start(S<Origin> origin);
     task<void> Start(std::string ovpnfile, std::string username, std::string password);
 };
 

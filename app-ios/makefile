@@ -21,20 +21,31 @@
 target := ios
 include env/target.mk
 
-
-version := 0.9
-
 cflags += '-DORCHID_DOMAIN="$(domain)"'
 cflags += '-DORCHID_NAME="$(name)"'
 
 bundle := $(output)/Payload/$(name).app
 signed := 
 
+altool := "/Applications/Xcode.app/Contents/Applications/Application Loader.app/Contents/Frameworks/ITunesSoftwareService.framework/Support/altool"
+
 .PHONY: all
 all: $(output)/$(name).ipa
 
 .PHONY: app
 app: $(bundle)$(signature)
+
+.PHONY: install
+install: $(output)/$(name).ipa
+	ideviceinstaller -i $<
+
+.PHONY: validate
+validate: $(output)/$(name).ipa
+	$(altool) --validate-app -f $< -t ios -u "$(aluser)" -p $(alpass)
+
+.PHONY: upload
+upload: $(output)/$(name).ipa
+	$(altool) --upload-app -f $< -t ios -u "$(aluser)" -p $(alpass)
 
 ifeq ($(target),sim)
 cflags += -Wno-deprecated-declarations
@@ -76,6 +87,9 @@ include env/output.mk
 -include $(output)/app.d
 
 
+replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
+
+
 cflags += -Fflutter/bin/cache/artifacts/engine/ios
 lflags += -Fflutter/bin/cache/artifacts/engine/ios
 
@@ -84,7 +98,7 @@ include flutter.mk
 
 $(output)/ents-%.xml: ents-%.xml.in
 	@mkdir -p $(dir $@)
-	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
+	$(replace)
 
 
 ifneq ($(target),sim)
@@ -95,7 +109,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(object) $(linked)
 
 $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	@mkdir -p $(dir $@)
-	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
+	$(replace)
 
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
@@ -109,18 +123,14 @@ $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.a
 ifneq ($(provision),)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision
 $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision: $(provision)vpn.mobileprovision
-	cp -a $< $@
+	cp -f $< $@
 
 signed += $(bundle)/embedded.mobileprovision
 $(bundle)/embedded.mobileprovision: $(provision)main.mobileprovision
-	cp -a $< $@
+	cp -f $< $@
 endif
 endif
 
-
-signed += $(bundle)/AppIcon.png
-$(bundle)/AppIcon.png: AppIcon.png
-	cp -a $< $@
 
 signed += $(bundle)/$(name)
 $(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
@@ -131,12 +141,24 @@ $(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
 signed += $(bundle)/Info.plist
 $(bundle)/Info.plist: info-main.plist.in
 	@mkdir -p $(dir $@)
-	sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g' $< >$@
+	$(replace)
 
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
 	$(environ) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
 
+
+signed += $(bundle)/Assets.car
+$(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
+	@mkdir -p $(output)/info
+	# XXX: --launch-image LaunchImage
+	actool --output-format human-readable-text --notices --warnings \
+	    --app-icon AppIcon \
+	    --compress-pngs --enable-on-demand-resources YES \
+	    --platform iphoneos --minimum-deployment-target 11.0 \
+	    --target-device iphone --target-device ipad \
+	    --output-partial-info-plist out-ios/info/actool.plist \
+	    --compile $(bundle) Images.xcassets
 
 signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))
 $(bundle)/%: resource/%

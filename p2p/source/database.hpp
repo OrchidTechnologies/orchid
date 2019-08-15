@@ -57,7 +57,7 @@ class Database {
     }
 };
 
-template <typename... Args_>
+template <typename Results_, typename... Args_>
 class Statement {
   private:
     Database &database_;
@@ -84,6 +84,8 @@ class Statement {
     orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const std::string &, value.c_str(), value.size(), SQLITE_TRANSIENT)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    orc_bind(text, const std::string_view, value.data(), value.size(), SQLITE_TRANSIENT)
 
   public:
     Statement() :
@@ -104,12 +106,58 @@ class Statement {
         orc_insist(false);
     } }
 
-    sqlite3_int64 operator ()(const Args_ &...args) {
+    operator sqlite3_stmt *() const {
+        return statement_;
+    }
+
+    Results_ operator ()(const Args_ &...args) {
         orc_sqlcall(sqlite3_reset(statement_));
-        Bind<1>(args...);
-        orc_assert(orc_sqlstep(sqlite3_step(statement_)) == SQLITE_DONE);
         orc_sqlcall(sqlite3_clear_bindings(statement_));
-        return sqlite3_last_insert_rowid(database_);
+        Bind<1>(args...);
+        return Results_(database_, *this);
+    }
+};
+
+class None {
+  public:
+    None(Database &database_, sqlite3_stmt *statement) {
+        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
+    }
+};
+
+class Last final {
+  private:
+    sqlite3_int64 value_;
+
+  public:
+    Last(Database &database_, sqlite3_stmt *statement) {
+        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
+        value_ = sqlite3_last_insert_rowid(database_);
+    }
+
+    operator sqlite3_int64() const {
+        return value_;
+    }
+};
+
+class Skip final {
+  public:
+    Skip(Database &database_, sqlite3_stmt *statement) {
+        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_ROW);
+        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
+    }
+};
+
+template <typename... Columns_>
+class One final :
+    public std::tuple<Columns_...>
+{
+  public:
+    One(Database &database_, sqlite3_stmt *statement) {
+        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_ROW);
+        // XXX: implement this abstraction correctly
+        std::get<0>(*this) = sqlite3_column_int64(statement, 0);
+        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
     }
 };
 

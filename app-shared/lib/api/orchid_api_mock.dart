@@ -218,5 +218,14 @@ class MockOrchidAPI implements OrchidAPI {
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
   }
+
+  Future<String> groupContainerPath() async {
+    return '/Users/pat/Desktop/table_flutter';
+  }
+
+  /// The build version
+  Future<String> versionString() async {
+    return "1.0.0";
+  }
 }
 

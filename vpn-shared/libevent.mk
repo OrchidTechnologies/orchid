@@ -9,27 +9,18 @@
 # }}}
 
 
-$(pwd)/libevent/configure: pwd := $(pwd)
-$(pwd)/libevent/configure: $(pwd)/libevent/configure.ac
-	cd $(pwd)/libevent && ../env/autogen.sh
+w_libevent := 
+w_libevent += --disable-libevent-regress
+w_libevent += --disable-openssl
+w_libevent += --disable-samples
 
-$(output)/libevent/Makefile: cycc := $(cycc)
-$(output)/libevent/Makefile: pwd := $(pwd)
-$(output)/libevent/Makefile: $(pwd)/libevent/configure $(linker)
-	rm -rf $(output)/libevent
-	mkdir -p $(output)/libevent
-	cd $(output)/libevent && $(environ) ../../$(pwd)/libevent/configure --host=$(host) --prefix=$(CURDIR)/$(output)/usr \
-	    CC="$(cycc)" CFLAGS="$(qflags)" LDFLAGS="$(wflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
-	    --disable-openssl --disable-samples --disable-libevent-regress \
-	    --enable-static --disable-shared
-	sed -i -e 's/libext=lib/libext=a/' $(output)/libevent/libtool
+m_libevent := sed -i -e 's/libext=lib/libext=a/' libtool
 
-$(output)/%/include/event2/event-config.h $(output)/%/.libs/libevent_core.a $(output)/%/.libs/libevent_extra.a: $(output)/%/Makefile $(linker)
-	$(environ) $(MAKE) -C $(output)/libevent
-	@touch $@
+$(output)/%/include/event2/event-config.h $(output)/%/.libs/libevent_core.a $(output)/%/.libs/libevent_extra.a: $(output)/%/Makefile $(sysroot)
+	$(environ) $(MAKE) -C $(dir $<)
 
 cflags += -I$(pwd)/libevent/include
-cflags += -I$(output)/libevent/include
+cflags += -I$(output)/$(pwd)/libevent/include
 
-linked += $(output)/libevent/.libs/libevent_core.a
-linked += $(output)/libevent/.libs/libevent_extra.a
+linked += $(output)/$(pwd)/libevent/.libs/libevent_core.a
+linked += $(output)/$(pwd)/libevent/.libs/libevent_extra.a

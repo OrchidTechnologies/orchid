@@ -168,7 +168,7 @@ task<Socket> Server::Associate(Sunk<> *sunk, const std::string &host, const std:
     });
 }
 
-task<Socket> Server::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<Socket> Server::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {
     orc_assert(false);
 }
 
@@ -186,6 +186,10 @@ task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (st
         const auto &socket(candidate.address());
         co_return Socket(socket.ipaddr().ToString(), socket.port());
     });
+}
+
+task<Socket> Server::Open(Sunk<Opening, BufferSewer> *sunk) {
+    orc_assert(false);
 }
 
 task<S<Origin>> Setup() {

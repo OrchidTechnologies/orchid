@@ -13,11 +13,27 @@
 
 set -o pipefail
 
+width=4
+
+describe=$(git describe --tags --match="v*" "$@" 2>/dev/null)
 monotonic=$(git log -1 --pretty=format:%ct)
-version=$(git describe --tags --match="v*" "$@" 2>/dev/null | sed -e 's@-\([^-]*\)-\([^-]*\)$@+\1.\2@;s@^v@@;s@%@~@g' || echo 0.9)
+
+commit=$(git rev-parse HEAD)
+decimal=$(echo "obase=10;ibase=16;$(echo "${commit}" | cut -c "1-${width}" | tr '[:lower:]' '[:upper:]')" | bc)
+
+package=$(echo "${describe}" | sed -e 's@-\([^-]*\)-\([^-]*\)$@.p\1.\2@;s@^v@@;s@%@~@g')
+version=$(echo "${describe}" | sed -e 's@^v@@;s@-.*@@')
+
+revision=$(echo "obase=2;${monotonic} * 2^(4*${width}) + ${decimal}" | BC_LINE_LENGTH=64 bc)
 
 if git status --ignore-submodules=dirty -s | cut -c 1-2 | grep M >/dev/null; then
-    version+='+'
+    package+='.x'
+    revision+=1
+else
+    revision+=0
 fi
 
-echo "${monotonic}" "${version}"
+length=${#revision}
+revision=$(echo "ibase=2;${revision:0:length-21-21}" | bc).$(echo "ibase=2;${revision:length-21-21:21}" | bc).$(echo "ibase=2;${revision:length-21:21}" | bc)
+
+echo "${monotonic}" "${revision}" "${package}" "${version}"

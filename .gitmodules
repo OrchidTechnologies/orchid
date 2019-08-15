@@ -46,9 +46,6 @@
 [submodule "lwip"]
 	path = p2p/lwip
 	url = https://git.savannah.nongnu.org/git/lwip.git
-[submodule "ics-openvpn"]
-	path = vpn-android/ics-openvpn
-	url = https://github.com/schwabe/ics-openvpn.git
 [submodule "BeastHttp"]
 	path = p2p/BeastHttp
 	url = https://github.com/0xdead4ead/BeastHttp.git
@@ -97,3 +94,21 @@
 [submodule "SPCDNS"]
 	path = vpn-shared/SPCDNS
 	url = https://github.com/spc476/SPCDNS
+[submodule "wireshark"]
+	path = min-wireshark/wireshark
+	url = https://code.wireshark.org/review/wireshark
+[submodule "libgpg-error"]
+	path = min-wireshark/libgpg-error
+	url = https://github.com/gpg/libgpg-error.git
+[submodule "libgcrypt"]
+	path = min-wireshark/libgcrypt
+	url = https://github.com/gpg/libgcrypt.git
+[submodule "glib"]
+	path = min-wireshark/glib
+	url = https://github.com/GNOME/glib.git
+[submodule "libiconv"]
+	path = min-wireshark/libiconv
+	url = https://git.savannah.gnu.org/git/libiconv.git
+[submodule "gnulib"]
+	path = min-wireshark/gnulib
+	url = git://git.savannah.gnu.org/gnulib.git

@@ -8,305 +8,291 @@
 #include "monitor.hpp"
 #include "socket.hpp"
 
+// includes from wireshark
+#include <epan/epan.h>
+#include <wsutil/filesystem.h>
+#include <wsutil/privileges.h>
+#include <wsutil/report_message.h>
+#include "epan/column-utils.h"
+#include "epan/proto.h"
+#include "file.h"
+#include "frame_tvbuff.h"
+#include <epan/addr_resolv.h>
+#include <epan/column.h>
+#include <epan/epan_dissect.h>
+#include <epan/ftypes/ftypes-int.h>
+#include <epan/packet.h>
+#include <epan/prefs.h>
+#include <epan/tap.h>
+#include <version_info.h>
+#include "log.h"
+
+
 using namespace openvpn;
 using namespace asio::ip;
 
 
 namespace orc {
+typedef std::function<void (const std::string_view)> hostname_callback;
+typedef std::function<void (const std::string_view)> protocol_callback;
+}
 
-typedef std::function<void (std::string)> sni_callback;
+capture_file cf;
+guint32 cum_bytes;
+frame_data ref_frame;
+frame_data prev_dis_frame;
+frame_data prev_cap_frame;
+gint64 data_offset;
+wtap_rec rec;
+epan_dissect_t edt;
 
-void get_quic_SNI(const uint8_t *data, size_t len, const sni_callback callback)
+void log_func_ignore(const gchar *log_domain, GLogLevelFlags log_level,
+                     const gchar *message, gpointer user_data)
 {
-    // CID
-    if (len < 1) {
-        return;
-    }
-    int offset = 1;
-    if (data[0] & 0x08) {
-        offset += 8;
-    }
+}
 
-    if (len < offset + 5) {
-        return;
-    }
+// General errors and warnings are reported with an console message in Orchid.
+void failure_warning_message(const char *msg_format, va_list ap)
+{
+    char buf[1024];
+    vsnprintf(buf, sizeof(buf), msg_format, ap);
+    orc::Log() << "orchid: " << buf << std::endl;
+}
 
-    // Get version
-    int version = -1;
-    if (data[0] & 0x01 && data[offset] == 'Q') {
-        version = (data[offset+1] - '0') * 100 +
-                  (data[offset+2] - '0') * 10 +
-                  (data[offset+3] - '0');
-        offset += 4;
-    }
+// Open/create errors are reported with an console message in Orchid.
+void open_failure_message(const char *filename, int err, gboolean for_writing)
+{
+    char buf[1024];
+    snprintf(buf, sizeof(buf), file_open_error_message(err, for_writing), filename);
+    orc::Log() << "orchid: " << buf << std::endl;
+}
 
-    // Unsupported version
-    if (version < 24) {
-        return;
-    }
+// Read errors are reported with an console message in Orchid.
+void read_failure_message(const char *filename, int err)
+{
+    orc::Log() << "An error occurred while reading from the file \"" << filename << "\" " << g_strerror(err) << std::endl;
+}
 
-    // Diversification only is from server to client, so we can ignore
+// Write errors are reported with an console message in Orchid.
+void write_failure_message(const char *filename, int err)
+{
+    orc::Log() << "An error occurred while writing to the file \"" << filename << "\" " << g_strerror(err) << std::endl;
+}
 
-    // Packet number size
-    if ((data[0] & 0x30) == 0) {
-        offset++;
-    } else {
-        offset += ((data[0] & 0x30) >> 4) * 2;
-    }
+const nstime_t* raw_get_frame_ts(struct packet_provider_data *prov, guint32 frame_num)
+{
+    if (prov->ref && prov->ref->num == frame_num)
+        return &prov->ref->abs_ts;
 
-    // Hash
-    offset += 12;
+    if (prov->prev_dis && prov->prev_dis->num == frame_num)
+        return &prov->prev_dis->abs_ts;
 
-    // Private Flags
-    if (version < 34) {
-        offset++;
-    }
+    if (prov->prev_cap && prov->prev_cap->num == frame_num)
+        return &prov->prev_cap->abs_ts;
 
-    if (offset > len) {
-        return;
-    }
+    return NULL;
+}
 
-    // several QUIC parsers I tried failed at the next section for QUIC v46:
-    // https://github.com/aol/moloch/blob/master/capture/parsers/quic.c
-    // https://github.com/0x4D31/quick/blob/master/chlo.go
-    // and QUIC v46 does not appear to be documented:
-    // https://groups.google.com/a/chromium.org/forum/#!topic/proto-quic/ic0K5ORnFOc
-    // So, just search for CHLO and hope the subtag section is still parsable
-    const uint8_t *b = (const uint8_t*)memmem(&data[offset], len - offset, "CHLO", strlen("CHLO"));
-    if (!b) {
-        return;
-    }
-    b += strlen("CHLO");
-
-    const uint8_t *end = data + len;
-
-    if ((end - b) < sizeof(uint16_t)) {
-        return;
-    }
-    uint16_t tagLen = *(uint16_t*)b;
-    b += sizeof(uint16_t);
-
-    // Padding
-    if ((end - b) < sizeof(uint16_t)) {
-        return;
-    }
-    b += sizeof(uint16_t);
-
-    if ((end - b) < tagLen * 8) {
-        return;
-    }
-
-    const uint8_t *tagDataStart = b + tagLen * 8;
-    uint32_t dlen = (end - b) - tagLen * 8;
-
-    uint32_t start = 0;
-    while (tagLen > 0) {
-        const uint8_t *subTag = b;
-        b += 4;
-
-        uint32_t endOffset = *(uint32_t*)b;
-        b += sizeof(uint32_t);
-
-        if (endOffset > dlen || start > dlen || start >= endOffset) {
-            return;
-        }
-
-        if (memcmp(subTag, "SNI\x00", 4) == 0) {
-            const char *snidata = (const char*)(&tagDataStart[start]);
-            size_t snilen = endOffset - start;
-            std::string sni(snidata, snilen);
-            Log() << "QUIC SNI(" << snilen << "): \"" << sni << "\"" << std::endl;
-            callback(sni);
-        }
-        start = endOffset;
-        tagLen--;
+void tap_frame(const char *field)
+{
+    GString *error_string = register_tap_listener("frame", NULL, field, TL_REQUIRES_PROTO_TREE, NULL, NULL, NULL, NULL);
+    if (error_string) {
+        /* error, we failed to attach to the tap. complain and clean up */
+        orc::Log() << "Couldn't register field (\"" << field << "\") extraction tap: " << error_string->str << std::endl;
+        g_string_free(error_string, TRUE);
     }
 }
 
-void get_TLS_SNI(const uint8_t *data, int end, const sni_callback callback)
+void wireshark_setup()
 {
-    /*
-    From https://tools.ietf.org/html/rfc5246:
+    ws_init_version_info("Orchid", NULL, epan_get_compiled_version_info,  NULL);
 
-    enum {
-        hello_request(0), client_hello(1), server_hello(2),
-        certificate(11), server_key_exchange (12),
-        certificate_request(13), server_hello_done(14),
-        certificate_verify(15), client_key_exchange(16),
-        finished(20)
-        (255)
-    } HandshakeType;
+    // Get credential information for later use.
+    init_process_policies();
 
-    struct {
-        HandshakeType msg_type;
-        uint24 length;
-        select (HandshakeType) {
-            case hello_request:       HelloRequest;
-            case client_hello:        ClientHello;
-            case server_hello:        ServerHello;
-            case certificate:         Certificate;
-            case server_key_exchange: ServerKeyExchange;
-            case certificate_request: CertificateRequest;
-            case server_hello_done:   ServerHelloDone;
-            case certificate_verify:  CertificateVerify;
-            case client_key_exchange: ClientKeyExchange;
-            case finished:            Finished;
-        } body;
-    } Handshake;
+    // nothing more than the standard GLib handler, but without a warning
+    GLogLevelFlags log_flags = (GLogLevelFlags)(G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO | G_LOG_LEVEL_DEBUG);
 
-    struct {
-        uint8 major;
-        uint8 minor;
-    } ProtocolVersion;
+    g_log_set_handler(NULL, log_flags, log_func_ignore, NULL);
+    g_log_set_handler(LOG_DOMAIN_CAPTURE_CHILD, log_flags, log_func_ignore, NULL);
 
-    struct {
-        uint32 gmt_unix_time;
-        opaque random_bytes[28];
-    } Random;
+    init_report_message(failure_warning_message, failure_warning_message,
+                        open_failure_message, read_failure_message,
+                        write_failure_message);
 
-    opaque SessionID<0..32>;
+    wtap_init(FALSE);
 
-    uint8 CipherSuite[2];
+    // Register all dissectors
+    if (!epan_init(NULL, NULL, TRUE)) {
+        wtap_cleanup();
+        return;
+    }
 
-    enum { null(0), (255) } CompressionMethod;
+    // Load libwireshark settings from the current profile
+    e_prefs *prefs_p = epan_load_settings();
 
-    struct {
-        ProtocolVersion client_version;
-        Random random;
-        SessionID session_id;
-        CipherSuite cipher_suites<2..2^16-2>;
-        CompressionMethod compression_methods<1..2^8-1>;
-        select (extensions_present) {
-            case false:
-                struct {};
-            case true:
-                Extension extensions<0..2^16-1>;
-        };
-    } ClientHello;
-    */
+    cap_file_init(&cf);
 
-    // skip the record header
-    size_t pos = 5;
+    disable_name_resolution();
 
-    // skip HandshakeType (you should already have verified this)
-    pos += 1;
+    char *errmsg = NULL;
+    prefs_set_pref(strdup("gui.column.format:\"Protocol\",\"%p\""), &errmsg);
+    if (errmsg) {
+        orc::Log() << __func__ << " " << errmsg << std::endl;
+    }
 
-    // skip handshake length
-    pos += 3;
+    prefs_apply_all();
 
-    // skip protocol version (you should already have verified this)
-    pos += 2;
+    // COL_PROTOCOL is better
+    //tap_frame("frame.protocols");
+    tap_frame("tls.handshake.extensions_server_name");
+    tap_frame("gquic.tag.sni");
+    tap_frame("gquic.version");
+    tap_frame("http.host");
+    tap_frame("http.request.version");
 
-    // skip Random
-    pos += 32;
+    build_column_format_array(&cf.cinfo, prefs_p->num_cols, TRUE);
 
-    // skip SessionID
-    if (pos > end - sizeof(uint8_t)) return;
-    uint8_t sessionIdLength = data[pos];
-    pos += sizeof(uint8_t) + sessionIdLength;
+    static const struct packet_provider_funcs funcs = {
+        raw_get_frame_ts,
+        NULL,
+        NULL,
+        NULL,
+    };
 
-    // skip CipherSuite
-    if (pos > end - sizeof(uint16_t)) return;
-    uint16_t cipherSuiteLength = ntohs(*(uint16_t*)&data[pos]);
-    pos += sizeof(uint16_t) + cipherSuiteLength;
+    cf.epan = epan_new(&cf.provider, &funcs);
+    cf.provider.wth = NULL;
+    cf.f_datalen = 0;
+    cf.filename = NULL;
+    cf.is_tempfile = TRUE;
+    cf.unsaved_changes = FALSE;
+    cf.cd_t = WTAP_FILE_TYPE_SUBTYPE_UNKNOWN;
+    cf.open_type = WTAP_TYPE_AUTO;
+    cf.count = 0;
+    cf.drops_known = FALSE;
+    cf.drops = 0;
+    cf.snap = 0;
+    nstime_set_zero(&cf.elapsed_time);
+    cf.provider.ref = NULL;
+    cf.provider.prev_dis = NULL;
+    cf.provider.prev_cap = NULL;
 
-    // skip CompressionMethod
-    if (pos > end - sizeof(uint8_t)) return;
-    uint8_t compressionMethodLength = data[pos];
-    pos += sizeof(uint8_t) + compressionMethodLength;
+    wtap_rec_init(&rec);
+    epan_dissect_init(&edt, cf.epan, TRUE, FALSE);
+}
 
-    // verify extensions exist
-    if (pos > end - sizeof(uint16_t)) return;
-    uint16_t extensionsLength = ntohs(*(uint16_t*)&data[pos]);
-    pos += sizeof(uint16_t);
+void wireshark_cleanup()
+{
+    epan_dissect_cleanup(&edt);
+    wtap_rec_cleanup(&rec);
+    epan_free(cf.epan);
+    epan_cleanup();
+    wtap_cleanup();
+}
 
-    // verify the extensions fit
-    size_t extensionsEnd = pos + extensionsLength;
-    if (extensionsEnd > end) return;
-    end = extensionsEnd;
-
-    /*
-    From https://tools.ietf.org/html/rfc5246
-     and http://tools.ietf.org/html/rfc6066:
-
-    struct {
-        ExtensionType extension_type;
-        opaque extension_data<0..2^16-1>;
-    } Extension;
-
-    enum {
-        signature_algorithms(13), (65535)
-    } ExtensionType;
-
-    enum {
-        server_name(0), max_fragment_length(1),
-        client_certificate_url(2), trusted_ca_keys(3),
-        truncated_hmac(4), status_request(5), (65535)
-    } ExtensionType;
-
-    struct {
-        NameType name_type;
-        select (name_type) {
-            case host_name: HostName;
-        } name;
-    } ServerName;
-
-    enum {
-        host_name(0), (255)
-    } NameType;
-
-    opaque HostName<1..2^16-1>;
-
-    struct {
-        ServerName server_name_list<1..2^16-1>
-    } ServerNameList;
-    */
-
-    while (pos <= end - (sizeof(uint16_t) + sizeof(uint16_t))) {
-        uint16_t extensionType = ntohs(*(uint16_t*)&data[pos]);
-        pos += sizeof(uint16_t);
-        uint16_t extensionSize = ntohs(*(uint16_t*)&data[pos]);
-        pos += sizeof(uint16_t);
-        if (extensionType != 0) { 
-            // ExtensionType was something we are not interested in
-            pos += extensionSize;
+std::string get_tree_field(epan_dissect_t *edt, const char *field)
+{
+    header_field_info *hfi = proto_registrar_get_byname(field);
+    if (!hfi) {
+        orc::Log() << "Field \"" << field << "\" doesn't exist." << std::endl;
+        return "";
+    }
+    GPtrArray *gp = proto_get_finfo_ptr_array(edt->tree, hfi->id);
+    if (!gp) {
+        return "";
+    }
+    for (guint i = 0; i < gp->len; i++) {
+        field_info *finfo = (field_info *)gp->pdata[i];
+        if (!finfo->value.ftype->val_to_string_repr) {
             continue;
         }
-
-        // ExtensionType was server_name(0)
-
-        // read ServerNameList length
-        if (pos > end - sizeof(uint16_t)) return;
-        uint16_t nameListLength = ntohs(*(uint16_t*)&data[pos]);
-        pos += sizeof(uint16_t);
-
-        // verify we have enough bytes and loop over SeverNameList
-        size_t n = pos;
-        pos += nameListLength;
-        if (pos > end) return;
-        while (n < pos - (sizeof(uint8_t) + sizeof(uint16_t))) {
-            uint8_t nameType = data[n];
-            n += sizeof(uint8_t);
-            uint16_t nameLength = ntohs(*(uint16_t*)&data[n]);
-            n += sizeof(uint16_t);
-
-            // check if NameType is host_name(0)
-            if (nameType == 0) {
-
-                // verify we have enough bytes
-                if (n > end - nameLength) return;
-
-                std::string sni((char*)&data[n], nameLength);
-                Log() << "TLS SNI(" << nameLength << "): \"" << sni << "\"" << std::endl;
-                callback(sni);
-                return;
-            }
-
-            n += nameLength;
-        }
+        int fs_len = fvalue_string_repr_len(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display);
+        std::string field_value;
+        field_value.resize(fs_len + 1);
+        finfo->value.ftype->val_to_string_repr(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display, &field_value[0], fs_len + 1);
+        return field_value;
     }
+    return "";
 }
 
+void wireshark_analyze(const uint8_t *buf, size_t packet_len, const orc::hostname_callback hostname_cb, const orc::protocol_callback protocol_cb)
+{
+    static bool wireshark_initialized = false;
+    if (!wireshark_initialized) {
+        wireshark_initialized = true;
+        wireshark_setup();
+    }
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    rec.ts.secs = ts.tv_sec;
+    rec.ts.nsecs = ts.tv_nsec;
+    rec.rec_header.packet_header.caplen = packet_len;
+    rec.rec_header.packet_header.len = packet_len;
+    rec.rec_header.packet_header.pkt_encap = WTAP_ENCAP_RAW_IP;
+    data_offset += packet_len;
+
+    cf.count++;
+
+    frame_data fdata;
+    frame_data_init(&fdata, cf.count, &rec, data_offset, cum_bytes);
+
+    frame_data_set_before_dissect(&fdata, &cf.elapsed_time,
+                                  &cf.provider.ref, cf.provider.prev_dis);
+
+    if (cf.provider.ref == &fdata) {
+        ref_frame = fdata;
+        cf.provider.ref = &ref_frame;
+    }
+
+    epan_dissect_run_with_taps(&edt, cf.cd_t, &rec,
+                               frame_tvbuff_new(&cf.provider, &fdata, buf),
+                               &fdata, &cf.cinfo);
+    epan_dissect_fill_in_columns(&edt, FALSE, TRUE);
+
+    std::string gquic_ver = get_tree_field(&edt, "gquic.version");
+    std::string http_ver = get_tree_field(&edt, "http.request.version");
+
+    for (int i = 0; i < cf.cinfo.num_cols; i++) {
+        col_item_t* col_item = &cf.cinfo.columns[i];
+        if (col_item->col_fmt == COL_PROTOCOL) {
+            if (!http_ver.empty()) {
+                protocol_cb(http_ver);
+            } else if (!gquic_ver.empty()) {
+                std::ostringstream protocol;
+                protocol << col_item->col_data << " " << gquic_ver;
+                protocol_cb(protocol.str());
+            } else {
+                protocol_cb(col_item->col_data);
+            }
+            break;
+        }
+    }
+
+    const char* hostname_keys[] = {
+        "tls.handshake.extensions_server_name",
+        "gquic.tag.sni",
+        "http.host"
+    };
+    for (size_t i = 0; i < sizeof(hostname_keys) / sizeof(hostname_keys[0]); i++) {
+        std::string hostname = get_tree_field(&edt, hostname_keys[i]);
+        if (!hostname.empty()) {
+            hostname_cb(hostname);
+            break;
+        }
+    }
+
+    frame_data_set_after_dissect(&fdata, &cum_bytes);
+    prev_dis_frame = fdata;
+    cf.provider.prev_dis = &prev_dis_frame;
+
+    prev_cap_frame = fdata;
+    cf.provider.prev_cap = &prev_cap_frame;
+
+    epan_dissect_reset(&edt);
+    frame_data_destroy(&fdata);
+}
+
+namespace orc {
 
 void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
 {
@@ -329,6 +315,9 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
     auto ipv4hlen = IPv4Header::length(iphdr->version_len);
     auto ip_payload_len = len - ipv4hlen;
 
+    uint16_t src_port = 0;
+    uint16_t dst_port = 0;
+
     switch (iphdr->protocol) {
     case IPCommon::TCP: {
         if (ip_payload_len < sizeof(TCPHeader)) {
@@ -336,17 +325,13 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         }
         TCPHeader* tcphdr = (TCPHeader*)(buf + ipv4hlen);
         int tcphlen = TCPHeader::length(tcphdr->doff_res);
-        if (tcphlen <= sizeof(TCPHeader) || tcphlen > ip_payload_len) {
+        if (tcphlen < sizeof(TCPHeader) || tcphlen > ip_payload_len) {
             return;
         }
         auto tcp_payload_len = ip_payload_len - tcphlen;
         Log() << "TCP(" << tcp_payload_len << ") dest:" << ntohs(tcphdr->dest) << std::endl;
-        auto flow = Five(IPCommon::TCP, {address_v4(ntohl(iphdr->saddr)), ntohs(tcphdr->source)}, {address_v4(ntohl(iphdr->daddr)), ntohs(tcphdr->dest)});
-        logger.AddFlow(flow);
-        auto tcpbuf = ((const uint8_t *)tcphdr) + tcphlen;
-        get_TLS_SNI(tcpbuf, tcp_payload_len, [&](auto sni) {
-            logger.GotHostname(flow, sni);
-        });
+        src_port = ntohs(tcphdr->source);
+        dst_port = ntohs(tcphdr->dest);
         break;
     }
     case IPCommon::UDP: {
@@ -356,15 +341,22 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
         UDPHeader* udphdr = (UDPHeader*)(buf + ipv4hlen);
         auto udp_payload_len = ip_payload_len - sizeof(UDPHeader);
         Log() << "UDP(" << udp_payload_len << ") dest:" << ntohs(udphdr->dest) << std::endl;
-        auto udpbuf = ((const uint8_t *)udphdr) + sizeof(UDPHeader);
-        auto flow = Five(IPCommon::UDP, {address_v4(ntohl(iphdr->saddr)), ntohs(udphdr->source)}, {address_v4(ntohl(iphdr->daddr)), ntohs(udphdr->dest)});
-        logger.AddFlow(flow);
-        get_quic_SNI(udpbuf, udp_payload_len, [&](auto sni) {
-            logger.GotHostname(flow, sni);
-        });
+        src_port = ntohs(udphdr->source);
+        dst_port = ntohs(udphdr->dest);
         break;
     }
     }
+
+    auto flow = Five(iphdr->protocol, {address_v4(ntohl(iphdr->saddr)), src_port}, {address_v4(ntohl(iphdr->daddr)), dst_port});
+    logger.AddFlow(flow);
+
+    wireshark_analyze(buf, len, [&](auto hostname) {
+        Log() << "hostname: " << hostname << std::endl;
+        logger.GotHostname(flow, hostname);
+    }, [&](auto protocol) {
+        Log() << "protocol: " << protocol << std::endl;
+        logger.GotProtocol(flow, protocol);
+    });
 }
 
 }

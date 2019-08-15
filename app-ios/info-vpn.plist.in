@@ -2,11 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleVersion</key>
-    <string>@MONOTONIC@</string>
     <key>CFBundleSignature</key>
     <string>????</string>
-
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>CFBundleInfoDictionaryVersion</key>
@@ -19,28 +16,34 @@
     <string>@DOMAIN@.@NAME@.VPN</string>
     <key>CFBundleName</key>
     <string>@NAME@</string>
+    <key>CFBundleDisplayName</key>
+    <string>@NAME@ VPN</string>
     <key>CFBundleShortVersionString</key>
     <string>@VERSION@</string>
+    <key>CFBundleVersion</key>
+    <string>@REVISION@</string>
 
     <key>BuildMachineOSBuild</key>
-    <string>11G63</string>
+    <string>18E226</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
 
     <key>DTCompiler</key>
-    <string></string>
-    <key>DTPlatformBuild</key>
-    <string>4H1003</string>
+    <string>com.apple.compilers.llvm.clang.1_0</string>
+    <key>DTPlatformName</key>
+    <string>iphoneos</string>
     <key>DTPlatformVersion</key>
-    <string>GM</string>
+    <string>12.2</string>
+    <key>DTPlatformBuild</key>
+    <string>16E226</string>
     <key>DTSDKBuild</key>
-    <string>12D75</string>
+    <string>16E226</string>
     <key>DTSDKName</key>
-    <string>iphoneos6.1</string>
+    <string>iphoneos12.0</string>
     <key>DTXcode</key>
-    <string>0462</string>
+    <string>1020</string>
     <key>DTXcodeBuild</key>
-    <string>4H1003</string>
+    <string>10E125</string>
 
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.utilities</string>
@@ -61,14 +64,18 @@
     <key>SBUsesNetwork</key>
     <integer>11</integer>
 
-    <key>DTSDKName</key>
-    <string>iphoneos2.0.saurik</string>
-
-    <key>DTPlatformVersion</key>
-    <string>8.0</string>
-
     <key>MinimumOSVersion</key>
-    <string>2.0</string>
+    <string>11.0</string>
+
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>@SUPPORT@</string>
+    </array>
+
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
 
     <key>UIDeviceFamily</key>
     <array>

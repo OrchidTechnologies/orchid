@@ -46,9 +46,9 @@
 
 #include <asio.hpp>
 #include "capture.hpp"
-#include "connection.hpp"
 #include "error.hpp"
 #include "protect.hpp"
+#include "sync.hpp"
 #include "syscall.hpp"
 #include "task.hpp"
 #include "transport.hpp"
@@ -63,12 +63,6 @@ namespace orc {
 std::string Group() {
     // XXX: I am just not feeling this today
     return "/Users/saurik/orchid/tst-tunnel";
-}
-
-int Protect(int socket, const sockaddr *address, socklen_t length) {
-    if (address == nullptr)
-        return 0;
-    return Bind(socket, address, length);
 }
 
 int Main(int argc, const char *const argv[]) {
@@ -87,8 +81,9 @@ int Main(int argc, const char *const argv[]) {
 #if 0
 #elif defined(__APPLE__)
     auto family(capture->Wire<Sink<Family>>());
-    auto connection(family->Wire<Connection<asio::generic::datagram_protocol::socket>>(asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
-    auto file((*connection)->native_handle());
+    auto sync(family->Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+
+    auto file((*sync)->native_handle());
 
     ctl_info info;
     memset(&info, 0, sizeof(info));
@@ -105,17 +100,20 @@ int Main(int argc, const char *const argv[]) {
     do ++address.sc_unit;
     while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
 
-    connection->Start();
+    sync->Start();
 #else
 #error
 #endif
 
+    auto utun("utun" + std::to_string(address.sc_unit - 1));
+    orc_assert(system(("ifconfig " + utun + " inet " + local + " " + local + " mtu 1500 up").c_str()) == 0);
+    orc_assert(system(("route -n add 207.254.46.169 -interface " + utun).c_str()) == 0);
+    orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
+
     Wait([&]() -> task<void> {
         co_await Schedule();
-        co_await capture->Start(std::move(ovpn), std::move(username), std::move(password));
-
-        auto utun("utun" + std::to_string(address.sc_unit - 1));
-        orc_assert(system(("ifconfig " + utun + " inet " + local + " 207.254.46.169 mtu 1500 up").c_str()) == 0);
+        co_await capture->Start(GetLocal());
+        //co_await capture->Start(std::move(ovpn), std::move(username), std::move(password));
     }());
 
     Thread().join();

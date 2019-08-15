@@ -154,8 +154,23 @@ class Span {
     template <typename Cast_>
     Cast_ &cast(size_t offset = 0) {
         static_assert(sizeof(Type_) == 1);
-        orc_assert(size() >= offset + sizeof(Cast_));
+        orc_assert_(size() >= offset + sizeof(Cast_), "orc_assert(" << size() << " {size()} >= " << offset << " {offset} + " << sizeof(Cast_) << " {sizeof(" << typeid(Cast_).name() << ")})");
         return *reinterpret_cast<Cast_ *>(data() + offset);
+    }
+
+    template <typename Cast_>
+    Cast_ &take() {
+        static_assert(sizeof(Type_) == 1);
+        orc_assert(size_ >= sizeof(Type_));
+        auto value(reinterpret_cast<Cast_ *>(data()));
+        data_ += sizeof(Type_);
+        size_ -= sizeof(Type_);
+        return *value;
+    }
+
+    Span operator +(size_t offset) {
+        orc_assert(size_ >= offset);
+        return Span(data_ + offset, size_ - offset);
     }
 
     Span &operator +=(size_t offset) {
@@ -171,6 +186,16 @@ class Span {
 
     uint8_t operator [](size_t index) const {
         return data_[index];
+    }
+
+    void copy(size_t offset, const Buffer &data) {
+        orc_assert(offset <= size_);
+        data.each([&](const uint8_t *data, size_t size) {
+            orc_assert(size_ - offset >= size);
+            memcpy(data_ + offset, data, size);
+            offset += size;
+            return true;
+        });
     }
 };
 
@@ -492,6 +517,16 @@ class Beam :
 
     size_t size() const override {
         return size_;
+    }
+
+    Span<uint8_t> span() {
+        return {data(), size()};
+    }
+
+    Subset subset(size_t offset, size_t size) const {
+        orc_assert(offset <= size_);
+        orc_assert(size_ - offset >= size);
+        return {data_ + offset, size};
     }
 
     uint8_t &operator [](size_t index) {

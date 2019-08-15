@@ -50,7 +50,7 @@ class Family :
     {
     }
 
-    task<void> Send(const Buffer &data) {
+    task<void> Send(const Buffer &data) override {
         co_return co_await Inner()->Send(Tie(Number<uint32_t>(Analyze(data)), data));
     }
 };

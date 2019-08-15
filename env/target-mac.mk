@@ -16,6 +16,7 @@ sdk := macosx
 
 arch := x86_64
 ossl := darwin64-x86_64-cc
+mfam := x86_64
 
 host := $(arch)-apple-darwin
 

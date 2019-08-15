@@ -20,7 +20,9 @@ uname := $(shell uname -s)
 
 version := $(shell $(pwd)/version.sh)
 monotonic := $(word 1,$(version))
-version := $(word 2,$(version))
+revision := $(word 2,$(version))
+package := $(word 3,$(version))
+version := $(word 4,$(version))
 
 cflags := 
 qflags := 
@@ -33,7 +35,7 @@ tflags :=
 source := 
 linked := 
 header := 
-linker := 
+sysroot := 
 
 environ := 
 output := out-$(target)
@@ -50,6 +52,10 @@ cflags += -Werror
 cflags += -fmessage-length=0
 cflags += -ferror-limit=0
 cflags += -ftemplate-backtrace-limit=0
+
+cflags += -I$(output)/usr/include
+
+beta := false
 
 include ../default.mk
 -include ../identity.mk

@@ -24,15 +24,46 @@
 #define ORCHID_FORGE_HPP
 
 #include <openvpn/ip/csum.hpp>
+#include <openvpn/ip/icmp4.hpp>
 #include <openvpn/ip/ip4.hpp>
 #include <openvpn/ip/tcp.hpp>
 #include <openvpn/ip/udp.hpp>
 
 #include "buffer.hpp"
+#include "socket.hpp"
 
 namespace orc {
 
-uint32_t Forge4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
+// XXX: I can do much better than this
+
+template <typename Header_>
+static void Forge(Header_ &header, int adjust) {
+    boost::endian::big_to_native_inplace(header.check);
+    openvpn::tcp_adjust_checksum(adjust, header.check);
+    boost::endian::native_to_big_inplace(header.check);
+}
+
+static void Forge(openvpn::ICMPv4 &header, int adjust) {
+    boost::endian::big_to_native_inplace(header.checksum);
+    openvpn::tcp_adjust_checksum(adjust, header.checksum);
+    boost::endian::native_to_big_inplace(header.checksum);
+}
+
+template <typename Header_>
+void Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
+    auto before(boost::endian::big_to_native(header.*field));
+    header.*field = boost::endian::native_to_big(value);
+    Forge(header, int32_t(before) - int32_t(value));
+}
+
+uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
+
+static void Forge(Span<> &span, openvpn::TCPHeader &tcp, const Socket &source, const Socket &target) {
+    ForgeIP4(span, &openvpn::IPv4Header::saddr, source.Host().to_v4().to_uint());
+    Forge(tcp, &openvpn::TCPHeader::source, source.Port());
+    ForgeIP4(span, &openvpn::IPv4Header::daddr, target.Host().to_v4().to_uint());
+    Forge(tcp, &openvpn::TCPHeader::dest, target.Port());
+}
 
 }
 

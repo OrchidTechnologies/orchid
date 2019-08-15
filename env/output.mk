@@ -106,27 +106,31 @@ tidy :=
 tidy += source/.*\.[ch]pp
 tidy := (^|/)($(subst $(space),|,$(patsubst %,%,($(strip $(tidy))))))$$
 
-$(output)/%.o: %.c $(header) $(linker)
+.PHONY: printenv
+printenv:
+	printenv
+
+$(output)/%.o: %.c $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
 	@$(cycc) -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
-$(output)/%.o: %.m $(header) $(linker)
+$(output)/%.o: %.m $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
 	@$(cycc) -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
-$(output)/%.o: %.mm $(header) $(linker)
+$(output)/%.o: %.mm $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
 	@$(cycp) -std=gnu++17 -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
-$(output)/%.o: %.cc $(header) $(linker)
+$(output)/%.o: %.cc $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
 	@$(cycp) -std=c++11 -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
-$(output)/%.o: %.cpp $(header) $(linker)
+$(output)/%.o: %.cpp $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target) $<
 ifeq ($(dotidy),yes)
@@ -134,6 +138,31 @@ ifeq ($(dotidy),yes)
 	    $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_) $(tflags)
 endif
 	@$(cycp) -std=c++2a -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
+
+$(shell env/meson.sh '$(output)' '$(CURDIR)' '$(msys)' '$(mfam)' '$(ar)' '$(strip)' '$(cycc)' '$(cycp)' '$(qflags)' '$(wflags)')
+
+export PATH := $(CURDIR)/env/path:$(PATH)
+
+%/configure: %/configure.ac
+	env/autogen.sh $(dir $@)
+	cd $(dir $@); $(a_$(subst -,_,$(notdir $(patsubst %/configure.ac,%,$<))))
+
+$(output)/%/Makefile: %/configure $(sysroot)
+	@rm -rf $(dir $@)
+	@mkdir -p $(dir $@)
+	cd $(dir $@) && $(environ) $(CURDIR)/$< --host=$(host) --prefix=$(CURDIR)/$(output)/usr \
+	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
+	    CPPFLAGS="$(p_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))" \
+	    LDFLAGS="$(wflags) $(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))" \
+	    --enable-static --disable-shared $(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
+	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
+
+$(output)/%/build.ninja: %/meson.build $(output)/meson.txt
+	@rm -rf $(dir $@)
+	@mkdir -p $(dir $@)
+	cd $(dir $<) && meson --cross $(CURDIR)/$(output)/meson.txt $(CURDIR)/$(dir $@) \
+	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
+	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 
 .PHONY: clean
 clean:

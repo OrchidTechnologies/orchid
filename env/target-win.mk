@@ -13,11 +13,15 @@ dll := dll
 lib := lib
 exe := .exe
 
+msys := windows
+
 #arch := i686
 #ossl := mingw
+#mfam := x86
 
 arch := x86_64
 ossl := mingw64
+mfam := x86_64
 
 host := $(arch)-w64-mingw32
 
@@ -33,6 +37,7 @@ cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
 
 ranlib := $(arch)-w64-mingw32-ranlib
 ar := $(arch)-w64-mingw32-ar
+strip := $(arch)-w64-mingw32-ar
 
 lflags += -static
 lflags += -lc++
@@ -69,4 +74,4 @@ $(output)/%.msys2:
 	@curl http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-$*-any.pkg.tar.xz | tar -C $(output) -Jxvf-
 	@touch $@
 
-linker += $(patsubst %,$(output)/%.msys2,$(msys2))
+sysroot += $(patsubst %,$(output)/%.msys2,$(msys2))

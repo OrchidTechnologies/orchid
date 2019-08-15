@@ -1,12 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.orchid"
+    package="net.orchid.Orchid"
 >
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="orchid_sap"
+        android:label="Orchid"
         android:icon="@mipmap/ic_launcher"
     >
         <activity

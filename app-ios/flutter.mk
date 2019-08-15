@@ -35,7 +35,7 @@ $(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/te
 
 $(bundle)/Frameworks/App.framework/App:
 	@mkdir -p $(dir $@)
-	echo "static const int Moo = 88;" | $(cycc) -dynamiclib -o $@ \
+	echo "static const int Moo = 88;" | $(subst -miphoneos-version-min=11.0,-miphoneos-version-min=8.0,$(cycc)) -dynamiclib -o $@ \
 	    -x c - -Wno-unused-const-variable \
 	    -Xlinker -rpath -Xlinker '@executable_path/Frameworks' \
 	    -Xlinker -rpath -Xlinker '@loader_path/Frameworks' \

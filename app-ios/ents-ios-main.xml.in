@@ -22,5 +22,8 @@
     <array>
 	<string>@TEAMID@.@DOMAIN@.@NAME@</string>
     </array>
+
+@B@ <key>beta-reports-active</key>
+@B@ <true/>
 </dict>
 </plist>

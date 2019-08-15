@@ -90,8 +90,14 @@ abstract class OrchidAPI {
   /// Set a name-value pair representing a dynamic developer settings
   void setDeveloperSetting({String name, String value});
 
-  // Placeholder API for funds and budgeting
+  /// Placeholder API for funds and budgeting
   OrchidBudgetAPI budget();
+
+  /// The the path for files shared between the 
+  Future<String> groupContainerPath();
+
+  /// The build version
+  Future<String> versionString();
 }
 
 

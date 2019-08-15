@@ -31,7 +31,10 @@ namespace orc {
 
 task<std::string> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data) {
     Sink<Adapter> adapter(orc::Context());
-    co_await Connect(&adapter, locator.host_, locator.port_);
+    U<Stream> stream;
+    co_await Connect(stream, locator.host_, locator.port_);
+    auto socket(adapter.Wire<Inverted>(std::move(stream)));
+    socket->Start();
     co_return co_await orc::Request(adapter, method, locator, headers, data);
 }
 
@@ -56,14 +59,17 @@ _trace();
 };
 
 task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto socket(sunk->Wire<Connection<asio::ip::udp::socket>>());
-    auto endpoint(co_await socket->Connect(host, port));
+    auto connection(std::make_unique<Connection<asio::ip::udp::socket>>(Context()));
+    auto endpoint(co_await connection->Connect(host, port));
+    auto inverted(sunk->Wire<Inverted>(std::move(connection)));
+    inverted->Start();
     co_return Socket(endpoint.address().to_string(), endpoint.port());
 }
 
-task<Socket> Local::Connect(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto socket(sunk->Wire<Connection<asio::ip::tcp::socket>>());
-    auto endpoint(co_await socket->Connect(host, port));
+task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {
+    auto connection(std::make_unique<Connection<asio::ip::tcp::socket>>(Context()));
+    auto endpoint(co_await connection->Connect(host, port));
+    stream = std::move(connection);
     co_return Socket(endpoint.address().to_string(), endpoint.port());
 }
 
@@ -76,6 +82,12 @@ task<Socket> Local::Hop(Sunk<> *sunk, const std::function<task<std::string> (std
     auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ToString(), socket.port());
+}
+
+task<Socket> Local::Open(Sunk<Opening, BufferSewer> *sunk) {
+    auto opening(sunk->Wire<Opening>());
+    opening->Connect({asio::ip::address_v4::any(), 0});
+    co_return opening->Local();
 }
 
 S<Local> GetLocal() {

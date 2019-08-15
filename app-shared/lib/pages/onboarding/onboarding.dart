@@ -30,19 +30,22 @@ class AppOnboarding {
   /// null if no pages remain to be shown.
   Future<String> _nextPage() async {
 
+    /*
     // Show the walkthrough
-    bool walkthroughCompleted =
-        await UserPreferences().getWalkthroughCompleted();
+    bool walkthroughCompleted = await UserPreferences().getWalkthroughCompleted();
     if (!walkthroughCompleted) {
       return AppRoutes.onboarding_walkthrough;
     }
 
     // Prompt for VPN permission
+    // TODO: race condition here.
     bool hasVPNPermission = OrchidAPI().vpnPermissionStatus.value;
     bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
-    if (!hasVPNPermission && !promptedForVPNPermission) {
+    debugPrint("XXX: hasVPNPerm: $hasVPNPermission, prompted: $promptedForVPNPermission");
+    if (!(hasVPNPermission == true) && !promptedForVPNPermission) {
       return AppRoutes.onboarding_vpn_permission;
     }
+    */
 
     return NO_PAGE;
   }

@@ -51,6 +51,7 @@ template <typename Stream_>
 task<std::string> Request_(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
     (void) co_await boost::beast::http::async_write(stream, req, orc::Token());
 
+    // this buffer must be maintained if this socket object is ever reused
     boost::beast::flat_buffer buffer;
     boost::beast::http::response<boost::beast::http::dynamic_body> res;
     (void) co_await boost::beast::http::async_read(stream, buffer, res, orc::Token());
@@ -97,8 +98,8 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const Loc
 
         try {
             co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
-        } catch (const asio::error_code &error) {
-            orc_assert_(false, error.message());
+        } catch (const asio::system_error &error) {
+            orc_adapt(error);
         }
 
         body = co_await Request_(stream, req);
@@ -112,7 +113,7 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const Loc
                 // XXX: this scenario is untested
             else if (code == asio::ssl::error::stream_truncated);
                 // XXX: this is because of infura
-            else orc_assert_(false, code.message());
+            else orc_adapt(error);
         }
     } else orc_assert(false);
 
@@ -130,10 +131,10 @@ task<std::string> Request(const std::string &method, const Locator &locator, con
 
     auto body(co_await Request_(socket, method, locator, headers, data, verify));
 
-    boost::beast::error_code ec;
-    socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
-    if (ec && ec != boost::beast::errc::not_connected)
-        throw boost::beast::system_error{ec};
+    boost::beast::error_code error;
+    socket.shutdown(asio::ip::tcp::socket::shutdown_both, error);
+    if (error && error != boost::beast::errc::not_connected)
+        throw boost::beast::system_error{error};
 
     co_return body;
 }

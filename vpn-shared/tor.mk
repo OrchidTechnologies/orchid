@@ -9,46 +9,45 @@
 # }}}
 
 
-config := 
-config += --disable-asciidoc
-config += --disable-system-torrc
-config += --disable-unittests
+w_tor := 
+w_tor += --disable-asciidoc
+w_tor += --disable-system-torrc
+w_tor += --disable-tool-name-check
+w_tor += --disable-unittests
 
-config += --enable-pic
+w_tor += --enable-pic
 
-cfgc := 
-cfgl := 
+p_tor := 
+l_tor := 
 deps := 
 
-cfgc += -I$(CURDIR)/$(output)/libevent/include
-cfgc += -I$(CURDIR)/$(pwd)/libevent/include
-deps += $(output)/libevent/include/event2/event-config.h
-cfgl += -L$(CURDIR)/$(output)/libevent/.libs
-deps += $(output)/libevent/.libs/libevent_core.a
-config += tor_cv_library_zlib_dir="(system)"
+p_tor += -I$(CURDIR)/$(output)/$(pwd)/libevent/include
+p_tor += -I$(CURDIR)/$(pwd)/libevent/include
+deps += $(output)/$(pwd)/libevent/include/event2/event-config.h
+l_tor += -L$(CURDIR)/$(output)/$(pwd)/libevent/.libs
+deps += $(output)/$(pwd)/libevent/.libs/libevent_core.a
+w_tor += tor_cv_library_zlib_dir="(system)"
 
-cfgc += -I$(CURDIR)/$(output)/openssl/include
-cfgc += -I$(CURDIR)/$(pwd)/p2p/rtc/openssl/include
+p_tor += -I$(CURDIR)/$(output)/openssl/include
+p_tor += -I$(CURDIR)/$(pwd)/p2p/rtc/openssl/include
 deps += $(output)/openssl/include/openssl/opensslconf.h
-cfgl += -L$(CURDIR)/$(output)/openssl
+l_tor += -L$(CURDIR)/$(output)/openssl
 deps += $(output)/openssl/libssl.a
 deps += $(output)/openssl/libcrypto.a
-config += tor_cv_library_openssl_dir="(system)"
+w_tor += tor_cv_library_openssl_dir="(system)"
 
-cfgc += -I$(CURDIR)/$(output)/zlib
-cfgc += -I$(CURDIR)/$(pwd)/zlib
-cfgl += -L$(CURDIR)/$(output)/zlib
+p_tor += -I$(CURDIR)/$(output)/zlib
+p_tor += -I$(CURDIR)/$(pwd)/zlib
+l_tor += -L$(CURDIR)/$(output)/zlib
 deps += $(output)/zlib/libz.a
-config += tor_cv_library_zlib_dir="(system)"
+w_tor += tor_cv_library_zlib_dir="(system)"
 
 ifeq ($(target),win)
-cfgl += -Wl,--start-group
-cfgl += -lcrypt32
-cfgl += -lws2_32
-config += --disable-gcc-hardening
+l_tor += -Wl,--start-group
+l_tor += -lcrypt32
+l_tor += -lws2_32
+w_tor += --disable-gcc-hardening
 endif
-
-config += CPPFLAGS="$(cfgc)" LDFLAGS="$(wflags) $(cfgl)"
 
 tor := 
 tor += core/libtor-app.a
@@ -90,27 +89,12 @@ tor += ext/ed25519/ref10/libed25519_ref10.a
 tor += ext/keccak-tiny/libkeccak-tiny.a
 tor += lib/libtor-dispatch.a
 tor += lib/libtor-container.a
-tor := $(patsubst %,$(output)/tor/src/%,$(tor))
+tor := $(patsubst %,$(output)/$(pwd)/tor/src/%,$(tor))
 
-$(pwd)/tor/configure: pwd := $(pwd)
-$(pwd)/tor/configure: $(pwd)/tor/configure.ac
-	cd $(pwd)/tor && ../env/autogen.sh
+$(output)/$(pwd)/tor/Makefile: $(deps) $(sysroot)
 
-$(output)/tor/Makefile: cycc := $(cycc)
-$(output)/tor/Makefile: pwd := $(pwd)
-$(output)/tor/Makefile: $(pwd)/tor/configure $(deps) $(linker)
-	rm -rf $(output)/tor
-	mkdir -p $(output)/tor
-	cd $(output)/tor && $(environ) ../../$(pwd)/tor/configure --host=$(host) --prefix=$(out)/usr --disable-tool-name-check \
-	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" $(config)
-
-temp := $(subst /tor/,/%/,$(tor))
-
-$(temp): output := $(output)
-$(temp): pwd := $(pwd)
-$(temp): $(output)/%/Makefile $(deps) $(linker) $(shell find $(pwd)/tor -name '*.c')
-	$(environ) $(MAKE) -C $(output)/tor src/app/tor$(exe) src/core/libtor-app.a
-	@touch $@
+$(subst /tor/,/%/,$(tor)): $(output)/$(pwd)/%/Makefile $(deps) $(sysroot) $(shell find $(pwd)/tor -name '*.c')
+	$(environ) $(MAKE) -C $(dir $<) src/app/tor$(exe) src/core/libtor-app.a
 
 cflags += -I$(pwd)/tor/src
 linked += $(tor)

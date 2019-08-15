@@ -19,6 +19,10 @@
 
 
 pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
+pwd_vpn_shared := $(pwd)
+
+cflags += '-DORCHID_USERNAME="$(username)"'
+cflags += '-DORCHID_PASSWORD="$(password)"'
 
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
@@ -75,4 +79,5 @@ include $(pwd)/tor.mk
 include $(pwd)/libevent.mk
 include $(pwd)/zlib.mk
 
-include $(pwd)/p2p/target.mk
+include $(pwd_vpn_shared)/wsk/target.mk
+include $(pwd_vpn_shared)/p2p/target.mk
