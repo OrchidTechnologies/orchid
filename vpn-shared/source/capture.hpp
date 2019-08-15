@@ -36,8 +36,8 @@ class Analyzer {
   public:
     virtual ~Analyzer();
 
-    virtual void Analyze(Span<> span) = 0;
-    virtual void AnalyzeIncoming(Span<> span) = 0;
+    virtual void Analyze(Span<const uint8_t> span) = 0;
+    virtual void AnalyzeIncoming(Span<const uint8_t> span) = 0;
 };
 
 class Internal {

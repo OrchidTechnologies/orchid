@@ -151,6 +151,10 @@ class Span {
         return size_;
     }
 
+    operator Span<const Type_>() const {
+        return {data_, size_};
+    }
+
     template <typename Cast_>
     Cast_ &cast(size_t offset = 0) {
         static_assert(sizeof(Type_) == 1);

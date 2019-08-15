@@ -23,11 +23,12 @@
 #ifndef ORCHID_MONITOR_HPP
 #define ORCHID_MONITOR_HPP
 
+#include "buffer.hpp"
 #include "capture.hpp"
 
 namespace orc {
 
-void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger);
+void monitor(Span<const uint8_t> span, MonitorLogger &logger);
 
 }
 

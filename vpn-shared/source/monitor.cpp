@@ -316,53 +316,33 @@ void wireshark_analyze(const uint8_t *buf, size_t packet_len, const orc::hostnam
 
 namespace orc {
 
-void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
+void monitor(Span<const uint8_t> span, MonitorLogger &logger)
 {
-    if (len < 1) {
-        return;
-    }
-
-    if (IPCommon::version(buf[0]) != (uint8_t)IPCommon::IPv4) {
+    if (IPCommon::version(span.cast<const uint8_t>()) != uint8_t(IPCommon::IPv4)) {
         // TODO : IPv6
         orc_assert(false);
         return;
     }
 
-    if (len <= sizeof(IPv4Header)) {
-        return;
-    }
-
-    const IPv4Header *iphdr = (const IPv4Header *)buf;
-
+    auto iphdr = &span.cast<const IPv4Header>();
     auto ipv4hlen = IPv4Header::length(iphdr->version_len);
-    auto ip_payload_len = len - ipv4hlen;
 
     uint16_t src_port = 0;
     uint16_t dst_port = 0;
 
     switch (iphdr->protocol) {
     case IPCommon::TCP: {
-        if (ip_payload_len < sizeof(TCPHeader)) {
-            return;
-        }
-        TCPHeader* tcphdr = (TCPHeader*)(buf + ipv4hlen);
-        int tcphlen = TCPHeader::length(tcphdr->doff_res);
-        if (tcphlen < sizeof(TCPHeader) || tcphlen > ip_payload_len) {
-            return;
-        }
-        auto tcp_payload_len = ip_payload_len - tcphlen;
-        Log() << "TCP(" << tcp_payload_len << ") dest:" << ntohs(tcphdr->dest) << std::endl;
+        auto tcphdr = &span.cast<const TCPHeader>(ipv4hlen);
+        auto tcpbuf = span + (ipv4hlen + TCPHeader::length(tcphdr->doff_res));
+        Log() << "TCP(" << tcpbuf.size() << ") dest:" << ntohs(tcphdr->dest) << std::endl;
         src_port = ntohs(tcphdr->source);
         dst_port = ntohs(tcphdr->dest);
         break;
     }
     case IPCommon::UDP: {
-        if (ip_payload_len < sizeof(UDPHeader)) {
-            return;
-        }
-        UDPHeader* udphdr = (UDPHeader*)(buf + ipv4hlen);
-        auto udp_payload_len = ip_payload_len - sizeof(UDPHeader);
-        Log() << "UDP(" << udp_payload_len << ") dest:" << ntohs(udphdr->dest) << std::endl;
+        auto udphdr = &span.cast<const UDPHeader>(ipv4hlen);
+        auto udpbuf = span + (ipv4hlen + sizeof(UDPHeader));
+        Log() << "UDP(" << udpbuf.size() << ") dest:" << ntohs(udphdr->dest) << std::endl;
         src_port = ntohs(udphdr->source);
         dst_port = ntohs(udphdr->dest);
         break;
@@ -372,7 +352,7 @@ void monitor(const uint8_t *buf, size_t len, MonitorLogger &logger)
     auto flow = Five(iphdr->protocol, {address_v4(ntohl(iphdr->saddr)), src_port}, {address_v4(ntohl(iphdr->daddr)), dst_port});
     logger.AddFlow(flow);
 
-    wireshark_analyze(buf, len, [&](auto hostname) {
+    wireshark_analyze(span.data(), span.size(), [&](auto hostname) {
         Log() << "hostname: " << hostname << std::endl;
         logger.GotHostname(flow, hostname);
     }, [&](auto protocol, auto protocol_chain) {

@@ -125,18 +125,18 @@ class Logger :
     {
     }
 
-    void Analyze(Span<> span) override {
-        monitor(span.data(), span.size(), *this);
+    void Analyze(Span<const uint8_t> span) override {
+        monitor(span, *this);
     }
 
-    void get_DNS_answers(const uint8_t *data, int end) {
+    void get_DNS_answers(Span<const uint8_t> span) {
         dns_decoded_t decoded[DNS_DECODEBUF_4K];
         size_t decodesize = sizeof(decoded);
 
         // From the author:
         // And while passing in a char * declared buffer to dns_decode() may appear to
         // work, it only works on *YOUR* system; it may not work on other systems.
-        dns_rcode rc = dns_decode(decoded, &decodesize, reinterpret_cast<const dns_packet_t *>(data), end);
+        dns_rcode rc = dns_decode(decoded, &decodesize, reinterpret_cast<const dns_packet_t *>(span.data()), span.size());
 
         if (rc != RCODE_OKAY) {
             return;
@@ -155,15 +155,13 @@ class Logger :
         }
     }
 
-    void AnalyzeIncoming(Span<> span) override {
-        auto &ip4(span.cast<openvpn::IPv4Header>());
+    void AnalyzeIncoming(Span<const uint8_t> span) override {
+        auto &ip4(span.cast<const openvpn::IPv4Header>());
         if (ip4.protocol == openvpn::IPCommon::UDP) {
             auto length(openvpn::IPv4Header::length(ip4.version_len));
-            auto &udp(span.cast<openvpn::UDPHeader>(length));
-            if (ntohs(udp.source) == 53) {
-                auto skip = length + sizeof(openvpn::UDPHeader);
-                get_DNS_answers((span.data() + skip), span.size() - skip);
-            }
+            auto &udp(span.cast<const openvpn::UDPHeader>(length));
+            if (ntohs(udp.source) == 53)
+                get_DNS_answers(span + (length + sizeof(openvpn::UDPHeader)));
         }
     }
 
