@@ -169,7 +169,7 @@ contract OrchidDirectory is IOrchidDirectory {
 
 
     struct Pending {
-        uint256 time_;
+        uint256 expire_;
         address stakee_;
         uint128 amount_;
     }
@@ -178,14 +178,14 @@ contract OrchidDirectory is IOrchidDirectory {
 
     function take(uint256 index, address payable target) public {
         Pending memory pending = pendings_[msg.sender][index];
-        require(pending.time_ <= block.timestamp);
+        require(pending.expire_ <= block.timestamp);
         delete pendings_[msg.sender][index];
         require(token_.transfer(target, pending.amount_));
     }
 
     function stop(uint256 index, uint128 delay) public {
         Pending memory pending = pendings_[msg.sender][index];
-        require(pending.time_ <= block.timestamp + delay);
+        require(pending.expire_ <= block.timestamp + delay);
         delete pendings_[msg.sender][index];
         more(pending.stakee_, pending.amount_, delay);
     }
@@ -262,7 +262,7 @@ contract OrchidDirectory is IOrchidDirectory {
         }
 
         Pending storage pending = pendings_[msg.sender][index];
-        pending.time_ = block.timestamp + delay;
+        pending.expire_ = block.timestamp + delay;
         pending.stakee_ = stakee;
         pending.amount_ += amount;
     }
