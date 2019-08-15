@@ -167,6 +167,15 @@ contract OrchidDirectory is IOrchidDirectory {
         require(token_.transferFrom(msg.sender, address(this), amount));
     }
 
+    function wait(address stakee, uint128 delay) public {
+        address staker = msg.sender;
+        bytes32 key = name(staker, stakee);
+        Medallion storage medallion = medallions_[key];
+
+        require(delay >= medallion.delay_);
+        medallion.delay_ = delay;
+    }
+
 
     struct Pending {
         uint256 expire_;
