@@ -140,7 +140,7 @@ $(bundle)/Info.plist: info-main.plist.in
 
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
-	$(environ) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $<
+	$(environ) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $< 2>&1 | cat
 
 
 signed += $(bundle)/Assets.car
@@ -153,7 +153,7 @@ $(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
 	    --platform iphoneos --minimum-deployment-target 11.0 \
 	    --target-device iphone --target-device ipad \
 	    --output-partial-info-plist out-ios/info/actool.plist \
-	    --compile $(bundle) Images.xcassets
+	    --compile $(bundle) Images.xcassets | cat
 
 signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))
 $(bundle)/%: resource/%
