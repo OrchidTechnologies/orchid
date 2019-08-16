@@ -140,14 +140,14 @@ $(bundle)/Info.plist: info-main.plist.in
 
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
-	$(environ) xcrun ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $< 2>&1 | cat
+	$(environ) ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $< 2>&1 | cat
 
 
 signed += $(bundle)/Assets.car
 $(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
 	@mkdir -p $(output)/info
 	# XXX: --launch-image LaunchImage
-	actool --output-format human-readable-text --notices --warnings \
+	$(environ) actool --output-format human-readable-text --notices --warnings \
 	    --app-icon AppIcon \
 	    --compress-pngs --enable-on-demand-resources YES \
 	    --platform iphoneos --minimum-deployment-target 11.0 \
