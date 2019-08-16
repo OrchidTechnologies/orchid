@@ -54,10 +54,10 @@ $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -n
 	exit 0
 	touch $@
 
-debug.keystore:
-	echo $$'android\nandroid\n\n\n' | keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -validity 365 -keyalg RSA -keysize 2048
+../debug.keystore:
+	echo $$'android\nandroid\n\n\n' | keytool -genkey -v -keystore $@ -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -validity 365 -keyalg RSA -keysize 2048
 
-keystore := debug
+keystore := ../debug
 keyalias := androiddebugkey
 keyextra := 
 

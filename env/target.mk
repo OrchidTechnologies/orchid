@@ -43,7 +43,6 @@ environ :=
 output := out-$(target)
 
 cleans := 
-cleans += $(output)
 
 qflags += -gfull -Os
 

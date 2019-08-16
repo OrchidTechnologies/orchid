@@ -1,4 +1,6 @@
 /identity.mk
+/*.keystore
+/*.mobileprovision
 /*.p12
 /*.pem
 bundle.js

@@ -8,6 +8,5 @@
 /ios/Flutter
 /ios/Pods
 /ios/Runner
-/*.mobileprovision
 /out-*
 /.packages

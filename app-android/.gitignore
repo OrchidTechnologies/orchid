@@ -1,6 +1,5 @@
 /android/local.properties
 /build
-/*.keystore
 /.flutter-plugins
 /.gradle
 /out-*

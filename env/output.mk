@@ -166,6 +166,6 @@ $(output)/%/build.ninja: %/meson.build $(output)/meson.txt
 
 .PHONY: clean
 clean:
-	rm -rf $(cleans)
+	git clean -fXd
 
 -include $(patsubst %.o,%.d,$(sort $(object)))
