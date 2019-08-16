@@ -16,4 +16,6 @@ host := x86_64-apple-darwin
 more := -mios-simulator-version-min=11.0
 support := iPhoneSimulator
 
+debug := true
+
 include $(pwd)/target-apl.mk

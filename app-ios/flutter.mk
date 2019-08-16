@@ -18,20 +18,20 @@
 # }}}
 
 
-ifeq ($(target),sim)
-mode := debug
-else
+ifeq ($(debug),)
 mode := release
+engine := -release
+else
+mode := debug
+engine := 
 endif
 
+engine := flutter/bin/cache/artifacts/engine/ios$(engine)
 assets := $(bundle)/Frameworks/App.framework/flutter_assets
+dart := $(shell find lib/ -name '*.dart')
 
-include shared/flutter.mk
-
-$(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
-	@mkdir -p $(dir $@)
-	cp -af $< $@
-	touch $@
+ifeq ($(mode),debug)
+precompiled := 
 
 $(bundle)/Frameworks/App.framework/App:
 	@mkdir -p $(dir $@)
@@ -40,34 +40,58 @@ $(bundle)/Frameworks/App.framework/App:
 	    -Xlinker -rpath -Xlinker '@executable_path/Frameworks' \
 	    -Xlinker -rpath -Xlinker '@loader_path/Frameworks' \
 	    -install_name '@rpath/App.framework/App'
+else
+ifeq ($(mode),release)
+precompiled := --precompiled
 
-signed += $(bundle)/Frameworks/App.framework$(signature)
-$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App $(assets)/kernel_blob.bin
-	@rm -rf $(dir $@)
-	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
-	@touch $@
+$(output)/aot/App.framework/App: $(dart)
+	flutter/bin/flutter --suppress-analytics --verbose build aot -t lib/main.dart \
+	    --target-platform=ios --$(mode) --output-dir=$(output)/aot
 
-$(bundle)/Frameworks/Flutter.framework/Flutter: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/Flutter
+$(bundle)/Frameworks/App.framework/App: $(output)/aot/App.framework/App
 	@mkdir -p $(dir $@)
-	$(environ) lipo $(patsubst %,-extract %,$(arch)) $< -output $@
-	@touch $@
+	cp -a $< $@
+else
+XXX support Flutter profile
+endif
+endif
 
-$(bundle)/Frameworks/Flutter.framework/%: flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%
+include shared/flutter.mk
+
+$(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
 	@mkdir -p $(dir $@)
 	cp -af $< $@
 	touch $@
 
-signed += $(assets)/kernel_blob.bin
-build/app%dill %flutter-plugins $(assets)/kernel_blob%bin ios/Runner/GeneratedPluginRegistrant%m: $(shell find lib/ -name '*.dart') flutter/packages/flutter/pubspec%lock pubspec%lock
-	rm -rf build $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
+signed += $(bundle)/Frameworks/App.framework$(signature)
+$(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App .flutter-plugins
+	@rm -rf $(dir $@)
+	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
+	@touch $@
+
+$(bundle)/Frameworks/Flutter.framework/Flutter: $(engine)/Flutter.framework/Flutter
+	@mkdir -p $(dir $@)
+	$(environ) lipo $(patsubst %,-extract %,$(arch)) $< -output $@
+	@touch $@
+
+$(bundle)/Frameworks/Flutter.framework/%: $(engine)/Flutter.framework/%
+	@mkdir -p $(dir $@)
+	cp -af $< $@
+	touch $@
+
+signed += $(assets)/AssetManifest.json
+$(assets)/AssetManifest%json %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m: flutter/packages/flutter/pubspec%lock pubspec%lock $(dart)
+	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
-	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=ios --target=lib/main.dart --$(mode) --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
+	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
+	    --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)" --output-dill="$(output)/build.dill" \
+	    --target-platform=ios --$(mode) $(precompiled)
 
 # XXX: -include out-ios/snapshot_blob.bin.d
 
 flutter := Flutter Info.plist icudtl.dat
 
-$(patsubst %,flutter/bin/cache/artifacts/engine/ios/Flutter.framework/%,$(flutter)): .flutter-plugins
+$(patsubst %,$(engine)/Flutter.framework/%,$(flutter)): .flutter-plugins
 
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
 $(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-$(target)-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))

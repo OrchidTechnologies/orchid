@@ -30,6 +30,8 @@ lflags :=
 wflags := 
 
 dotidy := no
+debug = 
+
 tflags := 
 
 source := 
@@ -44,7 +46,6 @@ cleans :=
 cleans += $(output)
 
 qflags += -gfull -Os
-lflags += -Wl,-s
 
 cflags += -Wall
 cflags += -Werror
@@ -59,5 +60,9 @@ beta := false
 
 include ../default.mk
 -include ../identity.mk
+
+ifeq ($(debug),)
+lflags += -Wl,-s
+endif
 
 include $(pwd)/target-$(target).mk

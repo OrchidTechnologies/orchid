@@ -198,7 +198,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     // Flutter plugins use [UIApplication sharedApplication].delegate.window.rootViewController to get the FlutterViewController
     [GeneratedPluginRegistrant registerWithRegistry:self];
 
-    feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter];
+    feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter.binaryMessenger];
 
     __weak typeof(self) weakSelf = self;
     [feedback_ setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {

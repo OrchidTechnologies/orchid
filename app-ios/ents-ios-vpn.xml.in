@@ -17,5 +17,8 @@
     <array>
 	<string>packet-tunnel-provider</string>
     </array>
+
+@D@ <key>get-task-allow</key>
+@D@ <true/>
 </dict>
 </plist>

@@ -76,18 +76,13 @@ ios/Pods/Manifest.lock: ios/Podfile .flutter-plugins
 out-$(target)/XCBuildData/build.db: ios/Pods/Manifest.lock
 	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(arch) -sdk $(sdk) SYMROOT=../../out-$(target)
 
-$(output)/%.o: /%.m ios/Pods/Manifest.lock
-	@mkdir -p $(dir $@)
-	@echo [CC] $<
-	$(cycc) -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
-
 
 include env/output.mk
 
 -include $(output)/app.d
 
 
-replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
+replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if test -n "$(debug)"; then sed -e 's/^@D@/   /'; else sed -e '/^@D@/d'; fi | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
 
 
 cflags += -Fflutter/bin/cache/artifacts/engine/ios

@@ -1,6 +1,7 @@
 .idea
 /android
 /build
+/flutter_*.log
 /.flutter-plugins
 /ios/.symlinks
 /ios/build
