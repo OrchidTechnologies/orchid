@@ -142,6 +142,13 @@ contract OrchidDirectory is IOrchidDirectory {
         }
     }
 
+    function lift(bytes32 key, Stake storage stake, uint128 amount, address stakee) private {
+        stake.amount_ += amount;
+        stakees_[stakee].amount_ += amount;
+        step(key, stake, amount, bytes32(0));
+    }
+
+
     function more(address stakee, uint128 amount, uint128 delay) private {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
@@ -168,9 +175,7 @@ contract OrchidDirectory is IOrchidDirectory {
             stake.stakee_ = stakee;
         }
 
-        stake.amount_ += amount;
-        stakees_[stakee].amount_ += amount;
-        step(key, stake, amount, bytes32(0));
+        lift(key, stake, amount, stakee);
     }
 
     function push(address stakee, uint128 amount, uint128 delay) public {
@@ -220,9 +225,7 @@ contract OrchidDirectory is IOrchidDirectory {
         require(stake.amount_ != 0);
         require(stake.amount_ >= amount);
 
-        stake.amount_ -= amount;
-        stakees_[stakee].amount_ -= amount;
-        step(key, stake, -amount, bytes32(0));
+        lift(key, stake, -amount, stakee);
 
         if (stake.amount_ == 0) {
             if (stake.parent_ == bytes32(0))
