@@ -104,7 +104,7 @@ contract OrchidDirectory is IOrchidDirectory {
         return stake.before_ + stake.after_ + stake.amount_;
     }
 
-    function scan(uint128 percent) public view returns (address) {
+    function scan(uint128 percent) public view returns (address, uint128) {
         require(!nope(root_));
 
         uint128 point = uint128(have() * uint256(percent) / 2**128);
@@ -121,7 +121,7 @@ contract OrchidDirectory is IOrchidDirectory {
             point -= stake.before_;
 
             if (point < stake.amount_)
-                return stake.stakee_;
+                return (stake.stakee_, stake.delay_);
 
             point -= stake.amount_;
 
