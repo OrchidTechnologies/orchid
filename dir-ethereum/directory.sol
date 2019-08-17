@@ -42,7 +42,7 @@ contract OrchidDirectory is IOrchidDirectory {
         bytes32 value_;
     }
 
-    function name(address staker, address stakee) private pure returns (bytes32) {
+    function name(address staker, address stakee) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(staker, stakee));
     }
 
@@ -104,14 +104,15 @@ contract OrchidDirectory is IOrchidDirectory {
         return stake.before_ + stake.after_ + stake.amount_;
     }
 
-    function scan(uint128 percent) public view returns (address, uint128) {
+    function scan(uint128 percent) public view returns (bytes32, address, uint128) {
         require(!nope(root_));
 
         uint128 point = uint128(have() * uint256(percent) / 2**128);
 
         Primary storage primary = root_;
         for (;;) {
-            Stake storage stake = stakes_[name(primary)];
+            bytes32 key = name(primary);
+            Stake storage stake = stakes_[key];
 
             if (point < stake.before_) {
                 primary = stake.left_;
@@ -121,7 +122,7 @@ contract OrchidDirectory is IOrchidDirectory {
             point -= stake.before_;
 
             if (point < stake.amount_)
-                return (stake.stakee_, stake.delay_);
+                return (key, stake.stakee_, stake.delay_);
 
             point -= stake.amount_;
 
