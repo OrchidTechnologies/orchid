@@ -12,8 +12,9 @@
 ifeq ($(target),ios)
 lflags += -lsqlite3
 else
+# XXX: $(pwd)/sqlite/configure is (strangely) in the repository, but should not be rebuilt with autogen.sh
 $(output)/sqlite/Makefile: pwd := $(pwd)
-$(output)/sqlite/Makefile: $(pwd)/sqlite/configure
+$(output)/sqlite/Makefile:
 	mkdir -p $(output)/sqlite
 	cd $(output)/sqlite && $(CURDIR)/$(pwd)/sqlite/configure --enable-static --disable-shared --disable-tcl
 
