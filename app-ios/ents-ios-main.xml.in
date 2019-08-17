@@ -22,10 +22,10 @@
     <array>
 	<string>@TEAMID@.@DOMAIN@.@NAME@</string>
     </array>
-
+@D@
 @D@ <key>get-task-allow</key>
 @D@ <true/>
-
+@B@
 @B@ <key>beta-reports-active</key>
 @B@ <true/>
 </dict>
