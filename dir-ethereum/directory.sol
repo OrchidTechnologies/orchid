@@ -67,6 +67,16 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
 
+    struct Stakee {
+        uint128 amount_;
+    }
+
+    mapping(address => Stakee) internal stakees_;
+
+    function heft(address stakee) public view returns (uint128 amount) {
+        return stakees_[stakee].amount_;
+    }
+
 
     struct Stake {
         uint128 before_;
@@ -159,6 +169,7 @@ contract OrchidDirectory is IOrchidDirectory {
         }
 
         stake.amount_ += amount;
+        stakees_[stakee].amount_ += amount;
         step(key, stake, amount, bytes32(0));
     }
 
@@ -208,8 +219,9 @@ contract OrchidDirectory is IOrchidDirectory {
 
         require(stake.amount_ != 0);
         require(stake.amount_ >= amount);
-        stake.amount_ -= amount;
 
+        stake.amount_ -= amount;
+        stakees_[stakee].amount_ -= amount;
         step(key, stake, -amount, bytes32(0));
 
         if (stake.amount_ == 0) {
