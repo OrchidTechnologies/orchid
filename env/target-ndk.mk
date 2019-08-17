@@ -9,10 +9,14 @@
 # }}}
 
 
+ifeq ($(ANDROID_HOME),)
+export ANDROID_HOME := $(wildcard ~/Library/Android/sdk)
+endif
+
 ndk := $(ANDROID_NDK_HOME)
 
 ifeq ($(ndk),)
-ndk := $(wildcard ~/Library/Android/sdk/ndk-bundle)
+ndk := $(wildcard $(ANDROID_HOME)/ndk-bundle)
 endif
 
 ifeq ($(ndk),)
