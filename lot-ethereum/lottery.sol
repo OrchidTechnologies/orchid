@@ -54,7 +54,7 @@ contract OrchidLottery {
 
 
     // signer must be a simple account, to support signing tickets
-    function fund(address signer, uint128 amount, uint128 total) public {
+    function push(address signer, uint128 amount, uint128 total) public {
         require(total >= amount);
         Pot storage pot = pots_[signer];
         pot.amount_ += amount;
