@@ -88,13 +88,16 @@ contract OrchidLottery {
     }
 
 
-    function burn(Pot storage pot, uint128 amount) private returns (uint128) {
+    function take(Pot storage pot, uint128 amount) private returns (uint128) {
         if (pot.amount_ >= amount)
-            return amount;
+            pot.amount_ -= amount;
         else {
+            amount = pot.amount_;
+            pot.amount_ = 0;
             pot.escrow_ = 0;
-            return pot.amount_;
         }
+
+        return amount;
     }
 
     function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint256 start, uint128 range, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
@@ -121,8 +124,7 @@ contract OrchidLottery {
 
         address signer = ecrecover(ticket, v, r, s);
         Pot storage pot = pots_[signer];
-        amount = burn(pot, amount);
-        pot.amount_ -= amount;
+        amount = take(pot, amount);
         send(signer, pot);
 
         if (amount > transfer)
@@ -133,8 +135,7 @@ contract OrchidLottery {
 
     function pull(address payable target, uint128 amount) public {
         Pot storage pot = pots_[msg.sender];
-        amount = burn(pot, amount);
-        pot.amount_ -= amount;
+        amount = take(pot, amount);
         send(msg.sender, pot);
         require(token_.transfer(target, amount));
     }
@@ -152,7 +153,7 @@ contract OrchidLottery {
         send(msg.sender, pot);
     }
 
-    function take(address payable target) public {
+    function pull(address payable target) public {
         Pot storage pot = pots_[msg.sender];
         require(pot.unlock_ != 0);
         require(pot.unlock_ <= block.timestamp);
