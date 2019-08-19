@@ -43,6 +43,10 @@ contract OrchidLottery {
 
     event Update(address indexed signer, uint128 amount, uint128 escrow, uint256 unlock);
 
+    function send(address signer, Pot storage pot) private {
+        emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
+    }
+
     function look(address signer) public view returns (uint128, uint128, uint256) {
         Pot storage pot = pots_[signer];
         return (pot.amount_, pot.escrow_, pot.unlock_);
@@ -55,7 +59,7 @@ contract OrchidLottery {
         Pot storage pot = pots_[signer];
         pot.amount_ += amount;
         pot.escrow_ += total - amount;
-        emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
+        send(signer, pot);
         require(token_.transferFrom(msg.sender, address(this), total));
     }
 
@@ -64,7 +68,7 @@ contract OrchidLottery {
         require(pot.amount_ >= amount);
         pot.amount_ -= amount;
         pot.escrow_ += amount;
-        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
+        send(msg.sender, pot);
     }
 
 
@@ -119,7 +123,7 @@ contract OrchidLottery {
         Pot storage pot = pots_[signer];
         amount = burn(pot, amount);
         pot.amount_ -= amount;
-        emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
+        send(signer, pot);
 
         if (amount > transfer)
             amount = transfer;
@@ -131,7 +135,7 @@ contract OrchidLottery {
         Pot storage pot = pots_[msg.sender];
         amount = burn(pot, amount);
         pot.amount_ -= amount;
-        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
+        send(msg.sender, pot);
         require(token_.transfer(target, amount));
     }
 
@@ -139,13 +143,13 @@ contract OrchidLottery {
     function warn() public {
         Pot storage pot = pots_[msg.sender];
         pot.unlock_ = block.timestamp + 1 days;
-        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
+        send(msg.sender, pot);
     }
 
     function lock() public {
         Pot storage pot = pots_[msg.sender];
         pot.unlock_ = 0;
-        emit Update(msg.sender, pot.amount_, pot.escrow_, pot.unlock_);
+        send(msg.sender, pot);
     }
 
     function take(address payable target) public {
@@ -154,7 +158,7 @@ contract OrchidLottery {
         require(pot.unlock_ <= block.timestamp);
         uint128 amount = pot.amount_ + pot.escrow_;
         delete pots_[msg.sender];
-        emit Update(msg.sender, 0, 0, 0);
+        send(msg.sender, pot);
         require(token_.transfer(target, amount));
     }
 }
