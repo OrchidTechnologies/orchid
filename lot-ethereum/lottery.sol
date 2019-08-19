@@ -113,28 +113,28 @@ contract OrchidLottery {
 
         bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, ratio, start, range, amount));
 
-    {
-        uint256 until = start + range;
-        require(until > block.timestamp);
-        require(tracks_[target][ticket].until_ == 0);
-        tracks_[target][ticket].until_ = until;
-    }
+        {
+            uint256 until = start + range;
+            require(until > block.timestamp);
+            require(tracks_[target][ticket].until_ == 0);
+            tracks_[target][ticket].until_ = until;
+        }
 
         for (uint256 i = 0; i != old.length; ++i)
             kill(tracks_[target][old[i]]);
 
-    {
-        uint128 limit;
-        if (start >= block.timestamp)
-            limit = amount;
-        else
-            limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
+        {
+            uint128 limit;
+            if (start >= block.timestamp)
+                limit = amount;
+            else
+                limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
 
-        address signer = ecrecover(ticket, v, r, s);
-        amount = take(signer, amount);
-        if (amount > limit)
-            amount = limit;
-    }
+            address signer = ecrecover(ticket, v, r, s);
+            amount = take(signer, amount);
+            if (amount > limit)
+                amount = limit;
+        }
 
         if (amount != 0)
             require(token_.transfer(target, amount));
