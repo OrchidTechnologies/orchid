@@ -123,16 +123,16 @@ contract OrchidLottery {
         for (uint256 i = 0; i != old.length; ++i)
             kill(tracks_[target][old[i]]);
 
-        uint128 transfer;
+        uint128 limit;
         if (start >= block.timestamp)
-            transfer = amount;
+            limit = amount;
         else
-            transfer = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
+            limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
 
         address signer = ecrecover(ticket, v, r, s);
         amount = take(signer, amount);
-        if (amount > transfer)
-            amount = transfer;
+        if (amount > limit)
+            amount = limit;
         if (amount != 0)
             require(token_.transfer(target, amount));
     }
