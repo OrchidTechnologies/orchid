@@ -32,6 +32,7 @@ contract OrchidLottery {
         token_ = ERC20(token);
     }
 
+
     struct Pot {
         uint128 amount_;
         uint128 escrow_;
@@ -42,10 +43,11 @@ contract OrchidLottery {
 
     event Update(address indexed signer, uint128 amount, uint128 escrow, uint256 unlock);
 
-    function balance(address signer) public view returns(uint128, uint128) {
+    function look(address signer) public view returns (uint128, uint128, uint256) {
         Pot storage pot = pots_[signer];
-        return (pot.amount_, pot.escrow_);
+        return (pot.amount_, pot.escrow_, pot.unlock_);
     }
+
 
     // signer must be a simple account, to support signing tickets
     function fund(address signer, uint128 amount, uint128 total) public {
