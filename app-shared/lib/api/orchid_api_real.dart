@@ -71,6 +71,12 @@ class RealOrchidAPI implements OrchidAPI {
   /// Transient, in-memory log implementation.
   OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
 
+  /// The Flutter application uses this method to indicate to the native channel code
+  /// that the UI has finished launching and all listeners have been established.
+  Future<void> applicationReady() {
+    budget().applicationReady();
+    return _platform.invokeMethod('ready');
+  }
   /// Get the logging API.
   @override
   OrchidLogAPI logger() {

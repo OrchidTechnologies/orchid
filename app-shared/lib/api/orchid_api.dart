@@ -45,6 +45,10 @@ abstract class OrchidAPI {
   /// NEVPNManager API.
   final BehaviorSubject<bool> vpnPermissionStatus;
 
+  /// The Flutter application uses this method to indicate to the native channel code
+  /// that the UI has finished launching and all listeners have been established.
+  Future<void> applicationReady();
+
   /// Get the logging API.
   OrchidLogAPI logger();
 

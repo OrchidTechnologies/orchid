@@ -27,7 +27,10 @@ class OrchidBudgetAPI {
     return _shared;
   }
 
-  void appStartup() {
+  void applicationReady() {
+    // Inactive
+    return;
+
     // On first launch, generate the user's primary lottery pot keypair.
     UserPreferences().getLotteryPotsPrimaryAddress().then((String address) {
       if (address == null) {

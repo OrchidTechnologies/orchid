@@ -89,7 +89,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 #pragma mark - VPN Provider State
 
-// Note: This does *not_ seem to fire if the user adds or removes the vpn config in settings, so
+// Note: This does *not* seem to fire if the user adds or removes the vpn config in settings, so
 // Note: I'm not sure under what circumstances it is called.
 - (void) onConfigurationChange:(NSNotification *)notification {
     NSLog(@"Provider state changed.");
@@ -101,6 +101,15 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     [self providerStatus: ^(bool result) {
         [self setProviderState: result];
     }];
+}
+
+// Get the connection state of the provider manager and publish it to the app.
+- (void) updateConnectionStatus {
+    if (self.providerManager != nil) {
+      [self onVpnState:self.providerManager.connection.status];
+    } else {
+      [self onVpnState: NEVPNStatusInvalid];
+    }
 }
 
 // Get the initialization state of the tunnel provider
@@ -138,7 +147,7 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     [feedback_ invokeMethod:@"providerStatus" arguments: @(installed)];
 }
 
-#pragma mark - App Initialization
+#pragma mark - VPN Initialization
 
 - (void) initProvider: (FlutterResult)result {
     NETunnelProviderProtocol *protocol([[NETunnelProviderProtocol alloc] init]);
@@ -186,6 +195,8 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     }];
 }
 
+#pragma mark - Lifecycle Methods
+
 - (BOOL) application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)options {
 
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
@@ -203,6 +214,8 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
     __weak typeof(self) weakSelf = self;
     [feedback_ setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
         if (false) {
+        } else if ([@"ready" isEqualToString:call.method]) {
+            [weakSelf applicationReady];
         } else if ([@"connect" isEqualToString:call.method]) {
             [weakSelf connection];
         } else if ([@"disconnect" isEqualToString:call.method]) {
@@ -255,10 +268,14 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 
 
 - (void) applicationDidBecomeActive:(UIApplication *)application {
-    NSLog(@"Updating provider status");
-    [self updateProviderStatus];
 }
 
+// Called when the flutter application startup is complete and listeners are registered.
+- (void) applicationReady {
+    NSLog(@"Application ready");
+    [self updateProviderStatus];
+    [self updateConnectionStatus];
+}
 
 - (void) applicationWillTerminate:(UIApplication *)application {
 }

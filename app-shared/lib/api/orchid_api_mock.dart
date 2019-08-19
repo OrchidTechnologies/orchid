@@ -83,6 +83,13 @@ class MockOrchidAPI implements OrchidAPI {
 
   OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
 
+  /// The Flutter application uses this method to indicate to the native channel code
+  /// that the UI has finished launching and all listeners have been established.
+  Future<void> applicationReady() {
+    budget().applicationReady();
+    return null;
+  }
+
   /// Get the logging API.
   @override
   OrchidLogAPI logger() {

@@ -6,7 +6,7 @@ import 'api/orchid_api.dart';
 
 void main() {
   OrchidAPI().logger().write("App Startup");
-  //OrchidAPI().budget().appStartup();
+  OrchidAPI().applicationReady();
 
   // Force portrait orientation
   // Note: There is a bug causing this to fail on iPad, so we have locked
