@@ -37,7 +37,6 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
 
-
     struct Primary {
         bytes32 value_;
     }
