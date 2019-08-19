@@ -93,24 +93,36 @@ contract OrchidLottery {
         }
     }
 
-    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
+    function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint256 start, uint128 range, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
+
+        bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, ratio, start, range, amount));
+
+    {
+        uint256 until = start + range;
         require(until > block.timestamp);
-
-        bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, until, ratio, amount));
-
         require(tracks_[target][ticket].until_ == 0);
         tracks_[target][ticket].until_ = until;
+    }
 
         for (uint256 i = 0; i != old.length; ++i)
             kill(tracks_[target][old[i]]);
+
+        uint128 transfer;
+        if (start >= block.timestamp)
+            transfer = amount;
+        else
+            transfer = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
 
         address signer = ecrecover(ticket, v, r, s);
         Pot storage pot = pots_[signer];
         amount = burn(pot, amount);
         pot.amount_ -= amount;
         emit Update(signer, pot.amount_, pot.escrow_, pot.unlock_);
+
+        if (amount > transfer)
+            amount = transfer;
         if (amount != 0)
             require(token_.transfer(target, amount));
     }
