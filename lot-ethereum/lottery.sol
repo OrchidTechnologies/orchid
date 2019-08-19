@@ -123,6 +123,7 @@ contract OrchidLottery {
         for (uint256 i = 0; i != old.length; ++i)
             kill(tracks_[target][old[i]]);
 
+    {
         uint128 limit;
         if (start >= block.timestamp)
             limit = amount;
@@ -133,6 +134,8 @@ contract OrchidLottery {
         amount = take(signer, amount);
         if (amount > limit)
             amount = limit;
+    }
+
         if (amount != 0)
             require(token_.transfer(target, amount));
     }
