@@ -1,6 +1,6 @@
 Privacy Policy
 Orchid considers the privacy of our visitors to be extremely important. This
-privacy policy document describes in detail the types of personal information is
+privacy policy document describes in detail the types of personal information that is
 collected and recorded by the Orchid iOS and Android applications and how we use it.
 
 Orchid is committed to user privacy and does not collect or store personal data.
@@ -12,13 +12,13 @@ how that information is being used. Please refer to their terms and conditions a
 privacy policies for information they store through their app publication services.
 
 Traffic Activity
-All data surround using network traffic activity is stored locally on your device
+All data surrounding network traffic activity is stored locally on your device
 and is not collected or used by Orchid Labs. This data potentially includes internet
 protocol (IP) addresses of your device and hosts you connect to, source and
 destination ports of these connections, connection protocol, and the date/time
 of the connection. Clearing this data from within the application deletes the
 only stored copy of the information.
- 
+
 Orchid Mobile Application Privacy Policy Only
 This privacy policy applies only to the Orchid iOS and Android applications
 published by Orchid Labs, Inc and information shared and/or collected there.
@@ -30,7 +30,7 @@ Consent
 By using our application, you hereby consent to our privacy policy and agree to its terms.
 
 Update
-This Privacy Policy was last updated on: Thursday, August 8th, 2019.
+This Privacy Policy was last updated on: Friday, August 16th, 2019.
 Should we update, amend or make any changes to our privacy policy, those changes will be posted here.
 
 More Information
