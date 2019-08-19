@@ -74,6 +74,16 @@ contract OrchidLottery {
 
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
+    function kill(Track storage track) private {
+        require(track.until_ <= block.timestamp);
+        delete track.until_;
+    }
+
+    function kill(bytes32 ticket) public {
+        kill(tracks_[msg.sender][ticket]);
+    }
+
+
     function burn(Pot storage pot, uint128 amount) private returns (uint128) {
         if (pot.amount_ >= amount)
             return amount;
@@ -93,11 +103,8 @@ contract OrchidLottery {
         require(tracks_[target][ticket].until_ == 0);
         tracks_[target][ticket].until_ = until;
 
-        for (uint256 i = 0; i != old.length; ++i) {
-            Track storage track = tracks_[target][old[i]];
-            require(track.until_ <= block.timestamp);
-            delete track.until_;
-        }
+        for (uint256 i = 0; i != old.length; ++i)
+            kill(tracks_[target][old[i]]);
 
         address signer = ecrecover(ticket, v, r, s);
         Pot storage pot = pots_[signer];
