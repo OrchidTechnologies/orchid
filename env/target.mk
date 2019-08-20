@@ -29,8 +29,6 @@ qflags :=
 lflags := 
 wflags := 
 
-dotidy := no
-
 source := 
 linked := 
 header := 

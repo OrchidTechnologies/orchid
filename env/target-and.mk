@@ -52,8 +52,6 @@ more += -fno-addrsig
 cycc := $(llvm)/bin/clang $(more)
 cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
 
-#dotidy := yes
-
 lflags += -Wl,--icf=all
 lflags += -lm -llog
 lflags += -static-libstdc++

@@ -132,11 +132,12 @@ $(output)/%.o: %.cc $(header) $(sysroot)
 
 $(output)/%.o: %.cpp $(header) $(sysroot)
 	@mkdir -p $(dir $@)
-	@echo [CC] $(target) $<
-ifeq ($(dotidy),yes)
+ifeq ($(filter notidy,$(debug)),)
+	@echo [CT] $(target) $<
 	@[[ ! $< =~ $(tidy) ]] || $(llvm)/bin/clang-tidy $< -quiet -warnings-as-errors='*' -header-filter='$(tidy)' -checks='$(checks)' -- \
 	    $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_)
 endif
+	@echo [CC] $(target) $<
 	@$(cycp) -std=c++2a -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
 $(shell env/meson.sh '$(output)' '$(CURDIR)' '$(msys)' '$(mfam)' '$(ar)' '$(strip)' '$(cycc)' '$(cycp)' '$(cyco)' '$(qflags)' '$(wflags)')

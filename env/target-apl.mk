@@ -31,6 +31,7 @@ clang := $(shell $(environ) xcrun -f clang)
 cyco := $(clang) $(more)
 
 ifeq (,)
+debug += notidy
 cycc := $(clang) $(more)
 cycp := $(shell $(environ) xcrun -f clang++) $(more)
 else
@@ -43,7 +44,6 @@ more += -fno-strict-return
 cycc := $(llvm)/bin/clang $(more)
 cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
 lflags += $(resource)/lib/darwin/libclang_rt.$(target).a
-dotidy := yes
 endif
 
 ranlib := ranlib
