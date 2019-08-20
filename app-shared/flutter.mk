@@ -23,7 +23,7 @@ flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml ../
 	cd flutter && $(environ) bin/flutter precache
 	cd flutter && $(environ) bin/flutter update-packages
 
-ifeq ($(debug),)
+ifeq ($(filter noaot,$(debug)),)
 mode := release
 engine := -release
 precompiled := --precompiled

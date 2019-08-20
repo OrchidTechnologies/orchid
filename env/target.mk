@@ -30,7 +30,6 @@ lflags :=
 wflags := 
 
 dotidy := no
-debug = 
 
 source := 
 linked := 
@@ -58,7 +57,7 @@ beta := false
 include ../default.mk
 -include ../identity.mk
 
-ifeq ($(debug),)
+ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s
 endif
 
