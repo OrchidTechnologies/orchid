@@ -59,6 +59,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
   Switch _buildSwitch() {
     var currentValue = OrchidAPI().connectionStatus.value ??
         OrchidConnectionState.NotConnected;
+    bool switchOn = false;
+    switch(currentValue) {
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+        break;
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Connected:
+        switchOn = true;
+    }
     return Switch(
         activeColor: AppColors.purple_5,
         // TODO: We should replace this switch with something that represents the
@@ -68,7 +77,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
         // Note: value before it can be toggled off again programmatically.
         // Note: This makes a failed "connecting" state problematic.  So I have
         // Note: inverted the logic to show connected immediately and fall back.
-        value: currentValue != OrchidConnectionState.NotConnected,
+        value: switchOn,
         onChanged: (bool newValue) {
           _switchChanged(currentValue, newValue);
         });
