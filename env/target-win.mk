@@ -26,6 +26,7 @@ mfam := x86_64
 host := $(arch)-w64-mingw32
 
 include $(pwd)/target-ndk.mk
+include $(pwd)/target-gnu.mk
 
 more := 
 more += -target $(arch)-pc-windows-gnu 

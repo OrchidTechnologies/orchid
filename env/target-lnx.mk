@@ -20,9 +20,9 @@ ossl := linux-x86_64
 
 host := $(arch)-linux-gnu
 
-ifeq ($(uname),Linux)
-
 include $(pwd)/target-gnu.mk
+
+ifeq ($(uname),Linux)
 
 ranlib := ranlib
 ar := ar

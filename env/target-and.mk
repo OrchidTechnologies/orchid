@@ -40,6 +40,7 @@ mfam := arm
 #mfam := x86_64
 
 include $(pwd)/target-ndk.mk
+include $(pwd)/target-gnu.mk
 
 host := $(arch)-linux-android$(asuf)
 

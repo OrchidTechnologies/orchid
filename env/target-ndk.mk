@@ -46,5 +46,3 @@ endif
 ranlib := $(llvm)/bin/$(apre)-linux-android$(asuf)-ranlib
 ar := $(llvm)/bin/$(apre)-linux-android$(asuf)-ar
 strip := $(llvm)/bin/$(apre)-linux-android$(asuf)-strip
-
-include $(pwd)/target-gnu.mk
