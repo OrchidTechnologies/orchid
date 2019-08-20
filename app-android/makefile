@@ -34,23 +34,34 @@ include vpn/target.mk
 
 include env/output.mk
 
-$(output)/$(alib)/liborchid.so: $(object) $(linked)
+$(output)/jnilibs/$(alib)/liborchid.so: $(object) $(linked)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cycp) -shared $(wflags) -o $@ $^ $(lflags)
 	@ls -la $@
 
-mode := release
 assets := $(output)/assets/flutter_assets
 
 include shared/flutter.mk
 
-build/app%dill %flutter-plugins $(assets)/kernel_blob%bin src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java: $(shell find lib/ -name '*.dart') flutter/packages/flutter/pubspec%lock pubspec%lock
+ifneq ($(precompiled),)
+$(output)/aot/app.so: $(dart)
+	flutter/bin/flutter --suppress-analytics --verbose build aot -t lib/main.dart \
+	    --target-platform=android-arm --$(mode) --output-dir=$(output)/aot
+
+$(output)/jnilibs/$(alib)/libapp.so: $(output)/aot/app.so
+	@mkdir -p $(dir $@)
+	cp -f $< $@
+endif
+
+$(assets)/AssetManifest%json %flutter-plugins src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java: flutter/packages/flutter/pubspec%lock pubspec%lock $(dart)
 	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
-	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle --target-platform=android-arm --target=lib/main.dart --$(mode) --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)"
+	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
+	    --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)" --output-dill="$(output)/build.dill" \
+	    --target-platform=android-arm --$(mode) $(precompiled)
 
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(output)/$(alib)/liborchid.so $(assets)/kernel_blob.bin src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(output)/jnilibs/$(alib)/liborchid.so $(output)/jnilibs/$(alib)/libapp.so src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all
 	exit 0
 	touch $@

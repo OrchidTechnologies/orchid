@@ -27,7 +27,7 @@ subprojects {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-def flutter = files('flutter/bin/cache/artifacts/engine/android-arm/flutter.jar')
+def flutter = files('flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar')
 
 android {
     compileSdkVersion 28
@@ -48,7 +48,7 @@ android {
     sourceSets {
         main {
             assets.srcDirs += ['out-and/assets']
-            jniLibs.srcDirs = ['out-and']
+            jniLibs.srcDirs = ['out-and/jnilibs']
         }
     }
 

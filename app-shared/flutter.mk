@@ -22,3 +22,15 @@ flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml ../
 	cd flutter && git clean -fxd
 	cd flutter && $(environ) bin/flutter precache
 	cd flutter && $(environ) bin/flutter update-packages
+
+ifeq ($(debug),)
+mode := release
+engine := -release
+precompiled := --precompiled
+else
+mode := debug
+engine := 
+precompiled := 
+endif
+
+dart := $(shell find lib/ -name '*.dart')

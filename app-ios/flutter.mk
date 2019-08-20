@@ -18,21 +18,13 @@
 # }}}
 
 
-ifeq ($(debug),)
-mode := release
-engine := -release
-else
-mode := debug
-engine := 
-endif
+assets := $(bundle)/Frameworks/App.framework/flutter_assets
+
+include shared/flutter.mk
 
 engine := flutter/bin/cache/artifacts/engine/ios$(engine)
-assets := $(bundle)/Frameworks/App.framework/flutter_assets
-dart := $(shell find lib/ -name '*.dart')
 
-ifeq ($(mode),debug)
-precompiled := 
-
+ifeq ($(precompiled),)
 $(bundle)/Frameworks/App.framework/App:
 	@mkdir -p $(dir $@)
 	echo "static const int Moo = 88;" | $(subst -miphoneos-version-min=11.0,-miphoneos-version-min=8.0,$(cycc)) -dynamiclib -o $@ \
@@ -41,27 +33,18 @@ $(bundle)/Frameworks/App.framework/App:
 	    -Xlinker -rpath -Xlinker '@loader_path/Frameworks' \
 	    -install_name '@rpath/App.framework/App'
 else
-ifeq ($(mode),release)
-precompiled := --precompiled
-
 $(output)/aot/App.framework/App: $(dart)
 	flutter/bin/flutter --suppress-analytics --verbose build aot -t lib/main.dart \
 	    --target-platform=ios --$(mode) --output-dir=$(output)/aot
 
 $(bundle)/Frameworks/App.framework/App: $(output)/aot/App.framework/App
 	@mkdir -p $(dir $@)
-	cp -a $< $@
-else
-XXX support Flutter profile
+	cp -f $< $@
 endif
-endif
-
-include shared/flutter.mk
 
 $(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
 	@mkdir -p $(dir $@)
-	cp -af $< $@
-	touch $@
+	cp -f $< $@
 
 signed += $(bundle)/Frameworks/App.framework$(signature)
 $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App .flutter-plugins
