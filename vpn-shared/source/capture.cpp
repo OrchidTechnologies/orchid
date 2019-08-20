@@ -129,7 +129,7 @@ class Logger :
         monitor(span, *this);
     }
 
-    void get_DNS_answers(Span<const uint8_t> span) {
+    void get_DNS_answers(const Span<const uint8_t> &span) {
         dns_decoded_t decoded[DNS_DECODEBUF_4K];
         size_t decodesize = sizeof(decoded);
 
@@ -146,7 +146,7 @@ class Logger :
         for (size_t i = 0; i != result->ancount; ++i) {
             // TODO: IPv6
             if (result->answers[i].generic.type == RR_A) {
-                auto ip = asio::ip::address_v4(ntohl(result->answers[i].a.address));
+                auto ip = asio::ip::address_v4(boost::endian::native_to_big(result->answers[i].a.address));
                 auto hostname = std::string(result->answers[i].a.name);
                 hostname.pop_back();
                 Log() << "DNS " << hostname << " " << ip << std::endl;
@@ -160,7 +160,7 @@ class Logger :
         if (ip4.protocol == openvpn::IPCommon::UDP) {
             auto length(openvpn::IPv4Header::length(ip4.version_len));
             auto &udp(span.cast<const openvpn::UDPHeader>(length));
-            if (ntohs(udp.source) == 53)
+            if (boost::endian::native_to_big(udp.source) == 53)
                 get_DNS_answers(span + (length + sizeof(openvpn::UDPHeader)));
         }
     }

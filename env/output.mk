@@ -96,9 +96,18 @@ checks += readability-isolate-declaration
 checks += readability-redundant-member-init
 checks += readability-redundant-smartptr-get
 checks += readability-redundant-string-cstr
-checks += readability-redundant-string-init
+#checks += readability-redundant-string-init
 checks += readability-static-definition-in-anonymous-namespace
 checks += readability-uniqueptr-delete-release
+ifeq ($(target),and)
+# XXX: boost multiprecision on android
+checks += -clang-analyzer-core.UndefinedBinaryOperatorResult
+endif
+ifeq ($(target),win)
+# XXX: boost asio threading on win32
+checks += -clang-analyzer-cplusplus.NewDelete
+checks += -clang-analyzer-cplusplus.NewDeleteLeaks
+endif
 checks := $(subst $(space),$(comma),$(strip $(checks)))
 
 # XXX: this is not a very accurate filter expression

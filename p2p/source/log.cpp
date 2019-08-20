@@ -43,7 +43,7 @@ namespace orc {
 
 bool Verbose(false);
 
-Log::~Log() {
+Log::~Log() { try {
     auto log(str());
     if (!log.empty() && log[log.size() - 1] == '\n')
         log.resize(log.size() - 1);
@@ -51,12 +51,16 @@ Log::~Log() {
     boost::replace_all(log, "\n", " || ");
 #if 0
 #elif defined(__APPLE__)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-type-cstyle-cast)
     NSLog((NSString *)CFSTR("%s"), log.c_str());
 #elif defined(__ANDROID__)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "%s", log.c_str());
 #else
     std::cerr << log << std::endl;
 #endif
-}
+} catch (...) {
+    // XXX: maybe there's a backup plan?
+} }
 
 }
