@@ -32,8 +32,6 @@ wflags :=
 dotidy := no
 debug = 
 
-tflags := 
-
 source := 
 linked := 
 header := 

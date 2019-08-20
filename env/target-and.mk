@@ -43,17 +43,16 @@ include $(pwd)/target-gnu.mk
 host := $(arch)-linux-android$(asuf)
 
 more := 
+more += -target $(arch)-unknown-linux-android$(asuf)$(aver)
+more += --sysroot=$(llvm)/sysroot
 
-cycc := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang $(more)
-cycp := $(llvm)/bin/$(arch)-linux-android$(asuf)$(aver)-clang++ $(more)
+# https://github.com/android-ndk/ndk/issues/884
+more += -fno-addrsig
+
+cycc := $(llvm)/bin/clang $(more)
+cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
 
 #dotidy := yes
-tflags += -target $(arch)-unknown-linux-android$(asuf)$(aver)
-tflags += -I$(llvm)/sysroot/usr/include/c++/v1
-tflags += -I$(llvm)/sysroot/usr/local/include
-tflags += -I$(llvm)/lib64/clang/8.0.2/include
-tflags += -I$(llvm)/sysroot/usr/include/arm-linux-androideabi
-tflags += -I$(llvm)/sysroot/usr/include
 
 lflags += -Wl,--icf=all
 lflags += -lm -llog
