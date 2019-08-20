@@ -10,9 +10,10 @@ ar=${5}
 strip=${6}
 cycc=${7}
 cycp=${8}
-qflags=${9}
-wflags=${10}
-shift 10
+cyco=${9}
+qflags=${10}
+wflags=${11}
+shift 11
 
 if [[ $# -ne 0 ]]; then
     exit 1
@@ -20,6 +21,7 @@ fi
 
 cycc=(${cycc})
 cycp=(${cycp})
+cyco=(${cyco})
 
 qflags=(${qflags})
 wflags=(${wflags})
@@ -55,15 +57,15 @@ endian = 'little'
 [properties]
 c_args = [$(args "${cycc[@]}" "${cflags[@]}")]
 cpp_args = [$(args "${cycp[@]}" "${cflags[@]}")]
-objc_args = [$(args "${cycc[@]}" "${cflags[@]}")]
+objc_args = [$(args "${cyco[@]}" "${cflags[@]}")]
 c_link_args = [$(args "${cycc[@]}" "${lflags[@]}")]
 cpp_link_args = [$(args "${cycp[@]}" "${lflags[@]}")]
-objc_link_args = [$(args "${cycc[@]}" "${lflags[@]}")]
+objc_link_args = [$(args "${cyco[@]}" "${lflags[@]}")]
 
 [binaries]
 c = '${cycc[0]}'
 cpp = '${cycp[0]}'
-objc = '${cycc[0]}'
+objc = '${cyco[0]}'
 ar = '${ar}'
 strip = '${strip}'
 pkgconfig = '${curdir}/env/pkg-config'

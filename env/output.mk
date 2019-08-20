@@ -139,7 +139,7 @@ ifeq ($(dotidy),yes)
 endif
 	@$(cycp) -std=c++2a -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
 
-$(shell env/meson.sh '$(output)' '$(CURDIR)' '$(msys)' '$(mfam)' '$(ar)' '$(strip)' '$(cycc)' '$(cycp)' '$(qflags)' '$(wflags)')
+$(shell env/meson.sh '$(output)' '$(CURDIR)' '$(msys)' '$(mfam)' '$(ar)' '$(strip)' '$(cycc)' '$(cycp)' '$(cyco)' '$(qflags)' '$(wflags)')
 
 export PATH := $(CURDIR)/env/path:$(PATH)
 

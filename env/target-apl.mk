@@ -27,8 +27,24 @@ ifneq ($(sdk),macosx)
 more += -idirafter $(shell $(environ) xcodebuild -sdk macosx -version Path)/usr/include
 endif
 
-cycc := $(shell $(environ) xcrun -f clang) $(more)
+clang := $(shell $(environ) xcrun -f clang)
+cyco := $(clang) $(more)
+
+ifeq (,)
+cycc := $(clang) $(more)
 cycp := $(shell $(environ) xcrun -f clang++) $(more)
+else
+include $(pwd)/target-ndk.mk
+resource := $(shell $(environ) xcrun clang -print-resource-dir)
+more += -target $(host)18.5.0
+more += -B$(dir $(clang))
+more += -Xclang -resource-dir -Xclang $(resource)
+more += -fno-strict-return
+cycc := $(llvm)/bin/clang $(more)
+cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
+lflags += $(resource)/lib/darwin/libclang_rt.$(target).a
+dotidy := yes
+endif
 
 ranlib := ranlib
 ar := ar
