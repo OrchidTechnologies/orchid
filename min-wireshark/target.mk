@@ -225,6 +225,7 @@ deps += glib/subprojects/proxy-libintl/libintl.a
 deps := $(patsubst %,$(output)/$(pwd)/%,$(deps))
 
 $(output)/$(pwd)/glib/build.ninja: $(output)/usr/include/iconv.h $(output)/usr/lib/libiconv.a
+$(output)/$(pwd)/glib/glib/glibconfig.h: $(output)/$(pwd)/glib/build.ninja
 
 $(patsubst %.a,%$(percent)a,$(deps)): $(output)/$(pwd)/glib/build%ninja
 	cd $(dir $<) && ninja
