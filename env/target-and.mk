@@ -24,19 +24,17 @@ mfam := arm
 
 #arch := aarch64
 #ossl := android-arm64
+#alib := arm64-v8a
 #mfam := aarch64
 
-#ossl := android-mips
-#mfam := mips
-
-#ossl := android-mip64
-#mfam := mips64
-
+#arch := i686
 #ossl := android-x86
+#alib := x86
 #mfam := x86
 
 #arch := x86_64
 #ossl := android-x86_64
+#alib := x86_64
 #mfam := x86_64
 
 include $(pwd)/target-ndk.mk
