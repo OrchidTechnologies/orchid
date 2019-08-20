@@ -382,6 +382,7 @@ class _QuickConnectPageState
   /// True if we show the animated connected background for the given state.
   bool _showConnectedBackgroundFor(OrchidConnectionState state) {
     switch (state) {
+      case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
         return false;
@@ -430,6 +431,7 @@ class _QuickConnectPageState
   void _onConnectButtonPressed() {
     // Toggle the current connection state
     switch (_connectionState) {
+      case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
         OrchidAPI().setConnected(true);
         break;

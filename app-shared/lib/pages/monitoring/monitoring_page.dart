@@ -76,6 +76,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   void _switchChanged(OrchidConnectionState currentValue, bool newValue) {
     switch (currentValue) {
+      case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
         if (newValue == true) {
           _checkPermissionAndEnableConnection();
@@ -92,32 +93,25 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   void _checkPermissionAndEnableConnection() {
     // Get the most recent status, blocking if needed.
-    OrchidAPI().vpnPermissionStatus.take(1).listen((installed) {
+    OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
       debugPrint("vpn: current perm: $installed");
       if (installed) {
         debugPrint("vpn: already installed");
         OrchidAPI().setConnected(true);
         setState(() {});
       } else {
-        _showVPNPermissionPage(
-            allowSkip: true,
-            onComplete: (installed) {
-              if (installed) {
-                debugPrint("vpn: user chose to install");
-                // Note: It appears that trying to enable the connection too quickly
-                // Note: after installing the vpn permission / config fails.
-                // Note: Introducing a short artificial delay.
-                Future.delayed(Duration(milliseconds: 500)).then((_) {
-                  OrchidAPI().setConnected(true);
-                  Navigator.pop(context);
-                  setState(() {});
-                });
-              } else {
-                debugPrint("vpn: user skipped");
-                Navigator.pop(context);
-                setState(() {});
-              }
-            });
+        bool ok = await OrchidAPI().requestVPNPermission();
+        if (ok) {
+          debugPrint("vpn: user chose to install");
+          // Note: It appears that trying to enable the connection too quickly
+          // Note: after installing the vpn permission / config fails.
+          // Note: Introducing a short artificial delay.
+          Future.delayed(Duration(milliseconds: 500)).then((_) {
+            OrchidAPI().setConnected(true);
+          });
+        } else {
+          debugPrint("vpn: user skipped");
+        }
       }
     });
   }
