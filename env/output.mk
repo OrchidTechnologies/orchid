@@ -134,7 +134,7 @@ $(output)/%.o: %.cpp $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 ifeq ($(filter notidy,$(debug)),)
 	@echo [CT] $(target) $<
-	@[[ ! $< =~ $(tidy) ]] || $(llvm)/bin/clang-tidy $< -quiet -warnings-as-errors='*' -header-filter='$(tidy)' -checks='$(checks)' -- \
+	@[[ ! $< =~ $(tidy) || $< == */monitor.cpp ]] || $(llvm)/bin/clang-tidy $< -quiet -warnings-as-errors='*' -header-filter='$(tidy)' -checks='$(checks)' -- \
 	    $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_)
 endif
 	@echo [CC] $(target) $<
