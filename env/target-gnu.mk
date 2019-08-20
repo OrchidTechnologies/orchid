@@ -10,4 +10,5 @@
 
 
 qflags += -fdata-sections -ffunction-sections
+qflags += -fvisibility=hidden
 lflags += -Wl,--gc-sections

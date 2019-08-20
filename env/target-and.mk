@@ -56,6 +56,7 @@ tflags += -I$(llvm)/lib64/clang/8.0.2/include
 tflags += -I$(llvm)/sysroot/usr/include/arm-linux-androideabi
 tflags += -I$(llvm)/sysroot/usr/include
 
+lflags += -Wl,--icf=all
 lflags += -lm -llog
 lflags += -static-libstdc++
 lflags += -Wl,--no-undefined

@@ -49,5 +49,6 @@ endif
 
 dotidy := yes
 
+lflags += -Wl,--icf=all
 lflags += -pthread
 qflags += -fPIC

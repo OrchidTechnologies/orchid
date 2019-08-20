@@ -38,6 +38,7 @@ $(output)/$(alib)/liborchid.so: $(object) $(linked)
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cycp) -shared $(wflags) -o $@ $^ $(lflags)
+	@ls -la $@
 
 mode := release
 assets := $(output)/assets/flutter_assets
