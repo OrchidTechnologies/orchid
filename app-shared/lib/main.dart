@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:orchid/pages/app_routes.dart';
 
 import 'api/orchid_api.dart';
@@ -24,14 +23,9 @@ class OrchidApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'Orchid',
-        debugShowCheckedModeBanner: false,
-
-        // Theme (overridden for most widgets)
         theme: ThemeData(
           primarySwatch: Colors.deepPurple,
         ),
-
-        // Routing
         initialRoute: '/',
         routes: AppRoutes.routes);
   }

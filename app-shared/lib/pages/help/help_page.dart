@@ -9,21 +9,21 @@ class HelpPage extends TitledPageBase {
     return Column(
       children: <Widget>[
         PageTile.route(
-            title: "Linking your wallet",
-            routeName: '/help/link_wallet',
+            title: "Overview",
+            //imageName: "assets/images/account_balance_wallet.png",
+            routeName: '/help/overview',
             context: context),
         PageTile.route(
-            title: "Choosing a server",
-            routeName: '/help/choose_server',
+            title: "Privacy Policy",
+            //imageName: "assets/images/account_balance_wallet.png",
+            routeName: '/help/privacy',
             context: context),
         PageTile.route(
-            title: "Adding a server",
-            routeName: '/settings/add_server',
+            title: "Open Source Licenses",
+            //imageName: "assets/images/assignment.png",
+            routeName: '/help/open_source',
             context: context),
-        PageTile.route(
-            title: "Problems connecting",
-            routeName: '/settings/problems_connecting',
-            context: context),
+
       ],
     );
   }

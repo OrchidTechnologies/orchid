@@ -100,13 +100,14 @@ class _SideDrawerState extends State<SideDrawer> {
                 }),
             divider(),
             SideDrawerTile(
-                title: "Legal",
-                imageName: 'assets/images/feedback.png',
+                title: "Help",
+                imageName: 'assets/images/help.png',
                 showDetail: true,
                 onPressed: () {
-                  Navigator.pushNamed(context, '/legal');
+                  Navigator.pushNamed(context, '/help');
                 }),
 
+            // Version at bottom
             Spacer(),
             SafeArea(
               child: Column(
