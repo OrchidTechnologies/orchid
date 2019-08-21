@@ -48,12 +48,12 @@ cflags += -fmessage-length=0
 cflags += -ferror-limit=0
 cflags += -ftemplate-backtrace-limit=0
 
-cflags += -I$(output)/usr/include
-
 beta := false
 
 include ../default.mk
 -include ../identity.mk
+
+cflags += -I$(output)/usr/include
 
 ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s

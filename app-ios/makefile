@@ -73,8 +73,8 @@ cflags += -Iios/Pods/Headers/Public
 ios/Pods/Manifest.lock: ios/Podfile .flutter-plugins
 	cd ios && pod install
 
-out-$(target)/XCBuildData/build.db: ios/Pods/Manifest.lock
-	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(arch) -sdk $(sdk) SYMROOT=../../out-$(target)
+$(output)/XCBuildData/build.db: ios/Pods/Manifest.lock
+	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(arch) -sdk $(sdk) SYMROOT=../../$(output)
 
 
 include env/output.mk
@@ -128,10 +128,10 @@ endif
 
 
 signed += $(bundle)/$(name)
-$(bundle)/$(name): $(local) out-$(target)/XCBuildData/build.db
+$(bundle)/$(name): $(local) $(output)/XCBuildData/build.db
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) out-$(target)/Release-$(sdk)/libPods-Runner.a out-$(target)/Release-$(sdk)/*/lib*.a
+	@$(cycp) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) $(output)/Release-$(sdk)/libPods-Runner.a $(output)/Release-$(sdk)/*/lib*.a
 
 signed += $(bundle)/Info.plist
 $(bundle)/Info.plist: info-main.plist.in
@@ -152,7 +152,7 @@ $(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
 	    --compress-pngs --enable-on-demand-resources YES \
 	    --platform iphoneos --minimum-deployment-target 11.0 \
 	    --target-device iphone --target-device ipad \
-	    --output-partial-info-plist out-ios/info/actool.plist \
+	    --output-partial-info-plist $(output)/info/actool.plist \
 	    --compile $(bundle) Images.xcassets 2>&1 | cat
 
 signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))

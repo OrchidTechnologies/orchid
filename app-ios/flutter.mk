@@ -70,7 +70,7 @@ $(assets)/AssetManifest%json %flutter-plugins ios/Runner/GeneratedPluginRegistra
 	    --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)" --output-dill="$(output)/build.dill" \
 	    --target-platform=ios --$(mode) $(precompiled)
 
-# XXX: -include out-ios/snapshot_blob.bin.d
+# XXX: -include $(output)/snapshot_blob.bin.d
 
 flutter := Flutter Info.plist icudtl.dat
 
