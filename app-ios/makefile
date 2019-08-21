@@ -153,7 +153,7 @@ $(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
 	    --platform iphoneos --minimum-deployment-target 11.0 \
 	    --target-device iphone --target-device ipad \
 	    --output-partial-info-plist out-ios/info/actool.plist \
-	    --compile $(bundle) Images.xcassets | cat
+	    --compile $(bundle) Images.xcassets 2>&1 | cat
 
 signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))
 $(bundle)/%: resource/%
