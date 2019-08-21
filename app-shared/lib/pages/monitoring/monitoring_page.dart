@@ -53,6 +53,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
             child: TrafficView()),
       ),
       drawer: SideDrawer(),
+      // Workaround for: https://github.com/flutter/flutter/issues/23926
+      resizeToAvoidBottomInset: false,
     );
   }
 

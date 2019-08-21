@@ -29,28 +29,31 @@ class TitledPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: PreferredSize(
-            preferredSize: Size.fromHeight(79.0 - 20.0),
-            // Min space with no custom widgets
-            child: AppBar(
-                leading: IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                ),
-                title: Text(this.title),
-                titleSpacing: 0,
-                backgroundColor: AppColors.purple,
-                elevation: 0.0)),
-        body: Container(
-          child: child,
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [AppColors.grey_7, AppColors.grey_6])),
-        ));
+      appBar: PreferredSize(
+          preferredSize: Size.fromHeight(79.0 - 20.0),
+          // Min space with no custom widgets
+          child: AppBar(
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              ),
+              title: Text(this.title),
+              titleSpacing: 0,
+              backgroundColor: AppColors.purple,
+              elevation: 0.0)),
+      body: Container(
+        child: child,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.grey_7, AppColors.grey_6])),
+      ),
+      // Workaround for: https://github.com/flutter/flutter/issues/23926
+      resizeToAvoidBottomInset: false,
+    );
   }
 }
