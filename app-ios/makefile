@@ -168,6 +168,12 @@ $(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
 	@touch $@
 
+ifeq ($(filter nocompress,$(debug)),)
+zflags := -9
+else
+zflags := -0
+endif
+
 $(output)/$(name).ipa: $(bundle)$(signature)
 	@rm -f $@
-	cd $(output); zip -r9Xy $(name).ipa Payload
+	cd $(output); zip -rXy $(zflags) $(name).ipa Payload
