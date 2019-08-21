@@ -30,7 +30,7 @@ endif
 clang := $(shell $(environ) xcrun -f clang)
 cyco := $(clang) $(more)
 
-ifeq (,)
+ifeq ($(filter iosndk,$(debug)),)
 debug += notidy
 cycc := $(clang) $(more)
 cycp := $(shell $(environ) xcrun -f clang++) $(more)
