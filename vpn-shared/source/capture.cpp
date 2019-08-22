@@ -276,6 +276,7 @@ class Punch :
         header.udp.source = boost::endian::native_to_big(socket.Port());
         header.udp.dest = boost::endian::native_to_big(socket_.Port());
         header.udp.len = boost::endian::native_to_big<uint16_t>(sizeof(openvpn::UDPHeader) + data.size());
+        header.udp.check = 0;
 
         header.udp.check = boost::endian::native_to_big(openvpn::udp_checksum(
             reinterpret_cast<uint8_t *>(&header.udp),
