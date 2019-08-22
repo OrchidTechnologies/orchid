@@ -74,7 +74,7 @@ class QueryParser {
     var orderBy = ' ORDER BY "start" DESC';
     var limit = ' LIMIT 1000'; // ?
     var hostnameOrDestIp = _hostnameOrDestIP();
-    return "SELECT rowid, $hostnameOrDestIp, * FROM flow" +
+    return "SELECT id, $hostnameOrDestIp, * FROM flow" +
         restrictions +
         orderBy +
         limit;

@@ -171,6 +171,7 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   Future<void> setConnected(bool connect) async {
     switch (connectionStatus.value) {
+      case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
         if (connect) {
           _setConnectionState(OrchidConnectionState.Connecting);

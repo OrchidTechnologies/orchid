@@ -16,6 +16,7 @@ import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'package:orchid/pages/settings/settings_vpn_credentials_page.dart';
 import 'balance/balance_page.dart';
+import 'help/help_overview.dart';
 import 'help/legal_page.dart';
 
 class AppRoutes {
@@ -26,6 +27,7 @@ class AppRoutes {
   static const String settings_log = "/settings/log";
   static const String settings_dev = "/settings/dev";
   static const String help = "/help";
+  static const String help_overview = "/help/overview";
   static const String privacy = "/help/privacy";
   static const String open_source = "/help/open_source";
   static const String legal = "/legal";
@@ -48,6 +50,7 @@ class AppRoutes {
     settings_log: (context) => SettingsLogPage(),
     settings_dev: (context) => SettingsDevPage(),
     help: (context) => HelpPage(),
+    help_overview: (context) => HelpOverviewPage(),
     privacy: (context) => PrivacyPage(),
     open_source: (context) => OpenSourcePage(),
     legal: (context) => LegalPage(),

@@ -43,7 +43,7 @@ class AnalysisDb {
       List<Map> list = await db.rawQuery(query);
       return list.map((row) {
         return FlowEntry(
-            rowId: row['rowid'],
+            rowId: row['id'],
             start: fromJulianDate(row['start']),
             layer4: _fromProtocol(row['layer4']),
             protocol: row['protocol'],

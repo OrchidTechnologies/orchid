@@ -44,83 +44,66 @@ class _SideDrawerState extends State<SideDrawer> {
   }
 
   Widget buildContent(BuildContext context) {
-    return Stack(
+    return Column(
       children: <Widget>[
-        // The menu items
-        Column(
-          children: <Widget>[
-            // top logo
-            DrawerHeader(
-              child: Image(image: AssetImage('assets/images/logo.png')),
-            ),
+        // top logo
+        DrawerHeader(
+          child: Image(image: AssetImage('assets/images/logo.png')),
+        ),
+        divider(),
 
-            divider(),
-            /*
-            SideDrawerTile(
-                title: "Connect",
-                imageName: 'assets/images/connect.png',
-                onPressed: () {
-                  Navigator.pushNamed(context, '/connect');
-                }),
-            divider(),
-            BalanceSideDrawerTile(
-                title: "Balance",
-                imageName: 'assets/images/wallet.png',
-                onPressed: () {
-                  Navigator.pushNamed(context, '/balance');
-                }),
-            divider(),
-            SideDrawerTile(
-                title: "Settings",
-                imageName: 'assets/images/settings.png',
-                onPressed: () {
-                  Navigator.pushNamed(context, '/settings');
-                }),
-            divider(),
-            SideDrawerTile(
-                title: "Help",
-                imageName: 'assets/images/help.png',
-                onPressed: () {
-                  Navigator.pushNamed(context, '/help');
-                }),
-            divider(),
-            SideDrawerTile(
-                title: "Feedback",
-                imageName: 'assets/images/feedback.png',
-                onPressed: () {
-                  Navigator.pushNamed(context, '/feedback');
-                }),
-            divider(),
-             */
-            SideDrawerTile(
-                title: "Clear Data",
-                imageName: 'assets/images/sync.png',
-                onPressed: () {
-                  _confirmDelete(context);
-                }),
-            divider(),
-            SideDrawerTile(
-                title: "Legal",
-                imageName: 'assets/images/feedback.png',
-                showDetail: true,
-                onPressed: () {
-                  Navigator.pushNamed(context, '/legal');
-                }),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              SideDrawerTile(
+                  title: "Clear Data",
+                  imageName: 'assets/images/sync.png',
+                  onPressed: () {
+                    _confirmDelete(context);
+                  }),
+              divider(),
+              SideDrawerTile(
+                  title: "Help",
+                  imageName: 'assets/images/help.png',
+                  showDetail: true,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/help/overview');
+                  }),
 
-            Spacer(),
-            SafeArea(
-              child: Column(
-                children: <Widget>[
-                  divider(),
-                  SizedBox(height: 16),
-                  Text("Version: " + (_version ?? ""),
-                      style: AppText.noteStyle
-                          .copyWith(color: AppColors.neutral_4)),
-                  SizedBox(height: 32)
-                ],
-              ),
-            )
-          ],
+              divider(),
+              SideDrawerTile(
+                  title: "Privacy Policy",
+                  imageName: 'assets/images/help.png',
+                  showDetail: true,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/help/privacy');
+                  }),
+
+              divider(),
+              SideDrawerTile(
+                  title: "Open Source Licenses",
+                  imageName: 'assets/images/help.png',
+                  showDetail: true,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/help/open_source');
+                  }),
+
+            ],
+          ),
+        ),
+
+        // Version info at the bottom
+        SafeArea(
+          child: Column(
+            children: <Widget>[
+              divider(),
+              SizedBox(height: 16),
+              Text("Version: " + (_version ?? ""),
+                  style: AppText.noteStyle
+                      .copyWith(color: AppColors.neutral_4)),
+            ],
+          ),
         )
       ],
     );
@@ -154,7 +137,7 @@ class SideDrawerTile extends StatelessWidget {
 
   const SideDrawerTile({
     @required this.title,
-    @required this.imageName,
+    this.imageName,
     @required this.onPressed,
     this.showDetail = false,
   }) : super();
@@ -162,14 +145,14 @@ class SideDrawerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-        contentPadding: EdgeInsets.only(left: 20, right: 20),
-        leading: Image(
+        contentPadding: EdgeInsets.only(left: 18, right: 18),
+        leading: imageName != null ? Image(
             height: 32,
             width: 32,
             fit: BoxFit.fill,
             alignment: Alignment.center,
             color: Colors.white,
-            image: AssetImage(imageName)),
+            image: AssetImage(imageName)) : null,
         trailing: showDetail
             ? Icon(Icons.chevron_right, color: AppColors.white)
             : null,

@@ -65,6 +65,7 @@ class ConnectButtonState extends State<ConnectButton>
       return false;
     }
     switch (connectionState) {
+      case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
         return false;

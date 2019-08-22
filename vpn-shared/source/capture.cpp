@@ -208,7 +208,7 @@ class Logger :
                 return;
             }
         }
-        flow_to_protocol_chain_.emplace(five, protocol_chain);
+        flow_to_protocol_chain_[five] = protocol_chain;
         update_protocol_(protocol, flow_row->second);
     }
 };

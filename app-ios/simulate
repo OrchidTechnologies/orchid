@@ -1,4 +1,31 @@
 #!/bin/bash
 set -e
+
+# Build 
 make target=sim app "$@"
+
+# Install
 xcrun simctl install booted out-sim/Payload/Orchid.app
+
+# Start log and attach 
+cd $(dirname "$0")
+session="tmux$$"
+tmux new-session -d -s $session
+tmux set status-bg default
+tmux split-window -v
+tmux select-pane -t 0
+tmux send-keys "flutter/bin/flutter logs" C-m
+tmux select-pane -t 1
+tmux send-keys "flutter/bin/flutter attach" C-m
+
+# Give flutter attach time to start.
+echo "Waiting 10s for attach..."
+sleep 10
+
+# launch
+name=$(grep '^name' ../identity.mk | sed 's/^.*:=[ ]*\([^ ]\{1,\}\).*/\1/')
+domain=$(grep '^domain' ../identity.mk | sed 's/^.*:=[ ]*\([^ ]\{1,\}\).*/\1/')
+app="${domain}.${name}"
+xcrun simctl launch booted "$app"
+
+tmux attach-session -t $session

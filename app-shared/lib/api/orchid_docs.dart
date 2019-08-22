@@ -8,4 +8,7 @@ class OrchidDocs {
   static Future<String> privacyPolicy() async {
     return await rootBundle.loadString('assets/docs/privacy.txt');
   }
+  static Future<String> helpOverview() async {
+    return await rootBundle.loadString('assets/docs/help.txt');
+  }
 }

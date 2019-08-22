@@ -24,7 +24,7 @@ class RealOrchidAPI implements OrchidAPI {
         case 'connectionStatus':
           switch (call.arguments) {
             case 'Invalid':
-              connectionStatus.add(OrchidConnectionState.NotConnected);
+              connectionStatus.add(OrchidConnectionState.Invalid);
               break;
             case 'Disconnected':
               connectionStatus.add(OrchidConnectionState.NotConnected);
@@ -63,7 +63,7 @@ class RealOrchidAPI implements OrchidAPI {
 
   final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
       NetworkConnectivityType.Unknown);
-  final connectionStatus = BehaviorSubject<OrchidConnectionState>();
+  final connectionStatus = BehaviorSubject<OrchidConnectionState>.seeded(OrchidConnectionState.Invalid);
   final syncStatus = BehaviorSubject<OrchidSyncStatus>();
   final routeStatus = BehaviorSubject<OrchidRoute>();
   final vpnPermissionStatus = BehaviorSubject<bool>();
