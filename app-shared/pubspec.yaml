@@ -30,6 +30,7 @@ dependencies:
   http: ^0.12.0+2
   sqflite: ^1.1.6
   intl: ^0.15.8
+  flutter_html: ^0.10.4  # We may want to replace this with webview_flutter when it's ready.
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,6 @@ class OrchidDocs {
     return await rootBundle.loadString('assets/docs/privacy.txt');
   }
   static Future<String> helpOverview() async {
-    return await rootBundle.loadString('assets/docs/help.txt');
+    return await rootBundle.loadString('assets/docs/help_overview.html');
   }
 }

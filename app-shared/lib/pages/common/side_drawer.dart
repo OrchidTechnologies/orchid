@@ -61,15 +61,14 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     _confirmDelete(context);
                   }),
-              /*divider(),
+              divider(),
               SideDrawerTile(
                   title: "Help",
                   imageName: 'assets/images/help.png',
                   showDetail: true,
                   onPressed: () {
                     Navigator.pushNamed(context, '/help/overview');
-                  }),*/
-
+                  }),
               divider(),
               SideDrawerTile(
                   title: "Privacy Policy",

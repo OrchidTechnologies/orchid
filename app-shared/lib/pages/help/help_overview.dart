@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_docs.dart';
 import 'package:orchid/pages/common/plain_text_box.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:html/dom.dart' as dom;
 
 class HelpOverviewPage extends StatefulWidget {
   @override
@@ -31,16 +33,40 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
 
   Widget buildPage(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            SizedBox(height: 24),
-            PlainTextBox(text: _helpText),
-          ],
+      child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[html(_helpText)],
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  // flutter_hmtl supports a subset of html: https://pub.dev/packages/flutter_html
+  Widget html(String html) {
+    return Html(
+      data: html,
+      defaultTextStyle: TextStyle(fontSize: 16.0),
+      linkStyle: const TextStyle(
+        color: Colors.purple,
+      ),
+      onLinkTap: (url) {},
+      onImageTap: (src) {},
+      // This is our css :)
+      customTextStyle: (dom.Node node, TextStyle baseStyle) {
+        if (node is dom.Element) {
+          switch (node.localName) {
+            case "h2":
+              return baseStyle.merge(TextStyle(fontSize: 20));
+          }
+        }
+        return baseStyle;
+      },
     );
   }
 }
