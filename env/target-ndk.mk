@@ -28,12 +28,11 @@ $(error install Android NDK and export ANDROID_NDK_HOME)
 endif
 
 ifeq ($(ANDROID_NDK_HOME),)
-environ += ANDROID_NDK_HOME=$(ndk)
+export ANDROID_NDK_HOME := $(ndk)
 endif
 
 llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64
-
-environ += PATH='$(llvm)/bin:$(PATH)'
+export PATH := $(llvm)/bin:$(PATH)
 
 ifeq ($(arch),armv7a)
 asuf := eabi

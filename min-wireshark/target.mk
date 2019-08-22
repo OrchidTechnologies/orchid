@@ -165,7 +165,7 @@ source += $(output)/$(pwd)/wireshark/wiretap/candump_parser.c
 
 # XXX: this is currently shared by libiconv and libgpg-error; it might be sharable by more stuff
 $(output)/usr/include/%.h $(output)/usr/lib/lib%.a: $(output)/$(pwd)/lib%/Makefile $(sysroot)
-	$(environ) $(MAKE) -C $(dir $<) install
+	$(MAKE) -C $(dir $<) install
 
 # libgcrypt {{{
 w_libgcrypt := 
@@ -189,7 +189,7 @@ $(output)/$(pwd)/libgcrypt/Makefile: $(output)/usr/lib/libgpg-error.a
 
 # XXX: one of the test cases uses system() (not allowed on iOS) and there is no --disable-tests
 $(output)/$(pwd)/%/src/gcrypt.h $(output)/$(pwd)/%/src/.libs/libgcrypt.a: $(output)/$(pwd)/%/Makefile
-	for sub in compat mpi cipher random src; do $(environ) $(MAKE) -C $(dir $<)/$${sub}; done
+	for sub in compat mpi cipher random src; do $(MAKE) -C $(dir $<)/$${sub}; done
 
 cflags += -I$(output)/$(pwd)/libgcrypt/src
 linked += $(output)/$(pwd)/libgcrypt/src/.libs/libgcrypt.a

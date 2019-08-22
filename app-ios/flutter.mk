@@ -49,12 +49,12 @@ $(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/te
 signed += $(bundle)/Frameworks/App.framework$(signature)
 $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App .flutter-plugins
 	@rm -rf $(dir $@)
-	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
+	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
 
 $(bundle)/Frameworks/Flutter.framework/Flutter: $(engine)/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
-	$(environ) lipo $(patsubst %,-extract %,$(arch)) $< -output $@
+	lipo $(patsubst %,-extract %,$(arch)) $< -output $@
 	@touch $@
 
 $(bundle)/Frameworks/Flutter.framework/%: $(engine)/Flutter.framework/%
@@ -66,7 +66,7 @@ signed += $(assets)/AssetManifest.json
 $(assets)/AssetManifest%json %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m: flutter/packages/flutter/pubspec%lock pubspec%lock $(dart)
 	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
-	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
+	flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
 	    --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)" --output-dill="$(output)/build.dill" \
 	    --target-platform=ios --$(mode) $(precompiled)
 
@@ -79,5 +79,5 @@ $(patsubst %,$(engine)/Flutter.framework/%,$(flutter)): .flutter-plugins
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
 $(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-$(target)-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))
 	@rm -rf $(dir $@)
-	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
+	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
 	@touch $@

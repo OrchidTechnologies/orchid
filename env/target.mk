@@ -34,9 +34,7 @@ linked :=
 header := 
 sysroot := 
 
-environ := 
 output := out-$(target)
-
 cleans := 
 
 qflags += -gfull -Os

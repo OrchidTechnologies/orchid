@@ -20,8 +20,8 @@
 
 flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml ../.git/modules/flutter/HEAD
 	cd flutter && git clean -fxd
-	cd flutter && $(environ) bin/flutter precache
-	cd flutter && $(environ) bin/flutter update-packages
+	cd flutter && bin/flutter precache
+	cd flutter && bin/flutter update-packages
 
 ifeq ($(filter noaot,$(debug)),)
 mode := release

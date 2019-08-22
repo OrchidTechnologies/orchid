@@ -94,7 +94,7 @@ tor := $(patsubst %,$(output)/$(pwd)/tor/src/%,$(tor))
 $(output)/$(pwd)/tor/Makefile: $(deps) $(sysroot)
 
 $(subst /tor/,/%/,$(tor)): $(output)/$(pwd)/%/Makefile $(deps) $(sysroot) $(shell find $(pwd)/tor -name '*.c')
-	$(environ) $(MAKE) -C $(dir $<) src/app/tor$(exe) src/core/libtor-app.a
+	$(MAKE) -C $(dir $<) src/app/tor$(exe) src/core/libtor-app.a
 
 cflags += -I$(pwd)/tor/src
 linked += $(tor)

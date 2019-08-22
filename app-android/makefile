@@ -57,7 +57,7 @@ endif
 $(assets)/AssetManifest%json %flutter-plugins src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java: flutter/packages/flutter/pubspec%lock pubspec%lock $(dart)
 	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
-	$(environ) flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
+	flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
 	    --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)" --output-dill="$(output)/build.dill" \
 	    --target-platform=android-arm --$(mode) $(precompiled)
 

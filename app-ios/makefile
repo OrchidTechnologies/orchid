@@ -110,7 +110,7 @@ signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
-	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
+	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
 	@touch $@
 
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.appex/GeoLite2-City.mmdb
@@ -140,14 +140,14 @@ $(bundle)/Info.plist: info-main.plist.in
 
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
-	$(environ) ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $< 2>&1 | cat
+	ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $< 2>&1 | cat
 
 
 signed += $(bundle)/Assets.car
 $(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
 	@mkdir -p $(output)/info
 	# XXX: --launch-image LaunchImage
-	$(environ) actool --output-format human-readable-text --notices --warnings \
+	actool --output-format human-readable-text --notices --warnings \
 	    --app-icon AppIcon \
 	    --compress-pngs --enable-on-demand-resources YES \
 	    --platform iphoneos --minimum-deployment-target 11.0 \
@@ -165,7 +165,7 @@ $(bundle)/%: resource/%
 $(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
-	$(environ) codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
+	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
 	@touch $@
 
 ifeq ($(filter nocompress,$(debug)),)

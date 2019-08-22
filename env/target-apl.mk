@@ -21,22 +21,22 @@ lflags += -Wl,-no_dead_strip_inits_and_terms
 signature := /_CodeSignature/CodeResources
 
 more += $(patsubst %,-arch %,$(arch))
-more += -isysroot $(shell $(environ) xcodebuild -sdk $(sdk) -version Path)
+more += -isysroot $(shell xcodebuild -sdk $(sdk) -version Path)
 
 ifneq ($(sdk),macosx)
-more += -idirafter $(shell $(environ) xcodebuild -sdk macosx -version Path)/usr/include
+more += -idirafter $(shell xcodebuild -sdk macosx -version Path)/usr/include
 endif
 
-clang := $(shell $(environ) xcrun -f clang)
+clang := $(shell xcrun -f clang)
 cyco := $(clang) $(more)
 
 ifeq ($(filter iosndk,$(debug)),)
 debug += notidy
 cycc := $(clang) $(more)
-cycp := $(shell $(environ) xcrun -f clang++) $(more)
+cycp := $(shell xcrun -f clang++) $(more)
 else
 include $(pwd)/target-ndk.mk
-resource := $(shell $(environ) xcrun clang -print-resource-dir)
+resource := $(shell xcrun clang -print-resource-dir)
 more += -target $(host)18.5.0
 more += -B$(dir $(clang))
 more += -Xclang -resource-dir -Xclang $(resource)

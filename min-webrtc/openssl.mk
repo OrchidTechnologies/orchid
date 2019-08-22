@@ -15,7 +15,7 @@ $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: pwd := $(pwd)
 $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(sysroot)
 	rm -rf $(output)/openssl
 	mkdir -p $(output)/openssl
-	cd $(output)/openssl && $(environ) $(CURDIR)/$(pwd)/openssl/Configure $(ossl) \
+	cd $(output)/openssl && $(CURDIR)/$(pwd)/openssl/Configure $(ossl) \
 	    no-dso \
 	    no-engine \
 	    no-shared \
@@ -24,10 +24,10 @@ $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configu
 	    no-unit-test \
 	    no-weak-ssl-ciphers \
 	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)"
-	$(environ) $(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
+	$(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
 
 $(output)/%/libssl.a $(output)/%/libcrypto.a: $(output)/%/Makefile $(sysroot)
-	$(environ) $(MAKE) -C $(output)/openssl build_libs
+	$(MAKE) -C $(output)/openssl build_libs
 
 cflags += -I$(pwd)/openssl/include
 cflags += -I$(output)/openssl/include

@@ -162,7 +162,7 @@ export PATH := $(CURDIR)/env/path:$(PATH)
 $(output)/%/Makefile: %/configure $(sysroot)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	cd $(dir $@) && $(environ) $(CURDIR)/$< --host=$(host) --prefix=$(CURDIR)/$(output)/usr \
+	cd $(dir $@) && $(CURDIR)/$< --host=$(host) --prefix=$(CURDIR)/$(output)/usr \
 	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
 	    CPPFLAGS="$(p_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))" \
 	    LDFLAGS="$(wflags) $(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))" \
