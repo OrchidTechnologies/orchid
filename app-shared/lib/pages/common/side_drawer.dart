@@ -50,7 +50,6 @@ class _SideDrawerState extends State<SideDrawer> {
         DrawerHeader(
           child: Image(image: AssetImage('assets/images/logo.png')),
         ),
-        divider(),
 
         Expanded(
           child: ListView(

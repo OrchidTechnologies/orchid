@@ -37,10 +37,6 @@ class _PrivacyPageState extends State<PrivacyPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             SizedBox(height: 24),
-            Text(
-              title,
-              textAlign: TextAlign.left,
-            ),
             PlainTextBox(text: _privacyText),
           ],
         ),
