@@ -503,6 +503,8 @@ class Selector final :
     {
     }
 
+    // XXX: the r20 clang-tidy doesn't seem to do this correctly
+    // NOLINTNEXTLINE (performance-unnecessary-value-param)
     Selector(const std::string &name, uint256_t gas = 90000) :
         Selector([&]() {
             std::ostringstream signature;

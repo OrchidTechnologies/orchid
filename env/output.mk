@@ -58,7 +58,8 @@ checks += google-build-namespaces
 checks += misc-definitions-in-headers
 checks += misc-noexcept-moveconstructor
 checks += misc-non-copyable-objects
-checks += misc-non-private-member-variables-in-classes
+# XXX: the r20 clang-tidy doesn't seem to do this correctly
+#checks += misc-non-private-member-variables-in-classes
 checks += misc-static-assert
 checks += misc-throw-by-value-catch-by-reference
 checks += misc-unconventional-assign-operator
