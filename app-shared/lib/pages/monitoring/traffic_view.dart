@@ -4,8 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+
 import '../app_colors.dart';
 import '../app_text.dart';
+import 'traffic_view_detail.dart';
+
 
 class TrafficView extends StatefulWidget {
   @override
@@ -25,7 +28,7 @@ class _TrafficViewState extends State<TrafficView> {
     // Update on search text
     _searchTextController.addListener(() {
       _query =
-          _searchTextController.text.isEmpty ? "" : _searchTextController.text;
+      _searchTextController.text.isEmpty ? "" : _searchTextController.text;
       _performQuery();
     });
 
@@ -37,23 +40,23 @@ class _TrafficViewState extends State<TrafficView> {
     // Update first view
     _performQuery();
 
-    AnalysisDb().update.listen((_) {
-      _performQuery();
-    });
+//    AnalysisDb().update.listen((_) { _performQuery(); });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        Visibility(visible: _showEmptyView(), child: _TrafficEmptyView()),
-        Visibility(
-          visible: !_showEmptyView(),
-          child: Column(
-            children: <Widget>[_buildSearchView(), _buildResultListView()],
-          ),
-        )
-      ],
+    return SafeArea(
+      child: Stack(
+        children: <Widget>[
+          Visibility(visible: _showEmptyView(), child: _TrafficEmptyView()),
+          Visibility(
+            visible: !_showEmptyView(),
+            child: Column(
+              children: <Widget>[_buildSearchView(), _buildResultListView()],
+            ),
+          )
+        ],
+      ),
     );
   }
 
@@ -65,7 +68,7 @@ class _TrafficViewState extends State<TrafficView> {
 
   Widget _buildSearchView() {
     return Container(
-      padding: EdgeInsets.only(left: 8.0),
+      padding: EdgeInsets.only(left: 8.0, bottom: 12.0),
       //decoration: BoxDecoration(border: Border.all(width: 1.0)),
       child: TextFormField(
         autocorrect: false,
@@ -76,11 +79,11 @@ class _TrafficViewState extends State<TrafficView> {
           suffixIcon: _searchTextController.text.isEmpty
               ? null
               : IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () {
-                    _searchTextController.clear();
-                    FocusScope.of(context).requestFocus(FocusNode());
-                  }),
+              icon: Icon(Icons.clear),
+              onPressed: () {
+                _searchTextController.clear();
+                FocusScope.of(context).requestFocus(FocusNode());
+              }),
         ),
         textAlign: TextAlign.left,
       ),
@@ -104,86 +107,58 @@ class _TrafficViewState extends State<TrafficView> {
         onRefresh: () {
           return _performQuery();
         },
-        child: ListView.builder(
+        child: ListView.separated(
+            separatorBuilder: (BuildContext context, int index) => Divider(),
             key: PageStorageKey('traffic list view'),
             primary: true,
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
-              var item = _resultList[index];
+              FlowEntry item = _resultList[index];
               var hostname = (item.hostname == null || item.hostname.isEmpty)
                   ? item.dst_addr
                   : item.hostname;
               var date = DateFormat("MM/dd/yyyy HH:mm:ss.SSS")
                   .format(item.start.toLocal());
-              var protStyle = AppText.logStyle.copyWith(fontSize: 12.0);
-              return Card(
-                  color: Colors.white,
-                  elevation: 1.0,
-                  // additional margin outside each card
-                  margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 4.0),
-                  child: Theme(
-                    data: ThemeData(accentColor: AppColors.purple_3),
-                    child: ExpansionTile(
-                      key: PageStorageKey<int>(item.rowId), // unique key
-
-                      //leading: Icon(
-                      //Icons.check_circle_outline,
-                      //color: AppColors.purple,
-                      //),
-
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              return Theme(
+                data: ThemeData(accentColor: AppColors.purple_3),
+                child: ListTile(
+                  key: PageStorageKey<int>(item.rowId), // unique key
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
                         children: <Widget>[
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                flex: 10,
-                                child: Text("$hostname",
-                                    // Note: I'd prefer ellipses but they brake soft wrap control.
-                                    // Note: (Watch for the case of "-" dashes in domain names.)
-                                    overflow: TextOverflow.fade,
-                                    softWrap: false,
-                                    style: AppText.textLabelStyle
-                                        .copyWith(fontWeight: FontWeight.bold)),
-                              ),
-                              Spacer(),
-                              Text("${item.protocol}",
-                                  style: AppText.textLabelStyle.copyWith(
-                                      fontSize: 14.0,
-                                      color: AppColors.neutral_3)),
-                              SizedBox(width: 8)
-                            ],
+                          Expanded(
+                            flex: 10,
+                            child: Text("$hostname",
+                                // Note: I'd prefer ellipses but they brake soft wrap control.
+                                // Note: (Watch for the case of "-" dashes in domain names.)
+                                overflow: TextOverflow.fade,
+                                softWrap: false,
+                                style: AppText.textLabelStyle
+                                    .copyWith(fontWeight: FontWeight.bold)),
                           ),
-                          SizedBox(height: 4),
-                          Text("$date",
-                              style: AppText.logStyle.copyWith(fontSize: 12.0)),
+                          Spacer(),
+                          Text("${item.protocol}",
+                              style: AppText.textLabelStyle.copyWith(
+                                  fontSize: 14.0, color: AppColors.neutral_3)),
+                          SizedBox(width: 8)
                         ],
                       ),
-                      children: <Widget>[
-                        ListTile(
-                          title: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: <Widget>[
-                                Text('Source Addr: ${item.src_addr}',
-                                    style: protStyle),
-                                SizedBox(height: 2),
-                                Text('Source Port : ${item.src_port}',
-                                    style: protStyle),
-                                SizedBox(height: 2),
-                                Text('Dest Addr: ${item.dst_addr}',
-                                    style: protStyle),
-                                SizedBox(height: 2),
-                                Text('Dest Port: ${item.dst_port}',
-                                    style: protStyle),
-                              ],
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ));
+                      SizedBox(height: 4),
+                      Text("$date",
+                          style: AppText.logStyle.copyWith(fontSize: 12.0)),
+                    ],
+                  ),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (BuildContext context) {
+                          return TrafficViewDetail(item);
+                        }));
+                  },
+                ),
+              );
             }),
       ),
     );
@@ -214,7 +189,7 @@ class _TrafficEmptyView extends StatelessWidget {
                         builder: (context, snapshot) {
                           print("connection status: ${snapshot.data}");
                           bool connected = snapshot.data ==
-                                  OrchidConnectionState.Connecting ||
+                              OrchidConnectionState.Connecting ||
                               snapshot.data == OrchidConnectionState.Connected;
                           return AnimatedSwitcher(
                             duration: Duration(milliseconds: 300),
@@ -250,3 +225,4 @@ class _TrafficEmptyView extends StatelessWidget {
     );
   }
 }
+
