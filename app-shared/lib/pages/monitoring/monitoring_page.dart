@@ -49,7 +49,6 @@ class _MonitoringPageState extends State<MonitoringPage> {
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
         child: Container(
-            margin: EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
             child: TrafficView()),
       ),
       drawer: SideDrawer(),

@@ -87,7 +87,6 @@ class _TrafficViewState extends State<TrafficView> {
   Widget _buildSearchView() {
     return Container(
       padding: EdgeInsets.only(left: 8.0, bottom: 12.0),
-      //decoration: BoxDecoration(border: Border.all(width: 1.0)),
       child: TextFormField(
         autocorrect: false,
         controller: _searchTextController,
@@ -126,10 +125,9 @@ class _TrafficViewState extends State<TrafficView> {
           return _performQuery();
         },
         child: ListView.separated(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
             physics: _scrollPhysics,
             separatorBuilder: (BuildContext context, int index) =>
-                Divider(height: 8, color: Colors.transparent),
+                Divider(height: 0),
             key: PageStorageKey('traffic list view'),
             primary: true,
             itemCount: _resultList?.length ?? 0,
@@ -145,7 +143,7 @@ class _TrafficViewState extends State<TrafficView> {
                 child: Container(
                   decoration: BoxDecoration(
                       color: TrafficView.colorForProtocol(item.protocol),
-                      borderRadius: BorderRadius.all(Radius.circular(8.0))),
+                  ),
                   child: ListTile(
                     key: PageStorageKey<int>(item.rowId), // unique key
                     title: Column(
