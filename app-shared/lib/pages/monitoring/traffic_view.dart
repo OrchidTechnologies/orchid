@@ -9,10 +9,26 @@ import '../app_colors.dart';
 import '../app_text.dart';
 import 'traffic_view_detail.dart';
 
-
 class TrafficView extends StatefulWidget {
   @override
   _TrafficViewState createState() => _TrafficViewState();
+
+  static Color colorForProtocol(String protocol) {
+    const opacity = 0.2;
+    if (protocol == null) {
+      return Colors.white;
+    }
+    if (protocol.contains("DNS")) {
+      return Colors.grey.withOpacity(opacity);
+    }
+    if (protocol.contains("TLS")) {
+      return Colors.lightGreen.withOpacity(opacity);
+    }
+    if (protocol.contains("HTTP")) {
+      return Colors.red.withOpacity(opacity);
+    }
+    return Colors.yellow.withOpacity(opacity);
+  }
 }
 
 class _TrafficViewState extends State<TrafficView> {
@@ -108,7 +124,9 @@ class _TrafficViewState extends State<TrafficView> {
           return _performQuery();
         },
         child: ListView.separated(
-            separatorBuilder: (BuildContext context, int index) => Divider(),
+            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            separatorBuilder: (BuildContext context, int index) =>
+                Divider(height: 8, color: Colors.transparent),
             key: PageStorageKey('traffic list view'),
             primary: true,
             itemCount: _resultList?.length ?? 0,
@@ -121,42 +139,48 @@ class _TrafficViewState extends State<TrafficView> {
                   .format(item.start.toLocal());
               return Theme(
                 data: ThemeData(accentColor: AppColors.purple_3),
-                child: ListTile(
-                  key: PageStorageKey<int>(item.rowId), // unique key
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            flex: 10,
-                            child: Text("$hostname",
-                                // Note: I'd prefer ellipses but they brake soft wrap control.
-                                // Note: (Watch for the case of "-" dashes in domain names.)
-                                overflow: TextOverflow.fade,
-                                softWrap: false,
-                                style: AppText.textLabelStyle
-                                    .copyWith(fontWeight: FontWeight.bold)),
-                          ),
-                          Spacer(),
-                          Text("${item.protocol}",
-                              style: AppText.textLabelStyle.copyWith(
-                                  fontSize: 14.0, color: AppColors.neutral_3)),
-                          SizedBox(width: 8)
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Text("$date",
-                          style: AppText.logStyle.copyWith(fontSize: 12.0)),
-                    ],
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: TrafficView.colorForProtocol(item.protocol),
+                      borderRadius: BorderRadius.all(Radius.circular(8.0))),
+                  child: ListTile(
+                    key: PageStorageKey<int>(item.rowId), // unique key
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              flex: 10,
+                              child: Text("$hostname",
+                                  // Note: I'd prefer ellipses but they brake soft wrap control.
+                                  // Note: (Watch for the case of "-" dashes in domain names.)
+                                  overflow: TextOverflow.fade,
+                                  softWrap: false,
+                                  style: AppText.textLabelStyle
+                                      .copyWith(fontWeight: FontWeight.bold)),
+                            ),
+                            Spacer(),
+                            Text("${item.protocol}",
+                                style: AppText.textLabelStyle.copyWith(
+                                    fontSize: 14.0,
+                                    color: AppColors.neutral_3)),
+                            SizedBox(width: 8)
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                        Text("$date",
+                            style: AppText.logStyle.copyWith(fontSize: 12.0)),
+                      ],
+                    ),
+                    trailing: Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (BuildContext context) {
+                            return TrafficViewDetail(item);
+                          }));
+                    },
                   ),
-                  trailing: Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (BuildContext context) {
-                          return TrafficViewDetail(item);
-                        }));
-                  },
                 ),
               );
             }),
@@ -169,6 +193,7 @@ class _TrafficViewState extends State<TrafficView> {
     super.dispose();
     _pollTimer.cancel();
   }
+
 }
 
 class _TrafficEmptyView extends StatelessWidget {
@@ -225,4 +250,3 @@ class _TrafficEmptyView extends StatelessWidget {
     );
   }
 }
-
