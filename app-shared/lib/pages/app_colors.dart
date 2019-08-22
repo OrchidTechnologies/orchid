@@ -19,12 +19,12 @@ class AppColors {
   static const purple_6 = const Color(0xffe8ddfd);
   static const purple_5 = const Color(0xffb88dfc);
   static const purple_4 = const Color(0xff8c61e1);
-  static const neutral_3 = const Color(0xff766d86);
   static const purple_3 = const Color(0xff5f45ba);
   static const purple_1 = const Color(0xff3b146a);
   static const purple_2 = const Color(0xff52319c);
   static const neutral_6 = const Color(0xffe7eaf4);
   static const neutral_5 = const Color(0xffd5d7e2);
+  static const neutral_3 = const Color(0xff766d86);
   static const neutral_4 = const Color(0xffa29ec0);
   static const neutral_2 = const Color(0xff504960);
   static const neutral_7 = const Color(0xfffbfbfe);

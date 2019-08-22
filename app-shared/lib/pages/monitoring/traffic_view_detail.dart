@@ -8,7 +8,7 @@ import '../app_colors.dart';
 import '../app_text.dart';
 
 class TrafficViewDetail extends StatefulWidget {
-  FlowEntry flow;
+  final FlowEntry flow;
 
   TrafficViewDetail(this.flow);
 

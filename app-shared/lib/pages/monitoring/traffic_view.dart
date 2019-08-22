@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/pages/common/orchid_scroll.dart';
 
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -36,6 +37,7 @@ class _TrafficViewState extends State<TrafficView> {
   String _query = "";
   List<FlowEntry> _resultList;
   Timer _pollTimer;
+  ScrollPhysics _scrollPhysics = OrchidScrollPhysics();
 
   @override
   void initState() {
@@ -44,7 +46,7 @@ class _TrafficViewState extends State<TrafficView> {
     // Update on search text
     _searchTextController.addListener(() {
       _query =
-      _searchTextController.text.isEmpty ? "" : _searchTextController.text;
+          _searchTextController.text.isEmpty ? "" : _searchTextController.text;
       _performQuery();
     });
 
@@ -95,11 +97,11 @@ class _TrafficViewState extends State<TrafficView> {
           suffixIcon: _searchTextController.text.isEmpty
               ? null
               : IconButton(
-              icon: Icon(Icons.clear),
-              onPressed: () {
-                _searchTextController.clear();
-                FocusScope.of(context).requestFocus(FocusNode());
-              }),
+                  icon: Icon(Icons.clear),
+                  onPressed: () {
+                    _searchTextController.clear();
+                    FocusScope.of(context).requestFocus(FocusNode());
+                  }),
         ),
         textAlign: TextAlign.left,
       ),
@@ -125,6 +127,7 @@ class _TrafficViewState extends State<TrafficView> {
         },
         child: ListView.separated(
             padding: EdgeInsets.symmetric(horizontal: 8.0),
+            physics: _scrollPhysics,
             separatorBuilder: (BuildContext context, int index) =>
                 Divider(height: 8, color: Colors.transparent),
             key: PageStorageKey('traffic list view'),
@@ -177,8 +180,8 @@ class _TrafficViewState extends State<TrafficView> {
                     onTap: () {
                       Navigator.push(context,
                           MaterialPageRoute(builder: (BuildContext context) {
-                            return TrafficViewDetail(item);
-                          }));
+                        return TrafficViewDetail(item);
+                      }));
                     },
                   ),
                 ),
@@ -193,12 +196,9 @@ class _TrafficViewState extends State<TrafficView> {
     super.dispose();
     _pollTimer.cancel();
   }
-
 }
 
 class _TrafficEmptyView extends StatelessWidget {
-  bool switchValue = false;
-
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(
@@ -214,7 +214,7 @@ class _TrafficEmptyView extends StatelessWidget {
                         builder: (context, snapshot) {
                           print("connection status: ${snapshot.data}");
                           bool connected = snapshot.data ==
-                              OrchidConnectionState.Connecting ||
+                                  OrchidConnectionState.Connecting ||
                               snapshot.data == OrchidConnectionState.Connected;
                           return AnimatedSwitcher(
                             duration: Duration(milliseconds: 300),
