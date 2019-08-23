@@ -5,7 +5,6 @@ import '../app_colors.dart';
 import '../app_text.dart';
 
 class TrafficEmptyView extends StatelessWidget {
-  bool switchValue = false;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +26,7 @@ class TrafficEmptyView extends StatelessWidget {
                           return AnimatedSwitcher(
                             duration: Duration(milliseconds: 300),
                             child: Column(
-                              key: ValueKey<String>("welcome:$connected"),
+                              key: ValueKey<String>("welcome:$connected:$orientation"),
                               children: <Widget>[
                                 Spacer(flex: 1),
                                 AppText.header(
