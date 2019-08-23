@@ -143,10 +143,11 @@ $(output)/%.o: %.cc $(header) $(sysroot)
 $(output)/%.o: %.cpp $(header) $(sysroot)
 	@mkdir -p $(dir $@)
 ifeq ($(filter notidy,$(debug)),)
-	@[[ ! $< =~ $(tidy) || $< == */monitor.cpp ]] || \
-	    echo [CT] $(target) $< && \
+	@if [[ $< =~ $(tidy) && ! $< == */monitor.cpp ]]; then \
+	    echo [CT] $(target) $<; \
 	    $(llvm)/bin/clang-tidy $< -quiet -warnings-as-errors='*' -header-filter='$(tidy)' -checks='$(checks)' -- \
-	        $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_)
+	        $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_); \
+	fi
 endif
 	@echo [CC] $(target) $<
 	@$(cycp) -std=c++2a -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
