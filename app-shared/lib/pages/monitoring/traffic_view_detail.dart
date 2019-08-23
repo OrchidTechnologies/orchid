@@ -56,8 +56,6 @@ class _TrafficViewDetailState extends State<TrafficViewDetail> {
               SizedBox(height: 8),
               Text("Time: $date", style: protStyle),
               SizedBox(height: 2),
-              Text('Source Addr: ${flow.src_addr}', style: protStyle),
-              SizedBox(height: 2),
               Text('Source Port : ${flow.src_port}', style: protStyle),
               SizedBox(height: 2),
               Text('Destination Addr: ${flow.dst_addr}', style: protStyle),
