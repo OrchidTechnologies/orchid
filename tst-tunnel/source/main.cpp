@@ -89,6 +89,8 @@ int Main(int argc, const char *const argv[]) {
     ctl_info info;
     memset(&info, 0, sizeof(info));
     orc_assert(strlcpy(info.ctl_name, UTUN_CONTROL_NAME, sizeof(info.ctl_name)) < sizeof(info.ctl_name));
+    // XXX: is there a way I can do this with boost, to avoid the vararg call?
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     orc_syscall(ioctl(file, CTLIOCGINFO, &info));
 
     struct sockaddr_ctl address;
