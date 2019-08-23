@@ -29,21 +29,18 @@ class TitledPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-          preferredSize: Size.fromHeight(79.0 - 20.0),
-          // Min space with no custom widgets
-          child: AppBar(
-              leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              ),
-              title: Text(this.title),
-              titleSpacing: 0,
-              backgroundColor: AppColors.purple,
-              elevation: 0.0)),
+      appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          ),
+          title: Text(this.title),
+          titleSpacing: 0,
+          backgroundColor: Colors.deepPurple,
+          elevation: 0.0),
       body: Container(
         child: child,
         decoration: BoxDecoration(
