@@ -43,7 +43,11 @@ more += -Xclang -resource-dir -Xclang $(resource)
 more += -fno-strict-return
 cycc := $(llvm)/bin/clang $(more)
 cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
+ifeq ($(target),mac)
+lflags += $(resource)/lib/darwin/libclang_rt.osx.a
+else
 lflags += $(resource)/lib/darwin/libclang_rt.$(target).a
+endif
 endif
 
 ranlib := ranlib
