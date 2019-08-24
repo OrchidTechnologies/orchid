@@ -66,7 +66,7 @@ class Capture :
     public Hole,
     public BufferDrain
 {
-  public:
+  private:
     uint32_t local_;
     U<Internal> internal_;
 
