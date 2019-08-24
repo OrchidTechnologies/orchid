@@ -21,25 +21,25 @@ p_tor :=
 l_tor := 
 deps := 
 
-p_tor += -I$(CURDIR)/$(output)/$(pwd)/libevent/include
+p_tor += -I@/$(pwd)/libevent/include
 p_tor += -I$(CURDIR)/$(pwd)/libevent/include
-deps += $(output)/$(pwd)/libevent/include/event2/event-config.h
-l_tor += -L$(CURDIR)/$(output)/$(pwd)/libevent/.libs
-deps += $(output)/$(pwd)/libevent/.libs/libevent_core.a
+deps += $(pwd)/libevent/include/event2/event-config.h
+l_tor += -L@/$(pwd)/libevent/.libs
+deps += $(pwd)/libevent/.libs/libevent_core.a
 w_tor += tor_cv_library_zlib_dir="(system)"
 
-p_tor += -I$(CURDIR)/$(output)/openssl/include
+p_tor += -I@/openssl/include
 p_tor += -I$(CURDIR)/$(pwd)/p2p/rtc/openssl/include
-deps += $(output)/openssl/include/openssl/opensslconf.h
-l_tor += -L$(CURDIR)/$(output)/openssl
-deps += $(output)/openssl/libssl.a
-deps += $(output)/openssl/libcrypto.a
+deps += openssl/include/openssl/opensslconf.h
+l_tor += -L@/openssl
+deps += openssl/libssl.a
+deps += openssl/libcrypto.a
 w_tor += tor_cv_library_openssl_dir="(system)"
 
-p_tor += -I$(CURDIR)/$(output)/zlib
+p_tor += -I@/zlib
 p_tor += -I$(CURDIR)/$(pwd)/zlib
-l_tor += -L$(CURDIR)/$(output)/zlib
-deps += $(output)/zlib/libz.a
+l_tor += -L@/zlib
+deps += zlib/libz.a
 w_tor += tor_cv_library_zlib_dir="(system)"
 
 ifeq ($(target),win)
@@ -89,12 +89,17 @@ tor += ext/ed25519/ref10/libed25519_ref10.a
 tor += ext/keccak-tiny/libkeccak-tiny.a
 tor += lib/libtor-dispatch.a
 tor += lib/libtor-container.a
-tor := $(patsubst %,$(output)/$(pwd)/tor/src/%,$(tor))
+tor := $(patsubst %,$(pwd)/tor/src/%,$(tor))
 
-$(output)/$(pwd)/tor/Makefile: $(deps) $(sysroot)
+define _
+$(output)/$(1)/$(pwd)/tor/Makefile: $(patsubst %,$(output)/$(1)/%,$(deps))
+endef
+$(each)
 
-$(subst /tor/,/%/,$(tor)): $(output)/$(pwd)/%/Makefile $(deps) $(sysroot) $(shell find $(pwd)/tor -name '*.c')
-	$(MAKE) -C $(dir $<) src/app/tor$(exe) src/core/libtor-app.a
+tor-c := $(shell find $(pwd)/tor -name '*.c')
+
+$(subst @,%,$(patsubst %,$(output)/@/%,$(tor))): $(output)/%/$(pwd)/tor/Makefile $(sysroot) $(tor-c)
+	$(MAKE) -C $(dir $<) --no-print-directory src/app/tor$(exe) src/core/libtor-app.a
 
 cflags += -I$(pwd)/tor/src
 linked += $(tor)

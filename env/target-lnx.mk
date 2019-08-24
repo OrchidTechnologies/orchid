@@ -13,32 +13,44 @@ dll := so
 lib := a
 exe := 
 
-msys := linux
+meson := linux
 
-arch := x86_64
-ossl := linux-x86_64
-
-host := $(arch)-linux-gnu
+archs += x86_64
+openssl/x86_64 := linux-x86_64
+host/x86_64 := x86_64-linux-gnu
+meson/x86_64 := x86_64
 
 include $(pwd)/target-gnu.mk
 
+lflags += -Wl,--icf=all
+lflags += -pthread
+qflags += -fPIC
+
 ifeq ($(uname),Linux)
 
-ranlib := ranlib
-ar := ar
-strip := strip
+define _
+ranlib/$(1) := ranlib
+ar/$(1) := ar
+strip/$(1) := strip
+endef
+$(each)
 
-cycc := clang$(suffix)
-cycp := clang++$(suffix) -stdlib=libc++
+cc := clang$(suffix)
+cxx := clang++$(suffix) -stdlib=libc++
 
 else
 
+define item
+more/$(1) := 
+more/$(1) += -B$(llvm)/$(1)-linux-android/bin
+more/$(1) += -target $(1)-pc-linux-gnu
+endef
+$(each)
+
+more := --sysroot $(CURDIR)/$(output)/sysroot
 include $(pwd)/target-ndk.mk
-
-more := -B $(llvm)/$(arch)-linux-android/bin -target $(arch)-pc-linux-gnu --sysroot $(CURDIR)/$(output)/sysroot
-
-cycc := $(llvm)/bin/clang $(more)
-cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++ -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
+cxx += -stdlib=libc++
+cxx += -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
 
 $(output)/sysroot:
 	env/sysroot.sh
@@ -47,6 +59,4 @@ sysroot += $(output)/sysroot
 
 endif
 
-lflags += -Wl,--icf=all
-lflags += -pthread
-qflags += -fPIC
+default := x86_64

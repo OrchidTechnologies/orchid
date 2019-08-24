@@ -34,14 +34,5 @@ endif
 llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64
 export PATH := $(llvm)/bin:$(PATH)
 
-ifeq ($(arch),armv7a)
-asuf := eabi
-apre := arm
-else
-asuf := 
-apre := $(arch)
-endif
-
-ranlib := $(llvm)/bin/$(apre)-linux-android$(asuf)-ranlib
-ar := $(llvm)/bin/$(apre)-linux-android$(asuf)-ar
-strip := $(llvm)/bin/$(apre)-linux-android$(asuf)-strip
+cc := $(llvm)/bin/clang $(more)
+cxx := $(llvm)/bin/clang++ $(more)

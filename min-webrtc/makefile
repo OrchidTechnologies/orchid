@@ -9,6 +9,8 @@
 # }}}
 
 
+$(error XXX: this hasn't been maintained in a long time)
+
 target := mac
 include env/target.mk
 

@@ -13,43 +13,53 @@ dll := dylib
 lib := a
 exe := 
 
-msys := darwin
+meson := darwin
 
 lflags += -Wl,-dead_strip
 lflags += -Wl,-no_dead_strip_inits_and_terms
 
 signature := /_CodeSignature/CodeResources
 
-more += $(patsubst %,-arch %,$(arch))
-more += -isysroot $(shell xcodebuild -sdk $(sdk) -version Path)
+more += -isysroot $(shell xcrun --sdk $(sdk) --show-sdk-path)
 
 ifneq ($(sdk),macosx)
-more += -idirafter $(shell xcodebuild -sdk macosx -version Path)/usr/include
+more += -idirafter $(shell xcrun --sdk macosx --show-sdk-path)/usr/include
 endif
 
+define _
+more/$(1) := -arch $(1)
+endef
+$(each)
+
 clang := $(shell xcrun -f clang)
-cyco := $(clang) $(more)
+
+objc := $(clang) $(more)
 
 ifeq ($(filter iosndk,$(debug)),)
 debug += notidy
-cycc := $(clang) $(more)
-cycp := $(shell xcrun -f clang++) $(more)
+cc := $(clang) $(more)
+cxx := $(shell xcrun -f clang++) $(more)
 else
-include $(pwd)/target-ndk.mk
-resource := $(shell xcrun clang -print-resource-dir)
-more += -target $(host)18.5.0
+
+define _
+more/$(1) += -target $(host/$(1))18.5.0
+endef
+$(each)
+
+resource := $(shell $(clang) -print-resource-dir)
+more += -resource-dir $(resource)
+lflags += $(resource)/lib/darwin/libclang_rt.$(runtime).a
+
 more += -B$(dir $(clang))
-more += -Xclang -resource-dir -Xclang $(resource)
 more += -fno-strict-return
-cycc := $(llvm)/bin/clang $(more)
-cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
-ifeq ($(target),mac)
-lflags += $(resource)/lib/darwin/libclang_rt.osx.a
-else
-lflags += $(resource)/lib/darwin/libclang_rt.$(target).a
-endif
+include $(pwd)/target-ndk.mk
+cxx += -stdlib=libc++
+
 endif
 
-ranlib := ranlib
-ar := ar
-strip := strip
+define _
+ranlib/$(1) := ranlib
+ar/$(1) := ar
+strip/$(1) := strip
+endef
+$(each)

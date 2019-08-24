@@ -18,8 +18,6 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-
 lflags += -framework NetworkExtension
 lflags += -framework SystemConfiguration
 
@@ -32,4 +30,4 @@ source += $(pwd)/tunnel.mm
 
 cflags_tunnel := -Wno-arc-retain-cycles
 
-include $(pwd)/shared/target.mk
+$(call include,shared/target.mk)

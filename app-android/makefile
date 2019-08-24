@@ -30,14 +30,14 @@ all: $(output)/Orchid.apk
 install: $(output)/Orchid.apk
 	adb install -r $<
 
-include vpn/target.mk
+$(call include,vpn/target.mk)
 
 include env/output.mk
 
-$(output)/jnilibs/$(alib)/liborchid.so: $(object) $(linked)
+$(output)/jnilibs/%/liborchid.so: $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) -shared $(wflags) -o $@ $^ $(lflags)
+	@$(cxx/$*) -shared $(wflags) -o $@ $^ $(lflags)
 	@ls -la $@
 
 assets := $(output)/assets/flutter_assets
@@ -45,24 +45,40 @@ assets := $(output)/assets/flutter_assets
 include shared/flutter.mk
 
 ifneq ($(precompiled),)
-$(output)/aot/app.so: $(dart)
+$(output)/%/aot/app.so: $(dart)
 	flutter/bin/flutter --suppress-analytics --verbose build aot -t lib/main.dart \
-	    --target-platform=android-arm --$(mode) --output-dir=$(output)/aot
+	    --target-platform=android-$(flutter/$*) --$(mode) --output-dir=$(dir $@)
 
-$(output)/jnilibs/$(alib)/libapp.so: $(output)/aot/app.so
+$(output)/jnilibs/%/libapp.so: $(output)/%/aot/app.so
 	@mkdir -p $(dir $@)
 	cp -f $< $@
 endif
 
-$(assets)/AssetManifest%json %flutter-plugins src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java: flutter/packages/flutter/pubspec%lock pubspec%lock $(dart)
+jni := armeabi-v7a arm64-v8a
+#jnis := $(subst $(space),$(comma),$(foreach arch,$(jni),android-$(flutter/$(arch))))
+
+$(assets)/AssetManifest%json %flutter-plugins src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java: flutter/packages/flutter/pubspec.lock pubspec.lock $(dart)
 	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
 	flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
 	    --depfile="$(output)/snapshot_blob.bin.d" --asset-dir="$(assets)" --output-dill="$(output)/build.dill" \
 	    --target-platform=android-arm --$(mode) $(precompiled)
 
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(output)/jnilibs/$(alib)/liborchid.so $(output)/jnilibs/$(alib)/libapp.so src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all
+define _
+$(output)/flutter.jar: flutter/bin/cache/artifacts/engine/android-$(flutter/$(1))-release/flutter.jar
+flutter/bin/cache/artifacts/engine/android-$(flutter/$(1))-release/flutter.jar: flutter/packages/flutter/pubspec.lock
+endef
+$(foreach arch,$(jni),$(eval $(call _,$(arch))))
+
+jni := $(foreach arch,$(jni),$(foreach jni,orchid flutter app,$(output)/jnilibs/$(arch)/lib$(jni).so))
+
+$(output)/jnilibs/%/libflutter.so: flutter/bin/cache/artifacts/engine/android-$$(flutter/$$*)-release/flutter.jar
+	@mkdir -p $(dir $@)
+	unzip -p $< lib/$*/libflutter.so >$@
+
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(jni) src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java $(assets)/AssetManifest.json $(output)/flutter.jar
+	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all \
+	    -PflutterJar=flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar
 	exit 0
 	touch $@
 

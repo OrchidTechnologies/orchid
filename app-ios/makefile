@@ -51,7 +51,7 @@ ifeq ($(target),sim)
 cflags += -Wno-deprecated-declarations
 lflags += -framework NetworkExtension
 else
-include vpn/target.mk
+$(call include,vpn/target.mk)
 endif
 
 cflags += -I.
@@ -62,11 +62,10 @@ frameworks += SafariServices
 frameworks += UIKit
 
 local := 
-local += $(output)/app.o
+local += app.mm.o
 
-local += $(output)/ios/Runner/GeneratedPluginRegistrant.o
-$(output)/ios/Runner/GeneratedPluginRegistrant.o: ios/Runner/GeneratedPluginRegistrant.m ios/Pods/Manifest.lock
-app.o: ios/Runner/GeneratedPluginRegistrant.m
+local += ios/Runner/GeneratedPluginRegistrant.m.o
+$(call depend,ios/Runner/GeneratedPluginRegistrant.m.o,ios/Pods/Manifest.lock)
 
 cflags += -Iios/Pods/Headers/Public
 
@@ -74,12 +73,15 @@ ios/Pods/Manifest.lock: ios/Podfile .flutter-plugins
 	cd ios && pod install
 
 $(output)/XCBuildData/build.db: ios/Pods/Manifest.lock
-	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(arch) -sdk $(sdk) SYMROOT=../../$(output)
+	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=../../$(output)
 
 
 include env/output.mk
 
--include $(output)/app.d
+define _
+-include $(patsubst $(output)/$(1)/%.o,%.d,$(local))
+endef
+$(each)
 
 
 replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if test -n "$(filter noaot,$(debug))"; then sed -e 's/^@D@/   /'; else sed -e '/^@D@/d'; fi | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
@@ -97,10 +99,10 @@ $(output)/ents-%.xml: ents-%.xml.in
 
 
 ifneq ($(target),sim)
-$(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(object) $(linked)
+$(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(patsubst %,$(output)/$(default)/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
+	@$(cxx/$(default)) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
 
 $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	@mkdir -p $(dir $@)
@@ -128,10 +130,10 @@ endif
 
 
 signed += $(bundle)/$(name)
-$(bundle)/$(name): $(local) $(output)/XCBuildData/build.db
+$(bundle)/$(name): $(patsubst %,$(output)/$(default)/%,$(local)) $(output)/XCBuildData/build.db
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) $(output)/Release-$(sdk)/libPods-Runner.a $(output)/Release-$(sdk)/*/lib*.a
+	@$(cxx/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) $(output)/Release-$(sdk)/libPods-Runner.a $(output)/Release-$(sdk)/*/lib*.a
 
 signed += $(bundle)/Info.plist
 $(bundle)/Info.plist: info-main.plist.in

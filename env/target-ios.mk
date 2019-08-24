@@ -9,18 +9,20 @@
 # }}}
 
 
+archs += armv7
+openssl/armv7 := ios-xcrun
+host/armv7 := arm-apple-darwin
+meson/armv7 := arm
+
+archs += arm64
+openssl/arm64 := ios64-xcrun
+host/arm64 := aarch64-apple-darwin
+meson/arm64 := aarch64
+
 sdk := iphoneos
-
-#arch := armv7
-#ossl := ios-xcrun
-#host := 
-
-arch := arm64
-ossl := ios64-xcrun
-host := aarch64-apple-darwin
-mfam := aarch64
-
+runtime := ios
 more := -miphoneos-version-min=11.0
-support := iPhoneOS
-
 include $(pwd)/target-apl.mk
+
+default := arm64
+support := iPhoneOS

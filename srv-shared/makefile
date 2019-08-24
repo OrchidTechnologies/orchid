@@ -26,15 +26,15 @@ args += --dh ../dh.pem
 args += --ovpn ../app-ios/resource/PureVPN.ovpn
 
 .PHONY: all
-all: $(output)/orchid$(exe)
+all: $(output)/$(default)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/orchid$(exe)
-	$(output)/orchid$(exe) $(args)
+test: $(output)/$(default)/orchid$(exe)
+	$< $(args)
 
 .PHONY: debug
-debug: $(output)/orchid$(exe)
-	lldb -o 'run $(args)' $(output)/orchid$(exe)
+debug: $(output)/$(default)/orchid$(exe)
+	lldb -o 'run $(args)' $<
 
 
 source += $(wildcard source/*.cpp)
@@ -42,7 +42,7 @@ cflags += -Isource
 
 source += $(wildcard p2p/boost/libs/program_options/src/*.cpp)
 
-include p2p/target.mk
+$(call include,p2p/target.mk)
 
 cflags += -Iextra
 cflags += -Ip2p/rtc/openssl/test/ossl_shim/include
@@ -51,8 +51,8 @@ cflags += -Ip2p/rtc/openssl/test/ossl_shim/include
 include env/output.mk
 
 
-$(output)/orchid$(exe): $(object) $(linked)
+$(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) $(wflags) -o $@ $^ $(lflags)
+	@$(cxx/$*) $(wflags) -o $@ $^ $(lflags)
 	@ls -la $@

@@ -2,15 +2,15 @@
 set -e
 exec 1>&2
 
-output=${1}
-curdir=${2}
-msys=${3}
-mfam=${4}
+arch=${1}
+output=${2}
+curdir=${3}
+meson=${4}
 ar=${5}
 strip=${6}
-cycc=${7}
-cycp=${8}
-cyco=${9}
+cc=${7}
+cxx=${8}
+objc=${9}
 qflags=${10}
 wflags=${11}
 shift 11
@@ -19,20 +19,22 @@ if [[ $# -ne 0 ]]; then
     exit 1
 fi
 
-cycc=(${cycc})
-cycp=(${cycp})
-cyco=(${cyco})
+meson=(${meson})
+
+cc=(${cc})
+cxx=(${cxx})
+objc=(${objc})
 
 qflags=(${qflags})
 wflags=(${wflags})
 
-mkdir -p "${output}"
+mkdir -p "${output}/${arch}"
 
 cflags=("${qflags[@]}")
-cflags+=(-I"${curdir}/${output}/usr/include")
+cflags+=(-I"${curdir}/${output}/${arch}/usr/include")
 
 lflags=("${wflags[@]}")
-lflags+=(-L"${curdir}/${output}/usr/lib")
+lflags+=(-L"${curdir}/${output}/${arch}/usr/lib")
 
 function args() {
     shift
@@ -47,32 +49,32 @@ function args() {
     done
 }
 
-cat >"${output}"/meson.new <<EOF
+cat >"${output}/${arch}"/meson.new <<EOF
 [host_machine]
-system = '${msys}'
-cpu_family = '${mfam}'
-cpu = '${mfam}'
+system = '${meson[0]}'
+cpu_family = '${meson[1]}'
+cpu = '${meson[1]}'
 endian = 'little'
 
 [properties]
-c_args = [$(args "${cycc[@]}" "${cflags[@]}")]
-cpp_args = [$(args "${cycp[@]}" "${cflags[@]}")]
-objc_args = [$(args "${cyco[@]}" "${cflags[@]}")]
-c_link_args = [$(args "${cycc[@]}" "${lflags[@]}")]
-cpp_link_args = [$(args "${cycp[@]}" "${lflags[@]}")]
-objc_link_args = [$(args "${cyco[@]}" "${lflags[@]}")]
+c_args = [$(args "${cc[@]}" "${cflags[@]}")]
+cpp_args = [$(args "${cxx[@]}" "${cflags[@]}")]
+objc_args = [$(args "${objc[@]}" "${cflags[@]}")]
+c_link_args = [$(args "${cc[@]}" "${lflags[@]}")]
+cpp_link_args = [$(args "${cxx[@]}" "${lflags[@]}")]
+objc_link_args = [$(args "${objc[@]}" "${lflags[@]}")]
 
 [binaries]
-c = '${cycc[0]}'
-cpp = '${cycp[0]}'
-objc = '${cyco[0]}'
+c = '${cc[0]}'
+cpp = '${cxx[0]}'
+objc = '${objc[0]}'
 ar = '${ar}'
 strip = '${strip}'
 pkgconfig = '${curdir}/env/pkg-config'
 EOF
 
-if diff "${output}"/meson.{new,txt} &>/dev/null; then
-    rm -f "${output}"/meson.new
+if diff "${output}/${arch}"/meson.{new,txt} &>/dev/null; then
+    rm -f "${output}/${arch}"/meson.new
 else
-    mv -f "${output}"/meson.{new,txt}
+    mv -f "${output}/${arch}"/meson.{new,txt}
 fi

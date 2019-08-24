@@ -16,11 +16,17 @@ w_libevent += --disable-samples
 
 m_libevent := sed -i -e 's/libext=lib/libext=a/' libtool
 
-$(output)/%/include/event2/event-config.h $(output)/%/.libs/libevent_core.a $(output)/%/.libs/libevent_extra.a: $(output)/%/Makefile $(sysroot)
+libevent := 
+libevent += libevent_core.a
+libevent += libevent_extra.a
+libevent := $(patsubst %,$(pwd)/libevent/.libs/%,$(libevent))
+
+$(output)/%/$(pwd)/libevent/include/event2/event-config.h \
+$(subst @,%,$(patsubst %,$(output)/@/%,$(libevent))) \
+: $(output)/%/$(pwd)/libevent/Makefile $(sysroot)
 	$(MAKE) -C $(dir $<)
 
 cflags += -I$(pwd)/libevent/include
-cflags += -I$(output)/$(pwd)/libevent/include
+cflags += -I@/$(pwd)/libevent/include
 
-linked += $(output)/$(pwd)/libevent/.libs/libevent_core.a
-linked += $(output)/$(pwd)/libevent/.libs/libevent_extra.a
+linked += $(libevent)

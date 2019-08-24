@@ -27,7 +27,7 @@ subprojects {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-def flutter = files('flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar')
+def flutter = files(flutterJar)
 
 android {
     compileSdkVersion 28

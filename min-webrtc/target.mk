@@ -9,8 +9,6 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-
 source += $(pwd)/stub.cc
 
 cflags += -I$(pwd)/extra

@@ -9,13 +9,12 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
+pwd/openssl := $(pwd)/openssl
 
-$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: pwd := $(pwd)
-$(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configure $(sysroot)
-	rm -rf $(output)/openssl
-	mkdir -p $(output)/openssl
-	cd $(output)/openssl && $(CURDIR)/$(pwd)/openssl/Configure $(ossl) \
+$(output)/%/openssl/Makefile $(output)/%/openssl/include/openssl/opensslconf.h: $(pwd/openssl)/Configure $(sysroot)
+	rm -rf $(output)/$*/openssl
+	mkdir -p $(output)/$*/openssl
+	cd $(output)/$*/openssl && $(CURDIR)/$(pwd/openssl)/Configure $(openssl/$*) \
 	    no-dso \
 	    no-engine \
 	    no-shared \
@@ -23,14 +22,14 @@ $(output)/%/Makefile $(output)/%/include/openssl/opensslconf.h: $(pwd)/%/Configu
 	    no-ui-console \
 	    no-unit-test \
 	    no-weak-ssl-ciphers \
-	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)"
-	$(MAKE) -C $(output)/openssl include/openssl/opensslconf.h
+	    CC="$(cc/$*)" CFLAGS="$(qflags)" RANLIB="$(ranlib/$*)" AR="$(ar/$*)"
+	$(MAKE) -C $(output)/$*/openssl include/openssl/opensslconf.h
 
-$(output)/%/libssl.a $(output)/%/libcrypto.a: $(output)/%/Makefile $(sysroot)
-	$(MAKE) -C $(output)/openssl build_libs
+$(output)/%/openssl/libssl.a $(output)/%/openssl/libcrypto.a: $(output)/%/openssl/Makefile $(sysroot)
+	$(MAKE) -C $(output)/$*/openssl build_libs
 
 cflags += -I$(pwd)/openssl/include
-cflags += -I$(output)/openssl/include
-linked += $(output)/openssl/libssl.a
-linked += $(output)/openssl/libcrypto.a
-header += $(output)/openssl/include/openssl/opensslconf.h
+cflags += -I@/openssl/include
+linked += openssl/libssl.a
+linked += openssl/libcrypto.a
+header += @/openssl/include/openssl/opensslconf.h

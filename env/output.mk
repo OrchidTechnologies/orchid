@@ -9,15 +9,6 @@
 # }}}
 
 
-object := $(source)
-object := $(patsubst %.c,$(output)/%.o,$(object))
-object := $(patsubst %.cc,$(output)/%.o,$(object))
-object := $(patsubst %.cpp,$(output)/%.o,$(object))
-object := $(patsubst %.m,$(output)/%.o,$(object))
-object := $(patsubst %.mm,$(output)/%.o,$(object))
-
-c_ = $(foreach dir,$(subst /, ,$*),$(c_$(dir))) $(cflags_$(basename $(notdir $<)))
-
 checks := 
 checks += bugprone-exception-escape
 checks += bugprone-forwarding-reference-overload
@@ -120,60 +111,75 @@ tidy := (^|/)($(subst $(space),|,$(patsubst %,%,($(strip $(tidy))))))$$
 printenv:
 	printenv
 
-$(output)/%.o: %.c $(header) $(sysroot)
-	@mkdir -p $(dir $@)
-	@echo [CC] $(target) $<
-	@$(cycc) -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
+object := $(foreach _,$(sort $(source)),$(_).o)
 
-$(output)/%.o: %.m $(header) $(sysroot)
-	@mkdir -p $(dir $@)
-	@echo [CC] $(target) $<
-	@$(cycc) -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
+code = $(patsubst %,$(output)/%,$(patsubst @/%,$(arch)/%,$(header))) $(sysroot)
 
-$(output)/%.o: %.mm $(header) $(sysroot)
-	@mkdir -p $(dir $@)
-	@echo [CC] $(target) $<
-	@$(cycp) -std=gnu++17 -fobjc-arc -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
+flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags)) \
+    $(foreach dir,$(subst /, ,$*),$(c_$(dir))) $(cflags_$(basename $(notdir $<)))
 
-$(output)/%.o: %.cc $(header) $(sysroot)
+$(output)/%.c.o: $$(specific) $$(folder).c $$(code)
+	$(specific)
 	@mkdir -p $(dir $@)
-	@echo [CC] $(target) $<
-	@$(cycp) -std=c++11 -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
+	@echo [CC] $(target)/$(arch) $<
+	@$(cc/$(arch)) -MD -c -o $@ $< $(flags)
 
-$(output)/%.o: %.cpp $(header) $(sysroot)
+$(output)/%.m.o: $$(specific) $$(folder).m $$(code)
+	$(specific)
+	@mkdir -p $(dir $@)
+	@echo [CC] $(target)/$(arch) $<
+	@$(cc/$(arch)) -fobjc-arc -MD -c -o $@ $< $(flags)
+
+$(output)/%.mm.o: $$(specific) $$(folder).mm $$(code)
+	$(specific)
+	@mkdir -p $(dir $@)
+	@echo [CC] $(target)/$(arch) $<
+	@$(cxx/$(arch)) -std=gnu++17 -fobjc-arc -MD -c -o $@ $< $(flags)
+
+$(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
+	$(specific)
+	@mkdir -p $(dir $@)
+	@echo [CC] $(target)/$(arch) $<
+	@$(cxx/$(arch)) -std=c++11 -MD -c -o $@ $< $(flags)
+
+$(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
+	$(specific)
 	@mkdir -p $(dir $@)
 ifeq ($(filter notidy,$(debug)),)
 	@if [[ $< =~ $(tidy) && ! $< == */monitor.cpp ]]; then \
-	    echo [CT] $(target) $<; \
+	    echo [CT] $(target)/$(arch) $<; \
 	    $(llvm)/bin/clang-tidy $< -quiet -warnings-as-errors='*' -header-filter='$(tidy)' -checks='$(checks)' -- \
-	        $(wordlist 2,$(words $(cycp)),$(cycp)) -std=c++2a -MD -c -o $@ $(qflags) $(cflags) $(c_); \
+	        $(wordlist 2,$(words $(cxx/$(arch))),$(cxx/$(arch))) -std=c++2a $(flags); \
 	fi
 endif
-	@echo [CC] $(target) $<
-	@$(cycp) -std=c++2a -MD -c -o $@ $< $(qflags) $(cflags) $(c_)
+	@echo [CC] $(target)/$(arch) $<
+	@$(cxx/$(arch)) -std=c++2a -MD -c -o $@ $< $(flags)
 
-$(shell env/meson.sh '$(output)' '$(CURDIR)' '$(msys)' '$(mfam)' '$(ar)' '$(strip)' '$(cycc)' '$(cycp)' '$(cyco)' '$(qflags)' '$(wflags)')
-
-export PATH := $(CURDIR)/env/path:$(PATH)
+define _
+$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)')
+endef
+$(each)
 
 %/configure: %/configure.ac
 	env/autogen.sh $(dir $@)
 	cd $(dir $@); $(a_$(subst -,_,$(notdir $(patsubst %/configure.ac,%,$<))))
 
-$(output)/%/Makefile: %/configure $(sysroot)
+$(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot)
+	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	cd $(dir $@) && $(CURDIR)/$< --host=$(host) --prefix=$(CURDIR)/$(output)/usr \
-	    CC="$(cycc)" CFLAGS="$(qflags)" RANLIB="$(ranlib)" AR="$(ar)" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
-	    CPPFLAGS="$(p_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))" \
-	    LDFLAGS="$(wflags) $(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))" \
-	    --enable-static --disable-shared $(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
+	cd $(dir $@) && $(CURDIR)/$< --host=$(host/$(arch)) --prefix=$(CURDIR)/$(output)/$(arch)/usr \
+	    CC="$(cc/$(arch))" CFLAGS="$(qflags)" RANLIB="$(ranlib/$(arch))" AR="$(ar/$(arch))" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
+	    CPPFLAGS="$(patsubst -I@/%,-I$(CURDIR)/$(output)/$(arch)/%,$(p_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
+	    LDFLAGS="$(wflags) $(patsubst -L@/%,-L$(CURDIR)/$(output)/$(arch)/%,$(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
+	    --enable-static --disable-shared $(subst =@/,=$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
 
-$(output)/%/build.ninja: %/meson.build $(output)/meson.txt
+$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt
+	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	cd $(dir $<) && meson --cross $(CURDIR)/$(output)/meson.txt $(CURDIR)/$(dir $@) \
+	cd $(dir $<) && meson --cross $(CURDIR)/$(output)/$(arch)/meson.txt $(CURDIR)/$(dir $@) \
 	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 
@@ -181,4 +187,16 @@ $(output)/%/build.ninja: %/meson.build $(output)/meson.txt
 clean:
 	git clean -fXd
 
--include $(patsubst %.o,%.d,$(sort $(object)))
+define _
+-include $(patsubst $(output)/$(1)/%.o,%.d,$(object))
+endef
+$(each)
+
+define _
+$(output)/%/$(1).a: $(patsubst %,$(output)/$$(percent)/%,$(filter $(1)/%,$(object)))
+	@rm -f $$@
+	@echo [AR] $$@
+	@$$(ar/$$*) -rs $$@ $$^
+object := $(filter-out $(1)/%.o,$(object)) $(1).a
+endef
+$(foreach archive,$(archive),$(eval $(call _,$(archive))))

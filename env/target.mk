@@ -9,52 +9,6 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-include $(pwd)/common.mk
-
-.PHONY:
-all:
-
-uname := $(shell uname -s)
--include $(pwd)/uname-$(uname).mk
-
-version := $(shell $(pwd)/version.sh)
-monotonic := $(word 1,$(version))
-revision := $(word 2,$(version))
-package := $(word 3,$(version))
-version := $(word 4,$(version))
-
-cflags := 
-qflags := 
-lflags := 
-wflags := 
-
-source := 
-linked := 
-header := 
-sysroot := 
-
-output := out-$(target)
-cleans := 
-
-qflags += -gfull -Os
-
-cflags += -Wall
-cflags += -Werror
-
-cflags += -fmessage-length=0
-cflags += -ferror-limit=0
-cflags += -ftemplate-backtrace-limit=0
-
-beta := false
-
-include ../default.mk
--include ../identity.mk
-
-cflags += -I$(output)/usr/include
-
-ifeq ($(filter nostrip,$(debug)),)
-lflags += -Wl,-s
-endif
-
-include $(pwd)/target-$(target).mk
+env := ./$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+include $(env)common.mk
+$(call include,env/target-any.mk)

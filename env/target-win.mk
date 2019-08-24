@@ -15,41 +15,48 @@ exe := .exe
 
 msys := windows
 
-#arch := i686
-#ossl := mingw
-#mfam := x86
+archs += i686
+openssl/i686 := mingw
+host/i686 := i686-w64-mingw32
+meson/i686 := x86
+bits/i686 := 32
 
-arch := x86_64
-ossl := mingw64
-mfam := x86_64
+archs += x86_64
+openssl/x86_64 := mingw64
+host/x86_64 := x86_64-w64-mingw32
+meson/x86_64 := x86_64
+bits/x86_64 := 64
 
-host := $(arch)-w64-mingw32
-
-include $(pwd)/target-ndk.mk
 include $(pwd)/target-gnu.mk
 
-more := 
-more += -target $(arch)-pc-windows-gnu 
-more += --sysroot $(CURDIR)/$(output)/mingw64
-more += -D_WIN32_WINNT=0x0600
+define _
+more/$(1) := -target $(1)-pc-windows-gnu 
+more/$(1) += --sysroot $(CURDIR)/$(output)/$(1)/mingw$(bits/$(1))
+temp := $(shell which $(1)-w64-mingw32-ld)
+ifeq ($$(temp),)
+$$(error $(1)-w64-mingw32-ld must be on your path)
+endif
+more/$(1) += -B$$(dir $$(temp))$(1)-w64-mingw32-
+endef
+$(each)
 
-cycc := $(llvm)/bin/clang $(more)
-cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
+more := -D_WIN32_WINNT=0x0600
+include $(pwd)/target-ndk.mk
+cxx += -stdlib=libc++
 
-ranlib := $(arch)-w64-mingw32-ranlib
-ar := $(arch)-w64-mingw32-ar
-strip := $(arch)-w64-mingw32-ar
+define _
+ranlib/$(1) := $(1)-w64-mingw32-ranlib
+ar/$(1) := $(1)-w64-mingw32-ar
+strip/$(1) := $(1)-w64-mingw32-ar
+endef
+$(each)
 
 lflags += -static
 lflags += -lc++
 lflags += -lc++abi
 lflags += -pthread
 
-temp := $(shell which $(arch)-w64-mingw32-ld)
-ifeq ($(temp),)
-$(error $(arch)-w64-mingw32-ld must be on your path)
-endif
-wflags += -fuse-ld=ld -B$(dir $(temp))$(arch)-w64-mingw32-
+wflags += -fuse-ld=ld
 
 cflags += -DNOMINMAX
 cflags += -DWIN32_LEAN_AND_MEAN=
@@ -70,9 +77,14 @@ msys2 += libc++-8.0.0-8
 msys2 += libc++abi-8.0.0-8
 msys2 += winpthreads-git-7.0.0.5325.11a5459d-1
 
-$(output)/%.msys2:
-	@mkdir -p $(dir $@)
-	@curl http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-$*-any.pkg.tar.xz | tar -C $(output) -Jxvf-
+define _
+$(output)/$(1)/%.msys2:
+	@mkdir -p $$(dir $$@)
+	@curl http://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$*-any.pkg.tar.xz | tar -C $(output) -Jxvf-
 	@touch $@
 
-sysroot += $(patsubst %,$(output)/%.msys2,$(msys2))
+sysroot += $(patsubst %,$(output)/$(1)/%.msys2,$(msys2))
+endef
+$(each)
+
+default := x86_64

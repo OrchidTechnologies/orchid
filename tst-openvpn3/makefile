@@ -25,15 +25,15 @@ version := 0.9
 args := ../app-ios/resource/PureVPN.ovpn -x -u "$(username)" -p "$(password)"
 
 .PHONY: all
-all: $(output)/orchid
+all: $(output)/$(default)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/orchid$(exe)
-	sudo $(output)/orchid$(exe) $(args)
+test: $(output)/$(default)/orchid$(exe)
+	sudo $< $(args)
 
 .PHONY: debug
-debug: $(output)/orchid$(exe)
-	sudo lldb -o 'run $(args)' $(output)/orchid$(exe)
+debug: $(output)/$(default)/orchid$(exe)
+	sudo lldb -o 'run $(args)' $<
 
 source += $(wildcard vpn/lz4/lib/*.c)
 cflags += -Ivpn/lz4/lib
@@ -57,8 +57,8 @@ endif
 
 cflags += -Ivpn/p2p/source
 
-include vpn/p2p/asio.mk
-include vpn/p2p/rtc/openssl.mk
+$(call include,vpn/p2p/asio.mk)
+$(call include,vpn/p2p/rtc/openssl.mk)
 
 source += vpn/openvpn3/test/ovpncli/cli.cpp
 source += vpn/p2p/source/log.cpp
@@ -70,7 +70,7 @@ lflags += -framework SystemConfiguration
 
 include env/output.mk
 
-$(output)/orchid: $(object) $(linked)
+$(output)/%/orchid: $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@echo [LD] $@
-	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
+	@set -o pipefail; $(cxx/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
 	@ls -la $(output)/orchid

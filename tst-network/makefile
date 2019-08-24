@@ -26,17 +26,17 @@ version := 0.9
 args := 127.0.0.1 9999
 
 .PHONY: all
-all: $(output)/orchid$(exe)
+all: $(output)/$(default)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/orchid$(exe)
-	$(output)/orchid$(exe) $(args)
+test: $(output)/$(default)/orchid$(exe)
+	$< $(args)
 
 .PHONY: debug
-debug: $(output)/orchid$(exe)
-	lldb -o 'run $(args)' $(output)/orchid$(exe)
+debug: $(output)/$(default)/orchid$(exe)
+	lldb -o 'run $(args)' $<
 
-include vpn/target.mk
+$(call include,vpn/target.mk)
 
 source += $(wildcard source/*.cpp)
 
@@ -46,7 +46,7 @@ endif
 
 include env/output.mk
 
-$(output)/orchid$(exe): $(object) $(linked) $(output)/GeoLite2-City.mmdb
+$(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked)) $(output)/GeoLite2-City.mmdb
 	@echo [LD] $@
-	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
-	@ls -la $(output)/orchid$(exe)
+	@set -o pipefail; $(cxx/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
+	@ls -la $@

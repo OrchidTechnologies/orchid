@@ -21,27 +21,20 @@
 include env/target.mk
 
 .PHONY: all
-all: $(output)/orchid$(exe)
+all: $(output)/$(default)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/orchid$(exe)
-	$(output)/orchid$(exe)
+test: $(output)/$(default)/orchid$(exe)
+	$<
 
 source += $(wildcard source/*.cpp)
 cflags += -Isource
-#cflags += -I$(pwd)/aleth
-#cflags += -Ip2p/aleth
-#header += "aleth/"
 
-
-include p2p/target.mk
+$(call include,p2p/target.mk)
 include env/output.mk
 
-$(output)/orchid$(exe): $(object) $(linked)
-	@echo $(pwd)
-	@echo $(output)
-	@echo $(header)
+$(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cycp) $(wflags) -o $@ $^ $(lflags)
+	@$(cxx/$*) $(wflags) -o $@ $^ $(lflags)
 	@ls -la $@

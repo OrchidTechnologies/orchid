@@ -27,7 +27,7 @@ engine := flutter/bin/cache/artifacts/engine/ios$(engine)
 ifeq ($(precompiled),)
 $(bundle)/Frameworks/App.framework/App:
 	@mkdir -p $(dir $@)
-	echo "static const int Moo = 88;" | $(subst -miphoneos-version-min=11.0,-miphoneos-version-min=8.0,$(cycc)) -dynamiclib -o $@ \
+	echo "static const int Moo = 88;" | $(patsubst -miphoneos-version-min=11.0,-miphoneos-version-min=8.0,$(cc/arm64)) -dynamiclib -o $@ \
 	    -x c - -Wno-unused-const-variable \
 	    -Xlinker -rpath -Xlinker '@executable_path/Frameworks' \
 	    -Xlinker -rpath -Xlinker '@loader_path/Frameworks' \
@@ -54,7 +54,7 @@ $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xm
 
 $(bundle)/Frameworks/Flutter.framework/Flutter: $(engine)/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
-	lipo $(patsubst %,-extract %,$(arch)) $< -output $@
+	lipo $(patsubst %,-extract %,$(archs)) $< -output $@
 	@touch $@
 
 $(bundle)/Frameworks/Flutter.framework/%: $(engine)/Flutter.framework/%
@@ -63,7 +63,7 @@ $(bundle)/Frameworks/Flutter.framework/%: $(engine)/Flutter.framework/%
 	touch $@
 
 signed += $(assets)/AssetManifest.json
-$(assets)/AssetManifest%json %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m: flutter/packages/flutter/pubspec%lock pubspec%lock $(dart)
+$(assets)/AssetManifest%json %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m: flutter/packages/flutter/pubspec.lock pubspec.lock $(dart)
 	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
 	flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \

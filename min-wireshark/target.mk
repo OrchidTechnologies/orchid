@@ -9,7 +9,7 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
+archive += $(pwd)/wireshark
 
 wireshark := 
 c_wireshark := 
@@ -99,7 +99,7 @@ $(output)/$(pwd)/wireshark/epan/ps.c: $(pwd)/wireshark/tools/rdps.py $(pwd)/wire
 source += $(output)/$(pwd)/wireshark/epan/ps.c
 
 
-ifeq ($(msys),darwin)
+ifeq ($(meson),darwin)
 source += $(pwd)/wireshark.c
 else
 $(output)/$(pwd)/wireshark/epan/dissectors.c: $(pwd)/wireshark/tools/make-regs.py $(filter $(pwd)/wireshark/epan/dissectors/%.c,$(wireshark))
@@ -145,27 +145,30 @@ source += $(output)/$(pwd)/wireshark/epan/uat_load.c
 source += $(output)/$(pwd)/wireshark/wiretap/k12text.c
 
 source += $(output)/$(pwd)/wireshark/epan/dtd_parse.c
-$(output)/$(output)/$(pwd)/wireshark/epan/dtd_parse.o: $(output)/$(pwd)/wireshark/epan/dtd_grammar.h
+$(call depend,$(output)/$(pwd)/wireshark/epan/dtd_parse.c.o,$(output)/$(pwd)/wireshark/epan/dtd_grammar.h)
 source += $(output)/$(pwd)/wireshark/epan/dtd_grammar.c
 
-$(output)/$(pwd)/wireshark/epan/dfilter/dfilter.o: $(output)/$(pwd)/wireshark/epan/dfilter/scanner_lex.h
+$(call depend,$(pwd)/wireshark/epan/dfilter/dfilter.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/scanner_lex.h)
 cflags_dfilter := -I$(output)/$(pwd)/wireshark/epan/dfilter
 source += $(output)/$(pwd)/wireshark/epan/dfilter/scanner.c
-$(output)/$(output)/$(pwd)/wireshark/epan/dfilter/scanner.o: $(output)/$(pwd)/wireshark/epan/dfilter/grammar.h
+$(call depend,$(output)/$(pwd)/wireshark/epan/dfilter/scanner.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/grammar.h)
 source += $(output)/$(pwd)/wireshark/epan/dfilter/grammar.c
 
 source += $(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c
-$(output)/$(output)/$(pwd)/wireshark/wiretap/ascend_scanner.o: $(output)/$(pwd)/wireshark/wiretap/ascend.h
+$(call depend,$(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/ascend.h):w
 source += $(output)/$(pwd)/wireshark/wiretap/ascend.c
 
 source += $(output)/$(pwd)/wireshark/wiretap/candump_scanner.c
-$(output)/$(output)/$(pwd)/wireshark/wiretap/candump_scanner.o: $(output)/$(pwd)/wireshark/wiretap/candump_parser.h
+$(call depend,$(output)/$(pwd)/wireshark/wiretap/candump_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/candump_parser.h)
 source += $(output)/$(pwd)/wireshark/wiretap/candump_parser.c
 
 
 # XXX: this is currently shared by libiconv and libgpg-error; it might be sharable by more stuff
-$(output)/usr/include/%.h $(output)/usr/lib/lib%.a: $(output)/$(pwd)/lib%/Makefile $(sysroot)
-	$(MAKE) -C $(dir $<) install
+define _
+$(output)/$(1)/usr/include/%.h $(output)/$(1)/usr/lib/lib%.a: $(output)/$(1)/$(pwd)/lib%/Makefile $(sysroot)
+	$(MAKE) -C $$(dir $$<) install
+endef
+$(each)
 
 # libgcrypt {{{
 w_libgcrypt := 
@@ -183,17 +186,18 @@ w_libgcrypt += --disable-asm
 w_libgcrypt += ac_cv_func_getentropy=no
 endif
 
-w_libgcrypt += --with-libgpg-error-prefix=$(CURDIR)/$(output)/usr
-$(output)/$(pwd)/libgcrypt/Makefile: $(output)/usr/include/gpg-error.h
-$(output)/$(pwd)/libgcrypt/Makefile: $(output)/usr/lib/libgpg-error.a
+w_libgcrypt += --with-libgpg-error-prefix=@/usr
+$(call depend,$(pwd)/libgcrypt/Makefile,@/usr/include/gpg-error.h)
+$(call depend,$(pwd)/libgcrypt/Makefile,@/usr/lib/libgpg-error.a)
 
+.PRECIOUS: $(output)/%/$(pwd)/libgcrypt/src/gcrypt.h
 # XXX: one of the test cases uses system() (not allowed on iOS) and there is no --disable-tests
-$(output)/$(pwd)/%/src/gcrypt.h $(output)/$(pwd)/%/src/.libs/libgcrypt.a: $(output)/$(pwd)/%/Makefile
+$(output)/%/$(pwd)/libgcrypt/src/gcrypt.h $(output)/%/$(pwd)/libgcrypt/src/.libs/libgcrypt.a: $(output)/%/$(pwd)/libgcrypt/Makefile
 	for sub in compat mpi cipher random src; do $(MAKE) -C $(dir $<)/$${sub}; done
 
-cflags += -I$(output)/$(pwd)/libgcrypt/src
-linked += $(output)/$(pwd)/libgcrypt/src/.libs/libgcrypt.a
-header += $(output)/$(pwd)/libgcrypt/src/gcrypt.h
+cflags += -I@/$(pwd)/libgcrypt/src
+linked += $(pwd)/libgcrypt/src/.libs/libgcrypt.a
+header += @/$(pwd)/libgcrypt/src/gcrypt.h
 # }}}
 # libgpg-error {{{
 w_libgpg_error := 
@@ -205,11 +209,13 @@ w_libgpg_error += --disable-tests
 ifeq ($(target),and)
 # XXX: host_triplet armv7a-unknown-linux-androideabi contains unexpected "v7a" suffix
 # error including `syscfg/lock-obj-pub.linux-androideabi.h': No such file or directory
-m_libgpg_error := sed -i -e 's/\(host_triplet = arm\)[a-z0-9]*-/\1-/' src/Makefile
+# XXX: libgpg-error doesn't come with an aarch64 android lock-obj-pub implementation
+# I have independently confirmed the correct implementation is a 40 byte object of 0s
+m_libgpg_error := sed -i -e 's/^\(host_triplet = arm\)[a-z0-9]*-/\1-/; s/^\(host_triplet =\) aarch64-.*/\1 x86_64-unknown-linux-gnu/' src/Makefile
 endif
 
-linked += $(output)/usr/lib/libgpg-error.a
-header += $(output)/usr/include/gpg-error.h
+linked += usr/lib/libgpg-error.a
+header += @/usr/include/gpg-error.h
 # }}}
 # glib {{{
 w_glib := 
@@ -222,25 +228,22 @@ deps :=
 deps += glib/gmodule/libgmodule-2.0.a
 deps += glib/glib/libglib-2.0.a
 deps += glib/subprojects/proxy-libintl/libintl.a
-deps := $(patsubst %,$(output)/$(pwd)/%,$(deps))
+deps := $(patsubst %,$(pwd)/%,$(deps))
 
-$(output)/$(pwd)/glib/build.ninja: $(output)/usr/include/iconv.h $(output)/usr/lib/libiconv.a
-$(output)/$(pwd)/glib/glib/glibconfig.h: $(output)/$(pwd)/glib/build.ninja
+$(call depend,$(pwd)/glib/build.ninja,@/usr/include/iconv.h @/usr/lib/libiconv.a)
+$(call depend,$(pwd)/glib/glib/glibconfig.h,@/$(pwd)/glib/build.ninja)
 
-$(patsubst %.a,%$(percent)a,$(deps)): $(output)/$(pwd)/glib/build%ninja
+$(subst @,%,$(patsubst %,$(output)/@/%,$(deps))): $(output)/%/$(pwd)/glib/build.ninja
 	cd $(dir $<) && ninja
 
 linked += $(deps)
 
-header += $(output)/$(pwd)/glib/build.ninja
-cflags += -I$(output)/$(pwd)/glib/glib
+header += @/$(pwd)/glib/build.ninja
+cflags += -I@/$(pwd)/glib/glib
 
 cflags += -I$(pwd)/glib
 cflags += -I$(pwd)/glib/glib
 cflags += -I$(pwd)/glib/gmodule
-
-#cflags += $(shell pkg-config --cflags glib-2.0)
-#lflags += $(shell pkg-config --libs glib-2.0)
 # }}}
 # libiconv {{{
 w_libiconv := LDFLAGS="$(wflags)"
@@ -251,6 +254,6 @@ export GNULIB_TOOL := $(GNULIB_SRCDIR)/gnulib-tool
 # XXX: autogen.sh fails (without failing) before this step
 a_libiconv := cd preload && make -f Makefile.devel all
 
-linked += $(output)/usr/lib/libiconv.a
-header += $(output)/usr/include/iconv.h
+linked += usr/lib/libiconv.a
+header += @/usr/include/iconv.h
 # }}}

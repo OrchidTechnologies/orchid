@@ -9,17 +9,13 @@
 # }}}
 
 
-$(output)/zlib/Makefile: cycc := $(cycc)
-$(output)/zlib/Makefile: pwd := $(pwd)
-$(output)/zlib/Makefile: $(pwd)/zlib/configure $(sysroot) $(parts)
-	rm -rf $(output)/zlib
-	mkdir -p $(output)/zlib
-	cd $(output)/zlib && CC="$(cycc)" CFLAGS="$(qflags)" ../../$(pwd)/zlib/configure --static
+$(output)/%/zlib/Makefile: $(pwd)/zlib/configure $(sysroot) $(parts)
+	rm -rf $(output)/$*/zlib
+	mkdir -p $(output)/$*/zlib
+	cd $(output)/$*/zlib && CC="$(cc/$*)" CFLAGS="$(qflags)" $(CURDIR)/$< --static
 
-$(output)/zlib/libz.a: output := $(output)
-$(output)/zlib/libz.a: pwd := $(pwd)
-$(output)/zlib/libz.a: $(output)/zlib/Makefile $(sysroot)
-	$(MAKE) -C $(output)/zlib libz.a RANLIB="$(ranlib)" AR="$(ar)" ARFLAGS="-r"
+$(output)/%/zlib/libz.a: $(output)/%/zlib/Makefile $(sysroot)
+	$(MAKE) -C $(output)/$*/zlib libz.a RANLIB="$(ranlib/$*)" AR="$(ar/$*)" ARFLAGS="-r"
 
 cflags += -I$(pwd)/zlib/include
-linked += $(output)/zlib/libz.a
+linked += zlib/libz.a

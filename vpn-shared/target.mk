@@ -18,9 +18,6 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-pwd_vpn_shared := $(pwd)
-
 cflags += '-DORCHID_USERNAME="$(username)"'
 cflags += '-DORCHID_PASSWORD="$(password)"'
 
@@ -73,11 +70,11 @@ endif
 	@mkdir -p $(dir $@)
 	curl https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz | tar -C $(dir $@) --strip-components 1 --exclude '*.txt' -zxvf-
 
-include $(pwd)/sqlite.mk
+$(eval $(call include,sqlite.mk))
 
-include $(pwd)/tor.mk
-include $(pwd)/libevent.mk
-include $(pwd)/zlib.mk
+$(eval $(call include,tor.mk))
+$(eval $(call include,libevent.mk))
+$(eval $(call include,zlib.mk))
 
-include $(pwd_vpn_shared)/wsk/target.mk
-include $(pwd_vpn_shared)/p2p/target.mk
+$(eval $(call include,wsk/target.mk))
+$(eval $(call include,p2p/target.mk))

@@ -18,8 +18,6 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-
 cflags += -Wno-bitwise-op-parentheses
 cflags += -Wno-dangling-else
 cflags += -Wno-empty-body
@@ -31,7 +29,7 @@ cflags += -Wno-tautological-constant-out-of-range-compare
 cflags += -fcoroutines-ts
 
 cflags += -I$(pwd)/extra
-cflags += -I$(output)/$(pwd)
+# XXX: cflags += -I$(output)/$(pwd)
 
 cflags += -I$(pwd)/cppcoro/include
 
@@ -105,19 +103,22 @@ endif
 
 
 source += $(pwd)/secp256k1/src/secp256k1.c
-cflags += -I$(pwd)/secp256k1
 cflags += -I$(pwd)/secp256k1/include
-cflags += -I$(pwd)/secp256k1/src
 
-$(output)/gen_context: pwd := $(pwd)
-$(output)/gen_context: $(pwd)/secp256k1/src/gen_context.c
-	gcc -o $@ $< -I$(pwd)/secp256k1
+c_secp256k1 := 
+c_secp256k1 += -I$(pwd)/secp256k1
+c_secp256k1 += -I$(pwd)/secp256k1/src
+c_secp256k1 += -include $(pwd)/field.h
 
-$(pwd)/secp256k1/src/ecmult_static_context.h: pwd := $(pwd)
+pwd/secp256k1 := $(pwd)/secp256k1
+
+$(output)/gen_context: $(pwd/secp256k1)/src/gen_context.c
+	gcc -o $@ $< -I$(pwd/secp256k1)
+
 $(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
-	cd $(pwd)/secp256k1 && $(CURDIR)/$(output)/gen_context
+	cd $(pwd/secp256k1) && $(CURDIR)/$(output)/gen_context
 
-$(output)/$(pwd)/secp256k1/src/secp256k1.o: $(pwd)/secp256k1/src/ecmult_static_context.h
+$(call depend,$(pwd)/secp256k1/src/secp256k1.c.o,$(pwd)/secp256k1/src/ecmult_static_context.h)
 
 cflags += -DENABLE_MODULE_RECOVERY
 cflags += -DENABLE_MODULE_ECDH
@@ -126,15 +127,6 @@ cflags += -DUSE_FIELD_INV_BUILTIN
 cflags += -DUSE_NUM_NONE
 cflags += -DUSE_SCALAR_INV_BUILTIN
 cflags += -DECMULT_WINDOW_SIZE=15
-
-ifeq ($(target)-$(arch),and-armv7a)
-cflags += -DUSE_FIELD_10X26
-cflags += -DUSE_SCALAR_8X32
-else
-cflags += -DUSE_FIELD_5X52
-cflags += -DUSE_SCALAR_4X64
-cflags += -DHAVE___INT128
-endif
 
 
 c_eEVM := 
@@ -152,4 +144,4 @@ c_eEVM += -I$(pwd)/eEVM/3rdparty
 
 
 include $(pwd)/asio.mk
-include $(pwd)/rtc/target.mk
+$(call include,rtc/target.mk)

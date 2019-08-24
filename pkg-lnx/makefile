@@ -36,7 +36,7 @@ orchid-server-${version}-1.x86_64.rpm: orchid-server
 
 orchid-server:
 	$(MAKE) -C server target=lnx
-	cp -a server/out-lnx/orchid ./orchid-server
+	cp -a server/out-lnx/x86_64/orchid ./orchid-server
 
 .PHONY: clean
 clean:

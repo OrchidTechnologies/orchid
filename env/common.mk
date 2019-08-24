@@ -9,12 +9,52 @@
 # }}}
 
 
+ifeq ($(filter output-sync,$(.FEATURES)),)
+$(error make 4.0 required)
+endif
+
 .DELETE_ON_ERROR:
 .SECONDARY:
+.SECONDEXPANSION:
+.SUFFIXES:
+
+MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --no-builtin-variables
 
 SHELL := /bin/bash
 
-null := 
-space := $(null) #
+empty := 
+space := $(empty) #
 comma := ,
 percent := %
+
+pwd := .
+pwds := 
+
+define directory
+$(patsubst %/,%,$(dir $(1)))
+endef
+
+define include
+$(eval pwds := $(pwd) $(pwds))
+$(eval temp := $(pwd))
+$(eval pwd := $(pwd)/$(call directory,$(1)))
+$(eval include $(temp)/$(1))
+$(eval pwd := $(word 1,$(pwds)))
+$(eval pwds := $(wordlist 2,$(words $(pwd)),$(pwds)))
+endef
+
+define loop
+$(foreach i,$(2),$(eval $(call $(1),$(i))))
+endef
+
+define first
+$(firstword $(subst /,$(space),$(1)))
+endef
+
+define rest
+$(eval temp := $(subst /,$(space),$(1)))
+$(subst $(space),/,$(wordlist 2,$(words $(temp)),$(temp)))
+endef
+
+# XXX: implement a split and then reimplement specific in terms of it

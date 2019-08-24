@@ -9,17 +9,19 @@
 # }}}
 
 
+archs += i386
+openssl/i386 := darwin-i386-cc
+host/i386 := i386-apple-darwin
+meson/i386 := x86
+
+archs += x86_64
+openssl/x86_64 := darwin64-x86_64-cc
+host/x86_64 := x86_64-apple-darwin
+meson/x86_64 := x86_64
+
 sdk := macosx
-
-#arch := i386
-#ossl := darwin-i386-cc
-
-arch := x86_64
-ossl := darwin64-x86_64-cc
-mfam := x86_64
-
-host := $(arch)-apple-darwin
-
+runtime := osx
 more := -mmacosx-version-min=10.14
-
 include $(pwd)/target-apl.mk
+
+default := x86_64

@@ -9,13 +9,16 @@
 # }}}
 
 
-arch := x86_64
+archs += x86_64
+openssl/x86_64 := iossimulator-xcrun
+host/x86_64 := x86_64-apple-darwin
+meson/x86_64 := x86_64
+
 sdk := iphonesimulator
-
-host := x86_64-apple-darwin
+runtime := ios
 more := -mios-simulator-version-min=11.0
-support := iPhoneSimulator
-
-debug += noaot
-
 include $(pwd)/target-apl.mk
+
+default := x86_64
+support := iPhoneSimulator
+debug += noaot

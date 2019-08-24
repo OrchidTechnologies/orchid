@@ -18,8 +18,6 @@
 # }}}
 
 
-pwd := ./$(patsubst %/,%,$(patsubst $(CURDIR)/%,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-
 source += $(wildcard $(pwd)/source/*.cpp)
 
-include $(pwd)/shared/target.mk
+$(call include,shared/target.mk)

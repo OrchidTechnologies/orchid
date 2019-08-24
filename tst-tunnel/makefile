@@ -26,17 +26,17 @@ version := 0.9
 args := 
 
 .PHONY: all
-all: $(output)/orchid
+all: $(output)/$(default)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/orchid$(exe)
-	sudo $(output)/orchid$(exe) $(args)
+test: $(output)/$(default)/orchid$(exe)
+	sudo $< $(args)
 
 .PHONY: debug
-debug: $(output)/orchid$(exe)
-	sudo lldb -o 'run $(args)' $(output)/orchid$(exe)
+debug: $(output)/$(default)/orchid$(exe)
+	sudo lldb -o 'run $(args)' $<
 
-include vpn/target.mk
+$(call include,vpn/target.mk)
 
 ifeq ($(target),mac)
 cflags += -Iall/vpn-apple
@@ -50,8 +50,8 @@ source += $(wildcard source/*.cpp)
 
 include env/output.mk
 
-$(output)/orchid: $(object) $(linked) $(output)/GeoLite2-City.mmdb
+$(output)/%/orchid: $(patsubst %,$(output)/$$*/%,$(object) $(linked)) $(output)/%/GeoLite2-City.mmdb
 	@echo [LD] $@
-	@set -o pipefail; $(cycp) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
+	@set -o pipefail; $(cxx/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
 	@ls -la $@
 	@otool -lah $@ | grep '^  s.*__DATA' -A8 -B2

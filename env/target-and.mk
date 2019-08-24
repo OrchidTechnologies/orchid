@@ -13,46 +13,60 @@ dll := so
 lib := a
 exe := 
 
-msys := linux
+meson := linux
+
+archs += armeabi-v7a
+openssl/armeabi-v7a := android-arm
+host/armeabi-v7a := armv7a-linux-androideabi
+meson/armeabi-v7a := arm
+flutter/armeabi-v7a := arm
+
+archs += arm64-v8a
+openssl/arm64-v8a := android-arm64
+host/arm64-v8a := aarch64-linux-android
+meson/arm64-v8a := aarch64
+flutter/arm64-v8a := arm64
+
+archs += x86
+openssl/x86 := android-x86
+host/x86 := i686-linux-android
+meson/x86 := x86
+
+archs += x86_64
+openssl/x86_64 := android-x86_64
+host/x86_64 := x86_64-linux-android
+meson/x86_64 := x86_64
+
+include $(pwd)/target-gnu.mk
 
 aver := 21
 
-arch := armv7a
-ossl := android-arm
-alib := armeabi-v7a
-mfam := arm
+define _
+temp := $(subst -,$(space),$(host/$(1)))
+arch := $$(word 1,$$(temp))
+temp := $$(subst $$(space),-,$$(wordlist 2,3,$$(temp)))
+more/$(1) := -target $$(arch)-unknown-$$(temp)$(aver)
+temp := $(word 1,$(meson/$(1)))-$$(temp)
+endef
+$(each)
 
-#arch := aarch64
-#ossl := android-arm64
-#alib := arm64-v8a
-#mfam := aarch64
-
-#arch := i686
-#ossl := android-x86
-#alib := x86
-#mfam := x86
-
-#arch := x86_64
-#ossl := android-x86_64
-#alib := x86_64
-#mfam := x86_64
-
-include $(pwd)/target-ndk.mk
-include $(pwd)/target-gnu.mk
-
-host := $(arch)-linux-android$(asuf)
-
-more := 
-more += -target $(arch)-unknown-linux-android$(asuf)$(aver)
-more += --sysroot=$(llvm)/sysroot
-
+more = --sysroot=$(llvm)/sysroot
 # https://github.com/android-ndk/ndk/issues/884
 more += -fno-addrsig
+include $(pwd)/target-ndk.mk
+cxx += -stdlib=libc++
 
-cycc := $(llvm)/bin/clang $(more)
-cycp := $(llvm)/bin/clang++ $(more) -stdlib=libc++
+define _
+ranlib/$(1) := $(llvm)/bin/$$(temp)-ranlib
+ar/$(1) := $(llvm)/bin/$$(temp)-ar
+strip/$(1) := $(llvm)/bin/$$(temp)-strip
+endef
+$(each)
 
-lflags += -Wl,--icf=all
+# XXX: the 32-bit linker is gold
+# XXX: the 64-bit linker is just ld
+#lflags += -Wl,--icf=all
+
 lflags += -lm -llog
 lflags += -static-libstdc++
 lflags += -Wl,--no-undefined
