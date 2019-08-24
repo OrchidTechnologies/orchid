@@ -172,7 +172,7 @@ class Logger :
         const auto &source(five.Source());
         const auto &target(five.Target());
         // XXX: IPv6
-        int64_t row_id = insert_(five.Protocol(),
+        auto row_id = insert_(five.Protocol(),
             source.Host().to_v4().to_uint(), source.Port(),
             target.Host().to_v4().to_uint(), target.Port()
         );
