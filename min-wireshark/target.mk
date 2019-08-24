@@ -147,20 +147,23 @@ source += $(output)/$(pwd)/wireshark/wiretap/k12text.c
 source += $(output)/$(pwd)/wireshark/epan/dtd_parse.c
 $(call depend,$(output)/$(pwd)/wireshark/epan/dtd_parse.c.o,$(output)/$(pwd)/wireshark/epan/dtd_grammar.h)
 source += $(output)/$(pwd)/wireshark/epan/dtd_grammar.c
+$(call depend,$(output)/$(pwd)/wireshark/epan/dtd_grammar.c.o,$(output)/$(pwd)/wireshark/epan/dtd_parse.h)
 
-$(call depend,$(pwd)/wireshark/epan/dfilter/dfilter.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/scanner_lex.h)
-cflags_dfilter := -I$(output)/$(pwd)/wireshark/epan/dfilter
 source += $(output)/$(pwd)/wireshark/epan/dfilter/scanner.c
 $(call depend,$(output)/$(pwd)/wireshark/epan/dfilter/scanner.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/grammar.h)
 source += $(output)/$(pwd)/wireshark/epan/dfilter/grammar.c
+$(call depend,$(pwd)/wireshark/epan/dfilter/dfilter.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/scanner_lex.h)
+cflags_dfilter := -I$(output)/$(pwd)/wireshark/epan/dfilter
 
 source += $(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c
 $(call depend,$(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/ascend.h)
 source += $(output)/$(pwd)/wireshark/wiretap/ascend.c
+$(call depend,$(output)/$(pwd)/wireshark/wiretap/ascend.c.o,$(output)/$(pwd)/wireshark/wiretap/ascend_scanner_lex.h)
 
 source += $(output)/$(pwd)/wireshark/wiretap/candump_scanner.c
 $(call depend,$(output)/$(pwd)/wireshark/wiretap/candump_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/candump_parser.h)
 source += $(output)/$(pwd)/wireshark/wiretap/candump_parser.c
+$(call depend,$(output)/$(pwd)/wireshark/wiretap/candump_parser.c.o,$(output)/$(pwd)/wireshark/wiretap/candump_scanner_lex.h)
 
 
 # XXX: this is currently shared by libiconv and libgpg-error; it might be sharable by more stuff
