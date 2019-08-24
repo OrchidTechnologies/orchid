@@ -155,7 +155,7 @@ $(call depend,$(output)/$(pwd)/wireshark/epan/dfilter/scanner.c.o,$(output)/$(pw
 source += $(output)/$(pwd)/wireshark/epan/dfilter/grammar.c
 
 source += $(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c
-$(call depend,$(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/ascend.h):w
+$(call depend,$(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/ascend.h)
 source += $(output)/$(pwd)/wireshark/wiretap/ascend.c
 
 source += $(output)/$(pwd)/wireshark/wiretap/candump_scanner.c
