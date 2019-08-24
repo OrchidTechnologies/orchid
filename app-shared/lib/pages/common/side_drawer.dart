@@ -57,14 +57,15 @@ class _SideDrawerState extends State<SideDrawer> {
             children: <Widget>[
               SideDrawerTile(
                   title: "Clear Data",
-                  imageName: 'assets/images/sync.png',
+                  icon: Icons.delete_forever,
                   onPressed: () {
                     _confirmDelete(context);
                   }),
               divider(),
               SideDrawerTile(
                   title: "Help",
-                  imageName: 'assets/images/help.png',
+                  //imageName: 'assets/images/help.png',
+                  icon: Icons.help_outline,
                   showDetail: true,
                   onPressed: () {
                     Navigator.pushNamed(context, '/help/overview');
@@ -72,21 +73,21 @@ class _SideDrawerState extends State<SideDrawer> {
               divider(),
               SideDrawerTile(
                   title: "Privacy Policy",
-                  imageName: 'assets/images/help.png',
+                  imageName: 'assets/images/fileDocumentOutline.png',
                   showDetail: true,
+                  hoffset: 4.0,
                   onPressed: () {
                     Navigator.pushNamed(context, '/help/privacy');
                   }),
-
               divider(),
               SideDrawerTile(
                   title: "Open Source Licenses",
-                  imageName: 'assets/images/help.png',
+                  imageName: 'assets/images/fileDocumentBoxMultipleOutline.png',
                   showDetail: true,
+                  hoffset: 4.0,
                   onPressed: () {
                     Navigator.pushNamed(context, '/help/open_source');
                   }),
-
             ],
           ),
         ),
@@ -98,8 +99,8 @@ class _SideDrawerState extends State<SideDrawer> {
               divider(),
               SizedBox(height: 16),
               Text("Version: " + (_version ?? ""),
-                  style: AppText.noteStyle
-                      .copyWith(color: AppColors.neutral_4)),
+                  style:
+                      AppText.noteStyle.copyWith(color: AppColors.neutral_4)),
             ],
           ),
         )
@@ -130,27 +131,39 @@ class _SideDrawerState extends State<SideDrawer> {
 class SideDrawerTile extends StatelessWidget {
   final String title;
   final String imageName;
+  final IconData icon;
   final VoidCallback onPressed;
   final bool showDetail;
+  final double hoffset;
 
-  const SideDrawerTile({
-    @required this.title,
-    this.imageName,
-    @required this.onPressed,
-    this.showDetail = false,
-  }) : super();
+  SideDrawerTile(
+      {@required this.title,
+      this.imageName,
+      this.icon,
+      @required this.onPressed,
+      this.showDetail = false,
+      this.hoffset = 0})
+      : super() {
+    assert(imageName != null || icon != null);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-        contentPadding: EdgeInsets.only(left: 18, right: 18),
-        leading: imageName != null ? Image(
-            height: 32,
-            width: 32,
-            fit: BoxFit.fill,
+    Widget leading = imageName != null
+        ? Image(
+            height: 24,
+            width: 24,
+            fit: BoxFit.contain,
             alignment: Alignment.center,
             color: Colors.white,
-            image: AssetImage(imageName)) : null,
+            image: AssetImage(imageName))
+        : Icon(icon, color: Colors.white, size: 32);
+    return ListTile(
+        contentPadding: EdgeInsets.only(left: 20, right: 20),
+        leading: Padding(
+          padding: EdgeInsets.only(left: hoffset),
+          child: leading,
+        ),
         trailing: showDetail
             ? Icon(Icons.chevron_right, color: AppColors.white)
             : null,

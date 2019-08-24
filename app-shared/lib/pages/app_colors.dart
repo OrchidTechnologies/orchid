@@ -29,6 +29,7 @@ class AppColors {
   static const neutral_2 = const Color(0xff504960);
   static const neutral_7 = const Color(0xfffbfbfe);
   static const neutral_1 = const Color(0xff3a3149);
+  static const rneutral_1 = const Color(0xff3a3a3a);
   static const teal_7 = const Color(0xffeffafc);
   static const teal_6 = const Color(0xffc8f4fa);
   static const teal_5 = const Color(0xff97e3ee);
