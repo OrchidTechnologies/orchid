@@ -188,7 +188,7 @@ clean:
 	git clean -fXd
 
 define _
--include $(patsubst $(output)/$(1)/%.o,%.d,$(object))
+-include $(patsubst %.o,$(output)/$(1)/%.d,$(object))
 endef
 $(each)
 

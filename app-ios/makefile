@@ -79,7 +79,7 @@ $(output)/XCBuildData/build.db: ios/Pods/Manifest.lock
 include env/output.mk
 
 define _
--include $(patsubst $(output)/$(1)/%.o,%.d,$(local))
+-include $(patsubst %.o,$(output)/$(1)/%.d,$(local))
 endef
 $(each)
 
