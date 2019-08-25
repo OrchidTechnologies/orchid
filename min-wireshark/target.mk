@@ -147,7 +147,6 @@ source += $(output)/$(pwd)/wireshark/wiretap/k12text.c
 source += $(output)/$(pwd)/wireshark/epan/dtd_parse.c
 $(call depend,$(output)/$(pwd)/wireshark/epan/dtd_parse.c.o,$(output)/$(pwd)/wireshark/epan/dtd_grammar.h)
 source += $(output)/$(pwd)/wireshark/epan/dtd_grammar.c
-$(call depend,$(output)/$(pwd)/wireshark/epan/dtd_grammar.c.o,$(output)/$(pwd)/wireshark/epan/dtd_parse.h)
 
 source += $(output)/$(pwd)/wireshark/epan/dfilter/scanner.c
 $(call depend,$(output)/$(pwd)/wireshark/epan/dfilter/scanner.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/grammar.h)
