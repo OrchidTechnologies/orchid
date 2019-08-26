@@ -143,14 +143,21 @@ class Logger :
         }
 
         dns_query_t *result = reinterpret_cast<dns_query_t *>(decoded);
-        for (size_t i = 0; i != result->ancount; ++i) {
-            // TODO: IPv6
-            if (result->answers[i].generic.type == RR_A) {
-                auto ip = asio::ip::address_v4(boost::endian::native_to_big(result->answers[i].a.address));
-                auto hostname = std::string(result->answers[i].a.name);
-                hostname.pop_back();
-                Log() << "DNS " << hostname << " " << ip << std::endl;
-                dns_log_[ip] = hostname;
+        std::string hostname = "";
+        for (size_t i = 0; i != result->qdcount; ++i) {
+            hostname = result->questions[i].name;
+            hostname.pop_back();
+            break;
+        }
+        if (!hostname.empty()) {
+            for (size_t i = 0; i != result->ancount; ++i) {
+                // TODO: IPv6
+                if (result->answers[i].generic.type == RR_A) {
+                    auto ip = asio::ip::address_v4(boost::endian::native_to_big(result->answers[i].a.address));
+                    Log() << "DNS " << hostname << " " << ip << std::endl;
+                    dns_log_[ip] = hostname;
+                    break;
+                }
             }
         }
     }
