@@ -18,7 +18,51 @@
 # }}}
 
 
-cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/*/include))
+boost := 
+boost += algorithm
+boost += array
+boost += asio
+boost += assert
+boost += beast
+boost += bind
+boost += concept_check
+boost += config
+boost += container
+boost += container_hash
+boost += core
+boost += date_time
+boost += detail
+boost += endian
+boost += filesystem
+boost += function
+boost += integer
+boost += intrusive
+boost += io
+boost += iterator
+boost += lexical_cast
+boost += logic
+boost += math
+boost += move
+boost += mp11
+boost += mpl
+boost += multiprecision
+boost += optional
+boost += predef
+boost += preprocessor
+boost += random
+boost += range
+boost += rational
+boost += regex
+boost += smart_ptr
+boost += static_assert
+boost += system
+boost += throw_exception
+boost += tokenizer
+boost += type_index
+boost += type_traits
+boost += utility
+cflags += $(patsubst %,-I$(pwd)/boost/libs/%/include,$(boost))
+
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))
 cflags += -I$(pwd)/boost/libs/asio/include/boost
 cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
