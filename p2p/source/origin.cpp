@@ -22,7 +22,6 @@
 
 #include "adapter.hpp"
 #include "baton.hpp"
-#include "channel.hpp"
 #include "connection.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
@@ -38,26 +37,6 @@ task<std::string> Origin::Request(const std::string &method, const Locator &loca
     co_return co_await orc::Request(adapter, method, locator, headers, data);
 }
 
-class Actor final :
-    public Peer
-{
-  protected:
-    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        orc_assert(false);
-    }
-
-    void Stop(const std::string &error) override {
-        // XXX: how much does this matter?
-_trace();
-    }
-
-  public:
-    ~Actor() override {
-_trace();
-        Close();
-    }
-};
-
 task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto connection(std::make_unique<Connection<asio::ip::udp::socket>>(Context()));
     auto endpoint(co_await connection->Connect(host, port));
@@ -71,17 +50,6 @@ task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const st
     auto endpoint(co_await connection->Connect(host, port));
     stream = std::move(connection);
     co_return Socket(endpoint.address().to_string(), endpoint.port());
-}
-
-task<Socket> Local::Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) {
-    auto client(Make<Actor>());
-    auto channel(sunk->Wire<Channel>(client));
-    auto answer(co_await respond(Strip(co_await client->Offer())));
-    co_await client->Negotiate(answer);
-    co_await channel->Connect();
-    auto candidate(co_await client->Candidate());
-    const auto &socket(candidate.address());
-    co_return Socket(socket.ipaddr().ToString(), socket.port());
 }
 
 task<Socket> Local::Open(Sunk<Opening, BufferSewer> *sunk) {
