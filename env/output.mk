@@ -1,5 +1,5 @@
-# Orchid - WebRTC P2P VPN Market (on Ethereum)
-# Copyright (C) 2017-2019  The Orchid Authors
+# Cycc/Cympile - Shared Build Scripts for Make
+# Copyright (C) 2013-2019  Jay Freeman (saurik)
 
 # Zero Clause BSD license {{{
 #
