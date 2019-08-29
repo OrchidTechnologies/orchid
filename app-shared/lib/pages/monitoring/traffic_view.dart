@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/pages/common/orchid_scroll.dart';
+import 'package:collection/collection.dart';
 
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -154,20 +155,31 @@ class _TrafficViewState extends State<TrafficView>
     _updatesPaused = false;
   }
 
-  // Apply updates to list only when it is settled at the top to avoid interfering
-  // with user scrolling.  The effect is that updates are paused when the user
-  // scrolls down into the list and resumed when the list is returned to the top.
+  // Apply updates to the list only when it is settled at the top. The effect
+  // is that updates are paused when the user scrolls down into the list and
+  // resumed when the list is returned to the top.
   void applyPendingUpdates() {
     // If no update nothing to do.
-    // TODO: Should check for equivalent data here too.
     if (_pendingResultList == null) {
       return;
     }
 
-    // If no current results (e.g. invalidated by search) or the list has grown
-    // shorter through some other means just do a plain update.
-    if (_resultList == null ||
-        _pendingResultList.length <= _resultList.length) {
+    // If the update is identical do the current data ignore it.
+    if (_resultList != null) {
+      var ids1 = _pendingResultList.map((row) {
+        return row.rowId;
+      }).toList();
+      var ids2 = _resultList.map((row) {
+        return row.rowId;
+      }).toList();
+      if (ListEquality().equals(ids1, ids2)) {
+        return;
+      }
+    }
+
+    // If no current results (e.g. invalidated by search) or the list has
+    // shrunk through some other means just do a plain update.
+    if (_resultList == null || _pendingResultList.length < _resultList.length) {
       setState(() {
         _resultList = _pendingResultList;
       });
@@ -202,8 +214,8 @@ class _TrafficViewState extends State<TrafficView>
         try {
           scrollController
               .animateTo(0,
-                  duration: Duration(milliseconds: _scrollToTopDurationMs),
-                  curve: Curves.ease)
+              duration: Duration(milliseconds: _scrollToTopDurationMs),
+              curve: Curves.ease)
               .then((_) {
             _newContent.value = false;
           });
@@ -348,7 +360,6 @@ class _TrafficViewState extends State<TrafficView>
     _updatesPaused = false;
     applyPendingUpdates();
   }
-
 
   // Currently unused
   void dispose() {
