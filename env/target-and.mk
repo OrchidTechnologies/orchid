@@ -50,11 +50,29 @@ temp := $(word 1,$(meson/$(1)))-$$(temp)
 endef
 $(each)
 
+ifeq ($(shell uname -o),Android)
+
+cc := clang
+cxx := clang++
+
+openssl/arm64-v8a := linux-aarch64
+
+define _
+ranlib/$(1) := ranlib
+ar/$(1) := ar
+strip/$(1) := strip
+endef
+$(each)
+
+else
+
 more = --sysroot=$(llvm)/sysroot
 # https://github.com/android-ndk/ndk/issues/884
 more += -fno-addrsig
 include $(pwd)/target-ndk.mk
+
 cxx += -stdlib=libc++
+lflags += -static-libstdc++
 
 define _
 ranlib/$(1) := $(llvm)/bin/$$(temp)-ranlib
@@ -63,11 +81,14 @@ strip/$(1) := $(llvm)/bin/$$(temp)-strip
 endef
 $(each)
 
+endif
+
 # XXX: the 32-bit linker is gold
 # XXX: the 64-bit linker is just ld
 #lflags += -Wl,--icf=all
 
 lflags += -lm -llog
-lflags += -static-libstdc++
 lflags += -Wl,--no-undefined
 qflags += -fPIC
+
+default := arm64-v8a
