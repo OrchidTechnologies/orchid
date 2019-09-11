@@ -31,7 +31,7 @@ lflags += -Wl,--icf=all
 lflags += -pthread
 qflags += -fPIC
 
-ifeq ($(uname),Linux)
+ifeq ($(uname-s),Linux)
 
 define _
 ranlib/$(1) := ranlib

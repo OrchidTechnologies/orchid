@@ -50,7 +50,7 @@ temp := $(word 1,$(meson/$(1)))-$$(temp)
 endef
 $(each)
 
-ifeq ($(shell uname -o),Android)
+ifeq ($(uname-o),Android)
 
 cc := clang
 cxx := clang++

@@ -19,7 +19,7 @@ deb: orchid-server_${version}_darwin-amd64.deb
 rpm: orchid-server-${version}-1.x86_64.rpm
 
 orchid-server_${version}_darwin-amd64.deb: orchid-server
-    ifeq ($(uname),Linux)
+    ifeq ($(uname-s),Linux)
         ${help2man}
         ${fpm_deb}
     else
@@ -27,7 +27,7 @@ orchid-server_${version}_darwin-amd64.deb: orchid-server
     endif
 
 orchid-server-${version}-1.x86_64.rpm: orchid-server
-    ifeq ($(uname),Linux)
+    ifeq ($(uname-s),Linux)
         ${help2man}
         ${fpm_rpm}
     else

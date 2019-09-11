@@ -10,7 +10,7 @@
 
 
 ifeq ($(target),)
-ifeq ($(shell uname -o),Android)
+ifeq ($(uname-o),Android)
 target := and
 else
 target := lnx

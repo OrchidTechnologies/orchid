@@ -14,8 +14,9 @@ export PATH := $(CURDIR)/$(pwd)/path:$(PATH)
 .PHONY:
 all:
 
-uname := $(shell uname -s)
--include $(pwd)/uname-$(uname).mk
+uname-s := $(shell uname -s)
+uname-o := $(shell uname -o 2>/dev/null)
+-include $(pwd)/uname-$(uname-s).mk
 
 version := $(shell $(pwd)/version.sh)
 monotonic := $(word 1,$(version))
