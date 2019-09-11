@@ -37,7 +37,7 @@
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 
-#include "adapter.hpp"
+//#include "adapter.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
@@ -120,9 +120,11 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const Loc
     co_return body;
 }
 
+#if 0
 task<std::string> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     return Request_(adapter, method, locator, headers, data, verify);
 }
+#endif
 
 task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     const auto results(co_await Resolve(locator.host_, locator.port_));
