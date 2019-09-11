@@ -28,7 +28,7 @@ all: $(output)/Orchid.apk
 
 .PHONY: install
 install: $(output)/Orchid.apk
-	adb install -r $<
+	adb install -d -r $<
 
 $(call include,vpn/target.mk)
 
