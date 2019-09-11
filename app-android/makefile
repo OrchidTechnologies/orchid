@@ -78,6 +78,7 @@ $(output)/jnilibs/%/libflutter.so: flutter/bin/cache/artifacts/engine/android-$$
 
 $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(jni) src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java $(assets)/AssetManifest.json $(output)/flutter.jar
 	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all \
+	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
 	    -PflutterJar=flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar
 	exit 0
 	touch $@

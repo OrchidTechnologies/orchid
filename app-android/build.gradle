@@ -36,8 +36,8 @@ android {
         applicationId "net.orchid.Orchid"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        versionCode orcMonotonic.toInteger()
+        versionName orcPackage
     }
 
     compileOptions {
