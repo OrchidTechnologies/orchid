@@ -92,7 +92,13 @@ keyextra :=
 
 verbose := 
 
-zipalign := $(word 1,$(wildcard $(ANDROID_HOME)/build-tools/*/zipalign))
+zipalign := 
+ifneq ($(ANDROID_HOME),)
+zipalign := $(wildcard $(ANDROID_HOME)/build-tools/*/zipalign)
+endif
+ifeq ($(zipalign),)
+zipalign := $(shell which zipalign)
+endif
 ifeq ($(zipalign),)
 $(error unable to find zipalign)
 endif
