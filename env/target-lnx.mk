@@ -20,6 +20,11 @@ openssl/x86_64 := linux-x86_64
 host/x86_64 := x86_64-linux-gnu
 meson/x86_64 := x86_64
 
+archs += aarch64
+openssl/aarch64 := linux-aarch64
+host/aarch64 := aarch64-linux-gnu
+meson/aarch64 := aarch64
+
 include $(pwd)/target-gnu.mk
 
 lflags += -Wl,--icf=all
