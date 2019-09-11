@@ -45,7 +45,7 @@ cxx := clang++$(suffix) -stdlib=libc++
 
 else
 
-define item
+define _
 more/$(1) := 
 more/$(1) += -B$(llvm)/$(1)-linux-android/bin
 more/$(1) += -target $(1)-pc-linux-gnu
