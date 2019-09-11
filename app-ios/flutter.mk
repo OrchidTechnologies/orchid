@@ -27,7 +27,7 @@ engine := flutter/bin/cache/artifacts/engine/ios$(engine)
 ifeq ($(precompiled),)
 $(bundle)/Frameworks/App.framework/App:
 	@mkdir -p $(dir $@)
-	echo "static const int Moo = 88;" | $(patsubst -miphoneos-version-min=11.0,-miphoneos-version-min=8.0,$(cc/arm64)) -dynamiclib -o $@ \
+	echo "static const int Moo = 88;" | $(patsubst -miphoneos-version-min=11.0,-miphoneos-version-min=8.0,$(cc/$(default))) -dynamiclib -o $@ \
 	    -x c - -Wno-unused-const-variable \
 	    -Xlinker -rpath -Xlinker '@executable_path/Frameworks' \
 	    -Xlinker -rpath -Xlinker '@loader_path/Frameworks' \
