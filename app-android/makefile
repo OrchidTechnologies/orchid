@@ -94,7 +94,7 @@ verbose :=
 
 zipalign := 
 ifneq ($(ANDROID_HOME),)
-zipalign := $(wildcard $(ANDROID_HOME)/build-tools/*/zipalign)
+zipalign := $(firstword $(wildcard $(ANDROID_HOME)/build-tools/*/zipalign))
 endif
 ifeq ($(zipalign),)
 zipalign := $(shell which zipalign)
