@@ -36,5 +36,5 @@ cflags += -DSQLITE_OMIT_TCL_VARIABLE
 source += $(output)/sqlite/sqlite3.c
 
 cflags += -I$(output)/$(pwd)
-header += $(pwd)/sqlite3.h
+header += $(pwd/sqlite)3.h
 endif
