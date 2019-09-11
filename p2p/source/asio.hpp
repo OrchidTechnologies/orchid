@@ -20,6 +20,7 @@
 /* }}} */
 
 
+#pragma once
 #include_next <asio.hpp>
 
 #ifndef ASIO_STANDALONE
