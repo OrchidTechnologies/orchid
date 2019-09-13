@@ -2,24 +2,31 @@ import 'dart:async';
 import 'dart:math';
 import 'package:orchid/api/etherscan_io.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/util/units.dart';
 import 'package:rxdart/rxdart.dart';
 import 'orchid_api.dart';
 
 // Placeholder API for funds and budgeting
 class OrchidBudgetAPI {
+  // Development time feature flag for the budget functionality
+  // Remove when features are complete.
+  static const bool featureEnabled = false;
+
   static OrchidBudgetAPI _shared = OrchidBudgetAPI._init();
 
   /// The latest N funding events for the user's primary pot address.
-  BehaviorSubject<List<LotteryPotUpdateEvent>> events = BehaviorSubject();
+  BehaviorSubject<List<LotteryPotUpdateEvent>> fundingEvents = BehaviorSubject();
 
   /// A total balance in OXT of the user's funded lottery pots.
-  Observable<double> balance;
+  Observable<OXT> balance;
 
   Timer _pollTimer;
 
   OrchidBudgetAPI._init() {
-    this.balance = events.map((events) {
-      return (events != null && events.length > 0) ? events.first.balance : 0.0;
+    this.balance = fundingEvents.map((events) {
+      return (events != null && events.length > 0)
+          ? events.first.balance
+          : OXT(0.0);
     });
   }
 
@@ -27,9 +34,10 @@ class OrchidBudgetAPI {
     return _shared;
   }
 
-  void applicationReady() {
-    // Inactive
-    return;
+  void applicationReady() async {
+    if (!OrchidBudgetAPI.featureEnabled) {
+      return;
+    }
 
     // On first launch, generate the user's primary lottery pot keypair.
     UserPreferences().getLotteryPotsPrimaryAddress().then((String address) {
@@ -37,7 +45,8 @@ class OrchidBudgetAPI {
         // TODO: Generating a fake random pot address.
         var address = OrchidBudgetAPI._generateFakeRandomPotAddress();
         UserPreferences().setLotteryPotsPrimaryAddress(address);
-        OrchidAPI().logger().write("First Launch. Generated primary lottery pot address: $address");
+        OrchidAPI().logger().write(
+            "First Launch. Generated primary lottery pot address: $address");
       } else {
         OrchidAPI().logger().write("Primary lottery pot address: $address");
         poll();
@@ -55,11 +64,15 @@ class OrchidBudgetAPI {
     String potAddress = await getLotteryPotsPrimaryAddress();
     var potEvents = await EtherscanIO.getLotteryPotUpdateEvents(potAddress);
     OrchidAPI().logger().write("got pot events: ${potEvents.length}");
-    events.add(potEvents);
+    fundingEvents.add(potEvents);
     return true;
   }
 
   Future<String> getLotteryPotsPrimaryAddress() async {
+    // TODO:
+    if (OrchidAPI.mockAPI) {
+      return "A3D8F4933B73DACC0702C52503D0DC6BDE0984DA";
+    }
     return UserPreferences().getLotteryPotsPrimaryAddress();
   }
 
@@ -71,11 +84,43 @@ class OrchidBudgetAPI {
     return "http://pat.net/orchid?pot=$potAddress&amount=2";
   }
 
+  /// Get the current budget or null if none is defined.
+  Future<Budget> getBudget() async {
+    Budget userBudget = await UserPreferences().getBudget();
+    if (userBudget == null) {
+      // Temporary: always return the recommended budget.
+      // We should probably return null and let the UI decide.
+      return (await getBudgetRecommendations()).recommended;
+    }
+    return userBudget;
+  }
+
+  /// Set the current budget
+  Future<bool> setBudget(Budget budget) async {
+    return UserPreferences().setBudget(budget);
+  }
+
+  /// Return recommended budget configurations for low, average, and high usage.
+  Future<BudgetRecommendation> getBudgetRecommendations() async {
+    return BudgetRecommendation(
+      lowUsage:
+          Budget(deposit: OXT(10.0), spendRate: OXT(2.50), term: Months(1)),
+      averageUsage:
+          Budget(deposit: OXT(10.0), spendRate: OXT(5.00), term: Months(1)),
+      highUsage:
+          Budget(deposit: OXT(10.0), spendRate: OXT(10.00), term: Months(1)),
+
+      // TODO: Recommendation should be based on user history.
+      recommended:
+          Budget(deposit: OXT(10.0), spendRate: OXT(5.00), term: Months(1)),
+    );
+  }
+
   // TODO: Generating a fake random pot address.
   static String _generateFakeRandomPotAddress() {
     String sb = "0x";
     var rand = Random(DateTime.now().millisecondsSinceEpoch);
-    for (var i=0; i<40; i++) {
+    for (var i = 0; i < 40; i++) {
       sb += "0123456789ABCDEF"[rand.nextInt(16)];
     }
     return sb;
@@ -85,6 +130,45 @@ class OrchidBudgetAPI {
   void dispose() {
     _pollTimer.cancel();
   }
-
 }
 
+/// A budget representing a deposit, spend rate, and term.
+class Budget {
+  OXT deposit;
+  OXT spendRate; // OXT per Month
+  Months term;
+
+  Budget({this.deposit, this.spendRate, this.term});
+
+  Budget.fromJson(Map<String, dynamic> json)
+      : deposit = OXT(json['deposit']),
+        spendRate = OXT(json['spendRate']),
+        term = Months(json['term']);
+
+  Map<String, dynamic> toJson() =>
+      {
+        'deposit': deposit.value,
+        'spendRate': spendRate.value,
+        'term': term.value
+      };
+
+  bool operator ==(o) =>
+      o is Budget &&
+      o.deposit == deposit &&
+      o.spendRate == spendRate &&
+      o.term == term;
+
+// todo: hash
+}
+
+/// A set of recommended budgets including low, average, and high usage scenarios
+/// as well as a custom budget recommendation based on the user's history.
+class BudgetRecommendation {
+  final Budget lowUsage;
+  final Budget averageUsage;
+  final Budget highUsage;
+  final Budget recommended;
+
+  const BudgetRecommendation(
+      {this.lowUsage, this.averageUsage, this.highUsage, this.recommended});
+}

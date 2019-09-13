@@ -4,6 +4,7 @@ import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/pricing.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
@@ -225,6 +226,11 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
+  }
+
+  @override
+  OrchidPricingAPI pricing() {
+    return OrchidPricingAPI();
   }
 
   Future<String> groupContainerPath() async {

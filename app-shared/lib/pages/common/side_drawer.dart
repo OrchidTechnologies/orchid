@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/util/units.dart';
 import '../app_text.dart';
 import 'dialogs.dart';
 
@@ -55,6 +59,20 @@ class _SideDrawerState extends State<SideDrawer> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
+              Visibility(
+                visible: OrchidBudgetAPI.featureEnabled,
+                child: Column(
+                  children: <Widget>[
+                    BalanceSideDrawerTile(
+                        title: "Balance",
+                        imageName: 'assets/images/wallet.png',
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/budget/balance');
+                        }),
+                    divider(),
+                  ],
+                ),
+              ),
               SideDrawerTile(
                   title: "Clear Data",
                   icon: Icons.delete_forever,
@@ -190,27 +208,27 @@ class BalanceSideDrawerTile extends StatefulWidget {
 
 class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
   /// The user's balance in OXT or null if unavailable.
-  double _balance;
+  OXT _balance;
+  StreamSubscription _balanceListener;
 
   @override
   void initState() {
     super.initState();
 
-    /*
-    // Listen to the funding balance.
-    OrchidAPI().budget().balance.listen((balance) {
-      //OrchidAPI().logger().write("Balance update: $balance.");
-      setState(() {
-        this._balance = balance;
+    if (OrchidBudgetAPI.featureEnabled) {
+      // Listen to the funding balance.
+      _balanceListener = OrchidAPI().budget().balance.listen((balance) {
+        setState(() {
+          this._balance = balance;
+        });
       });
-    });
-     */
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-        contentPadding: EdgeInsets.only(left: 20),
+        contentPadding: EdgeInsets.only(left: 20, right: 20),
         leading: Image(
             height: 32,
             width: 32,
@@ -226,12 +244,21 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
             Text(
                 _balance == null
                     ? "(Setup)"
-                    : "${_balance.toStringAsFixed(2)} OXT",
+                    : "${_balance.value.toStringAsFixed(2)} OXT",
                 textAlign: TextAlign.left,
                 style: AppText.sideDrawerTitleStyle
                     .copyWith(fontSize: 12, height: 1.2)),
           ],
         ),
+        trailing: Icon(Icons.chevron_right, color: AppColors.white),
         onTap: widget.onPressed);
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _balanceListener.cancel();
+  }
+
+
 }

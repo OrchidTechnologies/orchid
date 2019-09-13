@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:orchid/util/units.dart';
 
 class EtherscanIO {
   static var apiKey = "73BIQR3R1ER56V53PSSAPNUTQUFVHCVVVH";
@@ -93,7 +94,7 @@ class EtherscanIO {
 
     List<LotteryPotUpdateEvent> list = result.map((dynamic event) {
       // The first 64char hex data field is the balance
-      double balance = toOXT(event['data'].toString().substring(0, 64 + 2));
+      OXT balance = toOXT(event['data'].toString().substring(0, 64 + 2));
 
       // ETH timestamp is seconds since epoch
       DateTime timeStamp = DateTime.fromMillisecondsSinceEpoch(
@@ -116,7 +117,7 @@ class EtherscanIO {
   }
 
   /// get the Orchid token balance for the specified address.
-  static Future<double> getTokenBalance(String address) async {
+  static Future<OXT> getTokenBalance(String address) async {
     var response = await http.post(url, body: {
       'module': 'account',
       'action': 'tokenbalance',
@@ -139,8 +140,8 @@ class EtherscanIO {
     return toOXT(balance);
   }
 
-  static double toOXT(String oxtWei) {
-    return BigInt.parse(oxtWei) / BigInt.from(1e18);
+  static OXT toOXT(String oxtWei) {
+    return OXT(BigInt.parse(oxtWei) / BigInt.from(1e18));
   }
 
   // Pad a 40 character address to 64 characters
@@ -154,7 +155,7 @@ class EtherscanIO {
 }
 
 class LotteryPotUpdateEvent {
-  final double balance;
+  final OXT balance;
   final String blockNumber;
   final DateTime timeStamp;
   final String gasPrice;

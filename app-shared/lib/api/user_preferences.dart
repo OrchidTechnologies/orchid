@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'orchid_budget_api.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -95,6 +99,22 @@ class UserPreferences {
         .setString(UserPreferenceKey.LotteryPotsPrimaryAddress.toString(), value);
   }
 
+  Future<bool> setBudget(Budget budget) async {
+    String value = jsonEncode(budget);
+    print("json = $value");
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.Budget.toString(), value);
+  }
+
+  Future<Budget> getBudget() async {
+    String value = (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.Budget.toString());
+    print("getBudget found: $value");
+    if (value == null) {
+      return null;
+    }
+    return Budget.fromJson(jsonDecode(value));
+  }
 }
 
 enum UserPreferenceKey {
@@ -103,5 +123,6 @@ enum UserPreferenceKey {
   PromptedToLinkWallet,
   LinkWalletAcknowledged,
   PromptedForVPNCredentials,
-  LotteryPotsPrimaryAddress
+  LotteryPotsPrimaryAddress,
+  Budget
 }

@@ -14,3 +14,22 @@ class LinkTextSpan extends TextSpan {
                 launch(url, forceSafariVC: false);
               });
 }
+
+class LinkText extends StatelessWidget {
+  TextStyle style;
+  String url;
+  String text;
+  TextOverflow overflow;
+
+  LinkText(this.text, {this.style, @required this.url, this.overflow = TextOverflow.ellipsis});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      child: Text(text ?? url, style: style, overflow: overflow),
+      onTap: () {
+        launch(url, forceSafariVC: false);
+      },
+    );
+  }
+}

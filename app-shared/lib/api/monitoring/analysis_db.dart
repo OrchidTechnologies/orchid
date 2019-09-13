@@ -14,6 +14,10 @@ class AnalysisDb {
 
   AnalysisDb._init();
 
+  factory AnalysisDb() {
+    return _shared;
+  }
+
   Future<Database> _getDb() async {
     if (_db != null && _db.isOpen) {
       return _db;
@@ -87,10 +91,6 @@ class AnalysisDb {
       return unknown;
     }
     return IANA.protocol[number] ?? unknown;
-  }
-
-  factory AnalysisDb() {
-    return _shared;
   }
 
   void dispose() {

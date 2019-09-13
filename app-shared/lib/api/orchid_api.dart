@@ -1,6 +1,7 @@
 import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/pricing.dart';
 import 'package:orchid/pages/settings/developer_settings.dart';
 import 'package:rxdart/rxdart.dart';
 import 'orchid_budget_api.dart';
@@ -94,8 +95,11 @@ abstract class OrchidAPI {
   /// Set a name-value pair representing a dynamic developer settings
   void setDeveloperSetting({String name, String value});
 
-  /// Placeholder API for funds and budgeting
+  /// API for funds and budgeting
   OrchidBudgetAPI budget();
+
+  /// API for exchange rates
+  OrchidPricingAPI pricing();
 
   /// The the path for files shared between the 
   Future<String> groupContainerPath();
