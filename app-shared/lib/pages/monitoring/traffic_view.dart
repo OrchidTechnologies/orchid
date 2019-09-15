@@ -326,8 +326,9 @@ class _TrafficViewState extends State<TrafficView>
 
       // Maintain position
       var scrollController = PrimaryScrollController.of(context);
+      var offset = scrollController.hasClients ? scrollController.offset : 0;
       scrollController
-          .jumpTo(scrollController.offset + delta * _renderedRowHeight);
+          .jumpTo(offset + delta * _renderedRowHeight);
 
       // Animate in the new data
       Future.delayed(Duration(milliseconds: 150)).then((_) {
