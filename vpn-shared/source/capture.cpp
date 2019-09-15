@@ -604,7 +604,12 @@ task<void> Split::Send(Beam data) {
             uint16_t offset(length + sizeof(openvpn::UDPHeader));
             uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
             Socket target(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
-            co_await punch->Send(data.subset(offset, size), target);
+            try {
+                co_await punch->Send(data.subset(offset, size), target);
+            } catch (...) {
+                // XXX: this is a hack. test on Travis' device
+                Log() << "FAIL TO SEND UDP from " << source << " to " << target << std::endl;
+            }
             analyzer_->Analyze(span);
         } break;
 
