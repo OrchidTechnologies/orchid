@@ -44,6 +44,9 @@ archive :=
 
 qflags += -gfull -Os
 
+qflags += -fdebug-prefix-map=./=
+qflags += -fdebug-prefix-map=$(CURDIR)=.
+
 cflags += -Wall
 cflags += -Werror
 
