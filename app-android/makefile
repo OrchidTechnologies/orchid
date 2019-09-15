@@ -83,12 +83,12 @@ $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -n
 	exit 0
 	touch $@
 
-../debug.keystore:
-	echo $$'android\nandroid\n\n\n' | keytool -genkey -v -keystore $@ -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -validity 365 -keyalg RSA -keysize 2048
+ifeq ($(keystore),)
+keystore := ../debug androiddebugkey
 
-keystore := ../debug
-keyalias := androiddebugkey
-keyextra := 
+$(word 1,$(keystore)).keystore:
+	echo $$'android\nandroid\n\n\n' | keytool -genkey -v -keystore $@ -alias $(word 2,$(keystore)) -dname "CN=Android Debug,O=Android,C=US" -validity 365 -keyalg RSA -keysize 2048
+endif
 
 verbose := 
 
@@ -103,8 +103,8 @@ ifeq ($(zipalign),)
 $(error unable to find zipalign)
 endif
 
-$(output)/Orchid.apk: $(apk) $(keystore).keystore $(keyextra)
+$(output)/Orchid.apk: $(apk) $(word 1,$(keystore)).keystore
 	cp -af $(apk) $(output)/signed.apk
-	jarsigner -digestalg SHA1 -sigalg MD5withRSA $(if $(verbose),-verbose) -sigfile CERT -keystore $(keystore).keystore -storepass android -tsa http://timestamp.digicert.com/ $(output)/signed.apk $(keyalias)
+	jarsigner -digestalg SHA1 -sigalg MD5withRSA $(if $(verbose),-verbose) -sigfile CERT -keystore $(word 1,$(keystore)).keystore -storepass android -tsa http://timestamp.digicert.com/ $(output)/signed.apk $(word 2,$(keystore))
 	$(zipalign) -f $(if $(verbose),-v) 4 $(output)/signed.apk $@
 	@rm -rf $(output)/signed.apk
