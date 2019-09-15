@@ -24,6 +24,8 @@ revision := $(word 2,$(version))
 package := $(word 3,$(version))
 version := $(word 4,$(version))
 
+export SOURCE_DATE_EPOCH := $(monotonic)
+
 archs := 
 each = $(call loop,_,$(archs))
 
