@@ -122,25 +122,25 @@ $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	@$(cc/$(arch)) -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cc/$(arch)) -MD -MP -c -o $@ $< $(flags)
 
 $(output)/%.m.o: $$(specific) $$(folder).m $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	@$(cc/$(arch)) -fobjc-arc -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cc/$(arch)) -fobjc-arc -MD -MP -c -o $@ $< $(flags)
 
 $(output)/%.mm.o: $$(specific) $$(folder).mm $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	@$(cxx/$(arch)) -std=gnu++17 -fobjc-arc -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cxx/$(arch)) -std=gnu++17 -fobjc-arc -MD -MP -c -o $@ $< $(flags)
 
 $(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	@$(cxx/$(arch)) -std=c++11 -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cxx/$(arch)) -std=c++11 -MD -MP -c -o $@ $< $(flags)
 
 $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
@@ -153,7 +153,7 @@ ifeq ($(filter notidy,$(debug)),)
 	fi
 endif
 	@echo [CC] $(target)/$(arch) $<
-	@$(cxx/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cxx/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags)
 
 define _
 $(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)')
