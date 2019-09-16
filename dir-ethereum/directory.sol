@@ -236,56 +236,56 @@ contract OrchidDirectory is IOrchidDirectory {
         lift(key, stake, -amount, stakee);
 
         if (stake.amount_ == 0) {
-                Primary storage pivot = turn(key, stake);
-                Primary storage child = stake.before_ > stake.after_ ? stake.left_ : stake.right_;
+            Primary storage pivot = turn(key, stake);
+            Primary storage child = stake.before_ > stake.after_ ? stake.left_ : stake.right_;
 
-                if (nope(child))
-                    kill(pivot);
-                else {
-                    Primary storage last = child;
-                    Stake storage current = stakes_[name(child)];
-                    for (;;) {
-                        Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
-                        if (nope(next))
-                            break;
-                        last = next;
-                        current = stakes_[name(next)];
-                    }
+            if (nope(child))
+                kill(pivot);
+            else {
+                Primary storage last = child;
+                Stake storage current = stakes_[name(child)];
+                for (;;) {
+                    Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
+                    if (nope(next))
+                        break;
+                    last = next;
+                    current = stakes_[name(next)];
+                }
 
-                    bytes32 direct = current.parent_;
-                    copy(pivot, last);
-                    current.parent_ = stake.parent_;
+                bytes32 direct = current.parent_;
+                copy(pivot, last);
+                current.parent_ = stake.parent_;
 
-                    if (direct == key) {
-                        Primary storage other = stake.before_ > stake.after_ ? stake.right_ : stake.left_;
-                        if (!nope(other))
-                            stakes_[name(other)].parent_ = name(last);
+                if (direct == key) {
+                    Primary storage other = stake.before_ > stake.after_ ? stake.right_ : stake.left_;
+                    if (!nope(other))
+                        stakes_[name(other)].parent_ = name(last);
 
-                        if (name(stake.left_) == key) {
-                            current.right_ = stake.right_;
-                            current.after_ = stake.after_;
-                        } else {
-                            current.left_ = stake.left_;
-                            current.before_ = stake.before_;
-                        }
-                    } else {
-                        if (!nope(stake.left_))
-                            stakes_[name(stake.left_)].parent_ = name(last);
-                        if (!nope(stake.right_))
-                            stakes_[name(stake.right_)].parent_ = name(last);
-
+                    if (name(stake.left_) == key) {
                         current.right_ = stake.right_;
                         current.after_ = stake.after_;
-
+                    } else {
                         current.left_ = stake.left_;
                         current.before_ = stake.before_;
-
-                        stake.parent_ = direct;
-                        copy(last, staker, stakee);
-                        step(key, stake, -current.amount_, current.parent_);
-                        kill(last);
                     }
+                } else {
+                    if (!nope(stake.left_))
+                        stakes_[name(stake.left_)].parent_ = name(last);
+                    if (!nope(stake.right_))
+                        stakes_[name(stake.right_)].parent_ = name(last);
+
+                    current.right_ = stake.right_;
+                    current.after_ = stake.after_;
+
+                    current.left_ = stake.left_;
+                    current.before_ = stake.before_;
+
+                    stake.parent_ = direct;
+                    copy(last, staker, stakee);
+                    step(key, stake, -current.amount_, current.parent_);
+                    kill(last);
                 }
+            }
 
             delete stakes_[key];
         }
