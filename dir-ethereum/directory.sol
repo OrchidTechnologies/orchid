@@ -130,6 +130,14 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
 
+    function turn(bytes32 key, Stake storage stake) private view returns (Primary storage) {
+        if (stake.parent_ == bytes32(0))
+            return root_;
+        Stake storage parent = stakes_[stake.parent_];
+        return name(parent.left_) == key ? parent.left_ : parent.right_;
+    }
+
+
     function step(bytes32 key, Stake storage stake, uint128 amount, bytes32 root) private {
         while (stake.parent_ != root) {
             bytes32 parent = stake.parent_;
@@ -228,23 +236,20 @@ contract OrchidDirectory is IOrchidDirectory {
         lift(key, stake, -amount, stakee);
 
         if (stake.amount_ == 0) {
-            if (stake.parent_ == bytes32(0))
-                delete root_;
-            else {
-                Stake storage current = stakes_[stake.parent_];
-                Primary storage pivot = name(current.left_) == key ? current.left_ : current.right_;
+                Primary storage pivot = turn(key, stake);
                 Primary storage child = stake.before_ > stake.after_ ? stake.left_ : stake.right_;
 
                 if (nope(child))
                     kill(pivot);
                 else {
                     Primary storage last = child;
+                    Stake storage current = stakes_[name(child)];
                     for (;;) {
-                        current = stakes_[name(last)];
                         Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
                         if (nope(next))
                             break;
                         last = next;
+                        current = stakes_[name(next)];
                     }
 
                     bytes32 direct = current.parent_;
@@ -281,7 +286,6 @@ contract OrchidDirectory is IOrchidDirectory {
                         kill(last);
                     }
                 }
-            }
 
             delete stakes_[key];
         }
