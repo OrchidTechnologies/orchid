@@ -37,6 +37,17 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
 
+    struct Stakee {
+        uint128 amount_;
+    }
+
+    mapping(address => Stakee) internal stakees_;
+
+    function heft(address stakee) public view returns (uint128 amount) {
+        return stakees_[stakee].amount_;
+    }
+
+
     struct Primary {
         bytes32 value_;
     }
@@ -63,17 +74,6 @@ contract OrchidDirectory is IOrchidDirectory {
 
     function nope(Primary storage primary) private view returns (bool) {
         return primary.value_ == bytes32(0);
-    }
-
-
-    struct Stakee {
-        uint128 amount_;
-    }
-
-    mapping(address => Stakee) internal stakees_;
-
-    function heft(address stakee) public view returns (uint128 amount) {
-        return stakees_[stakee].amount_;
     }
 
 
