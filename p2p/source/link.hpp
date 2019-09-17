@@ -139,16 +139,12 @@ class Sunk {
   public:
     virtual Drain_ *Gave() = 0;
 
-    template <typename Type_>
-    Type_ *Give(U<Type_> inner) {
+    template <typename Type_, typename... Args_>
+    Type_ *Wire(Args_ &&...args) {
+        auto inner(std::make_unique<Type_>(Gave(), std::forward<Args_>(args)...));
         auto backup(inner.get());
         inner_ = std::move(inner);
         return backup;
-    }
-
-    template <typename Type_, typename... Args_>
-    Type_ *Wire(Args_ &&...args) {
-        return Give(std::make_unique<Type_>(Gave(), std::forward<Args_>(args)...));
     }
 };
 

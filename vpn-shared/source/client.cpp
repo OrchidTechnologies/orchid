@@ -114,8 +114,8 @@ task<void> Server::Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std:
     co_await secure->Connect();
 }
 
-U<Prefix<Server>> Server::Path(BufferDrain *drain) {
-    return std::make_unique<Prefix<Server>>(drain, shared_from_this());
+Prefix<Server> *Server::Path(Sunk<Prefix<Server>> *sunk) {
+    return sunk->Wire<Prefix<Server>>(shared_from_this());
 }
 
 task<Beam> Server::Call(const Tag &command, const Buffer &args) {
@@ -151,9 +151,8 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
         }
     };
 
-    Sink<Result> result;
-
-    auto path(result.Give(Path(&result)));
+    Sink<Result, Prefix<Server>> result;
+    auto path(Path(&result));
 
     co_await path->Send(Tie(command, args));
     co_return co_await result.Wait();
@@ -161,7 +160,7 @@ task<Beam> Server::Call(const Tag &command, const Buffer &args) {
 
 task<Socket> Server::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto remote(sunk->Wire<Sink<Remote, Prefix<Server>>>());
-    remote->Give(Path(remote));
+    Path(remote);
     co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
         auto [service, socket] = Take<uint16_t, Rest>(co_await Call(ConnectTag, Tie(tag, Beam(host + ":" + port))));
         co_return Socket(socket.str(), service);
@@ -174,7 +173,7 @@ task<Socket> Server::Connect(U<Stream> &stream, const std::string &host, const s
 
 task<Socket> Server::Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) {
     auto remote(sunk->Wire<Sink<Remote, Prefix<Server>>>());
-    remote->Give(Path(remote));
+    Path(remote);
     co_return co_await remote->Connect([&](const Tag &tag) -> task<Socket> {
         auto answer(co_await respond((co_await Call(OfferTag, tag)).str()));
         auto description((co_await Call(NegotiateTag, Tie(tag, Beam(answer)))).str());

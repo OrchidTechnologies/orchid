@@ -65,7 +65,7 @@ class Server :
 
     task<void> Swing(Sunk<Secure> *sunk, const S<Origin> &origin, const std::string &host, const std::string &port);
 
-    U<Prefix<Server>> Path(BufferDrain *drain);
+    Prefix<Server> *Path(Sunk<Prefix<Server>> *sunk);
     task<Beam> Call(const Tag &command, const Buffer &args);
 
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
