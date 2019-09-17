@@ -151,8 +151,15 @@ class _BalancePageState extends State<BalancePage> {
                     Text(" OXT", style: valueStyle),
                   ],
                 ),
-                pady(2),
-                Text("\$$usdString USD", style: valueSubtitleStyle),
+                Visibility(
+                  visible: _pricing != null,
+                  child: Column(
+                    children: <Widget>[
+                      pady(2),
+                      Text("\$$usdString USD", style: valueSubtitleStyle),
+                    ],
+                  ),
+                ),
               ]),
         ],
       ),
@@ -229,8 +236,15 @@ class _BalancePageState extends State<BalancePage> {
                             Text(" OXT", style: valueStyle),
                           ],
                         ),
-                        pady(2),
-                        Text("\$$usdString USD", style: valueSubtitleStyle),
+                        Visibility(
+                          visible: _pricing != null,
+                          child: Column(
+                            children: <Widget>[
+                              pady(2),
+                              Text("\$$usdString USD", style: valueSubtitleStyle),
+                            ],
+                          ),
+                        ),
                       ]),
                   Spacer(),
                   Text(

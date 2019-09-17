@@ -12,8 +12,13 @@ class OrchidPricingAPI
     return _shared;
   }
 
-  // TODO: Placeholder, need a service
+  /// Get a snapshot of current pricing data with an associated "as of" time.
+  /// This method may return null if no pricing data is available and the UI
+  /// should handle this as a routine condition by hiding displayed conversions.
+  /// (The app may ship without pricing enabled at some point).
   Future<Pricing> getPricing() async {
+//    return null;
+    // TODO: Placeholder, need a service
     return Pricing(oxtToUsdRate: 0.5);
   }
 }
