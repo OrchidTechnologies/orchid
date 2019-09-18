@@ -8,6 +8,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/pages/app_gradients.dart';
+import 'package:orchid/pages/budget/subscription_page.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/link_text.dart';
@@ -81,7 +82,10 @@ class _BalancePageState extends State<BalancePage> {
           _buildSummaryTile(
               image: "assets/images/creditCard.png",
               title: "MONTHLY\nBUDGET",
-              oxtValue: _budget?.spendRate),
+              oxtValue: _budget?.spendRate,
+              detail: () {
+                _showSubscriptionPage();
+              }),
           _divider(),
           _buildSummaryTile(
               image: "assets/images/pig.png",
@@ -100,7 +104,8 @@ class _BalancePageState extends State<BalancePage> {
     );
   }
 
-  Widget _buildSummaryTile({String image, String title, OXT oxtValue}) {
+  Widget _buildSummaryTile(
+      {String image, String title, OXT oxtValue, VoidCallback detail}) {
     const color = Color(0xff3a3149);
 
     const titleStyle = TextStyle(
@@ -125,43 +130,58 @@ class _BalancePageState extends State<BalancePage> {
         fontFamily: "SFProText-Regular",
         height: 13.0 / 11.0);
 
-    var oxtString = oxtValue?.value?.toStringAsFixed(2) ?? "";
-    var usdString = _pricing?.toUSD(oxtValue)?.value?.toStringAsFixed(2) ?? "";
+    var oxtString = oxtValue?.toStringAsFixed(2) ?? "";
+    var usdString = _pricing?.toUSD(oxtValue)?.toStringAsFixed(2) ?? "";
 
-    return Container(
-      height: 64,
-      child: Row(
-        children: <Widget>[
-          Image.asset(
-            image,
-            color: color,
-          ),
-          padx(11),
-          Text(title, style: titleStyle),
-          Spacer(),
-          Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  children: <Widget>[
-                    Text(oxtString,
-                        style:
-                            valueStyle.copyWith(fontWeight: FontWeight.bold)),
-                    Text(" OXT", style: valueStyle),
-                  ],
-                ),
-                Visibility(
-                  visible: _pricing != null,
-                  child: Column(
-                    children: <Widget>[
-                      pady(2),
-                      Text("\$$usdString USD", style: valueSubtitleStyle),
-                    ],
-                  ),
-                ),
-              ]),
-        ],
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: detail != null
+          ? () {
+              _showSubscriptionPage();
+            }
+          : null,
+      child: Container(
+        height: 64,
+        child: Row(
+          children: <Widget>[
+            Image.asset(
+              image,
+              color: color,
+            ),
+            padx(11),
+            Text(title, style: titleStyle),
+            Spacer(),
+            Row(
+              children: <Widget>[
+                Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: <Widget>[
+                          Text(oxtString,
+                              style: valueStyle.copyWith(
+                                  fontWeight: FontWeight.bold)),
+                          Text(" OXT", style: valueStyle),
+                        ],
+                      ),
+                      Visibility(
+                        visible: _pricing != null,
+                        child: Column(
+                          children: <Widget>[
+                            pady(2),
+                            Text("\$$usdString USD", style: valueSubtitleStyle),
+                          ],
+                        ),
+                      ),
+                    ]),
+                padx(4),
+                Icon(Icons.chevron_right,
+                    color: detail != null ? Colors.grey : Colors.transparent)
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -241,7 +261,8 @@ class _BalancePageState extends State<BalancePage> {
                           child: Column(
                             children: <Widget>[
                               pady(2),
-                              Text("\$$usdString USD", style: valueSubtitleStyle),
+                              Text("\$$usdString USD",
+                                  style: valueSubtitleStyle),
                             ],
                           ),
                         ),
@@ -371,6 +392,12 @@ class _BalancePageState extends State<BalancePage> {
               color: Color(0xff5f45ba))),
       onPressed: _copyURL,
     );
+  }
+
+  void _showSubscriptionPage() {
+    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
+      return SubscriptionPage();
+    }));
   }
 
   @override
