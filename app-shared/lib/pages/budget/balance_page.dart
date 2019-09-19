@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/src/services/clipboard.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/etherscan_io.dart';
@@ -13,6 +14,7 @@ import 'package:orchid/pages/budget/budget_summary_tile.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
 
@@ -37,6 +39,8 @@ class _BalancePageState extends State<BalancePage> {
   @override
   void initState() {
     super.initState();
+
+    ScreenOrientation.portrait();
 
     OrchidAPI().pricing().getPricing().then((pricing) {
       setState(() {
@@ -413,6 +417,7 @@ class _BalancePageState extends State<BalancePage> {
   @override
   void dispose() {
     super.dispose();
+    ScreenOrientation.reset();
     _subscriptions.forEach((sub) {
       sub.cancel();
     });

@@ -7,6 +7,7 @@ import 'package:orchid/api/pricing.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';
+import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
 
@@ -27,6 +28,7 @@ class _BudgetPageState extends State<BudgetPage> {
   @override
   void initState() {
     super.initState();
+    ScreenOrientation.portrait();
     initStateAsync();
   }
 
@@ -134,19 +136,19 @@ class _BudgetPageState extends State<BudgetPage> {
         color: Colors.white,
         fontSize: 17.0,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        letterSpacing: 0.4,
         fontFamily: "SFProText-Semibold",
         height: 22.0 / 17.0);
     const subtitleStyle = TextStyle(
       color: Colors.white,
-      fontSize: 14.0,
+      fontSize: 13.0,
       fontWeight: FontWeight.w300,
       letterSpacing: 0.5,
       fontFamily: "SFProText-Semibold",
     );
     const valueStyle = TextStyle(
         color: Colors.white,
-        fontSize: 20.0,
+        fontSize: 18.0,
         fontWeight: FontWeight.normal,
         letterSpacing: 0.38,
         fontFamily: "SFProText-Regular",
@@ -178,10 +180,10 @@ class _BudgetPageState extends State<BudgetPage> {
           gradient: grad,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
           child: Row(
             children: <Widget>[
-              // left side
+              // left side usage description
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -199,7 +201,7 @@ class _BudgetPageState extends State<BudgetPage> {
                 ],
               ),
               Spacer(),
-              // right side
+              // right side value display
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Row(
                   children: <Widget>[
@@ -254,6 +256,7 @@ class _BudgetPageState extends State<BudgetPage> {
   @override
   void dispose() {
     super.dispose();
+    ScreenOrientation.reset();
     _rxSubscriptions.forEach((sub) {
       sub.cancel();
     });
