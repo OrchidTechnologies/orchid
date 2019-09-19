@@ -72,33 +72,20 @@ class Drain {
 
 using BufferDrain = Drain<const Buffer &>;
 
-template <typename Drain_>
-class Pump :
+class Valve :
     public Pipe
 {
   private:
-    typedef Drain_ Drain;
-    Drain_ *const drain_;
-
     cppcoro::async_manual_reset_event shut_;
 
   protected:
-    Drain_ *Outer() {
-        return drain_;
-    }
-
     void Stop() {
         orc_assert(!shut_.is_set());
         shut_.set();
     }
 
   public:
-    Pump(Drain_ *drain) :
-        drain_(drain)
-    {
-    }
-
-    ~Pump() override {
+    ~Valve() override {
         if (Verbose)
             Log() << "##### " << unique_ << std::endl;
         orc_insist(shut_.is_set());
@@ -107,6 +94,25 @@ class Pump :
     virtual task<void> Shut() {
         co_await shut_;
         co_await Schedule();
+    }
+};
+
+template <typename Drain_>
+class Pump :
+    public Valve
+{
+  private:
+    Drain_ *const drain_;
+
+  protected:
+    Drain_ *Outer() {
+        return drain_;
+    }
+
+  public:
+    Pump(Drain_ *drain) :
+        drain_(drain)
+    {
     }
 };
 
