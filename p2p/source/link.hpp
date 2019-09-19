@@ -142,9 +142,9 @@ class Sunk {
   protected:
     U<Inner_> inner_;
 
-  public:
     virtual Drain_ *Gave() = 0;
 
+  public:
     template <typename Type_, typename... Args_>
     Type_ *Wire(Args_ &&...args) {
         auto inner(std::make_unique<Type_>(Gave(), std::forward<Args_>(args)...));
@@ -159,7 +159,7 @@ class Sink final :
     public Base_,
     public Sunk<Inner_, Drain_>
 {
-  protected:
+  private:
     Inner_ *Inner() override {
         auto inner(this->inner_.get());
         orc_insist(inner != nullptr);
