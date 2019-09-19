@@ -29,9 +29,9 @@
 #define INET_ADDR(a,b,c,d) (a | (b<<8) | (c<<16) | (d<<24))
 #define TERMINATE_HOST INET_ADDR(10,7,0,3)
 
-bool vpn_protect(int s);
-
 namespace orc {
+
+bool vpn_protect(int s);
 
 int Protect(int socket, const sockaddr *address, socklen_t length) {
     bool is_local = false;

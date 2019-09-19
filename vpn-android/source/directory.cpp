@@ -23,9 +23,9 @@
 #include "directory.hpp"
 #include "error.hpp"
 
-extern std::string files_dir;
-
 namespace orc {
+
+extern std::string files_dir;
 
 std::string Group() {
     return files_dir;

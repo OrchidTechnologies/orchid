@@ -14,7 +14,7 @@
 #include "file.hpp"
 #include "transport.hpp"
 
-using namespace orc;
+namespace orc {
 
 #define ORC_CATCH() catch(...) { \
     /* XXX: implement */ \
@@ -106,4 +106,6 @@ bool vpn_protect(int s)
         //Log() << "vpn_protect fd:" << s << " success:" << (bool)success << std::endl;
         return (bool)success;
     })).get();
+}
+
 }
