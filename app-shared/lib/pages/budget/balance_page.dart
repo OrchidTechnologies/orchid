@@ -8,7 +8,8 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/pages/app_gradients.dart';
-import 'package:orchid/pages/budget/subscription_page.dart';
+import 'package:orchid/pages/budget/budget_page.dart';
+import 'package:orchid/pages/budget/budget_summary_tile.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/link_text.dart';
@@ -79,23 +80,28 @@ class _BalancePageState extends State<BalancePage> {
           pady(16),
           _buildCardView(oxtValue: _balance),
           pady(16),
-          _buildSummaryTile(
+          BudgetSummaryTile(
               image: "assets/images/creditCard.png",
               title: "MONTHLY\nBUDGET",
               oxtValue: _budget?.spendRate,
+              pricing: _pricing,
               detail: () {
                 _showSubscriptionPage();
               }),
           _divider(),
-          _buildSummaryTile(
-              image: "assets/images/pig.png",
-              title: "MEMBERSHIP\nDEPOSIT",
-              oxtValue: _budget?.deposit),
+          BudgetSummaryTile(
+            image: "assets/images/pig.png",
+            title: "MEMBERSHIP\nDEPOSIT",
+            oxtValue: _budget?.deposit,
+            pricing: _pricing,
+          ),
           _divider(),
-          _buildSummaryTile(
-              image: "assets/images/accountBalanceWallet.png",
-              title: "REMAINING\nBALANCE",
-              oxtValue: _balance),
+          BudgetSummaryTile(
+            image: "assets/images/accountBalanceWallet.png",
+            title: "REMAINING\nBALANCE",
+            oxtValue: _balance,
+            pricing: _pricing,
+          ),
           _divider(),
           pady(30),
           Expanded(child: _buildTransactionsList()),
@@ -104,8 +110,14 @@ class _BalancePageState extends State<BalancePage> {
     );
   }
 
+  /*
   Widget _buildSummaryTile(
-      {String image, String title, OXT oxtValue, VoidCallback detail}) {
+      {String image,
+      String title,
+      OXT oxtValue,
+      Pricing pricing,
+      VoidCallback detail}) {
+
     const color = Color(0xff3a3149);
 
     const titleStyle = TextStyle(
@@ -131,15 +143,11 @@ class _BalancePageState extends State<BalancePage> {
         height: 13.0 / 11.0);
 
     var oxtString = oxtValue?.toStringAsFixed(2) ?? "";
-    var usdString = _pricing?.toUSD(oxtValue)?.toStringAsFixed(2) ?? "";
+    var usdString = pricing?.toUSD(oxtValue)?.toStringAsFixed(2) ?? "";
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTap: detail != null
-          ? () {
-              _showSubscriptionPage();
-            }
-          : null,
+      onTap: detail,
       child: Container(
         height: 64,
         child: Row(
@@ -166,7 +174,7 @@ class _BalancePageState extends State<BalancePage> {
                         ],
                       ),
                       Visibility(
-                        visible: _pricing != null,
+                        visible: pricing != null,
                         child: Column(
                           children: <Widget>[
                             pady(2),
@@ -185,6 +193,8 @@ class _BalancePageState extends State<BalancePage> {
       ),
     );
   }
+
+   */
 
   Widget _buildCardView({OXT oxtValue}) {
     var oxtString = oxtValue?.value?.toStringAsFixed(2) ?? "";
@@ -396,7 +406,7 @@ class _BalancePageState extends State<BalancePage> {
 
   void _showSubscriptionPage() {
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
-      return SubscriptionPage();
+      return BudgetPage();
     }));
   }
 

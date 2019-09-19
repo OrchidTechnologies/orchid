@@ -4,22 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/pricing.dart';
-import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
 
-import '../app_text.dart';
+import 'budget_summary_tile.dart';
 
-class SubscriptionPage extends StatefulWidget {
+class BudgetPage extends StatefulWidget {
   @override
-  _SubscriptionPageState createState() => _SubscriptionPageState();
+  _BudgetPageState createState() => _BudgetPageState();
 }
 
-class _SubscriptionPageState extends State<SubscriptionPage> {
-  List<StreamSubscription> _rxSubs = List();
+class _BudgetPageState extends State<BudgetPage> {
+  List<StreamSubscription> _rxSubscriptions = List();
   BudgetRecommendation _budgetRecommendation;
   Budget _budget;
   Pricing _pricing;
@@ -32,7 +31,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   void initStateAsync() async {
-    _rxSubs.add(OrchidAPI().budget().balance.listen((balance) {
+    _rxSubscriptions.add(OrchidAPI().budget().balance.listen((balance) {
       setState(() {
         _balance = balance;
       });
@@ -47,7 +46,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "Subscription",
+      title: "Budget",
       child: buildPage(context),
       lightTheme: true,
     );
@@ -62,7 +61,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         children: <Widget>[
           pady(8),
           _buildInstructions(),
-          pady(36),
+          pady(16),
+          BudgetSummaryTile(
+            image: "assets/images/creditCard.png",
+            title: "CURRENT\nBUDGET",
+            oxtValue: _budget?.spendRate,
+            pricing: _pricing,
+            preserveIconSpace: false,
+          ),
+          pady(16),
           _buildBudgetCardView(
               budget: _budgetRecommendation?.lowUsage,
               title: "Low Usage",
@@ -196,16 +203,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Row(
                   children: <Widget>[
-                    Text("\$$usdString",
+                    Text("$oxtString",
                         style:
                             valueStyle.copyWith(fontWeight: FontWeight.bold)),
-                    Text(" USD", style: valueStyle),
+                    Text(" OXT", style: valueStyle),
                   ],
                 ),
                 pady(2),
                 Visibility(
                   visible: _pricing != null,
-                  child: Text("$oxtString OXT", style: valueSubtitleStyle),
+                  child: Text("\$$usdString USD", style: valueSubtitleStyle),
                 ),
               ]),
             ],
@@ -236,7 +243,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     Dialogs.showConfirmationDialog(
         context: context,
         title: "Confirm Budget Change",
-        body: "Do you want to change your budget to ${newBudget.spendRate.toStringAsFixed(2)} OXT per month?",
+        body:
+            "Do you want to change your budget to ${newBudget.spendRate.toStringAsFixed(2)} OXT per month?",
         action: () {
           OrchidAPI().budget().setBudget(newBudget);
           Navigator.of(context).pop();
@@ -246,7 +254,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
   void dispose() {
     super.dispose();
-    _rxSubs.forEach((sub) {
+    _rxSubscriptions.forEach((sub) {
       sub.cancel();
     });
   }
