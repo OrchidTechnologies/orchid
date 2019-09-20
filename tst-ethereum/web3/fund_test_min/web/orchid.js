@@ -123,14 +123,14 @@ function isAddress(str) {
 window.isAddress = isAddress;
 
 /// Transfer the amount in OXT-wei string value from the user to the specified lottery pot address.
-async function fundPot(addr, /*String*/amount) {
-    console.log("Fund address: ", addr, " amount: ", amount);
+async function fundPot(addr, amount/*:String*/, escrow/*:String*/) {
+    console.log("Fund address: ", addr, " amount: ", amount, " escrow: ", escrow);
     const accounts = await web3.eth.getAccounts();
 
     // Lottery funding amount
-    const value = BigInt(amount);
-    const escrow = BigInt(0);
-    const total = value + escrow;
+    const amount_value = BigInt(amount);
+    const escrow_value = BigInt(escrow);
+    const total = amount_value + escrow_value;
 
     // Gas price
     //const gwei = 1e9;
@@ -166,13 +166,13 @@ async function fundPot(addr, /*String*/amount) {
         }
 
         function doFundTx() {
-            //Orchid.lottery.methods.fund(addr, value.toString(), total.toString())
+            //Orchid.lottery.methods.fund(addr, amount_value.toString(), total.toString())
             //.estimateGas({from: accounts[0]})
             //.then((gas) => {
             //console.log("Funding gas estimate: ", gas);
             //});
 
-            Orchid.lottery.methods.fund(addr, value.toString(), total.toString()).send({
+            Orchid.lottery.methods.fund(addr, amount_value.toString(), total.toString()).send({
                 from: accounts[0],
                 gas: Orchid.lottery_fund_max_gas,
                 //gasPrice: gasPrice * gwei
@@ -205,8 +205,9 @@ async function fundPot(addr, /*String*/amount) {
 window.fundPot = fundPot;
 
 
-/// Get the lottery pot balance for the specified address.
-async function getPotBalance(addr) {
+/// Get the lottery pot balance and escrow amount for the specified address.
+/// Returned as an array of strings: [balance, escrow]
+async function getPotInfo(addr) {
     const accounts = await web3.eth.getAccounts();
     let result = await Orchid.lottery.methods.balance(addr).call({from: accounts[0],});
     if (result == null || result._length < 2) {
@@ -215,8 +216,8 @@ async function getPotBalance(addr) {
     const balance = result[0]; // web3.util.BN
     const escrow = result[1]; // web3.util.BN
     console.log("Get pot balance: ", balance.toString(), "escrow: ", escrow.toString());
-    return balance.toString();
+    return [balance.toString(), escrow.toString()];
 }
 
-window.getPotBalance = getPotBalance;
+window.getPotInfo = getPotInfo;
 

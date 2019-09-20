@@ -26,14 +26,27 @@
       <input type="text" id="from-account" placeholder="Address" readonly>
       <label>ETH Balance<span id="eth-balance-error" class="hidden error"> *</span></label>
       <input type="text" id="eth-balance" readonly>
+
       <label>OXT Balance<span id="oxt-balance-error" class="hidden error"> *</span></label>
       <input type="text" id="oxt-balance" readonly>
+
       <label>Lottery Pot Address<span id="pot-error" class="hidden error"> *</span></label>
       <input type="text" id="pot" placeholder="Address" readonly>
+
       <label>Lottery Pot Balance<span id="pot-balance-error" class="hidden error"> *</span></label>
-      <input type="number" id="pot-balance" readonly>
+      <input type="text" id="pot-balance" readonly>
+
+      <label>Lottery Pot
+        Escrow Balance<span id="pot-escrow-error" class="hidden error"> *</span></label>
+      <input type="text" id="pot-escrow" readonly>
+
       <label>Lottery Pot Add Amount<span id="amount-error" class="hidden error"> *</span></label>
-      <input type="number" id="amount" placeholder="Amount in OXT" readonly>
+      <input type="number" id="amount" placeholder="Amount in OXT" class="editable" readonly>
+
+      <label>Lottery Pot Escrow Add
+        Amount<span id="escrow-error" class="hidden error"> *</span></label>
+      <input type="number" id="escrow" placeholder="Amount in OXT" class="editable" readonly>
+
     </fieldset>
     <input id="fund-button" type="submit" value="Fund" onclick="submitTx(); return false;"/>
     <div id="spinner" class="spinner hidden"></div>

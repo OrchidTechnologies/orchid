@@ -5,3 +5,4 @@ android
 build
 ios
 pubspec.lock
+*.patch
