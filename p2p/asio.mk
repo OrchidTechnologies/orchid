@@ -20,6 +20,7 @@
 
 boost := 
 boost += algorithm
+boost += any
 boost += array
 boost += asio
 boost += assert
@@ -49,6 +50,7 @@ boost += multiprecision
 boost += optional
 boost += predef
 boost += preprocessor
+boost += program_options
 boost += random
 boost += range
 boost += rational
