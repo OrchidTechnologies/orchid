@@ -34,8 +34,11 @@ public class OrchidVpnService extends VpnService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand: intent:" + intent + " flags:" + flags + " startId:" + startId);
         if (intent != null && "disconnect".equals(intent.getAction())) {
-            closeFd();
             stopForeground(true);
+            stopSelf();
+            // the Orchid stack crashes if the fd is closed, so exit instead
+            //closeFd();
+            System.exit(0);
             return START_NOT_STICKY;
         }
         return START_STICKY;
@@ -122,7 +125,9 @@ public class OrchidVpnService extends VpnService {
     public void onRevoke() {
         Log.d(TAG, "onRevoke");
         super.onRevoke();
-        closeFd();
+        // the Orchid stack crashes if the fd is closed, so exit instead
+        //closeFd();
+        System.exit(0);
     }
 
     @Override
@@ -138,7 +143,9 @@ public class OrchidVpnService extends VpnService {
     @Override
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
-        closeFd();
+        // the Orchid stack crashes if the fd is closed, so exit instead
+        //closeFd();
+        System.exit(0);
     }
 
     public void startForeground() {
