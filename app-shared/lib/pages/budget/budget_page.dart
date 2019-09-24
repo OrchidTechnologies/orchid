@@ -23,7 +23,7 @@ class _BudgetPageState extends State<BudgetPage> {
   BudgetRecommendation _budgetRecommendation;
   Budget _budget;
   Pricing _pricing;
-  OXT _balance;
+  LotteryPot _pot;
 
   @override
   void initState() {
@@ -33,9 +33,9 @@ class _BudgetPageState extends State<BudgetPage> {
   }
 
   void initStateAsync() async {
-    _rxSubscriptions.add(OrchidAPI().budget().balance.listen((balance) {
+    _rxSubscriptions.add(OrchidAPI().budget().potStatus.listen((pot) {
       setState(() {
-        _balance = balance;
+        _pot = pot;
       });
     }));
     _budget = await OrchidAPI().budget().getBudget();
@@ -226,7 +226,7 @@ class _BudgetPageState extends State<BudgetPage> {
 
   void _selectBudget({Budget newBudget}) {
     // selected same budget
-    if (_balance == null) {
+    if (_pot == null) {
       Dialogs.showAppDialog(
           context: context,
           title: "Add Funds",
@@ -234,7 +234,7 @@ class _BudgetPageState extends State<BudgetPage> {
               "Please return to the balance screen and add funds to your account before selecting a budget.");
       return;
     }
-    if (_balance == null || _balance.value < newBudget.spendRate.value) {
+    if (_pot == null || _pot.balance.value < newBudget.spendRate.value) {
       Dialogs.showAppDialog(
           context: context,
           title: "Add Funds",

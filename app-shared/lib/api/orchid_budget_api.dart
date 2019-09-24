@@ -15,18 +15,20 @@ class OrchidBudgetAPI {
   static OrchidBudgetAPI _shared = OrchidBudgetAPI._init();
 
   /// The latest N funding events for the user's primary pot address.
-  BehaviorSubject<List<LotteryPotUpdateEvent>> fundingEvents = BehaviorSubject();
+  BehaviorSubject<List<LotteryPotUpdateEvent>> fundingEvents =
+      BehaviorSubject();
 
   /// A total balance in OXT of the user's funded lottery pots.
-  Observable<OXT> balance;
+  Observable<LotteryPot> potStatus;
 
   Timer _pollTimer;
 
   OrchidBudgetAPI._init() {
-    this.balance = fundingEvents.map((events) {
+    this.potStatus = fundingEvents.map((events) {
       return (events != null && events.length > 0)
-          ? events.first.balance
-          : OXT(0.0);
+          ? LotteryPot(
+              deposit: events.first.escrow, balance: events.first.balance)
+          : LotteryPot(deposit: OXT(0), balance: OXT(0));
     });
   }
 
@@ -76,12 +78,14 @@ class OrchidBudgetAPI {
     return UserPreferences().getLotteryPotsPrimaryAddress();
   }
 
-  Future<String> getFundingURL() async {
+  Future<String> getFundingURL({OXT amount, OXT deposit}) async {
     String potAddress = await getLotteryPotsPrimaryAddress();
+    // Remove hex prefix which, while valid, causes issues in some browsers.
     if (potAddress.startsWith("0x")) {
       potAddress = potAddress.substring(2);
     }
-    return "http://pat.net/orchid?pot=$potAddress&amount=2";
+    const hosting = "http://pat.net/orchid/"; // TODO:
+    return "$hosting?pot=$potAddress&amount=$amount&escrow=$deposit";
   }
 
   /// Get the current budget or null if none is defined.
@@ -132,6 +136,14 @@ class OrchidBudgetAPI {
   }
 }
 
+/// Lottery pot balance and deposit amounts.
+class LotteryPot {
+  OXT deposit;
+  OXT balance;
+
+  LotteryPot({this.deposit, this.balance});
+}
+
 /// A budget representing a deposit, spend rate, and term.
 class Budget {
   OXT deposit;
@@ -145,8 +157,7 @@ class Budget {
         spendRate = OXT(json['spendRate']),
         term = Months(json['term']);
 
-  Map<String, dynamic> toJson() =>
-      {
+  Map<String, dynamic> toJson() => {
         'deposit': deposit.value,
         'spendRate': spendRate.value,
         'term': term.value

@@ -1,12 +1,10 @@
-
 import 'package:orchid/util/units.dart';
 
 /// Exchange rates
-class OrchidPricingAPI
-{
+class OrchidPricingAPI {
   static OrchidPricingAPI _shared = OrchidPricingAPI._init();
 
-  OrchidPricingAPI._init() { }
+  OrchidPricingAPI._init() {}
 
   factory OrchidPricingAPI() {
     return _shared;
@@ -24,21 +22,26 @@ class OrchidPricingAPI
 }
 
 /// Pricing captures exchange rates at a point in time and supports conversion.
-class Pricing
-{
+class Pricing {
   DateTime asOf;
   double oxtToUsdRate = 0.5;
 
-  Pricing({DateTime asOf, double oxtToUsdRate})  {
+  Pricing({DateTime asOf, double oxtToUsdRate}) {
     this.asOf = asOf ?? DateTime.now();
     this.oxtToUsdRate = oxtToUsdRate;
   }
 
   USD toUSD(OXT oxt) {
+    if (oxt == null) {
+      return null;
+    }
     return USD(oxt.value * oxtToUsdRate);
   }
 
   OXT toOXT(USD usd) {
+    if (usd == null) {
+      return null;
+    }
     return OXT(usd.value / oxtToUsdRate);
   }
 }

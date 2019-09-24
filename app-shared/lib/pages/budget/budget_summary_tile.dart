@@ -70,16 +70,19 @@ class _BudgetSummaryTileState extends State<BudgetSummaryTile> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Row(
-                        children: <Widget>[
-                          Text(oxtString,
-                              style: valueStyle.copyWith(
-                                  fontWeight: FontWeight.bold)),
-                          Text(" OXT", style: valueStyle),
-                        ],
+                      Visibility(
+                        visible: oxtString != "",
+                        child: Row(
+                          children: <Widget>[
+                            Text(oxtString,
+                                style: valueStyle.copyWith(
+                                    fontWeight: FontWeight.bold)),
+                            Text(" OXT", style: valueStyle),
+                          ],
+                        ),
                       ),
                       Visibility(
-                        visible: widget.pricing != null,
+                        visible: widget.pricing != null && usdString != "",
                         child: Column(
                           children: <Widget>[
                             pady(2),
