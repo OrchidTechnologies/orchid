@@ -45,17 +45,20 @@ cxx := clang++$(suffix) -stdlib=libc++
 
 else
 
-define _
-more/$(1) := 
-more/$(1) += -B$(llvm)/$(1)-linux-android/bin
-more/$(1) += -target $(1)-pc-linux-gnu
-endef
-$(each)
-
 more := --sysroot $(CURDIR)/$(output)/sysroot
 include $(pwd)/target-ndk.mk
 cxx += -stdlib=libc++
 cxx += -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
+
+define _
+more/$(1) := 
+more/$(1) += -B$(llvm)/$(1)-linux-android/bin
+more/$(1) += -target $(1)-pc-linux-gnu
+ranlib/$(1) := $(llvm)/bin/$(1)-linux-android-ranlib
+ar/$(1) := $(llvm)/bin/$(1)-linux-android-ar
+strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
+endef
+$(each)
 
 $(output)/sysroot:
 	env/sysroot.sh

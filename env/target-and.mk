@@ -41,15 +41,6 @@ include $(pwd)/target-gnu.mk
 
 aver := 21
 
-define _
-temp := $(subst -,$(space),$(host/$(1)))
-arch := $$(word 1,$$(temp))
-temp := $$(subst $$(space),-,$$(wordlist 2,3,$$(temp)))
-more/$(1) := -target $$(arch)-unknown-$$(temp)$(aver)
-temp := $(word 1,$(meson/$(1)))-$$(temp)
-endef
-$(each)
-
 ifeq ($(uname-o),Android)
 
 cc := clang
@@ -58,6 +49,7 @@ cxx := clang++
 openssl/arm64-v8a := linux-aarch64
 
 define _
+more/$(1) := 
 ranlib/$(1) := ranlib
 ar/$(1) := ar
 strip/$(1) := strip
@@ -75,6 +67,11 @@ cxx += -stdlib=libc++
 lflags += -static-libstdc++
 
 define _
+temp := $(subst -,$(space),$(host/$(1)))
+arch := $$(word 1,$$(temp))
+temp := $$(subst $$(space),-,$$(wordlist 2,3,$$(temp)))
+more/$(1) := -target $$(arch)-unknown-$$(temp)$(aver)
+temp := $(word 1,$(meson/$(1)))-$$(temp)
 ranlib/$(1) := $(llvm)/bin/$$(temp)-ranlib
 ar/$(1) := $(llvm)/bin/$$(temp)-ar
 strip/$(1) := $(llvm)/bin/$$(temp)-strip
