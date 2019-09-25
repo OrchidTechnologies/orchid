@@ -94,7 +94,14 @@ class EtherscanIO {
 
     List<LotteryPotUpdateEvent> list = result.map((dynamic event) {
       // The first 64char hex data field is the balance
-      OXT balance = toOXT(event['data'].toString().substring(0, 64 + 2));
+      int start = 2;
+      int end = start + 64;
+      OXT balance = toOXT("0x"+event['data'].toString().substring(start, end));
+
+      // The second 64char hex data field is the escrow
+      start += 64;
+      end += 64;
+      OXT escrow = toOXT("0x"+event['data'].toString().substring(start, end));
 
       // ETH timestamp is seconds since epoch
       DateTime timeStamp = DateTime.fromMillisecondsSinceEpoch(
@@ -102,6 +109,7 @@ class EtherscanIO {
 
       return LotteryPotUpdateEvent(
           balance: balance,
+          escrow: escrow,
           blockNumber: event['blockNumber'],
           timeStamp: timeStamp,
           gasPrice: event['gasPrice'],
@@ -156,6 +164,7 @@ class EtherscanIO {
 
 class LotteryPotUpdateEvent {
   final OXT balance;
+  final OXT escrow;
   final String blockNumber;
   final DateTime timeStamp;
   final String gasPrice;
@@ -164,6 +173,7 @@ class LotteryPotUpdateEvent {
 
   LotteryPotUpdateEvent(
       {this.balance,
+      this.escrow,
       this.blockNumber,
       this.timeStamp,
       this.gasPrice,

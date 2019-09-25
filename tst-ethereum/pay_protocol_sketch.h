@@ -20,50 +20,109 @@
 
 
 /*
+
+
+Minutes = 60;
+Hours   = 60*Minutes;
+Days    = 24*Hours;
+Weeks   = 7*Days;
+
+struct Budget_PredExpW
+{
+	// budgeting params (input from UI)
+	budget_edate_;   	     // target budget end date
+	max_faceval_;            // maximum allowable faceval in OXT (user's hard variance limit)
+	max_prepay_time_ = 10;   // max amount of time client will prepay (credit) to server for undelivered bandwidth, in seconds (client->server trust)
+
+    // config hyperparams
+	timer_sample_rate_ = 60; // frequency of calls to on_timer() (nothing special about 60s)
+
+    // internal
+    prepay_credit_;
+	route_active_;                  // true when a connection/circuit is active
+	exp_half_life   = 1*Weeks;      // 1 one week 50% smoothing period
+	last_pay_date_;
+
+
+    get_afford() {
+        time_owed = (CurrentTime() - last_pay_date);
+		allowed   = spendrate_ * (time_owed + prepay_credit_);
+		return allowed;       
+    }
+    
+    get_max_faceval() {
+        return max_faceval_;
+    }
+
+    on_timer() {
+    
+        double ltime    = persist_load("ltime", CurrentTime()); // load variable from persistent disk/DB/config, default to CurrentTime()
+        double wactive  = persist_load("wactive", 1.0);       
+
+        // predict the fraction of time Orchid is active & connected (simple exp smoothing predictor) 
+        double etime    = CurrentTime() - ltime;
+        double decay    = exp(log(0.5) * etime/exp_half_life);        
+        double cactive  = route_active_ ? 1.0 : 0.0;       
+        wactive         = decay*wactive + (1-decay)*cactive;
+        ltime           = CurrentTime();
+        
+        double pred_future_active_time = (budget_edate_ - CurrentTime()) * wactive;
+		spendrate_      = get_OXT_balance() / (pred_future_active_time + 1*Days);
+
+        persist_store("ltime",   ltime);
+        persist_store("wactive", wactive);
+    }
+
+    Budget_PredExpW() {
+        register_timer_func(&on_timer, timer_sample_rate_); // call on_timer() every {timer_sample_rate_} seconds
+        route_active_ = false;
+        on_timer(); // tick the timer once on startup to update for any time orchid was shutdown
+    }
+    
+    on_connect()    { route_active = true;  last_pay_date_ = CurrentTime(); prepay_credit_ = max_prepay_time_; }
+    on_disconnect() { route_active = false; }
+    on_invoice()    { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
+};
+
 struct Client
 {
 	// budgeting params (input from UI)
-	budget_edate_;   	    // target budget end date
 	target_overhead_ = 0.1;	// target transaction fee overhead  // move to server?
 
 	// Internal
 	last_pay_date_ = CurrentTime();
+	
+	budgetf_ = new Budget_PredExpW();
+    
     
 	// External functions
     	get_max_trans_cost();   // (oracle) get estimate of max reasonable current transaction fees
     	get_OXT_balance();  	// (RPC call, cached) external eth balance 
     	get_trust_bound();  	// max OXT amount client is willing to lend to server (can initially be a large constant)
 
-	// Protocol server message handlers
-	on_invoice(bal_owed);   // server requests payment from client
-	
 	// user initiates connection to server (random selection picks server)
-	on_connect(server) 	 { send("connect", server, ...); }
+	on_connect(server) 	 { send("connect", server, ...);  budget_->on_connect(); }
     
-    	// todo: replace with more sophisticated budgeting
-	// todo: update to handle more than one server
-	get_budget_afford() {
-		spendrate = get_OXT_balance() / (budget_edate_ - CurrentTime()); // simple dumb bad budgeting
-		allowed = spendrate * (CurrentTime() - last_pay_date);
-		return allowed;
-	};
-	
-	on_invoice(bal_owed, trans_cost) {
+    // callback when disconnected from route
+	on_disconnect()     { budget_->on_disconnect(); }   
+
+	on_invoice(bal_owed, trans_cost) { // server requests payment from client
 		
-		afford 	    	= get_budget_afford();
-		max_face_val	= get_budget_max_faceval();
-		trust_bound 	= get_trust_bound();
-		exp_val     	= min(afford, bal_owed, trust_bound);
-        	trans_cost  	= min(get_max_trans_cost(), trans_cost);
-		face_val	= trans_cost / target_overhead_;
+		afford 	    	= budget_->get_afford();
+		max_face_val	= budget_->get_max_faceval();
+		//trust_bound 	= get_trust_bound();
+		//exp_val     	= min(afford, bal_owed, trust_bound); // removed into budgeting
+		exp_val     	= min(afford, bal_owed);
+       	trans_cost  	= min(get_max_trans_cost(), trans_cost);
+		face_val	    = trans_cost / target_overhead_;
 		//face_val      = min(face_val, max_face_val);
 		if (face_val > max_face_val) face_val = 0;  // hard constraint failure
 		
 		if (face_val > trans_cost) {
-			win_prob    	= exp_val / (face_val - trans_cost);
+			win_prob    = exp_val / (face_val - trans_cost);
 			win_prob	= max(min(win_prob, 1), 0); // todo: server may want a lower bound on win_prob for double-spend reasons
 			send("upay", server_, payment{win_prob, face_val, ..} );
-			last_pay_date_ 	= CurrentTime();
+			budget_->on_invoice();
 			// any book-keeping here
 		}
 		else {

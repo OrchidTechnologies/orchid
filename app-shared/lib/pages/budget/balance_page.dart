@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/src/services/clipboard.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/etherscan_io.dart';
@@ -8,9 +10,12 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/pages/app_gradients.dart';
+import 'package:orchid/pages/budget/budget_page.dart';
+import 'package:orchid/pages/budget/budget_summary_tile.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
 
@@ -28,13 +33,15 @@ class BalancePage extends StatefulWidget {
 class _BalancePageState extends State<BalancePage> {
   Pricing _pricing;
   Budget _budget;
-  OXT _balance;
+  LotteryPot _pot;
   List<LotteryPotUpdateEvent> _events;
   List<StreamSubscription> _subscriptions = List();
 
   @override
   void initState() {
     super.initState();
+
+    ScreenOrientation.portrait();
 
     OrchidAPI().pricing().getPricing().then((pricing) {
       setState(() {
@@ -46,10 +53,10 @@ class _BalancePageState extends State<BalancePage> {
         _budget = budget;
       });
     });
-    _subscriptions.add(OrchidAPI().budget().balance.listen((balance) {
+    _subscriptions.add(OrchidAPI().budget().potStatus.listen((balance) {
       OrchidAPI().logger().write(("budget page got balance: $balance"));
       setState(() {
-        this._balance = balance;
+        this._pot = balance;
       });
     }));
     _subscriptions.add(OrchidAPI().budget().fundingEvents.listen((events) {
@@ -76,84 +83,33 @@ class _BalancePageState extends State<BalancePage> {
       child: Column(
         children: <Widget>[
           pady(16),
-          _buildCardView(oxtValue: _balance),
+          _buildCardView(oxtValue: _pot?.balance),
           pady(16),
-          _buildSummaryTile(
+          BudgetSummaryTile(
               image: "assets/images/creditCard.png",
               title: "MONTHLY\nBUDGET",
-              oxtValue: _budget?.spendRate),
+              oxtValue: _budget?.spendRate,
+              pricing: _pricing,
+              detail: () {
+                _showSubscriptionPage();
+              }),
           _divider(),
-          _buildSummaryTile(
-              image: "assets/images/pig.png",
-              title: "MEMBERSHIP\nDEPOSIT",
-              oxtValue: _budget?.deposit),
+          BudgetSummaryTile(
+            image: "assets/images/pig.png",
+            title: "MEMBERSHIP\nDEPOSIT",
+            oxtValue: _budget?.deposit,
+            pricing: _pricing,
+          ),
           _divider(),
-          _buildSummaryTile(
-              image: "assets/images/accountBalanceWallet.png",
-              title: "REMAINING\nBALANCE",
-              oxtValue: _balance),
+          BudgetSummaryTile(
+            image: "assets/images/accountBalanceWallet.png",
+            title: "REMAINING\nBALANCE",
+            oxtValue: _pot?.balance,
+            pricing: _pricing,
+          ),
           _divider(),
           pady(30),
           Expanded(child: _buildTransactionsList()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryTile({String image, String title, OXT oxtValue}) {
-    const color = Color(0xff3a3149);
-
-    const titleStyle = TextStyle(
-        color: color,
-        fontSize: 11.0,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1.0,
-        fontFamily: "SFProText-Medium",
-        height: 13.0 / 11.0);
-    const valueStyle = TextStyle(
-        color: color,
-        fontSize: 15.0,
-        fontWeight: FontWeight.normal,
-        letterSpacing: -0.24,
-        fontFamily: "SFProText-Regular",
-        height: 20.0 / 15.0);
-    const valueSubtitleStyle = TextStyle(
-        color: Color(0xff766d86),
-        fontSize: 11.0,
-        fontWeight: FontWeight.normal,
-        letterSpacing: 0.07,
-        fontFamily: "SFProText-Regular",
-        height: 13.0 / 11.0);
-
-    var oxtString = oxtValue?.value?.toStringAsFixed(2) ?? "";
-    var usdString = _pricing?.toUSD(oxtValue)?.value?.toStringAsFixed(2) ?? "";
-
-    return Container(
-      height: 64,
-      child: Row(
-        children: <Widget>[
-          Image.asset(
-            image,
-            color: color,
-          ),
-          padx(11),
-          Text(title, style: titleStyle),
-          Spacer(),
-          Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  children: <Widget>[
-                    Text(oxtString,
-                        style:
-                            valueStyle.copyWith(fontWeight: FontWeight.bold)),
-                    Text(" OXT", style: valueStyle),
-                  ],
-                ),
-                pady(2),
-                Text("\$$usdString USD", style: valueSubtitleStyle),
-              ]),
         ],
       ),
     );
@@ -229,8 +185,16 @@ class _BalancePageState extends State<BalancePage> {
                             Text(" OXT", style: valueStyle),
                           ],
                         ),
-                        pady(2),
-                        Text("\$$usdString USD", style: valueSubtitleStyle),
+                        Visibility(
+                          visible: _pricing != null && usdString != "",
+                          child: Column(
+                            children: <Widget>[
+                              pady(2),
+                              Text("\$$usdString USD",
+                                  style: valueSubtitleStyle),
+                            ],
+                          ),
+                        ),
                       ]),
                   Spacer(),
                   Text(
@@ -332,8 +296,46 @@ class _BalancePageState extends State<BalancePage> {
     );
   }
 
-  void _copyURL() async {
-    String url = await OrchidAPI().budget().getFundingURL();
+  /// Generate a funding URL encoding the required balance and deposit amounts
+  /// for the currently selected budget and current pot balances.
+  Future<String> _generateFundingURL() async {
+    if (_pot == null || _budget == null) {
+      Dialogs.showAppDialog(
+          context: context,
+          title: "Error",
+          body:
+              "Unable to generate funding URL.  Waiting for balance or budget data.");
+      return null;
+    }
+
+    // Any additional spendable funding needed beyond current balance
+    double budgetFundAmount = max(
+        0, (_budget.spendRate.value * _budget.term.value) - _pot.balance.value);
+
+    // Any additional deposit funding needed beyond current deposit
+    double depositFundAmount = max(0, _budget.deposit.value - _pot.deposit.value);
+
+    OrchidAPI().logger().write("Budget to fund: $budgetFundAmount, Deposit to fund: $depositFundAmount");
+
+    if (budgetFundAmount == 0 && depositFundAmount == 0) {
+      Dialogs.showAppDialog(
+          context: context,
+          title: "No Funding Needed",
+          body:
+              "Your current balance and deposit are sufficient for your selected budget.");
+      return null;
+    }
+
+    return OrchidAPI().budget().getFundingURL(
+        amount: OXT(budgetFundAmount), deposit: OXT(depositFundAmount));
+  }
+
+  void _copyFundingURLToClipboard() async {
+    String url = await _generateFundingURL();
+    // If the funding url is null nothing to do here.
+    if (url == null) {
+      return;
+    }
     Clipboard.setData(ClipboardData(text: url));
     Dialogs.showAppDialog(
         context: context,
@@ -355,13 +357,20 @@ class _BalancePageState extends State<BalancePage> {
               height: 22.0 / 17.0,
               letterSpacing: -0.41,
               color: Color(0xff5f45ba))),
-      onPressed: _copyURL,
+      onPressed: _copyFundingURLToClipboard,
     );
+  }
+
+  void _showSubscriptionPage() {
+    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
+      return BudgetPage();
+    }));
   }
 
   @override
   void dispose() {
     super.dispose();
+    ScreenOrientation.reset();
     _subscriptions.forEach((sub) {
       sub.cancel();
     });

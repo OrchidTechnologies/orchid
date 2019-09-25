@@ -14,7 +14,6 @@ class OrchidScrollPhysics extends ScrollPhysics {
 
   @override
   Simulation createBallisticSimulation(ScrollMetrics position, double velocity) {
-    print("create ballistic sim");
     final Tolerance tolerance = this.tolerance;
     if (velocity.abs() >= tolerance.velocity || position.outOfRange) {
       return BouncingScrollSimulation(

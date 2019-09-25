@@ -17,12 +17,19 @@ async function init_app() {
     }
     $('#pot').val(potAddress);
 
-    window.initial_amount = params.get("amount");
-    if (initial_amount <= 0 || initial_amount > 10) {
+    window.initial_add_amount = params.get("amount");
+    if (initial_add_amount <= 0 || initial_add_amount > 10) {
         console.log("Fund amount is invalid");
         $('#amount-error').removeClass('hidden');
     }
-    $('#amount').val(initial_amount);
+    $('#amount').val(initial_add_amount);
+
+    window.initial_escrow_amount = params.get("escrow");
+    if (initial_escrow_amount <= 0 || initial_escrow_amount > 10) {
+        console.log("Fund escrow amount is invalid");
+        $('#escrow-error').removeClass('hidden');
+    }
+    $('#escrow').val(initial_escrow_amount);
 
     await showBalance();
 }
@@ -52,8 +59,11 @@ async function showBalance() {
         $('#oxt-balance-error').removeClass('hidden');
     }
     // Show the pot balance
-    let potBalance = fromWei(await getPotBalance(window.potAddress));
+    let potInfo = await getPotInfo(window.potAddress);
+    let potBalance = fromWei(potInfo[0]);
     $('#pot-balance').val(potBalance);
+    let potEscrow = fromWei(potInfo[1]);
+    $('#pot-escrow').val(potEscrow);
 }
 window.showBalance = showBalance;
 
@@ -64,14 +74,17 @@ async function submitTx() {
     let spinner = $('#spinner');
     fundButton.toggle();
     spinner.slideDown();
+
     let amount = $('#amount').val();
-    console.log("submit amount = ", amount);
+    let escrow = $('#escrow').val();
+    console.log("submit amounts: ", amount, escrow);
 
     try {
         // TODO: change to submit amount after validation
         const amountWei = BigInt(amount * 1e18).toString();
-        console.log("fund amount wei = ", amountWei);
-        let tx = await fundPot(potAddress, amountWei);
+        const escrowWei = BigInt(escrow * 1e18).toString();
+        console.log("fund amounts wei: ", amountWei, escrowWei);
+        let tx = await fundPot(potAddress, amountWei, escrowWei);
 
         window.tx=tx; // debug
         console.log("Funded.");

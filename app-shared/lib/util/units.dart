@@ -1,10 +1,14 @@
 
-class ScalarValue<T> {
+class ScalarValue<T extends num> {
   final T value;
   const ScalarValue(this.value);
 
   String toString() {
     return value.toString();
+  }
+
+  String toStringAsFixed(int len) {
+    return value.toStringAsFixed(len);
   }
 
   bool operator ==(o) => o is ScalarValue<T> && o.value == value;

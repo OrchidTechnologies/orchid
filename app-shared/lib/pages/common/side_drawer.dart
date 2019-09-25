@@ -217,9 +217,9 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
 
     if (OrchidBudgetAPI.featureEnabled) {
       // Listen to the funding balance.
-      _balanceListener = OrchidAPI().budget().balance.listen((balance) {
+      _balanceListener = OrchidAPI().budget().potStatus.listen((pot) {
         setState(() {
-          this._balance = balance;
+          this._balance = pot.balance;
         });
       });
     }
