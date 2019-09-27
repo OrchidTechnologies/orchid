@@ -1,7 +1,5 @@
 # Files and directories created by pub
 node_modules
-package-lock.json
-package.json
 .idea/
 .dart_tool/
 .packages
