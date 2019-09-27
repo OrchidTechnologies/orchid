@@ -148,6 +148,18 @@ class Explode final :
 
 std::string Implode(Nested nested);
 
+class Address :
+    public uint160_t
+{
+  public:
+    using uint160_t::uint160_t;
+
+    Address(uint160_t &&value) :
+        uint160_t(std::move(value))
+    {
+    }
+};
+
 class Argument final {
   private:
     mutable Json::Value value_;
@@ -184,6 +196,11 @@ class Argument final {
     {
     }
 
+    Argument(const Address &address) :
+        Argument(Number<uint160_t>(address))
+    {
+    }
+
     Argument(std::initializer_list<Argument> args) :
         value_(Json::arrayValue)
     {
@@ -214,18 +231,6 @@ class Argument final {
 };
 
 typedef std::map<std::string, Argument> Map;
-
-class Address :
-    public uint160_t
-{
-  public:
-    using uint160_t::uint160_t;
-
-    Address(uint160_t &&value) :
-        uint160_t(std::move(value))
-    {
-    }
-};
 
 typedef Beam Bytes;
 typedef Brick<32> Bytes32;
