@@ -32,7 +32,7 @@ contract TestOrchidLottery is OrchidLottery
 
 // ============== test functions ======================================================================
 
-    function test_ecrecover(bytes32 hdata, uint8 v, bytes32 r, bytes32 s, address signer)   public view returns (address)
+    function test_ecrecover(bytes32 hdata, uint8 v, bytes32 r, bytes32 s, address signer)   public pure returns (address)
     { 
         address signer2 = ecrecover(hdata, v, r, s);
         require(signer2 == signer); // this is currently failing, not sure why yet
@@ -71,7 +71,7 @@ contract TestOrchidLottery is OrchidLottery
 
 
 
-    function test_func(uint256 x)   public view returns (uint256)    { return x; }
+    function test_func(uint256 x)   public pure returns (uint256)    { return x; }
 
     function get_address(uint256)   public view returns (address)    { return address(this); }
 
@@ -82,12 +82,12 @@ contract TestOrchidLottery is OrchidLottery
     function get_escrow(address x)  public view returns (uint128)    { return pots_[x].escrow_; }
     function get_unlock(address x)  public view returns (uint256)    { return pots_[x].unlock_; }
 
-    function hash_test_(address payable target) public view returns (bytes32)
+    function hash_test_(address payable target) public pure returns (bytes32)
     {
         bytes32 ticket = keccak256(abi.encodePacked(target)); return ticket;
     }
 
-    function hash_test(bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount) public view returns (bytes32)
+    function hash_test(bytes32 hash, address payable target, uint256 nonce, uint256 until, uint256 ratio, uint64 amount) public pure returns (bytes32)
     {
         bytes32 ticket = keccak256(abi.encodePacked(hash, target, nonce, until, ratio, amount)); return ticket;
     }
