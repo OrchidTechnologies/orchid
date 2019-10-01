@@ -76,7 +76,7 @@ contract TestOrchidLottery is OrchidLottery
     function get_address(uint256)   public view returns (address)    { return address(this); }
 
     function get_token(uint256)     public view returns (address)    { return address(token_); }
-    function set_token(address x)   public                           { token_ = ERC20(x); }
+    function set_token(address x)   public                           { token_ = IERC20(x); }
 
     function get_amount(address x)  public view returns (uint128)    { return pots_[x].amount_; }
     function get_escrow(address x)  public view returns (uint128)    { return pots_[x].escrow_; }

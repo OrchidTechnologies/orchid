@@ -22,14 +22,14 @@
 
 pragma solidity ^0.5.7;
 
-import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "../openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 contract OrchidLottery {
 
-    ERC20 internal token_;
+    IERC20 internal token_;
 
     constructor(address token) public {
-        token_ = ERC20(token);
+        token_ = IERC20(token);
     }
 
 
