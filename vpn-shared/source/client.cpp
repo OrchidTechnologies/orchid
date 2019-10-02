@@ -194,10 +194,12 @@ task<Socket> Server::Open(Sunk<Opening, BufferSewer> *sunk) {
 task<S<Origin>> Setup() {
     S<Origin> origin(GetLocal());
 
-    //Endpoint endpoint({"https", "eth-ropsten.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
-    Endpoint endpoint({"https", "ropsten.infura.io", "443", "/v3/" ORCHID_INFURA});
-    //Endpoint endpoint({"https", "api.myetherwallet.com", "443", "/rop"});
+    Endpoint endpoint({"https", "cloudflare-eth.com", "443", "/"});
     //Endpoint endpoint({"http", "localhost", "8545", "/"});
+
+    //Endpoint endpoint({"https", "eth-ropsten.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
+    //Endpoint endpoint({"https", "ropsten.infura.io", "443", "/v3/" ORCHID_INFURA});
+    //Endpoint endpoint({"https", "api.myetherwallet.com", "443", "/rop"});
 
     // https://github.com/Blockchair/Blockchair.Support/blob/master/API_DOCUMENTATION_EN.md
     // https://api.blockchair.com/ethereum/blocks
