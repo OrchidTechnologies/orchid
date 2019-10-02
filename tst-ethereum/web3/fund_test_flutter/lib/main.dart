@@ -1,10 +1,10 @@
 import 'dart:math';
 
-import 'package:flutter_site/accommodate_keyboard.dart';
-import 'package:flutter_site/style.dart';
-import 'package:flutter_web/material.dart';
+import 'package:flutter/material.dart';
+import 'accommodate_keyboard.dart';
 import 'orchid_api.dart';
 import 'log_view.dart';
+import 'style.dart';
 
 void main() => runApp(FundOrchidApp());
 

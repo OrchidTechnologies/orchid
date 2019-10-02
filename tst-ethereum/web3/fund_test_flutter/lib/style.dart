@@ -1,4 +1,5 @@
-import 'package:flutter_web/material.dart';
+
+import 'package:flutter/material.dart';
 
 const neutral_1 = const Color(0xff3a3149);
 const neutral_5 = const Color(0xffd5d7e2);
