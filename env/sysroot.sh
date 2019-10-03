@@ -11,7 +11,7 @@ function clean() {
 
 clean 2>/dev/null || true
 
-docker run -i --name "${name}" -v "${PWD}/env/sysroot_.sh:/init" ubuntu:xenial /init
+docker run -i --name "${name}" -v "${PWD}/env/sysroot_.sh:/init" ubuntu:trusty /init
 trap clean EXIT
 
 env/export.sh "${name}" "${sysroot}"

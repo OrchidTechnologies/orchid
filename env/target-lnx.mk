@@ -45,7 +45,9 @@ cxx := clang++$(suffix) -stdlib=libc++
 
 else
 
-more := --sysroot $(CURDIR)/$(output)/sysroot
+more := 
+more += --sysroot $(CURDIR)/$(output)/sysroot
+more += --gcc-toolchain=$(CURDIR)/$(output)/sysroot/usr
 include $(pwd)/target-ndk.mk
 cxx += -stdlib=libc++
 cxx += -isystem $(output)/sysroot/usr/lib/llvm-8/include/c++/v1
