@@ -40,8 +40,6 @@ debug: $(output)/$(default)/orchid$(exe)
 source += $(wildcard source/*.cpp)
 cflags += -Isource
 
-source += $(wildcard p2p/boost/libs/program_options/src/*.cpp)
-
 $(call include,p2p/target.mk)
 
 cflags += -Iextra

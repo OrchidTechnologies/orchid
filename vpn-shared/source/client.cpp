@@ -191,22 +191,10 @@ task<Socket> Server::Open(Sunk<Opening, BufferSewer> *sunk) {
     orc_assert(false);
 }
 
-task<S<Origin>> Setup() {
+task<S<Origin>> Setup(const std::string &rpc) {
     S<Origin> origin(GetLocal());
 
-    Endpoint endpoint({"https", "cloudflare-eth.com", "443", "/"});
-    //Endpoint endpoint({"http", "localhost", "8545", "/"});
-
-    //Endpoint endpoint({"https", "eth-ropsten.alchemyapi.io", "443", "/jsonrpc/" ORCHID_ALCHEMY});
-    //Endpoint endpoint({"https", "ropsten.infura.io", "443", "/v3/" ORCHID_INFURA});
-    //Endpoint endpoint({"https", "api.myetherwallet.com", "443", "/rop"});
-
-    // https://github.com/Blockchair/Blockchair.Support/blob/master/API_DOCUMENTATION_EN.md
-    // https://api.blockchair.com/ethereum/blocks
-
-    // https://etherscan.io/apis https://ropsten.etherscan.io/apis#proxy
-    // https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken
-    // https://api.etherscan.io/api?module=proxy&action=eth_getBlockByNumber&tag=0x10d4f&boolean=true&apikey=YourApiKeyToken
+    Endpoint endpoint(Locator::Parse(rpc));
 
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator;
     generator.seed(boost::random::random_device()());

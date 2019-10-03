@@ -662,8 +662,8 @@ class Pass :
     }
 };
 
-task<void> Capture::Start(std::string ovpnfile, std::string username, std::string password) {
-    auto origin(co_await Setup());
+task<void> Capture::Start(const std::string &rpc, std::string ovpnfile, std::string username, std::string password) {
+    auto origin(co_await Setup(rpc));
     auto pass(std::make_unique<Sink<Pass>>(this));
     co_await Connect(pass.get(), std::move(origin), local_, std::move(ovpnfile), std::move(username), std::move(password));
     internal_ = std::move(pass);

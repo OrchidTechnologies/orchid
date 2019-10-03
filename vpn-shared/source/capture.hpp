@@ -83,7 +83,7 @@ class Capture :
     void Drop(Beam data) override;
 
     task<void> Start(S<Origin> origin);
-    task<void> Start(std::string ovpnfile, std::string username, std::string password);
+    task<void> Start(const std::string &rpc, std::string ovpnfile, std::string username, std::string password);
 };
 
 }

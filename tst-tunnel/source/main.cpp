@@ -44,6 +44,10 @@
 #include <boost/asio/generic/datagram_protocol.hpp>
 #include <boost/filesystem/string_file.hpp>
 
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+
 #include <asio.hpp>
 #include "capture.hpp"
 #include "error.hpp"
@@ -58,6 +62,8 @@
 #include "family.hpp"
 #endif
 
+namespace po = boost::program_options;
+
 namespace orc {
 
 std::string Group() {
@@ -67,6 +73,30 @@ std::string Group() {
 }
 
 int Main(int argc, const char *const argv[]) {
+    po::variables_map args;
+
+    po::options_description options("command-line (only)");
+    options.add_options()
+        ("help", "produce help message")
+        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
+        //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+    ;
+
+    po::store(po::parse_command_line(argc, argv, po::options_description()
+        .add(options)
+    ), args);
+
+    po::notify(args);
+
+    if (args.count("help") != 0) {
+        std::cout << po::options_description()
+            .add(options)
+        << std::endl;
+
+        return 0;
+    }
+
+
     Initialize();
 
     std::string ovpn;
@@ -116,7 +146,7 @@ int Main(int argc, const char *const argv[]) {
     Wait([&]() -> task<void> {
         co_await Schedule();
         co_await capture->Start(GetLocal());
-        //co_await capture->Start(std::move(ovpn), std::move(username), std::move(password));
+        //co_await capture->Start(args["rpc"].as<std::string>(), std::move(ovpn), std::move(username), std::move(password));
     }());
 
     Thread().join();

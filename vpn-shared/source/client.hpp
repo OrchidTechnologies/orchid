@@ -74,7 +74,7 @@ class Server :
     task<Socket> Open(Sunk<Opening, BufferSewer> *sunk) override;
 };
 
-task<S<Origin>> Setup();
+task<S<Origin>> Setup(const std::string &rpc);
 
 }
 

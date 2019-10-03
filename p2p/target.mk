@@ -71,6 +71,7 @@ cflags += -DLWIP_ERRNO_STDINCLUDE
 cflags += -I$(pwd)/BeastHttp/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
 source += $(wildcard $(pwd)/boost/libs/filesystem/src/*.cpp)
+source += $(wildcard $(pwd)/boost/libs/program_options/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/random/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
 
