@@ -27,6 +27,7 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "origin.hpp"
+#include "prefix.hpp"
 #include "secure.hpp"
 
 namespace orc {

@@ -20,23 +20,19 @@
 /* }}} */
 
 
-#ifndef ORCHID_COMMANDS_HPP
-#define ORCHID_COMMANDS_HPP
+#ifndef ORCHID_TAG_HPP
+#define ORCHID_TAG_HPP
 
-#include "tag.hpp"
+#include "buffer.hpp"
 
 namespace orc {
 
-static const Tag Zero{0x00000000};
-
-static const Tag AnswerTag{0x22a2b0d0};
-static const Tag BatchTag{0x6c53939e};
-static const Tag CloseTag{0x81b978ae};
-static const Tag ConnectTag{0xe7280b03};
-static const Tag DiscardTag{0xf5d821c9};
-static const Tag OfferTag{0xe3a99039};
-static const Tag NegotiateTag{0x5d8a6d96};
+typedef Number<uint32_t> Tag;
+static const size_t TagSize = sizeof(uint32_t);
+inline Tag NewTag() {
+    return Random<TagSize>();
+}
 
 }
 
-#endif//ORCHID_COMMANDS_HPP
+#endif//ORCHID_TAG_HPP

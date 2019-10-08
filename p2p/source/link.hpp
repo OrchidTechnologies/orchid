@@ -24,8 +24,6 @@
 #define ORCHID_LINK_HPP
 
 #include <functional>
-#include <map>
-#include <set>
 
 #include <cppcoro/async_manual_reset_event.hpp>
 
@@ -36,12 +34,6 @@
 #include "task.hpp"
 
 namespace orc {
-
-typedef Number<uint32_t> Tag;
-static const size_t TagSize = sizeof(uint32_t);
-inline Tag NewTag() {
-    return Random<TagSize>();
-}
 
 class Pipe {
   public:
@@ -196,72 +188,6 @@ class Sink final :
 
   public:
     using Base_::Base_;
-};
-
-template <typename Link_>
-class Prefixed :
-    public Pipe,
-    public BufferDrain
-{
-    template <typename Prefixed_>
-    friend class Prefix;
-
-  private:
-    std::map<Tag, BufferDrain *> prefixes_;
-
-  protected:
-    void Land(const Buffer &data) override {
-        auto [tag, rest] = Take<Tag, Window>(data);
-        auto prefix(prefixes_.find(tag));
-        orc_assert(prefix != prefixes_.end());
-        prefix->second->Land(rest);
-    }
-
-    void Stop(const std::string &error) override {
-        for (const auto &[tag, drain] : prefixes_)
-            drain->Stop(error);
-    }
-
-  public:
-    ~Prefixed() override {
-        orc_insist(prefixes_.empty());
-    }
-};
-
-template <typename Prefixed_>
-class Prefix final :
-    public Link
-{
-  public:
-    const S<Prefixed_> prefixed_;
-    const Tag tag_;
-
-  public:
-    Prefix(BufferDrain *drain, const S<Prefixed_> prefixed) :
-        Link(drain),
-        prefixed_(prefixed),
-        tag_([this]() {
-            BufferDrain *drain(this);
-            for (;;) {
-                auto tag(NewTag());
-                if (prefixed_->prefixes_.emplace(tag, drain).second)
-                    return tag;
-            }
-        }())
-    {
-    }
-
-    ~Prefix() override {
-        prefixed_->prefixes_.erase(tag_);
-    }
-
-    task<void> Send(const Buffer &data) override {
-        co_return co_await prefixed_->Send(Tie(tag_, data));
-    }
-
-    const S<Prefixed_> &operator ->() {
-        return prefixed_;
-    }
 };
 
 }
