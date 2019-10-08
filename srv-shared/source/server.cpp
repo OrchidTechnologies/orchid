@@ -56,6 +56,7 @@
 #include "crypto.hpp"
 //#include "ethereum.hpp"
 #include "http.hpp"
+#include "link.hpp"
 #include "secure.hpp"
 #include "task.hpp"
 #include "trace.hpp"
@@ -100,15 +101,28 @@ _trace();
     }
 };
 
-class Balance {
+class Balance :
+    public Basin
+{
   public:
     virtual void Land(const Buffer &data) = 0;
     virtual void Bill(uint64_t amount) = 0;
 };
 
+class Antique :
+    public Faucet<Balance>,
+    public Pipe
+{
+  public:
+    Antique(Balance *drain) :
+        Faucet<Balance>(drain)
+    {
+    }
+};
+
 template <typename Type_>
 class Output :
-    public Pump<Balance>,
+    public Antique,
     public BufferDrain
 {
     template <typename Base_, typename Inner_, typename Drain_>
@@ -127,13 +141,13 @@ class Output :
     }
 
     void Stop(const std::string &error) override {
-        Pump<Balance>::Stop();
+        Antique::Stop();
         // XXX: implement (efficiently ;P)
     }
 
   public:
     Output(Balance *drain, const Tag &tag) :
-        Pump<Balance>(drain),
+        Antique(drain),
         tag_(tag)
     {
 _trace();
@@ -149,7 +163,7 @@ _trace();
 
     task<void> Shut() override {
         co_await Inner()->Shut();
-        co_await Pump<Balance>::Shut();
+        co_await Antique::Shut();
     }
 
     Type_ *operator ->() {
@@ -191,7 +205,7 @@ class Waiter :
 };
 
 class Replay final :
-    public Pump<Balance>
+    public Antique
 {
   private:
     Beam request_;
@@ -215,7 +229,7 @@ class Space final :
 
     Pipe *input_;
 
-    std::map<Tag, U<Pump<Balance>>> outputs_;
+    std::map<Tag, U<Antique>> outputs_;
 
     int64_t balance_;
 
@@ -262,6 +276,10 @@ _trace();
 
     void Bill(uint64_t amount) override {
         balance_ -= amount;
+    }
+
+    void Stop(const std::string &error) override {
+        // XXX: this is a complete failure
     }
 
 

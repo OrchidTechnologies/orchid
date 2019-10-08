@@ -279,7 +279,7 @@ _trace();
 };
 
 class Channel final :
-    public Link,
+    public Pump,
     public webrtc::DataChannelObserver
 {
   private:
@@ -290,7 +290,7 @@ class Channel final :
 
   public:
     Channel(BufferDrain *drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
-        Link(drain),
+        Pump(drain),
         peer_(peer),
         channel_(channel)
     {
@@ -359,7 +359,7 @@ _trace();
         Subset data(buffer.data.data(), buffer.data.size());
         if (Verbose)
             Log() << "WebRTC >>> " << this << " " << data << std::endl;
-        Link::Land(data);
+        Pump::Land(data);
     }
 
     task<void> Send(const Buffer &data) override {
@@ -374,10 +374,10 @@ _trace();
 
     task<void> Shut() override {
         channel_->Close();
-        co_await Link::Shut();
+        co_await Pump::Shut();
     }
 
-    using Link::Stop;
+    using Pump::Stop;
 };
 
 std::string Strip(const std::string &sdp);

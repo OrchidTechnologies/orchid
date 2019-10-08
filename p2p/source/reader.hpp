@@ -39,23 +39,22 @@ class Reader {
 
 class Stream :
     public Reader,
-    public Pipe
+    public Pipe,
+    public Valve
 {
   public:
     ~Stream() override = default;
-
-    virtual task<void> Shut() = 0;
 };
 
 class Inverted final :
-    public Link
+    public Pump
 {
   private:
     U<Stream> stream_;
 
   public:
     Inverted(BufferDrain *drain, U<Stream> stream) :
-        Link(drain),
+        Pump(drain),
         stream_(std::move(stream))
     {
     }
@@ -69,17 +68,17 @@ class Inverted final :
                     writ = co_await stream_->Read(beam);
                 } catch (const Error &error) {
                     orc_insist(!error.text.empty());
-                    Link::Stop(error.text);
+                    Pump::Stop(error.text);
                     break;
                 }
 
                 if (writ == 0) {
-                    Link::Stop();
+                    Pump::Stop();
                     break;
                 }
 
                 auto subset(beam.subset(0, writ));
-                Link::Land(subset);
+                Pump::Land(subset);
             }
         });
     }
@@ -90,7 +89,7 @@ class Inverted final :
 
     task<void> Shut() override {
         stream_->Close();
-        co_await Link::Shut();
+        co_await Valve::Shut();
     }
 };
 

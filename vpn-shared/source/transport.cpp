@@ -58,7 +58,7 @@ class Transport :
     asio::executor_work_guard<openvpn_io::io_context::executor_type> work_;
 
   protected:
-    virtual Link *Inner() = 0;
+    virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
         //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;

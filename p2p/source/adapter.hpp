@@ -77,7 +77,7 @@ class Adapter :
     size_t offset_ = 0;
 
   protected:
-    virtual Link *Inner() = 0;
+    virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
         std::unique_lock<std::mutex> lock(mutex_);

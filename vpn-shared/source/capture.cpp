@@ -638,7 +638,7 @@ class Pass :
     U<Analyzer> analyzer_;
 
   protected:
-    virtual Link *Inner() = 0;
+    virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
         Beam beam(data);

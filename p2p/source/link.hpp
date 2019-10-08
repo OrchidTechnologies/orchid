@@ -63,18 +63,7 @@ class Pipe {
     virtual task<void> Send(const Buffer &data) = 0;
 };
 
-template <typename Type_>
-class Drain {
-  public:
-    virtual void Land(Type_ data) = 0;
-    virtual void Stop(const std::string &error = std::string()) = 0;
-};
-
-using BufferDrain = Drain<const Buffer &>;
-
-class Valve :
-    public Pipe
-{
+class Valve {
   private:
     cppcoro::async_manual_reset_event shut_;
 
@@ -85,9 +74,7 @@ class Valve :
     }
 
   public:
-    ~Valve() override {
-        if (Verbose)
-            Log() << "##### " << unique_ << std::endl;
+    ~Valve() {
         orc_insist(shut_.is_set());
     }
 
@@ -97,47 +84,84 @@ class Valve :
     }
 };
 
-template <typename Drain_>
-class Pump :
+class Basin {
+  public:
+    virtual void Stop(const std::string &error = std::string()) = 0;
+};
+
+template <typename Type_>
+class Drain :
+    public Basin
+{
+  public:
+    virtual void Land(Type_ data) = 0;
+};
+
+template <typename Basin_>
+class Faucet :
     public Valve
 {
   private:
-    Drain_ *const drain_;
+    Basin_ *const basin_;
 
   protected:
-    Drain_ *Outer() {
-        return drain_;
+    Basin_ *Outer() {
+        return basin_;
+    }
+
+    void Stop(const std::string &error = std::string()) {
+        Valve::Stop();
+        return Outer()->Stop(error);
     }
 
   public:
-    Pump(Drain_ *drain) :
-        drain_(drain)
+    Faucet(Basin_ *basin) :
+        basin_(basin)
+    {
+    }
+
+    virtual ~Faucet() = default;
+};
+
+using BufferDrain = Drain<const Buffer &>;
+
+class Pump :
+    public Pipe,
+    public Faucet<BufferDrain>
+{
+  protected:
+    void Land(const Buffer &data) {
+        return Outer()->Land(data);
+    }
+
+  public:
+    Pump(BufferDrain *drain) :
+        Faucet<BufferDrain>(drain)
     {
     }
 };
 
 class Link :
-    public Pump<BufferDrain>,
+    public Pump,
     public BufferDrain
 {
   protected:
     void Land(const Buffer &data) override {
-        return Outer()->Land(data);
+        return Pump::Land(data);
     }
 
     void Stop(const std::string &error = std::string()) override {
-        Pump<BufferDrain>::Stop();
-        return Outer()->Stop(error);
+        return Pump::Stop(error);
     }
 
   public:
     Link(BufferDrain *drain) :
-        Pump<BufferDrain>(drain)
+        Pump(drain)
     {
     }
 };
 
-template <typename Inner_ = Link, typename Drain_ = BufferDrain>
+template <typename Inner_ = Pump, typename Drain_ = BufferDrain>
 class Sunk {
   protected:
     U<Inner_> inner_;
@@ -154,7 +178,7 @@ class Sunk {
     }
 };
 
-template <typename Base_, typename Inner_ = Link, typename Drain_ = BufferDrain>
+template <typename Base_, typename Inner_ = Pump, typename Drain_ = BufferDrain>
 class Sink final :
     public Base_,
     public Sunk<Inner_, Drain_>
@@ -233,10 +257,6 @@ class Prefix final :
 
     task<void> Send(const Buffer &data) override {
         co_return co_await prefixed_->Send(Tie(tag_, data));
-    }
-
-    void Stop(const std::string &error = std::string()) override {
-        Link::Stop(error);
     }
 
     const S<Prefixed_> &operator ->() {

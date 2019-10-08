@@ -71,7 +71,7 @@ class Capture :
     U<Internal> internal_;
 
   protected:
-    virtual Link *Inner() = 0;
+    virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) override;

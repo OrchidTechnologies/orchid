@@ -36,7 +36,7 @@ class Family :
     }
 
   protected:
-    virtual Link *Inner() = 0;
+    virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
         auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
