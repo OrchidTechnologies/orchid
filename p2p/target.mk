@@ -68,6 +68,8 @@ cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
 
 cflags += -DLWIP_ERRNO_STDINCLUDE
 
+cflags_transport += -Wno-unused-private-field
+
 cflags += -I$(pwd)/BeastHttp/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
 source += $(wildcard $(pwd)/boost/libs/filesystem/src/*.cpp)
@@ -146,3 +148,5 @@ c_eEVM += -I$(pwd)/eEVM/3rdparty
 
 include $(pwd)/asio.mk
 $(call include,rtc/target.mk)
+
+$(call include,openvpn3.mk)

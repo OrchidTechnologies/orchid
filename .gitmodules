@@ -29,10 +29,10 @@
 	path = min-webrtc/webrtc
 	url = https://chromium.googlesource.com/external/webrtc
 [submodule "openvpn3"]
-	path = vpn-shared/openvpn3
+	path = p2p/openvpn3
 	url = https://github.com/OpenVPN/openvpn3.git
 [submodule "lz4"]
-	path = vpn-shared/lz4
+	path = p2p/lz4
 	url = https://github.com/lz4/lz4.git
 [submodule "openzeppelin-solidity"]
 	path = openzeppelin-solidity

@@ -26,31 +26,6 @@ cflags += -I$(pwd)/source
 
 cflags += -I$(pwd)/extra
 
-source += $(wildcard $(pwd)/lz4/lib/*.c)
-cflags += -I$(pwd)/lz4/lib
-
-cflags += -DUSE_ASIO
-cflags += -DUSE_ASIO_THREADLOCAL
-cflags += -DASIO_NO_DEPRECATED
-cflags += -DHAVE_LZ4
-cflags += -DUSE_OPENSSL
-cflags += -DOPENVPN_FORCE_TUN_NULL
-cflags += -DUSE_TUN_BUILDER
-
-source += $(wildcard $(pwd)/openvpn3/client/*.cpp)
-cflags += -I$(pwd)/openvpn3
-cflags += -I$(pwd)/openvpn3/client
-
-cflags += -DOPENVPN_EXTERNAL_TRANSPORT_FACTORY
-cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
-
-cflags_transport += -Wno-unused-private-field
-
-c_openvpn3 += -Wno-address-of-temporary
-c_openvpn3 += -Wno-delete-non-virtual-dtor
-c_openvpn3 += -Wno-unused-private-field
-c_openvpn3 += -Wno-vexing-parse
-
 source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
 cflags += -I$(pwd)/libmaxminddb/include
 c_libmaxminddb := -DUNICODE
@@ -61,10 +36,6 @@ source += $(pwd)/SPCDNS/src/codec.c
 source += $(pwd)/SPCDNS/src/mappings.c
 source += $(pwd)/SPCDNS/src/output.c
 cflags += -I$(pwd)/SPCDNS/src
-
-ifeq ($(target),ios)
-c_openvpn3 += -ObjC++
-endif
 
 %/GeoLite2-City.mmdb:
 	@mkdir -p $(dir $@)
