@@ -50,10 +50,11 @@ static void Forge(openvpn::ICMPv4 &header, int adjust) {
 }
 
 template <typename Header_>
-void Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
+uint16_t Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
     auto before(boost::endian::big_to_native(header.*field));
     header.*field = boost::endian::native_to_big(value);
     Forge(header, int32_t(before) - int32_t(value));
+    return before;
 }
 
 uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
