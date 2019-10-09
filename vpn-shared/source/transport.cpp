@@ -35,10 +35,8 @@
 
 #include <boost/asio/executor_work_guard.hpp>
 
-#include "client.hpp"
 #include "error.hpp"
 #include "forge.hpp"
-#include "protect.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
 

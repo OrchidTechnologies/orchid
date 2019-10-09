@@ -28,11 +28,14 @@
 
 #include "acceptor.hpp"
 #include "capture.hpp"
+#include "client.hpp"
 #include "connection.hpp"
 #include "database.hpp"
 #include "directory.hpp"
 #include "forge.hpp"
 #include "monitor.hpp"
+#include "opening.hpp"
+#include "origin.hpp"
 #include "syscall.hpp"
 #include "transport.hpp"
 
