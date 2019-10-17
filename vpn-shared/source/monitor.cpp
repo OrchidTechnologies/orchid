@@ -320,7 +320,7 @@ void monitor(Span<const uint8_t> span, MonitorLogger &logger)
 {
     if (IPCommon::version(span.cast<const uint8_t>()) != uint8_t(IPCommon::IPv4)) {
         // TODO : IPv6
-        orc_assert(false);
+        //orc_assert(false);
         return;
     }
 
