@@ -12,10 +12,11 @@ import DebugPanel from "./DebugPanel";
 import {MoveFunds} from "./MoveFunds";
 import {LockFunds} from "./LockFunds";
 import {ManageKeys} from "./ManageKeys";
+import {deploymentPath} from "../util/util";
 
 export const Layout: React.FC = () => {
   return (
-      <BrowserRouter basename={process.env.PUBLIC_URL}>
+      <BrowserRouter basename={deploymentPath()}>
         <Container>
           <Container className="form-style">
             <Header/>
