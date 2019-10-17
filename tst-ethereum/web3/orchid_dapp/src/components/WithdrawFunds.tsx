@@ -12,6 +12,7 @@ import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionResult} from "./TransactionResult";
 import {SubmitButton} from "./SubmitButton";
 import {Address} from "../api/orchid-types";
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class WithdrawFunds extends Component {
@@ -19,13 +20,16 @@ export class WithdrawFunds extends Component {
   withdrawAmount = new BehaviorSubject<number | null>(null);
   withdrawAll = new BehaviorSubject(false);
   sendToAddress = new BehaviorSubject<Address | null>(null);
+  amountInput = React.createRef<HTMLInputElement>();
 
   formValid = combineLatest([this.withdrawAmount, this.withdrawAll, this.sendToAddress])
       .pipe(map(val => {
         const [withdrawAmount, withdrawAll, sendToAddress] = val;
         this.setState({
           withdrawAll: withdrawAll,
-          withdrawAmount: withdrawAll ? weiToOxtString(this.state.potBalance || BigInt(0), 4) : withdrawAmount
+          withdrawAmount: withdrawAll ?
+              weiToOxtString(this.state.potBalance || BigInt(0), 4) :
+              withdrawAmount
         });
         let api = OrchidAPI.shared();
         return api.account.value !== null
@@ -102,6 +106,7 @@ export class WithdrawFunds extends Component {
   };
 
   render() {
+    let currentInputAmount = this.amountInput.current == null ? "" : this.amountInput.current.value;
     return (
         <div>
           <label className="title">Withdraw Funds</label>
@@ -119,15 +124,14 @@ export class WithdrawFunds extends Component {
 
           <label>Withdraw Amount<span className={errorClass(this.state.amountError)}> *</span></label>
           <input
+              ref={this.amountInput}
               type="number"
               className="withdraw-amount editable"
               placeholder="Amount in OXT"
-              value={
-                this.state.withdrawAmount == null ? "" : this.state.withdrawAmount
-              }
+              value={ this.state.withdrawAmount == null ? currentInputAmount : this.state.withdrawAmount }
               onChange={(e) => {
                 let amount = parseFloatSafe(e.currentTarget.value);
-                const valid = amount != null && amount > BigInt(0)
+                const valid = amount != null && amount > 0
                     && (this.state.potBalance == null || oxtToWei(amount) <= this.state.potBalance);
                 this.setState({amountError: !valid});
                 this.withdrawAmount.next(valid ? amount : null);
