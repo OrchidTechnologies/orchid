@@ -1,5 +1,4 @@
 import React from "react";
-import './LayoutDesktop.css'
 import {Container, Dropdown, Nav, Navbar} from "react-bootstrap";
 import Header from "./Header";
 

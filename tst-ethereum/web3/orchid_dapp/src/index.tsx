@@ -1,14 +1,11 @@
 import React, {FC} from 'react'
 import ReactDOM from 'react-dom'
-import {useMediaQuery} from 'react-responsive'
 import {OrchidAPI} from "./api/orchid-api";
-import {LayoutDesktop} from "./components/LayoutDesktop";
 
 import 'bootstrap/dist/css/bootstrap.css'
 import './index.css'
 import './css/app-style.css'
 import './css/button-style.css'
-import {LayoutMobile} from "./components/LayoutMobile";
 import {Layout} from "./components/Layout"
 
 // const Layout: FC = () => {
