@@ -21,7 +21,7 @@ namespace orc {
     orc_insist(false); \
 }
 
-static JavaVM *g_jvm;
+static JavaVM *jvm;
 static asio::io_context *executor_;
 std::string files_dir;
 U<Sink<Capture>> capture_;
@@ -69,16 +69,6 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
     executor_->run();
 }
 
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    g_jvm = vm;
-    JNIEnv* env;
-    if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
-        return -1;
-    }
-    return JNI_VERSION_1_6;
-}
-
 #define STR(A) #A
 #define IMPORT(pkg, class) jclass c ## class = env->FindClass(STR(pkg) "/" STR(class));
 #define CATCH(code) if (env->ExceptionOccurred()) { \
@@ -93,7 +83,7 @@ bool vpn_protect(int s)
     return boost::asio::post(*executor_, std::packaged_task<bool()>([&]{
         //Log() << "vpn_protect_inner: " << s << std::endl;
         JNIEnv *env;
-        if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
+        if (jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
             return false;
         }
         IMPORT(net/orchid/Orchid, OrchidVpnService);
@@ -108,4 +98,14 @@ bool vpn_protect(int s)
     })).get();
 }
 
+}
+
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+    orc::jvm = vm;
+    JNIEnv* env;
+    if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
+        return -1;
+    }
+    return JNI_VERSION_1_6;
 }
