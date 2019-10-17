@@ -63,6 +63,7 @@ ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s
 endif
 
+objc := false
 include $(pwd)/target-$(target).mk
 
 cflags += -I@/usr/include
