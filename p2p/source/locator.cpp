@@ -34,7 +34,10 @@ Locator Locator::Parse(const std::string &url) {
     auto scheme(value.protocol());
     orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');
     scheme.resize(scheme.size() - 1);
-    return Locator(std::move(scheme), value.host(), value.port(), value.pathname());
+    auto port(value.port());
+    if (port.empty())
+        port = std::to_string(skyr::url::default_port(scheme).value_or(0));
+    return Locator(std::move(scheme), value.hostname(), port, value.pathname());
 }
 
 }

@@ -23,6 +23,8 @@
 #ifndef ORCHID_CHANNEL_HPP
 #define ORCHID_CHANNEL_HPP
 
+#include <functional>
+
 #include "api/peer_connection_interface.h"
 
 #include <cppcoro/async_manual_reset_event.hpp>
@@ -33,6 +35,8 @@
 #include "trace.hpp"
 
 namespace orc {
+
+class Socket;
 
 // XXX: support exceptions
 
@@ -289,6 +293,8 @@ class Channel final :
     cppcoro::async_manual_reset_event opened_;
 
   public:
+    static task<Socket> Wire(Sunk<> *sunk, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
+
     Channel(BufferDrain *drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
         Pump(drain),
         peer_(peer),
@@ -381,6 +387,7 @@ _trace();
 };
 
 std::string Strip(const std::string &sdp);
+rtc::scoped_refptr<rtc::RTCCertificate> Certify();
 
 }
 

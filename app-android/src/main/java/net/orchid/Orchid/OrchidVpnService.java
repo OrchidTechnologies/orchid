@@ -92,8 +92,8 @@ public class OrchidVpnService extends VpnService {
                     File f = app().getFilesDir();
                     AssetManager assetManager = app().getAssets();
                     try {
-                        InputStream in = assetManager.open("PureVPN.ovpn");
-                        copyTo(in, new File(f, "PureVPN.ovpn"));
+                        InputStream in = assetManager.open("flutter_assets/assets/default.cfg");
+                        copyTo(in, new File(f, "orchid.cfg"));
                     } catch (IOException e) {
                         Log.e(TAG, "onCreate", e);
                     }

@@ -46,8 +46,6 @@ upload: $(output)/$(name).ipa
 	xcrun altool --upload-app -f $< -t ios -u "$(aluser)" -p $(alpass)
 
 ifeq ($(target),sim)
-cflags += '-DORCHID_USERNAME="$(username)"'
-cflags += '-DORCHID_PASSWORD="$(password)"'
 cflags += -Wno-deprecated-declarations
 lflags += -framework NetworkExtension
 else

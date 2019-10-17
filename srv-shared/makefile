@@ -18,12 +18,11 @@
 # }}}
 
 
-include env/target.mk
-
 args := 
 args += --tls ../network.p12
 args += --dh ../dh.pem
-args += --ovpn ../app-ios/resource/PureVPN.ovpn
+
+include env/target.mk
 
 .PHONY: all
 all: $(output)/$(default)/orchid$(exe)

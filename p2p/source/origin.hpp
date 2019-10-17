@@ -23,9 +23,6 @@
 #ifndef ORCHID_ORIGIN_HPP
 #define ORCHID_ORIGIN_HPP
 
-#include <rtc_base/openssl_identity.h>
-#include <rtc_base/ssl_fingerprint.h>
-
 #include "http.hpp"
 #include "link.hpp"
 #include "opening.hpp"
@@ -41,23 +38,10 @@ class Origin {
 
     virtual task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
     virtual task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) = 0;
-    virtual task<Socket> Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) = 0;
     virtual task<Socket> Open(Sunk<Opening, BufferSewer> *sunk) = 0;
 
     task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data);
 };
-
-class Local final :
-    public Origin
-{
-  public:
-    task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
-    task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;
-    task<Socket> Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) override;
-    task<Socket> Open(Sunk<Opening, BufferSewer> *sunk) override;
-};
-
-S<Local> GetLocal();
 
 }
 

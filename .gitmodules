@@ -112,3 +112,6 @@
 [submodule "gnulib"]
 	path = min-wireshark/gnulib
 	url = git://git.savannah.gnu.org/gnulib.git
+[submodule "gpgme"]
+	path = p2p/gpgme
+	url = https://dev.gnupg.org/source/gpgme.git

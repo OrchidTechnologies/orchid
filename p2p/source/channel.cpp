@@ -26,10 +26,12 @@
 #include <p2p/base/ice_transport_internal.h>
 
 #include <rtc_base/async_invoker.h>
+#include <rtc_base/openssl_identity.h>
 #include <rtc_base/ssl_adapter.h>
 
 #include "channel.hpp"
 #include "memory.hpp"
+#include "socket.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -217,9 +219,51 @@ void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interf
     Land(std::move(interface));
 }
 
+class Actor final :
+    public Peer
+{
+  protected:
+    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
+        orc_assert(false);
+    }
+
+    void Stop(const std::string &error) override {
+        // XXX: how much does this matter?
+_trace();
+    }
+
+  public:
+    Actor(Configuration configuration) :
+        Peer(std::move(configuration))
+    {
+    }
+
+    ~Actor() override {
+_trace();
+        Close();
+    }
+};
+
+task<Socket> Channel::Wire(Sunk<> *sunk, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
+    auto client(Make<Actor>(std::move(configuration)));
+    auto channel(sunk->Wire<Channel>(client));
+    auto answer(co_await respond(Strip(co_await client->Offer())));
+    co_await client->Negotiate(answer);
+    co_await channel->Connect();
+    auto candidate(co_await client->Candidate());
+    const auto &socket(candidate.address());
+    co_return Socket(socket.ipaddr().ToString(), socket.port());
+}
+
 std::string Strip(const std::string &sdp) {
     static std::regex re("\r?\na=candidate:[^\r\n]*");
     return std::regex_replace(sdp, re, "");
+}
+
+rtc::scoped_refptr<rtc::RTCCertificate> Certify() {
+    return rtc::RTCCertificate::Create(U<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
+        "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
+    )));
 }
 
 }

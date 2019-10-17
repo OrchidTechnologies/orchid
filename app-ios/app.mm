@@ -24,9 +24,6 @@
 #include <UIKit/UIKit.h>
 #include <NetworkExtension/NetworkExtension.h>
 
-static NSString * const username_ = @ ORCHID_USERNAME;
-static NSString * const password_ = @ ORCHID_PASSWORD;
-
 
 @interface GeneratedPluginRegistrant : NSObject
 
@@ -152,13 +149,9 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
 - (void) initProvider: (FlutterResult)result {
     NETunnelProviderProtocol *protocol([[NETunnelProviderProtocol alloc] init]);
 
-    NSURL *url([[NSBundle mainBundle] URLForResource:@"PureVPN" withExtension:@"ovpn"]);
-    NSData *data([[NSData alloc] initWithContentsOfURL:url]);
-
-    protocol.providerConfiguration = @{@"ovpnfile": data};
+    protocol.providerConfiguration = @{};
     protocol.providerBundleIdentifier = @ ORCHID_DOMAIN "." ORCHID_NAME ".VPN";
-    protocol.serverAddress = @"mac.saurik.com";
-    //protocol.serverAddress = @"ukl2-ovpn-tcp.pointtoserver.com";
+    protocol.serverAddress = @"Orchid";
     protocol.disconnectOnSleep = NO;
 
     [self.providerManager setEnabled:YES];
@@ -183,9 +176,10 @@ static NSString * const password_ = @ ORCHID_PASSWORD;
         if (error != nil)
             return;
 
+        NSURL *url([[NSBundle mainBundle] URLForResource:@"Frameworks/App.framework/flutter_assets/assets/default" withExtension:@"cfg"]);
+
         [self.providerManager.connection startVPNTunnelWithOptions:@{
-            @"username": username_,
-            @"password": password_,
+            @"config": [url path],
         } andReturnError:&error];
 
         if (error != nil)

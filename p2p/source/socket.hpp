@@ -30,7 +30,7 @@
 
 namespace orc {
 
-class Socket final {
+class Socket {
   private:
     asio::ip::address host_;
     uint16_t port_;
@@ -180,6 +180,49 @@ class Five final :
 
 inline std::ostream &operator <<(std::ostream &out, const Five &five) {
     return out << "[" << five.Protocol() << "|" << five.Source() << "|" << five.Target() << "]";
+}
+
+class Three final :
+    public Socket
+{
+  private:
+    uint8_t protocol_;
+
+  public:
+    template <typename... Args_>
+    Three(uint8_t protocol, Args_ &&...args) :
+        Socket(std::forward<Args_>(args)...),
+        protocol_(protocol)
+    {
+    }
+
+    Three(const Three &rhs) = default;
+
+    Three(Three &&rhs) noexcept :
+        Socket(std::move(rhs)),
+        protocol_(rhs.protocol_)
+    {
+    }
+
+    uint8_t Protocol() const {
+        return protocol_;
+    }
+
+    std::tuple<uint8_t, const Socket &> Tuple() const {
+        return std::tie(protocol_, *this);
+    }
+
+    bool operator <(const Three &rhs) const {
+        return Tuple() < rhs.Tuple();
+    }
+
+    bool operator ==(const Three &rhs) const {
+        return Tuple() == rhs.Tuple();
+    }
+};
+
+inline std::ostream &operator <<(std::ostream &out, const Three &three) {
+    return out << "[" << three.Protocol() << "|" << static_cast<const Socket &>(three) << "]";
 }
 
 }

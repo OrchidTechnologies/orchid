@@ -20,40 +20,34 @@
 /* }}} */
 
 
-#ifndef ORCHID_CLIENT_HPP
-#define ORCHID_CLIENT_HPP
+#ifndef ORCHID_NETWORK_HPP
+#define ORCHID_NETWORK_HPP
 
-#include <rtc_base/rtc_certificate.h>
-#include <rtc_base/ssl_fingerprint.h>
+#include <boost/program_options/variables_map.hpp>
 
-#include "bond.hpp"
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
+
+#include "jsonrpc.hpp"
 #include "origin.hpp"
 
 namespace orc {
 
-class Server :
-    public Bonded,
-    public Pump
-{
-  public:
-    U<rtc::SSLFingerprint> remote_;
-    rtc::scoped_refptr<rtc::RTCCertificate> local_;
+class Network {
+  private:
+    Address directory_;
+    Locator locator_;
 
-    Socket socket_;
-
-  protected:
-    void Land(Pipe *pipe, const Buffer &data) override;
+    boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
 
   public:
-    Server(BufferDrain *drain, U<rtc::SSLFingerprint> remote);
+    Network(Address directory, const std::string &rpc);
+    Network(boost::program_options::variables_map &args);
 
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Bonded::Send(data);
-    }
-
-    task<void> Connect(const S<Origin> &origin, const std::string &url);
+    task<void> Random(Sunk<> *sunk, const S<Origin> &origin);
+    task<S<Origin>> Setup();
 };
 
 }
 
-#endif//ORCHID_CLIENT_HPP
+#endif//ORCHID_NETWORK_HPP

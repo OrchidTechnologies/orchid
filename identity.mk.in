@@ -12,7 +12,4 @@ provision :=
 cflags += '-DORCHID_INFURA="XXX"'
 cflags += '-DORCHID_ALCHEMY="XXX"'
 
-username := XXX
-password := XXX
-
 #MAKEFLAGS += --output-sync=line

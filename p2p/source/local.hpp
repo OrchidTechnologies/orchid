@@ -20,40 +20,24 @@
 /* }}} */
 
 
-#include "channel.hpp"
+#ifndef ORCHID_LOCAL_HPP
+#define ORCHID_LOCAL_HPP
+
 #include "origin.hpp"
 
 namespace orc {
 
-class Actor final :
-    public Peer
+class Local final :
+    public Origin
 {
-  protected:
-    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        orc_assert(false);
-    }
-
-    void Stop(const std::string &error) override {
-        // XXX: how much does this matter?
-_trace();
-    }
-
   public:
-    ~Actor() override {
-_trace();
-        Close();
-    }
+    task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;
+    task<Socket> Open(Sunk<Opening, BufferSewer> *sunk) override;
 };
 
-task<Socket> Local::Hop(Sunk<> *sunk, const std::function<task<std::string> (std::string)> &respond) {
-    auto client(Make<Actor>());
-    auto channel(sunk->Wire<Channel>(client));
-    auto answer(co_await respond(Strip(co_await client->Offer())));
-    co_await client->Negotiate(answer);
-    co_await channel->Connect();
-    auto candidate(co_await client->Candidate());
-    const auto &socket(candidate.address());
-    co_return Socket(socket.ipaddr().ToString(), socket.port());
-}
+S<Local> GetLocal();
 
 }
+
+#endif//ORCHID_LOCAL_HPP

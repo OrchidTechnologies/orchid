@@ -41,28 +41,22 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
     files_dir = std::string(cDir);
     env->ReleaseStringUTFChars(dir, cDir);
 
-    std::string ovpnfilename = files_dir + std::string("/PureVPN.ovpn");
-    Log() << ovpnfilename << std::endl;
-    std::ifstream ifs(ovpnfilename);
-    std::string ovpnfile((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-    std::string username(ORCHID_USERNAME);
-    std::string password(ORCHID_PASSWORD);
+    std::string config = files_dir + std::string("/orchid.cfg");
+    Log() << config << std::endl;
 
     auto capture(std::make_unique<Sink<Capture>>(local));
     auto connection(capture->Wire<File<asio::posix::stream_descriptor>>(file));
-    connection->Start();
 
     asio::io_context executor;
     auto work(asio::make_work_guard(executor));
     Spawn([
         capture = std::move(capture),
-        ovpnfile = std::move(ovpnfile),
-        username = std::move(username),
-        password = std::move(password)
+        connection = std::move(connection),
+        config = std::move(config)
     ]() mutable -> task<void> { try {
         co_await Schedule();
-        co_await capture->Start(GetLocal());
-        //co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
+        co_await capture->Start(std::move(config));
+        connection->Start();
         capture_ = std::move(capture);
     } ORC_CATCH() });
     executor_ = &executor;

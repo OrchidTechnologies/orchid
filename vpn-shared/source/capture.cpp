@@ -22,6 +22,9 @@
 
 #include <cppcoro/async_latch.hpp>
 
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/options_description.hpp>
+
 #include <openvpn/addr/ipv4.hpp>
 
 #include <dns.h>
@@ -33,7 +36,9 @@
 #include "database.hpp"
 #include "directory.hpp"
 #include "forge.hpp"
+#include "local.hpp"
 #include "monitor.hpp"
+#include "network.hpp"
 #include "opening.hpp"
 #include "origin.hpp"
 #include "syscall.hpp"
@@ -231,6 +236,7 @@ void Capture::Land(const Buffer &data) {
 }
 
 void Capture::Stop(const std::string &error) {
+    std::cerr << error << std::endl;
     orc_insist(false);
 }
 
@@ -631,7 +637,6 @@ task<void> Capture::Start(S<Origin> origin) {
     co_return;
 }
 
-
 class Pass :
     public BufferDrain,
     public Internal
@@ -665,11 +670,35 @@ class Pass :
     }
 };
 
-task<void> Capture::Start(const std::string &rpc, std::string ovpnfile, std::string username, std::string password) {
-    auto origin(co_await Setup(rpc));
+task<Sunk<> *> Capture::Start() {
     auto pass(std::make_unique<Sink<Pass>>(this));
-    co_await Connect(pass.get(), std::move(origin), local_, std::move(ovpnfile), std::move(username), std::move(password));
+    auto backup(pass.get());
     internal_ = std::move(pass);
+    co_return backup;
+}
+
+task<void> Capture::Start(boost::program_options::variables_map &args) {
+    Network network(args);
+    auto sunk(co_await Start());
+    co_await network.Random(sunk, GetLocal());
+}
+
+task<void> Capture::Start(const std::string &config) {
+    po::variables_map args;
+    Store(args, config);
+    po::notify(args);
+    co_await Start(args);
+}
+
+void Store(po::variables_map &args, const std::string &path) {
+    po::options_description options("configuration file");
+    options.add_options()
+        ("eth", po::value<std::string>()->default_value(""), "contract address of staking directory tree")
+        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
+        //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+    ;
+
+    po::store(po::parse_config_file(path.c_str(), options), args);
 }
 
 }

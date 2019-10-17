@@ -20,40 +20,32 @@
 /* }}} */
 
 
-#ifndef ORCHID_CLIENT_HPP
-#define ORCHID_CLIENT_HPP
+#ifndef ORCHID_REMOTE_HPP
+#define ORCHID_REMOTE_HPP
 
-#include <rtc_base/rtc_certificate.h>
-#include <rtc_base/ssl_fingerprint.h>
-
-#include "bond.hpp"
 #include "origin.hpp"
 
 namespace orc {
 
-class Server :
-    public Bonded,
-    public Pump
+class Remote :
+    public Origin,
+    public BufferDrain,
+    public Valve
 {
-  public:
-    U<rtc::SSLFingerprint> remote_;
-    rtc::scoped_refptr<rtc::RTCCertificate> local_;
-
-    Socket socket_;
-
   protected:
-    void Land(Pipe *pipe, const Buffer &data) override;
+    virtual Pump *Inner() = 0;
+
+    void Land(const Buffer &data) override;
+    void Stop(const std::string &error) override;
 
   public:
-    Server(BufferDrain *drain, U<rtc::SSLFingerprint> remote);
+    task<void> Shut() override;
 
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Bonded::Send(data);
-    }
-
-    task<void> Connect(const S<Origin> &origin, const std::string &url);
+    task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
+    task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;
+    task<Socket> Open(Sunk<Opening, BufferSewer> *sunk) override;
 };
 
 }
 
-#endif//ORCHID_CLIENT_HPP
+#endif//ORCHID_REMOTE_HPP

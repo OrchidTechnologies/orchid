@@ -40,6 +40,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/default.cfg
     - assets/images/
     - assets/flare/
     - assets/docs/

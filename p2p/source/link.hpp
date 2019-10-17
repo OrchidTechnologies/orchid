@@ -178,7 +178,7 @@ class Sink final :
   private:
     Inner_ *Inner() override {
         auto inner(this->inner_.get());
-        orc_insist(inner != nullptr);
+        orc_insist_(inner != nullptr, typeid(Inner_).name() << " " << typeid(Base_).name() << "::Inner() == nullptr");
         return inner;
     }
 

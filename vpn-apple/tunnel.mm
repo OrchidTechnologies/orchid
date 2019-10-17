@@ -34,7 +34,11 @@
 
 using namespace orc;
 
-#define ORC_CATCH(handler) catch(...) { \
+#define ORC_CATCH(handler) \
+catch (const std::exception &error) { \
+    orc::Log() << error.what() << std::endl; \
+    orc_insist(false); \
+} catch(...) { \
     /* XXX: implement */ \
     orc_insist(false); \
 }
@@ -72,11 +76,9 @@ static std::string cfs(NSString *data) {
     auto provider(protocol.providerConfiguration);
     orc_assert(provider != nil);
 
-    std::string local("10.7.0.3");
+    auto config(cfs((NSString *) [options objectForKey:@"config"]));
 
-    auto ovpnfile(cfs((NSData *) provider[@"ovpnfile"]));
-    auto username(cfs((NSString *) [options objectForKey:@"username"]));
-    auto password(cfs((NSString *) [options objectForKey:@"password"]));
+    std::string local("10.7.0.3");
 
     auto settings([NEPacketTunnelNetworkSettings.alloc initWithTunnelRemoteAddress:@"127.0.0.1"]);
 
@@ -96,21 +98,18 @@ static std::string cfs(NSString *data) {
         orc_assert(file != -1);
 
         auto capture(std::make_unique<Sink<Capture>>(local));
-
         auto family(capture->Wire<Sink<Family>>());
         auto sync(family->Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
-        sync->Start();
 
         Spawn([
             capture = std::move(capture),
-            ovpnfile = std::move(ovpnfile),
-            username = std::move(username),
-            password = std::move(password),
+            sync = std::move(sync),
+            config = std::move(config),
             handler = handler,
         self]() mutable -> task<void> { try {
             co_await Schedule();
-            co_await capture->Start(GetLocal());
-            //co_await capture->Start(std::move(ovpnfile), std::move(username), std::move(password));
+            co_await capture->Start(config);
+            sync->Start();
             capture_ = std::move(capture);
             handler(nil);
         } ORC_CATCH(handler) });

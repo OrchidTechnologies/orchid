@@ -31,6 +31,7 @@
 #include "crypto.hpp"
 #include "http.hpp"
 #include "locator.hpp"
+#include "origin.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -425,6 +426,7 @@ struct Account final {
 
 class Endpoint final {
   private:
+    const S<Origin> origin_;
     const Locator locator_;
 
     uint256_t Get(int index, Json::Value &storages, const Region &root, const uint256_t &key);
@@ -440,7 +442,8 @@ class Endpoint final {
     }
 
   public:
-    Endpoint(Locator locator) :
+    Endpoint(S<Origin> origin, Locator locator) :
+        origin_(std::move(origin)),
         locator_(std::move(locator))
     {
     }

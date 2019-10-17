@@ -46,7 +46,6 @@
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
-#include <boost/program_options/variables_map.hpp>
 
 #include <asio.hpp>
 #include "capture.hpp"
@@ -62,8 +61,6 @@
 #include "family.hpp"
 #endif
 
-namespace po = boost::program_options;
-
 namespace orc {
 
 std::string Group() {
@@ -78,13 +75,15 @@ int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
         ("help", "produce help message")
-        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
-        //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
+        ("config", po::value<std::string>(), "configuration file for client configuration")
     ;
 
     po::store(po::parse_command_line(argc, argv, po::options_description()
         .add(options)
     ), args);
+
+    if (args.count("config") != 0)
+        Store(args, args["config"].as<std::string>());
 
     po::notify(args);
 
@@ -99,14 +98,8 @@ int Main(int argc, const char *const argv[]) {
 
     Initialize();
 
-    std::string ovpn;
-    boost::filesystem::load_string_file("../app-ios/resource/PureVPN.ovpn", ovpn);
-
-    std::string username(ORCHID_USERNAME);
-    std::string password(ORCHID_PASSWORD);
 
     std::string local("10.7.0.3");
-
     auto capture(Make<Sink<Capture>>(local));
 
 #if 0
@@ -143,11 +136,13 @@ int Main(int argc, const char *const argv[]) {
     orc_assert(system(("route -n add 207.254.46.169 -interface " + utun).c_str()) == 0);
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 
-    Wait([&]() -> task<void> {
+    Wait([&]() -> task<void> { try {
         co_await Schedule();
-        co_await capture->Start(GetLocal());
-        //co_await capture->Start(args["rpc"].as<std::string>(), std::move(ovpn), std::move(username), std::move(password));
-    }());
+        co_await capture->Start(args);
+    } catch (const std::exception &error) {
+        std::cerr << error.what() << std::endl;
+        throw;
+    } }());
 
     Thread().join();
     return 0;

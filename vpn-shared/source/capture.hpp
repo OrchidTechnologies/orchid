@@ -25,10 +25,14 @@
 
 #include <map>
 
+#include <boost/program_options/variables_map.hpp>
+
 #include "link.hpp"
 #include "socket.hpp"
 
 namespace orc {
+
+namespace po = boost::program_options;
 
 class Origin;
 
@@ -83,8 +87,12 @@ class Capture :
     void Drop(Beam data) override;
 
     task<void> Start(S<Origin> origin);
-    task<void> Start(const std::string &rpc, std::string ovpnfile, std::string username, std::string password);
+    task<Sunk<> *> Start();
+    task<void> Start(boost::program_options::variables_map &args);
+    task<void> Start(const std::string &config);
 };
+
+void Store(po::variables_map &args, const std::string &path);
 
 }
 

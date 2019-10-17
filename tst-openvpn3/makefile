@@ -22,7 +22,7 @@ include env/target.mk
 
 version := 0.9
 
-args := ../app-ios/resource/PureVPN.ovpn -x -u "$(username)" -p "$(password)"
+args := ../PureVPN.ovpn -x -u "$(username)" -p "$(password)"
 
 .PHONY: all
 all: $(output)/$(default)/orchid$(exe)

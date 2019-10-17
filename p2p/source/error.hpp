@@ -59,11 +59,14 @@ class Error final :
     }
 }; }
 
-#define orc_insist(code) do { \
+#define orc_insist_(code, text) do { \
     if ((code)) break; \
-    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << "orc_insist(" #code ")" << std::endl; \
+    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text << std::endl; \
     std::terminate(); \
 } while (false)
+
+#define orc_insist(code) \
+    orc_insist_(code, "orc_insist(" #code ")")
 
 #define orc_throw(text) do { \
     orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text << std::endl; \
