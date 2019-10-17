@@ -179,7 +179,7 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	cd $(dir $<) && meson --cross $(CURDIR)/$(output)/$(arch)/meson.txt $(CURDIR)/$(dir $@) \
+	cd $(dir $<) && meson --cross-file $(CURDIR)/$(output)/$(arch)/meson.txt $(CURDIR)/$(dir $@) \
 	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 
