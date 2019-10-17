@@ -83,7 +83,7 @@ static std::string cfs(NSString *data) {
     settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[[NSString stringWithUTF8String:local.c_str()]] subnetMasks:@[@"255.255.255.0"]];
     settings.IPv4Settings.includedRoutes = @[NEIPv4Route.defaultRoute];
 
-    settings.DNSSettings = [NEDNSSettings.alloc initWithServers:@[@"8.8.8.8", @"8.8.4.4"]];
+    settings.DNSSettings = [NEDNSSettings.alloc initWithServers:@[@"1.1.1.1"]];
 
     [self setTunnelNetworkSettings:settings completionHandler:^(NSError *_Nullable error) { try {
         orc_assert_(error == nil, [[error localizedDescription] UTF8String]);

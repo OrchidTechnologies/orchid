@@ -31,7 +31,7 @@ contract TestOrchidDirectory is OrchidDirectory
     constructor(address token) public OrchidDirectory(token) {}
 
     function set(address token) public {
-        token_ = ERC20(token);
+        token_ = IERC20(token);
     }
 
     function get_token(uint256)     public view returns (address)    { return address(token_); }

@@ -1,0 +1,32 @@
+
+.navbar {
+    padding: 0
+}
+.nav-link:hover {
+    color: rebeccapurple !important;
+}
+
+.dropdown-menu {
+    background-color: white;
+}
+
+.dropdown .btn-primary.dropdown-toggle,
+.dropdown .btn-primary.dropdown-toggle:active,
+.dropdown .btn-primary {
+    background-color: transparent;
+    color: gray;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.dropdown .btn-primary:hover {
+    color: rebeccapurple !important;
+}
+
+.dropdown .btn-primary:active {
+    background-color: transparent;
+}
+
+.dropdown .nav-link {
+    color: rebeccapurple !important;
+}

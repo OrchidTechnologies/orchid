@@ -27,8 +27,6 @@ cflags += '-DORCHID_NAME="$(name)"'
 bundle := $(output)/Payload/$(name).app
 signed := 
 
-altool := "/Applications/Xcode.app/Contents/Applications/Application Loader.app/Contents/Frameworks/ITunesSoftwareService.framework/Support/altool"
-
 .PHONY: all
 all: $(output)/$(name).ipa
 
@@ -41,11 +39,11 @@ install: $(output)/$(name).ipa
 
 .PHONY: validate
 validate: $(output)/$(name).ipa
-	$(altool) --validate-app -f $< -t ios -u "$(aluser)" -p $(alpass)
+	xcrun altool --validate-app -f $< -t ios -u "$(aluser)" -p $(alpass)
 
 .PHONY: upload
 upload: $(output)/$(name).ipa
-	$(altool) --upload-app -f $< -t ios -u "$(aluser)" -p $(alpass)
+	xcrun altool --upload-app -f $< -t ios -u "$(aluser)" -p $(alpass)
 
 ifeq ($(target),sim)
 cflags += '-DORCHID_USERNAME="$(username)"'

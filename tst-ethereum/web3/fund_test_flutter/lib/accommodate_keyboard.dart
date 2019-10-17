@@ -1,4 +1,4 @@
-import 'package:flutter_web/material.dart';
+import 'package:flutter/material.dart';
 
 /// Arrange a flexibly sized column of content to fill the screen normally but
 /// allow it to collapse and scroll as needed to accommodate the keyboard.
