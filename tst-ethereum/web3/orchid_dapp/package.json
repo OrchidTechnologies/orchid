@@ -2,6 +2,7 @@
   "name": "orchid_dapp",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://pat.net/orchid/v2",
   "dependencies": {
     "@types/jest": "24.0.18",
     "@types/node": "12.7.12",
@@ -10,6 +11,7 @@
     "@types/react-responsive": "^8.0.1",
     "@types/react-router-dom": "^5.1.0",
     "@types/web3": "^1.0.20",
+    "big-integer": "^1.6.47",
     "bootstrap": "^4.3.1",
     "react": "^16.10.2",
     "react-bootstrap": "^1.0.0-beta.14",

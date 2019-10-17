@@ -15,11 +15,11 @@ import {ManageKeys} from "./ManageKeys";
 
 export const Layout: React.FC = () => {
   return (
-      <BrowserRouter>
+      <BrowserRouter basename={process.env.PUBLIC_URL}>
         <Container>
           <Container className="form-style">
             <Header/>
-            <Navbar expand="md">
+            <Navbar expand={true}>
               <Dropdown>
                 <Dropdown.Toggle id="dropdown">More</Dropdown.Toggle>
                 <Dropdown.Menu>
@@ -35,9 +35,9 @@ export const Layout: React.FC = () => {
                 <Nav className="mr-auto">
                   {/*<Nav.Link href="/">Home</Nav.Link>*/}
                   {/*Nav.Link broken with typescript, adding the class to Link*/}
-                  <Link className="nav-link" to="/">Overview</Link>
-                  <Link className="nav-link" to="/add">Add Funds</Link>
-                  <Link className="nav-link" to="/withdraw">Withdraw Funds</Link>
+                  <Link className="nav-link" to="/">Home</Link>
+                  <Link className="nav-link" to="/add">Add</Link>
+                  <Link className="nav-link" to="/withdraw">Withdraw</Link>
                 </Nav>
               </Navbar.Collapse>
             </Navbar>

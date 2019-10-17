@@ -1,34 +1,4 @@
-/// Capture console and error output to an element with id `logId` in the page.
-/*
-export function captureLogsTo(logId) {
-  window.orgLog = console.log;
-  window.logText = "";
-  console.log = function (...args) {
-    // args = args.map(arg => {
-    //     if (typeof arg == "string" || typeof arg == "number") {
-    //         return arg
-    //     } else {
-    //         return JSON.stringify(arg)
-    //     }
-    // });
-    window.logText += "<span>Log: " + args.join(" ") + "</span><br/>";
-    let log = document.getElementById(logId);
-    if (log) {
-      log.innerHTML = logText;
-    }
-    orgLog.apply(console, arguments);
-  };
-  // Capture errors
-  window.onerror = function (message, source, lineno, colno, error) {
-    if (error) message = error.stack;
-    console.log('Error: ' + message + ": " + error);
-    console.log('Error json: ', JSON.stringify(error));
-  };
-  window.onload = function () {
-    console.log("Loaded.");
-  };
-}
- */
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 /*
 export function getURLParams() {

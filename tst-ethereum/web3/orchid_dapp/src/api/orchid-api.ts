@@ -6,7 +6,9 @@ import {isNotNull} from "./orchid-types";
 
 export class OrchidAPI {
   private static instance: OrchidAPI;
-  private constructor() { }
+
+  private constructor() {
+  }
 
   static shared() {
     if (!OrchidAPI.instance) {
@@ -23,17 +25,22 @@ export class OrchidAPI {
   account_wait: Observable<Account> = this.account.pipe(filter(isNotNull));
 
   lotteryPot = this.account_wait.pipe(
-    flatMap((account: Account) => { // flatMap resolves promises
-      return orchidGetLotteryPot(account.address);
-    })
+      flatMap((account: Account) => { // flatMap resolves promises
+        return orchidGetLotteryPot(account.address);
+      })
   );
   lotteryPot_wait: Observable<LotteryPot> = this.lotteryPot.pipe(filter(isNotNull));
 
+  debugLog = "";
+  debugLogChanged = new BehaviorSubject(true);
+
   async init(): Promise<boolean> {
+    this.captureLogs();
+
     // Allow init ethereum to create the web3 context for validation
     try {
       await orchidInitEthereum();
-    } catch(err) {
+    } catch (err) {
       return false;
     }
     this.updateAccount().then();
@@ -52,6 +59,30 @@ export class OrchidAPI {
     this.transactions.next(events);
   }
 
+  private captureLogs() {
+    let api = this;
+    console.log = function (...args: (any | undefined)[]) {
+      // args = args.map(arg => {
+      //     if (typeof arg == "string" || typeof arg == "number") {
+      //         return arg
+      //     } else {
+      //         return JSON.stringify(arg)
+      //     }
+      // });
+      api.debugLog += "<span>Log: " + args.join(" ") + "</span><br/>";
+      api.debugLogChanged.next(true);
+    };
+    // Capture errors
+    window.onerror = function (message, source, lineno, colno, error) {
+      let text = message.toString();
+      if (error && error.stack) { text = error.stack.toString() };
+      console.log('Error: ' + text + ": " + error);
+      console.log('Error json: ', JSON.stringify(error));
+    };
+    window.onload = function () {
+      console.log("Loaded.");
+    };
+  }
 }
 
 

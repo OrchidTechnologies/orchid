@@ -13,6 +13,9 @@ You will also see any lint errors in the console.
 
 ### `npm run build`
 
+TODO: For deployment to a non-root level server URL the build currently requires the package.json `homepage` url to be specified. (This is problematic for IPFS)
+
+
 Builds the app for production to the `build` folder.<br />
 It correctly bundles React in production mode and optimizes the build for the best performance.
 

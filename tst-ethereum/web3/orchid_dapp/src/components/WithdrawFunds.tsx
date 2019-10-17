@@ -12,6 +12,7 @@ import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionResult} from "./TransactionResult";
 import {SubmitButton} from "./SubmitButton";
 import {Address} from "../api/orchid-types";
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class WithdrawFunds extends Component {
 

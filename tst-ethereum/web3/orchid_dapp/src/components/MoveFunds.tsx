@@ -6,6 +6,7 @@ import {orchidMoveFundsToEscrow, oxtToWeiString, weiToOxtString} from "../api/or
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionResult} from "./TransactionResult";
 import {SubmitButton} from "./SubmitButton";
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class MoveFunds extends Component {
 

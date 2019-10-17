@@ -4,6 +4,7 @@ import {weiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
 import {errorClass} from "../util/util";
 import './Overview.css'
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 class Overview extends Component {
   state = {

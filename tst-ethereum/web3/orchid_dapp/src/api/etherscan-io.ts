@@ -1,6 +1,8 @@
 import {Address} from "./orchid-types";
 import {OrchidContracts} from "./orchid-eth-contracts";
 
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
+
 export class EtherscanIO {
   apiKey: string = "73BIQR3R1ER56V53PSSAPNUTQUFVHCVVVH";
   api_url: string = 'https://api.etherscan.io/api';
@@ -93,24 +95,36 @@ export class EtherscanIO {
       // The first 64char hex data field is the balance
       let start = 2;
       let end = start + 64;
-      const balance = "0x" + ev['data'].toString().substring(start, end);
+      // polyfill big-integer does not accept a 0x prefix for hex.
+      const balanceStr = ev['data'].toString().substring(start, end);
+      let balance = BigInt(0);
+      try {
+        balance = BigInt(balanceStr, 16);
+      } catch (err) {
+        throw new Error("invalid response data: " + balanceStr);
+      }
 
       // The second 64char hex data field is the escrow
       start += 64;
       end += 64;
-      let escrow = "0x" + ev['data'].toString().substring(start, end);
+      let escrow = BigInt(0);
+      try {
+        escrow = BigInt(ev['data'].toString().substring(start, end), 16);
+      } catch (err) {
+        throw new Error("invalid response data");
+      }
 
       // ETH timestamp is seconds since epoch
-      let timeStamp = new Date(parseInt(ev['timeStamp']) * 1000);
+      const timeStamp = new Date(parseInt(ev['timeStamp']) * 1000);
 
       return new LotteryPotUpdateEvent(
-        BigInt(balance),
-        BigInt(escrow),
-        ev['blockNumber'],
-        timeStamp,
-        ev['gasPrice'],
-        ev['gasUsed'],
-        ev['transactionHash']);
+          balance,
+          escrow,
+          ev['blockNumber'],
+          timeStamp,
+          ev['gasPrice'],
+          ev['gasUsed'],
+          ev['transactionHash']);
     });
 
     // Guarantee the results are sorted by time descending.
@@ -160,5 +174,4 @@ export class LotteryPotUpdateEvent {
     this.transactionHash = transactionHash;
   }
 }
-
 

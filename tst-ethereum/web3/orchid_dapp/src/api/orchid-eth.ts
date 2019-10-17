@@ -5,6 +5,7 @@ import {OrchidContracts} from "./orchid-eth-contracts";
 import {Address} from "./orchid-types";
 import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 declare global {
   interface Window {
