@@ -1,0 +1,37 @@
+
+.transactions-header-row,
+.transactions-row {
+    display: flex;
+    align-items: baseline;
+    overflow: hidden;
+    color: rebeccapurple;
+}
+
+.transactions-header-row {
+    color: black;
+    font-weight: normal;
+}
+
+.transactions-col3,
+.transactions-col2,
+.transactions-col {
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    min-width: 85px;
+    flex-grow: 1;
+}
+
+.transactions-col3 {
+    flex-grow: 8;
+    overflow: hidden;
+}
+
+.transactions-col2 {
+    min-width: 70px;
+}
+
+.loading {
+    font-size: medium;
+    font-style: italic;
+    color: darkgray;
+}
