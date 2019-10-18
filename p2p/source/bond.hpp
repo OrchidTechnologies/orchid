@@ -60,16 +60,16 @@ class Bonded {
         }
     };
 
-    std::set<Bonding *> bondings_;
+    std::map<Bonding *, U<Bonding>> bondings_;
 
   protected:
     virtual void Land(Pipe *pipe, const Buffer &data) = 0;
 
     Sunk<> *Wire() {
-        // XXX: this is clearly incorrect
-        auto bonding(new Sink<Bonding>(this));
-        auto backup(bonding);
-        bondings_.emplace(std::move(bonding));
+        // XXX: this is non-obviously incorrect
+        auto bonding(std::make_unique<Sink<Bonding>>(this));
+        auto backup(bonding.get());
+        bondings_.emplace(backup, std::move(bonding));
         return backup;
     }
 
@@ -78,7 +78,7 @@ class Bonded {
         auto bonding(bondings_.begin());
         if (bonding == bondings_.end())
             co_return;
-        co_return co_await (*bonding)->Send(data);
+        co_return co_await bonding->second->Send(data);
     }
 };
 
