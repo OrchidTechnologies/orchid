@@ -31,22 +31,22 @@
 
 #include "baton.hpp"
 #include "link.hpp"
+#include "reader.hpp"
 #include "task.hpp"
 
 namespace orc {
 
 template <typename File_>
 class File final :
-    public Link
+    public Stream
 {
   private:
     File_ file_;
 
   public:
     template <typename... Args_>
-    File(BufferDrain *drain, Args_ &&...args) :
-        Link(drain),
-        file_(Context(), std::forward<Args_>(args)...)
+    File(Args_ &&...args) :
+        file_(std::forward<Args_>(args)...)
     {
     }
 
@@ -54,35 +54,20 @@ class File final :
         return &file_;
     }
 
-    void Start() {
-        Spawn([this]() -> task<void> {
-            for (;;) {
-                char data[2048];
-                size_t writ;
-                try {
-                    writ = co_await file_.async_read_some(asio::buffer(data), Token());
-                } catch (const asio::system_error &error) {
-                    auto code(error.code());
-                    if (code == asio::error::eof)
-                        Link::Stop();
-                    else {
-                        std::string what(error.what());
-                        orc_assert(!what.empty());
-                        Link::Stop(what);
-                    }
-                    break;
-                }
+    task<size_t> Read(Beam &beam) override {
+	size_t writ;
+	try {
+	    writ = co_await file_.async_read_some(asio::buffer(beam.data(), beam.size()), Token());
+	} catch (const asio::system_error &error) {
+	    auto code(error.code());
+	    if (code == asio::error::eof)
+                co_return 0;
+            orc_adapt(error);
+	}
 
-                Subset region(data, writ);
-                if (Verbose)
-                    Log() << "\e[33mRECV " << writ << " " << region << "\e[0m" << std::endl;
-                Land(region);
-            }
-        });
-    }
-
-    ~File() override {
-_trace();
+        if (Verbose)
+            Log() << "\e[33mRECV " << writ << " " << beam.subset(0, writ) << "\e[0m" << std::endl;
+        co_return writ;
     }
 
     task<void> Send(const Buffer &data) override {
@@ -93,9 +78,8 @@ _trace();
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 
-    task<void> Shut() override {
+    void Close() override {
         file_.close();
-        co_await Link::Shut();
     }
 };
 

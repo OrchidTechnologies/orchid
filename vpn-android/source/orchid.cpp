@@ -45,18 +45,19 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
     Log() << config << std::endl;
 
     auto capture(std::make_unique<Sink<Capture>>(local));
-    auto connection(capture->Wire<File<asio::posix::stream_descriptor>>(file));
+    auto connection(std::make_unique<File<asio::posix::stream_descriptor>>(Context(), file));
+    auto inverted(capture->Wire<Inverted>(std::move(connection)));
 
     asio::io_context executor;
     auto work(asio::make_work_guard(executor));
     Spawn([
         capture = std::move(capture),
-        connection = std::move(connection),
+        inverted = std::move(inverted),
         config = std::move(config)
     ]() mutable -> task<void> { try {
         co_await Schedule();
         co_await capture->Start(config);
-        connection->Start();
+        inverted->Start();
         capture_ = std::move(capture);
     } ORC_CATCH() });
     executor_ = &executor;
