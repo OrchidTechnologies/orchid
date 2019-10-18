@@ -9,6 +9,13 @@ export function getURLParams() {
   return result;
 }*/
 
+// Return the relative path of the deployment 
+export function deploymentPath(): string {
+  let pathComponents = new URL(window.location.href).pathname.split('/');
+  pathComponents.pop();
+  return pathComponents.join('/');
+}
+
 export function isNumeric(val: any) {
   if (val == null || val === "") {
     return false;
