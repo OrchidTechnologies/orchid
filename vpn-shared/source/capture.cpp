@@ -678,6 +678,7 @@ task<Sunk<> *> Capture::Start() {
 }
 
 task<void> Capture::Start(boost::program_options::variables_map &args) {
+    co_return co_await Start(GetLocal());
     Network network(args);
     auto sunk(co_await Start());
     co_await network.Random(sunk, GetLocal());
