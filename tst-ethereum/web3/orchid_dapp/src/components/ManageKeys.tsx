@@ -1,68 +1,50 @@
 import React, {Component} from "react";
 import './ManageKeys.css'
 import {errorClass} from "../util/util";
-import {isEthAddress, orchidMoveFundsToEscrow, orchidBindSigner, oxtToWeiString, weiToOxtString} from "../api/orchid-eth";
-import {BehaviorSubject, combineLatest} from "rxjs";
+import {isEthAddress, orchidBindSigner} from "../api/orchid-eth";
 import {Address} from "../api/orchid-types";
-import {map} from "rxjs/operators";
 import {OrchidAPI} from "../api/orchid-api";
 import {SubmitButton} from "./SubmitButton";
 import {TransactionResult} from "./TransactionResult";
 
 export class ManageKeys extends Component {
-  signerAddress = new BehaviorSubject<Address | null>(null);
-
-  formValid = combineLatest([this.signerAddress])
-      .pipe(map(val => {
-        const [signerAddress] = val;
-        let api = OrchidAPI.shared();
-        return api.account.value !== null && signerAddress !== null;
-      }));
 
   state = {
-    formValid: false,
+    signerAddress: null as Address | null,
+    addressError: true,
+    // tx
     running: false,
-    text: "",
+    result: "",
     txId: "",
-    addressError: true
   };
-
-  componentDidMount(): void {
-    this.formValid.subscribe(valid => {
-      this.setState({formValid: valid});
-    });
-  }
 
   private async submitSigner() {
     let api = OrchidAPI.shared();
     let account = api.account.value;
-    const signer = this.signerAddress.value;
+    const signer = this.state.signerAddress;
     if (account == null || signer == null) {
       return;
     }
-    this.setState({
-      formValid: false,
-      running: true
-    });
+    this.setState({running: true});
 
     try {
       let txId = await orchidBindSigner(signer);
       this.setState({
-        text: "Transaction Complete!",
+        result: "Transaction Complete!",
         txId: txId,
         running: false,
-        formValid: true
       });
     } catch (err) {
       this.setState({
-        text: "Transaction Failed.",
+        result: "Transaction Failed.",
         running: false,
-        formValid: true
       });
     }
   }
 
   render() {
+    let api = OrchidAPI.shared();
+    let submitEnabled = api.account.value !== null && this.state.signerAddress !== null;
     return (
         <div>
           <label className="title">Manage Keys</label>
@@ -84,25 +66,22 @@ export class ManageKeys extends Component {
               onChange={(e) => {
                 const address = e.currentTarget.value;
                 const valid = isEthAddress(address);
-                this.setState({addressError: !valid});
-                this.signerAddress.next(valid ? address : null);
+                this.setState({
+                  signerAddress: valid ? address : null,
+                  addressError: !valid
+                });
               }}
           />
-
           <div style={{marginTop: '16px'}} className="submit-button">
-            <SubmitButton onClick={() => this.submitSigner().then()}
-                          enabled={this.state.formValid}/>
+            <SubmitButton onClick={() => this.submitSigner().then()} enabled={submitEnabled}/>
           </div>
-
           <TransactionResult
               running={this.state.running}
-              text={this.state.text}
+              text={this.state.result}
               txId={this.state.txId}
           />
-
         </div>
     );
   }
-
 }
 

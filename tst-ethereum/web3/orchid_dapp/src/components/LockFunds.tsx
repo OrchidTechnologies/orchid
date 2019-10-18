@@ -6,14 +6,13 @@ import {TransactionResult, TxState} from "./TransactionResult";
 
 interface LockFundsState {
   pot: LotteryPot | null,
-  formValid: boolean,
 }
 
 export class LockFunds extends Component {
 
   state: TxState & LockFundsState = {
     pot: null,
-    formValid: true,
+    // tx
     running: false,
     result: "",
     txId: ""
@@ -32,25 +31,21 @@ export class LockFunds extends Component {
     if (this.state.pot == null) {
       return;
     }
-    this.setState({
-      formValid: false,
-      running: true
-    });
+    this.setState({running: true});
     try {
       let txId = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? await orchidLock() : await orchidUnlock();
       this.setState({
         running: false,
-        text: "Transaction Complete!",
+        result: "Transaction Complete!",
         txId: txId,
-        formValid: true
       });
       let api = OrchidAPI.shared();
       api.updateAccount().then();
     } catch (err) {
+      console.log("error: ", err);
       this.setState({
         running: false,
-        text: `Transaction Failed: ${err}`,
-        formValid: true
+        result: `Transaction Failed: ${err}`,
       });
     }
   }
@@ -60,6 +55,7 @@ export class LockFunds extends Component {
       return <div/>;
     }
     let text = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? "Lock" : "Unlock";
+    let submitEnabled = !this.state.running;
     return (
         <div>
           <label className="title">Lock / Unlock Funds</label>
@@ -74,7 +70,7 @@ export class LockFunds extends Component {
                 onClick={(_) => {
                   this.lockOrUnlock().then()
                 }}
-                disabled={!this.state.formValid}
+                disabled={!submitEnabled}
             ><span>{text}</span></button>
           </div>
           <TransactionResult
