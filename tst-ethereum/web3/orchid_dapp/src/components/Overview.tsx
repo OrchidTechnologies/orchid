@@ -6,7 +6,7 @@ import {errorClass} from "../util/util";
 import './Overview.css'
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-class Overview extends Component {
+export class Overview extends Component {
   state = {
     walletAddress: "",
     ethBalance: "",
@@ -90,4 +90,4 @@ class Overview extends Component {
   }
 }
 
-export default Overview;
+
