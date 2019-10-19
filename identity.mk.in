@@ -9,7 +9,4 @@ provision :=
 # export DEVELOPER_DIR := /Applications/Xcode-XXX.app
 # suffix := -XXX
 
-cflags += '-DORCHID_INFURA="XXX"'
-cflags += '-DORCHID_ALCHEMY="XXX"'
-
 #MAKEFLAGS += --output-sync=line
