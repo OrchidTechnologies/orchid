@@ -2,7 +2,7 @@ import React from "react";
 import './DebugPanel.css'
 import {OrchidAPI} from "../api/orchid-api";
 
-const DebugPanel: React.FC = () => {
+export const DebugPanel: React.FC = () => {
   return (
       <div>
         <label className="title">Debug Output</label>
@@ -17,4 +17,3 @@ const DebugPanel: React.FC = () => {
   );
 };
 
-export default DebugPanel;

@@ -1,7 +1,5 @@
 import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {BehaviorSubject, combineLatest} from "rxjs";
-import {map} from "rxjs/operators";
 import {
   isEthAddress, oxtToWei, oxtToWeiString,
   weiToOxtString,
@@ -17,45 +15,22 @@ const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class WithdrawFunds extends Component {
 
-  withdrawAmount = new BehaviorSubject<number | null>(null);
-  withdrawAll = new BehaviorSubject(false);
-  sendToAddress = new BehaviorSubject<Address | null>(null);
-  amountInput = React.createRef<HTMLInputElement>();
-
-  formValid = combineLatest([this.withdrawAmount, this.withdrawAll, this.sendToAddress])
-      .pipe(map(val => {
-        const [withdrawAmount, withdrawAll, sendToAddress] = val;
-        this.setState({
-          withdrawAll: withdrawAll,
-          withdrawAmount: withdrawAll ?
-              weiToOxtString(this.state.potBalance || BigInt(0), 4) :
-              withdrawAmount
-        });
-        let api = OrchidAPI.shared();
-        return api.account.value !== null
-            && sendToAddress !== null
-            && (withdrawAll || withdrawAmount !== null)
-      }));
-
   state = {
     potBalance: null as BigInt | null,
-    withdrawAll: false,
     withdrawAmount: null as number | null,
-    formValid: false,
+    withdrawAll: false,
+    sendToAddress: null as Address | null,
+    amountError: true,
+    addressError: true,
+    // tx
     running: false,
     text: "",
     txId: "",
-    amountError: true,
-    addressError: true
   };
+  amountInput = React.createRef<HTMLInputElement>();
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
-
-    this.formValid.subscribe(valid => {
-      this.setState({formValid: valid});
-    });
-
     api.lotteryPot_wait.subscribe(pot => {
       this.setState({potBalance: pot.balance})
     });
@@ -64,9 +39,9 @@ export class WithdrawFunds extends Component {
   async submitWithdrawFunds() {
     let api = OrchidAPI.shared();
     let account = api.account.value;
-    const withdrawAmount = this.withdrawAmount.value;
-    const withdrawAll = this.withdrawAll.value;
-    const sendToAddress = this.sendToAddress.value;
+    const withdrawAmount = this.state.withdrawAmount;
+    const withdrawAll = this.state.withdrawAll;
+    const sendToAddress = this.state.sendToAddress;
 
     if (account == null
         || withdrawAmount == null
@@ -75,14 +50,11 @@ export class WithdrawFunds extends Component {
     ) {
       return;
     }
-    this.setState({
-      formValid: false,
-      running: true
-    });
+    this.setState({running: true});
 
     try {
       let txId;
-      if (this.withdrawAll.value) {
+      if (this.state.withdrawAll) {
         txId = await orchidWithdrawFundsAndEscrow(sendToAddress);
       } else {
         const withdrawWei = oxtToWeiString(withdrawAmount);
@@ -92,7 +64,6 @@ export class WithdrawFunds extends Component {
         running: false,
         text: "Transaction Complete!",
         txId: txId,
-        formValid: true
       });
       api.updateAccount().then();
       api.updateTransactions().then();
@@ -100,12 +71,20 @@ export class WithdrawFunds extends Component {
       this.setState({
         running: false,
         text: "Transaction Failed.",
-        formValid: true
       });
     }
   };
 
   render() {
+    let withdrawAmount = this.state.withdrawAll ?
+          weiToOxtString(this.state.potBalance || BigInt(0), 4) :
+          this.state.withdrawAmount;
+
+    let api = OrchidAPI.shared();
+    let submitEnabled = api.account.value !== null
+        && this.state.sendToAddress !== null
+        && (this.state.withdrawAll || this.state.withdrawAmount !== null);
+
     let currentInputAmount = this.amountInput.current == null ? "" : this.amountInput.current.value;
     return (
         <div>
@@ -128,13 +107,15 @@ export class WithdrawFunds extends Component {
               type="number"
               className="withdraw-amount editable"
               placeholder="Amount in OXT"
-              value={ this.state.withdrawAmount == null ? currentInputAmount : this.state.withdrawAmount }
+              value={withdrawAmount == null ? currentInputAmount : withdrawAmount}
               onChange={(e) => {
                 let amount = parseFloatSafe(e.currentTarget.value);
                 const valid = amount != null && amount > 0
                     && (this.state.potBalance == null || oxtToWei(amount) <= this.state.potBalance);
-                this.setState({amountError: !valid});
-                this.withdrawAmount.next(valid ? amount : null);
+                this.setState({
+                  withdrawAmount: amount,
+                  amountError: !valid
+                });
               }}
           />
 
@@ -146,8 +127,10 @@ export class WithdrawFunds extends Component {
               onChange={(e) => {
                 const address = e.currentTarget.value;
                 const valid = isEthAddress(address);
-                this.setState({addressError: !valid});
-                this.sendToAddress.next(valid ? address : null);
+                this.setState({
+                  sendToAddress: valid ? address : null,
+                  addressError: !valid
+                });
               }}
           />
 
@@ -157,15 +140,14 @@ export class WithdrawFunds extends Component {
                 style={{transform: 'scale(2)', margin: '16px'}}
                 onChange={(e) => {
                   const value = e.currentTarget.checked;
-                  this.withdrawAll.next(value);
+                  this.setState({withdrawAll: value});
                 }}
             />
             <label>Withdraw Full Balance and Escrow</label>
           </div>
 
           <div style={{marginTop: '16px'}} className="submit-button">
-            <SubmitButton onClick={() => this.submitWithdrawFunds().then()}
-                          enabled={this.state.formValid}/>
+            <SubmitButton onClick={() => this.submitWithdrawFunds().then()} enabled={submitEnabled}/>
           </div>
 
           <TransactionResult
