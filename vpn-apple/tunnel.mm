@@ -73,9 +73,6 @@ static std::string cfs(NSString *data) {
     auto protocol((NETunnelProviderProtocol *) self.protocolConfiguration);
     orc_assert(protocol != nil);
 
-    auto provider(protocol.providerConfiguration);
-    orc_assert(provider != nil);
-
     auto config(cfs((NSString *) [options objectForKey:@"config"]));
 
     std::string local("10.7.0.3");
