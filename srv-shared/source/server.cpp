@@ -151,13 +151,13 @@ class Egress :
     {
     }
 
-    ~Egress() {
+    ~Egress() override {
         orc_insist(false);
     }
 
     const Socket &Translate(BufferDrain *drain, const Three &three) {
         std::unique_lock<std::mutex> lock(mutex_);
-        auto translation(translations_.emplace(Three(three.Protocol(), local_, ephemeral_++), Translation_{three, drain}));
+        auto translation(translations_.emplace(Three(three.Protocol(), local_, ephemeral_++), Translation_{three.Two(), drain}));
         orc_insist(translation.second);
         return translation.first->first;
     }
@@ -176,8 +176,9 @@ class Translator :
     typedef std::map<Three, Socket> Translations_;
     Translations_ translations_;
 
-    Translations_::iterator Translate(const Three &source) {
-        auto translation(translations_.emplace(source, egress_->Translate(this, source)));
+    Translations_::iterator Translate(Three source) {
+        auto socket(egress_->Translate(this, source));
+        auto translation(translations_.emplace(std::move(source), std::move(socket)));
         return translation.first;
     }
 
@@ -200,7 +201,7 @@ class Translator :
                 Three source(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(tcp.source));
                 auto translation(translations_.find(source));
                 if (translation == translations_.end())
-                    translation = Translate(source);
+                    translation = Translate(std::move(source));
                 const auto &replace(translation->second);
                 ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
                 Forge(tcp, &openvpn::TCPHeader::source, replace.Port());
@@ -212,7 +213,7 @@ class Translator :
                 Three source(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
                 auto translation(translations_.find(source));
                 if (translation == translations_.end())
-                    translation = Translate(source);
+                    translation = Translate(std::move(source));
                 const auto &replace(translation->second);
                 ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
                 Forge(udp, &openvpn::UDPHeader::source, replace.Port());
@@ -312,7 +313,7 @@ class Space :
     }
 
   public:
-    task<void> Shut() {
+    task<void> Shut() override {
         co_return co_await Inner()->Shut();
     }
 

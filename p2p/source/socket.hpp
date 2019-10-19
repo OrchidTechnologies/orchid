@@ -219,6 +219,10 @@ class Three final :
     bool operator ==(const Three &rhs) const {
         return Tuple() == rhs.Tuple();
     }
+
+    Socket Two() const {
+        return static_cast<const Socket &>(*this);
+    }
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Three &three) {
