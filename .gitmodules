@@ -115,3 +115,9 @@
 [submodule "gpgme"]
 	path = p2p/gpgme
 	url = https://dev.gnupg.org/source/gpgme.git
+[submodule "libcxxabi"]
+	path = env/libcxxabi
+	url = https://github.com/llvm-mirror/libcxxabi.git
+[submodule "libcxx"]
+	path = env/libcxx
+	url = https://github.com/llvm-mirror/libcxx.git
