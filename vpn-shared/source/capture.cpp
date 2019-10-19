@@ -678,10 +678,12 @@ task<Sunk<> *> Capture::Start() {
 }
 
 task<void> Capture::Start(boost::program_options::variables_map &args) {
-    co_return co_await Start(GetLocal());
+    if (args.count("pot") == 0)
+        co_return co_await Start(GetLocal());
+    auto pot(args["pot"].as<std::string>());
     Network network(args);
     auto sunk(co_await Start());
-    co_await network.Random(sunk, GetLocal());
+    co_await network.Random(sunk, GetLocal(), pot);
 }
 
 task<void> Capture::Start(const std::string &config) {
@@ -696,6 +698,7 @@ void Store(po::variables_map &args, const std::string &path) {
     options.add_options()
         ("eth", po::value<std::string>()->default_value(""), "contract address of staking directory tree")
         ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
+        ("pot", po::value<std::string>(), "signing key for a lottery pot to pay on orchid")
         //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
     ;
 

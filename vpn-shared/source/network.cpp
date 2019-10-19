@@ -39,7 +39,7 @@ Network::Network(boost::program_options::variables_map &args) :
 {
 }
 
-task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin) {
+task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &pot) {
     Endpoint endpoint(origin, locator_);
 
     auto latest(co_await endpoint.Latest());
@@ -69,7 +69,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin) {
     }();
 
     orc_assert(fingerprint != nullptr);
-    auto server(sunk->Wire<Server>(std::move(fingerprint)));
+    auto server(sunk->Wire<Server>(pot, std::move(fingerprint)));
     co_await server->Connect(origin, url);
 }
 
@@ -78,7 +78,7 @@ task<S<Origin>> Network::Setup() {
 
     for (unsigned i(0); i != 3; ++i) {
         auto remote(std::make_shared<Sink<Remote>>());
-        co_await Random(remote.get(), origin);
+        co_await Random(remote.get(), origin, "");
         origin = remote;
     }
 

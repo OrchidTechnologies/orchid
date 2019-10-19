@@ -44,7 +44,7 @@ class Network {
     Network(Address directory, const std::string &rpc);
     Network(boost::program_options::variables_map &args);
 
-    task<void> Random(Sunk<> *sunk, const S<Origin> &origin);
+    task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &pot);
     task<S<Origin>> Setup();
 };
 

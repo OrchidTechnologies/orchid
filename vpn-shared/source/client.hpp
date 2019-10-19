@@ -36,6 +36,7 @@ class Server :
     public Pump
 {
   public:
+    std::string pot_;
     U<rtc::SSLFingerprint> remote_;
     rtc::scoped_refptr<rtc::RTCCertificate> local_;
 
@@ -45,7 +46,7 @@ class Server :
     void Land(Pipe *pipe, const Buffer &data) override;
 
   public:
-    Server(BufferDrain *drain, U<rtc::SSLFingerprint> remote);
+    Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote);
 
     task<void> Send(const Buffer &data) override {
         co_return co_await Bonded::Send(data);

@@ -32,8 +32,9 @@ void Server::Land(Pipe *pipe, const Buffer &data) {
     return Pump::Land(data);
 }
 
-Server::Server(BufferDrain *drain, U<rtc::SSLFingerprint> remote) :
+Server::Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote) :
     Pump(drain),
+    pot_(pot),
     remote_(std::move(remote)),
     local_(Certify())
 {
