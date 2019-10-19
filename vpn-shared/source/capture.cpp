@@ -696,8 +696,8 @@ task<void> Capture::Start(const std::string &config) {
 void Store(po::variables_map &args, const std::string &path) {
     po::options_description options("configuration file");
     options.add_options()
-        ("eth", po::value<std::string>()->default_value(""), "contract address of staking directory tree")
-        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
+        ("eth", po::value<std::string>()->default_value("0x451f59d78cbe8b6720638a15207c1a46437e825e"), "contract address of staking directory tree")
+        ("rpc", po::value<std::string>()->default_value("https://api.myetherwallet.com:443/rop"), "ethereum json/rpc and websocket endpoint")
         ("pot", po::value<std::string>(), "signing key for a lottery pot to pay on orchid")
         //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
     ;
