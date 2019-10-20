@@ -33,6 +33,7 @@ cflags :=
 qflags := 
 lflags := 
 wflags := 
+xflags := 
 
 source := 
 linked := 

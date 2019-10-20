@@ -13,7 +13,8 @@ cxx=${8}
 objc=${9}
 qflags=${10}
 wflags=${11}
-shift 11
+xflags=${12}
+shift 12
 
 if [[ $# -ne 0 ]]; then
     exit 1
@@ -27,6 +28,7 @@ objc=(${objc})
 
 qflags=(${qflags})
 wflags=(${wflags})
+xflags=(${xflags})
 
 mkdir -p "${output}/${arch}"
 
@@ -58,7 +60,7 @@ endian = 'little'
 
 [properties]
 c_args = [$(args "${cc[@]}" "${cflags[@]}")]
-cpp_args = [$(args "${cxx[@]}" "${cflags[@]}")]
+cpp_args = [$(args "${cxx[@]}" "${cflags[@]} ${xflags[@]}")]
 objc_args = [$(args "${objc[@]}" "${cflags[@]}")]
 c_link_args = [$(args "${cc[@]}" "${lflags[@]}")]
 cpp_link_args = [$(args "${cxx[@]}" "${lflags[@]}")]

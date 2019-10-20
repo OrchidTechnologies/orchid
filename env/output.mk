@@ -134,13 +134,13 @@ $(output)/%.mm.o: $$(specific) $$(folder).mm $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx/$(arch)) -std=gnu++17 -fobjc-arc -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cxx/$(arch)) -std=gnu++17 -fobjc-arc -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 $(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx/$(arch)) -std=c++11 -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cxx/$(arch)) -std=c++11 -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
@@ -149,14 +149,14 @@ ifeq ($(filter notidy,$(debug)),)
 	@if [[ $< =~ $(tidy) && ! $< == */monitor.cpp ]]; then \
 	    echo [CT] $(target)/$(arch) $<; \
 	    $(llvm)/bin/clang-tidy $< --quiet --warnings-as-errors='*' --header-filter='$(tidy)' --config='{Checks: "$(checks)", CheckOptions: [{key: "performance-move-const-arg.CheckTriviallyCopyableMove", value: 0}]}' -- \
-	        $(wordlist 2,$(words $(cxx/$(arch))),$(cxx/$(arch))) -std=c++2a $(flags); \
+	        $(wordlist 2,$(words $(cxx/$(arch))),$(cxx/$(arch))) -std=c++2a $(flags) $(xflags); \
 	fi
 endif
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cxx/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 define _
-$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)')
+$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)' '$(xflags)')
 endef
 $(each)
 
