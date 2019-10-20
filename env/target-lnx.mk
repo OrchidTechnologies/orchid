@@ -70,7 +70,7 @@ strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
 endef
 $(each)
 
-$(output)/sysroot:
+$(output)/sysroot: env/sysroot.sh env/sysroot_.sh
 	env/sysroot.sh
 
 sysroot += $(output)/sysroot
