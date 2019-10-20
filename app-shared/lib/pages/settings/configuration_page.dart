@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/pages/common/accommodate_keyboard.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
@@ -61,9 +62,11 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                   child: SingleChildScrollView(
                       child: TextFormField(
                         autocorrect: false,
+                        autofocus: false,
+                        keyboardType: TextInputType.multiline,
                         style: AppText.textEntryStyle,
                         controller: _configFileTextController,
-                        maxLines: null,
+                        maxLines: 99999,
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           labelStyle: AppText.textLabelStyle,
@@ -79,7 +82,6 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
               ),
             ),
 
-            SizedBox(height: 24),
             // Save button
             Center(
               child: Container(
@@ -101,9 +103,6 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   }
 
   void _save() {
-    // dismiss the keyboard if present
-    FocusScope.of(context).requestFocus(FocusNode());
-
     var newConfig = _configFileTextController.text;
     OrchidAPI().setConfiguration(newConfig).then((bool saved) {
       _readyToSave.add(false);
