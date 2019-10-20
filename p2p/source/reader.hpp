@@ -39,11 +39,12 @@ class Reader {
 
 class Stream :
     public Reader,
-    public Pipe,
-    public Valve
+    public Pipe
 {
   public:
     ~Stream() override = default;
+
+    virtual task<void> Shut() = 0;
 };
 
 class Inverted final :
