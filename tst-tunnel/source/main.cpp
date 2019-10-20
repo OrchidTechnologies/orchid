@@ -33,13 +33,16 @@
 #include <cerrno>
 #include <unistd.h>
 
-#include <net/if_utun.h>
-
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+
+#if 0
+#elif defined(__APPLE__)
+#include <net/if_utun.h>
 #include <sys/sys_domain.h>
 #include <sys/kern_control.h>
+#endif
 
 #include <boost/asio/generic/datagram_protocol.hpp>
 #include <boost/filesystem/string_file.hpp>
@@ -127,14 +130,14 @@ int Main(int argc, const char *const argv[]) {
     while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
 
     sync->Start();
-#else
-#error
-#endif
 
     auto utun("utun" + std::to_string(address.sc_unit - 1));
     orc_assert(system(("ifconfig " + utun + " inet " + local + " " + local + " mtu 1500 up").c_str()) == 0);
     orc_assert(system(("route -n add 207.254.46.169 -interface " + utun).c_str()) == 0);
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
+#else
+#error
+#endif
 
     Wait([&]() -> task<void> { try {
         co_await Schedule();
