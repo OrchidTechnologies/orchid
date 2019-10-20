@@ -17,5 +17,5 @@ $(output)/%/zlib/Makefile: $(pwd)/zlib/configure $(sysroot) $(parts)
 $(output)/%/zlib/libz.a: $(output)/%/zlib/Makefile $(sysroot)
 	$(MAKE) -C $(output)/$*/zlib libz.a RANLIB="$(ranlib/$*)" AR="$(ar/$*)" ARFLAGS="-r"
 
-cflags += -I$(pwd)/zlib/include
+cflags += -I$(pwd)/zlib
 linked += zlib/libz.a
