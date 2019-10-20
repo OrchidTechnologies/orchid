@@ -74,7 +74,7 @@ class AppLabeledTextField extends StatefulWidget {
   final int maxLines;
 
   AppLabeledTextField(
-      {@required this.labelText,
+      {this.labelText,
       this.controller,
       this.obscureText = false,
       this.trailing,

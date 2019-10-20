@@ -104,6 +104,7 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
                     }),
               ),
             ),
+
             SizedBox(height: 42)
           ],
         ),

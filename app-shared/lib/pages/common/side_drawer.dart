@@ -6,6 +6,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/util/units.dart';
+import '../app_routes.dart';
 import '../app_text.dart';
 import 'dialogs.dart';
 
@@ -95,8 +96,9 @@ class _SideDrawerState extends State<SideDrawer> {
                   showDetail: true,
                   hoffset: 4.0,
                   onPressed: () {
-                    Navigator.pushNamed(context, '/help/privacy');
+                    Navigator.pushNamed(context, AppRoutes.privacy);
                   }),
+
               divider(),
               SideDrawerTile(
                   title: "Open Source Licenses",
@@ -104,8 +106,19 @@ class _SideDrawerState extends State<SideDrawer> {
                   showDetail: true,
                   hoffset: 4.0,
                   onPressed: () {
-                    Navigator.pushNamed(context, '/help/open_source');
+                    Navigator.pushNamed(context, AppRoutes.open_source);
                   }),
+
+              divider(),
+              SideDrawerTile(
+                  title: "Configuration",
+                  imageName: 'assets/images/settings.png',
+                  showDetail: true,
+                  hoffset: 4.0,
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.configuration);
+                  }),
+
             ],
           ),
         ),

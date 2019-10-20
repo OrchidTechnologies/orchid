@@ -90,10 +90,10 @@ abstract class OrchidAPI {
 
   /// Get a map of name-value pairs representing dynamic developer settings.
   /// See [DeveloperSettings] for the list of default settings.
-  Future<Map<String,String>> getDeveloperSettings();
+  //Future<Map<String,String>> getDeveloperSettings();
 
   /// Set a name-value pair representing a dynamic developer settings
-  void setDeveloperSetting({String name, String value});
+  //void setDeveloperSetting({String name, String value});
 
   /// API for funds and budgeting
   OrchidBudgetAPI budget();
@@ -106,6 +106,13 @@ abstract class OrchidAPI {
 
   /// The build version
   Future<String> versionString();
+
+  /// Get the Orchid Configuration file contents
+  Future<String> getConfiguration();
+
+  /// Set the Orchid Configuration file contents
+  /// Returns true if the configuration was saved successfully.
+  Future<bool>setConfiguration(String config);
 }
 
 

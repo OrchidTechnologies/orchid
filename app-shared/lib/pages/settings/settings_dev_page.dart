@@ -8,7 +8,7 @@ import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/connect/connect_page.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
-import 'package:orchid/pages/settings/developer_settings.dart';
+//import 'package:orchid/pages/settings/developer_settings.dart';
 
 /// The developer settings page
 class SettingsDevPage extends StatefulWidget {
@@ -37,12 +37,12 @@ class _SettingsDevPage extends State<SettingsDevPage> {
 
     var api = OrchidAPI();
 
-    api.getDeveloperSettings().then((Map<String, String> settingsMap) {
-      setState(() {
-        _developerSettings = DeveloperSettings.fromMap(settingsMap,
-            onChanged: api.setDeveloperSetting);
-      });
-    });
+  //    api.getDeveloperSettings().then((Map<String, String> settingsMap) {
+  //      setState(() {
+  //        _developerSettings = DeveloperSettings.fromMap(settingsMap,
+  //            onChanged: api.setDeveloperSetting);
+  //      });
+  //    });
   }
 
   @override
