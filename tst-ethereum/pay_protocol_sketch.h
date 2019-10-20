@@ -111,7 +111,7 @@ struct Client
 		afford 	    	= budget_->get_afford();
 		max_face_val	= budget_->get_max_faceval();
 		//trust_bound 	= get_trust_bound();
-		//exp_val     	= min(afford, bal_owed, trust_bound); // removed into budgeting
+		//exp_val     	= min(afford, bal_owed, trust_bound); // moved into budgeting
 		exp_val     	= min(afford, baa_owed);
        	        trans_cost  	= min(get_max_trans_cost(), trans_cost);
 		face_val        = trans_cost / target_overhead_;
@@ -121,7 +121,7 @@ struct Client
 		if (face_val > trans_cost) {
 			win_prob    = exp_val / (face_val - trans_cost);
 			win_prob    = max(min(win_prob, 1), 0); // todo: server may want a lower bound on win_prob for double-spend reasons
-			
+			// todo: is one hour duration (range) reasonable?			
 			nonce = rand<uint256>(), ratio = win_prob, start = CurrentTime(), range = 1*Hour, amount = face_val;
 			bytes32 ticket = keccak256(abi.encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
 			sig = sign(ticket); 		
@@ -145,6 +145,7 @@ struct Server
 
 	// Internal
 	balances_;
+	old_tickets_;
     
 	// External functions
 	get_trans_cost();    // (oracle) get current transaction cost estimate
@@ -184,6 +185,12 @@ struct Server
 		//function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint256 start, uint128 range, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old)
 		hash = payment.hash_secret;
 		secret = secrets[hash];
+        	bytes32 ticket = keccak256(abi.encodePacked(hash, payment.target, payment.nonce, payment.ratio, payment.start, payment.range, payment.amount));
+		old_tickets_.insert_sorted(ticket, payment.start + payment.range);
+		old = {};
+		while ((CurrentTime() + 1*Hour) > old_tickets.top().key()) {
+			old.insert(old_tickets.pop());
+		}
 		RPC.transaction(trans_fee, grab(secret, hash, payment.target, payment.nonce, payment.ratio, payment.start, payment.range, payment.amount, payment.sig, old)); 		
 	}
 	
