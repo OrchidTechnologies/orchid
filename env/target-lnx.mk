@@ -55,9 +55,10 @@ include $(pwd)/target-ndk.mk
 xflags += -nostdinc++
 xflags += -isystem $(CURDIR)/$(pwd)/libcxx/include
 
+lflags += -lrt
+
 source += $(wildcard $(pwd)/libcxx/src/*.cpp)
 c_libcxx += -D_LIBCPP_BUILDING_LIBRARY
-c_libcxx += -DLIBSTDCXX
 c_libcxx += -D__GLIBCXX__
 
 define _
