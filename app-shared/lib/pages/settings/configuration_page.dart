@@ -120,7 +120,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     Dialogs.showAppDialog(
         context: context,
         title: "Saved!",
-        body: "Updated configuration saved.");
+        body: "Configuration saved. Changes will take effect when the VPN is restarted.");
   }
 
   void _showSaveFailed() {
@@ -128,7 +128,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
         context: context,
         title: "Whoops!",
         body:
-            "The configuration failed to save.  Please check syntax and try again.");
+            "Configuration failed to save.  Please check syntax and try again.");
   }
 
   void dispose() {
