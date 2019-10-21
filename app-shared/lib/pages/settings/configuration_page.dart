@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/pages/common/accommodate_keyboard.dart';
+import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
@@ -70,7 +70,6 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           labelStyle: AppText.textLabelStyle,
-                          hintText: "name=value\n...",
                         ),
                       )),
                   decoration: BoxDecoration(
@@ -117,10 +116,12 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   }
 
   void _showSaveSuccess() {
+    var warn = OrchidAPI().connectionStatus.value == OrchidConnectionState.NotConnected ?
+        "" : " Changes will take effect when the VPN is restarted.";
     Dialogs.showAppDialog(
         context: context,
         title: "Saved!",
-        body: "Configuration saved. Changes will take effect when the VPN is restarted.");
+        body: "Configuration saved.$warn");
   }
 
   void _showSaveFailed() {

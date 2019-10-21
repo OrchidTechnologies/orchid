@@ -176,11 +176,6 @@
         if (error != nil)
             return;
 
-        // Guard first launch
-        if ([self getConfig] == nil) {
-          [self setConfig: @""];
-        }
-
         NSURL *url = [self getConfigURL];
         [self.providerManager.connection startVPNTunnelWithOptions:@{
             @"config": [url path],
@@ -233,6 +228,18 @@
             [weakSelf setConfig: text result: result];
         }
     }];
+
+    // Init config on first launch
+    if ([self getConfig] == nil) {
+      NSString *templateConfig =
+         @"# Lottery Pot Signing Key\n"
+          "#pot=0\n\n"
+          "# Contract Address\n"
+          "#eth=0x451f59d78cbe8b6720638a15207c1a46437e825e\n\n"
+          "# JSON/RPC Endpoint\n"
+          "#rpc=https://api.myetherwallet.com:443/rop\n";
+      [self setConfig: templateConfig];
+    }
 
     [NETunnelProviderManager loadAllFromPreferencesWithCompletionHandler:^(NSArray<NETunnelProviderManager *> * _Nullable managers, NSError * _Nullable error) {
         if (error != nil) {
