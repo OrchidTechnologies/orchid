@@ -116,12 +116,21 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   }
 
   void _showSaveSuccess() {
-    var warn = OrchidAPI().connectionStatus.value == OrchidConnectionState.NotConnected ?
-        "" : " Changes will take effect when the VPN is restarted.";
+    var warn;
+    switch(OrchidAPI().connectionStatus.value) {
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+        warn = false;
+        break;
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Connected:
+        warn = true;
+    }
+    var warning = warn ? " Changes will take effect when the VPN is restarted." : "";
     Dialogs.showAppDialog(
         context: context,
         title: "Saved!",
-        body: "Configuration saved.$warn");
+        body: "Configuration saved.$warning");
   }
 
   void _showSaveFailed() {

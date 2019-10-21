@@ -229,16 +229,16 @@
         }
     }];
 
-    // Init config on first launch
+    // Install default config on first launch
     if ([self getConfig] == nil) {
-      NSString *templateConfig =
-         @"# Lottery Pot Signing Key\n"
-          "#pot=0\n\n"
-          "# Contract Address\n"
-          "#eth=0x451f59d78cbe8b6720638a15207c1a46437e825e\n\n"
-          "# JSON/RPC Endpoint\n"
-          "#rpc=https://api.myetherwallet.com:443/rop\n";
-      [self setConfig: templateConfig];
+        NSURL *url([[NSBundle mainBundle] URLForResource:@"Frameworks/App.framework/flutter_assets/assets/default" withExtension:@"cfg"]);
+        NSError *error;
+        NSString *config = [NSString stringWithContentsOfFile:[url path] encoding:NSASCIIStringEncoding error:&error];
+        if (error != nil) {
+            NSLog(@"Error loading default config: %@", error);
+        } else {
+          [self setConfig: config];
+        }
     }
 
     [NETunnelProviderManager loadAllFromPreferencesWithCompletionHandler:^(NSArray<NETunnelProviderManager *> * _Nullable managers, NSError * _Nullable error) {
