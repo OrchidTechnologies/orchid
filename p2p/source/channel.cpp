@@ -23,7 +23,11 @@
 #include <regex>
 
 #include <api/sctp_transport_interface.h>
+
+#include <p2p/base/basic_packet_socket_factory.h>
 #include <p2p/base/ice_transport_internal.h>
+
+#include <p2p/client/basic_port_allocator.h>
 
 #include <rtc_base/async_invoker.h>
 #include <rtc_base/openssl_identity.h>
@@ -64,10 +68,27 @@ struct SetupSSL {
     ~SetupSSL() { rtc::CleanupSSL(); }
 } setup_;
 
+class Manager :
+    public rtc::BasicNetworkManager
+{
+  public:
+    void GetNetworks(NetworkList *networks) const override {
+        rtc::BasicNetworkManager::GetNetworks(networks);
+        for (auto network : *networks)
+            Log() << "NET: " << network->ToString() << "@" << network->GetBestIP().ToString() << std::endl;
+        for (auto network(networks->begin()); network != networks->end(); ++network)
+            if ((*network)->GetBestIP().ToString() == "10.7.0.3") {
+                networks->erase(network);
+                break;
+            }
+    }
+};
+
 Peer::Peer(Configuration configuration) :
     peer_([&]() {
-        static auto factory(webrtc::CreateModularPeerConnectionFactory([]() {
-            const auto &threads(Threads::Get());
+        const auto &threads(Threads::Get());
+
+        static auto factory(webrtc::CreateModularPeerConnectionFactory([&]() {
             webrtc::PeerConnectionFactoryDependencies dependencies;
             dependencies.network_thread = threads.network_.get();
             dependencies.worker_thread = threads.working_.get();
@@ -89,8 +110,14 @@ Peer::Peer(Configuration configuration) :
             rtc.servers.emplace_back(std::move(server));
         }
 
+        static Manager manager;
+        static rtc::BasicPacketSocketFactory packeter(threads.network_.get());
+
         return factory->CreatePeerConnection(rtc, [&]() {
             webrtc::PeerConnectionDependencies dependencies(this);
+            threads.network_->Invoke<void>(RTC_FROM_HERE, [&]() {
+                dependencies.allocator = absl::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);
+            });
             return dependencies;
         }());
     }())
