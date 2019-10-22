@@ -254,6 +254,11 @@ class Subset final :
     {
     }
 
+    Subset(const Span<> &span) :
+        Subset(span.data(), span.size())
+    {
+    }
+
     Subset(const std::string &data) :
         Subset(data.data(), data.size())
     {
@@ -270,6 +275,12 @@ class Subset final :
 
     size_t size() const override {
         return range_.size();
+    }
+
+    Subset subset(size_t offset, size_t length) const {
+        orc_assert(offset <= size());
+        orc_assert(size() - offset >= length);
+        return {data() + offset, length};
     }
 };
 
@@ -391,6 +402,11 @@ class Brick final :
     }
 };
 
+template <size_t Size_>
+inline bool operator ==(const Brick<Size_> &lhs, const Brick<Size_> &rhs) {
+    return memcmp(lhs.data(), rhs.data(), Size_) == 0;
+}
+
 template <typename Type_, bool Arithmetic_ = std::is_arithmetic<Type_>::value>
 class Number;
 
@@ -484,7 +500,12 @@ class Beam :
     {
     }
 
-    Beam(const Buffer &buffer);
+    explicit Beam(const Buffer &buffer);
+
+    explicit Beam(const Beam &rhs) :
+        Beam(static_cast<const Buffer &>(rhs))
+    {
+    }
 
     Beam(Beam &&rhs) noexcept :
         size_(rhs.size_),
@@ -493,8 +514,6 @@ class Beam :
         rhs.size_ = 0;
         rhs.data_ = nullptr;
     }
-
-    Beam(const Beam &rhs) = delete;
 
     virtual ~Beam() {
         destroy();
@@ -527,10 +546,10 @@ class Beam :
         return {data(), size()};
     }
 
-    Subset subset(size_t offset, size_t size) const {
-        orc_assert(offset <= size_);
-        orc_assert(size_ - offset >= size);
-        return {data_ + offset, size};
+    Subset subset(size_t offset, size_t length) const {
+        orc_assert(offset <= size());
+        orc_assert(size() - offset >= length);
+        return {data() + offset, length};
     }
 
     uint8_t &operator [](size_t index) {

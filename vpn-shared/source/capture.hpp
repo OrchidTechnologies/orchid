@@ -48,7 +48,7 @@ class Internal {
   public:
     virtual ~Internal();
 
-    virtual task<void> Send(Beam beam) = 0;
+    virtual task<bool> Send(const Beam &beam) = 0;
 };
 
 class MonitorLogger
@@ -59,19 +59,12 @@ class MonitorLogger
     virtual void GotProtocol(Five const &five, const std::string_view protocol, const std::string_view protocol_chain) = 0;
 };
 
-class Hole {
-  public:
-    virtual ~Hole() = default;
-
-    virtual void Drop(Beam data) = 0;
-};
-
 class Capture :
-    public Hole,
     public BufferDrain
 {
   private:
     uint32_t local_;
+    U<Analyzer> analyzer_;
     U<Internal> internal_;
 
   protected:
@@ -82,9 +75,9 @@ class Capture :
 
   public:
     Capture(const std::string &local);
-    ~Capture() override;
+    ~Capture();
 
-    void Drop(Beam data) override;
+    void Land(const Buffer &data, bool analyze);
 
     task<void> Start(S<Origin> origin);
     task<Sunk<> *> Start();
