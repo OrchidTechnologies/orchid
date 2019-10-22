@@ -4,7 +4,7 @@ import {OrchidAPI} from "../api/orchid-api";
 
 export const DebugPanel: React.FC = () => {
   return (
-      <div>
+      <div className="form-style">
         <label className="title">Debug Output</label>
         <div style={{marginTop: '8px'}}>
           <div className="DebugPanel-container">

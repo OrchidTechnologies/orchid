@@ -42,7 +42,7 @@ export class Overview extends Component {
 
   render() {
     return (
-      <div className="Overview">
+      <div className="Overview form-style">
         <label className="title">Overview</label>
         {/*wallet*/}
         <label style={{fontWeight: "bold"}}>Wallet Address </label>

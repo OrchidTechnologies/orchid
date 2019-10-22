@@ -57,7 +57,7 @@ export class LockFunds extends Component {
     let text = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? "Lock" : "Unlock";
     let submitEnabled = !this.state.running;
     return (
-        <div>
+        <div className="form-style">
           <label className="title">Lock / Unlock Funds</label>
           <p className="instructions">
             To withdraw your full balance including the escrow the account must be unlocked.

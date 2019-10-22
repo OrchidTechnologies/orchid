@@ -57,7 +57,7 @@ export class MoveFunds extends Component {
         && !this.state.running
         && this.state.moveAmount != null;
     return (
-        <div>
+        <div className="form-style">
           <label className="title">Move Funds</label>
           <p className="instructions">
             Move funds from your Lottery Pot balance to your escrow. Balance funds are used by
