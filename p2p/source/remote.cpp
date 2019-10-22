@@ -24,6 +24,11 @@
 
 namespace orc {
 
+task<void> Remote::Shut() {
+    co_await Inner()->Shut();
+    co_await Valve::Shut();
+}
+
 task<Socket> Remote::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
     orc_insist(false);
 }
@@ -32,7 +37,7 @@ task<Socket> Remote::Connect(U<Stream> &stream, const std::string &host, const s
     orc_insist(false);
 }
 
-task<Socket> Remote::Open(Sunk<Opening, BufferSewer> *sunk) {
+task<Socket> Remote::Unlid(Sunk<Opening, BufferSewer> *sunk) {
     orc_insist(false);
 }
 

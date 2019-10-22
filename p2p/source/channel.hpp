@@ -368,6 +368,13 @@ _trace();
         Pump::Land(data);
     }
 
+    using Pump::Stop;
+
+    task<void> Shut() override {
+        channel_->Close();
+        co_await Pump::Shut();
+    }
+
     task<void> Send(const Buffer &data) override {
         if (Verbose)
             Log() << "WebRTC <<< " << this << " " << data << std::endl;
@@ -377,13 +384,6 @@ _trace();
             channel_->Send(webrtc::DataBuffer(buffer, true));
         });
     }
-
-    task<void> Shut() override {
-        channel_->Close();
-        co_await Pump::Shut();
-    }
-
-    using Pump::Stop;
 };
 
 std::string Strip(const std::string &sdp);

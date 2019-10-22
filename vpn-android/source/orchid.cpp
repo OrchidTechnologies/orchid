@@ -57,7 +57,7 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
     ]() mutable -> task<void> { try {
         co_await Schedule();
         co_await capture->Start(config);
-        inverted->Start();
+        inverted->Open();
         capture_ = std::move(capture);
     } ORC_CATCH() });
     executor_ = &executor;

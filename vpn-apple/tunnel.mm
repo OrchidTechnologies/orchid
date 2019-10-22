@@ -106,7 +106,7 @@ static std::string cfs(NSString *data) {
         self]() mutable -> task<void> { try {
             co_await Schedule();
             co_await capture->Start(config);
-            sync->Start();
+            sync->Open();
             capture_ = std::move(capture);
             handler(nil);
         } ORC_CATCH(handler) });

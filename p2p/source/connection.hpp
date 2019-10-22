@@ -50,6 +50,10 @@ class Connection final :
     {
     }
 
+    ~Connection() {
+        connection_.close();
+    }
+
     Connection_ *operator ->() {
         return &connection_;
     }
@@ -70,7 +74,7 @@ class Connection final :
         co_return writ;
     }
 
-    task<boost::asio::ip::basic_endpoint<typename Connection_::protocol_type>> Connect(const std::string &host, const std::string &port) {
+    task<boost::asio::ip::basic_endpoint<typename Connection_::protocol_type>> Open(const std::string &host, const std::string &port) {
         auto endpoints(co_await asio::ip::basic_resolver<typename Connection_::protocol_type>(Context()).async_resolve({host, port}, Token()));
         if (Verbose)
             for (auto &endpoint : endpoints)
@@ -78,6 +82,17 @@ class Connection final :
         auto endpoint(co_await asio::async_connect(connection_, endpoints, Token()));
         connection_.non_blocking(true);
         co_return endpoint;
+    }
+
+    task<void> Shut() override {
+        try {
+            connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
+        } catch (const asio::system_error &error) {
+            auto code(error.code());
+            if (code == asio::error::not_connected)
+                co_return;
+            orc_adapt(error);
+        }
     }
 
     task<void> Send(const Buffer &data) override {
@@ -95,21 +110,6 @@ class Connection final :
             }
             orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
         }
-    }
-
-    task<void> Shut() override {
-        try {
-            connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
-        } catch (const asio::system_error &error) {
-            auto code(error.code());
-            if (code == asio::error::not_connected)
-                co_return;
-            orc_adapt(error);
-        }
-    }
-
-    void Close() override {
-        connection_.close();
     }
 };
 

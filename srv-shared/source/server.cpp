@@ -288,7 +288,6 @@ _trace();
 
 class Space :
     public Bonded,
-    public Valve,
     public BufferDrain
 {
   public:

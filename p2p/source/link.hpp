@@ -102,8 +102,8 @@ class Faucet :
     }
 
     void Stop(const std::string &error = std::string()) {
+        Outer()->Stop(error);
         Valve::Stop();
-        return Outer()->Stop(error);
     }
 
   public:
@@ -118,8 +118,8 @@ class Faucet :
 using BufferDrain = Drain<const Buffer &>;
 
 class Pump :
-    public Pipe,
-    public Faucet<BufferDrain>
+    public Faucet<BufferDrain>,
+    public Pipe
 {
   protected:
     void Land(const Buffer &data) {

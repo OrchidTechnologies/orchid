@@ -31,10 +31,8 @@ namespace orc {
 
 class Reader {
   public:
-    virtual task<size_t> Read(Beam &beam) = 0;
-    virtual void Close() = 0;
-
     virtual ~Reader() = default;
+    virtual task<size_t> Read(Beam &beam) = 0;
 };
 
 class Stream :
@@ -43,7 +41,6 @@ class Stream :
 {
   public:
     ~Stream() override = default;
-
     virtual task<void> Shut() = 0;
 };
 
@@ -60,7 +57,7 @@ class Inverted final :
     {
     }
 
-    void Start() {
+    void Open() {
         Spawn([this]() -> task<void> {
             Beam beam(2048);
             for (;;) {
@@ -89,7 +86,7 @@ class Inverted final :
     }
 
     task<void> Shut() override {
-        stream_->Close();
+        co_await stream_->Shut();
         co_await Valve::Shut();
     }
 };

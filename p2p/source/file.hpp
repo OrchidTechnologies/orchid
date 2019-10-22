@@ -70,16 +70,17 @@ class File final :
         co_return writ;
     }
 
+    task<void> Shut() override {
+        file_.close();
+        co_return;
+    }
+
     task<void> Send(const Buffer &data) override {
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
         auto writ(co_await file_.async_write_some(Sequence(data), Token()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
-    }
-
-    void Close() override {
-        file_.close();
     }
 };
 

@@ -33,10 +33,16 @@
 namespace orc {
 
 class Acceptor :
+    public Valve,
     public Sewer<asio::ip::tcp::socket>
 {
   private:
     asio::ip::tcp::acceptor acceptor_;
+
+  protected:
+    void Stop(const std::string &error = std::string()) override {
+        Valve::Stop();
+    }
 
   public:
     template <typename... Args_>
@@ -49,7 +55,11 @@ class Acceptor :
         return &acceptor_;
     }
 
-    task<bool> Read() {
+    Socket Local() const {
+        return acceptor_.local_endpoint();
+    }
+
+    task<bool> Next() {
         asio::ip::tcp::socket connection(Context());
         asio::ip::tcp::endpoint endpoint;
 
@@ -72,22 +82,23 @@ class Acceptor :
         co_return true;
     }
 
-    void Start() {
+    void Open() {
         Spawn([this]() -> task<void> {
-            while (co_await Read());
+            while (co_await Next());
         });
     }
 
-    void Connect(const Socket &socket) {
+    void Open(const Socket &socket) {
         acceptor_.open(asio::ip::tcp::v4());
         acceptor_.bind({socket.Host(), socket.Port()});
         acceptor_.listen();
         acceptor_.non_blocking(true);
-        Start();
+        Open();
     }
 
-    Socket Local() const {
-        return acceptor_.local_endpoint();
+    task<void> Shut() override {
+        acceptor_.close();
+        co_await Valve::Shut();
     }
 };
 

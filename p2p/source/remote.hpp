@@ -43,7 +43,7 @@ class Remote :
 
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;
-    task<Socket> Open(Sunk<Opening, BufferSewer> *sunk) override;
+    task<Socket> Unlid(Sunk<Opening, BufferSewer> *sunk) override;
 };
 
 }

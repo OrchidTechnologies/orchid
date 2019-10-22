@@ -381,11 +381,9 @@ class Flow {
     {
     }
 
-    void Start() {
+    void Open() {
         Spawn([this]() -> task<void> {
             co_await latch_;
-            up_->Close();
-            down_->Close();
             co_await plant_->Pull(four_);
         });
 
@@ -427,7 +425,7 @@ class Split :
             if (flow == nullptr)
                 co_return;
             flow->down_ = std::make_unique<Connection<asio::ip::tcp::socket>>(std::move(connection));
-            flow->Start();
+            flow->Open();
         });
     }
 
@@ -508,7 +506,7 @@ _trace();
 };
 
 void Split::Connect(uint32_t local) {
-    Acceptor::Connect({asio::ip::address_v4(local), 0});
+    Acceptor::Open({asio::ip::address_v4(local), 0});
     local_ = Local();
     // XXX: this is sickening
     remote_ = asio::ip::address_v4(local_.Host().to_v4().to_uint() + 1);
@@ -600,7 +598,7 @@ task<bool> Split::Send(const Beam &data) {
             auto &punch(udp_[source]);
             if (punch == nullptr) {
                 auto sink(std::make_unique<Sink<Punch, Opening, BufferSewer>>(this, source));
-                co_await origin_->Open(sink.get());
+                co_await origin_->Unlid(sink.get());
                 punch = std::move(sink);
             }
 

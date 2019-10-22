@@ -53,7 +53,11 @@ class Opening final {
         return &connection_;
     }
 
-    void Start() {
+    Socket Local() const {
+        return connection_.local_endpoint();
+    }
+
+    void Open() {
         Spawn([this]() -> task<void> {
             for (;;) {
                 asio::ip::udp::endpoint endpoint;
@@ -74,15 +78,16 @@ class Opening final {
         });
     }
 
-    void Connect(const Socket &socket) {
+    void Open(const Socket &socket) {
         connection_.open(asio::ip::udp::v4());
         connection_.non_blocking(true);
         connection_.bind({socket.Host(), socket.Port()});
-        Start();
+        Open();
     }
 
-    Socket Local() const {
-        return connection_.local_endpoint();
+    task<void> Shut() {
+        connection_.close();
+        co_return;
     }
 
     task<void> Send(const Buffer &data, const Socket &socket) {

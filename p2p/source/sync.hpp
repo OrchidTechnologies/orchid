@@ -36,29 +36,29 @@
 
 namespace orc {
 
-template <typename Connection_>
+template <typename Sync_>
 class Sync final :
     public Link
 {
   protected:
-    Connection_ connection_;
+    Sync_ sync_;
 
   public:
     template <typename... Args_>
     Sync(BufferDrain *drain, Args_ &&...args) :
         Link(drain),
-        connection_(std::forward<Args_>(args)...)
+        sync_(std::forward<Args_>(args)...)
     {
     }
 
-    Connection_ *operator ->() {
-        return &connection_;
+    Sync_ *operator ->() {
+        return &sync_;
     }
 
     size_t Read(Beam &beam) {
         size_t writ;
         try {
-            writ = connection_.receive(asio::buffer(beam.data(), beam.size()));
+            writ = sync_.receive(asio::buffer(beam.data(), beam.size()));
         } catch (const asio::system_error &error) {
             auto code(error.code());
             if (code == asio::error::eof)
@@ -71,23 +71,7 @@ class Sync final :
         return writ;
     }
 
-    task<void> Send(const Buffer &data) override {
-        if (Verbose)
-            Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-
-        size_t writ;
-        try {
-            writ = connection_.send(Sequence(data));
-        } catch (const asio::system_error &error) {
-            orc_adapt(error);
-        }
-        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
-
-        co_return;
-    }
-
-    void Start() {
-        // XXX: this thread is never reaped
+    void Open() {
         std::thread([this]() {
             Beam beam(2048);
             for (;;) {
@@ -109,6 +93,26 @@ class Sync final :
                 Link::Land(subset);
             }
         }).detach();
+    }
+
+    task<void> Shut() override {
+        sync_.close();
+        co_await Link::Shut();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        if (Verbose)
+            Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
+
+        size_t writ;
+        try {
+            writ = sync_.send(Sequence(data));
+        } catch (const asio::system_error &error) {
+            orc_adapt(error);
+        }
+        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
+
+        co_return;
     }
 };
 

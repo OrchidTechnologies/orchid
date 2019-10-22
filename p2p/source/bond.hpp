@@ -29,9 +29,12 @@
 
 namespace orc {
 
-class Bonded {
+class Bonded :
+    public Valve
+{
   private:
     class Bonding :
+        public Valve,
         public Pipe,
         public BufferDrain
     {
@@ -55,6 +58,11 @@ class Bonded {
         {
         }
 
+        task<void> Shut() override {
+            co_await Inner()->Shut();
+            co_await Valve::Shut();
+        }
+
         task<void> Send(const Buffer &data) override {
             co_return co_await Inner()->Send(data);
         }
@@ -74,11 +82,16 @@ class Bonded {
     }
 
   public:
+    task<void> Shut() {
+        for (const auto &bonding : bondings_)
+            co_await bonding.second->Shut();
+        co_await Valve::Shut();
+    }
+
     task<void> Send(const Buffer &data) {
         auto bonding(bondings_.begin());
-        if (bonding == bondings_.end())
-            co_return;
-        co_return co_await bonding->second->Send(data);
+        if (bonding != bondings_.end())
+            co_await bonding->second->Send(data);
     }
 };
 

@@ -129,7 +129,7 @@ int Main(int argc, const char *const argv[]) {
     do ++address.sc_unit;
     while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
 
-    sync->Start();
+    sync->Open();
 
     auto utun("utun" + std::to_string(address.sc_unit - 1));
     orc_assert(system(("ifconfig " + utun + " inet " + local + " " + local + " mtu 1500 up").c_str()) == 0);
