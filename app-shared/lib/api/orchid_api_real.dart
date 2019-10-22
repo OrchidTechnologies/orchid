@@ -64,7 +64,8 @@ class RealOrchidAPI implements OrchidAPI {
 
   final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
       NetworkConnectivityType.Unknown);
-  final connectionStatus = BehaviorSubject<OrchidConnectionState>.seeded(OrchidConnectionState.Invalid);
+  final connectionStatus = BehaviorSubject<OrchidConnectionState>.seeded(
+      OrchidConnectionState.Invalid);
   final syncStatus = BehaviorSubject<OrchidSyncStatus>();
   final routeStatus = BehaviorSubject<OrchidRoute>();
   final vpnPermissionStatus = BehaviorSubject<bool>();
@@ -78,6 +79,7 @@ class RealOrchidAPI implements OrchidAPI {
     budget().applicationReady();
     return _platform.invokeMethod('ready');
   }
+
   /// Get the logging API.
   @override
   OrchidLogAPI logger() {
@@ -156,5 +158,17 @@ class RealOrchidAPI implements OrchidAPI {
   Future<String> versionString() async {
     return _platform.invokeMethod('version');
   }
-}
 
+  /// Get the Orchid Configuration file contents
+  Future<String> getConfiguration() async {
+    return _platform.invokeMethod('get_config');
+  }
+
+  /// Set the Orchid Configuration file contents
+  Future<bool> setConfiguration(String config) async {
+    // todo: return a bool from the native side?
+    String result = await _platform
+        .invokeMethod('set_config', <String, dynamic>{'text': config});
+    return result == "true";
+  }
+}

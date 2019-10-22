@@ -61,8 +61,11 @@ class TitledPage extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [AppColors.grey_7, AppColors.grey_6])),
       ),
-      // Workaround for: https://github.com/flutter/flutter/issues/23926
-      resizeToAvoidBottomInset: false,
+
+      // Note: Setting this to false is a workaround for:
+      // https://github.com/flutter/flutter/issues/23926
+      // however that breaks the automated keyboard accommodation.
+      resizeToAvoidBottomInset: true,
     );
   }
 }

@@ -241,5 +241,18 @@ class MockOrchidAPI implements OrchidAPI {
   Future<String> versionString() async {
     return "1.0.0";
   }
+
+  String config = "";
+
+  /// Get the Orchid Configuration file contents
+  Future<String> getConfiguration() async {
+    return config;
+  }
+
+  /// Set the Orchid Configuration file contents
+  Future<bool>setConfiguration(String config) async {
+    this.config = config;
+    return true;
+  }
 }
 
