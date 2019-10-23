@@ -88,16 +88,7 @@ public class OrchidVpnService extends VpnService {
                 vpnService = this;
                 startForeground();
                 new Thread(new Runnable() { public void run() {
-
                     File f = app().getFilesDir();
-                    AssetManager assetManager = app().getAssets();
-                    try {
-                        InputStream in = assetManager.open("flutter_assets/assets/default.cfg");
-                        copyTo(in, new File(f, "orchid.cfg"));
-                    } catch (IOException e) {
-                        Log.e(TAG, "onCreate", e);
-                    }
-
                     Log.d(TAG, "OrchidNative starting");
                     OrchidNative.runTunnel(fd, f.getAbsolutePath());
                     Log.d(TAG, "OrchidNative stopped");

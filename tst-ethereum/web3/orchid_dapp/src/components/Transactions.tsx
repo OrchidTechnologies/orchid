@@ -20,7 +20,7 @@ export class Transactions extends Component {
 
   render() {
     return (
-        <div>
+        <div className="form-style">
           <label className="title">Transactions</label>
           <div className="transactions-list">
             <div className="transactions-header-row">

@@ -1,13 +1,23 @@
 import React from "react";
 import logo from '../assets/name_logo.png'
-import wallet from '../assets/wallet.png'
 
 const Header: React.FC = () => {
   return (
     <div>
-      <div style={{width: '262px', height: '50px'}}>
-        <img style={{height: '40px'}} src={logo} alt=""/>
-        <img style={{height: '38px', marginLeft: '8px'}} src={wallet} alt=""/>
+      <div style={{marginBottom: '8px', marginLeft: '8px'}}>
+        <img style={{
+          width: '130px',
+          height: '33px',
+        }} src={logo} alt=""/>
+        <span style={{
+          display: "block",
+          fontFamily: 'Noto Sans',
+          letterSpacing: '0pt',
+          fontSize: '17pt',
+          color: 'rgb(95,69,186)',
+          marginLeft: '6px',
+          marginTop: '2px'
+        }}>account</span>
       </div>
     </div>
   );

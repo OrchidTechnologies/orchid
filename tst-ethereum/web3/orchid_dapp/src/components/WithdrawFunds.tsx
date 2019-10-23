@@ -87,7 +87,7 @@ export class WithdrawFunds extends Component {
 
     let currentInputAmount = this.amountInput.current == null ? "" : this.amountInput.current.value;
     return (
-        <div>
+        <div className="form-style">
           <label className="title">Withdraw Funds</label>
           <p className="instructions">
             Funds may be withdrawn from your lottery pot balance at any time,

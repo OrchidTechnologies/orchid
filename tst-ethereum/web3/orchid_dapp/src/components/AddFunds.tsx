@@ -57,7 +57,7 @@ export class AddFunds extends Component {
         && !this.state.amountError
         && !this.state.escrowError;
     return (
-        <div>
+        <div className="form-style">
           <label className="title">Add Funds</label>
           <p className="instructions">
             Add funds to your Lottery Pot balance and escrow. Balance funds are used by Orchid
