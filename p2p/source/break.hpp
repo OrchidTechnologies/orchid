@@ -20,32 +20,24 @@
 /* }}} */
 
 
-#ifndef ORCHID_ORIGIN_HPP
-#define ORCHID_ORIGIN_HPP
+#ifndef ORCHID_BREAK_HPP
+#define ORCHID_BREAK_HPP
 
-#include "break.hpp"
-#include "http.hpp"
 #include "link.hpp"
-#include "opening.hpp"
-#include "reader.hpp"
-#include "socket.hpp"
-#include "task.hpp"
 
 namespace orc {
 
-class Origin :
-    public Valve
-{
-  public:
-    virtual ~Origin() = default;
-
-    virtual task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
-    virtual task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) = 0;
-    virtual task<Socket> Unlid(Sunk<Opening, BufferSewer> *sunk) = 0;
-
-    task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data);
-};
+template <typename Type_, typename... Args_>
+inline S<Type_> Break(Args_ &&...args) {
+    auto valve(std::make_shared<Type_>(std::forward<Args_>(args)...));
+    auto backup(valve.get());
+    return std::shared_ptr<Type_>(backup, [valve = std::move(valve)](Type_ *) mutable {
+        Spawn([valve = std::move(valve)]() -> task<void> {
+            co_await valve->Shut();
+        });
+    });
+}
 
 }
 
-#endif//ORCHID_ORIGIN_HPP
+#endif//ORCHID_BREAK_HPP

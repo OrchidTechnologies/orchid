@@ -29,8 +29,7 @@ namespace orc {
 
 class Remote :
     public Origin,
-    public BufferDrain,
-    public Valve
+    public BufferDrain
 {
   protected:
     virtual Pump *Inner() = 0;

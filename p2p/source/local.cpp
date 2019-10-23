@@ -47,7 +47,7 @@ task<Socket> Local::Unlid(Sunk<Opening, BufferSewer> *sunk) {
 }
 
 S<Local> GetLocal() {
-    static auto local(Make<Local>());
+    static auto local(Break<Local>());
     return local;
 }
 

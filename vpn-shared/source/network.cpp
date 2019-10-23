@@ -77,7 +77,7 @@ task<S<Origin>> Network::Setup() {
     S<Origin> origin(GetLocal());
 
     for (unsigned i(0); i != 3; ++i) {
-        auto remote(std::make_shared<Sink<Remote>>());
+        auto remote(Break<Sink<Remote>>());
         co_await Random(remote.get(), origin, "");
         origin = remote;
     }
