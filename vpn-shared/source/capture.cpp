@@ -513,7 +513,7 @@ void Split::Connect(uint32_t local) {
 }
 
 void Split::Land(Beam data) {
-    return capture_->Land(std::move(data), true);
+    return capture_->Land(data, true);
 }
 
 task<bool> Split::Send(const Beam &data) {

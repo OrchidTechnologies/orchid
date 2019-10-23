@@ -50,10 +50,6 @@ class Connection final :
     {
     }
 
-    ~Connection() {
-        connection_.close();
-    }
-
     Connection_ *operator ->() {
         return &connection_;
     }

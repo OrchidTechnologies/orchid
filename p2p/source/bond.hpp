@@ -82,7 +82,7 @@ class Bonded :
     }
 
   public:
-    task<void> Shut() {
+    task<void> Shut() override {
         for (const auto &bonding : bondings_)
             co_await bonding.second->Shut();
         co_await Valve::Shut();
