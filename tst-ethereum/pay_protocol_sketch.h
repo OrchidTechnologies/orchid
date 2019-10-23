@@ -19,7 +19,6 @@
 
 
 
-/*
 
 
 Minutes = 60;
@@ -221,4 +220,3 @@ struct Server
 		if (balances[client] > min_balance_) { send(client, data); }
 	}
 };
-
