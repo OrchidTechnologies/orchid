@@ -21,6 +21,7 @@
 
 
 
+
 Minutes = 60;
 Hours   = 60*Minutes;
 Days    = 24*Hours;
@@ -37,7 +38,7 @@ struct Budget_PredExpW
 	timer_sample_rate_ = 60; // frequency of calls to on_timer() (nothing special about 60s)
 
     // internal
-    prepay_credit_;
+        prepay_credit_;
 	route_active_;                  // true when a connection/circuit is active
 	exp_half_life   = 1*Weeks;      // 1 one week 50% smoothing period
 	last_pay_date_;
@@ -66,7 +67,7 @@ struct Budget_PredExpW
         ltime           = CurrentTime();
         
         double pred_future_active_time = (budget_edate_ - CurrentTime()) * wactive;
-		spendrate_      = get_OXT_balance() / (pred_future_active_time + 1*Days);
+	spendrate_      = get_OXT_balance() / (pred_future_active_time + 1*Days);
 
         persist_store("ltime",   ltime);
         persist_store("wactive", wactive);
@@ -109,6 +110,9 @@ struct Client
 		
 		afford 	    	= budget_->get_afford();
 		max_face_val	= budget_->get_max_faceval();
+		
+		// todo: add back client side balance of trade tracking for trust bound
+
 		//trust_bound 	= get_trust_bound();
 		//exp_val     	= min(afford, bal_owed, trust_bound); // moved into budgeting
 		exp_val     	= min(afford, baa_owed);
@@ -117,6 +121,7 @@ struct Client
 		//face_val      = min(face_val, max_face_val);
 		if (face_val > max_face_val) face_val = 0;  // hard constraint failure
 		
+		// todo: simulate server ticket value function?
 		if (face_val > trans_cost) {
 			win_prob    = exp_val / (face_val - trans_cost);
 			win_prob    = max(min(win_prob, 1), 0); // todo: server may want a lower bound on win_prob for double-spend reasons
@@ -192,12 +197,22 @@ struct Server
 		}
 		RPC.transaction(trans_fee, grab(secret, hash, payment.target, payment.nonce, payment.ratio, payment.start, payment.range, payment.amount, payment.sig, old)); 		
 	}
+
+	ticket_value(payment, trans_fee) {
+		val = (payment.faceVal - trans_fee) * payment.winProb;
+		timestamp = CurrentTime + 5*Minutes; // 5 minutes is roughly upper eth transaction delay
+                if (payment.start >= timestamp)
+                   limit = val;
+                else
+                   limit = (val * (payment.range - (timestamp - payment.start)) / payment.range)
+		return limit;
+	}
 	
 	// upayment from client
 	on_upay(client, payment) { //  uses blocking external ethnode RPC calls
 		if (check_payment(payment)) { // validate the micropayment
 			trans_fee = get_trans_cost();
-			balances_[client] += (payment.faceVal - trans_fee) * payment.winProb;
+			balances_[client] += ticket_value(payment, trans_fee);
 			if (is_winner(payment) { // now check to see if it's a winner, and redeem if so
 				grab(payment, trans_fee);
 			}
@@ -220,3 +235,4 @@ struct Server
 		if (balances[client] > min_balance_) { send(client, data); }
 	}
 };
+
