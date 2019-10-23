@@ -46,8 +46,8 @@ struct Budget_PredExpW
 
     get_afford() {
         time_owed = (CurrentTime() - last_pay_date);
-		allowed   = spendrate_ * (time_owed + prepay_credit_);
-		return allowed;       
+	allowed   = spendrate_ * (time_owed + prepay_credit_);
+	return allowed;       
     }
     
     get_max_faceval() {
@@ -106,22 +106,26 @@ struct Client
     // callback when disconnected from route
 	on_disconnect()     { budget_->on_disconnect(); }   
 
-	on_invoice(bal_owed, trans_cost) { // server requests payment from client
+	on_invoice(hash_secret, target, bal_owed, trans_cost) { // server requests payment from client
 		
 		afford 	    	= budget_->get_afford();
 		max_face_val	= budget_->get_max_faceval();
 		//trust_bound 	= get_trust_bound();
-		//exp_val     	= min(afford, bal_owed, trust_bound); // removed into budgeting
-		exp_val     	= min(afford, bal_owed);
-       	trans_cost  	= min(get_max_trans_cost(), trans_cost);
-		face_val	    = trans_cost / target_overhead_;
+		//exp_val     	= min(afford, bal_owed, trust_bound); // moved into budgeting
+		exp_val     	= min(afford, baa_owed);
+       	        trans_cost  	= min(get_max_trans_cost(), trans_cost);
+		face_val        = trans_cost / target_overhead_;
 		//face_val      = min(face_val, max_face_val);
 		if (face_val > max_face_val) face_val = 0;  // hard constraint failure
 		
 		if (face_val > trans_cost) {
 			win_prob    = exp_val / (face_val - trans_cost);
-			win_prob	= max(min(win_prob, 1), 0); // todo: server may want a lower bound on win_prob for double-spend reasons
-			send("upay", server_, payment{win_prob, face_val, ..} );
+			win_prob    = max(min(win_prob, 1), 0); // todo: server may want a lower bound on win_prob for double-spend reasons
+			// todo: is one hour duration (range) reasonable?			
+			nonce = rand<uint256>(), ratio = win_prob, start = CurrentTime(), range = 1*Hour, amount = face_val;
+			bytes32 ticket = keccak256(abi.encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
+			sig = sign(ticket); 		
+			send("upay", server_, payment{hash_secret, target,  nonce, ratio, start, range, amount, sig} );
 			budget_->on_invoice();
 			// any book-keeping here
 		}
@@ -141,6 +145,7 @@ struct Server
 
 	// Internal
 	balances_;
+	old_tickets_;
     
 	// External functions
 	get_trans_cost();    // (oracle) get current transaction cost estimate
@@ -156,8 +161,11 @@ struct Server
 
 	invoice_check(client) {
 		if (balances[client] <= targ_balance_) {
-		    billed_amt  = max(bytes_per_upay_ * data_price_, targ_balance_ - balances[client]);
-		    send("invoice", client, billed_amt, get_trans_cost());
+		    billed_amt  = max(bytes_per_upas * data_price_, targ_balance_ - balances[client]);
+		    secret = rval<uint256>();
+		    hash_secret = hash(secret);
+		    secrets[hash_secret] = secret;
+		    send("invoice", client, {hash_secret, target = client, billed_amt, trans_cost = get_trans_cost() });
 		}
 	}
 
@@ -172,6 +180,19 @@ struct Server
 		if (RPC.balance(payment.sender).amount_ <     payment.faceVal)) return false;
 		if (RPC.balance(payment.sender).escrow_ < 2 * payment.faceVal)) return false; // 2 is justin's magic number, and may change
 	}
+
+	grab(payment, trans_fee) {
+		//function grab(uint256 secret, bytes32 hash, address payable target, uint256 nonce, uint256 ratio, uint256 start, uint128 range, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old)
+		hash = payment.hash_secret;
+		secret = secrets[hash];
+        	bytes32 ticket = keccak256(abi.encodePacked(hash, payment.target, payment.nonce, payment.ratio, payment.start, payment.range, payment.amount));
+		old_tickets_.insert_sorted(ticket, payment.start + payment.range);
+		old = {};
+		while ((CurrentTime() + 1*Hour) > old_tickets.top().key()) {
+			old.insert(old_tickets.pop());
+		}
+		RPC.transaction(trans_fee, grab(secret, hash, payment.target, payment.nonce, payment.ratio, payment.start, payment.range, payment.amount, payment.sig, old)); 		
+	}
 	
 	// upayment from client
 	on_upay(client, payment) { //  uses blocking external ethnode RPC calls
@@ -179,7 +200,7 @@ struct Server
 			trans_fee = get_trans_cost();
 			balances_[client] += (payment.faceVal - trans_fee) * payment.winProb;
 			if (is_winner(payment) { // now check to see if it's a winner, and redeem if so
-				RPC.grab(payment, trans_fee);
+				grab(payment, trans_fee);
 			}
 		}
 	}
