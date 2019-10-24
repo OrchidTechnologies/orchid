@@ -1,3 +1,6 @@
+import React, {FC} from "react";
+import {Row} from "react-bootstrap";
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 /*
@@ -37,4 +40,14 @@ export function errorClass(val: boolean): string {
   return val ? "error" : "hidden";
 }
 
+export const Divider: FC = () => {
+  return <Row
+    style={{
+      height: '1px',
+      backgroundColor: 'lightGrey',
+    }}/>
+};
 
+export const Visibility: FC<{ visible: boolean }> = (props) => {
+  return <div className={props.visible ? "" : "hidden"}>{props.children}</div>
+};

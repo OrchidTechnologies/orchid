@@ -1,5 +1,7 @@
 import React, {Component, FC} from "react";
-import {Col, Container, Image, Nav, Navbar, Row} from "react-bootstrap";
+import {
+  Button, Col, Container, Image, ListGroup, ListGroupItem, Nav, Navbar, OverlayTrigger, Popover, Row
+} from "react-bootstrap";
 import Header from "./Header";
 import {Transactions} from "./Transactions";
 import {AddFunds} from "./AddFunds";
@@ -19,27 +21,71 @@ import addIcon from '../assets/add.png'
 import addIconSelected from '../assets/add-selected.png'
 import removeIcon from '../assets/remove.png'
 import removeIconSelected from '../assets/remove-selected.png'
+import {Divider, Visibility} from "../util/util";
 
 export class Layout extends Component {
   state = {route: Overview as any};
 
+  moreMenuItems = new Map<any, string> ([
+    [Transactions, "Transactions"],
+    [MoveFunds, "Move Funds"],
+    [LockFunds, "Lock / Unlock Funds"],
+    [ManageKeys, "Manage Keys"],
+    [DebugPanel, "Debug Panel"]
+  ]);
+
+// @formatter:off
   render() {
+    let moreItemsSelected = Array.from(this.moreMenuItems.keys()).includes(this.state.route);
     return (
-      <Container className={"main-content"}>
-        <Header/>
-        <Navbar>
-          <this.NavButton route={Overview} icon={homeIcon} iconSelected={homeIconSelected}>Overview</this.NavButton>
-          <this.NavButton route={AddFunds} icon={addIcon} iconSelected={addIconSelected}>Add</this.NavButton>
-          <this.NavButton route={WithdrawFunds} icon={removeIcon} iconSelected={removeIconSelected}>Withdraw</this.NavButton>
-          <this.NavButton route={MoreItems} icon={moreIcon} iconSelected={moreIconSelected}>More</this.NavButton>
-        </Navbar>
-        <Visibility visible={this.state.route === MoreItems}><MoreItems/> </Visibility>
-        <Visibility visible={this.state.route === Overview}><Overview/></Visibility>
-        <Visibility visible={this.state.route === AddFunds}><AddFunds/></Visibility>
-        <Visibility visible={this.state.route === WithdrawFunds}><WithdrawFunds/></Visibility>
+      <Container className="main-content no-pad">
+        <Row>
+          <Col>
+            <Container><Header/></Container>
+            <Divider/>
+            <Navbar>
+              <this.NavButton route={Overview} icon={homeIcon} iconSelected={homeIconSelected}>Overview </this.NavButton>
+              <this.NavButton route={AddFunds} icon={addIcon} iconSelected={addIconSelected}>Add </this.NavButton>
+              <this.NavButton route={WithdrawFunds} icon={removeIcon} iconSelected={removeIconSelected}>Withdraw </this.NavButton>
+                <OverlayTrigger
+                  rootClose={true} trigger="click" placement='bottom'
+                  overlay={
+                    <Popover id='moreitems-popover'>
+                      <Popover.Content onClick={()=>document.body.click()}>
+                        <ListGroup variant="flush">{
+                          Array.from(this.moreMenuItems.entries()).map(([key,value])=>{
+                              return <ListGroupItem key={key.toString()}><this.NavRow route={key}>{value}</this.NavRow></ListGroupItem>
+                            })
+                          }</ListGroup>
+                      </Popover.Content>
+                    </Popover>
+                  }
+                >
+                  <Button className={"Layout-nav-button "}>
+                      <Image src={moreItemsSelected ? moreIconSelected : moreIcon}/>
+                      <Nav.Link className={moreItemsSelected ? "selected" : ""}>More</Nav.Link>
+                  </Button>
+                </OverlayTrigger>
+            </Navbar>
+            <Divider/>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Visibility visible={this.state.route === Overview}><Overview/></Visibility>
+            <Visibility visible={this.state.route === AddFunds}><AddFunds/></Visibility>
+            <Visibility visible={this.state.route === WithdrawFunds}><WithdrawFunds/></Visibility>
+            <Visibility visible={this.state.route === Transactions}><Transactions/> </Visibility>
+            <Visibility visible={this.state.route === MoveFunds}><MoveFunds/> </Visibility>
+            <Visibility visible={this.state.route === LockFunds}><LockFunds/> </Visibility>
+            <Visibility visible={this.state.route === ManageKeys}><ManageKeys/> </Visibility>
+            <Visibility visible={this.state.route === DebugPanel}><DebugPanel/> </Visibility>
+          </Col>
+        </Row>
       </Container>
     );
   }
+  // @formatter:on
 
   NavButton: FC<{ route: any, icon: any, iconSelected: any }> = (props) => {
     let selected = this.state.route === props.route;
@@ -52,71 +98,17 @@ export class Layout extends Component {
       </Nav>
     );
   };
-}
-
-export class MoreItems extends Component {
-  state = {route: null as any};
-
-  render() {
-    return (
-      <div style={{display: "flex", overflow: 'hidden'}}>
-        <Container style={{width: '100%', flexShrink: 0}}
-             className={"more-items " + (this.state.route == null ? "onscreen" : "push-left")}>
-          <Col>
-            <this.NavRow route={Transactions}>Transactions</this.NavRow>
-            <this.Divider/>
-            <this.NavRow route={MoveFunds}>Move Funds</this.NavRow>
-            <this.Divider/>
-            <this.NavRow route={LockFunds}>Lock / Unlock Funds</this.NavRow>
-            <this.Divider/>
-            <this.NavRow route={ManageKeys}>Manage Keys</this.NavRow>
-            <this.Divider/>
-            <this.NavRow route={DebugPanel}>Debug Panel</this.NavRow>
-          </Col>
-        </Container>
-        <div style={{width: '100%', flexShrink: 0}}
-             className={"more-items " + (this.state.route != null ? "push-left" : "onscreen")}>
-          <Visibility visible={this.state.route != null}>
-            <this.BackButton/>
-          </Visibility>
-          <Visibility visible={this.state.route === Transactions}><Transactions/> </Visibility>
-          <Visibility visible={this.state.route === MoveFunds}><MoveFunds/> </Visibility>
-          <Visibility visible={this.state.route === LockFunds}><LockFunds/> </Visibility>
-          <Visibility visible={this.state.route === ManageKeys}><ManageKeys/> </Visibility>
-          <Visibility visible={this.state.route === DebugPanel}><DebugPanel/> </Visibility>
-        </div>
-      </div>
-    );
-  }
-
-  BackButton: FC = () => {
-    return <Col onClick={() => this.setState({route: null})}>
-      <Row className="back-button">
-        <span style={{marginRight: '8px'}}>&lt;</span><span>Back</span>
-        <this.Divider/>
-      </Row>
-    </Col>
-  };
 
   NavRow: FC<{ route: any }> = (props) => {
+    let selected = this.state.route === props.route;
     return (
-      <Row className="Layout-nav-row justify-content-between"
-           onClick={() => this.setState({route: props.route})}>
-        <span>{props.children}</span>
-      </Row>
+      <Nav.Link
+        className={"Layout-nav-row "+ (selected ? "selected" : "")}
+        onClick={() => this.setState({route: props.route})}>
+          {props.children}
+      </Nav.Link>
     );
-  };
-
-  Divider: FC = () => {
-    return <Row
-      style={{
-        height: '1px',
-        backgroundColor: 'lightGrey'
-      }}/>
   };
 }
 
-const Visibility: FC<{ visible: boolean }> = (props) => {
-  return <div className={props.visible ? "" : "hidden-after-300"}>{props.children}</div>
-};
 

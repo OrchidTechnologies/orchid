@@ -3,6 +3,7 @@ import {LockStatus} from "./LockStatus";
 import {LotteryPot, orchidLock, orchidUnlock} from "../api/orchid-eth";
 import {OrchidAPI} from "../api/orchid-api";
 import {TransactionResult, TxState} from "./TransactionResult";
+import {Container} from "react-bootstrap";
 
 interface LockFundsState {
   pot: LotteryPot | null,
@@ -57,7 +58,7 @@ export class LockFunds extends Component {
     let text = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? "Lock" : "Unlock";
     let submitEnabled = !this.state.running;
     return (
-        <div className="form-style">
+        <Container className="form-style">
           <label className="title">Lock / Unlock Funds</label>
           <p className="instructions">
             To withdraw your full balance including the escrow the account must be unlocked.
@@ -78,7 +79,7 @@ export class LockFunds extends Component {
               text={this.state.result}
               txId={this.state.txId}
           />
-        </div>
+        </Container>
     );
   }
 }

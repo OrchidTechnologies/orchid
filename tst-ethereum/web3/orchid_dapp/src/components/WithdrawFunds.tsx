@@ -10,6 +10,7 @@ import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionResult} from "./TransactionResult";
 import {SubmitButton} from "./SubmitButton";
 import {Address} from "../api/orchid-types";
+import {Container} from "react-bootstrap";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -87,7 +88,7 @@ export class WithdrawFunds extends Component {
 
     let currentInputAmount = this.amountInput.current == null ? "" : this.amountInput.current.value;
     return (
-        <div className="form-style">
+        <Container className="form-style">
           <label className="title">Withdraw Funds</label>
           <p className="instructions">
             Funds may be withdrawn from your lottery pot balance at any time,
@@ -155,7 +156,7 @@ export class WithdrawFunds extends Component {
               text={this.state.text}
               txId={this.state.txId}
           />
-        </div>
+        </Container>
     );
   }
 }

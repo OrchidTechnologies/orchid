@@ -1,9 +1,13 @@
 /* Layout rules */
 
 html, body {
-  height: 100%;
   margin-left: auto;
   margin-right: auto;
+}
+
+.container {
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 .col-1-1 {
@@ -28,137 +32,6 @@ html, body {
 
 .col-1-8 {
   width: 12.5%;
-}
-
-/* Form Layout */
-
-.form-row {
-  display: inline-flex;
-  align-items: baseline;
-  overflow: hidden;
-}
-
-.form-row-label,
-.form-row-field,
-.form-row-element {
-  margin-right: 8px !important;
-}
-
-.form-row-label {
-}
-
-.form-row-field {
-  min-width: 50px;
-}
-
-/* Styling rules */
-
-.form-top,
-.form-style {
-  margin-top: 16px;
-  padding: 16px;
-  background: #f4f7f8;
-  border-radius: 8px;
-  font-family: Georgia, "Times New Roman", Times, serif;
-}
-
-.form-top {
-  margin-top: 0;
-  padding-top: 0
-}
-
-.form-style h3 {
-  margin-top: 0px;
-}
-
-.form-style fieldset {
-  border: none;
-}
-
-.form-style legend {
-  font-size: 1.4em;
-  margin-bottom: 10px;
-}
-
-.form-style label {
-  display: block;
-  margin-bottom: 12px;
-}
-
-.form-style input[type="text"],
-.form-style input[type="date"],
-.form-style input[type="datetime"],
-.form-style input[type="email"],
-.form-style input[type="number"],
-.form-style input[type="search"],
-.form-style input[type="time"],
-.form-style input[type="url"],
-.form-style textarea,
-.form-style select {
-  font-family: Georgia, "Times New Roman", Times, serif;
-  border: none;
-  border-radius: 4px;
-  font-size: 15px;
-  margin: 0;
-  outline: 0;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  background: #d8dedf;
-  color: rgb(64, 64, 64); /* text color */
-  -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
-  margin-bottom: 16px;
-}
-
-.form-style input[type="text"]:focus,
-.form-style input[type="date"]:focus,
-.form-style input[type="datetime"]:focus,
-.form-style input[type="email"]:focus,
-.form-style input[type="number"]:focus,
-.form-style input[type="search"]:focus,
-.form-style input[type="time"]:focus,
-.form-style input[type="url"]:focus,
-.form-style textarea:focus,
-.form-style select:focus {
-  background: #d2d9dd;
-}
-
-.form-style select {
-  -webkit-appearance: menulist-button;
-  height: 35px;
-}
-
-.form-style .number {
-  background: #1abc9c;
-  height: 30px;
-  width: 30px;
-  display: inline-block;
-  font-size: 0.8em;
-  margin-right: 4px;
-  line-height: 30px;
-  text-align: center;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-radius: 15px 15px 15px 0px;
-}
-
-.form-style input[type="submit"],
-.form-style input[type="button"] {
-  position: relative;
-  display: block;
-  padding: 19px 39px 18px 39px;
-  margin: 0 auto;
-  font-size: 18px;
-  text-align: center;
-  font-style: normal;
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.form-style input[type="submit"]:hover,
-.form-style input[type="button"]:hover {
 }
 
 .editable {
@@ -201,11 +74,6 @@ html, body {
   }
 }
 
-.form-style hr {
-  border-width: 0.5px;
-  color: lightslategray;
-}
-
 .disabled {
   color: #cccccc;
   pointer-events: none;
@@ -224,9 +92,4 @@ html, body {
   margin-right: 10px;
 }
 
-.title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 24px;
-}
 

@@ -4,12 +4,13 @@ import {orchidAddFunds, oxtToWeiString} from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionResult} from "./TransactionResult";
 import {SubmitButton} from "./SubmitButton";
+import {Container} from "react-bootstrap";
 
 export class AddFunds extends Component {
 
   state = {
     addAmount: null as number | null,
-    addEscrow: null as number | null,
+    addEscrow: 0,
     amountError: true,
     escrowError: false,
     // tx
@@ -21,6 +22,7 @@ export class AddFunds extends Component {
   async submitAddFunds() {
     let api = OrchidAPI.shared();
     let account = api.account.value;
+    console.log("submit add funds: ", account, this.state.addAmount, this.state.addEscrow);
     if (account == null
         || this.state.addAmount == null
         || this.state.addEscrow == null) {
@@ -57,7 +59,7 @@ export class AddFunds extends Component {
         && !this.state.amountError
         && !this.state.escrowError;
     return (
-        <div className="form-style">
+        <Container className="form-style">
           <label className="title">Add Funds</label>
           <p className="instructions">
             Add funds to your Lottery Pot balance and escrow. Balance funds are used by Orchid
@@ -98,7 +100,7 @@ export class AddFunds extends Component {
               text={this.state.text}
               txId={this.state.txId}
           />
-        </div>
+        </Container>
     );
   }
 }

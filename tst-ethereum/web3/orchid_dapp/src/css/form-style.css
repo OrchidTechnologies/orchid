@@ -1,0 +1,139 @@
+
+.form-row {
+  display: inline-flex;
+  align-items: baseline;
+  overflow: hidden;
+}
+
+.form-row-label,
+.form-row-field,
+.form-row-element {
+  margin-right: 8px !important;
+}
+
+.form-row-label {
+}
+
+.form-row-field {
+  min-width: 50px;
+}
+
+.form-style {
+  margin-top: 16px;
+  font-family: -apple-system, sans-serif;
+}
+
+.form-style h3 {
+  margin-top: 0px;
+}
+
+.form-style fieldset {
+  border: none;
+}
+
+.form-style legend {
+  font-size: 1.4em;
+  margin-bottom: 10px;
+}
+
+
+.form-style label {
+  display: block;
+  margin-bottom: 12px;
+
+  font-weight: normal;
+  font-size: 15pt;
+  line-height: 20.0pt;
+  letter-spacing: -0.24pt;
+  color: rgb(118,109,134);
+}
+
+.form-style label.title {
+  margin-bottom: 24px;
+  font-weight: 600;
+  font-size: 17pt;
+  line-height: 22.0pt;
+  letter-spacing: -0.41pt;
+}
+
+
+.form-style input[type="text"],
+.form-style input[type="date"],
+.form-style input[type="datetime"],
+.form-style input[type="email"],
+.form-style input[type="number"],
+.form-style input[type="search"],
+.form-style input[type="time"],
+.form-style input[type="url"],
+.form-style textarea,
+.form-style select {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  border: none;
+  border-radius: 4px;
+  font-size: 15px;
+  outline: 0;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  background: #d8dedf;
+  color: rgb(64, 64, 64); /* text color */
+  -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
+  margin: 0 0 16px;
+}
+
+.form-style input[type="text"]:focus,
+.form-style input[type="date"]:focus,
+.form-style input[type="datetime"]:focus,
+.form-style input[type="email"]:focus,
+.form-style input[type="number"]:focus,
+.form-style input[type="search"]:focus,
+.form-style input[type="time"]:focus,
+.form-style input[type="url"]:focus,
+.form-style textarea:focus,
+.form-style select:focus {
+  background: #d2d9dd;
+}
+
+.form-style select {
+  -webkit-appearance: menulist-button;
+  height: 35px;
+}
+
+.form-style .number {
+  background: #1abc9c;
+  height: 30px;
+  width: 30px;
+  display: inline-block;
+  font-size: 0.8em;
+  margin-right: 4px;
+  line-height: 30px;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 15px 15px 15px 0px;
+}
+
+.form-style input[type="submit"],
+.form-style input[type="button"] {
+  position: relative;
+  display: block;
+  padding: 19px 39px 18px 39px;
+  margin: 0 auto;
+  font-size: 18px;
+  text-align: center;
+  font-style: normal;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.form-style input[type="submit"]:hover,
+.form-style input[type="button"]:hover {
+}
+
+.form-style hr {
+  border-width: 0.5px;
+  color: lightslategray;
+}
+
