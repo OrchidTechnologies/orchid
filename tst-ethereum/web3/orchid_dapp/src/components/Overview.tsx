@@ -4,6 +4,7 @@ import {weiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
 import {errorClass} from "../util/util";
 import './Overview.css'
+import {Container} from "react-bootstrap";
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class Overview extends Component {
@@ -42,7 +43,7 @@ export class Overview extends Component {
 
   render() {
     return (
-      <div className="Overview form-style">
+      <Container className="Overview form-style">
         <label className="title">Overview</label>
         {/*wallet*/}
         <label style={{fontWeight: "bold"}}>Wallet Address </label>
@@ -85,7 +86,7 @@ export class Overview extends Component {
 
         {/*// pot lock status*/}
         <LockStatus/>
-      </div>
+      </Container>
     );
   }
 }

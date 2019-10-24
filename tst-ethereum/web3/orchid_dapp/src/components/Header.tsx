@@ -16,7 +16,8 @@ const Header: React.FC = () => {
           fontSize: '17pt',
           color: 'rgb(95,69,186)',
           marginLeft: '6px',
-          marginTop: '2px'
+          marginTop: '2px',
+          marginBottom: '16px'
         }}>account</span>
       </div>
     </div>

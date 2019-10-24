@@ -1,10 +1,11 @@
 import React from "react";
 import './DebugPanel.css'
 import {OrchidAPI} from "../api/orchid-api";
+import {Container} from "react-bootstrap";
 
 export const DebugPanel: React.FC = () => {
   return (
-      <div className="form-style">
+      <Container className="form-style">
         <label className="title">Debug Output</label>
         <div style={{marginTop: '8px'}}>
           <div className="DebugPanel-container">
@@ -13,7 +14,7 @@ export const DebugPanel: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </Container>
   );
 };
 

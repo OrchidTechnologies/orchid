@@ -3,6 +3,7 @@ import {OrchidAPI} from "../api/orchid-api";
 import {weiToOxtString} from "../api/orchid-eth";
 import {EtherscanIO, LotteryPotUpdateEvent} from "../api/etherscan-io";
 import './Transactions.css'
+import {Container} from "react-bootstrap";
 
 export class Transactions extends Component {
   state = {
@@ -20,7 +21,7 @@ export class Transactions extends Component {
 
   render() {
     return (
-        <div className="form-style">
+        <Container className="form-style">
           <label className="title">Transactions</label>
           <div className="transactions-list">
             <div className="transactions-header-row">
@@ -45,7 +46,7 @@ export class Transactions extends Component {
               );
             })}
           </div>
-        </div>
+        </Container>
     );
   }
 }

@@ -5,6 +5,7 @@ import {OrchidAPI} from "./api/orchid-api";
 import 'bootstrap/dist/css/bootstrap.css'
 import './index.css'
 import './css/app-style.css'
+import './css/form-style.css'
 import './css/button-style.css'
 import {Layout} from "./components/Layout"
 

@@ -4,6 +4,7 @@ import {orchidMoveFundsToEscrow, oxtToWeiString, weiToOxtString} from "../api/or
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionResult} from "./TransactionResult";
 import {SubmitButton} from "./SubmitButton";
+import {Container} from "react-bootstrap";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -57,7 +58,7 @@ export class MoveFunds extends Component {
         && !this.state.running
         && this.state.moveAmount != null;
     return (
-        <div className="form-style">
+        <Container className="form-style">
           <label className="title">Move Funds</label>
           <p className="instructions">
             Move funds from your Lottery Pot balance to your escrow. Balance funds are used by
@@ -87,7 +88,7 @@ export class MoveFunds extends Component {
               text={this.state.text}
               txId={this.state.txId}
           />
-        </div>
+        </Container>
     );
   }
 }

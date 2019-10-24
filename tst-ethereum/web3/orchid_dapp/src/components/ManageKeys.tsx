@@ -6,6 +6,7 @@ import {Address} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
 import {SubmitButton} from "./SubmitButton";
 import {TransactionResult} from "./TransactionResult";
+import {Container} from "react-bootstrap";
 
 export class ManageKeys extends Component {
 
@@ -46,7 +47,7 @@ export class ManageKeys extends Component {
     let api = OrchidAPI.shared();
     let submitEnabled = api.account.value !== null && this.state.signerAddress !== null;
     return (
-        <div className="form-style">
+        <Container className="form-style">
           <label className="title">Manage Keys</label>
           <p className="instructions">
             Bind signer keys to connect Orchid client applications to your Lottery Pot.
@@ -80,7 +81,7 @@ export class ManageKeys extends Component {
               text={this.state.result}
               txId={this.state.txId}
           />
-        </div>
+        </Container>
     );
   }
 }
