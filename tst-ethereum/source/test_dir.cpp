@@ -28,6 +28,7 @@
 #include "crypto.hpp"
 #include "jsonrpc.hpp"
 #include "buffer.hpp"
+#include "local.hpp"
 
 #include "tests.h"
 #include <boost/filesystem/string_file.hpp>
@@ -129,7 +130,7 @@ namespace orc
 
     task<int> test_directory()
     {
-        Endpoint endpoint({"http", "localhost", "8545", "/"});
+        Endpoint endpoint(GetLocal(), {"http", "localhost", "8545", "/"});
 
         co_await endpoint("web3_clientVersion", {});
 

@@ -27,6 +27,7 @@
 #include "crypto.hpp"
 #include "jsonrpc.hpp"
 #include "buffer.hpp"
+#include "local.hpp"
 
 #include "tests.h"
 
@@ -221,7 +222,7 @@ namespace orc
     {
     	test_SignAndRecover();
 
-        Endpoint endpoint({"http", "localhost", "8545", "/"});
+        Endpoint endpoint(GetLocal(), {"http", "localhost", "8545", "/"});
 
         co_await endpoint("web3_clientVersion", {});
 
