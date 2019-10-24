@@ -48,7 +48,7 @@ export class Layout extends Component {
               <this.NavButton route={AddFunds} icon={addIcon} iconSelected={addIconSelected}>Add </this.NavButton>
               <this.NavButton route={WithdrawFunds} icon={removeIcon} iconSelected={removeIconSelected}>Withdraw </this.NavButton>
                 <OverlayTrigger
-                  rootClose={true} trigger="click" placement='auto'
+                  rootClose={true} trigger="click" placement='bottom'
                   overlay={
                     <Popover id='moreitems-popover'>
                       <Popover.Content onClick={()=>document.body.click()}>
