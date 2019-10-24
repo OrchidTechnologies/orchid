@@ -103,7 +103,7 @@ export class Layout extends Component {
     let selected = this.state.route === props.route;
     return (
       <Nav.Link
-        className={selected ? "selected" : ""}
+        className={"Layout-nav-row "+ (selected ? "selected" : "")}
         onClick={() => this.setState({route: props.route})}>
           {props.children}
       </Nav.Link>
