@@ -11,7 +11,8 @@ export const SubmitButton: React.FC<{
           props.onClick();
         }}
         disabled={!props.enabled}>
-        <span>Submit</span></button>
+        {props.children || <span>Submit</span>}
+      </button>
     </div>
   );
 };

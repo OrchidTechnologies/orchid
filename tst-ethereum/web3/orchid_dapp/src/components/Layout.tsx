@@ -13,20 +13,21 @@ import {LockFunds} from "./LockFunds";
 import {ManageKeys} from "./ManageKeys";
 import './Layout.css'
 
-import moreIcon from '../assets/more.png'
-import moreIconSelected from '../assets/more-selected.png'
-import homeIcon from '../assets/home.png'
-import homeIconSelected from '../assets/home-selected.png'
-import addIcon from '../assets/add.png'
-import addIconSelected from '../assets/add-selected.png'
-import removeIcon from '../assets/remove.png'
-import removeIconSelected from '../assets/remove-selected.png'
+import moreIcon from '../assets/more-outlined.svg'
+import moreIconSelected from '../assets/more.svg'
+import homeIcon from '../assets/overview-outlined.svg'
+import homeIconSelected from '../assets/overview.svg'
+import addIcon from '../assets/add-outlined.svg'
+import addIconSelected from '../assets/add.svg'
+import withdrawIcon from '../assets/withdraw-outlined.svg'
+import withdrawIconSelected from '../assets/withdraw.svg'
+
 import {Divider, Visibility} from "../util/util";
 
 export class Layout extends Component {
-  state = {route: Overview as any};
+  state = {route: AddFunds as any};
 
-  moreMenuItems = new Map<any, string> ([
+  moreMenuItems = new Map<any, string>([
     [Transactions, "Transactions"],
     [MoveFunds, "Move Funds"],
     [LockFunds, "Lock / Unlock Funds"],
@@ -41,12 +42,12 @@ export class Layout extends Component {
       <Container className="main-content no-pad">
         <Row>
           <Col>
-            <Container><Header/></Container>
+            <Header/>
             <Divider/>
             <Navbar>
               <this.NavButton route={Overview} icon={homeIcon} iconSelected={homeIconSelected}>Overview </this.NavButton>
               <this.NavButton route={AddFunds} icon={addIcon} iconSelected={addIconSelected}>Add </this.NavButton>
-              <this.NavButton route={WithdrawFunds} icon={removeIcon} iconSelected={removeIconSelected}>Withdraw </this.NavButton>
+              <this.NavButton route={WithdrawFunds} icon={withdrawIcon} iconSelected={withdrawIconSelected}>Withdraw </this.NavButton>
                 <OverlayTrigger
                   rootClose={true} trigger="click" placement='bottom'
                   overlay={
@@ -70,7 +71,7 @@ export class Layout extends Component {
             <Divider/>
           </Col>
         </Row>
-        <Row>
+        <Row className="page-content">
           <Col>
             <Visibility visible={this.state.route === Overview}><Overview/></Visibility>
             <Visibility visible={this.state.route === AddFunds}><AddFunds/></Visibility>
@@ -82,6 +83,7 @@ export class Layout extends Component {
             <Visibility visible={this.state.route === DebugPanel}><DebugPanel/> </Visibility>
           </Col>
         </Row>
+        {/*<Divider/>*/}
       </Container>
     );
   }
@@ -103,9 +105,9 @@ export class Layout extends Component {
     let selected = this.state.route === props.route;
     return (
       <Nav.Link
-        className={"Layout-nav-row "+ (selected ? "selected" : "")}
+        className={"Layout-nav-row " + (selected ? "selected" : "")}
         onClick={() => this.setState({route: props.route})}>
-          {props.children}
+        {props.children}
       </Nav.Link>
     );
   };

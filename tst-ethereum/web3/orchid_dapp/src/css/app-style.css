@@ -1,13 +1,10 @@
 /* Layout rules */
 
 html, body {
-  margin-left: auto;
-  margin-right: auto;
+  font-family: -apple-system, sans-serif;
 }
 
 .container {
-  padding-left: 16px;
-  padding-right: 16px;
 }
 
 .col-1-1 {
@@ -32,15 +29,6 @@ html, body {
 
 .col-1-8 {
   width: 12.5%;
-}
-
-.editable {
-  background: #8ECDA7 !important;
-  color: #000000 !important;
-}
-
-.error {
-  color: red;
 }
 
 .hidden {
@@ -79,14 +67,6 @@ html, body {
   pointer-events: none;
 }
 
-.instructions {
-  font-size: small;
-  color: gray;
-  font-style: italic;
-  padding-left: 16px;
-  padding-right: 16px;
-  margin-top: 0px;
-}
 
 .icon {
   margin-right: 10px;
