@@ -638,51 +638,20 @@ class Sequence final :
     public Buffer
 {
   private:
-    size_t count_;
-    std::unique_ptr<Range[]> ranges_;
-
-    class Iterator {
-      private:
-        const Range *range_;
-
-      public:
-        Iterator(const Range *range) :
-            range_(range)
-        {
-        }
-
-        const Range &operator *() const {
-            return *range_;
-        }
-
-        const Range *operator ->() const {
-            return range_;
-        }
-
-        Iterator &operator ++() {
-            ++range_;
-            return *this;
-        }
-
-        bool operator !=(const Iterator &rhs) const {
-            return range_ != rhs.range_;
-        }
-    };
+    std::vector<Range> ranges_;
 
   public:
     Sequence(const Buffer &buffer) :
-        count_([&]() {
+        ranges_([&]() {
             size_t count(0);
             buffer.each([&](const uint8_t *data, size_t size) {
                 ++count;
                 return true;
             });
             return count;
-        }()),
-
-        ranges_(new Range[count_])
+        }())
     {
-        auto i(ranges_.get());
+        auto i(ranges_.begin());
         buffer.each([&](const uint8_t *data, size_t size) {
             *(i++) = Range(data, size);
             return true;
@@ -690,25 +659,21 @@ class Sequence final :
     }
 
     Sequence(Sequence &&sequence) noexcept :
-        count_(sequence.count_),
         ranges_(std::move(sequence.ranges_))
     {
     }
 
     Sequence(const Sequence &sequence) :
-        count_(sequence.count_),
-        ranges_(new Range[count_])
+        ranges_(sequence.ranges_)
     {
-        auto old(sequence.ranges_.get());
-        std::copy(old, old + count_, ranges_.get());
     }
 
-    Iterator begin() const {
-        return ranges_.get();
+    auto begin() const {
+        return ranges_.begin();
     }
 
-    Iterator end() const {
-        return ranges_.get() + count_;
+    auto end() const {
+        return ranges_.end();
     }
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
