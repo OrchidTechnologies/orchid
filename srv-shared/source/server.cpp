@@ -82,7 +82,8 @@ namespace po = boost::program_options;
 static std::vector<std::string> ice_;
 
 class Egress :
-    public Pipe,
+    public Valve,
+    public Pipe<Buffer>,
     public BufferDrain
 {
   private:
@@ -296,7 +297,7 @@ class Space :
   protected:
     virtual Pump *Inner() = 0;
 
-    void Land(Pipe *pipe, const Buffer &data) override {
+    void Land(Pipe<Buffer> *pipe, const Buffer &data) override {
         Spawn([this, data = Beam(data)]() -> task<void> {
             co_return co_await Inner()->Send(data);
         });

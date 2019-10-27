@@ -35,7 +35,7 @@ class Bonded :
   private:
     class Bonding :
         public Valve,
-        public Pipe,
+        public Pipe<Buffer>,
         public BufferDrain
     {
       private:
@@ -71,7 +71,7 @@ class Bonded :
     std::map<Bonding *, U<Bonding>> bondings_;
 
   protected:
-    virtual void Land(Pipe *pipe, const Buffer &data) = 0;
+    virtual void Land(Pipe<Buffer> *pipe, const Buffer &data) = 0;
 
     Sunk<> *Wire() {
         // XXX: this is non-obviously incorrect

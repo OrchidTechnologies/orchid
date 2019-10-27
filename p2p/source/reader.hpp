@@ -37,7 +37,7 @@ class Reader {
 
 class Stream :
     public Reader,
-    public Pipe
+    public Pipe<Buffer>
 {
   public:
     ~Stream() override = default;

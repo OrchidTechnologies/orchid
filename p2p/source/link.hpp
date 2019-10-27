@@ -35,10 +35,11 @@
 
 namespace orc {
 
+template <typename Type_>
 class Pipe {
   public:
     virtual ~Pipe() = default;
-    virtual task<void> Send(const Buffer &data) = 0;
+    virtual task<void> Send(const Type_ &data) = 0;
 };
 
 class Valve {
@@ -118,7 +119,7 @@ using BufferDrain = Drain<const Buffer &>;
 
 class Pump :
     public Faucet<BufferDrain>,
-    public Pipe
+    public Pipe<Buffer>
 {
   protected:
     void Land(const Buffer &data) {

@@ -32,7 +32,7 @@ namespace orc {
 
 template <typename Link_>
 class Prefixed :
-    public Pipe,
+    public Pipe<Buffer>,
     public BufferDrain
 {
     template <typename Prefixed_>
