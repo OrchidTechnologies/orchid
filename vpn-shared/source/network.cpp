@@ -21,6 +21,7 @@
 
 
 #include "client.hpp"
+#include "endpoint.hpp"
 #include "local.hpp"
 #include "network.hpp"
 #include "remote.hpp"

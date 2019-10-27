@@ -29,6 +29,7 @@
 #include <boost/random/random_device.hpp>
 
 #include "jsonrpc.hpp"
+#include "locator.hpp"
 #include "origin.hpp"
 
 namespace orc {
