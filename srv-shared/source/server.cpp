@@ -82,25 +82,6 @@ namespace po = boost::program_options;
 
 static std::vector<std::string> ice_;
 
-class Conduit :
-    public Link
-{
-  private:
-
-  protected:
-    virtual Channel *Inner() = 0;
-
-  public:
-    Conduit(BufferDrain *drain) :
-        Link(drain)
-    {
-    }
-
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(data);
-    }
-};
-
 class Incoming final :
     public Peer
 {
