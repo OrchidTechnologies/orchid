@@ -37,25 +37,19 @@ namespace orc {
 
 class Pipe {
   public:
-    static uint64_t Unique_;
-    const uint64_t unique_ = ++Unique_;
-
-    static void Insert(Pipe *pipe);
-    static void Remove(Pipe *pipe);
-
-  public:
-    Pipe() {
-        Insert(this);
-    }
-
-    virtual ~Pipe() {
-        Remove(this);
-    }
-
+    virtual ~Pipe() = default;
     virtual task<void> Send(const Buffer &data) = 0;
 };
 
 class Valve {
+  public:
+    static uint64_t Unique_;
+    const uint64_t unique_ = ++Unique_;
+
+  private:
+    static void Insert(Valve *valve);
+    static void Remove(Valve *valve);
+
   private:
     cppcoro::async_manual_reset_event shut_;
 
@@ -66,8 +60,13 @@ class Valve {
     }
 
   public:
+    Valve() {
+        Insert(this);
+    }
+
     ~Valve() {
         orc_insist(shut_.is_set());
+        Remove(this);
     }
 
     virtual task<void> Shut() {

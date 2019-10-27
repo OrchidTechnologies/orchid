@@ -34,11 +34,11 @@ namespace orc {
 
 static const bool tracking_ = false;
 
-uint64_t Pipe::Unique_ = 0;
+uint64_t Valve::Unique_ = 0;
 
 struct Tracker {
     std::mutex mutex_;
-    std::set<Pipe *> pipes_;
+    std::set<Valve *> pipes_;
 };
 
 class Track {
@@ -69,18 +69,18 @@ class Track {
     {
     }
 
-    std::set<Pipe *> *operator ->() {
+    std::set<Valve *> *operator ->() {
         return &tracker_.pipes_;
     }
 };
 
-void Pipe::Insert(Pipe *pipe) {
+void Valve::Insert(Valve *pipe) {
     if (!tracking_)
         return;
     Track()->insert(pipe);
 }
 
-void Pipe::Remove(Pipe *pipe) {
+void Valve::Remove(Valve *pipe) {
     if (!tracking_)
         return;
     Track()->erase(pipe);
