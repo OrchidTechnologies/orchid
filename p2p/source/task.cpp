@@ -31,6 +31,7 @@
 namespace orc {
 
 // XXX: audit and correct the std::atomic usage in Pool
+// XXX: this should be a priority / deadline scheduler
 
 class Pool {
   private:

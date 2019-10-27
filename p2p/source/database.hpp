@@ -96,6 +96,7 @@ class Statement {
     Statement(Database &database, const char *code) :
         database_(database)
     {
+        // XXX: evaluate using SQLITE_PREPARE_PERSISTENT and sqlite3_prepare_v3
         orc_sqlcall(sqlite3_prepare_v2(database_, code, -1, &statement_, nullptr));
     }
 

@@ -26,9 +26,11 @@
 
 namespace orc {
 
+// XXX: for Local::Request, this should use NSURLSession on __APPLE__
+
 task<std::string> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data) {
 #if 0
-    // XXX: needs to be implemented
+    // XXX: this implementation almost worked a while ago; needs updating
     Sink<Adapter> adapter(orc::Context());
     U<Stream> stream;
     co_await Connect(stream, locator.host_, locator.port_);

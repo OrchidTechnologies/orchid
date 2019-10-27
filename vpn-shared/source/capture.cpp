@@ -677,6 +677,8 @@ task<void> Capture::Start(boost::program_options::variables_map &args) {
     co_await network.Random(sunk, GetLocal(), pot);
 }
 
+// XXX: the config file should be JavaScript
+
 task<void> Capture::Start(const std::string &config) {
     po::variables_map args;
     Store(args, config);
