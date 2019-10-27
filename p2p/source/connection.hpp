@@ -95,17 +95,13 @@ class Connection final :
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-        /*if (data.empty()) {
-            connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
-        } else*/ {
-            size_t writ;
-            try {
-                writ = co_await connection_.async_send(Sequence(data), Token());
-            } catch (const asio::system_error &error) {
-                orc_adapt(error);
-            }
-            orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
+        size_t writ;
+        try {
+            writ = co_await connection_.async_send(Sequence(data), Token());
+        } catch (const asio::system_error &error) {
+            orc_adapt(error);
         }
+        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };
 
