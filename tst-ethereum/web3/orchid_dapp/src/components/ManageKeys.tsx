@@ -5,7 +5,7 @@ import {isEthAddress, orchidBindSigner} from "../api/orchid-eth";
 import {Address} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
 import {SubmitButton} from "./SubmitButton";
-import {TransactionResult} from "./TransactionResult";
+import {TxProps, TxResult} from "./TxResult";
 import {Container} from "react-bootstrap";
 
 export class ManageKeys extends Component {
@@ -13,10 +13,7 @@ export class ManageKeys extends Component {
   state = {
     signerAddress: null as Address | null,
     addressError: true,
-    // tx
-    running: false,
-    result: "",
-    txId: "",
+    tx: new TxProps()
   };
 
   private async submitSigner() {
@@ -26,20 +23,13 @@ export class ManageKeys extends Component {
     if (account == null || signer == null) {
       return;
     }
-    this.setState({running: true});
+    this.setState({tx: TxProps.running()});
 
     try {
       let txId = await orchidBindSigner(signer);
-      this.setState({
-        result: "Transaction Complete!",
-        txId: txId,
-        running: false,
-      });
+      this.setState({tx: TxProps.result("Transaction Complete!", txId)});
     } catch (err) {
-      this.setState({
-        result: "Transaction Failed.",
-        running: false,
-      });
+      this.setState({tx: TxProps.error(`Transaction Failed: ${err}`)});
     }
   }
 
@@ -76,11 +66,7 @@ export class ManageKeys extends Component {
           <div style={{marginTop: '16px'}} className="submit-button">
             <SubmitButton onClick={() => this.submitSigner().then()} enabled={submitEnabled}/>
           </div>
-          <TransactionResult
-              running={this.state.running}
-              text={this.state.result}
-              txId={this.state.txId}
-          />
+          <TxResult /*ref={txResult}*/ tx={this.state.tx}/>
         </Container>
     );
   }

@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {orchidMoveFundsToEscrow, oxtToWeiString, weiToOxtString} from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
-import {TransactionResult} from "./TransactionResult";
+import {TxProps, TxResult} from "./TxResult";
 import {SubmitButton} from "./SubmitButton";
 import {Container} from "react-bootstrap";
 
@@ -14,10 +14,7 @@ export class MoveFunds extends Component {
     moveAmount: null as number | null,
     amountError: true,
     potBalance: null as BigInt | null,
-    // tx
-    running: false,
-    text: "",
-    txId: "",
+    tx: new TxProps()
   };
 
   componentDidMount(): void {
@@ -33,29 +30,22 @@ export class MoveFunds extends Component {
     if (account == null || this.state.moveAmount == null) {
       return;
     }
-    this.setState({running: true});
+    this.setState({tx: TxProps.running()});
 
     try {
       const moveEscrowWei = oxtToWeiString(this.state.moveAmount);
       let txId = await orchidMoveFundsToEscrow(moveEscrowWei);
-      this.setState({
-        text: "Transaction Complete!",
-        txId: txId,
-        running: false,
-      });
+      this.setState({tx: TxProps.result("Transaction Complete!", txId)});
       api.updateAccount().then();
     } catch (err) {
-      this.setState({
-        text: "Transaction Failed.",
-        running: false,
-      });
+      this.setState({tx: TxProps.error(`Transaction Failed: ${err}`)});
     }
   }
 
   render() {
     let api = OrchidAPI.shared();
     let submitEnabled = api.account.value !== null
-        && !this.state.running
+        && !this.state.tx.running
         && this.state.moveAmount != null;
     return (
         <Container className="form-style">
@@ -83,11 +73,7 @@ export class MoveFunds extends Component {
               }}
           />
           <SubmitButton onClick={() => this.submitMoveFunds().then()} enabled={submitEnabled}/>
-          <TransactionResult
-              running={this.state.running}
-              text={this.state.text}
-              txId={this.state.txId}
-          />
+          <TxResult /*ref={txResult}*/ tx={this.state.tx}/>
         </Container>
     );
   }
