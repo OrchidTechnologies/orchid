@@ -1,20 +1,19 @@
 import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {
-  isEthAddress, oxtToWei, oxtToWeiString,
-  weiToOxtString,
-  orchidWithdrawFunds,
-  orchidWithdrawFundsAndEscrow
+  isEthAddress, oxtToWei, oxtToWeiString, weiToOxtString,
+  orchidWithdrawFunds, orchidWithdrawFundsAndEscrow
 } from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
-import {TransactionResult} from "./TransactionResult";
+import {TxProps, TxResult} from "./TxResult";
 import {SubmitButton} from "./SubmitButton";
 import {Address} from "../api/orchid-types";
-import {Container} from "react-bootstrap";
+import {Col, Container, Row} from "react-bootstrap";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class WithdrawFunds extends Component {
+  txResult = React.createRef<TxResult>();
 
   state = {
     potBalance: null as BigInt | null,
@@ -23,10 +22,7 @@ export class WithdrawFunds extends Component {
     sendToAddress: null as Address | null,
     amountError: true,
     addressError: true,
-    // tx
-    running: false,
-    text: "",
-    txId: "",
+    tx: new TxProps()
   };
   amountInput = React.createRef<HTMLInputElement>();
 
@@ -45,13 +41,16 @@ export class WithdrawFunds extends Component {
     const sendToAddress = this.state.sendToAddress;
 
     if (account == null
-        || withdrawAmount == null
-        || withdrawAll == null
-        || sendToAddress == null
+      || withdrawAmount == null
+      || withdrawAll == null
+      || sendToAddress == null
     ) {
       return;
     }
-    this.setState({running: true});
+    this.setState({tx: TxProps.running()});
+    if (this.txResult.current != null) {
+      this.txResult.current.scrollIntoView();
+    }
 
     try {
       let txId;
@@ -61,67 +60,72 @@ export class WithdrawFunds extends Component {
         const withdrawWei = oxtToWeiString(withdrawAmount);
         txId = await orchidWithdrawFunds(sendToAddress, withdrawWei);
       }
-      this.setState({
-        running: false,
-        text: "Transaction Complete!",
-        txId: txId,
-      });
+      this.setState({tx: TxProps.result("Transaction Complete!", txId)});
       api.updateAccount().then();
       api.updateTransactions().then();
     } catch (err) {
-      this.setState({
-        running: false,
-        text: "Transaction Failed.",
-      });
+      this.setState({tx: TxProps.error(`Transaction Failed: ${err}`)});
     }
   };
 
   render() {
     let withdrawAmount = this.state.withdrawAll ?
-          weiToOxtString(this.state.potBalance || BigInt(0), 4) :
-          this.state.withdrawAmount;
+      weiToOxtString(this.state.potBalance || BigInt(0), 4) :
+      this.state.withdrawAmount;
 
     let api = OrchidAPI.shared();
-    let submitEnabled = api.account.value !== null
-        && this.state.sendToAddress !== null
-        && (this.state.withdrawAll || this.state.withdrawAmount !== null);
+    let submitEnabled =
+      !this.state.tx.running
+      && api.account.value !== null
+      && this.state.sendToAddress !== null
+      && (this.state.withdrawAll || this.state.withdrawAmount !== null);
 
     let currentInputAmount = this.amountInput.current == null ? "" : this.amountInput.current.value;
     return (
-        <Container className="form-style">
-          <label className="title">Withdraw Funds</label>
-          <p className="instructions">
-            Funds may be withdrawn from your lottery pot balance at any time,
-            however if an overdraft occurs due to an outstanding lottery ticket your escrow
-            will be lost. Please be sure that this account is not active before withdrawing funds.
-            To withdraw your full balance including the escrow the account must be unlocked.
-          </p>
+      <Container className="form-style">
+        <label className="title">Withdraw from balance</label>
 
-          <label>Available Lottery Pot Balance Amount</label>
-          <input
-              value={this.state.potBalance == null ? "" : weiToOxtString(this.state.potBalance, 4)}
-              type="number" className="pot-balance" placeholder="Amount in OXT" readOnly/>
+        {/*Balance*/}
+        <Row className="form-row">
+          <Col>
+            <label>Balance</label>
+          </Col>
+          <Col>
+            <div className="oxt-1-pad">
+              {this.state.potBalance == null ? "..." : weiToOxtString(this.state.potBalance, 2)}
+            </div>
+          </Col>
+        </Row>
 
-          <label>Withdraw Amount<span className={errorClass(this.state.amountError)}> *</span></label>
-          <input
+        <Row className="form-row">
+          <Col>
+            <label>Withdraw<span className={errorClass(this.state.amountError)}> *</span></label>
+          </Col>
+          <Col>
+            <input
               ref={this.amountInput}
               type="number"
               className="withdraw-amount editable"
-              placeholder="Amount in OXT"
+              placeholder="0.00"
               value={withdrawAmount == null ? currentInputAmount : withdrawAmount}
               onChange={(e) => {
                 let amount = parseFloatSafe(e.currentTarget.value);
                 const valid = amount != null && amount > 0
-                    && (this.state.potBalance == null || oxtToWei(amount) <= this.state.potBalance);
+                  && (this.state.potBalance == null || oxtToWei(amount) <= this.state.potBalance);
                 this.setState({
                   withdrawAmount: amount,
                   amountError: !valid
                 });
               }}
-          />
+            />
+          </Col>
+        </Row>
 
-          <label>To Address<span className={errorClass(this.state.addressError)}> *</span></label>
-          <input
+        <Row>
+          <Col>
+            <label>Withdrawing to:<span
+              className={errorClass(this.state.addressError)}> *</span></label>
+            <input
               type="text"
               className="send-to-address editable"
               placeholder="Address"
@@ -133,30 +137,42 @@ export class WithdrawFunds extends Component {
                   addressError: !valid
                 });
               }}
-          />
+            />
+          </Col>
+        </Row>
 
-          <div style={{display: 'flex', alignItems: 'baseline', opacity: 0.3, pointerEvents: "none"}}>
-            <input
+        <Row>
+          <Col>
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              opacity: 0.3,
+              pointerEvents: "none"
+            }}>
+              <input
                 type="checkbox"
                 style={{transform: 'scale(2)', margin: '16px'}}
                 onChange={(e) => {
                   const value = e.currentTarget.checked;
                   this.setState({withdrawAll: value});
                 }}
-            />
-            <label>Withdraw Full Balance and Escrow</label>
-          </div>
+              />
+              <label>Withdraw Full Balance and Escrow</label>
+            </div>
+          </Col>
+        </Row>
 
-          <div style={{marginTop: '16px'}} className="submit-button">
-            <SubmitButton onClick={() => this.submitWithdrawFunds().then()} enabled={submitEnabled}/>
-          </div>
+        <p className="instructions-narrow">
+          Note: If an overdraft occurs on your Orchid<br/>
+          balance, your deposit will be lost.
+        </p>
+        <div style={{marginTop: '16px'}}>
+          <SubmitButton onClick={() => this.submitWithdrawFunds().then()} enabled={submitEnabled}>
+            Withdraw OXT</SubmitButton>
+        </div>
 
-          <TransactionResult
-              running={this.state.running}
-              text={this.state.text}
-              txId={this.state.txId}
-          />
-        </Container>
+        <TxResult ref={this.txResult} tx={this.state.tx}/>
+      </Container>
     );
   }
 }

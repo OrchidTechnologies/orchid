@@ -1,61 +1,70 @@
 
-.form-row {
-  display: inline-flex;
-  align-items: baseline;
-  overflow: hidden;
+.form-style {
+  margin-top: 16px;
+  font-family: -apple-system, sans-serif;
 }
 
-.form-row-label,
-.form-row-field,
-.form-row-element {
-  margin-right: 8px !important;
+.wide { }
+
+@media only screen and (min-width: 400px) {
+  .form-style:not(.wide) {
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.form-style label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: normal;
+  font-size: 15px;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+  color: #766d86;
+}
+
+/* A row with a left aligned label and right aligned content field */
+.form-row {
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.form-row > .col {
+  max-width: 240px
+}
+
+.form-row > .span {
+  text-align: right;
 }
 
 .form-row-label {
+  font-size: 15px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+  color: #766d86;
 }
 
 .form-row-field {
   min-width: 50px;
 }
 
-.form-style {
-  margin-top: 16px;
-  font-family: -apple-system, sans-serif;
-}
-
-.form-style h3 {
-  margin-top: 0px;
-}
-
-.form-style fieldset {
-  border: none;
-}
-
-.form-style legend {
-  font-size: 1.4em;
-  margin-bottom: 10px;
-}
-
-
-.form-style label {
-  display: block;
-  margin-bottom: 12px;
-
-  font-weight: normal;
-  font-size: 15pt;
-  line-height: 20.0pt;
-  letter-spacing: -0.24pt;
-  color: rgb(118,109,134);
-}
-
-.form-style label.title {
-  margin-bottom: 24px;
+.form-style .title,
+.title {
+  margin-bottom: 8px;
+  font-size: 17px;
   font-weight: 600;
-  font-size: 17pt;
-  line-height: 22.0pt;
-  letter-spacing: -0.41pt;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.29;
+  letter-spacing: -0.41px;
+  color: #3a3149;
 }
-
 
 .form-style input[type="text"],
 .form-style input[type="date"],
@@ -67,21 +76,28 @@
 .form-style input[type="url"],
 .form-style textarea,
 .form-style select {
-  font-family: Georgia, "Times New Roman", Times, serif;
-  border: none;
-  border-radius: 4px;
-  font-size: 15px;
   outline: 0;
   padding: 10px;
-  width: 100%;
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
-  background: #d8dedf;
-  color: rgb(64, 64, 64); /* text color */
   -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
-  margin: 0 0 16px;
+  margin: 0 0 8px;
+  width: 100%;
+  height: 40px;
+  border-radius: 12px;
+  border: solid 2px #d5d7e2;
+  background-color: #ffffff;
+  font-family: -apple-system, sans-serif;
+  font-size: 17px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.29;
+  letter-spacing: -0.41px;
+  text-align: right;
+  color: #212121;
 }
 
 .form-style input[type="text"]:focus,
@@ -94,7 +110,8 @@
 .form-style input[type="url"]:focus,
 .form-style textarea:focus,
 .form-style select:focus {
-  background: #d2d9dd;
+  border: solid 2px #5f45ba;
+  /*text-align: left;*/
 }
 
 .form-style select {
@@ -102,30 +119,16 @@
   height: 35px;
 }
 
-.form-style .number {
-  background: #1abc9c;
-  height: 30px;
-  width: 30px;
-  display: inline-block;
-  font-size: 0.8em;
-  margin-right: 4px;
-  line-height: 30px;
-  text-align: center;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-radius: 15px 15px 15px 0px;
-}
-
 .form-style input[type="submit"],
 .form-style input[type="button"] {
   position: relative;
   display: block;
   padding: 19px 39px 18px 39px;
-  margin: 0 auto;
   font-size: 18px;
   text-align: center;
   font-style: normal;
   width: 100%;
-  margin-bottom: 10px;
+  margin: 0 auto 10px;
 }
 
 .form-style input[type="submit"]:hover,
@@ -137,3 +140,34 @@
   color: lightslategray;
 }
 
+.editable { }
+
+.error {
+  color: red;
+  margin-left: 6px
+}
+
+.instructions-narrow,
+.instructions {
+  color: gray;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.18;
+  letter-spacing: 0.07px;
+  color: #766d86;
+}
+.instructions-narrow {
+  margin: 8px auto;
+  text-align: center;
+}
+
+/* Pad or hide the number spinner button on number type fields */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button { margin-left: 20px; }
+input[type=number] {
+  -moz-appearance:textfield;
+}

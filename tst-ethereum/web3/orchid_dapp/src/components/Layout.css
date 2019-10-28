@@ -1,19 +1,15 @@
 
-
 .main-content {
-  margin-top: 24px;
+  padding-top: 24px;
+  max-width: 700px;
 }
 
-.no-pad,
-.no-pad .row {
-  padding-left: 0;
-  padding-right: 0;
-  margin-right: auto;
-  margin-left: auto;
+.page-content {
+  padding-top: 8px;
+  padding-bottom: 16px;
 }
 
 .navbar {
-  padding: 18px;
   justify-content: space-between;
 }
 
@@ -32,16 +28,23 @@
   display: flex;
   align-items: center;
   flex-direction: column !important;
-  font-size: 12pt;
   font-family: -apple-system, sans-serif;
-  line-height: 16pt;
-  letter-spacing: 0.0pt;
   background-color: transparent !important;
   border-color: transparent !important;
+
+  font-size: 12px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.33;
+  letter-spacing: normal;
+  text-align: center;
+  color: #766d86;
 }
 
 .Layout-nav-button img {
-  height: 28pt;
+  height: 30px;
+  object-fit: contain;
 }
 
 .Layout-nav-row {

@@ -40,8 +40,9 @@ export function errorClass(val: boolean): string {
   return val ? "error" : "hidden";
 }
 
-export const Divider: FC = () => {
+export const Divider: FC<{noGutters?: boolean}> = (props) => {
   return <Row
+    className={props.noGutters ? "no-gutters" : ""}
     style={{
       height: '1px',
       backgroundColor: 'lightGrey',

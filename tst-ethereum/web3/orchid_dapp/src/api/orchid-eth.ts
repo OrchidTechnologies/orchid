@@ -280,7 +280,7 @@ export function isEthAddress(str: string): boolean {
 export function weiToOxtString(wei: BigInt, decimals: number) {
   decimals = Math.round(decimals);
   let val = parseFloat(web3.utils.fromWei(wei.toString()));
-  return (Math.round(val * (10 * decimals)) / (10 * decimals)).toString();
+  return val.toFixed(decimals).toString();
 }
 
 export function oxtToWei(oxt: number): BigInt {

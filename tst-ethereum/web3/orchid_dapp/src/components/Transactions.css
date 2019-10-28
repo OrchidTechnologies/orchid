@@ -35,3 +35,7 @@
     font-style: italic;
     color: darkgray;
 }
+
+.transaction-result {
+    margin-top: 24px;
+}

@@ -1,27 +1,56 @@
-import React from "react";
-import logo from '../assets/name_logo.png'
+import React, {Component} from "react";
+import logo from '../assets/name-logo.svg'
+import tokenLogo from '../assets/orchid-token-purple.svg'
+import {Col, Container, Row} from "react-bootstrap";
+import './Header.css';
+import {OrchidAPI} from "../api/orchid-api";
+import {weiToOxtString} from "../api/orchid-eth";
 
-const Header: React.FC = () => {
-  return (
-    <div>
-      <div style={{marginBottom: '8px', marginLeft: '8px'}}>
-        <img style={{
-          width: '130px',
-          height: '33px',
-        }} src={logo} alt=""/>
-        <span style={{
-          display: "block",
-          fontFamily: 'Noto Sans',
-          letterSpacing: '0pt',
-          fontSize: '17pt',
-          color: 'rgb(95,69,186)',
-          marginLeft: '6px',
-          marginTop: '2px',
-          marginBottom: '16px'
-        }}>account</span>
-      </div>
-    </div>
-  );
-};
+class Header extends Component {
+  state = {
+    oxtBalance: null as string | null,
+  };
+
+  componentDidMount(): void {
+    let api = OrchidAPI.shared();
+
+    api.account_wait.subscribe(account => {
+      this.setState({
+        oxtBalance: weiToOxtString(account.oxtBalance, 2),
+      });
+    });
+  }
+
+  render() {
+    return (
+      <Container>
+        <Row noGutters={true} style={{marginBottom: '14px'}}>
+          {/*Logo*/}
+          <Col>
+            <img style={{width: '130px', height: '56px', marginBottom: '16px'}}
+                 src={logo} alt="Orchid Account"/>
+          </Col>
+          {/*Balance*/}
+          <Col className={this.state.oxtBalance == null ? "hidden" : ""} style={{flexGrow: 2}}>
+            <Row noGutters={true}>
+              <Col>
+                <div className="header-balance">BALANCE</div>
+                <div className="header-balance-value">{this.state.oxtBalance || ""} OXT</div>
+              </Col>
+              <Col style={{flexGrow: 0}}>
+                <img style={{
+                  display: 'block',
+                  marginTop: '6px',
+                  marginLeft: '8px',
+                  width: '24px', height: '24px'
+                }} src={tokenLogo} alt="Orchid Account"/>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+}
 
 export default Header;
