@@ -415,7 +415,6 @@ int Main(int argc, const char *const argv[]) {
         descriptor["url"] = "https://" + host + ":" + std::to_string(port) + path;
         descriptor["tls"] = fingerprint->algorithm + " " + fingerprint->GetRfc4572Fingerprint();
         std::cerr << descriptor << std::endl;
-        std::cerr << Strung(Json::FastWriter().write(descriptor)).hex() << std::endl;
     }
 
 

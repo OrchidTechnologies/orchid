@@ -255,6 +255,8 @@ struct Numeric;
 
 template <size_t Size_, typename Type_>
 struct Numeric<false, Size_, Type_> {
+    static const bool dynamic_ = false;
+
     static Type_ Decode(Window &window) {
         window.Skip(32 - Size_);
         Brick<Size_> brick;
@@ -270,6 +272,8 @@ struct Numeric<false, Size_, Type_> {
 // XXX: these conversions only just barely work
 template <size_t Size_, typename Type_>
 struct Numeric<true, Size_, Type_> {
+    static const bool dynamic_ = false;
+
     static Type_ Decode(Window &window) {
         Brick<32> brick;
         window.Take(brick);
@@ -319,6 +323,8 @@ struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_
 
 template <>
 struct Coded<Address, void> {
+    static const bool dynamic_ = false;
+
     static void Name(std::ostringstream &signature) {
         signature << "address";
     }
@@ -334,6 +340,8 @@ struct Coded<Address, void> {
 
 template <size_t Size_>
 struct Coded<Brick<Size_>, typename std::enable_if<Size_ == 32>::type> {
+    static const bool dynamic_ = false;
+
     static void Name(std::ostringstream &signature) {
         signature << "bytes" << std::dec << Size_;
     }
@@ -351,6 +359,8 @@ struct Coded<Brick<Size_>, typename std::enable_if<Size_ == 32>::type> {
 
 template <>
 struct Coded<Beam, void> {
+    static const bool dynamic_ = true;
+
     static void Name(std::ostringstream &signature) {
         signature << "bytes";
     }
@@ -372,10 +382,39 @@ struct Coded<Beam, void> {
     }
 };
 
+template <>
+struct Coded<std::string, void> {
+    static const bool dynamic_ = true;
+
+    static void Name(std::ostringstream &signature) {
+        signature << "string";
+    }
+
+    static std::string Decode(Window &window) {
+        auto size(Coded<uint256_t>::Decode(window).convert_to<size_t>());
+        std::string data;
+        data.resize(size);
+        window.Take(data);
+        window.Skip(31 - (size + 31) % 32);
+        return data;
+    }
+
+    static void Encode(Builder &builder, const std::string &data) {
+        auto size(data.size());
+        Coded<uint256_t>::Encode(builder, size);
+        builder += Subset(data);
+        Beam pad(31 - (size + 31) % 32);
+        memset(pad.data(), 0, pad.size());
+        builder += std::move(pad);
+    }
+};
+
 // XXX: provide a more complete implementation
 
 template <typename Type_>
 struct Coded<std::vector<Type_>, void> {
+    static const bool dynamic_ = true;
+
     static void Name(std::ostringstream &signature) {
         Coded<Type_>::Name(signature);
         signature << "[]";
@@ -388,13 +427,47 @@ struct Coded<std::vector<Type_>, void> {
     }
 };
 
-template <>
-struct Coded<std::tuple<uint256_t, Bytes>, void> {
-    static std::tuple<uint256_t, Bytes> Decode(Window &window) {
-        std::tuple<uint256_t, Bytes> value;
-        std::get<0>(value) = Coded<uint256_t>::Decode(window);
-        orc_assert(Coded<uint256_t>::Decode(window) == 0x40);
-        std::get<1>(value) = Coded<Bytes>::Decode(window);
+template <size_t Index_, typename... Args_>
+struct Tupled;
+
+template <size_t Index_>
+struct Tupled<Index_> final {
+    template <typename Tuple_>
+    static void Head(Window &window, Tuple_ &tuple) {
+    }
+
+    template <typename Tuple_>
+    static void Tail(Window &window, Tuple_ &tuple) {
+    }
+};
+
+template <size_t Index_, typename Next_, typename... Rest_>
+struct Tupled<Index_, Next_, Rest_...> final {
+    template <typename Tuple_>
+    static void Head(Window &window, Tuple_ &tuple) {
+        if (Coded<Next_>::dynamic_)
+            Coded<uint256_t>::Decode(window);
+        else
+            std::get<Index_>(tuple) = Coded<Next_>::Decode(window);
+        Tupled<Index_ + 1, Rest_...>::Head(window, tuple);
+    }
+
+    template <typename Tuple_>
+    static void Tail(Window &window, Tuple_ &tuple) {
+        if (Coded<Next_>::dynamic_)
+            std::get<Index_>(tuple) = Coded<Next_>::Decode(window);
+        Tupled<Index_ + 1, Rest_...>::Tail(window, tuple);
+    }
+};
+
+template <typename... Args_>
+struct Coded<std::tuple<Args_...>, void> {
+    static const bool dynamic_ = true;
+
+    static std::tuple<Args_...> Decode(Window &window) {
+        std::tuple<Args_...> value;
+        Tupled<0, Args_...>::Head(window, value);
+        Tupled<0, Args_...>::Tail(window, value);
         return value;
     }
 };

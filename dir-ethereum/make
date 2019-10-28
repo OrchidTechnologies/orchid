@@ -1,4 +1,5 @@
 #!/bin/bash
 set -e
-solc --bin --optimize --overwrite --allow-paths . "$@" -o build directory.sol
-solc --bin --optimize --overwrite --allow-paths . "$@" -o build directory_test.sol
+for sol in *.sol; do
+    solc --bin --optimize --overwrite --allow-paths . "$@" -o build "${sol}"
+done

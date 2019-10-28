@@ -28,15 +28,16 @@
 
 namespace orc {
 
-Network::Network(Address directory, const std::string &rpc) :
+Network::Network(Address directory, Address location, const std::string &rpc) :
     directory_(std::move(directory)),
+    location_(std::move(location)),
     locator_(Locator::Parse(rpc))
 {
     generator_.seed(boost::random::random_device()());
 }
 
 Network::Network(boost::program_options::variables_map &args) :
-    Network(Address(args["eth"].as<std::string>()), args["rpc"].as<std::string>())
+    Network(Address(args["eth-directory"].as<std::string>()), Address(args["eth-location"].as<std::string>()), args["rpc"].as<std::string>())
 {
 }
 
@@ -55,18 +56,13 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
         auto address = co_await scan.Call(endpoint, latest, directory_, generator_());
         orc_assert(address != 0);
 
-        static Selector<std::tuple<uint256_t, Bytes>, Address> look("look");
-        auto [time, data] = co_await look.Call(endpoint, latest, directory_, address);
+        static Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
+        auto [set, url, tls] = co_await look.Call(endpoint, latest, location_, address);
 
-        Json::Value descriptor;
-        Json::Reader reader;
-        orc_assert(reader.parse(data.str(), descriptor, false));
-
-        auto tls(descriptor["tls"].asString());
         auto space(tls.find(' '));
         orc_assert(space != std::string::npos);
 
-        co_return Descriptor{descriptor["url"].asString(), rtc::SSLFingerprint::CreateUniqueFromRfc4572(tls.substr(0, space), tls.substr(space + 1))};
+        co_return Descriptor{url, rtc::SSLFingerprint::CreateUniqueFromRfc4572(tls.substr(0, space), tls.substr(space + 1))};
     }();
 
     orc_assert(fingerprint != nullptr);
