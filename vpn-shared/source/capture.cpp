@@ -690,6 +690,7 @@ void Store(po::variables_map &args, const std::string &path) {
     po::options_description options("configuration file");
     options.add_options()
         ("eth-directory", po::value<std::string>()->default_value("0xd87e0ee1a59841de2ac78c17209db97e27651985"), "contract address of staking directory tree")
+        ("eth-property", po::value<std::string>()->default_value("0x266d9a7f371f3ee09169609ecac1de42c3c8ce02"), "contract address of provider data storage")
         ("eth-location", po::value<std::string>()->default_value("0xfdb587eaf6f761aa875ecbfa8f258f3241beeb5c"), "contract address of location property data")
         ("rpc", po::value<std::string>()->default_value("https://api.myetherwallet.com:443/rop"), "ethereum json/rpc and websocket endpoint")
         ("pot", po::value<std::string>(), "signing key for a lottery pot to pay on orchid")
