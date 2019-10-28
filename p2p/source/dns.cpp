@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <regex>
+
 #include <json/json.h>
 
 #include "adapter.hpp"
@@ -37,7 +39,8 @@ task<Results> Resolve(const std::string &host, const std::string &port) {
 
     Results results;
 
-    if (host == "1.1.1.1") {
+    static std::regex re("[0-9.]+");
+    if (std::regex_match(host, re)) {
         auto endpoints(co_await resolver.async_resolve(host, port, orc::Token()));
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
