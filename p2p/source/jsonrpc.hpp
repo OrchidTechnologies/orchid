@@ -338,6 +338,27 @@ struct Coded<Address, void> {
     }
 };
 
+template <>
+struct Coded<bool, void> {
+    static const bool dynamic_ = false;
+
+    static void Name(std::ostringstream &signature) {
+        signature << "bool";
+    }
+
+    static bool Decode(Window &window) {
+        auto value(Coded<uint8_t>::Decode(window));
+        if (value == 0)
+            return false;
+        orc_assert(value == 1);
+        return true;
+    }
+
+    static void Encode(Builder &builder, const bool &value) {
+        return Coded<uint8_t>::Encode(builder, value ? 1 : 0);
+    }
+};
+
 template <size_t Size_>
 struct Coded<Brick<Size_>, typename std::enable_if<Size_ == 32>::type> {
     static const bool dynamic_ = false;

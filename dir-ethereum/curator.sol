@@ -20,37 +20,29 @@
 /* }}} */
 
 
-#ifndef ORCHID_NETWORK_HPP
-#define ORCHID_NETWORK_HPP
+pragma solidity ^0.5.7;
 
-#include <boost/program_options/variables_map.hpp>
+contract OrchidCurator {
+    address private owner_;
 
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
+    constructor(address owner) public {
+        owner_ = owner;
+    }
 
-#include "jsonrpc.hpp"
-#include "locator.hpp"
-#include "origin.hpp"
+    mapping (address => bool) private curated_;
 
-namespace orc {
+    function list(address target, bool good) public {
+        require(msg.sender == owner_);
+        curated_[target] = good;
+    }
 
-class Network {
-  private:
-    Locator locator_;
-    Address directory_;
-    Address location_;
-    Address curator_;
-
-    boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
-
-  public:
-    Network(const std::string &rpc, Address directory, Address location, Address curator);
-    Network(boost::program_options::variables_map &args);
-
-    task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &pot);
-    task<S<Origin>> Setup();
-};
-
+    function good(address target) public view returns (bool) {
+        return curated_[target];
+    }
 }
 
-#endif//ORCHID_NETWORK_HPP
+contract OrchidUntrusted {
+    function good(address) public pure returns (bool) {
+        return true;
+    }
+}

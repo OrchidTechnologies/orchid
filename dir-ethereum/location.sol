@@ -20,37 +20,29 @@
 /* }}} */
 
 
-#ifndef ORCHID_NETWORK_HPP
-#define ORCHID_NETWORK_HPP
+pragma solidity ^0.5.7;
 
-#include <boost/program_options/variables_map.hpp>
+contract OrchidLocation {
+    struct Location {
+        uint256 set_;
+        string url_;
+        string tls_;
+    }
 
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
+    mapping (address => Location) private locations_;
 
-#include "jsonrpc.hpp"
-#include "locator.hpp"
-#include "origin.hpp"
+    event Update(address indexed target, string url, string tls);
 
-namespace orc {
+    function move(string memory url, string memory tls) public {
+        Location storage location = locations_[msg.sender];
+        location.set_ = block.timestamp;
+        location.url_ = url;
+        location.tls_ = tls;
+        emit Update(msg.sender, url, tls);
+    }
 
-class Network {
-  private:
-    Locator locator_;
-    Address directory_;
-    Address location_;
-    Address curator_;
-
-    boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
-
-  public:
-    Network(const std::string &rpc, Address directory, Address location, Address curator);
-    Network(boost::program_options::variables_map &args);
-
-    task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &pot);
-    task<S<Origin>> Setup();
-};
-
+    function look(address target) public view returns (uint256, string memory, string memory) {
+        Location storage location = locations_[target];
+        return (location.set_, location.url_, location.tls_);
+    }
 }
-
-#endif//ORCHID_NETWORK_HPP
