@@ -43,7 +43,7 @@ export class OrchidAPI {
 
     // Allow init ethereum to create the web3 context for validation
     let status =  await orchidInitEthereum();
-    if (status == WalletStatus.Connected) {
+    if (status === WalletStatus.Connected) {
       this.updateAccount();
       this.updateTransactions();
     }
