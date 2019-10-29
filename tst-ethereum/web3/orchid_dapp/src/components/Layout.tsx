@@ -27,7 +27,7 @@ import {Overview} from "./Overview";
 import {Route, RouteContext} from "./Route";
 
 export const Layout: FC<{ status: WalletStatus }> = (props) => {
-  const [route, setRoute] = useState(Route.Overview);
+  const [route, setRoute] = useState(Route.AddFunds);
   const moreMenuItems = new Map<Route, string>([
     [Route.Balances, "Balances"],
     [Route.Transactions, "Transactions"],

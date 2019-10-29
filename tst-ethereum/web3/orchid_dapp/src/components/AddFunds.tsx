@@ -1,6 +1,6 @@
-import React, {FC, useState} from "react";
+import React, {FC, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {orchidAddFunds, oxtToWeiString} from "../api/orchid-eth";
+import {orchidAddFunds, oxtToWei, oxtToWeiString, weiToOxtString} from "../api/orchid-eth";
 import {Divider, errorClass, parseFloatSafe} from "../util/util";
 import {TxProps, TxResult} from "./TxResult";
 import {SubmitButton} from "./SubmitButton";
@@ -19,6 +19,17 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   const [escrowError, setEscrowError] = useState(false);
   const [tx, setTx] = useState(new TxProps());
   const txResult = React.createRef<TxResult>();
+  const [walletBalance, setWalletBalance] = useState<BigInt|null>(null);
+
+  useEffect(() => {
+    let api = OrchidAPI.shared();
+    let subscription = api.account_wait.subscribe(account => {
+      setWalletBalance(account.oxtBalance);
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   async function submitAddFunds() {
     let api = OrchidAPI.shared();
@@ -59,7 +70,20 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     <Container className="form-style">
       <label className="title">Add Funds</label>
 
-      {/*Balance*/}
+      {/*Available Wallet Balance*/}
+      <Row className="form-row">
+        <Col>
+          <label>From Available</label>
+        </Col>
+        <Col>
+          <div className="oxt-1-pad">
+            {walletBalance == null ? "..." : weiToOxtString(walletBalance, 2)}
+          </div>
+        </Col>
+      </Row>
+
+
+      {/*Add to Balance*/}
       <Row className="form-row" noGutters={true}>
         <Col>
           <label>Add to Balance<span
@@ -71,7 +95,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
             onChange={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
               setAddAmount(amount);
-              setAmountError(amount == null);
+              setAmountError(amount == null || oxtToWei(amount) > (walletBalance||0));
             }}
             type="number"
             placeholder="0.00"
