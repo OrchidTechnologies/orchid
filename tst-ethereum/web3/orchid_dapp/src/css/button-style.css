@@ -1,18 +1,4 @@
 
-/* Button container */
-/*
-.submit-button {
-  position: relative;
-  display: inline-block;
-  text-align: center;
-  width: 100%;
-  alignment: center;
-  margin: 0;
-  margin-top: 16px;
-  margin-bottom: 16px
-}
- */
-
 /* Button style */
 .submit-button button {
   display: block;
@@ -21,7 +7,7 @@
   -webkit-tap-highlight-color: transparent;
   -webkit-transition: background-color 0.3s, color 0.3s, width 0.3s, border-width 0.3s, border-color 0.3s;
   transition: background-color 0.3s, color 0.3s, width 0.3s, border-width 0.3s, border-color 0.3s;
-  padding: 0 64px;
+  padding: 0 48px;
   margin: 32px auto 0;
   height: 48px;
   background-color: #5f45ba;

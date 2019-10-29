@@ -13,10 +13,9 @@ class Header extends Component {
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
-
-    api.account_wait.subscribe(account => {
+    api.lotteryPot_wait.subscribe(pot=>{
       this.setState({
-        oxtBalance: weiToOxtString(account.oxtBalance, 2),
+        oxtBalance: weiToOxtString(pot.balance, 2),
       });
     });
   }

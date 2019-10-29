@@ -5,6 +5,7 @@ import {OrchidContracts} from "./orchid-eth-contracts";
 import {Address} from "./orchid-types";
 import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 declare global {
@@ -51,30 +52,26 @@ export class LotteryPot {
 }
 
 // Init the Web3 environment and the Orchid contracts
-export function orchidInitEthereum() {
+export function orchidInitEthereum(): Promise<void> {
   console.log("init ethereum");
   return new Promise(function (resolve, reject) {
     window.addEventListener('load', async () => {
-      console.log("init ethereum on load running");
-      // Modern DAPP browsers.
       if (window.ethereum) {
-        window.ethereum.autoRefreshOnNetworkChange = false;
         console.log("Modern dapp browser.");
+        window.ethereum.autoRefreshOnNetworkChange = false;
         web3 = new Web3(window.ethereum);
         try {
           await window.ethereum.enable();
         } catch (error) {
+          reject("denied");
           console.log("User denied account access...");
         }
-      }
-      // Legacy DAPP browsers.
-      else if (web3) {
+      } else if (web3) {
+        console.log("Legacy dapp browser.");
         web3 = new Web3(web3.currentProvider);
-      }
-      // Non-dapp browsers...
-      else {
+      } else {
         console.log('Non-Ethereum browser.');
-        reject();
+        reject("browser");
       }
 
       try {
@@ -82,6 +79,7 @@ export function orchidInitEthereum() {
         OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr);
       } catch (err) {
         console.log("Error constructing contracts");
+        reject("error");
       }
 
       resolve();
@@ -125,18 +123,18 @@ export async function orchidAddFunds(addr: Address, amount: string, escrow: stri
         from: accounts[0],
         gas: OrchidContracts.token_approval_max_gas,
       })
-          .on("transactionHash", (hash) => {
-            console.log("Approval hash: ", hash);
-            onComplete()
-          })
-          .on('confirmation', (confirmationNumber, receipt) => {
-            console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
-          })
-          .on('error', (err) => {
-            console.log("Approval error: ", JSON.stringify(err));
-            // If there is an error in the approval assume Funding will fail.
-            reject(err);
-          });
+        .on("transactionHash", (hash) => {
+          console.log("Approval hash: ", hash);
+          onComplete()
+        })
+        .on('confirmation', (confirmationNumber, receipt) => {
+          console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
+        })
+        .on('error', (err) => {
+          console.log("Approval error: ", JSON.stringify(err));
+          // If there is an error in the approval assume Funding will fail.
+          reject(err);
+        });
     }
 
     function doFundTx(): void {
@@ -144,19 +142,19 @@ export async function orchidAddFunds(addr: Address, amount: string, escrow: stri
         from: accounts[0],
         gas: OrchidContracts.lottery_push_max_gas,
       })
-          .on("transactionHash", (hash) => {
-            console.log("Fund hash: ", hash);
-          })
-          .on('confirmation', (confirmationNumber, receipt) => {
-            console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
-            // Wait for one confirmation on the funding tx.
-            const hash = receipt['transactionHash'];
-            resolve(hash);
-          })
-          .on('error', (err) => {
-            console.log("Fund error: ", JSON.stringify(err));
-            reject(err);
-          });
+        .on("transactionHash", (hash) => {
+          console.log("Fund hash: ", hash);
+        })
+        .on('confirmation', (confirmationNumber, receipt) => {
+          console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
+          // Wait for one confirmation on the funding tx.
+          const hash = receipt['transactionHash'];
+          resolve(hash);
+        })
+        .on('error', (err) => {
+          console.log("Fund error: ", JSON.stringify(err));
+          reject(err);
+        });
     }
 
     try {
@@ -172,19 +170,19 @@ export async function orchidAddFunds(addr: Address, amount: string, escrow: stri
 function evalOrchidTx<T>(promise: PromiEvent<T>): Promise<string> {
   return new Promise<string>(function (resolve, reject) {
     promise
-        .on("transactionHash", (hash) => {
-          console.log("hash: ", hash);
-        })
-        .on('confirmation', (confirmationNumber, receipt) => {
-          console.log("confirmation", confirmationNumber, JSON.stringify(receipt));
-          // Wait for one confirmation on the tx.
-          const hash = receipt['transactionHash'];
-          resolve(hash);
-        })
-        .on('error', (err) => {
-          console.log("error: ", JSON.stringify(err));
-          reject(err);
-        });
+      .on("transactionHash", (hash) => {
+        console.log("hash: ", hash);
+      })
+      .on('confirmation', (confirmationNumber, receipt) => {
+        console.log("confirmation", confirmationNumber, JSON.stringify(receipt));
+        // Wait for one confirmation on the tx.
+        const hash = receipt['transactionHash'];
+        resolve(hash);
+      })
+      .on('error', (err) => {
+        console.log("error: ", JSON.stringify(err));
+        reject(err);
+      });
   });
 }
 
@@ -193,10 +191,10 @@ export async function orchidMoveFundsToEscrow(amount: string): Promise<string> {
   console.log(`moveFunds amount: ${amount}`);
   const accounts = await web3.eth.getAccounts();
   return evalOrchidTx(
-      OrchidContracts.lottery.methods.move(amount).send({
-        from: accounts[0],
-        gas: OrchidContracts.lottery_move_max_gas,
-      })
+    OrchidContracts.lottery.methods.move(amount).send({
+      from: accounts[0],
+      gas: OrchidContracts.lottery_move_max_gas,
+    })
   );
 }
 
@@ -205,10 +203,10 @@ export async function orchidWithdrawFunds(sendTo: Address, amount: string): Prom
   console.log(`withdrawFunds to: ${sendTo} amount: ${amount}`);
   const accounts = await web3.eth.getAccounts();
   return evalOrchidTx(
-      OrchidContracts.lottery.methods.pull(sendTo, amount).send({
-        from: accounts[0],
-        gas: OrchidContracts.lottery_pull_amount_max_gas,
-      })
+    OrchidContracts.lottery.methods.pull(sendTo, amount).send({
+      from: accounts[0],
+      gas: OrchidContracts.lottery_pull_amount_max_gas,
+    })
   );
 }
 
@@ -217,10 +215,10 @@ export async function orchidWithdrawFundsAndEscrow(sendTo: Address): Promise<str
   console.log("withdrawFundsAndEscrow");
   const accounts = await web3.eth.getAccounts();
   return evalOrchidTx(
-      OrchidContracts.lottery.methods.pull(sendTo).send({
-        from: accounts[0],
-        gas: OrchidContracts.lottery_pull_all_max_gas
-      })
+    OrchidContracts.lottery.methods.pull(sendTo).send({
+      from: accounts[0],
+      gas: OrchidContracts.lottery_pull_all_max_gas
+    })
   );
 }
 
@@ -228,10 +226,10 @@ export async function orchidWithdrawFundsAndEscrow(sendTo: Address): Promise<str
 export async function orchidLock(): Promise<string> {
   const accounts = await web3.eth.getAccounts();
   return evalOrchidTx(
-      OrchidContracts.lottery.methods.lock().send({
-        from: accounts[0],
-        gas: OrchidContracts.lottery_lock_max_gas
-      })
+    OrchidContracts.lottery.methods.lock().send({
+      from: accounts[0],
+      gas: OrchidContracts.lottery_lock_max_gas
+    })
   );
 }
 
@@ -239,20 +237,20 @@ export async function orchidLock(): Promise<string> {
 export async function orchidUnlock(): Promise<string> {
   const accounts = await web3.eth.getAccounts();
   return evalOrchidTx(
-      OrchidContracts.lottery.methods.warn().send({
-        from: accounts[0],
-        gas: OrchidContracts.lottery_warn_max_gas
-      })
+    OrchidContracts.lottery.methods.warn().send({
+      from: accounts[0],
+      gas: OrchidContracts.lottery_warn_max_gas
+    })
   );
 }
 
 export async function orchidBindSigner(signer: Address): Promise<string> {
   const accounts = await web3.eth.getAccounts();
   return evalOrchidTx(
-      OrchidContracts.lottery.methods.bind(signer).send({
-        from: accounts[0],
-        gas: OrchidContracts.lottery_bind_max_gas
-      })
+    OrchidContracts.lottery.methods.bind(signer).send({
+      from: accounts[0],
+      gas: OrchidContracts.lottery_bind_max_gas
+    })
   );
 }
 
@@ -302,5 +300,4 @@ async function fakeTx(fail: boolean): Promise<string> {
       resolve('0x12341234123412341234123');
     }
   });
-}
-*/
+}*/

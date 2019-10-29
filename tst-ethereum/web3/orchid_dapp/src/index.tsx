@@ -8,18 +8,15 @@ import './css/app-style.css'
 import './css/form-style.css'
 import './css/button-style.css'
 import {Layout} from "./components/Layout"
+import {ok} from "assert";
 
-// const Layout: FC = () => {
-//   const isMobile = useMediaQuery({query: '(max-width: 500px)'});
-//   return isMobile ? <LayoutMobile/> : <LayoutDesktop/>;
-// };
+OrchidAPI.shared().init().then((status) => {
+  ReactDOM.render(
+    ok ? <Layout status={status}/> : <NoWallet/>,
+    document.getElementById('root'));
+});
 
 const NoWallet: FC = () => {
   return <h1>Not a dapp browser!</h1>;
 };
 
-OrchidAPI.shared().init().then((ok) => {
-  ReactDOM.render(
-    ok ? <Layout/> : <NoWallet/>,
-    document.getElementById('root'));
-});

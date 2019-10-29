@@ -7,7 +7,12 @@ import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
 
-export const AddFunds: FC = () => {
+interface AddFundsProps {
+  defaultAddAmount?: number
+  defaultAddEscrow?: number
+}
+
+export const AddFunds: FC<AddFundsProps> = (props) => {
   const [addAmount, setAddAmount] = useState<number | null>(null);
   const [addEscrow, setAddEscrow] = useState<number | null>(0);
   const [amountError, setAmountError] = useState(true);
@@ -63,13 +68,14 @@ export const AddFunds: FC = () => {
         <Col>
           <input
             className="editable"
-            onInput={(e) => {
+            onChange={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
               setAddAmount(amount);
               setAmountError(amount == null);
             }}
             type="number"
             placeholder="0.00"
+            defaultValue={props.defaultAddAmount}
           />
         </Col>
       </Row>
@@ -89,7 +95,7 @@ export const AddFunds: FC = () => {
               setEscrowError(amount == null);
             }}
             type="number" placeholder="0.00"
-            // defaultValue={"0.00"}
+            defaultValue={props.defaultAddEscrow}
           />
         </Col>
       </Row>
@@ -106,7 +112,9 @@ export const AddFunds: FC = () => {
           <label>Total</label>
         </Col>
         <Col>
-          <div className="oxt-1">30.00 OXT</div>
+          <div className="oxt-1">{
+            ((addEscrow||0)+(addAmount||0)).toFixed(2)
+          } OXT</div>
         </Col>
       </Row>
 

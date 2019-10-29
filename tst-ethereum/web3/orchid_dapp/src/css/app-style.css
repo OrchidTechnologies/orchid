@@ -32,7 +32,7 @@ html, body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .spinner {
@@ -67,6 +67,10 @@ html, body {
   pointer-events: none;
 }
 
+.disabled-faded {
+  opacity: 0.50;
+  pointer-events: none;
+}
 
 .icon {
   margin-right: 10px;
