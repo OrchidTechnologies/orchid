@@ -1,0 +1,39 @@
+
+.NoWallet {
+  padding-left: 30px;
+  padding-right: 30px;
+  max-width: 400px;
+}
+
+.NoWallet-title {
+  margin-top: 56px;
+  font-size: 28px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: 0.36px;
+  text-align: center;
+  color: #5f45ba;
+}
+.NoWallet-text {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+  text-align: center;
+  color: #000000;
+}
+.NoWallet-image {
+  margin-top: 40px;
+  width: 256px;
+  height: 244px;
+  object-fit: contain;
+}
+
+.NoWallet .submit-button button {
+  width: 100%;
+}

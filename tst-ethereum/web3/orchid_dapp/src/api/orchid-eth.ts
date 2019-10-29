@@ -5,6 +5,7 @@ import {OrchidContracts} from "./orchid-eth-contracts";
 import {Address} from "./orchid-types";
 import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
+import {WalletStatus} from "./orchid-api";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -52,7 +53,7 @@ export class LotteryPot {
 }
 
 // Init the Web3 environment and the Orchid contracts
-export function orchidInitEthereum(): Promise<void> {
+export function orchidInitEthereum(): Promise<WalletStatus> {
   console.log("init ethereum");
   return new Promise(function (resolve, reject) {
     window.addEventListener('load', async () => {
@@ -63,7 +64,7 @@ export function orchidInitEthereum(): Promise<void> {
         try {
           await window.ethereum.enable();
         } catch (error) {
-          reject("denied");
+          resolve(WalletStatus.NotConnected);
           console.log("User denied account access...");
         }
       } else if (web3) {
@@ -71,7 +72,7 @@ export function orchidInitEthereum(): Promise<void> {
         web3 = new Web3(web3.currentProvider);
       } else {
         console.log('Non-Ethereum browser.');
-        reject("browser");
+        resolve(WalletStatus.NoWallet);
       }
 
       try {
@@ -79,10 +80,10 @@ export function orchidInitEthereum(): Promise<void> {
         OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr);
       } catch (err) {
         console.log("Error constructing contracts");
-        reject("error");
+        resolve(WalletStatus.Error);
       }
 
-      resolve();
+      resolve(WalletStatus.Connected);
     });
   });
 }

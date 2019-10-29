@@ -5,7 +5,7 @@ import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isNotNull} from "./orchid-types";
 
 export enum WalletStatus {
-  Connected, Rejected, Error
+  NoWallet, NotConnected, Connected, Error
 }
 
 export class OrchidAPI {
@@ -42,14 +42,12 @@ export class OrchidAPI {
     this.captureLogs();
 
     // Allow init ethereum to create the web3 context for validation
-    try {
-      await orchidInitEthereum();
-    } catch (err) {
-      return WalletStatus.Error;
+    let status =  await orchidInitEthereum();
+    if (status == WalletStatus.Connected) {
+      this.updateAccount();
+      this.updateTransactions();
     }
-    this.updateAccount().then();
-    this.updateTransactions().then();
-    return WalletStatus.Connected;
+    return status;
   }
 
   async updateAccount() {
