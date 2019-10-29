@@ -4,6 +4,10 @@ import {filter, flatMap} from "rxjs/operators";
 import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isNotNull} from "./orchid-types";
 
+export enum WalletStatus {
+  Connected, Rejected, Error
+}
+
 export class OrchidAPI {
   private static instance: OrchidAPI;
 
@@ -34,18 +38,18 @@ export class OrchidAPI {
   debugLog = "";
   debugLogChanged = new BehaviorSubject(true);
 
-  async init(): Promise<boolean> {
+  async init(): Promise<WalletStatus> {
     this.captureLogs();
 
     // Allow init ethereum to create the web3 context for validation
     try {
       await orchidInitEthereum();
     } catch (err) {
-      return false;
+      return WalletStatus.Error;
     }
     this.updateAccount().then();
     this.updateTransactions().then();
-    return true;
+    return WalletStatus.Connected;
   }
 
   async updateAccount() {
