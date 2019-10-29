@@ -115,17 +115,15 @@ export async function orchidAddFunds(addr: Address, amount: string, escrow: stri
   const escrow_value = BigInt(escrow);
   const total = amount_value + escrow_value;
 
-  // Perform the approve and fund transactions with some sequencing within a single promise.
-  return new Promise<string>(function (resolve, reject) {
-
-    function doApproveTx(onComplete: () => void): void {
+  async function doApproveTx() {
+    return new Promise<string>(function (resolve, reject) {
       OrchidContracts.token.methods.approve(OrchidContracts.lottery_addr, total.toString()).send({
         from: accounts[0],
         gas: OrchidContracts.token_approval_max_gas,
       })
         .on("transactionHash", (hash) => {
           console.log("Approval hash: ", hash);
-          onComplete()
+          resolve(hash);
         })
         .on('confirmation', (confirmationNumber, receipt) => {
           console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
@@ -133,11 +131,14 @@ export async function orchidAddFunds(addr: Address, amount: string, escrow: stri
         .on('error', (err) => {
           console.log("Approval error: ", JSON.stringify(err));
           // If there is an error in the approval assume Funding will fail.
-          reject(err);
+          reject(err['message']);
         });
-    }
+    });
+  }
 
-    function doFundTx(): void {
+  async function doFundTx() {
+    console.log("do fund tx");
+    return new Promise<string>(function (resolve, reject) {
       OrchidContracts.lottery.methods.push(amount_value.toString(), total.toString()).send({
         from: accounts[0],
         gas: OrchidContracts.lottery_push_max_gas,
@@ -153,17 +154,15 @@ export async function orchidAddFunds(addr: Address, amount: string, escrow: stri
         })
         .on('error', (err) => {
           console.log("Fund error: ", JSON.stringify(err));
-          reject(err);
+          reject(err['message']);
         });
-    }
+    });
+  }
 
-    try {
-      return doApproveTx(doFundTx);
-    } catch (err) {
-      console.log("error:", JSON.stringify(err));
-      reject("error: " + err);
-    }
-  });
+  // The approval tx resolves immediately after the user submits.
+  await doApproveTx();
+  // The UI monitors the funding tx.
+  return doFundTx();
 }
 
 /// Evaluate an Orchid method call, returning the confirmation transaction has or error.
