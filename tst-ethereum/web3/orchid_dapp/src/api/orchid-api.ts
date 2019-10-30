@@ -30,7 +30,7 @@ export class OrchidAPI {
 
   lotteryPot = this.account_wait.pipe(
       flatMap((account: Account) => { // flatMap resolves promises
-        return orchidGetLotteryPot(account.address);
+        return orchidGetLotteryPot(account);
       })
   );
   lotteryPot_wait: Observable<LotteryPot> = this.lotteryPot.pipe(filter(isNotNull));

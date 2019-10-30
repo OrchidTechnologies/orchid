@@ -29,11 +29,13 @@ export class Account {
 }
 
 export class LotteryPot {
+  public account: Account;
   public balance: BigInt; // Wei
   public escrow: BigInt; // Oxt-Wei
   public unlock: Date | null;
 
-  constructor(balance: BigInt, escrow: BigInt, unlock: Date | null) {
+  constructor(account: Account, balance: BigInt, escrow: BigInt, unlock: Date | null) {
+    this.account = account;
     this.balance = balance;
     this.escrow = escrow;
     this.unlock = unlock;
@@ -255,9 +257,9 @@ export async function orchidBindSigner(signer: Address): Promise<string> {
 }
 
 /// Get the lottery pot balance and escrow amount for the specified address.
-export async function orchidGetLotteryPot(address: Address): Promise<LotteryPot | null> {
+export async function orchidGetLotteryPot(account: Account): Promise<LotteryPot | null> {
   const accounts = await web3.eth.getAccounts();
-  let result = await OrchidContracts.lottery.methods.look(address).call({from: accounts[0],});
+  let result = await OrchidContracts.lottery.methods.look(account.address).call({from: accounts[0],});
   if (result == null || result._length < 3) {
     return null;
   }
@@ -266,7 +268,7 @@ export async function orchidGetLotteryPot(address: Address): Promise<LotteryPot 
   const unlock: number = Number(result[2]);
   const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
   console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
-  return new LotteryPot(balance, escrow, unlockDate);
+  return new LotteryPot(account, balance, escrow, unlockDate);
 }
 
 export function isEthAddress(str: string): boolean {
@@ -300,4 +302,5 @@ async function fakeTx(fail: boolean): Promise<string> {
       resolve('0x12341234123412341234123');
     }
   });
-}*/
+}
+ */

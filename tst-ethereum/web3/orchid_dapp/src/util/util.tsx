@@ -13,10 +13,19 @@ export function getURLParams() {
 }*/
 
 // Return the relative path of the deployment 
-export function deploymentPath(): string {
+export function basePath(): string {
   let pathComponents = new URL(window.location.href).pathname.split('/');
   pathComponents.pop();
   return pathComponents.join('/');
+}
+
+export function extraPath(): string|undefined {
+  let pathComponents = new URL(window.location.href).pathname.split('/');
+  return pathComponents.pop();
+}
+
+export function hashPath(): string|undefined {
+  return new URL(window.location.href).hash;
 }
 
 export function isNumeric(val: any) {
@@ -40,7 +49,19 @@ export function errorClass(val: boolean): string {
   return val ? "error" : "hidden";
 }
 
-export const Divider: FC<{noGutters?: boolean}> = (props) => {
+export function pascalCase(str: string): string {
+  return str.replace(/^(.)/, (c) => {
+    return c.toUpperCase()
+  })
+}
+
+export function camelCase(str: string): string {
+  return str.replace(/^(.)/, (c) => {
+    return c.toLowerCase()
+  })
+}
+
+export const Divider: FC<{ noGutters?: boolean }> = (props) => {
   return <Row
     className={props.noGutters ? "no-gutters" : ""}
     style={{

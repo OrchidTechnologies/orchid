@@ -2,7 +2,7 @@ import React, {FC, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {orchidAddFunds, oxtToWei, oxtToWeiString, weiToOxtString} from "../api/orchid-eth";
 import {Divider, errorClass, parseFloatSafe} from "../util/util";
-import {TxProps, TxResult} from "./TxResult";
+import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
@@ -17,8 +17,8 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   const [addEscrow, setAddEscrow] = useState<number | null>(0);
   const [amountError, setAmountError] = useState(true);
   const [escrowError, setEscrowError] = useState(false);
-  const [tx, setTx] = useState(new TxProps());
-  const txResult = React.createRef<TxResult>();
+  const [tx, setTx] = useState(new TransactionStatus());
+  const txResult = React.createRef<TransactionProgress>();
   const [walletBalance, setWalletBalance] = useState<BigInt|null>(null);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       return;
     }
 
-    setTx(TxProps.running());
+    setTx(TransactionStatus.running());
     if (txResult.current != null) {
       txResult.current.scrollIntoView();
     }
@@ -51,18 +51,18 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       let potAddress = account.address;
 
       let txId = await orchidAddFunds(potAddress, amountWei, escrowWei);
-      setTx(TxProps.result("Transaction Complete!", txId));
+      setTx(TransactionStatus.result("Transaction Complete!", txId));
 
       api.updateAccount().then();
       api.updateTransactions().then();
     } catch (err) {
-      setTx(TxProps.error(`Transaction Failed: ${err}`));
+      setTx(TransactionStatus.error(`Transaction Failed: ${err}`));
     }
   }
 
   let submitEnabled =
     OrchidAPI.shared().account.value !== null
-    && !tx.running
+    && !tx.isRunning()
     && !amountError
     && !escrowError;
 
@@ -146,7 +146,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
         Add OXT
       </SubmitButton>
 
-      <TxResult ref={txResult} tx={tx}/>
+      <TransactionProgress ref={txResult} tx={tx}/>
     </Container>
   );
 };
