@@ -19,18 +19,15 @@ interface OverviewProps {
 }
 
 export const Overview: React.FC = () => {
-  let {setNavEnabled} = useContext(RouteContext);
-
   const [walletEthEmpty, setWalletEthEmpty] = useState(undefined as boolean|undefined);
   const [walletOxtEmpty, setWalletOxtEmpty] = useState(undefined as boolean|undefined);
   const [potFunded, setPotFunded] = useState(undefined as boolean|undefined);
-  const earnTargetAmountOXT = oxtToWei(20.0);
-  const earnTargetDepositOXT = oxtToWei(10.0);
-  // const earnTargetAmountOXT = BigInt(1); // allow anything greater than zero
-  // const earnTargetDepositOXT = BigInt(1);
+  // const earnTargetAmountOXT = oxtToWei(20.0);
+  // const earnTargetDepositOXT = oxtToWei(10.0);
+  const earnTargetAmountOXT = BigInt(1); // allow anything greater than zero
+  const earnTargetDepositOXT = BigInt(1);
 
   useEffect(() => {
-    setNavEnabled(false);
     let api = OrchidAPI.shared();
     let subscription = api.lotteryPot_wait.subscribe(pot => {
       setPotFunded(pot.balance >= earnTargetAmountOXT && pot.escrow >= earnTargetDepositOXT);
