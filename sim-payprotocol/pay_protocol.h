@@ -222,7 +222,7 @@ double is_winner(payment p)  // offline check to see if ticket is a winner
 }
 
 
-struct Client
+struct Client : public ITickable
 {
 	// budgeting params (input from UI)
 	double target_overhead_ = 0.1;	// target transaction fee overhead  // move to server?
@@ -232,6 +232,9 @@ struct Client
 	double last_pay_date_ = CurrentTime();
 	IBudget* budget_;
 	Server* server_;
+
+	uint256 hash_secret_;
+	bytes32 target_;
 
 	Client() {
 		account_ = rand();
@@ -250,7 +253,11 @@ struct Client
     // callback when disconnected from route
 	void on_disconnect()     { budget_->on_disconnect(); }
 
-	void on_invoice(uint256 hash_secret, bytes32 target, double bal_owed, double trans_cost);
+	void on_invoice(uint256 hash_secret, bytes32 target, double bal_owed, double trans_cost) { hash_secret_ = hash_secret; target_ = target;}
+	void on_sendpay(uint256 hash_secret, bytes32 target);
+
+    void on_timer() { on_sendpay(hash_secret_, target_); }
+
 };
 
 
@@ -370,6 +377,40 @@ void Client::on_connect(Server* server) {
 	budget_->on_connect();
 }
 
+
+
+void Client::on_sendpay(uint256 hash_secret, bytes32 target)
+{
+	double afford	   	= budget_->get_afford();
+	double max_face_val	= budget_->get_max_faceval();
+
+	double exp_val 		= afford;
+   	double trans_cost   = get_trans_cost();
+	double face_val     = trans_cost / target_overhead_;
+	//face_val      = min(face_val, max_face_val);
+	if (face_val > max_face_val) face_val = 0;  // hard constraint failure
+
+	// todo: simulate server ticket value function?
+	if (face_val > trans_cost) {
+		double win_prob = exp_val / (face_val - trans_cost);
+		win_prob    	= max(min(win_prob, 1.0), 0.0); // todo: server may want a lower bound on win_prob for double-spend reasons
+		// todo: is one hour duration (range) reasonable?
+		bytes32 nonce = rand();
+		double ratio = win_prob, start = CurrentTime(), range = 1.0*Hours, amount = face_val;
+		bytes32 ticket = keccak256(encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
+		auto sig = sign(ticket);
+		//send("upay", server_, payment{hash_secret, target,  nonce, ratio, start, range, amount, sig} );
+		server_->on_upay(this, payment{hash_secret, target,  nonce, account_, ratio, start, range, amount, sig});
+		budget_->on_invoice();
+		// any book-keeping here
+	}
+	else {
+		// handle payment error, report to GUI, etc
+	}
+}
+
+
+/*
 void Client::on_invoice(uint256 hash_secret, bytes32 target, double bal_owed, double trans_cost) { // server requests payment from client
 
 	double afford	   	= budget_->get_afford();
@@ -403,6 +444,9 @@ void Client::on_invoice(uint256 hash_secret, bytes32 target, double bal_owed, do
 		// handle payment error
 	}
 }
+*/
+
+
 
 
 /*
