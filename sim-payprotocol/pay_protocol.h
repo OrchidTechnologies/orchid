@@ -68,13 +68,6 @@ typedef unsigned int bytes32;
 typedef unsigned int uint256;
 
 
-double& get_OXT_balance(bytes32 account)  	// (RPC call, cached) external eth balance
-{
-	static map<bytes32, double> balances_;
-	return balances_[account];
-}
-
-
 double& get_trans_cost() // (oracle) get current transaction cost estimate
 {
 	static double local_(0.1);
@@ -86,6 +79,52 @@ double& get_max_trans_cost()   // (oracle) get estimate of max reasonable curren
 	static double local_(0.1);
 	return local_;
 }
+
+double& get_OXT_balance(bytes32 account)  	// (RPC call, cached) external eth balance
+{
+	static map<bytes32, double> balances_;
+	return balances_[account];
+}
+
+struct payment
+{
+	bytes32 hash_secret, target, nonce, sender;
+	double  ratio, start, range, amount;
+	bytes32 sig;
+};
+
+double is_winner(const payment& p)  // offline check to see if ticket is a winner
+{
+	double dnonce = double(p.nonce) / double(numeric_limits<bytes32>::max());
+	return dnonce < p.ratio;
+}
+
+struct Lotpot { double amount_, escrow_; };
+
+namespace RPC
+{
+	Lotpot& balance(bytes32 k) {
+		map<bytes32, Lotpot> local_;
+		return local_[k];
+	}
+
+	void grab(bytes32 secret, bytes32 hash, bytes32 target, bytes32 nonce, double ratio, double start, double range, double amount, bytes32 sig, vector<bytes32>)
+	{
+		double dnonce = double(nonce) / double(numeric_limits<bytes32>::max());
+		if (dnonce < ratio) {
+			bytes32 sender = sig;
+			if (balance(sender).amount_ >= amount) {
+				balance(sender).amount_ -= amount;
+				get_OXT_balance(target) += amount;
+			}
+			else {
+				balance(sender).escrow_ = 0;
+			}
+		}
+
+	}
+}
+
 
 
 struct ITickable
@@ -105,21 +144,7 @@ void register_timer_func(ITickable* p, double t)
 }
 
 
-struct Lotpot { double amount_, escrow_; };
 
-namespace RPC
-{
-	Lotpot& balance(bytes32 k) {
-		map<bytes32, Lotpot> local_;
-		return local_[k];
-	}
-
-	void grab(bytes32 secret, bytes32 hash, bytes32 target, bytes32 nonce, double ratio, double start, double range, double amount, bytes32 sig, vector<bytes32>)
-	{
-
-	}
-
-}
 
 
 
@@ -207,26 +232,24 @@ string encodePacked(T x, Ts... xs)
 }
 
 bytes32 keccak256(const string& x) 	{ return hash<string>{}(x); }
-bytes32 sign(bytes32 x) 			{ return hash<bytes32>{}(x);}
+
+// 'signature' is just the signer address, for easy recovery
+bytes32 sign(bytes32 x, bytes32 y)	{ return y;}
 
 
-struct payment
-{
-	bytes32 hash_secret, target, nonce, sender;
-	double  ratio, start, range, amount;
-	bytes32 sig;
-};
 
 
-double is_winner(payment p)  // offline check to see if ticket is a winner
-{
-	double dnonce = double(p.nonce) / double(numeric_limits<bytes32>::max());
-	return dnonce < p.ratio;
-}
+
 
 struct INet
 {
 	virtual ~INet() {}
+
+	void on_in_packets(		INet* client, double psize){} // inc data from target out to client
+	void on_out_packets(	INet* client, double psize){}	// inc data from client out to target
+	void on_dropped_packet(	INet* client, double psize){}
+	void on_queued_packet(	INet* client, double psize){}
+
 };
 
 struct Client : public ITickable, public INet
@@ -275,16 +298,16 @@ struct Server : public INet
 	//double bytes_per_upay_;  // desired inv frequency of payments, in bytes
 	//double data_price_;	  // server's OXT/byte price
 
-	double res_price_;	  	 // server's reserve(floor) OXT/byte price
-	double que_price_;	  	 // server's congestion OXT/byte price for queued packets
-	double drop_price_;		 // server's congestion OXT/byte price for dropped packets
+	double res_price_ 	= 1e-9;	  	 // server's reserve(floor) OXT/byte price
+	double que_price_	= 1e-8;	  	 // server's initial? congestion OXT/byte price for queued packets
+	double drop_price_	= 1e-7;		 // server's initial? congestion OXT/byte price for dropped packets
 
-	double targ_balance_;    // target min client balance before invoice sent
-	double min_balance_;     // min client balance to route packets (default 0)
+	//double targ_balance_;    // target min client balance before invoice sent
+	double min_balance_ = 0;     // min client balance to route packets (default 0)
 
 	// Internal
 	bytes32 account_;
-	map<Client*, double> 	balances_;
+	map<INet*, double> 		balances_;
 	map<double, bytes32> 	old_tickets_;
 	map<bytes32, bytes32> 	secrets_;
     
@@ -363,27 +386,27 @@ struct Server : public INet
 	}
 
 	
-	void bill_packet(Client* client, const string& data) {
-		double cost = data.size() * res_price_;
+	void bill_packet(INet* client, double psize) {
+		double cost = psize * res_price_;
 		balances_[client] -= cost;
 		//invoice_check(client);
 	}
 
-	void on_queued_packet(Client* client, const string& data) {
-		balances_[client] -= data.size() * que_price_;
+	void on_queued_packet(INet* client, double psize) {
+		balances_[client] -= psize * que_price_;
 	}
 
-	void on_dropped_packet(Client* client, const string& data) {
-		balances_[client] -= data.size() * drop_price_;
+	void on_dropped_packet(INet* client, double psize) {
+		balances_[client] -= psize * drop_price_;
 	}
 
-	void on_out_packets(Client* client, const string& data) {	// inc data from client out to target
-		bill_packet(client, data);
+	void on_out_packets(INet* client, double psize) {	// inc data from client out to target
+		bill_packet(client, psize);
 		if (balances_[client] > min_balance_); // { send(client.target, data); }
 	}
 
-	void on_in_packets(Client* client, const string& data) {   // inc data from target out to client
-		bill_packet(client, data);
+	void on_in_packets(INet* client, double psize) {   // inc data from target out to client
+		bill_packet(client, psize);
 		if (balances_[client] > min_balance_); //  { send(client, data); }
 	}
 
@@ -421,7 +444,7 @@ void Client::on_sendpay(uint256 hash_secret, bytes32 target)
 		bytes32 nonce = rand();
 		double ratio = win_prob, start = CurrentTime(), range = 1.0*Hours, amount = face_val;
 		bytes32 ticket = keccak256(encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
-		auto sig = sign(ticket);
+		auto sig = sign(ticket, account_);
 		//send("upay", server_, payment{hash_secret, target,  nonce, ratio, start, range, amount, sig} );
 		server_->on_upay(this, payment{hash_secret, target,  nonce, account_, ratio, start, range, amount, sig});
 		budget_->on_invoice();
