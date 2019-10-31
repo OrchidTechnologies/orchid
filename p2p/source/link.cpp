@@ -74,13 +74,13 @@ class Track {
     }
 };
 
-void Valve::Insert(Valve *pipe) {
+void Valve::Insert(Valve *valve) {
     if (!tracking_)
         return;
     Track()->insert(pipe);
 }
 
-void Valve::Remove(Valve *pipe) {
+void Valve::Remove(Valve *valve) {
     if (!tracking_)
         return;
     Track()->erase(pipe);
