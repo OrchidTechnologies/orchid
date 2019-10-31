@@ -90,6 +90,7 @@ double& get_max_trans_cost()   // (oracle) get estimate of max reasonable curren
 
 struct ITickable
 {
+	virtual ~ITickable() {}
     virtual void on_timer() = 0;
 };
 
@@ -125,6 +126,7 @@ namespace RPC
 
 struct IBudget
 {
+	virtual ~IBudget() {}
 	virtual double get_afford() = 0;
 	virtual double get_max_faceval() = 0;
     virtual void on_connect() = 0;
@@ -140,15 +142,16 @@ struct Budget_PredExpW : public IBudget, public ITickable
 	double max_prepay_time_ = 10;   // max amount of time client will prepay (credit) to server for undelivered bandwidth, in seconds (client->server trust)
 
     // config hyperparams
-	double timer_sample_rate_ = 60; // frequency of calls to on_timer() (nothing special about 60s)
+	double timer_sample_rate_ = 10.0; // frequency of calls to on_timer() (nothing special about 10s)
 
     // internal
 	double prepay_credit_;
-	double route_active_;                  // true when a connection/circuit is active
+	bool   route_active_;                  // true when a connection/circuit is active
 	double exp_half_life   = 1*Weeks;      // 1 one week 50% smoothing period
 	double last_pay_date_;
 	double spendrate_ = 0;
 	bytes32 account_;
+	double ltime_, wactive_;
 
 
 	virtual double get_afford() {
@@ -163,8 +166,8 @@ struct Budget_PredExpW : public IBudget, public ITickable
 
     void on_timer() {
     
-        double ltime    = persist_load("ltime", CurrentTime()); // load variable from persistent disk/DB/config, default to CurrentTime()
-        double wactive  = persist_load("wactive", 1.0);       
+        double ltime    = ltime_; // persist_load("ltime", CurrentTime()); // load variable from persistent disk/DB/config, default to CurrentTime()
+        double wactive  = wactive_; // persist_load("wactive", 1.0);
 
         // predict the fraction of time Orchid is active & connected (simple exp smoothing predictor) 
         double etime    = CurrentTime() - ltime;
@@ -176,11 +179,11 @@ struct Budget_PredExpW : public IBudget, public ITickable
         double pred_future_active_time = (budget_edate_ - CurrentTime()) * wactive;
         spendrate_      = get_OXT_balance(account_) / (pred_future_active_time + 1*Days);
 
-        persist_store("ltime",   ltime);
-        persist_store("wactive", wactive);
+        ltime_ 			= ltime; 	// persist_store("ltime",   ltime);
+        wactive_ 		= wactive; // persist_store("wactive", wactive);
     }
 
-    Budget_PredExpW(bytes32 account): account_(account) {
+    Budget_PredExpW(bytes32 account): account_(account), ltime_(CurrentTime()), wactive_(1.0) {
         register_timer_func(this, timer_sample_rate_); // call on_timer() every {timer_sample_rate_} seconds
         route_active_ = false;
         on_timer(); // tick the timer once on startup to update for any time orchid was shutdown
@@ -221,8 +224,12 @@ double is_winner(payment p)  // offline check to see if ticket is a winner
 	return dnonce < p.ratio;
 }
 
+struct INet
+{
+	virtual ~INet() {}
+};
 
-struct Client : public ITickable
+struct Client : public ITickable, public INet
 {
 	// budgeting params (input from UI)
 	double target_overhead_ = 0.1;	// target transaction fee overhead  // move to server?
@@ -241,7 +248,7 @@ struct Client : public ITickable
 		budget_  = new Budget_PredExpW(account_);
 	}
 
-	~Client() { delete budget_; }
+	virtual ~Client() { delete budget_; }
 
     
 	// External functions
@@ -262,11 +269,16 @@ struct Client : public ITickable
 
 
 
-struct Server
+struct Server : public INet
 {
 	// Server Hyperparams - from a config file or something
-	double bytes_per_upay_;  // desired inv frequency of payments, in bytes
-	double data_price_;	  // server's OXT/byte price
+	//double bytes_per_upay_;  // desired inv frequency of payments, in bytes
+	//double data_price_;	  // server's OXT/byte price
+
+	double res_price_;	  	 // server's reserve(floor) OXT/byte price
+	double que_price_;	  	 // server's congestion OXT/byte price for queued packets
+	double drop_price_;		 // server's congestion OXT/byte price for dropped packets
+
 	double targ_balance_;    // target min client balance before invoice sent
 	double min_balance_;     // min client balance to route packets (default 0)
 
@@ -287,6 +299,7 @@ struct Server
 	//void on_out_packets(Client* client, string data);	// inc data from client out to target
 	//void on_in_packets(Client* client, string data);   // inc data from target out to client
 
+	/*
 	void invoice_check(Client* client) {
 		if (balances_[client] <= targ_balance_) {
 		    double billed_amt  = max(bytes_per_upay_ * data_price_, targ_balance_ - balances_[client]);
@@ -297,10 +310,12 @@ struct Server
 		    client->on_invoice(hash_secret, account_, billed_amt, get_trans_cost());
 		}
 	}
+	*/
+
 
 	// client connection request
 	void on_connect(Client* client) {
-		invoice_check(client);
+		//invoice_check(client);
 		// connection established, stuff happens		
 	}
 
@@ -348,18 +363,26 @@ struct Server
 	}
 
 	
-	void bill_packet(Client* client, string data) {
-		double cost = data.size() * data_price_;
+	void bill_packet(Client* client, const string& data) {
+		double cost = data.size() * res_price_;
 		balances_[client] -= cost;
-		invoice_check(client);
+		//invoice_check(client);
 	}
 
-	void on_out_packets(Client* client, string data) {	// inc data from client out to target
+	void on_queued_packet(Client* client, const string& data) {
+		balances_[client] -= data.size() * que_price_;
+	}
+
+	void on_dropped_packet(Client* client, const string& data) {
+		balances_[client] -= data.size() * drop_price_;
+	}
+
+	void on_out_packets(Client* client, const string& data) {	// inc data from client out to target
 		bill_packet(client, data);
 		if (balances_[client] > min_balance_); // { send(client.target, data); }
 	}
 
-	void on_in_packets(Client* client, string data) {   // inc data from target out to client
+	void on_in_packets(Client* client, const string& data) {   // inc data from target out to client
 		bill_packet(client, data);
 		if (balances_[client] > min_balance_); //  { send(client, data); }
 	}

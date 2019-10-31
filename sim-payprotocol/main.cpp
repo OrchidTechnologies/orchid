@@ -37,5 +37,13 @@
 
 int main(int argc, char* argv[]) 
 {
+	int NumClients = 1000;
+	int NumServers = 10;
 
+	vector<Client*> clients;
+	vector<Server*> servers;
+
+	for (int i(0); i < NumClients; i++) {
+		clients.push_back(new Client());
+	}
 }
