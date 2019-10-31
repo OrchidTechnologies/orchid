@@ -524,7 +524,7 @@ Rt: time until user rerolls a bad connection
 D:  connection duration
 
 
- *
-/*
+*/
+
 
 
