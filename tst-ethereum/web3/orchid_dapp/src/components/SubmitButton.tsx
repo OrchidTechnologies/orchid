@@ -2,10 +2,11 @@ import React from "react";
 
 export const SubmitButton: React.FC<{
   onClick: () => void,
-  enabled: boolean
+  enabled: boolean,
+  hidden?: boolean
 }> = (props) => {
   return (
-    <div className="submit-button">
+    <div className={"submit-button"+(props.hidden?" hidden": "")}>
       <button
         onClick={(_) => {
           props.onClick();

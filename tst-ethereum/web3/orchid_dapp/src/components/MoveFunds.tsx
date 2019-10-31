@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {orchidMoveFundsToEscrow, oxtToWeiString, weiToOxtString} from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
-import {TxProps, TxResult} from "./TxResult";
+import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Container} from "react-bootstrap";
 
@@ -14,7 +14,7 @@ export class MoveFunds extends Component {
     moveAmount: null as number | null,
     amountError: true,
     potBalance: null as BigInt | null,
-    tx: new TxProps()
+    tx: new TransactionStatus()
   };
 
   componentDidMount(): void {
@@ -30,22 +30,22 @@ export class MoveFunds extends Component {
     if (account == null || this.state.moveAmount == null) {
       return;
     }
-    this.setState({tx: TxProps.running()});
+    this.setState({tx: TransactionStatus.running()});
 
     try {
       const moveEscrowWei = oxtToWeiString(this.state.moveAmount);
       let txId = await orchidMoveFundsToEscrow(moveEscrowWei);
-      this.setState({tx: TxProps.result("Transaction Complete!", txId)});
+      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
       api.updateAccount().then();
     } catch (err) {
-      this.setState({tx: TxProps.error(`Transaction Failed: ${err}`)});
+      this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
     }
   }
 
   render() {
     let api = OrchidAPI.shared();
     let submitEnabled = api.account.value !== null
-        && !this.state.tx.running
+        && !this.state.tx.isRunning()
         && this.state.moveAmount != null;
     return (
         <Container className="form-style">
@@ -73,7 +73,7 @@ export class MoveFunds extends Component {
               }}
           />
           <SubmitButton onClick={() => this.submitMoveFunds().then()} enabled={submitEnabled}/>
-          <TxResult /*ref={txResult}*/ tx={this.state.tx}/>
+          <TransactionProgress /*ref={txResult}*/ tx={this.state.tx}/>
         </Container>
     );
   }

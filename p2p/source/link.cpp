@@ -38,7 +38,7 @@ uint64_t Valve::Unique_ = 0;
 
 struct Tracker {
     std::mutex mutex_;
-    std::set<Valve *> pipes_;
+    std::set<Valve *> valves_;
 };
 
 class Track {
@@ -57,8 +57,8 @@ class Track {
 
                     std::unique_lock<std::mutex> lock(tracker.mutex_);
                     Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-                    for (auto pipe : tracker.pipes_)
-                        Log() << std::setw(5) << pipe->unique_ << ": " << boost::core::demangle(typeid(*pipe).name()) << std::endl;
+                    for (auto valve : tracker.valves_)
+                        Log() << std::setw(5) << valve->unique_ << ": " << boost::core::demangle(typeid(*valve).name()) << std::endl;
                     Log() << "vvvvvvvvvvvvvvvv" << std::endl;
                 }
             });
@@ -70,20 +70,20 @@ class Track {
     }
 
     std::set<Valve *> *operator ->() {
-        return &tracker_.pipes_;
+        return &tracker_.valves_;
     }
 };
 
-void Valve::Insert(Valve *pipe) {
+void Valve::Insert(Valve *valve) {
     if (!tracking_)
         return;
-    Track()->insert(pipe);
+    Track()->insert(valve);
 }
 
-void Valve::Remove(Valve *pipe) {
+void Valve::Remove(Valve *valve) {
     if (!tracking_)
         return;
-    Track()->erase(pipe);
+    Track()->erase(valve);
 }
 
 }

@@ -2,14 +2,14 @@ import React, {Component} from "react";
 import {LockStatus} from "./LockStatus";
 import {LotteryPot, orchidLock, orchidUnlock} from "../api/orchid-eth";
 import {OrchidAPI} from "../api/orchid-api";
-import {TxProps, TxResult} from "./TxResult";
+import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {Container} from "react-bootstrap";
 
 export class LockFunds extends Component {
 
   state = {
     pot: null as LotteryPot | null,
-    tx: new TxProps()
+    tx: new TransactionStatus()
   };
 
   componentDidMount(): void {
@@ -25,16 +25,16 @@ export class LockFunds extends Component {
     if (this.state.pot == null) {
       return;
     }
-    this.setState({tx: TxProps.running()});
+    this.setState({tx: TransactionStatus.running()});
     try {
       let txId = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? await orchidLock() : await orchidUnlock();
-      this.setState({tx: TxProps.result("Transaction Complete!", txId)});
+      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
 
       let api = OrchidAPI.shared();
       api.updateAccount().then();
     } catch (err) {
       console.log("error: ", err);
-      this.setState({tx: TxProps.error(`Transaction Failed: ${err}`)});
+      this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
     }
   }
 
@@ -43,7 +43,7 @@ export class LockFunds extends Component {
       return <div/>;
     }
     let text = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? "Lock" : "Unlock";
-    let submitEnabled = !this.state.tx.running;
+    let submitEnabled = !this.state.tx.isRunning();
     return (
       <Container className="form-style">
         <label className="title">Lock / Unlock Funds</label>
@@ -61,7 +61,7 @@ export class LockFunds extends Component {
             disabled={!submitEnabled}
           ><span>{text}</span></button>
         </div>
-        <TxResult /*ref={txResult}*/ tx={this.state.tx}/>
+        <TransactionProgress /*ref={txResult}*/ tx={this.state.tx}/>
       </Container>
     );
   }

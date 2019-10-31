@@ -5,7 +5,7 @@ import {
   orchidWithdrawFunds, orchidWithdrawFundsAndEscrow
 } from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
-import {TxProps, TxResult} from "./TxResult";
+import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Address} from "../api/orchid-types";
 import {Col, Container, Row} from "react-bootstrap";
@@ -13,7 +13,7 @@ import {Col, Container, Row} from "react-bootstrap";
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class WithdrawFunds extends Component {
-  txResult = React.createRef<TxResult>();
+  txResult = React.createRef<TransactionProgress>();
 
   state = {
     potBalance: null as BigInt | null,
@@ -22,7 +22,7 @@ export class WithdrawFunds extends Component {
     sendToAddress: null as Address | null,
     amountError: true,
     addressError: true,
-    tx: new TxProps()
+    tx: new TransactionStatus()
   };
   amountInput = React.createRef<HTMLInputElement>();
 
@@ -47,7 +47,7 @@ export class WithdrawFunds extends Component {
     ) {
       return;
     }
-    this.setState({tx: TxProps.running()});
+    this.setState({tx: TransactionStatus.running()});
     if (this.txResult.current != null) {
       this.txResult.current.scrollIntoView();
     }
@@ -60,11 +60,11 @@ export class WithdrawFunds extends Component {
         const withdrawWei = oxtToWeiString(withdrawAmount);
         txId = await orchidWithdrawFunds(sendToAddress, withdrawWei);
       }
-      this.setState({tx: TxProps.result("Transaction Complete!", txId)});
+      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
       api.updateAccount().then();
       api.updateTransactions().then();
     } catch (err) {
-      this.setState({tx: TxProps.error(`Transaction Failed: ${err}`)});
+      this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
     }
   };
 
@@ -75,7 +75,7 @@ export class WithdrawFunds extends Component {
 
     let api = OrchidAPI.shared();
     let submitEnabled =
-      !this.state.tx.running
+      !this.state.tx.isRunning()
       && api.account.value !== null
       && this.state.sendToAddress !== null
       && (this.state.withdrawAll || this.state.withdrawAmount !== null);
@@ -171,7 +171,7 @@ export class WithdrawFunds extends Component {
             Withdraw OXT</SubmitButton>
         </div>
 
-        <TxResult ref={this.txResult} tx={this.state.tx}/>
+        <TransactionProgress ref={this.txResult} tx={this.state.tx}/>
       </Container>
     );
   }

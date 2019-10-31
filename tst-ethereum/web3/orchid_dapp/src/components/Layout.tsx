@@ -21,13 +21,16 @@ import addIcon from '../assets/add-outlined.svg'
 import addIconSelected from '../assets/add.svg'
 import withdrawIcon from '../assets/withdraw-outlined.svg'
 import withdrawIconSelected from '../assets/withdraw.svg'
-import {Divider, Visibility} from "../util/util";
+import {Divider, hashPath, Visibility} from "../util/util";
 import {WalletStatus} from "../api/orchid-api";
 import {Overview} from "./Overview";
-import {Route, RouteContext} from "./Route";
+import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 
 export const Layout: FC<{ status: WalletStatus }> = (props) => {
-  const [route, setRoute] = useState(Route.Overview);
+
+  const [route, setRoute] = useState(pathToRoute(hashPath()) || Route.Overview);
+  const [navEnabledState, setNavEnabledState] = useState(true);
+
   const moreMenuItems = new Map<Route, string>([
     [Route.Balances, "Balances"],
     [Route.Transactions, "Transactions"],
@@ -39,9 +42,17 @@ export const Layout: FC<{ status: WalletStatus }> = (props) => {
 
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
-  let navEnabled = props.status === WalletStatus.Connected;
+  let navEnabled = navEnabledState && props.status === WalletStatus.Connected;
   return (
-    <RouteContext.Provider value={{route: route, setRoute: setRoute}}>
+    <RouteContext.Provider value={{
+      route: route,
+      setNavEnabled: (enabled: boolean) => {
+        console.log("set nav enabled: ", enabled);
+        setNavEnabledState(enabled)
+      },
+      setRoute: (route:Route)=>{ setURL(route); setRoute(route); }
+
+    }}>
       <Container className="main-content">
         <Row>
           <Col>
@@ -106,7 +117,7 @@ const NavButton: FC<{ route: Route, icon: any, iconSelected: any }> = (props) =>
   );
 };
 
-const NavRow: FC<{ route: Route}> = (props) => {
+const NavRow: FC<{ route: Route }> = (props) => {
   let {route, setRoute} = useContext(RouteContext);
   let selected = route === props.route;
   return (
