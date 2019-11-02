@@ -29,6 +29,8 @@ webrtc += $(filter-out \
     %/goog_cc_factory.cc \
 ,$(wildcard $(pwd)/webrtc/api/transport/*.cc))
 
+webrtc += $(wildcard $(pwd)/webrtc/api/transport/media/*.cc)
+
 webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
@@ -66,12 +68,17 @@ webrtc += $(pwd)/webrtc/modules/audio_processing/include/audio_processing_statis
 
 webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/include/*.cc)
 
+webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor_extension.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_header_extension_map.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_header_extensions.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_packet.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_packet_received.cc
+
+webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet.cc
+webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.cc
+webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc
 
 webrtc += $(wildcard $(pwd)/webrtc/modules/utility/source/*.cc)
 
