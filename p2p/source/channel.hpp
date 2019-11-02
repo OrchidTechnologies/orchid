@@ -32,94 +32,12 @@
 #include "error.hpp"
 #include "link.hpp"
 #include "task.hpp"
+#include "threads.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
 class Socket;
-
-// XXX: support exceptions
-
-template <typename Type_>
-class Value {
-  private:
-    Type_ value_;
-
-  public:
-    template <typename Code_>
-    void set(Code_ &code) {
-        value_ = code();
-    }
-
-    Type_ get() {
-        return std::move(value_);
-    }
-};
-
-template <>
-class Value<void> {
-  public:
-    template <typename Code_>
-    void set(Code_ &code) {
-        code();
-    }
-
-    void get() {
-    }
-};
-
-template <typename Code_>
-class Invoker :
-    public rtc::MessageHandler
-{
-  private:
-    typedef decltype(std::declval<Code_>()()) Type_;
-
-    Code_ code_;
-
-    Value<Type_> value_;
-    cppcoro::async_manual_reset_event ready_;
-
-  protected:
-    void OnMessage(rtc::Message *message) override {
-        value_.set(code_);
-        ready_.set();
-    }
-
-  public:
-    Invoker(Code_ code) :
-        code_(std::move(code))
-    {
-    }
-
-    task<Value<Type_>> operator ()(rtc::Thread *thread) {
-        // potentially pass value/ready as MessageData
-        orc_assert(!ready_.is_set());
-        thread->Post(RTC_FROM_HERE, this);
-        co_await ready_;
-        co_return std::move(value_);
-    }
-};
-
-class Threads {
-  public:
-    std::unique_ptr<rtc::Thread> signals_;
-    std::unique_ptr<rtc::Thread> network_;
-    std::unique_ptr<rtc::Thread> working_;
-
-    static const Threads &Get();
-
-  private:
-    Threads();
-};
-
-template <typename Code_>
-auto Post(Code_ code) -> task<decltype(code())> {
-    Invoker invoker(std::move(code));
-    auto value(co_await invoker(Threads::Get().signals_.get()));
-    co_await Schedule();
-    co_return value.get();
-}
 
 class CreateObserver :
     public cppcoro::async_manual_reset_event,
