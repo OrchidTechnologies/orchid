@@ -23,6 +23,7 @@
 #ifndef ORCHID_ENDPOINT_HPP
 #define ORCHID_ENDPOINT_HPP
 
+#include "crypto.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
 #include "origin.hpp"

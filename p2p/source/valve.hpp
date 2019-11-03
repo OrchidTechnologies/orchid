@@ -20,20 +20,50 @@
 /* }}} */
 
 
-#ifndef ORCHID_TAG_HPP
-#define ORCHID_TAG_HPP
+#ifndef ORCHID_VALVE_HPP
+#define ORCHID_VALVE_HPP
 
-#include "buffer.hpp"
-#include "crypto.hpp"
+#include <cppcoro/async_manual_reset_event.hpp>
+
+#include "error.hpp"
+#include "task.hpp"
 
 namespace orc {
 
-typedef Number<uint32_t> Tag;
-static const size_t TagSize = sizeof(uint32_t);
-inline Tag NewTag() {
-    return Random<TagSize>();
-}
+class Valve {
+  public:
+    static uint64_t Unique_;
+    const uint64_t unique_ = ++Unique_;
+
+  private:
+    static void Insert(Valve *valve);
+    static void Remove(Valve *valve);
+
+  private:
+    cppcoro::async_manual_reset_event shut_;
+
+  protected:
+    void Stop() {
+        orc_assert(!shut_.is_set());
+        shut_.set();
+    }
+
+  public:
+    Valve() {
+        Insert(this);
+    }
+
+    ~Valve() {
+        orc_insist(shut_.is_set());
+        Remove(this);
+    }
+
+    virtual task<void> Shut() {
+        co_await shut_;
+        co_await Schedule();
+    }
+};
 
 }
 
-#endif//ORCHID_TAG_HPP
+#endif//ORCHID_VALVE_HPP

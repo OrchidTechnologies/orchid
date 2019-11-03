@@ -23,15 +23,11 @@
 #ifndef ORCHID_LINK_HPP
 #define ORCHID_LINK_HPP
 
-#include <functional>
-
-#include <cppcoro/async_manual_reset_event.hpp>
-
 #include "buffer.hpp"
-#include "crypto.hpp"
 #include "error.hpp"
 #include "shared.hpp"
 #include "task.hpp"
+#include "valve.hpp"
 
 namespace orc {
 
@@ -40,40 +36,6 @@ class Pipe {
   public:
     virtual ~Pipe() = default;
     virtual task<void> Send(const Type_ &data) = 0;
-};
-
-class Valve {
-  public:
-    static uint64_t Unique_;
-    const uint64_t unique_ = ++Unique_;
-
-  private:
-    static void Insert(Valve *valve);
-    static void Remove(Valve *valve);
-
-  private:
-    cppcoro::async_manual_reset_event shut_;
-
-  protected:
-    void Stop() {
-        orc_assert(!shut_.is_set());
-        shut_.set();
-    }
-
-  public:
-    Valve() {
-        Insert(this);
-    }
-
-    ~Valve() {
-        orc_insist(shut_.is_set());
-        Remove(this);
-    }
-
-    virtual task<void> Shut() {
-        co_await shut_;
-        co_await Schedule();
-    }
 };
 
 class Basin {
