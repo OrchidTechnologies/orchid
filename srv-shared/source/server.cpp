@@ -82,9 +82,12 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     if (!Datagram(data, [&](Socket source, Socket target, const Buffer &data) {
         if (target != Port_)
             return false;
-        Datagram(Port_, source, Tie(), [&](const Buffer &data) {
-            return Land(data);
+
+        Spawn([this, source = std::move(source)]() -> task<void> {
+            auto packet(Tie());
+            co_await Bonded::Send(Datagram(Port_, source, packet));
         });
+
         return true;
     })) Send(data);
 }

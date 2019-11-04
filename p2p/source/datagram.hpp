@@ -31,7 +31,7 @@
 namespace orc {
 
 bool Datagram(const Buffer &data, const std::function<bool (Socket, Socket, Window)> &code);
-void Datagram(const Socket &source, const Socket &target, const Buffer &data, const std::function<void (const Buffer &data)> &code);
+Beam Datagram(const Socket &source, const Socket &target, const Buffer &data);
 
 }
 

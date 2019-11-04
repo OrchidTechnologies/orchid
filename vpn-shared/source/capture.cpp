@@ -278,9 +278,7 @@ class Punch :
 
   protected:
     void Land(const Buffer &data, Socket socket) override {
-        return Datagram(socket, socket_, data, [&](const Buffer &data) {
-            return hole_->Land(data);
-        });
+        hole_->Land(Datagram(socket, socket_, data));
     }
 
     void Stop(const std::string &error) override {

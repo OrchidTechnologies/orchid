@@ -49,7 +49,7 @@ bool Datagram(const Buffer &data, const std::function<bool (Socket, Socket, Wind
     return code(std::move(source), std::move(target), std::move(window));
 }
 
-void Datagram(const Socket &source, const Socket &target, const Buffer &data, const std::function<void (const Buffer &data)> &code) {
+Beam Datagram(const Socket &source, const Socket &target, const Buffer &data) {
     struct Header {
         openvpn::IPv4Header ip4;
         openvpn::UDPHeader udp;
@@ -86,7 +86,7 @@ void Datagram(const Socket &source, const Socket &target, const Buffer &data, co
         reinterpret_cast<uint8_t *>(&header.ip4.daddr)
     ));
 
-    return code(std::move(beam));
+    return beam;
 }
 
 }
