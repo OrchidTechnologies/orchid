@@ -12,10 +12,9 @@ export class OrchidContracts {
   // static lottery_addr: Address = '0x7AaCdc65c5e9128f7d8d58B060837f0b1b1a4b43'; // Main net
   static lottery_addr: Address = '0xa38b76b4EbD8f10fFC8866F001bB473874B9ee08'; // Main net
 
-  static lottery_push_max_gas: number = 500000;
-  // TODO: Needs update for new contract!
+  static lottery_push_max_gas: number = 800000;
   static lottery_push_method_hash: string =
-    '0xd6baf52d1a5fcdfc28f52cd8c2b20065e3d2d5354c0384fd85377ad6ae54493d'; // This is topic[0] of the push event.
+    '0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc'; // This is topic[0] of the push event.
 
   static lottery_pull_amount_max_gas: number = 200000;
   static lottery_pull_all_max_gas: number = 200000;

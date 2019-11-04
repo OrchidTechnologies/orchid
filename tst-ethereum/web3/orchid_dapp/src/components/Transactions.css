@@ -17,7 +17,7 @@
 .transactions-col {
     margin-left: 8px !important;
     margin-right: 8px !important;
-    min-width: 85px;
+    min-width: 60px;
     flex-grow: 1;
 }
 
@@ -27,7 +27,7 @@
 }
 
 .transactions-col2 {
-    min-width: 70px;
+    min-width: 80px;
 }
 
 .loading {

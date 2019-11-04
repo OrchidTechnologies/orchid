@@ -38,7 +38,7 @@ export class LockFunds extends Component {
       let txId = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ?
         await orchidLock(wallet.address, signer.address) :
         await orchidUnlock(wallet.address, signer.address);
-      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
+      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
       api.updateLotteryPot().then();
     } catch (err) {
       console.log("error: ", err);

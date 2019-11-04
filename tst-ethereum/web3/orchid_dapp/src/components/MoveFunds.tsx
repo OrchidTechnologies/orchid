@@ -37,7 +37,7 @@ export class MoveFunds extends Component {
       const moveEscrowWei = oxtToWei(this.state.moveAmount);
       let txId = await orchidMoveFundsToEscrow(wallet.address, signer.address, moveEscrowWei);
       await api.updateLotteryPot();
-      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
+      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
     } catch (err) {
       this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
     }

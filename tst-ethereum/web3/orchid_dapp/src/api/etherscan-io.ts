@@ -62,7 +62,7 @@ export class EtherscanIO {
     ]
     }
   */
-  async getEvents(potAddress: Address): Promise<LotteryPotUpdateEvent[]> {
+  async getEvents(funder: Address, signer: Address): Promise<LotteryPotUpdateEvent[]> {
     let url = new URL(this.api_url);
     let params: { [index: string]: string } = {
       'module': 'logs',
@@ -71,7 +71,8 @@ export class EtherscanIO {
       'toBlock': 'latest',
       'address': this.lotteryContractAddress,
       'topic0': this.lotteryFundMethodHash,
-      'topic1': EtherscanIO.pad64Chars(potAddress),
+      'topic1': EtherscanIO.pad64Chars(funder),
+      'topic2': EtherscanIO.pad64Chars(signer),
       'apikey': this.apiKey
     };
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));

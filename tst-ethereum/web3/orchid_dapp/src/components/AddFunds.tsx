@@ -66,7 +66,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       } else {
         await api.updateLotteryPot();
       }
-      setTx(TransactionStatus.result("Transaction Complete!", txId));
+      setTx(TransactionStatus.result(txId, "Transaction Complete!"));
       api.updateWallet().then();
       api.updateTransactions().then();
     } catch (err) {

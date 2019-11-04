@@ -68,7 +68,7 @@ export class OrchidAPI {
     let status =  await orchidInitEthereum();
     if (status === WalletStatus.Connected) {
       await this.updateWallet();
-      this.updateSigners();
+      await this.updateSigners();
       this.updateTransactions();
     }
     return status;
@@ -96,9 +96,15 @@ export class OrchidAPI {
   }
 
   async updateTransactions() {
+    console.log("update transactions");
     let io = new EtherscanIO();
-    let account = await orchidGetWallet();
-    let events: LotteryPotUpdateEvent[] = await io.getEvents(account.address); // Pot address is now the funder address
+    let funder = this.wallet.value;
+    let signer = this.signer.value;
+    if (!funder || !signer) {
+      console.log("can't update transactions, missing funder or signer");
+      return;
+    }
+    let events: LotteryPotUpdateEvent[] = await io.getEvents(funder.address, signer.address);
     this.transactions.next(events);
   }
 

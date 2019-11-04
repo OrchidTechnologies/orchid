@@ -64,7 +64,7 @@ export class WithdrawFunds extends Component {
       }
       await api.updateLotteryPot();
       await api.updateWallet();
-      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
+      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
       api.updateTransactions().then();
     } catch (err) {
       this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
