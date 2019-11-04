@@ -780,8 +780,6 @@ class Window :
     }
 
     void Take(uint8_t *data, size_t size) {
-        Beam beam(size);
-
         auto &here(range_);
         auto &step(offset_);
 
