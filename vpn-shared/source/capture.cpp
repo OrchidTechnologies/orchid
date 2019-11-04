@@ -31,7 +31,6 @@
 
 #include "acceptor.hpp"
 #include "capture.hpp"
-#include "client.hpp"
 #include "connection.hpp"
 #include "database.hpp"
 #include "directory.hpp"
@@ -41,6 +40,7 @@
 #include "network.hpp"
 #include "opening.hpp"
 #include "origin.hpp"
+#include "server.hpp"
 #include "syscall.hpp"
 #include "transport.hpp"
 

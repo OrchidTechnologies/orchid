@@ -20,23 +20,40 @@
 /* }}} */
 
 
-#ifndef ORCHID_COMMANDS_HPP
-#define ORCHID_COMMANDS_HPP
+#ifndef ORCHID_SERVER_HPP
+#define ORCHID_SERVER_HPP
 
-#include "tag.hpp"
+#include <rtc_base/rtc_certificate.h>
+#include <rtc_base/ssl_fingerprint.h>
+
+#include "bond.hpp"
+#include "origin.hpp"
 
 namespace orc {
 
-static const Tag Zero{0x00000000};
+class Server :
+    public Bonded,
+    public Pump
+{
+  public:
+    std::string pot_;
+    U<rtc::SSLFingerprint> remote_;
+    rtc::scoped_refptr<rtc::RTCCertificate> local_;
 
-static const Tag AnswerTag{0x22a2b0d0};
-static const Tag BatchTag{0x6c53939e};
-static const Tag CloseTag{0x81b978ae};
-static const Tag ConnectTag{0xe7280b03};
-static const Tag DiscardTag{0xf5d821c9};
-static const Tag OfferTag{0xe3a99039};
-static const Tag NegotiateTag{0x5d8a6d96};
+    Socket socket_;
+
+  protected:
+    void Land(Pipe *pipe, const Buffer &data) override;
+
+  public:
+    Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote);
+
+    task<void> Open(const S<Origin> &origin, const std::string &url);
+    task<void> Shut() override;
+
+    task<void> Send(const Buffer &data) override;
+};
 
 }
 
-#endif//ORCHID_COMMANDS_HPP
+#endif//ORCHID_SERVER_HPP

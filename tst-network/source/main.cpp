@@ -34,7 +34,7 @@
 
 #include "baton.hpp"
 #include "channel.hpp"
-#include "client.hpp"
+#include "server.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
 #include "jsonrpc.hpp"

@@ -23,7 +23,7 @@
 #include <rtc_base/openssl_identity.h>
 
 #include "channel.hpp"
-#include "client.hpp"
+#include "server.hpp"
 #include "locator.hpp"
 
 namespace orc {

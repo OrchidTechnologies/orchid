@@ -20,7 +20,6 @@
 /* }}} */
 
 
-#include <condition_variable>
 #include <cstdio>
 #include <iostream>
 #include <mutex>
@@ -32,13 +31,6 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
-
-#include <asio/connect.hpp>
-#include <asio/io_context.hpp>
-#include <asio/signal_set.hpp>
-#include <asio/write.hpp>
-
-#include <asio.hpp>
 
 #include <openssl/base.h>
 #include <openssl/pkcs12.h>
@@ -52,24 +44,13 @@
 
 #include "baton.hpp"
 #include "beast.hpp"
-#include "bond.hpp"
 #include "channel.hpp"
-#include "commands.hpp"
-#include "connection.hpp"
-#include "crypto.hpp"
+#include "client.hpp"
 #include "egress.hpp"
-//#include "ethereum.hpp"
-#include "forge.hpp"
-#include "http.hpp"
-#include "link.hpp"
 #include "local.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
-
-#define _disused \
-    __attribute__((__unused__))
-
 
 namespace bssl {
     BORINGSSL_MAKE_DELETER(PKCS12, PKCS12_free)
@@ -80,99 +61,20 @@ namespace orc {
 
 namespace po = boost::program_options;
 
-static std::vector<std::string> ice_;
-
-class Incoming final :
-    public Peer
-{
-  private:
-    S<Incoming> self_;
-    Sunk<> *sunk_;
-
-  protected:
-    void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        auto channel(sunk_->Wire<Channel>(shared_from_this(), interface));
-
-        Spawn([channel]() -> task<void> {
-            co_await channel->Connect();
-        });
-    }
-
-    void Stop(const std::string &error) override {
-        self_.reset();
-    }
-
-  public:
-    Incoming(Sunk<> *sunk) :
-        Peer([&]() {
-            Configuration configuration;
-            configuration.ice_ = ice_;
-            return configuration;
-        }()),
-        sunk_(sunk)
-    {
-    }
-
-    template <typename... Args_>
-    static S<Incoming> Create(Args_ &&...args) {
-        auto self(Make<Incoming>(std::forward<Args_>(args)...));
-        self->self_ = self;
-        return self;
-    }
-
-    ~Incoming() override {
-_trace();
-        Close();
-    }
-};
-
-class Client :
-    public Bonded,
-    public BufferDrain
-{
-  public:
-    S<Client> self_;
-
-  protected:
-    virtual Pump *Inner() = 0;
-
-    void Land(Pipe<Buffer> *pipe, const Buffer &data) override {
-        Spawn([this, data = Beam(data)]() -> task<void> {
-            co_return co_await Inner()->Send(data);
-        });
-    }
-
-    void Land(const Buffer &data) override {
-        Spawn([this, data = Beam(data)]() -> task<void> {
-            co_return co_await Bonded::Send(data);
-        });
-    }
-
-    void Stop(const std::string &error) override {
-    }
-
-  public:
-    task<void> Shut() override {
-        co_await Bonded::Shut();
-        co_await Inner()->Shut();
-    }
-
-    task<std::string> Respond(const std::string &offer) {
-        auto incoming(Incoming::Create(Wire()));
-        auto answer(co_await incoming->Answer(offer));
-        //answer = std::regex_replace(std::move(answer), std::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
-        co_return answer;
-    }
-};
-
 class Node final {
   private:
+    std::vector<std::string> ice_;
     S<Egress> egress_;
 
     std::mutex mutex_;
     std::map<std::string, W<Client>> clients_;
 
   public:
+    Node(std::vector<std::string> ice) :
+        ice_(ice)
+    {
+    }
+
     S<Egress> &Wire() {
         return egress_;
     }
@@ -215,7 +117,7 @@ class Node final {
                 auto client(Find(fingerprint));
 
                 auto offer(body);
-                auto answer(Wait(client->Respond(offer)));
+                auto answer(Wait(client->Respond(offer, ice_)));
 
                 Log() << std::endl;
                 Log() << "^^^^^^^^^^^^^^^^" << std::endl;
@@ -313,7 +215,8 @@ int Main(int argc, const char *const argv[]) {
 
     Initialize();
 
-    ice_.emplace_back(args["stun"].as<std::string>());
+    std::vector<std::string> ice;
+    ice.emplace_back(args["stun"].as<std::string>());
 
 
     std::string params;
@@ -419,7 +322,7 @@ int Main(int argc, const char *const argv[]) {
     }
 
 
-    auto node(Make<Node>());
+    auto node(Make<Node>(std::move(ice)));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;
