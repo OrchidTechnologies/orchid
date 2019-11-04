@@ -22,6 +22,7 @@
 
 #include "channel.hpp"
 #include "client.hpp"
+#include "local.hpp"
 
 namespace orc {
 
@@ -82,6 +83,12 @@ void Client::Land(const Buffer &data) {
 }
 
 void Client::Stop(const std::string &error) {
+}
+
+Client::Client(Locator locator, Address lottery) :
+    endpoint_(GetLocal(), std::move(locator)),
+    lottery_(std::move(lottery))
+{
 }
 
 task<void> Client::Shut() {

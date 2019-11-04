@@ -24,7 +24,9 @@
 #define ORCHID_CLIENT_HPP
 
 #include "bond.hpp"
+#include "endpoint.hpp"
 #include "link.hpp"
+#include "jsonrpc.hpp"
 #include "shared.hpp"
 #include "task.hpp"
 
@@ -36,6 +38,8 @@ class Client :
 {
   public:
     S<Client> self_;
+    Endpoint endpoint_;
+    Address lottery_;
 
   protected:
     virtual Pump *Inner() = 0;
@@ -46,6 +50,8 @@ class Client :
     void Stop(const std::string &error) override;
 
   public:
+    Client(Locator locator, Address lottery);
+
     task<void> Shut() override;
 
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);

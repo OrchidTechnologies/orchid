@@ -47,7 +47,9 @@
 #include "channel.hpp"
 #include "client.hpp"
 #include "egress.hpp"
+#include "jsonrpc.hpp"
 #include "local.hpp"
+#include "locator.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
@@ -64,14 +66,20 @@ namespace po = boost::program_options;
 class Node final {
   private:
     std::vector<std::string> ice_;
+
+    Locator locator_;
+    Address lottery_;
+
     S<Egress> egress_;
 
     std::mutex mutex_;
     std::map<std::string, W<Client>> clients_;
 
   public:
-    Node(std::vector<std::string> ice) :
-        ice_(ice)
+    Node(std::vector<std::string> ice, const std::string &rpc, Address lottery) :
+        ice_(ice),
+        locator_(Locator::Parse(rpc)),
+        lottery_(std::move(lottery))
     {
     }
 
@@ -84,7 +92,7 @@ class Node final {
         auto &cache(clients_[fingerprint]);
         if (auto client = cache.lock())
             return client;
-        auto client(Make<Sink<Client>>());
+        auto client(Make<Sink<Client>>(locator_, lottery_));
         client->Wire<Translator>(egress_);
         client->self_ = client;
         cache = client;
@@ -174,7 +182,8 @@ int Main(int argc, const char *const argv[]) {
     po::options_description configs("command-line / file");
     configs.add_options()
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
-        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc and websocket endpoint")
+        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
+        ("eth-lottery", po::value<std::string>()->default_value(""), "ethereum contract address of lottery")
         ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
         ("host", po::value<std::string>(), "hostname to access this server")
         ("port", po::value<uint16_t>()->default_value(8443), "port to advertise on blockchain")
@@ -322,7 +331,7 @@ int Main(int argc, const char *const argv[]) {
     }
 
 
-    auto node(Make<Node>(std::move(ice)));
+    auto node(Make<Node>(std::move(ice), args["rpc"].as<std::string>(), Address(args["eth-lottery"].as<std::string>())));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;
