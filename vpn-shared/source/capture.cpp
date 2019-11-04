@@ -186,15 +186,15 @@ class Logger :
         if (flow != flow_to_row_.end())
             return;
         const auto &source(five.Source());
-        const auto &target(five.Target());
+        const auto &destination(five.Target());
         // XXX: IPv6
         auto row_id = insert_(five.Protocol(),
             source.Host().to_v4().to_uint(), source.Port(),
-            target.Host().to_v4().to_uint(), target.Port()
+            destination.Host().to_v4().to_uint(), destination.Port()
         );
         flow_to_row_.emplace(five, row_id);
 
-        auto hostname(dns_log_.find(target.Host()));
+        auto hostname(dns_log_.find(destination.Host()));
         if (hostname != dns_log_.end()) {
             update_hostname_(hostname->second, row_id);
         }
@@ -424,7 +424,7 @@ _trace();
 
     // https://www.snellman.net/blog/archive/2016-02-01-tcp-rst/
     // https://superuser.com/questions/1056492/rst-sequence-number-and-window-size/1075512
-    void Reset(const Socket &source, const Socket &target, uint32_t sequence, uint32_t acknowledge) {
+    void Reset(const Socket &source, const Socket &destination, uint32_t sequence, uint32_t acknowledge) {
         struct Header {
             openvpn::IPv4Header ip4;
             openvpn::TCPHeader tcp;
@@ -443,12 +443,12 @@ _trace();
         header.ip4.protocol = openvpn::IPCommon::TCP;
         header.ip4.check = 0;
         header.ip4.saddr = boost::endian::native_to_big(source.Host().to_v4().to_uint());
-        header.ip4.daddr = boost::endian::native_to_big(target.Host().to_v4().to_uint());
+        header.ip4.daddr = boost::endian::native_to_big(destination.Host().to_v4().to_uint());
 
         header.ip4.check = openvpn::IPChecksum::checksum(span.data(), sizeof(header.ip4));
 
         header.tcp.source = boost::endian::native_to_big(source.Port());
-        header.tcp.dest = boost::endian::native_to_big(target.Port());
+        header.tcp.dest = boost::endian::native_to_big(destination.Port());
         header.tcp.seq = boost::endian::native_to_big(sequence);
         header.tcp.ack_seq = boost::endian::native_to_big(acknowledge);
         header.tcp.doff_res = sizeof(header.tcp) << 2;
@@ -570,12 +570,12 @@ task<bool> Split::Send(const Beam &data) {
 
             uint16_t offset(length + sizeof(openvpn::UDPHeader));
             uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
-            Socket target(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
+            Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
             try {
-                co_await punch->Send(subset.subset(offset, size), target);
+                co_await punch->Send(subset.subset(offset, size), destination);
             } catch (...) {
                 // XXX: this is a hack. test on Travis' device
-                Log() << "FAIL TO SEND UDP from " << source << " to " << target << std::endl;
+                Log() << "FAIL TO SEND UDP from " << source << " to " << destination << std::endl;
             }
 
             co_return true;

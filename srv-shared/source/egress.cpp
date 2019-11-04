@@ -34,8 +34,8 @@ void Egress::Land(const Buffer &data) {
     switch (ip4.protocol) {
         case openvpn::IPCommon::TCP: {
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
-            Three target(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(tcp.dest));
-            auto translation(Find(target));
+            Three destination(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(tcp.dest));
+            auto translation(Find(destination));
             if (translation == translations_.end())
                 return;
             const auto &replace(translation->second.socket_);
@@ -46,8 +46,8 @@ void Egress::Land(const Buffer &data) {
 
         case openvpn::IPCommon::UDP: {
             auto &udp(span.cast<openvpn::UDPHeader>(length));
-            Three target(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
-            auto translation(Find(target));
+            Three destination(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
+            auto translation(Find(destination));
             if (translation == translations_.end())
                 return;
             const auto &replace(translation->second.socket_);

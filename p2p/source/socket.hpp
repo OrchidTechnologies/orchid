@@ -114,16 +114,16 @@ inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
 class Four {
   private:
     Socket source_;
-    Socket target_;
+    Socket destination_;
 
     std::tuple<const Socket &, const Socket &> Tuple() const {
-        return std::tie(source_, target_);
+        return std::tie(source_, destination_);
     }
 
   public:
-    Four(Socket source, Socket target) :
+    Four(Socket source, Socket destination) :
         source_(std::move(source)),
-        target_(std::move(target))
+        destination_(std::move(destination))
     {
     }
 
@@ -131,7 +131,7 @@ class Four {
 
     Four(Four &&rhs) noexcept :
         source_(std::move(rhs.source_)),
-        target_(std::move(rhs.target_))
+        destination_(std::move(rhs.destination_))
     {
     }
 
@@ -140,7 +140,7 @@ class Four {
     }
 
     const Socket &Target() const {
-        return target_;
+        return destination_;
     }
 
     bool operator <(const Four &rhs) const {
@@ -171,8 +171,8 @@ class Five final :
     }
 
   public:
-    Five(uint8_t protocol, Socket source, Socket target) :
-        Four(std::move(source), std::move(target)),
+    Five(uint8_t protocol, Socket source, Socket destination) :
+        Four(std::move(source), std::move(destination)),
         protocol_(protocol)
     {
     }

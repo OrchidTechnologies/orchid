@@ -79,8 +79,8 @@ void Server::Send(const Buffer &data) {
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
-    if (!Datagram(data, [&](Socket source, Socket target, const Buffer &data) {
-        if (target != Port_)
+    if (!Datagram(data, [&](Socket source, Socket destination, const Buffer &data) {
+        if (destination != Port_)
             return false;
 
         Spawn([this, source = std::move(source)]() -> task<void> {

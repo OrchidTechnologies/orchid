@@ -44,12 +44,12 @@ bool Datagram(const Buffer &data, const std::function<bool (Socket, Socket, Wind
     window.Skip(boost::endian::big_to_native(udp.len) - sizeof(udp));
 
     Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
-    Socket target(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
+    Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
 
-    return code(std::move(source), std::move(target), std::move(window));
+    return code(std::move(source), std::move(destination), std::move(window));
 }
 
-Beam Datagram(const Socket &source, const Socket &target, const Buffer &data) {
+Beam Datagram(const Socket &source, const Socket &destination, const Buffer &data) {
     struct Header {
         openvpn::IPv4Header ip4;
         openvpn::UDPHeader udp;
@@ -70,12 +70,12 @@ Beam Datagram(const Socket &source, const Socket &target, const Buffer &data) {
     header.ip4.protocol = openvpn::IPCommon::UDP;
     header.ip4.check = 0;
     header.ip4.saddr = boost::endian::native_to_big(source.Host().to_v4().to_uint());
-    header.ip4.daddr = boost::endian::native_to_big(target.Host().to_v4().to_uint());
+    header.ip4.daddr = boost::endian::native_to_big(destination.Host().to_v4().to_uint());
 
     header.ip4.check = openvpn::IPChecksum::checksum(span.data(), sizeof(header.ip4));
 
     header.udp.source = boost::endian::native_to_big(source.Port());
-    header.udp.dest = boost::endian::native_to_big(target.Port());
+    header.udp.dest = boost::endian::native_to_big(destination.Port());
     header.udp.len = boost::endian::native_to_big<uint16_t>(sizeof(openvpn::UDPHeader) + data.size());
     header.udp.check = 0;
 
