@@ -905,10 +905,14 @@ class Rest final :
 };
 
 
+// XXX: omg why is this so inefficient?... please fix this :(
 class Builder :
     public Buffer
 {
   private:
+    // XXX: I mean, this should really be an std::vector<Beam>, right?
+    // XXX: but this whole thing should be something like std::string!
+    // XXX: and then you should be able to move a Builder to a Strung.
     std::list<Beam> ranges_;
 
   public:
