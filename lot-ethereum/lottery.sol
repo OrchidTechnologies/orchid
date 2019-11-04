@@ -173,6 +173,11 @@ contract OrchidLottery {
         take(funder, signer, amount, target);
     }
 
+    function give(address funder, address payable target, uint128 amount) public {
+        address signer = msg.sender;
+        take(funder, signer, amount, target);
+    }
+
     function pull(address signer, address payable target, uint128 amount) public {
         address funder = msg.sender;
         take(funder, signer, amount, target);
