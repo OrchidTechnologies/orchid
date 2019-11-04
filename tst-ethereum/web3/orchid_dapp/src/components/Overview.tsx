@@ -55,7 +55,7 @@ export const Overview: React.FC = () => {
   const [initialPath] = useState(hashPath());
 
   // Show a loading message while waiting for account status
-  if (newUser === undefined && potFunded === undefined) {
+  if (newUser !== true && potFunded === undefined) {
     return <OverviewLoading/>
   }
 

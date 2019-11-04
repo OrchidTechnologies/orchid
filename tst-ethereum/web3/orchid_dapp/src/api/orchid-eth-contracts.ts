@@ -22,7 +22,6 @@ export class OrchidContracts {
   static lottery_lock_max_gas: number = 200000;
   static lottery_warn_max_gas: number = 200000;
   static lottery_move_max_gas: number = 200000;
-  static lottery_bind_max_gas: number = 200000;
 
   static token_abi = [{
     "constant": true,

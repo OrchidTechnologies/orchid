@@ -63,7 +63,7 @@ export class OrchidAPI {
   debugLogChanged = new BehaviorSubject(true);
 
   async init(): Promise<WalletStatus> {
-    //this.captureLogs();
+    this.captureLogs();
 
     // Allow init ethereum to create the web3 context for validation
     let status =  await orchidInitEthereum();
