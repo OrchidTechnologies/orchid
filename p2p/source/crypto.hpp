@@ -43,6 +43,27 @@ Brick<Size_> Random() {
 Brick<32> Hash(const Buffer &data);
 Brick<32> Hash(const std::string &data);
 
+struct Signature {
+    Brick<32> r_;
+    Brick<32> s_;
+    uint8_t v_;
+
+    Signature(const Brick<65> &data);
+    Signature(const Brick<64> &data, int v);
+
+    operator Brick<65>() {
+        auto [external] = Take<Brick<65>>(Tie(r_, s_, Number<uint8_t>(v_)));
+        return external;
+    }
+};
+
+using Secret = Brick<32>;
+using Common = Brick<64>;
+Common Commonize(const Secret &secret);
+
+Signature Sign(const Secret &secret, const Brick<32> &data);
+Common Recover(const Signature &signature, const Brick<32> &data);
+
 }
 
 #endif//ORCHID_CRYPTO_HPP

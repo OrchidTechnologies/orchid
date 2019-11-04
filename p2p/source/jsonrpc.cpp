@@ -133,4 +133,9 @@ Explode::Explode(Window &&window) :
     orc_assert(window.empty());
 }
 
+Address::Address(const Brick<64> &common) :
+    Address(Hash(common).skip<12>().num<uint160_t>())
+{
+}
+
 }

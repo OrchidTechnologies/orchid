@@ -155,6 +155,8 @@ class Address :
         uint160_t(std::move(value))
     {
     }
+
+    Address(const Brick<64> &common);
 };
 
 class Argument final {

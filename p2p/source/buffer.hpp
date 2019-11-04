@@ -284,6 +284,34 @@ class Subset final :
     }
 };
 
+template <size_t Size_>
+class Bounded :
+    public Region
+{
+  private:
+    const uint8_t *data_;
+
+  public:
+    explicit Bounded(const uint8_t *data) :
+        data_(data)
+    {
+    }
+
+    const uint8_t *data() const override {
+        return data_;
+    }
+
+    size_t size() const override {
+        return Size_;
+    }
+
+    template <size_t Skip_>
+    auto skip() {
+        static_assert(Skip_ <= Size_);
+        return Bounded<Size_ - Skip_>(data() + Skip_);
+    }
+};
+
 template <typename Data_>
 class Strung final :
     public Region
@@ -359,6 +387,12 @@ class Data :
 
     bool operator <(const Data<Size_> &rhs) const {
         return data_ < rhs.data_;
+    }
+
+    template <size_t Skip_>
+    auto skip() {
+        static_assert(Skip_ <= Size_);
+        return Bounded<Size_ - Skip_>(data() + Skip_);
     }
 };
 
