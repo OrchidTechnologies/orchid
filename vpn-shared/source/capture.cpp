@@ -30,6 +30,7 @@
 #include <dns.h>
 
 #include "acceptor.hpp"
+#include "datagram.hpp"
 #include "capture.hpp"
 #include "connection.hpp"
 #include "database.hpp"
@@ -263,7 +264,7 @@ class Hole {
   public:
     virtual ~Hole() = default;
 
-    virtual void Land(Beam data) = 0;
+    virtual void Land(const Buffer &data) = 0;
 };
 
 class Punch :
@@ -277,42 +278,9 @@ class Punch :
 
   protected:
     void Land(const Buffer &data, Socket socket) override {
-        struct Header {
-            openvpn::IPv4Header ip4;
-            openvpn::UDPHeader udp;
-        } orc_packed;
-
-        Beam beam(sizeof(Header) + data.size());
-        auto span(beam.span());
-        auto &header(span.cast<Header>(0));
-        span.copy(sizeof(header), data);
-
-        header.ip4.version_len = openvpn::IPv4Header::ver_len(4, sizeof(header.ip4));
-        header.ip4.tos = 0;
-        header.ip4.tot_len = boost::endian::native_to_big<uint16_t>(span.size());
-        header.ip4.id = 0;
-        header.ip4.frag_off = 0;
-        header.ip4.ttl = 64;
-        header.ip4.protocol = openvpn::IPCommon::UDP;
-        header.ip4.check = 0;
-        header.ip4.saddr = boost::endian::native_to_big(socket.Host().to_v4().to_uint());
-        header.ip4.daddr = boost::endian::native_to_big(socket_.Host().to_v4().to_uint());
-
-        header.ip4.check = openvpn::IPChecksum::checksum(span.data(), sizeof(header.ip4));
-
-        header.udp.source = boost::endian::native_to_big(socket.Port());
-        header.udp.dest = boost::endian::native_to_big(socket_.Port());
-        header.udp.len = boost::endian::native_to_big<uint16_t>(sizeof(openvpn::UDPHeader) + data.size());
-        header.udp.check = 0;
-
-        header.udp.check = boost::endian::native_to_big(openvpn::udp_checksum(
-            reinterpret_cast<uint8_t *>(&header.udp),
-            boost::endian::big_to_native(header.udp.len),
-            reinterpret_cast<uint8_t *>(&header.ip4.saddr),
-            reinterpret_cast<uint8_t *>(&header.ip4.daddr)
-        ));
-
-        hole_->Land(std::move(beam));
+        return Datagram(socket, socket_, data, [&](const Buffer &data) {
+            return hole_->Land(data);
+        });
     }
 
     void Stop(const std::string &error) override {
@@ -442,7 +410,7 @@ class Split :
 
     void Connect(uint32_t local);
 
-    void Land(Beam data) override;
+    void Land(const Buffer &data) override;
     task<bool> Send(const Beam &data) override;
 
     task<void> Pull(const Four &four) override {
@@ -512,7 +480,7 @@ void Split::Connect(uint32_t local) {
     remote_ = asio::ip::address_v4(local_.Host().to_v4().to_uint() + 1);
 }
 
-void Split::Land(Beam data) {
+void Split::Land(const Buffer &data) {
     return capture_->Land(data, true);
 }
 
