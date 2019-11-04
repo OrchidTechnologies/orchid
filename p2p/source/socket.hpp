@@ -100,7 +100,7 @@ class Socket {
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
-    return out << socket.Host() << ":" << socket.Port();
+    return out << socket.Host() << ":" << std::dec << socket.Port();
 }
 
 class Four {
