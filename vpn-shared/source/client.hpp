@@ -48,11 +48,10 @@ class Server :
   public:
     Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote);
 
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Bonded::Send(data);
-    }
+    task<void> Open(const S<Origin> &origin, const std::string &url);
+    task<void> Shut() override;
 
-    task<void> Connect(const S<Origin> &origin, const std::string &url);
+    task<void> Send(const Buffer &data) override;
 };
 
 }

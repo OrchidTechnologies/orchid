@@ -40,7 +40,7 @@ Server::Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint
 {
 }
 
-task<void> Server::Connect(const S<Origin> &origin, const std::string &url) {
+task<void> Server::Open(const S<Origin> &origin, const std::string &url) {
     auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
         return *remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate);
     });
@@ -58,6 +58,15 @@ task<void> Server::Connect(const S<Origin> &origin, const std::string &url) {
         }
         co_return answer;
     });
+}
+
+task<void> Server::Shut() {
+    co_await Bonded::Shut();
+    co_await Pump::Shut();
+}
+
+task<void> Server::Send(const Buffer &data) {
+    co_return co_await Bonded::Send(data);
 }
 
 }

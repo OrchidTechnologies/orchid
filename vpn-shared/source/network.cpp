@@ -76,7 +76,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
 
     orc_assert(fingerprint != nullptr);
     auto server(sunk->Wire<Server>(pot, std::move(fingerprint)));
-    co_await server->Connect(origin, url);
+    co_await server->Open(origin, url);
 }
 
 task<S<Origin>> Network::Setup() {

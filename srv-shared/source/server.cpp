@@ -153,7 +153,8 @@ class Client :
 
   public:
     task<void> Shut() override {
-        co_return co_await Inner()->Shut();
+        co_await Bonded::Shut();
+        co_await Inner()->Shut();
     }
 
     task<std::string> Respond(const std::string &offer) {
