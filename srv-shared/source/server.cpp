@@ -21,9 +21,9 @@
 
 
 #include "channel.hpp"
-#include "client.hpp"
 #include "datagram.hpp"
 #include "local.hpp"
+#include "server.hpp"
 
 namespace orc {
 
@@ -71,13 +71,13 @@ _trace();
     }
 };
 
-void Client::Send(const Buffer &data) {
+void Server::Send(const Buffer &data) {
     Spawn([this, data = Beam(data)]() -> task<void> {
         co_return co_await Bonded::Send(data);
     });
 }
 
-void Client::Land(Pipe<Buffer> *pipe, const Buffer &data) {
+void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     if (!Datagram(data, [&](Socket source, Socket target, const Buffer &data) {
         return false;
     })) Spawn([this, data = Beam(data)]() -> task<void> {
@@ -85,25 +85,25 @@ void Client::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     });
 }
 
-void Client::Land(const Buffer &data) {
+void Server::Land(const Buffer &data) {
     Send(data);
 }
 
-void Client::Stop(const std::string &error) {
+void Server::Stop(const std::string &error) {
 }
 
-Client::Client(Locator locator, Address lottery) :
+Server::Server(Locator locator, Address lottery) :
     endpoint_(GetLocal(), std::move(locator)),
     lottery_(std::move(lottery))
 {
 }
 
-task<void> Client::Shut() {
+task<void> Server::Shut() {
     co_await Bonded::Shut();
     co_await Inner()->Shut();
 }
 
-task<std::string> Client::Respond(const std::string &offer, std::vector<std::string> ice) {
+task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {
     auto incoming(Incoming::Create(Wire(), std::move(ice)));
     auto answer(co_await incoming->Answer(offer));
     //answer = std::regex_replace(std::move(answer), std::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")

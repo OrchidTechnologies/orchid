@@ -20,11 +20,11 @@
 /* }}} */
 
 
+#include "client.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
 #include "network.hpp"
 #include "remote.hpp"
-#include "server.hpp"
 
 namespace orc {
 
@@ -75,8 +75,8 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
     }();
 
     orc_assert(fingerprint != nullptr);
-    auto server(sunk->Wire<Server>(pot, std::move(fingerprint)));
-    co_await server->Open(origin, url);
+    auto client(sunk->Wire<Client>(pot, std::move(fingerprint)));
+    co_await client->Open(origin, url);
 }
 
 task<S<Origin>> Network::Setup() {

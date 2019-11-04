@@ -42,11 +42,11 @@
 
 #include "baton.hpp"
 #include "channel.hpp"
-#include "client.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
 #include "node.hpp"
+#include "server.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 #include "transport.hpp"

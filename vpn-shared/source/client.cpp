@@ -23,19 +23,19 @@
 #include <rtc_base/openssl_identity.h>
 
 #include "channel.hpp"
+#include "client.hpp"
 #include "datagram.hpp"
-#include "server.hpp"
 #include "locator.hpp"
 
 namespace orc {
 
-void Server::Land(Pipe *pipe, const Buffer &data) {
+void Client::Land(Pipe *pipe, const Buffer &data) {
     if (!Datagram(data, [&](Socket source, Socket target, Window window) {
         return false;
     })) Pump::Land(data);
 }
 
-Server::Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote) :
+Client::Client(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote) :
     Pump(drain),
     pot_(pot),
     remote_(std::move(remote)),
@@ -43,7 +43,7 @@ Server::Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint
 {
 }
 
-task<void> Server::Open(const S<Origin> &origin, const std::string &url) {
+task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
     auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
         return *remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate);
     });
@@ -63,12 +63,12 @@ task<void> Server::Open(const S<Origin> &origin, const std::string &url) {
     });
 }
 
-task<void> Server::Shut() {
+task<void> Client::Shut() {
     co_await Bonded::Shut();
     co_await Pump::Shut();
 }
 
-task<void> Server::Send(const Buffer &data) {
+task<void> Client::Send(const Buffer &data) {
     co_return co_await Bonded::Send(data);
 }
 

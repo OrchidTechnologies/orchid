@@ -30,6 +30,7 @@
 #include <dns.h>
 
 #include "acceptor.hpp"
+#include "client.hpp"
 #include "datagram.hpp"
 #include "capture.hpp"
 #include "connection.hpp"
@@ -41,7 +42,6 @@
 #include "network.hpp"
 #include "opening.hpp"
 #include "origin.hpp"
-#include "server.hpp"
 #include "syscall.hpp"
 #include "transport.hpp"
 

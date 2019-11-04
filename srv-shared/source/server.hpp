@@ -23,35 +23,40 @@
 #ifndef ORCHID_SERVER_HPP
 #define ORCHID_SERVER_HPP
 
-#include <rtc_base/rtc_certificate.h>
-#include <rtc_base/ssl_fingerprint.h>
-
 #include "bond.hpp"
-#include "origin.hpp"
+#include "endpoint.hpp"
+#include "link.hpp"
+#include "jsonrpc.hpp"
+#include "shared.hpp"
+#include "task.hpp"
 
 namespace orc {
 
 class Server :
     public Bonded,
-    public Pump
+    public BufferDrain
 {
   public:
-    std::string pot_;
-    U<rtc::SSLFingerprint> remote_;
-    rtc::scoped_refptr<rtc::RTCCertificate> local_;
+    S<Server> self_;
+    Endpoint endpoint_;
+    Address lottery_;
 
-    Socket socket_;
+    void Send(const Buffer &data);
 
   protected:
-    void Land(Pipe *pipe, const Buffer &data) override;
+    virtual Pump *Inner() = 0;
+
+    void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
+
+    void Land(const Buffer &data) override;
+    void Stop(const std::string &error) override;
 
   public:
-    Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote);
+    Server(Locator locator, Address lottery);
 
-    task<void> Open(const S<Origin> &origin, const std::string &url);
     task<void> Shut() override;
 
-    task<void> Send(const Buffer &data) override;
+    task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
 };
 
 }

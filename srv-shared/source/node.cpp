@@ -48,10 +48,10 @@ void Node::Run(uint16_t port, const std::string &path, const std::string &key, c
             auto body(request.body());
             static int fingerprint_(0);
             std::string fingerprint(std::to_string(fingerprint_++));
-            auto client(Find(fingerprint));
+            auto server(Find(fingerprint));
 
             auto offer(body);
-            auto answer(Wait(client->Respond(offer, ice_)));
+            auto answer(Wait(server->Respond(offer, ice_)));
 
             Log() << std::endl;
             Log() << "^^^^^^^^^^^^^^^^" << std::endl;

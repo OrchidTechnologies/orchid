@@ -26,10 +26,10 @@
 #include <mutex>
 #include <vector>
 
-#include "client.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
+#include "server.hpp"
 
 namespace orc {
 
@@ -43,7 +43,7 @@ class Node final {
     S<Egress> egress_;
 
     std::mutex mutex_;
-    std::map<std::string, W<Client>> clients_;
+    std::map<std::string, W<Server>> servers_;
 
   public:
     Node(std::vector<std::string> ice, const std::string &rpc, Address lottery) :
@@ -57,16 +57,16 @@ class Node final {
         return egress_;
     }
 
-    S<Client> Find(const std::string &fingerprint) {
+    S<Server> Find(const std::string &fingerprint) {
         std::unique_lock<std::mutex> lock(mutex_);
-        auto &cache(clients_[fingerprint]);
-        if (auto client = cache.lock())
-            return client;
-        auto client(Make<Sink<Client>>(locator_, lottery_));
-        client->Wire<Translator>(egress_);
-        client->self_ = client;
-        cache = client;
-        return client;
+        auto &cache(servers_[fingerprint]);
+        if (auto server = cache.lock())
+            return server;
+        auto server(Make<Sink<Server>>(locator_, lottery_));
+        server->Wire<Translator>(egress_);
+        server->self_ = server;
+        cache = server;
+        return server;
     }
 
     void Run(uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params);
