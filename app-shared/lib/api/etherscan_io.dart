@@ -8,10 +8,10 @@ class EtherscanIO {
   static var tokenContractAddress =
       '0x53e71f4dec7f0753920a3e039289fdec616ad5b4';
   static var lotteryContractAddress =
-      '0xd4779b223797ecb6b8833f6f1545f2d94b29219c';
+      '0xa38b76b4EbD8f10fFC8866F001bB473874B9ee08'; // Main net
   static var lotteryFundMethodSignature =
-      '0xd6baf52d1a5fcdfc28f52cd8c2b20065e3d2d5354c0384fd85377ad6ae54493d';
-  static var startBlock = "800000";
+      '0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc';
+  static var startBlock = "872000";
 
   /*
     Get lottery pot funding events for the specified address in descending
@@ -65,8 +65,7 @@ class EtherscanIO {
     ]
     }
   */
-  static Future<List<LotteryPotUpdateEvent>> getLotteryPotUpdateEvents(
-      String potAddress) async {
+  static Future<List<LotteryPotUpdateEvent>> getLotteryPotUpdateEvents(String signer) async {
     var response = await http.post(url, body: {
       'module': 'logs',
       'action': 'getLogs',
@@ -74,7 +73,8 @@ class EtherscanIO {
       'toBlock': 'latest',
       'address': lotteryContractAddress,
       'topic0': lotteryFundMethodSignature,
-      'topic1': pad64Chars(potAddress),
+      //'topic1' would be the funder address here
+      'topic2': EtherscanIO.pad64Chars(signer),
       'apikey': apiKey
     });
     if (response.statusCode != 200) {
