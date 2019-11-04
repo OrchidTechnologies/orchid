@@ -35,8 +35,6 @@
 #include <openssl/base.h>
 #include <openssl/pkcs12.h>
 
-#include <json/json.h>
-
 #include <pc/webrtc_sdp.h>
 #include <rtc_base/message_digest.h>
 #include <rtc_base/openssl_identity.h>
@@ -323,12 +321,8 @@ int Main(int argc, const char *const argv[]) {
     auto path(args["path"].as<std::string>());
 
 
-    {
-        Json::Value descriptor;
-        descriptor["url"] = "https://" + host + ":" + std::to_string(port) + path;
-        descriptor["tls"] = fingerprint->algorithm + " " + fingerprint->GetRfc4572Fingerprint();
-        std::cerr << descriptor << std::endl;
-    }
+    std::cerr << "url = " << fingerprint->algorithm << " " << fingerprint->GetRfc4572Fingerprint() << std::endl;
+    std::cerr << "tls = " << "https://" << host << ":" << std::to_string(port) << path << std::endl;
 
 
     auto node(Make<Node>(std::move(ice), args["rpc"].as<std::string>(), Address(args["eth-lottery"].as<std::string>())));
