@@ -2,8 +2,8 @@ import React from "react";
 import {camelCase} from "../util/util";
 
 export enum Route {
-  Overview, Balances, AddFunds, WithdrawFunds, Transactions,
-  MoveFunds, LockFunds, ManageKeys, DebugPanel
+  Overview, Balances, AddFunds, CreateAccount, WithdrawFunds, Transactions,
+  MoveFunds, LockFunds, DebugPanel
 }
 
 export const RouteContext = React.createContext({

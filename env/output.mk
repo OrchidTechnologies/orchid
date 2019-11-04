@@ -140,7 +140,7 @@ $(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx/$(arch)) -std=c++11 -MD -MP -c -o $@ $< $(flags) $(xflags)
+	$(job)@$(prefix) $(cxx/$(arch)) -std=c++14 -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)

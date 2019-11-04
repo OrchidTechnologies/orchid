@@ -21,17 +21,25 @@ export class LockFunds extends Component {
     });
   }
 
-  private async lockOrUnlock() {
-    if (this.state.pot == null) {
+  private async lockOrUnlock()
+  {
+    let api = OrchidAPI.shared();
+    const wallet = api.wallet.value;
+    const signer = api.signer.value;
+
+    if (this.state.pot == null
+      || wallet === undefined
+      || signer === undefined
+    ) {
       return;
     }
     this.setState({tx: TransactionStatus.running()});
     try {
-      let txId = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? await orchidLock() : await orchidUnlock();
-      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
-
-      let api = OrchidAPI.shared();
-      api.updateAccount().then();
+      let txId = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ?
+        await orchidLock(wallet.address, signer.address) :
+        await orchidUnlock(wallet.address, signer.address);
+      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
+      api.updateLotteryPot().then();
     } catch (err) {
       console.log("error: ", err);
       this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});

@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {orchidMoveFundsToEscrow, oxtToWeiString, weiToOxtString} from "../api/orchid-eth";
+import {orchidMoveFundsToEscrow, oxtToWei, weiToOxtString} from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
@@ -26,17 +26,18 @@ export class MoveFunds extends Component {
 
   async submitMoveFunds() {
     let api = OrchidAPI.shared();
-    let account = api.account.value;
-    if (account == null || this.state.moveAmount == null) {
+    let wallet = api.wallet.value;
+    let signer = api.signer.value;
+    if (wallet === undefined || signer === undefined || this.state.moveAmount == null) {
       return;
     }
     this.setState({tx: TransactionStatus.running()});
 
     try {
-      const moveEscrowWei = oxtToWeiString(this.state.moveAmount);
-      let txId = await orchidMoveFundsToEscrow(moveEscrowWei);
-      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
-      api.updateAccount().then();
+      const moveEscrowWei = oxtToWei(this.state.moveAmount);
+      let txId = await orchidMoveFundsToEscrow(wallet.address, signer.address, moveEscrowWei);
+      await api.updateLotteryPot();
+      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
     } catch (err) {
       this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
     }
@@ -44,7 +45,7 @@ export class MoveFunds extends Component {
 
   render() {
     let api = OrchidAPI.shared();
-    let submitEnabled = api.account.value !== null
+    let submitEnabled = api.wallet.value !== null
         && !this.state.tx.isRunning()
         && this.state.moveAmount != null;
     return (
