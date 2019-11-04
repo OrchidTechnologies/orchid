@@ -150,14 +150,17 @@ contract OrchidLottery {
         bytes32 ticket = keccak256(abi.encodePacked(hash, nonce, ratio, start, range, amount, funder, target));
 
         {
+            mapping(bytes32 => Track) storage tracks = tracks_[target];
+
+            Track storage track = tracks[ticket];
             uint256 until = start + range;
             require(until > block.timestamp);
-            require(tracks_[target][ticket].until_ == 0);
-            tracks_[target][ticket].until_ = until;
-        }
+            require(track.until_ == 0);
+            track.until_ = until;
 
-        for (uint256 i = 0; i != old.length; ++i)
-            kill(tracks_[target][old[i]]);
+            for (uint256 i = 0; i != old.length; ++i)
+                kill(tracks[old[i]]);
+        }
 
         if (start < block.timestamp) {
             uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
