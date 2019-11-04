@@ -74,6 +74,7 @@ class EtherscanIO {
       'address': lotteryContractAddress,
       'topic0': lotteryFundMethodSignature,
       //'topic1' would be the funder address here
+      'topic0_2_opr': 'and',
       'topic2': EtherscanIO.pad64Chars(signer),
       'apikey': apiKey
     });
