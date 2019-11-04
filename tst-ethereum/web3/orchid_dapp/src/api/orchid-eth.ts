@@ -122,7 +122,6 @@ export async function orchidGetWallet(): Promise<Wallet> {
   } catch (err) {
     console.log("Error getting oxt balance", err);
   }
-  console.log("orchid get wallet: ", wallet);
   return wallet;
 }
 
@@ -185,9 +184,14 @@ export async function orchidAddFunds(funder: Address, signer: Address, amount: B
         })
         .on('confirmation', (confirmationNumber, receipt) => {
           console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
-          // Wait for one confirmation on the funding tx.
-          const hash = receipt['transactionHash'];
-          resolve(hash);
+          // Wait for confirmations on the funding tx.
+          const requiredConfirmations = 2;
+          if (confirmationNumber >= requiredConfirmations) {
+            const hash = receipt['transactionHash'];
+            resolve(hash);
+          } else {
+            console.log("waiting for more confirmations...");
+          }
         })
         .on('error', (err) => {
           console.log("Fund error: ", JSON.stringify(err));
@@ -275,11 +279,13 @@ export async function orchidUnlock(funder: Address, signer: Address): Promise<st
 
 /// Get the lottery pot balance and escrow amount for the specified address.
 export async function orchidGetLotteryPot(funder: Wallet, signer: Signer): Promise<LotteryPot | null> {
-  console.log("get lottery pot");
+  console.log("get lottery pot for signer: ", signer);
+  //console.log("get lottery pot for signer: ", signer);
   let result = await OrchidContracts.lottery.methods
     .look(funder.address, signer.address)
     .call({from: funder.address});
   if (result == null || result._length < 3) {
+    console.log("get lottery pot failed");
     return null;
   }
   const balance: BigInt = result[0];

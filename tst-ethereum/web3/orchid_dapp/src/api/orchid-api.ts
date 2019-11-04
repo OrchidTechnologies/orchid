@@ -7,7 +7,7 @@ import {
   Signer, orchidGetSigners
 } from "./orchid-eth";
 import {BehaviorSubject, Observable} from "rxjs";
-import {filter, flatMap, map} from "rxjs/operators";
+import {filter, flatMap, map, shareReplay} from "rxjs/operators";
 import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
 
@@ -30,33 +30,32 @@ export class OrchidAPI {
 
   // The current wallet
   wallet = new BehaviorSubject<Wallet | undefined>(undefined);
-  wallet_wait: Observable<Wallet> = this.wallet.pipe(filter(isDefined));
+  wallet_wait: Observable<Wallet> = this.wallet.pipe(filter(isDefined), shareReplay(1));
 
   // The list of available signer accounts
   signersAvailable = new BehaviorSubject<Signer [] | undefined>(undefined);
-  signersAvailable_wait: Observable<Signer []> = this.signersAvailable.pipe(filter(isDefined));
+  signersAvailable_wait: Observable<Signer []> = this.signersAvailable.pipe(filter(isDefined), shareReplay(1));
 
   // True if the user has no signer accounts configured yet.
   newUser_wait: Observable<boolean> = this.signersAvailable_wait.pipe(
-    map( (signers: Signer [])=>{ return signers.length === 0 } )
+    map( (signers: Signer [])=>{ return signers.length === 0 } ), shareReplay(1)
   );
-
 
   // The currently selected signer account
   signer = new BehaviorSubject<Signer | undefined>(undefined);
-  signer_wait: Observable<Signer> = this.signer.pipe(filter(isDefined));
+  signer_wait: Observable<Signer> = this.signer.pipe(filter(isDefined), shareReplay(1));
 
   // The Lottery pot associated with the currently selected signer account.
-  lotteryPot = this.signer_wait.pipe(
+  lotteryPot: Observable<LotteryPot | null> = this.signer_wait.pipe(
       flatMap((signer: Signer) => { // flatMap resolves promises
         return orchidGetLotteryPot(signer.wallet, signer);
-      })
+      }), shareReplay(1)
   );
-  lotteryPot_wait: Observable<LotteryPot> = this.lotteryPot.pipe(filter(isNotNull));
+  lotteryPot_wait: Observable<LotteryPot> = this.lotteryPot.pipe(filter(isNotNull), shareReplay(1));
 
   // Funding transactions on the current wallet
   transactions = new BehaviorSubject<LotteryPotUpdateEvent[] | null>(null);
-  transactions_wait: Observable<LotteryPotUpdateEvent[]> = this.transactions.pipe(filter(isNotNull));
+  transactions_wait: Observable<LotteryPotUpdateEvent[]> = this.transactions.pipe(filter(isNotNull), shareReplay(1));
 
   // Logging
   debugLog = "";
@@ -81,6 +80,7 @@ export class OrchidAPI {
     this.signersAvailable.next(signers);
     // Select the first if available
     if (!this.signer.value && signers.length > 0) {
+      console.log("updateSigners setting default signer: ", signers[0]);
       this.signer.next(signers[0]);
     }
   }
@@ -91,6 +91,7 @@ export class OrchidAPI {
 
   /// Update selected lottery pot balances
   async updateLotteryPot() {
+    console.log("Update lottery pot refreshing signer data: ", this.signer.value);
     this.signer.next(this.signer.value); // Set the signer again to trigger a refresh
   }
 

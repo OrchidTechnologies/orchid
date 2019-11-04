@@ -62,9 +62,9 @@ export class WithdrawFunds extends Component {
         const withdrawWei = oxtToWei(withdrawAmount);
         txId = await orchidWithdrawFunds(wallet.address, signer.address, targetAddress, withdrawWei);
       }
+      await api.updateLotteryPot();
+      await api.updateWallet();
       this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
-      api.updateLotteryPot().then();
-      api.updateWallet().then();
       api.updateTransactions().then();
     } catch (err) {
       this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});

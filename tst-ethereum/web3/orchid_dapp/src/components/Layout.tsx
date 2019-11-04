@@ -31,7 +31,6 @@ export const Layout: FC<{ status: WalletStatus }> = (props) => {
   const [navEnabledState, setNavEnabledState] = useState(true);
 
   const moreMenuItems = new Map<Route, string>([
-    [Route.CreateAccount, "Create Account"],
     [Route.Balances, "Balances"],
     [Route.Transactions, "Transactions"],
     [Route.MoveFunds, "Move Funds"],

@@ -68,6 +68,7 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
                     let api = OrchidAPI.shared();
                     let wallet = api.wallet.value;
                     if (!wallet) { return; }
+                    console.log("Account selector chose signer: ", signer.address);
                     api.signer.next(new Signer(wallet, signer.address))
                   }}
                   key={signer.address}>

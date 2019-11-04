@@ -33,8 +33,9 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let walletSubscription = api.wallet_wait.subscribe(account => {
-      setWalletBalance(account.oxtBalance);
+    let walletSubscription = api.wallet_wait.subscribe(wallet => {
+      console.log("add funds got wallet: ", wallet);
+      setWalletBalance(wallet.oxtBalance);
     });
     return () => {
       walletSubscription.unsubscribe();
@@ -60,13 +61,12 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       const escrowWei = oxtToWei(addEscrow);
 
       let txId = await orchidAddFunds(walletAddress, signerAddress, amountWei, escrowWei);
-      setTx(TransactionStatus.result("Transaction Complete!", txId));
-
       if (props.createAccount) {
         await api.updateSigners();
       } else {
-        api.updateLotteryPot().then();
+        await api.updateLotteryPot();
       }
+      setTx(TransactionStatus.result("Transaction Complete!", txId));
       api.updateWallet().then();
       api.updateTransactions().then();
     } catch (err) {
