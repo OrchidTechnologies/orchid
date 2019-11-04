@@ -9,6 +9,7 @@ import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
 import {Address} from "../api/orchid-types";
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 interface AddFundsProps {
   createAccount: boolean

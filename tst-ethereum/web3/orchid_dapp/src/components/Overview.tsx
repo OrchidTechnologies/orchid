@@ -8,6 +8,7 @@ import beaver from '../assets/beaver1.svg';
 import coinbase from '../assets/coinbase.jpg';
 import {hashPath} from "../util/util";
 import {OrchidAPI} from "../api/orchid-api";
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 interface OverviewProps {
   noAccount?: boolean,
