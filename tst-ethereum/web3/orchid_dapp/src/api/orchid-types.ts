@@ -6,6 +6,9 @@ export type Address = string;
 export function isNotNull<T>(a: T | null): a is T {
   return a !== null;
 }
+export function isDefined<T>(a: T | undefined): a is T {
+  return a !== undefined;
+}
 
 /*
 export class State<T> {

@@ -21,7 +21,7 @@ export class Balances extends Component {
   componentDidMount(): void {
     let api = OrchidAPI.shared();
 
-    api.account_wait.subscribe(account => {
+    api.wallet_wait.subscribe(account => {
       console.log("Funding from account: ", account.address);
       console.log("Balance: ", account.ethBalance);
       this.setState({

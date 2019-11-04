@@ -9,19 +9,20 @@ export class OrchidContracts {
   static token_addr: Address = '0x53e71f4dec7f0753920a3e039289fdec616ad5b4'; // Main net
   static token_approval_max_gas: number = 50000;
 
-  static lottery_addr: Address = '0x7AaCdc65c5e9128f7d8d58B060837f0b1b1a4b43'; // Main net
-  static lottery_look_max_gas: number = 50000;
+  // static lottery_addr: Address = '0x7AaCdc65c5e9128f7d8d58B060837f0b1b1a4b43'; // Main net
+  static lottery_addr: Address = '0xa38b76b4EbD8f10fFC8866F001bB473874B9ee08'; // Main net
 
-  static lottery_push_max_gas: number = 100000;
+  static lottery_push_max_gas: number = 500000;
+  // TODO: Needs update for new contract!
   static lottery_push_method_hash: string =
     '0xd6baf52d1a5fcdfc28f52cd8c2b20065e3d2d5354c0384fd85377ad6ae54493d'; // This is topic[0] of the push event.
 
-  static lottery_pull_amount_max_gas: number = 100000;
-  static lottery_pull_all_max_gas: number = 100000;
-  static lottery_lock_max_gas: number = 100000;
-  static lottery_warn_max_gas: number = 100000;
-  static lottery_move_max_gas: number = 100000;
-  static lottery_bind_max_gas: number = 100000;
+  static lottery_pull_amount_max_gas: number = 200000;
+  static lottery_pull_all_max_gas: number = 200000;
+  static lottery_lock_max_gas: number = 200000;
+  static lottery_warn_max_gas: number = 200000;
+  static lottery_move_max_gas: number = 200000;
+  static lottery_bind_max_gas: number = 200000;
 
   static token_abi = [{
     "constant": true,
@@ -297,55 +298,17 @@ export class OrchidContracts {
       "constant": false,
       "inputs": [
         {
-          "name": "secret",
-          "type": "uint256"
-        },
-        {
-          "name": "hash",
-          "type": "bytes32"
-        },
-        {
-          "name": "target",
+          "internalType": "address",
+          "name": "signer",
           "type": "address"
         },
         {
-          "name": "nonce",
-          "type": "uint256"
-        },
-        {
-          "name": "ratio",
-          "type": "uint256"
-        },
-        {
-          "name": "start",
-          "type": "uint256"
-        },
-        {
-          "name": "range",
-          "type": "uint128"
-        },
-        {
+          "internalType": "uint128",
           "name": "amount",
           "type": "uint128"
-        },
-        {
-          "name": "v",
-          "type": "uint8"
-        },
-        {
-          "name": "r",
-          "type": "bytes32"
-        },
-        {
-          "name": "s",
-          "type": "bytes32"
-        },
-        {
-          "name": "old",
-          "type": "bytes32[]"
         }
       ],
-      "name": "grab",
+      "name": "move",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -355,13 +318,122 @@ export class OrchidContracts {
       "constant": true,
       "inputs": [
         {
+          "internalType": "address",
+          "name": "funder",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
           "name": "signer",
           "type": "address"
         }
       ],
-      "name": "find",
+      "name": "look",
       "outputs": [
         {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "target",
+          "type": "address"
+        }
+      ],
+      "name": "pull",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "funder",
+          "type": "address"
+        }
+      ],
+      "name": "keys",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "target",
+          "type": "address"
+        },
+        {
+          "internalType": "uint128",
+          "name": "amount",
+          "type": "uint128"
+        }
+      ],
+      "name": "pull",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "funder",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "offset",
+          "type": "uint256"
+        }
+      ],
+      "name": "seek",
+      "outputs": [
+        {
+          "internalType": "address",
           "name": "",
           "type": "address"
         }
@@ -374,70 +446,17 @@ export class OrchidContracts {
       "constant": false,
       "inputs": [
         {
-          "name": "target",
-          "type": "address"
-        }
-      ],
-      "name": "pull",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
+          "internalType": "address",
           "name": "signer",
           "type": "address"
-        }
-      ],
-      "name": "bind",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "target",
-          "type": "address"
         },
         {
-          "name": "amount",
-          "type": "uint128"
-        }
-      ],
-      "name": "pull",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "amount",
-          "type": "uint128"
-        }
-      ],
-      "name": "move",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
+          "internalType": "uint128",
           "name": "amount",
           "type": "uint128"
         },
         {
+          "internalType": "uint128",
           "name": "total",
           "type": "uint128"
         }
@@ -449,9 +468,31 @@ export class OrchidContracts {
       "type": "function"
     },
     {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "funder",
+          "type": "address"
+        }
+      ],
+      "name": "size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "constant": false,
       "inputs": [
         {
+          "internalType": "bytes32",
           "name": "ticket",
           "type": "bytes32"
         }
@@ -464,7 +505,88 @@ export class OrchidContracts {
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "secret",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "hash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address payable",
+          "name": "target",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "funder",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "nonce",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ratio",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "start",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint128",
+          "name": "range",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "amount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint8",
+          "name": "v",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "r",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "s",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "old",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "grab",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        }
+      ],
       "name": "warn",
       "outputs": [],
       "payable": false,
@@ -472,35 +594,14 @@ export class OrchidContracts {
       "type": "function"
     },
     {
-      "constant": true,
+      "constant": false,
       "inputs": [
         {
-          "name": "funder",
+          "internalType": "address",
+          "name": "signer",
           "type": "address"
         }
       ],
-      "name": "look",
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint128"
-        },
-        {
-          "name": "",
-          "type": "uint128"
-        },
-        {
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
       "name": "lock",
       "outputs": [],
       "payable": false,
@@ -510,6 +611,7 @@ export class OrchidContracts {
     {
       "inputs": [
         {
+          "internalType": "address",
           "name": "token",
           "type": "address"
         }
@@ -523,21 +625,31 @@ export class OrchidContracts {
       "inputs": [
         {
           "indexed": true,
+          "internalType": "address",
           "name": "funder",
           "type": "address"
         },
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
           "indexed": false,
+          "internalType": "uint128",
           "name": "amount",
           "type": "uint128"
         },
         {
           "indexed": false,
+          "internalType": "uint128",
           "name": "escrow",
           "type": "uint128"
         },
         {
           "indexed": false,
+          "internalType": "uint256",
           "name": "unlock",
           "type": "uint256"
         }
@@ -546,5 +658,6 @@ export class OrchidContracts {
       "type": "event"
     }
   ];
+
 }
 
