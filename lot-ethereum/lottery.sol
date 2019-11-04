@@ -127,7 +127,7 @@ contract OrchidLottery {
     }
 
 
-    function take(address funder, address signer, uint128 amount) private returns (uint128) {
+    function take(address funder, address signer, uint128 amount, address payable target) private {
         Pot storage pot = find(funder, signer);
 
         if (pot.amount_ >= amount)
@@ -138,14 +138,16 @@ contract OrchidLottery {
         }
 
         send(funder, signer, pot);
-        return amount;
+
+        if (amount != 0)
+            require(token_.transfer(target, amount));
     }
 
-    function grab(uint256 secret, bytes32 hash, address payable target, address funder, uint256 nonce, uint256 ratio, uint256 start, uint128 range, uint128 amount, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
+    function grab(uint256 secret, bytes32 hash, uint256 nonce, uint256 ratio, uint256 start, uint128 range, uint128 amount, address funder, address payable target, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(secret)) == hash);
         require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
 
-        bytes32 ticket = keccak256(abi.encodePacked(hash, target, funder, nonce, ratio, start, range, amount));
+        bytes32 ticket = keccak256(abi.encodePacked(hash, nonce, ratio, start, range, amount, funder, target));
 
         {
             uint256 until = start + range;
@@ -157,29 +159,20 @@ contract OrchidLottery {
         for (uint256 i = 0; i != old.length; ++i)
             kill(tracks_[target][old[i]]);
 
-        {
-            uint128 limit;
-            if (start >= block.timestamp)
-                limit = amount;
-            else
-                limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
-
-            address signer = ecrecover(ticket, v, r, s);
-            require(signer != address(0));
-
-            amount = take(funder, signer, amount);
+        if (start < block.timestamp) {
+            uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
             if (amount > limit)
                 amount = limit;
         }
 
-        if (amount != 0)
-            require(token_.transfer(target, amount));
+        address signer = ecrecover(ticket, v, r, s);
+        require(signer != address(0));
+        take(funder, signer, amount, target);
     }
 
     function pull(address signer, address payable target, uint128 amount) public {
         address funder = msg.sender;
-        amount = take(funder, signer, amount);
-        require(token_.transfer(target, amount));
+        take(funder, signer, amount, target);
     }
 
 
