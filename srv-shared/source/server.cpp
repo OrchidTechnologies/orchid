@@ -126,12 +126,12 @@ _trace();
     }
 };
 
-class Space :
+class Client :
     public Bonded,
     public BufferDrain
 {
   public:
-    S<Space> self_;
+    S<Client> self_;
 
   protected:
     virtual Pump *Inner() = 0;
@@ -169,23 +169,23 @@ class Node final {
     S<Egress> egress_;
 
     std::mutex mutex_;
-    std::map<std::string, W<Space>> spaces_;
+    std::map<std::string, W<Client>> clients_;
 
   public:
     S<Egress> &Wire() {
         return egress_;
     }
 
-    S<Space> Find(const std::string &fingerprint) {
+    S<Client> Find(const std::string &fingerprint) {
         std::unique_lock<std::mutex> lock(mutex_);
-        auto &cache(spaces_[fingerprint]);
-        if (auto space = cache.lock())
-            return space;
-        auto space(Make<Sink<Space>>());
-        space->Wire<Translator>(egress_);
-        space->self_ = space;
-        cache = space;
-        return space;
+        auto &cache(clients_[fingerprint]);
+        if (auto client = cache.lock())
+            return client;
+        auto client(Make<Sink<Client>>());
+        client->Wire<Translator>(egress_);
+        client->self_ = client;
+        cache = client;
+        return client;
     }
 
     void Run(uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params) {
@@ -211,10 +211,10 @@ class Node final {
                 auto body(request.body());
                 static int fingerprint_(0);
                 std::string fingerprint(std::to_string(fingerprint_++));
-                auto space(Find(fingerprint));
+                auto client(Find(fingerprint));
 
                 auto offer(body);
-                auto answer(Wait(space->Respond(offer)));
+                auto answer(Wait(client->Respond(offer)));
 
                 Log() << std::endl;
                 Log() << "^^^^^^^^^^^^^^^^" << std::endl;

@@ -186,9 +186,9 @@ class Factory :
 };
 
 // tunnels to the left of me, transports to the right;
-// here I am, stuck in the middle with you... - Client
+// here I am, stuck in the middle with you... - Middle
 
-class Client :
+class Middle :
     public openvpn::ClientAPI::OpenVPNClient,
     public openvpn::TunClientFactory,
     public Link
@@ -198,20 +198,20 @@ class Client :
         public openvpn::TunClient
     {
       private:
-        Client *client_;
+        Middle *middle_;
 
       public:
-        Tunnel(Client *client) :
-            client_(client)
+        Tunnel(Middle *middle) :
+            middle_(middle)
         {
         }
 
         void tun_start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) override {
-            client_->Start(options, transport, settings);
+            middle_->Start(options, transport, settings);
         }
 
         void stop() override {
-            client_->Stop(std::string());
+            middle_->Stop(std::string());
         }
 
         void set_disconnect() override {
@@ -219,9 +219,9 @@ class Client :
         }
 
         bool tun_send(openvpn::BufferAllocated &buffer) override {
-            client_->Forge(buffer);
+            middle_->Forge(buffer);
             Subset data(buffer.c_data(), buffer.size());
-            client_->Land(data);
+            middle_->Land(data);
             return true;
         }
 
@@ -278,7 +278,7 @@ class Client :
     }
 
   public:
-    Client(BufferDrain *drain, S<Origin> origin, uint32_t local) :
+    Middle(BufferDrain *drain, S<Origin> origin, uint32_t local) :
         Link(drain),
         origin_(std::move(origin)),
         local_(local)
@@ -380,23 +380,23 @@ _trace();
 };
 
 task<void> Connect(Sunk<> *sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password) {
-    auto client(sunk->Wire<Sink<Client>>(std::move(origin), local));
+    auto middle(sunk->Wire<Sink<Middle>>(std::move(origin), local));
 
     {
         openvpn::ClientAPI::Config config;
         config.content = std::move(ovpnfile);
         config.disableClientCert = true;
-        client->eval_config(config);
+        middle->eval_config(config);
     }
 
     {
         openvpn::ClientAPI::ProvideCreds credentials;
         credentials.username = std::move(username);
         credentials.password = std::move(password);
-        client->provide_creds(credentials);
+        middle->provide_creds(credentials);
     }
 
-    co_await client->Connect();
+    co_await middle->Connect();
 }
 
 }
