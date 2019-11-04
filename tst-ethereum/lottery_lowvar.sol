@@ -20,7 +20,7 @@
 /* }}} */
 
 
-pragma solidity ^0.5.7;
+pragma solidity 0.5.12;
 
 import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 

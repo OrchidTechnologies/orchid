@@ -20,7 +20,7 @@
 /* }}} */
 
 
-pragma solidity ^0.5.7;
+pragma solidity 0.5.12;
 
 import "lottery.sol";
 
