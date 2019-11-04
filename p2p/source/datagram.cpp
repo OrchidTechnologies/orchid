@@ -20,45 +20,31 @@
 /* }}} */
 
 
-#ifndef ORCHID_CLIENT_HPP
-#define ORCHID_CLIENT_HPP
+#include <openvpn/ip/ip4.hpp>
+#include <openvpn/ip/udp.hpp>
 
-#include "bond.hpp"
-#include "endpoint.hpp"
-#include "link.hpp"
-#include "jsonrpc.hpp"
-#include "shared.hpp"
-#include "task.hpp"
+#include "datagram.hpp"
 
 namespace orc {
 
-class Client :
-    public Bonded,
-    public BufferDrain
-{
-  public:
-    S<Client> self_;
-    Endpoint endpoint_;
-    Address lottery_;
+bool Datagram(const Buffer &data, const std::function<bool (Socket, Socket, Window)> &code) {
+    Window window(data);
 
-    void Send(const Buffer &data);
+    openvpn::IPv4Header ip4;
+    window.Take(&ip4);
+    window.Skip(openvpn::IPv4Header::length(ip4.version_len) - sizeof(ip4));
 
-  protected:
-    virtual Pump *Inner() = 0;
+    if (ip4.protocol != uint8_t(openvpn::IPCommon::UDP))
+        return false;
 
-    void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
+    openvpn::UDPHeader udp;
+    window.Take(&udp);
+    window.Skip(boost::endian::big_to_native(udp.len) - sizeof(udp));
 
-    void Land(const Buffer &data) override;
-    void Stop(const std::string &error) override;
+    Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
+    Socket target(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
 
-  public:
-    Client(Locator locator, Address lottery);
-
-    task<void> Shut() override;
-
-    task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
-};
-
+    return code(std::move(source), std::move(target), std::move(window));
 }
 
-#endif//ORCHID_CLIENT_HPP
+}

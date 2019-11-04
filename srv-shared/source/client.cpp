@@ -22,6 +22,7 @@
 
 #include "channel.hpp"
 #include "client.hpp"
+#include "datagram.hpp"
 #include "local.hpp"
 
 namespace orc {
@@ -70,16 +71,22 @@ _trace();
     }
 };
 
-void Client::Land(Pipe<Buffer> *pipe, const Buffer &data) {
+void Client::Send(const Buffer &data) {
     Spawn([this, data = Beam(data)]() -> task<void> {
+        co_return co_await Bonded::Send(data);
+    });
+}
+
+void Client::Land(Pipe<Buffer> *pipe, const Buffer &data) {
+    if (!Datagram(data, [&](Socket source, Socket target, const Buffer &data) {
+        return false;
+    })) Spawn([this, data = Beam(data)]() -> task<void> {
         co_return co_await Inner()->Send(data);
     });
 }
 
 void Client::Land(const Buffer &data) {
-    Spawn([this, data = Beam(data)]() -> task<void> {
-        co_return co_await Bonded::Send(data);
-    });
+    Send(data);
 }
 
 void Client::Stop(const std::string &error) {

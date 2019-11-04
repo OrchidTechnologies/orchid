@@ -20,45 +20,18 @@
 /* }}} */
 
 
-#ifndef ORCHID_CLIENT_HPP
-#define ORCHID_CLIENT_HPP
+#ifndef ORCHID_DATAGRAM_HPP
+#define ORCHID_DATAGRAM_HPP
 
-#include "bond.hpp"
-#include "endpoint.hpp"
-#include "link.hpp"
-#include "jsonrpc.hpp"
-#include "shared.hpp"
-#include "task.hpp"
+#include <functional>
+
+#include "buffer.hpp"
+#include "socket.hpp"
 
 namespace orc {
 
-class Client :
-    public Bonded,
-    public BufferDrain
-{
-  public:
-    S<Client> self_;
-    Endpoint endpoint_;
-    Address lottery_;
-
-    void Send(const Buffer &data);
-
-  protected:
-    virtual Pump *Inner() = 0;
-
-    void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
-
-    void Land(const Buffer &data) override;
-    void Stop(const std::string &error) override;
-
-  public:
-    Client(Locator locator, Address lottery);
-
-    task<void> Shut() override;
-
-    task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
-};
+bool Datagram(const Buffer &data, const std::function<bool (Socket, Socket, Window)> &code);
 
 }
 
-#endif//ORCHID_CLIENT_HPP
+#endif//ORCHID_DATAGRAM_HPP

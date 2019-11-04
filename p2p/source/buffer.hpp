@@ -832,7 +832,19 @@ class Window :
         return beam;
     }
 
+    template <typename Type_>
+    void Take(Type_ *value) {
+        static_assert(std::is_pod<Type_>::value);
+        Take(reinterpret_cast<uint8_t *>(value), sizeof(Type_));
+    }
+
+    // XXX: this is not efficient
     void Skip(size_t size) {
+        (void) Take(size);
+    }
+
+    // XXX: this is not efficient
+    void Zero(size_t size) {
         auto data(Take(size));
         for (size_t i(0); i != size; ++i)
             orc_assert(data[i] == 0);
@@ -840,7 +852,7 @@ class Window :
 
     template <size_t Size_>
     void Take(Pad<Size_> &value) {
-        Skip(Size_);
+        Zero(Size_);
     }
 };
 
@@ -895,7 +907,7 @@ template <size_t Index_, size_t Size_, typename... Taking_>
 struct Taking<Index_, Pad<Size_>, void, Taking_...> final {
 template <typename Tuple_, typename Buffer_>
 static void Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
-    window.Skip(Size_);
+    window.Zero(Size_);
     return Taker<Index_, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
 

@@ -23,13 +23,16 @@
 #include <rtc_base/openssl_identity.h>
 
 #include "channel.hpp"
+#include "datagram.hpp"
 #include "server.hpp"
 #include "locator.hpp"
 
 namespace orc {
 
 void Server::Land(Pipe *pipe, const Buffer &data) {
-    return Pump::Land(data);
+    if (!Datagram(data, [&](Socket source, Socket target, Window window) {
+        return false;
+    })) Pump::Land(data);
 }
 
 Server::Server(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote) :

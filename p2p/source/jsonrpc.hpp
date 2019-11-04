@@ -258,7 +258,7 @@ struct Numeric<false, Size_, Type_> {
     static const bool dynamic_ = false;
 
     static Type_ Decode(Window &window) {
-        window.Skip(32 - Size_);
+        window.Zero(32 - Size_);
         Brick<Size_> brick;
         window.Take(brick);
         return brick.template num<Type_>();
@@ -389,7 +389,7 @@ struct Coded<Beam, void> {
     static Beam Decode(Window &window) {
         auto size(Coded<uint256_t>::Decode(window).convert_to<size_t>());
         auto data(window.Take(size));
-        window.Skip(31 - (size + 31) % 32);
+        window.Zero(31 - (size + 31) % 32);
         return data;
     }
 
@@ -416,7 +416,7 @@ struct Coded<std::string, void> {
         std::string data;
         data.resize(size);
         window.Take(data);
-        window.Skip(31 - (size + 31) % 32);
+        window.Zero(31 - (size + 31) % 32);
         return data;
     }
 
