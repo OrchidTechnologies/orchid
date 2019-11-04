@@ -24,20 +24,24 @@
 #include <math.h>
 #include <functional>
 #include <limits>
-
+#include <assert.h>
 
 double Minutes = 60;
 double Hours   = 60*Minutes;
 double Days    = 24*Hours;
 double Weeks   = 7*Days;
+double Months  = 30*Days;
 
 using namespace std;
 
-double& CurrentTime()
-{
-	static double ctime = 0;
-	return ctime;
-}
+
+typedef unsigned int uint32;
+typedef unsigned int bytes32;
+typedef unsigned int uint256;
+typedef unsigned int netaddr;
+
+
+
 
 template <class T>
 map<string, T>& get_store()
@@ -64,8 +68,6 @@ template <class T> void persist_store(const char* k, T x)
 }
 
 
-typedef unsigned int bytes32;
-typedef unsigned int uint256;
 
 
 double& get_trans_cost() // (oracle) get current transaction cost estimate
@@ -99,19 +101,18 @@ double is_winner(const payment& p)  // offline check to see if ticket is a winne
 	return dnonce < p.ratio;
 }
 
-struct Lotpot { double amount_, escrow_; };
 
-namespace RPC
+namespace Lot
 {
-	Lotpot& balance(bytes32 k) {
-		map<bytes32, Lotpot> local_;
-		return local_[k];
-	}
+	struct pot { double amount_, escrow_; };
+
+	pot& balance(bytes32 k);
 
 	void grab(bytes32 secret, bytes32 hash, bytes32 target, bytes32 nonce, double ratio, double start, double range, double amount, bytes32 sig, vector<bytes32>)
 	{
 		double dnonce = double(nonce) / double(numeric_limits<bytes32>::max());
 		if (dnonce < ratio) {
+			printf("grab(%x,%x,%x,%x,%f,%f,%f,%f,%x) winner! amount(%f) \n", secret,hash,target,nonce,ratio,start,range,amount,sig, amount);
 			bytes32 sender = sig;
 			if (balance(sender).amount_ >= amount) {
 				balance(sender).amount_ -= amount;
@@ -127,21 +128,39 @@ namespace RPC
 
 
 
+
+double CurrentTime();
+
 struct ITickable
 {
 	virtual ~ITickable() {}
-    virtual void on_timer() = 0;
+    virtual void step(double ctime) = 0;
+    virtual double next_step_time() = 0;
 };
 
-vector<pair<ITickable*, double>>& GetTickables()
-{
-	static vector<pair<ITickable*, double>> store_; return store_;
-}
+void register_timer_func(ITickable* p);
 
-void register_timer_func(ITickable* p, double t)
+
+struct Tickable : public ITickable
 {
-	GetTickables().push_back(pair<ITickable*,double>(p, t));
-}
+	virtual ~Tickable() {}
+
+	double period_ = 1.0;
+	double next_   = 0.0;
+
+    virtual void step(double ctime) {
+    	next_ = ctime + period_;
+    }
+
+    virtual double next_step_time() {
+    	return next_;
+    }
+
+    void reset() { next_ = 0.0; }
+
+
+};
+
 
 
 
@@ -152,35 +171,38 @@ void register_timer_func(ITickable* p, double t)
 struct IBudget
 {
 	virtual ~IBudget() {}
-	virtual double get_afford() = 0;
+	virtual double get_afford(double ctime) = 0;
 	virtual double get_max_faceval() = 0;
     virtual void on_connect() = 0;
     virtual void on_disconnect() = 0;
     virtual void on_invoice() = 0;
+	virtual void set_active(double aratio) = 0;
 };
 
-struct Budget_PredExpW : public IBudget, public ITickable
+struct Budget_PredExpW : public IBudget, public Tickable
 {
 	// budgeting params (input from UI)
-	double budget_edate_;   	     // target budget end date
-	double max_faceval_;            // maximum allowable faceval in OXT (user's hard variance limit)
-	double max_prepay_time_ = 10;   // max amount of time client will prepay (credit) to server for undelivered bandwidth, in seconds (client->server trust)
+	double budget_edate_;   	    // target budget end date
+	double max_faceval_		= 1.0;  // maximum allowable faceval in OXT (user's hard variance limit)
+	double max_prepay_time_ = 4.0;   // max amount of time client will prepay (credit) to server for undelivered bandwidth, in seconds (client->server trust)
 
     // config hyperparams
-	double timer_sample_rate_ = 10.0; // frequency of calls to on_timer() (nothing special about 10s)
+	double timer_sample_rate_ = 20.0; // frequency of calls to on_timer() (nothing special about 20s)
 
     // internal
+	double wactive_	= 0.1; // default to 2.4 hours / day of active VPN time
+
 	double prepay_credit_;
 	bool   route_active_;                  // true when a connection/circuit is active
 	double exp_half_life   = 1*Weeks;      // 1 one week 50% smoothing period
 	double last_pay_date_;
 	double spendrate_ = 0;
 	bytes32 account_;
-	double ltime_, wactive_;
+	double ltime_;
 
 
-	virtual double get_afford() {
-		double time_owed = (CurrentTime() - last_pay_date_);
+	virtual double get_afford(double ctime) {
+		double time_owed = (ctime - last_pay_date_);
 		double allowed   = spendrate_ * (time_owed + prepay_credit_);
         return allowed;
     }
@@ -189,34 +211,46 @@ struct Budget_PredExpW : public IBudget, public ITickable
         return max_faceval_;
     }
 
-    void on_timer() {
+    void step(double ctime) {
+    	printf("Budget_PredExpW::step(%f) ", ctime);
+    	Tickable::step(ctime);
     
         double ltime    = ltime_; // persist_load("ltime", CurrentTime()); // load variable from persistent disk/DB/config, default to CurrentTime()
         double wactive  = wactive_; // persist_load("wactive", 1.0);
 
         // predict the fraction of time Orchid is active & connected (simple exp smoothing predictor) 
-        double etime    = CurrentTime() - ltime;
+        double etime    = ctime - ltime;
         double decay    = exp(log(0.5) * etime/exp_half_life);        
         double cactive  = route_active_ ? 1.0 : 0.0;       
         wactive         = decay*wactive + (1-decay)*cactive;
-        ltime           = CurrentTime();
+        ltime           = ctime;
         
-        double pred_future_active_time = (budget_edate_ - CurrentTime()) * wactive;
-        spendrate_      = get_OXT_balance(account_) / (pred_future_active_time + 1*Days);
+        printf("wactive=%f = %f*%f + (1-%f)*%f ", wactive,decay,wactive,decay,cactive);
+
+
+        double pred_future_active_time = (budget_edate_ - ctime) * wactive;
+        double curbal   = Lot::balance(account_).amount_;
+        double duration = pred_future_active_time + 1*Days;
+        spendrate_      = curbal / duration;
+
+		printf(" pfat = (%f-%f)*%f; spendrate_(%f) = %f / (%f + %f) \n", budget_edate_,ctime,wactive,  spendrate_,curbal,pred_future_active_time,1*Days);
 
         ltime_ 			= ltime; 	// persist_store("ltime",   ltime);
         wactive_ 		= wactive; // persist_store("wactive", wactive);
     }
 
-    Budget_PredExpW(bytes32 account): account_(account), ltime_(CurrentTime()), wactive_(1.0) {
-        register_timer_func(this, timer_sample_rate_); // call on_timer() every {timer_sample_rate_} seconds
+    Budget_PredExpW(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate), ltime_(CurrentTime()) {
+    	period_ = timer_sample_rate_;
+        register_timer_func(this); // call on_timer() every {timer_sample_rate_} seconds
         route_active_ = false;
-        on_timer(); // tick the timer once on startup to update for any time orchid was shutdown
+        step(CurrentTime()); // tick the timer once on startup to update for any time orchid was shutdown
     }
     
     void on_connect()    { route_active_ = true;  last_pay_date_ = CurrentTime(); prepay_credit_ = max_prepay_time_; }
     void on_disconnect() { route_active_ = false; }
     void on_invoice()    { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
+	void set_active(double aratio) { route_active_ = aratio > 0.0; }
+
 };
 
 
@@ -240,21 +274,29 @@ bytes32 sign(bytes32 x, bytes32 y)	{ return y;}
 
 
 
-
 struct INet
 {
 	virtual ~INet() {}
 
-	void on_in_packets(		INet* client, double psize){} // inc data from target out to client
-	void on_out_packets(	INet* client, double psize){}	// inc data from client out to target
-	void on_dropped_packet(	INet* client, double psize){}
-	void on_queued_packet(	INet* client, double psize){}
+	virtual netaddr get_netaddr() = 0;
+
+	virtual void on_packet(netaddr to, netaddr from, double psize){}
+	virtual void on_dropped_packet(netaddr to, netaddr from, double psize){}
+	virtual void on_queued_packet( netaddr to, netaddr from, double psize){}
 
 };
 
-struct Client : public ITickable, public INet
+namespace net
 {
-	// budgeting params (input from UI)
+	void send(netaddr to, netaddr from, double psize);
+	void add(INet* net, double ibw, double obw);
+}
+
+
+
+struct Client : public Tickable, public INet
+{
+	// budgeting params (input from UI or optimization stuff)
 	double target_overhead_ = 0.1;	// target transaction fee overhead  // move to server?
 
 	// Internal
@@ -262,31 +304,55 @@ struct Client : public ITickable, public INet
 	double last_pay_date_ = CurrentTime();
 	IBudget* budget_;
 	Server* server_;
+	netaddr address_;
 
 	uint256 hash_secret_;
 	bytes32 target_;
 
-	Client() {
-		account_ = rand();
-		budget_  = new Budget_PredExpW(account_);
+	double  brecvd_;
+
+	Client(bytes32 account, double budget_edate) {
+		account_ = account;
+		address_ = rand();
+		budget_  = new Budget_PredExpW(account_, budget_edate);
+		period_  = 4.0; register_timer_func(this); // send a payment every 4s for now
+
+		brecvd_ = 0.0;
 	}
 
 	virtual ~Client() { delete budget_; }
+
+	virtual netaddr get_netaddr() { return address_; }
 
     
 	// External functions
 	double get_trust_bound();  	// max OXT amount client is willing to lend to server (can initially be a large constant)
 
 	// user initiates connection to server (random selection picks server)
-	void on_connect(Server* server);
+	void on_connect(Server* server, netaddr dst);
+
+	void set_active(double aratio) { // set an activity ratio for budgeting  (0.0 idle, 1.0 full use)
+		budget_->set_active(aratio);
+	}
     
     // callback when disconnected from route
 	void on_disconnect()     { budget_->on_disconnect(); }
 
 	void on_invoice(uint256 hash_secret, bytes32 target, double bal_owed, double trans_cost) { hash_secret_ = hash_secret; target_ = target;}
-	void on_sendpay(uint256 hash_secret, bytes32 target);
+	void sendpay(double ctime, uint256 hash_secret, bytes32 target);
 
-    void on_timer() { on_sendpay(hash_secret_, target_); }
+    void step(double ctime) {
+		printf("Client::step(%f)\n", ctime);
+    	Tickable::step(ctime);
+    	sendpay(ctime, hash_secret_, target_);
+    }
+
+
+	virtual void on_packet(netaddr to, netaddr from, double psize)
+	{
+		assert(to == address_); brecvd_ += psize;
+		printf("Client::on_packet(%x,%x,%f) brecvd_(%f) \n", to,from,psize,brecvd_);
+	}
 
 };
 
@@ -298,29 +364,22 @@ struct Server : public INet
 	//double bytes_per_upay_;  // desired inv frequency of payments, in bytes
 	//double data_price_;	  // server's OXT/byte price
 
-	double res_price_ 	= 1e-9;	  	 // server's reserve(floor) OXT/byte price
-	double que_price_	= 1e-8;	  	 // server's initial? congestion OXT/byte price for queued packets
-	double drop_price_	= 1e-7;		 // server's initial? congestion OXT/byte price for dropped packets
+	double res_price_ 	= 1e-11;	  	 // server's reserve(floor) OXT/byte price
+	double que_price_	= 1e-10;		 // server's initial? congestion OXT/byte price for queued packets
+	double drop_price_	= 1e-9;			 // server's initial? congestion OXT/byte price for dropped packets
 
 	//double targ_balance_;    // target min client balance before invoice sent
 	double min_balance_ = 0;     // min client balance to route packets (default 0)
 
 	// Internal
 	bytes32 account_;
+	netaddr address_;
 	map<INet*, double> 		balances_;
 	map<double, bytes32> 	old_tickets_;
 	map<bytes32, bytes32> 	secrets_;
+
+	map<netaddr, pair<netaddr,Client*>> routing_;
     
-	// External functions
-	//double is_winner(payment p);  // offline check to see if ticket is a winner
-    	
-	// Protocol client message handlers
-	//void on_connect(Client* client);		    // client connection request
-	//void on_upay(Client* client, payment* p);	// upayment from client
-    	
-	// On packet data event handlers
-	//void on_out_packets(Client* client, string data);	// inc data from client out to target
-	//void on_in_packets(Client* client, string data);   // inc data from target out to client
 
 	/*
 	void invoice_check(Client* client) {
@@ -335,17 +394,28 @@ struct Server : public INet
 	}
 	*/
 
+	Server() {
+		account_ = rand();
+		address_ = rand();
+	}
+
+	virtual ~Server() { }
+
+	virtual netaddr get_netaddr() { return address_; }
+
 
 	// client connection request
-	void on_connect(Client* client) {
-		//invoice_check(client);
+	void on_connect(Client* client, netaddr dst) {
+		routing_[client->get_netaddr()] = pair<netaddr,Client*>(dst, client);
+		routing_[dst] = pair<netaddr,Client*>(client->get_netaddr(), client);
 		// connection established, stuff happens		
 	}
 
 	// todo: remove sync ethnode RPC calls with async
 	bool check_payment(payment p) { // validate the micropayment (does not verify it's a winner)
-		if (RPC::balance(p.sender).amount_ <     p.amount) return false;
-		if (RPC::balance(p.sender).escrow_ < 2 * p.amount) return false; // 2 is justin's magic number, and may change
+		if (Lot::balance(p.sender).amount_ <     p.amount) return false;
+		if (Lot::balance(p.sender).escrow_ < 2 * p.amount) return false; // 2 is justin's magic number, and may change
+		return true;
 	}
 
 	void grab(payment p, double trans_fee) {
@@ -359,7 +429,7 @@ struct Server : public INet
 			old.insert(old_tickets.pop());
 		} */
 		//RPC::transaction(trans_fee, grab(secret, hash, p.target, p.nonce, p.ratio, p.start, p.range, p.amount, p.sig, old));
-		RPC::grab(secret, hash, p.target, p.nonce, p.ratio, p.start, p.range, p.amount, p.sig, old);
+		Lot::grab(secret, hash, p.target, p.nonce, p.ratio, p.start, p.range, p.amount, p.sig, old);
 	}
 
 	double ticket_value(payment p, double trans_fee) {
@@ -376,9 +446,15 @@ struct Server : public INet
 
 	// upayment from client
 	void on_upay(Client* client, payment p) { //  uses blocking external ethnode RPC calls
+
+		printf("Server::on_upay(%p,payment(%f,%f,%f,%f)) \n", client, p.ratio,p.amount, p.start,p.range);
+
+		// todo: charge them cost of processing payment
 		if (check_payment(p)) { // validate the micropayment
 			auto trans_fee = get_trans_cost();
-			balances_[client] += ticket_value(p, trans_fee);
+			double tv = ticket_value(p, trans_fee);
+			printf("balances_[%p]=%f += ticket_value(p,%f)=%f \n", client, balances_[client], trans_fee, tv);
+			balances_[client] += tv;
 			if (is_winner(p)) { // now check to see if it's a winner, and redeem if so
 				grab(p, trans_fee);
 			}
@@ -387,27 +463,38 @@ struct Server : public INet
 
 	
 	void bill_packet(INet* client, double psize) {
-		double cost = psize * res_price_;
-		balances_[client] -= cost;
+		double amt = psize * res_price_;
+		printf("Server::bill_packet(%p,%f) balances_[%p]=%f -= %f(%f*%f) \n", client,psize, client,balances_[client], amt,psize,res_price_);
+		balances_[client] -= amt;
 		//invoice_check(client);
 	}
 
-	void on_queued_packet(INet* client, double psize) {
-		balances_[client] -= psize * que_price_;
+	void on_queued_packet(netaddr to, netaddr from, double psize) {
+		auto route = routing_[from];
+		Client* client = route.second;
+		double amt = psize * que_price_;
+		printf("Server::on_queued_packet(%x,%x,%f) balances_[%p]=%f -= %f(%f * %f) \n", to,from,psize, client,balances_[client], amt,psize,que_price_);
+		balances_[client] -= amt;
 	}
 
-	void on_dropped_packet(INet* client, double psize) {
-		balances_[client] -= psize * drop_price_;
+	void on_dropped_packet(netaddr to, netaddr from, double psize) {
+		auto route = routing_[from];
+		Client* client = route.second;
+		double amt = psize * drop_price_;
+		printf("Server::on_dropped_packet(%x,%x,%f) balances_[%p]=%f -= %f(%f * %f) \n", to,from,psize, client,balances_[client], amt,psize,drop_price_);
+		balances_[client] -= amt;
 	}
 
-	void on_out_packets(INet* client, double psize) {	// inc data from client out to target
-		bill_packet(client, psize);
-		if (balances_[client] > min_balance_); // { send(client.target, data); }
-	}
+	virtual void on_packet(netaddr to, netaddr from, double psize) { // inc data from client out to target
+		printf("Server::on_packet(%x,%x,%f) \n", to,from,psize);
 
-	void on_in_packets(INet* client, double psize) {   // inc data from target out to client
-		bill_packet(client, psize);
-		if (balances_[client] > min_balance_); //  { send(client, data); }
+		assert(to == address_);
+		auto route = routing_[from];
+		Client* client = route.second;
+		if (client != nullptr) {
+			bill_packet(client, psize);
+			if (balances_[client] > min_balance_) { net::send(route.first, address_, psize); }
+		}
 	}
 
 
@@ -416,18 +503,19 @@ struct Server : public INet
 
 
 // user initiates connection to server (random selection picks server)
-void Client::on_connect(Server* server) {
+void Client::on_connect(Server* server, netaddr dst) {
 	server_ = server;
 	//send("connect", server);
-	server->on_connect(this);
+	server->on_connect(this, dst);
 	budget_->on_connect();
+	Tickable::reset(); // reset our timer to 0 so we immediately send a payment
 }
 
 
 
-void Client::on_sendpay(uint256 hash_secret, bytes32 target)
+void Client::sendpay(double ctime, uint256 hash_secret, bytes32 target)
 {
-	double afford	   	= budget_->get_afford();
+	double afford	   	= budget_->get_afford(ctime);
 	double max_face_val	= budget_->get_max_faceval();
 
 	double exp_val 		= afford;
