@@ -41,13 +41,12 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
-#include "beast.hpp"
 #include "channel.hpp"
 #include "client.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
-#include "locator.hpp"
+#include "node.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
@@ -60,106 +59,6 @@ namespace bssl {
 namespace orc {
 
 namespace po = boost::program_options;
-
-class Node final {
-  private:
-    std::vector<std::string> ice_;
-
-    Locator locator_;
-    Address lottery_;
-
-    S<Egress> egress_;
-
-    std::mutex mutex_;
-    std::map<std::string, W<Client>> clients_;
-
-  public:
-    Node(std::vector<std::string> ice, const std::string &rpc, Address lottery) :
-        ice_(ice),
-        locator_(Locator::Parse(rpc)),
-        lottery_(std::move(lottery))
-    {
-    }
-
-    S<Egress> &Wire() {
-        return egress_;
-    }
-
-    S<Client> Find(const std::string &fingerprint) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        auto &cache(clients_[fingerprint]);
-        if (auto client = cache.lock())
-            return client;
-        auto client(Make<Sink<Client>>(locator_, lottery_));
-        client->Wire<Translator>(egress_);
-        client->self_ = client;
-        cache = client;
-        return client;
-    }
-
-    void Run(uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params) {
-        boost::asio::ssl::context context{boost::asio::ssl::context::tlsv12};
-
-        context.set_options(
-            boost::asio::ssl::context::default_workarounds |
-            boost::asio::ssl::context::no_sslv2 |
-            boost::asio::ssl::context::single_dh_use |
-        0);
-
-        context.use_certificate_chain(boost::asio::buffer(chain.data(), chain.size()));
-        context.use_private_key(boost::asio::buffer(key.data(), key.size()), boost::asio::ssl::context::file_format::pem);
-        context.use_tmp_dh(boost::asio::buffer(params.data(), params.size()));
-
-
-        http::basic_router<SslHttpSession> router{std::regex::ECMAScript};
-
-        router.post(path, [&](auto request, auto context) {
-            Log() << request << std::endl;
-
-            try {
-                auto body(request.body());
-                static int fingerprint_(0);
-                std::string fingerprint(std::to_string(fingerprint_++));
-                auto client(Find(fingerprint));
-
-                auto offer(body);
-                auto answer(Wait(client->Respond(offer, ice_)));
-
-                Log() << std::endl;
-                Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-                Log() << offer << std::endl;
-                Log() << "================" << std::endl;
-                Log() << answer << std::endl;
-                Log() << "vvvvvvvvvvvvvvvv" << std::endl;
-                Log() << std::endl;
-
-                context.send(Response(request, "text/plain", answer));
-            } catch (...) {
-                context.send(Response(request, "text/plain", "", boost::beast::http::status::not_found));
-            }
-        });
-
-        router.all(R"(^.*$)", [&](auto request, auto context) {
-            Log() << request << std::endl;
-            context.send(Response(request, "text/plain", ""));
-        });
-
-        auto fail([](auto code, auto from) {
-            Log() << "ERROR " << code << " " << from << std::endl;
-        });
-
-        HttpListener::launch(Context(), {
-            asio::ip::make_address("0.0.0.0"),
-            port
-        }, [&](auto socket) {
-            SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
-                context.recv();
-            }, fail);
-        }, fail);
-
-        Thread().join();
-    }
-};
 
 std::string Stringify(bssl::UniquePtr<BIO> bio) {
     char *data;
