@@ -35,6 +35,10 @@ class Socket {
     asio::ip::address host_;
     uint16_t port_;
 
+    std::tuple<const asio::ip::address &, uint16_t> Tuple() const {
+        return std::tie(host_, port_);
+    }
+
   public:
     Socket() :
         port_(0)
@@ -91,11 +95,15 @@ class Socket {
     }
 
     bool operator <(const Socket &rhs) const {
-        return std::tie(host_, port_) < std::tie(rhs.host_, rhs.port_);
+        return Tuple() < rhs.Tuple();
     }
 
     bool operator ==(const Socket &rhs) const {
-        return std::tie(host_, port_) == std::tie(rhs.host_, rhs.port_);
+        return Tuple() == rhs.Tuple();
+    }
+
+    bool operator !=(const Socket &rhs) const {
+        return Tuple() != rhs.Tuple();
     }
 };
 
@@ -107,6 +115,10 @@ class Four {
   private:
     Socket source_;
     Socket target_;
+
+    std::tuple<const Socket &, const Socket &> Tuple() const {
+        return std::tie(source_, target_);
+    }
 
   public:
     Four(Socket source, Socket target) :
@@ -132,11 +144,15 @@ class Four {
     }
 
     bool operator <(const Four &rhs) const {
-        return std::tie(source_, target_) < std::tie(rhs.source_, rhs.target_);
+        return Tuple() < rhs.Tuple();
     }
 
     bool operator ==(const Four &rhs) const {
-        return std::tie(source_, target_) == std::tie(rhs.source_, rhs.target_);
+        return Tuple() == rhs.Tuple();
+    }
+
+    bool operator !=(const Four &rhs) const {
+        return Tuple() != rhs.Tuple();
     }
 };
 
@@ -149,6 +165,10 @@ class Five final :
 {
   private:
     uint8_t protocol_;
+
+    std::tuple<uint8_t, const Socket &, const Socket &> Tuple() const {
+        return std::tie(protocol_, Source(), Target());
+    }
 
   public:
     Five(uint8_t protocol, Socket source, Socket target) :
@@ -170,11 +190,15 @@ class Five final :
     }
 
     bool operator <(const Five &rhs) const {
-        return std::tie(protocol_, Source(), Target()) < std::tie(rhs.protocol_, rhs.Source(), rhs.Target());
+        return Tuple() < rhs.Tuple();
     }
 
     bool operator ==(const Five &rhs) const {
-        return std::tie(protocol_, Source(), Target()) == std::tie(rhs.protocol_, rhs.Source(), rhs.Target());
+        return Tuple() == rhs.Tuple();
+    }
+
+    bool operator !=(const Five &rhs) const {
+        return Tuple() != rhs.Tuple();
     }
 };
 
@@ -187,6 +211,10 @@ class Three final :
 {
   private:
     uint8_t protocol_;
+
+    std::tuple<uint8_t, const Socket &> Tuple() const {
+        return std::tie(protocol_, *this);
+    }
 
   public:
     template <typename... Args_>
@@ -208,16 +236,16 @@ class Three final :
         return protocol_;
     }
 
-    std::tuple<uint8_t, const Socket &> Tuple() const {
-        return std::tie(protocol_, *this);
-    }
-
     bool operator <(const Three &rhs) const {
         return Tuple() < rhs.Tuple();
     }
 
     bool operator ==(const Three &rhs) const {
         return Tuple() == rhs.Tuple();
+    }
+
+    bool operator !=(const Three &rhs) const {
+        return Tuple() != rhs.Tuple();
     }
 
     Socket Two() const {

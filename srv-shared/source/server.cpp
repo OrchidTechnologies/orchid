@@ -23,6 +23,7 @@
 #include "channel.hpp"
 #include "datagram.hpp"
 #include "local.hpp"
+#include "port.hpp"
 #include "server.hpp"
 
 namespace orc {
@@ -73,20 +74,25 @@ _trace();
 
 void Server::Send(const Buffer &data) {
     Spawn([this, data = Beam(data)]() -> task<void> {
-        co_return co_await Bonded::Send(data);
+        co_return co_await Inner()->Send(data);
     });
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     if (!Datagram(data, [&](Socket source, Socket target, const Buffer &data) {
-        return false;
-    })) Spawn([this, data = Beam(data)]() -> task<void> {
-        co_return co_await Inner()->Send(data);
-    });
+        if (target != Port_)
+            return false;
+        Datagram(Port_, source, Tie(), [&](const Buffer &data) {
+            return Land(data);
+        });
+        return true;
+    })) Send(data);
 }
 
 void Server::Land(const Buffer &data) {
-    Send(data);
+    Spawn([this, data = Beam(data)]() -> task<void> {
+        co_return co_await Bonded::Send(data);
+    });
 }
 
 void Server::Stop(const std::string &error) {
