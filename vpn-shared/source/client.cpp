@@ -51,7 +51,7 @@ task<void> Server::Connect(const S<Origin> &origin, const std::string &url) {
         Configuration configuration;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
-        auto answer(co_await orc::Request("POST", Locator::Parse(url), {}, offer, verify));
+        auto answer(co_await origin->Request("POST", Locator::Parse(url), {}, offer, verify));
         if (true || Verbose) {
             Log() << "Offer: " << offer << std::endl;
             Log() << "Answer: " << answer << std::endl;

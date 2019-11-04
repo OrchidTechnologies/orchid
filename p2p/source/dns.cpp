@@ -30,11 +30,12 @@
 #include "error.hpp"
 #include "http.hpp"
 #include "locator.hpp"
+#include "origin.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
-task<Results> Resolve(const std::string &host, const std::string &port) {
+task<Results> Resolve(const S<Origin> &origin, const std::string &host, const std::string &port) {
     asio::ip::tcp::resolver resolver(orc::Context());
 
     Results results;
@@ -45,7 +46,7 @@ task<Results> Resolve(const std::string &host, const std::string &port) {
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
-        auto body(co_await Request("GET", {"https", "1.1.1.1", "443", "/dns-query?type=A&name=" + host}, {
+        auto body(co_await origin->Request("GET", {"https", "1.1.1.1", "443", "/dns-query?type=A&name=" + host}, {
             {"accept", "application/dns-json"}
         }, {}));
 

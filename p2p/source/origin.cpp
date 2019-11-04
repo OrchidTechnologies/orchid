@@ -28,7 +28,7 @@ namespace orc {
 
 // XXX: for Local::Request, this should use NSURLSession on __APPLE__
 
-task<std::string> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data) {
+task<std::string> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
 #if 0
     // XXX: this implementation almost worked a while ago; needs updating
     Sink<Adapter> adapter(orc::Context());
@@ -36,9 +36,9 @@ task<std::string> Origin::Request(const std::string &method, const Locator &loca
     co_await Connect(stream, locator.host_, locator.port_);
     auto socket(adapter.Wire<Inverted>(std::move(stream)));
     socket->Start();
-    co_return co_await orc::Request(adapter, method, locator, headers, data);
+    co_return co_await orc::Request(adapter, method, locator, headers, data, verify);
 #else
-    co_return co_await orc::Request(method, locator, headers, data);
+    co_return co_await orc::Request(method, locator, headers, data, verify);
 #endif
 }
 
