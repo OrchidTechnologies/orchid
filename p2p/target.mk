@@ -50,7 +50,6 @@ source += $(filter-out \
     %/filesystem.cpp \
 ,$(wildcard $(pwd)/url/src/*.cpp))
 
-ifneq (,)
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/ipv4/*.c)
@@ -60,7 +59,6 @@ source += $(wildcard $(pwd)/lwip/src/netif/*.c)
 ifeq ($(target),win)
 #source += $(pwd)/lwip/contrib/ports/win32/sys_arch.c
 source += $(pwd)/lwip/contrib/ports/win32/sio.c
-endif
 endif
 
 cflags += -I$(pwd)/lwip/src/include
