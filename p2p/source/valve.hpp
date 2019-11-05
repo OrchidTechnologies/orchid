@@ -53,7 +53,7 @@ class Valve {
         Insert(this);
     }
 
-    ~Valve() {
+    virtual ~Valve() {
         orc_insist(shut_.is_set());
         Remove(this);
     }

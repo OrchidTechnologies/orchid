@@ -73,8 +73,6 @@ class Faucet :
         basin_(basin)
     {
     }
-
-    virtual ~Faucet() = default;
 };
 
 using BufferDrain = Drain<const Buffer &>;

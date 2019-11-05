@@ -37,8 +37,6 @@ class Origin :
     public Valve
 {
   public:
-    virtual ~Origin() = default;
-
     virtual task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
     virtual task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) = 0;
     virtual task<Socket> Unlid(Sunk<Opening, BufferSewer> *sunk) = 0;
