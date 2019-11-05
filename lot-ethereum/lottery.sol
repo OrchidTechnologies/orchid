@@ -84,6 +84,14 @@ contract OrchidLottery {
         return lotteries_[funder].keys_[offset];
     }
 
+    function page(address funder, uint256 offset, uint256 count) public view returns (address[] memory) {
+        address[] storage all = lotteries_[funder].keys_;
+        address[] memory slice = new address[](count);
+        for (uint256 i = 0; i != count; ++i)
+            slice[i] = all[offset + i];
+        return slice;
+    }
+
 
     function look(address funder, address signer) public view returns (uint128, uint128, uint256) {
         Pot storage pot = lotteries_[funder].pots_[signer];
