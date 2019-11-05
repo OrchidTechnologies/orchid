@@ -64,7 +64,9 @@ contract OrchidLottery {
     function kill(address funder, address signer, Pot storage pot) private {
         Lottery storage lottery = lotteries_[funder];
         require(pot.offset_ != 0);
-        lottery.keys_[pot.offset_ - 1] = lottery.keys_[lottery.keys_.length];
+        address key = lottery.keys_[lottery.keys_.length - 1];
+        lottery.pots_[key].offset_ = pot.offset_;
+        lottery.keys_[pot.offset_ - 1] = key;
         --lottery.keys_.length;
         delete lottery.pots_[signer];
     }
