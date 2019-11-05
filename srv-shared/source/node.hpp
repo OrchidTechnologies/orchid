@@ -47,7 +47,7 @@ class Node final {
 
   public:
     Node(std::vector<std::string> ice, const std::string &rpc, Address lottery) :
-        ice_(ice),
+        ice_(std::move(ice)),
         locator_(Locator::Parse(rpc)),
         lottery_(std::move(lottery))
     {
