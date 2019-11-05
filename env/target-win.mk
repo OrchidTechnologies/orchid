@@ -80,8 +80,8 @@ msys2 += winpthreads-git-7.0.0.5325.11a5459d-1
 define _
 $(output)/$(1)/%.msys2:
 	@mkdir -p $$(dir $$@)
-	@curl http://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$*-any.pkg.tar.xz | tar -C $(output) -Jxvf-
-	@touch $@
+	curl http://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.xz | tar -C $(output) -Jxvf-
+	@touch $$@
 
 sysroot += $(patsubst %,$(output)/$(1)/%.msys2,$(msys2))
 endef
