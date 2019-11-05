@@ -75,7 +75,7 @@ class Capture :
 
   public:
     Capture(const std::string &local);
-    ~Capture();
+    virtual ~Capture();
 
     void Land(const Buffer &data, bool analyze);
 
