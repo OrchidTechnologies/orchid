@@ -71,10 +71,10 @@ export class LotteryPot {
 }
 
 // Init the Web3 environment and the Orchid contracts
-export function orchidInitEthereum(): Promise<WalletStatus> {
+export function orchidInitEthereum(providerUpdateCallback?:(props:any)=>void): Promise<WalletStatus> {
   console.log("init ethereum");
   return new Promise(function (resolve, reject) {
-    window.addEventListener('load', async () => {
+    /*window.addEventListener('load',*/ (async () => {
       if (window.ethereum) {
         console.log("Modern dapp browser.");
         window.ethereum.autoRefreshOnNetworkChange = false;
@@ -93,6 +93,16 @@ export function orchidInitEthereum(): Promise<WalletStatus> {
         resolve(WalletStatus.NoWallet);
       }
 
+      let networkNumber = await web3.eth.net.getId();
+      console.log("network number: ", networkNumber);
+      if (networkNumber !== 1) {
+        resolve(WalletStatus.WrongNetwork);
+      }
+      providerUpdateCallback &&
+        (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
+          providerUpdateCallback && providerUpdateCallback(props);
+        });
+
       try {
         OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr);
         OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr);
@@ -102,7 +112,7 @@ export function orchidInitEthereum(): Promise<WalletStatus> {
       }
 
       resolve(WalletStatus.Connected);
-    });
+    })();
   });
 }
 
@@ -116,11 +126,13 @@ export async function orchidGetWallet(): Promise<Wallet> {
     wallet.ethBalance = BigInt(await web3.eth.getBalance(accounts[0]));
   } catch (err) {
     console.log("Error getting eth balance", err);
+    throw err;
   }
   try {
     wallet.oxtBalance = BigInt(await OrchidContracts.token.methods.balanceOf(accounts[0]).call());
   } catch (err) {
     console.log("Error getting oxt balance", err);
+    throw err;
   }
   return wallet;
 }
@@ -131,6 +143,7 @@ export async function orchidGetSigners(wallet: Wallet): Promise<Signer []> {
     keys = await OrchidContracts.lottery.methods.keys(wallet.address).call();
   } catch (err) {
     console.log("Error getting signers list", err);
+    throw err;
   }
   console.log("orchid signers: ", keys);
   return keys.map((key: Address) => new Signer(wallet, key));
@@ -278,7 +291,7 @@ export async function orchidUnlock(funder: Address, signer: Address): Promise<st
 }
 
 /// Get the lottery pot balance and escrow amount for the specified address.
-export async function orchidGetLotteryPot(funder: Wallet, signer: Signer): Promise<LotteryPot | null> {
+export async function orchidGetLotteryPot(funder: Wallet, signer: Signer): Promise<LotteryPot> {
   console.log("get lottery pot for signer: ", signer);
   //console.log("get lottery pot for signer: ", signer);
   let result = await OrchidContracts.lottery.methods
@@ -286,7 +299,7 @@ export async function orchidGetLotteryPot(funder: Wallet, signer: Signer): Promi
     .call({from: funder.address});
   if (result == null || result._length < 3) {
     console.log("get lottery pot failed");
-    return null;
+    throw new Error("Unable to get lottery pot");
   }
   const balance: BigInt = result[0];
   const escrow: BigInt = result[1];

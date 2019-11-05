@@ -12,7 +12,7 @@ import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
 
 export enum WalletStatus {
-  NoWallet, NotConnected, Connected, Error
+  NoWallet, NotConnected, Connected, Error, WrongNetwork
 }
 
 export class OrchidAPI {
@@ -28,6 +28,10 @@ export class OrchidAPI {
     return OrchidAPI.instance;
   }
 
+  // Wallet connection or error status.  Wallet.Error may indicate the lack of a valid web3
+  // environment or the failure of core contract calls.
+  walletStatus = new BehaviorSubject<WalletStatus>(WalletStatus.NotConnected);
+
   // The current wallet
   wallet = new BehaviorSubject<Wallet | undefined>(undefined);
   wallet_wait: Observable<Wallet> = this.wallet.pipe(filter(isDefined), shareReplay(1));
@@ -38,7 +42,9 @@ export class OrchidAPI {
 
   // True if the user has no signer accounts configured yet.
   newUser_wait: Observable<boolean> = this.signersAvailable_wait.pipe(
-    map( (signers: Signer [])=>{ return signers.length === 0 } ), shareReplay(1)
+    map((signers: Signer []) => {
+      return signers.length === 0
+    }), shareReplay(1)
   );
 
   // The currently selected signer account
@@ -47,9 +53,15 @@ export class OrchidAPI {
 
   // The Lottery pot associated with the currently selected signer account.
   lotteryPot: Observable<LotteryPot | null> = this.signer_wait.pipe(
-      flatMap((signer: Signer) => { // flatMap resolves promises
+    flatMap((signer: Signer) => { // flatMap resolves promises
+      try {
         return orchidGetLotteryPot(signer.wallet, signer);
-      }), shareReplay(1)
+      } catch (err) {
+        console.log("Error getting lottery pot data for signer: ", signer);
+        this.walletStatus.next(WalletStatus.Error);
+        throw err;
+      }
+    }), shareReplay(1)
   );
   lotteryPot_wait: Observable<LotteryPot> = this.lotteryPot.pipe(filter(isNotNull), shareReplay(1));
 
@@ -61,32 +73,51 @@ export class OrchidAPI {
   debugLog = "";
   debugLogChanged = new BehaviorSubject(true);
 
-  async init(): Promise<WalletStatus> {
+  async init(listenForProviderChanges: boolean = true): Promise<WalletStatus> {
     this.captureLogs();
 
+    const propsUpdate = listenForProviderChanges ?
+      (props: any) => {
+        console.log("provider props change: ", props);
+        this.init(false);
+      } : undefined;
+
     // Allow init ethereum to create the web3 context for validation
-    let status =  await orchidInitEthereum();
+    let status = await orchidInitEthereum(propsUpdate);
     if (status === WalletStatus.Connected) {
       await this.updateWallet();
       await this.updateSigners();
       this.updateTransactions();
     }
+    this.walletStatus.next(status);
     return status;
   }
 
   async updateSigners() {
-    if (this.wallet.value == null) { return; }
-    let signers = await orchidGetSigners(this.wallet.value);
-    this.signersAvailable.next(signers);
-    // Select the first if available
-    if (!this.signer.value && signers.length > 0) {
-      console.log("updateSigners setting default signer: ", signers[0]);
-      this.signer.next(signers[0]);
+    if (this.wallet.value == null) {
+      return;
+    }
+    try {
+      let signers = await orchidGetSigners(this.wallet.value);
+      this.signersAvailable.next(signers);
+      // Select the first if available
+      if (!this.signer.value && signers.length > 0) {
+        console.log("updateSigners setting default signer: ", signers[0]);
+        this.signer.next(signers[0]);
+      }
+    } catch (err) {
+      console.log("Error updating signers: ", err);
+      this.walletStatus.next(WalletStatus.Error);
     }
   }
 
   async updateWallet() {
-    this.wallet.next(await orchidGetWallet());
+    try {
+      this.wallet.next(await orchidGetWallet());
+    } catch (err) {
+      console.log("Error updating wallet: ", err);
+      this.walletStatus.next(WalletStatus.Error);
+    }
   }
 
   /// Update selected lottery pot balances
@@ -124,7 +155,10 @@ export class OrchidAPI {
     // Capture errors
     window.onerror = function (message, source, lineno, colno, error) {
       let text = message.toString();
-      if (error && error.stack) { text = error.stack.toString() };
+      if (error && error.stack) {
+        text = error.stack.toString()
+      }
+      ;
       console.log('Error: ' + text + ": " + error);
       console.log('Error json: ', JSON.stringify(error));
     };

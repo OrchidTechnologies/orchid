@@ -3,8 +3,9 @@ import {Container} from "react-bootstrap";
 import './NoWallet.css';
 import bugs from '../assets/bugs.png';
 import {SubmitButton} from "./SubmitButton";
+import {WalletStatus} from "../api/orchid-api";
 
-export const NoWallet: FC = () => {
+export const NoWallet: FC<{ walletStatus: WalletStatus }> = (props) => {
   const [buttonCopiedState, setButtonCopiedState] = useState(false);
 
   function copyUrl() {
@@ -24,15 +25,21 @@ export const NoWallet: FC = () => {
     }, 1000);
   }
 
+  let wrongNetwork = props.walletStatus === WalletStatus.WrongNetwork;
   return (
     <Container className="NoWallet" style={{textAlign: 'center'}}>
       <div className="NoWallet-title">You’re almost there!</div>
-      <div className="NoWallet-text">Paste this URL in a DApp browser (crypto wallet browser) to
-        connect.
-      </div>
+      <div className="NoWallet-text"> {
+          wrongNetwork ?
+            "Please select the Ethereum Main Network in your Dapp Browser!"
+            : "Paste this URL in a DApp browser (crypto wallet browser) to connect."
+      } </div>
       <img className="NoWallet-image" src={bugs} alt="Bugs"/>
       <div style={{marginTop: '16px'}}>
-        <SubmitButton onClick={copyUrl} enabled={true}>
+        <SubmitButton
+          hidden={wrongNetwork}
+          onClick={copyUrl}
+          enabled={true}>
           {buttonCopiedState ? "Copied!" : "Copy URL"}
         </SubmitButton>
       </div>

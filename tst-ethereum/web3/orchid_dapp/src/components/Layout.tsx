@@ -25,7 +25,7 @@ import {OrchidAPI, WalletStatus} from "../api/orchid-api";
 import {Overview} from "./Overview";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 
-export const Layout: FC<{ status: WalletStatus }> = (props) => {
+export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   const [route, setRoute] = useState(pathToRoute(hashPath()) || Route.Overview);
   const [navEnabledState, setNavEnabledState] = useState(true);
@@ -41,17 +41,17 @@ export const Layout: FC<{ status: WalletStatus }> = (props) => {
   useEffect(() => {
     let api = OrchidAPI.shared();
     // Disable general nav for new user with no accounts.
-    let newUserSubscription = api.newUser_wait.subscribe(isNew=>{
+    let newUserSub = api.newUser_wait.subscribe(isNew=>{
       setNavEnabledState(!isNew);
     });
     return () => {
-      newUserSubscription.unsubscribe();
+      newUserSub.unsubscribe();
     };
   }, []);
 
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
-  let navEnabled = navEnabledState && props.status === WalletStatus.Connected;
+  let navEnabled = navEnabledState && props.walletStatus === WalletStatus.Connected;
   return (
     <RouteContext.Provider value={{
       route: route,
