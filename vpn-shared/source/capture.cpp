@@ -441,6 +441,7 @@ _trace();
         header.ip4.saddr = boost::endian::native_to_big(source.Host().to_v4().to_uint());
         header.ip4.daddr = boost::endian::native_to_big(destination.Host().to_v4().to_uint());
 
+        // NOLINTNEXTLINE (clang-analyzer-core.uninitialized.Assign)
         header.ip4.check = openvpn::IPChecksum::checksum(&header.ip4, sizeof(header.ip4));
 
         header.tcp.source = boost::endian::native_to_big(source.Port());
@@ -453,6 +454,7 @@ _trace();
         header.tcp.check = 0;
         header.tcp.urgent_p = 0;
 
+        // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
         header.tcp.check = openvpn::udp_checksum(
             reinterpret_cast<uint8_t *>(&header.tcp),
             sizeof(header.tcp),
