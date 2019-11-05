@@ -150,6 +150,11 @@ class Sink final :
 
   public:
     using Base_::Base_;
+
+    ~Sink() {
+        if (Verbose)
+            Log() << "~Sink<" << typeid(Base_).name() << ", " << typeid(Inner_).name() << ">()" << std::endl;
+    }
 };
 
 }
