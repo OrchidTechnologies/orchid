@@ -17,6 +17,7 @@ export class WithdrawFunds extends Component {
 
   state = {
     potBalance: null as BigInt | null,
+    potUnlocked: null as boolean | null,
     withdrawAmount: null as number | null,
     withdrawAll: false,
     sendToAddress: null as Address | null,
@@ -29,7 +30,10 @@ export class WithdrawFunds extends Component {
   componentDidMount(): void {
     let api = OrchidAPI.shared();
     api.lotteryPot_wait.subscribe(pot => {
-      this.setState({potBalance: pot.balance})
+      this.setState({
+        potBalance: pot.balance,
+        potUnlocked: pot.isUnlocked()
+      })
     });
   }
 
@@ -147,11 +151,9 @@ export class WithdrawFunds extends Component {
         {/*Withdraw all checkbox*/}
         <Row>
           <Col>
-            <div style={{
+            <div className={this.state.potUnlocked ? "" : "disabled-faded"} style={{
               display: 'flex',
               alignItems: 'baseline',
-              opacity: 0.3,
-              pointerEvents: "none"
             }}>
               <input
                 type="checkbox"
