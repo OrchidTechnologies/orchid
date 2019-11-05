@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
@@ -68,12 +69,19 @@ class _SideDrawerState extends State<SideDrawer> {
                         title: "Balance",
                         imageName: 'assets/images/wallet.png',
                         onPressed: () {
-                          Navigator.pushNamed(context, '/budget/balance');
+                          //Navigator.pushNamed(context, '/budget/balance');
                         }),
                     divider(),
                   ],
                 ),
               ),
+              SideDrawerTile(
+                  title: "Copy Signer Key",
+                  imageName: 'assets/images/fileDocumentOutline.png',
+                  onPressed: () {
+                    _copySignerKey(context);
+                  }),
+              divider(),
               SideDrawerTile(
                   title: "Clear Data",
                   icon: Icons.delete_forever,
@@ -137,6 +145,18 @@ class _SideDrawerState extends State<SideDrawer> {
         )
       ],
     );
+  }
+
+  void _copySignerKey(BuildContext context) async {
+    var signerKey = await OrchidAPI().budget().getSignerKey();
+    Clipboard.setData(ClipboardData(text: signerKey));
+    Dialogs.showAppDialog(
+        context: context,
+        title: "Signer Key Copied",
+        body: "Your public signer key has been copied to the clipboard.  "
+            +"Paste this into the Create Account screen of the Orchid Account Manager Dapp to link "
+           + "this client to your account.",
+        );
   }
 
   void _confirmDelete(BuildContext context) {
@@ -263,7 +283,7 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
                     .copyWith(fontSize: 12, height: 1.2)),
           ],
         ),
-        trailing: Icon(Icons.chevron_right, color: AppColors.white),
+        //trailing: Icon(Icons.chevron_right, color: AppColors.white),
         onTap: widget.onPressed);
   }
 

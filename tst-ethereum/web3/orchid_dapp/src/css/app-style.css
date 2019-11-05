@@ -68,7 +68,7 @@ html, body {
 }
 
 .disabled-faded {
-  opacity: 0.50;
+  opacity: 0.30;
   pointer-events: none;
 }
 

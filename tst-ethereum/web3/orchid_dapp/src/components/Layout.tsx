@@ -1,8 +1,7 @@
-import React, {FC, useContext, useState} from "react";
+import React, {FC, useContext, useEffect, useState} from "react";
 import {
   Button, Col, Container, Image, ListGroup, ListGroupItem, Nav, Navbar, OverlayTrigger, Popover, Row
 } from "react-bootstrap";
-import Header from "./Header";
 import {Transactions} from "./Transactions";
 import {AddFunds} from "./AddFunds";
 import {WithdrawFunds} from "./WithdrawFunds";
@@ -10,7 +9,7 @@ import {Balances} from "./Balances";
 import {DebugPanel} from "./DebugPanel";
 import {MoveFunds} from "./MoveFunds";
 import {LockFunds} from "./LockFunds";
-import {ManageKeys} from "./ManageKeys";
+import {Header} from "./Header";
 import './Layout.css'
 
 import moreIcon from '../assets/more-outlined.svg'
@@ -22,11 +21,11 @@ import addIconSelected from '../assets/add.svg'
 import withdrawIcon from '../assets/withdraw-outlined.svg'
 import withdrawIconSelected from '../assets/withdraw.svg'
 import {Divider, hashPath, Visibility} from "../util/util";
-import {WalletStatus} from "../api/orchid-api";
+import {OrchidAPI, WalletStatus} from "../api/orchid-api";
 import {Overview} from "./Overview";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 
-export const Layout: FC<{ status: WalletStatus }> = (props) => {
+export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   const [route, setRoute] = useState(pathToRoute(hashPath()) || Route.Overview);
   const [navEnabledState, setNavEnabledState] = useState(true);
@@ -36,13 +35,23 @@ export const Layout: FC<{ status: WalletStatus }> = (props) => {
     [Route.Transactions, "Transactions"],
     [Route.MoveFunds, "Move Funds"],
     [Route.LockFunds, "Lock / Unlock Funds"],
-    [Route.ManageKeys, "Manage Keys"],
     [Route.DebugPanel, "Debug Panel"]
   ]);
 
+  useEffect(() => {
+    let api = OrchidAPI.shared();
+    // Disable general nav for new user with no accounts.
+    let newUserSub = api.newUser_wait.subscribe(isNew=>{
+      setNavEnabledState(!isNew);
+    });
+    return () => {
+      newUserSub.unsubscribe();
+    };
+  }, []);
+
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
-  let navEnabled = navEnabledState && props.status === WalletStatus.Connected;
+  let navEnabled = navEnabledState && props.walletStatus === WalletStatus.Connected;
   return (
     <RouteContext.Provider value={{
       route: route,
@@ -88,12 +97,12 @@ export const Layout: FC<{ status: WalletStatus }> = (props) => {
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>
             <Visibility visible={route === Route.Balances}><Balances/></Visibility>
-            <Visibility visible={route === Route.AddFunds}><AddFunds/></Visibility>
+            <Visibility visible={route === Route.AddFunds || route === Route.CreateAccount}>
+              <AddFunds createAccount={route === Route.CreateAccount}/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
             <Visibility visible={route === Route.Transactions}><Transactions/></Visibility>
             <Visibility visible={route === Route.MoveFunds}><MoveFunds/></Visibility>
             <Visibility visible={route === Route.LockFunds}><LockFunds/></Visibility>
-            <Visibility visible={route === Route.ManageKeys}><ManageKeys/></Visibility>
             <Visibility visible={route === Route.DebugPanel}><DebugPanel/></Visibility>
           </Col>
         </Row>

@@ -21,15 +21,15 @@ export class Balances extends Component {
   componentDidMount(): void {
     let api = OrchidAPI.shared();
 
-    api.account_wait.subscribe(account => {
-      console.log("Funding from account: ", account.address);
-      console.log("Balance: ", account.ethBalance);
+    api.wallet_wait.subscribe(wallet => {
+      console.log("Funding from account: ", wallet.address);
+      console.log("Balance: ", wallet.ethBalance);
       this.setState({
-        walletAddress: account.address,
-        ethBalance: weiToOxtString(account.ethBalance, 4),
-        ethBalanceError: account.ethBalance <= BigInt(0),
-        oxtBalance: weiToOxtString(account.oxtBalance, 4),
-        oxtBalanceError: account.oxtBalance <= BigInt(0),
+        walletAddress: wallet.address,
+        ethBalance: weiToOxtString(wallet.ethBalance, 4),
+        ethBalanceError: wallet.ethBalance <= BigInt(0),
+        oxtBalance: weiToOxtString(wallet.oxtBalance, 4),
+        oxtBalanceError: wallet.oxtBalance <= BigInt(0),
       });
     });
 

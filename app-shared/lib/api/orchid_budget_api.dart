@@ -10,7 +10,7 @@ import 'orchid_api.dart';
 class OrchidBudgetAPI {
   // Development time feature flag for the budget functionality
   // Remove when features are complete.
-  static const bool featureEnabled = false;
+  static const bool featureEnabled = true;
 
   static OrchidBudgetAPI _shared = OrchidBudgetAPI._init();
 
@@ -55,7 +55,7 @@ class OrchidBudgetAPI {
       }
     });
 
-    _pollTimer = Timer.periodic(Duration(seconds: 15), (timer) {
+    _pollTimer = Timer.periodic(Duration(seconds: 10), (timer) {
       poll();
     });
   }
@@ -63,23 +63,23 @@ class OrchidBudgetAPI {
   /// Prompt an update of the lottery pot events and balance.
   Future<bool> poll() async {
     OrchidAPI().logger().write("polling lottery pot events...");
-    String potAddress = await getLotteryPotsPrimaryAddress();
-    var potEvents = await EtherscanIO.getLotteryPotUpdateEvents(potAddress);
+    String signerAddress = await getSignerKey();
+    var potEvents = await EtherscanIO.getLotteryPotUpdateEvents(signerAddress);
     OrchidAPI().logger().write("got pot events: ${potEvents.length}");
     fundingEvents.add(potEvents);
     return true;
   }
 
-  Future<String> getLotteryPotsPrimaryAddress() async {
+  Future<String> getSignerKey() async {
     // TODO:
     if (OrchidAPI.mockAPI) {
-      return "A3D8F4933B73DACC0702C52503D0DC6BDE0984DA";
+      return "A3D8F4933B73DACC0702C52503D0DC6BDE0984DC";
     }
     return UserPreferences().getLotteryPotsPrimaryAddress();
   }
 
   Future<String> getFundingURL({OXT amount, OXT deposit}) async {
-    String potAddress = await getLotteryPotsPrimaryAddress();
+    String potAddress = await getSignerKey();
     // Remove hex prefix which, while valid, causes issues in some browsers.
     if (potAddress.startsWith("0x")) {
       potAddress = potAddress.substring(2);

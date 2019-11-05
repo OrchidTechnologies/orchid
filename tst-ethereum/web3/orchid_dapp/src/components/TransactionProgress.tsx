@@ -1,6 +1,7 @@
 import React, {Component} from "react";
 import {EtherscanIO} from "../api/etherscan-io";
 import {findDOMNode} from "react-dom";
+import {TransactionId} from "../api/orchid-types";
 
 enum TransactionState {
   New, Running, Completed, Failed
@@ -32,7 +33,7 @@ export class TransactionStatus {
       txId || "");
   }
 
-  static result(txId: string, text: string = ""): TransactionStatus {
+  static result(txId: TransactionId, text: string = ""): TransactionStatus {
     return new TransactionStatus(
       TransactionState.Completed,
       text,

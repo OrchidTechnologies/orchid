@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {FC, useEffect, useState} from 'react'
 import {render} from 'react-dom'
 import {OrchidAPI, WalletStatus} from "./api/orchid-api";
 
@@ -10,19 +10,37 @@ import './css/button-style.css'
 import {Layout} from "./components/Layout"
 import {NoWallet} from "./components/NoWallet";
 
-OrchidAPI.shared().init().then((status) => {
+OrchidAPI.shared().init().then((walletStatus) => {
+  render(<App walletStatus={walletStatus}/>, document.getElementById('root'));
+});
+
+const App: FC<{walletStatus: WalletStatus}> = (props) => {
+  const [walletStatus, setWalletStatus] = useState(props.walletStatus);
+
+  useEffect(() => {
+    let api = OrchidAPI.shared();
+    let walletStatusSub = api.walletStatus.subscribe(walletStatus => {
+      console.log("wallet status: ", WalletStatus[walletStatus]);
+      setWalletStatus(walletStatus);
+    });
+    return () => {
+      walletStatusSub.unsubscribe();
+    };
+  }, []);
+
   let el: any;
-  switch(status) {
+  switch(walletStatus) {
     case WalletStatus.NoWallet:
     case WalletStatus.Error:
-      el = <NoWallet/>;
+    case WalletStatus.WrongNetwork:
+      el = <NoWallet walletStatus={walletStatus}/>;
       break;
     case WalletStatus.NotConnected:
     case WalletStatus.Connected:
-      el = <Layout status={status}/>;
+      el = <Layout walletStatus={walletStatus}/>;
       break;
   }
-  render(el, document.getElementById('root'));
-});
+  return el;
+};
 
 

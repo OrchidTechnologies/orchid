@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {
-  isEthAddress, oxtToWei, oxtToWeiString, weiToOxtString,
+  isEthAddress, oxtToWei, weiToOxtString,
   orchidWithdrawFunds, orchidWithdrawFundsAndEscrow
 } from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
@@ -17,6 +17,7 @@ export class WithdrawFunds extends Component {
 
   state = {
     potBalance: null as BigInt | null,
+    potUnlocked: null as boolean | null,
     withdrawAmount: null as number | null,
     withdrawAll: false,
     sendToAddress: null as Address | null,
@@ -29,21 +30,26 @@ export class WithdrawFunds extends Component {
   componentDidMount(): void {
     let api = OrchidAPI.shared();
     api.lotteryPot_wait.subscribe(pot => {
-      this.setState({potBalance: pot.balance})
+      this.setState({
+        potBalance: pot.balance,
+        potUnlocked: pot.isUnlocked()
+      })
     });
   }
 
   async submitWithdrawFunds() {
-    let api = OrchidAPI.shared();
-    let account = api.account.value;
+    const api = OrchidAPI.shared();
+    const wallet = api.wallet.value;
+    const signer = api.signer.value;
     const withdrawAmount = this.state.withdrawAmount;
     const withdrawAll = this.state.withdrawAll;
-    const sendToAddress = this.state.sendToAddress;
+    const targetAddress = this.state.sendToAddress;
 
-    if (account == null
+    if (wallet === undefined
+      || signer === undefined
       || withdrawAmount == null
       || withdrawAll == null
-      || sendToAddress == null
+      || targetAddress == null
     ) {
       return;
     }
@@ -55,13 +61,14 @@ export class WithdrawFunds extends Component {
     try {
       let txId;
       if (this.state.withdrawAll) {
-        txId = await orchidWithdrawFundsAndEscrow(sendToAddress);
+        txId = await orchidWithdrawFundsAndEscrow(wallet.address, signer.address, targetAddress);
       } else {
-        const withdrawWei = oxtToWeiString(withdrawAmount);
-        txId = await orchidWithdrawFunds(sendToAddress, withdrawWei);
+        const withdrawWei = oxtToWei(withdrawAmount);
+        txId = await orchidWithdrawFunds(wallet.address, signer.address, targetAddress, withdrawWei);
       }
-      this.setState({tx: TransactionStatus.result("Transaction Complete!", txId)});
-      api.updateAccount().then();
+      await api.updateLotteryPot();
+      await api.updateWallet();
+      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
       api.updateTransactions().then();
     } catch (err) {
       this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
@@ -76,7 +83,7 @@ export class WithdrawFunds extends Component {
     let api = OrchidAPI.shared();
     let submitEnabled =
       !this.state.tx.isRunning()
-      && api.account.value !== null
+      && api.wallet.value !== null
       && this.state.sendToAddress !== null
       && (this.state.withdrawAll || this.state.withdrawAmount !== null);
 
@@ -141,13 +148,12 @@ export class WithdrawFunds extends Component {
           </Col>
         </Row>
 
+        {/*Withdraw all checkbox*/}
         <Row>
           <Col>
-            <div style={{
+            <div className={this.state.potUnlocked ? "" : "disabled-faded"} style={{
               display: 'flex',
               alignItems: 'baseline',
-              opacity: 0.3,
-              pointerEvents: "none"
             }}>
               <input
                 type="checkbox"

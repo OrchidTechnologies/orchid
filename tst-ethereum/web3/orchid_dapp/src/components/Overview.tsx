@@ -8,9 +8,10 @@ import beaver from '../assets/beaver1.svg';
 import coinbase from '../assets/coinbase.jpg';
 import {hashPath} from "../util/util";
 import {OrchidAPI} from "../api/orchid-api";
-import {oxtToWei} from "../api/orchid-eth";
+const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 interface OverviewProps {
+  noAccount?: boolean,
   walletEthEmpty?: boolean
   walletOxtEmpty?: boolean
   potFunded?: boolean
@@ -19,9 +20,10 @@ interface OverviewProps {
 }
 
 export const Overview: React.FC = () => {
-  const [walletEthEmpty, setWalletEthEmpty] = useState(undefined as boolean|undefined);
-  const [walletOxtEmpty, setWalletOxtEmpty] = useState(undefined as boolean|undefined);
-  const [potFunded, setPotFunded] = useState(undefined as boolean|undefined);
+  const [newUser, setNewUser] = useState<boolean | undefined>(undefined);
+  const [walletEthEmpty, setWalletEthEmpty] = useState<boolean | undefined>(undefined);
+  const [walletOxtEmpty, setWalletOxtEmpty] = useState<boolean | undefined>(undefined);
+  const [potFunded, setPotFunded] = useState<boolean | undefined>(undefined);
   // const earnTargetAmountOXT = oxtToWei(20.0);
   // const earnTargetDepositOXT = oxtToWei(10.0);
   const earnTargetAmountOXT = BigInt(1); // allow anything greater than zero
@@ -29,17 +31,21 @@ export const Overview: React.FC = () => {
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let subscription = api.lotteryPot_wait.subscribe(pot => {
+    let newSubscription = api.newUser_wait.subscribe(setNewUser);
+    let lotSubscription = api.lotteryPot_wait.subscribe(pot => {
       setPotFunded(pot.balance >= earnTargetAmountOXT && pot.escrow >= earnTargetDepositOXT);
-      setWalletOxtEmpty(pot.account.oxtBalance <= BigInt(0));
-      setWalletEthEmpty(pot.account.ethBalance <= BigInt(0));
+      let wallet = pot.signer.wallet;
+      setWalletOxtEmpty(wallet.oxtBalance <= BigInt(0));
+      setWalletEthEmpty(wallet.ethBalance <= BigInt(0));
     });
     return () => {
-      subscription.unsubscribe();
+      lotSubscription.unsubscribe();
+      newSubscription.unsubscribe();
     };
   }, []);
 
   let props: OverviewProps = {
+    noAccount: newUser,
     walletEthEmpty: walletEthEmpty,
     walletOxtEmpty: walletOxtEmpty,
     potFunded: potFunded,
@@ -49,7 +55,8 @@ export const Overview: React.FC = () => {
 
   const [initialPath] = useState(hashPath());
 
-  if (potFunded === undefined) {
+  // Show a loading message while waiting for account status
+  if (newUser !== true && potFunded === undefined) {
     return <OverviewLoading/>
   }
 
@@ -62,7 +69,7 @@ export const Overview: React.FC = () => {
 
 const OverviewDefault: React.FC<OverviewProps> = (props) => {
   let {setRoute} = useContext(RouteContext);
-  let {potFunded, walletEthEmpty, walletOxtEmpty} = props;
+  let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty} = props;
 
   let instructions: string;
   if (potFunded) {
@@ -76,6 +83,9 @@ const OverviewDefault: React.FC<OverviewProps> = (props) => {
   } else if (walletOxtEmpty) {
     instructions = "Your wallet OXT balance is empty. " +
       "Transfer OXT to this dapp wallet in order to continue.";
+  } else if (noAccount) {
+    instructions = "You are ready to create an Orchid account with funds from your wallet. " +
+      "Continue below to create your account.";
   } else {
     instructions = "Your Orchid Account is ready to receive funds from your wallet. " +
       "Continue below to finalize funding your account.";
@@ -89,8 +99,7 @@ const OverviewDefault: React.FC<OverviewProps> = (props) => {
         </Col></Row>
         <Row style={{marginTop: '24px'}} noGutters={true}>
           <Col className="Overview-copy">
-            Add, move, withdraw and connect funds here for use in the Orchid App. Your Orchid
-            Account is linked to the wallet you first associate it with.
+            {instructions}
           </Col>
           <Col>
             <img style={{width: '82px', height: '92px', marginRight: '30px', marginBottom: '24px'}}
@@ -99,13 +108,14 @@ const OverviewDefault: React.FC<OverviewProps> = (props) => {
         </Row>
       </div>
       <div className="Overview-bottomText">
-        {instructions}
       </div>
       <SubmitButton
-        onClick={() => { setRoute(Route.AddFunds) }}
+        onClick={() => {
+          setRoute(noAccount ? Route.CreateAccount : Route.AddFunds)
+        }}
         hidden={potFunded}
         enabled={!potFunded && !walletOxtEmpty && !walletEthEmpty}>
-        Add Funds to your Account
+        {noAccount ? "Create Account" : "Add Funds to your Account"}
       </SubmitButton>
     </div>
   );
@@ -113,11 +123,7 @@ const OverviewDefault: React.FC<OverviewProps> = (props) => {
 
 const OverviewEarn: React.FC<OverviewProps> = (props) => {
   let {setRoute, setNavEnabled} = useContext(RouteContext);
-  let {potFunded, walletEthEmpty, walletOxtEmpty} = props;
-
-  useEffect(() => {
-    setNavEnabled(false);
-  }, []);
+  let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty} = props;
 
   // currently duplicates above but this text may be customized
   let instructions: string;
@@ -132,6 +138,9 @@ const OverviewEarn: React.FC<OverviewProps> = (props) => {
   } else if (walletOxtEmpty) {
     instructions = "Your wallet OXT balance is empty. " +
       "Transfer OXT to this dapp wallet in order to continue.";
+  } else if (noAccount) {
+    instructions = "You are ready to create an Orchid account with funds from your wallet. " +
+      "Continue below to create your account.";
   } else {
     instructions = "Your Orchid Account is ready to receive funds from your wallet. " +
       "Continue below to finalize funding your account.";
@@ -157,10 +166,13 @@ const OverviewEarn: React.FC<OverviewProps> = (props) => {
         {instructions}
       </div>
       <SubmitButton
-        onClick={() => { setNavEnabled(true); setRoute(Route.AddFunds) }}
+        onClick={() => {
+          setNavEnabled(true);
+          setRoute(noAccount ? Route.CreateAccount : Route.AddFunds)
+        }}
         enabled={!potFunded && !walletOxtEmpty && !walletEthEmpty}
         hidden={potFunded}>
-        Add Funds to your Account
+        {noAccount ? "Create Account" : "Add Funds to your Account"}
       </SubmitButton>
     </div>
   );
