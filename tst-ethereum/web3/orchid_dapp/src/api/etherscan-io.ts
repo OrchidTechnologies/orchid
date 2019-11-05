@@ -71,7 +71,9 @@ export class EtherscanIO {
       'toBlock': 'latest',
       'address': this.lotteryContractAddress,
       'topic0': this.lotteryFundMethodHash,
+      'topic0_1_opr': 'and',
       'topic1': EtherscanIO.pad64Chars(funder),
+      'topic1_2_opr': 'and',
       'topic2': EtherscanIO.pad64Chars(signer),
       'apikey': this.apiKey
     };
