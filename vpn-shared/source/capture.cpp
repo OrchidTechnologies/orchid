@@ -655,9 +655,9 @@ task<void> Capture::Start(const std::string &config) {
 void Store(po::variables_map &args, const std::string &path) {
     po::options_description options("configuration file");
     options.add_options()
-        ("eth-directory", po::value<std::string>()->default_value("0xd87e0ee1a59841de2ac78c17209db97e27651985"), "contract address of staking directory tree")
-        ("eth-location", po::value<std::string>()->default_value("0x53c76cadd819f9f020e1aa969709ba905bf8d20f"), "contract address of location property data")
-        ("eth-curator", po::value<std::string>()->default_value("0x8a6ebb9800d064db7b4809b02ff1bf12a9effcc3"), "contract address of curated list information")
+        ("eth-directory", po::value<std::string>()->default_value("0xd87E0Ee1a59841DE2aC78C17209dB97E27651985"), "contract address of staking directory tree")
+        ("eth-location", po::value<std::string>()->default_value("0x53c76CaDD819F9F020E1aA969709Ba905bf8d20F"), "contract address of location property data")
+        ("eth-curator", po::value<std::string>()->default_value("0x8a6EBb9800d064Db7b4809b02ff1bf12a9efFCc3"), "contract address of curated list information")
         ("rpc", po::value<std::string>()->default_value("https://api.myetherwallet.com:443/rop"), "ethereum json/rpc and websocket endpoint")
         ("pot", po::value<std::string>(), "signing key for a lottery pot to pay on orchid")
         //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
