@@ -29,6 +29,33 @@
 #include "pay_protocol.h"
 #include <random>
 
+/*
+
+template <class T>
+map<string, T>& get_store()
+{
+	static std::map<std::string, T> store_;
+	return store_;
+}
+
+template <class T> T persist_load(const char* k, T x)
+{
+	std::string key(k);
+	auto& store = get_store<T>();
+	if (store.find(key) == store.end()) {
+		store[key] = x;
+	}
+	return store[key];
+}
+
+template <class T> void persist_store(const char* k, T x)
+{
+	std::string key(k);
+	auto& store = get_store<T>();
+	store[key] = x;
+}
+
+*/
 
 template <class T>
 T sum(const vector<T>& X)
@@ -116,6 +143,7 @@ void register_timer_func(ITickable* p)
 
 void step_all(double ctime)
 {
+	printf("step_all(%f)\n",ctime);
 	for (auto p : GetTickables())
 	{
 		double nst = p->next_step_time();
@@ -139,54 +167,66 @@ namespace Lot
 
 
 
+
+double 	get_size(const packet& p) 	{ return p.size_; }
+netaddr get_next(packet& p)		 	{ netaddr a = p.route_.back(); p.route_.pop_back(); return a; }
+bytes32 get_payer(const packet& p) 	{ return p.payer_; }
+uint32  get_id(const packet& p)		{ return p.id_; }
+
+
 struct Device { double throughput; double bqueued; };
 
 struct Network : public Tickable
 {
 
-	double QueLimit = 1e8;
-	double ltime_   = 0.0;
+	double QueLimitT = 10.0;
+	double ltime_    = 0.0;
 
 	map<netaddr, Device> odevs_;
 	map<netaddr, Device> idevs_;
 	map<netaddr, INet*>  objs_;
 
 	Network() {
-		printf("Network: %f %f \n", QueLimit, ltime_);
+		printf("Network: %f %f \n", QueLimitT, ltime_);
 		period_  = 1.0; register_timer_func(this);
 	}
 
-	void send(netaddr to, netaddr from, double psize)
+	void send(netaddr to, netaddr from, const packet& p)
 	{
-		auto& odev = odevs_[from];
-		auto& idev = idevs_[to];
+		double psize = get_size(p);
+		auto& odev   = odevs_[from];
+		auto& idev   = idevs_[to];
 
-		printf("Network::send(%x,%x,%f) odev.bqueued(%f) idev.bqueued(%f)\n", to,from,psize,odev.bqueued,idev.bqueued);
+		printf("Network::send      (%x,%x,%e,%i) odev(%e,%e) idev(%e,%e)\n", to,from,psize,get_id(p),odev.throughput,odev.bqueued,idev.throughput,idev.bqueued);
 
-		if (psize + odev.bqueued > QueLimit) {
-			if (objs_[from] != nullptr) objs_[from]->on_dropped_packet(to,from,psize);
+		double olimit = QueLimitT * odev.throughput; // specify queue limit as relative to throughput
+		if (psize + odev.bqueued > olimit) {
+			if (objs_[from] != nullptr) objs_[from]->on_dropped_packet(to,from,p);
+			printf("Network::send(%x,%x,%e) psize(%e) + odev.bqueued(%e) > olimit(%e) \n", to,from,psize,psize,odev.bqueued,olimit);
 			return;
 		}
-		else if (psize + odev.bqueued > 0.2*QueLimit){
-			if (objs_[from] != nullptr) objs_[from]->on_queued_packet(to,from, psize);
+		else if (psize + odev.bqueued > 0.2*olimit){
+			if (objs_[from] != nullptr) objs_[from]->on_queued_packet(to,from, p);
 		}
 		odev.bqueued += psize;
 
-		if (psize + idev.bqueued > QueLimit) {
-			if (objs_[to] != nullptr) objs_[to]->on_dropped_packet(to,from,psize);
+		double ilimit = QueLimitT * idev.throughput; // specify queue limit as relative to throughput
+		if (psize + idev.bqueued > ilimit) {
+			if (objs_[to] != nullptr) objs_[to]->on_dropped_packet(to,from,p);
+			printf("Network::send(%x,%x,%e) psize(%e) + idev.bqueued(%e) > ilimit(%e) \n", to,from,psize,psize,idev.bqueued,ilimit);
 			return;
 		}
-		else if (psize + idev.bqueued > 0.2*QueLimit){
-			if (objs_[to] != nullptr) objs_[to]->on_queued_packet(to,from, psize);
+		else if (psize + idev.bqueued > 0.2*ilimit){
+			if (objs_[to] != nullptr) objs_[to]->on_queued_packet(to,from, p);
 		}
 		idev.bqueued += psize;
 
-		if (objs_[to] != nullptr) objs_[to]->on_packet(to,from,psize);
+		if (objs_[to] != nullptr) objs_[to]->on_packet(to,from,p);
 	}
 
 	void add(INet* net, double ibw, double obw)
 	{
-		//printf("n(%f,%f) ", ibw, obw);
+		printf("Network::add(%e,%e) ", ibw, obw);
 		netaddr addr  = net->get_netaddr();
 		objs_[addr]   = net;
 		idevs_[addr]  = Device{ibw, 0.0};
@@ -219,8 +259,8 @@ Network& get_network()
 
 namespace net
 {
-	void send(netaddr to, netaddr from, double psize) 	{ get_network().send(to,from,psize); }
-	void add(INet* net, double ibw, double obw) 		{ get_network().add(net,ibw,obw); }
+	void send(netaddr to, netaddr from, const packet& p) 	{ get_network().send(to,from,p); }
+	void add(INet* net, double ibw, double obw) 			{ get_network().add(net,ibw,obw); }
 }
 
 
@@ -373,13 +413,15 @@ struct User : public Tickable
 		double elap = ctime - ltime_;
 		double bwdm = bwdemandf_->exec(ctime);
 		double bwd  = bwdm * bwd_mult_;
-		printf("bwd(%f) = %f * %f \n", bwd, bwdm, bwd_mult_); fflush(stdout);
+		printf("bwd(%e) = %f * %e \n", bwd, bwdm, bwd_mult_); fflush(stdout);
 		double ps   = bwd*elap;
 		auto server_addr = client_->server_->get_netaddr();
-		net::send(server_addr, client_->get_netaddr(), ps);
-		//net::send(targ_addr_, client_->get_netaddr(), ps);
+		auto client_addr = client_->get_netaddr();
+		// trivial route construction
+		auto p = packet{ps,client_->account_, {client_addr, server_addr, targ_addr_, server_addr} };
+		//net::send(get_next(p), client_addr, p);
+		client_->send_packet(get_next(p), client_addr, p);
 		ltime_ = ctime;
-		printf("\n");
 	}
 
 };
@@ -396,14 +438,18 @@ struct Website : public INet
 	virtual netaddr get_netaddr() { return addr_; }
 
 	// simple reflector
-	virtual void on_packet(netaddr to, netaddr from, double psize) { net::send(from, to, psize); }
+	virtual void on_packet(netaddr to, netaddr from, const packet& p_)
+	{
+		printf("Website::on_packet (%x,%x,%e) \n", to,from,get_size(p_));
+		packet p(p_); net::send(get_next(p), addr_, p);
+	}
 
 };
 
 
 struct Sim
 {
-	int NumClients 	= 1; // 1000;
+	int NumClients 	= 2; // 1000;
 	int NumWebsites = 1; // 20;
 	int NumServers 	= 1; // 10;
 
@@ -414,10 +460,10 @@ struct Sim
 	vector<double> 		server_stakes;
 	vector<double> 		server_stakes_ps;
 
-	void client_new_connect_1H(Client* client, netaddr dst)
+	void client_new_connect_1H(double ctime, Client* client, netaddr dst)
 	{
 		int si = find_range(server_stakes_ps, double(rand()) / double(RAND_MAX) );
-		client->on_connect(servers[si], dst);
+		client->on_connect(ctime,servers[si], dst);
 	}
 
 	Sim()
@@ -455,12 +501,14 @@ struct Sim
 		{ auto mf = new expFBM_f{uint32(rand()), -1.0, 0.8,  1.0 / Days, 10, 6.0, 0.0, -1.00}; test_noise_f(*mf); noisefuncs_.push_back(mf); }
 
 
+		double ctime = 0.0;
+
 		printf("Creating %i websites .\n", NumWebsites);
 		for (int i(0); i < NumWebsites; i++) {
 			Website* ws = new Website();
 			websites.push_back(ws);
-			auto ibw_dist = lognormal_distribution<>(  18, 7);
-			auto obw_dist = lognormal_distribution<>( 0.0, 1.0);
+			auto ibw_dist = lognormal_distribution<>(  22, 3);
+			auto obw_dist = lognormal_distribution<>( 0.0, 0.5);
 			double ibw = ibw_dist(gen);
 			double obw = ibw * obw_dist(gen);
 			net::add(ws, ibw, obw);
@@ -507,7 +555,7 @@ struct Sim
 		for (int i(0); i < NumServers; i++) {
 			Server* server = new Server();
 			servers.push_back(server);
-			auto ibw_dist = lognormal_distribution<>(  18, 7);
+			auto ibw_dist = lognormal_distribution<>(  22, 4);
 			auto obw_dist = lognormal_distribution<>( 0.0, 1.0);
 			double ibw = ibw_dist(gen);
 			double obw = ibw * obw_dist(gen);
@@ -535,13 +583,12 @@ struct Sim
 
 		printf("clients connecting \n");
 		for (int i(0); i < clients.size(); i++) {
-			client_new_connect_1H(clients[i], users[i]->targ_addr_);
+			client_new_connect_1H(ctime, clients[i], users[i]->targ_addr_);
 		}
 
 
 		printf("running sim loop: \n");
-		double ctime = 0.0;
-		for (int i(0); i < 2; i++)
+		for (int i(0); i < 10; i++)
 		{
 			ctime += 1.0;
 			step_all(ctime);

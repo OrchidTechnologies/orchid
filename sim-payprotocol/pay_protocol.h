@@ -41,33 +41,64 @@ typedef unsigned int uint256;
 typedef unsigned int netaddr;
 
 
+// ==================  Network Interface ==============================
+
+
+//struct packet;
+
+// todo: replace
+struct packet
+{
+	double 	size_;
+	bytes32	payer_;
+	vector<netaddr> route_;
+	uint32  id_;
+};
+
+
+double 	get_size(const packet& p);
+netaddr get_next(packet& p);
+bytes32 get_payer(const packet& p);
+uint32  get_id(const packet& p);
+
+
+struct INet
+{
+	virtual ~INet() {}
+
+	virtual netaddr get_netaddr() = 0;
+
+	virtual void on_packet(			netaddr to, netaddr from, const packet& p){}
+	virtual void on_dropped_packet(	netaddr to, netaddr from, const packet& p){}
+	virtual void on_queued_packet( 	netaddr to, netaddr from, const packet& p){}
+
+};
+
+namespace net
+{
+	void send(netaddr to, netaddr from, const packet& p);
+	void add(INet* net, double ibw, double obw);
+}
+
+
+
+// ==================  ETH misc ==============================
+
 
 
 template <class T>
-map<string, T>& get_store()
+string encodePacked(T x) { return to_string(x); }
+
+template <class T, class ... Ts>
+string encodePacked(T x, Ts... xs)
 {
-	static std::map<std::string, T> store_;
-	return store_;
+	return to_string(x) + encodePacked(xs...);
 }
 
-template <class T> T persist_load(const char* k, T x)
-{
-	std::string key(k);
-	auto& store = get_store<T>();
-	if (store.find(key) == store.end()) {
-		store[key] = x;
-	}
-	return store[key];
-}
+bytes32 keccak256(const string& x) 	{ return hash<string>{}(x); }
 
-template <class T> void persist_store(const char* k, T x)
-{
-	std::string key(k);
-	auto& store = get_store<T>();
-	store[key] = x;
-}
-
-
+// 'signature' is just the signer address, for easy recovery
+bytes32 sign(bytes32 x, bytes32 y)	{ return y;}
 
 
 double& get_trans_cost() // (oracle) get current transaction cost estimate
@@ -127,6 +158,7 @@ namespace Lot
 }
 
 
+// ==================  Time and Tickable (event simulation) ==============================
 
 
 double CurrentTime();
@@ -156,15 +188,17 @@ struct Tickable : public ITickable
     	return next_;
     }
 
-    void reset() { next_ = 0.0; }
+    void reset(double n) { next_ = n; }
 
 
 };
 
 
+// ==================  Pay Protocol interfaces,objects ==============================
 
 
 
+struct Server;
 
 
 
@@ -254,43 +288,6 @@ struct Budget_PredExpW : public IBudget, public Tickable
 };
 
 
-struct Server;
-
-template <class T>
-string encodePacked(T x) { return to_string(x); }
-
-template <class T, class ... Ts>
-string encodePacked(T x, Ts... xs)
-{
-	return to_string(x) + encodePacked(xs...);
-}
-
-bytes32 keccak256(const string& x) 	{ return hash<string>{}(x); }
-
-// 'signature' is just the signer address, for easy recovery
-bytes32 sign(bytes32 x, bytes32 y)	{ return y;}
-
-
-
-
-
-struct INet
-{
-	virtual ~INet() {}
-
-	virtual netaddr get_netaddr() = 0;
-
-	virtual void on_packet(netaddr to, netaddr from, double psize){}
-	virtual void on_dropped_packet(netaddr to, netaddr from, double psize){}
-	virtual void on_queued_packet( netaddr to, netaddr from, double psize){}
-
-};
-
-namespace net
-{
-	void send(netaddr to, netaddr from, double psize);
-	void add(INet* net, double ibw, double obw);
-}
 
 
 
@@ -309,7 +306,11 @@ struct Client : public Tickable, public INet
 	uint256 hash_secret_;
 	bytes32 target_;
 
-	double  brecvd_;
+	double  brecvd_; // bytes received for the current connection
+
+	uint32  last_recv_pac_id_ = 0;
+	uint32  last_sent_pac_id_ = 0;
+	double  rate_limit_mult_  = 1.0;
 
 	Client(bytes32 account, double budget_edate) {
 		account_ = account;
@@ -329,7 +330,7 @@ struct Client : public Tickable, public INet
 	double get_trust_bound();  	// max OXT amount client is willing to lend to server (can initially be a large constant)
 
 	// user initiates connection to server (random selection picks server)
-	void on_connect(Server* server, netaddr dst);
+	void on_connect(double ctime, Server* server, netaddr dst);
 
 	void set_active(double aratio) { // set an activity ratio for budgeting  (0.0 idle, 1.0 full use)
 		budget_->set_active(aratio);
@@ -347,11 +348,28 @@ struct Client : public Tickable, public INet
     	sendpay(ctime, hash_secret_, target_);
     }
 
+    void send_packet(netaddr to, netaddr from, packet p) {
+    	if (last_sent_pac_id_ != last_recv_pac_id_) {
+    		// last packet was dropped, downgrade rate control
+    		rate_limit_mult_ = rate_limit_mult_*0.5;
+    		printf("Client::send_packet(%x != %x) rate_limit_mult_(%f) \n", last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
+    	}
+    	else {
+    		rate_limit_mult_ = min(rate_limit_mult_*1.1, 1.0);
+    		printf("Client::send_packet(%x == %x) rate_limit_mult_(%f) \n", last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
+    	}
+    	p.size_ = p.size_ * rate_limit_mult_;
+    	last_sent_pac_id_++;
+    	p.id_   = last_sent_pac_id_;
+    	net::send(to, from, p);
+    }
 
-	virtual void on_packet(netaddr to, netaddr from, double psize)
+	virtual void on_packet(netaddr to, netaddr from, const packet& p)
 	{
+		last_recv_pac_id_ = get_id(p);
+		auto psize = get_size(p);
 		assert(to == address_); brecvd_ += psize;
-		printf("Client::on_packet(%x,%x,%f) brecvd_(%f) \n", to,from,psize,brecvd_);
+		printf("Client::on_packet  (%x,%x,%e,%d) brecvd_(%f) \n", to,from,psize,get_id(p),brecvd_);
 	}
 
 };
@@ -374,25 +392,14 @@ struct Server : public INet
 	// Internal
 	bytes32 account_;
 	netaddr address_;
-	map<INet*, double> 		balances_;
+	//map<INet*, double> 	balances_;
+	map<bytes32, double> 	balances_;
 	map<double, bytes32> 	old_tickets_;
 	map<bytes32, bytes32> 	secrets_;
 
-	map<netaddr, pair<netaddr,Client*>> routing_;
+	//map<netaddr, pair<netaddr,Client*>> routing_;
     
 
-	/*
-	void invoice_check(Client* client) {
-		if (balances_[client] <= targ_balance_) {
-		    double billed_amt  = max(bytes_per_upay_ * data_price_, targ_balance_ - balances_[client]);
-		    auto secret = rand();
-		    auto hash_secret = hash<bytes32>{}(secret);
-		    secrets_[hash_secret] = secret;
-		    //send("invoice", client, {hash_secret, target = client, billed_amt, trans_cost = get_trans_cost() });
-		    client->on_invoice(hash_secret, account_, billed_amt, get_trans_cost());
-		}
-	}
-	*/
 
 	Server() {
 		account_ = rand();
@@ -406,8 +413,8 @@ struct Server : public INet
 
 	// client connection request
 	void on_connect(Client* client, netaddr dst) {
-		routing_[client->get_netaddr()] = pair<netaddr,Client*>(dst, client);
-		routing_[dst] = pair<netaddr,Client*>(client->get_netaddr(), client);
+		//routing_[client->get_netaddr()] = pair<netaddr,Client*>(dst, client);
+		//routing_[dst] = pair<netaddr,Client*>(client->get_netaddr(), client);
 		// connection established, stuff happens		
 	}
 
@@ -453,8 +460,8 @@ struct Server : public INet
 		if (check_payment(p)) { // validate the micropayment
 			auto trans_fee = get_trans_cost();
 			double tv = ticket_value(p, trans_fee);
-			printf("balances_[%p]=%f += ticket_value(p,%f)=%f \n", client, balances_[client], trans_fee, tv);
-			balances_[client] += tv;
+			printf("balances_[%x]=%f += ticket_value(p,%f)=%f \n", client->account_, balances_[client->account_], trans_fee, tv);
+			balances_[client->account_] += tv;
 			if (is_winner(p)) { // now check to see if it's a winner, and redeem if so
 				grab(p, trans_fee);
 			}
@@ -462,38 +469,40 @@ struct Server : public INet
 	}
 
 	
-	void bill_packet(INet* client, double psize) {
+	void bill_packet(bytes32 account, double psize) {
 		double amt = psize * res_price_;
-		printf("Server::bill_packet(%p,%f) balances_[%p]=%f -= %f(%f*%f) \n", client,psize, client,balances_[client], amt,psize,res_price_);
-		balances_[client] -= amt;
+		printf("Server::bill_packet(%x,%f) balances_[%x]=%f -= %f(%f*%f) \n", account,psize, account,balances_[account], amt,psize,res_price_);
+		balances_[account] -= amt;
 		//invoice_check(client);
 	}
 
-	void on_queued_packet(netaddr to, netaddr from, double psize) {
-		auto route = routing_[from];
-		Client* client = route.second;
+	void on_queued_packet(netaddr to, netaddr from, const packet& p) {
+		auto psize = get_size(p);
+		bytes32 account = get_payer(p);
 		double amt = psize * que_price_;
-		printf("Server::on_queued_packet(%x,%x,%f) balances_[%p]=%f -= %f(%f * %f) \n", to,from,psize, client,balances_[client], amt,psize,que_price_);
-		balances_[client] -= amt;
+		printf("Server::on_queued_packet(%x,%x,%f) balances_[%x]=%f -= %f(%f * %f) \n", to,from,psize, account,balances_[account], amt,psize,que_price_);
+		balances_[account] -= amt;
 	}
 
-	void on_dropped_packet(netaddr to, netaddr from, double psize) {
-		auto route = routing_[from];
-		Client* client = route.second;
+	void on_dropped_packet(netaddr to, netaddr from, const packet& p) {
+		auto psize = get_size(p);
+		bytes32 account = get_payer(p);
 		double amt = psize * drop_price_;
-		printf("Server::on_dropped_packet(%x,%x,%f) balances_[%p]=%f -= %f(%f * %f) \n", to,from,psize, client,balances_[client], amt,psize,drop_price_);
-		balances_[client] -= amt;
+		printf("Server::on_dropped_packet(%x,%x,%f) balances_[%x]=%f -= %f(%f * %f) \n", to,from,psize, account,balances_[account], amt,psize,drop_price_);
+		balances_[account] -= amt;
 	}
 
-	virtual void on_packet(netaddr to, netaddr from, double psize) { // inc data from client out to target
-		printf("Server::on_packet(%x,%x,%f) \n", to,from,psize);
-
+	virtual void on_packet(netaddr to, netaddr from, const packet& p_) { // inc data from client out to target
+		packet p(p_);
+		auto psize = get_size(p);
 		assert(to == address_);
-		auto route = routing_[from];
-		Client* client = route.second;
-		if (client != nullptr) {
-			bill_packet(client, psize);
-			if (balances_[client] > min_balance_) { net::send(route.first, address_, psize); }
+		bytes32 account = get_payer(p);
+		if (balances_[account] > min_balance_) {
+			printf("Server::on_packet  (%x,%x,%e) client(%x) balance:  %f > %f \n", to,from,psize,account,balances_[account],min_balance_);
+			bill_packet(account, psize);
+			net::send(get_next(p), address_, p);
+		} else {
+			printf("Server::on_packet  (%x,%x,%e) client(%x) balance:  %f <= %f \n", to,from,psize,account,balances_[account],min_balance_);
 		}
 	}
 
@@ -503,12 +512,13 @@ struct Server : public INet
 
 
 // user initiates connection to server (random selection picks server)
-void Client::on_connect(Server* server, netaddr dst) {
+void Client::on_connect(double ctime, Server* server, netaddr dst) {
+	brecvd_ = 0.0;
 	server_ = server;
 	//send("connect", server);
 	server->on_connect(this, dst);
 	budget_->on_connect();
-	Tickable::reset(); // reset our timer to 0 so we immediately send a payment
+	this->step(ctime); // run update immediately
 }
 
 
