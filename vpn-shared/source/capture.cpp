@@ -428,15 +428,11 @@ _trace();
         struct Header {
             openvpn::IPv4Header ip4;
             openvpn::TCPHeader tcp;
-        } orc_packed;
-
-        Beam beam(sizeof(Header));
-        auto span(beam.span());
-        auto &header(span.cast<Header>());
+        } orc_packed header;
 
         header.ip4.version_len = openvpn::IPv4Header::ver_len(4, sizeof(header.ip4));
         header.ip4.tos = 0;
-        header.ip4.tot_len = boost::endian::native_to_big<uint16_t>(span.size());
+        header.ip4.tot_len = boost::endian::native_to_big<uint16_t>(sizeof(header));
         header.ip4.id = 0;
         header.ip4.frag_off = 0;
         header.ip4.ttl = 64;
@@ -445,7 +441,7 @@ _trace();
         header.ip4.saddr = boost::endian::native_to_big(source.Host().to_v4().to_uint());
         header.ip4.daddr = boost::endian::native_to_big(destination.Host().to_v4().to_uint());
 
-        header.ip4.check = openvpn::IPChecksum::checksum(span.data(), sizeof(header.ip4));
+        header.ip4.check = openvpn::IPChecksum::checksum(&header.ip4, sizeof(header.ip4));
 
         header.tcp.source = boost::endian::native_to_big(source.Port());
         header.tcp.dest = boost::endian::native_to_big(destination.Port());
@@ -467,7 +463,7 @@ _trace();
         openvpn::tcp_adjust_checksum(openvpn::IPCommon::UDP - openvpn::IPCommon::TCP, header.tcp.check);
         header.tcp.check = boost::endian::native_to_big(header.tcp.check);
 
-        Land(std::move(beam));
+        Land(Subset(&header));
     }
 };
 

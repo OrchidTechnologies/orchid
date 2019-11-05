@@ -254,6 +254,13 @@ class Subset final :
     {
     }
 
+    template <typename Type_>
+    Subset(const Type_ *value) :
+        Subset(reinterpret_cast<const uint8_t *>(value), sizeof(Type_))
+    {
+        static_assert(std::is_pod<Type_>::value);
+    }
+
     Subset(const Span<> &span) :
         Subset(span.data(), span.size())
     {
