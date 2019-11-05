@@ -49,6 +49,7 @@ class Bonded :
         }
 
         void Stop(const std::string &error) override {
+            Valve::Stop();
             bonded_->bondings_.erase(this);
         }
 

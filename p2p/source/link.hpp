@@ -64,8 +64,8 @@ class Faucet :
     }
 
     void Stop(const std::string &error = std::string()) {
-        Outer()->Stop(error);
         Valve::Stop();
+        return Outer()->Stop(error);
     }
 
   public:
