@@ -153,11 +153,11 @@ contract OrchidLottery {
             require(token_.transfer(target, amount));
     }
 
-    function grab(uint256 secret, bytes32 hash, uint256 nonce, uint256 ratio, uint256 start, uint128 range, uint128 amount, address funder, address payable target, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
-        require(keccak256(abi.encodePacked(secret)) == hash);
-        require(uint256(keccak256(abi.encodePacked(secret, nonce))) < ratio);
+    function grab(bytes32 seed, bytes32 hash, bytes32 nonce, uint256 start, uint128 range, uint128 amount, uint256 ratio, address funder, address payable target, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
+        require(keccak256(abi.encodePacked(seed)) == hash);
+        require(uint256(keccak256(abi.encodePacked(seed, nonce))) <= ratio);
 
-        bytes32 ticket = keccak256(abi.encodePacked(hash, nonce, ratio, start, range, amount, funder, target));
+        bytes32 ticket = keccak256(abi.encode(hash, nonce, start, range, amount, ratio, funder, target));
 
         {
             mapping(bytes32 => Track) storage tracks = tracks_[target];
@@ -178,7 +178,7 @@ contract OrchidLottery {
                 amount = limit;
         }
 
-        address signer = ecrecover(ticket, v, r, s);
+        address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
         require(signer != address(0));
         take(funder, signer, amount, target);
     }
