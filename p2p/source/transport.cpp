@@ -59,8 +59,11 @@ class Transport :
     virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
+        static size_t payload(2048);
+        orc_assert(data.size() <= payload);
         //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-        openvpn::BufferAllocated buffer(data.size(), openvpn::BufferAllocated::ARRAY);
+        openvpn::BufferAllocated buffer(payload, openvpn::BufferAllocated::ARRAY);
+        buffer.set_size(data.size());
         data.copy(buffer.data(), buffer.size());
         asio::dispatch(context_, [parent = parent_, buffer = std::move(buffer)]() mutable {
             //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
@@ -370,8 +373,8 @@ _trace();
 
         openvpn::BufferAllocated buffer(headroom + payload + tailroom, openvpn::BufferAllocated::ARRAY);
         buffer.reset_offset(headroom);
+        buffer.set_size(data.size());
         data.copy(buffer.data(), buffer.size());
-        buffer.set_size(buffer.size());
 
         Span span(buffer.data(), buffer.size());
         if (ForgeIP4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32()) != local_)
