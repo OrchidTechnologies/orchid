@@ -25,7 +25,7 @@
 
 namespace orc {
 
-void Node::Run(uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params) {
+void Node::Run(asio::ip::address bind, uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params) {
     boost::asio::ssl::context context{boost::asio::ssl::context::tlsv12};
 
     context.set_options(
@@ -76,10 +76,7 @@ void Node::Run(uint16_t port, const std::string &path, const std::string &key, c
         Log() << "ERROR " << code << " " << from << std::endl;
     });
 
-    HttpListener::launch(Context(), {
-        asio::ip::make_address("0.0.0.0"),
-        port
-    }, [&](auto socket) {
+    HttpListener::launch(Context(), {bind, port}, [&](auto socket) {
         SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
             context.recv();
         }, fail);

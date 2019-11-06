@@ -85,6 +85,7 @@ int Main(int argc, const char *const argv[]) {
         ("eth-target", po::value<std::string>(), "ethereum contract address of target")
         ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
         ("host", po::value<std::string>(), "hostname to access this server")
+        ("bind", po::value<std::string>()->default_value("0.0.0.0"), "ip address for server to bind to")
         ("port", po::value<uint16_t>()->default_value(8443), "port to advertise on blockchain")
         ("path", po::value<std::string>()->default_value("/"), "path of internal https endpoint")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
@@ -243,7 +244,7 @@ int Main(int argc, const char *const argv[]) {
     }
 
 
-    node->Run(port, path, key, chain, params);
+    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, path, key, chain, params);
     return 0;
 }
 
