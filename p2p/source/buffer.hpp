@@ -475,6 +475,10 @@ class Number<Type_, true> final :
         return boost::endian::big_to_native(value_);
     }
 
+    operator Brick<sizeof(Type_)>() const {
+        return Brick<sizeof(Type_)>(static_cast<const Region &>(*this));
+    }
+
     const uint8_t *data() const override {
         return reinterpret_cast<const uint8_t *>(&value_);
     }
@@ -503,6 +507,10 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     Number(const std::string &value) :
         Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>(value))
     {
+    }
+
+    operator Brick<(Bits_ >> 3)>() const {
+        return Brick<(Bits_ >> 3)>(static_cast<const Region &>(*this));
     }
 };
 
