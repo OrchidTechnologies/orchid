@@ -23,10 +23,14 @@
 #ifndef ORCHID_CLIENT_HPP
 #define ORCHID_CLIENT_HPP
 
+#include <atomic>
+
 #include <rtc_base/rtc_certificate.h>
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "bond.hpp"
+#include "crypto.hpp"
+#include "jsonrpc.hpp"
 #include "origin.hpp"
 
 namespace orc {
@@ -35,18 +39,27 @@ class Client :
     public Bonded,
     public Pump
 {
-  public:
-    std::string pot_;
-    U<rtc::SSLFingerprint> remote_;
+  private:
     rtc::scoped_refptr<rtc::RTCCertificate> local_;
+    U<rtc::SSLFingerprint> remote_;
+
+    Address provider_;
+
+    Secret secret_;
+    Address funder_;
 
     Socket socket_;
+
+    std::atomic<uint64_t> benefit_;
+
+    Address target_;
+    Bytes32 hash_;
 
   protected:
     void Land(Pipe *pipe, const Buffer &data) override;
 
   public:
-    Client(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote);
+    Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Secret secret, Address funder);
 
     task<void> Open(const S<Origin> &origin, const std::string &url);
     task<void> Shut() override;

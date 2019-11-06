@@ -26,21 +26,27 @@
 #include "client.hpp"
 #include "datagram.hpp"
 #include "locator.hpp"
+#include "port.hpp"
 
 namespace orc {
 
 void Client::Land(Pipe *pipe, const Buffer &data) {
+    benefit_ += data.size();
     if (!Datagram(data, [&](Socket source, Socket destination, Window window) {
         return false;
     })) Pump::Land(data);
 }
 
-Client::Client(BufferDrain *drain, const std::string &pot, U<rtc::SSLFingerprint> remote) :
+Client::Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Secret secret, Address funder) :
     Pump(drain),
-    pot_(pot),
+    local_(Certify()),
     remote_(std::move(remote)),
-    local_(Certify())
+    provider_(std::move(provider)),
+    secret_(std::move(secret)),
+    funder_(std::move(funder)),
+    benefit_(0)
 {
+    hash_ = Hash(Number<uint256_t>(uint256_t(0)));
 }
 
 task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
@@ -68,7 +74,22 @@ task<void> Client::Shut() {
     co_await Pump::Shut();
 }
 
+using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint256_t, Address, Address>;
+using Signed = Coder<uint8_t, Bytes32, Bytes32>;
+
 task<void> Client::Send(const Buffer &data) {
+    benefit_ += data.size();
+    std::cout << "BENEFIT " << std::dec << benefit_ << std::endl;
+    if (benefit_ >= 256) {
+    benefit_ -= 256;
+    Spawn([this]() -> task<void> {
+        static uint256_t nonce_(0);
+        auto nonce(nonce_++);
+        auto ticket(Ticket::Encode(hash_, Number<uint256_t>(nonce), -1, 0, 10000, uint256_t(1) << 255, funder_, provider_));
+        auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), Hash(ticket)))));
+_trace();
+        co_await Bonded::Send(Datagram(Port_, Port_, Tie(ticket, Signed::Encode(signature.v_, signature.r_, signature.s_))));
+    }); }
     co_return co_await Bonded::Send(data);
 }
 

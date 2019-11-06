@@ -41,6 +41,12 @@ class Server :
     Endpoint endpoint_;
     Address lottery_;
 
+    std::mutex mutex_;
+    Bytes32 hash_;
+    std::map<Bytes32, Bytes32> seeds_;
+
+    void Seed();
+
     void Send(const Buffer &data);
 
   protected:

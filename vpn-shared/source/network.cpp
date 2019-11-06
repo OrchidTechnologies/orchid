@@ -42,16 +42,17 @@ Network::Network(boost::program_options::variables_map &args) :
 {
 }
 
-task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &pot) {
+task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, Secret secret, Address funder) {
     Endpoint endpoint(origin, locator_);
 
     auto latest(co_await endpoint.Latest());
     //auto block(co_await endpoint.Header(latest));
 
-    typedef std::tuple<std::string, U<rtc::SSLFingerprint>> Descriptor;
-    auto [url, fingerprint] = co_await [&]() -> task<Descriptor> {
-        //co_return Descriptor{"https://local.saurik.com:8443/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
-        //co_return Descriptor{"https://mac.saurik.com:8082/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
+    typedef std::tuple<Address, std::string, U<rtc::SSLFingerprint>> Descriptor;
+    auto [provider, url, fingerprint] = co_await [&]() -> task<Descriptor> {
+        //static const Address provider("0x2b1ce95573ec1b927a90cb488db113b40eeb064a");
+        //co_return Descriptor{provider, "https://local.saurik.com:8443/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
+        //co_return Descriptor{provider, "https://mac.saurik.com:8082/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
 
         retry: {
             static Selector<Address, uint128_t> scan("scan");
@@ -70,21 +71,21 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
             auto space(tls.find(' '));
             orc_assert(space != std::string::npos);
 
-            co_return Descriptor{url, rtc::SSLFingerprint::CreateUniqueFromRfc4572(tls.substr(0, space), tls.substr(space + 1))};
+            co_return Descriptor{address, url, rtc::SSLFingerprint::CreateUniqueFromRfc4572(tls.substr(0, space), tls.substr(space + 1))};
         }
     }();
 
     orc_assert(fingerprint != nullptr);
-    auto client(sunk->Wire<Client>(pot, std::move(fingerprint)));
+    auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(provider), std::move(secret), std::move(funder)));
     co_await client->Open(origin, url);
 }
 
-task<S<Origin>> Network::Setup() {
+task<S<Origin>> Network::Setup(Secret secret, Address funder) {
     S<Origin> origin(GetLocal());
 
     for (unsigned i(0); i != 3; ++i) {
         auto remote(Break<Sink<Remote>>());
-        co_await Random(remote.get(), origin, "");
+        co_await Random(remote.get(), origin, secret, funder);
         origin = remote;
     }
 
