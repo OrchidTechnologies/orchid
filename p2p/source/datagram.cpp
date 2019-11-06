@@ -41,7 +41,7 @@ bool Datagram(const Buffer &data, const std::function<bool (Socket, Socket, Wind
 
     openvpn::UDPHeader udp;
     window.Take(&udp);
-    window.Skip(boost::endian::big_to_native(udp.len) - sizeof(udp));
+    orc_assert(window.size() == boost::endian::big_to_native(udp.len) - sizeof(udp));
 
     Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
     Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
