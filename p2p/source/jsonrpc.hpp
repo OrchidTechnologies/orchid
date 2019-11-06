@@ -244,15 +244,27 @@ struct Coder;
 
 template <>
 struct Coder<> {
-static void Encode(Builder &builder) {
-} };
+    static void Encode(Builder &builder) {
+    }
+
+    static Builder Encode() {
+        return {};
+    }
+};
 
 template <typename Type_, typename... Args_>
 struct Coder<Type_, Args_...> {
-static void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
-    Coded<Type_>::Encode(builder, value);
-    Coder<Args_...>::Encode(builder, args...);
-} };
+    static void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
+        Coded<Type_>::Encode(builder, value);
+        Coder<Args_...>::Encode(builder, args...);
+    }
+
+    static Builder Encode(const Type_ &value, const Args_ &...args) {
+        Builder builder;
+        Encode(builder, value, args...);
+        return builder;
+    }
+};
 
 template <bool Sign_, size_t Size_, typename Type_>
 struct Numeric;
