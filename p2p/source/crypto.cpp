@@ -76,6 +76,13 @@ Signature::Signature(const Brick<64> &data, int v) {
     v_ += 27;
 }
 
+Signature::Signature(Brick<32> r, Brick<32> s, uint8_t v) :
+    r_(std::move(r)),
+    s_(std::move(s)),
+    v_(v)
+{
+}
+
 
 static const secp256k1_context *Curve() {
     static std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)> context_{secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY), &secp256k1_context_destroy};

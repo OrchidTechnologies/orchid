@@ -50,6 +50,7 @@ struct Signature {
 
     Signature(const Brick<65> &data);
     Signature(const Brick<64> &data, int v);
+    Signature(Brick<32> r, Brick<32> s, uint8_t v);
 
     operator Brick<65>() {
         auto [external] = Take<Brick<65>>(Tie(r_, s_, Number<uint8_t>(v_)));
