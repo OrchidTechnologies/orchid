@@ -364,9 +364,14 @@ _trace();
 
     task<void> Send(const orc::Buffer &data) override {
         static size_t headroom(512);
-        openvpn::BufferAllocated buffer(data.size() + headroom, openvpn::BufferAllocated::ARRAY);
+        static size_t payload(2048);
+        static size_t tailroom(512);
+        orc_assert(data.size() <= payload);
+
+        openvpn::BufferAllocated buffer(headroom + payload + tailroom, openvpn::BufferAllocated::ARRAY);
         buffer.reset_offset(headroom);
         data.copy(buffer.data(), buffer.size());
+        buffer.set_size(buffer.size());
 
         Span span(buffer.data(), buffer.size());
         if (ForgeIP4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32()) != local_)
