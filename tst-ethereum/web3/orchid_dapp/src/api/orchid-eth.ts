@@ -98,7 +98,8 @@ export function orchidInitEthereum(providerUpdateCallback?:(props:any)=>void): P
       if (networkNumber !== 1) {
         resolve(WalletStatus.WrongNetwork);
       }
-      providerUpdateCallback &&
+
+      providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore &&
         (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
           providerUpdateCallback && providerUpdateCallback(props);
         });
