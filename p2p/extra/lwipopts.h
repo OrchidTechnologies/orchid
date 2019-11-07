@@ -1,1 +1,1 @@
-#define LWIP_SOCKET 0
+//#define LWIP_SOCKET 0
