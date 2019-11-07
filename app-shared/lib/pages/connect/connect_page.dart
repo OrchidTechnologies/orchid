@@ -1,20 +1,16 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/pages/connect/connect_button.dart';
-import 'package:orchid/pages/connect/connect_options.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:flare_flutter/flare_actor.dart';
-import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:rxdart/rxdart.dart';
-
 import '../app_transitions.dart';
 import 'connect_world_map.dart';
 
@@ -39,7 +35,6 @@ class _QuickConnectPageState
   // Animations driven by the connected state
   Animation<LinearGradient> _backgroundGradient;
   Animation<LinearGradient> _mapGradient;
-  Animation<Color> _iconColor; // The options bar icons
   Animation<double> _animOpacity; // The background Flare animation
 
   // This determines whether the intro (slide in) or repeating background animation is shown.
@@ -47,24 +42,22 @@ class _QuickConnectPageState
 
   ScrollController _scrollController = ScrollController();
 
+  List<StreamSubscription> _rxSubscriptions = List();
+
   @override
   void initState() {
     super.initState();
-    AppOnboarding().showPageIfNeeded(context);
+    //AppOnboarding().showPageIfNeeded(context);
     _initListeners();
     _initAnimations();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: SmallAppBar(),
-      body: buildPageContainer(context),
-      drawer: SideDrawer(),
-    );
+    return buildPageContainer(context);
   }
 
-  /// The page background and options bar.
+  /// The page background and (if standalone, options bar).
   /// Note: Some opportunity to factor out widgets below but it wouldn't really
   /// Note: help much in this context.
   Widget buildPageContainer(BuildContext context) {
@@ -84,9 +77,7 @@ class _QuickConnectPageState
         _buildScrollablePageContent(),
 
         // Options bar with optional notification banner
-        ConnectOptionsBar(
-            iconColor: _iconColor,
-            connectAnimController: _connectAnimController),
+        //ConnectOptionsBar(iconColor: _iconColor, connectAnimController: _connectAnimController),
       ],
     );
   }
@@ -101,7 +92,7 @@ class _QuickConnectPageState
     var buttonSize = screenSize.width;
 
     // Position for the center of the button
-    var buttonY = screenSize.height * 0.34;
+    var buttonY = screenSize.height * 0.29;
 
     // How much of the button image should remain visible when fully scrolled up.
     var buttonRemaining = 15;
@@ -160,7 +151,7 @@ class _QuickConnectPageState
         ConnectWorldMap.worldMapImage.aspectRatio;
 
     // The map center starting vertical position as fraction of screen height.
-    double mapStartPosition = 0.69;
+    double mapStartPosition = 0.58;
     // The map center ending vertical position as fraction of screen height.
     double mapEndPosition = 0.5;
     // The zoom at min scroll
@@ -289,14 +280,21 @@ class _QuickConnectPageState
 
   Widget _buildStatusMessage(BuildContext context) {
     // Localize
-    Map<OrchidConnectionState, String> connectionStateMessage = {
-      OrchidConnectionState.NotConnected: 'Push to connect.',
-      OrchidConnectionState.Connecting: 'Connecting...',
-      //OrchidConnectionState.Connected: 'Orchid is running! 🙌',
-      OrchidConnectionState.Connected: 'Orchid is running!',
-    };
+    String message;
+    switch (_connectionState) {
+      case OrchidConnectionState.Invalid:
+        message = 'Waiting...';
+        break;
+      case OrchidConnectionState.Connecting:
+        message = 'Connecting...';
+        break;
+      case OrchidConnectionState.NotConnected:
+        message = 'Push to connect.';
+        break;
+      case OrchidConnectionState.Connected:
+        message = 'Orchid is running!';
+    }
 
-    String message = connectionStateMessage[_connectionState];
     Color color = (_connectionState == OrchidConnectionState.Connected
         ? AppColors.neutral_6 // light
         : AppColors.neutral_1); // dark
@@ -316,30 +314,34 @@ class _QuickConnectPageState
     OrchidAPI().logger().write("Init listeners...");
 
     // Monitor VPN permission status
-    OrchidAPI().vpnPermissionStatus.listen((bool installed) {
+    _rxSubscriptions
+        .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
       OrchidAPI().logger().write("VPN Perm status changed: $installed");
       if (!installed) {
         String currentPage = ModalRoute.of(context).settings.name;
         OrchidAPI().logger().write("Current page: $currentPage");
-        var route = AppTransitions.downToUpTransition(OnboardingVPNPermissionPage(allowSkip: false));
+        var route = AppTransitions.downToUpTransition(
+            OnboardingVPNPermissionPage(allowSkip: false));
         Navigator.push(context, route);
       }
-    });
+    }));
 
     // Monitor connection status
-    OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
-      OrchidAPI().logger().write("Connection status changed: $state");
+    _rxSubscriptions
+        .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
+      OrchidAPI().logger().write("[connect page] Connection status changed: $state");
       _connectionStateChanged(state);
-    });
+    }));
 
     // Monitor sync status
-    OrchidAPI().syncStatus.listen((OrchidSyncStatus value) {
+    _rxSubscriptions
+        .add(OrchidAPI().syncStatus.listen((OrchidSyncStatus value) {
       _syncStateChanged(value);
-    });
+    }));
 
-    AppNotifications().notification.listen((_) {
+    _rxSubscriptions.add(AppNotifications().notification.listen((_) {
       setState(() {}); // Trigger refresh of the UI
-    });
+    }));
   }
 
   /// Called upon a change to Orchid connection state
@@ -422,10 +424,17 @@ class _QuickConnectPageState
             begin: mapGradientDisconnected, end: mapGradientConnected)
         .animate(_connectAnimController);
 
-    _iconColor = ColorTween(begin: AppColors.purple, end: AppColors.white)
-        .animate(_connectAnimController);
+    // Color tween for icons.
+    //_iconColor = ColorTween(begin: AppColors.purple, end: AppColors.white)
+    //.animate(_connectAnimController);
+
     _animOpacity = Tween(begin: 0.0, end: 1.0) // same as controller for now
         .animate(_connectAnimController);
+
+    // If we're already running cancel the intro animation.
+    if (OrchidAPI().connectionStatus.value == OrchidConnectionState.Connected) {
+      _showIntroAnimation = false;
+    }
   }
 
   void _onConnectButtonPressed() {
@@ -433,16 +442,55 @@ class _QuickConnectPageState
     switch (_connectionState) {
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        OrchidAPI().setConnected(true);
+        _checkPermissionAndEnableConnection();
         break;
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Connected:
-        OrchidAPI().setConnected(false);
+        _disableConnection();
         break;
     }
   }
 
+  // duplicates code in monitoring_page
+  void _checkPermissionAndEnableConnection() {
+    // Get the most recent status, blocking if needed.
+    _rxSubscriptions
+        .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
+      debugPrint("vpn: current perm: $installed");
+      if (installed) {
+        debugPrint("vpn: already installed");
+        OrchidAPI().setConnected(true);
+        setState(() {});
+      } else {
+        bool ok = await OrchidAPI().requestVPNPermission();
+        if (ok) {
+          debugPrint("vpn: user chose to install");
+          // Note: It appears that trying to enable the connection too quickly
+          // Note: after installing the vpn permission / config fails.
+          // Note: Introducing a short artificial delay.
+          Future.delayed(Duration(milliseconds: 500)).then((_) {
+            OrchidAPI().setConnected(true);
+          });
+        } else {
+          debugPrint("vpn: user skipped");
+        }
+      }
+    }));
+  }
+
+  void _disableConnection() {
+    OrchidAPI().setConnected(false);
+  }
+
   void _rerouteButtonPressed() {
     OrchidAPI().reroute();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _rxSubscriptions.forEach((sub) {
+      sub.cancel();
+    });
   }
 }
