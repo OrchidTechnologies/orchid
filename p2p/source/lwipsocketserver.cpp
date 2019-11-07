@@ -272,8 +272,6 @@ int LwipSocket::DoConnect(const SocketAddress& connect_addr) {
   sockaddr* addr = reinterpret_cast<sockaddr*>(&addr_storage);
   int err = ::lwip_connect(s_, addr, static_cast<int>(len));
   UpdateLastError();
-  const char *s = ((errno == -1) ? strerror(errno) : "success");
-  Log() << "FINDME: " << __func__ << ":" << __LINE__ << " " << err << " " << errno << " " << s;
   uint8_t events = DE_READ | DE_WRITE;
   if (err == 0) {
     state_ = CS_CONNECTED;
@@ -893,22 +891,40 @@ int SocketDispatcher::Close() {
 class EventDispatcher : public Dispatcher {
  public:
   EventDispatcher(LwipSocketServer* ss) : ss_(ss), fSignaled_(false) {
-    if (pipe(afd_) < 0)
-      RTC_LOG(LERROR) << "pipe failed";
+    afd_[0] = ::lwip_socket(PF_INET, SOCK_DGRAM, 0);
+    if (afd_[0] < 0)
+      RTC_LOG(LERROR) << "pipe 1 failed";
+    afd_[1] = ::lwip_socket(PF_INET, SOCK_DGRAM, 0);
+    if (afd_[1] < 0)
+      RTC_LOG(LERROR) << "pipe 2 failed";
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = 0;
+    addr.sin_addr.s_addr = inet_addr("10.0.7.3");
+    int r = ::lwip_bind(afd_[0], (const struct sockaddr *)&addr, sizeof(addr));
+    if (r < 0)
+        RTC_LOG(LERROR) << "pipe bind failed";
+    socklen_t addrlen = sizeof(addr);
+    r = ::lwip_getsockname(afd_[0], (struct sockaddr *)&addr, &addrlen);
+    if (r < 0)
+        RTC_LOG(LERROR) << "pipe getsockaddr failed";
+    r = ::lwip_connect(afd_[1], (const struct sockaddr *)&addr, addrlen);
+    if (r < 0)
+        RTC_LOG(LERROR) << "pipe connect failed";
     ss_->Add(this);
   }
 
   ~EventDispatcher() override {
     ss_->Remove(this);
-    close(afd_[0]);
-    close(afd_[1]);
+    ::lwip_close(afd_[0]);
+    ::lwip_close(afd_[1]);
   }
 
   virtual void Signal() {
     CritScope cs(&crit_);
     if (!fSignaled_) {
       const uint8_t b[1] = {0};
-      const ssize_t res = write(afd_[1], b, sizeof(b));
+      const ssize_t res = ::lwip_send(afd_[1], b, sizeof(b), 0);
       RTC_DCHECK_EQ(1, res);
       fSignaled_ = true;
     }
@@ -923,7 +939,7 @@ class EventDispatcher : public Dispatcher {
     CritScope cs(&crit_);
     if (fSignaled_) {
       uint8_t b[4];  // Allow for reading more than 1 byte, but expect 1.
-      const ssize_t res = read(afd_[0], b, sizeof(b));
+      const ssize_t res = ::lwip_recv(afd_[0], b, sizeof(b), 0);
       RTC_DCHECK_EQ(1, res);
       fSignaled_ = false;
     }
@@ -1212,7 +1228,7 @@ err_t netif_output_func(struct netif *netif, struct pbuf *p, const ip4_addr_t *i
 
 err_t netif_init_func(struct netif *netif)
 {
-  Log() << "netif func init";
+  Log() << __func__ << ":" << __LINE__;
 
   netif->name[0] = 'o';
   netif->name[1] = 'r';
@@ -1227,6 +1243,8 @@ err_t netif_input_func(struct pbuf *p, struct netif *inp)
   if (p->len > 0) {
     ip_version = (((uint8_t *)p->payload)[0] >> 4);
   }
+
+  Log() << __func__ << ":" << __LINE__;
 
   //return ip_input(p, inp);
 
@@ -1249,21 +1267,7 @@ LwipSocketServer::LwipSocketServer() : fWait_(false) {
     netif_set_link_up(&netif);
     netif_set_up(&netif);
 
-#if defined(WEBRTC_USE_EPOLL)
-  // Since Linux 2.6.8, the size argument is ignored, but must be greater than
-  // zero. Before that the size served as hint to the kernel for the amount of
-  // space to initially allocate in internal data structures.
-  epoll_fd_ = epoll_create(FD_SETSIZE);
-  if (epoll_fd_ == -1) {
-    // Not an error, will fall back to "select" below.
-    RTC_LOG_E(LS_WARNING, EN, errno) << "epoll_create";
-    epoll_fd_ = INVALID_SOCKET;
-  }
-#endif
   signal_wakeup_ = new Signaler(this, &fWait_);
-#if defined(WEBRTC_WIN)
-  socket_ev_ = WSACreateEvent();
-#endif
 }
 
 LwipSocketServer::~LwipSocketServer() {
@@ -1523,7 +1527,7 @@ bool LwipSocketServer::WaitSelect(int cmsWait, bool process_io) {
     // < 0 means error
     // 0 means timeout
     // > 0 means count of descriptors ready
-    int n = select(fdmax + 1, &fdsRead, &fdsWrite, nullptr, ptvWait);
+    int n = ::lwip_select(fdmax + 1, &fdsRead, &fdsWrite, nullptr, ptvWait);
 
     // If error, return error.
     if (n < 0) {
@@ -1750,7 +1754,7 @@ bool LwipSocketServer::WaitPoll(int cmsWait, Dispatcher* dispatcher) {
     // < 0 means error
     // 0 means timeout
     // > 0 means count of descriptors ready
-    int n = poll(&fds, 1, static_cast<int>(tvWait));
+    int n = ::lwip_poll(&fds, 1, static_cast<int>(tvWait));
     if (n < 0) {
       if (errno != EINTR) {
         RTC_LOG_E(LS_ERROR, EN, errno) << "poll";

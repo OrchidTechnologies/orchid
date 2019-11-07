@@ -1,1 +1,2 @@
 //#define LWIP_SOCKET 0
+#define LWIP_NETIF_LOOPBACK 1
