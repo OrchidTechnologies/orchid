@@ -86,6 +86,7 @@ class _BalancePageState extends State<BalancePage> {
           pady(16),
           _buildCardView(oxtValue: _pot?.balance),
           pady(16),
+          /*
           BudgetSummaryTile(
               image: "assets/images/creditCard.png",
               title: "MONTHLY\nBUDGET",
@@ -95,19 +96,23 @@ class _BalancePageState extends State<BalancePage> {
                 _showSubscriptionPage();
               }),
           _divider(),
+          */
           BudgetSummaryTile(
             image: "assets/images/pig.png",
             title: "MEMBERSHIP\nDEPOSIT",
-            oxtValue: _budget?.deposit,
+            //oxtValue: _budget?.deposit,
+            oxtValue: _pot?.deposit,
             pricing: _pricing,
           ),
           _divider(),
+          /*
           BudgetSummaryTile(
             image: "assets/images/accountBalanceWallet.png",
             title: "REMAINING\nBALANCE",
             oxtValue: _pot?.balance,
             pricing: _pricing,
           ),
+           */
           _divider(),
           pady(30),
           Expanded(child: _buildTransactionsList()),
@@ -288,7 +293,7 @@ class _BalancePageState extends State<BalancePage> {
       child: Row(children: [
         Container(alignment: alignment, width: 65, child: col1),
         padx(23),
-        Container(alignment: alignment, width: 70, child: col2),
+        Container(alignment: alignment, width: 75, child: col2),
         padx(23),
         Expanded(
           child: Container(alignment: alignment, width: 70, child: col3),
