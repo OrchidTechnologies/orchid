@@ -43,6 +43,8 @@ typedef unsigned int netaddr;
 
 // ==================  Network Interface ==============================
 
+void dlog(int level, const char* fmt, ...);
+
 
 //struct packet;
 
@@ -95,29 +97,14 @@ string encodePacked(T x, Ts... xs)
 	return to_string(x) + encodePacked(xs...);
 }
 
-bytes32 keccak256(const string& x) 	{ return hash<string>{}(x); }
+bytes32 keccak256(const string& x);
+uint256 keccak256(uint256 x);
+bytes32 sign(bytes32 x, bytes32 y);
 
-// 'signature' is just the signer address, for easy recovery
-bytes32 sign(bytes32 x, bytes32 y)	{ return y;}
 
-
-double& get_trans_cost() // (oracle) get current transaction cost estimate
-{
-	static double local_(0.1);
-	return local_;
-}
-
-double& get_max_trans_cost()   // (oracle) get estimate of max reasonable current transaction fees
-{
-	static double local_(0.1);
-	return local_;
-}
-
-double& get_OXT_balance(bytes32 account)  	// (RPC call, cached) external eth balance
-{
-	static map<bytes32, double> balances_;
-	return balances_[account];
-}
+double& get_trans_cost();
+double& get_max_trans_cost();
+double& get_OXT_balance(bytes32 account);
 
 struct payment
 {
@@ -126,10 +113,10 @@ struct payment
 	bytes32 sig;
 };
 
-double is_winner(const payment& p)  // offline check to see if ticket is a winner
+double is_winner(bytes32 secret, bytes32 nonce, double ratio)  // offline check to see if ticket is a winner
 {
-	double dnonce = double(p.nonce) / double(numeric_limits<bytes32>::max());
-	return dnonce < p.ratio;
+    double rval = double(keccak256(encodePacked(secret, nonce))) / double(numeric_limits<bytes32>::max());
+    return rval < ratio;
 }
 
 
@@ -141,15 +128,16 @@ namespace Lot
 
 	void grab(bytes32 secret, bytes32 hash, bytes32 target, bytes32 nonce, double ratio, double start, double range, double amount, bytes32 sig, vector<bytes32>)
 	{
-		double dnonce = double(nonce) / double(numeric_limits<bytes32>::max());
-		if (dnonce < ratio) {
-			printf("grab(%x,%x,%x,%x,%f,%f,%f,%f,%x) winner! amount(%f) \n", secret,hash,target,nonce,ratio,start,range,amount,sig, amount);
+		if (is_winner(secret, nonce, ratio)) {
 			bytes32 sender = sig;
+			dlog(2,"grab(%x,%x,%x,%x,%f,%f,%f,%f,%x) winner! amount(%f) ", secret,hash,target,nonce,ratio,start,range,amount,sig, amount);
 			if (balance(sender).amount_ >= amount) {
+				dlog(2,"balance[%x](%f) >= %f \n", sender, balance(sender).amount_, amount);
 				balance(sender).amount_ -= amount;
 				get_OXT_balance(target) += amount;
 			}
 			else {
+				dlog(2,"balance[%x](%f) < %f \n", sender, balance(sender).amount_, amount);
 				balance(sender).escrow_ = 0;
 			}
 		}
@@ -192,6 +180,8 @@ struct Tickable : public ITickable
 
 
 };
+
+
 
 
 // ==================  Pay Protocol interfaces,objects ==============================
@@ -238,6 +228,7 @@ struct Budget_PredExpW : public IBudget, public Tickable
 	virtual double get_afford(double ctime) {
 		double time_owed = (ctime - last_pay_date_);
 		double allowed   = spendrate_ * (time_owed + prepay_credit_);
+        dlog(2,"Budget_PredExpW::get_afford(%f) allowed(%f) = spendrate_(%f) * (%f - %f + %f) ", ctime,allowed,spendrate_,ctime,last_pay_date_,prepay_credit_);
         return allowed;
     }
     
@@ -246,7 +237,6 @@ struct Budget_PredExpW : public IBudget, public Tickable
     }
 
     void step(double ctime) {
-    	printf("Budget_PredExpW::step(%f) ", ctime);
     	Tickable::step(ctime);
     
         double ltime    = ltime_; // persist_load("ltime", CurrentTime()); // load variable from persistent disk/DB/config, default to CurrentTime()
@@ -259,7 +249,7 @@ struct Budget_PredExpW : public IBudget, public Tickable
         wactive         = decay*wactive + (1-decay)*cactive;
         ltime           = ctime;
         
-        printf("wactive=%f = %f*%f + (1-%f)*%f ", wactive,decay,wactive,decay,cactive);
+        dlog(2,"Budget_PredExpW::step(%f) wactive=%f = %f*%f + (1-%f)*%f ", ctime,wactive,decay,wactive,decay,cactive);
 
 
         double pred_future_active_time = (budget_edate_ - ctime) * wactive;
@@ -267,7 +257,7 @@ struct Budget_PredExpW : public IBudget, public Tickable
         double duration = pred_future_active_time + 1*Days;
         spendrate_      = curbal / duration;
 
-		printf(" pfat = (%f-%f)*%f; spendrate_(%f) = %f / (%f + %f) \n", budget_edate_,ctime,wactive,  spendrate_,curbal,pred_future_active_time,1*Days);
+		dlog(2," pfat = (%f-%f)*%f; spendrate_(%f) = %f / (%f + %f) \n", budget_edate_,ctime,wactive,  spendrate_,curbal,pred_future_active_time,1*Days);
 
         ltime_ 			= ltime; 	// persist_store("ltime",   ltime);
         wactive_ 		= wactive; // persist_store("wactive", wactive);
@@ -289,8 +279,16 @@ struct Budget_PredExpW : public IBudget, public Tickable
 
 
 
+/*
+ *
+This simple client implmentation sends payments on a regular schedule every (period_) seconds (Tickable timer)
+The amount of each payment is determined by the budget object
 
+In sendpay(...) the client uses a simple method of determining how to split expected value between win_prob and face_val by using a fixed parameterized transaction fee overhead target.
+(todo: this could later be outsourced to a more complex payment param optimizer thing)
 
+This client also has a simple congestion control thing (for the sim, not really part of the protocol, todo refactor later)
+ */
 struct Client : public Tickable, public INet
 {
 	// budgeting params (input from UI or optimization stuff)
@@ -304,13 +302,16 @@ struct Client : public Tickable, public INet
 	netaddr address_;
 
 	uint256 hash_secret_;
-	bytes32 target_;
+	bytes32 target_ = 0;
 
 	double  brecvd_; // bytes received for the current connection
 
+	// packet id tracking and rate limit multiplr for simple congestion control
 	uint32  last_recv_pac_id_ = 0;
 	uint32  last_sent_pac_id_ = 0;
 	double  rate_limit_mult_  = 1.0;
+	double  packs_sent_ = 0;
+	double  packs_recv_ = 0;
 
 	Client(bytes32 account, double budget_edate) {
 		account_ = account;
@@ -339,24 +340,26 @@ struct Client : public Tickable, public INet
     // callback when disconnected from route
 	void on_disconnect()     { budget_->on_disconnect(); }
 
-	void on_invoice(uint256 hash_secret, bytes32 target, double bal_owed, double trans_cost) { hash_secret_ = hash_secret; target_ = target;}
+	void on_payto(uint256 hash_secret, bytes32 target) { hash_secret_ = hash_secret; target_ = target;}
 	void sendpay(double ctime, uint256 hash_secret, bytes32 target);
 
     void step(double ctime) {
-		printf("Client::step(%f)\n", ctime);
+		dlog(2,"Client::step(%f)\n", ctime);
     	Tickable::step(ctime);
+    	assert(target_ != 0);
     	sendpay(ctime, hash_secret_, target_);
     }
 
     void send_packet(netaddr to, netaddr from, packet p) {
+    	packs_sent_ += 1.0;
     	if (last_sent_pac_id_ != last_recv_pac_id_) {
     		// last packet was dropped, downgrade rate control
     		rate_limit_mult_ = rate_limit_mult_*0.5;
-    		printf("Client::send_packet(%x != %x) rate_limit_mult_(%f) \n", last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
+    		dlog(2,"Client::send_packet(%x != %x) rate_limit_mult_(%f) \n", last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
     	}
     	else {
     		rate_limit_mult_ = min(rate_limit_mult_*1.1, 1.0);
-    		printf("Client::send_packet(%x == %x) rate_limit_mult_(%f) \n", last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
+    		dlog(2,"Client::send_packet(%x == %x) rate_limit_mult_(%f) \n", last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
     	}
     	p.size_ = p.size_ * rate_limit_mult_;
     	last_sent_pac_id_++;
@@ -366,16 +369,27 @@ struct Client : public Tickable, public INet
 
 	virtual void on_packet(netaddr to, netaddr from, const packet& p)
 	{
+    	packs_recv_ += 1.0;
 		last_recv_pac_id_ = get_id(p);
 		auto psize = get_size(p);
 		assert(to == address_); brecvd_ += psize;
-		printf("Client::on_packet  (%x,%x,%e,%d) brecvd_(%f) \n", to,from,psize,get_id(p),brecvd_);
+		dlog(2,"Client::on_packet  (%x,%x,%e,%d) brecvd_(%f) \n", to,from,psize,get_id(p),brecvd_);
 	}
+
+
+	void print_info(int llevl, double ctime);
 
 };
 
 
+/*
+ *
 
+This simple Server implementation conditionally forwards packets based on balance test, then bills the payer
+It also charges seperate fees for queued and dropped packets
+
+ *
+ */
 struct Server : public INet
 {
 	// Server Hyperparams - from a config file or something
@@ -395,7 +409,7 @@ struct Server : public INet
 	//map<INet*, double> 	balances_;
 	map<bytes32, double> 	balances_;
 	map<double, bytes32> 	old_tickets_;
-	map<bytes32, bytes32> 	secrets_;
+	map<uint256, uint256> 	secrets_;
 
 	//map<netaddr, pair<netaddr,Client*>> routing_;
     
@@ -413,6 +427,10 @@ struct Server : public INet
 
 	// client connection request
 	void on_connect(Client* client, netaddr dst) {
+		uint256 secret 		= rand();
+		uint256 hash_secret = keccak256(secret);
+		secrets_[hash_secret] = secret;
+		client->on_payto(hash_secret, account_);
 		//routing_[client->get_netaddr()] = pair<netaddr,Client*>(dst, client);
 		//routing_[dst] = pair<netaddr,Client*>(client->get_netaddr(), client);
 		// connection established, stuff happens		
@@ -454,15 +472,16 @@ struct Server : public INet
 	// upayment from client
 	void on_upay(Client* client, payment p) { //  uses blocking external ethnode RPC calls
 
-		printf("Server::on_upay(%p,payment(%f,%f,%f,%f)) \n", client, p.ratio,p.amount, p.start,p.range);
+		dlog(2,"Server::on_upay(%p,payment(%f,%f,%f,%f)) \n", client, p.ratio,p.amount, p.start,p.range);
 
 		// todo: charge them cost of processing payment
 		if (check_payment(p)) { // validate the micropayment
 			auto trans_fee = get_trans_cost();
 			double tv = ticket_value(p, trans_fee);
-			printf("balances_[%x]=%f += ticket_value(p,%f)=%f \n", client->account_, balances_[client->account_], trans_fee, tv);
+			dlog(2,"Server::on_upay balances_[%x]=%f += ticket_value(p,%f)=%f \n", client->account_, balances_[client->account_], trans_fee, tv);
 			balances_[client->account_] += tv;
-			if (is_winner(p)) { // now check to see if it's a winner, and redeem if so
+			auto secret = secrets_[p.hash_secret];
+			if (is_winner(secret, p.nonce, p.ratio)) { // now check to see if it's a winner, and redeem if so
 				grab(p, trans_fee);
 			}
 		}
@@ -471,7 +490,7 @@ struct Server : public INet
 	
 	void bill_packet(bytes32 account, double psize) {
 		double amt = psize * res_price_;
-		printf("Server::bill_packet(%x,%f) balances_[%x]=%f -= %f(%f*%f) \n", account,psize, account,balances_[account], amt,psize,res_price_);
+		dlog(2,"Server::bill_packet(%x,%f) balances_[%x]=%f -= %f(%f*%f) \n", account,psize, account,balances_[account], amt,psize,res_price_);
 		balances_[account] -= amt;
 		//invoice_check(client);
 	}
@@ -480,7 +499,7 @@ struct Server : public INet
 		auto psize = get_size(p);
 		bytes32 account = get_payer(p);
 		double amt = psize * que_price_;
-		printf("Server::on_queued_packet(%x,%x,%f) balances_[%x]=%f -= %f(%f * %f) \n", to,from,psize, account,balances_[account], amt,psize,que_price_);
+		dlog(2,"Server::on_queued_packet(%x,%x,%f) balances_[%x]=%f -= %f(%f * %f) \n", to,from,psize, account,balances_[account], amt,psize,que_price_);
 		balances_[account] -= amt;
 	}
 
@@ -488,7 +507,7 @@ struct Server : public INet
 		auto psize = get_size(p);
 		bytes32 account = get_payer(p);
 		double amt = psize * drop_price_;
-		printf("Server::on_dropped_packet(%x,%x,%f) balances_[%x]=%f -= %f(%f * %f) \n", to,from,psize, account,balances_[account], amt,psize,drop_price_);
+		dlog(2,"Server::on_dropped_packet(%x,%x,%f) balances_[%x]=%f -= %f(%f * %f) \n", to,from,psize, account,balances_[account], amt,psize,drop_price_);
 		balances_[account] -= amt;
 	}
 
@@ -498,13 +517,16 @@ struct Server : public INet
 		assert(to == address_);
 		bytes32 account = get_payer(p);
 		if (balances_[account] > min_balance_) {
-			printf("Server::on_packet  (%x,%x,%e) client(%x) balance:  %f > %f \n", to,from,psize,account,balances_[account],min_balance_);
+			dlog(3,"Server::on_packet  (%x,%x,%e) client(%x) balance:  %f > %f \n", to,from,psize,account,balances_[account],min_balance_);
 			bill_packet(account, psize);
 			net::send(get_next(p), address_, p);
 		} else {
-			printf("Server::on_packet  (%x,%x,%e) client(%x) balance:  %f <= %f \n", to,from,psize,account,balances_[account],min_balance_);
+			dlog(3,"Server::on_packet  (%x,%x,%e) client(%x) balance:  %f <= %f \n", to,from,psize,account,balances_[account],min_balance_);
 		}
 	}
+
+
+	void print_info(int llevl, double ctime, double stake);
 
 
 };
@@ -513,7 +535,9 @@ struct Server : public INet
 
 // user initiates connection to server (random selection picks server)
 void Client::on_connect(double ctime, Server* server, netaddr dst) {
+	target_ = 0;
 	brecvd_ = 0.0;
+	rate_limit_mult_ = 1.0;
 	server_ = server;
 	//send("connect", server);
 	server->on_connect(this, dst);
@@ -532,17 +556,21 @@ void Client::sendpay(double ctime, uint256 hash_secret, bytes32 target)
    	double trans_cost   = get_trans_cost();
 	double face_val     = trans_cost / target_overhead_;
 	//face_val      = min(face_val, max_face_val);
-	if (face_val > max_face_val) face_val = 0;  // hard constraint failure
+	//if (face_val > max_face_val) { assert(false); face_val = 0; }  // hard constraint failure }
 
 	// todo: simulate server ticket value function?
 	if (face_val > trans_cost) {
 		double win_prob = exp_val / (face_val - trans_cost);
+		if (win_prob >= 1.0) {
+			win_prob = 1.0; face_val = exp_val + trans_cost;
+			//printf("win_prob %f = %f / (%f - %f) \n ", win_prob, exp_val, face_val, trans_cost);
+		}
 		win_prob    	= max(min(win_prob, 1.0), 0.0); // todo: server may want a lower bound on win_prob for double-spend reasons
 		// todo: is one hour duration (range) reasonable?
-		bytes32 nonce = rand();
-		double ratio = win_prob, start = CurrentTime(), range = 1.0*Hours, amount = face_val;
-		bytes32 ticket = keccak256(encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
-		auto sig = sign(ticket, account_);
+		bytes32 nonce 	= rand();
+		double ratio 	= win_prob, start = CurrentTime(), range = 1.0*Hours, amount = face_val;
+		bytes32 ticket 	= keccak256(encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
+		auto sig 		= sign(ticket, account_);
 		//send("upay", server_, payment{hash_secret, target,  nonce, ratio, start, range, amount, sig} );
 		server_->on_upay(this, payment{hash_secret, target,  nonce, account_, ratio, start, range, amount, sig});
 		budget_->on_invoice();
