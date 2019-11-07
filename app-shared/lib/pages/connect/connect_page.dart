@@ -285,6 +285,9 @@ class _QuickConnectPageState
       case OrchidConnectionState.Invalid:
         message = 'Waiting...';
         break;
+      case OrchidConnectionState.Disconnecting:
+        message = 'Disonnecting...';
+        break;
       case OrchidConnectionState.Connecting:
         message = 'Connecting...';
         break;
@@ -295,9 +298,7 @@ class _QuickConnectPageState
         message = 'Orchid is running!';
     }
 
-    Color color = (_connectionState == OrchidConnectionState.Connected
-        ? AppColors.neutral_6 // light
-        : AppColors.neutral_1); // dark
+    Color color = _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
 
     return Container(
       // Note: the emoji changes the baseline so we give this a couple of pixels
@@ -329,7 +330,9 @@ class _QuickConnectPageState
     // Monitor connection status
     _rxSubscriptions
         .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
-      OrchidAPI().logger().write("[connect page] Connection status changed: $state");
+      OrchidAPI()
+          .logger()
+          .write("[connect page] Connection status changed: $state");
       _connectionStateChanged(state);
     }));
 
@@ -389,6 +392,7 @@ class _QuickConnectPageState
       case OrchidConnectionState.Connecting:
         return false;
       case OrchidConnectionState.Connected:
+      case OrchidConnectionState.Disconnecting:
         return true;
     }
   }
@@ -440,6 +444,9 @@ class _QuickConnectPageState
   void _onConnectButtonPressed() {
     // Toggle the current connection state
     switch (_connectionState) {
+      case OrchidConnectionState.Disconnecting:
+        // Do nothing while we are trying to disconnect
+        break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
         _checkPermissionAndEnableConnection();

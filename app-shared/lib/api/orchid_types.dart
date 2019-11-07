@@ -6,7 +6,7 @@ import 'package:orchid/util/location.dart';
 enum NetworkConnectivityType { Unknown, Wifi, Mobile, NoConnectivity }
 
 /// The connection states of the Orchid network client.
-enum OrchidConnectionState { Invalid, NotConnected, Connecting, Connected }
+enum OrchidConnectionState { Invalid, NotConnected, Connecting, Connected, Disconnecting }
 
 /// The synchronization states of the Orchid network client.
 enum OrchidSyncState { Required, InProgress, Complete }

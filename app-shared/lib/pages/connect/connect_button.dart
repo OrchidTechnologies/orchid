@@ -25,7 +25,7 @@ class ConnectButton extends StatefulWidget {
 
 class ConnectButtonState extends State<ConnectButton>
     with TickerProviderStateMixin {
-  OrchidConnectionState connectionState = OrchidConnectionState.NotConnected;
+  OrchidConnectionState connectionState = OrchidConnectionState.Invalid;
   bool enabled = true;
 
   AnimationController _pulseAnimationController;
@@ -67,6 +67,7 @@ class ConnectButtonState extends State<ConnectButton>
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Disconnecting:
         return false;
       case OrchidConnectionState.Connected:
         return true;
@@ -80,6 +81,7 @@ class ConnectButtonState extends State<ConnectButton>
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Disconnecting:
         image = 'connect_button_enabled.png';
         break;
       case OrchidConnectionState.Connected:

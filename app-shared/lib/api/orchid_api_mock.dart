@@ -174,6 +174,7 @@ class MockOrchidAPI implements OrchidAPI {
     switch (connectionStatus.value) {
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.Disconnecting:
         if (connect) {
           _setConnectionState(OrchidConnectionState.Connecting);
           _connectFuture = Future.delayed(Duration(milliseconds: 2500), () {

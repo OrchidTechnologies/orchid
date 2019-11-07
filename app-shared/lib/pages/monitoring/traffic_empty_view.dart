@@ -20,9 +20,20 @@ class TrafficEmptyView extends StatelessWidget {
                         stream: OrchidAPI().connectionStatus,
                         builder: (context, snapshot) {
                           print("connection status: ${snapshot.data}");
-                          bool connected = snapshot.data ==
-                              OrchidConnectionState.Connecting ||
-                              snapshot.data == OrchidConnectionState.Connected;
+
+                          bool connected;
+                          switch(snapshot.data) {
+                            case OrchidConnectionState.Invalid:
+                            case OrchidConnectionState.NotConnected:
+                              connected = false;
+                              break;
+                            case OrchidConnectionState.Connecting:
+                            case OrchidConnectionState.Connected:
+                            case OrchidConnectionState.Disconnecting:
+                              connected = true;
+                              break;
+                          }
+
                           return AnimatedSwitcher(
                             duration: Duration(milliseconds: 300),
                             child: Column(

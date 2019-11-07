@@ -120,6 +120,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     switch(OrchidAPI().connectionStatus.value) {
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.Disconnecting:
         warn = false;
         break;
       case OrchidConnectionState.Connecting:

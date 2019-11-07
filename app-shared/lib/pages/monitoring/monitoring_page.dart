@@ -79,6 +79,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
         break;
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Connected:
+      case OrchidConnectionState.Disconnecting:
         switchOn = true;
     }
     return Switch(
@@ -96,17 +97,20 @@ class _MonitoringPageState extends State<MonitoringPage> {
         });
   }
 
-  void _switchChanged(OrchidConnectionState currentValue, bool newValue) {
-    switch (currentValue) {
+  void _switchChanged(OrchidConnectionState currentConnectionState, bool desiredEnabled) {
+    switch (currentConnectionState) {
+      case OrchidConnectionState.Disconnecting:
+        // TODO: We should reject the switch change in this case.
+        break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        if (newValue == true) {
+        if (desiredEnabled == true) {
           _checkPermissionAndEnableConnection();
         }
         break;
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Connected:
-        if (newValue == false) {
+        if (desiredEnabled == false) {
           _disableConnection();
         }
         break;
