@@ -35,8 +35,8 @@ test: $(output)/$(default)/orchid$(exe)
 debug: $(output)/$(default)/orchid$(exe)
 	sudo lldb -o 'run $(args)' $<
 
-source += $(wildcard vpn/lz4/lib/*.c)
-cflags += -Ivpn/lz4/lib
+source += $(wildcard vpn/p2p/lz4/lib/*.c)
+cflags += -Ivpn/p2p/lz4/lib
 
 cflags += -DUSE_ASIO
 cflags += -DUSE_ASIO_THREADLOCAL
@@ -44,8 +44,8 @@ cflags += -DASIO_NO_DEPRECATED
 cflags += -DHAVE_LZ4
 cflags += -DUSE_OPENSSL
 
-cflags += -Ivpn/openvpn3
-cflags += -Ivpn/openvpn3/client
+cflags += -Ivpn/p2p/openvpn3
+cflags += -Ivpn/p2p/openvpn3/client
 
 c_openvpn3 += -Wno-address-of-temporary
 c_openvpn3 += -Wno-delete-non-virtual-dtor
@@ -60,7 +60,7 @@ cflags += -Ivpn/p2p/source
 $(call include,vpn/p2p/asio.mk)
 $(call include,vpn/p2p/rtc/openssl.mk)
 
-source += vpn/openvpn3/test/ovpncli/cli.cpp
+source += vpn/p2p/openvpn3/test/ovpncli/cli.cpp
 source += vpn/p2p/source/log.cpp
 
 lflags += -framework CoreServices
@@ -73,4 +73,4 @@ include env/output.mk
 $(output)/%/orchid: $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@echo [LD] $@
 	@set -o pipefail; $(cxx/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
-	@ls -la $(output)/orchid
+	@ls -la $(output)/$*/orchid
