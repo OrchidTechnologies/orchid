@@ -85,6 +85,7 @@ contract OrchidDirectory is IOrchidDirectory {
         uint128 delay_;
 
         address stakee_;
+        bytes data_;
 
         bytes32 parent_;
         Primary left_;
@@ -103,7 +104,7 @@ contract OrchidDirectory is IOrchidDirectory {
         return stake.before_ + stake.after_ + stake.amount_;
     }
 
-    function scan(uint128 percent) public view returns (bytes32, address, uint128) {
+    function scan(uint128 percent) public view returns (bytes32, address, uint128, bytes memory) {
         require(!nope(root_));
 
         uint128 point = uint128(have() * uint256(percent) / 2**128);
@@ -121,7 +122,7 @@ contract OrchidDirectory is IOrchidDirectory {
             point -= stake.before_;
 
             if (point < stake.amount_)
-                return (key, stake.stakee_, stake.delay_);
+                return (key, stake.stakee_, stake.delay_, stake.data_);
 
             point -= stake.amount_;
 
@@ -210,6 +211,16 @@ contract OrchidDirectory is IOrchidDirectory {
 
         require(delay >= stake.delay_);
         stake.delay_ = delay;
+    }
+
+
+    function move(address stakee, bytes memory data) public {
+        address staker = msg.sender;
+        bytes32 key = name(staker, stakee);
+        Stake storage stake = stakes_[key];
+        require(stake.amount_ != 0);
+
+        stake.data_ = data;
     }
 
 
