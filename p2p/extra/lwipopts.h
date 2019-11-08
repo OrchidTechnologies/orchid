@@ -1,2 +1,6 @@
-//#define LWIP_SOCKET 0
+#define LWIP_SOCKET 1
+#define LWIP_COMPAT_SOCKETS 0
+#define LWIP_TCP 1
+#define LWIP_UDP 1
 #define LWIP_NETIF_LOOPBACK 1
+#define LWIP_SOCKET_POLL 0

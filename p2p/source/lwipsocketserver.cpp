@@ -22,16 +22,32 @@
 #include "lwipsocketserver.hpp"
 #include "log.hpp"
 
-#define LWIP_SOCKET 1
-#define LWIP_COMPAT_SOCKETS 0
 #define LWIP_SOCKET_EXTERNAL_HEADERS 1
 #define LWIP_SOCKET_EXTERNAL_HEADER_INET_H <arpa/inet.h>
-#define LWIP_SOCKET_EXTERNAL_HEADER_SOCKETS_H <poll.h>
+#define LWIP_SOCKET_EXTERNAL_HEADER_SOCKETS_H <sys/socket.h>
 
 #include "lwip/opt.h"
 #include "lwip/sockets.h"
 #include "lwip/tcpip.h"
 #include "lwip/sys.h"
+
+#ifndef TCP_NODELAY
+#define TCP_NODELAY    0x01    /* don't delay send to coalesce packets */
+#endif
+
+/* commands for fnctl */
+#ifndef F_GETFL
+#define F_GETFL 3
+#endif
+#ifndef F_SETFL
+#define F_SETFL 4
+#endif
+
+/* File status flags and file access modes for fnctl,
+   these are bits in an int. */
+#ifndef O_NONBLOCK
+#define O_NONBLOCK  1 /* nonblocking I/O */
+#endif
 
 #if defined(_MSC_VER) && _MSC_VER < 1300
 #pragma warning(disable : 4786)
@@ -41,26 +57,12 @@
 #include <sanitizer/msan_interface.h>
 #endif
 
-#if defined(WEBRTC_POSIX)
-#include <fcntl.h>
 #include <string.h>
-#if defined(WEBRTC_USE_EPOLL)
-// "poll" will be used to wait for the signal dispatcher.
-#include <poll.h>
-#endif
 #include <signal.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
-#endif
-
-#if defined(WEBRTC_WIN)
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#undef SetPort
-#endif
 
 #include <errno.h>
 
@@ -75,58 +77,14 @@
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/time_utils.h"
 
-#if defined(WEBRTC_LINUX)
-#include <linux/sockios.h>
-#endif
-
-#if defined(WEBRTC_WIN)
-#define LAST_SYSTEM_ERROR (::GetLastError())
-#elif defined(__native_client__) && __native_client__
-#define LAST_SYSTEM_ERROR (0)
-#elif defined(WEBRTC_POSIX)
 #define LAST_SYSTEM_ERROR (errno)
-#endif  // WEBRTC_WIN
 
-#if defined(WEBRTC_POSIX)
-#include <netinet/tcp.h>  // for TCP_NODELAY
 #define IP_MTU 14  // Until this is integrated from linux/in.h to netinet/in.h
 typedef void* SockOptArg;
-
-#endif  // WEBRTC_POSIX
-
-#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(__native_client__)
-
-int64_t GetSocketRecvTimestamp(int socket) {
-  struct timeval tv_ioctl;
-  int ret = ioctl(socket, SIOCGSTAMP, &tv_ioctl);
-  if (ret != 0)
-    return -1;
-  int64_t timestamp =
-      rtc::kNumMicrosecsPerSec * static_cast<int64_t>(tv_ioctl.tv_sec) +
-      static_cast<int64_t>(tv_ioctl.tv_usec);
-  return timestamp;
-}
-
-#else
 
 int64_t GetSocketRecvTimestamp(int socket) {
   return -1;
 }
-#endif
-
-#if defined(WEBRTC_WIN)
-typedef char* SockOptArg;
-#endif
-
-#if defined(WEBRTC_USE_EPOLL)
-// POLLRDHUP / EPOLLRDHUP are only defined starting with Linux 2.6.17.
-#if !defined(POLLRDHUP)
-#define POLLRDHUP 0x2000
-#endif
-#if !defined(EPOLLRDHUP)
-#define EPOLLRDHUP 0x2000
-#endif
-#endif
 
 using namespace rtc;
 
@@ -144,7 +102,7 @@ LwipSocket::LwipSocket(LwipSocketServer* ss, SOCKET s)
     int type = SOCK_STREAM;
     socklen_t len = sizeof(type);
     const int res =
-        getsockopt(s_, SOL_SOCKET, SO_TYPE, (SockOptArg)&type, &len);
+        ::lwip_getsockopt(s_, SOL_SOCKET, SO_TYPE, (SockOptArg)&type, &len);
     RTC_DCHECK_EQ(0, res);
     udp_ = (SOCK_DGRAM == type);
   }
@@ -307,11 +265,6 @@ int LwipSocket::GetOption(Option opt, int* value) {
     return -1;
   socklen_t optlen = sizeof(*value);
   int ret = ::lwip_getsockopt(s_, slevel, sopt, (SockOptArg)value, &optlen);
-  if (ret != -1 && opt == OPT_DONTFRAGMENT) {
-#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
-    *value = (*value != IP_PMTUDISC_DONT) ? 1 : 0;
-#endif
-  }
   return ret;
 }
 
@@ -320,27 +273,13 @@ int LwipSocket::SetOption(Option opt, int value) {
   int sopt;
   if (TranslateOption(opt, &slevel, &sopt) == -1)
     return -1;
-  if (opt == OPT_DONTFRAGMENT) {
-#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
-    value = (value) ? IP_PMTUDISC_DO : IP_PMTUDISC_DONT;
-#endif
-  }
   return ::lwip_setsockopt(s_, slevel, sopt, (SockOptArg)&value, sizeof(value));
 }
 
 int LwipSocket::Send(const void* pv, size_t cb) {
   int sent = DoSend(
       s_, reinterpret_cast<const char*>(pv), static_cast<int>(cb),
-#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
-      // Suppress SIGPIPE. Without this, attempting to send on a socket whose
-      // other end is closed will result in a SIGPIPE signal being raised to
-      // our process, which by default will terminate the process, which we
-      // don't want. By specifying this flag, we'll just get the error EPIPE
-      // instead and can handle the error gracefully.
-      MSG_NOSIGNAL
-#else
       0
-#endif
   );
   UpdateLastError();
   MaybeRemapSendError();
@@ -360,12 +299,7 @@ int LwipSocket::SendTo(const void* buffer,
   size_t len = addr.ToSockAddrStorage(&saddr);
   int sent =
       DoSendTo(s_, static_cast<const char*>(buffer), static_cast<int>(length),
-#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
-               // Suppress SIGPIPE. See above for explanation.
-               MSG_NOSIGNAL,
-#else
                0,
-#endif
                reinterpret_cast<sockaddr*>(&saddr), static_cast<int>(len));
   UpdateLastError();
   MaybeRemapSendError();
@@ -520,16 +454,6 @@ void LwipSocket::UpdateLastError() {
 }
 
 void LwipSocket::MaybeRemapSendError() {
-#if defined(WEBRTC_MAC)
-  // https://developer.apple.com/library/mac/documentation/Darwin/
-  // Reference/ManPages/man2/sendto.2.html
-  // ENOBUFS - The output queue for a network interface is full.
-  // This generally indicates that the interface has stopped sending,
-  // but may be caused by transient congestion.
-  if (GetError() == ENOBUFS) {
-    SetError(EWOULDBLOCK);
-  }
-#endif
 }
 
 void LwipSocket::SetEnabledEvents(uint8_t events) {
@@ -547,18 +471,8 @@ void LwipSocket::DisableEvents(uint8_t events) {
 int LwipSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
   switch (opt) {
     case OPT_DONTFRAGMENT:
-#if defined(WEBRTC_WIN)
-      *slevel = IPPROTO_IP;
-      *sopt = IP_DONTFRAGMENT;
-      break;
-#elif defined(WEBRTC_MAC) || defined(BSD) || defined(__native_client__)
       RTC_LOG(LS_WARNING) << "Socket::OPT_DONTFRAGMENT not supported.";
       return -1;
-#elif defined(WEBRTC_POSIX)
-      *slevel = IPPROTO_IP;
-      *sopt = IP_MTU_DISCOVER;
-      break;
-#endif
     case OPT_RCVBUF:
       *slevel = SOL_SOCKET;
       *sopt = SO_RCVBUF;
@@ -584,24 +498,12 @@ int LwipSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
 }
 
 SocketDispatcher::SocketDispatcher(LwipSocketServer* ss)
-#if defined(WEBRTC_WIN)
-    : LwipSocket(ss),
-      id_(0),
-      signal_close_(false)
-#else
     : LwipSocket(ss)
-#endif
 {
 }
 
 SocketDispatcher::SocketDispatcher(SOCKET s, LwipSocketServer* ss)
-#if defined(WEBRTC_WIN)
-    : LwipSocket(ss, s),
-      id_(0),
-      signal_close_(false)
-#else
     : LwipSocket(ss, s)
-#endif
 {
 }
 
@@ -612,21 +514,7 @@ SocketDispatcher::~SocketDispatcher() {
 bool SocketDispatcher::Initialize() {
   RTC_DCHECK(s_ != INVALID_SOCKET);
 // Must be a non-blocking
-#if defined(WEBRTC_WIN)
-  u_long argp = 1;
-  ioctlsocket(s_, FIONBIO, &argp);
-#elif defined(WEBRTC_POSIX)
-  fcntl(s_, F_SETFL, fcntl(s_, F_GETFL, 0) | O_NONBLOCK);
-#endif
-#if defined(WEBRTC_IOS)
-  // iOS may kill sockets when the app is moved to the background
-  // (specifically, if the app doesn't use the "voip" UIBackgroundMode). When
-  // we attempt to write to such a socket, SIGPIPE will be raised, which by
-  // default will terminate the process, which we don't want. By specifying
-  // this socket option, SIGPIPE will be disabled for the socket.
-  int value = 1;
-  ::lwip_setsockopt(s_, SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value));
-#endif
+  ::lwip_fcntl(s_, F_SETFL, ::lwip_fcntl(s_, F_GETFL, 0) | O_NONBLOCK);
   ss_->Add(this);
   return true;
 }
@@ -643,41 +531,9 @@ bool SocketDispatcher::Create(int family, int type) {
   if (!Initialize())
     return false;
 
-#if defined(WEBRTC_WIN)
-  do {
-    id_ = ++next_id_;
-  } while (id_ == 0);
-#endif
   return true;
 }
 
-#if defined(WEBRTC_WIN)
-
-WSAEVENT SocketDispatcher::GetWSAEvent() {
-  return WSA_INVALID_EVENT;
-}
-
-SOCKET SocketDispatcher::GetSocket() {
-  return s_;
-}
-
-bool SocketDispatcher::CheckSignalClose() {
-  if (!signal_close_)
-    return false;
-
-  char ch;
-  if (recv(s_, &ch, 1, MSG_PEEK) > 0)
-    return false;
-
-  state_ = CS_CLOSED;
-  signal_close_ = false;
-  SignalCloseEvent(this, signal_err_);
-  return true;
-}
-
-int SocketDispatcher::next_id_ = 0;
-
-#elif defined(WEBRTC_POSIX)
 
 int SocketDispatcher::GetDescriptor() {
   return s_;
@@ -730,8 +586,6 @@ bool SocketDispatcher::IsDescriptorClosed() {
   }
 }
 
-#endif  // WEBRTC_POSIX
-
 uint32_t SocketDispatcher::GetRequestedEvents() {
   return enabled_events();
 }
@@ -740,59 +594,11 @@ void SocketDispatcher::OnPreEvent(uint32_t ff) {
   if ((ff & DE_CONNECT) != 0)
     state_ = CS_CONNECTED;
 
-#if defined(WEBRTC_WIN)
-// We set CS_CLOSED from CheckSignalClose.
-#elif defined(WEBRTC_POSIX)
   if ((ff & DE_CLOSE) != 0)
     state_ = CS_CLOSED;
-#endif
 }
 
-#if defined(WEBRTC_WIN)
-
 void SocketDispatcher::OnEvent(uint32_t ff, int err) {
-  int cache_id = id_;
-  // Make sure we deliver connect/accept first. Otherwise, consumers may see
-  // something like a READ followed by a CONNECT, which would be odd.
-  if (((ff & DE_CONNECT) != 0) && (id_ == cache_id)) {
-    if (ff != DE_CONNECT)
-      RTC_LOG(LS_VERBOSE) << "Signalled with DE_CONNECT: " << ff;
-    DisableEvents(DE_CONNECT);
-#if !defined(NDEBUG)
-    dbg_addr_ = "Connected @ ";
-    dbg_addr_.append(GetRemoteAddress().ToString());
-#endif
-    SignalConnectEvent(this);
-  }
-  if (((ff & DE_ACCEPT) != 0) && (id_ == cache_id)) {
-    DisableEvents(DE_ACCEPT);
-    SignalReadEvent(this);
-  }
-  if ((ff & DE_READ) != 0) {
-    DisableEvents(DE_READ);
-    SignalReadEvent(this);
-  }
-  if (((ff & DE_WRITE) != 0) && (id_ == cache_id)) {
-    DisableEvents(DE_WRITE);
-    SignalWriteEvent(this);
-  }
-  if (((ff & DE_CLOSE) != 0) && (id_ == cache_id)) {
-    signal_close_ = true;
-    signal_err_ = err;
-  }
-}
-
-#elif defined(WEBRTC_POSIX)
-
-void SocketDispatcher::OnEvent(uint32_t ff, int err) {
-#if defined(WEBRTC_USE_EPOLL)
-  // Remember currently enabled events so we can combine multiple changes
-  // into one update call later.
-  // The signal handlers might re-enable events disabled here, so we can't
-  // keep a list of events to disable at the end of the method. This list
-  // would not be updated with the events enabled by the signal handlers.
-  StartBatchedEventUpdates();
-#endif
   // Make sure we deliver connect/accept first. Otherwise, consumers may see
   // something like a READ followed by a CONNECT, which would be odd.
   if ((ff & DE_CONNECT) != 0) {
@@ -816,78 +622,16 @@ void SocketDispatcher::OnEvent(uint32_t ff, int err) {
     SetEnabledEvents(0);
     SignalCloseEvent(this, err);
   }
-#if defined(WEBRTC_USE_EPOLL)
-  FinishBatchedEventUpdates();
-#endif
 }
-
-#endif  // WEBRTC_POSIX
-
-#if defined(WEBRTC_USE_EPOLL)
-
-static int GetEpollEvents(uint32_t ff) {
-  int events = 0;
-  if (ff & (DE_READ | DE_ACCEPT)) {
-    events |= EPOLLIN;
-  }
-  if (ff & (DE_WRITE | DE_CONNECT)) {
-    events |= EPOLLOUT;
-  }
-  return events;
-}
-
-void SocketDispatcher::StartBatchedEventUpdates() {
-  RTC_DCHECK_EQ(saved_enabled_events_, -1);
-  saved_enabled_events_ = enabled_events();
-}
-
-void SocketDispatcher::FinishBatchedEventUpdates() {
-  RTC_DCHECK_NE(saved_enabled_events_, -1);
-  uint8_t old_events = static_cast<uint8_t>(saved_enabled_events_);
-  saved_enabled_events_ = -1;
-  MaybeUpdateDispatcher(old_events);
-}
-
-void SocketDispatcher::MaybeUpdateDispatcher(uint8_t old_events) {
-  if (GetEpollEvents(enabled_events()) != GetEpollEvents(old_events) &&
-      saved_enabled_events_ == -1) {
-    ss_->Update(this);
-  }
-}
-
-void SocketDispatcher::SetEnabledEvents(uint8_t events) {
-  uint8_t old_events = enabled_events();
-  LwipSocket::SetEnabledEvents(events);
-  MaybeUpdateDispatcher(old_events);
-}
-
-void SocketDispatcher::EnableEvents(uint8_t events) {
-  uint8_t old_events = enabled_events();
-  LwipSocket::EnableEvents(events);
-  MaybeUpdateDispatcher(old_events);
-}
-
-void SocketDispatcher::DisableEvents(uint8_t events) {
-  uint8_t old_events = enabled_events();
-  LwipSocket::DisableEvents(events);
-  MaybeUpdateDispatcher(old_events);
-}
-
-#endif  // WEBRTC_USE_EPOLL
 
 int SocketDispatcher::Close() {
   if (s_ == INVALID_SOCKET)
     return 0;
 
-#if defined(WEBRTC_WIN)
-  id_ = 0;
-  signal_close_ = false;
-#endif
   ss_->Remove(this);
   return LwipSocket::Close();
 }
 
-#if defined(WEBRTC_POSIX)
 class EventDispatcher : public Dispatcher {
  public:
   EventDispatcher(LwipSocketServer* ss) : ss_(ss), fSignaled_(false) {
@@ -957,237 +701,6 @@ class EventDispatcher : public Dispatcher {
   bool fSignaled_;
   CriticalSection crit_;
 };
-
-// These two classes use the self-pipe trick to deliver POSIX signals to our
-// select loop. This is the only safe, reliable, cross-platform way to do
-// non-trivial things with a POSIX signal in an event-driven program (until
-// proper pselect() implementations become ubiquitous).
-
-class PosixSignalHandler {
- public:
-  // POSIX only specifies 32 signals, but in principle the system might have
-  // more and the programmer might choose to use them, so we size our array
-  // for 128.
-  static const int kNumPosixSignals = 128;
-
-  // There is just a single global instance. (Signal handlers do not get any
-  // sort of user-defined void * parameter, so they can't access anything that
-  // isn't global.)
-  static PosixSignalHandler* Instance() {
-    static PosixSignalHandler* const instance = new PosixSignalHandler();
-    return instance;
-  }
-
-  // Returns true if the given signal number is set.
-  bool IsSignalSet(int signum) const {
-    RTC_DCHECK(signum < static_cast<int>(arraysize(received_signal_)));
-    if (signum < static_cast<int>(arraysize(received_signal_))) {
-      return received_signal_[signum];
-    } else {
-      return false;
-    }
-  }
-
-  // Clears the given signal number.
-  void ClearSignal(int signum) {
-    RTC_DCHECK(signum < static_cast<int>(arraysize(received_signal_)));
-    if (signum < static_cast<int>(arraysize(received_signal_))) {
-      received_signal_[signum] = false;
-    }
-  }
-
-  // Returns the file descriptor to monitor for signal events.
-  int GetDescriptor() const { return afd_[0]; }
-
-  // This is called directly from our real signal handler, so it must be
-  // signal-handler-safe. That means it cannot assume anything about the
-  // user-level state of the process, since the handler could be executed at any
-  // time on any thread.
-  void OnPosixSignalReceived(int signum) {
-    if (signum >= static_cast<int>(arraysize(received_signal_))) {
-      // We don't have space in our array for this.
-      return;
-    }
-    // Set a flag saying we've seen this signal.
-    received_signal_[signum] = true;
-    // Notify application code that we got a signal.
-    const uint8_t b[1] = {0};
-    if (-1 == write(afd_[1], b, sizeof(b))) {
-      // Nothing we can do here. If there's an error somehow then there's
-      // nothing we can safely do from a signal handler.
-      // No, we can't even safely log it.
-      // But, we still have to check the return value here. Otherwise,
-      // GCC 4.4.1 complains ignoring return value. Even (void) doesn't help.
-      return;
-    }
-  }
-
- private:
-  PosixSignalHandler() {
-    if (pipe(afd_) < 0) {
-      RTC_LOG_ERR(LS_ERROR) << "pipe failed";
-      return;
-    }
-    if (fcntl(afd_[0], F_SETFL, O_NONBLOCK) < 0) {
-      RTC_LOG_ERR(LS_WARNING) << "fcntl #1 failed";
-    }
-    if (fcntl(afd_[1], F_SETFL, O_NONBLOCK) < 0) {
-      RTC_LOG_ERR(LS_WARNING) << "fcntl #2 failed";
-    }
-    memset(const_cast<void*>(static_cast<volatile void*>(received_signal_)), 0,
-           sizeof(received_signal_));
-  }
-
-  ~PosixSignalHandler() {
-    int fd1 = afd_[0];
-    int fd2 = afd_[1];
-    // We clobber the stored file descriptor numbers here or else in principle
-    // a signal that happens to be delivered during application termination
-    // could erroneously write a zero byte to an unrelated file handle in
-    // OnPosixSignalReceived() if some other file happens to be opened later
-    // during shutdown and happens to be given the same file descriptor number
-    // as our pipe had. Unfortunately even with this precaution there is still a
-    // race where that could occur if said signal happens to be handled
-    // concurrently with this code and happens to have already read the value of
-    // afd_[1] from memory before we clobber it, but that's unlikely.
-    afd_[0] = -1;
-    afd_[1] = -1;
-    close(fd1);
-    close(fd2);
-  }
-
-  int afd_[2];
-  // These are boolean flags that will be set in our signal handler and read
-  // and cleared from Wait(). There is a race involved in this, but it is
-  // benign. The signal handler sets the flag before signaling the pipe, so
-  // we'll never end up blocking in select() while a flag is still true.
-  // However, if two of the same signal arrive close to each other then it's
-  // possible that the second time the handler may set the flag while it's still
-  // true, meaning that signal will be missed. But the first occurrence of it
-  // will still be handled, so this isn't a problem.
-  // Volatile is not necessary here for correctness, but this data _is_ volatile
-  // so I've marked it as such.
-  volatile uint8_t received_signal_[kNumPosixSignals];
-};
-
-class PosixSignalDispatcher : public Dispatcher {
- public:
-  PosixSignalDispatcher(LwipSocketServer* owner) : owner_(owner) {
-    owner_->Add(this);
-  }
-
-  ~PosixSignalDispatcher() override { owner_->Remove(this); }
-
-  uint32_t GetRequestedEvents() override { return DE_READ; }
-
-  void OnPreEvent(uint32_t ff) override {
-    // Events might get grouped if signals come very fast, so we read out up to
-    // 16 bytes to make sure we keep the pipe empty.
-    uint8_t b[16];
-    ssize_t ret = read(GetDescriptor(), b, sizeof(b));
-    if (ret < 0) {
-      RTC_LOG_ERR(LS_WARNING) << "Error in read()";
-    } else if (ret == 0) {
-      RTC_LOG(LS_WARNING) << "Should have read at least one byte";
-    }
-  }
-
-  void OnEvent(uint32_t ff, int err) override {
-    for (int signum = 0; signum < PosixSignalHandler::kNumPosixSignals;
-         ++signum) {
-      if (PosixSignalHandler::Instance()->IsSignalSet(signum)) {
-        PosixSignalHandler::Instance()->ClearSignal(signum);
-        HandlerMap::iterator i = handlers_.find(signum);
-        if (i == handlers_.end()) {
-          // This can happen if a signal is delivered to our process at around
-          // the same time as we unset our handler for it. It is not an error
-          // condition, but it's unusual enough to be worth logging.
-          RTC_LOG(LS_INFO) << "Received signal with no handler: " << signum;
-        } else {
-          // Otherwise, execute our handler.
-          (*i->second)(signum);
-        }
-      }
-    }
-  }
-
-  int GetDescriptor() override {
-    return PosixSignalHandler::Instance()->GetDescriptor();
-  }
-
-  bool IsDescriptorClosed() override { return false; }
-
-  void SetHandler(int signum, void (*handler)(int)) {
-    handlers_[signum] = handler;
-  }
-
-  void ClearHandler(int signum) { handlers_.erase(signum); }
-
-  bool HasHandlers() { return !handlers_.empty(); }
-
- private:
-  typedef std::map<int, void (*)(int)> HandlerMap;
-
-  HandlerMap handlers_;
-  // Our owner.
-  LwipSocketServer* owner_;
-};
-
-#endif  // WEBRTC_POSIX
-
-#if defined(WEBRTC_WIN)
-static uint32_t FlagsToEvents(uint32_t events) {
-  uint32_t ffFD = FD_CLOSE;
-  if (events & DE_READ)
-    ffFD |= FD_READ;
-  if (events & DE_WRITE)
-    ffFD |= FD_WRITE;
-  if (events & DE_CONNECT)
-    ffFD |= FD_CONNECT;
-  if (events & DE_ACCEPT)
-    ffFD |= FD_ACCEPT;
-  return ffFD;
-}
-
-class EventDispatcher : public Dispatcher {
- public:
-  EventDispatcher(LwipSocketServer* ss) : ss_(ss) {
-    hev_ = WSACreateEvent();
-    if (hev_) {
-      ss_->Add(this);
-    }
-  }
-
-  ~EventDispatcher() override {
-    if (hev_ != nullptr) {
-      ss_->Remove(this);
-      WSACloseEvent(hev_);
-      hev_ = nullptr;
-    }
-  }
-
-  virtual void Signal() {
-    if (hev_ != nullptr)
-      WSASetEvent(hev_);
-  }
-
-  uint32_t GetRequestedEvents() override { return 0; }
-
-  void OnPreEvent(uint32_t ff) override { WSAResetEvent(hev_); }
-
-  void OnEvent(uint32_t ff, int err) override {}
-
-  WSAEVENT GetWSAEvent() override { return hev_; }
-
-  SOCKET GetSocket() override { return INVALID_SOCKET; }
-
-  bool CheckSignalClose() override { return false; }
-
- private:
-  LwipSocketServer* ss_;
-  WSAEVENT hev_;
-};
-#endif  // WEBRTC_WIN
 
 // Sets the value of a boolean value to false when signaled.
 class Signaler : public EventDispatcher {
@@ -1271,18 +784,7 @@ LwipSocketServer::LwipSocketServer() : fWait_(false) {
 }
 
 LwipSocketServer::~LwipSocketServer() {
-#if defined(WEBRTC_WIN)
-  WSACloseEvent(socket_ev_);
-#endif
-#if defined(WEBRTC_POSIX)
-  signal_dispatcher_.reset();
-#endif
   delete signal_wakeup_;
-#if defined(WEBRTC_USE_EPOLL)
-  if (epoll_fd_ != INVALID_SOCKET) {
-    close(epoll_fd_);
-  }
-#endif
   RTC_DCHECK(dispatchers_.empty());
 }
 
@@ -1332,11 +834,6 @@ void LwipSocketServer::Add(Dispatcher* pdispatcher) {
   } else {
     dispatchers_.insert(pdispatcher);
   }
-#if defined(WEBRTC_USE_EPOLL)
-  if (epoll_fd_ != INVALID_SOCKET) {
-    AddEpoll(pdispatcher);
-  }
-#endif  // WEBRTC_USE_EPOLL
 }
 
 void LwipSocketServer::Remove(Dispatcher* pdispatcher) {
@@ -1361,26 +858,9 @@ void LwipSocketServer::Remove(Dispatcher* pdispatcher) {
         << "dispatcher, potentially from a duplicate call to Add.";
     return;
   }
-#if defined(WEBRTC_USE_EPOLL)
-  if (epoll_fd_ != INVALID_SOCKET) {
-    RemoveEpoll(pdispatcher);
-  }
-#endif  // WEBRTC_USE_EPOLL
 }
 
 void LwipSocketServer::Update(Dispatcher* pdispatcher) {
-#if defined(WEBRTC_USE_EPOLL)
-  if (epoll_fd_ == INVALID_SOCKET) {
-    return;
-  }
-
-  CritScope cs(&crit_);
-  if (dispatchers_.find(pdispatcher) == dispatchers_.end()) {
-    return;
-  }
-
-  UpdateEpoll(pdispatcher);
-#endif
 }
 
 void LwipSocketServer::AddRemovePendingDispatchers() {
@@ -1399,19 +879,7 @@ void LwipSocketServer::AddRemovePendingDispatchers() {
   }
 }
 
-#if defined(WEBRTC_POSIX)
-
 bool LwipSocketServer::Wait(int cmsWait, bool process_io) {
-#if defined(WEBRTC_USE_EPOLL)
-  // We don't keep a dedicated "epoll" descriptor containing only the non-IO
-  // (i.e. signaling) dispatcher, so "poll" will be used instead of the default
-  // "select" to support sockets larger than FD_SETSIZE.
-  if (!process_io) {
-    return WaitPoll(cmsWait, signal_wakeup_);
-  } else if (epoll_fd_ != INVALID_SOCKET) {
-    return WaitEpoll(cmsWait);
-  }
-#endif
   return WaitSelect(cmsWait, process_io);
 }
 
@@ -1584,441 +1052,5 @@ bool LwipSocketServer::WaitSelect(int cmsWait, bool process_io) {
 
   return true;
 }
-
-#if defined(WEBRTC_USE_EPOLL)
-
-// Initial number of events to process with one call to "epoll_wait".
-static const size_t kInitialEpollEvents = 128;
-
-// Maximum number of events to process with one call to "epoll_wait".
-static const size_t kMaxEpollEvents = 8192;
-
-void LwipSocketServer::AddEpoll(Dispatcher* pdispatcher) {
-  RTC_DCHECK(epoll_fd_ != INVALID_SOCKET);
-  int fd = pdispatcher->GetDescriptor();
-  RTC_DCHECK(fd != INVALID_SOCKET);
-  if (fd == INVALID_SOCKET) {
-    return;
-  }
-
-  struct epoll_event event = {0};
-  event.events = GetEpollEvents(pdispatcher->GetRequestedEvents());
-  event.data.ptr = pdispatcher;
-  int err = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &event);
-  RTC_DCHECK_EQ(err, 0);
-  if (err == -1) {
-    RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_ADD";
-  }
-}
-
-void LwipSocketServer::RemoveEpoll(Dispatcher* pdispatcher) {
-  RTC_DCHECK(epoll_fd_ != INVALID_SOCKET);
-  int fd = pdispatcher->GetDescriptor();
-  RTC_DCHECK(fd != INVALID_SOCKET);
-  if (fd == INVALID_SOCKET) {
-    return;
-  }
-
-  struct epoll_event event = {0};
-  int err = epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, &event);
-  RTC_DCHECK(err == 0 || errno == ENOENT);
-  if (err == -1) {
-    if (errno == ENOENT) {
-      // Socket has already been closed.
-      RTC_LOG_E(LS_VERBOSE, EN, errno) << "epoll_ctl EPOLL_CTL_DEL";
-    } else {
-      RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_DEL";
-    }
-  }
-}
-
-void LwipSocketServer::UpdateEpoll(Dispatcher* pdispatcher) {
-  RTC_DCHECK(epoll_fd_ != INVALID_SOCKET);
-  int fd = pdispatcher->GetDescriptor();
-  RTC_DCHECK(fd != INVALID_SOCKET);
-  if (fd == INVALID_SOCKET) {
-    return;
-  }
-
-  struct epoll_event event = {0};
-  event.events = GetEpollEvents(pdispatcher->GetRequestedEvents());
-  event.data.ptr = pdispatcher;
-  int err = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, &event);
-  RTC_DCHECK_EQ(err, 0);
-  if (err == -1) {
-    RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_MOD";
-  }
-}
-
-bool LwipSocketServer::WaitEpoll(int cmsWait) {
-  RTC_DCHECK(epoll_fd_ != INVALID_SOCKET);
-  int64_t tvWait = -1;
-  int64_t tvStop = -1;
-  if (cmsWait != kForever) {
-    tvWait = cmsWait;
-    tvStop = TimeAfter(cmsWait);
-  }
-
-  if (epoll_events_.empty()) {
-    // The initial space to receive events is created only if epoll is used.
-    epoll_events_.resize(kInitialEpollEvents);
-  }
-
-  fWait_ = true;
-
-  while (fWait_) {
-    // Wait then call handlers as appropriate
-    // < 0 means error
-    // 0 means timeout
-    // > 0 means count of descriptors ready
-    int n = epoll_wait(epoll_fd_, &epoll_events_[0],
-                       static_cast<int>(epoll_events_.size()),
-                       static_cast<int>(tvWait));
-    if (n < 0) {
-      if (errno != EINTR) {
-        RTC_LOG_E(LS_ERROR, EN, errno) << "epoll";
-        return false;
-      }
-      // Else ignore the error and keep going. If this EINTR was for one of the
-      // signals managed by this LwipSocketServer, the
-      // PosixSignalDeliveryDispatcher will be in the signaled state in the next
-      // iteration.
-    } else if (n == 0) {
-      // If timeout, return success
-      return true;
-    } else {
-      // We have signaled descriptors
-      CritScope cr(&crit_);
-      for (int i = 0; i < n; ++i) {
-        const epoll_event& event = epoll_events_[i];
-        Dispatcher* pdispatcher = static_cast<Dispatcher*>(event.data.ptr);
-        if (dispatchers_.find(pdispatcher) == dispatchers_.end()) {
-          // The dispatcher for this socket no longer exists.
-          continue;
-        }
-
-        bool readable = (event.events & (EPOLLIN | EPOLLPRI));
-        bool writable = (event.events & EPOLLOUT);
-        bool check_error = (event.events & (EPOLLRDHUP | EPOLLERR | EPOLLHUP));
-
-        ProcessEvents(pdispatcher, readable, writable, check_error);
-      }
-    }
-
-    if (static_cast<size_t>(n) == epoll_events_.size() &&
-        epoll_events_.size() < kMaxEpollEvents) {
-      // We used the complete space to receive events, increase size for future
-      // iterations.
-      epoll_events_.resize(std::max(epoll_events_.size() * 2, kMaxEpollEvents));
-    }
-
-    if (cmsWait != kForever) {
-      tvWait = TimeDiff(tvStop, TimeMillis());
-      if (tvWait < 0) {
-        // Return success on timeout.
-        return true;
-      }
-    }
-  }
-
-  return true;
-}
-
-bool LwipSocketServer::WaitPoll(int cmsWait, Dispatcher* dispatcher) {
-  RTC_DCHECK(dispatcher);
-  int64_t tvWait = -1;
-  int64_t tvStop = -1;
-  if (cmsWait != kForever) {
-    tvWait = cmsWait;
-    tvStop = TimeAfter(cmsWait);
-  }
-
-  fWait_ = true;
-
-  struct pollfd fds = {0};
-  int fd = dispatcher->GetDescriptor();
-  fds.fd = fd;
-
-  while (fWait_) {
-    uint32_t ff = dispatcher->GetRequestedEvents();
-    fds.events = 0;
-    if (ff & (DE_READ | DE_ACCEPT)) {
-      fds.events |= POLLIN;
-    }
-    if (ff & (DE_WRITE | DE_CONNECT)) {
-      fds.events |= POLLOUT;
-    }
-    fds.revents = 0;
-
-    // Wait then call handlers as appropriate
-    // < 0 means error
-    // 0 means timeout
-    // > 0 means count of descriptors ready
-    int n = ::lwip_poll(&fds, 1, static_cast<int>(tvWait));
-    if (n < 0) {
-      if (errno != EINTR) {
-        RTC_LOG_E(LS_ERROR, EN, errno) << "poll";
-        return false;
-      }
-      // Else ignore the error and keep going. If this EINTR was for one of the
-      // signals managed by this LwipSocketServer, the
-      // PosixSignalDeliveryDispatcher will be in the signaled state in the next
-      // iteration.
-    } else if (n == 0) {
-      // If timeout, return success
-      return true;
-    } else {
-      // We have signaled descriptors (should only be the passed dispatcher).
-      RTC_DCHECK_EQ(n, 1);
-      RTC_DCHECK_EQ(fds.fd, fd);
-
-      bool readable = (fds.revents & (POLLIN | POLLPRI));
-      bool writable = (fds.revents & POLLOUT);
-      bool check_error = (fds.revents & (POLLRDHUP | POLLERR | POLLHUP));
-
-      ProcessEvents(dispatcher, readable, writable, check_error);
-    }
-
-    if (cmsWait != kForever) {
-      tvWait = TimeDiff(tvStop, TimeMillis());
-      if (tvWait < 0) {
-        // Return success on timeout.
-        return true;
-      }
-    }
-  }
-
-  return true;
-}
-
-#endif  // WEBRTC_USE_EPOLL
-
-static void GlobalSignalHandler(int signum) {
-  PosixSignalHandler::Instance()->OnPosixSignalReceived(signum);
-}
-
-bool LwipSocketServer::SetPosixSignalHandler(int signum,
-                                                 void (*handler)(int)) {
-  // If handler is SIG_IGN or SIG_DFL then clear our user-level handler,
-  // otherwise set one.
-  if (handler == SIG_IGN || handler == SIG_DFL) {
-    if (!InstallSignal(signum, handler)) {
-      return false;
-    }
-    if (signal_dispatcher_) {
-      signal_dispatcher_->ClearHandler(signum);
-      if (!signal_dispatcher_->HasHandlers()) {
-        signal_dispatcher_.reset();
-      }
-    }
-  } else {
-    if (!signal_dispatcher_) {
-      signal_dispatcher_.reset(new PosixSignalDispatcher(this));
-    }
-    signal_dispatcher_->SetHandler(signum, handler);
-    if (!InstallSignal(signum, &GlobalSignalHandler)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-Dispatcher* LwipSocketServer::signal_dispatcher() {
-  return signal_dispatcher_.get();
-}
-
-bool LwipSocketServer::InstallSignal(int signum, void (*handler)(int)) {
-  struct sigaction act;
-  // It doesn't really matter what we set this mask to.
-  if (sigemptyset(&act.sa_mask) != 0) {
-    RTC_LOG_ERR(LS_ERROR) << "Couldn't set mask";
-    return false;
-  }
-  act.sa_handler = handler;
-#if !defined(__native_client__)
-  // Use SA_RESTART so that our syscalls don't get EINTR, since we don't need it
-  // and it's a nuisance. Though some syscalls still return EINTR and there's no
-  // real standard for which ones. :(
-  act.sa_flags = SA_RESTART;
-#else
-  act.sa_flags = 0;
-#endif
-  if (sigaction(signum, &act, nullptr) != 0) {
-    RTC_LOG_ERR(LS_ERROR) << "Couldn't set sigaction";
-    return false;
-  }
-  return true;
-}
-#endif  // WEBRTC_POSIX
-
-#if defined(WEBRTC_WIN)
-bool LwipSocketServer::Wait(int cmsWait, bool process_io) {
-  int64_t cmsTotal = cmsWait;
-  int64_t cmsElapsed = 0;
-  int64_t msStart = Time();
-
-  fWait_ = true;
-  while (fWait_) {
-    std::vector<WSAEVENT> events;
-    std::vector<Dispatcher*> event_owners;
-
-    events.push_back(socket_ev_);
-
-    {
-      CritScope cr(&crit_);
-      // TODO(jbauch): Support re-entrant waiting.
-      RTC_DCHECK(!processing_dispatchers_);
-
-      // Calling "CheckSignalClose" might remove a closed dispatcher from the
-      // set. This must be deferred to prevent invalidating the iterator.
-      processing_dispatchers_ = true;
-      for (Dispatcher* disp : dispatchers_) {
-        if (!process_io && (disp != signal_wakeup_))
-          continue;
-        SOCKET s = disp->GetSocket();
-        if (disp->CheckSignalClose()) {
-          // We just signalled close, don't poll this socket
-        } else if (s != INVALID_SOCKET) {
-          WSAEventSelect(s, events[0],
-                         FlagsToEvents(disp->GetRequestedEvents()));
-        } else {
-          events.push_back(disp->GetWSAEvent());
-          event_owners.push_back(disp);
-        }
-      }
-
-      processing_dispatchers_ = false;
-      // Process deferred dispatchers that have been added/removed while the
-      // events were handled above.
-      AddRemovePendingDispatchers();
-    }
-
-    // Which is shorter, the delay wait or the asked wait?
-
-    int64_t cmsNext;
-    if (cmsWait == kForever) {
-      cmsNext = cmsWait;
-    } else {
-      cmsNext = std::max<int64_t>(0, cmsTotal - cmsElapsed);
-    }
-
-    // Wait for one of the events to signal
-    DWORD dw =
-        WSAWaitForMultipleEvents(static_cast<DWORD>(events.size()), &events[0],
-                                 false, static_cast<DWORD>(cmsNext), false);
-
-    if (dw == WSA_WAIT_FAILED) {
-      // Failed?
-      // TODO(pthatcher): need a better strategy than this!
-      WSAGetLastError();
-      RTC_NOTREACHED();
-      return false;
-    } else if (dw == WSA_WAIT_TIMEOUT) {
-      // Timeout?
-      return true;
-    } else {
-      // Figure out which one it is and call it
-      CritScope cr(&crit_);
-      int index = dw - WSA_WAIT_EVENT_0;
-      if (index > 0) {
-        --index;  // The first event is the socket event
-        Dispatcher* disp = event_owners[index];
-        // The dispatcher could have been removed while waiting for events.
-        if (dispatchers_.find(disp) != dispatchers_.end()) {
-          disp->OnPreEvent(0);
-          disp->OnEvent(0, 0);
-        }
-      } else if (process_io) {
-        processing_dispatchers_ = true;
-        for (Dispatcher* disp : dispatchers_) {
-          SOCKET s = disp->GetSocket();
-          if (s == INVALID_SOCKET)
-            continue;
-
-          WSANETWORKEVENTS wsaEvents;
-          int err = WSAEnumNetworkEvents(s, events[0], &wsaEvents);
-          if (err == 0) {
-            {
-              if ((wsaEvents.lNetworkEvents & FD_READ) &&
-                  wsaEvents.iErrorCode[FD_READ_BIT] != 0) {
-                RTC_LOG(WARNING)
-                    << "LwipSocketServer got FD_READ_BIT error "
-                    << wsaEvents.iErrorCode[FD_READ_BIT];
-              }
-              if ((wsaEvents.lNetworkEvents & FD_WRITE) &&
-                  wsaEvents.iErrorCode[FD_WRITE_BIT] != 0) {
-                RTC_LOG(WARNING)
-                    << "LwipSocketServer got FD_WRITE_BIT error "
-                    << wsaEvents.iErrorCode[FD_WRITE_BIT];
-              }
-              if ((wsaEvents.lNetworkEvents & FD_CONNECT) &&
-                  wsaEvents.iErrorCode[FD_CONNECT_BIT] != 0) {
-                RTC_LOG(WARNING)
-                    << "LwipSocketServer got FD_CONNECT_BIT error "
-                    << wsaEvents.iErrorCode[FD_CONNECT_BIT];
-              }
-              if ((wsaEvents.lNetworkEvents & FD_ACCEPT) &&
-                  wsaEvents.iErrorCode[FD_ACCEPT_BIT] != 0) {
-                RTC_LOG(WARNING)
-                    << "LwipSocketServer got FD_ACCEPT_BIT error "
-                    << wsaEvents.iErrorCode[FD_ACCEPT_BIT];
-              }
-              if ((wsaEvents.lNetworkEvents & FD_CLOSE) &&
-                  wsaEvents.iErrorCode[FD_CLOSE_BIT] != 0) {
-                RTC_LOG(WARNING)
-                    << "LwipSocketServer got FD_CLOSE_BIT error "
-                    << wsaEvents.iErrorCode[FD_CLOSE_BIT];
-              }
-            }
-            uint32_t ff = 0;
-            int errcode = 0;
-            if (wsaEvents.lNetworkEvents & FD_READ)
-              ff |= DE_READ;
-            if (wsaEvents.lNetworkEvents & FD_WRITE)
-              ff |= DE_WRITE;
-            if (wsaEvents.lNetworkEvents & FD_CONNECT) {
-              if (wsaEvents.iErrorCode[FD_CONNECT_BIT] == 0) {
-                ff |= DE_CONNECT;
-              } else {
-                ff |= DE_CLOSE;
-                errcode = wsaEvents.iErrorCode[FD_CONNECT_BIT];
-              }
-            }
-            if (wsaEvents.lNetworkEvents & FD_ACCEPT)
-              ff |= DE_ACCEPT;
-            if (wsaEvents.lNetworkEvents & FD_CLOSE) {
-              ff |= DE_CLOSE;
-              errcode = wsaEvents.iErrorCode[FD_CLOSE_BIT];
-            }
-            if (ff != 0) {
-              disp->OnPreEvent(ff);
-              disp->OnEvent(ff, errcode);
-            }
-          }
-        }
-
-        processing_dispatchers_ = false;
-        // Process deferred dispatchers that have been added/removed while the
-        // events were handled above.
-        AddRemovePendingDispatchers();
-      }
-
-      // Reset the network event until new activity occurs
-      WSAResetEvent(socket_ev_);
-    }
-
-    // Break?
-    if (!fWait_)
-      break;
-    cmsElapsed = TimeSince(msStart);
-    if ((cmsWait != kForever) && (cmsElapsed >= cmsWait)) {
-      break;
-    }
-  }
-
-  // Done
-  return true;
-}
-#endif  // WEBRTC_WIN
 
 }  // namespace rtc

@@ -22,11 +22,6 @@
 #ifndef ORCHID_LWIP_SOCKET_SERVER_H_
 #define ORCHID_LWIP_SOCKET_SERVER_H_
 
-#if defined(WEBRTC_POSIX) && defined(WEBRTC_LINUX)
-#include <sys/epoll.h>
-#define WEBRTC_USE_EPOLL 1
-#endif
-
 #include <memory>
 #include <set>
 #include <vector>
@@ -36,9 +31,7 @@
 #include "rtc_base/socket_server.h"
 #include "rtc_base/system/rtc_export.h"
 
-#if defined(WEBRTC_POSIX)
 typedef int SOCKET;
-#endif  // WEBRTC_POSIX
 
 using namespace rtc;
 
@@ -54,9 +47,6 @@ enum DispatcherEvent {
 };
 
 class Signaler;
-#if defined(WEBRTC_POSIX)
-class PosixSignalDispatcher;
-#endif
 
 class Dispatcher {
  public:
@@ -64,14 +54,8 @@ class Dispatcher {
   virtual uint32_t GetRequestedEvents() = 0;
   virtual void OnPreEvent(uint32_t ff) = 0;
   virtual void OnEvent(uint32_t ff, int err) = 0;
-#if defined(WEBRTC_WIN)
-  virtual WSAEVENT GetWSAEvent() = 0;
-  virtual SOCKET GetSocket() = 0;
-  virtual bool CheckSignalClose() = 0;
-#elif defined(WEBRTC_POSIX)
   virtual int GetDescriptor() = 0;
   virtual bool IsDescriptorClosed() = 0;
-#endif
 };
 
 // A socket server that provides the real sockets of the underlying OS.
@@ -95,44 +79,14 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   void Remove(Dispatcher* dispatcher);
   void Update(Dispatcher* dispatcher);
 
-#if defined(WEBRTC_POSIX)
-  // Sets the function to be executed in response to the specified POSIX signal.
-  // The function is executed from inside Wait() using the "self-pipe trick"--
-  // regardless of which thread receives the signal--and hence can safely
-  // manipulate user-level data structures.
-  // "handler" may be SIG_IGN, SIG_DFL, or a user-specified function, just like
-  // with signal(2).
-  // Only one LwipSocketServer should have user-level signal handlers.
-  // Dispatching signals on multiple LwipSocketServers is not reliable.
-  // The signal mask is not modified. It is the caller's responsibily to
-  // maintain it as desired.
-  virtual bool SetPosixSignalHandler(int signum, void (*handler)(int));
-
- protected:
-  Dispatcher* signal_dispatcher();
-#endif
-
  private:
   typedef std::set<Dispatcher*> DispatcherSet;
 
   void AddRemovePendingDispatchers();
 
-#if defined(WEBRTC_POSIX)
   bool WaitSelect(int cms, bool process_io);
   static bool InstallSignal(int signum, void (*handler)(int));
 
-  std::unique_ptr<PosixSignalDispatcher> signal_dispatcher_;
-#endif  // WEBRTC_POSIX
-#if defined(WEBRTC_USE_EPOLL)
-  void AddEpoll(Dispatcher* dispatcher);
-  void RemoveEpoll(Dispatcher* dispatcher);
-  void UpdateEpoll(Dispatcher* dispatcher);
-  bool WaitEpoll(int cms);
-  bool WaitPoll(int cms, Dispatcher* dispatcher);
-
-  int epoll_fd_ = INVALID_SOCKET;
-  std::vector<struct epoll_event> epoll_events_;
-#endif  // WEBRTC_USE_EPOLL
   DispatcherSet dispatchers_;
   DispatcherSet pending_add_dispatchers_;
   DispatcherSet pending_remove_dispatchers_;
@@ -140,9 +94,6 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   Signaler* signal_wakeup_;
   CriticalSection crit_;
   bool fWait_;
-#if defined(WEBRTC_WIN)
-  WSAEVENT socket_ev_;
-#endif
 };
 
 class LwipSocket : public AsyncSocket, public sigslot::has_slots<> {
@@ -241,43 +192,14 @@ class SocketDispatcher : public Dispatcher, public LwipSocket {
   virtual bool Create(int type);
   bool Create(int family, int type) override;
 
-#if defined(WEBRTC_WIN)
-  WSAEVENT GetWSAEvent() override;
-  SOCKET GetSocket() override;
-  bool CheckSignalClose() override;
-#elif defined(WEBRTC_POSIX)
   int GetDescriptor() override;
   bool IsDescriptorClosed() override;
-#endif
 
   uint32_t GetRequestedEvents() override;
   void OnPreEvent(uint32_t ff) override;
   void OnEvent(uint32_t ff, int err) override;
 
   int Close() override;
-
-#if defined(WEBRTC_USE_EPOLL)
- protected:
-  void StartBatchedEventUpdates();
-  void FinishBatchedEventUpdates();
-
-  void SetEnabledEvents(uint8_t events) override;
-  void EnableEvents(uint8_t events) override;
-  void DisableEvents(uint8_t events) override;
-#endif
-
- private:
-#if defined(WEBRTC_WIN)
-  static int next_id_;
-  int id_;
-  bool signal_close_;
-  int signal_err_;
-#endif  // WEBRTC_WIN
-#if defined(WEBRTC_USE_EPOLL)
-  void MaybeUpdateDispatcher(uint8_t old_events);
-
-  int saved_enabled_events_ = -1;
-#endif
 };
 
 }  // namespace rtc
