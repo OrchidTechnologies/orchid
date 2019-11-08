@@ -305,6 +305,7 @@ struct Client : public Tickable, public INet
 	bytes32 target_ = 0;
 
 	double  brecvd_; // bytes received for the current connection
+	double  active_ = 1.0;
 
 	// packet id tracking and rate limit multiplr for simple congestion control
 	uint32  last_recv_pac_id_ = 0;
@@ -333,8 +334,9 @@ struct Client : public Tickable, public INet
 	// user initiates connection to server (random selection picks server)
 	void on_connect(double ctime, Server* server, netaddr dst);
 
-	void set_active(double aratio) { // set an activity ratio for budgeting  (0.0 idle, 1.0 full use)
-		budget_->set_active(aratio);
+	void set_active(double active) { // set an activity ratio for budgeting  (0.0 idle, 1.0 full use)
+		budget_->set_active(active);
+		active_ = active;
 	}
     
     // callback when disconnected from route
@@ -344,10 +346,10 @@ struct Client : public Tickable, public INet
 	void sendpay(double ctime, uint256 hash_secret, bytes32 target);
 
     void step(double ctime) {
-		dlog(2,"Client::step(%f)\n", ctime);
+	dlog(2,"Client::step(%f)\n", ctime);
     	Tickable::step(ctime);
     	assert(target_ != 0);
-    	sendpay(ctime, hash_secret_, target_);
+    	if (active_ > 0.0) sendpay(ctime, hash_secret_, target_);
     }
 
     void send_packet(netaddr to, netaddr from, packet p) {
@@ -366,15 +368,15 @@ struct Client : public Tickable, public INet
     	p.id_   = last_sent_pac_id_;
     	net::send(to, from, p);
     }
-
-	virtual void on_packet(netaddr to, netaddr from, const packet& p)
-	{
+    
+    virtual void on_packet(netaddr to, netaddr from, const packet& p)
+    {
     	packs_recv_ += 1.0;
-		last_recv_pac_id_ = get_id(p);
-		auto psize = get_size(p);
-		assert(to == address_); brecvd_ += psize;
-		dlog(2,"Client::on_packet  (%x,%x,%e,%d) brecvd_(%f) \n", to,from,psize,get_id(p),brecvd_);
-	}
+	last_recv_pac_id_ = get_id(p);
+	auto psize = get_size(p);
+	assert(to == address_); brecvd_ += psize;
+	dlog(2,"Client::on_packet  (%x,%x,%e,%d) brecvd_(%f) \n", to,from,psize,get_id(p),brecvd_);
+    }
 
 
 	void print_info(int llevl, double ctime);
@@ -526,7 +528,7 @@ struct Server : public INet
 	}
 
 
-	void print_info(int llevl, double ctime, double stake);
+	void print_info(int llevl, double ctime, double stake, int nusers);
 
 
 };
