@@ -48,7 +48,9 @@ Threads::Threads() {
     signals_->SetName("Orchid WebRTC Signals", nullptr);
     signals_->Start();
 
-    network_ = std::unique_ptr<Thread>(new Thread(std::unique_ptr<SocketServer>(new LwipSocketServer)));
+    network_ = rtc::Thread::CreateWithSocketServer();
+    // LWIP: use the LwipSocketServer to capture WebRTC traffic
+    //network_ = std::unique_ptr<Thread>(new Thread(std::unique_ptr<SocketServer>(new LwipSocketServer)));
     network_->SetName("Orchid WebRTC Network", nullptr);
     network_->Start();
 
