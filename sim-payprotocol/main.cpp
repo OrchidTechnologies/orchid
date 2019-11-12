@@ -37,33 +37,10 @@ using namespace std::chrono;
 
 const int MaxLogLevel = 1;
 
-/*
 
-template <class T>
-map<string, T>& get_store()
-{
-	static std::map<std::string, T> store_;
-	return store_;
-}
 
-template <class T> T persist_load(const char* k, T x)
-{
-	std::string key(k);
-	auto& store = get_store<T>();
-	if (store.find(key) == store.end()) {
-		store[key] = x;
-	}
-	return store[key];
-}
 
-template <class T> void persist_store(const char* k, T x)
-{
-	std::string key(k);
-	auto& store = get_store<T>();
-	store[key] = x;
-}
-
-*/
+template <class X, class Y> inline pair<X,Y> pair_(const X& x, const Y& y) { return pair<X,Y>(x,y); }
 
 template <class T>
 T sum(const vector<T>& X)
@@ -87,16 +64,17 @@ template <class T>
 int find_range(const vector<T>& X, const T& y)
 {
 	int i = 0;
-	int e = X.size();
+	int e = X.size()-1;
 	//while (true) {
 	for (int j(0); j < 1024; j++) {
 		int m = (i + e)/2; //  + (rand()%2);
-		//printf("%i,%i,%i %f < %f,%f,%f \n", i,m,e, y, X[i],X[m],X[e]);
 		if (y < X[m]) {
+			//printf("%i,%i,%i %f <  %f  %f,%f \n", i,m,e, y,X[m], X[i],X[e]);
 			if (m == i) { return i;}
 			e = m;
 		}
 		else {
+			//printf("%i,%i,%i %f >= %f  %f,%f \n", i,m,e, y,X[m], X[i],X[e]);
 			if (m == i) { return e;}
 			i = m;
 		}
@@ -208,7 +186,8 @@ bytes32 keccak256(const string& x) 	{ return hash<string>{}(x); }
 uint256 keccak256(uint256 x) 		{ return simple::hash(x); }
 
 // 'signature' is just the signer address, for easy recovery
-bytes32 sign(bytes32 x, bytes32 y)	{ return y;}
+bytes32 sign(bytes32 x, bytes32 signer)	{ return signer;}
+bytes32 ecrecover(bytes32 sig)			{ return sig; }
 
 
 
@@ -278,10 +257,10 @@ struct RotLog
 };
 
 
-RotLog Log0 = RotLog("log0_", 32*1024);
-RotLog Log1 = RotLog("log1_", 32*1024);
-RotLog Log2 = RotLog("log2_", 32*1024);
-RotLog Log3 = RotLog("log3_", 32*1024);
+RotLog Log0 = RotLog("log0_", 512*1024);
+RotLog Log1 = RotLog("log1_", 512*1024);
+RotLog Log2 = RotLog("log2_", 512*1024);
+RotLog Log3 = RotLog("log3_", 512*1024);
 
 FILE* get_logfile(int i) {
 	if (i == 0) { return Log0.get(); }
@@ -303,22 +282,19 @@ void dlog(int level, const char* fmt, ...)
 				vfprintf(get_logfile(i), fmt, args);
 				va_end(args);
 	    	}
-	    	if (i == 0) {
-				va_list args;
-				va_start(args, fmt);
-	    		vprintf(fmt, args);
-				va_end(args);
-	    	}
 	    }
 	}
+	if (level <= 0) {
+		va_list args;
+		va_start(args, fmt);
+		vprintf(fmt, args);
+		va_end(args);
+	}
+
 }
 
 
 
-double 	get_size(const packet& p) 	{ return p.size_; }
-netaddr get_next(packet& p)		 	{ netaddr a = p.route_.back(); p.route_.pop_back(); return a; }
-bytes32 get_payer(const packet& p) 	{ return p.payer_; }
-uint32  get_id(const packet& p)		{ return p.id_; }
 
 
 struct Device { double throughput; double bqueued; };
@@ -329,55 +305,55 @@ struct Network : public Tickable
 	double QueLimitT = 10.0;
 	double ltime_    = 0.0;
 
-	map<netaddr, Device> odevs_;
-	map<netaddr, Device> idevs_;
-	map<netaddr, INet*>  objs_;
+	map<uint32, Device> odevs_;
+	map<uint32, Device> idevs_;
+	map<uint32, INet*>  objs_;
 
 	Network() {
 		dlog(0,"Network: %f %f \n", QueLimitT, ltime_);
 		period_  = 1.0; register_timer_func(this);
 	}
 
-	void send(netaddr to, netaddr from, const packet& p)
+	void send(netaddr to, netaddr from, const Packet& p)
 	{
 		double psize = get_size(p);
-		auto& odev   = odevs_[from];
-		auto& idev   = idevs_[to];
+		auto& odev   = odevs_[from.addr_];
+		auto& idev   = idevs_[to.addr_];
 
-		dlog(3, "Network::send      (%x,%x,%e,%i) odev(%e,%e) idev(%e,%e)\n", to,from,psize,get_id(p),odev.throughput,odev.bqueued,idev.throughput,idev.bqueued);
+		dlog(3, "Network::send      ([%x,%x],[%x,%x],%e,%i) odev(%e,%e) idev(%e,%e)\n", to.addr_,to.port_,from.addr_,from.port_,psize,get_id(p),odev.throughput,odev.bqueued,idev.throughput,idev.bqueued);
 
 		double olimit = QueLimitT * odev.throughput; // specify queue limit as relative to throughput
 		if (psize + odev.bqueued > olimit) {
-			if (objs_[from] != nullptr) objs_[from]->on_dropped_packet(to,from,p);
-			dlog(3, "Network::send(%x,%x,%e) psize(%e) + odev.bqueued(%e) > olimit(%e) \n", to,from,psize,psize,odev.bqueued,olimit);
+			if (objs_[from.addr_] != nullptr) objs_[from.addr_]->on_dropped_packet(to,from,p);
+			dlog(3, "Network::send(%x,%x,%e) psize(%e) + odev.bqueued(%e) > olimit(%e) \n", to.addr_,from.addr_,psize,psize,odev.bqueued,olimit);
 			return;
 		}
 		else if (psize + odev.bqueued > 0.2*olimit){
-			if (objs_[from] != nullptr) objs_[from]->on_queued_packet(to,from, p);
+			if (objs_[from.addr_] != nullptr) objs_[from.addr_]->on_queued_packet(to,from, p);
 		}
 		odev.bqueued += psize;
 
 		double ilimit = QueLimitT * idev.throughput; // specify queue limit as relative to throughput
 		if (psize + idev.bqueued > ilimit) {
-			if (objs_[to] != nullptr) objs_[to]->on_dropped_packet(to,from,p);
-			dlog(3, "Network::send(%x,%x,%e) psize(%e) + idev.bqueued(%e) > ilimit(%e) \n", to,from,psize,psize,idev.bqueued,ilimit);
+			if (objs_[to.addr_] != nullptr) objs_[to.addr_]->on_dropped_packet(to,from,p);
+			dlog(3, "Network::send(%x,%x,%e) psize(%e) + idev.bqueued(%e) > ilimit(%e) \n", to.addr_,from.addr_,psize,psize,idev.bqueued,ilimit);
 			return;
 		}
 		else if (psize + idev.bqueued > 0.2*ilimit){
-			if (objs_[to] != nullptr) objs_[to]->on_queued_packet(to,from, p);
+			if (objs_[to.addr_] != nullptr) objs_[to.addr_]->on_queued_packet(to,from, p);
 		}
 		idev.bqueued += psize;
 
-		if (objs_[to] != nullptr) objs_[to]->on_packet(to,from,p);
+		if (objs_[to.addr_] != nullptr) objs_[to.addr_]->on_packet(to,from,p);
 	}
 
 	void add(INet* net, double ibw, double obw)
 	{
 		dlog(2, "Network::add(%e,%e) \n", ibw, obw);
 		netaddr addr  = net->get_netaddr();
-		objs_[addr]   = net;
-		idevs_[addr]  = Device{ibw, 0.0};
-		odevs_[addr]  = Device{obw, 0.0};
+		objs_[addr.addr_]   = net;
+		idevs_[addr.addr_]  = Device{ibw, 0.0};
+		odevs_[addr.addr_]  = Device{obw, 0.0};
 	}
 
 	virtual void step(double ctime)
@@ -407,7 +383,7 @@ Network& get_network()
 
 namespace net
 {
-	void send(netaddr to, netaddr from, const packet& p) 	{ get_network().send(to,from,p); }
+	void send(netaddr to, netaddr from, const Packet& p) 	{ get_network().send(to,from,p); }
 	void add(INet* net, double ibw, double obw) 			{ get_network().add(net,ibw,obw); }
 }
 
@@ -568,12 +544,9 @@ struct User : public Tickable
 		double bwd 	= bwd_;
 		dlog(2,"User::step(%f) bwdf(%p) client(%p) bwd(%e) = %f * %e  \n", ctime, bwdemandf_, client_,  bwd, bwdm, bwd_mult_);
 		double ps   = bwd*elap;
-		auto server_addr = client_->server_->get_netaddr();
-		auto client_addr = client_->get_netaddr();
-		// trivial route construction
-		auto p = packet{ps,client_->account_, {client_addr, server_addr, targ_addr_, server_addr} };
-		//net::send(get_next(p), client_addr, p);
-		client_->send_packet(get_next(p), client_addr, p);
+
+		client_->send_data(ctime, targ_addr_, ps);
+
 		ltime_ = ctime;
 	}
 
@@ -585,17 +558,17 @@ struct Website : public INet
 {
 	netaddr addr_;
 
-	Website(): addr_(rand()) {}
+	Website(): addr_{uint32(rand()),8020} {}
 
 	virtual ~Website() {}
 
 	virtual netaddr get_netaddr() { return addr_; }
 
 	// simple reflector
-	virtual void on_packet(netaddr to, netaddr from, const packet& p_)
+	virtual void on_packet(netaddr to, netaddr from, const Packet& p)
 	{
-		dlog(2,"Website::on_packet (%x,%x,%e) \n", to,from,get_size(p_));
-		packet p(p_); net::send(get_next(p), addr_, p);
+		dlog(2,"Website::on_packet (%x,%x,%e) \n", to,from,get_size(p));
+		net::send(from, addr_, p);
 	}
 
 };
@@ -605,19 +578,24 @@ void Server::print_info(int llev, double ctime, double stake)
 {
 	double bal = get_OXT_balance(account_);
 
-	double ibw = get_network().idevs_[address_].throughput;
-	double obw = get_network().odevs_[address_].throughput;
+	double ibw = get_network().idevs_[address_.addr_].throughput;
+	double obw = get_network().odevs_[address_.addr_].throughput;
 
-	dlog(llev,"Server balance[%8x]=%9.4f  stake(%8.0f)  ratio(%4.4f)  bw(%e,%e) \n", account_, bal, stake, bal/stake, ibw,obw);
+	double iq = get_network().idevs_[address_.addr_].bqueued;
+	double oq = get_network().odevs_[address_.addr_].bqueued;
+
+	dlog(llev,"Server balance[%8x]=%9.4f  stake(%8.0f)  ratio(%4.4f)  ibw(%e,%f) obw(%e,%f) \n", account_, bal, stake, bal/stake, ibw,iq/ibw, obw,oq/obw);
 }
+
 
 
 
 struct Sim
 {
-	int NumClients 	= 200;
-	int NumWebsites = 20;
-	int NumServers 	= 10;
+	const int NumClients  = 200; // 200;
+	const int NumWebsites = 20; // 20;
+	const int NumServers  = 10; // 10;
+	const int NumHops     = 1;
 
 	vector<Client*> 	clients;
 	vector<User*> 		users;
@@ -631,14 +609,29 @@ struct Sim
 
 	void client_new_connect_1H(double ctime, Client* client, netaddr dst)
 	{
-		int si = find_range(server_stakes_ps, double(rand()) / double(RAND_MAX) );
+		double rv = double(rand()) / double(RAND_MAX) ;
+		int si = find_range(server_stakes_ps, rv);
 		Server* server = servers[si];
 		double stake = server_stakes[si];
 		// bw(%e,%e)\n", ibw,obw
-		double ibw = get_network().idevs_[server->address_].throughput;
-		double obw = get_network().odevs_[server->address_].throughput;
-		dlog(1, "client_new_connect_1H(%f,%p,%x) si(%i) stake(%f) bw(%e,%e) \n", ctime,client,dst, si, stake, ibw,obw);
-		client->on_connect(ctime,server, dst);
+
+		double ibw = get_network().idevs_[server->address_.addr_].throughput;
+		double obw = get_network().odevs_[server->address_.addr_].throughput;
+
+		double iq = get_network().idevs_[server->address_.addr_].bqueued;
+		double oq = get_network().odevs_[server->address_.addr_].bqueued;
+
+		double iqr = iq/(ibw + 0.0000001);
+		double oqr = oq/(obw + 0.0000001);
+
+		double ratelm 	= client->rate_limit_mult_;
+
+		dlog(1, "client_new_connect_1H(%f,%p,%x) ratelm(%f) rv(%f) si(%i) stake(%f) ibw(%e,%f) obw(%e,%f) \n", ctime,client,dst, ratelm, rv,si,stake, ibw,iqr, obw,oqr);
+
+		//client->on_connect(ctime,server, dst);
+
+		client->on_connect(ctime, {pair_(server->address_, server->account_)} );
+
 	}
 
 	void print_server_info(double ctime)
@@ -678,10 +671,12 @@ struct Sim
 
 	}
 
-	Sim(): gen(198182)
+	Sim(): gen(492782) {}
+
+	void init()
 	{
 	    srand(time(NULL));
-	    srand(381131);
+	    srand(3864320);
 
 
 		dlog(0,"Initializing.");
@@ -737,7 +732,7 @@ struct Sim
 
 			auto client_budget_time_dist = normal_distribution<>(1*Months, 0.0*Months); // 1*Months);
 
-			Client* client = new Client(account, client_budget_time_dist(gen));
+			Client* client = new Client(account, client_budget_time_dist(gen), NumHops);
 
 
 			clients.push_back(client);
@@ -804,7 +799,8 @@ struct Sim
 		timer timer_;
 		dlog(0,"running sim loop: \n");
 		//for (int i(0); i < 20000; i++)
-		for (ctime = 1.0; ctime <= 1*Weeks; ctime += 1.0)
+		double sim_length = 1*Weeks;
+		for (ctime = 1.0; ctime <= sim_length; ctime += 1.0)
 		{
 			//ctime += 1.0;
 			step_all(timer_, ctime);
@@ -822,6 +818,19 @@ struct Sim
 
 };
 
+Sim& get_sim()
+{
+	static Sim sim; return sim;
+}
+
+
+void Client::on_update_route()
+{
+	dlog(0,"Client::on_update_route(): \n");
+	uniform_int_distribution<uint64> udist;
+	routehash_ = udist(get_sim().gen); // fake hash
+}
+
 
 void User::reroll_check(double ctime, double elap)
 {
@@ -833,7 +842,7 @@ void User::reroll_check(double ctime, double elap)
 	auto keep_dist 		= bernoulli_distribution(keep_prob);
 	double keep 		= keep_dist(sim_->gen);
 
-	dlog(2,"reroll_check(%f,%f) keep(%f) keep_prob(%f) = pow(0.5, %f / %f) half_life = (10 / (lrl + epsi)))  lrl(%f) = -log(%f) \n", ctime,elap, keep,keep_prob, elap,half_life,lrl,rate_limit );
+	dlog(2,"reroll_check(%f,%f) keep(%f) keep_prob(%f) = pow(0.5, %f / %f) half_life = (%f / (lrl + epsi)))  lrl(%f) = -log(%f) \n", ctime,elap, keep,keep_prob, elap,half_life,half_life_,lrl,rate_limit );
 
 	if (keep < 0.5) {
 		sim_->client_new_connect_1H(ctime, client_, targ_addr_);
@@ -851,7 +860,7 @@ int main(int argc, char* argv[])
 {
 	printf("Start ppsim.\n");
 
-	Sim sim;
+	get_sim().init();
 
 
 	printf("\n");
