@@ -265,13 +265,15 @@ contract OrchidDirectory is IOrchidDirectory {
                 kill(pivot);
             else {
                 Primary storage last = child;
-                Stake storage current = stakes_[name(child)];
+                bytes32 location = name(last);
+                Stake storage current = stakes_[location];
                 for (;;) {
                     Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
                     if (nope(next))
                         break;
                     last = next;
-                    current = stakes_[name(next)];
+                    location = name(last);
+                    current = stakes_[location];
                 }
 
                 bytes32 direct = current.parent_;
@@ -281,7 +283,7 @@ contract OrchidDirectory is IOrchidDirectory {
                 if (direct == key) {
                     Primary storage other = stake.before_ > stake.after_ ? stake.right_ : stake.left_;
                     if (!nope(other))
-                        stakes_[name(other)].parent_ = name(last);
+                        stakes_[name(other)].parent_ = location;
 
                     if (name(stake.left_) == key) {
                         current.right_ = stake.right_;
@@ -292,9 +294,9 @@ contract OrchidDirectory is IOrchidDirectory {
                     }
                 } else {
                     if (!nope(stake.left_))
-                        stakes_[name(stake.left_)].parent_ = name(last);
+                        stakes_[name(stake.left_)].parent_ = location;
                     if (!nope(stake.right_))
-                        stakes_[name(stake.right_)].parent_ = name(last);
+                        stakes_[name(stake.right_)].parent_ = location;
 
                     current.right_ = stake.right_;
                     current.after_ = stake.after_;
