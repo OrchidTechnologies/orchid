@@ -34,6 +34,7 @@
 #include "memory.hpp"
 #include "socket.hpp"
 #include "trace.hpp"
+#include "lwipsocketserver.hpp"
 
 namespace orc {
 
@@ -48,6 +49,8 @@ Threads::Threads() {
     signals_->Start();
 
     network_ = rtc::Thread::CreateWithSocketServer();
+    // LWIP: use the LwipSocketServer to capture WebRTC traffic
+    //network_ = std::unique_ptr<Thread>(new Thread(std::unique_ptr<SocketServer>(new LwipSocketServer)));
     network_->SetName("Orchid WebRTC Network", nullptr);
     network_->Start();
 

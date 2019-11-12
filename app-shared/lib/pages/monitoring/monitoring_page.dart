@@ -1,9 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
-import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 
 import '../app_colors.dart';
@@ -16,11 +16,13 @@ class MonitoringPage extends StatefulWidget {
 }
 
 class _MonitoringPageState extends State<MonitoringPage> {
+  List<StreamSubscription> _rxSubscriptions = List();
+
   @override
   void initState() {
     super.initState();
     // Show the initial walkthrough screens if needed.
-    AppOnboarding().showPageIfNeeded(context);
+    //AppOnboarding().showPageIfNeeded(context);
     _initListeners();
   }
 
@@ -31,13 +33,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
     //_monitorVPNStatus();
 
     // Monitor connection status
-    OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
+    _rxSubscriptions
+        .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
       OrchidAPI().logger().write("Connection status changed: $state");
       // Update the UI
       setState(() {});
-    });
+    }));
   }
 
+  /*
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,18 +59,27 @@ class _MonitoringPageState extends State<MonitoringPage> {
       // Workaround for: https://github.com/flutter/flutter/issues/23926
       resizeToAvoidBottomInset: false,
     );
+  }*/
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
+      child: Container(child: TrafficView()),
+    );
   }
 
   Switch _buildSwitch() {
     var currentValue = OrchidAPI().connectionStatus.value ??
         OrchidConnectionState.NotConnected;
     bool switchOn = false;
-    switch(currentValue) {
+    switch (currentValue) {
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
         break;
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Connected:
+      case OrchidConnectionState.Disconnecting:
         switchOn = true;
     }
     return Switch(
@@ -84,17 +97,20 @@ class _MonitoringPageState extends State<MonitoringPage> {
         });
   }
 
-  void _switchChanged(OrchidConnectionState currentValue, bool newValue) {
-    switch (currentValue) {
+  void _switchChanged(OrchidConnectionState currentConnectionState, bool desiredEnabled) {
+    switch (currentConnectionState) {
+      case OrchidConnectionState.Disconnecting:
+        // TODO: We should reject the switch change in this case.
+        break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        if (newValue == true) {
+        if (desiredEnabled == true) {
           _checkPermissionAndEnableConnection();
         }
         break;
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Connected:
-        if (newValue == false) {
+        if (desiredEnabled == false) {
           _disableConnection();
         }
         break;
@@ -103,7 +119,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   void _checkPermissionAndEnableConnection() {
     // Get the most recent status, blocking if needed.
-    OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
+    _rxSubscriptions
+        .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
       debugPrint("vpn: current perm: $installed");
       if (installed) {
         debugPrint("vpn: already installed");
@@ -123,7 +140,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
           debugPrint("vpn: user skipped");
         }
       }
-    });
+    }));
   }
 
   void _disableConnection() {
@@ -132,12 +149,13 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   // Continously monitor VPN permission status and show the permission page as needed.
   void _monitorVPNStatus() {
-    OrchidAPI().vpnPermissionStatus.distinct().listen((bool installed) {
+    _rxSubscriptions.add(
+        OrchidAPI().vpnPermissionStatus.distinct().listen((bool installed) {
       OrchidAPI().logger().write("VPN Perm status changed: $installed");
       if (!installed) {
         _showVPNPermissionPage();
       }
-    });
+    }));
   }
 
   void _showVPNPermissionPage(
@@ -147,5 +165,13 @@ class _MonitoringPageState extends State<MonitoringPage> {
       onComplete: onComplete,
     ));
     Navigator.push(context, route);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _rxSubscriptions.forEach((sub) {
+      sub.cancel();
+    });
   }
 }

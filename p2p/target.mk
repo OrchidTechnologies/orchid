@@ -59,6 +59,8 @@ source += $(wildcard $(pwd)/lwip/src/netif/*.c)
 ifeq ($(target),win)
 #source += $(pwd)/lwip/contrib/ports/win32/sys_arch.c
 source += $(pwd)/lwip/contrib/ports/win32/sio.c
+else
+source += $(pwd)/lwip/contrib/ports/unix/port/sys_arch.c
 endif
 
 cflags += -I$(pwd)/lwip/src/include

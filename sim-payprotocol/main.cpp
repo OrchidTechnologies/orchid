@@ -277,10 +277,10 @@ void dlog(int level, const char* fmt, ...)
 	for (int i = 0; i <= MaxLogLevel; i++) {
 	    if (i >= level) {
 	    	{
-				va_list args;
-				va_start(args, fmt);
-				vfprintf(get_logfile(i), fmt, args);
-				va_end(args);
+			va_list args;
+			va_start(args, fmt);
+			vfprintf(get_logfile(i), fmt, args);
+			va_end(args);
 	    	}
 	    }
 	}
@@ -523,28 +523,28 @@ struct User : public Tickable
 
 	User(Sim* sim, Client* client, INoise_f* bwdf, double bm, netaddr ta): sim_(sim), rseed_(rand()), client_(client), bwdemandf_(bwdf), bwd_mult_(bm), targ_addr_(ta)
 	{
-		ltime_ = 0.0;
-		period_  = 1.0; register_timer_func(this);
+		ltime_      = 0.0;
+		period_     = 1.0; register_timer_func(this);
 		double bwdm = bwdemandf_->exec(CurrentTime());
-		bwd_		= bwdm * bwd_mult_;
+		bwd_        = bwdm * bwd_mult_;
 	}
 
 	void reroll_check(double ctime, double elap);
 
 	void step(double ctime)
 	{
-    	Tickable::step(ctime);
+    		Tickable::step(ctime);
 
 		double elap = ctime - ltime_;
-    	reroll_check(ctime, elap);
+    		reroll_check(ctime, elap);
 
 		// send a packet to our target of size (elapsed_time * bandwidth_demand)
 		double bwdm = bwdemandf_->exec(ctime);
 		bwd_  		= bwdm * bwd_mult_;
 		double bwd 	= bwd_;
 		dlog(2,"User::step(%f) bwdf(%p) client(%p) bwd(%e) = %f * %e  \n", ctime, bwdemandf_, client_,  bwd, bwdm, bwd_mult_);
-		double ps   = bwd*elap;
 
+		double ps   = bwd*elap;
 		client_->send_data(ctime, targ_addr_, ps);
 
 		ltime_ = ctime;
@@ -574,7 +574,7 @@ struct Website : public INet
 };
 
 
-void Server::print_info(int llev, double ctime, double stake)
+void Server::print_info(int llev, double ctime, double stake, int nusers)
 {
 	double bal = get_OXT_balance(account_);
 
@@ -584,7 +584,7 @@ void Server::print_info(int llev, double ctime, double stake)
 	double iq = get_network().idevs_[address_.addr_].bqueued;
 	double oq = get_network().odevs_[address_.addr_].bqueued;
 
-	dlog(llev,"Server balance[%8x]=%9.4f  stake(%8.0f)  ratio(%4.4f)  ibw(%e,%f) obw(%e,%f) \n", account_, bal, stake, bal/stake, ibw,iq/ibw, obw,oq/obw);
+	dlog(llev,"Server balance[%8x]=%9.4f  stake(%8.0f)  ratio(%4.4f)  ibw(%e,%f) obw(%e,%f) nusers(%i) \n", account_, bal, stake, bal/stake, ibw,iq/ibw, obw,oq/obw, nusers);
 }
 
 
@@ -635,16 +635,25 @@ struct Sim
 	}
 
 	void print_server_info(double ctime)
-	{
+	{	
 		int cstep = int(ctime);
 		int llev  = -1;
 
-		if 		(cstep % 1000 == 0) llev = 0;
+		if      (cstep % 1000 == 0) llev = 0;
 		else if (cstep % 100  == 0) llev = 1;
+
+		map<uint32,int> user_cnts;
+
+		for (auto client : clients) {
+			for (const auto& node : client->route_) {
+				user_cnts[node.address_.addr_]++;
+			}
+		}
+
 
 		if (llev >= 0) {
 			for (auto server : servers) {
-				server->print_info(llev, ctime, server_stake_map[server]);
+				server->print_info(llev, ctime, server_stake_map[server], user_cnts[server->address_.addr_]);
 			}
 		}
 	}
@@ -654,7 +663,7 @@ struct Sim
 		int cstep = int(ctime);
 		int llev  = -1;
 
-		if 		(cstep % 1000 == 0) llev = 0;
+		if 	(cstep % 1000 == 0) llev = 0;
 		else if (cstep % 100  == 0) llev = 1;
 
 		double nsent = 0;
@@ -699,7 +708,7 @@ struct Sim
 		{ FBM_f 	mf{uint32(rand()), -1.6, 0.6,  1.0 / Hours, 10}; test_noise_f(mf); }
 
 		dlog(0,".\n");
-		vector<INoise_f*> noisefuncs_;
+		vector<expFBM_f*> noisefuncs_;
 		{ auto mf = new expFBM_f{uint32(rand()), -1.6, 0.6,  1.0 / Days, 10, 1.0, 0.0, -0.05}; test_noise_f(*mf); noisefuncs_.push_back(mf); }
 		{ auto mf = new expFBM_f{uint32(rand()), -1.0, 0.7,  1.0 / Days, 10, 2.0, 0.0, -0.30}; test_noise_f(*mf); noisefuncs_.push_back(mf); }
 		{ auto mf = new expFBM_f{uint32(rand()), -1.0, 0.7,  1.0 / Days, 10, 3.0, 0.0, -0.70}; test_noise_f(*mf); noisefuncs_.push_back(mf); }
@@ -725,25 +734,26 @@ struct Sim
 
 			bytes32 account = rand();
 
-			auto client_bal_dist = lognormal_distribution<>(4, 0); // 2);
+			auto client_bal_dist = lognormal_distribution<>(4, 1); // 2);
 			Lot::balance(account) = Lot::pot{client_bal_dist(gen), 4.0};
-	        double curbal   = Lot::balance(account).amount_;
-	        dlog(2,"funded client balance(%f) \n", curbal);
+	        	double curbal   = Lot::balance(account).amount_;
+	        	dlog(2,"funded client balance(%f) \n", curbal);
 
-			auto client_budget_time_dist = normal_distribution<>(1*Months, 0.0*Months); // 1*Months);
+			auto client_budget_time_dist = normal_distribution<>(6*Months, 2*Months); // 1*Months);
 
 			Client* client = new Client(account, client_budget_time_dist(gen), NumHops);
 
 
 			clients.push_back(client);
-			auto ibw_dist = lognormal_distribution<>(  14, 0); // 4);
-			auto obw_dist = lognormal_distribution<>(-0.0, 0); // 1.5);
+			auto ibw_dist = lognormal_distribution<>(  14, 2); // 4);
+			auto obw_dist = lognormal_distribution<>(-0.0, 1); // 1.5);
 			double ibw = ibw_dist(gen);
 			double obw = ibw * obw_dist(gen);
 			net::add(client, ibw, obw);
 
-			auto obwu_dist = lognormal_distribution<>(  14, 0); // 4);
-			INoise_f* noisef = (noisefuncs_[ rand() % noisefuncs_.size() ]);
+			auto obwu_dist = lognormal_distribution<>(  16, 3); // 4);
+			expFBM_f* noisef_ = (noisefuncs_[ rand() % noisefuncs_.size() ]);
+			expFBM_f* noisef  = new expFBM_f(*noisef_); noisef->rseed_ = rand();
 			test_noise_f(*noisef);
 
 			Website* ws = websites[ rand() % websites.size() ];
@@ -826,7 +836,7 @@ Sim& get_sim()
 
 void Client::on_update_route()
 {
-	dlog(0,"Client::on_update_route(): \n");
+	dlog(1,"Client::on_update_route(): \n");
 	uniform_int_distribution<uint64> udist;
 	routehash_ = udist(get_sim().gen); // fake hash
 }

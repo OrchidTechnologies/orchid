@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/src/services/clipboard.dart';
@@ -16,9 +15,9 @@ import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
 
+import '../app_colors.dart';
 import '../app_text.dart';
 
 //
@@ -69,11 +68,13 @@ class _BalancePageState extends State<BalancePage> {
 
   @override
   Widget build(BuildContext context) {
-    return TitledPage(
-      title: "Balance",
-      actions: <Widget>[_buildAddFundsButton()],
-      child: buildPage(context),
-      lightTheme: true,
+    return Container(
+        child: buildPage(context),
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.grey_7, AppColors.grey_6])),
     );
   }
 
@@ -85,6 +86,7 @@ class _BalancePageState extends State<BalancePage> {
           pady(16),
           _buildCardView(oxtValue: _pot?.balance),
           pady(16),
+          /*
           BudgetSummaryTile(
               image: "assets/images/creditCard.png",
               title: "MONTHLY\nBUDGET",
@@ -94,19 +96,23 @@ class _BalancePageState extends State<BalancePage> {
                 _showSubscriptionPage();
               }),
           _divider(),
+          */
           BudgetSummaryTile(
             image: "assets/images/pig.png",
             title: "MEMBERSHIP\nDEPOSIT",
-            oxtValue: _budget?.deposit,
+            //oxtValue: _budget?.deposit,
+            oxtValue: _pot?.deposit,
             pricing: _pricing,
           ),
           _divider(),
+          /*
           BudgetSummaryTile(
             image: "assets/images/accountBalanceWallet.png",
             title: "REMAINING\nBALANCE",
             oxtValue: _pot?.balance,
             pricing: _pricing,
           ),
+           */
           _divider(),
           pady(30),
           Expanded(child: _buildTransactionsList()),
@@ -287,7 +293,7 @@ class _BalancePageState extends State<BalancePage> {
       child: Row(children: [
         Container(alignment: alignment, width: 65, child: col1),
         padx(23),
-        Container(alignment: alignment, width: 70, child: col2),
+        Container(alignment: alignment, width: 75, child: col2),
         padx(23),
         Expanded(
           child: Container(alignment: alignment, width: 70, child: col3),
@@ -348,6 +354,7 @@ class _BalancePageState extends State<BalancePage> {
     return Container(height: 0.5, color: Color(0xffcac9ce));
   }
 
+  // Optionally place this into the header as an action.
   Widget _buildAddFundsButton() {
     return FlatButton(
       color: Colors.transparent,

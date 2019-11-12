@@ -37,7 +37,7 @@ class RealOrchidAPI implements OrchidAPI {
               connectionStatus.add(OrchidConnectionState.Connected);
               break;
             case 'Disconnecting':
-              connectionStatus.add(OrchidConnectionState.NotConnected);
+              connectionStatus.add(OrchidConnectionState.Disconnecting);
               break;
             case 'Reasserting':
               connectionStatus.add(OrchidConnectionState.Connecting);

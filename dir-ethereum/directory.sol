@@ -24,11 +24,7 @@ pragma solidity 0.5.12;
 
 import "../openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
-interface IOrchidDirectory {
-    function have() external view returns (uint128 amount);
-}
-
-contract OrchidDirectory is IOrchidDirectory {
+contract OrchidDirectory {
 
     IERC20 internal token_;
 
@@ -85,6 +81,7 @@ contract OrchidDirectory is IOrchidDirectory {
         uint128 delay_;
 
         address stakee_;
+        bytes data_;
 
         bytes32 parent_;
         Primary left_;
@@ -103,7 +100,7 @@ contract OrchidDirectory is IOrchidDirectory {
         return stake.before_ + stake.after_ + stake.amount_;
     }
 
-    function scan(uint128 percent) public view returns (bytes32, address, uint128) {
+    function scan(uint128 percent) public view returns (bytes32, address, uint128, bytes memory) {
         require(!nope(root_));
 
         uint128 point = uint128(have() * uint256(percent) / 2**128);
@@ -121,7 +118,7 @@ contract OrchidDirectory is IOrchidDirectory {
             point -= stake.before_;
 
             if (point < stake.amount_)
-                return (key, stake.stakee_, stake.delay_);
+                return (key, stake.stakee_, stake.delay_, stake.data_);
 
             point -= stake.amount_;
 
@@ -213,6 +210,16 @@ contract OrchidDirectory is IOrchidDirectory {
     }
 
 
+    function move(address stakee, bytes memory data) public {
+        address staker = msg.sender;
+        bytes32 key = name(staker, stakee);
+        Stake storage stake = stakes_[key];
+        require(stake.amount_ != 0);
+
+        stake.data_ = data;
+    }
+
+
     struct Pending {
         uint256 expire_;
         address stakee_;
@@ -235,6 +242,23 @@ contract OrchidDirectory is IOrchidDirectory {
         more(pending.stakee_, pending.amount_, delay);
     }
 
+
+    function fixr(Stake storage stake, bytes32 location, Stake storage current) private {
+        if (nope(stake.right_))
+            return;
+        stakes_[name(stake.right_)].parent_ = location;
+        current.right_ = stake.right_;
+        current.after_ = stake.after_;
+    }
+
+    function fixl(Stake storage stake, bytes32 location, Stake storage current) private {
+        if (nope(stake.left_))
+            return;
+        stakes_[name(stake.left_)].parent_ = location;
+        current.left_ = stake.left_;
+        current.before_ = stake.before_;
+    }
+
     function pull(address stakee, uint128 amount, uint256 index) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
@@ -254,47 +278,33 @@ contract OrchidDirectory is IOrchidDirectory {
                 kill(pivot);
             else {
                 Primary storage last = child;
-                Stake storage current = stakes_[name(child)];
+                bytes32 location = name(last);
+                Stake storage current = stakes_[location];
                 for (;;) {
                     Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
                     if (nope(next))
                         break;
                     last = next;
-                    current = stakes_[name(next)];
+                    location = name(last);
+                    current = stakes_[location];
                 }
 
                 bytes32 direct = current.parent_;
                 copy(pivot, last);
                 current.parent_ = stake.parent_;
 
-                if (direct == key) {
-                    Primary storage other = stake.before_ > stake.after_ ? stake.right_ : stake.left_;
-                    if (!nope(other))
-                        stakes_[name(other)].parent_ = name(last);
-
-                    if (name(stake.left_) == key) {
-                        current.right_ = stake.right_;
-                        current.after_ = stake.after_;
-                    } else {
-                        current.left_ = stake.left_;
-                        current.before_ = stake.before_;
-                    }
-                } else {
-                    if (!nope(stake.left_))
-                        stakes_[name(stake.left_)].parent_ = name(last);
-                    if (!nope(stake.right_))
-                        stakes_[name(stake.right_)].parent_ = name(last);
-
-                    current.right_ = stake.right_;
-                    current.after_ = stake.after_;
-
-                    current.left_ = stake.left_;
-                    current.before_ = stake.before_;
+                if (direct != key) {
+                    fixr(stake, location, current);
+                    fixl(stake, location, current);
 
                     stake.parent_ = direct;
                     copy(last, staker, stakee);
                     step(key, stake, -current.amount_, current.parent_);
                     kill(last);
+                } else if (name(stake.left_) == location) {
+                    fixr(stake, location, current);
+                } else {
+                    fixl(stake, location, current);
                 }
             }
 

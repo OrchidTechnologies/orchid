@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/app_colors.dart';
@@ -23,40 +25,37 @@ class ConnectButton extends StatefulWidget {
 
 class ConnectButtonState extends State<ConnectButton>
     with TickerProviderStateMixin {
-  final Map<OrchidConnectionState, String> images = {
-    OrchidConnectionState.NotConnected: 'connect_button_enabled.png',
-    OrchidConnectionState.Connecting: 'connect_button_enabled.png',
-    OrchidConnectionState.Connected: 'connect_button_connected.png',
-  };
-
-  OrchidConnectionState connectionState = OrchidConnectionState.NotConnected;
+  OrchidConnectionState connectionState = OrchidConnectionState.Invalid;
   bool enabled = true;
 
   AnimationController _pulseAnimationController;
   AnimationController _teeterAnimationController;
 
+  List<StreamSubscription> _rxSubscriptions = List();
+
   @override
   void initState() {
     super.initState();
 
-    widget.connectionStatus.listen((OrchidConnectionState state) {
+    _rxSubscriptions
+        .add(widget.connectionStatus.listen((OrchidConnectionState state) {
       setState(() {
         this.connectionState = state;
       });
-    });
+    }));
 
-    widget.enabledStatus.listen((bool state) {
+    _rxSubscriptions.add(widget.enabledStatus.listen((bool state) {
       setState(() {
         this.enabled = state;
       });
-    });
+    }));
 
     _pulseAnimationController = AnimationController(
         vsync: this, duration: Duration(milliseconds: 4000));
     _pulseAnimationController.repeat();
 
-    _teeterAnimationController = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 600));
+    _teeterAnimationController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 600));
     _teeterAnimationController.repeat(reverse: true);
   }
 
@@ -68,6 +67,7 @@ class ConnectButtonState extends State<ConnectButton>
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Disconnecting:
         return false;
       case OrchidConnectionState.Connected:
         return true;
@@ -76,8 +76,20 @@ class ConnectButtonState extends State<ConnectButton>
 
   @override
   Widget build(BuildContext context) {
-    var imageButtonName = 'assets/images/' +
-        (enabled ? images[connectionState] : 'connect_button_disabled');
+    String image;
+    switch (connectionState) {
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Disconnecting:
+        image = 'connect_button_enabled.png';
+        break;
+      case OrchidConnectionState.Connected:
+        image = 'connect_button_connected.png';
+    }
+
+    var imageButtonName =
+        'assets/images/' + (enabled ? image : 'connect_button_disabled');
     var buttonImage = Image.asset(imageButtonName);
     var rerouteImage = Image.asset('assets/images/reroute_button.png');
     double buttonWidth = 146;

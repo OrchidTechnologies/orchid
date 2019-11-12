@@ -426,6 +426,7 @@ struct Client : public Tickable, public INet
 
 
 	double  brecvd_; // bytes received for the current connection
+	double  active_ = 1.0;
 
 	// packet id tracking and rate limit multiplr for simple congestion control
 	uint32  last_recv_pac_id_ = 0;
@@ -459,8 +460,9 @@ struct Client : public Tickable, public INet
 	double get_trust_bound();  	// max OXT amount client is willing to lend to server (can initially be a large constant)
 
 
-	void set_active(double aratio) { // set an activity ratio for budgeting  (0.0 idle, 1.0 full use)
-		for (auto n : route_) n.budget_->set_active(aratio);
+	void set_active(double active) { // set an activity ratio for budgeting  (0.0 idle, 1.0 full use)
+		for (auto n : route_) n.budget_->set_active(active);
+		active_ = active;
 	}
     
     // callback when disconnected from route
@@ -491,10 +493,9 @@ struct Client : public Tickable, public INet
 
 
     void step(double ctime) {
-		dlog(2,"Client::step(%f)\n", ctime);
+	    dlog(2,"Client::step(%f)\n", ctime);
     	Tickable::step(ctime);
-    	send_payments(ctime);
-    	//sendpay(ctime, hash_secret_, target_);
+		if (active_ > 0.0) send_payments(ctime);
     }
 
     void send_packet(netaddr to, netaddr from, Packet& p) {
@@ -881,9 +882,6 @@ struct Server : public INet
 	}
 
 
-	void print_info(int llevl, double ctime, double stake);
-
-
 
 	virtual void on_recv(netaddr to, netaddr from, const Packet& inpack, Connect_Msg* msg)
 	{
@@ -907,6 +905,7 @@ struct Server : public INet
 		net::send(from, to, opack);
 	}
 
+	void print_info(int llevl, double ctime, double stake, int nusers);
 
 };
 

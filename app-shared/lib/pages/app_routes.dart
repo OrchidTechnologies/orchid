@@ -41,11 +41,10 @@ class AppRoutes {
   static const String onboarding_vpn_credentials = "/onboarding/vpn_credentials";
   static const String balance = "/budget/balance";
   static const String budget_overview = "/budget/overview";
-  // TODO: Why does this fail if I try to make the initial route "/monitoring" instead of "/"?
-  static const String monitoring = "/";
+  static const String home = "/";
 
   static final Map<String, WidgetBuilder> routes = {
-    monitoring: (context) => MonitoringPage(),
+    //home: (context) => MonitoringPage(), // Don't define a home route when using tab layout.
     connect: (context) => QuickConnectPage(),
     settings: (context) => SettingsPage(),
     settings_wallet: (context) => SettingsLinkWalletPage(),
