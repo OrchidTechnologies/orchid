@@ -246,6 +246,21 @@ contract OrchidDirectory is IOrchidDirectory {
         more(pending.stakee_, pending.amount_, delay);
     }
 
+
+    function fixr(Stake storage stake, bytes32 location, Stake storage current) private {
+        if (!nope(stake.right_))
+            stakes_[name(stake.right_)].parent_ = location;
+        current.right_ = stake.right_;
+        current.after_ = stake.after_;
+    }
+
+    function fixl(Stake storage stake, bytes32 location, Stake storage current) private {
+        if (!nope(stake.left_))
+            stakes_[name(stake.left_)].parent_ = location;
+        current.left_ = stake.left_;
+        current.before_ = stake.before_;
+    }
+
     function pull(address stakee, uint128 amount, uint256 index) public {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
@@ -281,30 +296,17 @@ contract OrchidDirectory is IOrchidDirectory {
                 current.parent_ = stake.parent_;
 
                 if (direct != key) {
-                    if (!nope(stake.right_))
-                        stakes_[name(stake.right_)].parent_ = location;
-                    current.right_ = stake.right_;
-                    current.after_ = stake.after_;
-
-                    if (!nope(stake.left_))
-                        stakes_[name(stake.left_)].parent_ = location;
-                    current.left_ = stake.left_;
-                    current.before_ = stake.before_;
+                    fixr(stake, location, current);
+                    fixl(stake, location, current);
 
                     stake.parent_ = direct;
                     copy(last, staker, stakee);
                     step(key, stake, -current.amount_, current.parent_);
                     kill(last);
                 } else if (name(stake.left_) == location) {
-                    if (!nope(stake.right_))
-                        stakes_[name(stake.right_)].parent_ = location;
-                    current.right_ = stake.right_;
-                    current.after_ = stake.after_;
+                    fixr(stake, location, current);
                 } else {
-                    if (!nope(stake.left_))
-                        stakes_[name(stake.left_)].parent_ = location;
-                    current.left_ = stake.left_;
-                    current.before_ = stake.before_;
+                    fixl(stake, location, current);
                 }
             }
 
