@@ -334,21 +334,43 @@ class Middle :
     }
 
 
+    bool tun_builder_new() override {
+        return true; }
+    bool tun_builder_set_session_name(const std::string &name) override {
+        return true; }
+    bool tun_builder_set_mtu(int mtu) override {
+        return true; }
+
+    bool tun_builder_set_remote_address(const std::string &address, bool ipv6) override {
+        return true; }
+
     bool tun_builder_add_address(const std::string &address, int prefix, const std::string &gateway, bool ipv6, bool net30) override {
         orc_insist(!ipv6);
         ip4_ = openvpn::IPv4::Addr::from_string(address);
         return true;
     }
 
-    bool tun_builder_add_dns_server(const std::string &address, bool ipv6) override {
-        return true; }
     bool tun_builder_reroute_gw(bool ipv4, bool ipv6, unsigned int flags) override {
         return true; }
-    bool tun_builder_set_mtu(int mtu) override {
+    bool tun_builder_add_route(const std::string &address, int prefix, int metric, bool ipv6) override {
         return true; }
-    bool tun_builder_set_remote_address(const std::string &address, bool ipv6) override {
+    bool tun_builder_exclude_route(const std::string &address, int prefix, int metric, bool ipv6) override {
         return true; }
-    bool tun_builder_set_session_name(const std::string &name) override {
+
+    bool tun_builder_add_dns_server(const std::string &address, bool ipv6) override {
+        return true; }
+    bool tun_builder_add_search_domain(const std::string &domain) override {
+        return true; }
+    bool tun_builder_add_wins_server(const std::string &wins) override {
+        return true; }
+
+    bool tun_builder_set_proxy_auto_config_url(const std::string &url) override {
+        return true; }
+    bool tun_builder_set_proxy_http(const std::string &host, int port) override {
+        return true; }
+    bool tun_builder_set_proxy_https(const std::string &host, int port) override {
+        return true; }
+    bool tun_builder_add_proxy_bypass(const std::string &proxy) override {
         return true; }
 
 
