@@ -82,13 +82,13 @@
 #define IP_MTU 14  // Until this is integrated from linux/in.h to netinet/in.h
 typedef void* SockOptArg;
 
-int64_t GetSocketRecvTimestamp(int socket) {
-  return -1;
-}
-
 using namespace rtc;
 
 namespace orc {
+
+int64_t GetSocketRecvTimestamp(int socket) {
+  return -1;
+}
 
 LwipSocket::LwipSocket(LwipSocketServer* ss, SOCKET s)
     : ss_(ss),
