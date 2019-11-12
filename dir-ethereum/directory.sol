@@ -280,19 +280,7 @@ contract OrchidDirectory is IOrchidDirectory {
                 copy(pivot, last);
                 current.parent_ = stake.parent_;
 
-                if (direct == key) {
-                    if (name(stake.left_) == location) {
-                        if (!nope(stake.right_))
-                            stakes_[name(stake.right_)].parent_ = location;
-                        current.right_ = stake.right_;
-                        current.after_ = stake.after_;
-                    } else {
-                        if (!nope(stake.left_))
-                            stakes_[name(stake.left_)].parent_ = location;
-                        current.left_ = stake.left_;
-                        current.before_ = stake.before_;
-                    }
-                } else {
+                if (direct != key) {
                     if (!nope(stake.left_))
                         stakes_[name(stake.left_)].parent_ = location;
                     if (!nope(stake.right_))
@@ -308,6 +296,16 @@ contract OrchidDirectory is IOrchidDirectory {
                     copy(last, staker, stakee);
                     step(key, stake, -current.amount_, current.parent_);
                     kill(last);
+                } else if (name(stake.left_) == location) {
+                    if (!nope(stake.right_))
+                        stakes_[name(stake.right_)].parent_ = location;
+                    current.right_ = stake.right_;
+                    current.after_ = stake.after_;
+                } else {
+                    if (!nope(stake.left_))
+                        stakes_[name(stake.left_)].parent_ = location;
+                    current.left_ = stake.left_;
+                    current.before_ = stake.before_;
                 }
             }
 
