@@ -5,6 +5,8 @@ import {LockStatus} from "./LockStatus";
 import {errorClass} from "../util/util";
 import './Balances.css'
 import {Container} from "react-bootstrap";
+import {Subscription} from "rxjs";
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class Balances extends Component {
@@ -17,28 +19,38 @@ export class Balances extends Component {
     potBalance: "",
     potEscrow: "",
   };
+  subscriptions: Subscription [] = [];
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
 
-    api.wallet_wait.subscribe(wallet => {
-      console.log("Funding from account: ", wallet.address);
-      console.log("Balance: ", wallet.ethBalance);
-      this.setState({
-        walletAddress: wallet.address,
-        ethBalance: weiToOxtString(wallet.ethBalance, 4),
-        ethBalanceError: wallet.ethBalance <= BigInt(0),
-        oxtBalance: weiToOxtString(wallet.oxtBalance, 4),
-        oxtBalanceError: wallet.oxtBalance <= BigInt(0),
-      });
-    });
+    this.subscriptions.push(
+      api.wallet_wait.subscribe(wallet => {
+        console.log("Funding from account: ", wallet.address);
+        console.log("Balance: ", wallet.ethBalance);
+        this.setState({
+          walletAddress: wallet.address,
+          ethBalance: weiToOxtString(wallet.ethBalance, 4),
+          ethBalanceError: wallet.ethBalance <= BigInt(0),
+          oxtBalance: weiToOxtString(wallet.oxtBalance, 4),
+          oxtBalanceError: wallet.oxtBalance <= BigInt(0),
+        });
+      }));
 
-    api.lotteryPot_wait.subscribe(pot => {
-      this.setState({
-        potBalance: weiToOxtString(pot.balance, 4),
-        potEscrow: weiToOxtString(pot.escrow, 4)
-      });
-    });
+    this.subscriptions.push(
+      api.lotteryPot_wait.subscribe(pot => {
+        this.setState({
+          potBalance: weiToOxtString(pot.balance, 4),
+          potEscrow: weiToOxtString(pot.escrow, 4)
+        });
+      }));
+  }
+
+
+  componentWillUnmount(): void {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe()
+    })
   }
 
   render() {
