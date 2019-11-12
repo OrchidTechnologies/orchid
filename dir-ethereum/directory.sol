@@ -285,7 +285,7 @@ contract OrchidDirectory is IOrchidDirectory {
                     if (!nope(other))
                         stakes_[name(other)].parent_ = location;
 
-                    if (name(stake.left_) == key) {
+                    if (name(stake.left_) == location) {
                         current.right_ = stake.right_;
                         current.after_ = stake.after_;
                     } else {
