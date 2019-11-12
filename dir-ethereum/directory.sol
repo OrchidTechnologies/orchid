@@ -24,11 +24,7 @@ pragma solidity 0.5.12;
 
 import "../openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
-interface IOrchidDirectory {
-    function have() external view returns (uint128 amount);
-}
-
-contract OrchidDirectory is IOrchidDirectory {
+contract OrchidDirectory {
 
     IERC20 internal token_;
 
