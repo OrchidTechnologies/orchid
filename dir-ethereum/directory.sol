@@ -248,15 +248,17 @@ contract OrchidDirectory is IOrchidDirectory {
 
 
     function fixr(Stake storage stake, bytes32 location, Stake storage current) private {
-        if (!nope(stake.right_))
-            stakes_[name(stake.right_)].parent_ = location;
+        if (nope(stake.right_))
+            return;
+        stakes_[name(stake.right_)].parent_ = location;
         current.right_ = stake.right_;
         current.after_ = stake.after_;
     }
 
     function fixl(Stake storage stake, bytes32 location, Stake storage current) private {
-        if (!nope(stake.left_))
-            stakes_[name(stake.left_)].parent_ = location;
+        if (nope(stake.left_))
+            return;
+        stakes_[name(stake.left_)].parent_ = location;
         current.left_ = stake.left_;
         current.before_ = stake.before_;
     }
