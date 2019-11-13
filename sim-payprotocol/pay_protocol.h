@@ -311,9 +311,85 @@ struct IBudget
 	virtual double get_max_faceval() = 0;
     virtual void on_connect() = 0;
     virtual void on_disconnect() = 0;
-    virtual void on_invoice() = 0;
+    virtual void on_payment() = 0;
 	virtual void set_active(double aratio) = 0;
 };
+
+
+struct Budget_SurplusTracking : public IBudget, public Tickable
+{
+	double budget_edate_;   	    // target budget end date
+	double max_faceval_		= 1.0;  // maximum allowable faceval in OXT (user's hard variance limit)
+	double max_prepay_time_ = 4.0;   // max amount of time client will prepay (credit) to server for undelivered bandwidth, in seconds (client->server trust)
+
+    // config hyperparams
+	double timer_sample_rate_ = 20.0; // frequency of calls to on_timer() (nothing special about 20s)
+
+	double prepay_credit_;
+	double last_pay_date_  = 0.0;
+	double spendrate_      = 0.0;
+	bytes32 account_;
+
+
+	double start_time_ 	  = 0.0;
+	double start_balance_ = 0.0;
+
+
+	virtual double get_afford(double ctime)
+	{
+		double time_owed = (ctime - last_pay_date_);
+		double allowed   = spendrate_ * (time_owed + prepay_credit_);
+        dlog(2,"Budget_ST::get_afford(%f) allowed(%f) = spendrate_(%f) * (%f - %f + %f) \n", ctime,allowed,spendrate_,ctime,last_pay_date_,prepay_credit_);
+        return allowed;
+    }
+
+
+	virtual double get_max_faceval() {
+        return max_faceval_;
+    }
+
+    void step(double ctime) {
+    	Tickable::step(ctime);
+
+    	double core_spendrate = start_balance_ / (budget_edate_ - start_time_);
+
+        double curbal   = Lot::balance(account_).amount_;
+        double expbal   = start_balance_ - core_spendrate * (ctime - start_time_);
+        double surplus  = curbal - expbal;
+        double surplus_spendrate = surplus / (3.0 * Days);
+
+        spendrate_ = core_spendrate + surplus_spendrate;
+
+        dlog(2,"Budget_ST::step(%f) spendrate_(%f) = core_spendrate(%f) + surplous_spendrate(%f) \n", ctime, spendrate_, core_spendrate, surplus_spendrate);
+
+        dlog(2,"Budget_ST core = %f / (%f - %f)   surplus = (curbal(%f) - expbal(%f)) / (%f)   expbal = (%f - %f * (%f - %f)) \n", start_balance_,budget_edate_,start_time_,  curbal,expbal,3.0*Days,  start_balance_,core_spendrate,ctime,start_time_);
+
+    }
+
+	Budget_SurplusTracking(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate)
+	{
+    	period_ = timer_sample_rate_;
+        register_timer_func(this); // call on_timer() every {timer_sample_rate_} seconds
+
+        start_time_    = CurrentTime();
+        start_balance_ = Lot::balance(account_).amount_;
+
+        step(CurrentTime()); // tick the timer once on startup to update for any time orchid was shutdown
+    }
+
+    virtual ~Budget_SurplusTracking() {}
+
+    void on_connect()    {
+        dlog(2,"Budget_ST::on_connect() ctime(%f) \n", CurrentTime());
+    	last_pay_date_ = CurrentTime(); prepay_credit_ = max_prepay_time_;
+    }
+
+    void on_disconnect() { }
+    void on_payment()    { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
+	void set_active(double aratio) { }
+
+};
+
 
 struct Budget_PredExpW : public IBudget, public Tickable
 {
@@ -325,16 +401,16 @@ struct Budget_PredExpW : public IBudget, public Tickable
     // config hyperparams
 	double timer_sample_rate_ = 20.0; // frequency of calls to on_timer() (nothing special about 20s)
 
-    // internal
-	double wactive_	= 0.1; // default to 2.4 hours / day of active VPN time
-
 	double prepay_credit_;
-	bool   route_active_;                  // true when a connection/circuit is active
-	double exp_half_life   = 1*Weeks;      // 1 one week 50% smoothing period
 	double last_pay_date_  = 0.0;
 	double spendrate_      = 0.0;
 	bytes32 account_;
+
+    // internal
+	bool   route_active_;                  // true when a connection/circuit is active
+	double wactive_	= 0.1; // default to 2.4 hours / day of active VPN time
 	double ltime_;
+	double exp_half_life   = 1*Weeks;      // 1 one week 50% smoothing period
 
 
 	virtual double get_afford(double ctime) {
@@ -382,13 +458,15 @@ struct Budget_PredExpW : public IBudget, public Tickable
         step(CurrentTime()); // tick the timer once on startup to update for any time orchid was shutdown
     }
     
+    virtual ~Budget_PredExpW() {}
+
     void on_connect()    {
         dlog(2,"Budget_PredExpW::on_connect() ctime(%f) \n", CurrentTime());
     	route_active_ = true;  last_pay_date_ = CurrentTime(); prepay_credit_ = max_prepay_time_;
     }
 
     void on_disconnect() { route_active_ = false; }
-    void on_invoice()    { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
+    void on_payment()    { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
 	void set_active(double aratio) { route_active_ = aratio > 0.0; }
 
 };
@@ -446,7 +524,8 @@ struct Client : public Tickable, public INet
 
 		route_.resize(nhops);
 		for (int i(0); i < nhops; i++) {
-			route_[i].budget_ = new Budget_PredExpW(account_, budget_edate);
+			//route_[i].budget_ = new Budget_PredExpW(account_, budget_edate);
+			route_[i].budget_ = new Budget_SurplusTracking(account_, budget_edate);
 		}
 		on_update_route();
 	}
@@ -563,7 +642,7 @@ payment Client::create_payment(double ctime, IBudget* budget, uint256 hash_secre
 		double ratio 	= win_prob, start = CurrentTime(), range = 1.0*Hours, amount = face_val;
 		bytes32 ticket 	= keccak256(encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
 		auto sig 		= sign(ticket, account_);
-		budget->on_invoice();
+		budget->on_payment();
 		// any book-keeping here
 
 		return payment{hash_secret, target,  nonce, account_, ratio, start, range, amount, sig};
