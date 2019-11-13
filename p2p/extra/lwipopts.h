@@ -4,3 +4,5 @@
 #define LWIP_UDP 1
 #define LWIP_NETIF_LOOPBACK 1
 #define LWIP_SOCKET_POLL 0
+#define MEMP_MEM_MALLOC 1
+#define MEM_LIBC_MALLOC 1
