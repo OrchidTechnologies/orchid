@@ -643,7 +643,7 @@ class EventDispatcher : public Dispatcher {
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = 0;
-    addr.sin_addr.s_addr = inet_addr("10.0.7.3");
+    addr.sin_addr.s_addr = inet_addr("10.7.0.3");
     int r = ::lwip_bind(afd_[0], (const struct sockaddr *)&addr, sizeof(addr));
     if (r < 0)
         RTC_LOG(LERROR) << "pipe bind failed";

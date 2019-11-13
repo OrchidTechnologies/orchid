@@ -126,8 +126,8 @@ Remote::Remote() {
         setup = true;
     }
 
-    static ip4_addr_t gateway; IP4_ADDR(&gateway, 10,0,7,1);
-    static ip4_addr_t address; IP4_ADDR(&address, 10,0,7,3);
+    static ip4_addr_t gateway; IP4_ADDR(&gateway, 10,7,0,1);
+    static ip4_addr_t address; IP4_ADDR(&address, 10,7,0,3);
     static ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
 
     orc_assert(netif_add(&interface_, &address, &netmask, &gateway, nullptr, &Initialize, &ip_input) != nullptr);
