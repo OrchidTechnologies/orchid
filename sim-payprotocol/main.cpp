@@ -533,10 +533,10 @@ struct User : public Tickable
 
 	void step(double ctime)
 	{
-    		Tickable::step(ctime);
+    	Tickable::step(ctime);
 
 		double elap = ctime - ltime_;
-    		reroll_check(ctime, elap);
+    	reroll_check(ctime, elap);
 
 		// send a packet to our target of size (elapsed_time * bandwidth_demand)
 		double bwdm = bwdemandf_->exec(ctime);
@@ -544,8 +544,15 @@ struct User : public Tickable
 		double bwd 	= bwd_;
 		dlog(2,"User::step(%f) bwdf(%p) client(%p) bwd(%e) = %f * %e  \n", ctime, bwdemandf_, client_,  bwd, bwdm, bwd_mult_);
 
-		double ps   = bwd*elap;
-		client_->send_data(ctime, targ_addr_, ps);
+		if (bwd > 0.0) {
+			client_->set_active(1.0);
+			double ps   = bwd*elap;
+			client_->send_data(ctime, targ_addr_, ps);
+		}
+		else {
+			client_->set_active(0.0);
+		}
+
 
 		ltime_ = ctime;
 	}
@@ -592,9 +599,9 @@ void Server::print_info(int llev, double ctime, double stake, int nusers)
 
 struct Sim
 {
-	const int NumClients  = 200; // 200;
-	const int NumWebsites = 20; // 20;
-	const int NumServers  = 10; // 10;
+	const int NumClients  = 200; // 200; // 200;
+	const int NumWebsites = 20; // 20; // 20;
+	const int NumServers  = 10; // 10; // 10;
 	const int NumHops     = 1;
 
 	vector<Client*> 	clients;
@@ -734,7 +741,7 @@ struct Sim
 
 			bytes32 account = rand();
 
-			auto client_bal_dist = lognormal_distribution<>(4, 1); // 2);
+			auto client_bal_dist = lognormal_distribution<>(4, 0.5); // 2);
 			Lot::balance(account) = Lot::pot{client_bal_dist(gen), 4.0};
 	        	double curbal   = Lot::balance(account).amount_;
 	        	dlog(2,"funded client balance(%f) \n", curbal);
@@ -751,14 +758,16 @@ struct Sim
 			double obw = ibw * obw_dist(gen);
 			net::add(client, ibw, obw);
 
-			auto obwu_dist = lognormal_distribution<>(  16, 3); // 4);
+
 			expFBM_f* noisef_ = (noisefuncs_[ rand() % noisefuncs_.size() ]);
 			expFBM_f* noisef  = new expFBM_f(*noisef_); noisef->rseed_ = rand();
 			test_noise_f(*noisef);
 
 			Website* ws = websites[ rand() % websites.size() ];
 
-			User* user = new User(this, client, noisef, obwu_dist(gen), ws->get_netaddr());
+			auto bwd_dist = lognormal_distribution<>(  14, 2); // 4);
+
+			User* user = new User(this, client, noisef, bwd_dist(gen), ws->get_netaddr());
 			users.push_back(user);
 			//user->step(0.0);
 		}
