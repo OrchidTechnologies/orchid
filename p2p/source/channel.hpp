@@ -31,6 +31,7 @@
 
 #include "error.hpp"
 #include "link.hpp"
+#include "origin.hpp"
 #include "task.hpp"
 #include "threads.hpp"
 #include "trace.hpp"
@@ -79,6 +80,7 @@ class Peer :
     friend class Channel;
 
   private:
+    const S<Origin> origin_;
     const rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_;
 
     std::set<Channel *> channels_;
@@ -95,7 +97,7 @@ class Peer :
     }
 
   public:
-    Peer(Configuration configuration = Configuration());
+    Peer(const S<Origin> &origin, Configuration configuration = Configuration());
 
     ~Peer() override {
 _trace();
@@ -211,7 +213,7 @@ class Channel final :
     cppcoro::async_manual_reset_event opened_;
 
   public:
-    static task<Socket> Wire(Sunk<> *sunk, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
+    static task<Socket> Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
     Channel(BufferDrain *drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
         Pump(drain),

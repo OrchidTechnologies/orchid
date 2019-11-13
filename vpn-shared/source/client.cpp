@@ -56,7 +56,7 @@ task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
 
     auto sunk(Wire());
 
-    socket_ = co_await Channel::Wire(sunk, [&]() {
+    socket_ = co_await Channel::Wire(sunk, origin, [&]() {
         Configuration configuration;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {

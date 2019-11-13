@@ -95,7 +95,6 @@ class Invoker :
 class Threads {
   public:
     std::unique_ptr<rtc::Thread> signals_;
-    std::unique_ptr<rtc::Thread> network_;
     std::unique_ptr<rtc::Thread> working_;
 
     static const Threads &Get();

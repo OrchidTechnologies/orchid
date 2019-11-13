@@ -19,17 +19,16 @@
 **/
 /* }}} */
 
-#include "lwipsocketserver.hpp"
+#include "lwip.hpp"
 #include "log.hpp"
 
 #define LWIP_SOCKET_EXTERNAL_HEADERS 1
 #define LWIP_SOCKET_EXTERNAL_HEADER_INET_H <arpa/inet.h>
 #define LWIP_SOCKET_EXTERNAL_HEADER_SOCKETS_H <sys/socket.h>
 
-#include "lwip/opt.h"
-#include "lwip/sockets.h"
-#include "lwip/tcpip.h"
-#include "lwip/sys.h"
+#include <lwip/opt.h>
+#include <lwip/sockets.h>
+#include <lwip/sys.h>
 
 #ifndef TCP_NODELAY
 #define TCP_NODELAY    0x01    /* don't delay send to coalesce packets */
@@ -717,69 +716,7 @@ class Signaler : public EventDispatcher {
   bool* pf_;
 };
 
-#define SOME_MTU 1500
-
-err_t common_netif_output(struct netif *netif, struct pbuf *p)
-{
-  do {
-    if (p->len > SOME_MTU) {
-      Log() << "netif func output: no space left";
-      return ERR_OK;
-    }
-
-    Log() << __func__ << " packet:" << p->len << " bytes" << std::endl;
-    //Tap_Send((uint8_t *)p->payload, p->len);
-  } while ((p = p->next));
-
-  return ERR_OK;
-}
-
-err_t netif_output_func(struct netif *netif, struct pbuf *p, const ip4_addr_t *ipaddr)
-{
-  return common_netif_output(netif, p);
-}
-
-err_t netif_init_func(struct netif *netif)
-{
-  Log() << __func__ << ":" << __LINE__;
-
-  netif->name[0] = 'o';
-  netif->name[1] = 'r';
-  netif->output = netif_output_func;
-
-  return ERR_OK;
-}
-
-err_t netif_input_func(struct pbuf *p, struct netif *inp)
-{
-  uint8_t ip_version = 0;
-  if (p->len > 0) {
-    ip_version = (((uint8_t *)p->payload)[0] >> 4);
-  }
-
-  Log() << __func__ << ":" << __LINE__;
-
-  //return ip_input(p, inp);
-
-  pbuf_free(p);
-  return ERR_OK;
-}
-
 LwipSocketServer::LwipSocketServer() : fWait_(false) {
-    static struct netif netif;
-    static ip4_addr_t ipaddr, netmask, gw;
- 
-    IP4_ADDR(&gw, 10,0,7,1);
-    IP4_ADDR(&ipaddr, 10,0,7,3);
-    IP4_ADDR(&netmask, 255,255,255,0);
-
-    tcpip_init(NULL, NULL);
-
-    netif_add(&netif, &ipaddr, &netmask, &gw, NULL, netif_init_func, netif_input_func);
-    netif_set_default(&netif);
-    netif_set_link_up(&netif);
-    netif_set_up(&netif);
-
   signal_wakeup_ = new Signaler(this, &fWait_);
 }
 

@@ -24,11 +24,36 @@
 #include <p2p/client/basic_port_allocator.h>
 #include <rtc_base/async_invoker.h>
 
+#include "local.hpp"
 #include "log.hpp"
+#include "lwip.hpp"
+#include "remote.hpp"
 #include "shared.hpp"
 #include "threads.hpp"
 
 namespace orc {
+
+rtc::Thread *Local::Thread() {
+    static std::unique_ptr<rtc::Thread> thread;
+    if (thread == nullptr) {
+        thread = rtc::Thread::CreateWithSocketServer();
+        thread->SetName("Orchid WebRTC Local", nullptr);
+        thread->Start();
+    }
+
+    return thread.get();
+}
+
+rtc::Thread *Remote::Thread() {
+    static std::unique_ptr<rtc::Thread> thread;
+    if (thread == nullptr) {
+        thread = std::make_unique<rtc::Thread>(std::make_unique<LwipSocketServer>());
+        thread->SetName("Orchid WebRTC Remote", nullptr);
+        thread->Start();
+    }
+
+    return thread.get();
+}
 
 class Manager :
     public rtc::BasicNetworkManager
@@ -38,19 +63,26 @@ class Manager :
         rtc::BasicNetworkManager::GetNetworks(networks);
         for (auto network : *networks)
             Log() << "NET: " << network->ToString() << "@" << network->GetBestIP().ToString() << std::endl;
-        for (auto network(networks->begin()); network != networks->end(); ++network)
-            if ((*network)->GetBestIP().ToString() == "10.7.0.3") {
-                networks->erase(network);
-                break;
-            }
+        std::remove_if(networks->begin(), networks->end(), [](auto network) {
+            return network->GetBestIP().ToString() == "10.7.0.3";
+        });
     }
 };
 
-U<cricket::PortAllocator> GetAllocator() {
-    auto &threads(Threads::Get());
+U<cricket::PortAllocator> Local::Allocator() {
+    auto thread(Thread());
     static Manager manager;
-    static rtc::BasicPacketSocketFactory packeter(threads.network_.get());
-    return threads.network_->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
+    static rtc::BasicPacketSocketFactory packeter(thread);
+    return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
+        return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);
+    });
+}
+
+U<cricket::PortAllocator> Remote::Allocator() {
+    auto thread(Thread());
+    static rtc::BasicNetworkManager manager;
+    static rtc::BasicPacketSocketFactory packeter(thread);
+    return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
         return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);
     });
 }

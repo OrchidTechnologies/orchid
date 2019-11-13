@@ -50,7 +50,7 @@ class Incoming final :
 
   public:
     Incoming(Sunk<> *sunk, std::vector<std::string> ice) :
-        Peer([&]() {
+        Peer(GetLocal(), [&]() {
             Configuration configuration;
             configuration.ice_ = std::move(ice);
             return configuration;

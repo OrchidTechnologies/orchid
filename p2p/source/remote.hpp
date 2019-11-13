@@ -23,6 +23,8 @@
 #ifndef ORCHID_REMOTE_HPP
 #define ORCHID_REMOTE_HPP
 
+#include <lwip/netif.h>
+
 #include "origin.hpp"
 
 namespace orc {
@@ -31,6 +33,13 @@ class Remote :
     public Origin,
     public BufferDrain
 {
+  private:
+    netif interface_;
+
+    task<void> Send(const Buffer &data);
+    static err_t Output(netif *interface, pbuf *buffer, const ip4_addr_t *destination);
+    static err_t Initialize(netif *interface);
+
   protected:
     virtual Pump *Inner() = 0;
 
@@ -38,7 +47,14 @@ class Remote :
     void Stop(const std::string &error) override;
 
   public:
+    Remote();
+    ~Remote() override;
+
+    void Open();
     task<void> Shut() override;
+
+    rtc::Thread *Thread() override;
+    U<cricket::PortAllocator> Allocator() override;
 
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;

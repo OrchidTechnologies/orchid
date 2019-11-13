@@ -48,7 +48,7 @@ class Network {
     Network(boost::program_options::variables_map &args);
 
     task<void> Random(Sunk<> *sunk, const S<Origin> &origin, Secret secret, Address funder);
-    task<S<Origin>> Setup(Secret secret, Address funder);
+    task<S<Origin>> Randoms(S<Origin> origin, unsigned hops, Secret secret, Address funder);
 };
 
 }

@@ -31,12 +31,21 @@
 #include "socket.hpp"
 #include "task.hpp"
 
+namespace rtc {
+class Thread; }
+
+namespace cricket {
+class PortAllocator; }
+
 namespace orc {
 
 class Origin :
     public Valve
 {
   public:
+    virtual rtc::Thread *Thread() = 0;
+    virtual U<cricket::PortAllocator> Allocator() = 0;
+
     virtual task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
     virtual task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) = 0;
     virtual task<Socket> Unlid(Sunk<Opening, BufferSewer> *sunk) = 0;

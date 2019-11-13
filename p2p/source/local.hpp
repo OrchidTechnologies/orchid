@@ -31,6 +31,9 @@ class Local final :
     public Origin
 {
   public:
+    rtc::Thread *Thread() override;
+    U<cricket::PortAllocator> Allocator() override;
+
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;
     task<Socket> Unlid(Sunk<Opening, BufferSewer> *sunk) override;

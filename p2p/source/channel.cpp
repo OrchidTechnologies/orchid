@@ -23,18 +23,18 @@
 #include <regex>
 
 #include <api/sctp_transport_interface.h>
-
 #include <p2p/base/ice_transport_internal.h>
+#include <pc/peer_connection_internal.h>
 
 #include <rtc_base/async_invoker.h>
 #include <rtc_base/openssl_identity.h>
 #include <rtc_base/ssl_adapter.h>
 
 #include "channel.hpp"
+#include "lwip.hpp"
 #include "memory.hpp"
 #include "socket.hpp"
 #include "trace.hpp"
-#include "lwipsocketserver.hpp"
 
 namespace orc {
 
@@ -47,12 +47,6 @@ Threads::Threads() {
     signals_ = rtc::Thread::Create();
     signals_->SetName("Orchid WebRTC Signals", nullptr);
     signals_->Start();
-
-    network_ = rtc::Thread::CreateWithSocketServer();
-    // LWIP: use the LwipSocketServer to capture WebRTC traffic
-    //network_ = std::unique_ptr<Thread>(new Thread(std::unique_ptr<SocketServer>(new LwipSocketServer)));
-    network_->SetName("Orchid WebRTC Network", nullptr);
-    network_->Start();
 
     working_ = rtc::Thread::Create();
     working_->SetName("Orchid WebRTC Workers", nullptr);
@@ -68,15 +62,14 @@ struct SetupSSL {
     ~SetupSSL() { rtc::CleanupSSL(); }
 } setup_;
 
-U<cricket::PortAllocator> GetAllocator();
-
-Peer::Peer(Configuration configuration) :
+Peer::Peer(const S<Origin> &origin, Configuration configuration) :
+    origin_(origin),
     peer_([&]() {
         const auto &threads(Threads::Get());
 
-        static auto factory(webrtc::CreateModularPeerConnectionFactory([&]() {
+        auto factory(webrtc::CreateModularPeerConnectionFactory([&]() {
             webrtc::PeerConnectionFactoryDependencies dependencies;
-            dependencies.network_thread = threads.network_.get();
+            dependencies.network_thread = origin_->Thread();
             dependencies.worker_thread = threads.working_.get();
             dependencies.signaling_thread = threads.signals_.get();
             return dependencies;
@@ -98,7 +91,7 @@ Peer::Peer(Configuration configuration) :
 
         return factory->CreatePeerConnection(rtc, [&]() {
             webrtc::PeerConnectionDependencies dependencies(this);
-            dependencies.allocator = GetAllocator();
+            dependencies.allocator = origin_->Allocator();
             return dependencies;
         }());
     }())
@@ -112,7 +105,7 @@ task<cricket::Candidate> Peer::Candidate() {
 
     orc_assert(sctp != nullptr);
 
-    co_return Threads::Get().network_->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
+    co_return origin_->Thread()->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
         auto dtls(sctp->dtls_transport());
         orc_assert(dtls != nullptr);
         auto ice(dtls->ice_transport());
@@ -241,8 +234,8 @@ _trace();
     }
 
   public:
-    Actor(Configuration configuration) :
-        Peer(std::move(configuration))
+    Actor(const S<Origin> &origin, Configuration configuration) :
+        Peer(origin, std::move(configuration))
     {
     }
 
@@ -252,8 +245,8 @@ _trace();
     }
 };
 
-task<Socket> Channel::Wire(Sunk<> *sunk, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
-    auto client(Make<Actor>(std::move(configuration)));
+task<Socket> Channel::Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
+    auto client(Make<Actor>(origin, std::move(configuration)));
     auto channel(sunk->Wire<Channel>(client));
     auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);

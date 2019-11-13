@@ -19,8 +19,8 @@
 **/
 /* }}} */
 
-#ifndef ORCHID_LWIP_SOCKET_SERVER_H_
-#define ORCHID_LWIP_SOCKET_SERVER_H_
+#ifndef ORCHID_LWIP_HPP
+#define ORCHID_LWIP_HPP
 
 #include <memory>
 #include <set>
@@ -50,7 +50,7 @@ class Signaler;
 
 class Dispatcher {
  public:
-  virtual ~Dispatcher() {}
+  virtual ~Dispatcher() = default;
   virtual uint32_t GetRequestedEvents() = 0;
   virtual void OnPreEvent(uint32_t ff) = 0;
   virtual void OnEvent(uint32_t ff, int err) = 0;
@@ -202,6 +202,6 @@ class SocketDispatcher : public Dispatcher, public LwipSocket {
   int Close() override;
 };
 
-}  // namespace rtc
+}
 
-#endif  // ORCHID_LWIP_SOCKET_SERVER_H_
+#endif//ORCHID_LWIP_HPP

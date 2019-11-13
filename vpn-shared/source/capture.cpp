@@ -640,7 +640,8 @@ task<void> Capture::Start(boost::program_options::variables_map &args) {
     Address funder(args["pot-funder"].as<std::string>());
     Network network(args);
     auto sunk(co_await Start());
-    co_await network.Random(sunk, GetLocal(), secret, funder);
+    auto origin(co_await network.Randoms(GetLocal(), args["hops"].as<unsigned>(), secret, funder));
+    co_await network.Random(sunk, origin, secret, funder);
 }
 
 // XXX: the config file should be JavaScript
@@ -659,6 +660,7 @@ void Store(po::variables_map &args, const std::string &path) {
         ("eth-location", po::value<std::string>()->default_value("0x53c76CaDD819F9F020E1aA969709Ba905bf8d20F"), "contract address of location property data")
         ("eth-curator", po::value<std::string>()->default_value("0x8a6EBb9800d064Db7b4809b02ff1bf12a9efFCc3"), "contract address of curated list information")
         ("rpc", po::value<std::string>()->default_value("https://api.myetherwallet.com:443/rop"), "ethereum json/rpc and websocket endpoint")
+        ("hops", po::value<unsigned>()->default_value(0), "number of hops to inject before the exit")
         ("pot-secret", po::value<std::string>(), "signing info for a lottery pot to pay on orchid")
         ("pot-funder", po::value<std::string>(), "signing info for a lottery pot to pay on orchid")
         //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")

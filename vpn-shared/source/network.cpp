@@ -80,16 +80,15 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, Secret secret,
     co_await client->Open(origin, url);
 }
 
-task<S<Origin>> Network::Setup(Secret secret, Address funder) {
-    S<Origin> origin(GetLocal());
-
-    for (unsigned i(0); i != 3; ++i) {
+task<S<Origin>> Network::Randoms(S<Origin> origin, unsigned hops, Secret secret, Address funder) {
+    for (unsigned i(0); i != hops; ++i) {
         auto remote(Break<Sink<Remote>>());
         co_await Random(remote.get(), origin, secret, funder);
+        remote->Open();
         origin = remote;
     }
 
-    co_return origin;
+    co_return std::move(origin);
 }
 
 }

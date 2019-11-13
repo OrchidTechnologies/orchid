@@ -146,7 +146,7 @@ $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 ifeq ($(filter notidy,$(debug)),)
-	@if [[ $< =~ $(tidy) && ! $< == */monitor.cpp ]]; then \
+	@if [[ $< =~ $(tidy) && ! $< =~ .*/(lwip|monitor)\.cpp ]]; then \
 	    echo [CT] $(target)/$(arch) $<; \
 	    $(llvm)/bin/clang-tidy $< --quiet --warnings-as-errors='*' --header-filter='$(tidy)' --config='{Checks: "$(checks)", CheckOptions: [{key: "performance-move-const-arg.CheckTriviallyCopyableMove", value: 0}]}' -- \
 	        $(wordlist 2,$(words $(cxx/$(arch))),$(cxx/$(arch))) -std=c++2a $(flags) $(xflags); \
