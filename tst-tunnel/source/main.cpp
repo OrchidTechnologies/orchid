@@ -129,8 +129,6 @@ int Main(int argc, const char *const argv[]) {
     do ++address.sc_unit;
     while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
 
-    sync->Open();
-
     auto utun("utun" + std::to_string(address.sc_unit - 1));
     orc_assert(system(("ifconfig " + utun + " inet " + local + " " + local + " mtu 1500 up").c_str()) == 0);
     orc_assert(system(("route -n add 207.254.46.169 -interface " + utun).c_str()) == 0);
@@ -142,6 +140,7 @@ int Main(int argc, const char *const argv[]) {
     Wait([&]() -> task<void> { try {
         co_await Schedule();
         co_await capture->Start(args);
+        sync->Open();
     } catch (const std::exception &error) {
         std::cerr << error.what() << std::endl;
         throw;
