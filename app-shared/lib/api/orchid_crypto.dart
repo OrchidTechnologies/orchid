@@ -13,15 +13,14 @@ class Crypto {
   static EthereumKeyPair generateEthereumKeyPair() {
     final ECDomainParameters curve = ECCurve_secp256k1();
 
-    // Generate a private key using Dart's secure random source.
+    // Generate a keypair using Dart's secure random source.
     final generator = ECKeyGenerator();
     final params = ECKeyGeneratorParameters(curve);
     generator.init(ParametersWithRandom(params, DartSecureRandom()));
     final key = generator.generateKeyPair();
     final BigInt privateKey = (key.privateKey as ECPrivateKey).d;
+    final ECPoint publicKeyPoint = (key.publicKey as ECPublicKey).Q;
 
-    // Derive the public key from the private key
-    final ECPoint publicKeyPoint = curve.G * privateKey; // EC scalar multiply
     // X9.62 encoded uncompressed ECPoint is just the prefix value '4' followed by x, y.
     final encoded = publicKeyPoint.getEncoded(false).buffer;
     // Remove the prefix byte
