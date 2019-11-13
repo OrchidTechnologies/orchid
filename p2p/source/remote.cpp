@@ -32,14 +32,28 @@ class Reference {
     pbuf *buffer_;
 
   public:
+    Reference() :
+        buffer_(nullptr)
+    {
+    }
+
     Reference(pbuf *buffer) :
         buffer_(buffer)
     {
         pbuf_ref(buffer_);
     }
 
+    Reference(const Reference &other) = delete;
+
+    Reference(Reference &&other) :
+        buffer_(other.buffer_)
+    {
+        other.buffer_ = nullptr;
+    }
+
     ~Reference() {
-        pbuf_free(buffer_);
+        if (buffer_ != nullptr)
+            pbuf_free(buffer_);
     }
 
     operator pbuf *() const {
@@ -72,7 +86,6 @@ class Chain :
     Chain(pbuf *buffer) :
         buffer_(buffer)
     {
-        pbuf_ref(buffer_);
     }
 
     operator pbuf *() const {
@@ -80,7 +93,7 @@ class Chain :
     }
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
-        for (auto buffer(buffer_); ; buffer = buffer->next) {
+        for (pbuf *buffer(buffer_); ; buffer = buffer->next) {
             orc_assert(buffer != nullptr);
             if (!code(static_cast<const uint8_t *>(buffer->payload), buffer->len))
                 return false;
