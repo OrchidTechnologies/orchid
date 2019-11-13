@@ -415,7 +415,6 @@ task<void> Connect(Sunk<> *sunk, S<Origin> origin, uint32_t local, std::string o
     {
         openvpn::ClientAPI::Config config;
         config.content = std::move(ovpnfile);
-        config.disableClientCert = true;
         middle->eval_config(config);
     }
 
