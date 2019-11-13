@@ -602,7 +602,7 @@ struct Sim
 	const int NumClients  = 200; // 200; // 200;
 	const int NumWebsites = 20; // 20; // 20;
 	const int NumServers  = 10; // 10; // 10;
-	const int NumHops     = 1;
+	const int NumHops     = 2;
 
 	vector<Client*> 	clients;
 	vector<User*> 		users;
@@ -614,6 +614,7 @@ struct Sim
 
 	default_random_engine gen;
 
+	/*
 	void client_new_connect_1H(double ctime, Client* client, netaddr dst)
 	{
 		double rv = double(rand()) / double(RAND_MAX) ;
@@ -638,7 +639,38 @@ struct Sim
 		//client->on_connect(ctime,server, dst);
 
 		client->on_connect(ctime, {pair_(server->address_, server->account_)} );
+	}
+	*/
 
+	void client_new_connect(double ctime, Client* client, netaddr dst)
+	{
+		vector<pair<netaddr,bytes32>> route;
+
+		for (int i(0); i < NumHops; i++)
+		{
+			double rv = double(rand()) / double(RAND_MAX) ;
+			int si    = find_range(server_stakes_ps, rv);
+			Server* server = servers[si];
+			double stake  = server_stakes[si];
+			// bw(%e,%e)\n", ibw,obw
+
+			double ibw = get_network().idevs_[server->address_.addr_].throughput;
+			double obw = get_network().odevs_[server->address_.addr_].throughput;
+
+			double iq = get_network().idevs_[server->address_.addr_].bqueued;
+			double oq = get_network().odevs_[server->address_.addr_].bqueued;
+
+			double iqr = iq/(ibw + 0.0000001);
+			double oqr = oq/(obw + 0.0000001);
+
+			double ratelm 	= client->rate_limit_mult_;
+
+			dlog(1, "client_new_connect(%f,%p,%x) ratelm(%f) rv(%f) si(%i) stake(%f) ibw(%e,%f) obw(%e,%f) \n", ctime,client,dst, ratelm, rv,si,stake, ibw,iqr, obw,oqr);
+
+			route.push_back(pair_(server->address_, server->account_));
+		}
+
+		client->on_connect(ctime, route);
 	}
 
 	void print_server_info(double ctime)
@@ -811,7 +843,7 @@ struct Sim
 
 		dlog(0,"clients connecting \n");
 		for (int i(0); i < clients.size(); i++) {
-			client_new_connect_1H(ctime, clients[i], users[i]->targ_addr_);
+			client_new_connect(ctime, clients[i], users[i]->targ_addr_);
 		}
 
 
@@ -864,7 +896,7 @@ void User::reroll_check(double ctime, double elap)
 	dlog(2,"reroll_check(%f,%f) keep(%f) keep_prob(%f) = pow(0.5, %f / %f) half_life = (%f / (lrl + epsi)))  lrl(%f) = -log(%f) \n", ctime,elap, keep,keep_prob, elap,half_life,half_life_,lrl,rate_limit );
 
 	if (keep < 0.5) {
-		sim_->client_new_connect_1H(ctime, client_, targ_addr_);
+		sim_->client_new_connect(ctime, client_, targ_addr_);
 		half_life_ *= 1.2; // every time we reroll we take longer to reroll the next time
 	}
 
