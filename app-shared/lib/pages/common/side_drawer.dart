@@ -75,11 +75,19 @@ class _SideDrawerState extends State<SideDrawer> {
                   ],
                 ),
               ),
+              /*
               SideDrawerTile(
                   title: "Copy Signer Key",
                   imageName: 'assets/images/fileDocumentOutline.png',
                   onPressed: () {
                     _copySignerKey(context);
+                  }),
+               */
+              SideDrawerTile(
+                  title: "Key Generator",
+                  imageName: 'assets/images/fileDocumentOutline.png',
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/settings/keygen');
                   }),
               divider(),
               SideDrawerTile(
@@ -147,6 +155,7 @@ class _SideDrawerState extends State<SideDrawer> {
     );
   }
 
+  /*
   void _copySignerKey(BuildContext context) async {
     var signerKey = await OrchidAPI().budget().getSignerKey();
     Clipboard.setData(ClipboardData(text: signerKey));
@@ -157,7 +166,7 @@ class _SideDrawerState extends State<SideDrawer> {
             +"Paste this into the Create Account screen of the Orchid Account Manager Dapp to link "
            + "this client to your account.",
         );
-  }
+  }*/
 
   void _confirmDelete(BuildContext context) {
     Dialogs.showConfirmationDialog(
