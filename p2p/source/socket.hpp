@@ -26,13 +26,51 @@
 #include <iostream>
 #include <string>
 
+#include <boost/endian/conversion.hpp>
+
 #include <asio.hpp>
 
 namespace orc {
 
-class Socket {
+class Host {
   private:
     asio::ip::address host_;
+
+  public:
+    Host(asio::ip::address host) :
+        host_(std::move(host))
+    {
+    }
+
+    Host(const std::string &host) :
+        host_(asio::ip::make_address(host))
+    {
+    }
+
+    Host(uint32_t host) :
+        host_(asio::ip::address_v4(host))
+    {
+    }
+
+    Host() :
+        Host(0)
+    {
+    }
+
+    operator const asio::ip::address &() const {
+        return host_;
+    }
+
+    operator in_addr() const {
+        in_addr address;
+        address.s_addr = boost::endian::native_to_big(host_.to_v4().to_uint());
+        return address;
+    }
+};
+
+class Socket {
+  private:
+    Host host_;
     uint16_t port_;
 
     std::tuple<const asio::ip::address &, uint16_t> Tuple() const {
@@ -45,20 +83,14 @@ class Socket {
     {
     }
 
-    Socket(asio::ip::address host, uint16_t port) :
+    Socket(Host host, uint16_t port) :
         host_(std::move(host)),
         port_(port)
     {
     }
 
-    Socket(const std::string &host, uint16_t port) :
-        host_(asio::ip::make_address(host)),
-        port_(port)
-    {
-    }
-
-    Socket(uint32_t host, uint16_t port) :
-        host_(asio::ip::address_v4(host)),
+    Socket(asio::ip::address host, uint16_t port) :
+        host_(std::move(host)),
         port_(port)
     {
     }

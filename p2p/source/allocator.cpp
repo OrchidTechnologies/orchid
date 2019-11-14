@@ -78,9 +78,36 @@ U<cricket::PortAllocator> Local::Allocator() {
     });
 }
 
+class Assistant :
+    public rtc::NetworkManager
+{
+  private:
+    mutable rtc::Network network_;
+
+  public:
+    Assistant() :
+        network_("or0", "or0", rtc::IPAddress(Host("10.0.0.0")), 8, ADAPTER_TYPE_VPN)
+    {
+        //network_.set_default_local_address_provider(this);
+        network_.AddIP(rtc::IPAddress(Host("10.7.0.3")));
+    }
+
+    void StartUpdating() override {
+        SignalNetworksChanged();
+    }
+
+    void StopUpdating() override {
+    }
+
+    void GetNetworks(NetworkList *networks) const override {
+        networks->clear();
+        networks->emplace_back(&network_);
+    }
+};
+
 U<cricket::PortAllocator> Remote::Allocator() {
     auto thread(Thread());
-    static rtc::BasicNetworkManager manager;
+    static Assistant manager;
     static rtc::BasicPacketSocketFactory packeter(thread);
     return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
         return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);

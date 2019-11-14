@@ -24,6 +24,6 @@
 
 namespace orc {
 
-const Socket Port_("0.0.0.0", 9876);
+const Socket Port_(0, 9876);
 
 }
