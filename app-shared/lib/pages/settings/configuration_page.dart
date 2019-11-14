@@ -64,7 +64,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                         autocorrect: false,
                         autofocus: false,
                         keyboardType: TextInputType.multiline,
-                        style: AppText.textEntryStyle,
+                        style: AppText.logStyle.copyWith(color: AppColors.grey_2),
                         controller: _configFileTextController,
                         maxLines: 99999,
                         decoration: InputDecoration(

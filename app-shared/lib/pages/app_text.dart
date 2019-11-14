@@ -138,7 +138,7 @@ class AppText {
       fontSize: 12.0);
 
   static TextStyle logStyle = const TextStyle(
-      fontFamily: "VT323", fontSize: 16.0, color: AppColors.neutral_1);
+      fontFamily: "Courier", fontSize: 16.0, color: AppColors.neutral_1);
 
   static TextStyle switchLabelStyle = const TextStyle(
       color: AppColors.neutral_1,
