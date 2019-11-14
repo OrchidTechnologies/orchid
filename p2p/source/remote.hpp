@@ -27,6 +27,9 @@
 
 #include "origin.hpp"
 
+namespace rtc {
+class NetworkManager; }
+
 namespace orc {
 
 class Remote :
@@ -35,6 +38,7 @@ class Remote :
 {
   private:
     netif interface_;
+    U<rtc::NetworkManager> manager_;
 
     task<void> Send(const Buffer &data);
     static err_t Output(netif *interface, pbuf *buffer, const ip4_addr_t *destination);

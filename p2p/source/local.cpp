@@ -54,8 +54,8 @@ class Manager :
 };
 
 U<cricket::PortAllocator> Local::Allocator() {
-    auto thread(Thread());
     static Manager manager;
+    auto thread(Thread());
     static rtc::BasicPacketSocketFactory packeter(thread);
     return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
         return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);

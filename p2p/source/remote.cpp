@@ -187,11 +187,11 @@ class Assistant :
     mutable rtc::Network network_;
 
   public:
-    Assistant() :
-        network_("or0", "or0", rtc::IPAddress(Host("10.0.0.0")), 8, ADAPTER_TYPE_VPN)
+    Assistant(Host network, unsigned bits, Host host) :
+        network_("or0", "or0", rtc::IPAddress(network), bits, ADAPTER_TYPE_VPN)
     {
         //network_.set_default_local_address_provider(this);
-        network_.AddIP(rtc::IPAddress(Host("10.7.0.3")));
+        network_.AddIP(rtc::IPAddress(host));
     }
 
     void StartUpdating() override {
@@ -208,11 +208,12 @@ class Assistant :
 };
 
 U<cricket::PortAllocator> Remote::Allocator() {
+    if (manager_ == nullptr)
+        manager_ = std::make_unique<Assistant>(Host("10.7.0.0"), 24, Host("10.7.0.3"));
     auto thread(Thread());
-    static Assistant manager;
     static rtc::BasicPacketSocketFactory packeter(thread);
     return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
-        return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);
+        return std::make_unique<cricket::BasicPortAllocator>(manager_.get(), &packeter);
     });
 }
 
