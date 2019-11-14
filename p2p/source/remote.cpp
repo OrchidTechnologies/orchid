@@ -24,6 +24,10 @@
 #include <lwip/tcpip.h>
 #include <lwip/netifapi.h>
 
+#include <p2p/base/basic_packet_socket_factory.h>
+#include <p2p/client/basic_port_allocator.h>
+
+#include "lwip.hpp"
 #include "remote.hpp"
 
 namespace orc {
@@ -163,6 +167,53 @@ task<void> Remote::Shut() {
     co_await Inner()->Shut();
     co_await Valve::Shut();
     netifapi_netif_set_down(&interface_);
+}
+
+rtc::Thread *Remote::Thread() {
+    static std::unique_ptr<rtc::Thread> thread;
+    if (thread == nullptr) {
+        thread = std::make_unique<rtc::Thread>(std::make_unique<LwipSocketServer>());
+        thread->SetName("Orchid WebRTC Remote", nullptr);
+        thread->Start();
+    }
+
+    return thread.get();
+}
+
+class Assistant :
+    public rtc::NetworkManager
+{
+  private:
+    mutable rtc::Network network_;
+
+  public:
+    Assistant() :
+        network_("or0", "or0", rtc::IPAddress(Host("10.0.0.0")), 8, ADAPTER_TYPE_VPN)
+    {
+        //network_.set_default_local_address_provider(this);
+        network_.AddIP(rtc::IPAddress(Host("10.7.0.3")));
+    }
+
+    void StartUpdating() override {
+        SignalNetworksChanged();
+    }
+
+    void StopUpdating() override {
+    }
+
+    void GetNetworks(NetworkList *networks) const override {
+        networks->clear();
+        networks->emplace_back(&network_);
+    }
+};
+
+U<cricket::PortAllocator> Remote::Allocator() {
+    auto thread(Thread());
+    static Assistant manager;
+    static rtc::BasicPacketSocketFactory packeter(thread);
+    return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
+        return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);
+    });
 }
 
 task<Socket> Remote::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {

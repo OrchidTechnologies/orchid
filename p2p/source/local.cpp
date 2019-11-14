@@ -20,10 +20,47 @@
 /* }}} */
 
 
+#include <p2p/base/basic_packet_socket_factory.h>
+#include <p2p/client/basic_port_allocator.h>
+
 #include "connection.hpp"
 #include "local.hpp"
 
 namespace orc {
+
+rtc::Thread *Local::Thread() {
+    static std::unique_ptr<rtc::Thread> thread;
+    if (thread == nullptr) {
+        thread = rtc::Thread::CreateWithSocketServer();
+        thread->SetName("Orchid WebRTC Local", nullptr);
+        thread->Start();
+    }
+
+    return thread.get();
+}
+
+class Manager :
+    public rtc::BasicNetworkManager
+{
+  public:
+    void GetNetworks(NetworkList *networks) const override {
+        rtc::BasicNetworkManager::GetNetworks(networks);
+        for (auto network : *networks)
+            Log() << "NET: " << network->ToString() << "@" << network->GetBestIP().ToString() << std::endl;
+        std::remove_if(networks->begin(), networks->end(), [](auto network) {
+            return network->GetBestIP().ToString() == "10.7.0.3";
+        });
+    }
+};
+
+U<cricket::PortAllocator> Local::Allocator() {
+    auto thread(Thread());
+    static Manager manager;
+    static rtc::BasicPacketSocketFactory packeter(thread);
+    return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
+        return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);
+    });
+}
 
 task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto connection(std::make_unique<Connection<asio::ip::udp::socket>>(Context()));
