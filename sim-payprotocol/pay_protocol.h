@@ -20,6 +20,7 @@
 
 
 #include <map>
+#include <set>
 #include <vector>
 #include <math.h>
 #include <functional>
@@ -608,7 +609,7 @@ struct Client : public Tickable, public INet
 			del_msg(p);
 		}
 		else {
-			assert(p.routehash_ == routehash_);
+			//assert(p.routehash_ == routehash_);
 		}
 	}
 
@@ -657,6 +658,8 @@ inline int invidx(int i, int s) { return s - i - 1; }
 
 void Client::send_data(double ctime, netaddr dst, double ps)
 {
+	dlog(2, "Client::send_data(%f) \n", ctime);
+
 	Packet pack; pack.routehash_ = routehash_;
 	pack.size_ = ps;
 	netaddr targ;
@@ -681,6 +684,8 @@ void Client::send_data(double ctime, netaddr dst, double ps)
 
 void Client::send_payments(double ctime)
 {
+	dlog(2, "Client::send_payments(%f) \n", ctime);
+
 	Packet pack; pack.routehash_ = routehash_;
 	netaddr dst;
 	if (route_.size() > 0) dst = route_[0].address_;
@@ -710,6 +715,9 @@ void Client::on_connect(double ctime, const vector<pair<netaddr,bytes32>>& route
 {
 	dlog(1, "Client::on_connect(%f) \n", ctime);
 
+
+	set<uint32> saddrs;
+
 	brecvd_ = 0.0;
 	rate_limit_mult_ = 1.0;
 	last_recv_pac_id_ = 0;
@@ -717,9 +725,14 @@ void Client::on_connect(double ctime, const vector<pair<netaddr,bytes32>>& route
 
 	assert(route.size() == route_.size());
 	for (int i(0); i < int(route_.size()); i++) {
+		auto saddr = route[i].first;
+		assert(saddrs.find(saddr.addr_) == saddrs.end());
+		saddrs.insert(saddr.addr_);
 		route_[i].address_ = route[i].first; route_[i].stakee_ = route[i].second;
 		route_[i].budget_->on_connect();
+		dlog(2, "Client::on_connect route[%i] address_(%x) stakee_(%x) \n", i, route_[i].address_, route_[i].stakee_);
 	}
+	on_update_route();
 
 	//send("connect", server);
 	//server->on_connect(this, dst);
@@ -730,6 +743,8 @@ void Client::on_connect(double ctime, const vector<pair<netaddr,bytes32>>& route
 
 	for (int i(0); i < int(route_.size()); i++)
 	{
+		dlog(2, "  on_connect %i \n", i);
+
 		Packet pack; pack.routehash_ = routehash_;
 		int rs = i+1;
 		pack.payersigs_.resize(rs); pack.fwds_.resize(rs); pack.msgs_.resize(rs);
@@ -916,7 +931,7 @@ struct Server : public INet
 
 		auto* msg = get_msg(p); // if there's a protocol message for us, handle it first
 
-		dlog(4,"Server::on_packet  ([%x,%x],[%x,%x],%e)  msg(%p) \n", to.addr_,to.port_,from.addr_,from.port_,psize,msg);
+		dlog(3,"Server::on_packet  ([%x,%x],[%x,%x],%e)  msg(%p) \n", to.addr_,to.port_,from.addr_,from.port_,psize,msg);
 
 		if (msg != nullptr && (msg->get_recipient() == account_)) {
 			msg->recv(to, from, p, this);
@@ -928,7 +943,7 @@ struct Server : public INet
 		{
 			assert(has_fwd(p));
 			if (balances_[payer] > min_balance_) {
-				dlog(3,"Server::on_packet  ([%x,%x],[%x,%x],%e) payer(%x) balance:  %f > %f ", to.addr_,to.port_,from.addr_,from.port_,psize,payer,balances_[payer],min_balance_);
+				dlog(3," Server::on_packet  ([%x,%x],[%x,%x],%e) payer(%x) balance:  %f > %f ", to.addr_,to.port_,from.addr_,from.port_,psize,payer,balances_[payer],min_balance_);
 				netaddr dst = get_fwd(p);
 				uint32 sendport = next_port_;
 				if (route_to_port_.find(p.routehash_) == route_to_port_.end()) {
@@ -939,13 +954,17 @@ struct Server : public INet
 				}
 				else {
 					sendport = route_to_port_[p.routehash_];
-					dlog(3," existing routehash_(%x) -> sendport(%i) \n", p.routehash_, sendport);
+					auto pe = port_to_entry_[sendport];
+					dlog(3," existing routehash_(%x) -> sendport(%i) pe([%x,%x],[%x,%x],%x) \n", p.routehash_, sendport, pe.to_.addr_,pe.to_.port_, pe.from_.addr_, pe.from_.port_, pe.payer_);
+					assert(pe.to_ == to);
+					assert(pe.from_ == from);
+					assert(pe.payer_ == payer);
 				}
 				bill_packet(payer, psize);
 				strip(p);
 				net::send(dst, netaddr{address_.addr_, sendport}, p);
 			} else {
-				dlog(3,"Server::on_packet  ([%x,%x],[%x,%x],%e) payer(%x) balance:  %f <= %f \n", to.addr_,to.port_,from.addr_,from.port_,psize,payer,balances_[payer],min_balance_);
+				dlog(3," Server::on_packet  ([%x,%x],[%x,%x],%e) payer(%x) balance:  %f <= %f \n", to.addr_,to.port_,from.addr_,from.port_,psize,payer,balances_[payer],min_balance_);
 			}
 		}
 		else if (to.port_ != 0) // inv packet, look it up
@@ -953,16 +972,22 @@ struct Server : public INet
 			PortEntry pe = port_to_entry_[to.port_];
 			netaddr dst = pe.from_;
 			payer = pe.payer_;
-			dlog(3,"Server::on_packet  ([%x,%x],[%x,%x],%e)  payer(%x) inv pentry[%x,%x][%x,%x] \n", to.addr_,to.port_,from.addr_,from.port_,psize,payer, pe.to_.addr_,pe.to_.port_,pe.from_.addr_,pe.from_.port_);
-			bill_packet(payer, psize);
-			//strip(p);
-			net::send(dst, to, p);
+
+			if (balances_[payer] > min_balance_) {
+				dlog(3," Server::on_packet  ([%x,%x],[%x,%x],%e)  payer(%x) balance:  %f > %f  inv pe[%x,%x][%x,%x] \n", to.addr_,to.port_,from.addr_,from.port_,psize,payer, balances_[payer],min_balance_, pe.to_.addr_,pe.to_.port_,pe.from_.addr_,pe.from_.port_);
+				bill_packet(payer, psize);
+				//strip(p);
+				net::send(dst, to, p);
+			}
+			else {
+				dlog(3," Server::on_packet  ([%x,%x],[%x,%x],%e)  payer(%x) balance:  %f <= %f  inv pe[%x,%x][%x,%x] \n", to.addr_,to.port_,from.addr_,from.port_,psize,payer, balances_[payer],min_balance_, pe.to_.addr_,pe.to_.port_,pe.from_.addr_,pe.from_.port_);
+			}
 		}
 	}
 
 
 
-	virtual void on_recv(netaddr to, netaddr from, const Packet& inpack, Connect_Msg* msg)
+	virtual void on_recv(netaddr to, netaddr from, const Packet& ipack, Connect_Msg* msg)
 	{
 		dlog(2,"Server::on_recv(%x,%x,Packet,Connect_Msg*) \n", to.addr_, from.addr_);
 
@@ -971,16 +996,16 @@ struct Server : public INet
 		uint256 hash_secret   = keccak256(secret);
 		secrets_[hash_secret] = secret;
 
-		Packet pack; pack.id_ = inpack.id_; pack.size_ = inpack.size_;
-		pack.msgs_ = { new Payable_Msg(msg->sender_, address_, account_, account_, hash_secret ) };
-		net::send(from, to, pack);
+		Packet opack; opack.id_ = ipack.id_; opack.size_ = ipack.size_;
+		opack.msgs_ = { new Payable_Msg(msg->sender_, address_, account_, account_, hash_secret ) };
+		net::send(from, to, opack);
 	}
 
 	virtual void on_recv(netaddr to, netaddr from, const Packet& ipack, Payment_Msg* msg)
 	{
 		assert(msg != nullptr);
 		on_upay(msg->payment_);
-		Packet opack(ipack); opack.msgs_ = {};
+		Packet opack; opack.id_ = ipack.id_; opack.size_ = ipack.size_;;
 		net::send(from, to, opack);
 	}
 
