@@ -3,6 +3,7 @@
 #define LWIP_NETIF_API 1
 #define LWIP_TCP 1
 #define LWIP_UDP 1
+#define LWIP_HAVE_LOOPIF 1
 #define LWIP_NETIF_LOOPBACK 1
 #define LWIP_SOCKET_POLL 0
 #define MEM_LIBC_MALLOC 1
