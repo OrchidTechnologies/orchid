@@ -22,6 +22,7 @@
 
 #include <lwip/ip.h>
 #include <lwip/tcpip.h>
+#include <lwip/netifapi.h>
 
 #include "remote.hpp"
 
@@ -124,11 +125,11 @@ err_t Remote::Initialize(netif *interface) {
 }
 
 void Remote::Land(const Buffer &data) {
-    orc_assert(interface_.input(Chain(data), &interface_) == ERR_OK);
+    orc_assert(tcpip_inpkt(Chain(data), &interface_, interface_.input) == ERR_OK);
 }
 
 void Remote::Stop(const std::string &error) {
-    netif_set_link_down(&interface_);
+    netifapi_netif_set_link_down(&interface_);
     Origin::Stop();
 }
 
@@ -143,25 +144,25 @@ Remote::Remote() {
     static ip4_addr_t address; IP4_ADDR(&address, 10,7,0,3);
     static ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
 
-    orc_assert(netif_add(&interface_, &address, &netmask, &gateway, nullptr, &Initialize, &ip_input) != nullptr);
+    orc_assert(netifapi_netif_add(&interface_, &address, &netmask, &gateway, nullptr, &Initialize, &ip_input) == ERR_OK);
     interface_.state = this;
 
-    netif_set_default(&interface_);
+    netifapi_netif_set_default(&interface_);
 }
 
 Remote::~Remote() {
-    netif_remove(&interface_);
+    netifapi_netif_remove(&interface_);
 }
 
 void Remote::Open() {
-    netif_set_up(&interface_);
-    netif_set_link_up(&interface_);
+    netifapi_netif_set_up(&interface_);
+    netifapi_netif_set_link_up(&interface_);
 }
 
 task<void> Remote::Shut() {
     co_await Inner()->Shut();
     co_await Valve::Shut();
-    netif_set_down(&interface_);
+    netifapi_netif_set_down(&interface_);
 }
 
 task<Socket> Remote::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
