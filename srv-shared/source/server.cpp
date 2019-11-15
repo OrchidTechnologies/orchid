@@ -88,14 +88,14 @@ void Server::Send(const Buffer &data) {
 using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint256_t, Address, Address>;
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
-    if (!Datagram(data, [&](Socket source, Socket destination, const Buffer &data) {
+    if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
 
         auto [hash, nonce, start, range, amount, ratio, funder, target, v, r, s] = Take<Brick<32>, Brick<32>, uint256_t, Pad<16>, uint128_t, Pad<16>, uint128_t, uint256_t, Pad<12>, uint160_t, Pad<12>, uint160_t, Pad<31>, Number<uint8_t>, Brick<32>, Brick<32>>(data);
-        Signature signature(std::move(r), std::move(s), v);
+        Signature signature(r, s, v);
 
-        Spawn([this, source = std::move(source), hash = std::move(hash), nonce = std::move(nonce), start = std::move(start), range = std::move(range), amount = std::move(amount), ratio = std::move(ratio), funder = Address(std::move(funder)), target = Address(std::move(target)), signature = std::move(signature)]() -> task<void> {
+        Spawn([this, source, hash, nonce, start = std::move(start), range = std::move(range), amount = std::move(amount), ratio = std::move(ratio), funder = Address(std::move(funder)), target = Address(std::move(target)), signature]() -> task<void> {
             auto ticket(Ticket::Encode(hash, nonce, start, range, amount, ratio, funder, target));
             auto signer(Recover(signature, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), Hash(ticket)))));
             (void) signer;

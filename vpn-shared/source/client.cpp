@@ -32,7 +32,7 @@ namespace orc {
 
 void Client::Land(Pipe *pipe, const Buffer &data) {
     benefit_ += data.size();
-    if (!Datagram(data, [&](Socket source, Socket destination, Window window) {
+    if (!Datagram(data, [&](const Socket &source, const Socket &destination, Window window) {
         return false;
     })) Pump::Land(data);
 }
