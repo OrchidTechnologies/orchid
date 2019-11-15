@@ -70,7 +70,7 @@ task<void> Translator::Send(const Buffer &data) {
             Three source(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(tcp.source));
             auto translation(translations_.find(source));
             if (translation == translations_.end())
-                translation = Translate(std::move(source));
+                translation = Translate(source);
             const auto &replace(translation->second);
             ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
             Forge(tcp, &openvpn::TCPHeader::source, replace.Port());
@@ -82,7 +82,7 @@ task<void> Translator::Send(const Buffer &data) {
             Three source(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
             auto translation(translations_.find(source));
             if (translation == translations_.end())
-                translation = Translate(std::move(source));
+                translation = Translate(source);
             const auto &replace(translation->second);
             ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
             Forge(udp, &openvpn::UDPHeader::source, replace.Port());

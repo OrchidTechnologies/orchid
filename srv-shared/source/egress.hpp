@@ -100,9 +100,9 @@ class Translator :
     typedef std::map<Three, Socket> Translations_;
     Translations_ translations_;
 
-    Translations_::iterator Translate(Three source) {
+    Translations_::iterator Translate(const Three &source) {
         auto socket(egress_->Translate(this, source));
-        auto translation(translations_.emplace(std::move(source), std::move(socket)));
+        auto translation(translations_.emplace(source, socket));
         return translation.first;
     }
 
