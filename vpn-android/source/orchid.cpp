@@ -12,6 +12,7 @@
 
 #include "capture.hpp"
 #include "file.hpp"
+#include "port.hpp"
 #include "transport.hpp"
 
 namespace orc {
