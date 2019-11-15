@@ -14,3 +14,12 @@ struct netif *hook_ip4_route_src(const void *src, const void *dest);
 #define LWIP_TCPIP_CORE_LOCKING    1
 void sys_check_core_locking(void);
 #define LWIP_ASSERT_CORE_LOCKED()  sys_check_core_locking()
+
+#if 0
+#define LWIP_DEBUG 1
+#define LWIP_DBG_TYPES_ON LWIP_DBG_ON
+#define NETIF_DEBUG LWIP_DBG_ON
+#define SOCKETS_DEBUG LWIP_DBG_ON
+#define API_LIB_DEBUG LWIP_DBG_ON
+#define IP_DEBUG LWIP_DBG_ON
+#endif
