@@ -509,6 +509,8 @@ struct Coded<std::tuple<Args_...>, void> {
     }
 };
 
+static const uint128_t Ten18("1000000000000000000");
+
 }
 
 #endif//ORCHID_JSONRPC_HPP
