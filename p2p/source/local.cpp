@@ -47,9 +47,9 @@ class Manager :
         rtc::BasicNetworkManager::GetNetworks(networks);
         for (auto network : *networks)
             Log() << "NET: " << network->ToString() << "@" << network->GetBestIP().ToString() << std::endl;
-        std::remove_if(networks->begin(), networks->end(), [](auto network) {
+        networks->erase(std::remove_if(networks->begin(), networks->end(), [](auto network) {
             return network->GetBestIP().ToString() == "10.7.0.3";
-        });
+        }), networks->end());
     }
 };
 
