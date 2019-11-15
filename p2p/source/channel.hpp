@@ -288,7 +288,10 @@ _trace();
         Pump::Land(data);
     }
 
-    using Pump::Stop;
+    void Stop(const std::string &error = std::string()) {
+        opened_.set();
+        return Pump::Stop(error);
+    }
 
     task<void> Shut() override {
         channel_->Close();

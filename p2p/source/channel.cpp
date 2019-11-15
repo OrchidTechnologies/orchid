@@ -188,16 +188,16 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
                 Log() << "OnStandardizedIceConnectionChange(kIceConnectionFailed)" << std::endl;
 
             // you can't close a PeerConnection if it is blocked in a signal
-            Spawn([this]() -> task<void> {
-                co_await Post([this]() {
-                    for (auto current(channels_.begin()); current != channels_.end(); ) {
+            Spawn([self = shared_from_this()]() mutable -> task<void> {
+                co_await Post([self = std::move(self)]() {
+                    for (auto current(self->channels_.begin()); current != self->channels_.end(); ) {
                         auto next(current);
                         ++next;
                         (*current)->Stop("kIceConnectionClosed");
                         current = next;
                     }
 
-                    Stop();
+                    self->Stop();
                 });
             });
         break;
