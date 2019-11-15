@@ -634,13 +634,14 @@ task<Sunk<> *> Capture::Start() {
 }
 
 task<void> Capture::Start(boost::program_options::variables_map &args) {
-    if (args.count("pot-secret") == 0 || args.count("pot-funder") == 0)
+    auto hops(args["hops"].as<unsigned>());
+    if (hops == 0)
         co_return co_await Start(GetLocal());
     Secret secret(Bless(args["pot-secret"].as<std::string>()));
     Address funder(args["pot-funder"].as<std::string>());
     Network network(args);
     auto sunk(co_await Start());
-    auto origin(co_await network.Randoms(GetLocal(), args["hops"].as<unsigned>(), secret, funder));
+    auto origin(co_await network.Randoms(GetLocal(), hops - 1, secret, funder));
     co_await network.Random(sunk, origin, secret, funder);
 }
 
