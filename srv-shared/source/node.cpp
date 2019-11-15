@@ -25,7 +25,7 @@
 
 namespace orc {
 
-void Node::Run(asio::ip::address bind, uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params) {
+void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params) {
     boost::asio::ssl::context context{boost::asio::ssl::context::tlsv12};
 
     context.set_options(

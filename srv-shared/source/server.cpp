@@ -95,7 +95,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
         auto [hash, nonce, start, range, amount, ratio, funder, target, v, r, s] = Take<Brick<32>, Brick<32>, uint256_t, Pad<16>, uint128_t, Pad<16>, uint128_t, uint256_t, Pad<12>, uint160_t, Pad<12>, uint160_t, Pad<31>, Number<uint8_t>, Brick<32>, Brick<32>>(data);
         Signature signature(r, s, v);
 
-        Spawn([this, source, hash, nonce, start = std::move(start), range = std::move(range), amount = std::move(amount), ratio = std::move(ratio), funder = Address(std::move(funder)), target = Address(std::move(target)), signature]() -> task<void> {
+        Spawn([this, hash = hash, nonce = nonce, start = std::move(start), range = std::move(range), amount = std::move(amount), ratio = std::move(ratio), funder = Address(std::move(funder)), target = Address(std::move(target)), signature]() -> task<void> {
             auto ticket(Ticket::Encode(hash, nonce, start, range, amount, ratio, funder, target));
             auto signer(Recover(signature, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), Hash(ticket)))));
             (void) signer;
