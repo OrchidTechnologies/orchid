@@ -5,6 +5,8 @@
 #define LWIP_UDP 1
 #define LWIP_HAVE_LOOPIF 1
 #define LWIP_NETIF_LOOPBACK 1
+struct netif *hook_ip4_route_src(const void *src, const void *dest);
+#define LWIP_HOOK_IP4_ROUTE_SRC hook_ip4_route_src
 #define LWIP_SOCKET_POLL 0
 #define MEM_LIBC_MALLOC 1
 #define MEMP_MEM_MALLOC 1

@@ -30,6 +30,18 @@
 #include "lwip.hpp"
 #include "remote.hpp"
 
+
+extern "C" struct netif *hook_ip4_route_src(const ip4_addr_t *src, const ip4_addr_t *dest)
+{
+    struct netif *netif;
+    NETIF_FOREACH(netif) {
+        if (netif_is_up(netif) && netif_is_link_up(netif) && ip4_addr_cmp(src, netif_ip4_addr(netif))) {
+            return netif;
+        }
+    }
+    return nullptr;
+}
+
 namespace orc {
 
 class Reference {
@@ -152,10 +164,7 @@ Remote::Remote() :
     ip4_addr_t address(host_);
     ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
 
-    orc_assert(netifapi_netif_add(&interface_, &address, &netmask, &gateway, nullptr, &Initialize, &ip_input) == ERR_OK);
-    interface_.state = this;
-
-    netifapi_netif_set_default(&interface_);
+    orc_assert(netifapi_netif_add(&interface_, &address, &netmask, &gateway, this, &Initialize, &ip_input) == ERR_OK);
 }
 
 Remote::~Remote() {
