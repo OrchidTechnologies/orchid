@@ -43,6 +43,7 @@ cflags += -DUSE_ASIO_THREADLOCAL
 cflags += -DASIO_NO_DEPRECATED
 cflags += -DHAVE_LZ4
 cflags += -DUSE_OPENSSL
+cflags += -D'OPENVPN_PACKET_LOG="packet.log"'
 
 cflags += -Ivpn/p2p/openvpn3
 cflags += -Ivpn/p2p/openvpn3/client
