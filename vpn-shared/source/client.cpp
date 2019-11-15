@@ -37,12 +37,12 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
     })) Pump::Land(data);
 }
 
-Client::Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Secret secret, Address funder) :
+Client::Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, const Secret &secret, Address funder) :
     Pump(drain),
     local_(Certify()),
     remote_(std::move(remote)),
     provider_(std::move(provider)),
-    secret_(std::move(secret)),
+    secret_(secret),
     funder_(std::move(funder)),
     benefit_(0)
 {

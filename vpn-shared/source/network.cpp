@@ -42,7 +42,7 @@ Network::Network(boost::program_options::variables_map &args) :
 {
 }
 
-task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, Secret secret, Address funder) {
+task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &secret, Address funder) {
     Endpoint endpoint(origin, locator_);
 
     auto latest(co_await endpoint.Latest());
@@ -76,11 +76,11 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, Secret secret,
     }();
 
     orc_assert(fingerprint != nullptr);
-    auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(provider), std::move(secret), std::move(funder)));
+    auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(provider), secret, std::move(funder)));
     co_await client->Open(origin, url);
 }
 
-task<S<Origin>> Network::Randoms(S<Origin> origin, unsigned hops, Secret secret, Address funder) {
+task<S<Origin>> Network::Randoms(S<Origin> origin, unsigned hops, const Secret &secret, Address funder) {
     for (unsigned i(0); i != hops; ++i) {
         auto remote(Break<Sink<Remote>>());
         co_await Random(remote.get(), origin, secret, funder);

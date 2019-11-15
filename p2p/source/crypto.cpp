@@ -76,9 +76,9 @@ Signature::Signature(const Brick<64> &data, int v) {
     v_ += 27;
 }
 
-Signature::Signature(Brick<32> r, Brick<32> s, uint8_t v) :
-    r_(std::move(r)),
-    s_(std::move(s)),
+Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
+    r_(r),
+    s_(s),
     v_(v)
 {
 }

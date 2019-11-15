@@ -50,7 +50,7 @@ class Reference {
 
     Reference(const Reference &other) = delete;
 
-    Reference(Reference &&other) :
+    Reference(Reference &&other) noexcept :
         buffer_(other.buffer_)
     {
         other.buffer_ = nullptr;

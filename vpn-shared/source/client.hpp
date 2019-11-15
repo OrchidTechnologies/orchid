@@ -59,7 +59,7 @@ class Client :
     void Land(Pipe *pipe, const Buffer &data) override;
 
   public:
-    Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Secret secret, Address funder);
+    Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, const Secret &secret, Address funder);
 
     task<void> Open(const S<Origin> &origin, const std::string &url);
     task<void> Shut() override;
