@@ -78,6 +78,7 @@ using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint256_
 using Signed = Coder<uint8_t, Bytes32, Bytes32>;
 
 task<void> Client::Send(const Buffer &data) {
+#if 0
     benefit_ += data.size();
     std::cout << "BENEFIT " << std::dec << benefit_ << std::endl;
     if (benefit_ >= 256) {
@@ -90,6 +91,7 @@ task<void> Client::Send(const Buffer &data) {
 _trace();
         co_await Bonded::Send(Datagram(Port_, Port_, Tie(ticket, Signed::Encode(signature.v_, signature.r_, signature.s_))));
     }); }
+#endif
     co_return co_await Bonded::Send(data);
 }
 
