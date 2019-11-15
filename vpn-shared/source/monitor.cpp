@@ -334,7 +334,8 @@ void monitor(Span<const uint8_t> span, MonitorLogger &logger)
     case IPCommon::TCP: {
         auto tcphdr = &span.cast<const TCPHeader>(ipv4hlen);
         auto tcpbuf = span + (ipv4hlen + TCPHeader::length(tcphdr->doff_res));
-        Log() << "TCP(" << tcpbuf.size() << ") dest:" << ntohs(tcphdr->dest) << std::endl;
+        if (Verbose)
+            Log() << "TCP(" << tcpbuf.size() << ") dest:" << ntohs(tcphdr->dest) << std::endl;
         src_port = ntohs(tcphdr->source);
         dst_port = ntohs(tcphdr->dest);
         break;
@@ -342,7 +343,8 @@ void monitor(Span<const uint8_t> span, MonitorLogger &logger)
     case IPCommon::UDP: {
         auto udphdr = &span.cast<const UDPHeader>(ipv4hlen);
         auto udpbuf = span + (ipv4hlen + sizeof(UDPHeader));
-        Log() << "UDP(" << udpbuf.size() << ") dest:" << ntohs(udphdr->dest) << std::endl;
+        if (Verbose)
+            Log() << "UDP(" << udpbuf.size() << ") dest:" << ntohs(udphdr->dest) << std::endl;
         src_port = ntohs(udphdr->source);
         dst_port = ntohs(udphdr->dest);
         break;
@@ -353,10 +355,12 @@ void monitor(Span<const uint8_t> span, MonitorLogger &logger)
     logger.AddFlow(flow);
 
     wireshark_analyze(span.data(), span.size(), [&](auto hostname) {
-        Log() << "hostname: " << hostname << std::endl;
+        if (Verbose)
+            Log() << "hostname: " << hostname << std::endl;
         logger.GotHostname(flow, hostname);
     }, [&](auto protocol, auto protocol_chain) {
-        Log() << "protocol: " << protocol << " (" << protocol_chain << ")" << std::endl;
+        if (Verbose)
+            Log() << "protocol: " << protocol << " (" << protocol_chain << ")" << std::endl;
         logger.GotProtocol(flow, protocol, protocol_chain);
     });
 }
