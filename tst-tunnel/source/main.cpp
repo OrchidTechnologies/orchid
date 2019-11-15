@@ -53,6 +53,7 @@
 #include <asio.hpp>
 #include "capture.hpp"
 #include "error.hpp"
+#include "port.hpp"
 #include "protect.hpp"
 #include "sync.hpp"
 #include "syscall.hpp"
@@ -102,7 +103,7 @@ int Main(int argc, const char *const argv[]) {
     Initialize();
 
 
-    std::string local("10.7.0.3");
+    auto local(Host_);
     auto capture(Make<Sink<Capture>>(local));
 
 #if 0
@@ -130,7 +131,7 @@ int Main(int argc, const char *const argv[]) {
     while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
 
     auto utun("utun" + std::to_string(address.sc_unit - 1));
-    orc_assert(system(("ifconfig " + utun + " inet " + local + " " + local + " mtu 1500 up").c_str()) == 0);
+    orc_assert(system(("ifconfig " + utun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
     orc_assert(system(("route -n add 207.254.46.169 -interface " + utun).c_str()) == 0);
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 #else

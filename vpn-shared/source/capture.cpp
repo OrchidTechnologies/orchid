@@ -251,8 +251,8 @@ void Capture::Land(const Buffer &data, bool analyze) {
     });
 }
 
-Capture::Capture(const std::string &local) :
-    local_(openvpn::IPv4::Addr::from_string(local).to_uint32()),
+Capture::Capture(const Host &local) :
+    local_(local),
     analyzer_(std::make_unique<Logger>(Group() + "/analysis.db"))
 {
 }
@@ -288,7 +288,7 @@ class Punch :
   public:
     Punch(Hole *hole, Socket socket) :
         hole_(hole),
-        socket_(std::move(socket))
+        socket_(socket)
     {
     }
 
@@ -342,7 +342,7 @@ class Flow {
   public:
     Flow(Plant *plant, Four four) :
         plant_(plant),
-        four_(std::move(four)),
+        four_(four),
         latch_(2)
     {
     }
@@ -380,7 +380,7 @@ class Split :
 
   protected:
     void Land(asio::ip::tcp::socket connection, Socket socket) override {
-        Spawn([this, connection = std::move(connection), socket = std::move(socket)]() mutable -> task<void> {
+        Spawn([this, connection = std::move(connection), socket]() mutable -> task<void> {
             auto flow(co_await [&]() -> task<S<Flow>> {
                 auto lock(co_await meta_.scoped_lock_async());
                 auto flow(flows_.find(socket));
@@ -406,7 +406,7 @@ class Split :
     {
     }
 
-    void Connect(uint32_t local);
+    void Connect(const Host &local);
 
     void Land(const Buffer &data) override;
     task<bool> Send(const Beam &data) override;
@@ -470,8 +470,8 @@ _trace();
     }
 };
 
-void Split::Connect(uint32_t local) {
-    Acceptor::Open({asio::ip::address_v4(local), 0});
+void Split::Connect(const Host &local) {
+    Acceptor::Open({local, 0});
     local_ = Local();
     // XXX: this is sickening
     remote_ = asio::ip::address_v4(local_.Host().to_v4().to_uint() + 1);
@@ -530,8 +530,8 @@ task<bool> Split::Send(const Beam &data) {
                 Spawn([
                     beam = std::move(beam),
                     flow,
-                    four = std::move(four),
-                    socket = std::move(socket),
+                    four,
+                    socket,
                     span,
                     &tcp,
                 this]() mutable -> task<void> {

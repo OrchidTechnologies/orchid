@@ -20,14 +20,12 @@
 /* }}} */
 
 
+#include "port.hpp"
 #include "protect.hpp"
 #include "log.hpp"
 
 #include <netinet/in.h>
 
-
-#define INET_ADDR(a,b,c,d) (a | (b<<8) | (c<<16) | (d<<24))
-#define TERMINATE_HOST INET_ADDR(10,7,0,3)
 
 namespace orc {
 
@@ -37,7 +35,7 @@ int Protect(int socket, const sockaddr *address, socklen_t length) {
     bool is_local = false;
     if (address != nullptr && address->sa_family == AF_INET) {
         const struct sockaddr_in *s = reinterpret_cast<const struct sockaddr_in *>(address);
-        is_local = (s->sin_addr.s_addr == TERMINATE_HOST);
+        is_local = (s->sin_addr.s_addr == Host_);
     }
     if (!is_local && !vpn_protect(socket))
         return -1;

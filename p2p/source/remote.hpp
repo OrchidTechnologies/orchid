@@ -26,6 +26,7 @@
 #include <lwip/netif.h>
 
 #include "origin.hpp"
+#include "socket.hpp"
 
 namespace rtc {
 class NetworkManager; }
@@ -37,6 +38,7 @@ class Remote :
     public BufferDrain
 {
   private:
+    Host host_;
     netif interface_;
     U<rtc::NetworkManager> manager_;
 

@@ -253,7 +253,7 @@ task<Socket> Channel::Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration 
     co_await channel->Connect();
     auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
-    co_return Socket(socket.ipaddr().ToString(), socket.port());
+    co_return Socket(socket.ipaddr().ipv4_address(), socket.port());
 }
 
 std::string Strip(const std::string &sdp) {

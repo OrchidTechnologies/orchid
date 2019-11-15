@@ -63,7 +63,7 @@ class Capture :
     public BufferDrain
 {
   private:
-    uint32_t local_;
+    Host local_;
     U<Analyzer> analyzer_;
     U<Internal> internal_;
 
@@ -74,7 +74,7 @@ class Capture :
     void Stop(const std::string &error) override;
 
   public:
-    Capture(const std::string &local);
+    Capture(const Host &local);
     virtual ~Capture();
 
     void Land(const Buffer &data, bool analyze);

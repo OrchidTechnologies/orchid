@@ -25,6 +25,7 @@
 
 #include "connection.hpp"
 #include "local.hpp"
+#include "port.hpp"
 
 namespace orc {
 
@@ -48,7 +49,7 @@ class Manager :
         for (auto network : *networks)
             Log() << "NET: " << network->ToString() << "@" << network->GetBestIP().ToString() << std::endl;
         networks->erase(std::remove_if(networks->begin(), networks->end(), [](auto network) {
-            return network->GetBestIP().ToString() == "10.7.0.3";
+            return Host(network->GetBestIP()) == Host_;
         }), networks->end());
     }
 };
@@ -67,14 +68,14 @@ task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::
     auto endpoint(co_await connection->Open(host, port));
     auto inverted(sunk->Wire<Inverted>(std::move(connection)));
     inverted->Open();
-    co_return Socket(endpoint.address().to_string(), endpoint.port());
+    co_return Socket(endpoint.address(), endpoint.port());
 }
 
 task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {
     auto connection(std::make_unique<Connection<asio::ip::tcp::socket>>(Context()));
     auto endpoint(co_await connection->Open(host, port));
     stream = std::move(connection);
-    co_return Socket(endpoint.address().to_string(), endpoint.port());
+    co_return Socket(endpoint.address(), endpoint.port());
 }
 
 task<Socket> Local::Unlid(Sunk<Opening, BufferSewer> *sunk) {

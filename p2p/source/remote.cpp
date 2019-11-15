@@ -137,16 +137,20 @@ void Remote::Stop(const std::string &error) {
     Origin::Stop();
 }
 
-Remote::Remote() {
+static uint8_t quad_(3);
+
+Remote::Remote() :
+    host_(10,7,0,++quad_)
+{
     static bool setup(false);
     if (!setup) {
         tcpip_init(nullptr, nullptr);
         setup = true;
     }
 
-    static ip4_addr_t gateway; IP4_ADDR(&gateway, 10,7,0,1);
-    static ip4_addr_t address; IP4_ADDR(&address, 10,7,0,3);
-    static ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
+    ip4_addr_t gateway; IP4_ADDR(&gateway, 10,7,0,1);
+    ip4_addr_t address(host_);
+    ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
 
     orc_assert(netifapi_netif_add(&interface_, &address, &netmask, &gateway, nullptr, &Initialize, &ip_input) == ERR_OK);
     interface_.state = this;
@@ -187,11 +191,16 @@ class Assistant :
     mutable rtc::Network network_;
 
   public:
-    Assistant(Host network, unsigned bits, Host host) :
-        network_("or0", "or0", rtc::IPAddress(network), bits, ADAPTER_TYPE_VPN)
+    Assistant(const std::string &name, const Host &host, const Host &network, unsigned bits) :
+        network_(name, name, network, bits, ADAPTER_TYPE_VPN)
     {
         //network_.set_default_local_address_provider(this);
-        network_.AddIP(rtc::IPAddress(host));
+        network_.AddIP(host);
+    }
+
+    Assistant(const std::string &name, const Host &host) :
+        Assistant(name, host, host, 32)
+    {
     }
 
     void StartUpdating() override {
@@ -208,8 +217,11 @@ class Assistant :
 };
 
 U<cricket::PortAllocator> Remote::Allocator() {
-    if (manager_ == nullptr)
-        manager_ = std::make_unique<Assistant>(Host("10.7.0.0"), 24, Host("10.7.0.3"));
+    if (manager_ == nullptr) {
+        static unsigned interface(0);
+        manager_ = std::make_unique<Assistant>("or" + std::to_string(interface++), host_);
+    }
+
     auto thread(Thread());
     static rtc::BasicPacketSocketFactory packeter(thread);
     return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {

@@ -27,6 +27,7 @@
 
 #include "capture.hpp"
 #include "family.hpp"
+#include "port.hpp"
 #include "sync.hpp"
 #include "transport.hpp"
 
@@ -75,11 +76,11 @@ static std::string cfs(NSString *data) {
 
     auto config(cfs((NSString *) [options objectForKey:@"config"]));
 
-    std::string local("10.7.0.3");
+    auto local(Host_);
 
     auto settings([NEPacketTunnelNetworkSettings.alloc initWithTunnelRemoteAddress:@"127.0.0.1"]);
 
-    settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[[NSString stringWithUTF8String:local.c_str()]] subnetMasks:@[@"255.255.255.0"]];
+    settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[[NSString stringWithUTF8String:local.String().c_str()]] subnetMasks:@[@"255.255.255.0"]];
     settings.IPv4Settings.includedRoutes = @[NEIPv4Route.defaultRoute];
 
     settings.DNSSettings = [NEDNSSettings.alloc initWithServers:@[@"1.1.1.1"]];

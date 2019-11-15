@@ -27,44 +27,121 @@
 #include <string>
 
 #include <boost/endian/conversion.hpp>
+#include <lwip/ip4_addr.h>
+#include <rtc_base/ip_address.h>
 
 #include <asio.hpp>
+#include "error.hpp"
 
 namespace orc {
 
 class Host {
   private:
-    asio::ip::address host_;
+    std::array<uint8_t, 16> data_;
 
-  public:
-    Host(asio::ip::address host) :
-        host_(std::move(host))
-    {
+    explicit Host(const uint8_t *data) {
+        memcpy(data_.data(), data, 16);
     }
 
-    Host(const std::string &host) :
-        host_(asio::ip::make_address(host))
+  public:
+    Host(uint8_t q0, uint8_t q1, uint8_t q2, uint8_t q3) :
+        data_({0,0,0,0, 0,0,0,0, 0,0,0xff,0xff, q0,q1,q2,q3,})
     {
     }
 
     Host(uint32_t host) :
-        host_(asio::ip::address_v4(host))
+        Host(host >> 24, host >> 16, host >> 8, host)
+    {
+    }
+
+    Host(const std::array<uint8_t, 16> &host) :
+        Host(host.data())
+    {
+    }
+
+    Host(const std::array<uint8_t, 4> &host) :
+        Host(host[0], host[1], host[2], host[3])
+    {
+    }
+
+    Host(const in6_addr &host) :
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
+        Host(host.s6_addr)
+    {
+    }
+
+    Host(const in_addr &host) :
+        Host(boost::endian::big_to_native(host.s_addr))
+    {
+    }
+
+    Host(const asio::ip::address &host) :
+        Host((host.is_v6() ? host.to_v6() : asio::ip::make_address_v6(asio::ip::v4_mapped, host.to_v4())).to_bytes())
+    {
+    }
+
+    Host(const rtc::IPAddress &host) :
+        Host(host.AsIPv6Address().ipv6_address())
     {
     }
 
     Host() :
-        Host(0)
+        Host(uint32_t(0))
     {
     }
 
-    operator const asio::ip::address &() const {
-        return host_;
+    bool v4() const {
+        return memcmp(data_.data(), static_cast<const void *>((const uint8_t[]) {0,0,0,0, 0,0,0,0, 0,0,0xff,0xff}), 12) == 0;
+    }
+
+    operator uint32_t() const {
+        orc_assert(v4());
+        return data_[12] << 24 | data_[13] << 16 | data_[14] << 8 | data_[15];
+    }
+
+    operator in6_addr() const {
+        in6_addr address;
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
+        memcpy(address.s6_addr, data_.data(), 16);
+        return address;
     }
 
     operator in_addr() const {
         in_addr address;
-        address.s_addr = boost::endian::native_to_big(host_.to_v4().to_uint());
+        address.s_addr = boost::endian::native_to_big(operator uint32_t());
         return address;
+    }
+
+    operator ip4_addr_t() const {
+        ip4_addr_t address;
+        address.addr = boost::endian::native_to_big(operator uint32_t());
+        return address;
+    }
+
+    operator asio::ip::address() const {
+        if (v4())
+            return asio::ip::make_address_v4(std::array<uint8_t, 4>({data_[12], data_[13], data_[14], data_[15]}));
+        else
+            return asio::ip::make_address_v6(data_);
+    }
+
+    operator rtc::IPAddress() const {
+        if (v4())
+            return rtc::IPAddress(operator in_addr());
+        else
+            return rtc::IPAddress(operator in6_addr());
+    }
+
+    std::string String() const {
+        return operator asio::ip::address().to_string();
+    }
+
+    bool operator <(const Host &rhs) const {
+        return data_ < rhs.data_;
+    }
+
+    bool operator ==(const Host &rhs) const {
+        return data_ == rhs.data_;
     }
 };
 
@@ -73,7 +150,7 @@ class Socket {
     Host host_;
     uint16_t port_;
 
-    std::tuple<const asio::ip::address &, uint16_t> Tuple() const {
+    std::tuple<const Host &, uint16_t> Tuple() const {
         return std::tie(host_, port_);
     }
 
@@ -84,13 +161,13 @@ class Socket {
     }
 
     Socket(Host host, uint16_t port) :
-        host_(std::move(host)),
+        host_(host),
         port_(port)
     {
     }
 
-    Socket(asio::ip::address host, uint16_t port) :
-        host_(std::move(host)),
+    Socket(const asio::ip::address &host, uint16_t port) :
+        host_(host),
         port_(port)
     {
     }
@@ -102,23 +179,7 @@ class Socket {
     {
     }
 
-    Socket(const Socket &rhs) = default;
-
-    Socket(Socket &&rhs) noexcept :
-        host_(std::move(rhs.host_)),
-        port_(rhs.port_)
-    {
-    }
-
-    Socket &operator =(const Socket &rhs) = default;
-
-    Socket &operator =(Socket &&rhs) noexcept {
-        host_ = std::move(rhs.host_);
-        port_ = rhs.port_;
-        return *this;
-    }
-
-    const asio::ip::address &Host() const {
+    asio::ip::address Host() const {
         return host_;
     }
 
@@ -154,16 +215,8 @@ class Four {
 
   public:
     Four(Socket source, Socket destination) :
-        source_(std::move(source)),
-        destination_(std::move(destination))
-    {
-    }
-
-    Four(const Four &rhs) = default;
-
-    Four(Four &&rhs) noexcept :
-        source_(std::move(rhs.source_)),
-        destination_(std::move(rhs.destination_))
+        source_(source),
+        destination_(destination)
     {
     }
 
@@ -204,16 +257,8 @@ class Five final :
 
   public:
     Five(uint8_t protocol, Socket source, Socket destination) :
-        Four(std::move(source), std::move(destination)),
+        Four(source, destination),
         protocol_(protocol)
-    {
-    }
-
-    Five(const Five &rhs) = default;
-
-    Five(Five &&rhs) noexcept :
-        Four(std::move(rhs)),
-        protocol_(rhs.protocol_)
     {
     }
 
@@ -253,14 +298,6 @@ class Three final :
     Three(uint8_t protocol, Args_ &&...args) :
         Socket(std::forward<Args_>(args)...),
         protocol_(protocol)
-    {
-    }
-
-    Three(const Three &rhs) = default;
-
-    Three(Three &&rhs) noexcept :
-        Socket(std::move(rhs)),
-        protocol_(rhs.protocol_)
     {
     }
 

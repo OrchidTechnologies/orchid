@@ -35,7 +35,7 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
 
     orc_assert(file != -1);
 
-    std::string local("10.7.0.3");
+    auto local(Host_);
 
     const char* cDir = env->GetStringUTFChars(dir, nullptr);
     files_dir = std::string(cDir);

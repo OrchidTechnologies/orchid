@@ -46,7 +46,7 @@ bool Datagram(const Buffer &data, const std::function<bool (Socket, Socket, Wind
     Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
     Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
 
-    return code(std::move(source), std::move(destination), std::move(window));
+    return code(source, destination, std::move(window));
 }
 
 Beam Datagram(const Socket &source, const Socket &destination, const Buffer &data) {
