@@ -55,6 +55,19 @@ void Egress::Land(const Buffer &data) {
             Forge(udp, &openvpn::UDPHeader::dest, replace.Port());
             return translation->second.drain_->Land(beam);
         } break;
+
+        case openvpn::IPCommon::ICMPv4: {
+            Log() << __func__ << " ICMP " << length << " s:" << inet_ntoa({.s_addr = ip4.saddr}) << " d:" << inet_ntoa({.s_addr = ip4.daddr});
+            auto &icmp(span.cast<openvpn::ICMPv4>(length));
+            Three destination(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(icmp.id));
+            auto translation(Find(destination));
+            if (translation == translations_.end())
+                return;
+            const auto &replace(translation->second.socket_);
+            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host().to_v4().to_uint());
+            Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
+            return translation->second.drain_->Land(beam);
+        } break;
     }
 }
 
@@ -86,6 +99,18 @@ task<void> Translator::Send(const Buffer &data) {
             const auto &replace(translation->second);
             ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
             Forge(udp, &openvpn::UDPHeader::source, replace.Port());
+            co_return co_await egress_->Send(beam);
+        } break;
+
+        case openvpn::IPCommon::ICMPv4: {
+            auto &icmp(span.cast<openvpn::ICMPv4>(length));
+            Three source(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(icmp.id));
+            auto translation(translations_.find(source));
+            if (translation == translations_.end())
+                translation = Translate(source);
+            const auto &replace(translation->second);
+            ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
+            Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
             co_return co_await egress_->Send(beam);
         } break;
     }
