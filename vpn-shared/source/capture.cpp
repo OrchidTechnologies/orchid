@@ -656,13 +656,13 @@ task<void> Capture::Start(const std::string &path) {
         eth_location = "0x53c76CaDD819F9F020E1aA969709Ba905bf8d20F";
         eth_curator = "0x8a6EBb9800d064Db7b4809b02ff1bf12a9efFCc3";
         rpc = "https://api.myetherwallet.com:443/rop";
-        hops = 0;
+        hops = [];
         //stun = "stun:stun.l.google.com:19302";
     )");
 
     heap.eval<void>(config);
 
-    unsigned hops(heap.eval<double>("hops"));
+    unsigned hops(heap.eval<double>("hops.length"));
     if (hops == 0)
         co_return co_await Start(GetLocal());
 
