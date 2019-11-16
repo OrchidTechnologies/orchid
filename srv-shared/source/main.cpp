@@ -210,7 +210,6 @@ int Main(int argc, const char *const argv[]) {
 
     rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(key, chain)));
     U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateFromCertificate(*certificate));
-    std::cerr << fingerprint->GetRfc4572Fingerprint() << std::endl;
 
 
     std::string host;
@@ -223,8 +222,8 @@ int Main(int argc, const char *const argv[]) {
     auto path(args["path"].as<std::string>());
 
 
-    std::cerr << "url = " << fingerprint->algorithm << " " << fingerprint->GetRfc4572Fingerprint() << std::endl;
-    std::cerr << "tls = " << "https://" << host << ":" << std::to_string(port) << path << std::endl;
+    std::cerr << "url = " << "https://" << host << ":" << std::to_string(port) << path << std::endl;
+    std::cerr << "tls = " << fingerprint->algorithm << " " << fingerprint->GetRfc4572Fingerprint() << std::endl;
 
 
     auto node(Make<Node>(std::move(ice), args["rpc"].as<std::string>(), Address(args["eth-lottery"].as<std::string>())));
