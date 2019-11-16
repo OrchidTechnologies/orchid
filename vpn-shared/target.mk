@@ -38,6 +38,7 @@ cflags += -I$(pwd)/SPCDNS/src
 	@mkdir -p $(dir $@)
 	curl https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz | tar -C $(dir $@) --strip-components 1 --exclude '*.txt' -zxvf-
 
+$(call include,duktape.mk)
 $(call include,sqlite.mk)
 
 $(call include,tor.mk)

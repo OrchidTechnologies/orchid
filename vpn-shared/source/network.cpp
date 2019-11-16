@@ -37,11 +37,6 @@ Network::Network(const std::string &rpc, Address directory, Address location, Ad
     generator_.seed(boost::random::random_device()());
 }
 
-Network::Network(boost::program_options::variables_map &args) :
-    Network(args["rpc"].as<std::string>(), Address(args["eth-directory"].as<std::string>()), Address(args["eth-location"].as<std::string>()), Address(args["eth-curator"].as<std::string>()))
-{
-}
-
 task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &secret, Address funder) {
     Endpoint endpoint(origin, locator_);
 

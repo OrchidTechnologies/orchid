@@ -113,7 +113,7 @@ printenv:
 
 object := $(foreach _,$(sort $(source)),$(_).o)
 
-code = $(patsubst %,$(output)/%,$(patsubst @/%,$(arch)/%,$(header))) $(sysroot)
+code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)
 
 flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags)) \
     $(foreach dir,$(subst /, ,$*),$(c_$(dir))) $(cflags_$(basename $(notdir $<)))

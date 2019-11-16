@@ -23,7 +23,7 @@ include env/target.mk
 
 version := 0.9
 
-args := --config ../app-shared/assets/default.cfg
+args := ../app-shared/assets/default.cfg
 
 .PHONY: all
 all: $(output)/$(default)/orchid$(exe)

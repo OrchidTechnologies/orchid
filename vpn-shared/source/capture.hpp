@@ -25,14 +25,10 @@
 
 #include <map>
 
-#include <boost/program_options/variables_map.hpp>
-
 #include "link.hpp"
 #include "socket.hpp"
 
 namespace orc {
-
-namespace po = boost::program_options;
 
 class Origin;
 
@@ -81,11 +77,8 @@ class Capture :
 
     task<void> Start(S<Origin> origin);
     task<Sunk<> *> Start();
-    task<void> Start(boost::program_options::variables_map &args);
-    task<void> Start(const std::string &config);
+    task<void> Start(const std::string &path);
 };
-
-void Store(po::variables_map &args, const std::string &path);
 
 }
 

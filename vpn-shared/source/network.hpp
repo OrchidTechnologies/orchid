@@ -23,8 +23,6 @@
 #ifndef ORCHID_NETWORK_HPP
 #define ORCHID_NETWORK_HPP
 
-#include <boost/program_options/variables_map.hpp>
-
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
@@ -45,7 +43,6 @@ class Network {
 
   public:
     Network(const std::string &rpc, Address directory, Address location, Address curator);
-    Network(boost::program_options::variables_map &args);
 
     task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &secret, Address funder);
     task<S<Origin>> Randoms(S<Origin> origin, unsigned hops, const Secret &secret, Address funder);

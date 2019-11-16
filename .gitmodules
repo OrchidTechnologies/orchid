@@ -121,3 +121,6 @@
 [submodule "libcxx"]
 	path = env/libcxx
 	url = https://github.com/llvm-mirror/libcxx.git
+[submodule "duktape"]
+	path = vpn-shared/duktape
+	url = https://github.com/svaarala/duktape.git

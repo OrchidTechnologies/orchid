@@ -74,33 +74,10 @@ std::string Group() {
 }
 
 int Main(int argc, const char *const argv[]) {
-    po::variables_map args;
-
-    po::options_description options("command-line (only)");
-    options.add_options()
-        ("help", "produce help message")
-        ("config", po::value<std::string>(), "configuration file for client configuration")
-    ;
-
-    po::store(po::parse_command_line(argc, argv, po::options_description()
-        .add(options)
-    ), args);
-
-    if (args.count("config") != 0)
-        Store(args, args["config"].as<std::string>());
-
-    po::notify(args);
-
-    if (args.count("help") != 0) {
-        std::cout << po::options_description()
-            .add(options)
-        << std::endl;
-
-        return 0;
-    }
-
-
     Initialize();
+
+    orc_assert(argc == 2);
+    const char *config(argv[1]);
 
 
     auto local(Host_);
@@ -140,7 +117,7 @@ int Main(int argc, const char *const argv[]) {
 
     Wait([&]() -> task<void> { try {
         co_await Schedule();
-        co_await capture->Start(args);
+        co_await capture->Start(config);
         sync->Open();
     } catch (const std::exception &error) {
         std::cerr << error.what() << std::endl;

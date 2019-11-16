@@ -22,21 +22,22 @@
 
 #include <cppcoro/async_latch.hpp>
 
-#include <boost/program_options/parsers.hpp>
-#include <boost/program_options/options_description.hpp>
+#include <boost/filesystem/string_file.hpp>
 
 #include <openvpn/addr/ipv4.hpp>
 
 #include <dns.h>
+#include <duktape.h>
 
 #include "acceptor.hpp"
-#include "client.hpp"
 #include "datagram.hpp"
 #include "capture.hpp"
+#include "client.hpp"
 #include "connection.hpp"
 #include "database.hpp"
 #include "directory.hpp"
 #include "forge.hpp"
+#include "heap.hpp"
 #include "local.hpp"
 #include "monitor.hpp"
 #include "network.hpp"
@@ -633,41 +634,45 @@ task<Sunk<> *> Capture::Start() {
     co_return backup;
 }
 
-task<void> Capture::Start(boost::program_options::variables_map &args) {
-    auto hops(args["hops"].as<unsigned>());
+static duk_ret_t print(duk_context *ctx) {
+    duk_push_string(ctx, " ");
+    duk_insert(ctx, 0);
+    duk_join(ctx, duk_get_top(ctx) - 1);
+    printf("%s\n", duk_safe_to_string(ctx, -1));
+    return 0;
+}
+
+task<void> Capture::Start(const std::string &path) {
+    std::string config;
+    boost::filesystem::load_string_file(path, config);
+
+    Heap heap;
+
+    duk_push_c_function(heap, &print, 1);
+    duk_put_global_string(heap, "print");
+
+    heap.eval<void>(R"(
+        eth_directory = "0xd87E0Ee1a59841DE2aC78C17209dB97E27651985";
+        eth_location = "0x53c76CaDD819F9F020E1aA969709Ba905bf8d20F";
+        eth_curator = "0x8a6EBb9800d064Db7b4809b02ff1bf12a9efFCc3";
+        rpc = "https://api.myetherwallet.com:443/rop";
+        hops = 0;
+        //stun = "stun:stun.l.google.com:19302";
+    )");
+
+    heap.eval<void>(config);
+
+    unsigned hops(heap.eval<double>("hops"));
     if (hops == 0)
         co_return co_await Start(GetLocal());
-    Secret secret(Bless(args["pot-secret"].as<std::string>()));
-    Address funder(args["pot-funder"].as<std::string>());
-    Network network(args);
+
+    Secret secret(Bless(heap.eval<std::string>("pot_secret")));
+    Address funder(heap.eval<std::string>("pot_funder"));
+    Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), Address(heap.eval<std::string>("eth_curator")));
+
     auto sunk(co_await Start());
     auto origin(co_await network.Randoms(GetLocal(), hops - 1, secret, funder));
     co_await network.Random(sunk, origin, secret, funder);
-}
-
-// XXX: the config file should be JavaScript
-
-task<void> Capture::Start(const std::string &config) {
-    po::variables_map args;
-    Store(args, config);
-    po::notify(args);
-    co_await Start(args);
-}
-
-void Store(po::variables_map &args, const std::string &path) {
-    po::options_description options("configuration file");
-    options.add_options()
-        ("eth-directory", po::value<std::string>()->default_value("0xd87E0Ee1a59841DE2aC78C17209dB97E27651985"), "contract address of staking directory tree")
-        ("eth-location", po::value<std::string>()->default_value("0x53c76CaDD819F9F020E1aA969709Ba905bf8d20F"), "contract address of location property data")
-        ("eth-curator", po::value<std::string>()->default_value("0x8a6EBb9800d064Db7b4809b02ff1bf12a9efFCc3"), "contract address of curated list information")
-        ("rpc", po::value<std::string>()->default_value("https://api.myetherwallet.com:443/rop"), "ethereum json/rpc and websocket endpoint")
-        ("hops", po::value<unsigned>()->default_value(0), "number of hops to inject before the exit")
-        ("pot-secret", po::value<std::string>(), "signing info for a lottery pot to pay on orchid")
-        ("pot-funder", po::value<std::string>(), "signing info for a lottery pot to pay on orchid")
-        //("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
-    ;
-
-    po::store(po::parse_config_file(path.c_str(), options), args);
 }
 
 }
