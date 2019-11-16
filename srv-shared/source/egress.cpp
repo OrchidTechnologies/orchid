@@ -58,6 +58,7 @@ void Egress::Land(const Buffer &data) {
 
         case openvpn::IPCommon::ICMPv4: {
             auto &icmp(span.cast<openvpn::ICMPv4>());
+            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             Three destination(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(icmp.id));
             auto translation(Find(destination));
             if (translation == translations_.end())
@@ -103,6 +104,7 @@ task<void> Translator::Send(const Buffer &data) {
 
         case openvpn::IPCommon::ICMPv4: {
             auto &icmp(span.cast<openvpn::ICMPv4>());
+            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             Three source(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(icmp.id));
             auto translation(translations_.find(source));
             if (translation == translations_.end())
