@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
@@ -106,6 +107,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     OrchidAPI().setConfiguration(newConfig).then((bool saved) {
       _readyToSave.add(false);
       if (saved) {
+        UserPreferences().setUserConfig(newConfig);
         _configFileTextLast = newConfig;
         _showSaveSuccess();
       } else {

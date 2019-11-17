@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_routes.dart';
-import 'package:orchid/pages/budget/balance_page.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/connect/connect_page.dart';
 import 'package:orchid/pages/monitoring/monitoring_page.dart';
+
+import 'circuit/circuit_page.dart';
 
 class OrchidApp extends StatefulWidget {
   @override
@@ -39,7 +40,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
           ),
           body: TabBarView(
             controller: _tabController,
-            children: [QuickConnectPage(), MonitoringPage(), BalancePage()],
+            children: [QuickConnectPage(), MonitoringPage(), CircuitPage()],
           ),
           bottomNavigationBar: SafeArea(
             child: new TabBar(
@@ -62,9 +63,9 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
                       height: 27),
                 ),
                 Tab(
-                  text: "Funds",
-                  icon: Image.asset("assets/images/balanceOpt.png",
-                      color: _tabController.index == 2
+                  text: "Circuit",
+                  icon: Image.asset("assets/images/rerouteAlt.png",
+                      color: _tabController.index == 1
                           ? Colors.white
                           : Colors.white60,
                       height: 27),

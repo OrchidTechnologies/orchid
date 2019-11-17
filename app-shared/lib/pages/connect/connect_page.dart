@@ -298,7 +298,8 @@ class _QuickConnectPageState
         message = 'Orchid is running!';
     }
 
-    Color color = _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
+    Color color =
+        _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
 
     return Container(
       // Note: the emoji changes the baseline so we give this a couple of pixels
@@ -315,17 +316,21 @@ class _QuickConnectPageState
     OrchidAPI().logger().write("Init listeners...");
 
     // Monitor VPN permission status
+    /*
     _rxSubscriptions
         .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
       OrchidAPI().logger().write("VPN Perm status changed: $installed");
       if (!installed) {
-        String currentPage = ModalRoute.of(context).settings.name;
-        OrchidAPI().logger().write("Current page: $currentPage");
-        var route = AppTransitions.downToUpTransition(
-            OnboardingVPNPermissionPage(allowSkip: false));
-        Navigator.push(context, route);
+        // TODO: Showing this vertical transition breaks the (completely unrelated) reorderable
+        // TODO: list view in the circuit builder page???
+        //var route = AppTransitions.downToUpTransition(
+        //OnboardingVPNPermissionPage(allowSkip: false));
+        //Navigator.push(context, route);
+        Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                    OnboardingVPNPermissionPage(allowSkip: false)));
       }
     }));
+     */
 
     // Monitor connection status
     _rxSubscriptions

@@ -231,14 +231,8 @@
 
     // Install default config on first launch
     if ([self getConfig] == nil) {
-        NSURL *url([[NSBundle mainBundle] URLForResource:@"Frameworks/App.framework/flutter_assets/assets/default" withExtension:@"cfg"]);
-        NSError *error;
-        NSString *config = [NSString stringWithContentsOfFile:[url path] encoding:NSASCIIStringEncoding error:&error];
-        if (error != nil) {
-            NSLog(@"Error loading default config: %@", error);
-        } else {
-          [self setConfig: config];
-        }
+        NSString *config = @"";
+        [self setConfig: config];
     }
 
     [NETunnelProviderManager loadAllFromPreferencesWithCompletionHandler:^(NSArray<NETunnelProviderManager *> * _Nullable managers, NSError * _Nullable error) {

@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/pricing.dart';
+import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/pages/circuit/hop.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
@@ -161,14 +163,33 @@ class RealOrchidAPI implements OrchidAPI {
 
   /// Get the Orchid Configuration file contents
   Future<String> getConfiguration() async {
-    return _platform.invokeMethod('get_config');
+    // return _platform.invokeMethod('get_config');
+    // Return only the user visible portion of the config.
+    return await UserPreferences().getUserConfig();
   }
 
   /// Set the Orchid Configuration file contents
   Future<bool> setConfiguration(String config) async {
+
+    // Append the generated config before saving.
+    // The desired format is (JavaScript, not JSON) e.g.:
+    // hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}, {protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
+    Circuit circuit = await UserPreferences().getCircuit();
+    // Convert the hop to a json map and replace its value with a quoted string
+    // to match the JS object literal notation.
+    var hopsListConfig = circuit.hops.map((hop) {
+      return hop.toJson().map((key, value) {
+        return MapEntry(key, "\"$value\"");
+      }).toString();
+    }).toList();
+
+    var generatecConfig = "hops = $hopsListConfig;";
+    var combinedConfig = config + "\n" + generatecConfig;
+    print("combined config = $combinedConfig");
+
     // todo: return a bool from the native side?
     String result = await _platform
-        .invokeMethod('set_config', <String, dynamic>{'text': config});
+        .invokeMethod('set_config', <String, dynamic>{'text': combinedConfig});
     return result == "true";
   }
 }

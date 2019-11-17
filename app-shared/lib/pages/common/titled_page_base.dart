@@ -18,6 +18,10 @@ class TitledPageBase extends StatelessWidget {
   }
 }
 
+// A callback to perform the back button action (normally popping the view).
+// Note that this requires the current build context in order to perform the pop.
+typedef void BackAction(BuildContext context);
+
 /// A second level page reached through navigation.
 /// These pages have a title with a back button.
 class TitledPage extends StatelessWidget {
@@ -25,12 +29,14 @@ class TitledPage extends StatelessWidget {
   final Widget child;
   final bool lightTheme;
   final List<Widget> actions;
+  final VoidCallback backAction;
 
   TitledPage(
       {@required this.title,
       @required this.child,
       this.lightTheme = false,
-      this.actions = const []});
+      this.actions = const [],
+      this.backAction});
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +46,10 @@ class TitledPage extends StatelessWidget {
       appBar: AppBar(
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: foregroundColor),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: backAction ??
+                () {
+                  Navigator.pop(context);
+                },
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           ),
           title: Text(

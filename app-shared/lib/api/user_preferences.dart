@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:orchid/pages/circuit/hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'orchid_budget_api.dart';
@@ -115,6 +116,34 @@ class UserPreferences {
     }
     return Budget.fromJson(jsonDecode(value));
   }
+
+  Future<bool> setCircuit(Circuit circuit) async {
+    String value = jsonEncode(circuit);
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.Circuit.toString(), value);
+  }
+
+  Future<Circuit> getCircuit() async {
+    String value = (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.Circuit.toString());
+    if (value == null) {
+      return null;
+    }
+    return Circuit.fromJson(jsonDecode(value));
+  }
+
+
+  // Get the user visible portion of the configuration file text.
+  Future<String> getUserConfig() async {
+    return (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.UserConfig.toString());
+  }
+
+  // Set the user visible portion of the configuration file text.
+  Future<bool> setUserConfig(String value) async {
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.UserConfig.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -124,5 +153,7 @@ enum UserPreferenceKey {
   LinkWalletAcknowledged,
   PromptedForVPNCredentials,
   LotteryPotsPrimaryAddress,
-  Budget
+  Budget,
+  Circuit,
+  UserConfig
 }

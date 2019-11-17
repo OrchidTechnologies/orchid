@@ -18,6 +18,7 @@ import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'package:orchid/pages/settings/settings_vpn_credentials_page.dart';
 import 'budget/balance_page.dart';
+import 'circuit/circuit_page.dart';
 import 'help/help_overview.dart';
 import 'help/legal_page.dart';
 
@@ -43,6 +44,7 @@ class AppRoutes {
   static const String balance = "/budget/balance";
   static const String budget_overview = "/budget/overview";
   static const String keygen = "/settings/keygen";
+  static const String circuit = "/circuit";
   static const String home = "/";
 
   static final Map<String, WidgetBuilder> routes = {
@@ -67,5 +69,6 @@ class AppRoutes {
     onboarding_vpn_credentials: (context) => OnboardingVPNCredentialsPage(),
     balance: (context) => BalancePage(),
     keygen: (context) => KeyGenPage(),
+    circuit: (context) => CircuitPage(),
   };
 }
