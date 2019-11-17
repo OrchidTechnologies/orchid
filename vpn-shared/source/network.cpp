@@ -24,7 +24,6 @@
 #include "endpoint.hpp"
 #include "local.hpp"
 #include "network.hpp"
-#include "remote.hpp"
 
 namespace orc {
 
@@ -73,17 +72,6 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &
     orc_assert(fingerprint != nullptr);
     auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(provider), secret, std::move(funder)));
     co_await client->Open(origin, url);
-}
-
-task<S<Origin>> Network::Randoms(S<Origin> origin, unsigned hops, const Secret &secret, Address funder) {
-    for (unsigned i(0); i != hops; ++i) {
-        auto remote(Break<Sink<Remote>>());
-        co_await Random(remote.get(), origin, secret, funder);
-        remote->Open();
-        origin = remote;
-    }
-
-    co_return std::move(origin);
 }
 
 }

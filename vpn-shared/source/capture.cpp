@@ -43,6 +43,7 @@
 #include "network.hpp"
 #include "opening.hpp"
 #include "origin.hpp"
+#include "remote.hpp"
 #include "syscall.hpp"
 #include "transport.hpp"
 
@@ -642,6 +643,13 @@ static duk_ret_t print(duk_context *ctx) {
     return 0;
 }
 
+static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Origin> &origin, unsigned hop) {
+    std::string hops("hops[" + std::to_string(hop) + "]");
+    Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
+    Address funder(heap.eval<std::string>(hops + ".funder"));
+    co_await network.Random(sunk, origin, secret, funder);
+}
+
 task<void> Capture::Start(const std::string &path) {
     std::string config;
     boost::filesystem::load_string_file(path, config);
@@ -662,17 +670,23 @@ task<void> Capture::Start(const std::string &path) {
 
     heap.eval<void>(config);
 
+    S<Origin> origin(GetLocal());
+
     unsigned hops(heap.eval<double>("hops.length"));
     if (hops == 0)
-        co_return co_await Start(GetLocal());
+        co_return co_await Start(std::move(origin));
 
-    Secret secret(Bless(heap.eval<std::string>("pot_secret")));
-    Address funder(heap.eval<std::string>("pot_funder"));
     Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), Address(heap.eval<std::string>("eth_curator")));
 
+    for (unsigned i(0); i != hops - 1; ++i) {
+        auto remote(Break<Sink<Remote>>());
+        co_await Single(remote.get(), heap, network, origin, i);
+        remote->Open();
+        origin = remote;
+    }
+
     auto sunk(co_await Start());
-    auto origin(co_await network.Randoms(GetLocal(), hops - 1, secret, funder));
-    co_await network.Random(sunk, origin, secret, funder);
+    co_await Single(sunk, heap, network, origin, hops - 1);
 }
 
 }
