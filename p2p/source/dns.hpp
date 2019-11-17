@@ -27,6 +27,7 @@
 
 #include <boost/asio/ip/tcp.hpp>
 
+#include <asio.hpp>
 #include "shared.hpp"
 #include "task.hpp"
 
@@ -38,7 +39,7 @@ typedef asio::ip::tcp::endpoint Result;
 //typedef asio::ip::basic_resolver_results<asio::ip::tcp> Results;
 typedef std::vector<Result> Results;
 
-task<Results> Resolve(const S<Origin> &origin, const std::string &host, const std::string &port);
+task<Results> Resolve(Origin &origin, const std::string &host, const std::string &port);
 
 }
 

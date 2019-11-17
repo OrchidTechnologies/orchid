@@ -43,6 +43,8 @@ class Origin :
     public Valve
 {
   public:
+    virtual Host Host() = 0;
+
     virtual rtc::Thread *Thread() = 0;
     virtual U<cricket::PortAllocator> Allocator() = 0;
 

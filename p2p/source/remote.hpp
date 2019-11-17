@@ -38,7 +38,7 @@ class Remote :
     public BufferDrain
 {
   private:
-    Host host_;
+    class Host host_;
     netif interface_;
     U<rtc::NetworkManager> manager_;
 
@@ -58,6 +58,8 @@ class Remote :
 
     void Open();
     task<void> Shut() override;
+
+    class Host Host() override;
 
     rtc::Thread *Thread() override;
     U<cricket::PortAllocator> Allocator() override;

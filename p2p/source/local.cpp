@@ -29,6 +29,11 @@
 
 namespace orc {
 
+class Host Local::Host() {
+    // XXX: get local address
+    return Host_;
+}
+
 rtc::Thread *Local::Thread() {
     static std::unique_ptr<rtc::Thread> thread;
     if (thread == nullptr) {

@@ -43,6 +43,7 @@
 #include "network.hpp"
 #include "opening.hpp"
 #include "origin.hpp"
+#include "port.hpp"
 #include "remote.hpp"
 #include "syscall.hpp"
 #include "transport.hpp"
@@ -643,11 +644,20 @@ static duk_ret_t print(duk_context *ctx) {
     return 0;
 }
 
-static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Origin> &origin, unsigned hop) {
+static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) {
     std::string hops("hops[" + std::to_string(hop) + "]");
-    Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
-    Address funder(heap.eval<std::string>(hops + ".funder"));
-    co_await network.Random(sunk, origin, secret, funder);
+    auto protocol(heap.eval<std::string>(hops + ".protocol"));
+    if (false) {
+    } else if (protocol == "orchid") {
+        Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
+        Address funder(heap.eval<std::string>(hops + ".funder"));
+        co_await network.Random(sunk, origin, secret, funder);
+    } else if (protocol == "openvpn") {
+        auto ovpnfile(heap.eval<std::string>(hops + ".ovpnfile"));
+        auto username(heap.eval<std::string>(hops + ".username"));
+        auto password(heap.eval<std::string>(hops + ".password"));
+        co_await Connect(sunk, origin, local, ovpnfile, username, password);
+    }
 }
 
 task<void> Capture::Start(const std::string &path) {
@@ -678,15 +688,17 @@ task<void> Capture::Start(const std::string &path) {
 
     Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), Address(heap.eval<std::string>("eth_curator")));
 
+    auto host(origin->Host());
+
     for (unsigned i(0); i != hops - 1; ++i) {
         auto remote(Break<Sink<Remote>>());
-        co_await Single(remote.get(), heap, network, origin, i);
+        co_await Single(remote.get(), heap, network, origin, remote->Host(), i);
         remote->Open();
         origin = remote;
     }
 
     auto sunk(co_await Start());
-    co_await Single(sunk, heap, network, origin, hops - 1);
+    co_await Single(sunk, heap, network, origin, host, hops - 1);
 }
 
 }

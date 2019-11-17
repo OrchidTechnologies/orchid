@@ -21,15 +21,19 @@
 
 
 #include <lwip/ip.h>
-#include <lwip/tcpip.h>
 #include <lwip/netifapi.h>
+#include <lwip/tcpip.h>
+#include <lwip/udp.h>
 
 #include <p2p/base/basic_packet_socket_factory.h>
 #include <p2p/client/basic_port_allocator.h>
 
+#include "dns.hpp"
 #include "lwip.hpp"
 #include "remote.hpp"
 
+#define orc_lwipcall(expr) \
+    orc_assert((expr) == ERR_OK)
 
 extern "C" struct netif *hook_ip4_route_src(const ip4_addr_t *src, const ip4_addr_t *dest)
 {
@@ -122,6 +126,61 @@ class Chain :
     }
 };
 
+class Core {
+  public:
+    Core() {
+        sys_lock_tcpip_core();
+    }
+
+    ~Core() {
+        sys_unlock_tcpip_core();
+    }
+};
+
+class Association :
+    public Pump
+{
+  private:
+    udp_pcb *pcb_;
+
+    static void Land(void *arg, udp_pcb *pcb, pbuf *data, const ip4_addr_t *host, u16_t port) {
+        static_cast<Association *>(arg)->Pump::Land(Chain(data));
+    }
+
+  public:
+    Association(BufferDrain *drain, const ip4_addr_t &host) :
+        Pump(drain)
+    {
+        Core core;
+        pcb_ = udp_new();
+        orc_assert(pcb_ != nullptr);
+        orc_lwipcall(udp_bind(pcb_, &host, 0));
+    }
+
+    ~Association() {
+        Core core;
+        udp_remove(pcb_);
+    }
+
+    void Open(const ip4_addr_t &host, uint16_t port) {
+        Core core;
+        orc_lwipcall(udp_connect(pcb_, &host, port));
+        udp_recv(pcb_, &Land, this);
+    }
+
+    task<void> Shut() override {
+        { Core core;
+            udp_disconnect(pcb_); }
+        co_await Pump::Shut();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        { Core core;
+            orc_lwipcall(udp_send(pcb_, Chain(data))); }
+        co_return;
+    }
+};
+
 task<void> Remote::Send(const Buffer &data) {
     co_return co_await Inner()->Send(data);
 }
@@ -182,6 +241,10 @@ task<void> Remote::Shut() {
     netifapi_netif_set_down(&interface_);
 }
 
+class Host Remote::Host() {
+    return host_;
+}
+
 rtc::Thread *Remote::Thread() {
     static std::unique_ptr<rtc::Thread> thread;
     if (thread == nullptr) {
@@ -239,7 +302,15 @@ U<cricket::PortAllocator> Remote::Allocator() {
 }
 
 task<Socket> Remote::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    orc_insist(false);
+    auto association(sunk->Wire<Association>(host_));
+    auto results(co_await Resolve(*this, host, port));
+    for (auto &result : results) {
+        Socket socket(result);
+        // XXX: socket.Host() should return a class Host
+        association->Open(orc::Host(socket.Host()), socket.Port());
+        co_return socket;
+    }
+    orc_assert(false);
 }
 
 task<Socket> Remote::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {

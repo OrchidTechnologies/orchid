@@ -31,6 +31,8 @@ class Local final :
     public Origin
 {
   public:
+    class Host Host() override;
+
     rtc::Thread *Thread() override;
     U<cricket::PortAllocator> Allocator() override;
 
