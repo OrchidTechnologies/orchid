@@ -49,6 +49,7 @@
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
 
 #include <asio.hpp>
 #include "capture.hpp"
@@ -67,6 +68,8 @@
 
 namespace orc {
 
+namespace po = boost::program_options;
+
 std::string Group() {
     // UGH: error: 'current_path' is unavailable: introduced in macOS 10.15
     //return std::filesystem::current_path();
@@ -74,10 +77,29 @@ std::string Group() {
 }
 
 int Main(int argc, const char *const argv[]) {
-    Initialize();
+    po::variables_map args;
 
-    orc_assert(argc == 2);
-    const char *config(argv[1]);
+    po::options_description options("command-line (only)");
+    options.add_options()
+        ("help", "produce help message")
+        ("config", po::value<std::string>(), "configuration file for client configuration")
+    ;
+
+    po::store(po::parse_command_line(argc, argv, po::options_description()
+        .add(options)
+    ), args);
+
+    po::notify(args);
+
+    if (args.count("help") != 0) {
+        std::cout << po::options_description()
+            .add(options)
+        << std::endl;
+        return 0;
+    }
+
+
+    Initialize();
 
 
     auto local(Host_);
@@ -117,7 +139,7 @@ int Main(int argc, const char *const argv[]) {
 
     Wait([&]() -> task<void> { try {
         co_await Schedule();
-        co_await capture->Start(config);
+        co_await capture->Start(args["config"].as<std::string>());
         sync->Open();
     } catch (const std::exception &error) {
         std::cerr << error.what() << std::endl;
