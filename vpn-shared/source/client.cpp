@@ -74,7 +74,7 @@ task<void> Client::Shut() {
     co_await Pump::Shut();
 }
 
-using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint256_t, Address, Address>;
+using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint128_t, Address, Address>;
 using Signed = Coder<uint8_t, Bytes32, Bytes32>;
 
 task<void> Client::Send(const Buffer &data) {
@@ -86,7 +86,7 @@ task<void> Client::Send(const Buffer &data) {
     Spawn([this]() -> task<void> {
         static uint256_t nonce_(0);
         auto nonce(nonce_++);
-        auto ticket(Ticket::Encode(hash_, Number<uint256_t>(nonce), -1, 0, 10000, uint256_t(1) << 255, funder_, provider_));
+        auto ticket(Ticket::Encode(hash_, Number<uint256_t>(nonce), -1, 0, 10000, uint128_t(1) << 127, funder_, provider_));
         auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), Hash(ticket)))));
 _trace();
         co_await Bonded::Send(Datagram(Port_, Port_, Tie(ticket, Signed::Encode(signature.v_, signature.r_, signature.s_))));

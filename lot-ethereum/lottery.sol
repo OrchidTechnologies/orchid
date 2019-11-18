@@ -153,9 +153,9 @@ contract OrchidLottery {
             require(token_.transfer(target, amount));
     }
 
-    function grab(bytes32 seed, bytes32 hash, bytes32 nonce, uint256 start, uint128 range, uint128 amount, uint256 ratio, address funder, address payable target, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
+    function grab(bytes32 seed, bytes32 hash, bytes32 nonce, uint256 start, uint128 range, uint128 amount, uint128 ratio, address funder, address payable target, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(seed)) == hash);
-        require(uint256(keccak256(abi.encodePacked(seed, nonce))) <= ratio);
+        require(uint256(keccak256(abi.encodePacked(seed, nonce))) >> 128 <= ratio);
 
         bytes32 ticket = keccak256(abi.encode(hash, nonce, start, range, amount, ratio, funder, target));
 

@@ -85,14 +85,14 @@ void Server::Send(const Buffer &data) {
     });
 }
 
-using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint256_t, Address, Address>;
+using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint128_t, Address, Address>;
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
 
-        auto [hash, nonce, start, range, amount, ratio, funder, target, v, r, s] = Take<Brick<32>, Brick<32>, uint256_t, Pad<16>, uint128_t, Pad<16>, uint128_t, uint256_t, Pad<12>, uint160_t, Pad<12>, uint160_t, Pad<31>, Number<uint8_t>, Brick<32>, Brick<32>>(data);
+        auto [hash, nonce, start, range, amount, ratio, funder, target, v, r, s] = Take<Brick<32>, Brick<32>, uint256_t, Pad<16>, uint128_t, Pad<16>, uint128_t, Pad<16>, uint128_t, Pad<12>, uint160_t, Pad<12>, uint160_t, Pad<31>, Number<uint8_t>, Brick<32>, Brick<32>>(data);
         Signature signature(r, s, v);
 
         Spawn([this, hash = hash, nonce = nonce, start = std::move(start), range = std::move(range), amount = std::move(amount), ratio = std::move(ratio), funder = Address(std::move(funder)), target = Address(std::move(target)), signature]() -> task<void> {
@@ -107,7 +107,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
                 return seed->second;
             }());
 
-            auto won(Hash(Tie(seed, nonce)).num<uint256_t>() <= ratio);
+            auto won(Hash(Tie(seed, nonce)).num<uint256_t>() >> 128 <= ratio);
             if (won) {
                 std::unique_lock<std::mutex> lock_;
                 if (hash_ == hash)
@@ -119,7 +119,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
 
             if (won) {
                 std::vector<Bytes32> old;
-                static Selector<void, Bytes32, Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint256_t, Address, Address, uint8_t, Bytes32, Bytes32, std::vector<Bytes32>> grab("grab");
+                static Selector<void, Bytes32, Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint128_t, Address, Address, uint8_t, Bytes32, Bytes32, std::vector<Bytes32>> grab("grab");
                 co_await grab.Send(endpoint_, target, lottery_, seed, hash, nonce, start, range, amount, ratio, funder, target, signature.v_, signature.r_, signature.s_, old);
             }
         });
