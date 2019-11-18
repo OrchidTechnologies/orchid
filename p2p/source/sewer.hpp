@@ -37,6 +37,23 @@ class Sewer {
 
 using BufferSewer = Sewer<const Buffer &>;
 
+class Opening :
+    public Valve
+{
+  protected:
+    BufferSewer *const drain_;
+
+  public:
+    template <typename... Args_>
+    Opening(BufferSewer *drain) :
+        drain_(drain)
+    {
+    }
+
+    virtual Socket Local() const = 0;
+    virtual task<void> Send(const Buffer &data, const Socket &socket) = 0;
+};
+
 }
 
 #endif//ORCHID_SEWER_HPP

@@ -29,6 +29,67 @@
 
 namespace orc {
 
+class LocalOpening final :
+    public Opening
+{
+  private:
+    asio::ip::udp::socket connection_;
+
+  public:
+    template <typename... Args_>
+    LocalOpening(BufferSewer *drain, Args_ &&...args) :
+        Opening(drain),
+        connection_(Context(), std::forward<Args_>(args)...)
+    {
+    }
+
+    asio::ip::udp::socket *operator ->() {
+        return &connection_;
+    }
+
+    Socket Local() const override {
+        return connection_.local_endpoint();
+    }
+
+    void Open() {
+        Spawn([this]() -> task<void> {
+            for (;;) {
+                asio::ip::udp::endpoint endpoint;
+
+                char data[2048];
+                size_t writ;
+                try {
+                    writ = co_await connection_.async_receive_from(asio::buffer(data), endpoint, Token());
+                } catch (const asio::system_error &error) {
+                    orc_adapt(error);
+                }
+
+                Subset region(data, writ);
+                if (Verbose)
+                    Log() << "\e[33mRECV " << writ << " " << region << "\e[0m" << std::endl;
+                drain_->Land(region, endpoint);
+            }
+        });
+    }
+
+    void Open(const Socket &socket) {
+        connection_.open(asio::ip::udp::v4());
+        connection_.non_blocking(true);
+        connection_.bind({socket.Host(), socket.Port()});
+        Open();
+    }
+
+    task<void> Shut() override {
+        connection_.close();
+        co_return;
+    }
+
+    task<void> Send(const Buffer &data, const Socket &socket) override {
+        auto writ(co_await connection_.async_send_to(Sequence(data), {socket.Host(), socket.Port()}, Token()));
+        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
+    }
+};
+
 class Host Local::Host() {
     // XXX: get local address
     return Host_;
@@ -84,7 +145,7 @@ task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const st
 }
 
 task<Socket> Local::Unlid(Sunk<Opening, BufferSewer> *sunk) {
-    auto opening(sunk->Wire<Opening>());
+    auto opening(sunk->Wire<LocalOpening>());
     opening->Open({asio::ip::address_v4::any(), 0});
     co_return opening->Local();
 }

@@ -39,7 +39,7 @@ void Egress::Land(const Buffer &data) {
             if (translation == translations_.end())
                 return;
             const auto &replace(translation->second.socket_);
-            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host().to_v4().to_uint());
+            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
             Forge(tcp, &openvpn::TCPHeader::dest, replace.Port());
             return translation->second.drain_->Land(beam);
         } break;
@@ -51,7 +51,7 @@ void Egress::Land(const Buffer &data) {
             if (translation == translations_.end())
                 return;
             const auto &replace(translation->second.socket_);
-            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host().to_v4().to_uint());
+            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
             Forge(udp, &openvpn::UDPHeader::dest, replace.Port());
             return translation->second.drain_->Land(beam);
         } break;
@@ -64,7 +64,7 @@ void Egress::Land(const Buffer &data) {
             if (translation == translations_.end())
                 return;
             const auto &replace(translation->second.socket_);
-            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host().to_v4().to_uint());
+            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
             Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
             return translation->second.drain_->Land(beam);
         } break;
@@ -85,7 +85,7 @@ task<void> Translator::Send(const Buffer &data) {
             if (translation == translations_.end())
                 translation = Translate(source);
             const auto &replace(translation->second);
-            ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
+            ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host());
             Forge(tcp, &openvpn::TCPHeader::source, replace.Port());
             co_return co_await egress_->Send(beam);
         } break;
@@ -97,7 +97,7 @@ task<void> Translator::Send(const Buffer &data) {
             if (translation == translations_.end())
                 translation = Translate(source);
             const auto &replace(translation->second);
-            ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
+            ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host());
             Forge(udp, &openvpn::UDPHeader::source, replace.Port());
             co_return co_await egress_->Send(beam);
         } break;
@@ -110,7 +110,7 @@ task<void> Translator::Send(const Buffer &data) {
             if (translation == translations_.end())
                 translation = Translate(source);
             const auto &replace(translation->second);
-            ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host().to_v4().to_uint());
+            ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host());
             Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
             co_return co_await egress_->Send(beam);
         } break;

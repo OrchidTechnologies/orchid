@@ -137,35 +137,58 @@ class Core {
     }
 };
 
-class Association :
-    public Pump
-{
-  private:
+class Base {
+  protected:
     udp_pcb *pcb_;
 
+    virtual void Land(const Buffer &data, const Socket &socket) = 0;
+
     static void Land(void *arg, udp_pcb *pcb, pbuf *data, const ip4_addr_t *host, u16_t port) {
-        static_cast<Association *>(arg)->Pump::Land(Chain(data));
+        static_cast<Base *>(arg)->Land(Chain(data), Socket(*host, port));
     }
 
-  public:
-    Association(BufferDrain *drain, const ip4_addr_t &host) :
-        Pump(drain)
-    {
+    Base(const ip4_addr_t &host) {
         Core core;
         pcb_ = udp_new();
         orc_assert(pcb_ != nullptr);
         orc_lwipcall(udp_bind(pcb_, &host, 0));
     }
 
-    ~Association() {
+    ~Base() {
         Core core;
         udp_remove(pcb_);
     }
 
-    void Open(const ip4_addr_t &host, uint16_t port) {
+  public:
+    operator udp_pcb *() {
+        return pcb_;
+    }
+
+    void Open() {
         Core core;
-        orc_lwipcall(udp_connect(pcb_, &host, port));
         udp_recv(pcb_, &Land, this);
+    }
+};
+
+class Association :
+    public Pump,
+    public Base
+{
+  protected:
+    void Land(const Buffer &data, const Socket &socket) override {
+        Pump::Land(data);
+    }
+
+  public:
+    Association(BufferDrain *drain, const ip4_addr_t &host) :
+        Pump(drain),
+        Base(host)
+    {
+    }
+
+    void Open(const ip4_addr_t &host, uint16_t port) {
+        Base::Open();
+        orc_lwipcall(udp_connect(pcb_, &host, port));
     }
 
     task<void> Shut() override {
@@ -177,6 +200,38 @@ class Association :
     task<void> Send(const Buffer &data) override {
         { Core core;
             orc_lwipcall(udp_send(pcb_, Chain(data))); }
+        co_return;
+    }
+};
+
+class RemoteOpening final :
+    public Opening,
+    public Base
+{
+  protected:
+    void Land(const Buffer &data, const Socket &socket) override {
+        drain_->Land(data, socket);
+    }
+
+  public:
+    RemoteOpening(BufferSewer *drain, const ip4_addr_t &host) :
+        Opening(drain),
+        Base(host)
+    {
+    }
+
+    Socket Local() const override {
+        return Socket(pcb_->local_ip, pcb_->local_port);
+    }
+
+    task<void> Shut() override {
+        co_return;
+    }
+
+    task<void> Send(const Buffer &data, const Socket &socket) {
+        ip4_addr_t address(socket.Host());
+        { Core core;
+            orc_lwipcall(udp_sendto(pcb_, Chain(data), &address, socket.Port())); }
         co_return;
     }
 };
@@ -318,7 +373,9 @@ task<Socket> Remote::Connect(U<Stream> &stream, const std::string &host, const s
 }
 
 task<Socket> Remote::Unlid(Sunk<Opening, BufferSewer> *sunk) {
-    orc_insist(false);
+    auto opening(sunk->Wire<RemoteOpening>(host_));
+    opening->Open();
+    co_return opening->Local();
 }
 
 }

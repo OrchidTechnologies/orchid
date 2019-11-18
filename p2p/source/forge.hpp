@@ -60,9 +60,9 @@ uint16_t Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
 uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
 
 static void Forge(Span<> &span, openvpn::TCPHeader &tcp, const Socket &source, const Socket &destination) {
-    ForgeIP4(span, &openvpn::IPv4Header::saddr, source.Host().to_v4().to_uint());
+    ForgeIP4(span, &openvpn::IPv4Header::saddr, source.Host());
     Forge(tcp, &openvpn::TCPHeader::source, source.Port());
-    ForgeIP4(span, &openvpn::IPv4Header::daddr, destination.Host().to_v4().to_uint());
+    ForgeIP4(span, &openvpn::IPv4Header::daddr, destination.Host());
     Forge(tcp, &openvpn::TCPHeader::dest, destination.Port());
 }
 

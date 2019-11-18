@@ -69,8 +69,8 @@ Beam Datagram(const Socket &source, const Socket &destination, const Buffer &dat
     header.ip4.ttl = 64;
     header.ip4.protocol = openvpn::IPCommon::UDP;
     header.ip4.check = 0;
-    header.ip4.saddr = boost::endian::native_to_big(source.Host().to_v4().to_uint());
-    header.ip4.daddr = boost::endian::native_to_big(destination.Host().to_v4().to_uint());
+    header.ip4.saddr = boost::endian::native_to_big(source.Host().operator uint32_t());
+    header.ip4.daddr = boost::endian::native_to_big(destination.Host().operator uint32_t());
 
     header.ip4.check = openvpn::IPChecksum::checksum(span.data(), sizeof(header.ip4));
 

@@ -20,6 +20,7 @@
 /* }}} */
 
 
+#include "baton.hpp"
 #include "beast.hpp"
 #include "node.hpp"
 

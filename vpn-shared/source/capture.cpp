@@ -41,7 +41,6 @@
 #include "local.hpp"
 #include "monitor.hpp"
 #include "network.hpp"
-#include "opening.hpp"
 #include "origin.hpp"
 #include "port.hpp"
 #include "remote.hpp"
@@ -192,8 +191,8 @@ class Logger :
         const auto &destination(five.Target());
         // XXX: IPv6
         auto row_id = insert_(five.Protocol(),
-            source.Host().to_v4().to_uint(), source.Port(),
-            destination.Host().to_v4().to_uint(), destination.Port()
+            source.Host(), source.Port(),
+            destination.Host(), destination.Port()
         );
         flow_to_row_.emplace(five, row_id);
 
@@ -442,8 +441,8 @@ _trace();
         header.ip4.ttl = 64;
         header.ip4.protocol = openvpn::IPCommon::TCP;
         header.ip4.check = 0;
-        header.ip4.saddr = boost::endian::native_to_big(source.Host().to_v4().to_uint());
-        header.ip4.daddr = boost::endian::native_to_big(destination.Host().to_v4().to_uint());
+        header.ip4.saddr = boost::endian::native_to_big(source.Host().operator uint32_t());
+        header.ip4.daddr = boost::endian::native_to_big(destination.Host().operator uint32_t());
 
         // NOLINTNEXTLINE (clang-analyzer-core.uninitialized.Assign)
         header.ip4.check = openvpn::IPChecksum::checksum(&header.ip4, sizeof(header.ip4));
@@ -477,7 +476,7 @@ void Split::Connect(const Host &local) {
     Acceptor::Open({local, 0});
     local_ = Local();
     // XXX: this is sickening
-    remote_ = asio::ip::address_v4(local_.Host().to_v4().to_uint() + 1);
+    remote_ = asio::ip::address_v4(local_.Host().operator uint32_t() + 1);
 }
 
 void Split::Land(const Buffer &data) {
@@ -541,7 +540,8 @@ task<bool> Split::Send(const Beam &data) {
                     bool reset(false);
 
                     try {
-                        co_await origin_->Connect(flow->up_, four.Target().Host().to_string(), std::to_string(four.Target().Port()));
+                        // XXX: it seems strange that Connect takes a string and not a Host
+                        co_await origin_->Connect(flow->up_, four.Target().Host().String(), std::to_string(four.Target().Port()));
                     } catch (const std::exception &error) {
                         Log() << error.what() << std::endl;
                         reset = true;

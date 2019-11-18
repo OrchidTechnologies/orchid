@@ -75,6 +75,11 @@ class Host {
     {
     }
 
+    Host(const ip4_addr_t &host) :
+        Host(boost::endian::big_to_native(host.addr))
+    {
+    }
+
     Host(const asio::ip::address &host) :
         Host((host.is_v6() ? host.to_v6() : asio::ip::make_address_v6(asio::ip::v4_mapped, host.to_v4())).to_bytes())
     {
@@ -179,7 +184,7 @@ class Socket {
     {
     }
 
-    asio::ip::address Host() const {
+    const Host &Host() const {
         return host_;
     }
 
