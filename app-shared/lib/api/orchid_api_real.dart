@@ -4,7 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/circuit/hop.dart';
+import 'package:orchid/pages/circuit/circuit_hop.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
@@ -172,6 +172,15 @@ class RealOrchidAPI implements OrchidAPI {
   /// and publish it to the VPN.
   Future<bool> setConfiguration(String userConfig) async {
 
+    String combinedConfig = await generateCombinedConfig(userConfig);
+
+    // todo: return a bool from the native side?
+    String result = await _platform
+        .invokeMethod('set_config', <String, dynamic>{'text': combinedConfig});
+    return result == "true";
+  }
+
+  static Future<String> generateCombinedConfig(String userConfig) async {
     // Append the generated config before saving.
     // The desired format is (JavaScript, not JSON) e.g.:
     // hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}, {protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
@@ -179,8 +188,12 @@ class RealOrchidAPI implements OrchidAPI {
 
     // Convert the hops to a json map and replace its value with a quoted string
     // to match the JS object literal notation.
+    // The protocol value is transformed to lowercase.
     var hopsListConfig = circuit.hops.map((hop) {
       return hop.toJson().map((key, value) {
+        if (key == "protocol") {
+          value = value.toString().toLowerCase();
+        }
         return MapEntry(key, "\"$value\"");
       }).toString();
     }).toList();
@@ -190,11 +203,7 @@ class RealOrchidAPI implements OrchidAPI {
     var combinedConfig = generatedConfig + "\n" + userConfig ;
 
     print("Saving combined config = $combinedConfig");
-
-    // todo: return a bool from the native side?
-    String result = await _platform
-        .invokeMethod('set_config', <String, dynamic>{'text': combinedConfig});
-    return result == "true";
+    return combinedConfig;
   }
 
   /// Publish the latest configuration to the VPN.

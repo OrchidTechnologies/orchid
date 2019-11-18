@@ -1,13 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/circuit/circuit_add_page.dart';
+import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
+import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/util/collections.dart';
 
 import '../app_colors.dart';
 import '../app_text.dart';
-import 'hop.dart';
+import 'circuit_hop.dart';
 
 class CircuitPage extends StatefulWidget {
   @override
@@ -93,7 +95,7 @@ class CircuitPageState extends State<CircuitPage> {
               },
               key: Key(uniqueHop.key.toString()),
               title: Text(
-                "Orchid",
+                uniqueHop.hop.displayName(),
                 style: AppText.dialogTitle,
               ),
               trailing: Icon(Icons.menu),
@@ -105,30 +107,88 @@ class CircuitPageState extends State<CircuitPage> {
   }
 
   void _addHop() async {
-    var route =
-        MaterialPageRoute<UniqueHop>(builder: (context) => CircuitAddPage());
-    UniqueHop result = await Navigator.push(context, route);
+    _showAddHopChoices(
+      context: context,
+      child: CupertinoActionSheet(
+          title: Text('Hop Type', style: TextStyle(fontSize: 21)),
+          actions: <Widget>[
+            CupertinoActionSheetAction(
+              child: const Text("Orchid"),
+              onPressed: () {
+                Navigator.pop(context, Protocol.Orchid);
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: const Text("Open VPN"),
+              onPressed: () {
+                Navigator.pop(context, Protocol.OpenVPN);
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          )),
+    );
+  }
+
+  void _showAddHopChoices({BuildContext context, Widget child}) {
+    showCupertinoModalPopup<Protocol>(
+      context: context,
+      builder: (BuildContext context) => child,
+    ).then<void>((value) {
+      if (value != null) {
+        _addHopType(value);
+      }
+    });
+  }
+
+  void _addHopType(Protocol hopType) async {
+    var editor;
+    switch (hopType) {
+      case Protocol.Orchid:
+        editor = OrchidHopPage();
+        break;
+      case Protocol.OpenVPN:
+        editor = OpenVPNHopPage();
+        break;
+    }
+
+    UniqueHop newHop = await _showEditor(editor);
     if (_hops == null) {
       _hops = [];
     }
     setState(() {
-      _hops.add(result);
+      _hops.add(newHop);
     });
     _saveCircuit();
   }
 
   void _editHop(UniqueHop uniqueHop) async {
-    var route = MaterialPageRoute<UniqueHop>(
-        builder: (context) => CircuitAddPage(
-            initialFunder: uniqueHop.hop.funder,
-            initialSecret: uniqueHop.hop.secret));
-    UniqueHop updated = await Navigator.push(context, route);
+    var editor;
+    switch (uniqueHop.hop.protocol) {
+      case Protocol.Orchid:
+        editor = OrchidHopPage(initialState: uniqueHop.hop);
+        break;
+      case Protocol.OpenVPN:
+        editor = OpenVPNHopPage(initialState: uniqueHop.hop);
+        break;
+    }
+
+    UniqueHop editedHop = await _showEditor(editor);
     var index = _hops.indexOf(uniqueHop);
     setState(() {
       _hops.removeAt(index);
-      _hops.insert(index, updated);
+      _hops.insert(index, editedHop);
     });
     _saveCircuit();
+  }
+
+  Future<UniqueHop> _showEditor(editor) async {
+    var route = MaterialPageRoute<UniqueHop>(builder: (context) => editor);
+    return await Navigator.push(context, route);
   }
 
   // Callback for swipe to delete

@@ -2,31 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-
 import '../app_text.dart';
-import 'hop.dart';
+import 'circuit_hop.dart';
 
-class CircuitAddPage extends StatefulWidget {
-  final String initialFunder;
-  final String initialSecret;
+class OrchidHopPage extends StatefulWidget {
+  final OrchidHop initialState;
 
-  CircuitAddPage({this.initialFunder, this.initialSecret});
+  OrchidHopPage({this.initialState});
 
   @override
-  _CircuitAddPageState createState() => _CircuitAddPageState();
+  _OrchidHopPageState createState() => _OrchidHopPageState();
 }
 
-class _CircuitAddPageState extends State<CircuitAddPage> {
+class _OrchidHopPageState extends State<OrchidHopPage> {
   // TODO: Validation logic
   var funderField = TextEditingController();
   var secretField = TextEditingController();
 
-
   @override
   void initState() {
     super.initState();
-    funderField.text = widget.initialFunder;
-    secretField.text = widget.initialSecret;
+    funderField.text = widget.initialState?.funder;
+    secretField.text = widget.initialState?.secret;
   }
 
   @override
@@ -63,8 +60,11 @@ class _CircuitAddPageState extends State<CircuitAddPage> {
   }
 
   void _backAction() {
-    var hop = Hop(funder: funderField.text, secret: secretField.text);
-    Navigator.pop(context,
-        UniqueHop(key: DateTime.now().millisecondsSinceEpoch, hop: hop));
+    Navigator.pop(
+        context,
+        UniqueHop(
+            key: DateTime.now().millisecondsSinceEpoch,
+            hop:
+                OrchidHop(funder: funderField.text, secret: secretField.text)));
   }
 }
