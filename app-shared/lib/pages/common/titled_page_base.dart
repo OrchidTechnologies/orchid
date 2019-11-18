@@ -18,10 +18,6 @@ class TitledPageBase extends StatelessWidget {
   }
 }
 
-// A callback to perform the back button action (normally popping the view).
-// Note that this requires the current build context in order to perform the pop.
-typedef void BackAction(BuildContext context);
-
 /// A second level page reached through navigation.
 /// These pages have a title with a back button.
 class TitledPage extends StatelessWidget {

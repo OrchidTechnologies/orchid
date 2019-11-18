@@ -63,7 +63,6 @@ class _CircuitAddPageState extends State<CircuitAddPage> {
   }
 
   void _backAction() {
-    print("circuit add back acction");
     var hop = Hop(funder: funderField.text, secret: secretField.text);
     Navigator.pop(context,
         UniqueHop(key: DateTime.now().millisecondsSinceEpoch, hop: hop));
