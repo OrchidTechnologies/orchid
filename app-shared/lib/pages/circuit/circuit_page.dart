@@ -30,12 +30,9 @@ class CircuitPageState extends State<CircuitPage> {
     setState(() {
       // Wrap the hops with a locally unique id for the UI
       _hops = mapIndexed(
-          circuit?.hops ?? [],
-          ((index, hop) =>
-              UniqueHop(
-                  key: DateTime
-                      .now()
-                      .millisecondsSinceEpoch + index,
+              circuit?.hops ?? [],
+              ((index, hop) => UniqueHop(
+                  key: DateTime.now().millisecondsSinceEpoch + index,
                   hop: hop)))
           .toList();
     });
@@ -96,7 +93,7 @@ class CircuitPageState extends State<CircuitPage> {
               },
               key: Key(uniqueHop.key.toString()),
               title: Text(
-                "Orchid Hop: ${uniqueHop.hop.funder}", // TESTING
+                "Orchid",
                 style: AppText.dialogTitle,
               ),
               trailing: Icon(Icons.menu),
@@ -108,8 +105,8 @@ class CircuitPageState extends State<CircuitPage> {
   }
 
   void _addHop() async {
-    var route = MaterialPageRoute<UniqueHop>(
-        builder: (context) => CircuitAddPage());
+    var route =
+        MaterialPageRoute<UniqueHop>(builder: (context) => CircuitAddPage());
     UniqueHop result = await Navigator.push(context, route);
     if (_hops == null) {
       _hops = [];
@@ -121,11 +118,10 @@ class CircuitPageState extends State<CircuitPage> {
   }
 
   void _editHop(UniqueHop uniqueHop) async {
-    var route = MaterialPageRoute<UniqueHop>(builder: (context) =>
-        CircuitAddPage(
-          initialFunder: uniqueHop.hop.funder,
-          initialSecret: uniqueHop.hop.secret
-        ));
+    var route = MaterialPageRoute<UniqueHop>(
+        builder: (context) => CircuitAddPage(
+            initialFunder: uniqueHop.hop.funder,
+            initialSecret: uniqueHop.hop.secret));
     UniqueHop updated = await Navigator.push(context, route);
     var index = _hops.indexOf(uniqueHop);
     setState(() {
@@ -162,4 +158,3 @@ class CircuitPageState extends State<CircuitPage> {
     _saveCircuit();
   }
 }
-
