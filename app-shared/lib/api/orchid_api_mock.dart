@@ -255,13 +255,14 @@ class MockOrchidAPI implements OrchidAPI {
 
   // TODO: Copied from orchid_api_real, combine.
   /// Set the Orchid Configuration file contents
-  Future<bool> setConfiguration(String config) async {
+  Future<bool> setConfiguration(String userConfig) async {
 
     // Append the generated config before saving.
     // The desired format is (JavaScript, not JSON) e.g.:
     // hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}, {protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
     Circuit circuit = await UserPreferences().getCircuit();
-    // Convert the hop to a json map and replace its value with a quoted string
+    
+    // Convert the hops to a json map and replace its value with a quoted string
     // to match the JS object literal notation.
     var hopsListConfig = circuit.hops.map((hop) {
       return hop.toJson().map((key, value) {
@@ -269,12 +270,19 @@ class MockOrchidAPI implements OrchidAPI {
       }).toString();
     }).toList();
 
-    var generatecConfig = "hops = $hopsListConfig;";
-    var combinedConfig = config + "\n" + generatecConfig;
-    print("combined config = $combinedConfig");
+    // Concatenate the user config and generated config
+    var generatedConfig = "hops = $hopsListConfig;";
+    var combinedConfig = generatedConfig + "\n" + userConfig ;
+
+    print("Saving combined config = $combinedConfig");
 
     // Do nothing with the combined config.  Fake save.
     return true;
+  }
+  
+  /// Publish the latest configuration to the VPN.
+  Future<bool> updateConfiguration() async {
+    return setConfiguration(await UserPreferences().getUserConfig());
   }
 }
 

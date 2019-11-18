@@ -2,7 +2,6 @@ import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/pricing.dart';
-import 'package:orchid/pages/settings/developer_settings.dart';
 import 'package:rxdart/rxdart.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
@@ -88,13 +87,6 @@ abstract class OrchidAPI {
   /// Choose a new, randomized, network route.
   Future<void> reroute();
 
-  /// Get a map of name-value pairs representing dynamic developer settings.
-  /// See [DeveloperSettings] for the list of default settings.
-  //Future<Map<String,String>> getDeveloperSettings();
-
-  /// Set a name-value pair representing a dynamic developer settings
-  //void setDeveloperSetting({String name, String value});
-
   /// API for funds and budgeting
   OrchidBudgetAPI budget();
 
@@ -107,12 +99,16 @@ abstract class OrchidAPI {
   /// The build version
   Future<String> versionString();
 
-  /// Get the Orchid Configuration file contents
+  /// Get the User visible Orchid Configuration file contents
   Future<String> getConfiguration();
 
-  /// Set the Orchid Configuration file contents
+  /// Set the User visible Orchid Configuration file contents
+  /// and publish it to the VPN.
   /// Returns true if the configuration was saved successfully.
-  Future<bool>setConfiguration(String config);
+  Future<bool>setConfiguration(String userConfig);
+
+  /// Publish the latest configuration to the VPN.
+  Future<bool> updateConfiguration();
 }
 
 

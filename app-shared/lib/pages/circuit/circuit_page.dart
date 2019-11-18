@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/circuit_add_page.dart';
 import 'package:orchid/pages/common/formatting.dart';
@@ -146,6 +147,7 @@ class CircuitPageState extends State<CircuitPage> {
   void _saveCircuit() {
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
     UserPreferences().setCircuit(circuit);
+    OrchidAPI().updateConfiguration();
   }
 
   // Callback for drag to reorder
