@@ -52,41 +52,49 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                 pady(16),
                 Row(
                   children: <Widget>[
-                    Text("Password:", style: AppText.textLabelStyle.copyWith(fontSize: 20)),
+                    Text("Password:",
+                        style: AppText.textLabelStyle.copyWith(fontSize: 20)),
                     Expanded(child: AppTextField(controller: _userPassword))
                   ],
                 ),
 
                 // opvn config
+                pady(16),
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text("Config:",
+                        style: AppText.textLabelStyle.copyWith(fontSize: 20))),
                 // TODO: This is copied from the configuration page, factor out?
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(
                         left: 16, right: 16, top: 24, bottom: 24),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       child: SingleChildScrollView(
                           child: TextFormField(
-                            autocorrect: false,
-                            autofocus: false,
-                            keyboardType: TextInputType.multiline,
-                            style: AppText.logStyle.copyWith(color: AppColors.grey_2),
-                            controller: _ovpnConfig,
-                            maxLines: 99999,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              labelStyle: AppText.textLabelStyle,
-                            ),
-                          )),
+                        autocorrect: false,
+                        autofocus: false,
+                        keyboardType: TextInputType.multiline,
+                        style:
+                            AppText.logStyle.copyWith(color: AppColors.grey_2),
+                        controller: _ovpnConfig,
+                        maxLines: 99999,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          labelStyle: AppText.textLabelStyle,
+                        ),
+                      )),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                        border: Border.all(width: 2.0, color: AppColors.neutral_5),
+                        border:
+                            Border.all(width: 2.0, color: AppColors.neutral_5),
                       ),
                     ),
                   ),
-                )// ...
-
+                )
               ],
             ),
           ),
