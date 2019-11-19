@@ -46,6 +46,7 @@ contract OrchidDirectory {
 
     struct Primary {
         bytes32 value_;
+        uint256 below_;
     }
 
     function name(address staker, address stakee) public pure returns (bytes32) {
@@ -74,9 +75,6 @@ contract OrchidDirectory {
 
 
     struct Stake {
-        uint256 before_;
-        uint256 after_;
-
         uint256 amount_;
         uint128 delay_;
 
@@ -96,7 +94,7 @@ contract OrchidDirectory {
         if (nope(root_))
             return 0;
         Stake storage stake = stakes_[name(root_)];
-        return stake.before_ + stake.after_ + stake.amount_;
+        return stake.left_.below_ + stake.right_.below_ + stake.amount_;
     }
 
     function scan(uint256 point) public view returns (bytes32, address, uint128) {
@@ -107,12 +105,12 @@ contract OrchidDirectory {
             bytes32 key = name(primary);
             Stake storage stake = stakes_[key];
 
-            if (point < stake.before_) {
+            if (point < stake.left_.below_) {
                 primary = stake.left_;
                 continue;
             }
 
-            point -= stake.before_;
+            point -= stake.left_.below_;
 
             if (point < stake.amount_)
                 return (key, stake.stakee_, stake.delay_);
@@ -143,9 +141,9 @@ contract OrchidDirectory {
             bytes32 parent = stake.parent_;
             stake = stakes_[parent];
             if (name(stake.left_) == key)
-                stake.before_ += amount;
+                stake.left_.below_ += amount;
             else
-                stake.after_ += amount;
+                stake.right_.below_ += amount;
             key = parent;
         }
     }
@@ -185,7 +183,7 @@ contract OrchidDirectory {
             while (!nope(primary)) {
                 parent = name(primary);
                 Stake storage current = stakes_[parent];
-                primary = current.before_ < current.after_ ? current.left_ : current.right_;
+                primary = current.left_.below_ < current.right_.below_ ? current.left_ : current.right_;
             }
 
             stake.parent_ = parent;
@@ -241,7 +239,7 @@ contract OrchidDirectory {
             return;
         stakes_[name(stake.right_)].parent_ = location;
         copy(current.right_, stake.right_);
-        current.after_ = stake.after_;
+        current.right_.below_ = stake.right_.below_;
     }
 
     function fixl(Stake storage stake, bytes32 location, Stake storage current) private {
@@ -249,7 +247,7 @@ contract OrchidDirectory {
             return;
         stakes_[name(stake.left_)].parent_ = location;
         copy(current.left_, stake.left_);
-        current.before_ = stake.before_;
+        current.left_.below_ = stake.left_.below_;
     }
 
     function pull(address stakee, uint256 amount, uint256 index) external {
@@ -265,7 +263,7 @@ contract OrchidDirectory {
 
         if (stake.amount_ == 0) {
             Primary storage pivot = turn(key, stake);
-            Primary storage child = stake.before_ > stake.after_ ? stake.left_ : stake.right_;
+            Primary storage child = stake.left_.below_ > stake.right_.below_ ? stake.left_ : stake.right_;
 
             if (nope(child))
                 kill(pivot);
@@ -274,7 +272,7 @@ contract OrchidDirectory {
                 bytes32 location = name(last);
                 Stake storage current = stakes_[location];
                 for (;;) {
-                    Primary storage next = current.before_ > current.after_ ? current.left_ : current.right_;
+                    Primary storage next = current.left_.below_ > current.right_.below_ ? current.left_ : current.right_;
                     if (nope(next))
                         break;
                     last = next;
