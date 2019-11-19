@@ -234,20 +234,20 @@ contract OrchidDirectory {
     }
 
 
-    function fixr(Stake storage stake, bytes32 location, Stake storage current) private {
-        if (nope(stake.right_))
+    function move(Primary storage stake, bytes32 location, Primary storage current) private {
+        if (nope(stake))
             return;
-        stakes_[name(stake.right_)].parent_ = location;
-        copy(current.right_, stake.right_);
-        current.right_.below_ = stake.right_.below_;
+        stakes_[name(stake)].parent_ = location;
+        copy(current, stake);
+        current.below_ = stake.below_;
+    }
+
+    function fixr(Stake storage stake, bytes32 location, Stake storage current) private {
+        move(stake.right_, location, current.right_);
     }
 
     function fixl(Stake storage stake, bytes32 location, Stake storage current) private {
-        if (nope(stake.left_))
-            return;
-        stakes_[name(stake.left_)].parent_ = location;
-        copy(current.left_, stake.left_);
-        current.left_.below_ = stake.left_.below_;
+        move(stake.left_, location, current.left_);
     }
 
     function pull(address stakee, uint256 amount, uint256 index) external {
