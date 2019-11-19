@@ -155,9 +155,17 @@ class UserPreferences {
     }
     try {
       var jsonList = jsonDecode(value) as List<dynamic>;
-      return jsonList.map((el) {
-        return StoredEthereumKey.fromJson(el);
-      }).toList();
+      return jsonList
+          .map((el) {
+            try {
+              return StoredEthereumKey.fromJson(el);
+            } catch (err) {
+              OrchidAPI().logger().write("Error decoding key: $err");
+              return null;
+            }
+          })
+          .where((key) => key != null)
+          .toList();
     } catch (err) {
       OrchidAPI().logger().write("Error retrieving keys!: $err");
       return [];
