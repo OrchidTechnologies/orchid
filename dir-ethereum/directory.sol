@@ -240,7 +240,7 @@ contract OrchidDirectory {
         if (nope(stake.right_))
             return;
         stakes_[name(stake.right_)].parent_ = location;
-        current.right_ = stake.right_;
+        copy(current.right_, stake.right_);
         current.after_ = stake.after_;
     }
 
@@ -248,7 +248,7 @@ contract OrchidDirectory {
         if (nope(stake.left_))
             return;
         stakes_[name(stake.left_)].parent_ = location;
-        current.left_ = stake.left_;
+        copy(current.left_, stake.left_);
         current.before_ = stake.before_;
     }
 
