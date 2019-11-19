@@ -36,7 +36,7 @@ class TitledPage extends StatelessWidget {
     this.lightTheme = false,
     this.actions = const [],
     this.backAction,
-    this.cancellable,
+    this.cancellable = false,
   });
 
   @override
