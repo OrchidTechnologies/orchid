@@ -149,7 +149,7 @@ contract OrchidDirectory {
     event Update(address indexed staker, address stakee, uint128 amount);
     event Update(address indexed stakee, uint128 amount);
 
-    function lift(bytes32 key, Stake storage stake, uint128 amount, address stakee, address staker) private {
+    function lift(bytes32 key, Stake storage stake, uint128 amount, address staker, address stakee) private {
         uint128 local = stake.amount_;
         local += amount;
         stake.amount_ = local;
@@ -190,7 +190,7 @@ contract OrchidDirectory {
             stake.stakee_ = stakee;
         }
 
-        lift(key, stake, amount, stakee, staker);
+        lift(key, stake, amount, staker, stakee);
     }
 
     function push(address stakee, uint128 amount, uint128 delay) external {
@@ -257,7 +257,7 @@ contract OrchidDirectory {
         require(stake.amount_ != 0);
         require(stake.amount_ >= amount);
 
-        lift(key, stake, -amount, stakee, staker);
+        lift(key, stake, -amount, staker, stakee);
 
         if (stake.amount_ == 0) {
             Primary storage pivot = turn(key, stake);
