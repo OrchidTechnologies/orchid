@@ -34,12 +34,12 @@ contract OrchidDirectory {
 
 
     struct Stakee {
-        uint128 amount_;
+        uint256 amount_;
     }
 
     mapping(address => Stakee) internal stakees_;
 
-    function heft(address stakee) external view returns (uint128) {
+    function heft(address stakee) external view returns (uint256) {
         return stakees_[stakee].amount_;
     }
 
@@ -74,10 +74,10 @@ contract OrchidDirectory {
 
 
     struct Stake {
-        uint128 before_;
-        uint128 after_;
+        uint256 before_;
+        uint256 after_;
 
-        uint128 amount_;
+        uint256 amount_;
         uint128 delay_;
 
         address stakee_;
@@ -92,17 +92,15 @@ contract OrchidDirectory {
     Primary private root_;
 
 
-    function have() public view returns (uint128) {
+    function have() public view returns (uint256) {
         if (nope(root_))
             return 0;
         Stake storage stake = stakes_[name(root_)];
         return stake.before_ + stake.after_ + stake.amount_;
     }
 
-    function scan(uint128 percent) external view returns (bytes32, address, uint128) {
+    function scan(uint256 point) public view returns (bytes32, address, uint128) {
         require(!nope(root_));
-
-        uint128 point = uint128(have() * uint256(percent) / 2**128);
 
         Primary storage primary = root_;
         for (;;) {
@@ -125,6 +123,12 @@ contract OrchidDirectory {
         }
     }
 
+    // provide a single-call variant of scan() that works for initial OXT clients
+    function scan(uint128 percent) external view returns (bytes32, address, uint128) {
+        // for OXT, have() will be less than a uint128, so this math cannot overflow
+        return scan(have() * percent >> 128);
+    }
+
 
     function turn(bytes32 key, Stake storage stake) private view returns (Primary storage) {
         if (stake.parent_ == bytes32(0))
@@ -134,7 +138,7 @@ contract OrchidDirectory {
     }
 
 
-    function step(bytes32 key, Stake storage stake, uint128 amount, bytes32 root) private {
+    function step(bytes32 key, Stake storage stake, uint256 amount, bytes32 root) private {
         while (stake.parent_ != root) {
             bytes32 parent = stake.parent_;
             stake = stakes_[parent];
@@ -146,16 +150,16 @@ contract OrchidDirectory {
         }
     }
 
-    event Update(address indexed staker, address stakee, uint128 amount);
-    event Update(address indexed stakee, uint128 amount);
+    event Update(address indexed staker, address stakee, uint256 amount);
+    event Update(address indexed stakee, uint256 amount);
 
-    function lift(bytes32 key, Stake storage stake, uint128 amount, address staker, address stakee) private {
-        uint128 local = stake.amount_;
+    function lift(bytes32 key, Stake storage stake, uint256 amount, address staker, address stakee) private {
+        uint256 local = stake.amount_;
         local += amount;
         stake.amount_ = local;
         emit Update(staker, stakee, local);
 
-        uint128 global = stakees_[stakee].amount_;
+        uint256 global = stakees_[stakee].amount_;
         global += amount;
         stakees_[stakee].amount_ = global;
         emit Update(stakee, global);
@@ -164,7 +168,7 @@ contract OrchidDirectory {
     }
 
 
-    function more(address stakee, uint128 amount, uint128 delay) private {
+    function more(address stakee, uint256 amount, uint128 delay) private {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
@@ -193,7 +197,7 @@ contract OrchidDirectory {
         lift(key, stake, amount, staker, stakee);
     }
 
-    function push(address stakee, uint128 amount, uint128 delay) external {
+    function push(address stakee, uint256 amount, uint128 delay) external {
         more(stakee, amount, delay);
         require(token_.transferFrom(msg.sender, address(this), amount));
     }
@@ -212,7 +216,7 @@ contract OrchidDirectory {
     struct Pending {
         uint256 expire_;
         address stakee_;
-        uint128 amount_;
+        uint256 amount_;
     }
 
     mapping(address => mapping(uint256 => Pending)) private pendings_;
@@ -248,7 +252,7 @@ contract OrchidDirectory {
         current.before_ = stake.before_;
     }
 
-    function pull(address stakee, uint128 amount, uint256 index) external {
+    function pull(address stakee, uint256 amount, uint256 index) external {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
