@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import '../app_text.dart';
 import 'circuit_hop.dart';
+import 'key_selection.dart';
 
 class OrchidHopPage extends StatefulWidget {
   final OrchidHop initialState;
@@ -15,15 +17,19 @@ class OrchidHopPage extends StatefulWidget {
 }
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
-  // TODO: Validation logic
-  var funderField = TextEditingController();
-  var secretField = TextEditingController();
+  var _funderField = TextEditingController();
+
+  // Reference to the selected StoredEthereumKey
+  StoredEthereumKeyRef _keyRef;
 
   @override
   void initState() {
     super.initState();
-    funderField.text = widget.initialState?.funder;
-    secretField.text = widget.initialState?.secret;
+    setState(() {
+      _funderField.text = widget.initialState?.funder;
+      _keyRef = widget.initialState?.keyRef;
+    });
+    print("hop editor: initial keyref = $_keyRef");
   }
 
   @override
@@ -41,7 +47,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 children: <Widget>[
                   Text("Funder:",
                       style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-                  Expanded(child: AppTextField(controller: funderField))
+                  Expanded(child: AppTextField(controller: _funderField))
                 ],
               ),
               pady(16),
@@ -49,7 +55,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 children: <Widget>[
                   Text("Secret:",
                       style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-                  Expanded(child: AppTextField(controller: secretField))
+                  Expanded(
+                      child: Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 16),
+                    child: KeySelection(
+                        initialSelection: _keyRef, onSelection: _keySelected),
+                  ))
                 ],
               ),
             ],
@@ -59,12 +70,24 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
+  void _keySelected(StoredEthereumKey key) {
+    setState(() {
+      print("setting key ref to: ${key.ref()}");
+      _keyRef = key.ref();
+    });
+  }
+
   void _backAction() {
+    //
+    if (_keyRef == null ||
+        _funderField.text == null ||
+        _funderField.text == "") {
+      return null;
+    }
     Navigator.pop(
         context,
         UniqueHop(
             key: DateTime.now().millisecondsSinceEpoch,
-            hop:
-                OrchidHop(funder: funderField.text, secret: secretField.text)));
+            hop: OrchidHop(funder: _funderField.text, keyRef: _keyRef)));
   }
 }

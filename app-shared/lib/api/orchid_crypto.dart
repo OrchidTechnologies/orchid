@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/user_preferences.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/digests/sha3.dart';
 import 'package:pointycastle/ecc/api.dart';
@@ -111,6 +112,9 @@ class DartSecureRandom implements SecureRandom {
 }
 
 class StoredEthereumKey {
+  // A locally unique id for referencing this key in the persistence layer.
+  final String uid;
+
   // The time at which this key was stored.
   final DateTime time;
 
@@ -121,14 +125,23 @@ class StoredEthereumKey {
   final BigInt private;
 
   StoredEthereumKey(
-      {@required this.time, @required this.imported, @required this.private});
+      {String uid,
+      @required this.time,
+      @required this.imported,
+      @required this.private})
+      : this.uid = uid ?? time.millisecondsSinceEpoch.toString();
 
   EthereumKeyPair keys() {
     return Crypto.fromPrivateKey(private);
   }
 
+  StoredEthereumKeyRef ref() {
+    return StoredEthereumKeyRef(uid);
+  }
+
   StoredEthereumKey.fromJson(Map<String, dynamic> json)
-      : this.time = DateTime.fromMillisecondsSinceEpoch(json['time']),
+      : this.uid = json['uuid'] ?? json['time'].toString(),
+        this.time = DateTime.fromMillisecondsSinceEpoch(json['time']),
         this.imported = json['imported'],
         this.private = BigInt.parse(json['private']);
 
@@ -139,3 +152,29 @@ class StoredEthereumKey {
       };
 }
 
+// A simple referential value by uid.
+// Note: We can do more with caching here if needed.
+class StoredEthereumKeyRef {
+  String keyUid;
+
+  StoredEthereumKeyRef(this.keyUid);
+
+  // Resolve the reference
+  Future<StoredEthereumKey> get() async {
+    var keys = await UserPreferences().getKeys();
+    return getFrom(keys);
+  }
+
+  StoredEthereumKey getFrom(List<StoredEthereumKey> keys) {
+    return keys.firstWhere((key) {
+      return key.uid == keyUid;
+    });
+  }
+
+  @override
+  String toString() {
+    return keyUid;
+  }
+
+
+}

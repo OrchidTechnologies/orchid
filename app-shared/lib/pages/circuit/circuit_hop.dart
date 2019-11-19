@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_crypto.dart';
 
 enum Protocol { Orchid, OpenVPN }
 
@@ -55,30 +56,30 @@ class CircuitHop {
   static stringToProtocol(String s) {
     return Protocol.values.firstWhere((e) => e.toString() == "Protocol." + s,
         orElse: () {
-          return null;
-        }); // ug
+      return null;
+    }); // ug
   }
 
   static protocolToString(Protocol type) {
     return type.toString().substring("Protocol.".length);
   }
-
 }
 
 class OrchidHop extends CircuitHop {
-  final String secret; // hex
   final String funder; // 0x prefixed hex
+  final StoredEthereumKeyRef keyRef;
 
-  OrchidHop({this.secret, this.funder}) : super(Protocol.Orchid);
+  OrchidHop({this.funder, this.keyRef}) : super(Protocol.Orchid);
 
   factory OrchidHop.fromJson(Map<String, dynamic> json) {
-    return OrchidHop(secret: json['secret'], funder: json['funder']);
+    return OrchidHop(
+        funder: json['funder'], keyRef: StoredEthereumKeyRef(json['keyRef']));
   }
 
   Map<String, dynamic> toJson() => {
         'protocol': CircuitHop.protocolToString(protocol),
-        'secret': secret,
-        'funder': funder
+        'funder': funder,
+        'keyRef': keyRef.toString(),
       };
 }
 

@@ -7,7 +7,6 @@ import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/util/collections.dart';
 
-import '../app_colors.dart';
 import '../app_gradients.dart';
 import '../app_text.dart';
 import 'circuit_hop.dart';
@@ -21,6 +20,7 @@ class CircuitPage extends StatefulWidget {
 
 class CircuitPageState extends State<CircuitPage> {
   List<UniqueHop> _hops;
+  bool _keysAvailable = false;
 
   @override
   void initState() {
@@ -30,6 +30,7 @@ class CircuitPageState extends State<CircuitPage> {
 
   void initStateAsync() async {
     var circuit = await UserPreferences().getCircuit();
+    var keys = await UserPreferences().getKeys();
     if (mounted) {
       setState(() {
         // Wrap the hops with a locally unique id for the UI
@@ -39,6 +40,7 @@ class CircuitPageState extends State<CircuitPage> {
                     key: DateTime.now().millisecondsSinceEpoch + index,
                     hop: hop)))
             .toList();
+        _keysAvailable = keys != null && keys.length > 0;
       });
     }
   }
@@ -58,9 +60,15 @@ class CircuitPageState extends State<CircuitPage> {
               ),
             ),
             Expanded(child: _buildListView()),
-            FloatingActionButton(
-              child: Icon(Icons.add),
-              onPressed: _addHop,
+            Visibility(
+              visible: _keysAvailable,
+              child: FloatingActionButton(
+                child: Icon(Icons.add),
+                onPressed: _addHop,
+              ),
+              replacement: Text("Add one or more keys before creating a circuit...",
+                  style: AppText.textHintStyle
+                      .copyWith(fontStyle: FontStyle.italic)),
             ),
             pady(36.0),
           ],
