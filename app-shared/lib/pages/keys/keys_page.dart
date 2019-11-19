@@ -181,9 +181,11 @@ class _KeysPageState extends State<KeysPage> {
   Future<StoredEthereumKey> _importKey() async {
     var route = MaterialPageRoute<BigInt>(
         builder: (context) => ImportKeyPage(), fullscreenDialog: true);
-    var secret = await Navigator.push(context, route);
-    return StoredEthereumKey(
-        time: DateTime.now(), imported: true, private: secret);
+    var secret = await Navigator.push<BigInt>(context, route);
+    return secret != null
+        ? StoredEthereumKey(
+            time: DateTime.now(), imported: true, private: secret)
+        : null;
   }
 
   _saveKeys() {

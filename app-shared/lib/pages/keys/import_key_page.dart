@@ -106,6 +106,7 @@ class _ImportKeyPageState extends State<ImportKeyPage> {
 
   @override
   void dispose() {
+    super.dispose();
     _secretController.removeListener(_onSecretChange);
   }
 }
