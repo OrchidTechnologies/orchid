@@ -137,23 +137,23 @@ class _TrafficViewState extends State<TrafficView>
             physics: _scrollPhysics,
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
-              FlowEntry item = _resultList[index];
-              var hostname = (item.hostname == null || item.hostname.isEmpty)
-                  ? item.dst_addr
-                  : item.hostname;
+              FlowEntry flow = _resultList[index];
+              var hostname = (flow.hostname == null || flow.hostname.isEmpty)
+                  ? flow.dst_addr
+                  : flow.hostname;
               var date = DateFormat("MM/dd/yyyy HH:mm:ss.SSS")
-                  .format(item.start.toLocal());
+                  .format(flow.start.toLocal());
               return Theme(
                 data: ThemeData(accentColor: AppColors.purple_3),
                 child: Container(
                   height: _renderedRowHeight,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: TrafficView.colorForProtocol(item.protocol),
+                    color: TrafficView.colorForProtocol(flow.protocol),
                   ),
                   child: IntrinsicHeight(
                     child: ListTile(
-                      key: PageStorageKey<int>(item.rowId), // unique key
+                      key: PageStorageKey<int>(flow.rowId), // unique key
                       title: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -162,7 +162,7 @@ class _TrafficViewState extends State<TrafficView>
                             children: <Widget>[
                               Expanded(
                                 flex: 10,
-                                child: Text("$hostname",
+                                child: Text("$hostname:${flow.dst_port}",
                                     // Note: I'd prefer ellipses but they brake soft wrap control.
                                     // Note: (Watch for the case of "-" dashes in domain names.)
                                     overflow: TextOverflow.fade,
@@ -171,7 +171,7 @@ class _TrafficViewState extends State<TrafficView>
                                         .copyWith(fontWeight: FontWeight.bold)),
                               ),
                               Spacer(),
-                              Text("${item.protocol}",
+                              Text("${flow.protocol}",
                                   textAlign: TextAlign.right,
                                   style: AppText.textLabelStyle.copyWith(
                                       fontSize: 14.0,
@@ -188,7 +188,7 @@ class _TrafficViewState extends State<TrafficView>
                       onTap: () {
                         Navigator.push(context,
                             MaterialPageRoute(builder: (BuildContext context) {
-                              return TrafficViewDetail(item);
+                              return TrafficViewDetail(flow);
                             }));
                       },
                     ),

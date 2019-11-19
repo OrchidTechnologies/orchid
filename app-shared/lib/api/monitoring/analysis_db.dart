@@ -22,9 +22,8 @@ class AnalysisDb {
     if (_db != null && _db.isOpen) {
       return _db;
     }
-    String dbPath = (await OrchidAPI().groupContainerPath()) + '/analysis.db';
-    //debugPrint("Analysis db path: $dbPath");
     try {
+      String dbPath = (await OrchidAPI().groupContainerPath()) + '/analysis.db';
       _db = await openDatabase(dbPath, readOnly: false);
     } catch (err) {
       debugPrint("Error opening analysis db: $err");

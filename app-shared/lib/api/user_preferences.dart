@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/circuit/hop.dart';
+import 'package:orchid/pages/circuit/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'orchid_budget_api.dart';

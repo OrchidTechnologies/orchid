@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
@@ -75,20 +73,6 @@ class _SideDrawerState extends State<SideDrawer> {
                   ],
                 ),
               ),
-              /*
-              SideDrawerTile(
-                  title: "Copy Signer Key",
-                  imageName: 'assets/images/fileDocumentOutline.png',
-                  onPressed: () {
-                    _copySignerKey(context);
-                  }),
-               */
-              SideDrawerTile(
-                  title: "Key Generator",
-                  imageName: 'assets/images/fileDocumentOutline.png',
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/settings/keygen');
-                  }),
               divider(),
               SideDrawerTile(
                   title: "Clear Data",
@@ -114,7 +98,6 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.privacy);
                   }),
-
               divider(),
               SideDrawerTile(
                   title: "Open Source Licenses",
@@ -124,17 +107,15 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.open_source);
                   }),
-
               divider(),
               SideDrawerTile(
-                  title: "Configuration",
+                  title: "Advanced",
                   imageName: 'assets/images/settings.png',
                   showDetail: true,
                   hoffset: 4.0,
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.configuration);
                   }),
-
             ],
           ),
         ),
@@ -154,19 +135,6 @@ class _SideDrawerState extends State<SideDrawer> {
       ],
     );
   }
-
-  /*
-  void _copySignerKey(BuildContext context) async {
-    var signerKey = await OrchidAPI().budget().getSignerKey();
-    Clipboard.setData(ClipboardData(text: signerKey));
-    Dialogs.showAppDialog(
-        context: context,
-        title: "Signer Key Copied",
-        body: "Your public signer key has been copied to the clipboard.  "
-            +"Paste this into the Create Account screen of the Orchid Account Manager Dapp to link "
-           + "this client to your account.",
-        );
-  }*/
 
   void _confirmDelete(BuildContext context) {
     Dialogs.showConfirmationDialog(
@@ -301,6 +269,4 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
     super.dispose();
     _balanceListener.cancel();
   }
-
-
 }
