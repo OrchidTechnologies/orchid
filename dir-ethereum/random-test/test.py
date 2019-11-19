@@ -118,7 +118,7 @@ for staker in accounts:
     for stakee in accounts:
         print(f'Checking ({staker}, {stakee}) stake...')
         name = keccak_256(unhexlify(staker[2:] + stakee[2:])).hexdigest()
-        amount = int('{:>064}'.format(hexlify(web3.eth.getStorageAt(directory.address, int(keccak_256(unhexlify(name.encode() + b'0'*63 + b'2')).hexdigest(), 16) + 1)).decode())[32:], 16)
+        amount = int('{:>064}'.format(hexlify(web3.eth.getStorageAt(directory.address, int(keccak_256(unhexlify(name.encode() + b'0'*63 + b'2')).hexdigest(), 16) + 2)).decode()), 16)
         assert amount == staker_stakee_amount[(staker, stakee)]
 
 BYTES32_ZERO = '0'*64
@@ -132,17 +132,15 @@ def check_tree(name, p):
     def fetch(n):
         # this reads word `n` from the struct found at stakes_[name] (slot 2) via keccak256(name . slot) + n
         return '{:>064}'.format(hexlify(web3.eth.getStorageAt(directory.address, int(keccak_256(unhexlify(name.encode() + b'0'*63 + b'2')).hexdigest(), 16) + n)).decode())
-    def split(n):
-        # this fetches a word that contains two uint128s and returns the constituent parts
-        x = fetch(n)
-        return int(x[32:], 16), int(x[:32], 16)
 
-    before, after = split(0)
-    amount, delay = split(1)
-    stakee = fetch(2)[24:]
-    parent = fetch(3)
-    left = fetch(4)
-    right = fetch(5)
+    before = int(fetch(0), 16)
+    after = int(fetch(1), 16)
+    amount = int(fetch(2), 16)
+    delay = int(fetch(3), 16)
+    stakee = fetch(4)[24:]
+    parent = fetch(5)
+    left = fetch(6)
+    right = fetch(7)
 
     assert parent == p
     if left != BYTES32_ZERO:
