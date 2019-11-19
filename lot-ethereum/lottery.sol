@@ -24,6 +24,10 @@ pragma solidity 0.5.12;
 
 import "../openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
+interface OrchidVerifier {
+    function good(bytes calldata shared, address target, bytes calldata receipt) external pure returns (bool);
+}
+
 contract OrchidLottery {
 
     IERC20 internal token_;
@@ -40,6 +44,9 @@ contract OrchidLottery {
         uint128 escrow_;
 
         uint256 unlock_;
+
+        OrchidVerifier verify_;
+        bytes shared_;
     }
 
     event Update(address indexed funder, address indexed signer, uint128 amount, uint128 escrow, uint256 unlock);
@@ -93,9 +100,9 @@ contract OrchidLottery {
     }
 
 
-    function look(address funder, address signer) external view returns (uint128, uint128, uint256) {
+    function look(address funder, address signer) external view returns (uint128, uint128, uint256, OrchidVerifier, bytes memory) {
         Pot storage pot = lotteries_[funder].pots_[signer];
-        return (pot.amount_, pot.escrow_, pot.unlock_);
+        return (pot.amount_, pot.escrow_, pot.unlock_, pot.verify_, pot.shared_);
     }
 
 
@@ -120,6 +127,14 @@ contract OrchidLottery {
         send(funder, signer, pot);
     }
 
+    function bind(address signer, OrchidVerifier verify, bytes calldata shared) external {
+        address funder = msg.sender;
+        Pot storage pot = find(funder, signer);
+        require(pot.escrow_ == 0);
+        pot.verify_ = verify;
+        pot.shared_ = shared;
+    }
+
 
     struct Track {
         uint256 until_;
@@ -137,9 +152,7 @@ contract OrchidLottery {
     }
 
 
-    function take(address funder, address signer, uint128 amount, address payable target) private {
-        Pot storage pot = find(funder, signer);
-
+    function take(address funder, address signer, uint128 amount, address payable target, Pot storage pot) private {
         if (pot.amount_ >= amount)
             pot.amount_ -= amount;
         else {
@@ -153,7 +166,14 @@ contract OrchidLottery {
             require(token_.transfer(target, amount));
     }
 
-    function grab(bytes32 seed, bytes32 hash, bytes32 nonce, uint256 start, uint128 range, uint128 amount, uint128 ratio, address funder, address payable target, uint8 v, bytes32 r, bytes32 s, bytes32[] calldata old) external {
+    function take(address funder, address signer, uint128 amount, address payable target, bytes memory receipt) private {
+        Pot storage pot = find(funder, signer);
+        take(funder, signer, amount, target, pot);
+        if (pot.verify_ != OrchidVerifier(0))
+            require(pot.verify_.good(pot.shared_, target, receipt));
+    }
+
+    function grab(bytes32 seed, bytes32 hash, bytes32 nonce, uint256 start, uint128 range, uint128 amount, uint128 ratio, address funder, address payable target, bytes memory receipt, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
         require(keccak256(abi.encodePacked(seed)) == hash);
         require(uint256(keccak256(abi.encodePacked(seed, nonce))) >> 128 <= ratio);
 
@@ -180,17 +200,18 @@ contract OrchidLottery {
 
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
         require(signer != address(0));
-        take(funder, signer, amount, target);
+        take(funder, signer, amount, target, receipt);
     }
 
-    function give(address funder, address payable target, uint128 amount) external {
+    function give(address funder, address payable target, uint128 amount, bytes calldata receipt) external {
         address signer = msg.sender;
-        take(funder, signer, amount, target);
+        take(funder, signer, amount, target, receipt);
     }
 
     function pull(address signer, address payable target, uint128 amount) external {
         address funder = msg.sender;
-        take(funder, signer, amount, target);
+        Pot storage pot = find(funder, signer);
+        take(funder, signer, amount, target, pot);
     }
 
 
