@@ -128,11 +128,18 @@ contract OrchidDirectory {
     }
 
 
+    function side(Stake storage stake, bool less) private view returns (Primary storage) {
+        return (stake.left_.below_ < stake.right_.below_) == less ? stake.left_ : stake.right_;
+    }
+
+    function side(Stake storage stake, bytes32 key) private view returns (Primary storage) {
+        return name(stake.left_) == key ? stake.left_ : stake.right_;
+    }
+
     function turn(bytes32 key, Stake storage stake) private view returns (Primary storage) {
         if (stake.parent_ == bytes32(0))
             return root_;
-        Stake storage parent = stakes_[stake.parent_];
-        return name(parent.left_) == key ? parent.left_ : parent.right_;
+        return side(stakes_[stake.parent_], key);
     }
 
 
@@ -140,10 +147,7 @@ contract OrchidDirectory {
         while (stake.parent_ != root) {
             bytes32 parent = stake.parent_;
             stake = stakes_[parent];
-            if (name(stake.left_) == key)
-                stake.left_.below_ += amount;
-            else
-                stake.right_.below_ += amount;
+            side(stake, key).below_ += amount;
             key = parent;
         }
     }
@@ -263,7 +267,7 @@ contract OrchidDirectory {
 
         if (stake.amount_ == 0) {
             Primary storage pivot = turn(key, stake);
-            Primary storage child = stake.left_.below_ > stake.right_.below_ ? stake.left_ : stake.right_;
+            Primary storage child = side(stake, false);
 
             if (nope(child))
                 kill(pivot);
@@ -272,7 +276,7 @@ contract OrchidDirectory {
                 bytes32 location = name(last);
                 Stake storage current = stakes_[location];
                 for (;;) {
-                    Primary storage next = current.left_.below_ > current.right_.below_ ? current.left_ : current.right_;
+                    Primary storage next = side(current, false);
                     if (nope(next))
                         break;
                     last = next;
