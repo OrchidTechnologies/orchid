@@ -31,18 +31,18 @@ contract OrchidCurator {
 
     mapping (address => bool) private curated_;
 
-    function list(address target, bool good) public {
+    function list(address target, bool good) external {
         require(msg.sender == owner_);
         curated_[target] = good;
     }
 
-    function good(address target) public view returns (bool) {
+    function good(address target) external view returns (bool) {
         return curated_[target];
     }
 }
 
 contract OrchidUntrusted {
-    function good(address) public pure returns (bool) {
+    function good(address) external pure returns (bool) {
         return true;
     }
 }

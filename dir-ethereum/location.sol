@@ -33,7 +33,7 @@ contract OrchidLocation {
 
     event Update(address indexed target, string url, string tls);
 
-    function move(string memory url, string memory tls) public {
+    function move(string calldata url, string calldata tls) external {
         Location storage location = locations_[msg.sender];
         location.set_ = block.timestamp;
         location.url_ = url;
@@ -41,7 +41,7 @@ contract OrchidLocation {
         emit Update(msg.sender, url, tls);
     }
 
-    function look(address target) public view returns (uint256, string memory, string memory) {
+    function look(address target) external view returns (uint256, string memory, string memory) {
         Location storage location = locations_[target];
         return (location.set_, location.url_, location.tls_);
     }

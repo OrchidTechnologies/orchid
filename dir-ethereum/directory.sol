@@ -39,7 +39,7 @@ contract OrchidDirectory {
 
     mapping(address => Stakee) internal stakees_;
 
-    function heft(address stakee) public view returns (uint128 amount) {
+    function heft(address stakee) external view returns (uint128 amount) {
         return stakees_[stakee].amount_;
     }
 
@@ -100,7 +100,7 @@ contract OrchidDirectory {
         return stake.before_ + stake.after_ + stake.amount_;
     }
 
-    function scan(uint128 percent) public view returns (bytes32, address, uint128, bytes memory) {
+    function scan(uint128 percent) external view returns (bytes32, address, uint128, bytes memory) {
         require(!nope(root_));
 
         uint128 point = uint128(have() * uint256(percent) / 2**128);
@@ -194,12 +194,12 @@ contract OrchidDirectory {
         lift(key, stake, amount, stakee, staker);
     }
 
-    function push(address stakee, uint128 amount, uint128 delay) public {
+    function push(address stakee, uint128 amount, uint128 delay) external {
         more(stakee, amount, delay);
         require(token_.transferFrom(msg.sender, address(this), amount));
     }
 
-    function wait(address stakee, uint128 delay) public {
+    function wait(address stakee, uint128 delay) external {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
@@ -210,7 +210,7 @@ contract OrchidDirectory {
     }
 
 
-    function move(address stakee, bytes memory data) public {
+    function move(address stakee, bytes calldata data) external {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
@@ -228,14 +228,14 @@ contract OrchidDirectory {
 
     mapping(address => mapping(uint256 => Pending)) private pendings_;
 
-    function take(uint256 index, address payable target) public {
+    function take(uint256 index, address payable target) external {
         Pending memory pending = pendings_[msg.sender][index];
         require(pending.expire_ <= block.timestamp);
         delete pendings_[msg.sender][index];
         require(token_.transfer(target, pending.amount_));
     }
 
-    function stop(uint256 index, uint128 delay) public {
+    function stop(uint256 index, uint128 delay) external {
         Pending memory pending = pendings_[msg.sender][index];
         require(pending.expire_ <= block.timestamp + delay);
         delete pendings_[msg.sender][index];
@@ -259,7 +259,7 @@ contract OrchidDirectory {
         current.before_ = stake.before_;
     }
 
-    function pull(address stakee, uint128 amount, uint256 index) public {
+    function pull(address stakee, uint128 amount, uint256 index) external {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
