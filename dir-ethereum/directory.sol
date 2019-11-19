@@ -28,8 +28,8 @@ contract OrchidDirectory {
 
     IERC20 internal token_;
 
-    constructor(address token) public {
-        token_ = IERC20(token);
+    constructor(IERC20 token) public {
+        token_ = token;
     }
 
 

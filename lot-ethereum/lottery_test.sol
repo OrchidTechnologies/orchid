@@ -28,7 +28,7 @@ import "lottery.sol";
 contract TestOrchidLottery is OrchidLottery
 {
 
-    constructor(address token) public OrchidLottery(token) {}
+    constructor(IERC20 token) public OrchidLottery(token) {}
 
 // ============== test functions ======================================================================
 
