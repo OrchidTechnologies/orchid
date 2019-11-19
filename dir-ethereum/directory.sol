@@ -39,7 +39,7 @@ contract OrchidDirectory {
 
     mapping(address => Stakee) internal stakees_;
 
-    function heft(address stakee) external view returns (uint128 amount) {
+    function heft(address stakee) external view returns (uint128) {
         return stakees_[stakee].amount_;
     }
 
@@ -93,7 +93,7 @@ contract OrchidDirectory {
     Primary private root_;
 
 
-    function have() public view returns (uint128 amount) {
+    function have() public view returns (uint128) {
         if (nope(root_))
             return 0;
         Stake storage stake = stakes_[name(root_)];
