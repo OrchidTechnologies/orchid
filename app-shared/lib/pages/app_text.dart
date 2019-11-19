@@ -87,6 +87,13 @@ class AppText {
       fontStyle: FontStyle.normal,
       fontSize: 16.0);
 
+  static TextStyle actionButtonStyle = TextStyle(
+      color: AppColors.neutral_3,
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 18.0);
+
   static TextStyle textEntryStyle = TextStyle(
       color: AppColors.grey_3,
       fontWeight: FontWeight.w400,
@@ -102,6 +109,13 @@ class AppText {
       fontSize: 14.0);
 
   static TextStyle dialogTitle = const TextStyle(
+      color: const Color(0xff3a3149),
+      fontWeight: FontWeight.w400,
+      fontFamily: "Roboto",
+      fontStyle: FontStyle.normal,
+      fontSize: 20.0);
+
+  static TextStyle listItem = const TextStyle(
       color: const Color(0xff3a3149),
       fontWeight: FontWeight.w400,
       fontFamily: "Roboto",

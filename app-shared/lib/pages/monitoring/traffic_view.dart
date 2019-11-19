@@ -188,8 +188,8 @@ class _TrafficViewState extends State<TrafficView>
                       onTap: () {
                         Navigator.push(context,
                             MaterialPageRoute(builder: (BuildContext context) {
-                              return TrafficViewDetail(flow);
-                            }));
+                          return TrafficViewDetail(flow);
+                        }));
                       },
                     ),
                   ),
@@ -300,9 +300,11 @@ class _TrafficViewState extends State<TrafficView>
     // If no current results (e.g. invalidated by search) or the list has
     // shrunk through some other means just do a plain update.
     if (_resultList == null || _pendingResultList.length < _resultList.length) {
-      setState(() {
-        _resultList = _pendingResultList;
-      });
+      if (mounted) {
+        setState(() {
+          _resultList = _pendingResultList;
+        });
+      }
       _newContent.value = false;
       return;
     }
@@ -327,16 +329,15 @@ class _TrafficViewState extends State<TrafficView>
       // Maintain position
       var scrollController = PrimaryScrollController.of(context);
       var offset = scrollController.hasClients ? scrollController.offset : 0;
-      scrollController
-          .jumpTo(offset + delta * _renderedRowHeight);
+      scrollController.jumpTo(offset + delta * _renderedRowHeight);
 
       // Animate in the new data
       Future.delayed(Duration(milliseconds: 150)).then((_) {
         try {
           scrollController
               .animateTo(0,
-              duration: Duration(milliseconds: _scrollToTopDurationMs),
-              curve: Curves.ease)
+                  duration: Duration(milliseconds: _scrollToTopDurationMs),
+                  curve: Curves.ease)
               .then((_) {
             _newContent.value = false;
           });

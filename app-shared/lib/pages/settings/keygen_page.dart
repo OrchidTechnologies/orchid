@@ -160,7 +160,7 @@ class _KeyGenPageState extends State<KeyGenPage> {
   }
 
   void _generate() {
-    var keyPair = Crypto.generateEthereumKeyPair();
+    var keyPair = Crypto.generateKeyPair();
     setState(() {
       this.revealPrivateKey = false;
       this.keyPair = keyPair;

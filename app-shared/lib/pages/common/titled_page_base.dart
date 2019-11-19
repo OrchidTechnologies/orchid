@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_colors.dart';
 
+import '../app_text.dart';
+
 /// A base class for stateless second level pages reached through navigation.
 /// These pages have a title with a back button.
 class TitledPageBase extends StatelessWidget {
@@ -26,35 +28,29 @@ class TitledPage extends StatelessWidget {
   final bool lightTheme;
   final List<Widget> actions;
   final VoidCallback backAction;
+  final bool cancellable;
 
-  TitledPage(
-      {@required this.title,
-      @required this.child,
-      this.lightTheme = false,
-      this.actions = const [],
-      this.backAction});
+  TitledPage({
+    @required this.title,
+    @required this.child,
+    this.lightTheme = false,
+    this.actions = const [],
+    this.backAction,
+    this.cancellable,
+  });
 
   @override
   Widget build(BuildContext context) {
-    var foregroundColor = lightTheme ? Colors.black : Colors.white;
-    var backgroundColor = lightTheme ? Colors.white : Colors.deepPurple;
     return Scaffold(
       appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: foregroundColor),
-            onPressed: backAction ??
-                () {
-                  Navigator.pop(context);
-                },
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          ),
+          leading: _buildBackButton(context),
+          actions: actions,
           title: Text(
             this.title,
-            style: TextStyle(color: foregroundColor),
+            style: TextStyle(color: _foregroundColor()),
           ),
           titleSpacing: 0,
-          backgroundColor: backgroundColor,
-          actions: actions,
+          backgroundColor: _backgroundColor(),
           elevation: 0.0),
       body: Container(
         child: child,
@@ -69,6 +65,26 @@ class TitledPage extends StatelessWidget {
       // https://github.com/flutter/flutter/issues/23926
       // however that breaks the automated keyboard accommodation.
       resizeToAvoidBottomInset: true,
+    );
+  }
+
+  Color _foregroundColor() {
+    return lightTheme ? Colors.black : Colors.white;
+  }
+
+  Color _backgroundColor() {
+    return lightTheme ? Colors.white : Colors.deepPurple;
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return IconButton(
+      icon: Icon(cancellable ? Icons.close : Icons.arrow_back,
+          color: _foregroundColor()),
+      onPressed: backAction ??
+          () {
+            Navigator.pop(context);
+          },
+      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
     );
   }
 }

@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/pages/circuit/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'orchid_api.dart';
 import 'orchid_budget_api.dart';
 
 class UserPreferences {
@@ -72,10 +74,9 @@ class UserPreferences {
         .setBool(UserPreferenceKey.LinkWalletAcknowledged.toString(), value);
   }
 
-
   Future<bool> getPromptedForVPNCredentials() async {
     return (await SharedPreferences.getInstance())
-        .getBool(UserPreferenceKey.PromptedForVPNCredentials.toString()) ??
+            .getBool(UserPreferenceKey.PromptedForVPNCredentials.toString()) ??
         false;
   }
 
@@ -83,7 +84,6 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.PromptedForVPNCredentials.toString(), value);
   }
-
 
   /// Get the user's lottery pots primary address.  The value should have been
   /// set once upon app initialization.
@@ -96,8 +96,8 @@ class UserPreferences {
   /// app initialization. This method is currently guarded to prevent
   /// overwriting the stored value.
   Future<bool> setLotteryPotsPrimaryAddress(String value) async {
-    return (await SharedPreferences.getInstance())
-        .setString(UserPreferenceKey.LotteryPotsPrimaryAddress.toString(), value);
+    return (await SharedPreferences.getInstance()).setString(
+        UserPreferenceKey.LotteryPotsPrimaryAddress.toString(), value);
   }
 
   Future<bool> setBudget(Budget budget) async {
@@ -132,7 +132,6 @@ class UserPreferences {
     return Circuit.fromJson(jsonDecode(value));
   }
 
-
   // Get the user visible portion of the configuration file text.
   Future<String> getUserConfig() async {
     return (await SharedPreferences.getInstance())
@@ -143,6 +142,36 @@ class UserPreferences {
   Future<bool> setUserConfig(String value) async {
     return (await SharedPreferences.getInstance())
         .setString(UserPreferenceKey.UserConfig.toString(), value);
+  }
+
+  // Note: A format change or bug that causes a decoding error here would be bad.
+  // Note: When we move these keys to secure storage the issues will change
+  // Note: so we will rely on this for now.
+  Future<List<StoredEthereumKey>> getKeys() async {
+    String value = (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.Keys.toString());
+    if (value == null) {
+      return null;
+    }
+    try {
+      var jsonList = jsonDecode(value) as List<dynamic>;
+      return jsonList.map((el) {
+        return StoredEthereumKey.fromJson(el);
+      }).toList();
+    } catch (err) {
+      OrchidAPI().logger().write("Error retrieving keys!: $err");
+      return [];
+    }
+  }
+
+  Future<bool> setKeys(List<StoredEthereumKey> keys) async {
+    try {
+      return (await SharedPreferences.getInstance())
+          .setString(UserPreferenceKey.Keys.toString(), jsonEncode(keys));
+    } catch (err) {
+      OrchidAPI().logger().write("Error storing keys!: $err");
+      return false;
+    }
   }
 }
 
@@ -155,5 +184,6 @@ enum UserPreferenceKey {
   LotteryPotsPrimaryAddress,
   Budget,
   Circuit,
-  UserConfig
+  UserConfig,
+  Keys
 }

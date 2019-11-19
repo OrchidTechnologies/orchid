@@ -8,6 +8,7 @@ import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/util/collections.dart';
 
 import '../app_colors.dart';
+import '../app_gradients.dart';
 import '../app_text.dart';
 import 'circuit_hop.dart';
 
@@ -29,26 +30,24 @@ class CircuitPageState extends State<CircuitPage> {
 
   void initStateAsync() async {
     var circuit = await UserPreferences().getCircuit();
-    setState(() {
-      // Wrap the hops with a locally unique id for the UI
-      _hops = mapIndexed(
-              circuit?.hops ?? [],
-              ((index, hop) => UniqueHop(
-                  key: DateTime.now().millisecondsSinceEpoch + index,
-                  hop: hop)))
-          .toList();
-    });
+    if (mounted) {
+      setState(() {
+        // Wrap the hops with a locally unique id for the UI
+        _hops = mapIndexed(
+                circuit?.hops ?? [],
+                ((index, hop) => UniqueHop(
+                    key: DateTime.now().millisecondsSinceEpoch + index,
+                    hop: hop)))
+            .toList();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [AppColors.grey_7, AppColors.grey_6])),
+        decoration: BoxDecoration(gradient: AppGradients.basicGradient),
         child: Column(
           children: <Widget>[
             Padding(
@@ -96,7 +95,7 @@ class CircuitPageState extends State<CircuitPage> {
               key: Key(uniqueHop.key.toString()),
               title: Text(
                 uniqueHop.hop.displayName(),
-                style: AppText.dialogTitle,
+                style: AppText.listItem,
               ),
               trailing: Icon(Icons.menu),
             ),

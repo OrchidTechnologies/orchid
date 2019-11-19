@@ -7,6 +7,7 @@ class Circuit {
 
   Circuit(this.hops);
 
+  // Handle the heterogeneous list of hops
   Circuit.fromJson(Map<String, dynamic> json) {
     this.hops = (json['hops'] as List<dynamic>)
         .map((el) {
