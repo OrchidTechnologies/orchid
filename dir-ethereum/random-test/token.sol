@@ -1,4 +1,4 @@
-pragma solidity 0.5.13;
+pragma solidity 0.5.12;
 
 contract DummyToken {
     mapping(address => uint256) public balanceOf;
