@@ -1,0 +1,12 @@
+In one window, launch Ganache with 11 accounts:
+
+    ganache-cli -a 11
+
+In the other:
+
+    # setup Python virtual environment
+    pipenv shell
+    pipenv install
+
+    # run test
+    python test.py ../directory.sol 1234
