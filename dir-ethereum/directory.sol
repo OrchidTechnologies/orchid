@@ -221,18 +221,28 @@ contract OrchidDirectory {
 
     mapping(address => mapping(uint256 => Pending)) private pendings_;
 
-    function take(uint256 index, address payable target) external {
-        Pending memory pending = pendings_[msg.sender][index];
-        require(pending.expire_ <= block.timestamp);
-        delete pendings_[msg.sender][index];
-        require(token_.transfer(target, pending.amount_));
+    function pend(uint256 index, uint256 amount, uint128 delay) private returns (address) {
+        Pending storage pending = pendings_[msg.sender][index];
+        require(pending.expire_ <= block.timestamp + delay);
+        address stakee = pending.stakee_;
+
+        if (pending.amount_ == amount)
+            delete pendings_[msg.sender][index];
+        else {
+            require(pending.amount_ > amount);
+            pending.amount_ -= amount;
+        }
+
+        return stakee;
     }
 
-    function stop(uint256 index, uint128 delay) external {
-        Pending memory pending = pendings_[msg.sender][index];
-        require(pending.expire_ <= block.timestamp + delay);
-        delete pendings_[msg.sender][index];
-        more(pending.stakee_, pending.amount_, delay);
+    function take(uint256 index, uint256 amount, address payable target) external {
+        pend(index, amount, 0);
+        require(token_.transfer(target, amount));
+    }
+
+    function stop(uint256 index, uint256 amount, uint128 delay) external {
+        more(pend(index, amount, delay), amount, delay);
     }
 
 
@@ -305,10 +315,17 @@ contract OrchidDirectory {
         }
 
         Pending storage pending = pendings_[msg.sender][index];
-        require(pending.amount_ == 0);
-        pending.expire_ = block.timestamp + delay;
-        pending.stakee_ = stakee;
-        pending.amount_ = amount;
+
+        uint256 expire = block.timestamp + delay;
+        if (pending.expire_ < expire)
+            pending.expire_ = expire;
+
+        if (pending.stakee_ == address(0))
+            pending.stakee_ = stakee;
+        else
+            require(pending.stakee_ == stakee);
+
+        pending.amount_ += amount;
     }
 
 }
