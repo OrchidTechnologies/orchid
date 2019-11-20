@@ -1,4 +1,5 @@
 /identity.mk
+/orchid.cfg
 /*.keystore
 /*.mobileprovision
 /*.p12
