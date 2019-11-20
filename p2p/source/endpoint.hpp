@@ -200,6 +200,18 @@ class Selector final :
         }})).asString()).template num<uint256_t>());
         co_return std::move(transaction);
     }
+
+    task<uint256_t> Send(Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const Args_ &...args) {
+        Builder builder;
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
+        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Map{
+            {"from", from},
+            {"to", contract},
+            {"gas", gas_},
+            {"data", Tie(*this, builder)},
+        }, password})).asString()).template num<uint256_t>());
+        co_return std::move(transaction);
+    }
 };
 
 }

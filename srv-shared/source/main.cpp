@@ -50,6 +50,7 @@
 #include "task.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
+#include "utility.hpp"
 
 namespace bssl {
     BORINGSSL_MAKE_DELETER(PKCS12, PKCS12_free)
@@ -81,7 +82,10 @@ int Main(int argc, const char *const argv[]) {
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
         ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
         ("eth-token", po::value<std::string>()->default_value("0x9CCAE86e37ccF4E5C6f43005621511f43F2D0305"), "ethereum contract address of token")
+        ("eth-location", po::value<std::string>()->default_value("0x8415A0bCdb4B5Ae64E6eac0FBBB73E6D6d054Ec4"), "ethereum contract address of location")
         ("eth-lottery", po::value<std::string>()->default_value("0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"), "ethereum contract address of lottery")
+        ("eth-password", po::value<std::string>()->default_value(""), "password to use with personal API")
+        ("eth-provider", po::value<std::string>(), "ethereum contract address of provider")
         ("eth-target", po::value<std::string>(), "ethereum contract address of target")
         ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
         ("host", po::value<std::string>(), "hostname to access this server")
@@ -221,12 +225,31 @@ int Main(int argc, const char *const argv[]) {
     auto port(args["port"].as<uint16_t>());
     auto path(args["path"].as<std::string>());
 
+    auto url("https://" + host + ":" + std::to_string(port) + path);
+    auto tls(fingerprint->algorithm + " " + fingerprint->GetRfc4572Fingerprint());
 
-    std::cerr << "url = " << "https://" << host << ":" << std::to_string(port) << path << std::endl;
-    std::cerr << "tls = " << fingerprint->algorithm << " " << fingerprint->GetRfc4572Fingerprint() << std::endl;
+    std::cerr << "url = " << url << std::endl;
+    std::cerr << "tls = " << tls << std::endl;
 
 
-    auto node(Make<Node>(std::move(ice), args["rpc"].as<std::string>(), Address(args["eth-lottery"].as<std::string>())));
+    Address provider(args["eth-provider"].as<std::string>());
+    Address location(args["eth-location"].as<std::string>());
+    std::string password(args["eth-password"].as<std::string>());
+
+    auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
+    Endpoint endpoint(GetLocal(), rpc);
+
+    Wait([&]() -> task<void> {
+        auto latest(co_await endpoint.Latest());
+        static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
+        if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, provider)) != std::tie(url, tls, "")) {
+            static Selector<void, std::string, std::string, std::string> move("move");
+            co_await move.Send(endpoint, provider, password, location, url, tls, "");
+        }
+    }());
+
+
+    auto node(Make<Node>(std::move(ice), rpc, Address(args["eth-lottery"].as<std::string>())));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;

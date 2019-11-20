@@ -37,7 +37,7 @@ class Node final {
   private:
     std::vector<std::string> ice_;
 
-    Locator locator_;
+    Locator rpc_;
     Address lottery_;
 
     S<Egress> egress_;
@@ -46,9 +46,9 @@ class Node final {
     std::map<std::string, W<Server>> servers_;
 
   public:
-    Node(std::vector<std::string> ice, const std::string &rpc, Address lottery) :
+    Node(std::vector<std::string> ice, Locator rpc, Address lottery) :
         ice_(std::move(ice)),
-        locator_(Locator::Parse(rpc)),
+        rpc_(std::move(rpc)),
         lottery_(std::move(lottery))
     {
     }
@@ -62,7 +62,7 @@ class Node final {
         auto &cache(servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
-        auto server(Make<Sink<Server>>(locator_, lottery_));
+        auto server(Make<Sink<Server>>(rpc_, lottery_));
         server->Wire<Translator>(egress_);
         server->self_ = server;
         cache = server;
