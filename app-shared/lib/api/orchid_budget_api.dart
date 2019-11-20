@@ -10,7 +10,7 @@ import 'orchid_api.dart';
 class OrchidBudgetAPI {
   // Development time feature flag for the budget functionality
   // Remove when features are complete.
-  static const bool featureEnabled = true;
+  static const bool featureEnabled = false;
 
   static OrchidBudgetAPI _shared = OrchidBudgetAPI._init();
 
