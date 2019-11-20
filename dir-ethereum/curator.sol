@@ -36,13 +36,13 @@ contract OrchidCurator {
         curated_[target] = good;
     }
 
-    function good(address target) external view returns (bool) {
+    function good(address target, bytes calldata) external view returns (bool) {
         return curated_[target];
     }
 }
 
 contract OrchidUntrusted {
-    function good(address) external pure returns (bool) {
+    function good(address, bytes calldata) external pure returns (bool) {
         return true;
     }
 }
