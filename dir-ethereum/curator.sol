@@ -41,6 +41,16 @@ contract OrchidCurator {
     }
 }
 
+contract OrchidUnified {
+    function good(address target, bytes calldata argument) external pure returns (bool) {
+        require(argument.length == 20);
+        address allowed;
+        bytes memory copy = argument;
+        assembly { allowed := mload(add(copy,20)) }
+        return target == allowed;
+    }
+}
+
 contract OrchidUntrusted {
     function good(address, bytes calldata) external pure returns (bool) {
         return true;

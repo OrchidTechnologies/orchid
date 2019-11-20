@@ -44,7 +44,7 @@ class Network {
   public:
     Network(const std::string &rpc, Address directory, Address location, Address curator);
 
-    task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &secret, Address funder);
+    task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &argument, const Secret &secret, Address funder);
 };
 
 }

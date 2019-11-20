@@ -36,7 +36,7 @@ Network::Network(const std::string &rpc, Address directory, Address location, Ad
     generator_.seed(boost::random::random_device()());
 }
 
-task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &secret, Address funder) {
+task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &argument, const Secret &secret, Address funder) {
     Endpoint endpoint(origin, locator_);
 
     auto latest(co_await endpoint.Latest());
@@ -55,7 +55,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &
 
             if (curator_ != 0) {
                 static Selector<bool, Address, Bytes> good("good");
-                if (!co_await good.Call(endpoint, latest, curator_, address, Beam()))
+                if (!co_await good.Call(endpoint, latest, curator_, address, argument))
                     goto retry;
             }
 
