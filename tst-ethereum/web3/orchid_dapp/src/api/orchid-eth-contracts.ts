@@ -6,11 +6,12 @@ export class OrchidContracts {
   static token: Contract;
   static lottery: Contract;
 
-  static token_addr: Address = '0x53e71f4dec7f0753920a3e039289fdec616ad5b4'; // Main net
+  //static token_addr: Address = '0x53e71f4dec7f0753920a3e039289fdec616ad5b4'; // TST2 Main net
+  static token_addr: Address = '0xff9978B7b309021D39a76f52Be377F2B95D72394'; // OTT Main net
   static token_approval_max_gas: number = 50000;
 
-  // static lottery_addr: Address = '0x7AaCdc65c5e9128f7d8d58B060837f0b1b1a4b43'; // Main net
-  static lottery_addr: Address = '0xa38b76b4EbD8f10fFC8866F001bB473874B9ee08'; // Main net
+  //static lottery_addr: Address = '0xa38b76b4EbD8f10fFC8866F001bB473874B9ee08'; // Main net
+  static lottery_addr: Address = '0x38cf68E1d19a0b2d2Ba73865E4c85aA1A544C1BF'; // Main net
 
   static lottery_push_max_gas: number = 800000;
   static lottery_push_method_hash: string =
@@ -22,49 +23,81 @@ export class OrchidContracts {
   static lottery_warn_max_gas: number = 200000;
   static lottery_move_max_gas: number = 200000;
 
-  static token_abi = [{
-    "constant": true,
-    "inputs": [],
-    "name": "name",
-    "outputs": [
-      {
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
+  static token_abi = [
     {
-      "constant": false,
+      "inputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
       "inputs": [
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
           "name": "spender",
           "type": "address"
         },
         {
+          "indexed": false,
+          "internalType": "uint256",
           "name": "value",
           "type": "uint256"
         }
       ],
-      "name": "approve",
-      "outputs": [
+      "name": "Approval",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
         {
-          "name": "",
-          "type": "bool"
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
         }
       ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
+      "name": "Transfer",
+      "type": "event"
     },
     {
       "constant": true,
-      "inputs": [],
-      "name": "totalSupply",
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        }
+      ],
+      "name": "allowance",
       "outputs": [
         {
+          "internalType": "uint256",
           "name": "",
           "type": "uint256"
         }
@@ -77,21 +110,20 @@ export class OrchidContracts {
       "constant": false,
       "inputs": [
         {
-          "name": "from",
+          "internalType": "address",
+          "name": "spender",
           "type": "address"
         },
         {
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "name": "value",
+          "internalType": "uint256",
+          "name": "amount",
           "type": "uint256"
         }
       ],
-      "name": "transferFrom",
+      "name": "approve",
       "outputs": [
         {
+          "internalType": "bool",
           "name": "",
           "type": "bool"
         }
@@ -102,10 +134,32 @@ export class OrchidContracts {
     },
     {
       "constant": true,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
       "inputs": [],
       "name": "decimals",
       "outputs": [
         {
+          "internalType": "uint8",
           "name": "",
           "type": "uint8"
         }
@@ -118,10 +172,38 @@ export class OrchidContracts {
       "constant": false,
       "inputs": [
         {
+          "internalType": "address",
           "name": "spender",
           "type": "address"
         },
         {
+          "internalType": "uint256",
+          "name": "subtractedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "decreaseAllowance",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
           "name": "addedValue",
           "type": "uint256"
         }
@@ -129,6 +211,7 @@ export class OrchidContracts {
       "name": "increaseAllowance",
       "outputs": [
         {
+          "internalType": "bool",
           "name": "",
           "type": "bool"
         }
@@ -139,17 +222,13 @@ export class OrchidContracts {
     },
     {
       "constant": true,
-      "inputs": [
-        {
-          "name": "owner",
-          "type": "address"
-        }
-      ],
-      "name": "balanceOf",
+      "inputs": [],
+      "name": "name",
       "outputs": [
         {
+          "internalType": "string",
           "name": "",
-          "type": "uint256"
+          "type": "string"
         }
       ],
       "payable": false,
@@ -162,6 +241,7 @@ export class OrchidContracts {
       "name": "symbol",
       "outputs": [
         {
+          "internalType": "string",
           "name": "",
           "type": "string"
         }
@@ -171,43 +251,38 @@ export class OrchidContracts {
       "type": "function"
     },
     {
-      "constant": false,
-      "inputs": [
+      "constant": true,
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
         {
-          "name": "spender",
-          "type": "address"
-        },
-        {
-          "name": "subtractedValue",
+          "internalType": "uint256",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "name": "decreaseAllowance",
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool"
-        }
-      ],
       "payable": false,
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     },
     {
       "constant": false,
       "inputs": [
         {
-          "name": "to",
+          "internalType": "address",
+          "name": "recipient",
           "type": "address"
         },
         {
-          "name": "value",
+          "internalType": "uint256",
+          "name": "amount",
           "type": "uint256"
         }
       ],
       "name": "transfer",
       "outputs": [
         {
+          "internalType": "bool",
           "name": "",
           "type": "bool"
         }
@@ -217,445 +292,520 @@ export class OrchidContracts {
       "type": "function"
     },
     {
-      "constant": true,
+      "constant": false,
       "inputs": [
         {
-          "name": "owner",
+          "internalType": "address",
+          "name": "sender",
           "type": "address"
         },
         {
-          "name": "spender",
+          "internalType": "address",
+          "name": "recipient",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         }
       ],
-      "name": "allowance",
+      "name": "transferFrom",
       "outputs": [
         {
+          "internalType": "bool",
           "name": "",
-          "type": "uint256"
+          "type": "bool"
         }
       ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "name": "from",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "name": "value",
-          "type": "uint256"
-        }
-      ],
-      "name": "Transfer",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "name": "spender",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "name": "value",
-          "type": "uint256"
-        }
-      ],
-      "name": "Approval",
-      "type": "event"
+      "type": "function"
     }
   ];
 
-  static lottery_abi = [
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        },
-        {
-          "internalType": "uint128",
-          "name": "amount",
-          "type": "uint128"
-        }
-      ],
-      "name": "move",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "funder",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        }
-      ],
-      "name": "look",
-      "outputs": [
-        {
-          "internalType": "uint128",
-          "name": "",
-          "type": "uint128"
-        },
-        {
-          "internalType": "uint128",
-          "name": "",
-          "type": "uint128"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        },
-        {
-          "internalType": "address payable",
-          "name": "target",
-          "type": "address"
-        }
-      ],
-      "name": "pull",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "funder",
-          "type": "address"
-        }
-      ],
-      "name": "keys",
-      "outputs": [
-        {
-          "internalType": "address[]",
-          "name": "",
-          "type": "address[]"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        },
-        {
-          "internalType": "address payable",
-          "name": "target",
-          "type": "address"
-        },
-        {
-          "internalType": "uint128",
-          "name": "amount",
-          "type": "uint128"
-        }
-      ],
-      "name": "pull",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "funder",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "offset",
-          "type": "uint256"
-        }
-      ],
-      "name": "seek",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        },
-        {
-          "internalType": "uint128",
-          "name": "amount",
-          "type": "uint128"
-        },
-        {
-          "internalType": "uint128",
-          "name": "total",
-          "type": "uint128"
-        }
-      ],
-      "name": "push",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "funder",
-          "type": "address"
-        }
-      ],
-      "name": "size",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "ticket",
-          "type": "bytes32"
-        }
-      ],
-      "name": "kill",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "secret",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "hash",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address payable",
-          "name": "target",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "funder",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "nonce",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "ratio",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "start",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint128",
-          "name": "range",
-          "type": "uint128"
-        },
-        {
-          "internalType": "uint128",
-          "name": "amount",
-          "type": "uint128"
-        },
-        {
-          "internalType": "uint8",
-          "name": "v",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "r",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "s",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32[]",
-          "name": "old",
-          "type": "bytes32[]"
-        }
-      ],
-      "name": "grab",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        }
-      ],
-      "name": "warn",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        }
-      ],
-      "name": "lock",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "token",
-          "type": "address"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "funder",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "signer",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint128",
-          "name": "amount",
-          "type": "uint128"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint128",
-          "name": "escrow",
-          "type": "uint128"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "unlock",
-          "type": "uint256"
-        }
-      ],
-      "name": "Update",
-      "type": "event"
-    }
-  ];
+  static lottery_abi =
+    [
+      {
+        "inputs": [
+          {
+            "internalType": "contract IERC20",
+            "name": "token",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint128",
+            "name": "amount",
+            "type": "uint128"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint128",
+            "name": "escrow",
+            "type": "uint128"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "unlock",
+            "type": "uint256"
+          }
+        ],
+        "name": "Update",
+        "type": "event"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          },
+          {
+            "internalType": "contract OrchidVerifier",
+            "name": "verify",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "shared",
+            "type": "bytes"
+          }
+        ],
+        "name": "bind",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "internalType": "address payable",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint128",
+            "name": "amount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "bytes",
+            "name": "receipt",
+            "type": "bytes"
+          }
+        ],
+        "name": "give",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "seed",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "hash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "nonce",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "start",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint128",
+            "name": "range",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "amount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "ratio",
+            "type": "uint128"
+          },
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "internalType": "address payable",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "receipt",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "old",
+            "type": "bytes32[]"
+          }
+        ],
+        "name": "grab",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          }
+        ],
+        "name": "keys",
+        "outputs": [
+          {
+            "internalType": "address[]",
+            "name": "",
+            "type": "address[]"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "ticket",
+            "type": "bytes32"
+          }
+        ],
+        "name": "kill",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          }
+        ],
+        "name": "lock",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          }
+        ],
+        "name": "look",
+        "outputs": [
+          {
+            "internalType": "uint128",
+            "name": "",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          },
+          {
+            "internalType": "contract OrchidVerifier",
+            "name": "",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "",
+            "type": "bytes"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint128",
+            "name": "amount",
+            "type": "uint128"
+          }
+        ],
+        "name": "move",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "offset",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "count",
+            "type": "uint256"
+          }
+        ],
+        "name": "page",
+        "outputs": [
+          {
+            "internalType": "address[]",
+            "name": "",
+            "type": "address[]"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          },
+          {
+            "internalType": "address payable",
+            "name": "target",
+            "type": "address"
+          }
+        ],
+        "name": "pull",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          },
+          {
+            "internalType": "address payable",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint128",
+            "name": "amount",
+            "type": "uint128"
+          }
+        ],
+        "name": "pull",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint128",
+            "name": "total",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "escrow",
+            "type": "uint128"
+          }
+        ],
+        "name": "push",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "offset",
+            "type": "uint256"
+          }
+        ],
+        "name": "seek",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          }
+        ],
+        "name": "size",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "signer",
+            "type": "address"
+          }
+        ],
+        "name": "warn",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "what",
+        "outputs": [
+          {
+            "internalType": "contract IERC20",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
 
 }
 

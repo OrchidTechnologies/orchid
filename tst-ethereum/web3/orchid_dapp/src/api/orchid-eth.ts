@@ -71,10 +71,11 @@ export class LotteryPot {
 }
 
 // Init the Web3 environment and the Orchid contracts
-export function orchidInitEthereum(providerUpdateCallback?:(props:any)=>void): Promise<WalletStatus> {
+export function orchidInitEthereum(providerUpdateCallback?: (props: any) => void): Promise<WalletStatus> {
   console.log("init ethereum");
   return new Promise(function (resolve, reject) {
-    /*window.addEventListener('load',*/ (async () => {
+    /*window.addEventListener('load',*/
+    (async () => {
       if (window.ethereum) {
         console.log("Modern dapp browser.");
         window.ethereum.autoRefreshOnNetworkChange = false;
@@ -100,9 +101,9 @@ export function orchidInitEthereum(providerUpdateCallback?:(props:any)=>void): P
       }
 
       providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore &&
-        (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
-          providerUpdateCallback && providerUpdateCallback(props);
-        });
+      (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
+        providerUpdateCallback && providerUpdateCallback(props);
+      });
 
       try {
         OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr);
@@ -187,8 +188,8 @@ export async function orchidAddFunds(funder: Address, signer: Address, amount: B
     return new Promise<string>(function (resolve, reject) {
       OrchidContracts.lottery.methods.push(
         signer,
-        amount_value.toString(),
-        total.toString()
+        total.toString(),
+        escrow_value.toString()
       ).send({
         from: funder,
         gas: OrchidContracts.lottery_push_max_gas,
