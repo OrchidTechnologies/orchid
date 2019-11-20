@@ -36,6 +36,10 @@ contract OrchidLottery {
         token_ = token;
     }
 
+    function what() external view returns (IERC20) {
+        return token_;
+    }
+
 
     struct Pot {
         uint256 offset_;
