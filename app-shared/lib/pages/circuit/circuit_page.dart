@@ -66,9 +66,9 @@ class CircuitPageState extends State<CircuitPage> {
                 child: Icon(Icons.add),
                 onPressed: _addHop,
               ),
-              replacement: Text("Add one or more keys before creating a circuit...",
+              replacement: Text("Add keys before creating a circuit...",
                   style: AppText.textHintStyle
-                      .copyWith(fontStyle: FontStyle.italic)),
+                      .copyWith(fontStyle: FontStyle.italic, fontSize: 14)),
             ),
             pady(36.0),
           ],
