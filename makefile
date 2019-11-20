@@ -9,7 +9,7 @@ all: all-app-and
 all: all-srv-and
 all: all-srv-lnx
 all: all-srv-mac
-all: all-srv-win
+#all: all-srv-win
 
 .PHONY: tst-ethereum
 tst-ethereum:
