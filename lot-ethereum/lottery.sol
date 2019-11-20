@@ -106,14 +106,14 @@ contract OrchidLottery {
     }
 
 
-    function push(address signer, uint128 amount, uint128 total) external {
+    function push(address signer, uint128 total, uint128 escrow) external {
         address funder = msg.sender;
-        require(total >= amount);
+        require(total >= escrow);
         Pot storage pot = find(funder, signer);
         if (pot.offset_ == 0)
             pot.offset_ = lotteries_[funder].keys_.push(signer);
-        pot.amount_ += amount;
-        pot.escrow_ += total - amount;
+        pot.amount_ += total - escrow;
+        pot.escrow_ += escrow;
         send(funder, signer, pot);
         require(token_.transferFrom(funder, address(this), total));
     }
