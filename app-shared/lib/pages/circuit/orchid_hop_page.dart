@@ -29,7 +29,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       _funderField.text = widget.initialState?.funder;
       _keyRef = widget.initialState?.keyRef;
     });
-    print("hop editor: initial keyref = $_keyRef");
   }
 
   @override

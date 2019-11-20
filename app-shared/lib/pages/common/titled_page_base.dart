@@ -41,30 +41,33 @@ class TitledPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          leading: _buildBackButton(context),
-          actions: actions,
-          title: Text(
-            this.title,
-            style: TextStyle(color: _foregroundColor()),
-          ),
-          titleSpacing: 0,
-          backgroundColor: _backgroundColor(),
-          elevation: 0.0),
-      body: Container(
-        child: child,
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [AppColors.grey_7, AppColors.grey_6])),
-      ),
+    return WillPopScope(
+      onWillPop: () async { return false; },
+      child: Scaffold(
+        appBar: AppBar(
+            leading: _buildBackButton(context),
+            actions: actions,
+            title: Text(
+              this.title,
+              style: TextStyle(color: _foregroundColor()),
+            ),
+            titleSpacing: 0,
+            backgroundColor: _backgroundColor(),
+            elevation: 0.0),
+        body: Container(
+          child: child,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.grey_7, AppColors.grey_6])),
+        ),
 
-      // Note: Setting this to false is a workaround for:
-      // https://github.com/flutter/flutter/issues/23926
-      // however that breaks the automated keyboard accommodation.
-      resizeToAvoidBottomInset: true,
+        // Note: Setting this to false is a workaround for:
+        // https://github.com/flutter/flutter/issues/23926
+        // however that breaks the automated keyboard accommodation.
+        resizeToAvoidBottomInset: true,
+      ),
     );
   }
 
@@ -80,11 +83,20 @@ class TitledPage extends StatelessWidget {
     return IconButton(
       icon: Icon(cancellable ? Icons.close : Icons.arrow_back,
           color: _foregroundColor()),
-      onPressed: backAction ??
-          () {
-            Navigator.pop(context);
-          },
-      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+      onPressed: () {
+        _performBackAction(context);
+      },
+      tooltip: MaterialLocalizations
+          .of(context)
+          .backButtonTooltip,
     );
+  }
+
+  void _performBackAction(BuildContext context) async {
+    if (backAction != null) {
+      backAction();
+    } else {
+      Navigator.pop(context);
+    }
   }
 }
