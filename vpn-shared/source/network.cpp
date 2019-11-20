@@ -49,18 +49,18 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Secret &
         //co_return Descriptor{provider, "https://mac.saurik.com:8082/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
 
         retry: {
-            static Selector<Address, uint128_t> scan("scan");
-            auto address = co_await scan.Call(endpoint, latest, directory_, generator_());
+            static Selector<std::tuple<Address, uint128_t>, uint128_t> scan("scan");
+            auto [address, delay] = co_await scan.Call(endpoint, latest, directory_, generator_());
             orc_assert(address != 0);
 
             if (curator_ != 0) {
-                static Selector<bool, Address> good("good");
-                if (!co_await good.Call(endpoint, latest, curator_, address))
+                static Selector<bool, Address, Bytes> good("good");
+                if (!co_await good.Call(endpoint, latest, curator_, address, Beam()))
                     goto retry;
             }
 
-            static Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
-            auto [set, url, tls] = co_await look.Call(endpoint, latest, location_, address);
+            static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
+            auto [set, url, tls, gpg] = co_await look.Call(endpoint, latest, location_, address);
 
             auto space(tls.find(' '));
             orc_assert(space != std::string::npos);

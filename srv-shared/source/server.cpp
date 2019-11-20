@@ -119,8 +119,8 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
 
             if (won) {
                 std::vector<Bytes32> old;
-                static Selector<void, Bytes32, Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint128_t, Address, Address, uint8_t, Bytes32, Bytes32, std::vector<Bytes32>> grab("grab");
-                co_await grab.Send(endpoint_, target, lottery_, seed, hash, nonce, start, range, amount, ratio, funder, target, signature.v_, signature.r_, signature.s_, old);
+                static Selector<void, Bytes32, Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint128_t, Address, Address, Bytes, uint8_t, Bytes32, Bytes32, std::vector<Bytes32>> grab("grab");
+                co_await grab.Send(endpoint_, target, lottery_, seed, hash, nonce, start, range, amount, ratio, funder, target, Beam(), signature.v_, signature.r_, signature.s_, old);
             }
         });
 

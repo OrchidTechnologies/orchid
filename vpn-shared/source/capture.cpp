@@ -670,9 +670,9 @@ task<void> Capture::Start(const std::string &path) {
     duk_put_global_string(heap, "print");
 
     heap.eval<void>(R"(
-        eth_directory = "0xd87E0Ee1a59841DE2aC78C17209dB97E27651985";
-        eth_location = "0x53c76CaDD819F9F020E1aA969709Ba905bf8d20F";
-        eth_curator = "0x8a6EBb9800d064Db7b4809b02ff1bf12a9efFCc3";
+        eth_directory = "0x32A8F497D86ab18A24302Cd9C1d412Ce8abA69a9";
+        eth_location = "0x8415A0bCdb4B5Ae64E6eac0FBBB73E6D6d054Ec4";
+        eth_curator = "0x441f2C1dC59Fe75cF379641C11c93a4f763d164c";
         rpc = "https://api.myetherwallet.com:443/rop";
         hops = [];
         //stun = "stun:stun.l.google.com:19302";

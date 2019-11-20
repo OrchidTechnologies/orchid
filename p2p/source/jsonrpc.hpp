@@ -239,33 +239,6 @@ typedef Brick<32> Bytes32;
 template <typename Type_, typename Enable_ = void>
 struct Coded;
 
-template <typename... Args_>
-struct Coder;
-
-template <>
-struct Coder<> {
-    static void Encode(Builder &builder) {
-    }
-
-    static Builder Encode() {
-        return {};
-    }
-};
-
-template <typename Type_, typename... Args_>
-struct Coder<Type_, Args_...> {
-    static void Encode(Builder &builder, const Type_ &value, const Args_ &...args) {
-        Coded<Type_>::Encode(builder, value);
-        Coder<Args_...>::Encode(builder, args...);
-    }
-
-    static Builder Encode(const Type_ &value, const Args_ &...args) {
-        Builder builder;
-        Encode(builder, value, args...);
-        return builder;
-    }
-};
-
 template <bool Sign_, size_t Size_, typename Type_>
 struct Numeric;
 
@@ -283,6 +256,10 @@ struct Numeric<false, Size_, Type_> {
     static void Encode(Builder &builder, const Type_ &value) {
         builder += Number<uint256_t>(value);
     }
+
+    static void Size(size_t &offset, const Type_ &value) {
+        offset += 32;
+    }
 };
 
 // XXX: these conversions only just barely work
@@ -298,6 +275,10 @@ struct Numeric<true, Size_, Type_> {
 
     static void Encode(Builder &builder, const Type_ &value) {
         builder += Number<uint256_t>(value, signbit(value) ? 0xff : 0x00);
+    }
+
+    static void Size(size_t &offset, const Type_ &value) {
+        offset += 32;
     }
 };
 
@@ -352,6 +333,10 @@ struct Coded<Address, void> {
     static void Encode(Builder &builder, const Address &value) {
         return Coded<uint160_t>::Encode(builder, value);
     }
+
+    static void Size(size_t &offset, const uint160_t &value) {
+        offset += 32;
+    }
 };
 
 template <>
@@ -373,6 +358,10 @@ struct Coded<bool, void> {
     static void Encode(Builder &builder, const bool &value) {
         return Coded<uint8_t>::Encode(builder, value ? 1 : 0);
     }
+
+    static void Size(size_t &offset, const bool &value) {
+        offset += 32;
+    }
 };
 
 template <size_t Size_>
@@ -392,6 +381,10 @@ struct Coded<Brick<Size_>, typename std::enable_if<Size_ == 32>::type> {
     static void Encode(Builder &builder, const Brick<Size_> &data) {
         builder += data;
     }
+
+    static void Size(size_t &offset, const Brick<Size_> &data) {
+        offset += Size_;
+    }
 };
 
 template <>
@@ -402,10 +395,14 @@ struct Coded<Beam, void> {
         signature << "bytes";
     }
 
+    static size_t Pad(size_t size) {
+        return 31 - (size + 31) % 32;
+    }
+
     static Beam Decode(Window &window) {
         auto size(Coded<uint256_t>::Decode(window).convert_to<size_t>());
         auto data(window.Take(size));
-        window.Zero(31 - (size + 31) % 32);
+        window.Zero(Pad(size));
         return data;
     }
 
@@ -413,9 +410,13 @@ struct Coded<Beam, void> {
         auto size(data.size());
         Coded<uint256_t>::Encode(builder, size);
         builder += data;
-        Beam pad(31 - (size + 31) % 32);
+        Beam pad(Pad(size));
         memset(pad.data(), 0, pad.size());
         builder += std::move(pad);
+    }
+
+    static void Size(size_t &offset, const Beam &data) {
+        offset += 32 + data.size() + Pad(data.size());
     }
 };
 
@@ -427,12 +428,16 @@ struct Coded<std::string, void> {
         signature << "string";
     }
 
+    static size_t Pad(size_t size) {
+        return 31 - (size + 31) % 32;
+    }
+
     static std::string Decode(Window &window) {
         auto size(Coded<uint256_t>::Decode(window).convert_to<size_t>());
         std::string data;
         data.resize(size);
         window.Take(data);
-        window.Zero(31 - (size + 31) % 32);
+        window.Zero(Pad(size));
         return data;
     }
 
@@ -440,9 +445,13 @@ struct Coded<std::string, void> {
         auto size(data.size());
         Coded<uint256_t>::Encode(builder, size);
         builder += Subset(data);
-        Beam pad(31 - (size + 31) % 32);
+        Beam pad(Pad(size));
         memset(pad.data(), 0, pad.size());
         builder += std::move(pad);
+    }
+
+    static void Size(size_t &offset, const std::string &data) {
+        offset += 32 + data.size() + Pad(data.size());
     }
 };
 
@@ -462,6 +471,12 @@ struct Coded<std::vector<Type_>, void> {
         for (const auto &value : values)
             Coded<Type_>::Encode(builder, value);
     }
+
+    static void Size(size_t &offset, const std::vector<Type_> &values) {
+        offset += 32;
+        for (const auto &value : values)
+            Coded<Type_>::Size(offset, value);
+    }
 };
 
 template <size_t Index_, typename... Args_>
@@ -476,16 +491,28 @@ struct Tupled<Index_> final {
     template <typename Tuple_>
     static void Tail(Window &window, Tuple_ &tuple) {
     }
+
+    template <typename Tuple_>
+    static void Head(Builder &builder, Tuple_ &tuple, size_t offset) {
+    }
+
+    template <typename Tuple_>
+    static void Tail(Builder &builder, Tuple_ &tuple) {
+    }
+
+    template <typename Tuple_>
+    static void Size(size_t &offset, Tuple_ &tuple) {
+    }
 };
 
 template <size_t Index_, typename Next_, typename... Rest_>
 struct Tupled<Index_, Next_, Rest_...> final {
     template <typename Tuple_>
     static void Head(Window &window, Tuple_ &tuple) {
-        if (Coded<Next_>::dynamic_)
-            Coded<uint256_t>::Decode(window);
-        else
+        if (!Coded<Next_>::dynamic_)
             std::get<Index_>(tuple) = Coded<Next_>::Decode(window);
+        else
+            Coded<uint256_t>::Decode(window);
         Tupled<Index_ + 1, Rest_...>::Head(window, tuple);
     }
 
@@ -494,6 +521,33 @@ struct Tupled<Index_, Next_, Rest_...> final {
         if (Coded<Next_>::dynamic_)
             std::get<Index_>(tuple) = Coded<Next_>::Decode(window);
         Tupled<Index_ + 1, Rest_...>::Tail(window, tuple);
+    }
+
+    template <typename Tuple_>
+    static void Head(Builder &builder, Tuple_ &tuple, size_t offset) {
+        if (!Coded<Next_>::dynamic_)
+            Coded<Next_>::Encode(builder, std::get<Index_>(tuple));
+        else {
+            Coded<uint256_t>::Encode(builder, offset);
+            Coded<Next_>::Size(offset, std::get<Index_>(tuple));
+        }
+        Tupled<Index_ + 1, Rest_...>::Head(builder, tuple, offset);
+    }
+
+    template <typename Tuple_>
+    static void Tail(Builder &builder, Tuple_ &tuple) {
+        if (Coded<Next_>::dynamic_)
+            Coded<Next_>::Encode(builder, std::get<Index_>(tuple));
+        Tupled<Index_ + 1, Rest_...>::Tail(builder, tuple);
+    }
+
+    template <typename Tuple_>
+    static void Size(size_t &offset, Tuple_ &tuple) {
+        if (!Coded<Next_>::dynamic_)
+            Coded<Next_>::Size(offset, std::get<Index_>(tuple));
+        else
+            offset += 32;
+        Tupled<Index_ + 1, Rest_...>::Size(offset, tuple);
     }
 };
 
@@ -506,6 +560,28 @@ struct Coded<std::tuple<Args_...>, void> {
         Tupled<0, Args_...>::Head(window, value);
         Tupled<0, Args_...>::Tail(window, value);
         return value;
+    }
+
+    static void Encode(Builder &builder, const std::tuple<Args_...> &data) {
+        size_t offset(0);
+        Tupled<0, Args_...>::Size(offset, data);
+        Tupled<0, Args_...>::Head(builder, data, offset);
+        Tupled<0, Args_...>::Tail(builder, data);
+    }
+};
+
+template <typename... Args_>
+struct Coder {
+    typedef std::tuple<Args_...> Tuple;
+
+    static void Encode(Builder &builder, const Args_ &...args) {
+        return Coded<Tuple>::Encode(builder, Tuple(args...));
+    }
+
+    static Builder Encode(const Args_ &...args) {
+        Builder builder;
+        Coded<Tuple>::Encode(builder, Tuple(args...));
+        return builder;
     }
 };
 
