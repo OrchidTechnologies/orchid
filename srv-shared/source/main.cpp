@@ -83,7 +83,7 @@ int Main(int argc, const char *const argv[]) {
         ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
         ("eth-token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"), "ethereum contract address of token")
         ("eth-location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"), "ethereum contract address of location")
-        ("eth-lottery", po::value<std::string>()->default_value("0x38cf68E1d19a0b2d2Ba73865E4c85aA1A544C1BF"), "ethereum contract address of lottery")
+        ("eth-lottery", po::value<std::string>()->default_value("0xc999ACfE677239b8F07f04AC378651189c5Ad517"), "ethereum contract address of lottery")
         ("eth-password", po::value<std::string>()->default_value(""), "password to use with personal API")
         ("eth-provider", po::value<std::string>(), "ethereum contract address of provider")
         ("eth-target", po::value<std::string>(), "ethereum contract address of target")
