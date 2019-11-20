@@ -188,7 +188,8 @@ class Association :
 
     void Open(const ip4_addr_t &host, uint16_t port) {
         Base::Open();
-        orc_lwipcall(udp_connect(pcb_, &host, port));
+        { Core core;
+            orc_lwipcall(udp_connect(pcb_, &host, port)); }
     }
 
     task<void> Shut() override {
