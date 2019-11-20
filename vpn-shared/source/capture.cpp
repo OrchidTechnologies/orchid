@@ -670,10 +670,10 @@ task<void> Capture::Start(const std::string &path) {
     duk_put_global_string(heap, "print");
 
     heap.eval<void>(R"(
-        eth_directory = "0x32A8F497D86ab18A24302Cd9C1d412Ce8abA69a9";
-        eth_location = "0x8415A0bCdb4B5Ae64E6eac0FBBB73E6D6d054Ec4";
-        eth_curator = "0x441f2C1dC59Fe75cF379641C11c93a4f763d164c";
-        rpc = "https://api.myetherwallet.com:443/rop";
+        eth_directory = "0x385407dF8D47729F93BA4Ae6FcA6Ccb8706B55df";
+        eth_location = "0xE214330bDd412F07d8FC4d4960698c0D657e1774";
+        eth_curator = "0x6F137810F46de17Ae5C3697cEBD33600842455C2";
+        rpc = "https://cloudflare-eth.com:443/";
         hops = [];
         //stun = "stun:stun.l.google.com:19302";
     )");
