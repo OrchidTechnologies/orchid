@@ -9,9 +9,7 @@ import 'package:orchid/pages/connect/connect_button.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:flare_flutter/flare_actor.dart';
-import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:rxdart/rxdart.dart';
-import '../app_transitions.dart';
 import 'connect_world_map.dart';
 
 /// The main page containing the connect button.
@@ -25,7 +23,8 @@ class QuickConnectPage extends StatefulWidget {
 class _QuickConnectPageState
     extends State<QuickConnectPage> // with SingleTickerProviderStateMixin {
     with
-        TickerProviderStateMixin {
+        TickerProviderStateMixin //, AutomaticKeepAliveClientMixin // This breaks things unexpectedly.
+{
   // Current state reflected by the page, driving color and animation.
   OrchidConnectionState _connectionState = OrchidConnectionState.NotConnected;
 
@@ -313,7 +312,7 @@ class _QuickConnectPageState
 
   /// Listen for changes in Orchid network status.
   void _initListeners() {
-    OrchidAPI().logger().write("Init listeners...");
+    OrchidAPI().logger().write("Connect Page: Init listeners...");
 
     // Monitor VPN permission status
     /*
@@ -505,4 +504,6 @@ class _QuickConnectPageState
       sub.cancel();
     });
   }
+
+//@override bool get wantKeepAlive => true;
 }

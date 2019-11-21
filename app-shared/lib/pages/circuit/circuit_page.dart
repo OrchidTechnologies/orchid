@@ -34,11 +34,10 @@ class CircuitPageState extends State<CircuitPage> {
     if (mounted) {
       setState(() {
         // Wrap the hops with a locally unique id for the UI
-        _hops = mapIndexed(
-                circuit?.hops ?? [],
-                ((index, hop) => UniqueHop(
-                    key: DateTime.now().millisecondsSinceEpoch + index,
-                    hop: hop)))
+        _hops = mapIndexed(circuit?.hops ?? [], ((index, hop) {
+          var key = DateTime.now().millisecondsSinceEpoch + index;
+          return UniqueHop(key: key, hop: hop);
+        }))
             .toList();
         _keysAvailable = keys != null && keys.length > 0;
       });
@@ -153,42 +152,44 @@ class CircuitPageState extends State<CircuitPage> {
   }
 
   void _addHopType(Protocol hopType) async {
-    var editor;
+    EditableHop editableHop = EditableHop.empty();
+    HopEditor editor;
     switch (hopType) {
       case Protocol.Orchid:
-        editor = OrchidHopPage();
+        editor = OrchidHopPage(editableHop: editableHop);
         break;
       case Protocol.OpenVPN:
-        editor = OpenVPNHopPage();
+        editor = OpenVPNHopPage(editableHop: editableHop);
         break;
     }
 
-    UniqueHop newHop = await _showEditor(editor);
+    await _showEditor(editor);
     if (_hops == null) {
       _hops = [];
     }
     setState(() {
-      _hops.add(newHop);
+      _hops.add(editableHop.value);
     });
     _saveCircuit();
   }
 
   void _editHop(UniqueHop uniqueHop) async {
+    EditableHop editableHop = EditableHop(uniqueHop);
     var editor;
     switch (uniqueHop.hop.protocol) {
       case Protocol.Orchid:
-        editor = OrchidHopPage(initialState: uniqueHop.hop);
+        editor = OrchidHopPage(editableHop: editableHop);
         break;
       case Protocol.OpenVPN:
-        editor = OpenVPNHopPage(initialState: uniqueHop.hop);
+        editor = OpenVPNHopPage(editableHop: editableHop);
         break;
     }
 
-    UniqueHop editedHop = await _showEditor(editor);
+    await _showEditor(editor);
     var index = _hops.indexOf(uniqueHop);
     setState(() {
       _hops.removeAt(index);
-      _hops.insert(index, editedHop);
+      _hops.insert(index, editableHop.value);
     });
     _saveCircuit();
   }

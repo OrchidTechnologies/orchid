@@ -7,10 +7,11 @@ import '../app_colors.dart';
 import '../app_text.dart';
 import 'circuit_hop.dart';
 
-class OpenVPNHopPage extends StatefulWidget {
-  final OpenVPNHop initialState;
+class OpenVPNHopPage extends StatefulWidget implements HopEditor<OpenVPNHop> {
+  @override
+  final EditableHop editableHop;
 
-  OpenVPNHopPage({this.initialState});
+  OpenVPNHopPage({@required this.editableHop});
 
   @override
   _OpenVPNHopPageState createState() => _OpenVPNHopPageState();
@@ -25,16 +26,27 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
   @override
   void initState() {
     super.initState();
-    _userName.text = widget.initialState?.userName;
-    _userPassword.text = widget.initialState?.userPassword;
-    _ovpnConfig.text = widget.initialState?.ovpnConfig;
+    OpenVPNHop hop = widget.editableHop.value?.hop;
+    _userName.text = hop?.userName;
+    _userPassword.text = hop?.userPassword;
+    _ovpnConfig.text = hop?.ovpnConfig;
+    setState(() {}); // Setstate to update the hop for any defaulted values.
+
+    _userName.addListener(_updateHop);
+    _userPassword.addListener(_updateHop);
+    _ovpnConfig.addListener(_updateHop);
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _updateHop();
   }
 
   @override
   Widget build(BuildContext context) {
     return TapClearsFocus(
       child: TitledPage(
-        backAction: _backAction,
         title: "Open VPN Hop",
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -103,14 +115,21 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     );
   }
 
-  void _backAction() {
-    Navigator.pop(
-        context,
-        UniqueHop(
-            key: DateTime.now().millisecondsSinceEpoch,
-            hop: OpenVPNHop(
-                userName: _userName.text,
-                userPassword: _userPassword.text,
-                ovpnConfig: _ovpnConfig.text)));
+  void _updateHop() {
+    widget.editableHop.value = UniqueHop(
+        key: widget.editableHop.value?.key ??
+            DateTime.now().millisecondsSinceEpoch,
+        hop: OpenVPNHop(
+            userName: _userName.text,
+            userPassword: _userPassword.text,
+            ovpnConfig: _ovpnConfig.text));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _userName.removeListener(_updateHop);
+    _userPassword.removeListener(_updateHop);
+    _ovpnConfig.removeListener(_updateHop);
   }
 }
