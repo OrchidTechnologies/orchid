@@ -97,6 +97,9 @@ contract OrchidLottery {
 
     function page(address funder, uint256 offset, uint256 count) external view returns (address[] memory) {
         address[] storage all = lotteries_[funder].keys_;
+        require(offset <= all.length);
+        if (count > all.length - offset)
+            count = all.length - offset;
         address[] memory slice = new address[](count);
         for (uint256 i = 0; i != count; ++i)
             slice[i] = all[offset + i];
