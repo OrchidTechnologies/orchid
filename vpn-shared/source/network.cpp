@@ -49,8 +49,8 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
         //co_return Descriptor{provider, "https://mac.saurik.com:8084/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
 
         retry: {
-            static Selector<std::tuple<Address, uint128_t>, uint128_t> scan("scan");
-            auto [address, delay] = co_await scan.Call(endpoint, latest, directory_, generator_());
+            static Selector<std::tuple<Address, uint128_t>, uint128_t> pick("pick");
+            auto [address, delay] = co_await pick.Call(endpoint, latest, directory_, generator_());
             orc_assert(address != 0);
 
             if (curator_ != 0) {

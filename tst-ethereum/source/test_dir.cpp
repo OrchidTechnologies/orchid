@@ -237,19 +237,19 @@ namespace orc
  
         
         // sample
-        printf("[%d] Testing scan() \n\n\n", __LINE__);
-        Selector<Address, uint128_t> scan_f("scan");
+        printf("[%d] Testing pick() \n\n\n", __LINE__);
+        Selector<Address, uint128_t> pick_f("pick");
 
-        Address result1 = co_await scan_f.Call(endpoint, block, Address(directory_addr), uint128_t(1) );
-        printf("[%d] scan(1): ", __LINE__); std::cout << std::hex << result1 << std::endl;
+        Address result1 = co_await pick_f.Call(endpoint, block, Address(directory_addr), uint128_t(1) );
+        printf("[%d] pick(1): ", __LINE__); std::cout << std::hex << result1 << std::endl;
         
         map<uint256_t, int> cnts;
         
         for (int i(0); i < int(nsamples); i++) {
             double rv      = double(rand()%10000) / double(10000);
             uint128_t rvi  = uint128_t(rv * pow(2.0, 128.0)); 
-            Address raddr  = co_await scan_f.Call(endpoint, block, Address(directory_addr), rvi );
-            printf("[%d] scan(%f): ", __LINE__,rv); std::cout << std::hex << raddr << std::endl;
+            Address raddr  = co_await pick_f.Call(endpoint, block, Address(directory_addr), rvi );
+            printf("[%d] pick(%f): ", __LINE__,rv); std::cout << std::hex << raddr << std::endl;
             cnts[uint256_t(raddr)]++;
         }
 

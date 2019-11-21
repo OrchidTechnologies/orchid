@@ -99,7 +99,7 @@ contract OrchidDirectory {
         return stake.before_ + stake.after_ + stake.amount_;
     }
 
-    function scan(uint256 point) public view returns (address, uint128) {
+    function seek(uint256 point) public view returns (address, uint128) {
         require(!nope(root_));
 
         Primary storage primary = root_;
@@ -123,10 +123,9 @@ contract OrchidDirectory {
         }
     }
 
-    // provide a single-call variant of scan() that works for initial OXT clients
-    function scan(uint128 percent) external view returns (address, uint128) {
+    function pick(uint128 percent) external view returns (address, uint128) {
         // for OXT, have() will be less than a uint128, so this math cannot overflow
-        return scan(have() * percent >> 128);
+        return seek(have() * percent >> 128);
     }
 
 
