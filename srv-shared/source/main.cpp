@@ -243,7 +243,7 @@ int Main(int argc, const char *const argv[]) {
         auto latest(co_await endpoint.Latest());
         static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
         if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, provider)) != std::tie(url, tls, "")) {
-            static Selector<void, std::string, std::string, std::string> move("move");
+            static Selector<void, std::string, std::string, std::string> move("move", 180000);
             co_await move.Send(endpoint, provider, password, location, url, tls, "");
         }
     }());
