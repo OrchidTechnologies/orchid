@@ -35,7 +35,7 @@ clang := $(shell xcrun -f clang)
 
 objc := $(clang) $(more)
 
-ifeq ($(filter iosndk,$(debug)),)
+ifeq ($(filter crossndk,$(debug)),)
 debug += notidy
 cc := $(clang) $(more)
 cxx := $(shell xcrun -f clang++) $(more)
