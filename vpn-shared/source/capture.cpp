@@ -640,7 +640,7 @@ static duk_ret_t print(duk_context *ctx) {
     duk_push_string(ctx, " ");
     duk_insert(ctx, 0);
     duk_join(ctx, duk_get_top(ctx) - 1);
-    printf("%s\n", duk_safe_to_string(ctx, -1));
+    Log() << duk_safe_to_string(ctx, -1) << std::endl;
     return 0;
 }
 
