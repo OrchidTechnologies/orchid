@@ -12,3 +12,5 @@
 ifeq ($(target),)
 target := mac
 endif
+
+prebuilt := darwin-x86_64

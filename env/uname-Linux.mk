@@ -16,3 +16,5 @@ else
 target := lnx
 endif
 endif
+
+prebuilt := linux-x86_64

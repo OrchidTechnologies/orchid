@@ -39,7 +39,7 @@ ifeq ($(ANDROID_NDK_HOME),)
 export ANDROID_NDK_HOME := $(ndk)
 endif
 
-llvm := $(ndk)/toolchains/llvm/prebuilt/darwin-x86_64
+llvm := $(ndk)/toolchains/llvm/prebuilt/$(prebuilt)
 export PATH := $(llvm)/bin:$(PATH)
 
 cc := $(llvm)/bin/clang $(more)
