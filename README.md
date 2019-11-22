@@ -2,18 +2,14 @@
 
 Overview
 ========
-The Orchid app is an Open Source packet analyzer that allows you to view your
-network traffic locally on your device, without connecting through a server.
-The packet capture runs on the phone only, providing you with a stream of
-information including IP addresses, hostnames and ports for insight and
-analysis of your  internet traffic.
+The Orchid network enables a decentralized virtual private network (VPN),
+allowing users to buy bandwidth from a global pool of service providers.
 
-Features
-========
-* Local VPN service for packet capture
-* Advanced filtering to drill down on the data you care about
-* Source and destination IP address & port number
-* Open Source
+To do this, Orchid uses an ERC-20 utility token called OXT, a new VPN protocol
+for token-incentivized bandwidth proxying, and smart-contracts with algorithmic
+advertising and payment functions. Orchid's users connect to bandwidth sellers
+using a provider directory, and they pay using probabilistic nanopayments so
+Ethereum transaction fees on packets are acceptably low.
 
 Vision
 ======
