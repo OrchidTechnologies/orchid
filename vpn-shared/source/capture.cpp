@@ -670,7 +670,7 @@ task<void> Capture::Start(const std::string &path) {
     duk_put_global_string(heap, "print");
 
     heap.eval<void>(R"(
-        eth_directory = "0x385407dF8D47729F93BA4Ae6FcA6Ccb8706B55df";
+        eth_directory = "0xd87e0ee1a59841de2ac78c17209db97e27651985";
         eth_location = "0xE214330bDd412F07d8FC4d4960698c0D657e1774";
         eth_curator = "0x55Abb3CE20ABbC38444e0A200dDE7fC0388b76a5";
         eth_argument = "2b1ce95573ec1b927a90cb488db113b40eeb064a";
