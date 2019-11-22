@@ -50,6 +50,7 @@ contract OrchidLottery {
         uint256 unlock_;
 
         OrchidVerifier verify_;
+        bytes32 codehash_;
         bytes shared_;
     }
 
@@ -107,9 +108,9 @@ contract OrchidLottery {
     }
 
 
-    function look(address funder, address signer) external view returns (uint128, uint128, uint256, OrchidVerifier, bytes memory) {
+    function look(address funder, address signer) external view returns (uint128, uint128, uint256, OrchidVerifier, bytes32, bytes memory) {
         Pot storage pot = lotteries_[funder].pots_[signer];
-        return (pot.amount_, pot.escrow_, pot.unlock_, pot.verify_, pot.shared_);
+        return (pot.amount_, pot.escrow_, pot.unlock_, pot.verify_, pot.codehash_, pot.shared_);
     }
 
 
@@ -138,7 +139,13 @@ contract OrchidLottery {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         require(pot.escrow_ == 0);
+
+        bytes32 codehash;
+        assembly { codehash := extcodehash(verify) }
+        require(codehash != 0);
+
         pot.verify_ = verify;
+        pot.codehash_ = codehash;
         pot.shared_ = shared;
     }
 
@@ -176,8 +183,14 @@ contract OrchidLottery {
     function take(address funder, address signer, uint128 amount, address payable target, bytes memory receipt) private {
         Pot storage pot = find(funder, signer);
         take(funder, signer, amount, target, pot);
-        if (pot.verify_ != OrchidVerifier(0))
-            require(pot.verify_.good(pot.shared_, target, receipt));
+
+        OrchidVerifier verify = pot.verify_;
+        if (verify != OrchidVerifier(0)) {
+            bytes32 codehash;
+            assembly { codehash := extcodehash(verify) }
+            if (pot.codehash_ == codehash)
+                require(verify.good(pot.shared_, target, receipt));
+        }
     }
 
     function grab(bytes32 seed, bytes32 hash, bytes32 nonce, uint256 start, uint128 range, uint128 amount, uint128 ratio, address funder, address payable target, bytes memory receipt, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
