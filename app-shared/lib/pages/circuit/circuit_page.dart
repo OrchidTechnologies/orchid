@@ -4,7 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
-import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/util/collections.dart';
 
 import '../app_gradients.dart';
@@ -46,9 +46,9 @@ class CircuitPageState extends State<CircuitPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+    return Container(
+      decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+      child: SafeArea(
         child: Column(
           children: <Widget>[
             Padding(
@@ -61,15 +61,11 @@ class CircuitPageState extends State<CircuitPage> {
             Expanded(child: _buildListView()),
             Visibility(
               visible: _keysAvailable,
-              child: FloatingActionButton(
-                child: Icon(Icons.add),
-                onPressed: _addHop,
-              ),
+              child: FloatingAddButton(onPressed: _addHop),
               replacement: Text("Add keys before creating a circuit...",
                   style: AppText.textHintStyle
                       .copyWith(fontStyle: FontStyle.italic, fontSize: 14)),
             ),
-            pady(36.0),
           ],
         ),
       ),

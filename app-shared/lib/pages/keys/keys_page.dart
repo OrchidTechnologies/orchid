@@ -5,7 +5,6 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
-import 'package:orchid/pages/common/formatting.dart';
 
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -36,9 +35,9 @@ class _KeysPageState extends State<KeysPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+    return Container(
+      decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+      child: SafeArea(
         child: Column(
           children: <Widget>[
             Padding(
@@ -49,11 +48,7 @@ class _KeysPageState extends State<KeysPage> {
               ),
             ),
             Expanded(child: _buildKeyList()),
-            FloatingActionButton(
-              child: Icon(Icons.add),
-              onPressed: _addKey,
-            ),
-            pady(36.0),
+            FloatingAddButton(onPressed: _addKey),
           ],
         ),
       ),
@@ -190,7 +185,6 @@ class _KeysPageState extends State<KeysPage> {
 
   _saveKeys() {
     UserPreferences().setKeys(_keys);
-    OrchidAPI().updateConfiguration();
   }
 
   void _tapKey(StoredEthereumKey key, int index) async {
@@ -202,6 +196,29 @@ class _KeysPageState extends State<KeysPage> {
     setState(() {
       _copiedIndex = null;
     });
+  }
+}
+
+class FloatingAddButton extends StatelessWidget {
+  const FloatingAddButton({
+    Key key,
+    @required this.onPressed,
+  }) : super(key: key);
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: onPressed,
+        ),
+      ),
+    );
   }
 }
 
