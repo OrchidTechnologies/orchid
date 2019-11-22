@@ -281,16 +281,14 @@ class _QuickConnectPageState
     // Localize
     String message;
     switch (_connectionState) {
-      case OrchidConnectionState.Invalid:
-        message = 'Waiting...';
-        break;
       case OrchidConnectionState.Disconnecting:
         message = 'Disonnecting...';
         break;
       case OrchidConnectionState.Connecting:
         message = 'Connecting...';
         break;
-      case OrchidConnectionState.NotConnected:
+    case OrchidConnectionState.Invalid:
+    case OrchidConnectionState.NotConnected:
         message = 'Push to connect.';
         break;
       case OrchidConnectionState.Connected:

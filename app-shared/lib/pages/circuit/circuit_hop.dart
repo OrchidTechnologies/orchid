@@ -66,20 +66,23 @@ class CircuitHop {
 }
 
 class OrchidHop extends CircuitHop {
-  final String funder; // 0x prefixed hex
+  final String funder;
   final StoredEthereumKeyRef keyRef;
 
   OrchidHop({this.funder, this.keyRef}) : super(Protocol.Orchid);
 
   factory OrchidHop.fromJson(Map<String, dynamic> json) {
-    return OrchidHop(
-        funder: json['funder'], keyRef: StoredEthereumKeyRef(json['keyRef']));
+    var keyRefValue = json['keyRef'];
+    // Key references are explicitly allowed to be null.
+    var nullableKeyRef =
+        keyRefValue != null ? StoredEthereumKeyRef(keyRefValue) : null;
+    return OrchidHop(funder: json['funder'], keyRef: nullableKeyRef);
   }
 
   Map<String, dynamic> toJson() => {
         'protocol': CircuitHop.protocolToString(protocol),
         'funder': funder,
-        'keyRef': keyRef.toString(),
+        'keyRef': keyRef?.toString(), // Key references are nullable
       };
 }
 
@@ -117,11 +120,13 @@ class UniqueHop {
 
 class EditableHop extends ValueNotifier<UniqueHop> {
   EditableHop(UniqueHop value) : super(value);
+
   EditableHop.empty() : super(null);
 }
 
 abstract class HopEditor<T extends CircuitHop> {
   final EditableHop editableHop;
+
   HopEditor(this.editableHop);
 }
 
@@ -155,4 +160,3 @@ abstract class HopEditor<T extends CircuitHop> {
 }
 
 */
-

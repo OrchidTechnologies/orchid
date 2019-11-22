@@ -31,15 +31,16 @@ class _KeySelectionState extends State<KeySelection> {
 
     // If an initial key selection is provided use it
     if (widget.initialSelection != null) {
-      this._selectedKey = widget.initialSelection.getFrom(_keys);
+      this._selectedKey = widget.initialSelection?.getFrom(_keys);
     }
+    /*
     // Else default to the first available key and fire the listener
     else {
       this._selectedKey = (_keys ?? []).length > 0 ? _keys[0] : null;
       if (_selectedKey != null) {
         widget.onSelection(_selectedKey);
       }
-    }
+    }*/
 
     // Update all state
     setState(() {});
