@@ -196,7 +196,7 @@ class RealOrchidAPI implements OrchidAPI {
         if (key == "keyRef") {
           var keyRef = StoredEthereumKeyRef(value);
           StoredEthereumKey key = keyRef.getFrom(keys);
-          return MapEntry("secret", "\"${key.private}\"");
+          return MapEntry("secret", "\"${key.private.toRadixString(16)}\"");
         }
         // The protocol value is transformed to lowercase.
         if (key == "protocol") {
