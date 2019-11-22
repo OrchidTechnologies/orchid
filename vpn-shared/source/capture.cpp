@@ -683,7 +683,7 @@ task<void> Capture::Start(const std::string &path) {
 
     S<Origin> origin(GetLocal());
 
-    unsigned hops(heap.eval<double>("hops.length"));
+    auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
         co_return co_await Start(std::move(origin));
 

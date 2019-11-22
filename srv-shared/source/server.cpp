@@ -107,6 +107,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
                 return seed->second;
             }());
 
+            // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
             auto won(Hash(Tie(seed, nonce)).num<uint256_t>() >> 128 <= ratio);
             if (won) {
                 std::unique_lock<std::mutex> lock_;

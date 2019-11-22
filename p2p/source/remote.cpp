@@ -229,7 +229,7 @@ class RemoteOpening final :
         co_return;
     }
 
-    task<void> Send(const Buffer &data, const Socket &socket) {
+    task<void> Send(const Buffer &data, const Socket &socket) override {
         ip4_addr_t address(socket.Host());
         { Core core;
             orc_lwipcall(udp_sendto(pcb_, Chain(data), &address, socket.Port())); }
