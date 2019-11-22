@@ -28,7 +28,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   /// Listen for changes in Orchid network status.
   void _initListeners() {
-    OrchidAPI().logger().write("Init listeners...");
+    OrchidAPI().logger().write("Traffcc Monitor: Init listeners...");
 
     //_monitorVPNStatus();
 
@@ -40,26 +40,6 @@ class _MonitoringPageState extends State<MonitoringPage> {
       setState(() {});
     }));
   }
-
-  /*
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Image.asset("assets/images/name_logo.png",
-            color: Colors.white, height: 24),
-        actions: <Widget>[_buildSwitch()],
-      ),
-      body: Container(
-        decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-        child: Container(
-            child: TrafficView()),
-      ),
-      drawer: SideDrawer(),
-      // Workaround for: https://github.com/flutter/flutter/issues/23926
-      resizeToAvoidBottomInset: false,
-    );
-  }*/
 
   @override
   Widget build(BuildContext context) {

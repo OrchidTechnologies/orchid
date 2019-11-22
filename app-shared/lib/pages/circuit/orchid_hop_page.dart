@@ -7,10 +7,11 @@ import '../app_text.dart';
 import 'circuit_hop.dart';
 import 'key_selection.dart';
 
-class OrchidHopPage extends StatefulWidget {
-  final OrchidHop initialState;
+class OrchidHopPage extends StatefulWidget implements HopEditor<OrchidHop> {
+  @override
+  final EditableHop editableHop;
 
-  OrchidHopPage({this.initialState});
+  OrchidHopPage({@required this.editableHop});
 
   @override
   _OrchidHopPageState createState() => _OrchidHopPageState();
@@ -26,15 +27,22 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void initState() {
     super.initState();
     setState(() {
-      _funderField.text = widget.initialState?.funder;
-      _keyRef = widget.initialState?.keyRef;
+      OrchidHop hop = widget.editableHop.value?.hop;
+      _funderField.text = hop?.funder;
+      _keyRef = hop?.keyRef;
     });
+    _funderField.addListener(_updateHop);
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _updateHop();
   }
 
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      backAction: _backAction,
       title: "Orchid Hop",
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -71,22 +79,20 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   void _keySelected(StoredEthereumKey key) {
     setState(() {
-      print("setting key ref to: ${key.ref()}");
       _keyRef = key.ref();
     });
   }
 
-  void _backAction() {
-    //
-    if (_keyRef == null ||
-        _funderField.text == null ||
-        _funderField.text == "") {
-      return null;
-    }
-    Navigator.pop(
-        context,
-        UniqueHop(
-            key: DateTime.now().millisecondsSinceEpoch,
-            hop: OrchidHop(funder: _funderField.text, keyRef: _keyRef)));
+  void _updateHop() {
+    widget.editableHop.value = UniqueHop(
+        key: widget.editableHop.value?.key ?? DateTime.now().millisecondsSinceEpoch,
+        hop: OrchidHop(funder: _funderField.text, keyRef: _keyRef));
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _funderField.removeListener(_updateHop);
+  }
+
 }

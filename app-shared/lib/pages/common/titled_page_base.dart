@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_colors.dart';
 
-import '../app_text.dart';
-
 /// A base class for stateless second level pages reached through navigation.
 /// These pages have a title with a back button.
 class TitledPageBase extends StatelessWidget {
@@ -41,33 +39,30 @@ class TitledPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async { return false; },
-      child: Scaffold(
-        appBar: AppBar(
-            leading: _buildBackButton(context),
-            actions: actions,
-            title: Text(
-              this.title,
-              style: TextStyle(color: _foregroundColor()),
-            ),
-            titleSpacing: 0,
-            backgroundColor: _backgroundColor(),
-            elevation: 0.0),
-        body: Container(
-          child: child,
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [AppColors.grey_7, AppColors.grey_6])),
-        ),
-
-        // Note: Setting this to false is a workaround for:
-        // https://github.com/flutter/flutter/issues/23926
-        // however that breaks the automated keyboard accommodation.
-        resizeToAvoidBottomInset: true,
+    return Scaffold(
+      appBar: AppBar(
+          leading: _buildBackButton(context),
+          actions: actions,
+          title: Text(
+            this.title,
+            style: TextStyle(color: _foregroundColor()),
+          ),
+          titleSpacing: 0,
+          backgroundColor: _backgroundColor(),
+          elevation: 0.0),
+      body: Container(
+        child: child,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.grey_7, AppColors.grey_6])),
       ),
+
+      // Note: Setting this to false is a workaround for:
+      // https://github.com/flutter/flutter/issues/23926
+      // however that breaks the automated keyboard accommodation.
+      resizeToAvoidBottomInset: true,
     );
   }
 

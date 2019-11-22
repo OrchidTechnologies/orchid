@@ -113,6 +113,46 @@ class UniqueHop {
   final CircuitHop hop;
 
   UniqueHop({@required this.key, @required this.hop});
-
-  bool operator ==(o) => o is UniqueHop && o.key == key;
 }
+
+class EditableHop extends ValueNotifier<UniqueHop> {
+  EditableHop(UniqueHop value) : super(value);
+  EditableHop.empty() : super(null);
+}
+
+abstract class HopEditor<T extends CircuitHop> {
+  final EditableHop editableHop;
+  HopEditor(this.editableHop);
+}
+
+// Debating whether making these fully typed is helpful.
+/*
+switch (hop.protocol) {
+  case Protocol.Orchid:
+    return UniqueHop<OrchidHop>(key: key, hop: hop);
+  case Protocol.OpenVPN:
+    return UniqueHop<OpenVPNHop>(key: key, hop: hop);
+  default:
+    throw Exception();
+}
+...
+
+class UniqueHop<T extends CircuitHop> {
+  final int key;
+  final T hop;
+
+  UniqueHop({@required this.key, @required this.hop});
+}
+
+class EditableHop<T extends CircuitHop> extends ValueNotifier<UniqueHop<T>> {
+  EditableHop(UniqueHop<T> value) : super(value);
+  EditableHop.empty() : super(null);
+}
+
+abstract class HopEditor<T extends CircuitHop> {
+  final EditableHop<T> editableHop;
+  HopEditor(this.editableHop);
+}
+
+*/
+
