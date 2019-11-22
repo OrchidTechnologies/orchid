@@ -193,10 +193,17 @@ class RealOrchidAPI implements OrchidAPI {
     var hopsListConfig = hops.map((hop) {
       return hop.toJson().map((key, value) {
         // Key references are replaced with the actual key values.
+        // Null keyRefs are explicitly allowed by the UI
         if (key == "keyRef") {
-          var keyRef = StoredEthereumKeyRef(value);
-          StoredEthereumKey key = keyRef.getFrom(keys);
-          return MapEntry("secret", "\"${key.private}\"");
+          String secret;
+          if (value != null) {
+            var keyRef = StoredEthereumKeyRef(value);
+            StoredEthereumKey key = keyRef.getFrom(keys);
+            secret = "\"${key.private.toRadixString(16)}\"";
+          } else {
+            secret = null;
+          }
+          return MapEntry("secret", secret);
         }
         // The protocol value is transformed to lowercase.
         if (key == "protocol") {
