@@ -142,7 +142,6 @@ contract OrchidLottery {
 
         bytes32 codehash;
         assembly { codehash := extcodehash(verify) }
-        require(codehash != 0);
 
         pot.verify_ = verify;
         pot.codehash_ = codehash;
