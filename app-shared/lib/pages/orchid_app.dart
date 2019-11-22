@@ -4,9 +4,8 @@ import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/connect/connect_page.dart';
 import 'package:orchid/pages/monitoring/monitoring_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
-
-import 'app_text.dart';
 import 'circuit/circuit_page.dart';
+import 'monitoring/traffic_view.dart';
 
 class OrchidApp extends StatefulWidget {
   @override
@@ -14,23 +13,19 @@ class OrchidApp extends StatefulWidget {
 }
 
 class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
-  static var _logo = Image.asset("assets/images/name_logo.png", color: Colors.white, height: 24);
-  
+  static var _logo = Image.asset("assets/images/name_logo.png",
+      color: Colors.white, height: 24);
+
   TabController _tabController;
   Widget _pageTitle = _logo;
+  List<Widget> _pageActions = [];
+  var _trafficButtonController = ClearTrafficActionButtonController();
 
   @override
   void initState() {
     super.initState();
     _tabController = new TabController(length: 4, vsync: this);
     _tabController.addListener(_handleTabSelection);
-  }
-
-  void _handleTabSelection() {
-    var titles = [_logo, Text("Traffic"), Text("Circuit"), Text("Keys")];
-    setState(() {
-      _pageTitle = titles[_tabController.index];
-    });
   }
 
   @override
@@ -43,10 +38,16 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
         home: new Scaffold(
           appBar: AppBar(
             title: _pageTitle,
+            actions: _pageActions,
           ),
           body: TabBarView(
             controller: _tabController,
-            children: [QuickConnectPage(), MonitoringPage(), CircuitPage(), KeysPage()],
+            children: [
+              QuickConnectPage(),
+              TrafficView(clearTrafficController: _trafficButtonController),
+              CircuitPage(),
+              KeysPage()
+            ],
           ),
           bottomNavigationBar: SafeArea(
             child: new TabBar(
@@ -91,5 +92,15 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
           drawer: SideDrawer(),
         ),
         routes: AppRoutes.routes);
+  }
+
+  void _handleTabSelection() {
+    var titles = [_logo, Text("Traffic"), Text("Circuit"), Text("Keys")];
+    setState(() {
+      _pageTitle = titles[_tabController.index];
+      _pageActions = _tabController.index == 1
+          ? [ClearTrafficActionButton(controller: _trafficButtonController)]
+          : [];
+    });
   }
 }

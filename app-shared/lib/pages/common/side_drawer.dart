@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/util/units.dart';
 import '../app_routes.dart';
 import '../app_text.dart';
-import 'dialogs.dart';
 
 /// The application side drawer
 class SideDrawer extends StatefulWidget {
@@ -75,13 +73,6 @@ class _SideDrawerState extends State<SideDrawer> {
               ),
               divider(),
               SideDrawerTile(
-                  title: "Clear Data",
-                  icon: Icons.delete_forever,
-                  onPressed: () {
-                    _confirmDelete(context);
-                  }),
-              divider(),
-              SideDrawerTile(
                   title: "Help",
                   //imageName: 'assets/images/help.png',
                   icon: Icons.help_outline,
@@ -134,18 +125,6 @@ class _SideDrawerState extends State<SideDrawer> {
         )
       ],
     );
-  }
-
-  void _confirmDelete(BuildContext context) {
-    Dialogs.showConfirmationDialog(
-        context: context,
-        title: "Delete all data?",
-        body: "This will delete all recorded data within the app.",
-        cancelText: "CANCEL",
-        actionText: "OK",
-        action: () async {
-          await AnalysisDb().clear();
-        });
   }
 
   Widget divider() {

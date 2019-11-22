@@ -88,7 +88,7 @@ class AppText {
       fontSize: 16.0);
 
   static TextStyle actionButtonStyle = TextStyle(
-      color: AppColors.neutral_3,
+      color: Colors.white,
       fontWeight: FontWeight.w400,
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,

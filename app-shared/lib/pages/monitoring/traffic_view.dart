@@ -3,15 +3,21 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
 
 import '../app_colors.dart';
+import '../app_gradients.dart';
 import '../app_text.dart';
 import 'traffic_empty_view.dart';
 import 'traffic_view_detail.dart';
 
 class TrafficView extends StatefulWidget {
+  final ClearTrafficActionButtonController clearTrafficController;
+
+  const TrafficView({this.clearTrafficController});
+
   @override
   _TrafficViewState createState() => _TrafficViewState();
 
@@ -82,21 +88,24 @@ class _TrafficViewState extends State<TrafficView>
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Stack(
-        children: <Widget>[
-          Visibility(visible: _showEmptyView(), child: TrafficEmptyView()),
-          Visibility(
-            visible: !_showEmptyView(),
-            child: Column(
-              children: <Widget>[
-                _buildSearchView(),
-                _buildNewContentIndicator(),
-                _buildResultListView()
-              ],
-            ),
-          )
-        ],
+    return Container(
+      decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
+      child: SafeArea(
+        child: Stack(
+          children: <Widget>[
+            Visibility(visible: _showEmptyView(), child: TrafficEmptyView()),
+            Visibility(
+              visible: !_showEmptyView(),
+              child: Column(
+                children: <Widget>[
+                  _buildSearchView(),
+                  _buildNewContentIndicator(),
+                  _buildResultListView()
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -266,6 +275,7 @@ class _TrafficViewState extends State<TrafficView>
   void updateResults(List<FlowEntry> results) {
     _pendingResultList = results;
     applyPendingUpdates();
+    widget.clearTrafficController.enabled.value = !_showEmptyView();
   }
 
   /// Indicate that the query context has changed and the result list should be
@@ -373,5 +383,51 @@ class _TrafficViewState extends State<TrafficView>
   void dispose() {
     super.dispose();
     _pollTimer.cancel();
+  }
+}
+
+class ClearTrafficActionButtonController {
+  // Tri-state enabled status
+  ValueNotifier<bool> enabled = ValueNotifier(null);
+}
+
+class ClearTrafficActionButton extends StatelessWidget {
+  final ClearTrafficActionButtonController controller;
+
+  const ClearTrafficActionButton({this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+        valueListenable: controller.enabled,
+        builder: (context, enabledOrNull, child) {
+          bool enabled = enabledOrNull ?? false;
+          return Visibility(
+            visible: enabledOrNull != null,
+            child: Opacity(
+              opacity: enabled ? 1.0 : 0.3,
+              child: FlatButton(
+                child: Text("Clear", style: AppText.actionButtonStyle),
+                onPressed: enabled
+                    ? () {
+                        _confirmDelete(context);
+                      }
+                    : null,
+              ),
+            ),
+          );
+        });
+  }
+
+  void _confirmDelete(BuildContext context) {
+    Dialogs.showConfirmationDialog(
+        context: context,
+        title: "Delete all data?",
+        body: "This will delete all recorded traffic data within the app.",
+        cancelText: "CANCEL",
+        actionText: "OK",
+        action: () async {
+          await AnalysisDb().clear();
+        });
   }
 }

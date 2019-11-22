@@ -10,6 +10,9 @@ import '../app_colors.dart';
 import '../app_gradients.dart';
 import '../app_transitions.dart';
 
+// TODO: Remove if this remains unused.
+// This page wraps the traffic monitor and offers a switch to enable the VPN.
+// It also guards the state of the vpn extension installation.
 class MonitoringPage extends StatefulWidget {
   @override
   _MonitoringPageState createState() => _MonitoringPageState();
@@ -28,7 +31,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   /// Listen for changes in Orchid network status.
   void _initListeners() {
-    OrchidAPI().logger().write("Traffcc Monitor: Init listeners...");
+    OrchidAPI().logger().write("Traffic Monitor: Init listeners...");
 
     //_monitorVPNStatus();
 
