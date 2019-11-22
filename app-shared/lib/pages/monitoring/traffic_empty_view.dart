@@ -5,7 +5,6 @@ import '../app_colors.dart';
 import '../app_text.dart';
 
 class TrafficEmptyView extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(
@@ -17,12 +16,11 @@ class TrafficEmptyView extends StatelessWidget {
                 child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: 450),
                     child: StreamBuilder<OrchidConnectionState>(
+                        initialData: OrchidConnectionState.Invalid,
                         stream: OrchidAPI().connectionStatus,
                         builder: (context, snapshot) {
-                          print("connection status: ${snapshot.data}");
-
                           bool connected;
-                          switch(snapshot.data) {
+                          switch (snapshot.data) {
                             case OrchidConnectionState.Invalid:
                             case OrchidConnectionState.NotConnected:
                               connected = false;
@@ -37,7 +35,8 @@ class TrafficEmptyView extends StatelessWidget {
                           return AnimatedSwitcher(
                             duration: Duration(milliseconds: 300),
                             child: Column(
-                              key: ValueKey<String>("welcome:$connected:$orientation"),
+                              key: ValueKey<String>(
+                                  "welcome:$connected:$orientation"),
                               children: <Widget>[
                                 Spacer(flex: 1),
                                 AppText.header(

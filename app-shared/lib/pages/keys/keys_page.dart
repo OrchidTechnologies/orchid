@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
+import 'package:orchid/pages/common/formatting.dart';
 
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -40,13 +40,7 @@ class _KeysPageState extends State<KeysPage> {
       child: SafeArea(
         child: Column(
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Keys",
-                style: AppText.headerStyle.copyWith(color: Colors.black),
-              ),
-            ),
+            pady(16),
             Expanded(child: _buildKeyList()),
             FloatingAddButton(onPressed: _addKey),
           ],

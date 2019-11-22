@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
+import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/util/collections.dart';
 
@@ -51,13 +52,7 @@ class CircuitPageState extends State<CircuitPage> {
       child: SafeArea(
         child: Column(
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Circuit",
-                style: AppText.headerStyle.copyWith(color: Colors.black),
-              ),
-            ),
+            pady(16),
             Expanded(child: _buildListView()),
             Visibility(
               visible: _keysAvailable,

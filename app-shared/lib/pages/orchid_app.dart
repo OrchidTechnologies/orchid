@@ -5,6 +5,7 @@ import 'package:orchid/pages/connect/connect_page.dart';
 import 'package:orchid/pages/monitoring/monitoring_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 
+import 'app_text.dart';
 import 'circuit/circuit_page.dart';
 
 class OrchidApp extends StatefulWidget {
@@ -13,7 +14,10 @@ class OrchidApp extends StatefulWidget {
 }
 
 class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
+  static var _logo = Image.asset("assets/images/name_logo.png", color: Colors.white, height: 24);
+  
   TabController _tabController;
+  Widget _pageTitle = _logo;
 
   @override
   void initState() {
@@ -23,7 +27,10 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
   }
 
   void _handleTabSelection() {
-    setState(() {});
+    var titles = [_logo, Text("Traffic"), Text("Circuit"), Text("Keys")];
+    setState(() {
+      _pageTitle = titles[_tabController.index];
+    });
   }
 
   @override
@@ -35,9 +42,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
         ),
         home: new Scaffold(
           appBar: AppBar(
-            title: Image.asset("assets/images/name_logo.png",
-                color: Colors.white, height: 24),
-            //actions: <Widget>[_buildSwitch()],
+            title: _pageTitle,
           ),
           body: TabBarView(
             controller: _tabController,
