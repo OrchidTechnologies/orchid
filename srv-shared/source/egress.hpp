@@ -37,20 +37,30 @@ class Egress :
 {
   private:
     uint32_t local_;
-    uint16_t ephemeral_ = 4096;
+    uint16_t ephemeral_base_ = 4096;
+
+    typedef std::list<Three> LRU_;
 
     struct Translation_ {
         Socket socket_;
         BufferDrain *drain_;
+        LRU_::iterator lru_iter_;
     };
 
     typedef std::map<Three, Translation_> Translations_;
     std::mutex mutex_;
     Translations_ translations_;
+    LRU_ lru_;
 
     Translations_::iterator Find(const Three &target) {
         std::unique_lock<std::mutex> lock(mutex_);
-        return translations_.find(target);
+        auto translation_iter(translations_.find(target));
+        if (translation_iter != translations_.end()) {
+            lru_.erase(translation_iter->second.lru_iter_);
+            lru_.push_back(translation_iter->first);
+            translation_iter->second.lru_iter_ = std::prev(lru_.end());
+        }
+        return translation_iter;
     }
 
   protected:
@@ -85,7 +95,18 @@ class Egress :
 
     const Socket &Translate(BufferDrain *drain, const Three &three) {
         std::unique_lock<std::mutex> lock(mutex_);
-        auto translation(translations_.emplace(Three(three.Protocol(), local_, ephemeral_++), Translation_{three.Two(), drain}));
+        auto ephemeral(ephemeral_base_ + translations_.size());
+        if (ephemeral >= 65535) {
+            auto old_three(*lru_.begin());
+            auto old_translation_iter(translations_.find(old_three));
+            orc_insist(old_translation_iter != translations_.end());
+            ephemeral = old_translation_iter->first.Port();
+            translations_.erase(old_translation_iter);
+        }
+        auto new_three(Three(three.Protocol(), local_, ephemeral));
+        lru_.push_back(new_three);
+        auto lru_iter(std::prev(lru_.end()));
+        auto translation(translations_.emplace(new_three, Translation_{three.Two(), drain, lru_iter}));
         orc_insist(translation.second);
         return translation.first->first;
     }
