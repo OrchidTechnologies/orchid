@@ -41,7 +41,7 @@ void Egress::Land(const Buffer &data) {
             const auto &replace(translation->second.socket_);
             ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
             Forge(tcp, &openvpn::TCPHeader::dest, replace.Port());
-            return translation->second.drain_->Land(beam);
+            return translation->second.translator_->Land(beam);
         } break;
 
         case openvpn::IPCommon::UDP: {
@@ -53,7 +53,7 @@ void Egress::Land(const Buffer &data) {
             const auto &replace(translation->second.socket_);
             ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
             Forge(udp, &openvpn::UDPHeader::dest, replace.Port());
-            return translation->second.drain_->Land(beam);
+            return translation->second.translator_->Land(beam);
         } break;
 
         case openvpn::IPCommon::ICMPv4: {
@@ -66,7 +66,7 @@ void Egress::Land(const Buffer &data) {
             const auto &replace(translation->second.socket_);
             ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
             Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
-            return translation->second.drain_->Land(beam);
+            return translation->second.translator_->Land(beam);
         } break;
     }
 }
@@ -116,5 +116,12 @@ task<void> Translator::Send(const Buffer &data) {
         } break;
     }
 }
+
+Translator::Translations_::iterator Translator::Translate(const Three &source) {
+    auto socket(egress_->Translate(this, source));
+    auto translation(translations_.emplace(source, socket));
+    return translation.first;
+}
+
 
 }
