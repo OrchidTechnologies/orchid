@@ -213,7 +213,7 @@ contract OrchidLottery {
         {
             mapping(bytes32 => Track) storage tracks = tracks_[target];
 
-            Track storage track = tracks[ticket];
+            Track storage track = tracks[keccak256(abi.encodePacked(signer, ticket))];
             uint256 until = start + range;
             require(until > block.timestamp);
             require(track.until_ == 0);
