@@ -45,7 +45,7 @@
 	url = https://github.com/libevent/libevent.git
 [submodule "lwip"]
 	path = p2p/lwip
-	url = https://git.savannah.nongnu.org/git/lwip.git
+	url = git://git.savannah.nongnu.org/lwip.git
 [submodule "BeastHttp"]
 	path = p2p/BeastHttp
 	url = https://github.com/0xdead4ead/BeastHttp.git
@@ -108,7 +108,7 @@
 	url = https://github.com/GNOME/glib.git
 [submodule "libiconv"]
 	path = min-wireshark/libiconv
-	url = https://git.savannah.gnu.org/git/libiconv.git
+	url = git://git.savannah.gnu.org/libiconv.git
 [submodule "gnulib"]
 	path = min-wireshark/gnulib
 	url = git://git.savannah.gnu.org/gnulib.git
