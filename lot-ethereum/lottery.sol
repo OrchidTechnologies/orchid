@@ -196,7 +196,7 @@ contract OrchidLottery {
         require(keccak256(abi.encodePacked(seed)) == hash);
         require(uint256(keccak256(abi.encodePacked(seed, nonce))) >> 128 <= ratio);
 
-        bytes32 ticket = keccak256(abi.encode(hash, nonce, start, range, amount, ratio, funder, target));
+        bytes32 ticket = keccak256(abi.encode(hash, nonce, start, range, amount, ratio, funder, target, receipt));
 
         {
             mapping(bytes32 => Track) storage tracks = tracks_[target];
