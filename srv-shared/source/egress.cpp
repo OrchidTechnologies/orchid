@@ -71,6 +71,48 @@ void Egress::Land(const Buffer &data) {
     }
 }
 
+void Egress::Stop(const std::string &error)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    for (auto translation : translations_)
+        translation.second.translator_->Stop(error);
+}
+
+Egress::Translations_::iterator Egress::Find(const Three &target)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto translation_iter(translations_.find(target));
+    if (translation_iter != translations_.end()) {
+        lru_.erase(translation_iter->second.lru_iter_);
+        lru_.push_back(translation_iter->first);
+        translation_iter->second.lru_iter_ = std::prev(lru_.end());
+    }
+    return translation_iter;
+}
+
+const Socket &Egress::Translate(Translator *translator, const Three &three)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto ephemeral(ephemeral_base_ + translations_.size());
+    if (ephemeral >= 65535) {
+        auto old_three(*lru_.begin());
+        auto old_translation_iter(translations_.find(old_three));
+        orc_insist(old_translation_iter != translations_.end());
+        orc_insist(old_three == old_translation_iter->first);
+        ephemeral = old_three.Port();
+        auto old_translation(old_translation_iter->second);
+        old_translation.translator_->Remove(Three(old_three.Protocol(), old_translation.socket_));
+        translations_.erase(old_translation_iter);
+        lru_.pop_front();
+    }
+    auto new_three(Three(three.Protocol(), local_, ephemeral));
+    lru_.push_back(new_three);
+    auto lru_iter(std::prev(lru_.end()));
+    auto translation(translations_.emplace(new_three, Translation_{three.Two(), translator, lru_iter}));
+    orc_insist(translation.second);
+    return translation.first->first;
+}
+
 task<void> Translator::Send(const Buffer &data) {
     Beam beam(data);
     auto span(beam.span());
@@ -115,12 +157,6 @@ task<void> Translator::Send(const Buffer &data) {
             co_return co_await egress_->Send(beam);
         } break;
     }
-}
-
-Translator::Translations_::iterator Translator::Translate(const Three &source) {
-    auto socket(egress_->Translate(this, source));
-    auto translation(translations_.emplace(source, socket));
-    return translation.first;
 }
 
 
