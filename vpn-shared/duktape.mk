@@ -14,7 +14,7 @@ pwd/duktape := $(pwd)/duktape
 prep := prep/nondebug
 
 $(pwd/duktape)/%/duktape.c $(pwd/duktape)/%/duktape.h $(pwd/duktape)/%/duk_config.h: $(pwd/duktape)/Makefile
-	cd $(pwd/duktape) && make $*
+	cd $(pwd/duktape) && rm -rf $* && make $*
 
 source += $(pwd/duktape)/$(prep)/duktape.c
 header += $(pwd/duktape)/$(prep)/duktape.h
