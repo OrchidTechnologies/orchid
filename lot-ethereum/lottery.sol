@@ -192,11 +192,23 @@ contract OrchidLottery {
         }
     }
 
-    function grab(bytes32 seed, bytes32 hash, bytes32 nonce, uint256 start, uint128 range, uint128 amount, uint128 ratio, address funder, address payable target, bytes memory receipt, uint8 v, bytes32 r, bytes32 s, bytes32[] memory old) public {
+    // the arguments to this function are carefully ordered for stack depth optimization
+    // this function was marked public, instead of external, for lower stack depth usage
+    function grab(
+        bytes32 seed, bytes32 hash,
+        uint8 v, bytes32 r, bytes32 s,
+        bytes32 nonce, address funder,
+        uint128 amount, uint128 ratio,
+        uint256 start, uint128 range,
+        address payable target, bytes memory receipt,
+        bytes32[] memory old
+    ) public {
         require(keccak256(abi.encodePacked(seed)) == hash);
         require(uint256(keccak256(abi.encodePacked(seed, nonce))) >> 128 <= ratio);
 
-        bytes32 ticket = keccak256(abi.encode(hash, nonce, start, range, amount, ratio, funder, target, receipt));
+        bytes32 ticket = keccak256(abi.encode(hash, nonce, funder, amount, ratio, start, range, target, receipt));
+        address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
+        require(signer != address(0));
 
         {
             mapping(bytes32 => Track) storage tracks = tracks_[target];
@@ -217,8 +229,6 @@ contract OrchidLottery {
                 amount = limit;
         }
 
-        address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
-        require(signer != address(0));
         take(funder, signer, amount, target, receipt);
     }
 
