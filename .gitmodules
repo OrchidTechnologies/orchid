@@ -111,7 +111,7 @@
 	url = https://git.savannah.gnu.org/git/libiconv.git
 [submodule "gnulib"]
 	path = min-wireshark/gnulib
-	url = git://git.savannah.gnu.org/gnulib.git
+	url = https://git.savannah.gnu.org/git/gnulib.git
 [submodule "gpgme"]
 	path = p2p/gpgme
 	url = https://dev.gnupg.org/source/gpgme.git
