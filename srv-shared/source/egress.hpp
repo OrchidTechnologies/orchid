@@ -91,6 +91,7 @@ class Translator:
 {
   private:
     S<Egress> egress_;
+    std::mutex mutex_;
 
     typedef std::map<Three, Socket> Translations_;
     Translations_ translations_;
@@ -113,6 +114,7 @@ class Translator:
     using Link::Land;
 
     void Remove(const Three &source) {
+        std::unique_lock<std::mutex> lock(mutex_);
         orc_insist(translations_.find(source) != translations_.end());
         translations_.erase(source);
     }

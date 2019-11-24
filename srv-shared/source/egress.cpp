@@ -71,15 +71,13 @@ void Egress::Land(const Buffer &data) {
     }
 }
 
-void Egress::Stop(const std::string &error)
-{
+void Egress::Stop(const std::string &error) {
     std::unique_lock<std::mutex> lock(mutex_);
     for (auto translation : translations_)
         translation.second.translator_->Stop(error);
 }
 
-Egress::Translations_::iterator Egress::Find(const Three &target)
-{
+Egress::Translations_::iterator Egress::Find(const Three &target) {
     std::unique_lock<std::mutex> lock(mutex_);
     auto translation_iter(translations_.find(target));
     if (translation_iter != translations_.end()) {
@@ -90,15 +88,12 @@ Egress::Translations_::iterator Egress::Find(const Three &target)
     return translation_iter;
 }
 
-const Socket &Egress::Translate(Translator *translator, const Three &three)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
+const Socket &Egress::Translate(Translator *translator, const Three &three) {
     auto ephemeral(ephemeral_base_ + translations_.size());
     if (ephemeral >= 65535) {
         auto old_three(*lru_.begin());
         auto old_translation_iter(translations_.find(old_three));
         orc_insist(old_translation_iter != translations_.end());
-        orc_insist(old_three == old_translation_iter->first);
         ephemeral = old_three.Port();
         auto old_translation(old_translation_iter->second);
         old_translation.translator_->Remove(Three(old_three.Protocol(), old_translation.socket_));
@@ -114,6 +109,7 @@ const Socket &Egress::Translate(Translator *translator, const Three &three)
 }
 
 task<void> Translator::Send(const Buffer &data) {
+    std::unique_lock<std::mutex> lock(mutex_);
     Beam beam(data);
     auto span(beam.span());
     auto &ip4(span.cast<openvpn::IPv4Header>());
