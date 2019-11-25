@@ -34,6 +34,10 @@ bool Datagram(const Buffer &data, const std::function<bool (const Socket &, cons
 
     openvpn::IPv4Header ip4;
     window.Take(&ip4);
+
+    if (openvpn::IPCommon::version(ip4.version_len) != uint8_t(openvpn::IPCommon::IPv4))
+        return false;
+
     window.Skip(openvpn::IPv4Header::length(ip4.version_len) - sizeof(ip4));
 
     if (ip4.protocol != uint8_t(openvpn::IPCommon::UDP))
