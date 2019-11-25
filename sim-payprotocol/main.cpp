@@ -356,7 +356,7 @@ struct Network : public Tickable
 		odevs_[addr.addr_]  = Device{obw, 0.0};
 	}
 
-	virtual void step(double ctime)
+	virtual double step(double ctime)
 	{
 		dlog(3, "Network::step(%f)\n", ctime);
     	Tickable::step(ctime);
@@ -371,6 +371,7 @@ struct Network : public Tickable
 			dev.bqueued = max(dev.bqueued - elap*dev.throughput, 0.0);
 		}
 		ltime_ = ctime;
+		return elap;
 	}
 };
 
@@ -531,12 +532,12 @@ struct User : public Tickable
 
 	void reroll_check(double ctime, double elap);
 
-	void step(double ctime)
+	double step(double ctime)
 	{
-    	Tickable::step(ctime);
+    		Tickable::step(ctime);
 
 		double elap = ctime - ltime_;
-    	reroll_check(ctime, elap);
+    		reroll_check(ctime, elap);
 
 		// send a packet to our target of size (elapsed_time * bandwidth_demand)
 		double bwdm = bwdemandf_->exec(ctime);
@@ -555,6 +556,7 @@ struct User : public Tickable
 
 
 		ltime_ = ctime;
+		return elap;
 	}
 
 

@@ -267,7 +267,7 @@ double CurrentTime();
 struct ITickable
 {
 	virtual ~ITickable() {}
-    virtual void step(double ctime) = 0;
+    virtual double step(double ctime) = 0;
     virtual double next_step_time() = 0;
 };
 
@@ -280,9 +280,13 @@ struct Tickable : public ITickable
 
 	double period_ = 1.0;
 	double next_   = 0.0;
+        double last_   = 0.0;
 
-    virtual void step(double ctime) {
+    virtual double step(double ctime) {
+        double last = last_;
+        last_ = ctime;
     	next_ = ctime + period_;
+        return ctime - last;
     }
 
     virtual double next_step_time() {
@@ -310,12 +314,52 @@ struct IBudget
 	virtual ~IBudget() {}
 	virtual double get_afford(double ctime) = 0;
 	virtual double get_max_faceval() = 0;
-    virtual void on_connect() = 0;
-    virtual void on_disconnect() = 0;
-    virtual void on_payment() = 0;
+        virtual void on_connect() = 0;
+        virtual void on_disconnect() = 0;
+        virtual void on_payment(double ctime, double amt) {}
 	virtual void set_active(double aratio) = 0;
 };
 
+
+struct Budget_SurpTrack2 : public IBudget, public Tickable
+{
+        // UI/config inputs
+        double budget_rate_ = 0;
+        double prepay_credit_ = 0;
+
+        // internal
+        double surplus_ = 0;
+        double nxt_surplus_ = 0;
+        double last_aff_date_ = 0;
+        double last_pay_date_ = 0;
+        double prepay_amt_ = 0;
+
+	virtual double get_afford(double ctime)
+	{
+	    double elap = (ctime - last_aff_date_);
+            last_aff_date_ = ctime;
+            double surplus_rate = surplus_ / (3*Days);
+            nxt_surplus_ = surplus_ - surplus_rate * elap;
+            double spendrate = budget_rate_ + surplus_rate;
+	    double allowed   = spendrate * elap + prepay_credit_;
+            return allowed;
+        }
+
+        virtual void on_payment(double ctime, double amt) {
+	    double elap = (ctime - last_pay_date_);
+            last_pay_date_ = ctime;
+            double surplus_rate = surplus_ / (3*Days);
+            surplus_ = nxt_surplus_;
+            double expected_amt = budget_rate_ * elap;
+            surplus_ += (expected_amt - amt);
+        }
+
+        void on_connect(double ctime)    {
+            dlog(2,"Budget_ST2::on_connect() ctime(%f) \n", ctime);
+    	    last_aff_date_ = ctime; prepay_amt_ = prepay_credit_;
+        }
+
+};
 
 struct Budget_SurplusTracking : public IBudget, public Tickable
 {
@@ -338,19 +382,19 @@ struct Budget_SurplusTracking : public IBudget, public Tickable
 
 	virtual double get_afford(double ctime)
 	{
-		double time_owed = (ctime - last_pay_date_);
-		double allowed   = spendrate_ * (time_owed + prepay_credit_);
+	    double time_owed = (ctime - last_pay_date_);
+	    double allowed   = spendrate_ * (time_owed + prepay_credit_);
         dlog(2,"Budget_ST::get_afford(%f) allowed(%f) = spendrate_(%f) * (%f - %f + %f) \n", ctime,allowed,spendrate_,ctime,last_pay_date_,prepay_credit_);
-        return allowed;
-    }
+            return allowed;
+       }
 
 
 	virtual double get_max_faceval() {
-        return max_faceval_;
-    }
+            return max_faceval_;
+        }
 
-    void step(double ctime) {
-    	Tickable::step(ctime);
+    virtual double step(double ctime) {
+    	double elap = Tickable::step(ctime);
 
     	double core_spendrate = start_balance_ / (budget_edate_ - start_time_);
 
@@ -365,9 +409,10 @@ struct Budget_SurplusTracking : public IBudget, public Tickable
 
         dlog(2,"Budget_ST core = %f / (%f - %f)   surplus = (curbal(%f) - expbal(%f)) / (%f)   expbal = (%f - %f * (%f - %f)) \n", start_balance_,budget_edate_,start_time_,  curbal,expbal,3.0*Days,  start_balance_,core_spendrate,ctime,start_time_);
 
+	return elap;
     }
 
-	Budget_SurplusTracking(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate)
+    Budget_SurplusTracking(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate)
 	{
     	period_ = timer_sample_rate_;
         register_timer_func(this); // call on_timer() every {timer_sample_rate_} seconds
@@ -386,8 +431,8 @@ struct Budget_SurplusTracking : public IBudget, public Tickable
     }
 
     void on_disconnect() { }
-    void on_payment()    { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
-	void set_active(double aratio) { }
+    virtual void on_payment(double ctime, double amt) { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
+    void set_active(double aratio) { }
 
 };
 
@@ -425,8 +470,8 @@ struct Budget_PredExpW : public IBudget, public Tickable
         return max_faceval_;
     }
 
-    void step(double ctime) {
-    	Tickable::step(ctime);
+    virtual double step(double ctime) {
+    	double elap = Tickable::step(ctime);
     
         double ltime    = ltime_; // persist_load("ltime", CurrentTime()); // load variable from persistent disk/DB/config, default to CurrentTime()
         double wactive  = wactive_; // persist_load("wactive", 1.0);
@@ -450,6 +495,7 @@ struct Budget_PredExpW : public IBudget, public Tickable
 
         ltime_ 			= ltime; 	// persist_store("ltime",   ltime);
         wactive_ 		= wactive; // persist_store("wactive", wactive);
+	return elap;
     }
 
     Budget_PredExpW(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate), ltime_(CurrentTime()) {
@@ -572,10 +618,11 @@ struct Client : public Tickable, public INet
 	}
 
 
-    void step(double ctime) {
-	    dlog(2,"Client::step(%f)\n", ctime);
-    	Tickable::step(ctime);
-		if (active_ > 0.0) send_payments(ctime);
+    virtual double step(double ctime) {
+	dlog(2,"Client::step(%f)\n", ctime);
+    	double elap = Tickable::step(ctime);
+	if (active_ > 0.0) send_payments(ctime);
+	return elap;
     }
 
     void send_packet(netaddr to, netaddr from, Packet& p) {
@@ -643,7 +690,7 @@ payment Client::create_payment(double ctime, IBudget* budget, uint256 hash_secre
 		double ratio 	= win_prob, start = CurrentTime(), range = 1.0*Hours, amount = face_val;
 		bytes32 ticket 	= keccak256(encodePacked(hash_secret, target, nonce, ratio, start, range, amount));
 		auto sig 		= sign(ticket, account_);
-		budget->on_payment();
+		budget->on_payment(ctime, win_prob * face_val);
 		// any book-keeping here
 
 		return payment{hash_secret, target,  nonce, account_, ratio, start, range, amount, sig};
