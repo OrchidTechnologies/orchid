@@ -36,7 +36,7 @@
 
 namespace orc {
 
-int Protect(int socket, const sockaddr *address, socklen_t length) {
+int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const sockaddr *address, socklen_t length) {
     std::unique_ptr<ifaddrs, decltype(freeifaddrs) *> interfaces([]() {
         ifaddrs *interfaces;
         orc_assert(getifaddrs(&interfaces) != -1);
@@ -52,7 +52,7 @@ int Protect(int socket, const sockaddr *address, socklen_t length) {
         }
 #endif
 
-        if (address != nullptr && address->sa_family == AF_INET) {
+        if (address->sa_family == AF_INET) {
             auto address4(reinterpret_cast<const sockaddr_in *>(address));
             for (auto i(interfaces.get()); i != NULL; i = i->ifa_next)
                 if (i->ifa_addr->sa_family == AF_INET)
@@ -73,9 +73,7 @@ int Protect(int socket, const sockaddr *address, socklen_t length) {
     }
 
   done:
-    if (address == nullptr)
-        return 0;
-    return Bind(socket, address, length);
+    return attach(socket, address, length);
 }
 
 }

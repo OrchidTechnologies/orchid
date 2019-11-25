@@ -41,18 +41,13 @@ extern "C"
 #endif
 decltype(system_connect) hooked_connect __asm__(ORC_SYMBOL "connect");
 
-namespace orc {
-int Bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
-    return hooked_bind(socket, address, length);
-} }
-
 extern "C" int orchid_bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
     if (orc::Verbose) {
         orc::Log() << "bind(" << socket << ", " << length << ")" << std::endl;
         orc::Log() << "Protect(" << socket << ")" << std::endl;
     }
 
-    return orc::Protect(socket, address, length);
+    return orc::Protect(socket, &hooked_bind, address, length);
 }
 
 extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, socklen_t length) {
@@ -88,8 +83,7 @@ extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, soc
     } }()) {
         if (orc::Verbose)
             orc::Log() << "Protect(" << socket << ")" << std::endl;
-        if (auto error = orc::Protect(socket, nullptr, 0))
-            return error;
+        return orc::Protect(socket, &hooked_connect, address, length);
     }
 
 #ifndef _WIN32

@@ -33,8 +33,7 @@ typedef int SOCKET;
 
 namespace orc {
 
-int Bind(SOCKET socket, const sockaddr *address, socklen_t length);
-int Protect(SOCKET socket, const sockaddr *address, socklen_t length);
+int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t), const sockaddr *address, socklen_t length);
 
 }
 

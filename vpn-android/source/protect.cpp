@@ -31,17 +31,15 @@ namespace orc {
 
 bool vpn_protect(int s);
 
-int Protect(int socket, const sockaddr *address, socklen_t length) {
+int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const sockaddr *address, socklen_t length) {
     bool is_local = false;
-    if (address != nullptr && address->sa_family == AF_INET) {
+    if (address->sa_family == AF_INET) {
         const struct sockaddr_in *s = reinterpret_cast<const struct sockaddr_in *>(address);
         is_local = (s->sin_addr.s_addr == Host_);
     }
     if (!is_local && !vpn_protect(socket))
         return -1;
-    if (address == nullptr)
-        return 0;
-    return Bind(socket, address, length);
+    return attach(socket, address, length);
 }
 
 }
