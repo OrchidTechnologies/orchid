@@ -907,11 +907,6 @@ class Window :
                 orc_assert(data[i] == 0);
         }, size);
     }
-
-    template <size_t Size_>
-    void Take(Pad<Size_> &value) {
-        Zero(Size_);
-    }
 };
 
 class Rest final :
