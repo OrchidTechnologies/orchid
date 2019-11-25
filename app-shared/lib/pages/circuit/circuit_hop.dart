@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
 
 enum Protocol { Orchid, OpenVPN }
 
@@ -124,10 +125,33 @@ class EditableHop extends ValueNotifier<UniqueHop> {
   EditableHop.empty() : super(null);
 }
 
-abstract class HopEditor<T extends CircuitHop> {
+class HopEditor<T extends CircuitHop> extends StatefulWidget {
   final EditableHop editableHop;
 
-  HopEditor(this.editableHop);
+  // If showSave is true the editor offers a "save" button that pops the
+  // view and returns the edited value on the context.  If the user navigates
+  // back without saving the context result will be null.
+  final bool showSave;
+
+  HopEditor({@required this.editableHop, @required this.showSave});
+
+  Widget buildSaveButton(BuildContext context, {bool isValid = true}) {
+    return SaveActionButton(
+        isValid: isValid,
+        onPressed: () {
+          Navigator.pop(context, this.editableHop.value.hop);
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    throw Exception("implement in subclass");
+  }
+
+  @override
+  State<StatefulWidget> createState() {
+    throw Exception("implement in subclass");
+  }
 }
 
 // Debating whether making these fully typed is helpful.

@@ -7,11 +7,9 @@ import '../app_text.dart';
 import 'circuit_hop.dart';
 import 'key_selection.dart';
 
-class OrchidHopPage extends StatefulWidget implements HopEditor<OrchidHop> {
-  @override
-  final EditableHop editableHop;
-
-  OrchidHopPage({@required this.editableHop});
+class OrchidHopPage extends HopEditor<OrchidHop> {
+  OrchidHopPage({@required editableHop, showSave = false})
+      : super(editableHop: editableHop, showSave: showSave);
 
   @override
   _OrchidHopPageState createState() => _OrchidHopPageState();
@@ -44,6 +42,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   Widget build(BuildContext context) {
     return TitledPage(
       title: "Orchid Hop",
+      actions: widget.showSave ? [widget.buildSaveButton(context)] : [],
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: SafeArea(
@@ -85,7 +84,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   void _updateHop() {
     widget.editableHop.value = UniqueHop(
-        key: widget.editableHop.value?.key ?? DateTime.now().millisecondsSinceEpoch,
+        key: widget.editableHop.value?.key ??
+            DateTime.now().millisecondsSinceEpoch,
         hop: OrchidHop(funder: _funderField.text, keyRef: _keyRef));
   }
 
@@ -94,5 +94,4 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     super.dispose();
     _funderField.removeListener(_updateHop);
   }
-
 }

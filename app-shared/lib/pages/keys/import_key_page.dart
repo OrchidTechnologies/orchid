@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
@@ -30,7 +31,8 @@ class _ImportKeyPageState extends State<ImportKeyPage> {
       }
       var bigInt = BigInt.parse(text, radix: 16);
       //  TODO: check this validation
-      if (bigInt > BigInt.from(0) && bigInt < ((BigInt.from(1)<<256)-BigInt.from(1)) ) {
+      if (bigInt > BigInt.from(0) &&
+          bigInt < ((BigInt.from(1) << 256) - BigInt.from(1))) {
         _secret = bigInt;
       } else {
         _secret = null;
@@ -89,19 +91,10 @@ class _ImportKeyPageState extends State<ImportKeyPage> {
   }
 
   Widget _buildSaveButton() {
-    bool isValid = _secret != null;
-    return FlatButton(
-        child: Text(
-          "Save",
-          style: AppText.actionButtonStyle.copyWith(
-              // TODO: We need to get the TitledPage to publish colors on the context (theme)
-              color: isValid ? Colors.white : Colors.white.withOpacity(0.4)),
-        ),
-        onPressed: isValid
-            ? () {
-                Navigator.pop(context, _secret);
-              }
-            : null);
+    return SaveActionButton(
+      isValid: _secret != null,
+      onPressed: () { Navigator.pop(context, _secret); }
+    );
   }
 
   @override
@@ -110,3 +103,5 @@ class _ImportKeyPageState extends State<ImportKeyPage> {
     _secretController.removeListener(_onSecretChange);
   }
 }
+
+

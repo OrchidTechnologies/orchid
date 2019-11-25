@@ -125,3 +125,26 @@ class LinkStyleTextButton extends StatelessWidget {
     );
   }
 }
+
+class SaveActionButton extends StatelessWidget {
+  const SaveActionButton({
+    Key key,
+    @required this.isValid,
+    @required this.onPressed,
+  }) : super(key: key);
+
+  final bool isValid;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+        child: Text(
+          "Save",
+          style: AppText.actionButtonStyle.copyWith(
+            // TODO: We need to get the TitledPage to publish colors on the context (theme)
+              color: isValid ? Colors.white : Colors.white.withOpacity(0.4)),
+        ),
+        onPressed: isValid ? onPressed : null);
+  }
+}

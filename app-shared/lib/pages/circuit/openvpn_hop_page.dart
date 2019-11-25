@@ -7,11 +7,9 @@ import '../app_colors.dart';
 import '../app_text.dart';
 import 'circuit_hop.dart';
 
-class OpenVPNHopPage extends StatefulWidget implements HopEditor<OpenVPNHop> {
-  @override
-  final EditableHop editableHop;
-
-  OpenVPNHopPage({@required this.editableHop});
+class OpenVPNHopPage extends HopEditor<OpenVPNHop> {
+  OpenVPNHopPage({@required editableHop, showSave = false})
+      : super(editableHop: editableHop, showSave: showSave);
 
   @override
   _OpenVPNHopPageState createState() => _OpenVPNHopPageState();
@@ -48,6 +46,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     return TapClearsFocus(
       child: TitledPage(
         title: "Open VPN Hop",
+        actions: widget.showSave ? [widget.buildSaveButton(context)] : [],
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: SafeArea(
