@@ -828,13 +828,12 @@ class Window :
         orc_assert(empty());
     }
 
-    void Take(uint8_t *data, size_t size) {
+    template <typename Code_>
+    void Take(Code_ &&code, size_t need) {
         auto &here(range_);
         auto &step(offset_);
 
-        auto rest(ranges_.get() + count_ - here);
-
-        for (auto need(size); need != 0; step = 0, ++here, --rest) {
+        for (auto rest(ranges_.get() + count_ - here); need != 0; step = 0, ++here, --rest) {
             orc_assert(rest != 0);
 
             auto size(here->size() - step);
@@ -842,15 +841,21 @@ class Window :
                 continue;
 
             if (need < size) {
-                memcpy(data, here->data() + step, need);
+                code(here->data() + step, need);
                 step += need;
                 break;
             }
 
-            memcpy(data, here->data() + step, size);
-            data += size;
+            code(here->data() + step, size);
             need -= size;
         }
+    }
+
+    void Take(uint8_t *here, size_t size) {
+        Take([&](const uint8_t *data, size_t size) {
+            memcpy(here, data, size);
+            here += size;
+        }, size);
     }
 
     void Take(std::string &data) {
@@ -885,16 +890,16 @@ class Window :
         Take(reinterpret_cast<uint8_t *>(value), sizeof(Type_));
     }
 
-    // XXX: this is not efficient
     void Skip(size_t size) {
-        (void) Take(size);
+        Take([&](const uint8_t *data, size_t size) {
+        }, size);
     }
 
-    // XXX: this is not efficient
     void Zero(size_t size) {
-        auto data(Take(size));
-        for (size_t i(0); i != size; ++i)
-            orc_assert(data[i] == 0);
+        Take([&](const uint8_t *data, size_t size) {
+            for (decltype(size) i(0); i != size; ++i)
+                orc_assert(data[i] == 0);
+        }, size);
     }
 
     template <size_t Size_>
