@@ -232,21 +232,24 @@ int Main(int argc, const char *const argv[]) {
     std::cerr << "tls = " << tls << std::endl;
 
 
-    Address provider(args["eth-provider"].as<std::string>());
     Address location(args["eth-location"].as<std::string>());
     std::string password(args["eth-password"].as<std::string>());
 
     auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
     Endpoint endpoint(GetLocal(), rpc);
 
-    Wait([&]() -> task<void> {
-        auto latest(co_await endpoint.Latest());
-        static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
-        if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, provider)) != std::tie(url, tls, "")) {
-            static Selector<void, std::string, std::string, std::string> move("move", 3000000);
-            co_await move.Send(endpoint, provider, password, location, url, tls, "");
-        }
-    }());
+    if (args.count("eth-provider")) {
+        Address provider(args["eth-provider"].as<std::string>());
+
+        Wait([&]() -> task<void> {
+            auto latest(co_await endpoint.Latest());
+            static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
+            if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, provider)) != std::tie(url, tls, "")) {
+                static Selector<void, std::string, std::string, std::string> move("move", 3000000);
+                co_await move.Send(endpoint, provider, password, location, url, tls, "");
+            }
+        }());
+    }
 
 
     auto node(Make<Node>(std::move(ice), rpc, Address(args["eth-lottery"].as<std::string>())));
