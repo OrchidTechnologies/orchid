@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/pages/common/tap_copy_text.dart';
 import 'package:orchid/util/units.dart';
 import '../app_routes.dart';
 import '../app_text.dart';
@@ -117,7 +118,8 @@ class _SideDrawerState extends State<SideDrawer> {
             children: <Widget>[
               divider(),
               SizedBox(height: 16),
-              Text("Version: " + (_version ?? ""),
+              TapToCopyText("Version: " + (_version ?? "<no version>"),
+                  key: ValueKey(_version),
                   style:
                       AppText.noteStyle.copyWith(color: AppColors.neutral_4)),
             ],

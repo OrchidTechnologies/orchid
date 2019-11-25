@@ -225,6 +225,7 @@ class ConnectButtonState extends State<ConnectButton>
 
   @override
   void dispose() {
+    _teeterAnimationController.dispose();
     _pulseAnimationController.dispose();
     super.dispose();
   }

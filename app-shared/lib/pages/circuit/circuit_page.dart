@@ -10,6 +10,7 @@ import 'package:orchid/util/collections.dart';
 
 import '../app_gradients.dart';
 import '../app_text.dart';
+import 'add_hop_page.dart';
 import 'circuit_hop.dart';
 
 class CircuitPage extends StatefulWidget {
@@ -104,62 +105,17 @@ class CircuitPageState extends State<CircuitPage> {
   }
 
   void _addHop() async {
-    _showAddHopChoices(
-      context: context,
-      child: CupertinoActionSheet(
-          title: Text('Hop Type', style: TextStyle(fontSize: 21)),
-          actions: <Widget>[
-            CupertinoActionSheetAction(
-              child: const Text("Orchid"),
-              onPressed: () {
-                Navigator.pop(context, Protocol.Orchid);
-              },
-            ),
-            CupertinoActionSheetAction(
-              child: const Text("Open VPN"),
-              onPressed: () {
-                Navigator.pop(context, Protocol.OpenVPN);
-              },
-            ),
-          ],
-          cancelButton: CupertinoActionSheetAction(
-            child: const Text('Cancel'),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          )),
-    );
-  }
-
-  void _showAddHopChoices({BuildContext context, Widget child}) {
-    showCupertinoModalPopup<Protocol>(
-      context: context,
-      builder: (BuildContext context) => child,
-    ).then<void>((value) {
-      if (value != null) {
-        _addHopType(value);
-      }
-    });
-  }
-
-  void _addHopType(Protocol hopType) async {
-    EditableHop editableHop = EditableHop.empty();
-    HopEditor editor;
-    switch (hopType) {
-      case Protocol.Orchid:
-        editor = OrchidHopPage(editableHop: editableHop);
-        break;
-      case Protocol.OpenVPN:
-        editor = OpenVPNHopPage(editableHop: editableHop);
-        break;
+    var editor = AddHopPage();
+    var route = MaterialPageRoute<CircuitHop>(
+        builder: (context) => editor, fullscreenDialog: true);
+    var hop = await Navigator.push(context, route);
+    if (hop == null) {
+      return; // user cancelled
     }
-
-    await _showEditor(editor);
-    if (_hops == null) {
-      _hops = [];
-    }
+    var uniqueHop =
+        UniqueHop(hop: hop, key: DateTime.now().millisecondsSinceEpoch);
     setState(() {
-      _hops.add(editableHop.value);
+      _hops.add(uniqueHop);
     });
     _saveCircuit();
   }
@@ -185,9 +141,9 @@ class CircuitPageState extends State<CircuitPage> {
     _saveCircuit();
   }
 
-  Future<UniqueHop> _showEditor(editor) async {
-    var route = MaterialPageRoute<UniqueHop>(builder: (context) => editor);
-    return await Navigator.push(context, route);
+  Future<void> _showEditor(editor) async {
+    var route = MaterialPageRoute(builder: (context) => editor);
+    await Navigator.push(context, route);
   }
 
   // Callback for swipe to delete
