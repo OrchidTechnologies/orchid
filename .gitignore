@@ -2,6 +2,7 @@
 /orchid.cfg
 /*.keystore
 /*.mobileprovision
+/*.ovpn
 /*.p12
 /*.pem
 bundle.js
