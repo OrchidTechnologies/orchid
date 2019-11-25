@@ -50,6 +50,7 @@ class Buffer {
     virtual bool each(const std::function<bool (const uint8_t *, size_t)> &code) const = 0;
 
     virtual size_t size() const;
+    virtual bool have(size_t value) const;
 
     virtual bool empty() const {
         return size() == 0;
@@ -94,6 +95,10 @@ class Region :
   public:
     virtual const uint8_t *data() const = 0;
     size_t size() const override = 0;
+
+    bool have(size_t value) const override {
+        return value <= size();
+    }
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
         return code(data(), size());
@@ -879,6 +884,7 @@ class Window :
     }
 
     Beam Take(size_t size) {
+        orc_assert(have(size));
         Beam beam(size);
         Take(beam.data(), beam.size());
         return beam;

@@ -36,6 +36,15 @@ size_t Buffer::size() const {
     return value;
 }
 
+bool Buffer::have(size_t value) const {
+    return !each([&](const uint8_t *data, size_t size) {
+        if (value <= size)
+            return false;
+        value -= size;
+        return true;
+    });
+}
+
 std::string Buffer::str() const {
     std::string value;
     value.resize(size());
