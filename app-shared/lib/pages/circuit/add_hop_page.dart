@@ -16,6 +16,7 @@ class _AddHopPageState extends State<AddHopPage> {
   Widget build(BuildContext context) {
     return TitledPage(
       title: "Add Circuit Hop",
+      cancellable: true,
       child: SafeArea(
         child: Column(
           children: <Widget>[

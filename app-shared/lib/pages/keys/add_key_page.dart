@@ -49,7 +49,7 @@ class _AddKeyPageState extends State<AddKeyPage> {
   Widget build(BuildContext context) {
     return TitledPage(
       title: "Add Key",
-      //cancellable: true,
+      cancellable: true,
       child: TapClearsFocus(
         child: Container(
           decoration: BoxDecoration(gradient: AppGradients.basicGradient),
