@@ -238,7 +238,7 @@ int Main(int argc, const char *const argv[]) {
     auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
     Endpoint endpoint(GetLocal(), rpc);
 
-    if (args.count("eth-provider")) {
+    if (args.count("eth-provider") != 0) {
         Address provider(args["eth-provider"].as<std::string>());
 
         Wait([&]() -> task<void> {
