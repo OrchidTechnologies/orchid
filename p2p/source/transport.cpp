@@ -59,7 +59,7 @@ class Transport :
     virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        static size_t payload(2048);
+        static size_t payload(65536);
         const auto size(data.size());
         orc_assert_(size <= payload, "orc_assert(Land: " << size << " {data.size()} <= " << payload << ") " << data);
         //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
@@ -390,7 +390,7 @@ _trace();
 
     task<void> Send(const orc::Buffer &data) override {
         static size_t headroom(512);
-        static size_t payload(2048);
+        static size_t payload(65536);
         static size_t tailroom(512);
         const auto size(data.size());
         orc_assert_(size <= payload, "orc_assert(Send: " << size << " {data.size()} <= " << payload << ") " << data);
