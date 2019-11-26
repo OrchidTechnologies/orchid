@@ -373,12 +373,29 @@ class Split :
     Socket local_;
     asio::ip::address_v4 remote_;
 
-    cppcoro::async_mutex meta_;
-    std::map<Four, Socket> ephemerals_;
-    uint16_t ephemeral_ = 0;
-    std::map<Socket, S<Flow>> flows_;
+    typedef std::list<Four> LRU_;
 
+    struct Ephemeral_ {
+        Socket socket_;
+        LRU_::iterator lru_iter_;
+    };
+
+    cppcoro::async_mutex meta_;
+    std::map<Four, Ephemeral_> ephemerals_;
+    std::map<Socket, S<Flow>> flows_;
     std::map<Socket, U<Punch>> udp_;
+    LRU_ lru_;
+
+    void Pull_(const Four &four) {
+        auto ephemeral(ephemerals_.find(four));
+        orc_insist(ephemeral != ephemerals_.end());
+        auto flow(flows_.find(ephemeral->second.socket_));
+        orc_insist(flow != flows_.end());
+        lru_.erase(ephemeral->second.lru_iter_);
+        ephemerals_.erase(ephemeral);
+        flows_.erase(flow);
+_trace();
+    }
 
   protected:
     void Land(asio::ip::tcp::socket connection, Socket socket) override {
@@ -413,15 +430,16 @@ class Split :
     void Land(const Buffer &data) override;
     task<bool> Send(const Beam &data) override;
 
+    void EphemeralUsed(const Four &four) {
+        auto emphemeral_iter(ephemerals_.find(four));
+        lru_.erase(emphemeral_iter->second.lru_iter_);
+        lru_.push_back(emphemeral_iter->first);
+        emphemeral_iter->second.lru_iter_ = std::prev(lru_.end());
+    }
+
     task<void> Pull(const Four &four) override {
         auto lock(co_await meta_.scoped_lock_async());
-        auto ephemeral(ephemerals_.find(four));
-        orc_insist(ephemeral != ephemerals_.end());
-        auto flow(flows_.find(ephemeral->second));
-        orc_insist(flow != flows_.end());
-        ephemerals_.erase(ephemeral);
-        flows_.erase(flow);
-_trace();
+        Pull_(four);
     }
 
     // https://www.snellman.net/blog/archive/2016-02-01-tcp-rst/
@@ -509,6 +527,7 @@ task<bool> Split::Send(const Beam &data) {
                     break;
                 orc_insist(flow->second != nullptr);
                 const auto &original(flow->second->four_);
+                EphemeralUsed(original);
                 Forge(span, tcp, original.Target(), original.Source());
                 capture_->Land(subset, true);
                 co_return false;
@@ -520,15 +539,24 @@ task<bool> Split::Send(const Beam &data) {
             if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) == 0) {
                 if (ephemeral == ephemerals_.end())
                     break;
-                Forge(span, tcp, ephemeral->second, local_);
+                EphemeralUsed(four);
+                Forge(span, tcp, ephemeral->second.socket_, local_);
                 capture_->Land(subset, false);
-            } else if (ephemerals_.find(four) == ephemerals_.end()) {
-                // XXX: this only supports 65k sockets
-                Socket socket(remote_, ++ephemeral_);
+            } else if (ephemeral == ephemerals_.end()) {
+                auto port(ephemerals_.size());
+                if (port >= 65535) {
+                    auto old_four(*lru_.begin());
+                    auto old_ephemeral(ephemerals_.find(old_four));
+                    port = old_ephemeral->second.socket_.Port();
+                    Pull_(old_four);
+                }
+                Socket socket(remote_, port);
                 auto &flow(flows_[socket]);
                 orc_insist(flow == nullptr);
                 flow = Make<Flow>(this, four);
-                ephemerals_.emplace(four, socket);
+                lru_.push_back(four);
+                auto lru_iter(std::prev(lru_.end()));
+                ephemerals_.emplace(four, Ephemeral_{socket, lru_iter});
                 Spawn([
                     beam = std::move(beam),
                     flow,
