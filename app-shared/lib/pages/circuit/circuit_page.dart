@@ -89,7 +89,7 @@ class CircuitPageState extends State<CircuitPage> {
             },
             child: ListTile(
               onTap: () {
-                _editHop(uniqueHop);
+                _viewHop(uniqueHop);
               },
               key: Key(uniqueHop.key.toString()),
               title: Text(
@@ -120,6 +120,21 @@ class CircuitPageState extends State<CircuitPage> {
     _saveCircuit();
   }
 
+  void _viewHop(UniqueHop uniqueHop) async {
+    EditableHop editableHop = EditableHop(uniqueHop);
+    var editor;
+    switch (uniqueHop.hop.protocol) {
+      case Protocol.Orchid:
+        editor = OrchidHopPage(editableHop: editableHop);
+        break;
+      case Protocol.OpenVPN:
+        editor = OpenVPNHopPage(editableHop: editableHop);
+        break;
+    }
+    _showEditor(editor);
+  }
+
+  /*
   void _editHop(UniqueHop uniqueHop) async {
     EditableHop editableHop = EditableHop(uniqueHop);
     var editor;
@@ -140,6 +155,7 @@ class CircuitPageState extends State<CircuitPage> {
     });
     _saveCircuit();
   }
+   */
 
   Future<void> _showEditor(editor) async {
     var route = MaterialPageRoute(builder: (context) => editor);

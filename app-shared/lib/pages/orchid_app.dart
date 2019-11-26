@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/connect/connect_page.dart';
-import 'package:orchid/pages/monitoring/monitoring_page.dart';
-import 'package:orchid/pages/keys/keys_page.dart';
 import 'circuit/circuit_page.dart';
 import 'monitoring/traffic_view.dart';
 
