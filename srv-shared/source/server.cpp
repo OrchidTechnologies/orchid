@@ -23,7 +23,7 @@
 #include "channel.hpp"
 #include "datagram.hpp"
 #include "local.hpp"
-#include "port.hpp"
+#include "protocol.hpp"
 #include "server.hpp"
 
 namespace orc {
@@ -72,75 +72,110 @@ _trace();
     }
 };
 
-void Server::Seed() {
-    //auto seed(Random<32>());
-    Bytes32 seed(Number<uint256_t>(uint256_t(0)));
-    hash_ = Hash(seed);
-    seeds_.emplace(hash_, seed);
-}
-
-void Server::Send(const Buffer &data) {
-    Spawn([this, data = Beam(data)]() -> task<void> {
-        co_return co_await Inner()->Send(data);
+void Server::Bill(Pipe *pipe, const Buffer &data) {
+    uint256_t amount(cashier_->Price() * data.size());
+    { std::unique_lock<std::mutex> lock_(mutex_);
+        if (balance_ < amount) {
+            _trace(); /* XXX: nerf return; */ }
+        balance_ -= amount; }
+    Spawn([pipe, data = Beam(data)]() -> task<void> {
+        co_return co_await pipe->Send(data);
     });
 }
 
-using Ticket = Coder<Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint128_t, Address, Address>;
+task<void> Server::Send(const Buffer &data) {
+    co_return co_await Bonded::Send(data);
+}
+
+void Server::Seed() {
+    auto seed(Random<32>());
+    if (hash_ != seeds_.end())
+        hash_->second.second = Timestamp();
+    hash_ = seeds_.try_emplace(Hash(seed), seed, 0).first;
+}
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
+    try {
+        auto [header, window] = Take<Header, Window>(data);
+        auto &[magic] = header;
+        orc_assert(magic == Magic_);
 
-        auto [hash, nonce, start, range, amount, ratio, funder, target, v, r, s] = Take<Brick<32>, Brick<32>, uint256_t, Pad<16>, uint128_t, Pad<16>, uint128_t, Pad<16>, uint128_t, Pad<12>, uint160_t, Pad<12>, uint160_t, Pad<31>, Number<uint8_t>, Brick<32>, Brick<32>>(data);
-        Signature signature(r, s, v);
+        Spawn([this, source, data = Beam(window)]() -> task<void> {
+            auto [v, r, s, hash, nonce, funder, amount, ratio, start, range, target, receipt] = Take<uint8_t, Brick<32>, Brick<32>, Brick<32>, Brick<32>, Address, uint128_t, uint128_t, uint256_t, uint128_t, Address, Window>(data);
 
-        Spawn([this, hash = hash, nonce = nonce, start = std::move(start), range = std::move(range), amount = std::move(amount), ratio = std::move(ratio), funder = Address(std::move(funder)), target = Address(std::move(target)), signature]() -> task<void> {
-            auto ticket(Ticket::Encode(hash, nonce, start, range, amount, ratio, funder, target));
-            auto signer(Recover(signature, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), Hash(ticket)))));
-            (void) signer;
+            using Ticket = Coder<Bytes32, Bytes32, Address, uint128_t, uint128_t, uint256_t, uint128_t, Address, Bytes>;
+            // XXX: fix Coder to not immediately convert everything into a tuple so this doesn't need to call Beam(receipt)
+            const auto ticket(Hash(Ticket::Encode(hash, nonce, funder, amount, ratio, start, range, target, Beam(receipt))));
+            const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
 
-            auto seed([&]() {
-                std::unique_lock<std::mutex> lock_;
-                auto seed(seeds_.find(hash));
+            const auto until(start + range);
+            const auto now(Timestamp());
+            orc_assert(until > now);
+
+            const auto credit(amount * (uint256_t(ratio) + 1));
+
+            auto seed([&, hash = hash]() {
+                std::unique_lock<std::mutex> lock_(mutex_);
+                const auto seed(seeds_.find(hash));
                 orc_assert(seed != seeds_.end());
-                return seed->second;
+                orc_assert(seed->second.second + 60 < now);
+                orc_assert(tickets_.emplace(until, signer, ticket).second);
+                balance_ += credit;
+                return seed->second.first;
             }());
 
             // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
-            auto won(Hash(Tie(seed, nonce)).num<uint256_t>() >> 128 <= ratio);
-            if (won) {
-                std::unique_lock<std::mutex> lock_;
-                if (hash_ == hash)
-                    Seed();
-            }
+            if (Hash(Tie(seed, nonce)).num<uint256_t>() >> 128 <= ratio) {
+                { std::unique_lock<std::mutex> lock_(mutex_);
+                    if (hash_->first == hash)
+                        Seed(); }
 
-            //auto packet(Tie());
-            //co_await Bonded::Send(Datagram(Port_, source, packet));
-
-            if (won) {
                 std::vector<Bytes32> old;
-                static Selector<void, Bytes32, Bytes32, Bytes32, uint256_t, uint128_t, uint128_t, uint128_t, Address, Address, Bytes, uint8_t, Bytes32, Bytes32, std::vector<Bytes32>> grab("grab");
-                co_await grab.Send(endpoint_, target, lottery_, seed, hash, nonce, start, range, amount, ratio, funder, target, Beam(), signature.v_, signature.r_, signature.s_, old);
+
+                static Selector<void,
+                    Bytes32 /*seed*/, Bytes32 /*hash*/,
+                    uint8_t /*v*/, Bytes32 /*r*/, Bytes32 /*s*/,
+                    Bytes32 /*nonce*/, Address /*funder*/,
+                    uint128_t /*amount*/, uint128_t /*ratio*/,
+                    uint256_t /*start*/, uint128_t /*range*/,
+                    Address /*target*/, Bytes /*receipt*/,
+                    std::vector<Bytes32> /*old*/
+                > grab("grab");
+
+                co_await cashier_->Send(grab,
+                    seed, hash,
+                    v, r, s,
+                    nonce, funder,
+                    amount, ratio,
+                    start, range,
+                    target, Beam(),
+                    old
+                );
             }
+
+            auto packet(Tie());
+            co_await Bonded::Send(Datagram(Port_, source, packet));
         });
 
         return true;
-    })) Send(data);
+    } catch (const std::exception &error) {
+        return true;
+    } })) Bill(Inner(), data);
 }
 
 void Server::Land(const Buffer &data) {
-    Spawn([this, data = Beam(data)]() -> task<void> {
-        co_return co_await Bonded::Send(data);
-    });
+    Bill(this, data);
 }
 
 void Server::Stop(const std::string &error) {
 }
 
-Server::Server(Locator locator, Address lottery) :
-    endpoint_(GetLocal(), std::move(locator)),
-    lottery_(std::move(lottery))
+Server::Server(S<Cashier> cashier) :
+    cashier_(std::move(cashier)),
+    balance_(0)
 {
     Seed();
 }

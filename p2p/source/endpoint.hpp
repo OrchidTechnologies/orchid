@@ -104,6 +104,10 @@ class Endpoint final {
             std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
         co_return result;
     }
+
+    task<Bytes32> Sign(const Address &signer, const Buffer &data) {
+        co_return Bless((co_await operator ()("eth_sign", {signer, data})).asString());
+    }
 };
 
 template <typename Result_, typename... Args_>

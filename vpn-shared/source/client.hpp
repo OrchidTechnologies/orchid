@@ -32,6 +32,7 @@
 #include "crypto.hpp"
 #include "jsonrpc.hpp"
 #include "origin.hpp"
+#include "ticket.hpp"
 
 namespace orc {
 
@@ -48,12 +49,15 @@ class Client :
     Secret secret_;
     Address funder_;
 
-    Socket socket_;
-
     std::atomic<uint64_t> benefit_;
+    std::map<Bytes32, std::pair<Ticket, Signature>> tickets_;
 
     Address target_;
     Bytes32 hash_;
+
+    Socket socket_;
+
+    void Transfer(size_t size);
 
   protected:
     void Land(Pipe *pipe, const Buffer &data) override;

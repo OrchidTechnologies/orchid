@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <boost/filesystem/string_file.hpp>
+#include <boost/multiprecision/cpp_bin_float.hpp>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -41,7 +42,9 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
+#include "cashier.hpp"
 #include "channel.hpp"
+#include "coinbase.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
@@ -72,54 +75,73 @@ std::string Stringify(bssl::UniquePtr<BIO> bio) {
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 
-    po::options_description options("command-line (only)");
-    options.add_options()
+    po::options_description group("general command line");
+    group.add_options()
         ("help", "produce help message")
     ;
 
-    po::options_description configs("command-line / file");
-    configs.add_options()
-        ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+    po::options_description options;
+
+    { po::options_description group("orchid eth addresses");
+    group.add_options()
+        //("token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
+        ("location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"))
+        ("lottery", po::value<std::string>()->default_value("0xc999ACfE677239b8F07f04AC378651189c5Ad517"))
+    ; options.add(group); }
+
+    { po::options_description group("user eth addresses");
+    group.add_options()
+        ("personal", po::value<std::string>(), "address to use for making transactions")
+        ("password", po::value<std::string>()->default_value(""), "password to unlock personal account")
+        ("recipient", po::value<std::string>(), "deposit address for client payments")
+        ("provider", po::value<std::string>(), "provider address in stake directory")
+    ; options.add(group); }
+
+    { po::options_description group("external resources");
+    group.add_options()
         ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
-        ("eth-token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"), "ethereum contract address of token")
-        ("eth-location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"), "ethereum contract address of location")
-        ("eth-lottery", po::value<std::string>()->default_value("0xc999ACfE677239b8F07f04AC378651189c5Ad517"), "ethereum contract address of lottery")
-        ("eth-password", po::value<std::string>()->default_value(""), "password to use with personal API")
-        ("eth-provider", po::value<std::string>(), "ethereum contract address of provider")
-        ("eth-target", po::value<std::string>(), "ethereum contract address of target")
-        ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
-        ("host", po::value<std::string>(), "hostname to access this server")
+        ("stun", po::value<std::string>()->default_value("stun.l.google.com:19302"), "stun server url to use for discovery")
+    ; options.add(group); }
+
+    { po::options_description group("webrtc signaling");
+    group.add_options()
+        ("host", po::value<std::string>(), "external hostname for this server")
         ("bind", po::value<std::string>()->default_value("0.0.0.0"), "ip address for server to bind to")
         ("port", po::value<uint16_t>()->default_value(8443), "port to advertise on blockchain")
         ("path", po::value<std::string>()->default_value("/"), "path of internal https endpoint")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
-        ("ovpn-file", po::value<std::string>(), "openvpn .ovpn configuration file")
-        ("ovpn-user", po::value<std::string>()->default_value(""), "openvpn credential (username)")
-        ("ovpn-pass", po::value<std::string>()->default_value(""), "openvpn credential (password)")
-    ;
+        ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+    ; options.add(group); }
 
-    po::options_description hiddens("you can't see these");
-    hiddens.add_options()
-    ;
+    { po::options_description group("bandwidth pricing");
+    group.add_options()
+        ("fiat", po::value<std::string>()->default_value("USD"), "fiat currency for conversions")
+        ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in fiat / GB")
+    ; options.add(group); }
+
+    { po::options_description group("openpvn egress");
+    group.add_options()
+        ("ovpn-file", po::value<std::string>(), "openvpn .ovpn configuration file")
+        ("ovpn-user", po::value<std::string>()->default_value(""), "openvpn client credential (username)")
+        ("ovpn-pass", po::value<std::string>()->default_value(""), "openvpn client credential (password)")
+    ; options.add(group); }
 
     po::store(po::parse_command_line(argc, argv, po::options_description()
+        .add(group)
         .add(options)
-        .add(configs)
-        .add(hiddens)
     ), args);
 
     if (auto path = getenv("ORCHID_CONFIG"))
         po::store(po::parse_config_file(path, po::options_description()
-            .add(configs)
-            .add(hiddens)
+            .add(options)
         ), args);
 
     po::notify(args);
 
     if (args.count("help") != 0) {
         std::cout << po::options_description()
+            .add(group)
             .add(options)
-            .add(configs)
         << std::endl;
 
         return 0;
@@ -129,7 +151,7 @@ int Main(int argc, const char *const argv[]) {
     Initialize();
 
     std::vector<std::string> ice;
-    ice.emplace_back(args["stun"].as<std::string>());
+    ice.emplace_back("stun:" + args["stun"].as<std::string>());
 
 
     std::string params;
@@ -232,14 +254,15 @@ int Main(int argc, const char *const argv[]) {
     std::cerr << "tls = " << tls << std::endl;
 
 
-    Address location(args["eth-location"].as<std::string>());
-    std::string password(args["eth-password"].as<std::string>());
+    Address location(args["location"].as<std::string>());
+    Address personal(args["personal"].as<std::string>());
+    std::string password(args["password"].as<std::string>());
 
     auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
     Endpoint endpoint(GetLocal(), rpc);
 
-    if (args.count("eth-provider") != 0) {
-        Address provider(args["eth-provider"].as<std::string>());
+    if (args.count("provider") != 0) {
+        Address provider(args["provider"].as<std::string>());
 
         Wait([&]() -> task<void> {
             auto latest(co_await endpoint.Latest());
@@ -252,7 +275,22 @@ int Main(int argc, const char *const argv[]) {
     }
 
 
-    auto node(Make<Node>(std::move(ice), rpc, Address(args["eth-lottery"].as<std::string>())));
+    // XXX: price needs to be updated at runtime
+    // XXX: this code needs to move into Cashier
+    uint256_t price(Wait([&]() -> task<uint256_t> {
+        cpp_dec_float_50 price(args["price"].as<std::string>());
+        price /= co_await Price("ETH", args["fiat"].as<std::string>()) / 200;
+        price *= 1000000000;
+        price /= 1024 * 1024 * 1024;
+        price *= 1000000000;
+        using boost::multiprecision::cpp_bin_float_quad;
+        co_return static_cast<uint256_t>(static_cast<cpp_bin_float_quad>(price) * static_cast<cpp_bin_float_quad>(uint256_t(1) << 128));
+    }()));
+
+    std::cout.precision(std::numeric_limits<cpp_dec_float_50>::digits10);
+    std::cerr << "price = " << price << std::endl;
+
+    auto node(Make<Node>(std::move(ice), Make<Cashier>(rpc, Address(args["lottery"].as<std::string>()), price, personal, password)));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;

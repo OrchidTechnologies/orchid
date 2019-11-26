@@ -20,10 +20,24 @@
 /* }}} */
 
 
-#include "port.hpp"
+#include <json/json.h>
+
+#include "coinbase.hpp"
+#include "error.hpp"
+#include "http.hpp"
+#include "locator.hpp"
 
 namespace orc {
 
-const Host Host_(10,7,0,3);
+task<cpp_dec_float_50> Price(const std::string &from, const std::string &to) {
+    auto body(co_await Request("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {}));
+
+    Json::Value result;
+    Json::Reader reader;
+    orc_assert(reader.parse(body, result, false));
+
+    auto data(result["data"]);
+    co_return cpp_dec_float_50(data["amount"].asString());
+}
 
 }

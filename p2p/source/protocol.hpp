@@ -20,10 +20,19 @@
 /* }}} */
 
 
-#include "port.hpp"
+#ifndef ORCHID_PROTOCOL_HPP
+#define ORCHID_PROTOCOL_HPP
+
+#include <tuple>
+
+#include "socket.hpp"
 
 namespace orc {
 
-const Host Host_(10,7,0,3);
+extern const Socket Port_;
+typedef std::tuple<uint32_t> Header;
+static uint32_t Magic_(0x33333333);
 
 }
+
+#endif//ORCHID_PROTOCOL_HPP

@@ -20,10 +20,21 @@
 /* }}} */
 
 
-#include "port.hpp"
+#ifndef ORCHID_COINBASE_HPP
+#define ORCHID_COINBASE_HPP
+
+#include <string>
+
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+#include "task.hpp"
 
 namespace orc {
 
-const Host Host_(10,7,0,3);
+using boost::multiprecision::cpp_dec_float_50;
+
+task<cpp_dec_float_50> Price(const std::string &from, const std::string &to);
 
 }
+
+#endif//ORCHID_COINBASE_HPP

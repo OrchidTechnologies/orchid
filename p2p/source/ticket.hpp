@@ -20,10 +20,29 @@
 /* }}} */
 
 
-#include "port.hpp"
+#ifndef ORCHID_TICKET_HPP
+#define ORCHID_TICKET_HPP
+
+#include "jsonrpc.hpp"
 
 namespace orc {
 
-const Host Host_(10,7,0,3);
+struct Ticket {
+    Bytes32 hash_;
+    Bytes32 nonce_;
+    Address funder_;
+    uint128_t amount_;
+    uint128_t ratio_;
+    uint256_t start_;
+    uint128_t range_;
+    Address provider_;
+    Bytes receipt_;
+
+    Builder Encode() {
+        return Coder<Bytes32, Bytes32, Address, uint128_t, uint128_t, uint256_t, uint128_t, Address, Bytes>::Encode(hash_, nonce_, funder_, amount_, ratio_, start_, range_, provider_, receipt_);
+    }
+};
 
 }
+
+#endif//ORCHID_TICKET_HPP

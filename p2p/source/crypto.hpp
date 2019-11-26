@@ -63,7 +63,11 @@ using Common = Brick<64>;
 Common Commonize(const Secret &secret);
 
 Signature Sign(const Secret &secret, const Brick<32> &data);
-Common Recover(const Signature &signature, const Brick<32> &data);
+Common Recover(const Brick<32> &data, const Signature &signature);
+
+inline Common Recover(const Brick<32> &data, uint8_t v, const Brick<32> &r, const Brick<32> &s) {
+    return Recover(data, Signature(r, s, v));
+}
 
 }
 

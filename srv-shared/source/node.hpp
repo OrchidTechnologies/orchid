@@ -26,6 +26,7 @@
 #include <mutex>
 #include <vector>
 
+#include "cashier.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
@@ -36,9 +37,7 @@ namespace orc {
 class Node final {
   private:
     std::vector<std::string> ice_;
-
-    Locator rpc_;
-    Address lottery_;
+    S<Cashier> cashier_;
 
     S<Egress> egress_;
 
@@ -46,10 +45,9 @@ class Node final {
     std::map<std::string, W<Server>> servers_;
 
   public:
-    Node(std::vector<std::string> ice, Locator rpc, Address lottery) :
+    Node(std::vector<std::string> ice, S<Cashier> cashier) :
         ice_(std::move(ice)),
-        rpc_(std::move(rpc)),
-        lottery_(std::move(lottery))
+        cashier_(std::move(cashier))
     {
     }
 
@@ -62,7 +60,7 @@ class Node final {
         auto &cache(servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
-        auto server(Make<Sink<Server>>(rpc_, lottery_));
+        auto server(Make<Sink<Server>>(cashier_));
         server->Wire<Translator>(egress_);
         server->self_ = server;
         cache = server;

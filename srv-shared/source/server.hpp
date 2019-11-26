@@ -23,7 +23,11 @@
 #ifndef ORCHID_SERVER_HPP
 #define ORCHID_SERVER_HPP
 
+#include <map>
+#include <set>
+
 #include "bond.hpp"
+#include "cashier.hpp"
 #include "endpoint.hpp"
 #include "link.hpp"
 #include "jsonrpc.hpp"
@@ -34,20 +38,26 @@ namespace orc {
 
 class Server :
     public Bonded,
+    protected Pipe<Buffer>,
     public BufferDrain
 {
   public:
     S<Server> self_;
-    Endpoint endpoint_;
-    Address lottery_;
+  private:
+    S<Cashier> cashier_;
+    uint256_t balance_;
 
     std::mutex mutex_;
-    Bytes32 hash_;
-    std::map<Bytes32, Bytes32> seeds_;
+
+    std::map<Bytes32, std::pair<Bytes32, uint256_t>> seeds_;
+    decltype(seeds_.end()) hash_ = seeds_.end();
+
+    std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
+
+    void Bill(Pipe *pipe, const Buffer &data);
+    task<void> Send(const Buffer &data) override;
 
     void Seed();
-
-    void Send(const Buffer &data);
 
   protected:
     virtual Pump *Inner() = 0;
@@ -58,7 +68,7 @@ class Server :
     void Stop(const std::string &error) override;
 
   public:
-    Server(Locator locator, Address lottery);
+    Server(S<Cashier> cashier);
 
     task<void> Shut() override;
 

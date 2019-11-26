@@ -159,7 +159,21 @@ class Address :
     }
 
     Address(const Brick<64> &common);
+
+    bool operator <(const Address &rhs) const {
+        return static_cast<const uint160_t &>(*this) < static_cast<const uint160_t &>(rhs);
+    }
 };
+
+template <size_t Index_, typename... Taking_>
+struct Taking<Index_, Address, void, Taking_...> final {
+template <typename Tuple_, typename Buffer_>
+static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
+    Number<uint160_t> value;
+    window.Take(value);
+    std::get<Index_>(tuple) = Address(value);
+    return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
+} };
 
 class Argument final {
   private:
@@ -406,7 +420,7 @@ struct Coded<Beam, void> {
         return data;
     }
 
-    static void Encode(Builder &builder, const Beam &data) {
+    static void Encode(Builder &builder, const Buffer &data) {
         auto size(data.size());
         Coded<uint256_t>::Encode(builder, size);
         builder += data;
@@ -415,8 +429,9 @@ struct Coded<Beam, void> {
         builder += std::move(pad);
     }
 
-    static void Size(size_t &offset, const Beam &data) {
-        offset += 32 + data.size() + Pad(data.size());
+    static void Size(size_t &offset, const Buffer &data) {
+        auto size(data.size());
+        offset += 32 + size + Pad(size);
     }
 };
 
@@ -586,6 +601,8 @@ struct Coder {
 };
 
 static const uint128_t Ten18("1000000000000000000");
+
+uint256_t Timestamp();
 
 }
 
