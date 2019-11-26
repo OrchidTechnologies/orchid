@@ -125,15 +125,19 @@ class EditableHop extends ValueNotifier<UniqueHop> {
   EditableHop.empty() : super(null);
 }
 
+enum HopEditorMode {
+  Create, Edit, View
+}
+
 class HopEditor<T extends CircuitHop> extends StatefulWidget {
   final EditableHop editableHop;
 
-  // If showSave is true the editor offers a "save" button that pops the
-  // view and returns the edited value on the context.  If the user navigates
-  // back without saving the context result will be null.
-  final bool showSave;
+  // In create mode the editor offers a "save" button that pops the view and
+  // returns the value on the context.  If the user navigates back without
+  // saving the context result will be null.
+  final HopEditorMode mode;
 
-  HopEditor({@required this.editableHop, @required this.showSave});
+  HopEditor({@required this.editableHop, @required this.mode});
 
   Widget buildSaveButton(BuildContext context, {bool isValid = true}) {
     return SaveActionButton(
@@ -141,6 +145,13 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
         onPressed: () {
           Navigator.pop(context, this.editableHop.value.hop);
         });
+  }
+
+  bool editable() {
+    return mode != HopEditorMode.View;
+  }
+  bool viewOnly() {
+    return !editable();
   }
 
   @override

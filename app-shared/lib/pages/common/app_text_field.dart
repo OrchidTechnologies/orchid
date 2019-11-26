@@ -10,17 +10,20 @@ class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final bool obscureText;
   final int maxLines;
+  final bool enabled;
 
   AppTextField(
       {this.hintText,
       this.trailing,
       this.controller,
       this.obscureText = false,
-      this.maxLines = 1});
+      this.maxLines = 1,
+      this.enabled = true});
 
   @override
   Widget build(BuildContext context) {
     return Container(
+        //decoration: enabled ? textFieldEnabledDecoration : null,
         decoration: textFieldEnabledDecoration,
         height: 56,
         margin: EdgeInsets.symmetric(horizontal: 20),
@@ -30,6 +33,7 @@ class AppTextField extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
+                  enabled: enabled,
                   obscureText: obscureText,
                   controller: controller,
                   autocorrect: false,
@@ -139,14 +143,14 @@ class AppPasswordField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppLabeledTextField(
-        labelText: labelText,
-        hintText: hintText,
-        controller: controller,
-        obscureText: true,
-        // TODO: This is causing overlfow on the page containing this widget for some reason.
-        //trailing: Container(
-            //margin: EdgeInsets.only(right: 13.0),
-            //child: Image.asset("assets/images/visibility.png"))
+      labelText: labelText,
+      hintText: hintText,
+      controller: controller,
+      obscureText: true,
+      // TODO: This is causing overlfow on the page containing this widget for some reason.
+      //trailing: Container(
+      //margin: EdgeInsets.only(right: 13.0),
+      //child: Image.asset("assets/images/visibility.png"))
     );
   }
 }

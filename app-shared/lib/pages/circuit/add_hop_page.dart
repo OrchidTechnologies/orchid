@@ -55,13 +55,13 @@ class _AddHopPageState extends State<AddHopPage> {
       case Protocol.Orchid:
         editor = OrchidHopPage(
           editableHop: editableHop,
-          showSave: true,
+          mode: HopEditorMode.Create,
         );
         break;
       case Protocol.OpenVPN:
         editor = OpenVPNHopPage(
           editableHop: editableHop,
-          showSave: true,
+          mode: HopEditorMode.Create,
         );
         break;
     }

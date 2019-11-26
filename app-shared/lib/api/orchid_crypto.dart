@@ -175,6 +175,35 @@ class StoredEthereumKeyRef {
   String toString() {
     return keyUid;
   }
+}
 
+class Hex {
+  static String removePrefix(String text) {
+    if (text != null && text.toLowerCase().startsWith("0x")) {
+      text = text.substring(2);
+    }
+    return text;
+  }
+}
 
+class EthereumAddress {
+  static BigInt parse(String text) {
+    if (text == null) {
+      throw Exception("invalid, null");
+    }
+    text = Hex.removePrefix(text);
+    if (text.length != 40) {
+      throw Exception("invalid, length");
+    }
+    try {
+      var val = BigInt.parse(text, radix: 16);
+      if (val < BigInt.from(0)) {
+        throw Exception("invalid, range");
+      }
+      return val;
+    } catch (err) {
+      print(err);
+      throw Exception("invalid, value");
+    }
+  }
 }
