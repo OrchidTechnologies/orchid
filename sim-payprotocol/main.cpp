@@ -601,7 +601,7 @@ void Server::print_info(int llev, double ctime, double stake, int nusers)
 
 struct Sim
 {
-	const int NumClients  = 200; // 200; // 200;
+	const int NumClients  = 200; // 200; // 200; // 200;
 	const int NumWebsites = 20; // 20; // 20;
 	const int NumServers  = 10; // 10; // 10;
 	const int NumHops     = 3;
@@ -762,8 +762,8 @@ struct Sim
 
 			auto client_bal_dist = lognormal_distribution<>(4, 0.5); // 2);
 			Lot::balance(account) = Lot::pot{client_bal_dist(gen), 4.0};
-	        	double curbal   = Lot::balance(account).amount_;
-	        	dlog(2,"funded client balance(%f) \n", curbal);
+	        double curbal   = Lot::balance(account).amount_;
+	        dlog(2,"funded client balance(%f) \n", curbal);
 
 			auto client_budget_time_dist = normal_distribution<>(6*Months, 2*Months); // 1*Months);
 

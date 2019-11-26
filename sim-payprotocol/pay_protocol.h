@@ -314,54 +314,75 @@ struct IBudget
 	virtual ~IBudget() {}
 	virtual double get_afford(double ctime) = 0;
 	virtual double get_max_faceval() = 0;
-        virtual void on_connect() = 0;
-        virtual void on_disconnect() = 0;
-        virtual void on_payment(double ctime, double amt) {}
+    virtual void on_connect(double ctime) = 0;
+    virtual void on_disconnect() {}
+    virtual void on_payment(double ctime, double amt) {}
 	virtual void set_active(double aratio) = 0;
 };
 
 
 struct Budget_SurpTrack2 : public IBudget, public Tickable
 {
-        // UI/config inputs
-        double budget_rate_ = 0;
-        double prepay_credit_ = 0;
+	// UI/config inputs
+    double budget_rate_   = 0; // based budget in OXT/s
+    double prepay_credit_ = 0; // in OXT
+	double max_faceval_	  = 1.0;  // maximum allowable faceval in OXT (user's hard variance limit)
 
-        // internal
-        double surplus_ = 0;
-        double nxt_surplus_ = 0;
-        double last_aff_date_ = 0;
-        double last_pay_date_ = 0;
-        double prepay_amt_ = 0;
+    // internal
+    double active_ = 1.0;
+    double surplus_ = 0; // todo: surplus should be initialized to some non-zero fraction of the (unknown) budget
+    double nxt_surplus_ = 0;
+    double last_aff_date_ = 0;
+    double last_pay_date_ = 0;
+    double prepay_amt_ = 0;
+
+    // budget_rate_ in OXT/s, for now prepay_credit of 4s
+    Budget_SurpTrack2(double budget_rate, double pay_interval = 4.0) { budget_rate_ = budget_rate; prepay_credit_ = budget_rate_ * pay_interval; }
+
+    Budget_SurpTrack2(bytes32 account, double edate) {
+        double curbal = Lot::balance(account).amount_;
+        double sdate  = CurrentTime();
+        budget_rate_  = curbal / (edate - sdate);
+        prepay_credit_ = budget_rate_ * 4.0;
+        dlog(1,"Budget_ST2(%x,%f) curbal(%f) budget_rate_(%f) \n", account,edate, curbal, budget_rate_);
+    }
+
+	virtual double get_max_faceval() { return max_faceval_; }
 
 	virtual double get_afford(double ctime)
 	{
 	    double elap = (ctime - last_aff_date_);
-            last_aff_date_ = ctime;
-            double surplus_rate = surplus_ / (3*Days);
-            nxt_surplus_ = surplus_ - surplus_rate * elap;
-            double spendrate = budget_rate_ + surplus_rate;
-	    double allowed   = spendrate * elap + prepay_credit_;
-            return allowed;
-        }
+	    last_aff_date_ = ctime;
+	    double surplus_rate = surplus_ / (3*Days);
+	    nxt_surplus_ = surplus_ - surplus_rate * elap;
+	    double spendrate = budget_rate_ + surplus_rate;
+	    double allowed   = active_*spendrate*elap + prepay_amt_;
+        dlog(2,"Budget_ST2::get_afford(%f) allowed(%f) = %f*spendrate_(%f)*%f + %f  \n", ctime,allowed, active_,spendrate,elap,prepay_amt_);
+	    return allowed;
+	}
 
-        virtual void on_payment(double ctime, double amt) {
-	    double elap = (ctime - last_pay_date_);
-            last_pay_date_ = ctime;
-            double surplus_rate = surplus_ / (3*Days);
-            surplus_ = nxt_surplus_;
-            double expected_amt = budget_rate_ * elap;
-            surplus_ += (expected_amt - amt);
-        }
+    virtual void on_payment(double ctime, double amt) {
+        double elap = (ctime - last_pay_date_);
+        last_pay_date_ = ctime;
+        surplus_ = nxt_surplus_;
+        double expected_amt = budget_rate_ * elap;
+        surplus_ += (expected_amt - amt);
+        prepay_amt_ = 0.0;
+    }
 
-        void on_connect(double ctime)    {
-            dlog(2,"Budget_ST2::on_connect() ctime(%f) \n", ctime);
-    	    last_aff_date_ = ctime; prepay_amt_ = prepay_credit_;
-        }
+    void on_connect(double ctime)    {
+        dlog(2,"Budget_ST2::on_connect() ctime(%f) \n", ctime);
+        last_aff_date_ = ctime; prepay_amt_ = prepay_credit_;
+    }
+
+    // if we get a new updated actual balance, the UI can call these functions to reduce variance and/or avoid overdrafts
+    void set_budget(double balance, double time_remain) { budget_rate_ = balance/time_remain; }
+    void set_budget_rate(double br) { budget_rate_ = br; }
+    void set_active(double active) { active_ = active; }
 
 };
 
-struct Budget_SurplusTracking : public IBudget, public Tickable
+struct Budget_SurpTrack : public IBudget, public Tickable
 {
 	double budget_edate_;   	    // target budget end date
 	double max_faceval_		= 1.0;  // maximum allowable faceval in OXT (user's hard variance limit)
@@ -375,7 +396,6 @@ struct Budget_SurplusTracking : public IBudget, public Tickable
 	double spendrate_      = 0.0;
 	bytes32 account_;
 
-
 	double start_time_ 	  = 0.0;
 	double start_balance_ = 0.0;
 
@@ -385,17 +405,14 @@ struct Budget_SurplusTracking : public IBudget, public Tickable
 	    double time_owed = (ctime - last_pay_date_);
 	    double allowed   = spendrate_ * (time_owed + prepay_credit_);
         dlog(2,"Budget_ST::get_afford(%f) allowed(%f) = spendrate_(%f) * (%f - %f + %f) \n", ctime,allowed,spendrate_,ctime,last_pay_date_,prepay_credit_);
-            return allowed;
-       }
+        return allowed;
+	}
 
 
-	virtual double get_max_faceval() {
-            return max_faceval_;
-        }
+	virtual double get_max_faceval() { return max_faceval_; }
 
     virtual double step(double ctime) {
-    	double elap = Tickable::step(ctime);
-
+        double elap = Tickable::step(ctime);
     	double core_spendrate = start_balance_ / (budget_edate_ - start_time_);
 
         double curbal   = Lot::balance(account_).amount_;
@@ -406,15 +423,13 @@ struct Budget_SurplusTracking : public IBudget, public Tickable
         spendrate_ = core_spendrate + surplus_spendrate;
 
         dlog(2,"Budget_ST::step(%f) spendrate_(%f) = core_spendrate(%f) + surplous_spendrate(%f) \n", ctime, spendrate_, core_spendrate, surplus_spendrate);
-
         dlog(2,"Budget_ST core = %f / (%f - %f)   surplus = (curbal(%f) - expbal(%f)) / (%f)   expbal = (%f - %f * (%f - %f)) \n", start_balance_,budget_edate_,start_time_,  curbal,expbal,3.0*Days,  start_balance_,core_spendrate,ctime,start_time_);
-
-	return elap;
+        return elap;
     }
 
-    Budget_SurplusTracking(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate)
+    Budget_SurpTrack(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate)
 	{
-    	period_ = timer_sample_rate_;
+        period_ = timer_sample_rate_;
         register_timer_func(this); // call on_timer() every {timer_sample_rate_} seconds
 
         start_time_    = CurrentTime();
@@ -423,15 +438,15 @@ struct Budget_SurplusTracking : public IBudget, public Tickable
         step(CurrentTime()); // tick the timer once on startup to update for any time orchid was shutdown
     }
 
-    virtual ~Budget_SurplusTracking() {}
+    virtual ~Budget_SurpTrack() {}
 
-    void on_connect()    {
-        dlog(2,"Budget_ST::on_connect() ctime(%f) \n", CurrentTime());
-    	last_pay_date_ = CurrentTime(); prepay_credit_ = max_prepay_time_;
+    void on_connect(double ctime)    {
+        dlog(2,"Budget_ST::on_connect() ctime(%f) \n", ctime);
+        last_pay_date_ = ctime; prepay_credit_ = max_prepay_time_;
     }
 
     void on_disconnect() { }
-    virtual void on_payment(double ctime, double amt) { last_pay_date_ = CurrentTime(); prepay_credit_ = 0; }
+    virtual void on_payment(double ctime, double amt) { last_pay_date_ = ctime; prepay_credit_ = 0; }
     void set_active(double aratio) { }
 
 };
@@ -460,10 +475,10 @@ struct Budget_PredExpW : public IBudget, public Tickable
 
 
 	virtual double get_afford(double ctime) {
-		double time_owed = (ctime - last_pay_date_);
-		double allowed   = spendrate_ * (time_owed + prepay_credit_);
-        dlog(2,"Budget_PredExpW::get_afford(%f) allowed(%f) = spendrate_(%f) * (%f - %f + %f) \n", ctime,allowed,spendrate_,ctime,last_pay_date_,prepay_credit_);
-        return allowed;
+	    double time_owed = (ctime - last_pay_date_);
+	    double allowed   = spendrate_ * (time_owed + prepay_credit_);
+	    dlog(2,"Budget_PredExpW::get_afford(%f) allowed(%f) = spendrate_(%f) * (%f - %f + %f) \n", ctime,allowed,spendrate_,ctime,last_pay_date_,prepay_credit_);
+	    return allowed;
     }
     
 	virtual double get_max_faceval() {
@@ -471,8 +486,7 @@ struct Budget_PredExpW : public IBudget, public Tickable
     }
 
     virtual double step(double ctime) {
-    	double elap = Tickable::step(ctime);
-    
+        double elap = Tickable::step(ctime);
         double ltime    = ltime_; // persist_load("ltime", CurrentTime()); // load variable from persistent disk/DB/config, default to CurrentTime()
         double wactive  = wactive_; // persist_load("wactive", 1.0);
 
@@ -491,15 +505,15 @@ struct Budget_PredExpW : public IBudget, public Tickable
         double duration = pred_future_active_time + 1*Days;
         spendrate_      = curbal / duration;
 
-		dlog(2," pfat = (%f-%f)*%f; spendrate_(%f) = %f / (%f + %f) \n", budget_edate_,ctime,wactive,  spendrate_,curbal,pred_future_active_time,1*Days);
+        dlog(2," pfat = (%f-%f)*%f; spendrate_(%f) = %f / (%f + %f) \n", budget_edate_,ctime,wactive,  spendrate_,curbal,pred_future_active_time,1*Days);
 
         ltime_ 			= ltime; 	// persist_store("ltime",   ltime);
         wactive_ 		= wactive; // persist_store("wactive", wactive);
-	return elap;
+        return elap;
     }
 
     Budget_PredExpW(bytes32 account, double budget_edate): account_(account), budget_edate_(budget_edate), ltime_(CurrentTime()) {
-    	period_ = timer_sample_rate_;
+        period_ = timer_sample_rate_;
         register_timer_func(this); // call on_timer() every {timer_sample_rate_} seconds
         route_active_ = false;
         step(CurrentTime()); // tick the timer once on startup to update for any time orchid was shutdown
@@ -507,9 +521,9 @@ struct Budget_PredExpW : public IBudget, public Tickable
     
     virtual ~Budget_PredExpW() {}
 
-    void on_connect()    {
-        dlog(2,"Budget_PredExpW::on_connect() ctime(%f) \n", CurrentTime());
-    	route_active_ = true;  last_pay_date_ = CurrentTime(); prepay_credit_ = max_prepay_time_;
+    void on_connect(double ctime)    {
+        dlog(2,"Budget_PredExpW::on_connect() ctime(%f) \n", ctime);
+        route_active_ = true;  last_pay_date_ = ctime; prepay_credit_ = max_prepay_time_;
     }
 
     void on_disconnect() { route_active_ = false; }
@@ -540,11 +554,11 @@ struct Client : public Tickable, public INet
 
 	struct Node
 	{
-		netaddr 	address_ = {};
-		bytes32 	stakee_  = 0;
-		bytes32 	target_  = 0; // could be different from stakee_ . .?
-		uint256 	hash_secret_ = 0;
-		IBudget*	budget_ = nullptr;
+	    netaddr 	address_ = {};
+	    bytes32 	stakee_  = 0;
+	    bytes32 	target_  = 0; // could be different from stakee_ . .?
+	    uint256 	hash_secret_ = 0;
+	    IBudget*	budget_ = nullptr;
 	};
 	vector<Node> 	route_; // client route information
 	uint64 routehash_ = 0;
@@ -564,17 +578,16 @@ struct Client : public Tickable, public INet
 	void on_update_route();
 
 	Client(bytes32 account, double budget_edate, int nhops) {
-		account_ = account;
-		address_ = netaddr{uint32(rand()), 0};
-		period_  = 4.0; register_timer_func(this); // send a payment every 4s for now
-		brecvd_  = 0.0;
-
-		route_.resize(nhops);
-		for (int i(0); i < nhops; i++) {
-			route_[i].budget_ = new Budget_PredExpW(account_, budget_edate);
-			//route_[i].budget_ = new Budget_SurplusTracking(account_, budget_edate);
+	    account_ = account;
+	    address_ = netaddr{uint32(rand()), 0};
+	    period_  = 4.0; register_timer_func(this); // send a payment every 4s for now
+	    brecvd_  = 0.0;
+	    route_.resize(nhops);
+	    for (int i(0); i < nhops; i++) {
+	        //route_[i].budget_ = new Budget_PredExpW(account_, budget_edate);
+	        route_[i].budget_ = new Budget_SurpTrack2(account_, budget_edate);
 		}
-		on_update_route();
+	    on_update_route();
 	}
 
 	virtual ~Client() { for (auto n : route_) delete n.budget_; }
@@ -619,22 +632,24 @@ struct Client : public Tickable, public INet
 
 
     virtual double step(double ctime) {
-	dlog(2,"Client::step(%f)\n", ctime);
-    	double elap = Tickable::step(ctime);
-	if (active_ > 0.0) send_payments(ctime);
-	return elap;
+        dlog(2,"Client::step(%f)\n", ctime);
+        double elap = Tickable::step(ctime);
+        if (active_ > 0.0) send_payments(ctime);
+        return elap;
     }
 
     void send_packet(netaddr to, netaddr from, Packet& p) {
-    	packs_sent_ += 1.0;
+		auto* msg = get_msg(p);
+    	//if (msg == nullptr)
+		packs_sent_ += 1.0;
     	if (last_sent_pac_id_ != last_recv_pac_id_) {
     		// last packet was dropped, downgrade rate control
     		rate_limit_mult_ = rate_limit_mult_*0.5;
-    		dlog(2,"Client(%p)::send_packet(%i != %i) rate_limit_mult_(%f) \n", this, last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
+    		dlog(2,"Client(%p)::send_packet(%i != %i) packs(%f,%f) rate_limit_mult_(%f) \n", this, last_sent_pac_id_,last_recv_pac_id_, packs_sent_,packs_recv_, rate_limit_mult_);
     	}
     	else {
     		rate_limit_mult_ = min(rate_limit_mult_*1.1, 1.0);
-    		dlog(2,"Client(%p)::send_packet(%i == %i) rate_limit_mult_(%f) \n", this, last_sent_pac_id_, last_recv_pac_id_, rate_limit_mult_);
+    		dlog(2,"Client(%p)::send_packet(%i == %i) packs(%f,%f) rate_limit_mult_(%f) \n", this, last_sent_pac_id_,last_recv_pac_id_, packs_sent_,packs_recv_, rate_limit_mult_);
     	}
     	p.size_ = p.size_ * rate_limit_mult_;
     	last_sent_pac_id_++;
@@ -644,13 +659,16 @@ struct Client : public Tickable, public INet
 
 	virtual void on_packet(netaddr to, netaddr from, const Packet& p)
 	{
-    	packs_recv_ += 1.0;
-		last_recv_pac_id_ = get_id(p);
+		auto* msg = get_msg(p);
+		//if (msg == nullptr)
+		if (last_recv_pac_id_ != get_id(p)) {
+			last_recv_pac_id_ = get_id(p);
+			packs_recv_ += 1.0;
+		}
 		auto psize = get_size(p);
 		assert(to.addr_ == address_.addr_); brecvd_ += psize;
-		dlog(2,"Client(%p)::on_packet  (%x,%x,%e,%d) brecvd_(%f) ids(%i,%i) \n", this, to,from,psize,get_id(p),brecvd_, last_sent_pac_id_, last_recv_pac_id_);
+		dlog(2,"Client(%p)::on_packet  (%x,%x,%e,%d) packs(%f,%f) brecvd_(%f) ids(%i,%i) \n", this, to,from,psize,get_id(p), packs_sent_,packs_recv_, brecvd_, last_sent_pac_id_, last_recv_pac_id_);
 
-		auto* msg = get_msg(p);
 		if (msg != nullptr) {
 			msg->recv(to, from, p, this);
 			del_msg(p);
@@ -776,7 +794,7 @@ void Client::on_connect(double ctime, const vector<pair<netaddr,bytes32>>& route
 		assert(saddrs.find(saddr.addr_) == saddrs.end());
 		saddrs.insert(saddr.addr_);
 		route_[i].address_ = route[i].first; route_[i].stakee_ = route[i].second;
-		route_[i].budget_->on_connect();
+		route_[i].budget_->on_connect(ctime);
 		dlog(2, "Client::on_connect route[%i] address_(%x) stakee_(%x) \n", i, route_[i].address_, route_[i].stakee_);
 	}
 	on_update_route();
