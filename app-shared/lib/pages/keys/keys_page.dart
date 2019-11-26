@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -35,8 +36,8 @@ class _KeysPageState extends State<KeysPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+    return TitledPage(
+      title: "Keys",
       child: SafeArea(
         child: Column(
           children: <Widget>[
@@ -85,24 +86,21 @@ class _KeysPageState extends State<KeysPage> {
   }
 
   void _addKey() async {
-    var route = MaterialPageRoute<BigInt>(
+    var route = MaterialPageRoute<StoredEthereumKey>(
         builder: (context) => AddKeyPage(), fullscreenDialog: true);
-    var secret = await Navigator.push<BigInt>(context, route);
+    StoredEthereumKey key = await Navigator.push(context, route);
 
     // User cancelled
-    if (secret == null) {
+    if (key == null) {
       return;
     }
-
-    var newKey = StoredEthereumKey(
-        time: DateTime.now(), imported: true, private: secret);
 
     // Add the new key
     if (_keys == null) {
       _keys = [];
     }
     setState(() {
-      _keys.add(newKey);
+      _keys.add(key);
       _sortKeys();
     });
 

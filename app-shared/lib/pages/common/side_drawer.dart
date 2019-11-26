@@ -101,6 +101,15 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               divider(),
               SideDrawerTile(
+                  title: "Keys",
+                  imageName: 'assets/images/balanceOpt.png',
+                  showDetail: true,
+                  hoffset: 0.0,
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.keys);
+                  }),
+              divider(),
+              SideDrawerTile(
                   title: "Advanced",
                   imageName: 'assets/images/settings.png',
                   showDetail: true,

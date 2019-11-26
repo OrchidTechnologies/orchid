@@ -90,7 +90,7 @@ class _AddKeyPageState extends State<AddKeyPage> {
                     controller: _secretController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      hintText: "Paste private key...",
+                      hintText: "Paste private key hex...",
                       hintStyle: AppText.textHintStyle.copyWith(
                           color: Colors.grey, fontStyle: FontStyle.italic),
                       border: InputBorder.none,
@@ -115,17 +115,20 @@ class _AddKeyPageState extends State<AddKeyPage> {
   Widget _buildImportButton() {
     bool isValid = _secret != null;
     return RoundedRectRaisedButton(
-        text: " Import Key ",
-        onPressed: isValid
-            ? () {
-                Navigator.pop(context, _secret);
-              }
-            : null);
+        text: " Import Key ", onPressed: isValid ? _importKey : null);
+  }
+
+  void _importKey() {
+    var key = StoredEthereumKey(
+        time: DateTime.now(), imported: true, private: _secret);
+    Navigator.pop(context, key);
   }
 
   void _generateKey() {
     var keyPair = Crypto.generateKeyPair();
-    Navigator.pop(context, keyPair.private);
+    var key = StoredEthereumKey(
+        time: DateTime.now(), imported: false, private: keyPair.private);
+    Navigator.pop(context, key);
   }
 
   @override

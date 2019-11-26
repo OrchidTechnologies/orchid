@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/pages/keys/add_key_page.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 import 'circuit_hop.dart';
@@ -24,9 +26,8 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
   var _funderField = TextEditingController();
-
-  // Reference to the selected StoredEthereumKey
-  StoredEthereumKeyRef _keyRef;
+  StoredEthereumKeyRef _initialKeyRef;
+  StoredEthereumKeyRef _selectedKeyRef;
 
   @override
   void initState() {
@@ -34,7 +35,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     setState(() {
       OrchidHop hop = widget.editableHop.value?.hop;
       _funderField.text = hop?.funder;
-      _keyRef = hop?.keyRef;
+      _selectedKeyRef = hop?.keyRef;
+      _initialKeyRef = _selectedKeyRef;
     });
     _funderField.addListener(_textFieldChanged);
   }
@@ -87,12 +89,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                       child: Padding(
                     padding: const EdgeInsets.only(left: 20, right: 16),
                     child: KeySelection(
+                        key: ValueKey(_initialKeyRef.toString()),
                         enabled: widget.editable(),
-                        initialSelection: _keyRef,
+                        initialSelection: _initialKeyRef,
                         onSelection: _keySelected),
                   )),
 
-                  // Key Copy
+                  // Copy key button
                   Visibility(
                     visible: widget.viewOnly(),
                     child: RoundedRectRaisedButton(
@@ -100,6 +103,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                         textColor: Colors.white,
                         text: "Copy",
                         onPressed: _onCopyButton),
+                  ),
+
+                  // Add key button
+                  Visibility(
+                    visible: widget.editable(),
+                    child: _buidAddKeyButton(),
                   )
                 ],
               ),
@@ -110,9 +119,34 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
+  /*
+  Widget _buidAddKeyButton() {
+    return GestureDetector(
+      onTap: _onCopyButton,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey,
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        width: 35,
+        height: 35,
+        child: Icon(Icons.add_circle_outline, color: Colors.white),
+      ),
+    );
+  }*/
+  Widget _buidAddKeyButton() {
+    return Container(
+      width: 30,
+      child: FlatButton(
+          padding: EdgeInsets.only(right: 5),
+          child: Icon(Icons.add_circle_outline, color: Colors.grey),
+          onPressed: _onAddKeyButton),
+    );
+  }
+
   void _keySelected(StoredEthereumKey key) {
     setState(() {
-      _keyRef = key.ref();
+      _selectedKeyRef = key.ref();
     });
   }
 
@@ -121,7 +155,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   bool _keyRefValid() {
-    return _keyRef != null;
+    return _selectedKeyRef != null;
   }
 
   bool _funderValid() {
@@ -142,12 +176,36 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         key: widget.editableHop.value?.key ??
             DateTime.now().millisecondsSinceEpoch,
         hop: OrchidHop(
-            funder: Hex.removePrefix(_funderField.text), keyRef: _keyRef));
+            funder: Hex.removePrefix(_funderField.text),
+            keyRef: _selectedKeyRef));
   }
 
   /// Copy the log data to the clipboard
-  void _onCopyButton() {
-    Clipboard.setData(ClipboardData(text: _funderField.text));
+  void _onCopyButton() async {
+    StoredEthereumKey key = await _selectedKeyRef.get();
+    Clipboard.setData(ClipboardData(text: key.keys().address));
+  }
+
+  void _onAddKeyButton() async {
+    var route = MaterialPageRoute<StoredEthereumKey>(
+        builder: (context) => AddKeyPage(), fullscreenDialog: true);
+    StoredEthereumKey key = await Navigator.push(context, route);
+
+    // User cancelled
+    if (key == null) {
+      return;
+    }
+
+    // Save the new key
+    var keys = await UserPreferences().getKeys();
+    keys.add(key);
+    await UserPreferences().setKeys(keys);
+
+    // Select the new key in the list
+    setState(() {
+      _initialKeyRef = key.ref(); // rebuild the dropdown
+      _selectedKeyRef = _initialKeyRef;
+    });
   }
 
   @override

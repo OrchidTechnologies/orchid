@@ -8,6 +8,7 @@ class RoundedRectRaisedButton extends StatelessWidget {
   final VoidCallback onPressed;
   final Color backgroundColor;
   final Color textColor;
+  final Icon icon;
 
   const RoundedRectRaisedButton({
     Key key,
@@ -15,6 +16,7 @@ class RoundedRectRaisedButton extends StatelessWidget {
     @required this.onPressed,
     this.backgroundColor,
     this.textColor,
+    this.icon,
   }) : super(key: key);
 
   @override
@@ -22,7 +24,7 @@ class RoundedRectRaisedButton extends StatelessWidget {
     return RaisedButton(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16))),
-      child: AppText.body(
+      child: icon ?? AppText.body(
           text: text,
           color: textColor ?? AppColors.text_light,
           letterSpacing: 1.25,

@@ -10,7 +10,11 @@ class KeySelection extends StatefulWidget {
   final bool enabled;
 
   KeySelection(
-      {@required this.onSelection, this.initialSelection, this.enabled = false});
+      {Key key,
+      @required this.onSelection,
+      this.initialSelection,
+      this.enabled = false})
+      : super(key: key);
 
   @override
   _KeySelectionState createState() => _KeySelectionState();

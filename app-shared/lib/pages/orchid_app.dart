@@ -24,7 +24,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = new TabController(length: 4, vsync: this);
+    _tabController = new TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabSelection);
   }
 
@@ -46,7 +46,6 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
               QuickConnectPage(),
               TrafficView(clearTrafficController: _trafficButtonController),
               CircuitPage(),
-              KeysPage()
             ],
           ),
           bottomNavigationBar: SafeArea(
@@ -76,15 +75,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
                           ? Colors.white
                           : Colors.white60,
                       height: 27),
-                ),
-                Tab(
-                  text: "Keys",
-                  icon: Image.asset("assets/images/balanceOpt.png",
-                      color: _tabController.index == 3
-                          ? Colors.white
-                          : Colors.white60,
-                      height: 27),
-                ),
+                )
               ],
             ),
           ),
@@ -95,7 +86,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
   }
 
   void _handleTabSelection() {
-    var titles = [_logo, Text("Traffic"), Text("Circuit"), Text("Keys")];
+    var titles = [_logo, Text("Traffic"), Text("Circuit")];
     setState(() {
       _pageTitle = titles[_tabController.index];
       _pageActions = _tabController.index == 1
