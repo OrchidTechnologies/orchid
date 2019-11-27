@@ -233,10 +233,10 @@ class Logger :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    if (internal_) Spawn([this, data = Beam(data)]() mutable -> task<void> {
+    if (internal_) nest_.Hatch([&]() { return [this, data = Beam(data)]() mutable -> task<void> {
         if (co_await internal_->Send(data))
             analyzer_->Analyze(data.span());
-    });
+    }; });
 }
 
 void Capture::Stop(const std::string &error) {
@@ -255,6 +255,7 @@ void Capture::Land(const Buffer &data, bool analyze) {
 
 Capture::Capture(const Host &local) :
     local_(local),
+    nest_(32),
     analyzer_(std::make_unique<Logger>(Group() + "/analysis.db"))
 {
 }

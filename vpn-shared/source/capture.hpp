@@ -26,6 +26,7 @@
 #include <map>
 
 #include "link.hpp"
+#include "nest.hpp"
 #include "socket.hpp"
 
 namespace orc {
@@ -60,6 +61,7 @@ class Capture :
 {
   private:
     Host local_;
+    Nest nest_;
     U<Analyzer> analyzer_;
     U<Internal> internal_;
 
