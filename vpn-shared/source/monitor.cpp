@@ -127,6 +127,8 @@ void tap_frame(const char *field)
 
 void wireshark_setup()
 {
+    setenv("WIRESHARK_DEBUG_WMEM_OVERRIDE", "simple", 1);
+
     ws_init_version_info("Orchid", NULL, epan_get_compiled_version_info,  NULL);
 
     // Get credential information for later use.
