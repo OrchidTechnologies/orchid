@@ -33,6 +33,7 @@
 #include "channel.hpp"
 #include "lwip.hpp"
 #include "memory.hpp"
+#include "pirate.hpp"
 #include "socket.hpp"
 #include "trace.hpp"
 
@@ -96,6 +97,19 @@ Peer::Peer(const S<Origin> &origin, Configuration configuration) :
         }());
     }())
 {
+}
+
+struct Internal_ { typedef struct socket *(cricket::SctpTransport::*type); };
+template struct Pirate<Internal_, &cricket::SctpTransport::sock_>;
+
+task<struct socket *> Peer::Internal() {
+    auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
+        return peer_->GetSctpTransport();
+    }));
+
+    orc_assert(sctp != nullptr);
+
+    co_return static_cast<cricket::SctpTransport *>(static_cast<webrtc::SctpTransport *>(sctp.get())->internal())->*Loot<Internal_>::pointer;
 }
 
 task<cricket::Candidate> Peer::Candidate() {

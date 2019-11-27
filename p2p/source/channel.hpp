@@ -36,6 +36,8 @@
 #include "threads.hpp"
 #include "trace.hpp"
 
+struct socket;
+
 namespace orc {
 
 class Socket;
@@ -108,6 +110,7 @@ _trace();
         return peer_;
     }
 
+    task<struct socket *> Internal();
     task<cricket::Candidate> Candidate();
 
 
