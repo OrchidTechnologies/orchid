@@ -304,7 +304,8 @@ _trace();
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
         co_await Post([&]() {
-            channel_->Send(webrtc::DataBuffer(buffer, true));
+            if (channel_->buffered_amount() == 0)
+                channel_->Send(webrtc::DataBuffer(buffer, true));
         });
     }
 };
