@@ -32,6 +32,10 @@ all: $(output)/$(default)/orchid$(exe)
 test: $(output)/$(default)/orchid$(exe)
 	sudo $< $(args)
 
+.PHONY: leak
+leak: $(output)/$(default)/orchid$(exe)
+	sudo bash -c 'MallocStackLogging=1 $< $(args)'
+
 .PHONY: debug
 debug: $(output)/$(default)/orchid$(exe)
 	sudo lldb -o 'run $(args)' $<
