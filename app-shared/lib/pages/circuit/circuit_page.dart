@@ -22,7 +22,6 @@ class CircuitPage extends StatefulWidget {
 
 class CircuitPageState extends State<CircuitPage> {
   List<UniqueHop> _hops;
-  bool _keysAvailable = false;
 
   @override
   void initState() {
@@ -32,7 +31,6 @@ class CircuitPageState extends State<CircuitPage> {
 
   void initStateAsync() async {
     var circuit = await UserPreferences().getCircuit();
-    var keys = await UserPreferences().getKeys();
     if (mounted) {
       setState(() {
         // Wrap the hops with a locally unique id for the UI
@@ -41,7 +39,6 @@ class CircuitPageState extends State<CircuitPage> {
           return UniqueHop(key: key, hop: hop);
         }))
             .toList();
-        _keysAvailable = keys != null && keys.length > 0;
       });
     }
   }
@@ -55,13 +52,7 @@ class CircuitPageState extends State<CircuitPage> {
           children: <Widget>[
             pady(16),
             Expanded(child: _buildListView()),
-            Visibility(
-              visible: _keysAvailable,
-              child: FloatingAddButton(onPressed: _addHop),
-              replacement: Text("Add keys before creating a circuit...",
-                  style: AppText.textHintStyle
-                      .copyWith(fontStyle: FontStyle.italic, fontSize: 14)),
-            ),
+            FloatingAddButton(onPressed: _addHop),
           ],
         ),
       ),

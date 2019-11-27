@@ -197,7 +197,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }
 
     // Save the new key
-    var keys = await UserPreferences().getKeys();
+    var keys = await UserPreferences().getKeys() ?? [];
     keys.add(key);
     await UserPreferences().setKeys(keys);
 
