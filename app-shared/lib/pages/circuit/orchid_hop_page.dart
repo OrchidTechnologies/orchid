@@ -5,6 +5,7 @@ import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/keys/add_key_page.dart';
 import '../app_colors.dart';
@@ -26,6 +27,7 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
   var _funderField = TextEditingController();
+  var _curatorField = TextEditingController();
   StoredEthereumKeyRef _initialKeyRef;
   StoredEthereumKeyRef _selectedKeyRef;
 
@@ -37,6 +39,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       _funderField.text = hop?.funder;
       _selectedKeyRef = hop?.keyRef;
       _initialKeyRef = _selectedKeyRef;
+      _curatorField.text = hop?.curator ?? OrchidHop.defaultCurator;
     });
     _funderField.addListener(_textFieldChanged);
   }
@@ -50,69 +53,100 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   @override
   Widget build(BuildContext context) {
     var isValid = _funderValid() && _keyRefValid();
-    return TitledPage(
-      title: "Orchid Hop",
-      actions: widget.mode == HopEditorMode.Create
-          ? [widget.buildSaveButton(context, isValid: isValid)]
-          : [],
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SafeArea(
-          child: Column(
-            children: <Widget>[
-              pady(16),
-              Row(
-                children: <Widget>[
-                  Text("Funder:",
-                      style: AppText.textLabelStyle.copyWith(
-                          fontSize: 20,
-                          color: _funderValid()
-                              ? AppColors.neutral_1
-                              : AppColors.neutral_3)),
-                  Expanded(
-                      child: AppTextField(
-                    controller: _funderField,
-                    enabled: widget.editable(),
-                  ))
-                ],
-              ),
-              pady(16),
-              Row(
-                children: <Widget>[
-                  Text("Signer:",
-                      style: AppText.textLabelStyle.copyWith(
-                          fontSize: 20,
-                          color: _keyRefValid()
-                              ? AppColors.neutral_1
-                              : AppColors.neutral_3)),
-                  Expanded(
-                      child: Padding(
-                    padding: const EdgeInsets.only(left: 20, right: 16),
-                    child: KeySelection(
-                        key: ValueKey(_initialKeyRef.toString()),
-                        enabled: widget.editable(),
-                        initialSelection: _initialKeyRef,
-                        onSelection: _keySelected),
-                  )),
-
-                  // Copy key button
-                  Visibility(
-                    visible: widget.viewOnly(),
-                    child: RoundedRectRaisedButton(
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        text: "Copy",
-                        onPressed: _onCopyButton),
+    return TapClearsFocus(
+      child: TitledPage(
+        title: "Orchid Hop",
+        actions: widget.mode == HopEditorMode.Create
+            ? [widget.buildSaveButton(context, isValid: isValid)]
+            : [],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SafeArea(
+            child: Column(
+              children: <Widget>[
+                // Curator
+                Visibility(
+                  visible: widget.viewOnly(),
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          width: 70,
+                          child: Text("Curator:",
+                              style: AppText.textLabelStyle.copyWith(
+                                  fontSize: 20, color: AppColors.neutral_1)),
+                        ),
+                        Expanded(
+                            child: AppTextField(
+                          controller: _curatorField,
+                          enabled: false,
+                        ))
+                      ],
+                    ),
                   ),
+                ),
 
-                  // Add key button
-                  Visibility(
-                    visible: widget.editable(),
-                    child: _buidAddKeyButton(),
-                  )
-                ],
-              ),
-            ],
+                // Funder
+                pady(16),
+                Row(
+                  children: <Widget>[
+                    Container(
+                      width: 70,
+                      child: Text("Funder:",
+                          style: AppText.textLabelStyle.copyWith(
+                              fontSize: 20,
+                              color: _funderValid()
+                                  ? AppColors.neutral_1
+                                  : AppColors.neutral_3)),
+                    ),
+                    Expanded(
+                        child: AppTextField(
+                      controller: _funderField,
+                      enabled: widget.editable(),
+                    ))
+                  ],
+                ),
+
+                // Signer
+                pady(16),
+                Row(
+                  children: <Widget>[
+                    Text("Signer:",
+                        style: AppText.textLabelStyle.copyWith(
+                            fontSize: 20,
+                            color: _keyRefValid()
+                                ? AppColors.neutral_1
+                                : AppColors.neutral_3)),
+                    Expanded(
+                        child: Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 16),
+                      child: KeySelection(
+                          key: ValueKey(_initialKeyRef.toString()),
+                          enabled: widget.editable(),
+                          initialSelection: _initialKeyRef,
+                          onSelection: _keySelected),
+                    )),
+
+                    // Copy key button
+                    Visibility(
+                      visible: widget.viewOnly(),
+                      child: RoundedRectRaisedButton(
+                          backgroundColor: Colors.grey,
+                          textColor: Colors.white,
+                          text: "Copy",
+                          onPressed: _onCopyButton),
+                    ),
+
+                    // Add key button
+                    Visibility(
+                      visible: widget.editable(),
+                      child: _buidAddKeyButton(),
+                    )
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

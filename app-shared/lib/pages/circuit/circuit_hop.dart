@@ -67,20 +67,27 @@ class CircuitHop {
 }
 
 class OrchidHop extends CircuitHop {
+  static const String defaultCurator = "partners.orch1d.eth";
+  final String curator;
   final String funder;
   final StoredEthereumKeyRef keyRef;
 
-  OrchidHop({this.funder, this.keyRef}) : super(Protocol.Orchid);
+  OrchidHop({this.curator = defaultCurator, this.funder, this.keyRef})
+      : super(Protocol.Orchid);
 
   factory OrchidHop.fromJson(Map<String, dynamic> json) {
+    var curator = json['curator'];
     var keyRefValue = json['keyRef'];
+
     // Key references are explicitly allowed to be null.
     var nullableKeyRef =
         keyRefValue != null ? StoredEthereumKeyRef(keyRefValue) : null;
-    return OrchidHop(funder: json['funder'], keyRef: nullableKeyRef);
+    return OrchidHop(
+        curator: curator, funder: json['funder'], keyRef: nullableKeyRef);
   }
 
   Map<String, dynamic> toJson() => {
+        'curator': curator ?? defaultCurator,
         'protocol': CircuitHop.protocolToString(protocol),
         'funder': funder,
         'keyRef': keyRef?.toString(), // Key references are nullable
@@ -125,9 +132,7 @@ class EditableHop extends ValueNotifier<UniqueHop> {
   EditableHop.empty() : super(null);
 }
 
-enum HopEditorMode {
-  Create, Edit, View
-}
+enum HopEditorMode { Create, Edit, View }
 
 class HopEditor<T extends CircuitHop> extends StatefulWidget {
   final EditableHop editableHop;
@@ -150,6 +155,7 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
   bool editable() {
     return mode != HopEditorMode.View;
   }
+
   bool viewOnly() {
     return !editable();
   }
