@@ -10,7 +10,12 @@ class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final bool obscureText;
   final int maxLines;
+
+  // If enabled the text field is editable
   final bool enabled;
+
+  // If readOnly the text is displayed without the text field decoration
+  final bool readOnly;
 
   AppTextField(
       {this.hintText,
@@ -18,15 +23,15 @@ class AppTextField extends StatelessWidget {
       this.controller,
       this.obscureText = false,
       this.maxLines = 1,
-      this.enabled = true});
+      this.enabled = true,
+      this.readOnly = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        //decoration: enabled ? textFieldEnabledDecoration : null,
-        decoration: textFieldEnabledDecoration,
+        decoration: readOnly ? BoxDecoration() : textFieldEnabledDecoration,
         height: 56,
-        margin: EdgeInsets.symmetric(horizontal: 20),
+        margin: readOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: <Widget>[
             Flexible(

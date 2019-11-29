@@ -13,13 +13,14 @@ import '../app_text.dart';
 import 'circuit_hop.dart';
 import 'key_selection.dart';
 
-// TODO: This was originally designed to allow partial (invalid) configuration
-// TODO: to be observed and saved in edit mode.  If no longer needed we can
-// TODO: remove that abstraction.
 /// Create / edit / view an Orchid Hop
 class OrchidHopPage extends HopEditor<OrchidHop> {
-  OrchidHopPage({@required editableHop, mode = HopEditorMode.View})
-      : super(editableHop: editableHop, mode: mode);
+  OrchidHopPage(
+      {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
+      : super(
+            editableHop: editableHop,
+            mode: mode,
+            onAddFlowComplete: onAddFlowComplete);
 
   @override
   _OrchidHopPageState createState() => _OrchidHopPageState();
@@ -59,115 +60,179 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, isValid: isValid)]
             : [],
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: SafeArea(
-            child: Column(
-              children: <Widget>[
-                // Curator
-                Visibility(
-                  visible: widget.viewOnly(),
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 16),
-                    child: Row(
-                      children: <Widget>[
-                        Container(
-                          width: 70,
-                          child: Text("Curator:",
-                              style: AppText.textLabelStyle.copyWith(
-                                  fontSize: 20, color: AppColors.neutral_1)),
-                        ),
-                        Expanded(
-                            child: AppTextField(
-                          controller: _curatorField,
-                          enabled: false,
-                        ))
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Funder
-                pady(16),
-                Row(
-                  children: <Widget>[
-                    Container(
-                      width: 70,
-                      child: Text("Funder:",
-                          style: AppText.textLabelStyle.copyWith(
-                              fontSize: 20,
-                              color: _funderValid()
-                                  ? AppColors.neutral_1
-                                  : AppColors.neutral_3)),
-                    ),
-                    Expanded(
-                        child: AppTextField(
-                      controller: _funderField,
-                      enabled: widget.editable(),
-                    ))
-                  ],
-                ),
-
-                // Signer
-                pady(16),
-                Row(
-                  children: <Widget>[
-                    Text("Signer:",
-                        style: AppText.textLabelStyle.copyWith(
-                            fontSize: 20,
-                            color: _keyRefValid()
-                                ? AppColors.neutral_1
-                                : AppColors.neutral_3)),
-                    Expanded(
-                        child: Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 16),
-                      child: KeySelection(
-                          key: ValueKey(_initialKeyRef.toString()),
-                          enabled: widget.editable(),
-                          initialSelection: _initialKeyRef,
-                          onSelection: _keySelected),
-                    )),
-
-                    // Copy key button
-                    Visibility(
-                      visible: widget.viewOnly(),
-                      child: RoundedRectRaisedButton(
-                          backgroundColor: Colors.grey,
-                          textColor: Colors.white,
-                          text: "Copy",
-                          onPressed: _onCopyButton),
-                    ),
-
-                    // Add key button
-                    Visibility(
-                      visible: widget.editable(),
-                      child: _buidAddKeyButton(),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
+        child: SafeArea(
+          child: _buildContent(),
         ),
       ),
     );
   }
 
-  /*
-  Widget _buidAddKeyButton() {
-    return GestureDetector(
-      onTap: _onCopyButton,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey,
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        width: 35,
-        height: 35,
-        child: Icon(Icons.add_circle_outline, color: Colors.white),
+  Widget _buildContent() {
+    switch (widget.mode) {
+      case HopEditorMode.Create:
+        return _buildCreateModeContent();
+      case HopEditorMode.Edit:
+      case HopEditorMode.View:
+        return _buildViewOrEditModeContent();
+    }
+  }
+
+  Widget _buildCreateModeContent() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: <Widget>[
+          _buildFunding(),
+        ],
       ),
     );
-  }*/
+  }
+
+  Widget _buildViewOrEditModeContent() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 24, top: 24, bottom: 24, right: 16),
+      child: Column(
+        children: <Widget>[
+          _buildSection(
+              title: "Funding", child: _buildFunding(), onDetail: null),
+          pady(16),
+          divider(),
+          pady(24),
+          _buildSection(
+              title: "Curation", child: _buildCuration(), onDetail: () {}),
+          pady(36),
+          divider(),
+          pady(24),
+          _buildSection(
+              title: "Budget", child: _buildBudget(), onDetail: () {}),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection({String title, Widget child, VoidCallback onDetail}) {
+    return Column(
+      children: <Widget>[
+        Text(title,
+            style: AppText.dialogTitle
+                .copyWith(color: Colors.black, fontSize: 22)),
+        pady(8),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(child: child),
+              Visibility(
+                visible: onDetail != null,
+                child: Container(
+                  //width: 60,
+                  //color: Colors.red,
+                  child: FlatButton(
+                      child: Icon(Icons.chevron_right), onPressed: onDetail),
+                ),
+              )
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFunding() {
+    return Column(
+      children: <Widget>[
+        // Wallet address (funder)
+        Row(
+          children: <Widget>[
+            Container(
+              width: 70,
+              child: Text("Funder:",
+                  style: AppText.textLabelStyle.copyWith(
+                      fontSize: 20,
+                      color: _funderValid()
+                          ? AppColors.neutral_1
+                          : AppColors.neutral_3)),
+            ),
+            Expanded(
+                child: AppTextField(
+              controller: _funderField,
+              readOnly: widget.viewOnly(),
+              enabled: widget.editable(),
+            ))
+          ],
+        ),
+
+        // Signer
+        pady(widget.viewOnly() ? 0 : 8),
+        Row(
+          children: <Widget>[
+            Text("Signer:",
+                style: AppText.textLabelStyle.copyWith(
+                    fontSize: 20,
+                    color: _keyRefValid()
+                        ? AppColors.neutral_1
+                        : AppColors.neutral_3)),
+            Expanded(
+                child: Padding(
+              padding: const EdgeInsets.only(left: 20, right: 16),
+              child: KeySelection(
+                  key: ValueKey(_initialKeyRef.toString()),
+                  enabled: widget.editable(),
+                  initialSelection: _initialKeyRef,
+                  onSelection: _keySelected),
+            )),
+
+            // Copy key button
+            Visibility(
+              visible: widget.viewOnly(),
+              child: RoundedRectRaisedButton(
+                  backgroundColor: Colors.grey,
+                  textColor: Colors.white,
+                  text: "Copy",
+                  onPressed: _onCopyButton),
+            ),
+
+            // Add key button
+            Visibility(
+              visible: widget.editable(),
+              child: _buidAddKeyButton(),
+            )
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCuration() {
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 75,
+          child: Text("Curator:",
+              style: AppText.textLabelStyle
+                  .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+        ),
+        Expanded(
+            child: AppTextField(
+          controller: _curatorField,
+          readOnly: true,
+          enabled: false,
+        ))
+      ],
+    );
+  }
+
+  Widget _buildBudget() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        pady(16),
+        Text("View or modify your budget.",
+            textAlign: TextAlign.left, style: AppText.dialogBody),
+      ],
+    );
+  }
+
   Widget _buidAddKeyButton() {
     return Container(
       width: 30,
@@ -240,6 +305,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       _initialKeyRef = key.ref(); // rebuild the dropdown
       _selectedKeyRef = _initialKeyRef;
     });
+  }
+
+  Widget divider() {
+    return Divider(
+      color: Colors.black.withOpacity(0.5),
+      height: 1.0,
+    );
   }
 
   @override

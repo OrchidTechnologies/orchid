@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 
+import 'add_hop_page.dart';
+
 enum Protocol { Orchid, OpenVPN }
 
 class Circuit {
@@ -136,24 +138,21 @@ enum HopEditorMode { Create, Edit, View }
 
 class HopEditor<T extends CircuitHop> extends StatefulWidget {
   final EditableHop editableHop;
+  final AddFlowCompletion onAddFlowComplete;
 
   // In create mode the editor offers a "save" button that pops the view and
   // returns the value on the context.  If the user navigates back without
   // saving the context result will be null.
   final HopEditorMode mode;
 
-  HopEditor({@required this.editableHop, @required this.mode});
+  HopEditor({@required this.editableHop, @required this.mode, this.onAddFlowComplete});
 
   Widget buildSaveButton(BuildContext context, {bool isValid = true}) {
     return SaveActionButton(
         isValid: isValid,
         onPressed: () {
-          _save(context);
+          this.onAddFlowComplete(this.editableHop.value.hop);
         });
-  }
-
-  void _save(BuildContext context) {
-    Navigator.pop(context, this.editableHop.value.hop);
   }
 
   bool editable() {
