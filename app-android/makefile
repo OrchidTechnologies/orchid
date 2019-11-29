@@ -45,7 +45,7 @@ assets := $(output)/assets/flutter_assets
 include shared/flutter.mk
 
 ifneq ($(precompiled),)
-$(output)/%/aot/app.so: $(dart)
+$(output)/%/aot/app.so: flutter/packages/flutter/pubspec.lock $(dart)
 	flutter/bin/flutter --suppress-analytics --verbose build aot -t lib/main.dart \
 	    --target-platform=android-$(flutter/$*) --$(mode) --output-dir=$(dir $@)
 

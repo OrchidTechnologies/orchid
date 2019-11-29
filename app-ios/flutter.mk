@@ -33,7 +33,7 @@ $(bundle)/Frameworks/App.framework/App:
 	    -Xlinker -rpath -Xlinker '@loader_path/Frameworks' \
 	    -install_name '@rpath/App.framework/App'
 else
-$(output)/aot/App.framework/App: $(dart)
+$(output)/aot/App.framework/App: flutter/packages/flutter/pubspec.lock $(dart)
 	flutter/bin/flutter --suppress-analytics --verbose build aot -t lib/main.dart \
 	    --target-platform=ios --$(mode) --output-dir=$(output)/aot
 
