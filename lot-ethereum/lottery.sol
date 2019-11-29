@@ -135,6 +135,14 @@ contract OrchidLottery {
         send(funder, signer, pot);
     }
 
+    function burn(address signer, uint128 escrow) external {
+        address funder = msg.sender;
+        Pot storage pot = find(funder, signer);
+        require(pot.escrow_ >= escrow);
+        pot.escrow_ -= escrow;
+        send(funder, signer, pot);
+    }
+
     function bind(address signer, OrchidVerifier verify, bytes calldata shared) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
