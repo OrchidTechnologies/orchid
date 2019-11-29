@@ -112,9 +112,6 @@
 [submodule "gnulib"]
 	path = min-wireshark/gnulib
 	url = https://git.savannah.gnu.org/git/gnulib.git
-[submodule "gpgme"]
-	path = p2p/gpgme
-	url = https://dev.gnupg.org/source/gpgme.git
 [submodule "libcxxabi"]
 	path = env/libcxxabi
 	url = https://github.com/llvm-mirror/libcxxabi.git
