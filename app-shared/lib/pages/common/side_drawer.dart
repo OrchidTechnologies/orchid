@@ -50,8 +50,11 @@ class _SideDrawerState extends State<SideDrawer> {
     return Column(
       children: <Widget>[
         // top logo
-        DrawerHeader(
-          child: Image(image: AssetImage('assets/images/logo.png')),
+        Theme(
+          data: ThemeData(dividerColor: Colors.transparent),
+          child: DrawerHeader(
+            child: Image(image: AssetImage('assets/images/logo.png')),
+          ),
         ),
 
         Expanded(
@@ -251,3 +254,4 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
     _balanceListener.cancel();
   }
 }
+

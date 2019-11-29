@@ -21,17 +21,9 @@ class _AddHopPageState extends State<AddHopPage> {
         child: Column(
           children: <Widget>[
             pady(8),
-            _buildChoice(
-                text: "Orchid Hop",
-                onPressed: () {
-                  _addHopType(Protocol.Orchid);
-                }),
+            _buildHopChoice(text: "Orchid Hop", hopType: Protocol.Orchid),
             _divider(),
-            _buildChoice(
-                text: "OpenVPN Hop",
-                onPressed: () {
-                  _addHopType(Protocol.OpenVPN);
-                }),
+            _buildHopChoice(text: "OpenVPN Hop", hopType: Protocol.OpenVPN),
             _divider(),
           ],
         ),
@@ -39,13 +31,15 @@ class _AddHopPageState extends State<AddHopPage> {
     );
   }
 
-  Widget _buildChoice({String text, VoidCallback onPressed}) {
+  Widget _buildHopChoice({String text, Protocol hopType}) {
     return ListTile(
         contentPadding: EdgeInsets.only(left: 24, right: 24, top: 8, bottom: 8),
         trailing: Icon(Icons.chevron_right, color: Colors.black),
         title:
             Text(text, textAlign: TextAlign.left, style: AppText.dialogTitle),
-        onTap: onPressed);
+        onTap: () {
+          _addHopType(hopType);
+        });
   }
 
   void _addHopType(Protocol hopType) async {

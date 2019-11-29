@@ -148,8 +148,12 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
     return SaveActionButton(
         isValid: isValid,
         onPressed: () {
-          Navigator.pop(context, this.editableHop.value.hop);
+          _save(context);
         });
+  }
+
+  void _save(BuildContext context) {
+    Navigator.pop(context, this.editableHop.value.hop);
   }
 
   bool editable() {
