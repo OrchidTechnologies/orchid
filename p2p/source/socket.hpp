@@ -28,7 +28,7 @@
 
 #include <boost/endian/conversion.hpp>
 #include <lwip/ip4_addr.h>
-#include <rtc_base/ip_address.h>
+#include <rtc_base/socket_address.h>
 
 #include <asio.hpp>
 #include "error.hpp"
@@ -181,6 +181,12 @@ class Socket {
     Socket(const asio::ip::basic_endpoint<Protocol_> &endpoint) :
         host_(endpoint.address()),
         port_(endpoint.port())
+    {
+    }
+
+    Socket(const rtc::SocketAddress &socket) :
+        host_(socket.ipaddr()),
+        port_(socket.port())
     {
     }
 

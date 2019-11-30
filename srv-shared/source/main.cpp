@@ -35,7 +35,9 @@
 #include <openssl/base.h>
 #include <openssl/pkcs12.h>
 
+#include <api/jsep_session_description.h>
 #include <pc/webrtc_sdp.h>
+
 #include <rtc_base/message_digest.h>
 #include <rtc_base/openssl_identity.h>
 #include <rtc_base/ssl_fingerprint.h>
@@ -270,6 +272,39 @@ int Main(int argc, const char *const argv[]) {
                 co_await move.Send(endpoint, provider, password, location, url, tls, "");
             }
         }());
+    }
+
+
+    {
+        auto offer(Wait(Description(GetLocal(), {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
+        std::cout << std::endl;
+        std::cout << offer << std::endl;
+
+        webrtc::JsepSessionDescription jsep(webrtc::SdpType::kOffer);
+        webrtc::SdpParseError error;
+        orc_assert(webrtc::SdpDeserialize(offer, &jsep, &error));
+
+        auto description(jsep.description());
+        orc_assert(description != nullptr);
+
+        std::map<Socket, Socket> reflexive;
+
+        for (size_t i(0); ; ++i) {
+            auto ices(jsep.candidates(i));
+            if (ices == nullptr)
+                break;
+            for (size_t i(0), e(ices->count()); i != e; ++i) {
+                auto ice(ices->at(i));
+                orc_assert(ice != nullptr);
+                const auto &candidate(ice->candidate());
+                if (candidate.type() != "stun")
+                    continue;
+                if (!reflexive.emplace(candidate.related_address(), candidate.address()).second) {
+                    std::cerr << "server must not use symmetric NAT" << std::endl;
+                    return 1;
+                }
+            }
+        }
     }
 
 

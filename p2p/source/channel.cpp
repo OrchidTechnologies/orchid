@@ -281,4 +281,13 @@ rtc::scoped_refptr<rtc::RTCCertificate> Certify() {
     )));
 }
 
+task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice) {
+    Configuration configuration;
+    configuration.ice_ = std::move(ice);
+    auto client(Make<Actor>(origin, std::move(configuration)));
+    auto stopper(Break<Sink<Stopper>>());
+    stopper->Wire<Channel>(client);
+    co_return co_await client->Offer();
+}
+
 }

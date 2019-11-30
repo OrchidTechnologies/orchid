@@ -315,6 +315,7 @@ _trace();
 
 std::string Strip(const std::string &sdp);
 rtc::scoped_refptr<rtc::RTCCertificate> Certify();
+task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice);
 
 }
 
