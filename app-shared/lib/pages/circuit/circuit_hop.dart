@@ -74,8 +74,17 @@ class OrchidHop extends CircuitHop {
   final String funder;
   final StoredEthereumKeyRef keyRef;
 
-  OrchidHop({this.curator = defaultCurator, this.funder, this.keyRef})
+  OrchidHop(
+      {@required this.curator, @required this.funder, @required this.keyRef})
       : super(Protocol.Orchid);
+
+  // Construct an Orchid Hop using an existing hop as defaults.
+  OrchidHop.from(OrchidHop hop,
+      {String curator, String funder, StoredEthereumKeyRef keyRef})
+      : this(
+            curator: curator ?? hop?.curator,
+            funder: funder ?? hop?.funder,
+            keyRef: keyRef ?? hop?.keyRef);
 
   factory OrchidHop.fromJson(Map<String, dynamic> json) {
     var curator = json['curator'];
@@ -126,12 +135,23 @@ class UniqueHop {
   final CircuitHop hop;
 
   UniqueHop({@required this.key, @required this.hop});
+
+  // Create a UniqueHop preserving any key from a previous UniqueHop.
+  UniqueHop.from(UniqueHop uniqueHop, {CircuitHop hop, int index = 0})
+      : this(
+            key:
+                uniqueHop?.key ?? DateTime.now().millisecondsSinceEpoch + index,
+            hop: hop);
 }
 
 class EditableHop extends ValueNotifier<UniqueHop> {
   EditableHop(UniqueHop value) : super(value);
 
   EditableHop.empty() : super(null);
+
+  void update(CircuitHop hop) {
+    value = UniqueHop.from(value, hop: hop);
+  }
 }
 
 enum HopEditorMode { Create, Edit, View }
@@ -145,7 +165,10 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
   // saving the context result will be null.
   final HopEditorMode mode;
 
-  HopEditor({@required this.editableHop, @required this.mode, this.onAddFlowComplete});
+  HopEditor(
+      {@required this.editableHop,
+      @required this.mode,
+      this.onAddFlowComplete});
 
   Widget buildSaveButton(BuildContext context, {bool isValid = true}) {
     return SaveActionButton(
@@ -159,7 +182,7 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
     return mode != HopEditorMode.View;
   }
 
-  bool viewOnly() {
+  bool readOnly() {
     return !editable();
   }
 

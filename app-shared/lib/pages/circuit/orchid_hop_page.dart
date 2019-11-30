@@ -10,7 +10,9 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/keys/add_key_page.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
+import 'budget_page.dart';
 import 'circuit_hop.dart';
+import 'curator_page.dart';
 import 'key_selection.dart';
 
 /// Create / edit / view an Orchid Hop
@@ -36,7 +38,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void initState() {
     super.initState();
     setState(() {
-      OrchidHop hop = widget.editableHop.value?.hop;
+      OrchidHop hop = _hop();
       _funderField.text = hop?.funder;
       _selectedKeyRef = hop?.keyRef;
       _initialKeyRef = _selectedKeyRef;
@@ -160,14 +162,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             Expanded(
                 child: AppTextField(
               controller: _funderField,
-              readOnly: widget.viewOnly(),
+              readOnly: widget.readOnly(),
               enabled: widget.editable(),
             ))
           ],
         ),
 
         // Signer
-        pady(widget.viewOnly() ? 0 : 8),
+        pady(widget.readOnly() ? 0 : 8),
         Row(
           children: <Widget>[
             Text("Signer:",
@@ -188,7 +190,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
             // Copy key button
             Visibility(
-              visible: widget.viewOnly(),
+              visible: widget.readOnly(),
               child: RoundedRectRaisedButton(
                   backgroundColor: Colors.grey,
                   textColor: Colors.white,
@@ -210,15 +212,17 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   Widget _buildCuration() {
     return Row(
       children: <Widget>[
+        /*
         Container(
           width: 75,
           child: Text("Curator:",
               style: AppText.textLabelStyle
                   .copyWith(fontSize: 20, color: AppColors.neutral_1)),
-        ),
+        ),*/
         Expanded(
             child: AppTextField(
           controller: _curatorField,
+          padding: EdgeInsets.zero,
           readOnly: true,
           enabled: false,
         ))
@@ -247,15 +251,18 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  void _editCurator() {
+  void _editCurator() async {
     var route = MaterialPageRoute(
-        builder: (context) => CuratorEditor(editableHop: widget.editableHop));
-    Navigator.push(context, route);
+        builder: (context) =>
+            CuratorEditorPage(editableHop: widget.editableHop));
+    await Navigator.push(context, route);
+    _curatorField.text = _hop()?.curator ?? OrchidHop.defaultCurator;
   }
 
   void _editBudget() {
     var route = MaterialPageRoute(
-        builder: (context) => BudgetEditor(editableHop: widget.editableHop));
+        builder: (context) =>
+            BudgetEditorPage(editableHop: widget.editableHop));
     Navigator.push(context, route);
   }
 
@@ -287,12 +294,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     if (!widget.editable()) {
       return;
     }
-    widget.editableHop.value = UniqueHop(
-        key: widget.editableHop.value?.key ??
-            DateTime.now().millisecondsSinceEpoch,
-        hop: OrchidHop(
-            funder: Hex.removePrefix(_funderField.text),
-            keyRef: _selectedKeyRef));
+    widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,
+        funder: Hex.removePrefix(_funderField.text), keyRef: _selectedKeyRef));
   }
 
   /// Copy the log data to the clipboard
@@ -323,6 +326,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     });
   }
 
+  OrchidHop _hop() {
+    return widget.editableHop.value?.hop;
+  }
+
   Widget divider() {
     return Divider(
       color: Colors.black.withOpacity(0.5),
@@ -334,49 +341,5 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void dispose() {
     super.dispose();
     _funderField.removeListener(_textFieldChanged);
-  }
-}
-
-class CuratorEditor extends HopEditor<OrchidHop> {
-  CuratorEditor({@required editableHop})
-      : super(editableHop: editableHop, mode: HopEditorMode.Edit);
-
-  @override
-  _CuratorEditorState createState() => _CuratorEditorState();
-}
-
-class _CuratorEditorState extends State<CuratorEditor> {
-  @override
-  Widget build(BuildContext context) {
-    return TapClearsFocus(
-      child: TitledPage(
-        title: "Curation",
-        child: SafeArea(
-          child: Container(),
-        ),
-      ),
-    );
-  }
-}
-
-class BudgetEditor extends HopEditor<OrchidHop> {
-  BudgetEditor({@required editableHop})
-      : super(editableHop: editableHop, mode: HopEditorMode.Edit);
-
-  @override
-  _BudgetEditorState createState() => _BudgetEditorState();
-}
-
-class _BudgetEditorState extends State<BudgetEditor> {
-  @override
-  Widget build(BuildContext context) {
-    return TapClearsFocus(
-      child: TitledPage(
-        title: "Budget",
-        child: SafeArea(
-          child: Container(),
-        ),
-      ),
-    );
   }
 }

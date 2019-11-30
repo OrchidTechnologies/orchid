@@ -17,6 +17,8 @@ class AppTextField extends StatelessWidget {
   // If readOnly the text is displayed without the text field decoration
   final bool readOnly;
 
+  final EdgeInsetsGeometry padding;
+
   AppTextField(
       {this.hintText,
       this.trailing,
@@ -24,19 +26,21 @@ class AppTextField extends StatelessWidget {
       this.obscureText = false,
       this.maxLines = 1,
       this.enabled = true,
-      this.readOnly = false});
+      this.readOnly = false,
+      this.padding});
 
   @override
   Widget build(BuildContext context) {
     return Container(
         decoration: readOnly ? BoxDecoration() : textFieldEnabledDecoration,
         height: 56,
-        margin: readOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 20),
+        margin:
+            readOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: <Widget>[
             Flexible(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
                   enabled: enabled,
                   obscureText: obscureText,

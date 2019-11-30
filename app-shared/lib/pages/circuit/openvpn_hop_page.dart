@@ -125,13 +125,10 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     if (!widget.editable()) {
       return;
     }
-    widget.editableHop.value = UniqueHop(
-        key: widget.editableHop.value?.key ??
-            DateTime.now().millisecondsSinceEpoch,
-        hop: OpenVPNHop(
-            userName: _userName.text,
-            userPassword: _userPassword.text,
-            ovpnConfig: _ovpnConfig.text));
+    widget.editableHop.update(OpenVPNHop(
+        userName: _userName.text,
+        userPassword: _userPassword.text,
+        ovpnConfig: _ovpnConfig.text));
   }
 
   @override
