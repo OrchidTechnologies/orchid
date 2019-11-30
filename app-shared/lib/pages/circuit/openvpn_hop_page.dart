@@ -7,13 +7,14 @@ import '../app_colors.dart';
 import '../app_text.dart';
 import 'circuit_hop.dart';
 
-// TODO: This was originally designed to allow partial (invalid) configuration
-// TODO: to be observed and saved in edit mode.  If no longer needed we can
-// TODO: remove that abstraction.
 /// Create / edit / view an Open VPN Hop
 class OpenVPNHopPage extends HopEditor<OpenVPNHop> {
-  OpenVPNHopPage({@required editableHop, mode = HopEditorMode.View})
-      : super(editableHop: editableHop, mode: mode);
+  OpenVPNHopPage(
+      {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
+      : super(
+            editableHop: editableHop,
+            mode: mode,
+            onAddFlowComplete: onAddFlowComplete);
 
   @override
   _OpenVPNHopPageState createState() => _OpenVPNHopPageState();

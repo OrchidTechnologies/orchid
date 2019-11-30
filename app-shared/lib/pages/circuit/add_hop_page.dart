@@ -6,7 +6,13 @@ import 'circuit_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
 
+typedef AddFlowCompletion = void Function(CircuitHop result);
+
 class AddHopPage extends StatefulWidget {
+  final AddFlowCompletion onAddFlowComplete;
+
+  const AddHopPage({Key key, this.onAddFlowComplete}) : super(key: key);
+
   @override
   _AddHopPageState createState() => _AddHopPageState();
 }
@@ -17,6 +23,9 @@ class _AddHopPageState extends State<AddHopPage> {
     return TitledPage(
       title: "Add Circuit Hop",
       cancellable: true,
+      backAction: () {
+        widget.onAddFlowComplete(null);
+      },
       child: SafeArea(
         child: Column(
           children: <Widget>[
@@ -50,12 +59,14 @@ class _AddHopPageState extends State<AddHopPage> {
         editor = OrchidHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
         );
         break;
       case Protocol.OpenVPN:
         editor = OpenVPNHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
         );
         break;
     }
