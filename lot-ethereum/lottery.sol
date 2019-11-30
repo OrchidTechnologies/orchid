@@ -73,14 +73,17 @@ contract OrchidLottery {
         return lotteries_[funder].pots_[signer];
     }
 
-    function kill(address funder, address signer, Pot storage pot) private {
+    function kill(address signer) external {
+        address funder = msg.sender;
         Lottery storage lottery = lotteries_[funder];
+        Pot storage pot = lottery.pots_[signer];
         require(pot.offset_ != 0);
         address key = lottery.keys_[lottery.keys_.length - 1];
         lottery.pots_[key].offset_ = pot.offset_;
         lottery.keys_[pot.offset_ - 1] = key;
         --lottery.keys_.length;
         delete lottery.pots_[signer];
+        send(funder, signer, pot);
     }
 
 
@@ -138,7 +141,8 @@ contract OrchidLottery {
     function burn(address signer, uint128 escrow) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
-        require(pot.escrow_ >= escrow);
+        if (escrow > pot.escrow_)
+            escrow = pot.escrow_;
         pot.escrow_ -= escrow;
         send(funder, signer, pot);
     }
@@ -164,19 +168,19 @@ contract OrchidLottery {
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
 
-    function take(address funder, address signer, uint128 amount, Pot storage pot) private returns (uint128) {
+    function take(uint128 amount, Pot storage pot) private returns (uint128) {
         if (pot.amount_ >= amount)
             pot.amount_ -= amount;
         else {
             amount = pot.amount_;
-            kill(funder, signer, pot);
+            pot.escrow_ = 0;
         }
 
         return amount;
     }
 
     function take(address funder, address signer, uint128 amount, address payable target, Pot storage pot) private {
-        amount = take(funder, signer, amount, pot);
+        amount = take(amount, pot);
         send(funder, signer, pot);
 
         if (amount != 0)
@@ -267,14 +271,34 @@ contract OrchidLottery {
         send(funder, signer, pot);
     }
 
-    function pull(address signer, address payable target) external {
+    function pull(address signer, address payable target, uint128 amount, uint128 escrow) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         require(pot.unlock_ != 0);
         require(pot.unlock_ <= block.timestamp);
-        uint128 amount = pot.amount_ + pot.escrow_;
-        kill(funder, signer, pot);
+        if (amount > pot.amount_)
+            amount = pot.amount_;
+        if (escrow > pot.escrow_)
+            escrow = pot.escrow_;
+        uint128 total = amount + escrow;
+        pot.amount_ -= amount;
+        pot.escrow_ -= escrow;
+        if (pot.escrow_ == 0)
+            pot.unlock_ = 0;
         send(funder, signer, pot);
-        require(token_.transfer(target, amount));
+        require(token_.transfer(target, total));
+    }
+
+    function yank(address signer, address payable target) external {
+        address funder = msg.sender;
+        Pot storage pot = find(funder, signer);
+        require(pot.unlock_ != 0);
+        require(pot.unlock_ <= block.timestamp);
+        uint128 total = pot.amount_ + pot.escrow_;
+        pot.amount_ = 0;
+        pot.escrow_ = 0;
+        pot.unlock_ = 0;
+        send(funder, signer, pot);
+        require(token_.transfer(target, total));
     }
 }
