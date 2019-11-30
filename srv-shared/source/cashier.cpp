@@ -20,8 +20,47 @@
 /* }}} */
 
 
+#include <boost/multiprecision/cpp_bin_float.hpp>
+
+#include <cppcoro/async_manual_reset_event.hpp>
+
+#include "baton.hpp"
 #include "cashier.hpp"
 
 namespace orc {
+
+task<void> Cashier::Update(cpp_dec_float_50 price, const std::string &fiat) {
+    price /= co_await Price("ETH", fiat) / 200;
+    price *= 1000000000;
+    price /= 1024 * 1024 * 1024;
+    price *= 1000000000;
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    using boost::multiprecision::cpp_bin_float_quad;
+    price_ = static_cast<uint256_t>(static_cast<cpp_bin_float_quad>(price) * static_cast<cpp_bin_float_quad>(uint256_t(1) << 128));
+}
+
+Cashier::Cashier(Locator rpc, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password) :
+    endpoint_(GetLocal(), std::move(rpc)),
+    lottery_(std::move(lottery)),
+    personal_(std::move(personal)),
+    password_(std::move(password))
+{
+    cppcoro::async_manual_reset_event ready;
+
+    Spawn([&ready, this, price = cpp_dec_float_50(price), fiat]() -> task<void> {
+        co_await Update(price, fiat);
+        ready.set();
+        for (;;) {
+            boost::asio::deadline_timer timer(Context(), boost::posix_time::minutes(5));
+            co_await timer.async_wait(Token());
+            co_await Update(price, fiat);
+        }
+    });
+
+    Wait([&]() -> task<void> {
+        co_await ready;
+    }());
+}
 
 }

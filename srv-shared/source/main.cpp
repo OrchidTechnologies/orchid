@@ -27,7 +27,6 @@
 #include <unistd.h>
 
 #include <boost/filesystem/string_file.hpp>
-#include <boost/multiprecision/cpp_bin_float.hpp>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -44,7 +43,6 @@
 #include "baton.hpp"
 #include "cashier.hpp"
 #include "channel.hpp"
-#include "coinbase.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
@@ -275,22 +273,7 @@ int Main(int argc, const char *const argv[]) {
     }
 
 
-    // XXX: price needs to be updated at runtime
-    // XXX: this code needs to move into Cashier
-    uint256_t price(Wait([&]() -> task<uint256_t> {
-        cpp_dec_float_50 price(args["price"].as<std::string>());
-        price /= co_await Price("ETH", args["fiat"].as<std::string>()) / 200;
-        price *= 1000000000;
-        price /= 1024 * 1024 * 1024;
-        price *= 1000000000;
-        using boost::multiprecision::cpp_bin_float_quad;
-        co_return static_cast<uint256_t>(static_cast<cpp_bin_float_quad>(price) * static_cast<cpp_bin_float_quad>(uint256_t(1) << 128));
-    }()));
-
-    std::cout.precision(std::numeric_limits<cpp_dec_float_50>::digits10);
-    std::cerr << "price = " << price << std::endl;
-
-    auto node(Make<Node>(std::move(ice), Make<Cashier>(rpc, Address(args["lottery"].as<std::string>()), price, personal, password)));
+    auto node(Make<Node>(std::move(ice), Make<Cashier>(rpc, Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["fiat"].as<std::string>(), personal, password)));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;

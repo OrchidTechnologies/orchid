@@ -73,7 +73,7 @@ _trace();
 };
 
 void Server::Bill(Pipe *pipe, const Buffer &data) {
-    uint256_t amount(cashier_->Price() * data.size());
+    uint256_t amount(cashier_->Bill(data.size()));
     { std::unique_lock<std::mutex> lock_(mutex_);
         if (balance_ < amount) {
             _trace(); /* XXX: nerf return; */ }

@@ -23,8 +23,10 @@
 #ifndef ORCHID_CASHIER_HPP
 #define ORCHID_CASHIER_HPP
 
+#include <mutex>
 #include <string>
 
+#include "coinbase.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
 #include "locator.hpp"
@@ -35,22 +37,20 @@ class Cashier {
   private:
     Endpoint endpoint_;
     Address lottery_;
-    uint256_t price_;
     Address personal_;
     std::string password_;
 
-  public:
-    Cashier(Locator rpc, Address lottery, uint256_t price, Address personal, std::string password) :
-        endpoint_(GetLocal(), std::move(rpc)),
-        lottery_(std::move(lottery)),
-        price_(std::move(price)),
-        personal_(std::move(personal)),
-        password_(std::move(password))
-    {
-    }
+    mutable std::mutex mutex_;
+    uint256_t price_;
 
-    uint256_t Price() const {
-        return price_;
+    task<void> Update(cpp_dec_float_50 price, const std::string &fiat);
+
+  public:
+    Cashier(Locator rpc, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password);
+
+    uint256_t Bill(size_t size) const {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return price_ * size;
     }
 
     template <typename Selector_, typename... Args_>
