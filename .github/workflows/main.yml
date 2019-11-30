@@ -1,0 +1,13 @@
+name: CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: make server
+      run: make -C srv-shared debug=notidy
