@@ -74,6 +74,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       case HopEditorMode.Edit:
       case HopEditorMode.View:
         return _buildViewOrEditModeContent();
+      default:
+        throw Error();
     }
   }
 
@@ -99,12 +101,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           divider(),
           pady(24),
           _buildSection(
-              title: "Curation", child: _buildCuration(), onDetail: () {}),
+              title: "Curation",
+              child: _buildCuration(),
+              onDetail: _editCurator),
           pady(36),
           divider(),
           pady(24),
           _buildSection(
-              title: "Budget", child: _buildBudget(), onDetail: () {}),
+              title: "Budget", child: _buildBudget(), onDetail: _editBudget),
         ],
       ),
     );
@@ -243,6 +247,18 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
+  void _editCurator() {
+    var route = MaterialPageRoute(
+        builder: (context) => CuratorEditor(editableHop: widget.editableHop));
+    Navigator.push(context, route);
+  }
+
+  void _editBudget() {
+    var route = MaterialPageRoute(
+        builder: (context) => BudgetEditor(editableHop: widget.editableHop));
+    Navigator.push(context, route);
+  }
+
   void _keySelected(StoredEthereumKey key) {
     setState(() {
       _selectedKeyRef = key.ref();
@@ -318,5 +334,49 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void dispose() {
     super.dispose();
     _funderField.removeListener(_textFieldChanged);
+  }
+}
+
+class CuratorEditor extends HopEditor<OrchidHop> {
+  CuratorEditor({@required editableHop})
+      : super(editableHop: editableHop, mode: HopEditorMode.Edit);
+
+  @override
+  _CuratorEditorState createState() => _CuratorEditorState();
+}
+
+class _CuratorEditorState extends State<CuratorEditor> {
+  @override
+  Widget build(BuildContext context) {
+    return TapClearsFocus(
+      child: TitledPage(
+        title: "Curation",
+        child: SafeArea(
+          child: Container(),
+        ),
+      ),
+    );
+  }
+}
+
+class BudgetEditor extends HopEditor<OrchidHop> {
+  BudgetEditor({@required editableHop})
+      : super(editableHop: editableHop, mode: HopEditorMode.Edit);
+
+  @override
+  _BudgetEditorState createState() => _BudgetEditorState();
+}
+
+class _BudgetEditorState extends State<BudgetEditor> {
+  @override
+  Widget build(BuildContext context) {
+    return TapClearsFocus(
+      child: TitledPage(
+        title: "Budget",
+        child: SafeArea(
+          child: Container(),
+        ),
+      ),
+    );
   }
 }
