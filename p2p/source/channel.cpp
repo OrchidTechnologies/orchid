@@ -109,6 +109,7 @@ task<struct socket *> Peer::Internal() {
 
     orc_assert(sctp != nullptr);
 
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
     co_return static_cast<cricket::SctpTransport *>(static_cast<webrtc::SctpTransport *>(sctp.get())->internal())->*Loot<Internal_>::pointer;
 }
 

@@ -502,6 +502,7 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     public Data<(Bits_ >> 3)>
 {
   public:
+    // NOLINTNEXTLINE (modernize-use-equals-default)
     using Data<(Bits_ >> 3)>::Data;
 
     Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value, uint8_t pad = 0) {
