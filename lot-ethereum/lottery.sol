@@ -135,6 +135,14 @@ contract OrchidLottery {
         send(funder, signer, pot);
     }
 
+    function burn(address signer, uint128 escrow) external {
+        address funder = msg.sender;
+        Pot storage pot = find(funder, signer);
+        require(pot.escrow_ >= escrow);
+        pot.escrow_ -= escrow;
+        send(funder, signer, pot);
+    }
+
     function bind(address signer, OrchidVerifier verify, bytes calldata shared) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
@@ -156,7 +164,7 @@ contract OrchidLottery {
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
 
-    function take(address funder, address signer, uint128 amount, address payable target, Pot storage pot) private {
+    function take(address funder, address signer, uint128 amount, Pot storage pot) private returns (uint128) {
         if (pot.amount_ >= amount)
             pot.amount_ -= amount;
         else {
@@ -164,6 +172,11 @@ contract OrchidLottery {
             kill(funder, signer, pot);
         }
 
+        return amount;
+    }
+
+    function take(address funder, address signer, uint128 amount, address payable target, Pot storage pot) private {
+        amount = take(funder, signer, amount, pot);
         send(funder, signer, pot);
 
         if (amount != 0)
