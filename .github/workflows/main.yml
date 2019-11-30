@@ -8,6 +8,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
       with:
-        submodules: true
+        submodules: recursive
     - name: make server
       run: make -C srv-shared debug=notidy
