@@ -242,6 +242,7 @@ int Main(int argc, const char *const argv[]) {
     if (args.count("host") != 0)
         host = args["host"].as<std::string>();
     else
+        // XXX: this should be the IP of "bind"
         host = boost::asio::ip::host_name();
 
     auto port(args["port"].as<uint16_t>());
