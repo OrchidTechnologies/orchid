@@ -36,8 +36,7 @@ Origin::Origin(U<rtc::NetworkManager> manager) :
 {
 }
 
-Origin::~Origin() {
-}
+Origin::~Origin() = default;
 
 struct Thread_ { typedef rtc::Thread *(rtc::BasicPacketSocketFactory::*type); };
 template struct Pirate<Thread_, &rtc::BasicPacketSocketFactory::thread_>;
