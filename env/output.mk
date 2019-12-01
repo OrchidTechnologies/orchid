@@ -91,8 +91,6 @@ checks += readability-redundant-string-cstr
 #checks += readability-redundant-string-init
 checks += readability-static-definition-in-anonymous-namespace
 checks += readability-uniqueptr-delete-release
-# XXX: false positives on binding names
-checks += -clang-analyzer-deadcode.DeadStores
 ifeq ($(target),and)
 # XXX: boost multiprecision on android
 checks += -clang-analyzer-core.UndefinedBinaryOperatorResult
