@@ -262,22 +262,6 @@ int Main(int argc, const char *const argv[]) {
 
     auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
-    auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
-    Endpoint endpoint(origin, rpc);
-
-    if (args.count("provider") != 0) {
-        Address provider(args["provider"].as<std::string>());
-
-        Wait([&]() -> task<void> {
-            auto latest(co_await endpoint.Latest());
-            static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
-            if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, provider)) != std::tie(url, tls, "")) {
-                static Selector<void, std::string, std::string, std::string> move("move", 3000000);
-                co_await move.Send(endpoint, provider, password, location, url, tls, "");
-            }
-        }());
-    }
-
 
     {
         auto offer(Wait(Description(origin, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
@@ -311,6 +295,22 @@ int Main(int argc, const char *const argv[]) {
         }
     }
 
+
+    auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
+    Endpoint endpoint(origin, rpc);
+
+    if (args.count("provider") != 0) {
+        Address provider(args["provider"].as<std::string>());
+
+        Wait([&]() -> task<void> {
+            auto latest(co_await endpoint.Latest());
+            static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
+            if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, provider)) != std::tie(url, tls, "")) {
+                static Selector<void, std::string, std::string, std::string> move("move", 3000000);
+                co_await move.Send(endpoint, provider, password, location, url, tls, "");
+            }
+        }());
+    }
 
     auto cashier(Make<Cashier>(std::move(endpoint), Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["fiat"].as<std::string>(), personal, password));
     auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
