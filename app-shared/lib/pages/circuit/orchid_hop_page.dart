@@ -37,12 +37,24 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   @override
   void initState() {
     super.initState();
+    initStateAsync();
+  }
+
+  void initStateAsync() async {
+    // If the hop is empty initialize it to defaults now.
+    if (_hop() == null) {
+      widget.editableHop.update(OrchidHop.from(_hop(),
+          curator: await UserPreferences().getDefaultCurator() ??
+              OrchidHop.appDefaultCurator));
+    }
+
+    // Init the UI from the supplied hop
     setState(() {
       OrchidHop hop = _hop();
       _funderField.text = hop?.funder;
       _selectedKeyRef = hop?.keyRef;
+      _curatorField.text = hop?.curator;
       _initialKeyRef = _selectedKeyRef;
-      _curatorField.text = hop?.curator ?? OrchidHop.defaultCurator;
     });
     _funderField.addListener(_textFieldChanged);
   }
@@ -256,7 +268,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         builder: (context) =>
             CuratorEditorPage(editableHop: widget.editableHop));
     await Navigator.push(context, route);
-    _curatorField.text = _hop()?.curator ?? OrchidHop.defaultCurator;
+    _curatorField.text = _hop()?.curator;
   }
 
   void _editBudget() {

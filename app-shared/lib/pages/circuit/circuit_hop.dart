@@ -69,7 +69,10 @@ class CircuitHop {
 }
 
 class OrchidHop extends CircuitHop {
-  static const String defaultCurator = "partners.orch1d.eth";
+  // The app default, which may be overridden by the user specified settings
+  // default or on a per-hop basis.
+  static const String appDefaultCurator = "partners.orch1d.eth";
+  
   final String curator;
   final String funder;
   final StoredEthereumKeyRef keyRef;
@@ -98,7 +101,7 @@ class OrchidHop extends CircuitHop {
   }
 
   Map<String, dynamic> toJson() => {
-        'curator': curator ?? defaultCurator,
+        'curator': curator,
         'protocol': CircuitHop.protocolToString(protocol),
         'funder': funder,
         'keyRef': keyRef?.toString(), // Key references are nullable

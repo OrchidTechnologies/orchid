@@ -13,7 +13,7 @@ class PageTile extends StatelessWidget {
   PageTile(
       {this.title,
       this.imageName,
-      @required this.onTap,
+      this.onTap,
       this.trailing,
       this.color = Colors.white});
 

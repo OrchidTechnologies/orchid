@@ -18,6 +18,7 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
 
   final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry margin;
 
   AppTextField(
       {this.hintText,
@@ -27,15 +28,16 @@ class AppTextField extends StatelessWidget {
       this.maxLines = 1,
       this.enabled = true,
       this.readOnly = false,
-      this.padding});
+      this.padding,
+      this.margin});
 
   @override
   Widget build(BuildContext context) {
     return Container(
         decoration: readOnly ? BoxDecoration() : textFieldEnabledDecoration,
         height: 56,
-        margin:
-            readOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 20),
+        margin: margin ??
+            (readOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 20)),
         child: Row(
           children: <Widget>[
             Flexible(

@@ -20,9 +20,6 @@ import 'package:orchid/util/units.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 
-//
-// Note: This file is getting large. Deferring refactoring until we settle the design.
-//
 
 class BalancePage extends StatefulWidget {
   @override
@@ -47,6 +44,7 @@ class _BalancePageState extends State<BalancePage> {
         _pricing = pricing;
       });
     });
+    /*
     OrchidAPI().budget().getBudget().then((budget) {
       setState(() {
         _budget = budget;
@@ -64,6 +62,7 @@ class _BalancePageState extends State<BalancePage> {
         this._events = events;
       });
     }));
+     */
   }
 
   @override
@@ -238,7 +237,8 @@ class _BalancePageState extends State<BalancePage> {
 
     return ((RefreshIndicator(
       onRefresh: () {
-        return OrchidAPI().budget().poll();
+        //return OrchidAPI().budget().poll();
+        return Future<void>(null);
       },
       // Note: The design anticipates sortable DataTable here, but I'm
       // Note: starting with a plain list for now.
@@ -332,8 +332,9 @@ class _BalancePageState extends State<BalancePage> {
       return null;
     }
 
-    return OrchidAPI().budget().getFundingURL(
-        amount: OXT(budgetFundAmount), deposit: OXT(depositFundAmount));
+    //return OrchidAPI().budget().getFundingURL(
+        //amount: OXT(budgetFundAmount), deposit: OXT(depositFundAmount));
+    return "https://";
   }
 
   void _copyFundingURLToClipboard() async {

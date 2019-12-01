@@ -181,6 +181,17 @@ class UserPreferences {
       return false;
     }
   }
+
+  Future<String> getDefaultCurator() async {
+    return (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.DefaultCurator.toString());
+  }
+
+  Future<bool> setDefaultCurator(String value) async {
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.DefaultCurator.toString(), value);
+  }
+
 }
 
 enum UserPreferenceKey {
@@ -193,5 +204,6 @@ enum UserPreferenceKey {
   Budget,
   Circuit,
   UserConfig,
-  Keys
+  Keys,
+  DefaultCurator
 }
