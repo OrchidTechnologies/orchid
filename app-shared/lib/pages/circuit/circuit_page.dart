@@ -131,7 +131,7 @@ class CircuitPageState extends State<CircuitPage> {
     // View the newly created hop:
     // Note: ideally we would like this to act like the iOS Contacts add flow,
     // Note: revealing the already pushed navigation state upon completing the
-    // Note: add flow.
+    // Note: add flow.  Doing a non-animated push approximates this.
     _viewHop(uniqueHop, animated: false);
   }
 
