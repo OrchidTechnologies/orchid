@@ -91,11 +91,11 @@ packages:
     dependency: "direct main"
     description:
       path: flare_flutter
-      ref: d8defc4c07571ce8287f26791cf38992fffaef75
-      resolved-ref: d8defc4c07571ce8287f26791cf38992fffaef75
+      ref: dev
+      resolved-ref: c911f4114f344146ef273224d651e18d2d67725f
       url: "git://github.com/2d-inc/Flare-Flutter.git"
     source: git
-    version: "1.5.0"
+    version: "1.7.3"
   flutter:
     dependency: "direct main"
     description: flutter
