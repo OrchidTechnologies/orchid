@@ -19,7 +19,11 @@
 
 
 .PHONY: ios
-ios: flutter/packages/flutter/pubspec.lock $(dart)
+ios:
 	flutter/bin/flutter build ios
+
+.PHONY: test
+test:
+	flutter/bin/flutter run
 
 include shared/flutter.mk
