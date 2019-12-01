@@ -30,11 +30,16 @@ namespace orc {
 class Local final :
     public Origin
 {
+  private:
+    Local(U<rtc::NetworkManager> manager);
   public:
+    Local(const class Host &host);
+    Local();
+
     class Host Host() override;
 
     rtc::Thread *Thread() override;
-    U<cricket::PortAllocator> Allocator() override;
+    rtc::BasicPacketSocketFactory &Factory() override;
 
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;

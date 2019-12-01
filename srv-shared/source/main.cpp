@@ -111,6 +111,7 @@ int Main(int argc, const char *const argv[]) {
         ("path", po::value<std::string>()->default_value("/"), "path of internal https endpoint")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+        ("network", po::value<std::string>(), "local interface for ICE candidates")
     ; options.add(group); }
 
     { po::options_description group("bandwidth pricing");
@@ -259,7 +260,8 @@ int Main(int argc, const char *const argv[]) {
     Address personal(args["personal"].as<std::string>());
     std::string password(args["password"].as<std::string>());
 
-    auto origin(Break<Local>());
+    auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
+
     auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
     Endpoint endpoint(origin, rpc);
 

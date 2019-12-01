@@ -90,6 +90,15 @@ class Host {
     {
     }
 
+    Host(const std::string &host) :
+        Host([&]() {
+            rtc::IPAddress address;
+            orc_assert(IPFromString(host, &address));
+            return address;
+        }())
+    {
+    }
+
     Host() :
         Host(uint32_t(0))
     {

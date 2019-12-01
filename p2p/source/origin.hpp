@@ -31,22 +31,33 @@
 #include "socket.hpp"
 #include "task.hpp"
 
-namespace rtc {
-class Thread; }
-
 namespace cricket {
-class PortAllocator; }
+    class PortAllocator;
+}
+
+namespace rtc {
+    class BasicPacketSocketFactory;
+    class NetworkManager;
+    class Thread;
+}
 
 namespace orc {
 
 class Origin :
     public Valve
 {
+  private:
+    U<rtc::NetworkManager> manager_;
+
   public:
+    Origin(U<rtc::NetworkManager> manager);
+    ~Origin() override;
+
     virtual Host Host() = 0;
 
     virtual rtc::Thread *Thread() = 0;
-    virtual U<cricket::PortAllocator> Allocator() = 0;
+    virtual rtc::BasicPacketSocketFactory &Factory() = 0;
+    U<cricket::PortAllocator> Allocator();
 
     virtual task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
     virtual task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) = 0;
