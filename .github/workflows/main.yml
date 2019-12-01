@@ -10,4 +10,4 @@ jobs:
       with:
         submodules: recursive
     - name: make server
-      run: make -C srv-shared debug=crossndk
+      run: make -C srv-shared
