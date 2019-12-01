@@ -282,7 +282,7 @@ int Main(int argc, const char *const argv[]) {
     {
         auto offer(Wait(Description(origin, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
         std::cout << std::endl;
-        std::cout << offer << std::endl;
+        std::cout << Filter(false, offer) << std::endl;
 
         webrtc::JsepSessionDescription jsep(webrtc::SdpType::kOffer);
         webrtc::SdpParseError error;

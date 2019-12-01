@@ -76,6 +76,8 @@ class Server :
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
 };
 
+std::string Filter(bool answer, const std::string &serialized);
+
 }
 
 #endif//ORCHID_SERVER_HPP

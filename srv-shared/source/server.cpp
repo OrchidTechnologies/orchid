@@ -20,6 +20,9 @@
 /* }}} */
 
 
+#include <api/jsep_session_description.h>
+#include <pc/webrtc_sdp.h>
+
 #include "channel.hpp"
 #include "datagram.hpp"
 #include "local.hpp"
@@ -189,8 +192,37 @@ task<void> Server::Shut() {
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {
     auto incoming(Incoming::Create(Wire(), origin_, std::move(ice)));
     auto answer(co_await incoming->Answer(offer));
-    //answer = std::regex_replace(std::move(answer), std::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
-    co_return answer;
+    co_return Filter(true, answer);
+}
+
+std::string Filter(bool answer, const std::string &serialized) {
+    webrtc::JsepSessionDescription jsep(answer ? webrtc::SdpType::kAnswer : webrtc::SdpType::kOffer);
+    webrtc::SdpParseError error;
+    orc_assert(webrtc::SdpDeserialize(serialized, &jsep, &error));
+
+    auto description(jsep.description());
+    orc_assert(description != nullptr);
+
+    std::vector<cricket::Candidate> privates;
+
+    for (size_t i(0); ; ++i) {
+        auto ices(jsep.candidates(i));
+        if (ices == nullptr)
+            break;
+        for (size_t i(0), e(ices->count()); i != e; ++i) {
+            auto ice(ices->at(i));
+            orc_assert(ice != nullptr);
+            const auto &candidate(ice->candidate());
+            if (candidate.address().IsPrivateIP())
+                privates.push_back(candidate);
+        }
+    }
+
+    for (auto &p : privates)
+        p.set_transport_name("0");
+    orc_assert(jsep.RemoveCandidates(privates) == privates.size());
+
+    return webrtc::SdpSerialize(jsep);
 }
 
 }
