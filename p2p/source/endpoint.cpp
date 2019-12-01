@@ -89,12 +89,12 @@ uint256_t Endpoint::Get(int index, Json::Value &storages, const Region &root, co
     return value;
 }
 
-task<Json::Value> Endpoint::operator ()(const std::string &method, Argument arg) {
+task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args) {
     Json::Value root;
     root["jsonrpc"] = "2.0";
     root["method"] = method;
     root["id"] = "";
-    root["params"] = std::move(arg);
+    root["params"] = std::move(args);
 
     Json::FastWriter writer;
     auto body(co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root)));
