@@ -11,3 +11,5 @@ jobs:
         submodules: recursive
     - name: make server
       run: make -C srv-shared
+    - name: make client
+      run: make -C tst-tunnel
