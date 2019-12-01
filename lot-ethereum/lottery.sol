@@ -274,11 +274,12 @@ contract OrchidLottery {
     function pull(address signer, address payable target, uint128 amount, uint128 escrow) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
-        require(pot.unlock_ - 1 < block.timestamp);
         if (amount > pot.amount_)
             amount = pot.amount_;
         if (escrow > pot.escrow_)
             escrow = pot.escrow_;
+        if (escrow != 0)
+            require(pot.unlock_ - 1 < block.timestamp);
         uint128 total = amount + escrow;
         pot.amount_ -= amount;
         pot.escrow_ -= escrow;
@@ -291,7 +292,8 @@ contract OrchidLottery {
     function yank(address signer, address payable target) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
-        require(pot.unlock_ - 1 < block.timestamp);
+        if (pot.escrow_ != 0)
+            require(pot.unlock_ - 1 < block.timestamp);
         uint128 total = pot.amount_ + pot.escrow_;
         pot.amount_ = 0;
         pot.escrow_ = 0;
