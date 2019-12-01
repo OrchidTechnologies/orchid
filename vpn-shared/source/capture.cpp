@@ -716,7 +716,7 @@ task<void> Capture::Start(const std::string &path) {
 
     heap.eval<void>(config);
 
-    S<Origin> origin(GetLocal());
+    S<Origin> origin(Break<Local>());
 
     auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)

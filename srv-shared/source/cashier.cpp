@@ -40,8 +40,8 @@ task<void> Cashier::Update(cpp_dec_float_50 price, const std::string &fiat) {
     price_ = static_cast<uint256_t>(static_cast<cpp_bin_float_quad>(price) * static_cast<cpp_bin_float_quad>(uint256_t(1) << 128));
 }
 
-Cashier::Cashier(Locator rpc, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password) :
-    endpoint_(GetLocal(), std::move(rpc)),
+Cashier::Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password) :
+    endpoint_(std::move(endpoint)),
     lottery_(std::move(lottery)),
     personal_(std::move(personal)),
     password_(std::move(password))

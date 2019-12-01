@@ -41,8 +41,6 @@ class Local final :
     task<Socket> Unlid(Sunk<Opening, BufferSewer> *sunk) override;
 };
 
-S<Local> GetLocal();
-
 }
 
 #endif//ORCHID_LOCAL_HPP

@@ -36,8 +36,9 @@ namespace orc {
 
 class Node final {
   private:
-    std::vector<std::string> ice_;
+    S<Origin> origin_;
     S<Cashier> cashier_;
+    std::vector<std::string> ice_;
 
     S<Egress> egress_;
 
@@ -45,9 +46,10 @@ class Node final {
     std::map<std::string, W<Server>> servers_;
 
   public:
-    Node(std::vector<std::string> ice, S<Cashier> cashier) :
-        ice_(std::move(ice)),
-        cashier_(std::move(cashier))
+    Node(S<Origin> origin, S<Cashier> cashier, std::vector<std::string> ice) :
+        origin_(std::move(origin)),
+        cashier_(std::move(cashier)),
+        ice_(std::move(ice))
     {
     }
 
@@ -60,7 +62,7 @@ class Node final {
         auto &cache(servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
-        auto server(Make<Sink<Server>>(cashier_));
+        auto server(Make<Sink<Server>>(origin_, cashier_));
         server->Wire<Translator>(egress_);
         server->self_ = server;
         cache = server;

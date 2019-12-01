@@ -44,6 +44,7 @@ class Server :
   public:
     S<Server> self_;
   private:
+    S<Origin> origin_;
     S<Cashier> cashier_;
     uint256_t balance_;
 
@@ -68,7 +69,7 @@ class Server :
     void Stop(const std::string &error) override;
 
   public:
-    Server(S<Cashier> cashier);
+    Server(S<Origin> origin, S<Cashier> cashier);
 
     task<void> Shut() override;
 

@@ -150,9 +150,4 @@ task<Socket> Local::Unlid(Sunk<Opening, BufferSewer> *sunk) {
     co_return opening->Local();
 }
 
-S<Local> GetLocal() {
-    static auto local(Break<Local>());
-    return local;
-}
-
 }

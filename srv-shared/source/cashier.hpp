@@ -46,7 +46,7 @@ class Cashier {
     task<void> Update(cpp_dec_float_50 price, const std::string &fiat);
 
   public:
-    Cashier(Locator rpc, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password);
+    Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password);
 
     uint256_t Bill(size_t size) const {
         std::unique_lock<std::mutex> lock(mutex_);

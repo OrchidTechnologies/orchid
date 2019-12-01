@@ -128,7 +128,9 @@ task<std::string> Request(Adapter &adapter, const std::string &method, const Loc
 #endif
 
 task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    const auto results(co_await Resolve(*GetLocal(), locator.host_, locator.port_));
+    // XXX: implement remote http requests
+    auto local(Break<Local>());
+    const auto results(co_await Resolve(*local, locator.host_, locator.port_));
     asio::ip::tcp::socket socket(orc::Context());
     (void) co_await asio::async_connect(socket, results.begin(), results.end(), orc::Token());
 

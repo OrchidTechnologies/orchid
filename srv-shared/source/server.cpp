@@ -49,8 +49,8 @@ class Incoming final :
     }
 
   public:
-    Incoming(Sunk<> *sunk, std::vector<std::string> ice) :
-        Peer(GetLocal(), [&]() {
+    Incoming(Sunk<> *sunk, S<Origin> origin, std::vector<std::string> ice) :
+        Peer(std::move(origin), [&]() {
             Configuration configuration;
             configuration.ice_ = std::move(ice);
             return configuration;
@@ -173,7 +173,8 @@ void Server::Land(const Buffer &data) {
 void Server::Stop(const std::string &error) {
 }
 
-Server::Server(S<Cashier> cashier) :
+Server::Server(S<Origin> origin, S<Cashier> cashier) :
+    origin_(std::move(origin)),
     cashier_(std::move(cashier)),
     balance_(0)
 {
@@ -186,7 +187,7 @@ task<void> Server::Shut() {
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {
-    auto incoming(Incoming::Create(Wire(), std::move(ice)));
+    auto incoming(Incoming::Create(Wire(), origin_, std::move(ice)));
     auto answer(co_await incoming->Answer(offer));
     //answer = std::regex_replace(std::move(answer), std::regex("\r?\na=candidate:[^ ]* [^ ]* [^ ]* [^ ]* 10\\.[^\r\n]*"), "")
     co_return answer;

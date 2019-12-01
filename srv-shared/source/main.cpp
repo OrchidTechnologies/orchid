@@ -258,8 +258,9 @@ int Main(int argc, const char *const argv[]) {
     Address personal(args["personal"].as<std::string>());
     std::string password(args["password"].as<std::string>());
 
+    auto origin(Break<Local>());
     auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
-    Endpoint endpoint(GetLocal(), rpc);
+    Endpoint endpoint(origin, rpc);
 
     if (args.count("provider") != 0) {
         Address provider(args["provider"].as<std::string>());
@@ -276,7 +277,7 @@ int Main(int argc, const char *const argv[]) {
 
 
     {
-        auto offer(Wait(Description(GetLocal(), {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
+        auto offer(Wait(Description(origin, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
         std::cout << std::endl;
         std::cout << offer << std::endl;
 
@@ -308,7 +309,8 @@ int Main(int argc, const char *const argv[]) {
     }
 
 
-    auto node(Make<Node>(std::move(ice), Make<Cashier>(rpc, Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["fiat"].as<std::string>(), personal, password)));
+    auto cashier(Make<Cashier>(std::move(endpoint), Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["fiat"].as<std::string>(), personal, password));
+    auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;
@@ -317,9 +319,9 @@ int Main(int argc, const char *const argv[]) {
         auto username(args["ovpn-user"].as<std::string>());
         auto password(args["ovpn-pass"].as<std::string>());
 
-        Spawn([&node, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() -> task<void> {
+        Spawn([&node, origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() -> task<void> {
             auto egress(Make<Sink<Egress>>(0));
-            co_await Connect(egress.get(), GetLocal(), 0, ovpnfile, username, password);
+            co_await Connect(egress.get(), std::move(origin), 0, ovpnfile, username, password);
             node->Wire() = std::move(egress);
         });
     }
