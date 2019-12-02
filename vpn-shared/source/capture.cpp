@@ -19,6 +19,7 @@
 **/
 /* }}} */
 
+#include <unordered_set>
 
 #include <cppcoro/async_latch.hpp>
 
@@ -304,6 +305,7 @@ class Punch :
 
 class Plant {
   public:
+    virtual task<void> Sending(const Four &four, Stream *output) = 0;
     virtual task<void> Pull(const Four &four) = 0;
 };
 
@@ -317,7 +319,7 @@ class Flow {
 
   private:
     void Splice(Stream *input, Stream *output) {
-        Spawn([input, output, &latch = latch_]() -> task<void> {
+        Spawn([&plant = plant_, &four = four_, input, output, &latch = latch_]() -> task<void> {
             Beam beam(2048);
             for (;;) {
                 size_t writ;
@@ -332,6 +334,7 @@ class Flow {
 
                 try {
                     co_await output->Send(beam.subset(0, writ));
+                    co_await plant->Sending(four, output);
                 } catch (const Error &error) {
                     break;
                 }
@@ -361,6 +364,17 @@ class Flow {
     }
 };
 
+template <typename Socket>
+struct HashSocket {
+    std::size_t operator()(const Socket& key) const {
+        std::size_t result = 0;
+        // XXX: this could be faster
+        boost::hash_combine(result, key.Host().String());
+        boost::hash_combine(result, key.Port());
+        return result;
+    }
+};
+
 class Split :
     public Acceptor,
     public Plant,
@@ -386,20 +400,25 @@ class Split :
     std::map<Socket, S<Flow>> flows_;
     std::map<Socket, U<Punch>> udp_;
     LRU_ lru_;
+    std::unordered_set<Socket, HashSocket<Socket>> sending_;
 
     void RemoveFlow(const Four &four) {
         auto ephemeral(ephemerals_.find(four));
         orc_insist(ephemeral != ephemerals_.end());
-        auto flow(flows_.find(ephemeral->second.socket_));
+        auto socket(ephemeral->second.socket_);
+        auto flow(flows_.find(socket));
         orc_insist(flow != flows_.end());
+        sending_.erase(socket);
         flows_.erase(flow);
     }
 
     void RemoveEmphemeral(const Four &four) {
         auto ephemeral(ephemerals_.find(four));
         orc_insist(ephemeral != ephemerals_.end());
-        flows_.erase(ephemeral->second.socket_);
         lru_.erase(ephemeral->second.lru_iter_);
+        auto socket(ephemeral->second.socket_);
+        sending_.erase(socket);
+        flows_.erase(socket);
         ephemerals_.erase(ephemeral);
     }
 
@@ -429,6 +448,28 @@ class Split :
         capture_(capture),
         origin_(std::move(origin))
     {
+        Spawn([&]() mutable -> task<void> {
+            // XXX: cancellation when Split destructs
+            for (;;) {
+                {
+                    auto lock(co_await meta_.scoped_lock_async());
+                    for (auto it = sending_.begin(); it != sending_.end(); ) {
+                        auto socket(*it);
+                        auto flow(flows_.find(socket));
+                        orc_insist(flow != flows_.end());
+                        auto &output(flow->second->down_);
+                        if (output->UpdateCost()) {
+                            it = sending_.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    }
+                }
+                boost::asio::system_timer timer(Context());
+                timer.expires_after(std::chrono::milliseconds(100));
+                co_await timer.async_wait(Token());
+            }
+        });
     }
 
     void Connect(const Host &local);
@@ -441,6 +482,17 @@ class Split :
         lru_.erase(emphemeral_iter->second.lru_iter_);
         lru_.push_back(emphemeral_iter->first);
         emphemeral_iter->second.lru_iter_ = std::prev(lru_.end());
+    }
+
+    task<void> Sending(const Four &four, Stream *output) override {
+        auto lock(co_await meta_.scoped_lock_async());
+        auto emphemeral_iter(ephemerals_.find(four));
+        auto socket(emphemeral_iter->second.socket_);
+        auto flow(flows_.find(socket));
+        orc_insist(flow != flows_.end());
+        if (!output->UpdateCost()) {
+            sending_.insert(socket);
+        }
     }
 
     task<void> Pull(const Four &four) override {

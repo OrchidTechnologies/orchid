@@ -43,15 +43,61 @@ class Connection final :
   protected:
     Connection_ connection_;
 
+    struct Log_ {
+        std::chrono::steady_clock::time_point timestamp_;
+        uint16_t length_;
+    };
+    std::deque<Log_> log_;
+    uint64_t log_total_;
+    int64_t min_delay_;
+
   public:
     template <typename... Args_>
     Connection(Args_ &&...args) :
-        connection_(std::forward<Args_>(args)...)
+        connection_(std::forward<Args_>(args)...),
+        log_total_(0),
+        min_delay_(UINT64_MAX)
     {
+    }
+
+    ~Connection() {
+        Log() << this << " " << __func__;
+        if (!UpdateCost()) {
+            Log() << __func__ << " unaccounted buffer bytes " << log_total_;
+        }
     }
 
     Connection_ *operator ->() {
         return &connection_;
+    }
+
+    bool UpdateCost() override {
+        auto fd = connection_.native_handle();
+        int outstanding = 0;
+#if defined(__linux__)
+        if (ioctl(fd, SIOCOUTQ, &outstanding) < 0)
+            return true;
+#elif defined(__APPLE__)
+        socklen_t optlen = sizeof(outstanding);
+        if (getsockopt(fd, SOL_SOCKET, SO_NWRITE, &outstanding, &optlen) < 0)
+            return true;
+#elif defined(__WIN32__)
+#error "use GetPerTcpConnectionEStats(.. TcpConnectionEstatsSendBuff ..) "
+#endif
+        uint64_t total_cost = 0;
+        while (log_total_ > outstanding) {
+            auto l = log_.front();
+            log_.pop_front();
+            log_total_ -= l.length_;
+            auto delay = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - l.timestamp_).count();
+            min_delay_ = std::max(1LL, std::min(min_delay_, delay));
+            delay -= min_delay_;
+            auto cost = delay * l.length_;
+            Log() << "min_delay:" << min_delay_ << " delay:" << delay << " length:" << l.length_ << " cost:" << cost;
+            total_cost += cost;
+        }
+        Log() << "total_cost:" << total_cost;
+        return log_total_ == 0;
     }
 
     task<size_t> Read(Beam &beam) override {
@@ -102,6 +148,9 @@ class Connection final :
             orc_adapt(error);
         }
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
+
+        log_.push_back(Log_{std::chrono::steady_clock::now(), static_cast<uint16_t>(writ)});
+        log_total_ += writ;
     }
 };
 

@@ -42,6 +42,7 @@ class Stream :
   public:
     ~Stream() override = default;
     virtual task<void> Shut() = 0;
+    virtual bool UpdateCost() { return true; }
 };
 
 class Inverted final :
