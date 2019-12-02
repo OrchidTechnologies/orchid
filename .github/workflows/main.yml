@@ -9,7 +9,9 @@ jobs:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
-    - name: make server
-      run: make -C srv-shared
+    - name: pip install
+      run: pip install pyyaml
     - name: make client
       run: make -C tst-tunnel
+    - name: make server
+      run: make -C srv-shared
