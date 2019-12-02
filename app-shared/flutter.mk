@@ -23,6 +23,9 @@ flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml ../
 	cd flutter && bin/flutter precache
 	cd flutter && bin/flutter update-packages
 
+pubspec.lock: pubspec.yaml
+	flutter/bin/flutter pub get
+
 ifeq ($(filter noaot,$(debug)),)
 mode := release
 engine := -release
@@ -34,3 +37,6 @@ precompiled :=
 endif
 
 dart := $(shell find lib/ -name '*.dart')
+dart += pubspec.lock
+dart += pubspec.yaml
+dart += flutter/packages/flutter/pubspec.yaml

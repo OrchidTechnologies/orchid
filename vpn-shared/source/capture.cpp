@@ -387,15 +387,20 @@ class Split :
     std::map<Socket, U<Punch>> udp_;
     LRU_ lru_;
 
-    void Pull_(const Four &four) {
+    void RemoveFlow(const Four &four) {
         auto ephemeral(ephemerals_.find(four));
         orc_insist(ephemeral != ephemerals_.end());
         auto flow(flows_.find(ephemeral->second.socket_));
         orc_insist(flow != flows_.end());
+        flows_.erase(flow);
+    }
+
+    void RemoveEmphemeral(const Four &four) {
+        auto ephemeral(ephemerals_.find(four));
+        orc_insist(ephemeral != ephemerals_.end());
+        flows_.erase(ephemeral->second.socket_);
         lru_.erase(ephemeral->second.lru_iter_);
         ephemerals_.erase(ephemeral);
-        flows_.erase(flow);
-_trace();
     }
 
   protected:
@@ -440,7 +445,8 @@ _trace();
 
     task<void> Pull(const Four &four) override {
         auto lock(co_await meta_.scoped_lock_async());
-        Pull_(four);
+        RemoveFlow(four);
+        _trace();
     }
 
     // https://www.snellman.net/blog/archive/2016-02-01-tcp-rst/
@@ -549,7 +555,7 @@ task<bool> Split::Send(const Beam &data) {
                     auto old_four(*lru_.begin());
                     auto old_ephemeral(ephemerals_.find(old_four));
                     port = old_ephemeral->second.socket_.Port();
-                    Pull_(old_four);
+                    RemoveEmphemeral(old_four);
                 }
                 Socket socket(remote_, port);
                 auto &flow(flows_[socket]);
@@ -710,7 +716,7 @@ task<void> Capture::Start(const std::string &path) {
 
     heap.eval<void>(config);
 
-    S<Origin> origin(GetLocal());
+    S<Origin> origin(Break<Local>());
 
     auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)

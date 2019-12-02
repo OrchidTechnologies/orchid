@@ -40,6 +40,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
           ),
           body: TabBarView(
             controller: _tabController,
+
             children: [
               QuickConnectPage(),
               TrafficView(clearTrafficController: _trafficButtonController),
@@ -48,6 +49,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
           ),
           bottomNavigationBar: SafeArea(
             child: new TabBar(
+              indicatorColor: Colors.transparent,
               controller: _tabController,
               tabs: [
                 Tab(

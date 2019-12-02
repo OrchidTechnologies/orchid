@@ -121,9 +121,6 @@
         </dict>
     </dict>
 
-    <key>UIApplicationExitsOnSuspend</key>
-    <false/>
-
     <!--
     <key>NSAppTransportSecurity</key>
     <dict>

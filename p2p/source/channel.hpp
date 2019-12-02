@@ -241,11 +241,6 @@ class Channel final :
     {
     }
 
-    task<void> Connect() {
-        co_await opened_;
-        co_await Schedule();
-    }
-
     ~Channel() override {
 _trace();
         peer_->channels_.erase(this);
@@ -296,6 +291,11 @@ _trace();
         return Pump::Stop(error);
     }
 
+    task<void> Open() {
+        co_await opened_;
+        co_await Schedule();
+    }
+
     task<void> Shut() override {
         channel_->Close();
         co_await Pump::Shut();
@@ -315,6 +315,7 @@ _trace();
 
 std::string Strip(const std::string &sdp);
 rtc::scoped_refptr<rtc::RTCCertificate> Certify();
+task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice);
 
 }
 

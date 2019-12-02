@@ -171,7 +171,8 @@ class _TrafficViewState extends State<TrafficView>
                             children: <Widget>[
                               Expanded(
                                 flex: 10,
-                                child: Text("$hostname:${flow.dst_port}",
+                                child: Text(
+                                    "$hostname:${flow.dst_port != 0 ? flow.dst_port : ""}",
                                     // Note: I'd prefer ellipses but they brake soft wrap control.
                                     // Note: (Watch for the case of "-" dashes in domain names.)
                                     overflow: TextOverflow.fade,

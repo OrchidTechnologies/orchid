@@ -28,9 +28,6 @@
 #include "origin.hpp"
 #include "socket.hpp"
 
-namespace rtc {
-class NetworkManager; }
-
 namespace orc {
 
 class Remote :
@@ -52,6 +49,8 @@ class Remote :
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) override;
 
+  private:
+    Remote(const class Host &host);
   public:
     Remote();
     ~Remote() override;
@@ -62,7 +61,7 @@ class Remote :
     class Host Host() override;
 
     rtc::Thread *Thread() override;
-    U<cricket::PortAllocator> Allocator() override;
+    rtc::BasicPacketSocketFactory &Factory() override;
 
     task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
     task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;

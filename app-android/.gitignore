@@ -1,6 +1,8 @@
 /android/local.properties
 /build
+/.dart_tool
 /.flutter-plugins
+/.flutter-plugins-dependencies
 /.gradle
 /out-*
 /.packages

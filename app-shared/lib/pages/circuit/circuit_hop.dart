@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 
+import 'add_hop_page.dart';
+
 enum Protocol { Orchid, OpenVPN }
 
 class Circuit {
@@ -67,20 +69,39 @@ class CircuitHop {
 }
 
 class OrchidHop extends CircuitHop {
+  // The app default, which may be overridden by the user specified settings
+  // default or on a per-hop basis.
+  static const String appDefaultCurator = "partners.orch1d.eth";
+  
+  final String curator;
   final String funder;
   final StoredEthereumKeyRef keyRef;
 
-  OrchidHop({this.funder, this.keyRef}) : super(Protocol.Orchid);
+  OrchidHop(
+      {@required this.curator, @required this.funder, @required this.keyRef})
+      : super(Protocol.Orchid);
+
+  // Construct an Orchid Hop using an existing hop as defaults.
+  OrchidHop.from(OrchidHop hop,
+      {String curator, String funder, StoredEthereumKeyRef keyRef})
+      : this(
+            curator: curator ?? hop?.curator,
+            funder: funder ?? hop?.funder,
+            keyRef: keyRef ?? hop?.keyRef);
 
   factory OrchidHop.fromJson(Map<String, dynamic> json) {
+    var curator = json['curator'];
     var keyRefValue = json['keyRef'];
+
     // Key references are explicitly allowed to be null.
     var nullableKeyRef =
         keyRefValue != null ? StoredEthereumKeyRef(keyRefValue) : null;
-    return OrchidHop(funder: json['funder'], keyRef: nullableKeyRef);
+    return OrchidHop(
+        curator: curator, funder: json['funder'], keyRef: nullableKeyRef);
   }
 
   Map<String, dynamic> toJson() => {
+        'curator': curator,
         'protocol': CircuitHop.protocolToString(protocol),
         'funder': funder,
         'keyRef': keyRef?.toString(), // Key references are nullable
@@ -117,40 +138,54 @@ class UniqueHop {
   final CircuitHop hop;
 
   UniqueHop({@required this.key, @required this.hop});
+
+  // Create a UniqueHop preserving any key from a previous UniqueHop.
+  UniqueHop.from(UniqueHop uniqueHop, {CircuitHop hop, int index = 0})
+      : this(
+            key:
+                uniqueHop?.key ?? DateTime.now().millisecondsSinceEpoch + index,
+            hop: hop);
 }
 
 class EditableHop extends ValueNotifier<UniqueHop> {
   EditableHop(UniqueHop value) : super(value);
 
   EditableHop.empty() : super(null);
+
+  void update(CircuitHop hop) {
+    value = UniqueHop.from(value, hop: hop);
+  }
 }
 
-enum HopEditorMode {
-  Create, Edit, View
-}
+enum HopEditorMode { Create, Edit, View }
 
 class HopEditor<T extends CircuitHop> extends StatefulWidget {
   final EditableHop editableHop;
+  final AddFlowCompletion onAddFlowComplete;
 
   // In create mode the editor offers a "save" button that pops the view and
   // returns the value on the context.  If the user navigates back without
   // saving the context result will be null.
   final HopEditorMode mode;
 
-  HopEditor({@required this.editableHop, @required this.mode});
+  HopEditor(
+      {@required this.editableHop,
+      @required this.mode,
+      this.onAddFlowComplete});
 
   Widget buildSaveButton(BuildContext context, {bool isValid = true}) {
     return SaveActionButton(
         isValid: isValid,
         onPressed: () {
-          Navigator.pop(context, this.editableHop.value.hop);
+          this.onAddFlowComplete(this.editableHop.value.hop);
         });
   }
 
   bool editable() {
     return mode != HopEditorMode.View;
   }
-  bool viewOnly() {
+
+  bool readOnly() {
     return !editable();
   }
 

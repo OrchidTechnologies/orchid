@@ -78,7 +78,9 @@ class Endpoint final {
     task<Json::Value> operator ()(const std::string &method, Argument args);
 
     task<uint256_t> Latest() {
-        co_return uint256_t((co_await operator ()("eth_blockNumber", {})).asString());
+        auto latest(uint256_t((co_await operator ()("eth_blockNumber", {})).asString()));
+        orc_assert_(latest != 0, "ethereum server has not synchronized any blocks");
+        co_return latest;
     }
 
     task<Block> Header(uint256_t number) {

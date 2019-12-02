@@ -26,10 +26,10 @@
 #include <lwip/udp.h>
 
 #include <p2p/base/basic_packet_socket_factory.h>
-#include <p2p/client/basic_port_allocator.h>
 
 #include "dns.hpp"
 #include "lwip.hpp"
+#include "manager.hpp"
 #include "remote.hpp"
 
 #define orc_lwipcall(expr) \
@@ -264,10 +264,9 @@ void Remote::Stop(const std::string &error) {
     Origin::Stop();
 }
 
-static uint8_t quad_(3);
-
-Remote::Remote() :
-    host_(10,7,0,++quad_)
+Remote::Remote(const class Host &host) :
+    Origin(std::make_unique<Assistant>(host)),
+    host_(host)
 {
     static bool setup(false);
     if (!setup) {
@@ -280,6 +279,13 @@ Remote::Remote() :
     ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
 
     orc_assert(netifapi_netif_add(&interface_, &address, &netmask, &gateway, this, &Initialize, &ip_input) == ERR_OK);
+}
+
+static uint8_t quad_(3);
+
+Remote::Remote() :
+    Remote({10,7,0,++quad_})
+{
 }
 
 Remote::~Remote() {
@@ -312,49 +318,9 @@ rtc::Thread *Remote::Thread() {
     return thread.get();
 }
 
-class Assistant :
-    public rtc::NetworkManager
-{
-  private:
-    mutable rtc::Network network_;
-
-  public:
-    Assistant(const std::string &name, const Host &host, const Host &network, unsigned bits) :
-        network_(name, name, network, bits, ADAPTER_TYPE_VPN)
-    {
-        //network_.set_default_local_address_provider(this);
-        network_.AddIP(host);
-    }
-
-    Assistant(const std::string &name, const Host &host) :
-        Assistant(name, host, host, 32)
-    {
-    }
-
-    void StartUpdating() override {
-        SignalNetworksChanged();
-    }
-
-    void StopUpdating() override {
-    }
-
-    void GetNetworks(NetworkList *networks) const override {
-        networks->clear();
-        networks->emplace_back(&network_);
-    }
-};
-
-U<cricket::PortAllocator> Remote::Allocator() {
-    if (manager_ == nullptr) {
-        static unsigned interface(0);
-        manager_ = std::make_unique<Assistant>("or" + std::to_string(interface++), host_);
-    }
-
-    auto thread(Thread());
-    static rtc::BasicPacketSocketFactory packeter(thread);
-    return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
-        return std::make_unique<cricket::BasicPortAllocator>(manager_.get(), &packeter);
-    });
+rtc::BasicPacketSocketFactory &Remote::Factory() {
+    static rtc::BasicPacketSocketFactory factory(Thread());
+    return factory;
 }
 
 task<Socket> Remote::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {

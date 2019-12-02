@@ -27,7 +27,6 @@
 #include <unistd.h>
 
 #include <boost/filesystem/string_file.hpp>
-#include <boost/multiprecision/cpp_bin_float.hpp>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -36,7 +35,9 @@
 #include <openssl/base.h>
 #include <openssl/pkcs12.h>
 
+#include <api/jsep_session_description.h>
 #include <pc/webrtc_sdp.h>
+
 #include <rtc_base/message_digest.h>
 #include <rtc_base/openssl_identity.h>
 #include <rtc_base/ssl_fingerprint.h>
@@ -44,7 +45,6 @@
 #include "baton.hpp"
 #include "cashier.hpp"
 #include "channel.hpp"
-#include "coinbase.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
@@ -86,7 +86,7 @@ int Main(int argc, const char *const argv[]) {
     group.add_options()
         //("token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
         ("location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"))
-        ("lottery", po::value<std::string>()->default_value("0xc999ACfE677239b8F07f04AC378651189c5Ad517"))
+        ("lottery", po::value<std::string>()->default_value("0xF28eE3675D0C9Fe8f29aBD25dA4AE0d940FE8239"))
     ; options.add(group); }
 
     { po::options_description group("user eth addresses");
@@ -111,12 +111,13 @@ int Main(int argc, const char *const argv[]) {
         ("path", po::value<std::string>()->default_value("/"), "path of internal https endpoint")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+        ("network", po::value<std::string>(), "local interface for ICE candidates")
     ; options.add(group); }
 
     { po::options_description group("bandwidth pricing");
     group.add_options()
-        ("fiat", po::value<std::string>()->default_value("USD"), "fiat currency for conversions")
-        ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in fiat / GB")
+        ("currency", po::value<std::string>()->default_value("USD"), "currency used for price conversions")
+        ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in currency / GB")
     ; options.add(group); }
 
     { po::options_description group("openpvn egress");
@@ -242,6 +243,7 @@ int Main(int argc, const char *const argv[]) {
     if (args.count("host") != 0)
         host = args["host"].as<std::string>();
     else
+        // XXX: this should be the IP of "bind"
         host = boost::asio::ip::host_name();
 
     auto port(args["port"].as<uint16_t>());
@@ -257,9 +259,46 @@ int Main(int argc, const char *const argv[]) {
     Address location(args["location"].as<std::string>());
     Address personal(args["personal"].as<std::string>());
     std::string password(args["password"].as<std::string>());
+    Address recipient(args.count("recipient") == 0 ? 0 : args["recipient"].as<std::string>());
+
+    auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
+
+
+    {
+        auto offer(Wait(Description(origin, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
+        std::cout << std::endl;
+        std::cout << Filter(false, offer) << std::endl;
+
+        webrtc::JsepSessionDescription jsep(webrtc::SdpType::kOffer);
+        webrtc::SdpParseError error;
+        orc_assert(webrtc::SdpDeserialize(offer, &jsep, &error));
+
+        auto description(jsep.description());
+        orc_assert(description != nullptr);
+
+        std::map<Socket, Socket> reflexive;
+
+        for (size_t i(0); ; ++i) {
+            auto ices(jsep.candidates(i));
+            if (ices == nullptr)
+                break;
+            for (size_t i(0), e(ices->count()); i != e; ++i) {
+                auto ice(ices->at(i));
+                orc_assert(ice != nullptr);
+                const auto &candidate(ice->candidate());
+                if (candidate.type() != "stun")
+                    continue;
+                if (!reflexive.emplace(candidate.related_address(), candidate.address()).second) {
+                    std::cerr << "server must not use symmetric NAT" << std::endl;
+                    return 1;
+                }
+            }
+        }
+    }
+
 
     auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
-    Endpoint endpoint(GetLocal(), rpc);
+    Endpoint endpoint(origin, rpc);
 
     if (args.count("provider") != 0) {
         Address provider(args["provider"].as<std::string>());
@@ -274,23 +313,8 @@ int Main(int argc, const char *const argv[]) {
         }());
     }
 
-
-    // XXX: price needs to be updated at runtime
-    // XXX: this code needs to move into Cashier
-    uint256_t price(Wait([&]() -> task<uint256_t> {
-        cpp_dec_float_50 price(args["price"].as<std::string>());
-        price /= co_await Price("ETH", args["fiat"].as<std::string>()) / 200;
-        price *= 1000000000;
-        price /= 1024 * 1024 * 1024;
-        price *= 1000000000;
-        using boost::multiprecision::cpp_bin_float_quad;
-        co_return static_cast<uint256_t>(static_cast<cpp_bin_float_quad>(price) * static_cast<cpp_bin_float_quad>(uint256_t(1) << 128));
-    }()));
-
-    std::cout.precision(std::numeric_limits<cpp_dec_float_50>::digits10);
-    std::cerr << "price = " << price << std::endl;
-
-    auto node(Make<Node>(std::move(ice), Make<Cashier>(rpc, Address(args["lottery"].as<std::string>()), price, personal, password)));
+    auto cashier(Make<Cashier>(std::move(endpoint), Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["currency"].as<std::string>(), std::move(personal), std::move(password), std::move(recipient)));
+    auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;
@@ -299,9 +323,9 @@ int Main(int argc, const char *const argv[]) {
         auto username(args["ovpn-user"].as<std::string>());
         auto password(args["ovpn-pass"].as<std::string>());
 
-        Spawn([&node, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() -> task<void> {
+        Spawn([&node, origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() -> task<void> {
             auto egress(Make<Sink<Egress>>(0));
-            co_await Connect(egress.get(), GetLocal(), 0, ovpnfile, username, password);
+            co_await Connect(egress.get(), std::move(origin), 0, ovpnfile, username, password);
             node->Wire() = std::move(egress);
         });
     }

@@ -6,7 +6,13 @@ import 'circuit_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
 
+typedef AddFlowCompletion = void Function(CircuitHop result);
+
 class AddHopPage extends StatefulWidget {
+  final AddFlowCompletion onAddFlowComplete;
+
+  const AddHopPage({Key key, this.onAddFlowComplete}) : super(key: key);
+
   @override
   _AddHopPageState createState() => _AddHopPageState();
 }
@@ -17,21 +23,16 @@ class _AddHopPageState extends State<AddHopPage> {
     return TitledPage(
       title: "Add Circuit Hop",
       cancellable: true,
+      backAction: () {
+        widget.onAddFlowComplete(null);
+      },
       child: SafeArea(
         child: Column(
           children: <Widget>[
             pady(8),
-            _buildChoice(
-                text: "Orchid Hop",
-                onPressed: () {
-                  _addHopType(Protocol.Orchid);
-                }),
+            _buildHopChoice(text: "Orchid Hop", hopType: Protocol.Orchid),
             _divider(),
-            _buildChoice(
-                text: "OpenVPN Hop",
-                onPressed: () {
-                  _addHopType(Protocol.OpenVPN);
-                }),
+            _buildHopChoice(text: "OpenVPN Hop", hopType: Protocol.OpenVPN),
             _divider(),
           ],
         ),
@@ -39,13 +40,15 @@ class _AddHopPageState extends State<AddHopPage> {
     );
   }
 
-  Widget _buildChoice({String text, VoidCallback onPressed}) {
+  Widget _buildHopChoice({String text, Protocol hopType}) {
     return ListTile(
         contentPadding: EdgeInsets.only(left: 24, right: 24, top: 8, bottom: 8),
         trailing: Icon(Icons.chevron_right, color: Colors.black),
         title:
             Text(text, textAlign: TextAlign.left, style: AppText.dialogTitle),
-        onTap: onPressed);
+        onTap: () {
+          _addHopType(hopType);
+        });
   }
 
   void _addHopType(Protocol hopType) async {
@@ -56,12 +59,14 @@ class _AddHopPageState extends State<AddHopPage> {
         editor = OrchidHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
         );
         break;
       case Protocol.OpenVPN:
         editor = OpenVPNHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
         );
         break;
     }

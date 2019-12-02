@@ -1,0 +1,25 @@
+name: CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: git config
+      run: |
+        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
+        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
+    - uses: actions/checkout@v1
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+    - name: brew install
+      run: brew install meson autoconf automake libtool
+    - name: brew link
+      run: brew link --force gettext
+    - name: pip install
+      run: pip install pyyaml
+    - name: make macOS client
+      run: make -C tst-tunnel
+    - name: make macOS server
+      run: make -C srv-shared

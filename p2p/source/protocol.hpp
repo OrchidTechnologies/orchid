@@ -25,13 +25,17 @@
 
 #include <tuple>
 
+#include "jsonrpc.hpp"
 #include "socket.hpp"
 
 namespace orc {
 
 extern const Socket Port_;
-typedef std::tuple<uint32_t> Header;
-static uint32_t Magic_(0x33333333);
+typedef std::tuple<uint32_t, Bytes32, uint32_t> Header;
+
+static uint32_t Magic_(0xff0fce1d);
+static uint32_t Submit_(0xe497a365);
+static uint32_t Invoice_(0xa0a5148d);
 
 }
 

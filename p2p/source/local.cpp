@@ -21,10 +21,10 @@
 
 
 #include <p2p/base/basic_packet_socket_factory.h>
-#include <p2p/client/basic_port_allocator.h>
 
 #include "connection.hpp"
 #include "local.hpp"
+#include "manager.hpp"
 #include "port.hpp"
 
 namespace orc {
@@ -90,6 +90,21 @@ class LocalOpening final :
     }
 };
 
+Local::Local(U<rtc::NetworkManager> manager) :
+    Origin(std::move(manager))
+{
+}
+
+Local::Local(const class Host &host) :
+    Local(std::make_unique<Assistant>(host))
+{
+}
+
+Local::Local() :
+    Local(std::make_unique<Manager>())
+{
+}
+
 class Host Local::Host() {
     // XXX: get local address
     return Host_;
@@ -106,27 +121,9 @@ rtc::Thread *Local::Thread() {
     return thread.get();
 }
 
-class Manager :
-    public rtc::BasicNetworkManager
-{
-  public:
-    void GetNetworks(NetworkList *networks) const override {
-        rtc::BasicNetworkManager::GetNetworks(networks);
-        for (auto network : *networks)
-            Log() << "NET: " << network->ToString() << "@" << network->GetBestIP().ToString() << std::endl;
-        networks->erase(std::remove_if(networks->begin(), networks->end(), [](auto network) {
-            return Host(network->GetBestIP()) == Host_;
-        }), networks->end());
-    }
-};
-
-U<cricket::PortAllocator> Local::Allocator() {
-    static Manager manager;
-    auto thread(Thread());
-    static rtc::BasicPacketSocketFactory packeter(thread);
-    return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
-        return std::make_unique<cricket::BasicPortAllocator>(&manager, &packeter);
-    });
+rtc::BasicPacketSocketFactory &Local::Factory() {
+    static rtc::BasicPacketSocketFactory factory(Thread());
+    return factory;
 }
 
 task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
@@ -148,11 +145,6 @@ task<Socket> Local::Unlid(Sunk<Opening, BufferSewer> *sunk) {
     auto opening(sunk->Wire<LocalOpening>());
     opening->Open({asio::ip::address_v4::any(), 0});
     co_return opening->Local();
-}
-
-S<Local> GetLocal() {
-    static auto local(Break<Local>());
-    return local;
 }
 
 }

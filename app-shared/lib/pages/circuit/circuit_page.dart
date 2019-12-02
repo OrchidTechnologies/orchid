@@ -95,11 +95,29 @@ class CircuitPageState extends State<CircuitPage> {
         onReorder: _onReorder);
   }
 
+  // Show the add hop flow and save the result if completed successfully.
   void _addHop() async {
-    var editor = AddHopPage();
+    // Create a nested navigation context for the flow.
+    // Performing a pop() from this outer context at any point will properly
+    // remove the entire flow with the correct animation.
+    var addFlow = Navigator(
+      onGenerateRoute: (RouteSettings settings) {
+        print("generate route: $settings");
+        var addFlowCompletion = (CircuitHop result) {
+          Navigator.pop(context, result);
+        };
+        var editor = AddHopPage(onAddFlowComplete: addFlowCompletion);
+        var route = MaterialPageRoute<CircuitHop>(
+            builder: (context) => editor, settings: settings);
+        return route;
+      },
+    );
     var route = MaterialPageRoute<CircuitHop>(
-        builder: (context) => editor, fullscreenDialog: true);
+        builder: (context) => addFlow, fullscreenDialog: true);
+
     var hop = await Navigator.push(context, route);
+    print("hop = $hop");
+
     if (hop == null) {
       return; // user cancelled
     }
@@ -109,36 +127,34 @@ class CircuitPageState extends State<CircuitPage> {
       _hops.add(uniqueHop);
     });
     _saveCircuit();
+
+    // View the newly created hop:
+    // Note: ideally we would like this to act like the iOS Contacts add flow,
+    // Note: revealing the already pushed navigation state upon completing the
+    // Note: add flow.  Doing a non-animated push approximates this.
+    _viewHop(uniqueHop, animated: false);
   }
 
-  void _viewHop(UniqueHop uniqueHop) async {
+  // View a hop selected from the circuit list
+  void _viewHop(UniqueHop uniqueHop, {bool animated = true}) async {
     EditableHop editableHop = EditableHop(uniqueHop);
     var editor;
     switch (uniqueHop.hop.protocol) {
       case Protocol.Orchid:
-        editor = OrchidHopPage(editableHop: editableHop);
+        editor =
+            OrchidHopPage(editableHop: editableHop, mode: HopEditorMode.View);
         break;
       case Protocol.OpenVPN:
-        editor = OpenVPNHopPage(editableHop: editableHop);
+        editor = OpenVPNHopPage(
+          editableHop: editableHop,
+          mode: HopEditorMode.Edit,
+        );
         break;
     }
-    _showEditor(editor);
-  }
+    await _showEditor(editor, animated: animated);
 
-  /*
-  void _editHop(UniqueHop uniqueHop) async {
-    EditableHop editableHop = EditableHop(uniqueHop);
-    var editor;
-    switch (uniqueHop.hop.protocol) {
-      case Protocol.Orchid:
-        editor = OrchidHopPage(editableHop: editableHop);
-        break;
-      case Protocol.OpenVPN:
-        editor = OpenVPNHopPage(editableHop: editableHop);
-        break;
-    }
-
-    await _showEditor(editor);
+    // TODO: avoid saving if the hop was not edited.
+    // Save the hop if it was edited.
     var index = _hops.indexOf(uniqueHop);
     setState(() {
       _hops.removeAt(index);
@@ -146,10 +162,11 @@ class CircuitPageState extends State<CircuitPage> {
     });
     _saveCircuit();
   }
-   */
 
-  Future<void> _showEditor(editor) async {
-    var route = MaterialPageRoute(builder: (context) => editor);
+  Future<void> _showEditor(editor, {bool animated = true}) async {
+    var route = animated
+        ? MaterialPageRoute(builder: (context) => editor)
+        : NoAnimationMaterialPageRoute(builder: (context) => editor);
     await Navigator.push(context, route);
   }
 
@@ -162,7 +179,7 @@ class CircuitPageState extends State<CircuitPage> {
     _saveCircuit();
   }
 
-  void _saveCircuit() {
+  void _saveCircuit() async {
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
     UserPreferences().setCircuit(circuit);
     OrchidAPI().updateConfiguration();
@@ -178,5 +195,40 @@ class CircuitPageState extends State<CircuitPage> {
       _hops.insert(newIndex, hop);
     });
     _saveCircuit();
+  }
+}
+
+// https://stackoverflow.com/a/53503738/74975
+class NoAnimationMaterialPageRoute<T> extends MaterialPageRoute<T> {
+  NoAnimationMaterialPageRoute({
+    @required WidgetBuilder builder,
+    RouteSettings settings,
+    bool maintainState = true,
+    bool fullscreenDialog = false,
+  }) : super(
+            builder: builder,
+            maintainState: maintainState,
+            settings: settings,
+            fullscreenDialog: fullscreenDialog);
+
+  @override
+  Widget buildTransitions(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation, Widget child) {
+    /*
+    // Experimenting with making this one-way.
+    if (animation.status == AnimationStatus.reverse) {
+      var begin = Offset.zero;
+      var end = Offset(0.0, 1.0);
+      var tween = Tween(begin: begin, end: end);
+      var offsetAnimation = animation.drive(tween);
+      return SlideTransition(
+          position: offsetAnimation,
+          child: child
+      );
+    } else {
+      return child;
+    }
+     */
+    return child;
   }
 }

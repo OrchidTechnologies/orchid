@@ -36,10 +36,28 @@ struct Ticket {
     uint256_t start_;
     uint128_t range_;
     Address provider_;
-    Bytes receipt_;
 
-    Builder Encode() {
-        return Coder<Bytes32, Bytes32, Address, uint128_t, uint128_t, uint256_t, uint128_t, Address, Bytes>::Encode(hash_, nonce_, funder_, amount_, ratio_, start_, range_, provider_, receipt_);
+    Builder Encode(const Bytes &receipt) const {
+        return Coder<
+            Bytes32, Bytes32, Address,
+            uint128_t, uint128_t,
+            uint256_t, uint128_t,
+            Address, Bytes
+        >::Encode(
+            hash_, nonce_, funder_,
+            amount_, ratio_,
+            start_, range_,
+            provider_, receipt
+        );
+    }
+
+    void Build(Builder &builder, const Bytes &receipt) const {
+        builder += Tie(
+            hash_, nonce_, Number<uint160_t>(funder_),
+            Number<uint128_t>(amount_), Number<uint128_t>(ratio_),
+            Number<uint256_t>(start_), Number<uint128_t>(range_),
+            Number<uint160_t>(provider_), receipt
+        );
     }
 };
 
