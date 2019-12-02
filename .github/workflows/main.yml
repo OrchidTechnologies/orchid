@@ -19,7 +19,9 @@ jobs:
       run: brew link --force gettext
     - name: pip install
       run: pip install pyyaml
-    - name: make client
+    - name: make iOS client
+      run: make -C app-ios
+    - name: make macOS client
       run: make -C tst-tunnel
-    - name: make server
+    - name: make macOS server
       run: make -C srv-shared
