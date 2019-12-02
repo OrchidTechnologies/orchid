@@ -203,7 +203,7 @@ contract OrchidLottery {
     // the arguments to this function are carefully ordered for stack depth optimization
     // this function was marked public, instead of external, for lower stack depth usage
     function grab(
-        bytes32 seed, bytes32 hash,
+        bytes32 reveal, bytes32 commit,
         uint8 v, bytes32 r, bytes32 s,
         bytes32 nonce, address funder,
         uint128 amount, uint128 ratio,
@@ -211,10 +211,10 @@ contract OrchidLottery {
         address payable target, bytes memory receipt,
         bytes32[] memory old
     ) public {
-        require(keccak256(abi.encodePacked(seed)) == hash);
-        require(uint256(keccak256(abi.encodePacked(seed, nonce))) >> 128 <= ratio);
+        require(keccak256(abi.encodePacked(reveal)) == commit);
+        require(uint256(keccak256(abi.encodePacked(reveal, nonce))) >> 128 <= ratio);
 
-        bytes32 ticket = keccak256(abi.encode(hash, nonce, funder, amount, ratio, start, range, target, receipt));
+        bytes32 ticket = keccak256(abi.encode(commit, nonce, funder, amount, ratio, start, range, target, receipt));
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
         require(signer != address(0));
 
