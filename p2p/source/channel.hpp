@@ -241,11 +241,6 @@ class Channel final :
     {
     }
 
-    task<void> Connect() {
-        co_await opened_;
-        co_await Schedule();
-    }
-
     ~Channel() override {
 _trace();
         peer_->channels_.erase(this);
@@ -294,6 +289,11 @@ _trace();
     void Stop(const std::string &error = std::string()) {
         opened_.set();
         return Pump::Stop(error);
+    }
+
+    task<void> Open() {
+        co_await opened_;
+        co_await Schedule();
     }
 
     task<void> Shut() override {

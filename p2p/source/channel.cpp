@@ -265,7 +265,7 @@ task<Socket> Channel::Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration 
     auto channel(sunk->Wire<Channel>(client));
     auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);
-    co_await channel->Connect();
+    co_await channel->Open();
     auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ipv4_address(), socket.port());

@@ -86,7 +86,7 @@ int Main(int argc, const char *const argv[]) {
     group.add_options()
         //("token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
         ("location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"))
-        ("lottery", po::value<std::string>()->default_value("0xc999ACfE677239b8F07f04AC378651189c5Ad517"))
+        ("lottery", po::value<std::string>()->default_value("0xF28eE3675D0C9Fe8f29aBD25dA4AE0d940FE8239"))
     ; options.add(group); }
 
     { po::options_description group("user eth addresses");
@@ -116,8 +116,8 @@ int Main(int argc, const char *const argv[]) {
 
     { po::options_description group("bandwidth pricing");
     group.add_options()
-        ("fiat", po::value<std::string>()->default_value("USD"), "fiat currency for conversions")
-        ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in fiat / GB")
+        ("currency", po::value<std::string>()->default_value("USD"), "currency used for price conversions")
+        ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in currency / GB")
     ; options.add(group); }
 
     { po::options_description group("openpvn egress");
@@ -259,6 +259,7 @@ int Main(int argc, const char *const argv[]) {
     Address location(args["location"].as<std::string>());
     Address personal(args["personal"].as<std::string>());
     std::string password(args["password"].as<std::string>());
+    Address recipient(args.count("recipient") == 0 ? 0 : args["recipient"].as<std::string>());
 
     auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
@@ -312,7 +313,7 @@ int Main(int argc, const char *const argv[]) {
         }());
     }
 
-    auto cashier(Make<Cashier>(std::move(endpoint), Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["fiat"].as<std::string>(), personal, password));
+    auto cashier(Make<Cashier>(std::move(endpoint), Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["currency"].as<std::string>(), std::move(personal), std::move(password), std::move(recipient)));
     auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
 
     if (args.count("ovpn-file") != 0) {

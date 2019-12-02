@@ -44,21 +44,24 @@ class Server :
   public:
     S<Server> self_;
   private:
-    S<Origin> origin_;
-    S<Cashier> cashier_;
+    const S<Origin> origin_;
+    const S<Cashier> cashier_;
     uint256_t balance_;
 
     std::mutex mutex_;
 
-    std::map<Bytes32, std::pair<Bytes32, uint256_t>> seeds_;
-    decltype(seeds_.end()) hash_ = seeds_.end();
+    std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
+    decltype(reveals_.end()) commit_ = reveals_.end();
 
     std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
 
     void Bill(Pipe *pipe, const Buffer &data);
     task<void> Send(const Buffer &data) override;
 
-    void Seed();
+    void Commit();
+
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Bytes32 &commit);
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id = Zero<32>());
 
   protected:
     virtual Pump *Inner() = 0;
@@ -71,6 +74,7 @@ class Server :
   public:
     Server(S<Origin> origin, S<Cashier> cashier);
 
+    task<void> Open(Pipe<Buffer> *pipe);
     task<void> Shut() override;
 
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);

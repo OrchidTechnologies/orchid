@@ -165,13 +165,17 @@ class Address :
     }
 };
 
+inline bool Each(const Address &address, const std::function<bool (const uint8_t *, size_t)> &code) {
+    return Number<uint160_t>(address).each(code);
+}
+
 template <size_t Index_, typename... Taking_>
 struct Taking<Index_, Address, void, Taking_...> final {
 template <typename Tuple_, typename Buffer_>
 static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     Number<uint160_t> value;
     window.Take(value);
-    std::get<Index_>(tuple) = Address(value);
+    std::get<Index_>(tuple) = value.num<uint160_t>();
     return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
 

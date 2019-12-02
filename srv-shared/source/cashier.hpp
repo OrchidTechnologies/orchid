@@ -36,21 +36,26 @@ namespace orc {
 class Cashier {
   private:
     Endpoint endpoint_;
-    Address lottery_;
-    Address personal_;
-    std::string password_;
+    const Address lottery_;
+    const Address personal_;
+    const std::string password_;
+    const Address recipient_;
 
     mutable std::mutex mutex_;
     uint256_t price_;
 
-    task<void> Update(cpp_dec_float_50 price, const std::string &fiat);
+    task<void> Update(cpp_dec_float_50 price, const std::string &currency);
 
   public:
-    Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password);
+    Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &currency, Address personal, std::string password, Address recipient);
 
     uint256_t Bill(size_t size) const {
         std::unique_lock<std::mutex> lock(mutex_);
         return price_ * size;
+    }
+
+    Address Recipient() const {
+        return recipient_;
     }
 
     template <typename Selector_, typename... Args_>

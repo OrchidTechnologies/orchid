@@ -74,7 +74,8 @@ class Bonded :
   protected:
     virtual void Land(Pipe<Buffer> *pipe, const Buffer &data) = 0;
 
-    Sunk<> *Wire() {
+  public:
+    Sink<Bonding> *Bond() {
         // XXX: this is non-obviously incorrect
         auto bonding(std::make_unique<Sink<Bonding>>(this));
         auto backup(bonding.get());
@@ -82,7 +83,6 @@ class Bonded :
         return backup;
     }
 
-  public:
     task<void> Shut() override {
         for (auto current(bondings_.begin()); current != bondings_.end(); ) {
             auto next(current);

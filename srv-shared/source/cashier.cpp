@@ -29,8 +29,8 @@
 
 namespace orc {
 
-task<void> Cashier::Update(cpp_dec_float_50 price, const std::string &fiat) {
-    price /= co_await Price("ETH", fiat) / 200;
+task<void> Cashier::Update(cpp_dec_float_50 price, const std::string &currency) {
+    price /= co_await Price("ETH", currency) / 200;
     price *= 1000000000;
     price /= 1024 * 1024 * 1024;
     price *= 1000000000;
@@ -40,21 +40,22 @@ task<void> Cashier::Update(cpp_dec_float_50 price, const std::string &fiat) {
     price_ = static_cast<uint256_t>(static_cast<cpp_bin_float_quad>(price) * static_cast<cpp_bin_float_quad>(uint256_t(1) << 128));
 }
 
-Cashier::Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &fiat, Address personal, std::string password) :
+Cashier::Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &currency, Address personal, std::string password, Address recipient) :
     endpoint_(std::move(endpoint)),
     lottery_(std::move(lottery)),
     personal_(std::move(personal)),
-    password_(std::move(password))
+    password_(std::move(password)),
+    recipient_(std::move(recipient))
 {
     cppcoro::async_manual_reset_event ready;
 
-    Spawn([&ready, this, price = cpp_dec_float_50(price), fiat]() -> task<void> {
-        co_await Update(price, fiat);
+    Spawn([&ready, this, price = cpp_dec_float_50(price), currency]() -> task<void> {
+        co_await Update(price, currency);
         ready.set();
         for (;;) {
             boost::asio::deadline_timer timer(Context(), boost::posix_time::minutes(5));
             co_await timer.async_wait(Token());
-            co_await Update(price, fiat);
+            co_await Update(price, currency);
         }
     });
 
