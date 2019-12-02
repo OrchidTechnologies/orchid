@@ -14,7 +14,9 @@ jobs:
       with:
         submodules: recursive
     - name: brew install
-      run: brew install autoconf automake libtool gettext
+      run: brew install autoconf automake libtool
+    - name: brew link
+      run: brew link --force gettext
     - name: pip install
       run: pip install pyyaml
     - name: make client
