@@ -15,6 +15,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   var _defaultCurator = TextEditingController();
+  bool _queryBalances = false;
 
   @override
   void initState() {
@@ -24,8 +25,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void initStateAsync() async {
+    _queryBalances = await UserPreferences().getQueryBalances();
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
+    setState(() { });
   }
 
   Widget build(BuildContext context) {
@@ -46,8 +49,13 @@ class _SettingsPageState extends State<SettingsPage> {
             //imageName: "assets/images/assignment.png",
             trailing: Switch(
               activeColor: AppColors.purple_3,
-              value: false,
-              onChanged: null/*(bool value) {}*/,
+              value: _queryBalances,
+              onChanged: (bool value) {
+                UserPreferences().setQueryBalances(value);
+                setState(() {
+                  _queryBalances = value;
+                });
+              },
             ),
           ),
           Divider(),

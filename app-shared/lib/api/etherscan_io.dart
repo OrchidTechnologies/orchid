@@ -75,7 +75,7 @@ class EtherscanIO {
       'topic0': lotteryFundMethodSignature,
       //'topic1' would be the funder address here
       'topic0_2_opr': 'and',
-      'topic2': EtherscanIO.pad64Chars(signer),
+      'topic2': pad64Chars(signer),
       'apikey': apiKey
     });
     if (response.statusCode != 200) {

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/util/hex.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/digests/sha3.dart';
 import 'package:pointycastle/ecc/api.dart';
@@ -177,16 +178,26 @@ class StoredEthereumKeyRef {
   }
 }
 
-class Hex {
-  static String removePrefix(String text) {
-    if (text != null && text.toLowerCase().startsWith("0x")) {
-      text = text.substring(2);
-    }
-    return text;
-  }
-}
-
 class EthereumAddress {
+  BigInt value;
+
+  EthereumAddress(BigInt value) {
+    // Allow the string parser to validate.
+    this.value = parse(value.toRadixString(16));
+  }
+
+  EthereumAddress.from(String text) {
+    this.value = parse(text);
+  }
+
+  // TODO: EIP55
+  // Display the optionally prefixed 40 char hex address.
+  @override
+  String toString({bool prefix: true}) {
+    return (prefix ? "0x" : "") + value.toRadixString(16).padLeft(40, '0');
+  }
+
+  // TODO: EIP55
   static BigInt parse(String text) {
     if (text == null) {
       throw Exception("invalid, null");

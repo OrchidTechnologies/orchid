@@ -17,6 +17,10 @@ class ScalarValue<T extends num> {
 
 class OXT extends ScalarValue<double> {
   const OXT(double value) : super(value);
+
+  static OXT fromWei(BigInt oxtWei) {
+    return OXT(oxtWei / BigInt.from(1e18));
+  }
 }
 
 class USD extends ScalarValue<double> {

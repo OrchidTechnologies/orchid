@@ -192,6 +192,16 @@ class UserPreferences {
         .setString(UserPreferenceKey.DefaultCurator.toString(), value);
   }
 
+  Future<bool> getQueryBalances() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.QueryBalances.toString()) ??
+        false;
+  }
+
+  Future<bool> setQueryBalances(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.QueryBalances.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -205,5 +215,6 @@ enum UserPreferenceKey {
   Circuit,
   UserConfig,
   Keys,
-  DefaultCurator
+  DefaultCurator,
+  QueryBalances
 }

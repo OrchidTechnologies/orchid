@@ -1,5 +1,10 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/api/cloudflare.dart';
+import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
@@ -8,6 +13,8 @@ import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/keys/add_key_page.dart';
+import 'package:orchid/util/hex.dart';
+import 'package:orchid/util/units.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 import 'budget_page.dart';
@@ -33,6 +40,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   var _curatorField = TextEditingController();
   StoredEthereumKeyRef _initialKeyRef;
   StoredEthereumKeyRef _selectedKeyRef;
+  bool _showBalance = false;
+  OXT _balance; // initially null
+  Timer _balanceTimer;
 
   @override
   void initState() {
@@ -57,6 +67,17 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       _initialKeyRef = _selectedKeyRef;
     });
     _funderField.addListener(_textFieldChanged);
+
+    // init balance polling
+    if (await UserPreferences().getQueryBalances()) {
+      setState(() {
+        _showBalance = true;
+      });
+      _balanceTimer = Timer.periodic(Duration(seconds: 10), (_) {
+        _pollBalance();
+      });
+      _pollBalance(); // kick one off immediately
+    }
   }
 
   @override
@@ -157,8 +178,43 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildFunding() {
+    const color = Color(0xff3a3149);
+    const valueStyle = TextStyle(
+        color: color,
+        fontSize: 15.0,
+        fontWeight: FontWeight.normal,
+        letterSpacing: -0.24,
+        fontFamily: "SFProText-Regular",
+        height: 20.0 / 15.0);
+    var balanceText =
+        _balance != null ? _balance.toStringAsFixed(4) + " OXT" : "...";
     return Column(
       children: <Widget>[
+        // Balance (if enabled)
+        Visibility(
+          visible: _showBalance,
+          child: Row(
+            children: <Widget>[
+              Container(
+                padding: EdgeInsets.only(top: 8, bottom: 16),
+                width: 80,
+                child: Text("Balance:",
+                    style: AppText.textLabelStyle.copyWith(
+                        fontSize: 20,
+                        color: _funderValid()
+                            ? AppColors.neutral_1
+                            : AppColors.neutral_3)),
+              ),
+              Expanded(
+                  child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(balanceText,
+                    textAlign: TextAlign.right, style: valueStyle),
+              ))
+            ],
+          ),
+        ),
+
         // Wallet address (funder)
         Row(
           children: <Widget>[
@@ -184,12 +240,15 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         pady(widget.readOnly() ? 0 : 8),
         Row(
           children: <Widget>[
-            Text("Signer:",
-                style: AppText.textLabelStyle.copyWith(
-                    fontSize: 20,
-                    color: _keyRefValid()
-                        ? AppColors.neutral_1
-                        : AppColors.neutral_3)),
+            Container(
+              width: 70,
+              child: Text("Signer:",
+                  style: AppText.textLabelStyle.copyWith(
+                      fontSize: 20,
+                      color: _keyRefValid()
+                          ? AppColors.neutral_1
+                          : AppColors.neutral_3)),
+            ),
             Expanded(
                 child: Padding(
               padding: const EdgeInsets.only(left: 20, right: 16),
@@ -353,5 +412,26 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void dispose() {
     super.dispose();
     _funderField.removeListener(_textFieldChanged);
+    _balanceTimer?.cancel();
+  }
+
+  void _pollBalance() async {
+    print("polling balance");
+    try {
+      // funder and signer from the stored hop
+      EthereumAddress funder = EthereumAddress.from(_hop()?.funder);
+      StoredEthereumKey signerKey = await _hop()?.keyRef?.get();
+      EthereumAddress signer = EthereumAddress.from(signerKey.keys().address);
+      // Fetch the pot balance
+      LotteryPot pot = await CloudFlare.getLotteryPot(funder, signer);
+      setState(() {
+        _balance = pot.balance;
+      });
+    } catch (err) {
+      print("Can't fetch balance: $err");
+      setState(() {
+        _balance = null; // no balance available
+      });
+    }
   }
 }
