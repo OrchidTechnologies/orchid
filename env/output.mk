@@ -172,7 +172,7 @@ $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot)
 	    CC="$(cc/$(arch))" CFLAGS="$(qflags)" RANLIB="$(ranlib/$(arch))" AR="$(ar/$(arch))" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
 	    CPPFLAGS="$(patsubst -I@/%,-I$(CURDIR)/$(output)/$(arch)/%,$(p_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
 	    LDFLAGS="$(wflags) $(patsubst -L@/%,-L$(CURDIR)/$(output)/$(arch)/%,$(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
-	    --enable-static --disable-shared $(subst =@/,=$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
+	    --enable-static --disable-shared $(subst =@/,=$(CURDIR)/$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
 
 $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt
