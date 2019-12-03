@@ -11,6 +11,7 @@ import 'package:orchid/util/collections.dart';
 import '../app_gradients.dart';
 import '../app_text.dart';
 import 'add_hop_page.dart';
+import 'circuit_empty_view.dart';
 import 'circuit_hop.dart';
 
 class CircuitPage extends StatefulWidget {
@@ -37,8 +38,7 @@ class CircuitPageState extends State<CircuitPage> {
         _hops = mapIndexed(circuit?.hops ?? [], ((index, hop) {
           var key = DateTime.now().millisecondsSinceEpoch + index;
           return UniqueHop(key: key, hop: hop);
-        }))
-            .toList();
+        })).toList();
       });
     }
   }
@@ -48,51 +48,70 @@ class CircuitPageState extends State<CircuitPage> {
     return Container(
       decoration: BoxDecoration(gradient: AppGradients.basicGradient),
       child: SafeArea(
-        child: Column(
+        child: Stack(
           children: <Widget>[
-            pady(16),
-            Expanded(child: _buildListView()),
-            FloatingAddButton(onPressed: _addHop),
+            Visibility(
+                visible: _showEmptyView(),
+                child: CircuitEmptyView(addHop: _addHop),
+                replacement: _buildBody()),
           ],
         ),
       ),
     );
   }
 
-  ReorderableListView _buildListView() {
-    return ReorderableListView(
-        children: (_hops ?? []).map((uniqueHop) {
-          return Dismissible(
-            background: Container(
-              color: Colors.red,
-              child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "Delete",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  )),
-            ),
-            onDismissed: (direction) {
-              _deleteHop(uniqueHop);
-            },
-            child: ListTile(
-              onTap: () {
-                _viewHop(uniqueHop);
-              },
-              key: Key(uniqueHop.key.toString()),
-              title: Text(
-                uniqueHop.hop.displayName(),
-                style: AppText.listItem,
+  Stack _buildBody() {
+    return Stack(
+      children: <Widget>[
+        _buildListView(),
+        Align(
+            alignment: Alignment.bottomRight,
+            child: FloatingAddButton(onPressed: _addHop)),
+      ],
+    );
+  }
+
+  bool _showEmptyView() {
+    return _hops == null || _hops.length == 0;
+  }
+
+  Widget _buildListView() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: ReorderableListView(
+          children: (_hops ?? []).map((uniqueHop) {
+            return Dismissible(
+              background: Container(
+                color: Colors.red,
+                child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "Delete",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )),
               ),
-              trailing: Icon(Icons.menu),
-            ),
-            key: Key(uniqueHop.key.toString()),
-          );
-        }).toList(),
-        onReorder: _onReorder);
+              onDismissed: (direction) {
+                _deleteHop(uniqueHop);
+              },
+              child: ListTile(
+                onTap: () {
+                  _viewHop(uniqueHop);
+                },
+                key: Key(uniqueHop.key.toString()),
+                title: Text(
+                  uniqueHop.hop.displayName(),
+                  style: AppText.listItem,
+                ),
+                trailing: Icon(Icons.menu),
+              ),
+              key: Key(uniqueHop.key.toString()),
+            );
+          }).toList(),
+          onReorder: _onReorder),
+    );
   }
 
   // Show the add hop flow and save the result if completed successfully.
