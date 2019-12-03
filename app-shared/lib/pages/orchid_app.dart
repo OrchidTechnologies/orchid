@@ -53,8 +53,8 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
               controller: _tabController,
               tabs: [
                 Tab(
-                  text: "VPN",
-                  icon: Image.asset("assets/images/swapVert.png",
+                  text: "Status",
+                  icon: Image.asset("assets/images/statusV2.png",
                       color: _tabController.index == 0
                           ? Colors.white
                           : Colors.white60,
@@ -62,14 +62,14 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
                 ),
                 Tab(
                   text: "Traffic",
-                  icon: Image.asset("assets/images/rerouteAlt.png",
+                  icon: Image.asset("assets/images/swapVert.png",
                       color: _tabController.index == 1
                           ? Colors.white
                           : Colors.white60,
                       height: 27),
                 ),
                 Tab(
-                  text: "Circuit",
+                  text: "Hops",
                   icon: Image.asset("assets/images/rerouteAlt.png",
                       color: _tabController.index == 2
                           ? Colors.white
@@ -86,7 +86,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
   }
 
   void _handleTabSelection() {
-    var titles = [_logo, Text("Traffic"), Text("Circuit")];
+    var titles = [_logo, Text("Traffic"), Text("Hops")];
     setState(() {
       _pageTitle = titles[_tabController.index];
       _pageActions = _tabController.index == 1
