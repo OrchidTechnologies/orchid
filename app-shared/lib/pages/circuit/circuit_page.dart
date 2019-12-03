@@ -15,6 +15,8 @@ import 'circuit_empty_view.dart';
 import 'circuit_hop.dart';
 
 class CircuitPage extends StatefulWidget {
+  CircuitPage({Key key}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
     return new CircuitPageState();

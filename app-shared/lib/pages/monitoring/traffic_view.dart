@@ -16,7 +16,7 @@ import 'traffic_view_detail.dart';
 class TrafficView extends StatefulWidget {
   final ClearTrafficActionButtonController clearTrafficController;
 
-  const TrafficView({this.clearTrafficController});
+  const TrafficView({Key key, this.clearTrafficController}) : super(key: key);
 
   @override
   _TrafficViewState createState() => _TrafficViewState();
@@ -59,6 +59,7 @@ class _TrafficViewState extends State<TrafficView>
 
   @override
   void initState() {
+    print("traffic view init state");
     super.initState();
 
     // Update on search text
@@ -94,14 +95,18 @@ class _TrafficViewState extends State<TrafficView>
         child: Stack(
           children: <Widget>[
             Visibility(
-              visible: _showEmptyView(),
-              child: TrafficEmptyView(),
-              replacement: Column(
-                children: <Widget>[
-                  _buildSearchView(),
-                  _buildNewContentIndicator(),
-                  _buildResultListView()
-                ],
+              visible: _uiInitialized(),
+              replacement: Container(),
+              child: Visibility(
+                visible: _showEmptyView(),
+                child: TrafficEmptyView(),
+                replacement: Column(
+                  children: <Widget>[
+                    _buildSearchView(),
+                    _buildNewContentIndicator(),
+                    _buildResultListView()
+                  ],
+                ),
               ),
             ),
           ],
@@ -372,6 +377,10 @@ class _TrafficViewState extends State<TrafficView>
   /// be shown.  Note that this does not include empty query results.
   bool _showEmptyView() {
     return _resultList != null && _resultList.isEmpty && _query.length < 1;
+  }
+
+  bool _uiInitialized() {
+    return _lastQuery != null;
   }
 
   /// Update the list with new content and scroll to the top

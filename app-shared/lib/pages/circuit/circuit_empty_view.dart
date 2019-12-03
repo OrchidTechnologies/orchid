@@ -51,11 +51,14 @@ class CircuitEmptyView extends StatelessWidget {
                   children: <Widget>[
                     Visibility(
                       visible: orientation == Orientation.portrait,
-                      child: AppText.header(
-                          text: "Create your first hop to get started.",
-                          color: Colors.deepPurple,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20.0),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 45.0),
+                        child: AppText.header(
+                            text: "Create your first hop to get started.",
+                            color: Colors.deepPurple,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20.0),
+                      ),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
