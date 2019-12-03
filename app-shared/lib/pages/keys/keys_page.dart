@@ -142,14 +142,11 @@ class FloatingAddButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: FloatingActionButton(
-          child: Icon(Icons.add),
-          onPressed: onPressed,
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: onPressed,
       ),
     );
   }

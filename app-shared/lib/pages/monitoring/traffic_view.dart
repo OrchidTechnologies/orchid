@@ -93,17 +93,17 @@ class _TrafficViewState extends State<TrafficView>
       child: SafeArea(
         child: Stack(
           children: <Widget>[
-            Visibility(visible: _showEmptyView(), child: TrafficEmptyView()),
             Visibility(
-              visible: !_showEmptyView(),
-              child: Column(
+              visible: _showEmptyView(),
+              child: TrafficEmptyView(),
+              replacement: Column(
                 children: <Widget>[
                   _buildSearchView(),
                   _buildNewContentIndicator(),
                   _buildResultListView()
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
