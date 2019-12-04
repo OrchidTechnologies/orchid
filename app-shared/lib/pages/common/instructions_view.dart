@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../app_colors.dart';
 import '../app_text.dart';
 
 /// Instructional text with vertically arranged image, title, and body.
@@ -23,9 +22,13 @@ class InstructionsView extends StatelessWidget {
   Widget build(BuildContext context) {
     var textColor = Color(0xff504960);
     return OrientationBuilder(
-      builder: (BuildContext context, Orientation orientation) {
+      builder: (BuildContext context, Orientation builderOrientation) {
+        // Orientation builder provides the parent widget orientation, not
+        // necessarily the device. Fetch device orientation.
+        var orientation = MediaQuery.of(context).orientation;
+        print("instructions ($title) orientation = $orientation");
         return Visibility(
-          visible: orientation == Orientation.portrait,
+          visible: orientation == Orientation.portrait || !hideInLandscape,
           child: SafeArea(
               child: Column(
             children: <Widget>[

@@ -11,6 +11,7 @@ import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
+import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/keys/add_key_page.dart';
@@ -48,6 +49,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   @override
   void initState() {
     super.initState();
+    // Disable rotation until we update the screen design
+    if (widget.readOnly()) {
+      ScreenOrientation.portrait();
+    }
     initStateAsync();
   }
 
@@ -420,6 +425,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   @override
   void dispose() {
     super.dispose();
+    ScreenOrientation.reset();
     _funderField.removeListener(_textFieldChanged);
     _balanceTimer?.cancel();
   }

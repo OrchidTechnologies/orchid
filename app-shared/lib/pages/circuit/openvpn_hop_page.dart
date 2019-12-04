@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/instructions_view.dart';
+import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import '../app_colors.dart';
@@ -29,6 +31,10 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
   @override
   void initState() {
     super.initState();
+
+    // Disable rotation until we update the screen design
+    ScreenOrientation.portrait();
+
     OpenVPNHop hop = widget.editableHop.value?.hop;
     _userName.text = hop?.userName;
     _userPassword.text = hop?.userPassword;
@@ -82,11 +88,11 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                     alignment: Alignment.centerLeft,
                     child: Text("Config:",
                         style: AppText.textLabelStyle.copyWith(fontSize: 20))),
-                // TODO: This is copied from the configuration page, factor out?
                 Expanded(
+                  flex: 2,
                   child: Padding(
                     padding: const EdgeInsets.only(
-                        left: 16, right: 16, top: 24, bottom: 24),
+                        left: 16, right: 16, top: 24, bottom: 8),
                     child: Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -112,7 +118,23 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                       ),
                     ),
                   ),
-                )
+                ),
+
+                // Instructions
+                Visibility(
+                  visible: widget.mode == HopEditorMode.Create,
+                  child: Expanded(
+                    flex: 1,
+                    child: InstructionsView(
+                      // TODO: This screen is being told it's in landscape mode in the simulator?
+                      //hideInLandscape: false,
+                      title: "Enter your credentials",
+                      body:
+                      "Enter the login information for your VPN provider above. Then paste the contents of your provider’s OpenVPN config file into the field provided. ",
+                    ),
+                  ),
+                ),
+                pady(24)
               ],
             ),
           ),
@@ -134,6 +156,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
   @override
   void dispose() {
     super.dispose();
+    ScreenOrientation.reset();
     _userName.removeListener(_updateHop);
     _userPassword.removeListener(_updateHop);
     _ovpnConfig.removeListener(_updateHop);
