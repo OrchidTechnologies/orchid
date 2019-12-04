@@ -21,6 +21,7 @@ class InstructionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var textColor = Color(0xff504960);
     return OrientationBuilder(
       builder: (BuildContext context, Orientation orientation) {
         return Visibility(
@@ -34,7 +35,7 @@ class InstructionsView extends StatelessWidget {
               AppText.header(
                   text: title,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black54,
+                  color: textColor,
                   fontSize: 20.0),
               SizedBox(height: 20),
               ConstrainedBox(
@@ -45,7 +46,7 @@ class InstructionsView extends StatelessWidget {
                       text: body,
                       fontWeight: FontWeight.w500,
                       fontSize: 11.0,
-                      color: AppColors.neutral_1),
+                      color: textColor),
                 ),
               ),
               Spacer(flex: 1),
