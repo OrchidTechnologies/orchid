@@ -181,6 +181,27 @@ class UserPreferences {
       return false;
     }
   }
+
+  Future<String> getDefaultCurator() async {
+    return (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.DefaultCurator.toString());
+  }
+
+  Future<bool> setDefaultCurator(String value) async {
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.DefaultCurator.toString(), value);
+  }
+
+  Future<bool> getQueryBalances() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.QueryBalances.toString()) ??
+        false;
+  }
+
+  Future<bool> setQueryBalances(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.QueryBalances.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -193,5 +214,7 @@ enum UserPreferenceKey {
   Budget,
   Circuit,
   UserConfig,
-  Keys
+  Keys,
+  DefaultCurator,
+  QueryBalances
 }

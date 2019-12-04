@@ -63,7 +63,7 @@ $(bundle)/Frameworks/Flutter.framework/%: $(engine)/Flutter.framework/%
 	touch $@
 
 signed += $(assets)/AssetManifest.json
-$(assets)/AssetManifest%json %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m: flutter/packages/flutter/pubspec.lock pubspec.lock $(dart)
+$(assets)/AssetManifest%json %flutter-plugins ios/Runner/GeneratedPluginRegistrant%m: $(dart)
 	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
 	flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \

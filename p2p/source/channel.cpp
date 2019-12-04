@@ -33,6 +33,7 @@
 #include "channel.hpp"
 #include "lwip.hpp"
 #include "memory.hpp"
+#include "pirate.hpp"
 #include "socket.hpp"
 #include "trace.hpp"
 
@@ -96,6 +97,20 @@ Peer::Peer(const S<Origin> &origin, Configuration configuration) :
         }());
     }())
 {
+}
+
+struct Internal_ { typedef struct socket *(cricket::SctpTransport::*type); };
+template struct Pirate<Internal_, &cricket::SctpTransport::sock_>;
+
+task<struct socket *> Peer::Internal() {
+    auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
+        return peer_->GetSctpTransport();
+    }));
+
+    orc_assert(sctp != nullptr);
+
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
+    co_return static_cast<cricket::SctpTransport *>(static_cast<webrtc::SctpTransport *>(sctp.get())->internal())->*Loot<Internal_>::pointer;
 }
 
 task<cricket::Candidate> Peer::Candidate() {
@@ -250,7 +265,7 @@ task<Socket> Channel::Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration 
     auto channel(sunk->Wire<Channel>(client));
     auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);
-    co_await channel->Connect();
+    co_await channel->Open();
     auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ipv4_address(), socket.port());
@@ -265,6 +280,15 @@ rtc::scoped_refptr<rtc::RTCCertificate> Certify() {
     return rtc::RTCCertificate::Create(U<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
         "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
     )));
+}
+
+task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice) {
+    Configuration configuration;
+    configuration.ice_ = std::move(ice);
+    auto client(Make<Actor>(origin, std::move(configuration)));
+    auto stopper(Break<Sink<Stopper>>());
+    stopper->Wire<Channel>(client);
+    co_return co_await client->Offer();
 }
 
 }

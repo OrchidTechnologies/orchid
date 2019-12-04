@@ -32,6 +32,7 @@
 #include "crypto.hpp"
 #include "jsonrpc.hpp"
 #include "origin.hpp"
+#include "ticket.hpp"
 
 namespace orc {
 
@@ -40,20 +41,32 @@ class Client :
     public Pump
 {
   private:
-    rtc::scoped_refptr<rtc::RTCCertificate> local_;
-    U<rtc::SSLFingerprint> remote_;
+    const rtc::scoped_refptr<rtc::RTCCertificate> local_;
+    const U<rtc::SSLFingerprint> remote_;
 
-    Address provider_;
+    const Address provider_;
+    const Bytes receipt_;
 
-    Secret secret_;
-    Address funder_;
+    const Secret secret_;
+    const Address funder_;
+
+    const uint256_t prepay_;
+    std::atomic<uint64_t> benefit_;
+    std::map<Bytes32, std::pair<Ticket, Signature>> tickets_;
+
+    std::mutex mutex_;
+    uint256_t timestamp_;
+    uint256_t balance_;
+    Address recipient_;
+    Bytes32 commit_;
 
     Socket socket_;
 
-    std::atomic<uint64_t> benefit_;
+    task<void> Submit();
+    task<void> Submit(Bytes32 hash, const Ticket &ticket, const Signature &signature);
 
-    Address target_;
-    Bytes32 hash_;
+    void Issue(uint256_t amount);
+    void Transfer(size_t size);
 
   protected:
     void Land(Pipe *pipe, const Buffer &data) override;

@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <chrono>
+
 #include "crypto.hpp"
 #include "error.hpp"
 #include "jsonrpc.hpp"
@@ -136,6 +138,13 @@ Explode::Explode(Window &&window) :
 Address::Address(const Brick<64> &common) :
     Address(Hash(common).skip<12>().num<uint160_t>())
 {
+}
+
+uint256_t Timestamp() {
+    using std::chrono::system_clock;
+    system_clock::time_point point(system_clock::now());
+    system_clock::duration duration(point.time_since_epoch());
+    return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
 }
 
 }

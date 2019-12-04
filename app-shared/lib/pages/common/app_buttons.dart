@@ -4,26 +4,32 @@ import 'package:orchid/pages/app_text.dart';
 
 /// A rounded rectangle raised text button.
 class RoundedRectRaisedButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  final Color textColor;
+  final Icon icon;
+
   const RoundedRectRaisedButton({
     Key key,
     @required this.text,
     @required this.onPressed,
+    this.backgroundColor,
+    this.textColor,
+    this.icon,
   }) : super(key: key);
-
-  final String text;
-  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return RaisedButton(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16))),
-      child: AppText.body(
+      child: icon ?? AppText.body(
           text: text,
-          color: AppColors.text_light,
+          color: textColor ?? AppColors.text_light,
           letterSpacing: 1.25,
           lineHeight: 1.14),
-      color: AppColors.purple_3,
+      color: backgroundColor ?? AppColors.purple_3,
       onPressed: onPressed,
     );
   }
@@ -142,7 +148,7 @@ class SaveActionButton extends StatelessWidget {
         child: Text(
           "Save",
           style: AppText.actionButtonStyle.copyWith(
-            // TODO: We need to get the TitledPage to publish colors on the context (theme)
+              // TODO: We need to get the TitledPage to publish colors on the context (theme)
               color: isValid ? Colors.white : Colors.white.withOpacity(0.4)),
         ),
         onPressed: isValid ? onPressed : null);

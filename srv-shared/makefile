@@ -39,10 +39,11 @@ debug: $(output)/$(default)/orchid$(exe)
 source += $(wildcard source/*.cpp)
 cflags += -Isource
 
-$(call include,p2p/target.mk)
-
 cflags += -Iextra
+$(call include,p2p/target.mk)
 cflags += -Ip2p/rtc/openssl/test/ossl_shim/include
+
+lflags += -lpcap
 
 
 include env/output.mk

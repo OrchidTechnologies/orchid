@@ -36,6 +36,8 @@
 #include "threads.hpp"
 #include "trace.hpp"
 
+struct socket;
+
 namespace orc {
 
 class Socket;
@@ -108,6 +110,7 @@ _trace();
         return peer_;
     }
 
+    task<struct socket *> Internal();
     task<cricket::Candidate> Candidate();
 
 
@@ -238,11 +241,6 @@ class Channel final :
     {
     }
 
-    task<void> Connect() {
-        co_await opened_;
-        co_await Schedule();
-    }
-
     ~Channel() override {
 _trace();
         peer_->channels_.erase(this);
@@ -293,6 +291,11 @@ _trace();
         return Pump::Stop(error);
     }
 
+    task<void> Open() {
+        co_await opened_;
+        co_await Schedule();
+    }
+
     task<void> Shut() override {
         channel_->Close();
         co_await Pump::Shut();
@@ -304,13 +307,15 @@ _trace();
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
         co_await Post([&]() {
-            channel_->Send(webrtc::DataBuffer(buffer, true));
+            if (channel_->buffered_amount() == 0)
+                channel_->Send(webrtc::DataBuffer(buffer, true));
         });
     }
 };
 
 std::string Strip(const std::string &sdp);
 rtc::scoped_refptr<rtc::RTCCertificate> Certify();
+task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice);
 
 }
 

@@ -16,6 +16,8 @@ import 'connect_world_map.dart';
 class QuickConnectPage extends StatefulWidget {
   static bool allowScrolling = false;
 
+  QuickConnectPage({Key key}) : super(key: key);
+
   @override
   _QuickConnectPageState createState() => _QuickConnectPageState();
 }

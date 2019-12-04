@@ -93,6 +93,26 @@ class Pump :
     }
 };
 
+class Stopper :
+    public Valve,
+    public BufferDrain
+{
+  protected:
+    virtual Pump *Inner() = 0;
+
+    void Land(const Buffer &buffer) override {
+    }
+
+    void Stop(const std::string &error) override {
+    }
+
+  public:
+    task<void> Shut() override {
+        co_await Inner()->Shut();
+        co_await Valve::Shut();
+    }
+};
+
 class Link :
     public Pump,
     public BufferDrain

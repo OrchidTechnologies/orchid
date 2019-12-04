@@ -50,29 +50,17 @@ class _SideDrawerState extends State<SideDrawer> {
     return Column(
       children: <Widget>[
         // top logo
-        DrawerHeader(
-          child: Image(image: AssetImage('assets/images/logo.png')),
+        Theme(
+          data: ThemeData(dividerColor: Colors.transparent),
+          child: DrawerHeader(
+            child: Image(image: AssetImage('assets/images/logo.png')),
+          ),
         ),
 
         Expanded(
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
-              Visibility(
-                visible: OrchidBudgetAPI.featureEnabled,
-                child: Column(
-                  children: <Widget>[
-                    BalanceSideDrawerTile(
-                        title: "Balance",
-                        imageName: 'assets/images/wallet.png',
-                        onPressed: () {
-                          //Navigator.pushNamed(context, '/budget/balance');
-                        }),
-                    divider(),
-                  ],
-                ),
-              ),
-              divider(),
               SideDrawerTile(
                   title: "Help",
                   //imageName: 'assets/images/help.png',
@@ -98,6 +86,15 @@ class _SideDrawerState extends State<SideDrawer> {
                   hoffset: 4.0,
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.open_source);
+                  }),
+              divider(),
+              SideDrawerTile(
+                  title: "Settings",
+                  imageName: 'assets/images/settings.png',
+                  showDetail: true,
+                  hoffset: 4.0,
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.settings);
                   }),
               divider(),
               SideDrawerTile(
@@ -205,15 +202,6 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
   @override
   void initState() {
     super.initState();
-
-    if (OrchidBudgetAPI.featureEnabled) {
-      // Listen to the funding balance.
-      _balanceListener = OrchidAPI().budget().potStatus.listen((pot) {
-        setState(() {
-          this._balance = pot.balance;
-        });
-      });
-    }
   }
 
   @override

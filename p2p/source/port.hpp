@@ -28,7 +28,6 @@
 namespace orc {
 
 extern const Host Host_;
-extern const Socket Port_;
 
 }
 

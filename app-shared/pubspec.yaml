@@ -22,7 +22,7 @@ dependencies:
   flare_flutter:
     git:
       url: git://github.com/2d-inc/Flare-Flutter.git
-      ref: d8defc4c07571ce8287f26791cf38992fffaef75
+      ref: dev
       path: flare_flutter
   url_launcher: ^5.0.0
   shared_preferences: ^0.5.2

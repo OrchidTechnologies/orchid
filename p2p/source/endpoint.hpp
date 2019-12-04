@@ -78,7 +78,9 @@ class Endpoint final {
     task<Json::Value> operator ()(const std::string &method, Argument args);
 
     task<uint256_t> Latest() {
-        co_return uint256_t((co_await operator ()("eth_blockNumber", {})).asString());
+        auto latest(uint256_t((co_await operator ()("eth_blockNumber", {})).asString()));
+        orc_assert_(latest != 0, "ethereum server has not synchronized any blocks");
+        co_return latest;
     }
 
     task<Block> Header(uint256_t number) {
@@ -103,6 +105,10 @@ class Endpoint final {
         for (unsigned i(0); i != args.size(); ++i)
             std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
         co_return result;
+    }
+
+    task<Bytes32> Sign(const Address &signer, const Buffer &data) {
+        co_return Bless((co_await operator ()("eth_sign", {signer, data})).asString());
     }
 };
 

@@ -59,11 +59,12 @@ class Transport :
     virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        static size_t payload(2048);
-        orc_assert(data.size() <= payload);
+        static size_t payload(65536);
+        const auto size(data.size());
+        orc_assert_(size <= payload, "orc_assert(Land: " << size << " {data.size()} <= " << payload << ") " << data);
         //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
         openvpn::BufferAllocated buffer(payload, openvpn::BufferAllocated::ARRAY);
-        buffer.set_size(data.size());
+        buffer.set_size(size);
         data.copy(buffer.data(), buffer.size());
         asio::dispatch(context_, [parent = parent_, buffer = std::move(buffer)]() mutable {
             //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
@@ -389,13 +390,14 @@ _trace();
 
     task<void> Send(const orc::Buffer &data) override {
         static size_t headroom(512);
-        static size_t payload(2048);
+        static size_t payload(65536);
         static size_t tailroom(512);
-        orc_assert(data.size() <= payload);
+        const auto size(data.size());
+        orc_assert_(size <= payload, "orc_assert(Send: " << size << " {data.size()} <= " << payload << ") " << data);
 
         openvpn::BufferAllocated buffer(headroom + payload + tailroom, openvpn::BufferAllocated::ARRAY);
         buffer.reset_offset(headroom);
-        buffer.set_size(data.size());
+        buffer.set_size(size);
         data.copy(buffer.data(), buffer.size());
 
         Span span(buffer.data(), buffer.size());

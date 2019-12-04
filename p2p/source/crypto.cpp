@@ -119,7 +119,7 @@ Signature Sign(const Secret &secret, const Brick<32> &data) {
     return {external, v};
 }
 
-Common Recover(const Signature &signature, const Brick<32> &data) {
+Common Recover(const Brick<32> &data, const Signature &signature) {
     auto *context(Curve());
 
     secp256k1_ecdsa_recoverable_signature internal;

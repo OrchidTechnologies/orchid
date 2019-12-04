@@ -25,6 +25,5 @@
 namespace orc {
 
 const Host Host_(10,7,0,3);
-const Socket Port_(0, 9876);
 
 }

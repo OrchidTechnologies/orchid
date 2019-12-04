@@ -35,12 +35,15 @@
 #include <openssl/base.h>
 #include <openssl/pkcs12.h>
 
+#include <api/jsep_session_description.h>
 #include <pc/webrtc_sdp.h>
+
 #include <rtc_base/message_digest.h>
 #include <rtc_base/openssl_identity.h>
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
+#include "cashier.hpp"
 #include "channel.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
@@ -72,54 +75,74 @@ std::string Stringify(bssl::UniquePtr<BIO> bio) {
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 
-    po::options_description options("command-line (only)");
-    options.add_options()
+    po::options_description group("general command line");
+    group.add_options()
         ("help", "produce help message")
     ;
 
-    po::options_description configs("command-line / file");
-    configs.add_options()
-        ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+    po::options_description options;
+
+    { po::options_description group("orchid eth addresses");
+    group.add_options()
+        //("token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
+        ("location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"))
+        ("lottery", po::value<std::string>()->default_value("0xF28eE3675D0C9Fe8f29aBD25dA4AE0d940FE8239"))
+    ; options.add(group); }
+
+    { po::options_description group("user eth addresses");
+    group.add_options()
+        ("personal", po::value<std::string>(), "address to use for making transactions")
+        ("password", po::value<std::string>()->default_value(""), "password to unlock personal account")
+        ("recipient", po::value<std::string>(), "deposit address for client payments")
+        ("provider", po::value<std::string>(), "provider address in stake directory")
+    ; options.add(group); }
+
+    { po::options_description group("external resources");
+    group.add_options()
         ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
-        ("eth-token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"), "ethereum contract address of token")
-        ("eth-location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"), "ethereum contract address of location")
-        ("eth-lottery", po::value<std::string>()->default_value("0xc999ACfE677239b8F07f04AC378651189c5Ad517"), "ethereum contract address of lottery")
-        ("eth-password", po::value<std::string>()->default_value(""), "password to use with personal API")
-        ("eth-provider", po::value<std::string>(), "ethereum contract address of provider")
-        ("eth-target", po::value<std::string>(), "ethereum contract address of target")
-        ("stun", po::value<std::string>()->default_value("stun:stun.l.google.com:19302"), "stun server url to use for discovery")
-        ("host", po::value<std::string>(), "hostname to access this server")
+        ("stun", po::value<std::string>()->default_value("stun.l.google.com:19302"), "stun server url to use for discovery")
+    ; options.add(group); }
+
+    { po::options_description group("webrtc signaling");
+    group.add_options()
+        ("host", po::value<std::string>(), "external hostname for this server")
         ("bind", po::value<std::string>()->default_value("0.0.0.0"), "ip address for server to bind to")
         ("port", po::value<uint16_t>()->default_value(8443), "port to advertise on blockchain")
         ("path", po::value<std::string>()->default_value("/"), "path of internal https endpoint")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
-        ("ovpn-file", po::value<std::string>(), "openvpn .ovpn configuration file")
-        ("ovpn-user", po::value<std::string>()->default_value(""), "openvpn credential (username)")
-        ("ovpn-pass", po::value<std::string>()->default_value(""), "openvpn credential (password)")
-    ;
+        ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
+        ("network", po::value<std::string>(), "local interface for ICE candidates")
+    ; options.add(group); }
 
-    po::options_description hiddens("you can't see these");
-    hiddens.add_options()
-    ;
+    { po::options_description group("bandwidth pricing");
+    group.add_options()
+        ("currency", po::value<std::string>()->default_value("USD"), "currency used for price conversions")
+        ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in currency / GB")
+    ; options.add(group); }
+
+    { po::options_description group("openpvn egress");
+    group.add_options()
+        ("ovpn-file", po::value<std::string>(), "openvpn .ovpn configuration file")
+        ("ovpn-user", po::value<std::string>()->default_value(""), "openvpn client credential (username)")
+        ("ovpn-pass", po::value<std::string>()->default_value(""), "openvpn client credential (password)")
+    ; options.add(group); }
 
     po::store(po::parse_command_line(argc, argv, po::options_description()
+        .add(group)
         .add(options)
-        .add(configs)
-        .add(hiddens)
     ), args);
 
     if (auto path = getenv("ORCHID_CONFIG"))
         po::store(po::parse_config_file(path, po::options_description()
-            .add(configs)
-            .add(hiddens)
+            .add(options)
         ), args);
 
     po::notify(args);
 
     if (args.count("help") != 0) {
         std::cout << po::options_description()
+            .add(group)
             .add(options)
-            .add(configs)
         << std::endl;
 
         return 0;
@@ -129,7 +152,7 @@ int Main(int argc, const char *const argv[]) {
     Initialize();
 
     std::vector<std::string> ice;
-    ice.emplace_back(args["stun"].as<std::string>());
+    ice.emplace_back("stun:" + args["stun"].as<std::string>());
 
 
     std::string params;
@@ -220,6 +243,7 @@ int Main(int argc, const char *const argv[]) {
     if (args.count("host") != 0)
         host = args["host"].as<std::string>();
     else
+        // XXX: this should be the IP of "bind"
         host = boost::asio::ip::host_name();
 
     auto port(args["port"].as<uint16_t>());
@@ -232,14 +256,52 @@ int Main(int argc, const char *const argv[]) {
     std::cerr << "tls = " << tls << std::endl;
 
 
-    Address location(args["eth-location"].as<std::string>());
-    std::string password(args["eth-password"].as<std::string>());
+    Address location(args["location"].as<std::string>());
+    Address personal(args["personal"].as<std::string>());
+    std::string password(args["password"].as<std::string>());
+    Address recipient(args.count("recipient") == 0 ? 0 : args["recipient"].as<std::string>());
+
+    auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
+
+
+    {
+        auto offer(Wait(Description(origin, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
+        std::cout << std::endl;
+        std::cout << Filter(false, offer) << std::endl;
+
+        webrtc::JsepSessionDescription jsep(webrtc::SdpType::kOffer);
+        webrtc::SdpParseError error;
+        orc_assert(webrtc::SdpDeserialize(offer, &jsep, &error));
+
+        auto description(jsep.description());
+        orc_assert(description != nullptr);
+
+        std::map<Socket, Socket> reflexive;
+
+        for (size_t i(0); ; ++i) {
+            auto ices(jsep.candidates(i));
+            if (ices == nullptr)
+                break;
+            for (size_t i(0), e(ices->count()); i != e; ++i) {
+                auto ice(ices->at(i));
+                orc_assert(ice != nullptr);
+                const auto &candidate(ice->candidate());
+                if (candidate.type() != "stun")
+                    continue;
+                if (!reflexive.emplace(candidate.related_address(), candidate.address()).second) {
+                    std::cerr << "server must not use symmetric NAT" << std::endl;
+                    return 1;
+                }
+            }
+        }
+    }
+
 
     auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
-    Endpoint endpoint(GetLocal(), rpc);
+    Endpoint endpoint(origin, rpc);
 
-    if (args.count("eth-provider")) {
-        Address provider(args["eth-provider"].as<std::string>());
+    if (args.count("provider") != 0) {
+        Address provider(args["provider"].as<std::string>());
 
         Wait([&]() -> task<void> {
             auto latest(co_await endpoint.Latest());
@@ -251,8 +313,8 @@ int Main(int argc, const char *const argv[]) {
         }());
     }
 
-
-    auto node(Make<Node>(std::move(ice), rpc, Address(args["eth-lottery"].as<std::string>())));
+    auto cashier(Make<Cashier>(std::move(endpoint), Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["currency"].as<std::string>(), std::move(personal), std::move(password), std::move(recipient)));
+    auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;
@@ -261,9 +323,9 @@ int Main(int argc, const char *const argv[]) {
         auto username(args["ovpn-user"].as<std::string>());
         auto password(args["ovpn-pass"].as<std::string>());
 
-        Spawn([&node, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() -> task<void> {
+        Spawn([&node, origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() -> task<void> {
             auto egress(Make<Sink<Egress>>(0));
-            co_await Connect(egress.get(), GetLocal(), 0, ovpnfile, username, password);
+            co_await Connect(egress.get(), std::move(origin), 0, ovpnfile, username, password);
             node->Wire() = std::move(egress);
         });
     }
@@ -278,5 +340,6 @@ int Main(int argc, const char *const argv[]) {
 int main(int argc, const char *const argv[]) { try {
     return orc::Main(argc, argv);
 } catch (const std::exception &error) {
+    std::cerr << error.what() << std::endl;
     return 1;
 } }

@@ -137,6 +137,9 @@ int Main(int argc, const char *const argv[]) {
 #error
 #endif
 
+    setgid(501);
+    setuid(501);
+
     Wait([&]() -> task<void> { try {
         co_await Schedule();
         co_await capture->Start(args["config"].as<std::string>());

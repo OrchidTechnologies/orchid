@@ -12,6 +12,9 @@ class ConnectButton extends StatefulWidget {
   final VoidCallback onConnectButtonPressed;
   final VoidCallback onRerouteButtonPressed;
 
+  // Feature flag for reroute button.
+  final bool enableRerouteButton = false;
+
   ConnectButton({
     @required this.connectionStatus,
     @required this.enabledStatus,
@@ -60,7 +63,7 @@ class ConnectButtonState extends State<ConnectButton>
   }
 
   bool _showRerouteButton() {
-    if (!enabled) {
+    if (!widget.enableRerouteButton || !enabled) {
       return false;
     }
     switch (connectionState) {

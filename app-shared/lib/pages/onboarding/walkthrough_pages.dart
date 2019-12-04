@@ -62,7 +62,7 @@ class _WalkthroughPagesState extends State<WalkthroughPages> {
           imageName: 'assets/images/illustration_1.png',
           titleText: "You've arrived at the natural internet",
           bodyText:
-              "At Orchid, our mission is to create open internet access for everyone, everywhere.\n\nIt starts here with our decentralized, secure, private, open-source VPN."),
+              "At Orchid, our mission is to create open internet access for everyone, everywhere.\n\nIt starts here with our decentralized, open-source VPN."),
       WalkthroughContent(
           imageName: 'assets/images/illustration_2.png',
           titleText: "We're breaking down information barriers",

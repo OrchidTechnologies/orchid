@@ -23,7 +23,11 @@
 #ifndef ORCHID_SERVER_HPP
 #define ORCHID_SERVER_HPP
 
+#include <map>
+#include <set>
+
 #include "bond.hpp"
+#include "cashier.hpp"
 #include "endpoint.hpp"
 #include "link.hpp"
 #include "jsonrpc.hpp"
@@ -34,20 +38,30 @@ namespace orc {
 
 class Server :
     public Bonded,
+    protected Pipe<Buffer>,
     public BufferDrain
 {
   public:
     S<Server> self_;
-    Endpoint endpoint_;
-    Address lottery_;
+  private:
+    const S<Origin> origin_;
+    const S<Cashier> cashier_;
+    uint256_t balance_;
 
     std::mutex mutex_;
-    Bytes32 hash_;
-    std::map<Bytes32, Bytes32> seeds_;
 
-    void Seed();
+    std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
+    decltype(reveals_.end()) commit_ = reveals_.end();
 
-    void Send(const Buffer &data);
+    std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
+
+    void Bill(Pipe *pipe, const Buffer &data);
+    task<void> Send(const Buffer &data) override;
+
+    void Commit();
+
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Bytes32 &commit);
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id = Zero<32>());
 
   protected:
     virtual Pump *Inner() = 0;
@@ -58,12 +72,15 @@ class Server :
     void Stop(const std::string &error) override;
 
   public:
-    Server(Locator locator, Address lottery);
+    Server(S<Origin> origin, S<Cashier> cashier);
 
+    task<void> Open(Pipe<Buffer> *pipe);
     task<void> Shut() override;
 
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
 };
+
+std::string Filter(bool answer, const std::string &serialized);
 
 }
 

@@ -46,7 +46,7 @@ class TrafficEmptyView extends StatelessWidget {
                                 SizedBox(height: 20),
                                 AppText.body(
                                     text: !connected
-                                        ? "This release is the first of our privacy tools. It is an Open Source, local traffic analyzer.\n\n   To get started, enable the VPN.   "
+                                        ? "This release is Orchid’s advanced VPN client, supporting multi-hop and local traffic analysis.\n\n   To get started, enable the VPN.   "
                                         : "Nothing to display yet. Traffic will appear here when there’s something to show.",
                                     fontSize: 15.0,
                                     color: AppColors.neutral_1),

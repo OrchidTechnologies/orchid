@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_gradients.dart';
 
 /// A base class for stateless second level pages reached through navigation.

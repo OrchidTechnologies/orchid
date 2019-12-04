@@ -125,8 +125,45 @@ void tap_frame(const char *field)
     }
 }
 
+void wireshark_epan_new()
+{
+    static const struct packet_provider_funcs funcs = {
+        raw_get_frame_ts,
+        NULL,
+        NULL,
+        NULL,
+    };
+
+    cf.epan = epan_new(&cf.provider, &funcs);
+    cf.provider.wth = NULL;
+    cf.f_datalen = 0;
+    cf.filename = NULL;
+    cf.is_tempfile = TRUE;
+    cf.unsaved_changes = FALSE;
+    cf.cd_t = WTAP_FILE_TYPE_SUBTYPE_UNKNOWN;
+    cf.open_type = WTAP_TYPE_AUTO;
+    cf.count = 0;
+    cf.drops_known = FALSE;
+    cf.drops = 0;
+    cf.snap = 0;
+    nstime_set_zero(&cf.elapsed_time);
+    cf.provider.ref = NULL;
+    cf.provider.prev_dis = NULL;
+    cf.provider.prev_cap = NULL;
+
+    epan_dissect_init(&edt, cf.epan, TRUE, FALSE);
+}
+
+void wireshark_epan_free()
+{
+    epan_dissect_cleanup(&edt);
+    epan_free(cf.epan);
+}
+
 void wireshark_setup()
 {
+    setenv("WIRESHARK_DEBUG_WMEM_OVERRIDE", "simple", 1);
+
     ws_init_version_info("Orchid", NULL, epan_get_compiled_version_info,  NULL);
 
     // Get credential information for later use.
@@ -174,39 +211,15 @@ void wireshark_setup()
 
     build_column_format_array(&cf.cinfo, prefs_p->num_cols, TRUE);
 
-    static const struct packet_provider_funcs funcs = {
-        raw_get_frame_ts,
-        NULL,
-        NULL,
-        NULL,
-    };
-
-    cf.epan = epan_new(&cf.provider, &funcs);
-    cf.provider.wth = NULL;
-    cf.f_datalen = 0;
-    cf.filename = NULL;
-    cf.is_tempfile = TRUE;
-    cf.unsaved_changes = FALSE;
-    cf.cd_t = WTAP_FILE_TYPE_SUBTYPE_UNKNOWN;
-    cf.open_type = WTAP_TYPE_AUTO;
-    cf.count = 0;
-    cf.drops_known = FALSE;
-    cf.drops = 0;
-    cf.snap = 0;
-    nstime_set_zero(&cf.elapsed_time);
-    cf.provider.ref = NULL;
-    cf.provider.prev_dis = NULL;
-    cf.provider.prev_cap = NULL;
-
     wtap_rec_init(&rec);
-    epan_dissect_init(&edt, cf.epan, TRUE, FALSE);
+
+    wireshark_epan_new();
 }
 
 void wireshark_cleanup()
 {
-    epan_dissect_cleanup(&edt);
+    wireshark_epan_free();
     wtap_rec_cleanup(&rec);
-    epan_free(cf.epan);
     epan_cleanup();
     wtap_cleanup();
 }
@@ -243,6 +256,11 @@ void wireshark_analyze(const uint8_t *buf, size_t packet_len, const orc::hostnam
         wireshark_initialized = true;
         wireshark_setup();
     }
+    if (cf.count > 100) {
+        wireshark_epan_free();
+        wireshark_epan_new();
+    }
+
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     rec.ts.secs = ts.tv_sec;

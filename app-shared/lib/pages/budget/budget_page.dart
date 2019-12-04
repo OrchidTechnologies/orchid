@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/pages/common/dialogs.dart';
@@ -9,8 +7,6 @@ import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/util/units.dart';
-
 import 'budget_summary_tile.dart';
 
 class BudgetPage extends StatefulWidget {
@@ -33,6 +29,7 @@ class _BudgetPageState extends State<BudgetPage> {
   }
 
   void initStateAsync() async {
+    /*
     _rxSubscriptions.add(OrchidAPI().budget().potStatus.listen((pot) {
       setState(() {
         _pot = pot;
@@ -43,6 +40,7 @@ class _BudgetPageState extends State<BudgetPage> {
         await OrchidAPI().budget().getBudgetRecommendations();
     _pricing = await OrchidAPI().pricing().getPricing();
     setState(() {});
+     */
   }
 
   @override
@@ -248,7 +246,7 @@ class _BudgetPageState extends State<BudgetPage> {
         body:
             "Do you want to change your budget to ${newBudget.spendRate.toStringAsFixed(2)} OXT per month?",
         action: () {
-          OrchidAPI().budget().setBudget(newBudget);
+          //OrchidAPI().budget().setBudget(newBudget);
           Navigator.of(context).pop();
         });
   }

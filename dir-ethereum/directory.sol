@@ -20,7 +20,7 @@
 /* }}} */
 
 
-pragma solidity 0.5.12;
+pragma solidity 0.5.13;
 
 import "../openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
@@ -149,31 +149,33 @@ contract OrchidDirectory {
         }
     }
 
-    event Update(address indexed staker, address stakee, uint256 amount);
-    event Update(address indexed stakee, uint256 amount);
+    event Update(address indexed stakee, address indexed staker, uint256 local, uint256 global);
 
     function lift(bytes32 key, Stake storage stake, uint256 amount, address staker, address stakee) private {
         uint256 local = stake.amount_;
         local += amount;
         stake.amount_ = local;
-        emit Update(staker, stakee, local);
 
         uint256 global = stakees_[stakee].amount_;
         global += amount;
         stakees_[stakee].amount_ = global;
-        emit Update(stakee, global);
 
+        emit Update(stakee, staker, local, global);
         step(key, stake, amount, bytes32(0));
     }
 
+
+    function wait(Stake storage stake, uint128 delay, address staker, address stakee) private {
+        if (stake.delay_ != delay) {
+            require(stake.delay_ < delay);
+            stake.delay_ = delay;
+        }
+    }
 
     function more(address stakee, uint256 amount, uint128 delay) private {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
-
-        require(delay >= stake.delay_);
-        stake.delay_ = delay;
 
         if (stake.amount_ == 0) {
             require(amount != 0);
@@ -193,6 +195,7 @@ contract OrchidDirectory {
             stake.stakee_ = stakee;
         }
 
+        wait(stake, delay, staker, stakee);
         lift(key, stake, amount, staker, stakee);
     }
 
@@ -206,9 +209,7 @@ contract OrchidDirectory {
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
         require(stake.amount_ != 0);
-
-        require(delay >= stake.delay_);
-        stake.delay_ = delay;
+        wait(stake, delay, staker, stakee);
     }
 
 

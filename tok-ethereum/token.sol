@@ -27,7 +27,7 @@ import "../openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
 contract OrchidToken is ERC20, ERC20Detailed {
     constructor()
-        ERC20Detailed("TestToken", "OTT", 18)
+        ERC20Detailed("Orchid", "OXT", 18)
     public {
         _mint(msg.sender, 10**9 * 10**uint256(decimals()));
     }

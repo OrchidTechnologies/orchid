@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'circuit_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
 
+typedef AddFlowCompletion = void Function(CircuitHop result);
+
 class AddHopPage extends StatefulWidget {
+  final AddFlowCompletion onAddFlowComplete;
+
+  const AddHopPage({Key key, this.onAddFlowComplete}) : super(key: key);
+
   @override
   _AddHopPageState createState() => _AddHopPageState();
 }
@@ -15,37 +22,41 @@ class _AddHopPageState extends State<AddHopPage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "Add Circuit Hop",
+      title: "Select Hop Type",
       cancellable: true,
+      backAction: () {
+        widget.onAddFlowComplete(null);
+      },
       child: SafeArea(
         child: Column(
           children: <Widget>[
             pady(8),
-            _buildChoice(
-                text: "Orchid Hop",
-                onPressed: () {
-                  _addHopType(Protocol.Orchid);
-                }),
+            _buildHopChoice(text: "Orchid Hop", hopType: Protocol.Orchid),
             _divider(),
-            _buildChoice(
-                text: "OpenVPN Hop",
-                onPressed: () {
-                  _addHopType(Protocol.OpenVPN);
-                }),
+            _buildHopChoice(text: "OpenVPN Hop", hopType: Protocol.OpenVPN),
             _divider(),
+            Expanded(
+                child: InstructionsView(
+              image: Image.asset("assets/images/approach.png"),
+              title: "Choose your protocol",
+              body:
+                  "There are two types of hops to choose from. You can route your traffic through a random, curated Orchid server or you can use your existing VPN provider’s OpenVPN configuration.",
+            )),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildChoice({String text, VoidCallback onPressed}) {
+  Widget _buildHopChoice({String text, Protocol hopType}) {
     return ListTile(
         contentPadding: EdgeInsets.only(left: 24, right: 24, top: 8, bottom: 8),
         trailing: Icon(Icons.chevron_right, color: Colors.black),
         title:
             Text(text, textAlign: TextAlign.left, style: AppText.dialogTitle),
-        onTap: onPressed);
+        onTap: () {
+          _addHopType(hopType);
+        });
   }
 
   void _addHopType(Protocol hopType) async {
@@ -55,13 +66,15 @@ class _AddHopPageState extends State<AddHopPage> {
       case Protocol.Orchid:
         editor = OrchidHopPage(
           editableHop: editableHop,
-          showSave: true,
+          mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
         );
         break;
       case Protocol.OpenVPN:
         editor = OpenVPNHopPage(
           editableHop: editableHop,
-          showSave: true,
+          mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
         );
         break;
     }
@@ -76,3 +89,4 @@ class _AddHopPageState extends State<AddHopPage> {
   Divider _divider() =>
       Divider(color: Colors.black.withOpacity(0.3), height: 1.0);
 }
+

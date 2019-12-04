@@ -69,6 +69,7 @@ cflags += -Iios/Pods/Headers/Public
 
 ios/Pods/Manifest.lock: ios/Podfile .flutter-plugins
 	cd ios && pod install
+	touch $@
 
 $(output)/XCBuildData/build.db: ios/Pods/Manifest.lock
 	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=../../$(output)
