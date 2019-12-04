@@ -165,13 +165,17 @@ contract OrchidDirectory {
     }
 
 
+    function wait(Stake storage stake, uint128 delay, address staker, address stakee) private {
+        if (stake.delay_ != delay) {
+            require(stake.delay_ < delay);
+            stake.delay_ = delay;
+        }
+    }
+
     function more(address stakee, uint256 amount, uint128 delay) private {
         address staker = msg.sender;
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
-
-        require(delay >= stake.delay_);
-        stake.delay_ = delay;
 
         if (stake.amount_ == 0) {
             require(amount != 0);
@@ -191,6 +195,7 @@ contract OrchidDirectory {
             stake.stakee_ = stakee;
         }
 
+        wait(stake, delay, staker, stakee);
         lift(key, stake, amount, staker, stakee);
     }
 
@@ -204,9 +209,7 @@ contract OrchidDirectory {
         bytes32 key = name(staker, stakee);
         Stake storage stake = stakes_[key];
         require(stake.amount_ != 0);
-
-        require(delay >= stake.delay_);
-        stake.delay_ = delay;
+        wait(stake, delay, staker, stakee);
     }
 
 
