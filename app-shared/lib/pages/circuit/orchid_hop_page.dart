@@ -10,6 +10,7 @@ import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/keys/add_key_page.dart';
@@ -120,6 +121,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       child: Column(
         children: <Widget>[
           _buildFunding(),
+          Expanded(
+            child: InstructionsView(
+              image: Image.asset("assets/images/group7.png"),
+              title: "Link your account",
+              body:
+                  "To link your hop with a funding source, enter your Ethereum wallet address and designate a signer key above. To complete this process, you will have to copy this signer key over to your Orchid account at account.orchid.com using your preferred DApp browser.",
+            ),
+          )
         ],
       ),
     );
@@ -220,7 +229,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           children: <Widget>[
             Container(
               width: 70,
-              child: Text("Funder:",
+              child: Text("Wallet:",
                   style: AppText.textLabelStyle.copyWith(
                       fontSize: 20,
                       color: _funderValid()
