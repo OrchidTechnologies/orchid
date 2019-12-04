@@ -193,8 +193,7 @@ contract OrchidLottery {
 
         OrchidVerifier verify = pot.verify_;
         if (verify != OrchidVerifier(0)) {
-            bytes32 codehash;
-            assembly { codehash := extcodehash(verify) }
+            bytes32 codehash; assembly { codehash := extcodehash(verify) }
             if (pot.codehash_ == codehash)
                 require(verify.good(pot.shared_, target, receipt));
         }
