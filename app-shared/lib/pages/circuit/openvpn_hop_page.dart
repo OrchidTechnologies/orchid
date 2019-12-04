@@ -65,24 +65,37 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
           child: SafeArea(
             child: Column(
               children: <Widget>[
+                // Username
                 pady(16),
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text("User name:",
+                    Text("Username:",
                         style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-                    Expanded(child: AppTextField(controller: _userName))
-                  ],
-                ),
-                pady(16),
-                Row(
-                  children: <Widget>[
-                    Text("Password:",
-                        style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-                    Expanded(child: AppTextField(controller: _userPassword))
+                    pady(8),
+                    AppTextField(
+                        hintText: "Username",
+                        margin: EdgeInsets.zero,
+                        controller: _userName)
                   ],
                 ),
 
-                // opvn config
+                // Password
+                pady(16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text("Password:",
+                        style: AppText.textLabelStyle.copyWith(fontSize: 20)),
+                    pady(8),
+                    AppTextField(
+                        hintText: "Password",
+                        margin: EdgeInsets.zero,
+                        controller: _userPassword)
+                  ],
+                ),
+
+                // OPVN Config
                 pady(16),
                 Align(
                     alignment: Alignment.centerLeft,
@@ -92,7 +105,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                   flex: 2,
                   child: Padding(
                     padding: const EdgeInsets.only(
-                        left: 16, right: 16, top: 24, bottom: 8),
+                        left: 0, right: 0, top: 8, bottom: 8),
                     child: Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -106,6 +119,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                         controller: _ovpnConfig,
                         maxLines: 99999,
                         decoration: InputDecoration(
+                          hintText: "Paste your OVPN config file here",
                           border: InputBorder.none,
                           labelStyle: AppText.textLabelStyle,
                         ),
@@ -130,7 +144,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                       //hideInLandscape: false,
                       title: "Enter your credentials",
                       body:
-                      "Enter the login information for your VPN provider above. Then paste the contents of your provider’s OpenVPN config file into the field provided. ",
+                          "Enter the login information for your VPN provider above. Then paste the contents of your provider’s OpenVPN config file into the field provided. ",
                     ),
                   ),
                 ),

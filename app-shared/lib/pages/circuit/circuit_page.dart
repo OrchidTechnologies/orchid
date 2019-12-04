@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
+import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/util/collections.dart';
@@ -65,7 +66,7 @@ class CircuitPageState extends State<CircuitPage> {
   Stack _buildBody() {
     return Stack(
       children: <Widget>[
-        _buildListView(),
+        _buildHopList(),
         Visibility(
             visible: _showSingleHopInstructions(),
             child: InstructionsView(
@@ -83,7 +84,7 @@ class CircuitPageState extends State<CircuitPage> {
 
   // Empty state instructions
   bool _showEmptyView() {
-    return _hops == null || _hops.length == 0;
+    return _hops != null && _hops.length == 0;
   }
 
   // (Success!) Instructions shown when the user has a single hop configured
@@ -91,43 +92,60 @@ class CircuitPageState extends State<CircuitPage> {
     return _hops != null && _hops.length == 1;
   }
 
-  Widget _buildListView() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0),
-      child: ReorderableListView(
-          children: (_hops ?? []).map((uniqueHop) {
-            return Dismissible(
-              background: Container(
-                color: Colors.red,
-                child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        "Delete",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    )),
-              ),
-              onDismissed: (direction) {
-                _deleteHop(uniqueHop);
-              },
-              child: ListTile(
-                onTap: () {
-                  _viewHop(uniqueHop);
-                },
-                key: Key(uniqueHop.key.toString()),
-                title: Text(
-                  uniqueHop.hop.displayName(),
-                  style: AppText.listItem,
-                ),
-                trailing: Icon(Icons.menu),
-              ),
-              key: Key(uniqueHop.key.toString()),
-            );
-          }).toList(),
-          onReorder: _onReorder),
+  Widget _buildHopList() {
+    return Column(
+      children: <Widget>[
+        pady(8),
+        //_divider(),
+        Expanded(
+          child: ReorderableListView(
+              children: (_hops ?? []).map((uniqueHop) {
+                return _buildHopListItem(uniqueHop);
+              }).toList(),
+              onReorder: _onReorder),
+        ),
+      ],
     );
+  }
+
+  Dismissible _buildHopListItem(UniqueHop uniqueHop) {
+    return Dismissible(
+            background: Container(
+              color: Colors.red,
+              child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "Delete",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )),
+            ),
+            onDismissed: (direction) {
+              _deleteHop(uniqueHop);
+            },
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ListTile(
+                    onTap: () {
+                      _viewHop(uniqueHop);
+                    },
+                    key: Key(uniqueHop.key.toString()),
+                    title: Text(
+                      uniqueHop.hop.displayName(),
+                      style: AppText.listItem,
+                    ),
+                    trailing: Icon(Icons.menu),
+                  ),
+                ),
+                _divider()
+              ],
+            ),
+            key: Key(uniqueHop.key.toString()),
+          );
   }
 
   // Show the add hop flow and save the result if completed successfully.
@@ -231,6 +249,11 @@ class CircuitPageState extends State<CircuitPage> {
     });
     _saveCircuit();
   }
+
+  Widget _divider() {
+    return Container(height: 1.0, color: Color(0xffd5d7e2));
+  }
+
 }
 
 // https://stackoverflow.com/a/53503738/74975
