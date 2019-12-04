@@ -4,11 +4,10 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
-import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/util/collections.dart';
 
-import '../app_colors.dart';
 import '../app_gradients.dart';
 import '../app_text.dart';
 import 'add_hop_page.dart';
@@ -69,7 +68,12 @@ class CircuitPageState extends State<CircuitPage> {
         _buildListView(),
         Visibility(
             visible: _showSingleHopInstructions(),
-            child: CircuitSuccessInstructions()),
+            child: InstructionsView(
+              image: Image.asset("assets/images/hi5.png"),
+              title: "Success!",
+              body:
+                  "You now have a configured single-hop route for your internet traffic. Each hop you add, brings a layer of security and privacy to your connection - as long as each is independently funded from a new source.",
+            )),
         Align(
             alignment: Alignment.bottomRight,
             child: FloatingAddButton(onPressed: _addHop)),
@@ -229,50 +233,6 @@ class CircuitPageState extends State<CircuitPage> {
   }
 }
 
-class CircuitSuccessInstructions extends StatelessWidget {
-  final VoidCallback addHop;
-
-  const CircuitSuccessInstructions({Key key, this.addHop}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return OrientationBuilder(
-      builder: (BuildContext context, Orientation orientation) {
-        return Visibility(
-          visible: orientation == Orientation.portrait,
-          child: SafeArea(
-              child: Column(
-            children: <Widget>[
-              Spacer(flex: 1),
-              Image.asset("assets/images/hi5.png"),
-              SizedBox(height: 20),
-              AppText.header(
-                  text: "Success!",
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black54,
-                  fontSize: 20.0),
-              SizedBox(height: 20),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 450),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 45),
-                  child: AppText.body(
-                      text:
-                          "You now have a configured single-hop route for your internet traffic. Each hop you add, brings a layer of security and privacy to your connection - as long as each is independently funded from a new source.",
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11.0,
-                      color: AppColors.neutral_1),
-                ),
-              ),
-              Spacer(flex: 1),
-            ],
-          )),
-        );
-      },
-    );
-  }
-}
-
 // https://stackoverflow.com/a/53503738/74975
 class NoAnimationMaterialPageRoute<T> extends MaterialPageRoute<T> {
   NoAnimationMaterialPageRoute({
@@ -307,3 +267,4 @@ class NoAnimationMaterialPageRoute<T> extends MaterialPageRoute<T> {
     return child;
   }
 }
+
