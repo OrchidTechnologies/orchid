@@ -52,6 +52,7 @@ class _KeySelectionState extends State<KeySelection> {
         child: IgnorePointer(
           ignoring: !widget.enabled,
           child: DropdownButton<StoredEthereumKey>(
+            hint: Text("Choose key"),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             underline: !widget.enabled ? Container() : null,

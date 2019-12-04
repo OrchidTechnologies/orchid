@@ -53,7 +53,8 @@ class AppTextField extends StatelessWidget {
                   decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: hintText,
-                      hintStyle: AppText.textHintStyle),
+                      //hintStyle: AppText.textHintStyle
+                  ),
                   onChanged: null,
                   focusNode: null,
                 ),

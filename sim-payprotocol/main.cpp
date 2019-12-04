@@ -333,6 +333,8 @@ struct Network : public Tickable
 		}
 		odev.bqueued += psize;
 
+		// no dropped packet notification on the receive side
+		/*
 		double ilimit = QueLimitT * idev.throughput; // specify queue limit as relative to throughput
 		if (psize + idev.bqueued > ilimit) {
 			if (objs_[to.addr_] != nullptr) objs_[to.addr_]->on_dropped_packet(to,from,p);
@@ -343,6 +345,7 @@ struct Network : public Tickable
 			if (objs_[to.addr_] != nullptr) objs_[to.addr_]->on_queued_packet(to,from, p);
 		}
 		idev.bqueued += psize;
+		*/
 
 		if (objs_[to.addr_] != nullptr) objs_[to.addr_]->on_packet(to,from,p);
 	}

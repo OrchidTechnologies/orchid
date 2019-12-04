@@ -103,9 +103,15 @@ class OrchidHop extends CircuitHop {
   Map<String, dynamic> toJson() => {
         'curator': curator,
         'protocol': CircuitHop.protocolToString(protocol),
-        'funder': funder,
+        // TODO: Remove hex prefixing after migration to eth address handling
+        'funder': ensureHexPrefixed(funder),
         'keyRef': keyRef?.toString(), // Key references are nullable
       };
+
+  // TODO: Remove this after migrating to handling these as eth addresses.
+  String ensureHexPrefixed(String value) {
+    return value.toLowerCase().startsWith("0x")? value : ("0x"+value);
+  }
 }
 
 class OpenVPNHop extends CircuitHop {

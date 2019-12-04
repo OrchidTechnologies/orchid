@@ -196,7 +196,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     const valueStyle = TextStyle(
         color: color,
         fontSize: 15.0,
-        fontWeight: FontWeight.normal,
+        fontWeight: FontWeight.bold,
         letterSpacing: -0.24,
         fontFamily: "SFProText-Regular",
         height: 20.0 / 15.0);
@@ -204,90 +204,94 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         _balance != null ? _balance.toStringAsFixed(4) + " OXT" : "...";
     return Column(
       children: <Widget>[
-        // Balance (if enabled)
+        // Balance
         Visibility(
           visible: _showBalance,
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Container(
-                padding: EdgeInsets.only(top: 8, bottom: 16),
-                width: 80,
-                child: Text("Balance:",
-                    style: AppText.textLabelStyle.copyWith(
-                        fontSize: 20,
-                        color: _funderValid()
-                            ? AppColors.neutral_1
-                            : AppColors.neutral_3)),
-              ),
-              Expanded(
-                  child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(balanceText,
-                    textAlign: TextAlign.right, style: valueStyle),
-              ))
-            ],
-          ),
-        ),
-
-        // Wallet address (funder)
-        Row(
-          children: <Widget>[
-            Container(
-              width: 70,
-              child: Text("Wallet:",
+              Text("Balance:",
                   style: AppText.textLabelStyle.copyWith(
                       fontSize: 20,
                       color: _funderValid()
                           ? AppColors.neutral_1
                           : AppColors.neutral_3)),
-            ),
-            Expanded(
-                child: AppTextField(
+              pady(8),
+              Padding(
+                padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
+                child: Text(balanceText,
+                textAlign: TextAlign.left, style: valueStyle),
+              ),
+              pady(16)
+            ],
+          ),
+        ),
+
+        // Wallet address (funder)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text("Wallet Address:",
+                style: AppText.textLabelStyle.copyWith(
+                    fontSize: 20,
+                    color: _funderValid()
+                        ? AppColors.neutral_1
+                        : AppColors.neutral_3)),
+            pady(8),
+            AppTextField(
+              hintText: "Paste here",
+              margin: EdgeInsets.zero,
               controller: _funderField,
               readOnly: widget.readOnly(),
               enabled: widget.editable(),
-            ))
+            )
           ],
         ),
 
-        // Signer
-        pady(widget.readOnly() ? 0 : 8),
-        Row(
+        // Signer key
+        pady(widget.readOnly() ? 0 : 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Container(
-              width: 70,
-              child: Text("Signer:",
-                  style: AppText.textLabelStyle.copyWith(
-                      fontSize: 20,
-                      color: _keyRefValid()
-                          ? AppColors.neutral_1
-                          : AppColors.neutral_3)),
-            ),
-            Expanded(
-                child: Padding(
-              padding: const EdgeInsets.only(left: 20, right: 16),
-              child: KeySelection(
-                  key: ValueKey(_initialKeyRef.toString()),
-                  enabled: widget.editable(),
-                  initialSelection: _initialKeyRef,
-                  onSelection: _keySelected),
-            )),
+            Text("Signer Key:",
+                style: AppText.textLabelStyle.copyWith(
+                    fontSize: 20,
+                    color: _keyRefValid()
+                        ? AppColors.neutral_1
+                        : AppColors.neutral_3)),
+            pady(8),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16.0),
+                      child: KeySelection(
+                          key: ValueKey(_initialKeyRef.toString()),
+                          enabled: widget.editable(),
+                          initialSelection: _initialKeyRef,
+                          onSelection: _keySelected),
+                    ),
+                  ),
+                ),
+                // Copy key button
+                Visibility(
+                  visible: widget.readOnly(),
+                  child: RoundedRectRaisedButton(
+                      backgroundColor: Colors.grey,
+                      textColor: Colors.white,
+                      text: "Copy",
+                      onPressed: _onCopyButton),
+                ),
 
-            // Copy key button
-            Visibility(
-              visible: widget.readOnly(),
-              child: RoundedRectRaisedButton(
-                  backgroundColor: Colors.grey,
-                  textColor: Colors.white,
-                  text: "Copy",
-                  onPressed: _onCopyButton),
+                // Add key button
+                Visibility(
+                  visible: widget.editable(),
+                  child: _buidAddKeyButton(),
+                )
+              ],
             ),
-
-            // Add key button
-            Visibility(
-              visible: widget.editable(),
-              child: _buidAddKeyButton(),
-            )
           ],
         ),
       ],
@@ -328,7 +332,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buidAddKeyButton() {
     return Container(
-      width: 30,
+      width: 35,
       child: FlatButton(
           padding: EdgeInsets.only(right: 5),
           child: Icon(Icons.add_circle_outline, color: Colors.grey),
