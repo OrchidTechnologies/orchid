@@ -149,20 +149,18 @@ contract OrchidDirectory {
         }
     }
 
-    event Update(address indexed staker, address stakee, uint256 amount);
-    event Update(address indexed stakee, uint256 amount);
+    event Update(address indexed stakee, address indexed staker, uint256 local, uint256 global);
 
     function lift(bytes32 key, Stake storage stake, uint256 amount, address staker, address stakee) private {
         uint256 local = stake.amount_;
         local += amount;
         stake.amount_ = local;
-        emit Update(staker, stakee, local);
 
         uint256 global = stakees_[stakee].amount_;
         global += amount;
         stakees_[stakee].amount_ = global;
-        emit Update(stakee, global);
 
+        emit Update(stakee, staker, local, global);
         step(key, stake, amount, bytes32(0));
     }
 
