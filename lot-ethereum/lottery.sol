@@ -189,12 +189,15 @@ contract OrchidLottery {
 
     function take(address funder, address signer, uint128 amount, address payable target, bytes memory receipt) private {
         Pot storage pot = find(funder, signer);
-        take(funder, signer, amount, target, pot);
 
         OrchidVerifier verify = pot.verify_;
+        bytes32 codehash = pot.codehash_;
+
+        take(funder, signer, amount, target, pot);
+
         if (verify != OrchidVerifier(0)) {
-            bytes32 codehash; assembly { codehash := extcodehash(verify) }
-            if (pot.codehash_ == codehash)
+            bytes32 current; assembly { current := extcodehash(verify) }
+            if (codehash == current)
                 require(verify.good(pot.shared_, target, receipt));
         }
     }
