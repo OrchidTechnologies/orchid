@@ -212,7 +212,7 @@ contract OrchidLottery {
         bytes32[] memory old
     ) public {
         require(keccak256(abi.encode(reveal)) == commit);
-        require(uint256(keccak256(abi.encode(reveal, nonce))) >> 128 <= ratio);
+        require(uint128(uint256(keccak256(abi.encode(reveal, nonce)))) <= ratio);
 
         bytes32 ticket = keccak256(abi.encode(commit, nonce, funder, amount, ratio, start, range, target, receipt));
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
