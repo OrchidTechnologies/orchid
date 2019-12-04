@@ -211,8 +211,8 @@ contract OrchidLottery {
         address payable target, bytes memory receipt,
         bytes32[] memory old
     ) public {
-        require(keccak256(abi.encodePacked(reveal)) == commit);
-        require(uint256(keccak256(abi.encodePacked(reveal, nonce))) >> 128 <= ratio);
+        require(keccak256(abi.encode(reveal)) == commit);
+        require(uint256(keccak256(abi.encode(reveal, nonce))) >> 128 <= ratio);
 
         bytes32 ticket = keccak256(abi.encode(commit, nonce, funder, amount, ratio, start, range, target, receipt));
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
@@ -222,7 +222,7 @@ contract OrchidLottery {
             mapping(bytes32 => Track) storage tracks = tracks_[target];
 
             {
-                Track storage track = tracks[keccak256(abi.encodePacked(signer, ticket))];
+                Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
                 uint256 until = start + range;
                 require(until > block.timestamp);
                 require(track.until_ == 0);
