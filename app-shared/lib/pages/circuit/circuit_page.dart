@@ -72,7 +72,7 @@ class CircuitPageState extends State<CircuitPage> {
               image: Image.asset("assets/images/hi5.png"),
               title: "Success!",
               body:
-                  "You now have a configured single-hop route for your internet traffic. Each hop you add, brings a layer of security and privacy to your connection - as long as each is independently funded from a new source.",
+                  "You now have a configured single-hop route for your internet traffic. Each hop you add brings a layer of indirection and obfuscation to your connection - as long as each is independently funded from a new source.",
             )),
         Align(
             alignment: Alignment.bottomRight,

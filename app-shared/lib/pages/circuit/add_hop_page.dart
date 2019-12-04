@@ -40,7 +40,7 @@ class _AddHopPageState extends State<AddHopPage> {
               image: Image.asset("assets/images/approach.png"),
               title: "Choose your protocol",
               body:
-                  "There are two types of hops to choose from. You can route your traffic through one of Orchid’s secure servers or you can use your existing VPN provider’s OpenVPN configuration.",
+                  "There are two types of hops to choose from. You can route your traffic through a random, curated Orchid server or you can use your existing VPN provider’s OpenVPN configuration.",
             )),
           ],
         ),

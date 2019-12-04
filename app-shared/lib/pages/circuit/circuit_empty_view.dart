@@ -31,7 +31,7 @@ class CircuitEmptyView extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 45),
                           child: AppText.body(
                               text:
-                                  "Set up your first hop to activate your  VPN connection.\n\nA ‘hop’ is a secure server along your path to the internet that your traffic is routed through. Each hop adds a layer of privacy and security your connection.",
+                                  "Set up your first hop to activate your  VPN connection.\n\nA ‘hop’ is a remote server along your path to the internet that your traffic is routed through. Each hop adds a layer of indirection and obfuscation to your connection.",
                               fontSize: 15.0,
                               color: AppColors.neutral_1),
                         ),
