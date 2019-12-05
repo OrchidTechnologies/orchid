@@ -4,7 +4,8 @@ import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
-import 'circuit_hop.dart';
+import 'hop_editor.dart';
+import 'model/orchid_hop.dart';
 
 class CuratorEditorPage extends HopEditor<OrchidHop> {
   CuratorEditorPage({@required editableHop})

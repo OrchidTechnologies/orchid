@@ -20,9 +20,10 @@ import 'package:orchid/util/units.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 import 'budget_page.dart';
-import 'circuit_hop.dart';
 import 'curator_page.dart';
+import 'hop_editor.dart';
 import 'key_selection.dart';
+import 'model/orchid_hop.dart';
 
 /// Create / edit / view an Orchid Hop
 class OrchidHopPage extends HopEditor<OrchidHop> {
@@ -67,7 +68,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     // Init the UI from the supplied hop
     setState(() {
       OrchidHop hop = _hop();
-      _funderField.text = hop?.funder;
+      _funderField.text = hop?.funder?.toString();
       _selectedKeyRef = hop?.keyRef;
       _curatorField.text = hop?.curator;
       _initialKeyRef = _selectedKeyRef;
@@ -220,7 +221,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               Padding(
                 padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
                 child: Text(balanceText,
-                textAlign: TextAlign.left, style: valueStyle),
+                    textAlign: TextAlign.left, style: valueStyle),
               ),
               pady(16)
             ],
@@ -374,7 +375,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       EthereumAddress.parse(_funderField.text);
       return true;
     } catch (err) {
-      print(err);
       return false;
     }
   }
@@ -383,8 +383,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     if (!widget.editable()) {
       return;
     }
+    EthereumAddress funder;
+    try {
+      funder = EthereumAddress.from(_funderField.text);
+    } catch (err) {
+      funder = null; // don't update it
+    }
     widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,
-        funder: Hex.removePrefix(_funderField.text), keyRef: _selectedKeyRef));
+        funder: funder, keyRef: _selectedKeyRef));
   }
 
   /// Copy the log data to the clipboard
@@ -438,7 +444,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     print("polling balance");
     try {
       // funder and signer from the stored hop
-      EthereumAddress funder = EthereumAddress.from(_hop()?.funder);
+      EthereumAddress funder = _hop()?.funder;
       StoredEthereumKey signerKey = await _hop()?.keyRef?.get();
       EthereumAddress signer = EthereumAddress.from(signerKey.keys().address);
       // Fetch the pot balance

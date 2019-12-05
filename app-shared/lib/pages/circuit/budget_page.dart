@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/pages/circuit/hop_editor.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'circuit_hop.dart';
+
+import 'model/orchid_hop.dart';
 
 class BudgetEditorPage extends HopEditor<OrchidHop> {
   BudgetEditorPage({@required editableHop})

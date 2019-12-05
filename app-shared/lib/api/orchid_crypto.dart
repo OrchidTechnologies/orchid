@@ -194,6 +194,9 @@ class EthereumAddress {
   // Display the optionally prefixed 40 char hex address.
   @override
   String toString({bool prefix: true}) {
+    if (value == null) {
+      throw Exception("invalid bigint");
+    }
     return (prefix ? "0x" : "") + value.toRadixString(16).padLeft(40, '0');
   }
 

@@ -7,7 +7,8 @@ import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
-import 'circuit_hop.dart';
+import 'hop_editor.dart';
+import 'model/openvpn_hop.dart';
 
 /// Create / edit / view an Open VPN Hop
 class OpenVPNHopPage extends HopEditor<OpenVPNHop> {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/circuit/circuit_hop.dart';
+import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';

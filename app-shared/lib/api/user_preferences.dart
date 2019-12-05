@@ -1,10 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/pages/circuit/circuit_hop.dart';
+import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'orchid_api.dart';
 import 'orchid_budget_api.dart';
 
@@ -194,7 +192,7 @@ class UserPreferences {
 
   Future<bool> getQueryBalances() async {
     return (await SharedPreferences.getInstance())
-        .getBool(UserPreferenceKey.QueryBalances.toString()) ??
+            .getBool(UserPreferenceKey.QueryBalances.toString()) ??
         false;
   }
 

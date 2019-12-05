@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
@@ -7,11 +6,9 @@ import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/circuit/circuit_hop.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
-
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
 
@@ -189,8 +186,8 @@ class MockOrchidAPI implements OrchidAPI {
         break;
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Connected:
-      // TODO: This does not seem to work.  How do we cancel here?
-      // Cancel any pending connect
+        // TODO: This does not seem to work.  How do we cancel here?
+        // Cancel any pending connect
         if (_connectFuture != null) {
           CancelableOperation.fromFuture(_connectFuture).cancel();
           _connectFuture = null;
@@ -261,10 +258,9 @@ class MockOrchidAPI implements OrchidAPI {
     // Do nothing.  Fake save.
     return true;
   }
-  
+
   /// Publish the latest configuration to the VPN.
   Future<bool> updateConfiguration() async {
     return setConfiguration(await UserPreferences().getUserConfig());
   }
 }
-

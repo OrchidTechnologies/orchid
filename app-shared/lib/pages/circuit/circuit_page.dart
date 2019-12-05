@@ -13,7 +13,9 @@ import '../app_gradients.dart';
 import '../app_text.dart';
 import 'add_hop_page.dart';
 import 'circuit_empty_view.dart';
-import 'circuit_hop.dart';
+import 'hop_editor.dart';
+import 'model/circuit.dart';
+import 'model/circuit_hop.dart';
 
 class CircuitPage extends StatefulWidget {
   CircuitPage({Key key}) : super(key: key);
@@ -110,42 +112,42 @@ class CircuitPageState extends State<CircuitPage> {
 
   Dismissible _buildHopListItem(UniqueHop uniqueHop) {
     return Dismissible(
-            background: Container(
-              color: Colors.red,
-              child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "Delete",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  )),
+      background: Container(
+        color: Colors.red,
+        child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "Delete",
+                style: TextStyle(color: Colors.white),
+              ),
+            )),
+      ),
+      onDismissed: (direction) {
+        _deleteHop(uniqueHop);
+      },
+      child: Column(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListTile(
+              onTap: () {
+                _viewHop(uniqueHop);
+              },
+              key: Key(uniqueHop.key.toString()),
+              title: Text(
+                uniqueHop.hop.displayName(),
+                style: AppText.listItem,
+              ),
+              trailing: Icon(Icons.menu),
             ),
-            onDismissed: (direction) {
-              _deleteHop(uniqueHop);
-            },
-            child: Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    onTap: () {
-                      _viewHop(uniqueHop);
-                    },
-                    key: Key(uniqueHop.key.toString()),
-                    title: Text(
-                      uniqueHop.hop.displayName(),
-                      style: AppText.listItem,
-                    ),
-                    trailing: Icon(Icons.menu),
-                  ),
-                ),
-                _divider()
-              ],
-            ),
-            key: Key(uniqueHop.key.toString()),
-          );
+          ),
+          _divider()
+        ],
+      ),
+      key: Key(uniqueHop.key.toString()),
+    );
   }
 
   // Show the add hop flow and save the result if completed successfully.
@@ -253,7 +255,6 @@ class CircuitPageState extends State<CircuitPage> {
   Widget _divider() {
     return Container(height: 1.0, color: Color(0xffd5d7e2));
   }
-
 }
 
 // https://stackoverflow.com/a/53503738/74975
@@ -290,4 +291,3 @@ class NoAnimationMaterialPageRoute<T> extends MaterialPageRoute<T> {
     return child;
   }
 }
-

@@ -3,7 +3,8 @@ import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'circuit_hop.dart';
+import 'hop_editor.dart';
+import 'model/circuit_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
 

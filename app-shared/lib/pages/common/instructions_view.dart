@@ -26,7 +26,6 @@ class InstructionsView extends StatelessWidget {
         // Orientation builder provides the parent widget orientation, not
         // necessarily the device. Fetch device orientation.
         var orientation = MediaQuery.of(context).orientation;
-        print("instructions ($title) orientation = $orientation");
         return Visibility(
           visible: orientation == Orientation.portrait || !hideInLandscape,
           child: SafeArea(

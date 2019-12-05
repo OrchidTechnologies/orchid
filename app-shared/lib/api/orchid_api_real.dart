@@ -5,11 +5,11 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/circuit/circuit_hop.dart';
+import 'package:orchid/pages/circuit/model/circuit.dart';
+import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
-
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
 

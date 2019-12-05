@@ -42,7 +42,7 @@ class CloudFlare {
     var postBody =
         '{"jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": ${params}}';
 
-    print("post body = $postBody");
+    //print("post body = $postBody");
     // do the post
     var response = await http.post(url,
         headers: {"Content-Type": "application/json"}, body: postBody);
