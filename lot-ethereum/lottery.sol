@@ -77,6 +77,7 @@ contract OrchidLottery {
         address funder = msg.sender;
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
+        bytes32 codehash = pot.codehash_;
         require(pot.offset_ != 0);
         address key = lottery.keys_[lottery.keys_.length - 1];
         lottery.pots_[key].offset_ = pot.offset_;
@@ -84,6 +85,8 @@ contract OrchidLottery {
         --lottery.keys_.length;
         delete lottery.pots_[signer];
         send(funder, signer, pot);
+        if (codehash != 0)
+            emit Bound(funder, signer);
     }
 
 
@@ -117,12 +120,16 @@ contract OrchidLottery {
     }
 
 
+    event Create(address indexed funder, address indexed signer);
+
     function push(address signer, uint128 total, uint128 escrow) external {
         address funder = msg.sender;
         require(total >= escrow);
         Pot storage pot = find(funder, signer);
-        if (pot.offset_ == 0)
+        if (pot.offset_ == 0) {
             pot.offset_ = lotteries_[funder].keys_.push(signer);
+            emit Create(funder, signer);
+        }
         pot.amount_ += total - escrow;
         pot.escrow_ += escrow;
         send(funder, signer, pot);
@@ -147,6 +154,8 @@ contract OrchidLottery {
         send(funder, signer, pot);
     }
 
+    event Bound(address indexed funder, address indexed signer);
+
     function bind(address signer, OrchidVerifier verify, bytes calldata shared) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
@@ -158,6 +167,8 @@ contract OrchidLottery {
         pot.verify_ = verify;
         pot.codehash_ = codehash;
         pot.shared_ = shared;
+
+        emit Bound(funder, signer);
     }
 
 
