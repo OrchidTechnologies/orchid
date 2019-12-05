@@ -83,6 +83,7 @@ export class Balances extends Component {
         <Row noGutters={true}>
           <Col style={{flexGrow: 10}}>
             <input type="text"
+                   style={{textOverflow: "ellipsis"}}
                    ref={this.walletAddressInput}
                    value={this.state.walletAddress} placeholder="Address" readOnly/>
           </Col>
@@ -114,6 +115,7 @@ export class Balances extends Component {
         <Row noGutters={true}>
           <Col style={{flexGrow: 10}}>
             <input type="text"
+                   style={{textOverflow: "ellipsis"}}
                    ref={this.signerAddressInput}
                    value={this.state.signerAddress} placeholder="Address" readOnly/>
           </Col>
