@@ -4,13 +4,14 @@ import {weiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
 import {errorClass} from "../util/util";
 import './Balances.css'
-import {Container} from "react-bootstrap";
+import {Button, Col, Container, Row} from "react-bootstrap";
 import {Subscription} from "rxjs";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class Balances extends Component {
   state = {
+    signerAddress: "",
     walletAddress: "",
     ethBalance: "",
     ethBalanceError: true,
@@ -20,20 +21,23 @@ export class Balances extends Component {
     potEscrow: "",
   };
   subscriptions: Subscription [] = [];
+  walletAddressInput = React.createRef<HTMLInputElement>();
+  signerAddressInput = React.createRef<HTMLInputElement>();
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
 
     this.subscriptions.push(
-      api.wallet_wait.subscribe(wallet => {
-        console.log("Funding from account: ", wallet.address);
-        console.log("Balance: ", wallet.ethBalance);
+      api.signer_wait.subscribe(signer => {
+        console.log("Funding from account: ", signer.wallet.address);
+        console.log("Balance: ", signer.wallet.ethBalance);
         this.setState({
-          walletAddress: wallet.address,
-          ethBalance: weiToOxtString(wallet.ethBalance, 4),
-          ethBalanceError: wallet.ethBalance <= BigInt(0),
-          oxtBalance: weiToOxtString(wallet.oxtBalance, 4),
-          oxtBalanceError: wallet.oxtBalance <= BigInt(0),
+          signerAddress: signer.address,
+          walletAddress: signer.wallet.address,
+          ethBalance: weiToOxtString(signer.wallet.ethBalance, 4),
+          ethBalanceError: signer.wallet.ethBalance <= BigInt(0),
+          oxtBalance: weiToOxtString(signer.wallet.oxtBalance, 4),
+          oxtBalanceError: signer.wallet.oxtBalance <= BigInt(0),
         });
       }));
 
@@ -53,15 +57,41 @@ export class Balances extends Component {
     })
   }
 
+  copyWalletAddress() {
+    if (this.walletAddressInput.current == null) {
+      return;
+    }
+    this.walletAddressInput.current.select();
+    document.execCommand('copy');
+  };
+
+  copySignerAddress() {
+    if (this.signerAddressInput.current == null) {
+      return;
+    }
+    this.signerAddressInput.current.select();
+    document.execCommand('copy');
+  };
+
   render() {
     return (
       <Container className="Balances form-style">
-        <label className="title">Overview</label>
-        {/*wallet*/}
-        <label style={{fontWeight: "bold"}}>Wallet Address </label>
-        <input type="text" value={this.state.walletAddress} placeholder="Address" readOnly/>
+        <label className="title">Info</label>
 
-        {/*// wallet balance*/}
+        {/*wallet address*/}
+        <label style={{fontWeight: "bold"}}>Wallet Address </label>
+        <Row noGutters={true}>
+          <Col style={{flexGrow: 10}}>
+            <input type="text"
+                   ref={this.walletAddressInput}
+                   value={this.state.walletAddress} placeholder="Address" readOnly/>
+          </Col>
+          <Col style={{marginLeft: '8px'}}>
+            <Button variant="light" onClick={this.copyWalletAddress.bind(this)}>Copy</Button>
+          </Col>
+        </Row>
+
+        {/*wallet balance*/}
         <div className="form-row col-1-1">
           <div className="form-row col-1-2">
             <label className="form-row-label">ETH</label>
@@ -79,8 +109,21 @@ export class Balances extends Component {
           </div>
         </div>
 
-        {/*// pot balance and escrow*/}
-        <label style={{fontWeight: "bold", marginTop: "12px"}}>Lottery Pot</label>
+        {/*signer address*/}
+        <label style={{fontWeight: "bold", marginTop: "16px"}}>Signer Address </label>
+        <Row noGutters={true}>
+          <Col style={{flexGrow: 10}}>
+            <input type="text"
+                   ref={this.signerAddressInput}
+                   value={this.state.signerAddress} placeholder="Address" readOnly/>
+          </Col>
+          <Col style={{marginLeft: '8px'}}>
+            <Button variant="light" onClick={this.copySignerAddress.bind(this)}>Copy</Button>
+          </Col>
+        </Row>
+
+        {/*pot balance and escrow*/}
+        <label style={{fontWeight: "bold", marginTop: "16px"}}>Lottery Pot</label>
         <div className="form-row col-1-1">
           <div className="form-row col-1-2">
             <label className="form-row-label">Balance</label>
@@ -96,7 +139,8 @@ export class Balances extends Component {
           </div>
         </div>
 
-        {/*// pot lock status*/}
+        {/*pot lock status*/}
+        <div style={{marginTop: "16px"}}/>
         <LockStatus/>
       </Container>
     );
