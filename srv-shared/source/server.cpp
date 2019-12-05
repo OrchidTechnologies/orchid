@@ -79,11 +79,16 @@ _trace();
 };
 
 void Server::Bill(Pipe *pipe, const Buffer &data) {
-    uint256_t amount(cashier_->Bill(data.size()));
-    { std::unique_lock<std::mutex> lock_(mutex_);
+    const auto amount(cashier_->Bill(data.size()) * 2);
+
+    {
+        std::unique_lock<std::mutex> lock_(mutex_);
         if (balance_ < amount) {
             _trace(); return; }
-        balance_ -= amount; }
+        balance_ -= amount;
+        //Log() << "balance- = " << balance_ << std::endl;
+    }
+
     Spawn([pipe, data = Beam(data)]() -> task<void> {
         co_return co_await pipe->Send(data);
     });
@@ -94,24 +99,113 @@ task<void> Server::Send(const Buffer &data) {
 }
 
 void Server::Commit() {
-    auto reveal(Random<32>());
+    const auto reveal(Random<32>());
     if (commit_ != reveals_.end())
-        commit_->second.second = Timestamp();
+        commit_->second.second = Seconds();
     commit_ = reveals_.try_emplace(Hash(reveal), reveal, 0).first;
 }
 
-task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Bytes32 &commit) {
-    const auto now(Timestamp());
-    auto balance([&]() { std::unique_lock<std::mutex> lock_(mutex_);
-        return balance_; }());
-    Header header{Magic_, id, Invoice_};
-    co_await pipe->Send(Datagram(Port_, destination, Tie(header, now, balance, cashier_->Recipient(), commit)));
+task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit) {
+    const auto now(Monotonic());
+    Builder builder;
+    builder += Tie(Invoice_, now, cashier_->Convert(balance), cashier_->Tuple(), commit);
+    Header header{Magic_, id};
+    co_await pipe->Send(Datagram(Port_, destination, Tie(header, uint16_t(builder.size()), builder)));
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id) {
-    auto [commit] = [&]() { std::unique_lock<std::mutex> lock_(mutex_);
-        return std::make_tuple(commit_->first); }();
-    co_await Invoice(pipe, destination, id, commit);
+    const auto [balance, commit] = [&]() { std::unique_lock<std::mutex> lock_(mutex_);
+        return std::make_tuple(balance_, commit_->first); }();
+    co_await Invoice(pipe, destination, id, balance, commit);
+}
+
+task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Buffer &data) {
+    Scan(data, [&](const Buffer &data) { try {
+        const auto [command, window] = Take<uint32_t, Window>(data);
+        orc_assert(command == Submit_);
+
+        const auto [
+            v, r, s,
+            lottery, chain,
+            commit,
+            nonce, funder,
+            amount, ratio,
+            start, range,
+            recipient, temp
+        ] = Take<
+            uint8_t, Brick<32>, Brick<32>,
+            Address, uint256_t,
+            Brick<32>,
+            Brick<32>, Address,
+            uint128_t, uint128_t,
+            uint256_t, uint128_t,
+            Address, Window
+        >(window);
+
+        // XXX: fix Coder and Selector to not require this to Beam
+        const Beam receipt(temp);
+
+        orc_assert(std::tie(lottery, chain, recipient) == cashier_->Tuple());
+
+        const auto until(start + range);
+        const auto now(Seconds());
+        orc_assert(until > now);
+
+        const uint256_t gas(100000);
+
+        const auto credit(cashier_->Credit(now, start, until, amount * (uint256_t(ratio) + 1), gas));
+
+        using Ticket = Coder<Address, uint256_t, Bytes32, Bytes32, Address, uint128_t, uint128_t, uint256_t, uint128_t, Address, Bytes>;
+        const auto ticket(Hash(Ticket::Encode(lottery, chain, commit, nonce, funder, amount, ratio, start, range, recipient, receipt)));
+        const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
+
+        const auto [reveal, balance] = [&, commit = commit]() {
+            std::unique_lock<std::mutex> lock_(mutex_);
+            const auto reveal(reveals_.find(commit));
+            orc_assert(reveal != reveals_.end());
+            const auto expire(reveal->second.second);
+            orc_assert(expire == 0 || reveal->second.second + 60 > now);
+            orc_assert(tickets_.emplace(until, signer, ticket).second);
+            balance_ += credit;
+            return std::make_tuple(reveal->second.first, balance_);
+        }();
+
+        //Log() << "balance+ = " << balance << std::endl;
+
+        // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
+        if (!(Hash(Tie(reveal, nonce)).skip<16>().num<uint128_t>() <= ratio))
+            return;
+
+        { std::unique_lock<std::mutex> lock_(mutex_);
+            if (commit_->first == commit) {
+                Commit(); } }
+
+        std::vector<Bytes32> old;
+
+        static Selector<void,
+            Bytes32 /*reveal*/, Bytes32 /*commit*/,
+            uint8_t /*v*/, Bytes32 /*r*/, Bytes32 /*s*/,
+            Bytes32 /*nonce*/, Address /*funder*/,
+            uint128_t /*amount*/, uint128_t /*ratio*/,
+            uint256_t /*start*/, uint128_t /*range*/,
+            Address /*recipient*/, Bytes /*receipt*/,
+            std::vector<Bytes32> /*old*/
+        > grab("grab");
+
+        cashier_->Send(grab, gas,
+            reveal, commit,
+            v, r, s,
+            nonce, funder,
+            amount, ratio,
+            start, range,
+            recipient, receipt,
+            old
+        );
+    } catch (const std::exception &error) {
+        Log() << error.what() << std::endl;
+    } });
+
+    co_await Invoice(this, destination, id);
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
@@ -119,87 +213,13 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
         if (destination != Port_)
             return false;
     try {
-        auto [header, window] = Take<Header, Window>(data);
-        auto &[magic, id, command] = header;
+        const auto [header, window] = Take<Header, Window>(data);
+        const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
-        orc_assert(command == Submit_);
 
+        // XXX: consider doing this work synchronously
         Spawn([this, source, id = id, data = Beam(window)]() -> task<void> {
-            if (data.size() == 0)
-                co_return co_await Invoice(this, source, id);
-
-            auto [
-                v, r, s,
-                commit,
-                nonce, funder,
-                amount, ratio,
-                start, range,
-                target, window
-            ] = Take<
-                uint8_t, Brick<32>, Brick<32>,
-                Brick<32>,
-                Brick<32>, Address,
-                uint128_t, uint128_t,
-                uint256_t, uint128_t,
-                Address, Window
-            >(data);
-
-            // XXX: fix Coder to not immediately convert everything into a tuple so this doesn't need to copy
-            Beam receipt(window);
-
-            using Ticket = Coder<Bytes32, Bytes32, Address, uint128_t, uint128_t, uint256_t, uint128_t, Address, Bytes>;
-            const auto ticket(Hash(Ticket::Encode(commit, nonce, funder, amount, ratio, start, range, target, receipt)));
-            const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
-
-            const auto until(start + range);
-            const auto now(Timestamp());
-            orc_assert(until > now);
-
-            const auto credit(amount * (uint256_t(ratio) + 1));
-
-            const auto [reveal, balance] = [&, commit = commit]() {
-                std::unique_lock<std::mutex> lock_(mutex_);
-                const auto reveal(reveals_.find(commit));
-                orc_assert(reveal != reveals_.end());
-                const auto expire(reveal->second.second);
-                orc_assert(expire == 0 || reveal->second.second + 60 > now);
-                orc_assert(tickets_.emplace(until, signer, ticket).second);
-                balance_ += credit;
-                return std::make_tuple(reveal->second.first, balance_);
-            }();
-
-            auto next(reveal);
-
-            // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
-            if (Hash(Tie(reveal, nonce)).num<uint256_t>() >> 128 <= ratio) {
-                { std::unique_lock<std::mutex> lock_(mutex_);
-                    if (commit_->first == commit) {
-                        Commit(); next = commit_->first; } }
-
-                std::vector<Bytes32> old;
-
-                static Selector<void,
-                    Bytes32 /*reveal*/, Bytes32 /*commit*/,
-                    uint8_t /*v*/, Bytes32 /*r*/, Bytes32 /*s*/,
-                    Bytes32 /*nonce*/, Address /*funder*/,
-                    uint128_t /*amount*/, uint128_t /*ratio*/,
-                    uint256_t /*start*/, uint128_t /*range*/,
-                    Address /*target*/, Bytes /*receipt*/,
-                    std::vector<Bytes32> /*old*/
-                > grab("grab");
-
-                co_await cashier_->Send(grab,
-                    reveal, commit,
-                    v, r, s,
-                    nonce, funder,
-                    amount, ratio,
-                    start, range,
-                    target, receipt,
-                    old
-                );
-            }
-
-            co_return co_await Invoice(this, source, id, next);
+            co_await Invoice(this, source, id, data);
         });
     } catch (const std::exception &error) {
     } return true; })) Bill(Inner(), data);
@@ -221,7 +241,7 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
 }
 
 task<void> Server::Open(Pipe<Buffer> *pipe) {
-    co_return co_await Invoice(pipe, Port_);
+    co_await Invoice(pipe, Port_, Zero<32>());
 }
 
 task<void> Server::Shut() {

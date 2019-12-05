@@ -23,6 +23,7 @@
 #ifndef ORCHID_PROTOCOL_HPP
 #define ORCHID_PROTOCOL_HPP
 
+#include <functional>
 #include <tuple>
 
 #include "jsonrpc.hpp"
@@ -31,11 +32,13 @@
 namespace orc {
 
 extern const Socket Port_;
-typedef std::tuple<uint32_t, Bytes32, uint32_t> Header;
+typedef std::tuple<uint32_t, Bytes32> Header;
 
 static uint32_t Magic_(0xff0fce1d);
 static uint32_t Submit_(0xe497a365);
 static uint32_t Invoice_(0xa0a5148d);
+
+void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code);
 
 }
 

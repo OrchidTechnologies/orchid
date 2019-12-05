@@ -22,13 +22,12 @@
 
 #include <regex>
 
-#include <json/json.h>
-
 #include "adapter.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
 #include "http.hpp"
+#include "json.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
 #include "trace.hpp"
@@ -46,15 +45,11 @@ task<Results> Resolve(Origin &origin, const std::string &host, const std::string
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
-        auto body(co_await origin.Request("GET", {"https", "1.1.1.1", "443", "/dns-query?type=A&name=" + host}, {
+        auto body(Parse(co_await origin.Request("GET", {"https", "1.1.1.1", "443", "/dns-query?type=A&name=" + host}, {
             {"accept", "application/dns-json"}
-        }, {}));
+        }, {})));
 
-        Json::Value parsed;
-        Json::Reader reader;
-        orc_assert(reader.parse(body, parsed, false));
-
-        for (auto answer : parsed["Answer"])
+        for (auto answer : body["Answer"])
             if (answer["type"].asUInt64() == 1) {
                 auto endpoints(co_await resolver.async_resolve(answer["data"].asString(), port, orc::Token()));
                 for (auto &endpoint : endpoints)

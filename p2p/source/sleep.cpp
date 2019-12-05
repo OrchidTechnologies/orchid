@@ -20,20 +20,15 @@
 /* }}} */
 
 
-#include "coinbase.hpp"
-#include "error.hpp"
-#include "http.hpp"
-#include "json.hpp"
-#include "locator.hpp"
+#include <asio.hpp>
+#include "baton.hpp"
+#include "sleep.hpp"
 
 namespace orc {
 
-static Float Ten18("1000000000000000000");
-
-task<Float> Price(const std::string &from, const std::string &to) {
-    auto result(Parse(co_await Request("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {})));
-    auto data(result["data"]);
-    co_return Float(data["amount"].asString()) / Ten18;
+task<void> Sleep(unsigned seconds) {
+    boost::asio::deadline_timer timer(Context(), boost::posix_time::seconds(seconds));
+    co_await timer.async_wait(Token());
 }
 
 }

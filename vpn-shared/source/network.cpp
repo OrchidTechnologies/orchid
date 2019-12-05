@@ -36,7 +36,7 @@ Network::Network(const std::string &rpc, Address directory, Address location, Ad
     generator_.seed(boost::random::random_device()());
 }
 
-task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &argument, const Secret &secret, Address funder) {
+task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &argument, Address lottery, uint256_t chain, const Secret &secret, Address funder) {
     Endpoint endpoint(origin, locator_);
 
     auto latest(co_await endpoint.Latest());
@@ -50,17 +50,19 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
 
         retry: {
             static Selector<std::tuple<Address, uint128_t>, uint128_t> pick("pick");
-            auto [address, delay] = co_await pick.Call(endpoint, latest, directory_, generator_());
+            auto [address, delay] = co_await pick.Call(endpoint, latest, directory_, 90000, generator_());
             orc_assert(address != 0);
+            if (delay < 90*24*60*60)
+                goto retry;
 
             if (curator_ != 0) {
                 static Selector<bool, Address, Bytes> good("good");
-                if (!co_await good.Call(endpoint, latest, curator_, address, argument))
+                if (!co_await good.Call(endpoint, latest, curator_, 90000, address, argument))
                     goto retry;
             }
 
-            static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
-            auto [set, url, tls, gpg] = co_await look.Call(endpoint, latest, location_, address);
+            static Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
+            auto [set, url, tls] = co_await look.Call(endpoint, latest, location_, 90000, address);
 
             auto space(tls.find(' '));
             orc_assert(space != std::string::npos);
@@ -70,7 +72,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
     }();
 
     orc_assert(fingerprint != nullptr);
-    auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(provider), secret, std::move(funder)));
+    auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(provider), std::move(lottery), std::move(chain), secret, std::move(funder)));
     co_await client->Open(origin, url);
 }
 

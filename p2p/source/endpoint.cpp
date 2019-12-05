@@ -23,6 +23,7 @@
 #include "endpoint.hpp"
 #include "error.hpp"
 #include "http.hpp"
+#include "json.hpp"
 
 namespace orc {
 
@@ -80,7 +81,7 @@ Account::Account(const Block &block, Json::Value &value) :
     orc_assert(leaf[3].num() == code_);
 }
 
-uint256_t Endpoint::Get(int index, Json::Value &storages, const Region &root, const uint256_t &key) {
+uint256_t Endpoint::Get(int index, Json::Value &storages, const Region &root, const uint256_t &key) const {
     auto storage(storages[index]);
     orc_assert(uint256_t(storage["key"].asString()) == key);
     uint256_t value(storage["value"].asString());
@@ -89,7 +90,7 @@ uint256_t Endpoint::Get(int index, Json::Value &storages, const Region &root, co
     return value;
 }
 
-task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args) {
+task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args) const {
     Json::Value root;
     root["jsonrpc"] = "2.0";
     root["method"] = method;
@@ -97,11 +98,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     root["params"] = std::move(args);
 
     Json::FastWriter writer;
-    auto body(co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root)));
-
-    Json::Value result;
-    Json::Reader reader;
-    orc_assert(reader.parse(body, result, false));
+    auto result(Parse(co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))));
     Log() << root << " -> " << result << "" << std::endl;
 
     orc_assert(result["jsonrpc"] == "2.0");

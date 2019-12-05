@@ -20,20 +20,20 @@
 /* }}} */
 
 
-#include "coinbase.hpp"
-#include "error.hpp"
-#include "http.hpp"
-#include "json.hpp"
-#include "locator.hpp"
+#ifndef ORCHID_JSON_HPP
+#define ORCHID_JSON_HPP
+
+#include <json/json.h>
 
 namespace orc {
 
-static Float Ten18("1000000000000000000");
-
-task<Float> Price(const std::string &from, const std::string &to) {
-    auto result(Parse(co_await Request("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {})));
-    auto data(result["data"]);
-    co_return Float(data["amount"].asString()) / Ten18;
+inline Json::Value Parse(const std::string &data) {
+    Json::Value result;
+    Json::Reader reader;
+    orc_assert(reader.parse(data, result, false));
+    return result;
 }
 
 }
+
+#endif//ORCHID_JSON_HPP

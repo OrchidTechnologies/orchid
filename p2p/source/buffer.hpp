@@ -41,6 +41,7 @@ namespace orc {
 
 using boost::multiprecision::uint128_t;
 using boost::multiprecision::uint256_t;
+using boost::multiprecision::checked_uint256_t;
 
 class Region;
 class Beam;
@@ -51,19 +52,8 @@ class Buffer {
 
     virtual size_t size() const;
     virtual bool have(size_t value) const;
-
-    virtual bool zero() const {
-        return each([&](const uint8_t *data, size_t size) {
-            for (decltype(size) i(0); i != size; ++i)
-                if (data[i] != 0)
-                    return false;
-            return true;
-        });
-    }
-
-    virtual bool empty() const {
-        return size() == 0;
-    }
+    virtual bool zero() const;
+    virtual bool done() const;
 
     size_t copy(uint8_t *data, size_t size) const;
 
@@ -869,7 +859,7 @@ class Window :
     }
 
     void Stop() {
-        orc_assert(empty());
+        orc_assert(done());
     }
 
     template <typename Code_>

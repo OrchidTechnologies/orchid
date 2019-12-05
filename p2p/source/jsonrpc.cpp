@@ -114,7 +114,7 @@ Explode::Explode(Window &window) {
         scalar_ = false;
         auto beam(window.Take(first - 0xc0));
         Window sub(beam);
-        while (!sub.empty())
+        while (!sub.done())
             array_.emplace_back(Explode(sub));
     } else {
         scalar_ = false;
@@ -124,7 +124,7 @@ Explode::Explode(Window &window) {
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
         auto beam(window.Take(boost::endian::big_to_native(length)));
         Window sub(beam);
-        while (!sub.empty())
+        while (!sub.done())
             array_.emplace_back(Explode(sub));
     }
 }
@@ -132,7 +132,7 @@ Explode::Explode(Window &window) {
 Explode::Explode(Window &&window) :
     Explode(window)
 {
-    orc_assert(window.empty());
+    orc_assert(window.done());
 }
 
 Address::Address(const Brick<64> &common) :
@@ -140,11 +140,23 @@ Address::Address(const Brick<64> &common) :
 {
 }
 
-uint256_t Timestamp() {
+// XXX: implement checksum protocol
+std::ostream &operator <<(std::ostream &out, const Address &address) {
+    return out << "0x" << address.str(0, std::ios::hex);
+}
+
+uint256_t Seconds() {
     using std::chrono::system_clock;
     system_clock::time_point point(system_clock::now());
     system_clock::duration duration(point.time_since_epoch());
     return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+}
+
+uint256_t Monotonic() {
+    using std::chrono::system_clock;
+    system_clock::time_point point(system_clock::now());
+    system_clock::duration duration(point.time_since_epoch());
+    return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 }
 
 }

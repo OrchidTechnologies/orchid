@@ -56,14 +56,14 @@ class Endpoint final {
     const S<Origin> origin_;
     const Locator locator_;
 
-    uint256_t Get(int index, Json::Value &storages, const Region &root, const uint256_t &key);
+    uint256_t Get(int index, Json::Value &storages, const Region &root, const uint256_t &key) const;
 
     template <int Index_, typename Result_, typename... Args_>
-    void Get(Result_ &result, Json::Value &storages, const Region &root) {
+    void Get(Result_ &result, Json::Value &storages, const Region &root) const {
     }
 
     template <int Index_, typename Result_, typename... Args_>
-    void Get(Result_ &result, Json::Value &storages, const Region &root, const uint256_t &key, Args_ &&...args) {
+    void Get(Result_ &result, Json::Value &storages, const Region &root, const uint256_t &key, Args_ &&...args) const {
         std::get<Index_ + 1>(result) = Get(Index_, storages, root, key);
         Get<Index_ + 1>(result, storages, root, std::forward<Args_>(args)...);
     }
@@ -75,20 +75,20 @@ class Endpoint final {
     {
     }
 
-    task<Json::Value> operator ()(const std::string &method, Argument args);
+    task<Json::Value> operator ()(const std::string &method, Argument args) const;
 
-    task<uint256_t> Latest() {
+    task<uint256_t> Latest() const {
         auto latest(uint256_t((co_await operator ()("eth_blockNumber", {})).asString()));
         orc_assert_(latest != 0, "ethereum server has not synchronized any blocks");
         co_return latest;
     }
 
-    task<Block> Header(uint256_t number) {
+    task<Block> Header(uint256_t number) const {
         co_return co_await operator ()("eth_getBlockByNumber", {number, false});
     }
 
     template <typename... Args_>
-    task<std::tuple<Account, typename Result<Args_>::type...>> Get(const Block &block, const Address &contract, Args_ &&...args) {
+    task<std::tuple<Account, typename Result<Args_>::type...>> Get(const Block &block, const Address &contract, Args_ &&...args) const {
         auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
         std::tuple<Account, typename Result<Args_>::type...> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
@@ -97,7 +97,7 @@ class Endpoint final {
     }
 
     template <typename... Args_>
-    task<std::tuple<Account, std::vector<uint256_t>>> Get(const Block &block, const Address &contract, const std::vector<uint256_t> &args) {
+    task<std::tuple<Account, std::vector<uint256_t>>> Get(const Block &block, const Address &contract, const std::vector<uint256_t> &args) const {
         auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
         std::tuple<Account, std::vector<uint256_t>> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
@@ -107,8 +107,12 @@ class Endpoint final {
         co_return result;
     }
 
-    task<Bytes32> Sign(const Address &signer, const Buffer &data) {
+    task<Brick<65>> Sign(const Address &signer, const Buffer &data) const {
         co_return Bless((co_await operator ()("eth_sign", {signer, data})).asString());
+    }
+
+    task<Brick<65>> Sign(const Address &signer, const std::string &password, const Buffer &data) const {
+        co_return Bless((co_await operator ()("personal_sign", {signer, data, password})).asString());
     }
 };
 
@@ -117,8 +121,7 @@ class Selector final :
     public Region
 {
   private:
-    uint32_t value_;
-    uint256_t gas_;
+    const uint32_t value_;
 
     template <bool Comma_, typename... Rest_>
     struct Args;
@@ -138,15 +141,12 @@ class Selector final :
     } };
 
   public:
-    Selector(uint32_t value, uint256_t gas = 90000) :
-        value_(boost::endian::native_to_big(value)),
-        gas_(std::move(gas))
+    Selector(uint32_t value) :
+        value_(boost::endian::native_to_big(value))
     {
     }
 
-    // XXX: the r20 clang-tidy doesn't seem to do this correctly
-    // NOLINTNEXTLINE (performance-unnecessary-value-param)
-    Selector(const std::string &name, uint256_t gas = 90000) :
+    Selector(const std::string &name) :
         Selector([&]() {
             std::ostringstream signature;
             signature << name << '(';
@@ -154,7 +154,7 @@ class Selector final :
             signature << ')';
             std::cerr << signature.str() << std::endl;
             return Hash(Strung(signature.str())).Clip<4>().num<uint32_t>();
-        }(), std::move(gas))
+        }())
     {
     }
 
@@ -166,12 +166,12 @@ class Selector final :
         return sizeof(value_);
     }
 
-    task<Result_> Call(Endpoint &endpoint, const Argument &block, const Address &contract, const Args_ &...args) {
+    task<Result_> Call(const Endpoint &endpoint, const Argument &block, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
             {"to", contract},
-            {"gas", gas_},
+            {"gas", gas},
             {"data", Tie(*this, builder)},
         }, block})).asString()));
         Window window(data);
@@ -180,13 +180,13 @@ class Selector final :
         co_return std::move(result);
     }
 
-    task<Result_> Call(Endpoint &endpoint, const Address &from, const Argument &block, const Address &contract, const Args_ &...args) {
+    task<Result_> Call(const Endpoint &endpoint, const Address &from, const Argument &block, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
             {"from", from},
             {"to", contract},
-            {"gas", gas_},
+            {"gas", gas},
             {"data", Tie(*this, builder)},
         }, block})).asString()));
         Window window(data);
@@ -195,25 +195,25 @@ class Selector final :
         co_return std::move(result);
     }
 
-    task<uint256_t> Send(Endpoint &endpoint, const Address &from, const Address &contract, const Args_ &...args) {
+    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Map{
             {"from", from},
             {"to", contract},
-            {"gas", gas_},
+            {"gas", gas},
             {"data", Tie(*this, builder)},
         }})).asString()).template num<uint256_t>());
         co_return std::move(transaction);
     }
 
-    task<uint256_t> Send(Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const Args_ &...args) {
+    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Map{
             {"from", from},
             {"to", contract},
-            {"gas", gas_},
+            {"gas", gas},
             {"data", Tie(*this, builder)},
         }, password})).asString()).template num<uint256_t>());
         co_return std::move(transaction);

@@ -85,8 +85,8 @@ int Main(int argc, const char *const argv[]) {
     { po::options_description group("orchid eth addresses");
     group.add_options()
         //("token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
-        ("location", po::value<std::string>()->default_value("0xE214330bDd412F07d8FC4d4960698c0D657e1774"))
-        ("lottery", po::value<std::string>()->default_value("0xF28eE3675D0C9Fe8f29aBD25dA4AE0d940FE8239"))
+        ("lottery", po::value<std::string>()->default_value("0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"))
+        ("location", po::value<std::string>()->default_value("0xe1B636079F2158E772bdD85e02Dc92D52c09F0Da"))
     ; options.add(group); }
 
     { po::options_description group("user eth addresses");
@@ -99,7 +99,9 @@ int Main(int argc, const char *const argv[]) {
 
     { po::options_description group("external resources");
     group.add_options()
+        ("chainid", po::value<unsigned>()->default_value(1), "ropsten = 3; rinkeby = 4; goerli = 5")
         ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
+        ("ws", po::value<std::string>()->default_value("ws://127.0.0.1:8546/"), "ethereum websocket private API endpoint")
         ("stun", po::value<std::string>()->default_value("stun.l.google.com:19302"), "stun server url to use for discovery")
     ; options.add(group); }
 
@@ -305,15 +307,23 @@ int Main(int argc, const char *const argv[]) {
 
         Wait([&]() -> task<void> {
             auto latest(co_await endpoint.Latest());
-            static Selector<std::tuple<uint256_t, std::string, std::string, std::string>, Address> look("look");
-            if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, provider)) != std::tie(url, tls, "")) {
-                static Selector<void, std::string, std::string, std::string> move("move", 3000000);
-                co_await move.Send(endpoint, provider, password, location, url, tls, "");
+            static Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
+            if (Slice<1, 3>(co_await look.Call(endpoint, latest, location, 90000, provider)) != std::tie(url, tls)) {
+                static Selector<void, std::string, std::string> move("move");
+                co_await move.Send(endpoint, provider, password, location, 3000000, url, tls);
             }
         }());
     }
 
-    auto cashier(Make<Cashier>(std::move(endpoint), Address(args["lottery"].as<std::string>()), args["price"].as<std::string>(), args["currency"].as<std::string>(), std::move(personal), std::move(password), std::move(recipient)));
+    Float price(args["price"].as<std::string>());
+    price /= 1024 * 1024 * 1024;
+
+    auto cashier(Make<Cashier>(std::move(endpoint),
+        std::move(price), args["currency"].as<std::string>(),
+        std::move(personal), std::move(password),
+        Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), std::move(recipient)
+    ));
+
     auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
 
     if (args.count("ovpn-file") != 0) {

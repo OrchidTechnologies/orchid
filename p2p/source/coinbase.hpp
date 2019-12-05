@@ -25,15 +25,15 @@
 
 #include <string>
 
-#include <boost/multiprecision/cpp_dec_float.hpp>
+#include <boost/multiprecision/cpp_bin_float.hpp>
 
 #include "task.hpp"
 
 namespace orc {
 
-using boost::multiprecision::cpp_dec_float_50;
+typedef boost::multiprecision::cpp_bin_float_oct Float;
 
-task<cpp_dec_float_50> Price(const std::string &from, const std::string &to);
+task<Float> Price(const std::string &from, const std::string &to);
 
 }
 

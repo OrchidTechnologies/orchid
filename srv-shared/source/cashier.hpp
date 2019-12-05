@@ -35,32 +35,40 @@ namespace orc {
 
 class Cashier {
   private:
-    Endpoint endpoint_;
-    const Address lottery_;
+    const Endpoint endpoint_;
+
+    const Float price_;
+    const std::string currency_;
+
     const Address personal_;
     const std::string password_;
+
+    const Address lottery_;
+    const uint256_t chain_;
     const Address recipient_;
 
     mutable std::mutex mutex_;
-    uint256_t price_;
+    Float eth_;
+    Float oxt_;
 
-    task<void> Update(cpp_dec_float_50 price, const std::string &currency);
+    task<void> Update();
 
   public:
-    Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &currency, Address personal, std::string password, Address recipient);
+    Cashier(Endpoint endpoint, const Float &price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient);
 
-    uint256_t Bill(size_t size) const {
-        std::unique_lock<std::mutex> lock(mutex_);
-        return price_ * size;
+    auto Tuple() const {
+        return std::tie(lottery_, chain_, recipient_);
     }
 
-    Address Recipient() const {
-        return recipient_;
-    }
+    Float Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const;
+    Float Bill(size_t size) const;
+    uint256_t Convert(const Float &balance) const;
 
     template <typename Selector_, typename... Args_>
-    task<void> Send(Selector_ &selector, Args_ &&...args) {
-        co_await selector.Send(endpoint_, personal_, password_, lottery_, std::forward<Args_>(args)...);
+    void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {
+        Spawn([=]() mutable -> task<void> {
+            co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, std::forward<Args_>(args)...);
+        });
     }
 };
 

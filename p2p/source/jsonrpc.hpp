@@ -163,7 +163,13 @@ class Address :
     bool operator <(const Address &rhs) const {
         return static_cast<const uint160_t &>(*this) < static_cast<const uint160_t &>(rhs);
     }
+
+    bool operator ==(const Address &rhs) const {
+        return static_cast<const uint160_t &>(*this) == static_cast<const uint160_t &>(rhs);
+    }
 };
+
+std::ostream &operator <<(std::ostream &out, const Address &address);
 
 inline bool Each(const Address &address, const std::function<bool (const uint8_t *, size_t)> &code) {
     return Number<uint160_t>(address).each(code);
@@ -604,9 +610,8 @@ struct Coder {
     }
 };
 
-static const uint128_t Ten18("1000000000000000000");
-
-uint256_t Timestamp();
+uint256_t Seconds();
+uint256_t Monotonic();
 
 }
 

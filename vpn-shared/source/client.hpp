@@ -47,18 +47,20 @@ class Client :
     const Address provider_;
     const Bytes receipt_;
 
+    const Address lottery_;
+    const uint256_t chain_;
     const Secret secret_;
     const Address funder_;
 
     const uint256_t prepay_;
-    std::atomic<uint64_t> benefit_;
+    std::atomic<uint64_t> benefit_ = 0;
     std::map<Bytes32, std::pair<Ticket, Signature>> tickets_;
 
     std::mutex mutex_;
-    uint256_t timestamp_;
-    uint256_t balance_;
+    uint256_t timestamp_ = 0;
+    uint256_t balance_ = 0;
     Address recipient_;
-    Bytes32 commit_;
+    Bytes32 commit_ = Zero<32>();
 
     Socket socket_;
 
@@ -72,7 +74,7 @@ class Client :
     void Land(Pipe *pipe, const Buffer &data) override;
 
   public:
-    Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, const Secret &secret, Address funder);
+    Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Address lottery, uint256_t chain, const Secret &secret, Address funder);
 
     task<void> Open(const S<Origin> &origin, const std::string &url);
     task<void> Shut() override;

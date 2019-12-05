@@ -684,9 +684,11 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
     auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
     } else if (protocol == "orchid") {
+        Address lottery(heap.eval<std::string>(hops + ".lottery", "0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"));
+        uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
         Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
         Address funder(heap.eval<std::string>(hops + ".funder"));
-        co_await network.Random(sunk, origin, argument, secret, funder);
+        co_await network.Random(sunk, origin, argument, lottery, chain, secret, funder);
     } else if (protocol == "openvpn") {
         auto ovpnfile(heap.eval<std::string>(hops + ".ovpnfile"));
         auto username(heap.eval<std::string>(hops + ".username"));
@@ -705,8 +707,8 @@ task<void> Capture::Start(const std::string &path) {
     duk_put_global_string(heap, "print");
 
     heap.eval<void>(R"(
-        eth_directory = "0xd87e0ee1a59841de2ac78c17209db97e27651985";
-        eth_location = "0xE214330bDd412F07d8FC4d4960698c0D657e1774";
+        eth_directory = "0x441f2C1dC59Fe75cF379641C11c93a4f763d164c";
+        eth_location = "0xe1B636079F2158E772bdD85e02Dc92D52c09F0Da";
         eth_curator = "0x55Abb3CE20ABbC38444e0A200dDE7fC0388b76a5";
         eth_argument = "2b1ce95573ec1b927a90cb488db113b40eeb064a";
         rpc = "https://cloudflare-eth.com:443/";

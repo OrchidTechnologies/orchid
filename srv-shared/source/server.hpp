@@ -46,9 +46,10 @@ class Server :
   private:
     const S<Origin> origin_;
     const S<Cashier> cashier_;
-    uint256_t balance_;
 
     std::mutex mutex_;
+
+    Float balance_;
 
     std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
     decltype(reveals_.end()) commit_ = reveals_.end();
@@ -60,8 +61,9 @@ class Server :
 
     void Commit();
 
-    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Bytes32 &commit);
-    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id = Zero<32>());
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit);
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id);
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Buffer &data);
 
   protected:
     virtual Pump *Inner() = 0;

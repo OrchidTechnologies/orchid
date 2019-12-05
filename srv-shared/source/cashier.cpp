@@ -26,42 +26,64 @@
 
 #include "baton.hpp"
 #include "cashier.hpp"
+#include "json.hpp"
+#include "sleep.hpp"
 
 namespace orc {
 
-task<void> Cashier::Update(cpp_dec_float_50 price, const std::string &currency) {
-    price /= co_await Price("ETH", currency) / 200;
-    price *= 1000000000;
-    price /= 1024 * 1024 * 1024;
-    price *= 1000000000;
+static Float Two128(uint256_t(1) << 128);
+//static Float Two30(1024 * 1024 * 1024);
+
+task<void> Cashier::Update() {
+    auto eth(co_await Price("ETH", currency_));
+    //auto oxt(co_await Price("OXT", currency_));
+    auto oxt(eth / 300);
+    //auto predict(Parse(co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/predictTable.json"}, {}, {})));
 
     std::unique_lock<std::mutex> lock(mutex_);
-    using boost::multiprecision::cpp_bin_float_quad;
-    price_ = static_cast<uint256_t>(static_cast<cpp_bin_float_quad>(price) * static_cast<cpp_bin_float_quad>(uint256_t(1) << 128));
+    eth_ = std::move(eth);
+    oxt_ = std::move(oxt);
 }
 
-Cashier::Cashier(Endpoint endpoint, Address lottery, const std::string &price, const std::string &currency, Address personal, std::string password, Address recipient) :
+Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient) :
     endpoint_(std::move(endpoint)),
-    lottery_(std::move(lottery)),
+
+    price_(std::move(price)),
+    currency_(std::move(currency)),
+
     personal_(std::move(personal)),
     password_(std::move(password)),
+
+    lottery_(std::move(lottery)),
+    chain_(std::move(chain)),
     recipient_(std::move(recipient))
 {
     cppcoro::async_manual_reset_event ready;
 
-    Spawn([&ready, this, price = cpp_dec_float_50(price), currency]() -> task<void> {
-        co_await Update(price, currency);
+    Spawn([&ready, this]() -> task<void> {
+        co_await Update();
         ready.set();
         for (;;) {
-            boost::asio::deadline_timer timer(Context(), boost::posix_time::minutes(5));
-            co_await timer.async_wait(Token());
-            co_await Update(price, currency);
+            co_await Sleep(5 * 60);
+            co_await Update();
         }
     });
 
     Wait([&]() -> task<void> {
         co_await ready;
     }());
+}
+
+Float Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const {
+    return Float(amount) * oxt_ / Two128;
+}
+
+Float Cashier::Bill(size_t size) const {
+    return price_ * size;
+}
+
+uint256_t Cashier::Convert(const Float &balance) const {
+    return uint256_t(balance / oxt_ * Two128);
 }
 
 }

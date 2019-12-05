@@ -45,6 +45,21 @@ bool Buffer::have(size_t value) const {
     });
 }
 
+bool Buffer::zero() const {
+    return each([&](const uint8_t *data, size_t size) {
+        for (decltype(size) i(0); i != size; ++i)
+            if (data[i] != 0)
+                return false;
+        return true;
+    });
+}
+
+bool Buffer::done() const {
+    return each([&](const uint8_t *data, size_t size) {
+        return size == 0;
+    });
+}
+
 std::string Buffer::str() const {
     std::string value;
     value.resize(size());
