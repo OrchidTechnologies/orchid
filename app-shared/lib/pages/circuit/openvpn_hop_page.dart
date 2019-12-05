@@ -10,7 +10,7 @@ import '../app_text.dart';
 import 'hop_editor.dart';
 import 'model/openvpn_hop.dart';
 
-/// Create / edit / view an Open VPN Hop
+/// Create / edit / view an OpenVPN Hop
 class OpenVPNHopPage extends HopEditor<OpenVPNHop> {
   OpenVPNHopPage(
       {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
@@ -57,7 +57,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
   Widget build(BuildContext context) {
     return TapClearsFocus(
       child: TitledPage(
-        title: "Open VPN Hop",
+        title: "OpenVPN Hop",
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context)]
             : [],

@@ -19,7 +19,7 @@ class CircuitHop {
         return "Orchid";
         break;
       case Protocol.OpenVPN:
-        return "Open VPN";
+        return "OpenVPN";
         break;
       default:
         return "";
