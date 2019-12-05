@@ -27,24 +27,22 @@ contract OrchidLocation {
         uint256 set_;
         string url_;
         string tls_;
-        string gpg_;
     }
 
     mapping (address => Location) private locations_;
 
-    event Update(address indexed target, string url, string tls, string gpg);
+    event Update(address indexed target, string url, string tls);
 
-    function move(string calldata url, string calldata tls, string calldata gpg) external {
+    function move(string calldata url, string calldata tls) external {
         Location storage location = locations_[msg.sender];
         location.set_ = block.timestamp;
         location.url_ = url;
         location.tls_ = tls;
-        location.gpg_ = gpg;
-        emit Update(msg.sender, url, tls, gpg);
+        emit Update(msg.sender, url, tls);
     }
 
-    function look(address target) external view returns (uint256, string memory, string memory, string memory) {
+    function look(address target) external view returns (uint256, string memory, string memory) {
         Location storage location = locations_[target];
-        return (location.set_, location.url_, location.tls_, location.gpg_);
+        return (location.set_, location.url_, location.tls_);
     }
 }
