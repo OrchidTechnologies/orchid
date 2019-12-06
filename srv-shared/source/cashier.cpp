@@ -45,7 +45,7 @@ task<void> Cashier::Update() {
     oxt_ = std::move(oxt);
 }
 
-Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient) :
+Cashier::Cashier(Endpoint endpoint, Float price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient) :
     endpoint_(std::move(endpoint)),
 
     price_(std::move(price)),

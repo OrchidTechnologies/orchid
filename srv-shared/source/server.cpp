@@ -55,8 +55,8 @@ class Incoming final :
     }
 
   public:
-    Incoming(S<Server> server, S<Origin> origin, std::vector<std::string> ice) :
-        Peer(std::move(origin), [&]() {
+    Incoming(S<Server> server, const S<Origin> &origin, std::vector<std::string> ice) :
+        Peer(origin, [&]() {
             Configuration configuration;
             configuration.ice_ = std::move(ice);
             return configuration;

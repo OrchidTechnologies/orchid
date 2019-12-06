@@ -260,7 +260,7 @@ int Main(int argc, const char *const argv[]) {
 
     Address location(args["location"].as<std::string>());
     std::string password(args["password"].as<std::string>());
-    Address recipient(args.count("recipient") == 0 ? 0 : args["recipient"].as<std::string>());
+    Address recipient(args.count("recipient") == 0 ? "0x0000000000000000000000000000000000000000" : args["recipient"].as<std::string>());
 
     auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
@@ -337,7 +337,7 @@ int Main(int argc, const char *const argv[]) {
         auto username(args["ovpn-user"].as<std::string>());
         auto password(args["ovpn-pass"].as<std::string>());
 
-        Spawn([&node, origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() -> task<void> {
+        Spawn([&node, origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() mutable -> task<void> {
             auto egress(Make<Sink<Egress>>(0));
             co_await Connect(egress.get(), std::move(origin), 0, ovpnfile, username, password);
             node->Wire() = std::move(egress);
