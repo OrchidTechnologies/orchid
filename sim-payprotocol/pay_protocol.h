@@ -312,14 +312,72 @@ struct Server;
 struct IBudget
 {
 	virtual ~IBudget() {}
-	virtual double get_afford(double ctime) = 0;
+	virtual double get_afford(double ctime, double bytes_used) = 0;
 	virtual double get_max_faceval() = 0;
-    virtual void on_connect(double ctime) = 0;
+
+	virtual void on_connect(double ctime) {}
     virtual void on_disconnect() {}
     virtual void on_payment(double ctime, double amt) {}
-	virtual void set_active(double aratio) = 0;
+	virtual void set_active(double aratio)  {}
+    virtual void on_balance(double balance) {}
+    virtual void on_packet(bool success)    {} // !success indicates dropped packet
 };
 
+
+struct Budget_Gastank : public IBudget
+{
+	// UI/config inputs
+    double max_price_   = 10.0; // in OXT/GB
+
+    // other
+	double max_faceval_	  = 1.0;  // maximum allowable faceval in OXT (user's hard variance limit)
+
+    // internal
+    double bytes_tracked_ = 0.0;
+    double prepay_bytes_  = 1e5;
+
+	virtual ~Budget_Gastank() {}
+
+	Budget_Gastank(double max_price, double balance): max_price_(max_price), max_faceval_(balance), bytes_tracked_(prepay_bytes_) {}
+
+	virtual double get_afford(double ctime, double bytes_used) {
+		bytes_tracked_ += bytes_used;
+		return bytes_tracked_ * 1e-9 * max_price_;
+	}
+
+	virtual double get_max_faceval() { return max_faceval_; }
+	virtual void on_connect(double ctime) { bytes_tracked_ = prepay_bytes_; }
+    virtual void on_payment(double ctime, double amt)  { bytes_tracked_ = 0.0; }
+    virtual void on_balance(double balance) { max_faceval_ = balance; }
+};
+
+struct Budget_RateControl : public IBudget
+{
+	IBudget* base_;
+
+	double rate_ = 1.0;
+
+	Budget_RateControl(IBudget* base): base_(base) {}
+	~Budget_RateControl() { delete base_; }
+
+	virtual double get_max_faceval() { return base_->get_max_faceval(); }
+	virtual void on_connect(double ctime) { base_->on_connect(ctime); }
+    virtual void on_disconnect() { base_->on_disconnect(); }
+    virtual void on_payment(double ctime, double amt) { base_->on_payment(ctime, amt); }
+	virtual void set_active(double aratio)  { base_->set_active(aratio); }
+    virtual void on_balance(double balance) { base_->on_balance(balance); }
+
+
+	virtual double get_afford(double ctime, double bytes_used) { return rate_ * base_->get_afford(ctime, bytes_used); }
+
+    virtual void on_packet(bool success)    {
+    	// !success indicates dropped packet
+    	// these params target about 1 in 1000 packets dropped, ~0.1% loss
+    	if (success) { rate_ = fmin(1.0, rate_ * 0.9997); }
+    	else		 { rate_ *= 1.3334; }
+    }
+
+};
 
 struct Budget_SurpTrack2 : public IBudget, public Tickable
 {
@@ -349,7 +407,7 @@ struct Budget_SurpTrack2 : public IBudget, public Tickable
 
 	virtual double get_max_faceval() { return max_faceval_; }
 
-	virtual double get_afford(double ctime)
+	virtual double get_afford(double ctime, double bytes_used)
 	{
 	    double elap = (ctime - last_aff_date_);
 	    last_aff_date_ = ctime;
@@ -400,7 +458,7 @@ struct Budget_SurpTrack : public IBudget, public Tickable
 	double start_balance_ = 0.0;
 
 
-	virtual double get_afford(double ctime)
+	virtual double get_afford(double ctime, double bytes_used)
 	{
 	    double time_owed = (ctime - last_pay_date_);
 	    double allowed   = spendrate_ * (time_owed + prepay_credit_);
@@ -474,7 +532,7 @@ struct Budget_PredExpW : public IBudget, public Tickable
 	double exp_half_life   = 1*Weeks;      // 1 one week 50% smoothing period
 
 
-	virtual double get_afford(double ctime) {
+	virtual double get_afford(double ctime, double bytes_used) {
 	    double time_owed = (ctime - last_pay_date_);
 	    double allowed   = spendrate_ * (time_owed + prepay_credit_);
 	    dlog(2,"Budget_PredExpW::get_afford(%f) allowed(%f) = spendrate_(%f) * (%f - %f + %f) \n", ctime,allowed,spendrate_,ctime,last_pay_date_,prepay_credit_);
@@ -574,18 +632,27 @@ struct Client : public Tickable, public INet
 	double  packs_sent_ = 0;
 	double  packs_recv_ = 0;
 
+	double  new_bytes_sent_ = 0.0;
+	double  new_bytes_recv_ = 0.0;
+
 
 	void on_update_route();
 
-	Client(bytes32 account, double budget_edate, int nhops) {
+	Client(bytes32 account, double budget_edate, double max_price, int nhops) {
 	    account_ = account;
 	    address_ = netaddr{uint32(rand()), 0};
 	    period_  = 4.0; register_timer_func(this); // send a payment every 4s for now
 	    brecvd_  = 0.0;
 	    route_.resize(nhops);
+
+	    double curbal = Lot::balance(account_).amount_;
+
 	    for (int i(0); i < nhops; i++) {
 	        //route_[i].budget_ = new Budget_PredExpW(account_, budget_edate);
-	        route_[i].budget_ = new Budget_SurpTrack2(account_, budget_edate);
+	        //route_[i].budget_ = new Budget_SurpTrack2(account_, budget_edate);
+	        //route_[i].budget_ = new Budget_Gastank(max_price, curbal);
+	        route_[i].budget_ = new Budget_RateControl(new Budget_Gastank(max_price, curbal));
+
 		}
 	    on_update_route();
 	}
@@ -639,6 +706,9 @@ struct Client : public Tickable, public INet
     }
 
     void send_packet(netaddr to, netaddr from, Packet& p) {
+		auto psize = get_size(p);
+		new_bytes_sent_ += psize;
+
 		auto* msg = get_msg(p);
     	//if (msg == nullptr)
 		packs_sent_ += 1.0;
@@ -659,13 +729,14 @@ struct Client : public Tickable, public INet
 
 	virtual void on_packet(netaddr to, netaddr from, const Packet& p)
 	{
+		auto psize = get_size(p);
+		new_bytes_recv_ += psize;
 		auto* msg = get_msg(p);
 		//if (msg == nullptr)
 		if (last_recv_pac_id_ != get_id(p)) {
 			last_recv_pac_id_ = get_id(p);
 			packs_recv_ += 1.0;
 		}
-		auto psize = get_size(p);
 		assert(to.addr_ == address_.addr_); brecvd_ += psize;
 		dlog(2,"Client(%p)::on_packet  (%x,%x,%e,%d) packs(%f,%f) brecvd_(%f) ids(%i,%i) \n", this, to,from,psize,get_id(p), packs_sent_,packs_recv_, brecvd_, last_sent_pac_id_, last_recv_pac_id_);
 
@@ -686,7 +757,9 @@ struct Client : public Tickable, public INet
 
 payment Client::create_payment(double ctime, IBudget* budget, uint256 hash_secret, bytes32 target)
 {
-	double afford	   	= budget->get_afford(ctime);
+	double afford	   	= budget->get_afford(ctime, new_bytes_sent_ + new_bytes_recv_);
+	new_bytes_sent_ = new_bytes_recv_ = 0.0;
+
 	double max_face_val	= budget->get_max_faceval();
 
 	double exp_val 		= afford;
