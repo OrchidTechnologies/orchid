@@ -65,7 +65,7 @@ class Client :
     Socket socket_;
 
     task<void> Submit();
-    task<void> Submit(Bytes32 hash, const Ticket &ticket, const Signature &signature);
+    task<void> Submit(const Bytes32 &hash, const Ticket &ticket, const Signature &signature);
 
     void Issue(uint256_t amount);
     void Transfer(size_t size);

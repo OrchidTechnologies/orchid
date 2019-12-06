@@ -54,7 +54,7 @@ class Cashier {
     task<void> Update();
 
   public:
-    Cashier(Endpoint endpoint, const Float &price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient);
+    Cashier(Endpoint endpoint, Float price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient);
 
     auto Tuple() const {
         return std::tie(lottery_, chain_, recipient_);

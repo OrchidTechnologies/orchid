@@ -54,7 +54,7 @@ class Nest :
             //Log() << "Nest[" << nest_ << "]: " << std::dec << count_ << std::endl;
         }
 
-        Count(Count &&count) :
+        Count(Count &&count) noexcept :
             nest_(count.nest_)
         {
             count.nest_ = nullptr;
@@ -80,7 +80,7 @@ class Nest :
     {
     }
 
-    task<void> Shut() {
+    task<void> Shut() override {
         for (;;) {
             co_await event_;
         }

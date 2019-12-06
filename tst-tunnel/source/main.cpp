@@ -137,8 +137,9 @@ int Main(int argc, const char *const argv[]) {
 #error
 #endif
 
-    setgid(501);
-    setuid(501);
+    // XXX: rage against the cage, my friend :(
+    (void) setgid(501);
+    (void) setuid(501);
 
     Wait([&]() -> task<void> { try {
         co_await Schedule();
