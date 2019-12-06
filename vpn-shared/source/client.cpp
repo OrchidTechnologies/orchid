@@ -49,8 +49,7 @@ void Client::Issue(uint256_t amount) {
             // XXX: retry existing packet
             co_return co_await Submit();
 
-        static uint256_t nonce_(0);
-        auto nonce(nonce_++);
+        const Bytes32 nonce(Random(32));
 
         const auto now(Seconds());
         auto start(now + 60 * 60 * 2);
@@ -61,7 +60,7 @@ void Client::Issue(uint256_t amount) {
         }();
 
         auto ratio(uint128_t(1) << 127 >> 12);
-        Ticket ticket{commit, Number<uint256_t>(nonce), funder_, uint128_t(amount / ratio), ratio, start, 0, recipient};
+        Ticket ticket{commit, nonce, funder_, uint128_t(amount / ratio), ratio, start, 0, recipient};
         auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
         auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
         { std::unique_lock<std::mutex> lock(mutex_);
