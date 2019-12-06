@@ -82,6 +82,7 @@ int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
         ("help", "produce help message")
+        ("capture", po::value<std::string>(), "single ip address to capture")
         ("config", po::value<std::string>(), "configuration file for client configuration")
     ;
 
@@ -131,7 +132,12 @@ int Main(int argc, const char *const argv[]) {
 
     auto utun("utun" + std::to_string(address.sc_unit - 1));
     orc_assert(system(("ifconfig " + utun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
-    orc_assert(system(("route -n add 207.254.46.169 -interface " + utun).c_str()) == 0);
+    if (args.count("capture") != 0)
+        orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " -interface " + utun).c_str()) == 0);
+    else {
+        orc_assert(system(("route -n add 0.0.0.0/1 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add 128.0.0.0/1 -interface " + utun).c_str()) == 0);
+    }
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 #else
 #error
