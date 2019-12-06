@@ -259,7 +259,6 @@ int Main(int argc, const char *const argv[]) {
 
 
     Address location(args["location"].as<std::string>());
-    Address personal(args["personal"].as<std::string>());
     std::string password(args["password"].as<std::string>());
     Address recipient(args.count("recipient") == 0 ? 0 : args["recipient"].as<std::string>());
 
@@ -318,11 +317,16 @@ int Main(int argc, const char *const argv[]) {
     Float price(args["price"].as<std::string>());
     price /= 1024 * 1024 * 1024;
 
-    auto cashier(Make<Cashier>(std::move(endpoint),
-        std::move(price), args["currency"].as<std::string>(),
-        std::move(personal), std::move(password),
-        Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), std::move(recipient)
-    ));
+    auto cashier([&]() -> S<Cashier> {
+        if (price == 0)
+            return nullptr;
+        Address personal(args["personal"].as<std::string>());
+        return Make<Cashier>(std::move(endpoint),
+            std::move(price), args["currency"].as<std::string>(),
+            std::move(personal), std::move(password),
+            Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), std::move(recipient)
+        );
+    }());
 
     auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
 

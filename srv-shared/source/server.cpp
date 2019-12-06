@@ -79,9 +79,9 @@ _trace();
 };
 
 void Server::Bill(Pipe *pipe, const Buffer &data) {
-    const auto amount(cashier_->Bill(data.size()) * 2);
+    if (cashier_ != nullptr) {
+        const auto amount(cashier_->Bill(data.size()) * 2);
 
-    {
         std::unique_lock<std::mutex> lock_(mutex_);
         if (balance_ < amount) {
             _trace(); return; }
@@ -212,6 +212,8 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
+        if (cashier_ == nullptr)
+            return true;
     try {
         const auto [header, window] = Take<Header, Window>(data);
         const auto &[magic, id] = header;
@@ -241,7 +243,8 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
 }
 
 task<void> Server::Open(Pipe<Buffer> *pipe) {
-    co_await Invoice(pipe, Port_, Zero<32>());
+    if (cashier_ != nullptr)
+        co_await Invoice(pipe, Port_, Zero<32>());
 }
 
 task<void> Server::Shut() {
