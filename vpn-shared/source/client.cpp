@@ -35,7 +35,7 @@ task<void> Client::Submit() {
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header)));
 }
 
-task<void> Client::Submit(Bytes32 hash, const Ticket &ticket, const Signature &signature) {
+task<void> Client::Submit(Bytes32 const &hash, const Ticket &ticket, const Signature &signature) {
     Header header{Magic_, hash};
     Builder builder;
     builder += Tie(Submit_, signature.v_, signature.r_, signature.s_, lottery_, chain_);
