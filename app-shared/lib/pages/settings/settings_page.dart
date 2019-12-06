@@ -45,7 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
               context: context),
            */
           PageTile(
-            title: "Query Balances",
+            title: "Query Address",
             //imageName: "assets/images/assignment.png",
             trailing: Switch(
               activeColor: AppColors.purple_3,

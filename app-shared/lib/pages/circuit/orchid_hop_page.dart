@@ -131,7 +131,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               image: Image.asset("assets/images/group7.png"),
               title: "Link your account",
               body:
-                  "To link your hop with a funding source, enter your Ethereum wallet address and designate a signer key above. To complete this process, you will have to copy this signer key over to your Orchid account at account.orchid.com using your preferred DApp browser.",
+                  "To link your hop with your Orchid credentials, enter your Ethereum address and designate a signer key above. Manage your Orchid account using your preferred dApp browser.",
             ),
           )
         ],
@@ -145,7 +145,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       child: Column(
         children: <Widget>[
           _buildSection(
-              title: "Funding", child: _buildFunding(), onDetail: null),
+              title: "Credentials", child: _buildFunding(), onDetail: null),
           pady(16),
           divider(),
           pady(24),
@@ -157,7 +157,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           divider(),
           pady(24),
           _buildSection(
-              title: "Budget", child: _buildBudget(), onDetail: _editBudget),
+              title: "Rate Limit", child: _buildBudget(), onDetail: _editBudget),
         ],
       ),
     );
@@ -215,7 +215,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               // Balance
-              Text("Balance:",
+              Text("Amount:",
                   style: AppText.textLabelStyle
                       .copyWith(fontSize: 20, color: AppColors.neutral_1)),
               pady(4),
@@ -244,7 +244,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text("Wallet Address:",
+            Text("Ethereum Address:",
                 style: AppText.textLabelStyle.copyWith(
                     fontSize: 20,
                     color: _funderValid()
@@ -337,7 +337,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         pady(16),
-        Text("View or modify your budget.",
+        Text("View or modify your rate limit.",
             textAlign: TextAlign.left, style: AppText.dialogBody),
       ],
     );
