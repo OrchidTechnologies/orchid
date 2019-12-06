@@ -96,7 +96,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
   }
 
   void _handleTabSelection(int index) {
-    var titles = [_logo, Text("Traffic"), Text("Circuit")];
+    var titles = [_logo, Text("Traffic"), Text("Hops")];
     setState(() {
       _selectedIndex = index;
       _pageTitle = titles[index];
