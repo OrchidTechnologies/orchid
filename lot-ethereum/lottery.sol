@@ -25,7 +25,7 @@ pragma solidity 0.5.13;
 import "../openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 interface OrchidVerifier {
-    function good(bytes calldata shared, address target, bytes calldata receipt) external pure returns (bool);
+    function good(bytes calldata shared, address target, bytes calldata receipt) external pure;
 }
 
 contract OrchidLottery {
@@ -209,7 +209,7 @@ contract OrchidLottery {
         if (verify != OrchidVerifier(0)) {
             bytes32 current; assembly { current := extcodehash(verify) }
             if (codehash == current)
-                require(verify.good(pot.shared_, target, receipt));
+                verify.good(pot.shared_, target, receipt);
         }
     }
 
