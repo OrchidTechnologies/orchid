@@ -19,8 +19,6 @@ class MainActivity(): FlutterActivity() {
         super.onCreate(savedInstanceState)
         GeneratedPluginRegistrant.registerWith(this)
 
-        installConfig();
-
         feedback = MethodChannel(flutterView, "orchid.com/feedback")
         feedback.setMethodCallHandler { call, result ->
             Log.d("Orchid", call.method)
@@ -87,18 +85,6 @@ class MainActivity(): FlutterActivity() {
 
     private fun configFile(): File {
         return File(filesDir.absolutePath + "/orchid.cfg");
-    }
-
-    // Install the default config file on first launch.
-    private fun installConfig() {
-        var file = configFile();
-        val defaultConfig = assets.open("flutter_assets/assets/default.cfg")
-        defaultConfig.use { defaultConfig ->
-            if (!file.exists()) {
-                Log.d("Orchid", "Installing default config file")
-                copyTo(defaultConfig, file);
-            }
-        }
     }
 
     fun copyTo(ins: InputStream, dst: File) {
