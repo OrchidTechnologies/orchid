@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
+import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
@@ -44,6 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
               routeName: '/settings/log',
               context: context),
            */
+          /* TODO:
           PageTile(
             title: "Query Address",
             //imageName: "assets/images/assignment.png",
@@ -59,6 +61,8 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           Divider(),
+           */
+          pady(16),
           PageTile(
             title: "Default Curator",
             //imageName: "assets/images/assignment.png",

@@ -75,7 +75,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     _funderField.addListener(_textFieldChanged);
 
     // init balance polling
-    if (widget.readOnly() && await UserPreferences().getQueryBalances()) {
+    // TODO: Disabled balances
+    if (false /*widget.readOnly() && await UserPreferences().getQueryBalances()*/) {
       setState(() {
         _showBalance = true;
       });
