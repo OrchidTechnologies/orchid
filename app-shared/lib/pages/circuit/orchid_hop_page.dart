@@ -98,7 +98,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var isValid = _funderValid() && _keyRefValid();
     return TapClearsFocus(
       child: TitledPage(
-        title: "Orchid Hop",
+        title: "Orchid Hop (Beta)",
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, isValid: isValid)]
             : [],
@@ -130,11 +130,23 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           Expanded(
             child: InstructionsView(
               image: Image.asset("assets/images/group7.png"),
-              title: "Link your account",
+              title: "Link your (beta) account",
               body:
-                  "To link your hop with your Orchid credentials, enter your Ethereum address and designate a signer key above. Manage your Orchid account using your preferred dApp browser.",
+                  "To link your hop with your Orchid credentials, enter your Ethereum address and designate a signer key above. Manage your Orchid beta account using your preferred dApp browser.",
+              children: <Widget>[
+                SizedBox(height: 20),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 450),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 45),
+                  child: AppText.body(
+                    text: "(Orchid Hops are currently in BETA for review and will be fully ready in a subsequent release, at which point we will switch to production contracts.)",
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.0,
+                    color: Color(0xff504960)))),
+              ]
             ),
-          )
+          ),
         ],
       ),
     );
@@ -245,7 +257,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text("Ethereum Address:",
+            Text("(Beta) Ethereum Address:",
                 style: AppText.textLabelStyle.copyWith(
                     fontSize: 20,
                     color: _funderValid()

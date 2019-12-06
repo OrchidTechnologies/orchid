@@ -32,7 +32,7 @@ class _AddHopPageState extends State<AddHopPage> {
         child: Column(
           children: <Widget>[
             pady(8),
-            _buildHopChoice(text: "Orchid Hop", hopType: Protocol.Orchid),
+            _buildHopChoice(text: "Orchid Hop (Beta Preview)", hopType: Protocol.Orchid),
             _divider(),
             _buildHopChoice(text: "OpenVPN Hop", hopType: Protocol.OpenVPN),
             _divider(),

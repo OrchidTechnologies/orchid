@@ -291,7 +291,7 @@ class _QuickConnectPageState
         break;
     case OrchidConnectionState.Invalid:
     case OrchidConnectionState.NotConnected:
-        message = 'Push to connect.';
+        message = 'Push to connect.\n(Orchid hops are currently in beta.)';
         break;
       case OrchidConnectionState.Connected:
         message = 'Orchid is running!';
@@ -303,9 +303,10 @@ class _QuickConnectPageState
     return Container(
       // Note: the emoji changes the baseline so we give this a couple of pixels
       // Note: of extra hieght and bottom align it.
-      height: 18.0,
+      height: 32.0,
       alignment: Alignment.bottomCenter,
       child: Text(message,
+          textAlign: TextAlign.center,
           style: AppText.connectButtonMessageStyle.copyWith(color: color)),
     );
   }

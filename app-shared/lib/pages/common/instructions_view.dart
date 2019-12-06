@@ -9,13 +9,15 @@ class InstructionsView extends StatelessWidget {
   final String title;
   final String body;
   final bool hideInLandscape;
+  final List<Widget> children;
 
   const InstructionsView(
       {Key key,
       this.image,
       @required this.title,
       @required this.body,
-      this.hideInLandscape = true})
+      this.hideInLandscape = true,
+      this.children = const <Widget> []})
       : super(key: key);
 
   @override
@@ -51,6 +53,7 @@ class InstructionsView extends StatelessWidget {
                       color: textColor),
                 ),
               ),
+            ] + children + <Widget> [
               Spacer(flex: 1),
             ],
           )),
