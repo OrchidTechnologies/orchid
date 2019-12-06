@@ -41,7 +41,7 @@ class AnalysisDb {
       return List();
     }
     String query = QueryParser(filterText).parse();
-    debugPrint("Query: $query");
+    //debugPrint("Query: $query");
     try {
       List<Map> list = await db.rawQuery(query);
       return list.map((row) {
