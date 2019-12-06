@@ -193,7 +193,7 @@ class UserPreferences {
   Future<bool> getQueryBalances() async {
     return (await SharedPreferences.getInstance())
             .getBool(UserPreferenceKey.QueryBalances.toString()) ??
-        false;
+        true;
   }
 
   Future<bool> setQueryBalances(bool value) async {

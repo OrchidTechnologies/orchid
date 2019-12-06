@@ -15,7 +15,6 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/keys/add_key_page.dart';
-import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -44,7 +43,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   StoredEthereumKeyRef _initialKeyRef;
   StoredEthereumKeyRef _selectedKeyRef;
   bool _showBalance = false;
-  OXT _balance; // initially null
+  LotteryPot _lotteryPot; // initially null
   Timer _balanceTimer;
 
   @override
@@ -201,26 +200,39 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         letterSpacing: -0.24,
         fontFamily: "SFProText-Regular",
         height: 20.0 / 15.0);
-    var balanceText =
-        _balance != null ? _balance.toStringAsFixed(4) + " OXT" : "...";
+    var balanceText = _lotteryPot?.balance != null
+        ? _lotteryPot?.balance.toStringAsFixed(4) + " OXT"
+        : "...";
+    var depositText = _lotteryPot?.deposit != null
+        ? _lotteryPot?.deposit.toStringAsFixed(4) + " OXT"
+        : "...";
     return Column(
       children: <Widget>[
-        // Balance
+        // Balance and Deposit
         Visibility(
           visible: _showBalance,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              // Balance
               Text("Balance:",
-                  style: AppText.textLabelStyle.copyWith(
-                      fontSize: 20,
-                      color: _funderValid()
-                          ? AppColors.neutral_1
-                          : AppColors.neutral_3)),
-              pady(8),
+                  style: AppText.textLabelStyle
+                      .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+              pady(4),
               Padding(
                 padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
                 child: Text(balanceText,
+                    textAlign: TextAlign.left, style: valueStyle),
+              ),
+              pady(16),
+              // Deposit
+              Text("Deposit:",
+                  style: AppText.textLabelStyle
+                      .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+              pady(4),
+              Padding(
+                padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
+                child: Text(depositText,
                     textAlign: TextAlign.left, style: valueStyle),
               ),
               pady(16)
@@ -238,7 +250,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                     color: _funderValid()
                         ? AppColors.neutral_1
                         : AppColors.neutral_3)),
-            pady(8),
+            pady(widget.readOnly() ? 4 : 8),
             AppTextField(
               hintText: "Paste here",
               margin: EdgeInsets.zero,
@@ -260,7 +272,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                     color: _keyRefValid()
                         ? AppColors.neutral_1
                         : AppColors.neutral_3)),
-            pady(8),
+            pady(4),
             Row(
               children: <Widget>[
                 Expanded(
@@ -450,12 +462,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       // Fetch the pot balance
       LotteryPot pot = await CloudFlare.getLotteryPot(funder, signer);
       setState(() {
-        _balance = pot.balance;
+        _lotteryPot = pot;
       });
     } catch (err) {
       print("Can't fetch balance: $err");
       setState(() {
-        _balance = null; // no balance available
+        _lotteryPot = null; // no balance available
       });
     }
   }
