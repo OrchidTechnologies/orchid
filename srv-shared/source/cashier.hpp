@@ -62,7 +62,7 @@ class Cashier {
 
     Float Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const;
     Float Bill(size_t size) const;
-    uint256_t Convert(const Float &balance) const;
+    checked_int256_t Convert(const Float &balance) const;
 
     template <typename Selector_, typename... Args_>
     void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {

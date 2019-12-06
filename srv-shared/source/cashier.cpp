@@ -82,8 +82,8 @@ Float Cashier::Bill(size_t size) const {
     return price_ * size;
 }
 
-uint256_t Cashier::Convert(const Float &balance) const {
-    return uint256_t(balance / oxt_ * Two128);
+checked_int256_t Cashier::Convert(const Float &balance) const {
+    return checked_int256_t(balance / oxt_ * Two128);
 }
 
 }

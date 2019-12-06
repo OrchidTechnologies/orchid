@@ -58,7 +58,7 @@ class Client :
 
     std::mutex mutex_;
     uint256_t timestamp_ = 0;
-    uint256_t balance_ = 0;
+    checked_int256_t balance_ = 0;
     Address recipient_;
     Bytes32 commit_ = Zero<32>();
 

@@ -93,7 +93,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             const auto [command, window] = Take<uint32_t, Window>(data);
             orc_assert(command == Invoice_);
 
-            auto [timestamp, balance, lottery, chain, recipient, commit] = Take<uint256_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
+            auto [timestamp, balance, lottery, chain, recipient, commit] = Take<uint256_t, checked_int256_t, Address, uint256_t, Address, Bytes32>(window);
             orc_assert(lottery == lottery_);
             orc_assert(chain == chain_);
 
@@ -110,7 +110,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             }
 
             if (prepay_ > balance)
-                Issue(prepay_ * 2 - balance);
+                Issue(uint256_t(prepay_ * 2 - balance));
         } catch (const std::exception &error) {
         } });
     } catch (const std::exception &error) {
