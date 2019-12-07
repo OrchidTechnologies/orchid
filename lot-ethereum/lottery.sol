@@ -227,7 +227,9 @@ contract OrchidLottery {
         require(keccak256(abi.encode(reveal)) == commit);
         require(uint128(uint256(keccak256(abi.encode(reveal, nonce)))) <= ratio);
 
-        bytes32 ticket = keccak256(abi.encode(address(this), commit, nonce, funder, amount, ratio, start, range, target, receipt));
+        // this variable is being reused because I do not have even one extra stack slot
+        bytes32 ticket; assembly { ticket := chainid() }
+        ticket = keccak256(abi.encode(address(this), ticket, commit, nonce, funder, amount, ratio, start, range, target, receipt));
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
         require(signer != address(0));
 

@@ -1,3 +1,3 @@
 #!/bin/bash
 set -e
-solc --bin --optimize --overwrite --allow-paths . "$@" -o build lottery.sol
+solc --evm-version istanbul --bin --optimize --overwrite --allow-paths . "$@" -o build lottery.sol
