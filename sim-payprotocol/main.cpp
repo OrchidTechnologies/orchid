@@ -768,9 +768,11 @@ struct Sim
 	        double curbal   = Lot::balance(account).amount_;
 	        dlog(2,"funded client balance(%f) \n", curbal);
 
-			auto client_budget_time_dist = normal_distribution<>(6*Months, 2*Months); // 1*Months);
 
-			Client* client = new Client(account, client_budget_time_dist(gen), NumHops);
+			auto client_budget_time_dist = normal_distribution<>(6*Months, 2*Months); // 1*Months);
+			auto client_max_price_dist   = normal_distribution<>(0.30, 0.10); // 1*Months);
+
+			Client* client = new Client(account, client_budget_time_dist(gen), client_max_price_dist(gen), NumHops);
 
 
 			clients.push_back(client);
