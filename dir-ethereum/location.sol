@@ -32,11 +32,19 @@ contract OrchidLocation {
 
     mapping (address => Location) private locations_;
 
-    event Update(address indexed target, string url, string tls, bytes gpg);
+    event Touch(address indexed provider, uint256 set);
+    event Update(address indexed provider, string url, string tls, bytes gpg);
+
+    function poke() external {
+        Location storage location = locations_[msg.sender];
+        location.set_ = block.timestamp;
+        emit Touch(msg.sender, block.timestamp);
+    }
 
     function move(string calldata url, string calldata tls, bytes calldata gpg) external {
         Location storage location = locations_[msg.sender];
         location.set_ = block.timestamp;
+        emit Touch(msg.sender, block.timestamp);
         location.url_ = url;
         location.tls_ = tls;
         location.gpg_ = gpg;
