@@ -55,25 +55,25 @@ void Client::Issue(uint256_t amount) {
         const auto start(now + 60 * 60 * 2);
 
         const auto [recipient, commit] = [&]() {
-            std::unique_lock<std::mutex> lock(mutex_);
-            return std::make_tuple(recipient_, commit_);
+            auto lock(locked_());
+            return std::make_tuple(lock->recipient_, lock->commit_);
         }();
 
         const auto ratio(uint128_t(1) << 127 >> 12);
         const Ticket ticket{commit, nonce, funder_, uint128_t(amount / ratio), ratio, start, 0, recipient};
         const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
         const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
-        { std::unique_lock<std::mutex> lock(mutex_);
-            tickets_.try_emplace(hash, ticket, signature); }
+        { auto lock(locked_());
+            lock->tickets_.try_emplace(hash, ticket, signature); }
         co_return co_await Submit(hash, ticket, signature);
     });
 }
 
 void Client::Transfer(size_t size) {
-    { std::unique_lock<std::mutex> lock(mutex_);
-    benefit_ += size;
-    if (benefit_ > 1024*256)
-        benefit_ -= 1024*256;
+    { auto lock(locked_());
+    lock->benefit_ += size;
+    if (lock->benefit_ > 1024*256)
+        lock->benefit_ -= 1024*256;
     else
         return; }
     Issue(0);
@@ -97,15 +97,15 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             orc_assert(chain == chain_);
 
             {
-                std::unique_lock<std::mutex> lock(mutex_);
+                auto lock(locked_());
                 if (!id.zero())
-                    tickets_.erase(id);
-                if (timestamp_ >= timestamp)
+                    lock->tickets_.erase(id);
+                if (lock->timestamp_ >= timestamp)
                     return;
-                timestamp_ = timestamp;
-                balance_ = balance;
-                recipient_ = recipient;
-                commit_ = commit;
+                lock->timestamp_ = timestamp;
+                lock->balance_ = balance;
+                lock->recipient_ = recipient;
+                lock->commit_ = commit;
             }
 
             if (prepay_ > balance)
@@ -130,7 +130,6 @@ Client::Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provid
     funder_(std::move(funder)),
     prepay_(uint256_t(0xb1a2bc2ec500)<<128)
 {
-    commit_ = Hash(Number<uint256_t>(uint256_t(0)));
 }
 
 task<void> Client::Open(const S<Origin> &origin, const std::string &url) {

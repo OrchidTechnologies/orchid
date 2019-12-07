@@ -40,9 +40,9 @@ task<void> Cashier::Update() {
     auto oxt(eth / 300);
     //auto predict(Parse(co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/predictTable.json"}, {}, {})));
 
-    std::unique_lock<std::mutex> lock(mutex_);
-    eth_ = std::move(eth);
-    oxt_ = std::move(oxt);
+    auto lock(locked_());
+    lock->eth_ = std::move(eth);
+    lock->oxt_ = std::move(oxt);
 }
 
 Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
@@ -75,7 +75,8 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, co
 }
 
 Float Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const {
-    return Float(amount) * oxt_ / Two128;
+    const auto oxt(locked_()->oxt_);
+    return Float(amount) * oxt / Two128;
 }
 
 Float Cashier::Bill(size_t size) const {
@@ -83,7 +84,8 @@ Float Cashier::Bill(size_t size) const {
 }
 
 checked_int256_t Cashier::Convert(const Float &balance) const {
-    return checked_int256_t(balance / oxt_ * Two128);
+    const auto oxt(locked_()->oxt_);
+    return checked_int256_t(balance / oxt * Two128);
 }
 
 }

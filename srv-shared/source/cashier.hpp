@@ -29,6 +29,7 @@
 #include "coinbase.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
+#include "locked.hpp"
 #include "locator.hpp"
 
 namespace orc {
@@ -47,9 +48,12 @@ class Cashier {
     const uint256_t chain_;
     const Address recipient_;
 
-    mutable std::mutex mutex_;
-    Float eth_;
-    Float oxt_;
+    struct Locked_ {
+        Float eth_ = 0;
+        Float oxt_ = 0;
+    };
+
+    Locked<Locked_> locked_;
 
     task<void> Update();
 
