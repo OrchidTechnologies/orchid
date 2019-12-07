@@ -253,9 +253,11 @@ int Main(int argc, const char *const argv[]) {
 
     auto url("https://" + host + ":" + std::to_string(port) + path);
     auto tls(fingerprint->algorithm + " " + fingerprint->GetRfc4572Fingerprint());
+    Bytes gpg;
 
     std::cerr << "url = " << url << std::endl;
     std::cerr << "tls = " << tls << std::endl;
+    std::cerr << "gpg = " << gpg << std::endl;
 
 
     Address location(args["location"].as<std::string>());
@@ -306,10 +308,10 @@ int Main(int argc, const char *const argv[]) {
 
         Wait([&]() -> task<void> {
             const auto latest(co_await endpoint.Latest());
-            static const Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
-            if (Slice<1, 3>(co_await look.Call(endpoint, latest, location, 90000, provider)) != std::tie(url, tls)) {
-                static const Selector<void, std::string, std::string> move("move");
-                co_await move.Send(endpoint, provider, password, location, 3000000, url, tls);
+            static const Selector<std::tuple<uint256_t, std::string, std::string, Bytes>, Address> look("look");
+            if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, 90000, provider)) != std::tie(url, tls, gpg)) {
+                static const Selector<void, std::string, std::string, Bytes> move("move");
+                co_await move.Send(endpoint, provider, password, location, 3000000, url, tls, {});
             }
         }());
     }

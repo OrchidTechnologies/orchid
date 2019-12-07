@@ -121,3 +121,6 @@
 [submodule "duktape"]
 	path = vpn-shared/duktape
 	url = https://github.com/svaarala/duktape.git
+[submodule "sequoia"]
+	path = p2p/sequoia
+	url = https://gitlab.com/sequoia-pgp/sequoia.git

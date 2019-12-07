@@ -61,8 +61,8 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
                     goto retry;
             }
 
-            static const Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
-            auto [set, url, tls] = co_await look.Call(endpoint, latest, location_, 90000, address);
+            static const Selector<std::tuple<uint256_t, std::string, std::string, Bytes>, Address> look("look");
+            auto [set, url, tls, gpg] = co_await look.Call(endpoint, latest, location_, 90000, address);
 
             const auto space(tls.find(' '));
             orc_assert(space != std::string::npos);
