@@ -2,7 +2,8 @@ name: CI
 on: [push]
 
 jobs:
-  build:
+
+  build-mac:
     runs-on: macos-latest
 
     steps:
@@ -23,3 +24,25 @@ jobs:
       run: make -C tst-tunnel
     - name: make macOS server
       run: make -C srv-shared
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-mac
+        path: srv-shared/out-mac/x86_64/orchid
+
+  build-lnx:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: git config
+      run: |
+        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
+        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
+    - uses: actions/checkout@v1
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+    - name: make Linux server
+      run: make -C srv-shared debug=crossndk -j3
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-lnx
+        path: srv-shared/out-lnx/x86_64/orchid
