@@ -74,11 +74,6 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, co
     }());
 }
 
-Float Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const {
-    const auto oxt(locked_()->oxt_);
-    return Float(amount) * oxt / Two128;
-}
-
 Float Cashier::Bill(size_t size) const {
     return price_ * size;
 }
@@ -86,6 +81,16 @@ Float Cashier::Bill(size_t size) const {
 checked_int256_t Cashier::Convert(const Float &balance) const {
     const auto oxt(locked_()->oxt_);
     return checked_int256_t(balance / oxt * Two128);
+}
+
+Float Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const {
+    const auto oxt(locked_()->oxt_);
+    return Float(amount) * oxt / Two128;
+}
+
+task<void> Cashier::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {
+    std::cout << "CHECK(" << signer << ", " << funder << ", " << amount << ", " << recipient << ", " << receipt << ")" << std::endl;
+    co_return;
 }
 
 }

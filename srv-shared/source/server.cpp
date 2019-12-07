@@ -120,7 +120,7 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Buffer &data) {
-    Scan(data, [&](const Buffer &data) { try {
+    co_await Scan(data, [&](const Buffer &data) -> task<void> { try {
         const auto [command, window] = Take<uint32_t, Window>(data);
         orc_assert(command == Submit_);
 
@@ -159,6 +159,8 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
         const auto ticket(Hash(Ticket::Encode(lottery, chain, commit, nonce, funder, amount, ratio, start, range, recipient, receipt)));
         const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
 
+        co_await cashier_->Check(signer, funder, amount, recipient, receipt);
+
         const auto [reveal, balance] = [&, commit = commit]() {
             auto lock(locked_());
             const auto reveal(lock->reveals_.find(commit));
@@ -174,7 +176,7 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
         if (!(Hash(Tie(reveal, nonce)).skip<16>().num<uint128_t>() <= ratio))
-            return;
+            co_return;
 
         { auto lock(locked_());
             if (lock->commit_->first == commit) {
@@ -219,7 +221,6 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
-        // XXX: consider doing this work synchronously
         Spawn([this, source, id = id, data = Beam(window)]() -> task<void> {
             co_await Invoice(this, source, id, data);
         });

@@ -64,9 +64,11 @@ class Cashier {
         return std::tie(lottery_, chain_, recipient_);
     }
 
-    Float Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const;
     Float Bill(size_t size) const;
     checked_int256_t Convert(const Float &balance) const;
+
+    Float Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const;
+    task<void> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt);
 
     template <typename Selector_, typename... Args_>
     void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {

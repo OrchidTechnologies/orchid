@@ -88,7 +88,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
-        Scan(window, [&, &id = id](const Buffer &data) { try {
+        Wait(Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
             const auto [command, window] = Take<uint32_t, Window>(data);
             orc_assert(command == Invoice_);
 
@@ -101,7 +101,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                 if (!id.zero())
                     lock->tickets_.erase(id);
                 if (lock->timestamp_ >= timestamp)
-                    return;
+                    co_return;
                 lock->timestamp_ = timestamp;
                 lock->balance_ = balance;
                 lock->recipient_ = recipient;
@@ -111,7 +111,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             if (prepay_ > balance)
                 Issue(uint256_t(prepay_ * 2 - balance));
         } catch (const std::exception &error) {
-        } });
+        } }));
     } catch (const std::exception &error) {
     } return true; })) {
         Transfer(data.size());
