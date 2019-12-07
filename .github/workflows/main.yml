@@ -21,9 +21,9 @@ jobs:
     - name: pip install
       run: pip install pyyaml
     - name: make macOS client
-      run: make -C tst-tunnel
+      run: make -j3 -C tst-tunnel
     - name: make macOS server
-      run: make -C srv-shared
+      run: make -j3 -C srv-shared
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-mac
@@ -41,7 +41,7 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
     - name: make Linux server
-      run: make -C srv-shared debug=crossndk -j3
+      run: make -j3 -C srv-shared debug=crossndk
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
