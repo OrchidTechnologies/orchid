@@ -49,7 +49,7 @@ void Client::Issue(uint256_t amount) {
             // XXX: retry existing packet
             co_return co_await Submit();
 
-        const Bytes32 nonce(Random(32));
+        const Bytes32 nonce(Random<32>());
 
         const auto now(Seconds());
         auto start(now + 60 * 60 * 2);
