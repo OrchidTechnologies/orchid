@@ -77,16 +77,15 @@ contract OrchidLottery {
         address funder = msg.sender;
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
-        bytes32 codehash = pot.codehash_;
         require(pot.offset_ != 0);
+        if (pot.codehash_ != 0)
+            emit Bound(funder, signer);
         address key = lottery.keys_[lottery.keys_.length - 1];
         lottery.pots_[key].offset_ = pot.offset_;
         lottery.keys_[pot.offset_ - 1] = key;
         --lottery.keys_.length;
         delete lottery.pots_[signer];
         send(funder, signer, pot);
-        if (codehash != 0)
-            emit Bound(funder, signer);
     }
 
 
