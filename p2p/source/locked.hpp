@@ -41,7 +41,7 @@ class Lock :
     }
 
     Lock(const Lock<Locked_> &lock) = delete;
-    Lock(Lock<Locked_> &&lock) = default;
+    Lock(Lock<Locked_> &&lock) noexcept = default;
 
     Locked_ *operator ->() const {
         return &locked_;
@@ -57,7 +57,6 @@ class Locked {
   public:
     Locked() = default;
     Locked(const Locked<Locked_> &lock) = delete;
-    Locked(Locked<Locked_> &&lock) = default;
 
     Lock<Locked_> operator ()() {
         return {mutex_, locked_};
