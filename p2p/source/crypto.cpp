@@ -136,11 +136,11 @@ Common Recover(const Brick<32> &data, const Signature &signature) {
 Beam Object(int nid) {
     const auto object(OBJ_nid2obj(nid));
     const auto size(i2d_ASN1_OBJECT(object, nullptr));
-    uint8_t data[size];
-    uint8_t *end(data);
+    Beam data(size);
+    uint8_t *end(data.data());
     orc_assert(i2d_ASN1_OBJECT(object, &end) == size);
-    orc_assert(end - data == size);
-    return {data, size_t(size)};
+    orc_assert(end - data.data() == size);
+    return data;
 }
 
 Beam Object(const char *ln) {
