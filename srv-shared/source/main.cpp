@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <iostream>
 #include <mutex>
+#include <regex>
 
 #include <unistd.h>
 
@@ -86,7 +87,7 @@ int Main(int argc, const char *const argv[]) {
     group.add_options()
         //("token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
         ("lottery", po::value<std::string>()->default_value("0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"))
-        ("location", po::value<std::string>()->default_value("0xe1B636079F2158E772bdD85e02Dc92D52c09F0Da"))
+        ("location", po::value<std::string>()->default_value("0xBF7A77753f4893A580E3C2512E064aB3283A95aA"))
     ; options.add(group); }
 
     { po::options_description group("user eth addresses");
@@ -251,9 +252,13 @@ int Main(int argc, const char *const argv[]) {
     auto port(args["port"].as<uint16_t>());
     auto path(args["path"].as<std::string>());
 
-    auto url("https://" + host + ":" + std::to_string(port) + path);
-    auto tls(fingerprint->algorithm + " " + fingerprint->GetRfc4572Fingerprint());
+    Strung url("https://" + host + ":" + std::to_string(port) + path);
     Bytes gpg;
+
+    Builder tls;
+    static std::regex re("-");
+    tls += Object(std::regex_replace(fingerprint->algorithm, re, "").c_str());
+    tls += Subset(fingerprint->digest.data(), fingerprint->digest.size());
 
     std::cerr << "url = " << url << std::endl;
     std::cerr << "tls = " << tls << std::endl;
@@ -308,10 +313,10 @@ int Main(int argc, const char *const argv[]) {
 
         Wait([&]() -> task<void> {
             const auto latest(co_await endpoint.Latest());
-            static const Selector<std::tuple<uint256_t, std::string, std::string, Bytes>, Address> look("look");
+            static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look("look");
             if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, 90000, provider)) != std::tie(url, tls, gpg)) {
-                static const Selector<void, std::string, std::string, Bytes> move("move");
-                co_await move.Send(endpoint, provider, password, location, 3000000, url, tls, {});
+                static const Selector<void, Bytes, Bytes, Bytes> move("move");
+                co_await move.Send(endpoint, provider, password, location, 3000000, Beam(url), Beam(tls), {});
             }
         }());
     }

@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <openssl/obj_mac.h>
+
 #include "client.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
@@ -61,13 +63,27 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
                     goto retry;
             }
 
-            static const Selector<std::tuple<uint256_t, std::string, std::string, Bytes>, Address> look("look");
+            static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look("look");
             auto [set, url, tls, gpg] = co_await look.Call(endpoint, latest, location_, 90000, address);
 
-            const auto space(tls.find(' '));
-            orc_assert(space != std::string::npos);
+            Window window(tls);
+            orc_assert(window.Take() == 0x06);
+            window.Skip(Length(window));
+            Beam fingerprint(window);
 
-            co_return Descriptor{address, std::move(url), rtc::SSLFingerprint::CreateUniqueFromRfc4572(tls.substr(0, space), tls.substr(space + 1))};
+            static const std::map<Beam, std::string> algorithms_({
+                {Object(NID_md2), "md2"},
+                {Object(NID_md5), "md5"},
+                {Object(NID_sha1), "sha-1"},
+                {Object(NID_sha224), "sha-224"},
+                {Object(NID_sha256), "sha-256"},
+                {Object(NID_sha384), "sha-384"},
+                {Object(NID_sha512), "sha-512"},
+            });
+
+            const auto algorithm(algorithms_.find(Window(tls).Take(tls.size() - fingerprint.size())));
+            orc_assert(algorithm != algorithms_.end());
+            co_return Descriptor{address, url.str(), std::make_unique<rtc::SSLFingerprint>(algorithm->second, fingerprint.data(), fingerprint.size())};
         }
     }();
 

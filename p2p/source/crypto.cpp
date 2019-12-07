@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <openssl/objects.h>
+
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
@@ -129,6 +131,32 @@ Common Recover(const Brick<32> &data, const Signature &signature) {
     secp256k1_pubkey common;
     orc_assert(secp256k1_ecdsa_recover(context, &common, &internal, data.data()) != 0);
     return Serialize(context, common);
+}
+
+Beam Object(int nid) {
+    const auto object(OBJ_nid2obj(nid));
+    const auto size(i2d_ASN1_OBJECT(object, nullptr));
+    uint8_t data[size];
+    uint8_t *end(data);
+    orc_assert(i2d_ASN1_OBJECT(object, &end) == size);
+    orc_assert(end - data == size);
+    return {data, size_t(size)};
+}
+
+Beam Object(const char *ln) {
+    const auto nid(OBJ_ln2nid(ln));
+    orc_assert(nid != NID_undef);
+    return Object(nid);
+}
+
+size_t Length(Window &window) {
+    const auto size(window.Take());
+    if ((size & 0xc0) == 0)
+        return size;
+    size_t value(0);
+    for (uint8_t i(0xc0); i != size; ++i)
+        value = value << 8 | window.Take();
+    return value;
 }
 
 }

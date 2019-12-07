@@ -25,15 +25,15 @@ pragma solidity 0.5.13;
 contract OrchidLocation {
     struct Location {
         uint256 set_;
-        string url_;
-        string tls_;
+        bytes url_;
+        bytes tls_;
         bytes gpg_;
     }
 
     mapping (address => Location) private locations_;
 
     event Touch(address indexed provider, uint256 set);
-    event Update(address indexed provider, string url, string tls, bytes gpg);
+    event Update(address indexed provider, bytes url, bytes tls, bytes gpg);
 
     function poke() external {
         Location storage location = locations_[msg.sender];
@@ -41,7 +41,7 @@ contract OrchidLocation {
         emit Touch(msg.sender, block.timestamp);
     }
 
-    function move(string calldata url, string calldata tls, bytes calldata gpg) external {
+    function move(bytes calldata url, bytes calldata tls, bytes calldata gpg) external {
         Location storage location = locations_[msg.sender];
         location.set_ = block.timestamp;
         emit Touch(msg.sender, block.timestamp);
@@ -51,7 +51,7 @@ contract OrchidLocation {
         emit Update(msg.sender, url, tls, gpg);
     }
 
-    function look(address target) external view returns (uint256, string memory, string memory, bytes memory) {
+    function look(address target) external view returns (uint256, bytes memory, bytes memory, bytes memory) {
         Location storage location = locations_[target];
         return (location.set_, location.url_, location.tls_, location.gpg_);
     }
