@@ -165,7 +165,8 @@ class Logger :
                 // TODO: IPv6
                 if (result->answers[i].generic.type == RR_A) {
                     auto ip = asio::ip::address_v4(boost::endian::native_to_big(result->answers[i].a.address));
-                    Log() << "DNS " << hostname << " " << ip << std::endl;
+                    if (Verbose)
+                        Log() << "DNS " << hostname << " " << ip << std::endl;
                     dns_log_[ip] = hostname;
                     break;
                 }
