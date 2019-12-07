@@ -60,9 +60,9 @@ class Capture :
     public BufferDrain
 {
   private:
-    Host local_;
+    const Host local_;
     Nest nest_;
-    U<Analyzer> analyzer_;
+    const U<Analyzer> analyzer_;
     U<Internal> internal_;
 
   protected:

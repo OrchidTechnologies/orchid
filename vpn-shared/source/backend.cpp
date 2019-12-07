@@ -40,7 +40,7 @@ void Backend() {
         context.send(Response(request, "text/plain", ""));
     });
 
-    auto fail([](auto code, auto from) {
+    const auto fail([](auto code, auto from) {
         Log() << "ERROR " << code << " " << from << std::endl;
     });
 

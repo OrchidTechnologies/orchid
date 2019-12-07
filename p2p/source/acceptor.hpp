@@ -66,11 +66,11 @@ class Acceptor :
         try {
             co_await acceptor_.async_accept(connection, endpoint, Token());
         } catch (const asio::system_error &error) {
-            auto code(error.code());
+            const auto code(error.code());
             if (code == asio::error::eof)
                 Stop();
             else {
-                std::string what(error.what());
+                const std::string what(error.what());
                 orc_assert(!what.empty());
                 Stop(what);
             }

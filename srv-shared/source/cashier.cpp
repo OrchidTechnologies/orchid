@@ -45,18 +45,18 @@ task<void> Cashier::Update() {
     oxt_ = std::move(oxt);
 }
 
-Cashier::Cashier(Endpoint endpoint, Float price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient) :
+Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
 
-    price_(std::move(price)),
+    price_(price),
     currency_(std::move(currency)),
 
-    personal_(std::move(personal)),
+    personal_(personal),
     password_(std::move(password)),
 
-    lottery_(std::move(lottery)),
-    chain_(std::move(chain)),
-    recipient_(std::move(recipient))
+    lottery_(lottery),
+    chain_(chain),
+    recipient_(recipient)
 {
     cppcoro::async_manual_reset_event ready;
 

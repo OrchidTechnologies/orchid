@@ -49,20 +49,20 @@ void Client::Issue(uint256_t amount) {
             // XXX: retry existing packet
             co_return co_await Submit();
 
-        const Bytes32 nonce(Random<32>());
+        const auto nonce(Random<32>());
 
         const auto now(Seconds());
-        auto start(now + 60 * 60 * 2);
+        const auto start(now + 60 * 60 * 2);
 
-        auto [recipient, commit] = [&]() {
+        const auto [recipient, commit] = [&]() {
             std::unique_lock<std::mutex> lock(mutex_);
             return std::make_tuple(recipient_, commit_);
         }();
 
-        auto ratio(uint128_t(1) << 127 >> 12);
-        Ticket ticket{commit, nonce, funder_, uint128_t(amount / ratio), ratio, start, 0, recipient};
-        auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
-        auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
+        const auto ratio(uint128_t(1) << 127 >> 12);
+        const Ticket ticket{commit, nonce, funder_, uint128_t(amount / ratio), ratio, start, 0, recipient};
+        const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
+        const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
         { std::unique_lock<std::mutex> lock(mutex_);
             tickets_.try_emplace(hash, ticket, signature); }
         co_return co_await Submit(hash, ticket, signature);
@@ -92,7 +92,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             const auto [command, window] = Take<uint32_t, Window>(data);
             orc_assert(command == Invoice_);
 
-            auto [timestamp, balance, lottery, chain, recipient, commit] = Take<uint256_t, checked_int256_t, Address, uint256_t, Address, Bytes32>(window);
+            const auto [timestamp, balance, lottery, chain, recipient, commit] = Take<uint256_t, checked_int256_t, Address, uint256_t, Address, Bytes32>(window);
             orc_assert(lottery == lottery_);
             orc_assert(chain == chain_);
 
@@ -134,11 +134,11 @@ Client::Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provid
 }
 
 task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
-    auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
+    const auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
         return *remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate);
     });
 
-    auto bonding(Bond());
+    const auto bonding(Bond());
 
     socket_ = co_await Channel::Wire(bonding, origin, [&]() {
         Configuration configuration;

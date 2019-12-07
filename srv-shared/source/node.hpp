@@ -36,9 +36,9 @@ namespace orc {
 
 class Node final {
   private:
-    S<Origin> origin_;
-    S<Cashier> cashier_;
-    std::vector<std::string> ice_;
+    const S<Origin> origin_;
+    const S<Cashier> cashier_;
+    const std::vector<std::string> ice_;
 
     S<Egress> egress_;
 

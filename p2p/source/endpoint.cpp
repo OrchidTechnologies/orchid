@@ -31,7 +31,7 @@ static Explode Verify(Json::Value &proofs, Brick<32> hash, const Region &path) {
     size_t offset(0);
     orc_assert(!proofs.isNull());
     for (auto e(proofs.size()), i(decltype(e)(0)); i != e; ++i) {
-        auto data(Bless(proofs[i].asString()));
+        const auto data(Bless(proofs[i].asString()));
         orc_assert(Hash(data) == hash);
 
         Explode proof(data);
@@ -43,11 +43,11 @@ static Explode Verify(Json::Value &proofs, Brick<32> hash, const Region &path) {
             } break;
 
             case 2: {
-                auto leg(proof[0].buf());
-                auto type(leg.nib(0));
+                const auto leg(proof[0].buf());
+                const auto type(leg.nib(0));
                 for (size_t i((type & 0x1) != 0 ? 1 : 2), e(leg.size() * 2); i != e; ++i)
                     orc_assert(path.nib(offset++) == leg.nib(i));
-                Range range(proof[1].buf());
+                const Range range(proof[1].buf());
                 if ((type & 0x2) != 0)
                     return Window(range);
                 hash = range;
@@ -98,7 +98,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     root["params"] = std::move(args);
 
     Json::FastWriter writer;
-    auto result(Parse(co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))));
+    const auto result(Parse(co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))));
     Log() << root << " -> " << result << "" << std::endl;
 
     orc_assert(result["jsonrpc"] == "2.0");

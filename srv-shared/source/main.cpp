@@ -302,33 +302,32 @@ int Main(int argc, const char *const argv[]) {
     Endpoint endpoint(origin, rpc);
 
     if (args.count("provider") != 0) {
-        Address provider(args["provider"].as<std::string>());
+        const Address provider(args["provider"].as<std::string>());
 
         Wait([&]() -> task<void> {
-            auto latest(co_await endpoint.Latest());
-            static Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
+            const auto latest(co_await endpoint.Latest());
+            static const Selector<std::tuple<uint256_t, std::string, std::string>, Address> look("look");
             if (Slice<1, 3>(co_await look.Call(endpoint, latest, location, 90000, provider)) != std::tie(url, tls)) {
-                static Selector<void, std::string, std::string> move("move");
+                static const Selector<void, std::string, std::string> move("move");
                 co_await move.Send(endpoint, provider, password, location, 3000000, url, tls);
             }
         }());
     }
 
-    Float price(args["price"].as<std::string>());
-    price /= 1024 * 1024 * 1024;
+    const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
 
     auto cashier([&]() -> S<Cashier> {
         if (price == 0)
             return nullptr;
-        Address personal(args["personal"].as<std::string>());
+        const Address personal(args["personal"].as<std::string>());
         return Make<Cashier>(std::move(endpoint),
-            std::move(price), args["currency"].as<std::string>(),
-            std::move(personal), std::move(password),
-            Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), std::move(recipient)
+            price, args["currency"].as<std::string>(),
+            personal, password,
+            Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
         );
     }());
 
-    auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
+    const auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
 
     if (args.count("ovpn-file") != 0) {
         std::string ovpnfile;

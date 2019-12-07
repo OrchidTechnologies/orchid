@@ -33,7 +33,7 @@ namespace orc {
 
 class Bench {
   private:
-    const char *name_;
+    const char *const name_;
     timeval start_;
 
   public:
