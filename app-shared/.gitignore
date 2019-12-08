@@ -6,3 +6,5 @@ build
 ios
 pubspec.lock
 *.patch
+.dart_tool
+.flutter-plugins-dependencies
