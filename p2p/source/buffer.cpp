@@ -37,12 +37,12 @@ size_t Buffer::size() const {
 }
 
 bool Buffer::have(size_t value) const {
-    return value == 0 || !each([&](const uint8_t *data, size_t size) {
+    return !each([&](const uint8_t *data, size_t size) {
         if (value <= size)
             return false;
         value -= size;
         return true;
-    });
+    }) || value == 0;
 }
 
 bool Buffer::zero() const {
