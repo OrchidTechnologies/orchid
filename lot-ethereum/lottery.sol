@@ -220,7 +220,7 @@ contract OrchidLottery {
         bytes32 nonce, address funder,
         uint128 amount, uint128 ratio,
         uint256 start, uint128 range,
-        address payable target, bytes memory receipt,
+        address payable recipient, bytes memory receipt,
         bytes32[] memory old
     ) public {
         require(keccak256(abi.encode(reveal)) == commit);
@@ -228,12 +228,12 @@ contract OrchidLottery {
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 ticket; assembly { ticket := chainid() }
-        ticket = keccak256(abi.encode(address(this), ticket, commit, nonce, funder, amount, ratio, start, range, target, receipt));
+        ticket = keccak256(abi.encode(address(this), ticket, commit, nonce, funder, amount, ratio, start, range, recipient, receipt));
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
         require(signer != address(0));
 
         {
-            mapping(bytes32 => Track) storage tracks = tracks_[target];
+            mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
             {
                 Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
@@ -256,12 +256,12 @@ contract OrchidLottery {
                 amount = limit;
         }
 
-        take(funder, signer, amount, target, receipt);
+        take(funder, signer, amount, recipient, receipt);
     }
 
-    function give(address funder, address payable target, uint128 amount, bytes calldata receipt) external {
+    function give(address funder, address payable recipient, uint128 amount, bytes calldata receipt) external {
         address signer = msg.sender;
-        take(funder, signer, amount, target, receipt);
+        take(funder, signer, amount, recipient, receipt);
     }
 
     function pull(address signer, address payable target, uint128 amount) external {
