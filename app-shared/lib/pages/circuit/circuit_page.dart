@@ -96,25 +96,14 @@ class CircuitPageState extends State<CircuitPage> {
                 children: <Widget>[_buildStartTile(), _buildFirewallTile()],
               ),
               children: (_hops ?? []).map((uniqueHop) {
-                return _buildHopListItem(uniqueHop);
+                return _buildHopTile(uniqueHop);
               }).toList(),
               footer: Column(
                 children: <Widget>[
                   _buildEndTile(),
                   Visibility(
                       visible: _showSingleHopInstructions(),
-                      // Providing the instructions a fixed height allows this to work.
-                      // TODO: Why doesn't IntrinsicHeight work here?
-                      child: Container(
-                        padding: EdgeInsets.only(top: 50),
-                        height: 300,
-                        child: InstructionsView(
-                          image: Image.asset("assets/images/hi5.png"),
-                          title: "Success!",
-                          body:
-                              "You now have a configured single-hop route for your internet traffic. Each hop you add brings a layer of indirection and obfuscation to your connection - as long as each is independently funded from a new source.",
-                        ),
-                      ))
+                      child: _buildSingleHopInstructions())
                 ],
               ),
               onReorder: _onReorder),
@@ -123,16 +112,33 @@ class CircuitPageState extends State<CircuitPage> {
     );
   }
 
-  Widget _buildStartTile() {
-    return _buildTileWithDivider(
-      title: "Your Device",
-      image: Image.asset("assets/images/person.png"),
-      gradient: AppGradients.purpleTileHorizontal,
-      textColor: Colors.white,
-      showDragHandle: false,
+  Container _buildSingleHopInstructions() {
+    // Providing the instructions a fixed height allows this to work.
+    // TODO: Why doesn't IntrinsicHeight work here?
+    return Container(
+      padding: EdgeInsets.only(top: 50),
+      height: 440,
+      child: InstructionsView(
+        image: Image.asset("assets/images/hi5.png"),
+        title: "Success!",
+        body:
+            "You now have a configured single-hop route for your internet traffic. Each hop you add brings a layer of indirection and obfuscation to your connection - as long as each is independently funded from a new source.",
+      ),
     );
   }
 
+  // The starting (top) tile in the hop flow
+  Widget _buildStartTile() {
+    return _buildTileWithDivider(
+        title: "Your Device",
+        image: Image.asset("assets/images/person.png"),
+        gradient: AppGradients.purpleTileHorizontal,
+        textColor: Colors.white,
+        showDragHandle: false,
+        showFlowDividerBottom: true);
+  }
+
+  // The ending (bottom) tile in the hop flow
   Widget _buildEndTile() {
     return _buildTileWithDivider(
       title: "The Internet",
@@ -140,20 +146,22 @@ class CircuitPageState extends State<CircuitPage> {
       gradient: AppGradients.purpleTileHorizontal,
       textColor: Colors.white,
       showDragHandle: false,
+      showFlowDividerTop: true
     );
   }
 
   Widget _buildFirewallTile() {
-    var color = Colors.deepPurple;
+    var color = Colors.white;
     return _buildTileWithDivider(
-      title: "Personal Firewall",
-      image: Image.asset("assets/images/fire.png", color: color),
-      textColor: color,
-      showDragHandle: false,
-    );
+        title: "Personal Firewall",
+        image: Image.asset("assets/images/fire.png", color: color),
+        gradient: AppGradients.purpleTileHorizontal,
+        textColor: color,
+        showDragHandle: false,
+        showFlowDividerBottom: true);
   }
 
-  Dismissible _buildHopListItem(UniqueHop uniqueHop) {
+  Dismissible _buildHopTile(UniqueHop uniqueHop) {
     return Dismissible(
       key: Key(uniqueHop.key.toString()),
       background: Container(
@@ -176,6 +184,8 @@ class CircuitPageState extends State<CircuitPage> {
   }
 
   Widget _buildHopTileWithDivider(UniqueHop uniqueHop) {
+    bool isFirstHop = uniqueHop.key == _hops.first.key;
+    bool hasMultipleHops = _hops.length > 1;
     Color color = Colors.teal;
     Image image;
     switch (uniqueHop.hop.protocol) {
@@ -189,14 +199,15 @@ class CircuitPageState extends State<CircuitPage> {
         throw new Exception();
     }
     return _buildTileWithDivider(
-      textColor: color,
-      image: image,
-      onTap: () {
-        _viewHop(uniqueHop);
-      },
-      key: Key(uniqueHop.key.toString()),
-      title: uniqueHop.hop.displayName(),
-    );
+        textColor: color,
+        image: image,
+        onTap: () {
+          _viewHop(uniqueHop);
+        },
+        key: Key(uniqueHop.key.toString()),
+        title: uniqueHop.hop.displayName(),
+        showTopDivider: isFirstHop,
+        showDragHandle: hasMultipleHops);
   }
 
   Widget _buildTileWithDivider({
@@ -208,13 +219,27 @@ class CircuitPageState extends State<CircuitPage> {
     Color color,
     Gradient gradient,
     bool showDragHandle = true,
+    bool showFlowDividerBottom = false,
+    bool showFlowDividerTop = false,
+    bool showTopDivider = false,
   }) {
     return Column(
       key: key,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
+        // Optional top flow divider
+        if (showFlowDividerTop)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: Image.asset("assets/images/expandMore.png"),
+          ),
+
+        // Optional top border divider
+        if (showTopDivider)
+          _divider(),
+
+        // Main tile body
         Container(
-          padding: EdgeInsets.all(0),
           decoration: BoxDecoration(color: color, gradient: gradient),
           // Allow the tile background to extend into the safe area but not the content
           child: SafeArea(
@@ -239,7 +264,16 @@ class CircuitPageState extends State<CircuitPage> {
                 )),
           ),
         ),
-        _divider()
+
+        // Bottom border divider
+        _divider(),
+
+        // Optional bottom flow divider
+        if (showFlowDividerBottom)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: Image.asset("assets/images/expandMore.png"),
+          )
       ],
     );
   }
