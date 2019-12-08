@@ -143,7 +143,7 @@ int Main(int argc, const char *const argv[]) {
     }
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 #elif defined(__linux__)
-    int file = open("/dev/net/tun", O_RDWR);
+    int file = open("/dev/net/tun", O_RDWR | O_NONBLOCK);
     orc_assert(file >= 0);
 
     auto connection(std::make_unique<File<asio::posix::stream_descriptor>>(Context(), file));
