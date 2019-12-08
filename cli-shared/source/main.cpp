@@ -59,6 +59,7 @@
 #include "port.hpp"
 #include "protect.hpp"
 #include "sync.hpp"
+#include "syncfile.hpp"
 #include "syscall.hpp"
 #include "task.hpp"
 #include "file.hpp"
@@ -67,6 +68,8 @@
 #if 0
 #elif defined(__APPLE__)
 #include "family.hpp"
+#elif defined(__linux__)
+#include "packetinfo.hpp"
 #endif
 
 namespace orc {
@@ -143,13 +146,12 @@ int Main(int argc, const char *const argv[]) {
     }
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 #elif defined(__linux__)
-    int file = open("/dev/net/tun", O_RDWR | O_NONBLOCK);
-    orc_assert(file >= 0);
+    auto family(capture->Wire<Sink<PacketInfo>>());
+    auto sync(family->Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
 
-    auto connection(std::make_unique<File<asio::posix::stream_descriptor>>(Context(), file));
-    auto sync(capture->Wire<Inverted>(std::move(connection)));
+    auto file((*sync)->native_handle());
 
-    struct ifreq ifr = {.ifr_flags = IFF_TUN | IFF_NO_PI};
+    struct ifreq ifr = {.ifr_flags = IFF_TUN};
     orc_assert(ioctl(file, TUNSETIFF, (void*)&ifr) >= 0);
     char dev[IFNAMSIZ];
     strcpy(dev, ifr.ifr_name);
@@ -161,7 +163,7 @@ int Main(int argc, const char *const argv[]) {
         orc_assert(system(("route -n add 0.0.0.0/1 dev " + tun).c_str()) == 0);
         orc_assert(system(("route -n add 128.0.0.0/1 dev " + tun).c_str()) == 0);
     }
-    orc_assert(system(("route -n add 10.7.0.4 dev" + tun).c_str()) == 0);
+    orc_assert(system(("route -n add 10.7.0.4 dev " + tun).c_str()) == 0);
 #else
 #error
 #endif
