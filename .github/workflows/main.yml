@@ -27,6 +27,10 @@ jobs:
 
     - name: make macOS client
       run: make -j3 -C cli-shared
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-mac
+        path: cli-shared/out-mac/x86_64/orchidd
 
     - name: make macOS server
       run: make -j3 -C srv-shared
@@ -62,6 +66,13 @@ jobs:
         name: orchid-apk
         path: app-android/out-and/Orchid.apk
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
+
+    - name: make Linux client
+      run: make -j3 -C cli-shared debug=crossndk
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-lnx
+        path: cli-shared/out-lnx/x86_64/orchid
 
     - name: make Linux server
       run: make -j3 -C srv-shared debug=crossndk
