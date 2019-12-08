@@ -38,7 +38,7 @@ leak: $(output)/$(default)/orchid$(exe)
 
 .PHONY: debug
 debug: $(output)/$(default)/orchid$(exe)
-	sudo lldb -o 'run $(args)' $<
+	sudo lldb -o 'b malloc_error_break' -o 'run $(args)' $<
 
 $(call include,vpn/target.mk)
 

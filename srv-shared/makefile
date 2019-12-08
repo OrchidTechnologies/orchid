@@ -35,7 +35,7 @@ test: $(binary)
 
 .PHONY: debug
 debug: $(binary)
-	lldb -o 'run $(args)' $<
+	lldb -o 'b malloc_error_break' -o 'run $(args)' $<
 
 
 source += $(wildcard source/*.cpp)
