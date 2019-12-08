@@ -139,7 +139,7 @@ contract OrchidLottery {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         require(pot.amount_ >= amount);
-        amount = take(amount, pot);
+        pot.amount_ -= amount;
         pot.escrow_ += amount;
         send(funder, signer, pot);
     }
