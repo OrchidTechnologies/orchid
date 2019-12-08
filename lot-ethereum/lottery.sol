@@ -196,6 +196,7 @@ contract OrchidLottery {
 
         OrchidVerifier verify = pot.verify_;
         bytes32 codehash = pot.codehash_;
+        bytes memory shared = pot.shared_;
 
         if (amount != 0)
             require(token_.transfer(recipient, amount));
@@ -203,7 +204,7 @@ contract OrchidLottery {
         if (verify != OrchidVerifier(0)) {
             bytes32 current; assembly { current := extcodehash(verify) }
             if (codehash == current)
-                verify.book(pot.shared_, recipient, receipt);
+                verify.book(shared, recipient, receipt);
         }
     }
 
