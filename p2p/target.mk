@@ -136,10 +136,10 @@ cflags += -DECMULT_WINDOW_SIZE=15
 cflags += -DECMULT_GEN_PREC_BITS=4
 
 
-source += $(pwd)/eEVM/evm/account.cpp
-source += $(pwd)/eEVM/evm/processor.cpp
-source += $(pwd)/eEVM/evm/stack.cpp
-source += $(pwd)/eEVM/evm/util.cpp
+source += $(pwd)/eEVM/src/processor.cpp
+source += $(pwd)/eEVM/src/stack.cpp
+source += $(pwd)/eEVM/src/transaction.cpp
+source += $(pwd)/eEVM/src/util.cpp
 
 source += $(pwd)/eEVM/3rdparty/keccak/KeccakHash.c
 source += $(pwd)/eEVM/3rdparty/keccak/KeccakSpongeWidth1600.c
