@@ -41,7 +41,7 @@ cflags += -I$(pwd)/SPCDNS/src
 $(call include,duktape.mk)
 $(call include,sqlite.mk)
 
-$(call include,tor.mk)
+#$(call include,tor.mk)
 $(call include,libevent.mk)
 $(call include,zlib.mk)
 
