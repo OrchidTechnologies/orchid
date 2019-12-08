@@ -201,6 +201,11 @@ class Argument final {
     {
     }
 
+    Argument(nullptr_t) :
+        value_()
+    {
+    }
+
     Argument(bool value) :
         value_(value)
     {
