@@ -151,7 +151,7 @@ int Main(int argc, const char *const argv[]) {
 
     auto file((*sync)->native_handle());
 
-    struct ifreq ifr = {.ifr_flags = IFF_TUN};
+    struct ifreq ifr = {.ifr_flags = IFF_TUN | IFF_NO_PI};
     orc_assert(ioctl(file, TUNSETIFF, (void*)&ifr) >= 0);
     char dev[IFNAMSIZ];
     strcpy(dev, ifr.ifr_name);

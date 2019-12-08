@@ -30,18 +30,11 @@ namespace orc {
 class PacketInfo :
     public Link
 {
-  private:
-    uint32_t Analyze(const Buffer &data) {
-        return 2;
-    }
-
   protected:
     virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
-        //orc_assert(protocol == Analyze(data));
-        return Link::Land(packet);
+        return Link::Land(data);
     }
 
   public:
@@ -51,7 +44,7 @@ class PacketInfo :
     }
 
     task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(Tie(Number<uint32_t>(Analyze(data)), data));
+        co_return co_await Inner()->Send(data);
     }
 };
 
