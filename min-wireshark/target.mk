@@ -229,7 +229,9 @@ m_glib := sed -i -e 's@^\(build all:.*\) tests/child-test@\1@; s@^\(build all:.*
 deps := 
 deps += glib/gmodule/libgmodule-2.0.a
 deps += glib/glib/libglib-2.0.a
+ifneq ($(target),lnx)
 deps += glib/subprojects/proxy-libintl/libintl.a
+endif
 deps := $(patsubst %,$(pwd)/%,$(deps))
 
 $(call depend,$(pwd)/glib/build.ninja,@/usr/include/iconv.h @/usr/lib/libiconv.a)
