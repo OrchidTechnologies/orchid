@@ -181,7 +181,7 @@ contract OrchidLottery {
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
 
-    function take(address funder, address signer, uint128 amount, address payable target, bytes memory receipt) private {
+    function take(address funder, address signer, address payable recipient, uint128 amount, bytes memory receipt) private {
         Pot storage pot = find(funder, signer);
 
         if (pot.amount_ >= amount)
@@ -198,12 +198,12 @@ contract OrchidLottery {
         bytes32 codehash = pot.codehash_;
 
         if (amount != 0)
-            require(token_.transfer(target, amount));
+            require(token_.transfer(recipient, amount));
 
         if (verify != OrchidVerifier(0)) {
             bytes32 current; assembly { current := extcodehash(verify) }
             if (codehash == current)
-                verify.book(pot.shared_, target, receipt);
+                verify.book(pot.shared_, recipient, receipt);
         }
     }
 
@@ -251,12 +251,12 @@ contract OrchidLottery {
                 amount = limit;
         }
 
-        take(funder, signer, amount, recipient, receipt);
+        take(funder, signer, recipient, amount, receipt);
     }
 
     function give(address funder, address payable recipient, uint128 amount, bytes calldata receipt) external {
         address signer = msg.sender;
-        take(funder, signer, amount, recipient, receipt);
+        take(funder, signer, recipient, amount, receipt);
     }
 
 
