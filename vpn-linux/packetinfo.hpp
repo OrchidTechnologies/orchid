@@ -40,7 +40,6 @@ class PacketInfo :
 
     void Land(const Buffer &data) override {
         auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
-        Log() << "protocol:" << protocol << " analyze:" << Analyze(data);
         //orc_assert(protocol == Analyze(data));
         return Link::Land(packet);
     }
