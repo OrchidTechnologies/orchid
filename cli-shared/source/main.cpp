@@ -147,13 +147,17 @@ int Main(int argc, const char *const argv[]) {
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 #elif defined(__linux__)
     auto family(capture->Wire<Sink<PacketInfo>>());
+    // XXX: NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     auto sync(family->Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
 
     auto file((*sync)->native_handle());
 
     struct ifreq ifr = {.ifr_flags = IFF_TUN | IFF_NO_PI};
+    // XXX: NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     orc_assert(ioctl(file, TUNSETIFF, (void*)&ifr) >= 0);
     char dev[IFNAMSIZ];
+    // XXX: correct memory management in this code ASAP after NL
+    // XXX: NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.strcpy)
     strcpy(dev, ifr.ifr_name);
     std::string tun(dev);
     orc_assert(system(("ifconfig " + tun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
