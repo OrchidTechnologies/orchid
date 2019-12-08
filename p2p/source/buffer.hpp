@@ -960,30 +960,24 @@ class Rest final :
 };
 
 
-// XXX: omg why is this so inefficient?... please fix this :(
 class Builder :
-    public Buffer
+    public Region,
+    public std::basic_string<uint8_t>
 {
-  private:
-    // XXX: I mean, this should really be an std::vector<Beam>, right?
-    // XXX: but this whole thing should be something like std::string!
-    // XXX: and then you should be able to move a Builder to a Strung.
-    std::list<Beam> ranges_;
-
   public:
-    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
-        for (const auto &range : ranges_)
-            if (!code(range.data(), range.size()))
-                return false;
-        return true;
+    const uint8_t *data() const override {
+        return std::basic_string<uint8_t>::data();
+    }
+
+    size_t size() const override {
+        return std::basic_string<uint8_t>::size();
     }
 
     void operator +=(const Buffer &buffer) {
-        ranges_.emplace_back(buffer);
-    }
-
-    void operator +=(Beam &&beam) {
-        ranges_.emplace_back(std::move(beam));
+        buffer.each([&](const uint8_t *data, size_t size) {
+            append(data, size);
+            return true;
+        });
     }
 };
 

@@ -438,9 +438,7 @@ struct Coded<Beam, void> {
         auto size(data.size());
         Coded<uint256_t>::Encode(builder, size);
         builder += data;
-        Beam pad(Pad(size));
-        memset(pad.data(), 0, pad.size());
-        builder += std::move(pad);
+        builder.append(Pad(size), 0);
     }
 
     static void Size(size_t &offset, const Buffer &data) {
@@ -474,9 +472,7 @@ struct Coded<std::string, void> {
         auto size(data.size());
         Coded<uint256_t>::Encode(builder, size);
         builder += Subset(data);
-        Beam pad(Pad(size));
-        memset(pad.data(), 0, pad.size());
-        builder += std::move(pad);
+        builder.append(Pad(size), 0);
     }
 
     static void Size(size_t &offset, const std::string &data) {
