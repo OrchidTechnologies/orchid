@@ -36,6 +36,7 @@ class _AddHopPageState extends State<AddHopPage> {
             _divider(),
             _buildHopChoice(text: "OpenVPN Hop", hopType: Protocol.OpenVPN),
             _divider(),
+            pady(32),
             Expanded(
                 child: InstructionsView(
               image: Image.asset("assets/images/approach.png"),
