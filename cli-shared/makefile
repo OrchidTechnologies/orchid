@@ -62,4 +62,6 @@ $(output)/%/orchid: $(patsubst %,$(output)/$$*/%,$(object) $(linked)) $(output)/
 	@echo [LD] $@
 	@set -o pipefail; $(cxx/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
 	@ls -la $@
+ifeq ($(target),mac)
 	@otool -lah $@ | grep '^  s.*__DATA' -A8 -B2
+endif
