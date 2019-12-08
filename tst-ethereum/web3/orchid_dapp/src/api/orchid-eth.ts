@@ -261,11 +261,11 @@ export async function orchidWithdrawFunds(funder: Address, signer: Address, targ
   );
 }
 
-/// Pull all funds and escrow, subjet to lock time.
+/// Pull all funds and escrow, subject to lock time.
 export async function orchidWithdrawFundsAndEscrow(funder: Address, signer: Address, targetAddress: Address): Promise<string> {
   console.log("withdrawFundsAndEscrow");
   return evalOrchidTx(
-    OrchidContracts.lottery.methods.pull(signer, targetAddress).send({
+    OrchidContracts.lottery.methods.yank(signer, targetAddress, true/*auto lock*/).send({
       from: funder,
       gas: OrchidContracts.lottery_pull_all_max_gas
     })
