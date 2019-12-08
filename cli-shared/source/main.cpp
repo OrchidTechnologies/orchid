@@ -157,7 +157,7 @@ int Main(int argc, const char *const argv[]) {
     orc_assert(ioctl(file, TUNSETIFF, (void*)&ifr) >= 0);
     char dev[IFNAMSIZ];
     // XXX: correct memory management in this code ASAP after NL
-    // XXX: NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.strcpy)
+    // XXX: NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.strcpy,cppcoreguidelines-pro-type-union-access)
     strcpy(dev, ifr.ifr_name);
     std::string tun(dev);
     orc_assert(system(("ifconfig " + tun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
