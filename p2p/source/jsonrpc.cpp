@@ -22,6 +22,8 @@
 
 #include <chrono>
 
+#include <eEVM/util.h>
+
 #include "crypto.hpp"
 #include "error.hpp"
 #include "jsonrpc.hpp"
@@ -133,6 +135,12 @@ Explode::Explode(Window &&window) :
     Explode(window)
 {
     orc_assert(window.done());
+}
+
+Address::Address(const std::string &address) :
+    uint160_t(address)
+{
+    //orc_assert(eevm::is_checksum_address(address));
 }
 
 Address::Address(const Brick<64> &common) :
