@@ -33,7 +33,7 @@ class InstructionsView extends StatelessWidget {
           child: SafeArea(
               child: Column(
             children: <Widget>[
-              Spacer(flex: 1),
+              //Spacer(flex: 1),
               image ?? Container(),
               SizedBox(height: 20),
               AppText.header(

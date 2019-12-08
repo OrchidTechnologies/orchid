@@ -659,6 +659,11 @@ inline bool operator !=(const Beam &lhs, const Buffer_ &rhs) {
     return !(lhs == rhs);
 }
 
+inline bool operator <(const Beam &lhs, const Beam &rhs) {
+    const auto size(lhs.size());
+    return size < rhs.size() || size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) < 0;
+}
+
 class Nothing final :
     public Region
 {

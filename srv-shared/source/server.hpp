@@ -29,8 +29,9 @@
 #include "bond.hpp"
 #include "cashier.hpp"
 #include "endpoint.hpp"
-#include "link.hpp"
 #include "jsonrpc.hpp"
+#include "link.hpp"
+#include "locked.hpp"
 #include "shared.hpp"
 #include "task.hpp"
 
@@ -47,19 +48,21 @@ class Server :
     const S<Origin> origin_;
     const S<Cashier> cashier_;
 
-    std::mutex mutex_;
+    struct Locked_ {
+        Float balance_ = 0;
 
-    Float balance_;
+        std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
+        decltype(reveals_.end()) commit_ = reveals_.end();
 
-    std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
-    decltype(reveals_.end()) commit_ = reveals_.end();
+        std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
+    };
 
-    std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
+    Locked<Locked_> locked_;
 
     void Bill(Pipe *pipe, const Buffer &data);
     task<void> Send(const Buffer &data) override;
 
-    void Commit();
+    void Commit(Lock<Locked_> &lock);
 
     task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit);
     task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id);

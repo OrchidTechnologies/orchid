@@ -31,6 +31,7 @@
 #include "bond.hpp"
 #include "crypto.hpp"
 #include "jsonrpc.hpp"
+#include "locked.hpp"
 #include "origin.hpp"
 #include "ticket.hpp"
 
@@ -53,14 +54,18 @@ class Client :
     const Address funder_;
 
     const uint256_t prepay_;
-    std::atomic<uint64_t> benefit_ = 0;
-    std::map<Bytes32, std::pair<Ticket, Signature>> tickets_;
 
-    std::mutex mutex_;
-    uint256_t timestamp_ = 0;
-    checked_int256_t balance_ = 0;
-    Address recipient_;
-    Bytes32 commit_ = Zero<32>();
+    struct Locked_ {
+        uint64_t benefit_ = 0;
+        std::map<Bytes32, std::pair<Ticket, Signature>> tickets_;
+
+        uint256_t timestamp_ = 0;
+        checked_int256_t balance_ = 0;
+        Address recipient_ = 0;
+        Bytes32 commit_ = Zero<32>();
+    };
+
+    Locked<Locked_> locked_;
 
     Socket socket_;
 

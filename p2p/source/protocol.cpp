@@ -26,13 +26,13 @@ namespace orc {
 
 const Socket Port_(0, 5482);
 
-void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code) {
+task<void> Scan(const Buffer &data, const std::function<task<void> (const Buffer &)> &code) {
     Window window(data);
     while (!window.done()) {
         Number<uint16_t> length;
         // XXX: I need (already have?) a Prefix Buffer
         window.Take(length);
-        code(window.Take(length.operator uint16_t()));
+        co_await code(window.Take(length.operator uint16_t()));
     }
 }
 

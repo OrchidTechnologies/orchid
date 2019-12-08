@@ -19,39 +19,54 @@
 **/
 /* }}} */
 
+#ifndef ORCHID_LOCKED_HPP
+#define ORCHID_LOCKED_HPP
 
-#ifndef ORCHID_BENCH_HPP
-#define ORCHID_BENCH_HPP
-
-#include <iomanip>
-
-#include <sys/time.h>
-
-#include "log.hpp"
+#include <mutex>
 
 namespace orc {
 
-class Bench {
+template <typename Locked_>
+class Lock :
+    public std::unique_lock<std::mutex>
+{
   private:
-    const char *const name_;
-    timeval start_;
+    Locked_ &locked_;
 
   public:
-    Bench(const char *name) :
-        name_(name)
+    Lock(std::mutex &mutex, Locked_ &locked) :
+        std::unique_lock<std::mutex>(mutex),
+        locked_(locked)
     {
-        gettimeofday(&start_, NULL);
     }
 
-    ~Bench() {
-        timeval end;
-        gettimeofday(&end, NULL);
-        timeval diff;
-        timersub(&end, &start_, &diff);
-        Log() << "Bench(\"" << name_ << "\") = " << diff.tv_sec << "." << std::setfill('0') << std::setw(6) << diff.tv_usec << std::endl;
+    Lock(const Lock<Locked_> &lock) = delete;
+    Lock(Lock<Locked_> &&lock) noexcept = default;
+
+    Locked_ *operator ->() const {
+        return &locked_;
+    }
+};
+
+template <typename Locked_>
+class Locked {
+  private:
+    mutable std::mutex mutex_;
+    Locked_ locked_;
+
+  public:
+    Locked() = default;
+    Locked(const Locked<Locked_> &lock) = delete;
+
+    Lock<Locked_> operator ()() {
+        return {mutex_, locked_};
+    }
+
+    Lock<const Locked_> operator ()() const {
+        return {mutex_, locked_};
     }
 };
 
 }
 
-#endif//ORCHID_BENCH_HPP
+#endif//ORCHID_LOCKED_HPP

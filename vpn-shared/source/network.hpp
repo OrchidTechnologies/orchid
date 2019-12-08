@@ -34,10 +34,10 @@ namespace orc {
 
 class Network {
   private:
-    Locator locator_;
-    Address directory_;
-    Address location_;
-    Address curator_;
+    const Locator locator_;
+    const Address directory_;
+    const Address location_;
+    const Address curator_;
 
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
 

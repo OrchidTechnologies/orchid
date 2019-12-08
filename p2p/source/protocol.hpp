@@ -38,7 +38,7 @@ static uint32_t Magic_(0xff0fce1d);
 static uint32_t Submit_(0xe497a365);
 static uint32_t Invoice_(0xa0a5148d);
 
-void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code);
+task<void> Scan(const Buffer &data, const std::function<task<void> (const Buffer &)> &code);
 
 }
 

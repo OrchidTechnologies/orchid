@@ -29,6 +29,7 @@
 #include "coinbase.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
+#include "locked.hpp"
 #include "locator.hpp"
 
 namespace orc {
@@ -47,22 +48,27 @@ class Cashier {
     const uint256_t chain_;
     const Address recipient_;
 
-    mutable std::mutex mutex_;
-    Float eth_;
-    Float oxt_;
+    struct Locked_ {
+        Float eth_ = 0;
+        Float oxt_ = 0;
+    };
+
+    Locked<Locked_> locked_;
 
     task<void> Update();
 
   public:
-    Cashier(Endpoint endpoint, Float price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient);
+    Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
 
     auto Tuple() const {
         return std::tie(lottery_, chain_, recipient_);
     }
 
-    Float Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const;
     Float Bill(size_t size) const;
     checked_int256_t Convert(const Float &balance) const;
+
+    Float Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const;
+    task<void> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt);
 
     template <typename Selector_, typename... Args_>
     void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {

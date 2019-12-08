@@ -26,3 +26,19 @@ class VerticalLinearGradient extends LinearGradient {
             stops: stops,
             tileMode: tileMode);
 }
+
+class HorizontalLinearGradient extends LinearGradient {
+  const HorizontalLinearGradient({
+    Alignment begin = Alignment.centerLeft,
+    Alignment end = Alignment.centerRight,
+    @required List<Color> colors,
+    List<double> stops,
+    TileMode tileMode = TileMode.clamp,
+  }) : super(
+      begin: begin,
+      end: end,
+      colors: colors,
+      stops: stops,
+      tileMode: tileMode);
+}
+

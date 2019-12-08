@@ -77,16 +77,15 @@ contract OrchidLottery {
         address funder = msg.sender;
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
-        bytes32 codehash = pot.codehash_;
         require(pot.offset_ != 0);
+        if (pot.codehash_ != 0)
+            emit Bound(funder, signer);
         address key = lottery.keys_[lottery.keys_.length - 1];
         lottery.pots_[key].offset_ = pot.offset_;
         lottery.keys_[pot.offset_ - 1] = key;
         --lottery.keys_.length;
         delete lottery.pots_[signer];
         send(funder, signer, pot);
-        if (codehash != 0)
-            emit Bound(funder, signer);
     }
 
 
@@ -227,7 +226,9 @@ contract OrchidLottery {
         require(keccak256(abi.encode(reveal)) == commit);
         require(uint128(uint256(keccak256(abi.encode(reveal, nonce)))) <= ratio);
 
-        bytes32 ticket = keccak256(abi.encode(address(this), commit, nonce, funder, amount, ratio, start, range, target, receipt));
+        // this variable is being reused because I do not have even one extra stack slot
+        bytes32 ticket; assembly { ticket := chainid() }
+        ticket = keccak256(abi.encode(address(this), ticket, commit, nonce, funder, amount, ratio, start, range, target, receipt));
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
         require(signer != address(0));
 

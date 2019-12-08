@@ -40,23 +40,23 @@ task<void> Cashier::Update() {
     auto oxt(eth / 300);
     //auto predict(Parse(co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/predictTable.json"}, {}, {})));
 
-    std::unique_lock<std::mutex> lock(mutex_);
-    eth_ = std::move(eth);
-    oxt_ = std::move(oxt);
+    auto lock(locked_());
+    lock->eth_ = std::move(eth);
+    lock->oxt_ = std::move(oxt);
 }
 
-Cashier::Cashier(Endpoint endpoint, Float price, std::string currency, Address personal, std::string password, Address lottery, uint256_t chain, Address recipient) :
+Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
 
-    price_(std::move(price)),
+    price_(price),
     currency_(std::move(currency)),
 
-    personal_(std::move(personal)),
+    personal_(personal),
     password_(std::move(password)),
 
-    lottery_(std::move(lottery)),
-    chain_(std::move(chain)),
-    recipient_(std::move(recipient))
+    lottery_(lottery),
+    chain_(chain),
+    recipient_(recipient)
 {
     cppcoro::async_manual_reset_event ready;
 
@@ -74,16 +74,23 @@ Cashier::Cashier(Endpoint endpoint, Float price, std::string currency, Address p
     }());
 }
 
-Float Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const {
-    return Float(amount) * oxt_ / Two128;
-}
-
 Float Cashier::Bill(size_t size) const {
     return price_ * size;
 }
 
 checked_int256_t Cashier::Convert(const Float &balance) const {
-    return checked_int256_t(balance / oxt_ * Two128);
+    const auto oxt(locked_()->oxt_);
+    return checked_int256_t(balance / oxt * Two128);
+}
+
+Float Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const {
+    const auto oxt(locked_()->oxt_);
+    return Float(amount) * oxt / Two128;
+}
+
+task<void> Cashier::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {
+    std::cout << "CHECK(" << signer << ", " << funder << ", " << amount << ", " << recipient << ", " << receipt << ")" << std::endl;
+    co_return;
 }
 
 }

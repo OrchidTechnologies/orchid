@@ -667,7 +667,7 @@ class Pass :
 
 task<Sunk<> *> Capture::Start() {
     auto pass(std::make_unique<Sink<Pass>>(this));
-    auto backup(pass.get());
+    const auto backup(pass.get());
     internal_ = std::move(pass);
     co_return backup;
 }
@@ -681,20 +681,21 @@ static duk_ret_t print(duk_context *ctx) {
 }
 
 static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Origin> &origin, const Beam &argument, const Host &local, unsigned hop) {
-    std::string hops("hops[" + std::to_string(hop) + "]");
-    auto protocol(heap.eval<std::string>(hops + ".protocol"));
+    const std::string hops("hops[" + std::to_string(hop) + "]");
+    const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
     } else if (protocol == "orchid") {
-        Address lottery(heap.eval<std::string>(hops + ".lottery", "0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"));
-        uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
-        Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
-        Address funder(heap.eval<std::string>(hops + ".funder"));
+        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"));
+        const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
+        const Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
+        const Address funder(heap.eval<std::string>(hops + ".funder"));
         co_await network.Random(sunk, origin, argument, lottery, chain, secret, funder);
     } else if (protocol == "openvpn") {
-        auto ovpnfile(heap.eval<std::string>(hops + ".ovpnfile"));
-        auto username(heap.eval<std::string>(hops + ".username"));
-        auto password(heap.eval<std::string>(hops + ".password"));
-        co_await Connect(sunk, origin, local, ovpnfile, username, password);
+        co_await Connect(sunk, origin, local,
+            heap.eval<std::string>(hops + ".ovpnfile"),
+            heap.eval<std::string>(hops + ".username"),
+            heap.eval<std::string>(hops + ".password")
+        );
     }
 }
 
@@ -709,7 +710,7 @@ task<void> Capture::Start(const std::string &path) {
 
     heap.eval<void>(R"(
         eth_directory = "0x441f2C1dC59Fe75cF379641C11c93a4f763d164c";
-        eth_location = "0xe1B636079F2158E772bdD85e02Dc92D52c09F0Da";
+        eth_location = "0xBF7A77753f4893A580E3C2512E064aB3283A95aA";
         eth_curator = "0x55Abb3CE20ABbC38444e0A200dDE7fC0388b76a5";
         eth_argument = "2b1ce95573ec1b927a90cb488db113b40eeb064a";
         rpc = "https://cloudflare-eth.com:443/";

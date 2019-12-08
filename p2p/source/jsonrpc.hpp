@@ -153,8 +153,8 @@ class Address :
     // NOLINTNEXTLINE (modernize-use-equals-default)
     using uint160_t::uint160_t;
 
-    Address(uint160_t &&value) :
-        uint160_t(std::move(value))
+    Address(const uint160_t &value) :
+        uint160_t(value)
     {
     }
 

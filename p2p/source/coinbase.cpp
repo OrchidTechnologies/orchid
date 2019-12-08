@@ -31,8 +31,8 @@ namespace orc {
 static Float Ten18("1000000000000000000");
 
 task<Float> Price(const std::string &from, const std::string &to) {
-    auto result(Parse(co_await Request("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {})));
-    auto data(result["data"]);
+    const auto result(Parse(co_await Request("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {})));
+    const auto data(result["data"]);
     co_return Float(data["amount"].asString()) / Ten18;
 }
 

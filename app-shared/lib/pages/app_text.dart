@@ -117,10 +117,10 @@ class AppText {
 
   static TextStyle listItem = const TextStyle(
       color: const Color(0xff3a3149),
-      fontWeight: FontWeight.w400,
-      fontFamily: "Roboto",
+      fontWeight: FontWeight.w600,
+      //fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
-      fontSize: 20.0);
+      fontSize: 16.0);
 
   static TextStyle dialogBody = const TextStyle(
       color: const Color(0xff504960),

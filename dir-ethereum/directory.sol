@@ -165,10 +165,13 @@ contract OrchidDirectory {
     }
 
 
+    event Delay(address indexed stakee, address indexed staker, uint128 delay);
+
     function wait(Stake storage stake, uint128 delay, address staker, address stakee) private {
         if (stake.delay_ != delay) {
             require(stake.delay_ < delay);
             stake.delay_ = delay;
+            emit Delay(stakee, staker, delay);
         }
     }
 
@@ -311,6 +314,7 @@ contract OrchidDirectory {
                 }
             }
 
+            emit Delay(stakee, staker, 0);
             delete stakes_[key];
         }
 

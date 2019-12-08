@@ -69,6 +69,11 @@ inline Common Recover(const Brick<32> &data, uint8_t v, const Brick<32> &r, cons
     return Recover(data, Signature(r, s, v));
 }
 
+Beam Object(int nid);
+Beam Object(const char *ln);
+
+size_t Length(Window &window);
+
 }
 
 #endif//ORCHID_CRYPTO_HPP
