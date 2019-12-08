@@ -195,8 +195,12 @@ contract OrchidLottery {
         send(funder, signer, pot);
 
         OrchidVerifier verify = pot.verify_;
-        bytes32 codehash = pot.codehash_;
-        bytes memory shared = pot.shared_;
+        bytes32 codehash;
+        bytes memory shared;
+        if (verify != OrchidVerifier(0)) {
+            codehash = pot.codehash_;
+            shared = pot.shared_;
+        }
 
         if (amount != 0)
             require(token_.transfer(recipient, amount));
