@@ -201,9 +201,7 @@ class Argument final {
     {
     }
 
-    Argument(nullptr_t) :
-        value_()
-    {
+    Argument(nullptr_t) {
     }
 
     Argument(bool value) :
