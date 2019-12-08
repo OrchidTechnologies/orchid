@@ -14,4 +14,7 @@ class AppGradients {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [AppColors.grey_7, AppColors.grey_6]);
+
+  static Gradient purpleTileHorizontal = HorizontalLinearGradient(
+      colors: [Colors.deepPurple.shade400, Colors.deepPurple.shade600]);
 }

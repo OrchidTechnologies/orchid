@@ -49,6 +49,10 @@ endif
 ifeq ($(target),win)
 cflags += -Iall/vpn-windows/tap-windows6/src
 endif
+ifeq ($(target),lnx)
+cflags += -Iall/vpn-linux
+source += all/vpn-linux/protect.cpp
+endif
 
 source += $(wildcard source/*.cpp)
 

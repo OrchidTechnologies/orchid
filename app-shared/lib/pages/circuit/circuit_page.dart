@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
+import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
@@ -52,31 +53,21 @@ class CircuitPageState extends State<CircuitPage> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(gradient: AppGradients.basicGradient),
-      child: SafeArea(
-        child: Stack(
-          children: <Widget>[
-            Visibility(
-                visible: _showEmptyView(),
-                child: CircuitEmptyView(addHop: _addHop),
-                replacement: _buildBody()),
-          ],
-        ),
+      child: Stack(
+        children: <Widget>[
+          Visibility(
+              visible: _showEmptyView(),
+              child: CircuitEmptyView(addHop: _addHop),
+              replacement: _buildBody()),
+        ],
       ),
     );
   }
 
-  Stack _buildBody() {
+  Widget _buildBody() {
     return Stack(
       children: <Widget>[
-        _buildHopList(),
-        Visibility(
-            visible: _showSingleHopInstructions(),
-            child: InstructionsView(
-              image: Image.asset("assets/images/hi5.png"),
-              title: "Success!",
-              body:
-                  "You now have a configured single-hop route for your internet traffic. Each hop you add brings a layer of indirection and obfuscation to your connection - as long as each is independently funded from a new source.",
-            )),
+        Visibility(visible: _hops != null, child: _buildHopList()),
         Align(
             alignment: Alignment.bottomRight,
             child: FloatingAddButton(onPressed: _addHop)),
@@ -97,21 +88,74 @@ class CircuitPageState extends State<CircuitPage> {
   Widget _buildHopList() {
     return Column(
       children: <Widget>[
-        pady(8),
+        pady(24),
         //_divider(),
         Expanded(
-          child: ReorderableListView(
+          child: AppReorderableListView(
+              header: Column(
+                children: <Widget>[_buildStartTile(), _buildFirewallTile()],
+              ),
               children: (_hops ?? []).map((uniqueHop) {
                 return _buildHopListItem(uniqueHop);
               }).toList(),
+              footer: Column(
+                children: <Widget>[
+                  _buildEndTile(),
+                  Visibility(
+                      visible: _showSingleHopInstructions(),
+                      // Providing the instructions a fixed height allows this to work.
+                      // TODO: Why doesn't IntrinsicHeight work here?
+                      child: Container(
+                        padding: EdgeInsets.only(top: 50),
+                        height: 300,
+                        child: InstructionsView(
+                          image: Image.asset("assets/images/hi5.png"),
+                          title: "Success!",
+                          body:
+                              "You now have a configured single-hop route for your internet traffic. Each hop you add brings a layer of indirection and obfuscation to your connection - as long as each is independently funded from a new source.",
+                        ),
+                      ))
+                ],
+              ),
               onReorder: _onReorder),
         ),
       ],
     );
   }
 
+  Widget _buildStartTile() {
+    return _buildTileWithDivider(
+      title: "Your Device",
+      image: Image.asset("assets/images/person.png"),
+      gradient: AppGradients.purpleTileHorizontal,
+      textColor: Colors.white,
+      showDragHandle: false,
+    );
+  }
+
+  Widget _buildEndTile() {
+    return _buildTileWithDivider(
+      title: "The Internet",
+      image: Image.asset("assets/images/globe.png"),
+      gradient: AppGradients.purpleTileHorizontal,
+      textColor: Colors.white,
+      showDragHandle: false,
+    );
+  }
+
+  Widget _buildFirewallTile() {
+    var color = Colors.deepPurple;
+    return _buildTileWithDivider(
+      title: "Personal Firewall",
+      image: Image.asset("assets/images/fire.png", color: color),
+      textColor: color,
+      showDragHandle: false,
+    );
+  }
+
   Dismissible _buildHopListItem(UniqueHop uniqueHop) {
     return Dismissible(
+      key: Key(uniqueHop.key.toString()),
       background: Container(
         color: Colors.red,
         child: Align(
@@ -127,26 +171,76 @@ class CircuitPageState extends State<CircuitPage> {
       onDismissed: (direction) {
         _deleteHop(uniqueHop);
       },
-      child: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListTile(
-              onTap: () {
-                _viewHop(uniqueHop);
-              },
-              key: Key(uniqueHop.key.toString()),
-              title: Text(
-                uniqueHop.hop.displayName(),
-                style: AppText.listItem,
-              ),
-              trailing: Icon(Icons.menu),
-            ),
-          ),
-          _divider()
-        ],
-      ),
+      child: _buildHopTileWithDivider(uniqueHop),
+    );
+  }
+
+  Widget _buildHopTileWithDivider(UniqueHop uniqueHop) {
+    Color color = Colors.teal;
+    Image image;
+    switch (uniqueHop.hop.protocol) {
+      case Protocol.Orchid:
+        image = Image.asset("assets/images/logo2.png", color: color);
+        break;
+      case Protocol.OpenVPN:
+        image = Image.asset("assets/images/security.png", color: color);
+        break;
+      default:
+        throw new Exception();
+    }
+    return _buildTileWithDivider(
+      textColor: color,
+      image: image,
+      onTap: () {
+        _viewHop(uniqueHop);
+      },
       key: Key(uniqueHop.key.toString()),
+      title: uniqueHop.hop.displayName(),
+    );
+  }
+
+  Widget _buildTileWithDivider({
+    String title,
+    VoidCallback onTap,
+    Key key,
+    Image image,
+    Color textColor,
+    Color color,
+    Gradient gradient,
+    bool showDragHandle = true,
+  }) {
+    return Column(
+      key: key,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.all(0),
+          decoration: BoxDecoration(color: color, gradient: gradient),
+          // Allow the tile background to extend into the safe area but not the content
+          child: SafeArea(
+            child: ListTile(
+                onTap: onTap,
+                key: key,
+                title: Text(
+                  title,
+                  style: AppText.listItem.copyWith(color: textColor),
+                ),
+                leading: image,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (showDragHandle) Icon(Icons.menu),
+                    if (onTap != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Icon(Icons.chevron_right),
+                      ),
+                  ],
+                )),
+          ),
+        ),
+        _divider()
+      ],
     );
   }
 

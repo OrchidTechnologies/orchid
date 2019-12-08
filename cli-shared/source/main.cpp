@@ -42,6 +42,8 @@
 #include <net/if_utun.h>
 #include <sys/sys_domain.h>
 #include <sys/kern_control.h>
+#elif defined(__linux__)
+#include <linux/if_tun.h>
 #endif
 
 #include <boost/asio/generic/datagram_protocol.hpp>
@@ -59,6 +61,7 @@
 #include "sync.hpp"
 #include "syscall.hpp"
 #include "task.hpp"
+#include "file.hpp"
 #include "transport.hpp"
 
 #if 0
@@ -139,6 +142,26 @@ int Main(int argc, const char *const argv[]) {
         orc_assert(system(("route -n add 128.0.0.0/1 -interface " + utun).c_str()) == 0);
     }
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
+#elif defined(__linux__)
+    int file = open("/dev/net/tun", O_RDWR);
+    orc_assert(file >= 0);
+
+    auto connection(std::make_unique<File<asio::posix::stream_descriptor>>(Context(), file));
+    auto sync(capture->Wire<Inverted>(std::move(connection)));
+
+    struct ifreq ifr = {.ifr_flags = IFF_TUN | IFF_NO_PI};
+    orc_assert(ioctl(file, TUNSETIFF, (void*)&ifr) >= 0);
+    char dev[IFNAMSIZ];
+    strcpy(dev, ifr.ifr_name);
+    std::string tun(dev);
+    orc_assert(system(("ifconfig " + tun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
+    if (args.count("capture") != 0)
+        orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " -interface " + tun).c_str()) == 0);
+    else {
+        orc_assert(system(("route -n add 0.0.0.0/1 -interface " + tun).c_str()) == 0);
+        orc_assert(system(("route -n add 128.0.0.0/1 -interface " + tun).c_str()) == 0);
+    }
+    orc_assert(system(("route -n add 10.7.0.4 -interface " + tun).c_str()) == 0);
 #else
 #error
 #endif
