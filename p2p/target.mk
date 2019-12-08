@@ -87,7 +87,7 @@ source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include
 
 
-source += $(wildcard $(pwd)/ethash/lib/ethash/*.c)
+source += $(wildcard $(pwd)/ethash/lib/keccak/*.c)
 cflags += -I$(pwd)/ethash/include
 
 
@@ -117,7 +117,7 @@ c_secp256k1 += -include $(pwd)/field.h
 pwd/secp256k1 := $(pwd)/secp256k1
 
 $(output)/gen_context: $(pwd/secp256k1)/src/gen_context.c
-	gcc -o $@ $< -I$(pwd/secp256k1)
+	gcc -o $@ $< -I$(pwd/secp256k1) -DECMULT_GEN_PREC_BITS=4
 
 $(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
 	cd $(pwd/secp256k1) && $(CURDIR)/$(output)/gen_context
@@ -131,6 +131,9 @@ cflags += -DUSE_FIELD_INV_BUILTIN
 cflags += -DUSE_NUM_NONE
 cflags += -DUSE_SCALAR_INV_BUILTIN
 cflags += -DECMULT_WINDOW_SIZE=15
+
+# XXX: this is also passed to gen_context above
+cflags += -DECMULT_GEN_PREC_BITS=4
 
 
 c_eEVM := 
