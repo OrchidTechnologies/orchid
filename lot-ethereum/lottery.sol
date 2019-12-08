@@ -178,7 +178,9 @@ contract OrchidLottery {
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
 
-    function take(uint128 amount, Pot storage pot) private returns (uint128) {
+    function take(address funder, address signer, uint128 amount, address payable target, bytes memory receipt) private {
+        Pot storage pot = find(funder, signer);
+
         if (pot.amount_ >= amount)
             pot.amount_ -= amount;
         else {
@@ -186,24 +188,13 @@ contract OrchidLottery {
             pot.escrow_ = 0;
         }
 
-        return amount;
-    }
-
-    function take(address funder, address signer, uint128 amount, address payable target, Pot storage pot) private {
-        amount = take(amount, pot);
         send(funder, signer, pot);
-
-        if (amount != 0)
-            require(token_.transfer(target, amount));
-    }
-
-    function take(address funder, address signer, uint128 amount, address payable target, bytes memory receipt) private {
-        Pot storage pot = find(funder, signer);
 
         OrchidVerifier verify = pot.verify_;
         bytes32 codehash = pot.codehash_;
 
-        take(funder, signer, amount, target, pot);
+        if (amount != 0)
+            require(token_.transfer(target, amount));
 
         if (verify != OrchidVerifier(0)) {
             bytes32 current; assembly { current := extcodehash(verify) }
