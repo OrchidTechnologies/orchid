@@ -294,7 +294,8 @@ contract OrchidLottery {
         if (autolock && pot.escrow_ == 0)
             pot.unlock_ = 0;
         send(funder, signer, pot);
-        require(token_.transfer(target, total));
+        if (total != 0)
+            require(token_.transfer(target, total));
     }
 
     function yank(address signer, address payable target, bool autolock) external {
