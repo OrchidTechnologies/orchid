@@ -279,7 +279,7 @@ contract OrchidLottery {
         send(funder, signer, pot);
     }
 
-    function pull(address signer, address payable target, uint128 amount, uint128 escrow) external {
+    function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         if (amount > pot.amount_)
@@ -291,13 +291,13 @@ contract OrchidLottery {
         uint128 total = amount + escrow;
         pot.amount_ -= amount;
         pot.escrow_ -= escrow;
-        if (pot.escrow_ == 0)
+        if (autolock && pot.escrow_ == 0)
             pot.unlock_ = 0;
         send(funder, signer, pot);
         require(token_.transfer(target, total));
     }
 
-    function yank(address signer, address payable target) external {
+    function yank(address signer, address payable target, bool autolock) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         if (pot.escrow_ != 0)
@@ -305,7 +305,8 @@ contract OrchidLottery {
         uint128 total = pot.amount_ + pot.escrow_;
         pot.amount_ = 0;
         pot.escrow_ = 0;
-        pot.unlock_ = 0;
+        if (autolock)
+            pot.unlock_ = 0;
         send(funder, signer, pot);
         require(token_.transfer(target, total));
     }
