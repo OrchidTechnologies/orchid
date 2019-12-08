@@ -42,8 +42,11 @@ class Node final {
 
     S<Egress> egress_;
 
-    std::mutex mutex_;
-    std::map<std::string, W<Server>> servers_;
+    struct Locked_ {
+        std::map<std::string, W<Server>> servers_;
+    };
+
+    Locked<Locked_> locked_;
 
   public:
     Node(S<Origin> origin, S<Cashier> cashier, std::vector<std::string> ice) :
@@ -58,8 +61,8 @@ class Node final {
     }
 
     S<Server> Find(const std::string &fingerprint) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        auto &cache(servers_[fingerprint]);
+        auto lock(locked_());
+        auto &cache(lock->servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
         auto server(Make<Sink<Server>>(origin_, cashier_));
