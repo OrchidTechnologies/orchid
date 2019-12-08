@@ -21,13 +21,13 @@ jobs:
     - name: pip install
       run: pip install pyyaml
     - name: make macOS client
-      run: make -j3 -C tst-tunnel
+      run: make -j3 -C cli-shared
     - name: make macOS server
       run: make -j3 -C srv-shared
     - uses: actions/upload-artifact@v1
       with:
-        name: orchid-mac
-        path: srv-shared/out-mac/x86_64/orchid
+        name: orchidd-mac
+        path: srv-shared/out-mac/x86_64/orchidd
 
   build-lnx:
     runs-on: ubuntu-latest
@@ -44,5 +44,5 @@ jobs:
       run: make -j3 -C srv-shared debug=crossndk
     - uses: actions/upload-artifact@v1
       with:
-        name: orchid-lnx
-        path: srv-shared/out-lnx/x86_64/orchid
+        name: orchidd-lnx
+        path: srv-shared/out-lnx/x86_64/orchidd

@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: tst-tunnel
+all: cli-shared
 
 all: all-app-ios
 all: all-app-sim
@@ -15,9 +15,9 @@ all: all-srv-mac
 tst-ethereum:
 	$(MAKE) -C tst-ethereum test
 
-.PHONY: tst-tunnel
-tst-tunnel:
-	$(MAKE) -C tst-tunnel target=mac
+.PHONY: cli-shared
+cli-shared:
+	$(MAKE) -C cli-shared target=mac
 
 .PHONY: all-srv-and
 all-srv-and:

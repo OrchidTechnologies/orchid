@@ -24,15 +24,17 @@ args += --dh ../dh.pem
 
 include env/target.mk
 
+binary := $(output)/$(default)/orchidd$(exe)
+
 .PHONY: all
-all: $(output)/$(default)/orchid$(exe)
+all: $(binary)
 
 .PHONY: test
-test: $(output)/$(default)/orchid$(exe)
+test: $(binary)
 	$< $(args)
 
 .PHONY: debug
-debug: $(output)/$(default)/orchid$(exe)
+debug: $(binary)
 	lldb -o 'run $(args)' $<
 
 
@@ -47,7 +49,7 @@ cflags += -Ip2p/rtc/openssl/test/ossl_shim/include
 include env/output.mk
 
 
-$(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
+$(output)/%/orchidd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cxx/$*) $(wflags) -o $@ $^ $(lflags)
