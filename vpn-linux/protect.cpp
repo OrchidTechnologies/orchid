@@ -8,6 +8,7 @@
 namespace orc {
 
 bool vpn_protect(int s) {
+    // XXX: don't hard-code eth0
     return setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, "eth0", 4) >= 0;
 }
 
