@@ -156,12 +156,12 @@ int Main(int argc, const char *const argv[]) {
     std::string tun(dev);
     orc_assert(system(("ifconfig " + tun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
     if (args.count("capture") != 0)
-        orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " -interface " + tun).c_str()) == 0);
+        orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " dev " + tun).c_str()) == 0);
     else {
-        orc_assert(system(("route -n add 0.0.0.0/1 -interface " + tun).c_str()) == 0);
-        orc_assert(system(("route -n add 128.0.0.0/1 -interface " + tun).c_str()) == 0);
+        orc_assert(system(("route -n add 0.0.0.0/1 dev " + tun).c_str()) == 0);
+        orc_assert(system(("route -n add 128.0.0.0/1 dev " + tun).c_str()) == 0);
     }
-    orc_assert(system(("route -n add 10.7.0.4 -interface " + tun).c_str()) == 0);#else
+    orc_assert(system(("route -n add 10.7.0.4 dev" + tun).c_str()) == 0);#else
 #error
 #endif
 
