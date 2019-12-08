@@ -30,7 +30,7 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-mac
-        path: cli-shared/out-mac/x86_64/orchidd
+        path: cli-shared/out-mac/x86_64/orchid
 
     - name: make macOS server
       run: make -j3 -C srv-shared
