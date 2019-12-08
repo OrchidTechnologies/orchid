@@ -264,12 +264,6 @@ contract OrchidLottery {
         take(funder, signer, amount, recipient, receipt);
     }
 
-    function pull(address signer, address payable target, uint128 amount) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
-        take(funder, signer, amount, target, pot);
-    }
-
 
     function warn(address signer) external {
         address funder = msg.sender;
