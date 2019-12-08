@@ -219,15 +219,24 @@ class CircuitPageState extends State<CircuitPage> {
           // Allow the tile background to extend into the safe area but not the content
           child: SafeArea(
             child: ListTile(
-              onTap: onTap,
-              key: key,
-              title: Text(
-                title,
-                style: AppText.listItem.copyWith(color: textColor),
-              ),
-              leading: image,
-              trailing: showDragHandle ? Icon(Icons.menu) : null,
-            ),
+                onTap: onTap,
+                key: key,
+                title: Text(
+                  title,
+                  style: AppText.listItem.copyWith(color: textColor),
+                ),
+                leading: image,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (showDragHandle) Icon(Icons.menu),
+                    if (onTap != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Icon(Icons.chevron_right),
+                      ),
+                  ],
+                )),
           ),
         ),
         _divider()
