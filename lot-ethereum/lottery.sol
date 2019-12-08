@@ -184,15 +184,18 @@ contract OrchidLottery {
     function take(address funder, address signer, address payable recipient, uint128 amount, bytes memory receipt) private {
         Pot storage pot = find(funder, signer);
 
-        if (pot.amount_ >= amount)
-            pot.amount_ -= amount;
-        else {
-            amount = pot.amount_;
+        uint128 cache = pot.amount_;
+
+        if (cache >= amount) {
+            cache -= amount;
+            pot.amount_ = cache;
+            emit Update(funder, signer, cache, pot.escrow_, pot.unlock_);
+        } else {
+            amount = cache;
             pot.amount_ = 0;
             pot.escrow_ = 0;
+            emit Update(funder, signer, 0, 0, pot.unlock_);
         }
-
-        send(funder, signer, pot);
 
         OrchidVerifier verify = pot.verify_;
         bytes32 codehash;
