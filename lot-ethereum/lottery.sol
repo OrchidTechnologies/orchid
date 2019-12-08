@@ -185,6 +185,7 @@ contract OrchidLottery {
             pot.amount_ -= amount;
         else {
             amount = pot.amount_;
+            pot.amount_ = 0;
             pot.escrow_ = 0;
         }
 
