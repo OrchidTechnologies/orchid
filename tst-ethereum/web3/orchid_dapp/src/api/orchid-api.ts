@@ -74,7 +74,9 @@ export class OrchidAPI {
   debugLogChanged = new BehaviorSubject(true);
 
   async init(listenForProviderChanges: boolean = true): Promise<WalletStatus> {
-    this.captureLogs();
+    if (OrchidAPI.isMobileDevice()) {
+      this.captureLogs();
+    }
 
     const propsUpdate = listenForProviderChanges ?
       (props: any) => {
@@ -166,6 +168,10 @@ export class OrchidAPI {
       console.log("Loaded.");
     };
   }
+
+  private static isMobileDevice() {
+    return (typeof window.orientation !== "undefined");
+  };
 }
 
 

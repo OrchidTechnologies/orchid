@@ -47,10 +47,11 @@ export class WithdrawFunds extends Component {
 
     if (wallet === undefined
       || signer === undefined
-      || withdrawAmount == null
+      || (withdrawAmount == null && !withdrawAll)
       || withdrawAll == null
       || targetAddress == null
     ) {
+      console.log("precondition error in withdraw");
       return;
     }
     this.setState({tx: TransactionStatus.running()});
@@ -63,6 +64,9 @@ export class WithdrawFunds extends Component {
       if (this.state.withdrawAll) {
         txId = await orchidWithdrawFundsAndEscrow(wallet.address, signer.address, targetAddress);
       } else {
+        if (withdrawAmount == null) {
+          return; // Shouldn't get here.
+        }
         const withdrawWei = oxtToWei(withdrawAmount);
         txId = await orchidWithdrawFunds(wallet.address, signer.address, targetAddress, withdrawWei);
       }
