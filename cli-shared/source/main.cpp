@@ -168,9 +168,12 @@ int Main(int argc, const char *const argv[]) {
 #error
 #endif
 
+    // XXX: we need CAP_NET_RAW capability for SO_BINDTODEVICE
+#if !defined(__linux__)
     // XXX: rage against the cage, my friend :(
     (void) setgid(501);
     (void) setuid(501);
+#endif
 
     Wait([&]() -> task<void> { try {
         co_await Schedule();
