@@ -35,6 +35,10 @@ contract OrchidDirectory {
         token_ = token;
     }
 
+    function what() external view returns (IERC20) {
+        return token_;
+    }
+
 
     struct Stakee {
         uint256 amount_;
