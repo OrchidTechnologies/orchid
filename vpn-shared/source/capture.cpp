@@ -685,7 +685,7 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
     } else if (protocol == "orchid") {
-        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"));
+        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0x6Aa30A9619BFc5E539AEaF1027B5Cc259A120178"));
         const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
         const Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
@@ -709,7 +709,7 @@ task<void> Capture::Start(const std::string &path) {
     duk_put_global_string(heap, "print");
 
     heap.eval<void>(R"(
-        eth_directory = "0x441f2C1dC59Fe75cF379641C11c93a4f763d164c";
+        eth_directory = "0x918101FB64f467414e9a785aF9566ae69C3e22C5";
         eth_location = "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD";
         eth_curator = "0x55Abb3CE20ABbC38444e0A200dDE7fC0388b76a5";
         eth_argument = "2b1ce95573ec1b927a90cb488db113b40eeb064a";
