@@ -30,6 +30,8 @@
 
 namespace orc {
 
+static const uint256_t Gwei = 1000000000;
+
 struct Block {
     const uint256_t number_;
     const uint256_t state_;
@@ -214,6 +216,19 @@ class Selector final :
             {"from", from},
             {"to", contract},
             {"gas", gas},
+            {"data", Tie(*this, builder)},
+        }, password})).asString()).template num<uint256_t>());
+        co_return std::move(transaction);
+    }
+
+    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const uint256_t &price, const Args_ &...args) const {
+        Builder builder;
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
+        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Map{
+            {"from", from},
+            {"to", contract},
+            {"gas", gas},
+            {"gasPrice", price},
             {"data", Tie(*this, builder)},
         }, password})).asString()).template num<uint256_t>());
         co_return std::move(transaction);

@@ -73,7 +73,7 @@ class Cashier {
     template <typename Selector_, typename... Args_>
     void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {
         Spawn([=]() mutable -> task<void> {
-            co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, std::forward<Args_>(args)...);
+            co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, 10*Gwei, std::forward<Args_>(args)...);
         });
     }
 };
