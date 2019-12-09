@@ -159,8 +159,9 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 
         const auto credit(cashier_->Credit(now, start, until, amount * (uint256_t(ratio) + 1), gas));
 
-        using Ticket = Coder<Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
-        const auto ticket(Hash(Ticket::Encode(commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
+        using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
+        static const auto orchid(Hash("Orchid.grab"));
+        const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
         const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
 
         co_await cashier_->Check(signer, funder, amount, recipient, receipt);

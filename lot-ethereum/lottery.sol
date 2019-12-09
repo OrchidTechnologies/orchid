@@ -231,7 +231,9 @@ contract OrchidLottery {
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 ticket; assembly { ticket := chainid() }
-        ticket = keccak256(abi.encode(commit, issued, nonce, address(this), ticket, amount, ratio, start, range, funder, recipient, receipt));
+        // keccak256("Orchid.grab") == 0x8b988a5483b8a95aa306ba150c9513d5565a0eee358bc4b35b29425708700645
+        ticket = keccak256(abi.encode(bytes32(uint256(0x8b988a5483b8a95aa306ba150c9513d5565a0eee358bc4b35b29425708700645)),
+            commit, issued, nonce, address(this), ticket, amount, ratio, start, range, funder, recipient, receipt));
         address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", ticket)), v, r, s);
         require(signer != address(0));
 
