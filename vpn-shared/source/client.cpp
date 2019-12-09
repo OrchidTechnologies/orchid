@@ -38,8 +38,8 @@ task<void> Client::Submit() {
 task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Signature &signature) {
     Header header{Magic_, hash};
     Builder builder;
-    builder += Tie(Submit_, signature.v_, signature.r_, signature.s_, lottery_, chain_);
-    ticket.Build(builder, receipt_);
+    builder += Tie(Submit_, signature.v_, signature.r_, signature.s_);
+    ticket.Build(builder, lottery_, chain_, receipt_);
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header, uint16_t(builder.size()), builder)));
 }
 
@@ -59,8 +59,8 @@ void Client::Issue(uint256_t amount) {
             return std::make_tuple(lock->recipient_, lock->commit_);
         }();
 
-        const auto ratio(uint128_t(1) << 127 >> 12);
-        const Ticket ticket{commit, nonce, funder_, uint128_t(amount / ratio), ratio, start, 0, recipient};
+        const auto ratio(uint128_t(1) << 127);
+        const Ticket ticket{commit, now, nonce, uint128_t(amount / ratio), ratio, start, 0, funder_, recipient};
         const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
         const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
         { auto lock(locked_());

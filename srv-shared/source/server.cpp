@@ -126,21 +126,21 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 
         const auto [
             v, r, s,
-            lottery, chain,
             commit,
-            nonce, funder,
+            issued, nonce,
+            lottery, chain,
             amount, ratio,
             start, range,
-            recipient, temp
-        ] = Take<
+            funder, recipient,
+        temp] = Take<
             uint8_t, Brick<32>, Brick<32>,
+            Bytes32,
+            uint256_t, Bytes32,
             Address, uint256_t,
-            Brick<32>,
-            Brick<32>, Address,
             uint128_t, uint128_t,
             uint256_t, uint128_t,
-            Address, Window
-        >(window);
+            Address, Address,
+        Window>(window);
 
         // XXX: fix Coder and Selector to not require this to Beam
         const Beam receipt(temp);
@@ -155,8 +155,8 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 
         const auto credit(cashier_->Credit(now, start, until, amount * (uint256_t(ratio) + 1), gas));
 
-        using Ticket = Coder<Address, uint256_t, Bytes32, Bytes32, Address, uint128_t, uint128_t, uint256_t, uint128_t, Address, Bytes>;
-        const auto ticket(Hash(Ticket::Encode(lottery, chain, commit, nonce, funder, amount, ratio, start, range, recipient, receipt)));
+        using Ticket = Coder<Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
+        const auto ticket(Hash(Ticket::Encode(commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
         const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
 
         co_await cashier_->Check(signer, funder, amount, recipient, receipt);
@@ -186,22 +186,22 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 
         static Selector<void,
             Bytes32 /*reveal*/, Bytes32 /*commit*/,
+            uint256_t /*issued*/, Bytes32 /*nonce*/,
             uint8_t /*v*/, Bytes32 /*r*/, Bytes32 /*s*/,
-            Bytes32 /*nonce*/, Address /*funder*/,
             uint128_t /*amount*/, uint128_t /*ratio*/,
             uint256_t /*start*/, uint128_t /*range*/,
-            Address /*recipient*/, Bytes /*receipt*/,
-            std::vector<Bytes32> /*old*/
+            Address /*funder*/, Address /*recipient*/,
+            Bytes /*receipt*/, std::vector<Bytes32> /*old*/
         > grab("grab");
 
         cashier_->Send(grab, gas,
             reveal, commit,
+            issued, nonce,
             v, r, s,
-            nonce, funder,
             amount, ratio,
             start, range,
-            recipient, receipt,
-            old
+            funder, recipient,
+            receipt, old
         );
     } catch (const std::exception &error) {
         Log() << error.what() << std::endl;

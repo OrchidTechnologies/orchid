@@ -29,38 +29,44 @@ namespace orc {
 
 struct Ticket {
     Bytes32 commit_;
+    uint256_t issued_;
     Bytes32 nonce_;
-    Address funder_;
     uint128_t amount_;
     uint128_t ratio_;
     uint256_t start_;
     uint128_t range_;
-    Address provider_;
+    Address funder_;
+    Address recipient_;
 
     Builder Encode(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
         return Coder<
-            Address, uint256_t,
             Bytes32,
-            Bytes32, Address,
+            uint256_t, Bytes32,
+            Address, uint256_t,
             uint128_t, uint128_t,
             uint256_t, uint128_t,
-            Address, Bytes
+            Address, Address,
+            Bytes
         >::Encode(
-            lottery, chain,
             commit_,
-            nonce_, funder_,
+            issued_, nonce_,
+            lottery, chain,
             amount_, ratio_,
             start_, range_,
-            provider_, receipt
+            funder_, recipient_,
+            receipt
         );
     }
 
-    void Build(Builder &builder, const Bytes &receipt) const {
+    void Build(Builder &builder, const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
         builder += Tie(
-            commit_, nonce_, Number<uint160_t>(funder_),
+            commit_,
+            issued_, nonce_,
+            lottery, chain,
             Number<uint128_t>(amount_), Number<uint128_t>(ratio_),
             Number<uint256_t>(start_), Number<uint128_t>(range_),
-            Number<uint160_t>(provider_), receipt
+            Number<uint160_t>(funder_), Number<uint160_t>(recipient_),
+            receipt
         );
     }
 };
