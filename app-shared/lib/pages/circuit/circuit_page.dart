@@ -272,7 +272,7 @@ class CircuitPageState extends State<CircuitPage> {
         title: "Turn on the VPN!",
         bodyFontSize: 14,
         body:
-            "Turn Orchid on to activate your circuit and protect your traffic",
+            "Turn Orchid on to activate your hops and protect your traffic",
       ),
     );
   }
