@@ -3,6 +3,7 @@ import 'package:orchid/pages/keys/keys_page.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 
+// TODO: Remove if unused
 class CircuitEmptyView extends StatelessWidget {
   final VoidCallback addHop;
 
