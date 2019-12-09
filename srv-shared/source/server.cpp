@@ -23,8 +23,12 @@
 #include <api/jsep_session_description.h>
 #include <pc/webrtc_sdp.h>
 
+#include "cashier.hpp"
 #include "channel.hpp"
+#include "coinbase.hpp"
+#include "crypto.hpp"
 #include "datagram.hpp"
+#include "endpoint.hpp"
 #include "local.hpp"
 #include "protocol.hpp"
 #include "server.hpp"

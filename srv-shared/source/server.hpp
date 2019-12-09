@@ -27,8 +27,6 @@
 #include <set>
 
 #include "bond.hpp"
-#include "cashier.hpp"
-#include "endpoint.hpp"
 #include "jsonrpc.hpp"
 #include "link.hpp"
 #include "locked.hpp"
@@ -36,6 +34,8 @@
 #include "task.hpp"
 
 namespace orc {
+
+class Cashier;
 
 class Server :
     public Bonded,
