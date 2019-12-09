@@ -95,7 +95,7 @@ std::ostream &operator <<(std::ostream &out, const Nested &value) {
 }
 
 Explode::Explode(Window &window) {
-    auto first(window.Take());
+    const auto first(window.Take());
 
     if (first < 0x80) {
         scalar_ = true;
@@ -107,24 +107,24 @@ Explode::Explode(Window &window) {
     } else if (first < 0xc0) {
         scalar_ = true;
         uint32_t length(0);
-        auto size(first - 0xb7);
+        const auto size(first - 0xb7);
         orc_assert(size <= sizeof(length));
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
         value_.resize(boost::endian::big_to_native(length));
         window.Take(value_);
     } else if (first < 0xf8) {
         scalar_ = false;
-        auto beam(window.Take(first - 0xc0));
+        const auto beam(window.Take(first - 0xc0));
         Window sub(beam);
         while (!sub.done())
             array_.emplace_back(Explode(sub));
     } else {
         scalar_ = false;
         uint32_t length(0);
-        auto size(first - 0xf7);
+        const auto size(first - 0xf7);
         orc_assert(size <= sizeof(length));
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
-        auto beam(window.Take(boost::endian::big_to_native(length)));
+        const auto beam(window.Take(boost::endian::big_to_native(length)));
         Window sub(beam);
         while (!sub.done())
             array_.emplace_back(Explode(sub));

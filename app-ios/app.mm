@@ -219,7 +219,7 @@
         } else if ([@"group_path" isEqualToString:call.method]) {
             [weakSelf groupPath: result];
         } else if ([@"version" isEqualToString:call.method]) {
-            auto info([[NSBundle mainBundle] infoDictionary]);
+            const auto info([[NSBundle mainBundle] infoDictionary]);
             result([NSString stringWithFormat:@"%@ (%@)", [info objectForKey:@"CFBundleShortVersionString"], [info objectForKey:@"CFBundleVersion"]]);
         } else if ([@"get_config" isEqualToString:call.method]) {
             [weakSelf getConfig: result];

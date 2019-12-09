@@ -60,7 +60,7 @@ class Sync final :
         try {
             writ = sync_.receive(asio::buffer(beam.data(), beam.size()));
         } catch (const asio::system_error &error) {
-            auto code(error.code());
+            const auto code(error.code());
             if (code == asio::error::eof)
                 return 0;
             orc_adapt(error);
@@ -89,7 +89,7 @@ class Sync final :
                     break;
                 }
 
-                auto subset(beam.subset(0, writ));
+                const auto subset(beam.subset(0, writ));
                 Link::Land(subset);
             }
         }).detach();

@@ -75,7 +75,7 @@ class Inverted final :
                     break;
                 }
 
-                auto subset(beam.subset(0, writ));
+                const auto subset(beam.subset(0, writ));
                 Pump::Land(subset);
             }
         });

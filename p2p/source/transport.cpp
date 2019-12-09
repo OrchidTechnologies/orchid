@@ -171,7 +171,7 @@ class Factory :
             });
 
             orc_assert(config_.remote_list);
-            auto remote(config_.remote_list->first_item());
+            const auto remote(config_.remote_list->first_item());
             orc_assert(remote != nullptr);
 
             co_await origin_->Associate(transport.get(), remote->server_host, remote->server_port);

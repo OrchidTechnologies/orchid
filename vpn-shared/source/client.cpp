@@ -55,7 +55,7 @@ void Client::Issue(uint256_t amount) {
         const auto start(now + 60 * 60 * 2);
 
         const auto [recipient, commit] = [&]() {
-            auto lock(locked_());
+            const auto lock(locked_());
             return std::make_tuple(lock->recipient_, lock->commit_);
         }();
 
@@ -63,14 +63,14 @@ void Client::Issue(uint256_t amount) {
         const Ticket ticket{commit, now, nonce, uint128_t(amount / ratio), ratio, start, 0, funder_, recipient};
         const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
         const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
-        { auto lock(locked_());
+        { const auto lock(locked_());
             lock->tickets_.try_emplace(hash, ticket, signature); }
         co_return co_await Submit(hash, ticket, signature);
     });
 }
 
 void Client::Transfer(size_t size) {
-    { auto lock(locked_());
+    { const auto lock(locked_());
     lock->benefit_ += size;
     if (lock->benefit_ > 1024*256)
         lock->benefit_ -= 1024*256;
@@ -97,7 +97,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             orc_assert(chain == chain_);
 
             {
-                auto lock(locked_());
+                const auto lock(locked_());
                 if (!id.zero())
                     lock->tickets_.erase(id);
                 if (lock->timestamp_ >= timestamp)
@@ -143,7 +143,7 @@ task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
         Configuration configuration;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
-        auto answer(co_await origin->Request("POST", Locator::Parse(url), {}, offer, verify));
+        const auto answer(co_await origin->Request("POST", Locator::Parse(url), {}, offer, verify));
         if (true || Verbose) {
             Log() << "Offer: " << offer << std::endl;
             Log() << "Answer: " << answer << std::endl;

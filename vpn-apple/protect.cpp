@@ -53,11 +53,11 @@ int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const s
 #endif
 
         if (address->sa_family == AF_INET) {
-            auto address4(reinterpret_cast<const sockaddr_in *>(address));
+            const auto address4(reinterpret_cast<const sockaddr_in *>(address));
             for (auto i(interfaces.get()); i != NULL; i = i->ifa_next)
                 if (i->ifa_addr->sa_family == AF_INET)
                     if (reinterpret_cast<sockaddr_in *>(i->ifa_addr)->sin_addr.s_addr == address4->sin_addr.s_addr) {
-                        int index(if_nametoindex(i->ifa_name));
+                        const auto index(if_nametoindex(i->ifa_name));
                         setsockopt(socket, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
                         goto done;
                     }
@@ -65,7 +65,7 @@ int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const s
 
         for (auto i(interfaces.get()); i != NULL; i = i->ifa_next) {
             if (i->ifa_addr->sa_family == AF_INET && strncmp(i->ifa_name, "en0", 3) == 0) {
-                int index(if_nametoindex(i->ifa_name));
+                const auto index(if_nametoindex(i->ifa_name));
                 setsockopt(socket, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
                 goto done;
             }

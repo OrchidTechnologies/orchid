@@ -43,7 +43,7 @@ template struct Pirate<Thread_, &rtc::BasicPacketSocketFactory::thread_>;
 
 U<cricket::PortAllocator> Origin::Allocator() {
     auto &factory(Factory());
-    auto thread(factory.*Loot<Thread_>::pointer);
+    const auto thread(factory.*Loot<Thread_>::pointer);
     return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
         return std::make_unique<cricket::BasicPortAllocator>(manager_.get(), &factory);
     });
@@ -57,7 +57,7 @@ task<std::string> Origin::Request(const std::string &method, const Locator &loca
     Sink<Adapter> adapter(orc::Context());
     U<Stream> stream;
     co_await Connect(stream, locator.host_, locator.port_);
-    auto socket(adapter.Wire<Inverted>(std::move(stream)));
+    const auto socket(adapter.Wire<Inverted>(std::move(stream)));
     socket->Start();
     co_return co_await orc::Request(adapter, method, locator, headers, data, verify);
 #else

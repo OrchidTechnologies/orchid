@@ -39,7 +39,7 @@ class Bonded :
         public BufferDrain
     {
       private:
-        Bonded *bonded_;
+        Bonded *const bonded_;
 
       protected:
         virtual Pump *Inner() = 0;
@@ -78,7 +78,7 @@ class Bonded :
     Sink<Bonding> *Bond() {
         // XXX: this is non-obviously incorrect
         auto bonding(std::make_unique<Sink<Bonding>>(this));
-        auto backup(bonding.get());
+        const auto backup(bonding.get());
         bondings_.emplace(backup, std::move(bonding));
         return backup;
     }
@@ -95,7 +95,7 @@ class Bonded :
     }
 
     task<void> Send(const Buffer &data) {
-        auto bonding(bondings_.begin());
+        const auto bonding(bondings_.begin());
         if (bonding != bondings_.end())
             co_await bonding->second->Send(data);
     }

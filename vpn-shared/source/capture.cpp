@@ -59,7 +59,7 @@ class LoggerDatabase :
     LoggerDatabase(const std::string &path) :
         Database(path)
     {
-        auto application(std::get<0>(Statement<One<int32_t>>(*this, R"(pragma application_id)")()));
+        const auto application(std::get<0>(Statement<One<int32_t>>(*this, R"(pragma application_id)")()));
         orc_assert(application == 0);
 
         Statement<Skip>(*this, R"(pragma journal_mode = wal)")();
@@ -68,7 +68,7 @@ class LoggerDatabase :
 
         Statement<None>(*this, R"(begin)")();
 
-        auto version(std::get<0>(Statement<One<int32_t>>(*this, R"(pragma user_version)")()));
+        const auto version(std::get<0>(Statement<One<int32_t>>(*this, R"(pragma user_version)")()));
         switch (version) {
             case 0:
                 Statement<None>(*this, R"(
@@ -722,23 +722,23 @@ task<void> Capture::Start(const std::string &path) {
 
     S<Origin> origin(Break<Local>());
 
-    auto hops(unsigned(heap.eval<double>("hops.length")));
+    const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
         co_return co_await Start(std::move(origin));
 
     Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), Address(heap.eval<std::string>("eth_curator")));
     Beam argument(Bless(heap.eval<std::string>("eth_argument")));
 
-    auto host(origin->Host());
+    const auto host(origin->Host());
 
     for (unsigned i(0); i != hops - 1; ++i) {
         auto remote(Break<Sink<Remote>>());
         co_await Single(remote.get(), heap, network, origin, argument, remote->Host(), i);
         remote->Open();
-        origin = remote;
+        origin = std::move(remote);
     }
 
-    auto sunk(co_await Start());
+    const auto sunk(co_await Start());
     co_await Single(sunk, heap, network, origin, argument, host, hops - 1);
 }
 

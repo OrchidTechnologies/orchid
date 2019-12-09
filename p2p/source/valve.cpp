@@ -57,7 +57,7 @@ class Track {
 
                     std::unique_lock<std::mutex> lock(tracker.mutex_);
                     Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-                    for (auto valve : tracker.valves_)
+                    for (const auto valve : tracker.valves_)
                         Log() << std::setw(5) << valve->unique_ << ": " << boost::core::demangle(typeid(*valve).name()) << std::endl;
                     Log() << "vvvvvvvvvvvvvvvv" << std::endl;
                 }

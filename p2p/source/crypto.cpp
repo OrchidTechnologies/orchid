@@ -47,7 +47,7 @@ void Random(uint8_t *data, size_t size) {
 
 Brick<32> Hash(const Buffer &data) {
     Beam beam(data);
-    auto hash(ethash_keccak256(beam.data(), beam.size()));
+    const auto hash(ethash_keccak256(beam.data(), beam.size()));
     Brick<sizeof(hash)> value;
     // the ethash_keccak56 API fundamentally requires a union
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
@@ -69,7 +69,7 @@ Signature::Signature(const Brick<64> &data, int v) {
     v_ = v;
 
     static const uint256_t n_("115792089237316195423570985008687907852837564279074904382605163141518161494337");
-    auto s(s_.num<uint256_t>());
+    const auto s(s_.num<uint256_t>());
     if (s > n_ / 2) {
         v_ = v_ ^ 1;
         s_ = Number<uint256_t>(n_ - s);
@@ -102,14 +102,14 @@ static Common Serialize(const secp256k1_context *context, secp256k1_pubkey &comm
 }
 
 Common Commonize(const Secret &secret) {
-    auto *context(Curve());
+    const auto context(Curve());
     secp256k1_pubkey common;
     orc_assert(secp256k1_ec_pubkey_create(context, &common, secret.data()) != 0);
     return Serialize(context, common);
 }
 
 Signature Sign(const Secret &secret, const Brick<32> &data) {
-    auto *context(Curve());
+    const auto context(Curve());
 
     secp256k1_ecdsa_recoverable_signature internal;
     orc_assert(secp256k1_ecdsa_sign_recoverable(context, &internal, data.data(), secret.data(), nullptr, nullptr) != 0);
@@ -122,10 +122,10 @@ Signature Sign(const Secret &secret, const Brick<32> &data) {
 }
 
 Common Recover(const Brick<32> &data, const Signature &signature) {
-    auto *context(Curve());
+    const auto context(Curve());
 
     secp256k1_ecdsa_recoverable_signature internal;
-    auto [combined] = Take<Brick<64>>(Tie(signature.r_, signature.s_));
+    const auto [combined] = Take<Brick<64>>(Tie(signature.r_, signature.s_));
     orc_assert(secp256k1_ecdsa_recoverable_signature_parse_compact(context, &internal, combined.data(), signature.v_ - 27) != 0);
 
     secp256k1_pubkey common;

@@ -63,7 +63,7 @@ class Nest :
         ~Count() {
             if (nest_ == nullptr)
                 return;
-            auto count(--nest_->count_);
+            const auto count(--nest_->count_);
             if (count == 0)
                 nest_->event_.set();
             //Log() << "Nest[" << nest_ << "]: " << std::dec << count << std::endl;

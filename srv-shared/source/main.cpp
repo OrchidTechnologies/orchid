@@ -179,7 +179,7 @@ int Main(int argc, const char *const argv[]) {
     std::string chain;
 
     if (args.count("tls") == 0) {
-        auto pem(Certify()->ToPEM());
+        const auto pem(Certify()->ToPEM());
 
         key = pem.private_key();
         chain = pem.certificate();
@@ -249,14 +249,14 @@ int Main(int argc, const char *const argv[]) {
         // XXX: this should be the IP of "bind"
         host = boost::asio::ip::host_name();
 
-    auto port(args["port"].as<uint16_t>());
+    const auto port(args["port"].as<uint16_t>());
     auto path(args["path"].as<std::string>());
 
-    Strung url("https://" + host + ":" + std::to_string(port) + path);
+    const Strung url("https://" + host + ":" + std::to_string(port) + path);
     Bytes gpg;
 
     Builder tls;
-    static std::regex re("-");
+    static const std::regex re("-");
     tls += Object(std::regex_replace(fingerprint->algorithm, re, "").c_str());
     tls += Subset(fingerprint->digest.data(), fingerprint->digest.size());
 
@@ -273,7 +273,7 @@ int Main(int argc, const char *const argv[]) {
 
 
     {
-        auto offer(Wait(Description(origin, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
+        const auto offer(Wait(Description(origin, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
         std::cout << std::endl;
         std::cout << Filter(false, offer) << std::endl;
 
@@ -287,11 +287,11 @@ int Main(int argc, const char *const argv[]) {
         std::map<Socket, Socket> reflexive;
 
         for (size_t i(0); ; ++i) {
-            auto ices(jsep.candidates(i));
+            const auto ices(jsep.candidates(i));
             if (ices == nullptr)
                 break;
             for (size_t i(0), e(ices->count()); i != e; ++i) {
-                auto ice(ices->at(i));
+                const auto ice(ices->at(i));
                 orc_assert(ice != nullptr);
                 const auto &candidate(ice->candidate());
                 if (candidate.type() != "stun")

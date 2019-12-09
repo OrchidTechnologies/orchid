@@ -39,7 +39,7 @@ class Family :
     virtual Pump *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
+        const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
         orc_assert(protocol == Analyze(data));
         return Link::Land(packet);
     }

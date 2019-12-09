@@ -64,7 +64,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
             }
 
             static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look("look");
-            auto [set, url, tls, gpg] = co_await look.Call(endpoint, latest, location_, 90000, address);
+            const auto [set, url, tls, gpg] = co_await look.Call(endpoint, latest, location_, 90000, address);
 
             Window window(tls);
             orc_assert(window.Take() == 0x06);

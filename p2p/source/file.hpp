@@ -59,7 +59,7 @@ class File final :
 	try {
 	    writ = co_await file_.async_read_some(asio::buffer(beam.data(), beam.size()), Token());
 	} catch (const asio::system_error &error) {
-	    auto code(error.code());
+	    const auto code(error.code());
 	    if (code == asio::error::eof)
                 co_return 0;
             orc_adapt(error);
@@ -79,7 +79,7 @@ class File final :
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-        auto writ(co_await file_.async_write_some(Sequence(data), Token()));
+        const auto writ(co_await file_.async_write_some(Sequence(data), Token()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };

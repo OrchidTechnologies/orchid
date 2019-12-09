@@ -118,7 +118,7 @@ class Region :
 
     unsigned nib(size_t index) const {
         orc_assert((index >> 1) < size());
-        auto value(data()[index >> 1]);
+        const auto value(data()[index >> 1]);
         if ((index & 0x1) == 0)
             return value >> 4;
         else
@@ -170,7 +170,7 @@ class Span {
     Cast_ &take() {
         static_assert(sizeof(Type_) == 1);
         orc_assert(size_ >= sizeof(Type_));
-        auto value(reinterpret_cast<Cast_ *>(data()));
+        const auto value(reinterpret_cast<Cast_ *>(data()));
         data_ += sizeof(Type_);
         size_ -= sizeof(Type_);
         return *value;
@@ -626,29 +626,29 @@ Beam Bless(const std::string &data);
 
 template <typename Data_>
 inline bool operator ==(const Beam &lhs, const std::string &rhs) {
-    auto size(lhs.size());
+    const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
 template <typename Data_>
 inline bool operator ==(const Beam &lhs, const Strung<Data_> &rhs) {
-    auto size(lhs.size());
+    const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
 template <size_t Size_>
 inline bool operator ==(const Beam &lhs, const Brick<Size_> &rhs) {
-    auto size(lhs.size());
+    const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
 inline bool operator ==(const Beam &lhs, const Range &rhs) {
-    auto size(lhs.size());
+    const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
 inline bool operator ==(const Beam &lhs, const Beam &rhs) {
-    auto size(lhs.size());
+    const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
@@ -843,7 +843,7 @@ class Window :
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
         auto here(range_);
-        auto rest(ranges_.get() + count_ - here);
+        const auto rest(ranges_.get() + count_ - here);
         if (rest == 0)
             return true;
 
@@ -875,7 +875,7 @@ class Window :
         for (auto rest(ranges_.get() + count_ - here); need != 0; step = 0, ++here, --rest) {
             orc_assert(rest != 0);
 
-            auto size(here->size() - step);
+            const auto size(here->size() - step);
             if (size == 0)
                 continue;
 
@@ -1116,7 +1116,7 @@ template <size_t Index_, typename... Nested_, typename... Taking_>
 struct Taking<Index_, std::tuple<Nested_...>, void, Taking_...> {
 template <typename Tuple_, typename Buffer_>
 static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
-    auto stop(Taker<0, Nested_...>::Take(std::get<Index_>(tuple), window, std::forward<Buffer_>(buffer)));
+    const auto stop(Taker<0, Nested_...>::Take(std::get<Index_>(tuple), window, std::forward<Buffer_>(buffer)));
     orc_assert(stop);
     return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };

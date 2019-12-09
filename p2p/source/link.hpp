@@ -144,7 +144,7 @@ class Sunk {
     template <typename Type_, typename... Args_>
     Type_ *Wire(Args_ &&...args) {
         auto inner(std::make_unique<Type_>(Gave(), std::forward<Args_>(args)...));
-        auto backup(inner.get());
+        const auto backup(inner.get());
         inner_ = std::move(inner);
         return backup;
     }
@@ -157,7 +157,7 @@ class Sink final :
 {
   private:
     Inner_ *Inner() override {
-        auto inner(this->inner_.get());
+        const auto inner(this->inner_.get());
         orc_insist_(inner != nullptr, typeid(Inner_).name() << " " << typeid(Base_).name() << "::Inner() == nullptr");
         return inner;
     }
