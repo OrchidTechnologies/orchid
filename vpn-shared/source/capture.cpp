@@ -710,7 +710,7 @@ task<void> Capture::Start(const std::string &path) {
 
     heap.eval<void>(R"(
         eth_directory = "0x441f2C1dC59Fe75cF379641C11c93a4f763d164c";
-        eth_location = "0xBF7A77753f4893A580E3C2512E064aB3283A95aA";
+        eth_location = "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD";
         eth_curator = "0x55Abb3CE20ABbC38444e0A200dDE7fC0388b76a5";
         eth_argument = "2b1ce95573ec1b927a90cb488db113b40eeb064a";
         rpc = "https://cloudflare-eth.com:443/";

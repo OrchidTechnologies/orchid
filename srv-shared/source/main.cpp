@@ -87,7 +87,7 @@ int Main(int argc, const char *const argv[]) {
     group.add_options()
         //("token", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
         ("lottery", po::value<std::string>()->default_value("0x5cF8F6Fa5aeBD59E67Cf852f5776BC90B2e2c562"))
-        ("location", po::value<std::string>()->default_value("0xBF7A77753f4893A580E3C2512E064aB3283A95aA"))
+        ("location", po::value<std::string>()->default_value("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD"))
     ; options.add(group); }
 
     { po::options_description group("user eth addresses");
