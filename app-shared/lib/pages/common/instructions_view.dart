@@ -10,6 +10,7 @@ class InstructionsView extends StatelessWidget {
   final String body;
   final bool hideInLandscape;
   final List<Widget> children;
+  final double bodyFontSize;
 
   const InstructionsView(
       {Key key,
@@ -17,7 +18,8 @@ class InstructionsView extends StatelessWidget {
       @required this.title,
       @required this.body,
       this.hideInLandscape = true,
-      this.children = const <Widget> []})
+      this.children = const <Widget>[],
+      this.bodyFontSize})
       : super(key: key);
 
   @override
@@ -33,29 +35,31 @@ class InstructionsView extends StatelessWidget {
           child: SafeArea(
               child: Column(
             children: <Widget>[
-              //Spacer(flex: 1),
-              image ?? Container(),
-              SizedBox(height: 20),
-              AppText.header(
-                  text: title,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                  fontSize: 20.0),
-              SizedBox(height: 20),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 450),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 45),
-                  child: AppText.body(
-                      text: body,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11.0,
-                      color: textColor),
-                ),
-              ),
-            ] + children + <Widget> [
-              Spacer(flex: 1),
-            ],
+                  //Spacer(flex: 1),
+                  image ?? Container(),
+                  SizedBox(height: 20),
+                  AppText.header(
+                      text: title,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                      fontSize: 20.0),
+                  SizedBox(height: 20),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 450),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 45),
+                      child: AppText.body(
+                          text: body,
+                          fontWeight: FontWeight.w500,
+                          fontSize: bodyFontSize ?? 11.0,
+                          color: textColor),
+                    ),
+                  ),
+                ] +
+                children +
+                <Widget>[
+                  Spacer(flex: 1),
+                ],
           )),
         );
       },

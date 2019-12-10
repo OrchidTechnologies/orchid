@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
@@ -14,8 +17,8 @@ import '../app_gradients.dart';
 import '../app_text.dart';
 import '../app_transitions.dart';
 import 'add_hop_page.dart';
-import 'circuit_empty_view.dart';
 import 'hop_editor.dart';
+import 'hop_tile.dart';
 import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
 
@@ -29,6 +32,7 @@ class CircuitPage extends StatefulWidget {
 }
 
 class CircuitPageState extends State<CircuitPage> {
+  List<StreamSubscription> _rxSubs = List();
   List<UniqueHop> _hops;
 
   @override
@@ -48,63 +52,115 @@ class CircuitPageState extends State<CircuitPage> {
         })).toList();
       });
     }
+
+    _rxSubs.add(OrchidAPI().connectionStatus.listen((state) {
+      setState(() {}); // Update the UI on connection status changes
+    }));
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+      child: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    return Visibility(
+      visible: _hops != null,
       child: Stack(
         children: <Widget>[
-          Visibility(
-              visible: _showEmptyView(),
-              child: CircuitEmptyView(addHop: _addHop),
-              replacement: _buildBody()),
+          _buildHopList(),
+          if (_hasHops())
+            _buildFloatingActionButton()
+          else
+            _buildBottomButtonCallout()
         ],
       ),
     );
   }
 
-  Widget _buildBody() {
-    return Stack(
-      children: <Widget>[
-        Visibility(visible: _hops != null, child: _buildHopList()),
-        Align(
-            alignment: Alignment.bottomRight,
-            child: FloatingAddButton(onPressed: _addHop)),
-      ],
-    );
+  Align _buildFloatingActionButton() {
+    return Align(
+        alignment: Alignment.bottomRight,
+        child: FloatingAddButton(onPressed: _addHop));
   }
 
-  // Empty state instructions
-  bool _showEmptyView() {
-    return _hops != null && _hops.length == 0;
+  Widget _buildBottomButtonCallout() {
+    return OrientationBuilder(
+        builder: (BuildContext context, Orientation orientation) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Visibility(
+            visible: orientation == Orientation.portrait,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 45.0),
+              child: AppText.header(
+                  text: "Create your first hop for IP protection.",
+                  color: Colors.deepPurple,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20.0),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                Image.asset("assets/images/drawnArrow.png"),
+                FloatingAddButton(
+                    padding:
+                        EdgeInsets.only(left: 24, right: 24, top: 0, bottom: 0),
+                    onPressed: _addHop),
+              ],
+            ),
+          ),
+        ],
+      );
+    });
   }
 
-  // (Success!) Instructions shown when the user has a single hop configured
-  bool _showSingleHopInstructions() {
-    return _hops != null && _hops.length == 1;
+  bool _hasHops() {
+    return _hops != null && _hops.length > 0;
+  }
+
+  bool _connected() {
+    return OrchidAPI().connectionStatus.value == OrchidConnectionState.Connected;
+  }
+
+  // Warn when no vpn protection is actually in effect.
+  bool _showProtectedWarning() {
+    // Note: The native side reports connected whenever the VPN is running,
+    // Note: including for traffic monitoring only.
+    return !_hasHops() || !_connected();
+  }
+
+  bool _showEnableVPNInstruction() {
+    return _hasHops() && !_connected();
   }
 
   Widget _buildHopList() {
     return Column(
       children: <Widget>[
         pady(24),
-        //_divider(),
         Expanded(
           child: AppReorderableListView(
               header: Column(
                 children: <Widget>[_buildStartTile(), _buildFirewallTile()],
               ),
               children: (_hops ?? []).map((uniqueHop) {
-                return _buildHopTile(uniqueHop);
+                return _buildDismissableHopTile(uniqueHop);
               }).toList(),
               footer: Column(
                 children: <Widget>[
                   _buildEndTile(),
-                  Visibility(
-                      visible: _showSingleHopInstructions(),
-                      child: _buildSingleHopInstructions())
+                  if (_showProtectedWarning())
+                    _buildWarningTile(),
+                  if (_showEnableVPNInstruction())
+                    _buildEnableVPNInstruction()
                 ],
               ),
               onReorder: _onReorder),
@@ -113,24 +169,9 @@ class CircuitPageState extends State<CircuitPage> {
     );
   }
 
-  Container _buildSingleHopInstructions() {
-    // Providing the instructions a fixed height allows this to work.
-    // TODO: Why doesn't IntrinsicHeight work here?
-    return Container(
-      padding: EdgeInsets.only(top: 50),
-      height: 440,
-      child: InstructionsView(
-        image: Image.asset("assets/images/hi5.png"),
-        title: "Success!",
-        body:
-            "You now have a configured single-hop route for your internet traffic. Each hop you add brings a layer of indirection and obfuscation to your connection - as long as each is independently funded from a new source.",
-      ),
-    );
-  }
-
   // The starting (top) tile in the hop flow
   Widget _buildStartTile() {
-    return _buildTileWithDivider(
+    return HopTile(
         title: "Your Device",
         image: Image.asset("assets/images/person.png"),
         gradient: AppGradients.purpleTileHorizontal,
@@ -141,19 +182,27 @@ class CircuitPageState extends State<CircuitPage> {
 
   // The ending (bottom) tile in the hop flow
   Widget _buildEndTile() {
-    return _buildTileWithDivider(
-      title: "The Internet",
-      image: Image.asset("assets/images/globe.png"),
-      gradient: AppGradients.purpleTileHorizontal,
-      textColor: Colors.white,
-      showDragHandle: false,
-      showFlowDividerTop: true
+    return HopTile(
+        title: "The Internet",
+        image: Image.asset("assets/images/globe.png"),
+        gradient: AppGradients.purpleTileHorizontal,
+        textColor: Colors.white,
+        showDragHandle: false,
+        showFlowDividerTop: _hops != null && _hops.length > 0);
+  }
+
+  Widget _buildWarningTile() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Text("️⚠️️ Your IP is exposed!",
+          style:
+              AppText.listItem.copyWith(fontSize: 18, color: Colors.redAccent)),
     );
   }
 
   Widget _buildFirewallTile() {
     var color = Colors.white;
-    return _buildTileWithDivider(
+    return HopTile(
         title: "Personal Firewall",
         image: Image.asset("assets/images/fire.png", color: color),
         gradient: AppGradients.purpleTileHorizontal,
@@ -162,7 +211,7 @@ class CircuitPageState extends State<CircuitPage> {
         showFlowDividerBottom: true);
   }
 
-  Dismissible _buildHopTile(UniqueHop uniqueHop) {
+  Dismissible _buildDismissableHopTile(UniqueHop uniqueHop) {
     return Dismissible(
       key: Key(uniqueHop.key.toString()),
       background: Container(
@@ -180,11 +229,11 @@ class CircuitPageState extends State<CircuitPage> {
       onDismissed: (direction) {
         _deleteHop(uniqueHop);
       },
-      child: _buildHopTileWithDivider(uniqueHop),
+      child: _buildHopTile(uniqueHop),
     );
   }
 
-  Widget _buildHopTileWithDivider(UniqueHop uniqueHop) {
+  Widget _buildHopTile(UniqueHop uniqueHop) {
     bool isFirstHop = uniqueHop.key == _hops.first.key;
     bool hasMultipleHops = _hops.length > 1;
     Color color = Colors.teal;
@@ -199,7 +248,7 @@ class CircuitPageState extends State<CircuitPage> {
       default:
         throw new Exception();
     }
-    return _buildTileWithDivider(
+    return HopTile(
         textColor: color,
         image: image,
         onTap: () {
@@ -211,71 +260,20 @@ class CircuitPageState extends State<CircuitPage> {
         showDragHandle: hasMultipleHops);
   }
 
-  Widget _buildTileWithDivider({
-    String title,
-    VoidCallback onTap,
-    Key key,
-    Image image,
-    Color textColor,
-    Color color,
-    Gradient gradient,
-    bool showDragHandle = true,
-    bool showFlowDividerBottom = false,
-    bool showFlowDividerTop = false,
-    bool showTopDivider = false,
-  }) {
-    return Column(
-      key: key,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        // Optional top flow divider
-        if (showFlowDividerTop)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 8),
-            child: Image.asset("assets/images/expandMore.png"),
-          ),
-
-        // Optional top border divider
-        if (showTopDivider)
-          _divider(),
-
-        // Main tile body
-        Container(
-          decoration: BoxDecoration(color: color, gradient: gradient),
-          // Allow the tile background to extend into the safe area but not the content
-          child: SafeArea(
-            child: ListTile(
-                onTap: onTap,
-                key: key,
-                title: Text(
-                  title,
-                  style: AppText.listItem.copyWith(color: textColor),
-                ),
-                leading: image,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    if (showDragHandle) Icon(Icons.menu),
-                    if (onTap != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Icon(Icons.chevron_right),
-                      ),
-                  ],
-                )),
-          ),
-        ),
-
-        // Bottom border divider
-        _divider(),
-
-        // Optional bottom flow divider
-        if (showFlowDividerBottom)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 8),
-            child: Image.asset("assets/images/expandMore.png"),
-          )
-      ],
+  Container _buildEnableVPNInstruction() {
+    // Providing the instructions a fixed height allows this to work.
+    // TODO: Why doesn't IntrinsicHeight work here?
+    return Container(
+      padding: EdgeInsets.only(top: 16),
+      height: 350,
+      child: InstructionsView(
+        hideInLandscape: false,
+        //image: Image.asset("assets/images/hi5.png"),
+        title: "Turn on the VPN!",
+        bodyFontSize: 14,
+        body:
+            "Turn Orchid on to activate your hops and protect your traffic",
+      ),
     );
   }
 
@@ -381,9 +379,11 @@ class CircuitPageState extends State<CircuitPage> {
     _saveCircuit();
   }
 
-  Widget _divider() {
-    return Container(height: 1.0, color: Color(0xffd5d7e2));
+  @override
+  void dispose() {
+    super.dispose();
+    _rxSubs.forEach((sub) {
+      sub.cancel();
+    });
   }
 }
-
-
