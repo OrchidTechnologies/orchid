@@ -123,6 +123,12 @@ class _ConnectWorldMapState extends State<ConnectWorldMap>
           );
         });
   }
+
+  @override
+  void dispose() {
+    _masterAnimController.dispose();
+    super.dispose();
+  }
 }
 
 /// Paint the route visualization on the map.

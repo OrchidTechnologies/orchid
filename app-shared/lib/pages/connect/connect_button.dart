@@ -34,20 +34,20 @@ class ConnectButtonState extends State<ConnectButton>
   AnimationController _pulseAnimationController;
   AnimationController _teeterAnimationController;
 
-  List<StreamSubscription> _rxSubscriptions = List();
+  List<StreamSubscription> _rxSubs = List();
 
   @override
   void initState() {
     super.initState();
 
-    _rxSubscriptions
+    _rxSubs
         .add(widget.connectionStatus.listen((OrchidConnectionState state) {
       setState(() {
         this.connectionState = state;
       });
     }));
 
-    _rxSubscriptions.add(widget.enabledStatus.listen((bool state) {
+    _rxSubs.add(widget.enabledStatus.listen((bool state) {
       setState(() {
         this.enabled = state;
       });
@@ -231,6 +231,9 @@ class ConnectButtonState extends State<ConnectButton>
     _teeterAnimationController.dispose();
     _pulseAnimationController.dispose();
     super.dispose();
+    _rxSubs.forEach((sub) {
+      sub.cancel();
+    });
   }
 }
 

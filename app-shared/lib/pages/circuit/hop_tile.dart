@@ -16,6 +16,7 @@ class HopTile extends StatelessWidget {
   final bool showFlowDividerTop;
   final bool showTopDivider;
   final bool showBottomDivider;
+  final Widget trailing;
 
   const HopTile({
     Key key,
@@ -30,6 +31,7 @@ class HopTile extends StatelessWidget {
     this.showFlowDividerTop = false,
     this.showTopDivider = false,
     this.showBottomDivider = true,
+    this.trailing,
   }) : super(key: key);
 
   @override
@@ -62,17 +64,18 @@ class HopTile extends StatelessWidget {
                   style: AppText.listItem.copyWith(color: textColor),
                 ),
                 leading: image,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    if (showDragHandle) Icon(Icons.menu),
-                    if (onTap != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Icon(Icons.chevron_right),
-                      ),
-                  ],
-                )),
+                trailing: trailing ??
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        if (showDragHandle) Icon(Icons.menu),
+                        if (onTap != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Icon(Icons.chevron_right),
+                          ),
+                      ],
+                    )),
           ),
         ),
 

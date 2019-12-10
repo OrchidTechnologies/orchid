@@ -54,7 +54,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   Switch _buildSwitch() {
     var currentValue = OrchidAPI().connectionStatus.value ??
-        OrchidConnectionState.NotConnected;
+        OrchidConnectionState.Invalid;
     bool switchOn = false;
     switch (currentValue) {
       case OrchidConnectionState.Invalid:

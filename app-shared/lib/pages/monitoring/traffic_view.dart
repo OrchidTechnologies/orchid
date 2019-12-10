@@ -59,7 +59,6 @@ class _TrafficViewState extends State<TrafficView>
 
   @override
   void initState() {
-    print("traffic view init state");
     super.initState();
 
     // Update on search text

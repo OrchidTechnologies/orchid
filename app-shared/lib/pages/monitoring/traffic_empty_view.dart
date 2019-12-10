@@ -16,11 +16,11 @@ class TrafficEmptyView extends StatelessWidget {
                 child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: 450),
                     child: StreamBuilder<OrchidConnectionState>(
-                        initialData: OrchidConnectionState.Invalid,
                         stream: OrchidAPI().connectionStatus,
                         builder: (context, snapshot) {
+                          var state = OrchidAPI().connectionStatus.value;
                           bool connected;
-                          switch (snapshot.data) {
+                          switch (state) {
                             case OrchidConnectionState.Invalid:
                             case OrchidConnectionState.NotConnected:
                               connected = false;
@@ -54,7 +54,9 @@ class TrafficEmptyView extends StatelessWidget {
                                 Visibility(
                                   visible: orientation == Orientation.portrait,
                                   child: Image.asset(
-                                      "assets/images/analysisBunny.png"),
+                                    "assets/images/analysisBunny.png",
+                                    height: 330,
+                                  ),
                                 ),
                                 Spacer(flex: 1),
                               ],

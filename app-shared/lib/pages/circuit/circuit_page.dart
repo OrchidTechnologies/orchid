@@ -9,10 +9,10 @@ import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/util/collections.dart';
 
+import '../app_colors.dart';
 import '../app_gradients.dart';
 import '../app_text.dart';
 import '../app_transitions.dart';
@@ -34,10 +34,16 @@ class CircuitPage extends StatefulWidget {
 class CircuitPageState extends State<CircuitPage> {
   List<StreamSubscription> _rxSubs = List();
   List<UniqueHop> _hops;
+  bool _switchOn;
+
+  // Workaround for dragged switch state issue
+  // https://github.com/flutter/flutter/issues/46046
+  int _switchKey = 0;
 
   @override
   void initState() {
     super.initState();
+    _switchOn = _initialSwitchState();
     initStateAsync();
   }
 
@@ -53,8 +59,10 @@ class CircuitPageState extends State<CircuitPage> {
       });
     }
 
+    // Update the UI on connection status changes
     _rxSubs.add(OrchidAPI().connectionStatus.listen((state) {
-      setState(() {}); // Update the UI on connection status changes
+      print("connection state changed: $state");
+      setState(() {});
     }));
   }
 
@@ -69,6 +77,7 @@ class CircuitPageState extends State<CircuitPage> {
   Widget _buildBody() {
     return Visibility(
       visible: _hops != null,
+      replacement: Container(),
       child: Stack(
         children: <Widget>[
           _buildHopList(),
@@ -123,14 +132,6 @@ class CircuitPageState extends State<CircuitPage> {
     });
   }
 
-  bool _hasHops() {
-    return _hops != null && _hops.length > 0;
-  }
-
-  bool _connected() {
-    return OrchidAPI().connectionStatus.value == OrchidConnectionState.Connected;
-  }
-
   // Warn when no vpn protection is actually in effect.
   bool _showProtectedWarning() {
     // Note: The native side reports connected whenever the VPN is running,
@@ -149,7 +150,11 @@ class CircuitPageState extends State<CircuitPage> {
         Expanded(
           child: AppReorderableListView(
               header: Column(
-                children: <Widget>[_buildStartTile(), _buildFirewallTile()],
+                children: <Widget>[
+                  _buildStartTile(),
+                  if (_showEnableVPNInstruction()) _buildEnableVPNInstruction(),
+                  _buildFirewallTile()
+                ],
               ),
               children: (_hops ?? []).map((uniqueHop) {
                 return _buildDismissableHopTile(uniqueHop);
@@ -157,10 +162,7 @@ class CircuitPageState extends State<CircuitPage> {
               footer: Column(
                 children: <Widget>[
                   _buildEndTile(),
-                  if (_showProtectedWarning())
-                    _buildWarningTile(),
-                  if (_showEnableVPNInstruction())
-                    _buildEnableVPNInstruction()
+                  if (_showProtectedWarning()) _buildWarningTile(),
                 ],
               ),
               onReorder: _onReorder),
@@ -176,8 +178,10 @@ class CircuitPageState extends State<CircuitPage> {
         image: Image.asset("assets/images/person.png"),
         gradient: AppGradients.purpleTileHorizontal,
         textColor: Colors.white,
+        trailing: _buildSwitch(),
         showDragHandle: false,
-        showFlowDividerBottom: true);
+        // Show the bottom flow arrow unless we are showing the enable instructions
+        showFlowDividerBottom: !_showEnableVPNInstruction());
   }
 
   // The ending (bottom) tile in the hop flow
@@ -264,18 +268,33 @@ class CircuitPageState extends State<CircuitPage> {
     // Providing the instructions a fixed height allows this to work.
     // TODO: Why doesn't IntrinsicHeight work here?
     return Container(
-      padding: EdgeInsets.only(top: 16),
-      height: 350,
-      child: InstructionsView(
-        hideInLandscape: false,
-        //image: Image.asset("assets/images/hi5.png"),
-        title: "Turn on the VPN!",
-        bodyFontSize: 14,
-        body:
-            "Turn Orchid on to activate your hops and protect your traffic",
-      ),
-    );
+        padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+        child: SafeArea(
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: AppText.header(
+                    text:
+                        "Turn Orchid on to activate your hops and protect your traffic",
+                    color: Colors.deepPurple,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20.0),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: RotatedBox(
+                    child:
+                        Image.asset("assets/images/drawnArrow.png", height: 34),
+                    quarterTurns: 3),
+              ),
+            ],
+          ),
+        ));
   }
+
+  ///
+  /// Begin - Add / view hop logic
+  ///
 
   // Show the add hop flow and save the result if completed successfully.
   void _addHop() async {
@@ -361,12 +380,6 @@ class CircuitPageState extends State<CircuitPage> {
     _saveCircuit();
   }
 
-  void _saveCircuit() async {
-    var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
-    UserPreferences().setCircuit(circuit);
-    OrchidAPI().updateConfiguration();
-  }
-
   // Callback for drag to reorder
   void _onReorder(int oldIndex, int newIndex) {
     setState(() {
@@ -377,6 +390,113 @@ class CircuitPageState extends State<CircuitPage> {
       _hops.insert(newIndex, hop);
     });
     _saveCircuit();
+  }
+
+  ///
+  /// Begin - VPN Switch Logic
+  ///
+
+  Switch _buildSwitch() {
+    return Switch(
+      key: Key(_switchKey.toString()),
+        activeColor: AppColors.purple_5,
+        value: _switchOn ?? false,
+        onChanged: (bool newValue) {
+          _setConnectionState(newValue);
+        });
+  }
+
+  // Get the initial state of the vpn switch based on the connection state.
+  // Note: By design the switch on this page does not track or respond to the
+  // Note: connection state after initialization.  See `monitoring_page.dart`
+  // Note: for a version of the switch that does attempt to track the connection.
+  bool _initialSwitchState() {
+    var connectionState =
+        OrchidAPI().connectionStatus.value ?? OrchidConnectionState.Invalid;
+    switch (connectionState) {
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+        return false; // off
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.Disconnecting:
+        return true; // on
+      default:
+        throw Exception();
+    }
+  }
+
+  // Note: By design the switch on this page does not track or respond to the
+  // Note: connection state after initialization.  See `monitoring_page.dart`
+  // Note: for a version of the switch that does attempt to track the connection.
+  void _setConnectionState(bool desiredEnabled) {
+    _switchKey++;
+    if(desiredEnabled) {
+      _checkPermissionAndEnableConnection();
+    } else {
+      OrchidAPI().setConnected(false);
+      setState(() {
+        _switchOn = false;
+      });
+    }
+  }
+
+  // Prompt for VPN permissions if needed and then start the VPN.
+  // Note: If the UI will no longer be participating in the prompt then
+  // Note: we can just do this routinely in the channel api on first launch.
+  // Note: duplicates code in monitoring_page and connect_page.
+  void _checkPermissionAndEnableConnection() {
+    // Get the most recent status, blocking if needed.
+    _rxSubs
+        .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
+      if (installed) {
+        OrchidAPI().setConnected(true);
+        setState(() {
+          _switchOn = true;
+        });
+      } else {
+        bool ok = await OrchidAPI().requestVPNPermission();
+        if (ok) {
+          debugPrint("vpn: user chose to install");
+          // Note: It appears that trying to enable the connection too quickly
+          // Note: after installing the vpn permission / config fails.
+          // Note: Introducing a short artificial delay.
+          Future.delayed(Duration(milliseconds: 500)).then((_) {
+            OrchidAPI().setConnected(true);
+          });
+          setState(() {
+            _switchOn = true;
+          });
+        } else {
+          debugPrint("vpn: user skipped");
+          setState(() {
+            _switchOn = false;
+          });
+        }
+      }
+    }));
+  }
+
+  ///
+  /// Begin - util
+  ///
+
+  bool _hasHops() {
+    return _hops != null && _hops.length > 0;
+  }
+
+  // Note: By design the switch on this page does not track or respond to the
+  // Note: connection state after initialization.  See `monitoring_page.dart`
+  // Note: for a version of the switch that does attempt to track the connection.
+  bool _connected() {
+    //return OrchidAPI().connectionStatus.value == OrchidConnectionState.Connected;
+    return _switchOn;
+  }
+
+  void _saveCircuit() async {
+    var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
+    UserPreferences().setCircuit(circuit);
+    OrchidAPI().updateConfiguration();
   }
 
   @override
