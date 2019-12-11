@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
@@ -43,11 +44,17 @@ class CircuitPageState extends State<CircuitPage> {
   @override
   void initState() {
     super.initState();
-    _switchOn = _initialSwitchState();
     initStateAsync();
   }
 
   void initStateAsync() async {
+    // Get the initial state of the vpn switch based on the connection state.
+    // Note: By design the switch on this page does not track or respond to the
+    // Note: dynamic connection state but instead reflects the user pref.
+    // Note: See `monitoring_page.dart` or `connect_page` for controls that track the
+    // Note: system connection status.
+    _switchOn = await UserPreferences().getDesiredVPNState();
+
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
       setState(() {
@@ -398,7 +405,7 @@ class CircuitPageState extends State<CircuitPage> {
 
   Switch _buildSwitch() {
     return Switch(
-      key: Key(_switchKey.toString()),
+        key: Key(_switchKey.toString()),
         activeColor: AppColors.purple_5,
         value: _switchOn ?? false,
         onChanged: (bool newValue) {
@@ -406,38 +413,15 @@ class CircuitPageState extends State<CircuitPage> {
         });
   }
 
-  // Get the initial state of the vpn switch based on the connection state.
-  // Note: By design the switch on this page does not track or respond to the
-  // Note: connection state after initialization.  See `monitoring_page.dart`
-  // Note: for a version of the switch that does attempt to track the connection.
-  bool _initialSwitchState() {
-    var connectionState =
-        OrchidAPI().connectionStatus.value ?? OrchidConnectionState.Invalid;
-    switch (connectionState) {
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
-        return false; // off
-      case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Connected:
-      case OrchidConnectionState.Disconnecting:
-        return true; // on
-      default:
-        throw Exception();
-    }
-  }
-
   // Note: By design the switch on this page does not track or respond to the
   // Note: connection state after initialization.  See `monitoring_page.dart`
   // Note: for a version of the switch that does attempt to track the connection.
   void _setConnectionState(bool desiredEnabled) {
     _switchKey++;
-    if(desiredEnabled) {
-      _checkPermissionAndEnableConnection();
+    if (desiredEnabled) {
+      _checkPermissionAndConnect();
     } else {
-      OrchidAPI().setConnected(false);
-      setState(() {
-        _switchOn = false;
-      });
+      _disconnect();
     }
   }
 
@@ -445,7 +429,8 @@ class CircuitPageState extends State<CircuitPage> {
   // Note: If the UI will no longer be participating in the prompt then
   // Note: we can just do this routinely in the channel api on first launch.
   // Note: duplicates code in monitoring_page and connect_page.
-  void _checkPermissionAndEnableConnection() {
+  void _checkPermissionAndConnect() {
+    UserPreferences().setDesiredVPNState(true);
     // Get the most recent status, blocking if needed.
     _rxSubs
         .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
@@ -475,6 +460,15 @@ class CircuitPageState extends State<CircuitPage> {
         }
       }
     }));
+  }
+
+  // Disconnect the VPN
+  void _disconnect() {
+    UserPreferences().setDesiredVPNState(false);
+    OrchidAPI().setConnected(false);
+    setState(() {
+      _switchOn = false;
+    });
   }
 
   ///

@@ -200,6 +200,31 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.QueryBalances.toString(), value);
   }
+
+  // Get the user's desired vpn state where true is on, false is off.
+  // Defaults to false if never set.
+  Future<bool> getDesiredVPNState() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.DesiredVPNState.toString()) ??
+        false;
+  }
+
+  // Set the user's desired vpn state where true is on, false is off.
+  Future<bool> setDesiredVPNState(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.DesiredVPNState.toString(), value);
+  }
+
+  Future<bool> getShowStatusTab() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.ShowStatusTab.toString()) ??
+        false;
+  }
+
+  Future<bool> setShowStatusTab(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.ShowStatusTab.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -214,5 +239,7 @@ enum UserPreferenceKey {
   UserConfig,
   Keys,
   DefaultCurator,
-  QueryBalances
+  QueryBalances,
+  DesiredVPNState,
+  ShowStatusTab
 }

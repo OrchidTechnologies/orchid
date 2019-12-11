@@ -7,6 +7,7 @@ import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
+import '../orchid_app.dart';
 
 /// The main settings page.
 class SettingsPage extends StatefulWidget {
@@ -16,7 +17,8 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   var _defaultCurator = TextEditingController();
-  bool _queryBalances = false;
+  //bool _queryBalances = false;
+  bool _showStatusTab = false;
 
   @override
   void initState() {
@@ -26,9 +28,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void initStateAsync() async {
-    _queryBalances = await UserPreferences().getQueryBalances();
+    //_queryBalances = await UserPreferences().getQueryBalances();
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
+    _showStatusTab = await UserPreferences().getShowStatusTab();
     setState(() { });
   }
 
@@ -70,7 +73,26 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: screenWidth * 0.5,
                 child: AppTextField(
                     controller: _defaultCurator, margin: EdgeInsets.zero)),
-          )
+          ),
+          pady(16),
+          Divider(),
+          PageTile(
+            title: "Show Status Page (beta)",
+            //imageName: "assets/images/assignment.png",
+            trailing: Switch(
+              activeColor: AppColors.purple_3,
+              value: _showStatusTab,
+              onChanged: (bool value) {
+                UserPreferences().setShowStatusTab(value);
+                setState(() {
+                  _showStatusTab = value;
+                });
+                OrchidApp.showStatusTabPref.notifyListeners();
+              },
+            ),
+          ),
+          pady(8),
+          Divider(),
         ],
       ),
     );

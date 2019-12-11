@@ -40,6 +40,10 @@
 
 @interface AppDelegate () {
     FlutterMethodChannel *feedback_;
+    
+    // The application's desired VPN state: true for on, false for off.
+    // This is populated from user preferences at launch.
+    NSNumber *desiredVPNState_;
 }
 
 @end
@@ -51,6 +55,7 @@
 - (void) onVpnStateChange:(NSNotification *)notification {
     [self onVpnState:self.providerManager.connection.status];
     [self updateProviderStatus];
+    [self setDesiredConnectionStateIfNeeded];
 }
 
 - (void) onVpnState:(NEVPNStatus)status {
@@ -171,10 +176,14 @@
     [self onVpnState:self.providerManager.connection.status];
 }
 
-- (void) connection {
+// Start the tunnel
+- (void) startVPN {
+    desiredVPNState_ = [NSNumber numberWithBool: true];
     [self.providerManager loadFromPreferencesWithCompletionHandler:^(NSError * _Nullable error) {
-        if (error != nil)
+        if (error != nil) {
+            NSLog(@"Start load preferences error: %@", error.localizedDescription);
             return;
+        }
 
         NSURL *url = [self getConfigURL];
         [self.providerManager.connection startVPNTunnelWithOptions:@{
@@ -186,6 +195,41 @@
 
         NSLog(@"Connection established!");
     }];
+}
+
+// Start the tunnel
+- (void) stopVPN {
+    desiredVPNState_ = [NSNumber numberWithBool: false];
+    [self.providerManager.connection stopVPNTunnel];
+}
+
+// Check the current connection state and desired state,
+// starting or stopping the VPN as required.
+-(void) setDesiredConnectionStateIfNeeded {
+    NEVPNStatus status = self.providerManager.connection.status;
+    switch (status) {
+        case NEVPNStatusInvalid:
+        case NEVPNStatusConnecting:
+        case NEVPNStatusDisconnecting:
+        case NEVPNStatusReasserting:
+            // Do nothing on intermediate states
+            break;
+        case NEVPNStatusConnected:
+            if (desiredVPNState_ != nil && [desiredVPNState_ boolValue] == false) {
+                NSLog(@"Reasserting desired connection state: Off");
+                [self stopVPN];
+            }
+            break;
+        case NEVPNStatusDisconnected:
+            if (desiredVPNState_ != nil && [desiredVPNState_ boolValue] == true) {
+                NSLog(@"Reasserting desired connection state: On");
+                [self startVPN];
+            }
+            break;
+        default:
+            break;
+    }
+    
 }
 
 #pragma mark - Lifecycle Methods
@@ -210,9 +254,9 @@
         } else if ([@"ready" isEqualToString:call.method]) {
             [weakSelf applicationReady];
         } else if ([@"connect" isEqualToString:call.method]) {
-            [weakSelf connection];
+            [weakSelf startVPN];
         } else if ([@"disconnect" isEqualToString:call.method]) {
-            [weakSelf.providerManager.connection stopVPNTunnel];
+            [weakSelf stopVPN];
         } else if ([@"reroute" isEqualToString:call.method]) {
         } else if ([@"install" isEqualToString:call.method]) {
             [weakSelf initProvider: result];
@@ -307,6 +351,7 @@
 
 
 - (void) applicationWillEnterForeground:(UIApplication *)application {
+    [self setDesiredConnectionStateIfNeeded];
 }
 
 
