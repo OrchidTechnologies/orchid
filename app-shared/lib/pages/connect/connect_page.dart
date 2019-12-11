@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/gradients.dart';
@@ -466,6 +467,7 @@ class _QuickConnectPageState
 
   // duplicates code in monitoring_page
   void _checkPermissionAndEnableConnection() {
+    UserPreferences().setDesiredVPNState(true);
     // Get the most recent status, blocking if needed.
     _rxSubscriptions
         .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
@@ -492,6 +494,7 @@ class _QuickConnectPageState
   }
 
   void _disableConnection() {
+    UserPreferences().setDesiredVPNState(false);
     OrchidAPI().setConnected(false);
   }
 

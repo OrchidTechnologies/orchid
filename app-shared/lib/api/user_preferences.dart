@@ -214,6 +214,17 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.DesiredVPNState.toString(), value);
   }
+
+  Future<bool> getShowStatusTab() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.ShowStatusTab.toString()) ??
+        false;
+  }
+
+  Future<bool> setShowStatusTab(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.ShowStatusTab.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -229,5 +240,6 @@ enum UserPreferenceKey {
   Keys,
   DefaultCurator,
   QueryBalances,
-  DesiredVPNState
+  DesiredVPNState,
+  ShowStatusTab
 }
