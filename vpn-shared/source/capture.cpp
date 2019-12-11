@@ -551,8 +551,9 @@ task<bool> Split::Send(const Beam &data) {
                 Forge(span, tcp, ephemeral->second.socket_, local_);
                 capture_->Land(subset, false);
             } else if (ephemeral == ephemerals_.end()) {
-                auto port(ephemerals_.size());
-                if (port >= 65535) {
+                // port 0 is not valid
+                auto port(ephemerals_.size() + 1);
+                if (port >= 65535 - 1) {
                     auto old_four(*lru_.begin());
                     auto old_ephemeral(ephemerals_.find(old_four));
                     port = old_ephemeral->second.socket_.Port();
