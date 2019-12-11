@@ -31,13 +31,18 @@
 
 namespace orc {
 
+static Float Ten18("1000000000000000000");
 static Float Two128(uint256_t(1) << 128);
 //static Float Two30(1024 * 1024 * 1024);
 
 task<void> Cashier::Update() {
-    auto eth(co_await Price("ETH", currency_));
-    //auto oxt(co_await Price("OXT", currency_));
-    auto oxt(eth / 300);
+    auto eth(co_await Price("ETH", currency_, Ten18));
+    orc_assert(eth != 0);
+
+    auto oxt(co_await Price("OXT", currency_, Ten18));
+    if (oxt == 0)
+        oxt = eth / 300;
+
     //auto predict(Parse(co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/predictTable.json"}, {}, {})));
 
     auto lock(locked_());

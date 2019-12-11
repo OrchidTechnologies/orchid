@@ -51,7 +51,7 @@ U<cricket::PortAllocator> Origin::Allocator() {
 
 // XXX: for Local::Request, this should use NSURLSession on __APPLE__
 
-task<std::string> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Response> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
 #if 0
     // XXX: this implementation almost worked a while ago; needs updating
     Sink<Adapter> adapter(orc::Context());

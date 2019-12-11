@@ -144,7 +144,7 @@ task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
         Configuration configuration;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
-        const auto answer(co_await origin->Request("POST", Locator::Parse(url), {}, offer, verify));
+        const auto answer((co_await origin->Request("POST", Locator::Parse(url), {}, offer, verify)).ok());
         if (true || Verbose) {
             Log() << "Offer: " << offer << std::endl;
             Log() << "Answer: " << answer << std::endl;

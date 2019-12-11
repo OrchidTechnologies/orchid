@@ -33,7 +33,7 @@ namespace orc {
 
 typedef boost::multiprecision::cpp_bin_float_oct Float;
 
-task<Float> Price(const std::string &from, const std::string &to);
+task<Float> Price(const std::string &from, const std::string &to, const Float &adjust);
 
 }
 

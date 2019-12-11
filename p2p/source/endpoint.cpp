@@ -98,7 +98,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     root["params"] = std::move(args);
 
     Json::FastWriter writer;
-    const auto result(Parse(co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))));
+    const auto result(Parse((co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))).ok()));
     Log() << root << " -> " << result << "" << std::endl;
 
     orc_assert(result["jsonrpc"] == "2.0");
