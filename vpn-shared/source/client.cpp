@@ -30,6 +30,8 @@
 
 namespace orc {
 
+unsigned WinShift_(10);
+
 task<void> Client::Submit() {
     Header header{Magic_, Zero<32>()};
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header)));
@@ -59,7 +61,7 @@ void Client::Issue(uint256_t amount) {
             return std::make_tuple(lock->recipient_, lock->commit_);
         }();
 
-        const auto ratio(uint128_t(1) << 127 >> 10);
+        const auto ratio(uint128_t(1) << 127 >> WinShift_);
         const Ticket ticket{commit, now, nonce, uint128_t(amount / ratio), ratio, start, 0, funder_, recipient};
         const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
         const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));

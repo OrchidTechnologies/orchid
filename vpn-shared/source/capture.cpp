@@ -699,6 +699,8 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
     }
 }
 
+extern unsigned WinShift_;
+
 task<void> Capture::Start(const std::string &path) {
     std::string config;
     boost::filesystem::load_string_file(path, config);
@@ -713,6 +715,7 @@ task<void> Capture::Start(const std::string &path) {
         eth_location = "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD";
         eth_curator = "0x55Abb3CE20ABbC38444e0A200dDE7fC0388b76a5";
         eth_argument = "2b1ce95573ec1b927a90cb488db113b40eeb064a";
+        eth_winshift = 10;
         rpc = "https://cloudflare-eth.com:443/";
         hops = [];
         //stun = "stun:stun.l.google.com:19302";
@@ -725,6 +728,8 @@ task<void> Capture::Start(const std::string &path) {
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
         co_return co_await Start(std::move(origin));
+
+    WinShift_ = unsigned(heap.eval<double>("eth_winshift"));
 
     Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), Address(heap.eval<std::string>("eth_curator")));
     Beam argument(Bless(heap.eval<std::string>("eth_argument")));
