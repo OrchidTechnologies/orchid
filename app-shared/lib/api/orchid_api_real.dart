@@ -78,9 +78,11 @@ class RealOrchidAPI implements OrchidAPI {
 
   /// The Flutter application uses this method to indicate to the native channel code
   /// that the UI has finished launching and all listeners have been established.
-  Future<void> applicationReady() {
+  Future<void> applicationReady() async {
     budget().applicationReady();
-    return _platform.invokeMethod('ready');
+    _platform.invokeMethod('ready');
+    // Set the initial VPN state from user preferences
+    setConnected(await UserPreferences().getDesiredVPNState());
   }
 
   /// Get the logging API.

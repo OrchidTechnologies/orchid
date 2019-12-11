@@ -370,9 +370,10 @@ class _QuickConnectPageState
       });
     }
 
-    setState(() {
-      _connectionState = state;
-    });
+    _connectionState = state;
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   /// Called upon a change to Orchid sync state
