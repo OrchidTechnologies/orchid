@@ -110,11 +110,10 @@ void Server::Commit(Lock<Locked_> &lock) {
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit) {
-    const auto now(Monotonic());
-    Builder builder;
-    builder += Tie(Invoice_, now, cashier_->Convert(balance), cashier_->Tuple(), commit);
     Header header{Magic_, id};
-    co_await pipe->Send(Datagram(Port_, destination, Tie(header, uint16_t(builder.size()), builder)));
+    co_await pipe->Send(Datagram(Port_, destination, Tie(header,
+        Packet(Invoice_, Monotonic(), cashier_->Convert(balance), cashier_->Tuple(), commit)
+    )));
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id) {

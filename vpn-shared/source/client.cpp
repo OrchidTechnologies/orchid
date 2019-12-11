@@ -39,10 +39,9 @@ task<void> Client::Submit() {
 
 task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Signature &signature) {
     Header header{Magic_, hash};
-    Builder builder;
-    builder += Tie(Submit_, signature.v_, signature.r_, signature.s_);
-    ticket.Build(builder, lottery_, chain_, receipt_);
-    co_await Bonded::Send(Datagram(Port_, Port_, Tie(header, uint16_t(builder.size()), builder)));
+    co_await Bonded::Send(Datagram(Port_, Port_, Tie(header,
+        Packet(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt_))
+    )));
 }
 
 void Client::Issue(uint256_t amount) {
