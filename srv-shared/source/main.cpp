@@ -130,10 +130,14 @@ int Main(int argc, const char *const argv[]) {
         ("ovpn-pass", po::value<std::string>()->default_value(""), "openvpn client credential (password)")
     ; options.add(group); }
 
-    po::store(po::parse_command_line(argc, argv, po::options_description()
+    po::positional_options_description positional;
+
+    po::store(po::command_line_parser(argc, argv).options(po::options_description()
         .add(group)
         .add(options)
-    ), args);
+    ).positional(positional).style(po::command_line_style::default_style
+        ^ po::command_line_style::allow_guessing
+    ).run(), args);
 
     if (auto path = getenv("ORCHID_CONFIG"))
         po::store(po::parse_config_file(path, po::options_description()
