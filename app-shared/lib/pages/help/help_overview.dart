@@ -5,6 +5,7 @@ import 'package:orchid/pages/common/plain_text_box.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html/dom.dart' as dom;
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpOverviewPage extends StatefulWidget {
   @override
@@ -53,9 +54,11 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
       data: html,
       defaultTextStyle: TextStyle(fontSize: 16.0),
       linkStyle: const TextStyle(
-        color: Colors.purple,
+        color: Colors.deepPurple,
       ),
-      onLinkTap: (url) {},
+      onLinkTap: (url) {
+        launch(url, forceSafariVC: false);
+      },
       onImageTap: (src) {},
       // This is our css :)
       customTextStyle: (dom.Node node, TextStyle baseStyle) {
