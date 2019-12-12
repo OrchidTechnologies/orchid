@@ -25,6 +25,8 @@
 
 #include <json/json.h>
 
+#include "error.hpp"
+
 namespace orc {
 
 inline Json::Value Parse(const std::string &data) {

@@ -20,41 +20,40 @@
 /* }}} */
 
 
-#ifndef ORCHID_FAMILY_HPP
-#define ORCHID_FAMILY_HPP
+#ifndef ORCHID_STRUCTURED_HPP
+#define ORCHID_STRUCTURED_HPP
 
+#include "json.hpp"
 #include "link.hpp"
 
 namespace orc {
 
-class Family :
-    public Link<Buffer>
+class Structured :
+    public Pump<Json::Value, Json::Value>,
+    public BufferDrain
 {
-  private:
-    uint32_t Analyze(const Buffer &data) {
-        return 2;
-    }
-
   protected:
     virtual Pump<Buffer> *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
-        orc_assert(protocol == Analyze(data));
-        return Link<Buffer>::Land(packet);
+        return Pump<Json::Value, Json::Value>::Land(Parse(data.str()));
+    }
+
+    void Stop(const std::string &error) override {
+        return Pump<Json::Value, Json::Value>::Stop(error);
     }
 
   public:
-    Family(BufferDrain *drain) :
-        Link<Buffer>(drain)
+    Structured(Drain<Json::Value> *drain) :
+        Pump<Json::Value, Json::Value>(drain)
     {
     }
 
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(Tie(Number<uint32_t>(Analyze(data)), data));
+    task<void> Send(const Json::Value &data) {
+        co_return co_await Inner()->Send(Strung(Json::FastWriter().write(data)));
     }
 };
 
 }
 
-#endif//ORCHID_FAMILY_HPP
+#endif//ORCHID_STRUCTURED_HPP

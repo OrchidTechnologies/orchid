@@ -39,7 +39,7 @@ namespace orc {
 
 class Client :
     public Bonded,
-    public Pump
+    public Pump<Buffer>
 {
   private:
     const rtc::scoped_refptr<rtc::RTCCertificate> local_;
@@ -63,9 +63,7 @@ class Client :
         checked_int256_t balance_ = 0;
         Address recipient_ = 0;
         Bytes32 commit_ = Zero<32>();
-    };
-
-    Locked<Locked_> locked_;
+    }; Locked<Locked_> locked_;
 
     Socket socket_;
 

@@ -206,7 +206,7 @@ _trace();
 };
 
 class Channel final :
-    public Pump,
+    public Pump<Buffer>,
     public webrtc::DataChannelObserver
 {
   private:
@@ -219,7 +219,7 @@ class Channel final :
     static task<Socket> Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
     Channel(BufferDrain *drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
-        Pump(drain),
+        Pump<Buffer>(drain),
         peer_(peer),
         channel_(channel)
     {

@@ -331,7 +331,7 @@ int Main(int argc, const char *const argv[]) {
         if (price == 0)
             return nullptr;
         const Address personal(args["personal"].as<std::string>());
-        return Make<Cashier>(std::move(endpoint),
+        return Make<Cashier>(std::move(endpoint), Locator::Parse(args["ws"].as<std::string>()),
             price, args["currency"].as<std::string>(),
             personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient

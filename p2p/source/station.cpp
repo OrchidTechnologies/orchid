@@ -20,41 +20,22 @@
 /* }}} */
 
 
-#ifndef ORCHID_FAMILY_HPP
-#define ORCHID_FAMILY_HPP
-
-#include "link.hpp"
+#include "station.hpp"
 
 namespace orc {
 
-class Family :
-    public Link<Buffer>
-{
-  private:
-    uint32_t Analyze(const Buffer &data) {
-        return 2;
-    }
-
-  protected:
-    virtual Pump<Buffer> *Inner() = 0;
-
-    void Land(const Buffer &data) override {
-        const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
-        orc_assert(protocol == Analyze(data));
-        return Link<Buffer>::Land(packet);
-    }
-
-  public:
-    Family(BufferDrain *drain) :
-        Link<Buffer>(drain)
-    {
-    }
-
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(Tie(Number<uint32_t>(Analyze(data)), data));
-    }
-};
-
+void Station::Land(Json::Value data) {
+    orc_assert(data["jsonrpc"] == "2.0");
+    return Outer()->Land(std::move(data));
 }
 
-#endif//ORCHID_FAMILY_HPP
+task<void> Station::Send(const std::string &method, const std::string &id, Argument args) {
+    Json::Value root;
+    root["jsonrpc"] = "2.0";
+    root["method"] = method;
+    root["id"] = id;
+    root["params"] = std::move(args);
+    co_await Inner()->Send(root);
+}
+
+}

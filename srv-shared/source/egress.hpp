@@ -58,7 +58,7 @@ class Egress :
     Translations_::iterator Find(const Three &target);
 
   protected:
-    virtual Pump *Inner() = 0;
+    virtual Pump<Buffer> *Inner() = 0;
 
     void Land(const Buffer &data) override;
 
@@ -88,7 +88,7 @@ class Egress :
 
 
 class Translator:
-    public Link
+    public Link<Buffer>
 {
   private:
     S<Egress> egress_;

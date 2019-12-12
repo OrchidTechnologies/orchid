@@ -171,7 +171,7 @@ class Base {
 };
 
 class Association :
-    public Pump,
+    public Pump<Buffer>,
     public Base
 {
   protected:

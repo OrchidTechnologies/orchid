@@ -45,14 +45,14 @@ class Stream :
 };
 
 class Inverted final :
-    public Pump
+    public Pump<Buffer>
 {
   private:
     U<Stream> stream_;
 
   public:
     Inverted(BufferDrain *drain, U<Stream> stream) :
-        Pump(drain),
+        Pump<Buffer>(drain),
         stream_(std::move(stream))
     {
     }

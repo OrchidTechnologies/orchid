@@ -26,17 +26,39 @@
 #include <mutex>
 #include <string>
 
+#include <cppcoro/async_manual_reset_event.hpp>
+
 #include "coinbase.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
 #include "locked.hpp"
 #include "locator.hpp"
+#include "station.hpp"
 
 namespace orc {
 
-class Cashier {
+typedef std::tuple<Address, Address> Identity;
+
+static std::string Combine(const Address &signer, const Address &funder) {
+    return Tie(signer, funder).hex();
+}
+
+struct Pot :
+    public cppcoro::async_manual_reset_event
+{
+    struct Locked_ {
+        uint128_t amount_ = 0;
+        uint128_t escrow_ = 0;
+        uint256_t unlock_ = 0;
+    }; Locked<Locked_> locked_;
+};
+
+class Cashier :
+    public Drain<Json::Value>
+{
   private:
     const Endpoint endpoint_;
+    const Locator locator_;
 
     const Float price_;
     const std::string currency_;
@@ -48,17 +70,29 @@ class Cashier {
     const uint256_t chain_;
     const Address recipient_;
 
-    struct Locked_ {
+    struct Prices_ {
         Float eth_ = 0;
         Float oxt_ = 0;
-    };
+    }; Locked<Prices_> prices_;
 
-    Locked<Locked_> locked_;
+    U<Station> station_;
+
+    struct Cache_ {
+        std::map<uint128_t, Identity> subscriptions_;
+        std::map<Identity, S<Pot>> pots_;
+    }; Locked<Cache_> cache_;
 
     task<void> Update();
+    task<void> Look(const Address &signer, const Address &funder, const std::string &combined);
+
+  protected:
+    void Land(Json::Value data) override;
+    void Stop(const std::string &error) override;
 
   public:
-    Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(Endpoint endpoint, Locator locator, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+
+    virtual ~Cashier() = default;
 
     auto Tuple() const {
         return std::tie(lottery_, chain_, recipient_);

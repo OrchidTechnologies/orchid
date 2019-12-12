@@ -86,11 +86,11 @@ void Server::Bill(Pipe *pipe, const Buffer &data) {
     if (cashier_ != nullptr) {
         const auto amount(cashier_->Bill(data.size()) * 2);
 
-        auto lock(locked_());
-        if (lock->balance_ < amount) {
+        const auto locked(locked_());
+        if (locked->balance_ < amount) {
             _trace(); return; }
-        lock->balance_ -= amount;
-        //Log() << "balance- = " << lock->balance_ << std::endl;
+        locked->balance_ -= amount;
+        //Log() << "balance- = " << locked->balance_ << std::endl;
     }
 
     Spawn([pipe, data = Beam(data)]() -> task<void> {
@@ -102,11 +102,11 @@ task<void> Server::Send(const Buffer &data) {
     co_return co_await Bonded::Send(data);
 }
 
-void Server::Commit(Lock<Locked_> &lock) {
+void Server::Commit(const Lock<Locked_> &locked) {
     const auto reveal(Random<32>());
-    if (lock->commit_ != lock->reveals_.end())
-        lock->commit_->second.second = Seconds();
-    lock->commit_ = lock->reveals_.try_emplace(Hash(reveal), reveal, 0).first;
+    if (locked->commit_ != locked->reveals_.end())
+        locked->commit_->second.second = Seconds();
+    locked->commit_ = locked->reveals_.try_emplace(Hash(reveal), reveal, 0).first;
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit) {
@@ -117,8 +117,8 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id) {
-    const auto [balance, commit] = [&]() { auto lock(locked_());
-        return std::make_tuple(lock->balance_, lock->commit_->first); }();
+    const auto [balance, commit] = [&]() { const auto locked(locked_());
+        return std::make_tuple(locked->balance_, locked->commit_->first); }();
     co_await Invoice(pipe, destination, id, balance, commit);
 }
 
@@ -166,14 +166,14 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
         co_await cashier_->Check(signer, funder, amount, recipient, receipt);
 
         const auto [reveal, balance] = [&, commit = commit]() {
-            auto lock(locked_());
-            const auto reveal(lock->reveals_.find(commit));
-            orc_assert(reveal != lock->reveals_.end());
+            const auto locked(locked_());
+            const auto reveal(locked->reveals_.find(commit));
+            orc_assert(reveal != locked->reveals_.end());
             const auto expire(reveal->second.second);
             orc_assert(expire == 0 || reveal->second.second + 60 > now);
-            orc_assert(lock->tickets_.emplace(until, signer, ticket).second);
-            lock->balance_ += credit;
-            return std::make_tuple(reveal->second.first, lock->balance_);
+            orc_assert(locked->tickets_.emplace(until, signer, ticket).second);
+            locked->balance_ += credit;
+            return std::make_tuple(reveal->second.first, locked->balance_);
         }();
 
         //Log() << "balance+ = " << balance << std::endl;
@@ -182,9 +182,9 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
         if (!(Hash(Tie(reveal, nonce)).skip<16>().num<uint128_t>() <= ratio))
             co_return;
 
-        { auto lock(locked_());
-            if (lock->commit_->first == commit) {
-                Commit(lock); } }
+        { const auto locked(locked_());
+            if (locked->commit_->first == commit) {
+                Commit(locked); } }
 
         std::vector<Bytes32> old;
 
@@ -243,8 +243,8 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
     origin_(std::move(origin)),
     cashier_(std::move(cashier))
 {
-    auto lock(locked_());
-    Commit(lock);
+    const auto locked(locked_());
+    Commit(locked);
 }
 
 task<void> Server::Open(Pipe<Buffer> *pipe) {
