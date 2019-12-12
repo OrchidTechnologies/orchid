@@ -42,7 +42,7 @@ class Bonded :
         Bonded *const bonded_;
 
       protected:
-        virtual Pump *Inner() = 0;
+        virtual Pump<Buffer> *Inner() = 0;
 
         void Land(const Buffer &data) override {
             return bonded_->Land(this, data);

@@ -43,6 +43,10 @@ class Lock :
     Lock(const Lock<Locked_> &lock) = delete;
     Lock(Lock<Locked_> &&lock) noexcept = default;
 
+    Locked_ &operator *() const {
+        return locked_;
+    }
+
     Locked_ *operator ->() const {
         return &locked_;
     }

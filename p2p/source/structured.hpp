@@ -20,21 +20,40 @@
 /* }}} */
 
 
-#ifndef ORCHID_COINBASE_HPP
-#define ORCHID_COINBASE_HPP
+#ifndef ORCHID_STRUCTURED_HPP
+#define ORCHID_STRUCTURED_HPP
 
-#include <string>
-
-#include <boost/multiprecision/cpp_bin_float.hpp>
-
-#include "task.hpp"
+#include "json.hpp"
+#include "link.hpp"
 
 namespace orc {
 
-typedef boost::multiprecision::cpp_bin_float_oct Float;
+class Structured :
+    public Pump<Json::Value, Json::Value>,
+    public BufferDrain
+{
+  protected:
+    virtual Pump<Buffer> *Inner() = 0;
 
-task<Float> Price(const std::string &from, const std::string &to, const Float &adjust);
+    void Land(const Buffer &data) override {
+        return Pump<Json::Value, Json::Value>::Land(Parse(data.str()));
+    }
+
+    void Stop(const std::string &error) override {
+        return Pump<Json::Value, Json::Value>::Stop(error);
+    }
+
+  public:
+    Structured(Drain<Json::Value> *drain) :
+        Pump<Json::Value, Json::Value>(drain)
+    {
+    }
+
+    task<void> Send(const Json::Value &data) {
+        co_return co_await Inner()->Send(Strung(Json::FastWriter().write(data)));
+    }
+};
 
 }
 
-#endif//ORCHID_COINBASE_HPP
+#endif//ORCHID_STRUCTURED_HPP

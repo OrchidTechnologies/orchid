@@ -60,14 +60,14 @@ struct Ticket {
         );
     }
 
-    void Build(Builder &builder, const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
-        builder += Tie(
+    auto Knot(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
+        return Tie(
             commit_,
             issued_, nonce_,
             lottery, chain,
-            Number<uint128_t>(amount_), Number<uint128_t>(ratio_),
-            Number<uint256_t>(start_), Number<uint128_t>(range_),
-            Number<uint160_t>(funder_), Number<uint160_t>(recipient_),
+            amount_, ratio_,
+            start_, range_,
+            funder_, recipient_,
             receipt
         );
     }

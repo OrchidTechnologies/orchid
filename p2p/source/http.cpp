@@ -49,7 +49,7 @@
 namespace orc {
 
 template <typename Stream_>
-task<std::string> Request_(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
+task<Response> Request_(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
     (void) co_await boost::beast::http::async_write(stream, req, orc::Token());
 
     // this buffer must be maintained if this socket object is ever reused
@@ -57,12 +57,12 @@ task<std::string> Request_(Stream_ &stream, boost::beast::http::request<boost::b
     boost::beast::http::response<boost::beast::http::dynamic_body> res;
     (void) co_await boost::beast::http::async_read(stream, buffer, res, orc::Token());
 
-    orc_assert_(res.result() == boost::beast::http::status::ok, res.reason());
-    co_return boost::beast::buffers_to_string(res.body().data());
+    // XXX: I can probably return this as a buffer array
+    co_return Response{res.result(), boost::beast::buffers_to_string(res.body().data())};
 }
 
 template <typename Socket_>
-task<std::string> Request_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Response> Request_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), locator.path_, 11};
     req.set(boost::beast::http::field::host, locator.host_);
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -73,11 +73,9 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const Loc
     req.set(boost::beast::http::field::content_length, data.size());
     req.body() = data;
 
-    std::string body;
-
     if (false) {
     } else if (locator.scheme_ == "http") {
-        body = co_await Request_(socket, req);
+        co_return co_await Request_(socket, req);
     } else if (locator.scheme_ == "https") {
         // XXX: this needs security
         asio::ssl::context context{asio::ssl::context::sslv23_client};
@@ -103,7 +101,7 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const Loc
             orc_adapt(error);
         }
 
-        body = co_await Request_(stream, req);
+        const auto response(co_await Request_(stream, req));
 
         try {
             co_await stream.async_shutdown(orc::Token());
@@ -116,25 +114,25 @@ task<std::string> Request_(Socket_ &socket, const std::string &method, const Loc
                 // XXX: this is because of infura
             else orc_adapt(error);
         }
-    } else orc_assert(false);
 
-    co_return body;
+        co_return response;
+    } else orc_assert(false);
 }
 
 #if 0
-task<std::string> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Response> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     return Request_(adapter, method, locator, headers, data, verify);
 }
 #endif
 
-task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
     // XXX: implement remote http requests
-    auto local(Break<Local>());
+    const auto local(Break<Local>());
     const auto results(co_await Resolve(*local, locator.host_, locator.port_));
     asio::ip::tcp::socket socket(orc::Context());
     (void) co_await asio::async_connect(socket, results.begin(), results.end(), orc::Token());
 
-    auto body(co_await Request_(socket, method, locator, headers, data, verify));
+    const auto body(co_await Request_(socket, method, locator, headers, data, verify));
 
     boost::beast::error_code error;
     socket.shutdown(asio::ip::tcp::socket::shutdown_both, error);

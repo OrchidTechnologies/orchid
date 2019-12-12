@@ -292,7 +292,7 @@ class _QuickConnectPageState
         break;
     case OrchidConnectionState.Invalid:
     case OrchidConnectionState.NotConnected:
-        message = 'Push to connect.\n(Orchid hops are currently in beta.)';
+        message = 'Push to connect.';
         break;
       case OrchidConnectionState.Connected:
         message = 'Orchid is running!';

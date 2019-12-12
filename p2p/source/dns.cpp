@@ -45,11 +45,11 @@ task<Results> Resolve(Origin &origin, const std::string &host, const std::string
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
-        const auto body(Parse(co_await origin.Request("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
+        const auto result(Parse((co_await origin.Request("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
             {"accept", "application/dns-json"}
-        }, {})));
+        }, {})).ok()));
 
-        for (const auto &answer : body["Answer"])
+        for (const auto &answer : result["Answer"])
             if (answer["type"].asUInt64() == 1) {
                 const auto endpoints(co_await resolver.async_resolve(answer["data"].asString(), port, orc::Token()));
                 for (const auto &endpoint : endpoints)

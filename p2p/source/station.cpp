@@ -20,21 +20,22 @@
 /* }}} */
 
 
-#ifndef ORCHID_COINBASE_HPP
-#define ORCHID_COINBASE_HPP
-
-#include <string>
-
-#include <boost/multiprecision/cpp_bin_float.hpp>
-
-#include "task.hpp"
+#include "station.hpp"
 
 namespace orc {
 
-typedef boost::multiprecision::cpp_bin_float_oct Float;
-
-task<Float> Price(const std::string &from, const std::string &to, const Float &adjust);
-
+void Station::Land(Json::Value data) {
+    orc_assert(data["jsonrpc"] == "2.0");
+    return Outer()->Land(std::move(data));
 }
 
-#endif//ORCHID_COINBASE_HPP
+task<void> Station::Send(const std::string &method, const std::string &id, Argument args) {
+    Json::Value root;
+    root["jsonrpc"] = "2.0";
+    root["method"] = method;
+    root["id"] = id;
+    root["params"] = std::move(args);
+    co_await Inner()->Send(root);
+}
+
+}

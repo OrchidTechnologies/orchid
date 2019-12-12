@@ -155,7 +155,7 @@ class Selector final :
             Args<false, Args_...>::Write(signature);
             signature << ')';
             std::cerr << signature.str() << std::endl;
-            return Hash(Strung(signature.str())).Clip<4>().num<uint32_t>();
+            return Hash(signature.str()).Clip<4>().num<uint32_t>();
         }())
     {
     }

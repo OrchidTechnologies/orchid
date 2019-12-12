@@ -20,21 +20,36 @@
 /* }}} */
 
 
-#ifndef ORCHID_COINBASE_HPP
-#define ORCHID_COINBASE_HPP
+#ifndef ORCHID_STATION_HPP
+#define ORCHID_STATION_HPP
 
-#include <string>
-
-#include <boost/multiprecision/cpp_bin_float.hpp>
-
-#include "task.hpp"
+#include "jsonrpc.hpp"
+#include "link.hpp"
 
 namespace orc {
 
-typedef boost::multiprecision::cpp_bin_float_oct Float;
+class Station :
+    public Faucet<Drain<Json::Value>>,
+    public Drain<Json::Value>
+{
+  protected:
+    virtual Pump<Json::Value, Json::Value> *Inner() = 0;
 
-task<Float> Price(const std::string &from, const std::string &to, const Float &adjust);
+    void Land(Json::Value data) override;
+
+    void Stop(const std::string &error) override {
+        return Faucet<Drain<Json::Value>>::Stop(error);
+    }
+
+  public:
+    Station(Drain<Json::Value> *drain) :
+        Faucet<Drain<Json::Value>>(drain)
+    {
+    }
+
+    task<void> Send(const std::string &method, const std::string &id, Argument args);
+};
 
 }
 
-#endif//ORCHID_COINBASE_HPP
+#endif//ORCHID_STATION_HPP

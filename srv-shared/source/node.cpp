@@ -62,15 +62,15 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
             Log() << "vvvvvvvvvvvvvvvv" << std::endl;
             Log() << std::endl;
 
-            context.send(Response(request, "text/plain", answer));
+            Respond(context, request, "text/plain", answer);
         } catch (...) {
-            context.send(Response(request, "text/plain", "", boost::beast::http::status::not_found));
+            Respond(context, request, "text/plain", "", boost::beast::http::status::not_found);
         }
     });
 
     router.all(R"(^.*$)", [&](auto request, auto context) {
         Log() << request << std::endl;
-        context.send(Response(request, "text/plain", ""));
+        Respond(context, request, "text/plain", "");
     });
 
     auto fail([](auto code, auto from) {

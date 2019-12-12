@@ -26,6 +26,8 @@
 #include <map>
 #include <string>
 
+#include <boost/beast/http/status.hpp>
+
 #include <rtc_base/openssl_certificate.h>
 
 #include "task.hpp"
@@ -35,9 +37,19 @@ namespace orc {
 class Adapter;
 class Locator;
 
-task<std::string> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
+struct Response {
+    boost::beast::http::status code_;
+    std::string body_;
 
-task<std::string> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
+    std::string ok() && {
+        orc_assert(code_ == boost::beast::http::status::ok);
+        return std::move(body_);
+    }
+};
+
+task<Response> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
+
+task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
 
 }
 

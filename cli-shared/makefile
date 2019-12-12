@@ -18,11 +18,11 @@
 # }}}
 
 
+args := --config ../orchid.cfg
+
 include env/target.mk
 
 version := 0.9
-
-args := --config ../orchid.cfg
 
 .PHONY: all
 all: $(output)/$(default)/orchid$(exe)

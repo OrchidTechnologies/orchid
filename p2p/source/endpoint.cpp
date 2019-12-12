@@ -98,14 +98,14 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     root["params"] = std::move(args);
 
     Json::FastWriter writer;
-    const auto result(Parse(co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))));
-    Log() << root << " -> " << result << "" << std::endl;
+    const auto data(Parse((co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))).ok()));
+    Log() << root << " -> " << data << "" << std::endl;
 
-    orc_assert(result["jsonrpc"] == "2.0");
+    orc_assert(data["jsonrpc"] == "2.0");
 
-    auto error(result["error"]);
+    const auto error(data["error"]);
 
-    auto id(result["id"]);
+    const auto id(data["id"]);
     orc_assert(!id.isNull() || !error.isNull());
 
     orc_assert_(error.isNull(), ([&]() {
@@ -116,8 +116,8 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
         return text;
     }()));
 
-    orc_assert(result["id"] == "");
-    co_return result["result"];
+    orc_assert(id == "");
+    co_return data["result"];
 }
 
 }

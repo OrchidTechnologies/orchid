@@ -38,7 +38,7 @@ namespace orc {
 
 template <typename Sync_>
 class SyncFile final :
-    public Link
+    public Link<Buffer>
 {
   protected:
     Sync_ sync_;
@@ -46,7 +46,7 @@ class SyncFile final :
   public:
     template <typename... Args_>
     SyncFile(BufferDrain *drain, Args_ &&...args) :
-        Link(drain),
+        Link<Buffer>(drain),
         sync_(std::forward<Args_>(args)...)
     {
     }
@@ -80,24 +80,24 @@ class SyncFile final :
                     writ = Read(beam);
                 } catch (const Error &error) {
                     orc_insist(!error.text.empty());
-                    Link::Stop(error.text);
+                    Link<Buffer>::Stop(error.text);
                     break;
                 }
 
                 if (writ == 0) {
-                    Link::Stop();
+                    Link<Buffer>::Stop();
                     break;
                 }
 
                 auto subset(beam.subset(0, writ));
-                Link::Land(subset);
+                Link<Buffer>::Land(subset);
             }
         }).detach();
     }
 
     task<void> Shut() override {
         sync_.close();
-        co_await Link::Shut();
+        co_await Link<Buffer>::Shut();
     }
 
     task<void> Send(const Buffer &data) override {

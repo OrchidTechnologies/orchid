@@ -28,7 +28,7 @@
 namespace orc {
 
 class Family :
-    public Link
+    public Link<Buffer>
 {
   private:
     uint32_t Analyze(const Buffer &data) {
@@ -36,17 +36,17 @@ class Family :
     }
 
   protected:
-    virtual Pump *Inner() = 0;
+    virtual Pump<Buffer> *Inner() = 0;
 
     void Land(const Buffer &data) override {
         const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
         orc_assert(protocol == Analyze(data));
-        return Link::Land(packet);
+        return Link<Buffer>::Land(packet);
     }
 
   public:
     Family(BufferDrain *drain) :
-        Link(drain)
+        Link<Buffer>(drain)
     {
     }
 

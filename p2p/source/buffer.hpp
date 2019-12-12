@@ -448,7 +448,7 @@ class Brick final :
 };
 
 template <size_t Size_>
-inline bool operator ==(const Brick<Size_> &lhs, const Brick<Size_> &rhs) {
+inline bool operator ==(const Data<Size_> &lhs, const Data<Size_> &rhs) {
     return memcmp(lhs.data(), rhs.data(), Size_) == 0;
 }
 

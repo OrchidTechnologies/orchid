@@ -55,21 +55,19 @@ class Server :
         decltype(reveals_.end()) commit_ = reveals_.end();
 
         std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
-    };
-
-    Locked<Locked_> locked_;
+    }; Locked<Locked_> locked_;
 
     void Bill(Pipe *pipe, const Buffer &data);
     task<void> Send(const Buffer &data) override;
 
-    void Commit(Lock<Locked_> &lock);
+    void Commit(const Lock<Locked_> &locked);
 
     task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit);
     task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id);
     task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Buffer &data);
 
   protected:
-    virtual Pump *Inner() = 0;
+    virtual Pump<Buffer> *Inner() = 0;
 
     void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
 

@@ -44,9 +44,7 @@ class Node final {
 
     struct Locked_ {
         std::map<std::string, W<Server>> servers_;
-    };
-
-    Locked<Locked_> locked_;
+    }; Locked<Locked_> locked_;
 
   public:
     Node(S<Origin> origin, S<Cashier> cashier, std::vector<std::string> ice) :
@@ -61,8 +59,8 @@ class Node final {
     }
 
     S<Server> Find(const std::string &fingerprint) {
-        auto lock(locked_());
-        auto &cache(lock->servers_[fingerprint]);
+        const auto locked(locked_());
+        auto &cache(locked->servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
         auto server(Make<Sink<Server>>(origin_, cashier_));

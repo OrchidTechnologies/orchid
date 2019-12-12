@@ -1,6 +1,7 @@
 .PHONY: all
 
-all: cli-shared
+all: all-cli-lnx
+all: all-cli-mac
 
 all: all-app-ios
 all: all-app-sim
@@ -15,8 +16,12 @@ all: all-srv-mac
 tst-ethereum:
 	$(MAKE) -C tst-ethereum test
 
-.PHONY: cli-shared
-cli-shared:
+.PHONY: all-cli-lnx
+all-cli-lnx:
+	$(MAKE) -C cli-shared target=lnx
+
+.PHONY: all-cli-mac
+all-cli-mac:
 	$(MAKE) -C cli-shared target=mac
 
 .PHONY: all-srv-and

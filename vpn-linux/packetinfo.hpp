@@ -28,18 +28,18 @@
 namespace orc {
 
 class PacketInfo :
-    public Link
+    public Link<Buffer>
 {
   protected:
-    virtual Pump *Inner() = 0;
+    virtual Pump<Buffer> *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        return Link::Land(data);
+        return Link<Buffer>::Land(data);
     }
 
   public:
     PacketInfo(BufferDrain *drain) :
-        Link(drain)
+        Link<Buffer>(drain)
     {
     }
 

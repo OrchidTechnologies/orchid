@@ -40,6 +40,12 @@ static uint32_t Invoice_(0xa0a5148d);
 
 task<void> Scan(const Buffer &data, const std::function<task<void> (const Buffer &)> &code);
 
+template <typename... Args_>
+auto Packet(const Args_ &...args) {
+    auto data(Tie(args...));
+    return std::make_tuple(uint16_t(data.size()), data);
+}
+
 }
 
 #endif//ORCHID_PROTOCOL_HPP
