@@ -1,57 +1,56 @@
-<h1>Welcome to Orchid</h1>
-<p>Orchid is a new type of VPN that gives you insight into how you are using data and control over
-  where it is going. This first release of Orchid focuses on analysis and shows you when and where
-  your apps are connecting to the Internet.</p>
+<h1>Join the privacy network</h1>
+<h2>Get started in 5 minutes</h2>
 
-<p>The Orchid app is a kind of “packet sniffer” for your phone. The application runs as a VPN
-  service, allowing it to inspect packets entering and leaving your device and logging the traffic
-  for your review. In order to do this Orchid needs the VPN permission on your phone.</p>
+<h3>Get some OXT</h3>
+<p>You need OXT tokens to pay network providers for bandwidth. Most users need $10 USD worth of OXT
+  for 1 month of usage and a $2 deposit.</p>
+<p>Remember: You only pay for the bandwidth you use and the deposit is refundable.</p>
 
-<h2>How to Use the App</h2>
-<ul>
-  <li>Simply turn on Orchid with the switch in the upper right of the app bar.</li>
-  <li>The first time you turn on the switch you will be prompted to grant VPN permissions to the app.
-    You can turn Orchid off and at any time using the switch.  To clear recorded data see
-    “How to delete your data” below.</li>
-  <li>After a few seconds you should start to see some network traffic.  However keep in mind that
-    most network activity occurs while you are using other apps.  So you may want to switch back
-    to your normal activity for a while and then return to see what has been logged.
-    For example, try switching to your web browser and visiting a site.
-    When you return to Orchid you should see that web traffic has been logged.
-    Note that it may be easier to find what you are looking for using the search features (see
-    below).</li>
-</ul>
+<h3>Set up a Web3 enabled wallet</h3>
+<p>Orchid does not use a standard email and password for authentication. Instead, you use a web3-enabled
+  Ethereum wallet. You will want to have the Ethereum address of the wallet handy for when you
+  setup the app. If you have a wallet already  setup, then you can skip to step 3.</p>
+<p>Here are the steps:</p>
+<ol>
+  <li>Setup a Web3 enabled wallet, such as <a href="https://wallet.coinbase.com/">Coinbase Wallet</a>,
+  <a href="https://trustwallet.com/">Trust Wallet</a> or <a href="https://metamask.io/">Metamask</a></li>
+  <li>Once in the wallet, find the Ethereum wallet address to receive funds and copy it to your clipboard</li>
+  <li>Switch over to where your OXT is stored</li>
+  <li>Send your OXT to the Ethereum address</li>
+  <li>Send $1-2 of ETH to the Ethereum address for "gas"
+  (<a href="https://media.consensys.net/ethereum-gas-fuel-and-fees-3333e17fe1dc">learn more</a>)</li>
+</ol>
 
-<h2>How to Use the Search / Filter Bar</h2>
-<ul>
-  <li>Enter a hostname or partial hostname into the search bar to show only matching rows.</li>
-  <li>Enter multiple terms separated by a space to combine hostname filters using “AND” logic.
-    e.g. “goog api” will match rows including both “goog” and “api”, such as “api1.google.com”.</li>
-  <li>Use a “-” minus sign to exclude terms.  e.g. “-goog” will show all hostnames *except*
-    those matching “goog”. You can mix these to include and exclude combinations such as:
-    “google -api” to find all “google” entries excluding those with “api”.</li>
-  <li>Use “prot: &lt;name of protocol&gt;” to filter by protocol name. e.g. “prot:imap” will match all
-    traffic identified as “imap” connections and “-prot:dns” will filter out all DNS queries from
-    the results.</li>
-</ul>
+<h3>Configure the Orchid app</h3>
+<p>The Orchid app is where you manage your private path to the Internet by constructing custom
+  "hops" on our new VPN platform. To fund your hops, you will need to connect them to your funding
+  source via your Orchid account.</p>
+<ol>
+  <li>Tap the "+" button to create a new hop</li>
+  <li>Tap "Orchid Hop" to create a hop on the Orchid Network</li>
+  <li>Paste your wallet address (from Step 2) into the "Wallet address" field</li>
+  <li>To the right of the "Signer key" field, tap the "+" icon to create a new signer key for your
+  hop (You will want to use a unique key for each hop to ensure privacy)</li>
+  <li>Tap the "Generate key" button and then tap "Save" in the top right</li>
+  <li>Now you have a hop! Tap on the "Copy" button to copy your signer key to the clipboard for
+  Step 4 so you can fund that hop.</li>
+</ol>
 
-<h2>How to Delete Your Data</h2>
-Orchid stores the data it analyzes privately on your device. If you wish to clear your data history open the side drawer using the
-hamburger menu (or by edge swiping), select “Clear Data”,
-and confirm the delete. Deleting the app from your device also removes the data of course.
+<h3>Create and fund an Orchid account</h3>
+<p>Your gateway to funding Orchid is found at <a href="https://account.orchid.technology/">account.orchid.technology</a>.
+  Here, funds can be transferred between your wallet and Orchid. This would include topping off your
+  funds when they run low, setting up the account to get started, and removing the funds at any time.</p>
+<p>Follow these steps to create and fund your Orchid account:</p>
+<ol>
+  <li>In the wallet, find the dapp browser and tap on it</li>
+  <li>Type in account.orchid.technology (bookmark this page to find it again easily)</li>
+  <li>Click on the button to fund your account</li>
+  <li>Here there are three fields to fill in. The signer key comes from the Orchid app</li>
+  <li>Fill in $10 USD wrth of OXT into the balance and $2 USD worth of OXT in the deposit</li>
+  <li>Now you need your signer key from the app</li>
+</ol>
+<p>You now have a funded hop!</p>
 
-<h2>Parts of the Network Traffic Displayed</h2>
-<ul>
-  <li>Source IP Address, Destination IP Address</li>
-  <li>Source Port, Destination Port</li>
-  <li>Hostname (when available)</li>
-</ul>
-
-<h2>Open Source</h2>
-Orchid is a 100% open source project, so you can have confidence that the app is on your side and
-not sharing your data with anyone but you. You can get Orchid from a trusted source such as the
-official app store for your device or, if you are a developer, build and install it yourself!
-Visit us on Github at: https://github.com/orchidsource/orchid
-
-<h2>Feedback</h2>
-We’d Love to Hear From You: Contact us at orchid.com!
+<h3>Start exploring freely!</h3>
+<p>Switch Orchid on, and that's it. You're ready to explore freely.
+Stay curious out there!</p>
