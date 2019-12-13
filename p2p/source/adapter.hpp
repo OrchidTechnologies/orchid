@@ -62,9 +62,6 @@ class Converted final :
 class Adapter :
     public BufferDrain
 {
-    template <typename Base_, typename Inner_, typename Drain_>
-    friend class Sink;
-
   public:
     typedef Adapter lowest_layer_type;
     typedef boost::asio::io_context::executor_type executor_type;

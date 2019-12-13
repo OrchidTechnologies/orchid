@@ -339,7 +339,7 @@ task<Socket> Remote::Connect(U<Stream> &stream, const std::string &host, const s
     orc_insist(false);
 }
 
-task<Socket> Remote::Unlid(Sunk<Opening, BufferSewer> *sunk) {
+task<Socket> Remote::Unlid(Sunk<BufferSewer, Opening> *sunk) {
     auto opening(sunk->Wire<RemoteOpening>(host_));
     opening->Open();
     co_return opening->Local();

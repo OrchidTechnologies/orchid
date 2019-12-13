@@ -135,7 +135,7 @@ class Link :
     }
 };
 
-template <typename Inner_ = Pump<Buffer>, typename Drain_ = BufferDrain>
+template <typename Drain_ = BufferDrain, typename Inner_ = Pump<Buffer>>
 class Sunk {
   protected:
     U<Inner_> inner_;
@@ -152,15 +152,23 @@ class Sunk {
     }
 };
 
-template <typename Base_, typename Inner_ = Pump<Buffer>, typename Drain_ = BufferDrain>
+template <typename Base_>
+class Sunken :
+    private Base_
+{
+  public:
+    using Base_::Inner;
+};
+
+template <typename Base_, typename Drain_ = BufferDrain, typename Inner_ = typename std::remove_pointer<decltype(std::declval<Sunken<Base_>>().Inner())>::type>
 class Sink final :
     public Base_,
-    public Sunk<Inner_, Drain_>
+    public Sunk<Drain_, Inner_>
 {
   private:
     Inner_ *Inner() override {
         const auto inner(this->inner_.get());
-        orc_insist_(inner != nullptr, typeid(Inner_).name() << " " << typeid(Base_).name() << "::Inner() == nullptr");
+        orc_insist_(inner != nullptr, typeid(decltype(inner)).name() << " " << typeid(Base_).name() << "::Inner() == nullptr");
         return inner;
     }
 
@@ -173,7 +181,7 @@ class Sink final :
 
     ~Sink() override {
         if (Verbose)
-            Log() << "~Sink<" << typeid(Base_).name() << ", " << typeid(Inner_).name() << ">()" << std::endl;
+            Log() << "~Sink<" << typeid(Base_).name() << ">()" << std::endl;
     }
 };
 

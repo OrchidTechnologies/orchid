@@ -278,9 +278,9 @@ class Punch :
     Hole *const hole_;
     Socket socket_;
 
+  protected:
     virtual Opening *Inner() = 0;
 
-  protected:
     void Land(const Buffer &data, Socket socket) override {
         hole_->Land(Datagram(socket, socket_, data));
     }
@@ -602,7 +602,7 @@ task<bool> Split::Send(const Beam &data) {
             Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
             auto &punch(udp_[source]);
             if (punch == nullptr) {
-                auto sink(std::make_unique<Sink<Punch, Opening, BufferSewer>>(this, source));
+                auto sink(std::make_unique<Sink<Punch, BufferSewer>>(this, source));
                 co_await origin_->Unlid(sink.get());
                 punch = std::move(sink);
             }

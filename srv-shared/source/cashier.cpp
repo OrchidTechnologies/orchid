@@ -179,7 +179,7 @@ Cashier::Cashier(Endpoint endpoint, Locator locator, const Float &price, std::st
         auto duplex(std::make_unique<Duplex>());
         co_await duplex->Open(locator);
 
-        auto station(std::make_unique<Sink<Station, Pump<Json::Value, Json::Value>, Drain<Json::Value>>>(this));
+        auto station(std::make_unique<Sink<Station, Drain<Json::Value>>>(this));
         const auto structured(station->Wire<Sink<Structured>>());
         const auto inverted(structured->Wire<Inverted>(std::move(duplex)));
         inverted->Open();

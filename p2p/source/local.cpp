@@ -141,7 +141,7 @@ task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const st
     co_return Socket(endpoint.address(), endpoint.port());
 }
 
-task<Socket> Local::Unlid(Sunk<Opening, BufferSewer> *sunk) {
+task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> *sunk) {
     auto opening(sunk->Wire<LocalOpening>());
     opening->Open({asio::ip::address_v4::any(), 0});
     co_return opening->Local();
