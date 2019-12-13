@@ -71,8 +71,9 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
             if (delay < 90*24*60*60)
                 continue;
 
-            static const Selector<bool, Address, Bytes> good_("good");
-            if (!co_await good_.Call(endpoint, latest, curator, 90000, address, argument))
+            static const Selector<uint128_t, Address, Bytes> good_("good");
+            const auto adjust(co_await good_.Call(endpoint, latest, curator, 90000, address, argument));
+            if (adjust < generator_())
                 continue;
 
             static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");

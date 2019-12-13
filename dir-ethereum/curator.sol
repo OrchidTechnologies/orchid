@@ -34,7 +34,7 @@ contract ReverseRegistrar {
 }
 
 contract OrchidCurator {
-    function good(address, bytes calldata) external view returns (bool);
+    function good(address, bytes calldata) external view returns (uint128);
 }
 
 contract OrchidList is OrchidCurator {
@@ -52,19 +52,33 @@ contract OrchidList is OrchidCurator {
         owner_ = owner;
     }
 
-    struct Provider {
-        bool good_;
+    struct Entry {
+        uint128 adjust_;
+        bool valid_;
     }
 
-    mapping (address => Provider) private providers_;
+    mapping (address => Entry) private entries_;
 
-    function list(address provider, bool good) external {
+    function kill(address provider) external {
         require(msg.sender == owner_);
-        providers_[provider].good_ = good;
+        delete entries_[provider];
     }
 
-    function good(address provider, bytes calldata) external view returns (bool) {
-        return providers_[provider].good_;
+    function tend(address provider, uint128 adjust) public {
+        require(msg.sender == owner_);
+        Entry storage entry = entries_[provider];
+        entry.adjust_ = adjust;
+        entry.valid_ = true;
+    }
+
+    function list(address provider) external {
+        return tend(provider, uint128(-1));
+    }
+
+    function good(address provider, bytes calldata) external view returns (uint128) {
+        Entry storage entry = entries_[provider];
+        require(entry.valid_);
+        return entry.adjust_;
     }
 }
 
@@ -75,12 +89,13 @@ contract OrchidSelect is OrchidCurator {
         ens_.claim(msg.sender);
     }
 
-    function good(address provider, bytes calldata argument) external view returns (bool) {
+    function good(address provider, bytes calldata argument) external view returns (uint128) {
         require(argument.length == 20);
         address allowed;
         bytes memory copy = argument;
         assembly { allowed := mload(add(copy, 20)) }
-        return provider == allowed;
+        require(provider == allowed);
+        return uint128(-1);
     }
 }
 
@@ -91,7 +106,7 @@ contract OrchidUntrusted is OrchidCurator {
         ens_.claim(msg.sender);
     }
 
-    function good(address, bytes calldata) external view returns (bool) {
-        return true;
+    function good(address, bytes calldata) external view returns (uint128) {
+        return uint128(-1);
     }
 }
