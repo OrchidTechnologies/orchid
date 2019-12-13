@@ -42,7 +42,8 @@ Network::Network(const std::string &rpc, Address directory, Address location) :
 task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, Address lottery, uint256_t chain, const Secret &secret, Address funder) {
     const Endpoint endpoint(origin, locator_);
 
-    const auto latest(co_await endpoint.Latest());
+    // XXX: this adjustment is suboptimal; it seems to help?
+    const auto latest(co_await endpoint.Latest() - 1);
     //const auto block(co_await endpoint.Header(latest));
 
     typedef std::tuple<Address, std::string, U<rtc::SSLFingerprint>> Descriptor;
