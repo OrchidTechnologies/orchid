@@ -24,21 +24,22 @@
 
 #include "client.hpp"
 #include "endpoint.hpp"
+#include "ens.hpp"
 #include "local.hpp"
 #include "network.hpp"
+#include "sleep.hpp"
 
 namespace orc {
 
-Network::Network(const std::string &rpc, Address directory, Address location, Address curator) :
+Network::Network(const std::string &rpc, Address directory, Address location) :
     locator_(Locator::Parse(rpc)),
     directory_(std::move(directory)),
-    location_(std::move(location)),
-    curator_(std::move(curator))
+    location_(std::move(location))
 {
     generator_.seed(boost::random::random_device()());
 }
 
-task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &argument, Address lottery, uint256_t chain, const Secret &secret, Address funder) {
+task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, Address lottery, uint256_t chain, const Secret &secret, Address funder) {
     const Endpoint endpoint(origin, locator_);
 
     const auto latest(co_await endpoint.Latest());
@@ -50,21 +51,31 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
         //co_return Descriptor{provider, "https://local.saurik.com:8443/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
         //co_return Descriptor{provider, "https://mac.saurik.com:8084/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
 
-        retry: {
-            static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick("pick");
-            const auto [address, delay] = co_await pick.Call(endpoint, latest, directory_, 90000, generator_());
+        static const Address ens("0x314159265dd8dbb310642f98f50c066173c1259b");
+
+        // XXX: parse the / out of name (but probably punt this to the frontend)
+        const auto node(Name(name));
+        Beam argument;
+
+        static const Selector<Address, Bytes32> resolver_("resolver");
+        const auto resolver(co_await resolver_.Call(endpoint, latest, ens, 90000, node));
+
+        static const Selector<Address, Bytes32> addr_("addr");
+        const auto curator(co_await addr_.Call(endpoint, latest, resolver, 90000, node));
+
+        for (;;) try {
+            static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
+            const auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
             orc_assert(address != 0);
             if (delay < 90*24*60*60)
-                goto retry;
+                continue;
 
-            if (curator_ != 0) {
-                static const Selector<bool, Address, Bytes> good("good");
-                if (!co_await good.Call(endpoint, latest, curator_, 90000, address, argument))
-                    goto retry;
-            }
+            static const Selector<bool, Address, Bytes> good_("good");
+            if (!co_await good_.Call(endpoint, latest, curator, 90000, address, argument))
+                continue;
 
-            static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look("look");
-            const auto [set, url, tls, gpg] = co_await look.Call(endpoint, latest, location_, 90000, address);
+            static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
+            const auto [set, url, tls, gpg] = co_await look_.Call(endpoint, latest, location_, 90000, address);
 
             Window window(tls);
             orc_assert(window.Take() == 0x06);
@@ -84,6 +95,8 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const Beam &ar
             const auto algorithm(algorithms_.find(Window(tls).Take(tls.size() - fingerprint.size())));
             orc_assert(algorithm != algorithms_.end());
             co_return Descriptor{address, url.str(), std::make_unique<rtc::SSLFingerprint>(algorithm->second, fingerprint.data(), fingerprint.size())};
+        } catch (const std::exception &error) {
+            co_await Sleep(2);
         }
     }();
 

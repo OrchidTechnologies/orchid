@@ -22,37 +22,76 @@
 
 pragma solidity 0.5.13;
 
+contract Resolver {
+    function setName(bytes32 node, string memory name) public;
+}
+
+contract ReverseRegistrar {
+    function setName(string memory name) public returns (bytes32 node);
+    function claim(address owner) public returns (bytes32 node);
+    function claimWithResolver(address owner, address resolver) public returns (bytes32 node);
+    function node(address addr) public pure returns (bytes32);
+}
+
 contract OrchidCurator {
+    function good(address, bytes calldata) external view returns (bool);
+}
+
+contract OrchidList is OrchidCurator {
+    ReverseRegistrar constant private ens_ = ReverseRegistrar(0x9062C0A6Dbd6108336BcBe4593a3D1cE05512069);
+
     address private owner_;
 
-    constructor(address owner) public {
+    constructor() public {
+        ens_.claim(msg.sender);
+        owner_ = msg.sender;
+    }
+
+    function hand(address owner) external {
+        require(msg.sender == owner_);
         owner_ = owner;
     }
 
-    mapping (address => bool) private curated_;
-
-    function list(address target, bool good) external {
-        require(msg.sender == owner_);
-        curated_[target] = good;
+    struct Provider {
+        bool good_;
     }
 
-    function good(address target, bytes calldata) external view returns (bool) {
-        return curated_[target];
+    mapping (address => Provider) private providers_;
+
+    function list(address provider, bool good) external {
+        require(msg.sender == owner_);
+        providers_[provider].good_ = good;
+    }
+
+    function good(address provider, bytes calldata) external view returns (bool) {
+        return providers_[provider].good_;
     }
 }
 
-contract OrchidUnified {
-    function good(address target, bytes calldata argument) external pure returns (bool) {
+contract OrchidSelect is OrchidCurator {
+    ReverseRegistrar constant private ens_ = ReverseRegistrar(0x9062C0A6Dbd6108336BcBe4593a3D1cE05512069);
+
+    constructor() public {
+        ens_.claim(msg.sender);
+    }
+
+    function good(address provider, bytes calldata argument) external view returns (bool) {
         require(argument.length == 20);
         address allowed;
         bytes memory copy = argument;
-        assembly { allowed := mload(add(copy,20)) }
-        return target == allowed;
+        assembly { allowed := mload(add(copy, 20)) }
+        return provider == allowed;
     }
 }
 
-contract OrchidUntrusted {
-    function good(address, bytes calldata) external pure returns (bool) {
+contract OrchidUntrusted is OrchidCurator {
+    ReverseRegistrar constant private ens_ = ReverseRegistrar(0x9062C0A6Dbd6108336BcBe4593a3D1cE05512069);
+
+    constructor() public {
+        ens_.claim(msg.sender);
+    }
+
+    function good(address, bytes calldata) external view returns (bool) {
         return true;
     }
 }

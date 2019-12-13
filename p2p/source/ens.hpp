@@ -20,32 +20,15 @@
 /* }}} */
 
 
-#ifndef ORCHID_NETWORK_HPP
-#define ORCHID_NETWORK_HPP
+#ifndef ORCHID_ENS_HPP
+#define ORCHID_ENS_HPP
 
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
-
-#include "jsonrpc.hpp"
-#include "locator.hpp"
-#include "origin.hpp"
+#include "buffer.hpp"
 
 namespace orc {
 
-class Network {
-  private:
-    const Locator locator_;
-    const Address directory_;
-    const Address location_;
-
-    boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
-
-  public:
-    Network(const std::string &rpc, Address directory, Address location);
-
-    task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, Address lottery, uint256_t chain, const Secret &secret, Address funder);
-};
+Brick<32> Name(const std::string &name);
 
 }
 
-#endif//ORCHID_NETWORK_HPP
+#endif//ORCHID_ENS_HPP
