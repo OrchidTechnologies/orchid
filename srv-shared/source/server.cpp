@@ -82,20 +82,29 @@ _trace();
     }
 };
 
-void Server::Bill(Pipe *pipe, const Buffer &data) {
-    if (cashier_ != nullptr) {
-        const auto amount(cashier_->Bill(data.size()) * 2);
+bool Server::Bill(const Buffer &data, bool force) {
+    if (cashier_ == nullptr)
+        return true;
+    const auto amount(cashier_->Bill(data.size()));
 
-        const auto locked(locked_());
-        if (locked->balance_ < amount) {
-            _trace(); return; }
-        locked->balance_ -= amount;
-        //Log() << "balance- = " << locked->balance_ << std::endl;
-    }
+    const auto locked(locked_());
+    if (!force && locked->balance_ < amount)
+        return false;
+    locked->balance_ -= amount;
+    //Log() << "balance- = " << locked->balance_ << std::endl;
+    return true;
+}
 
-    Spawn([pipe, data = Beam(data)]() -> task<void> {
+void Server::Transfer(const Buffer &data, Pipe *pipe, bool force) {
+    if (Bill(data, force))
+        Spawn([pipe, data = Beam(data)]() -> task<void> {
+            co_return co_await pipe->Send(data);
+        });
+}
+
+task<void> Server::Transfer(const Buffer &data, Pipe *pipe) {
+    if (Bill(data, true))
         co_return co_await pipe->Send(data);
-    });
 }
 
 task<void> Server::Send(const Buffer &data) {
@@ -111,9 +120,9 @@ void Server::Commit(const Lock<Locked_> &locked) {
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit) {
     Header header{Magic_, id};
-    co_await pipe->Send(Datagram(Port_, destination, Tie(header,
+    co_await Transfer(Datagram(Port_, destination, Tie(header,
         Packet(Invoice_, Monotonic(), cashier_->Convert(balance), cashier_->Tuple(), commit)
-    )));
+    )), pipe);
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id) {
@@ -215,7 +224,7 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
-    if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
+    if (Bill(data, true) && !Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
         if (cashier_ == nullptr)
@@ -229,11 +238,12 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
             co_await Invoice(this, source, id, data);
         });
     } catch (const std::exception &error) {
-    } return true; })) Bill(Inner(), data);
+    } return true; })) Transfer(data, Inner(), false);
 }
 
 void Server::Land(const Buffer &data) {
-    Bill(this, data);
+    if (Bill(data, true))
+        Transfer(data, this, false);
 }
 
 void Server::Stop(const std::string &error) {

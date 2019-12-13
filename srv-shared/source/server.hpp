@@ -57,7 +57,11 @@ class Server :
         std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
     }; Locked<Locked_> locked_;
 
-    void Bill(Pipe *pipe, const Buffer &data);
+    bool Bill(const Buffer &data, bool force);
+
+    void Transfer(const Buffer &data, Pipe *pipe, bool force);
+    task<void> Transfer(const Buffer &data, Pipe *pipe);
+
     task<void> Send(const Buffer &data) override;
 
     void Commit(const Lock<Locked_> &locked);
