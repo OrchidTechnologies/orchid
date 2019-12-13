@@ -691,7 +691,8 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
         const Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
-        co_await network.Random(sunk, origin, curator, lottery, chain, secret, funder);
+        const Address provider(heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000"));
+        co_await network.Random(sunk, origin, curator, provider, lottery, chain, secret, funder);
     } else if (protocol == "openvpn") {
         co_await Connect(sunk, origin, local,
             heap.eval<std::string>(hops + ".ovpnfile"),

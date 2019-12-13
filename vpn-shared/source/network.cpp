@@ -39,7 +39,7 @@ Network::Network(const std::string &rpc, Address directory, Address location) :
     generator_.seed(boost::random::random_device()());
 }
 
-task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, Address lottery, uint256_t chain, const Secret &secret, Address funder) {
+task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, Address lottery, uint256_t chain, const Secret &secret, Address funder) {
     const Endpoint endpoint(origin, locator_);
 
     // XXX: this adjustment is suboptimal; it seems to help?
@@ -47,10 +47,10 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
     //const auto block(co_await endpoint.Header(latest));
 
     typedef std::tuple<Address, std::string, U<rtc::SSLFingerprint>> Descriptor;
-    auto [provider, url, fingerprint] = co_await [&]() -> task<Descriptor> {
-        //static const Address provider("0x2b1ce95573ec1b927a90cb488db113b40eeb064a");
-        //co_return Descriptor{provider, "https://local.saurik.com:8443/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
-        //co_return Descriptor{provider, "https://mac.saurik.com:8084/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
+    auto [address, url, fingerprint] = co_await [&]() -> task<Descriptor> {
+        //static const Address address("0x2b1ce95573ec1b927a90cb488db113b40eeb064a");
+        //co_return Descriptor{address, "https://local.saurik.com:8443/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
+        //co_return Descriptor{address, "https://mac.saurik.com:8084/", rtc::SSLFingerprint::CreateUniqueFromRfc4572("sha-256", "A9:E2:06:F8:42:C2:2A:CC:0D:07:3C:E4:2B:8A:FD:26:DD:85:8F:04:E0:2E:90:74:89:93:E2:A5:58:53:85:15")};
 
         static const Address ens("0x314159265dd8dbb310642f98f50c066173c1259b");
 
@@ -66,10 +66,14 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
 
         for (;;) try {
             static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
-            const auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
+            auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
             orc_assert(address != 0);
             if (delay < 90*24*60*60)
                 continue;
+
+            // XXX: this is a stupid hack
+            if (provider != 0)
+                address = provider;
 
             static const Selector<uint128_t, Address, Bytes> good_("good");
             const auto adjust(co_await good_.Call(endpoint, latest, curator, 90000, address, argument));
@@ -103,7 +107,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
     }();
 
     orc_assert(fingerprint != nullptr);
-    const auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(provider), std::move(lottery), std::move(chain), secret, std::move(funder)));
+    const auto client(sunk->Wire<Client>(std::move(fingerprint), std::move(address), std::move(lottery), std::move(chain), secret, std::move(funder)));
     co_await client->Open(origin, url);
 }
 
