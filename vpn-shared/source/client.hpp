@@ -59,7 +59,7 @@ class Client :
         uint64_t benefit_ = 0;
         std::map<Bytes32, std::pair<Ticket, Signature>> pending_;
 
-        uint64_t serial_ = 0;
+        int64_t serial_ = -1;
         checked_int256_t balance_ = 0;
         Address recipient_ = 0;
         Bytes32 commit_ = Zero<32>();
