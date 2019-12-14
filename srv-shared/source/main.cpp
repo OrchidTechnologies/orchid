@@ -237,7 +237,7 @@ int Main(int argc, const char *const argv[]) {
             return bio;
         }());
 
-        for (auto e(sk_X509_num(stack.get())), i(decltype(e)(0)); i != e; i++)
+        for (auto e(stack != nullptr ? sk_X509_num(stack.get()) : 0), i(decltype(e)(0)); i != e; i++)
             chain += Stringify([&]() {
                 bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
                 orc_assert(PEM_write_bio_X509(bio.get(), sk_X509_value(stack.get(), i)));
