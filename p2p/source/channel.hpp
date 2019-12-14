@@ -69,8 +69,8 @@ class SetObserver :
 class Channel;
 
 struct Configuration final {
-    std::vector<std::string> ice_;
     rtc::scoped_refptr<rtc::RTCCertificate> tls_;
+    std::vector<std::string> ice_;
 };
 
 class Peer :

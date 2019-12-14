@@ -26,6 +26,8 @@
 #include <map>
 #include <set>
 
+#include <rtc_base/rtc_certificate.h>
+
 #include "bond.hpp"
 #include "jsonrpc.hpp"
 #include "link.hpp"
@@ -46,6 +48,8 @@ class Server :
   public:
     S<Server> self_;
   private:
+    const rtc::scoped_refptr<rtc::RTCCertificate> local_;
+
     const S<Origin> origin_;
     const S<Cashier> cashier_;
 

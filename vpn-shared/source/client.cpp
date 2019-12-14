@@ -158,6 +158,7 @@ task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
 
     socket_ = co_await Channel::Wire(bonding, origin, [&]() {
         Configuration configuration;
+        configuration.tls_ = local_;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
         const auto answer((co_await origin->Request("POST", Locator::Parse(url), {}, offer, verify)).ok());

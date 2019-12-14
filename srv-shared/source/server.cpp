@@ -59,9 +59,10 @@ class Incoming final :
     }
 
   public:
-    Incoming(S<Server> server, const S<Origin> &origin, std::vector<std::string> ice) :
+    Incoming(S<Server> server, const S<Origin> &origin, rtc::scoped_refptr<rtc::RTCCertificate> local, std::vector<std::string> ice) :
         Peer(origin, [&]() {
             Configuration configuration;
+            configuration.tls_ = std::move(local);
             configuration.ice_ = std::move(ice);
             return configuration;
         }()),
@@ -274,6 +275,7 @@ void Server::Stop(const std::string &error) {
 }
 
 Server::Server(S<Origin> origin, S<Cashier> cashier) :
+    local_(Certify()),
     origin_(std::move(origin)),
     cashier_(std::move(cashier))
 {
@@ -293,7 +295,7 @@ task<void> Server::Shut() {
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {
-    auto incoming(Incoming::Create(self_, origin_, std::move(ice)));
+    auto incoming(Incoming::Create(self_, origin_, local_, std::move(ice)));
     auto answer(co_await incoming->Answer(offer));
     co_return answer;
     co_return Filter(true, answer);
