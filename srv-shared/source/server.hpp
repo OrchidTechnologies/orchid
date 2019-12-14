@@ -30,6 +30,7 @@
 #include "jsonrpc.hpp"
 #include "link.hpp"
 #include "locked.hpp"
+#include "nest.hpp"
 #include "shared.hpp"
 #include "task.hpp"
 
@@ -48,27 +49,34 @@ class Server :
     const S<Origin> origin_;
     const S<Cashier> cashier_;
 
+    Nest nest_;
+
+    static const size_t horizon_ = 10;
+
     struct Locked_ {
+        uint64_t serial_ = 0;
         Float balance_ = 0;
 
         std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
         decltype(reveals_.end()) commit_ = reveals_.end();
 
-        std::set<std::tuple<uint256_t, Address, Bytes32>> tickets_;
+        uint256_t issued_ = 0;
+        std::set<std::tuple<uint256_t, Bytes32, Address>> nonces_;
     }; Locked<Locked_> locked_;
 
     bool Bill(const Buffer &data, bool force);
 
-    void Transfer(const Buffer &data, Pipe *pipe, bool force);
-    task<void> Transfer(const Buffer &data, Pipe *pipe);
+    task<void> Send(Pipe *pipe, const Buffer &data, bool force);
+    void Send(Pipe *pipe, const Buffer &data);
 
     task<void> Send(const Buffer &data) override;
 
     void Commit(const Lock<Locked_> &locked);
 
-    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit);
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit);
     task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id);
-    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Buffer &data);
+
+    task<void> Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &data);
 
   protected:
     virtual Pump<Buffer> *Inner() = 0;

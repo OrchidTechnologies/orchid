@@ -63,7 +63,7 @@ class Node final {
         auto &cache(locked->servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
-        auto server(Make<Sink<Server>>(origin_, cashier_));
+        auto server(Break<Sink<Server>>(origin_, cashier_));
         server->Wire<Translator>(egress_);
         server->self_ = server;
         cache = server;

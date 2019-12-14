@@ -40,7 +40,7 @@ task<void> Client::Submit() {
 task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Signature &signature) {
     Header header{Magic_, hash};
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header,
-        Packet(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt_))
+        Command(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt_))
     )));
 }
 
@@ -52,7 +52,7 @@ void Client::Issue(uint256_t amount) {
 
         const auto nonce(Random<32>());
 
-        const auto now(Seconds());
+        const auto now(Timestamp());
         const auto start(now + 60 * 60 * 2);
 
         const auto [recipient, commit] = [&]() {
@@ -65,7 +65,7 @@ void Client::Issue(uint256_t amount) {
         const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
         const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
         { const auto locked(locked_());
-            locked->tickets_.try_emplace(hash, ticket, signature); }
+            locked->pending_.try_emplace(hash, ticket, signature); }
         co_return co_await Submit(hash, ticket, signature);
     });
 }
@@ -91,26 +91,39 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
 
         Wait(Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
             const auto [command, window] = Take<uint32_t, Window>(data);
-            orc_assert(command == Invoice_);
+            if (command != Invoice_)
+                co_return;
 
-            const auto [timestamp, balance, lottery, chain, recipient, commit] = Take<uint256_t, checked_int256_t, Address, uint256_t, Address, Bytes32>(window);
+            const auto [serial, balance, lottery, chain, recipient, commit] = Take<uint64_t, checked_int256_t, Address, uint256_t, Address, Bytes32>(window);
             orc_assert(lottery == lottery_);
             orc_assert(chain == chain_);
 
-            {
+            const auto predicted([&, &serial = serial, &balance = balance, &recipient = recipient, &commit = commit]() {
                 const auto locked(locked_());
-                if (!id.zero())
-                    locked->tickets_.erase(id);
-                if (locked->timestamp_ >= timestamp)
-                    co_return;
-                locked->timestamp_ = timestamp;
-                locked->balance_ = balance;
-                locked->recipient_ = recipient;
-                locked->commit_ = commit;
-            }
 
-            if (prepay_ > balance)
-                Issue(uint256_t(prepay_ * 2 - balance));
+                // XXX: implement rollover strategy
+                if (locked->serial_ < serial) {
+                    locked->serial_ = serial;
+                    locked->balance_ = balance;
+                    locked->recipient_ = recipient;
+                    locked->commit_ = commit;
+                }
+
+                if (!id.zero())
+                    locked->pending_.erase(id);
+
+                auto predicted(locked->balance_);
+                for (const auto &pending : locked->pending_) {
+                    const auto &ticket(pending.second.first);
+                    // XXX: subtract predicted transaction fees
+                    predicted += ticket.amount_ * (ticket.ratio_ + 1);
+                }
+
+                return predicted;
+            }());
+
+            if (prepay_ > predicted)
+                Issue(uint256_t(prepay_ * 2 - predicted));
         } catch (const std::exception &error) {
         } }));
     } catch (const std::exception &error) {

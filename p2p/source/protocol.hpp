@@ -35,13 +35,14 @@ extern const Socket Port_;
 typedef std::tuple<uint32_t, Bytes32> Header;
 
 static uint32_t Magic_(0xff0fce1d);
-static uint32_t Submit_(0xe497a365);
-static uint32_t Invoice_(0xa0a5148d);
+static uint32_t Stamp_(0xee6d796e);
+static uint32_t Submit_(0xfd90e312);
+static uint32_t Invoice_(0x01959987);
 
 task<void> Scan(const Buffer &data, const std::function<task<void> (const Buffer &)> &code);
 
 template <typename... Args_>
-auto Packet(const Args_ &...args) {
+auto Command(const Args_ &...args) {
     auto data(Tie(args...));
     return std::make_tuple(uint16_t(data.size()), data);
 }

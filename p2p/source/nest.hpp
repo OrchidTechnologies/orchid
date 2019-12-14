@@ -75,7 +75,7 @@ class Nest :
     };
 
   public:
-    Nest(unsigned limit) :
+    Nest(unsigned limit = -1) :
         limit_(limit)
     {
     }
@@ -92,9 +92,11 @@ class Nest :
         Count count(this);
         if (count > limit_)
             return;
-        Spawn([count = std::move(count), code = code()]() mutable -> task<void> {
+        Spawn([count = std::move(count), code = code()]() mutable -> task<void> { try {
             co_await code();
-        });
+        } catch (...) {
+            // XXX: log error
+        } });
     }
 };
 

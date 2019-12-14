@@ -12,7 +12,7 @@ class CloudFlare {
 
   // Lottery contract address on main net
   static var lotteryContractAddress =
-      '0x6Aa30A9619BFc5E539AEaF1027B5Cc259A120178';
+      '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
 
   // The ABI identifier for the `look` method.
   // Note: The first four bytes of the signature hash (Remix can provide this).

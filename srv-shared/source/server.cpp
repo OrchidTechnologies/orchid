@@ -85,26 +85,35 @@ _trace();
 bool Server::Bill(const Buffer &data, bool force) {
     if (cashier_ == nullptr)
         return true;
+
     const auto amount(cashier_->Bill(data.size()));
+    const auto floor(cashier_->Bill(12*1024));
+
+    S<Server> self;
 
     const auto locked(locked_());
     if (!force && locked->balance_ < amount)
         return false;
+
     locked->balance_ -= amount;
-    //Log() << "balance- = " << locked->balance_ << std::endl;
-    return true;
+    ++locked->serial_;
+
+    //Log() << "balance- = " << locked->balance_ << " [floor: " << floor << "]" << std::endl;
+
+    if (locked->balance_ >= -floor)
+        return true;
+    std::swap(self, self_);
+    return false;
 }
 
-void Server::Transfer(const Buffer &data, Pipe *pipe, bool force) {
+task<void> Server::Send(Pipe *pipe, const Buffer &data, bool force) {
     if (Bill(data, force))
-        Spawn([pipe, data = Beam(data)]() -> task<void> {
-            co_return co_await pipe->Send(data);
-        });
+        co_return co_await pipe->Send(data);
 }
 
-task<void> Server::Transfer(const Buffer &data, Pipe *pipe) {
-    if (Bill(data, true))
-        co_return co_await pipe->Send(data);
+void Server::Send(Pipe *pipe, const Buffer &data) {
+    nest_.Hatch([&]() { return [this, pipe, data = Beam(data)]() -> task<void> {
+        co_return co_await Send(pipe, data, false); }; });
 }
 
 task<void> Server::Send(const Buffer &data) {
@@ -114,87 +123,98 @@ task<void> Server::Send(const Buffer &data) {
 void Server::Commit(const Lock<Locked_> &locked) {
     const auto reveal(Random<32>());
     if (locked->commit_ != locked->reveals_.end())
-        locked->commit_->second.second = Seconds();
+        locked->commit_->second.second = Timestamp();
     locked->commit_ = locked->reveals_.try_emplace(Hash(reveal), reveal, 0).first;
 }
 
-task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Float &balance, const Bytes32 &commit) {
+task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit) {
     Header header{Magic_, id};
-    co_await Transfer(Datagram(Port_, destination, Tie(header,
-        Packet(Invoice_, Monotonic(), cashier_->Convert(balance), cashier_->Tuple(), commit)
-    )), pipe);
+    co_await Send(pipe, Datagram(Port_, destination, Tie(header,
+        Command(Stamp_, Monotonic()),
+        Command(Invoice_, serial, cashier_->Convert(balance), cashier_->Tuple(), commit)
+    )), true);
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id) {
-    const auto [balance, commit] = [&]() { const auto locked(locked_());
-        return std::make_tuple(locked->balance_, locked->commit_->first); }();
-    co_await Invoice(pipe, destination, id, balance, commit);
+    const auto [serial, balance, commit] = [&]() { const auto locked(locked_());
+        return std::make_tuple(locked->serial_, locked->balance_, locked->commit_->first); }();
+    co_await Invoice(pipe, destination, id, serial, balance, commit);
 }
 
-task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, const Buffer &data) {
-    co_await Scan(data, [&](const Buffer &data) -> task<void> { try {
-        const auto [command, window] = Take<uint32_t, Window>(data);
-        orc_assert(command == Submit_);
+task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &data) {
+    const auto [
+        v, r, s,
+        commit,
+        issued, nonce,
+        lottery, chain,
+        amount, ratio,
+        start, range,
+        funder, recipient,
+    window] = Take<
+        uint8_t, Brick<32>, Brick<32>,
+        Bytes32,
+        uint256_t, Bytes32,
+        Address, uint256_t,
+        uint128_t, uint128_t,
+        uint256_t, uint128_t,
+        Address, Address,
+    Window>(data);
 
-        const auto [
-            v, r, s,
-            commit,
-            issued, nonce,
-            lottery, chain,
-            amount, ratio,
-            start, range,
-            funder, recipient,
-        temp] = Take<
-            uint8_t, Brick<32>, Brick<32>,
-            Bytes32,
-            uint256_t, Bytes32,
-            Address, uint256_t,
-            uint128_t, uint128_t,
-            uint256_t, uint128_t,
-            Address, Address,
-        Window>(window);
+    // XXX: fix Coder and Selector to not require this to Beam
+    const Beam receipt(window);
 
-        // XXX: fix Coder and Selector to not require this to Beam
-        const Beam receipt(temp);
+    orc_assert(std::tie(lottery, chain, recipient) == cashier_->Tuple());
 
-        orc_assert(std::tie(lottery, chain, recipient) == cashier_->Tuple());
+    const auto until(start + range);
+    const auto now(Timestamp());
+    orc_assert(until > now);
 
-        const auto until(start + range);
-        const auto now(Seconds());
-        orc_assert(until > now);
+    const uint256_t gas(100000);
 
-        const uint256_t gas(100000);
+    const auto credit(cashier_->Credit(now, start, until, amount * (uint256_t(ratio) + 1), gas));
 
-        const auto credit(cashier_->Credit(now, start, until, amount * (uint256_t(ratio) + 1), gas));
+    using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
+    static const auto orchid(Hash("Orchid.grab"));
+    const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
+    const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
 
-        using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
-        static const auto orchid(Hash("Orchid.grab"));
-        const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
-        const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
+    co_await cashier_->Check(signer, funder, amount, recipient, receipt);
 
-        co_await cashier_->Check(signer, funder, amount, recipient, receipt);
+    const auto [reveal, balance, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio]() {
+        const auto locked(locked_());
 
-        const auto [reveal, balance] = [&, commit = commit]() {
-            const auto locked(locked_());
+        orc_assert(issued >= locked->issued_);
+        auto &nonces(locked->nonces_);
+        orc_assert(nonces.emplace(issued, nonce, signer).second);
+        while (nonces.size() > horizon_) {
+            const auto oldest(nonces.begin());
+            orc_assert(oldest != nonces.end());
+            locked->issued_ = std::get<0>(*oldest) + 1;
+            nonces.erase(oldest);
+        }
+
+        const auto reveal([&]() {
             const auto reveal(locked->reveals_.find(commit));
             orc_assert(reveal != locked->reveals_.end());
             const auto expire(reveal->second.second);
             orc_assert(expire == 0 || reveal->second.second + 60 > now);
-            orc_assert(locked->tickets_.emplace(until, signer, ticket).second);
-            locked->balance_ += credit;
-            return std::make_tuple(reveal->second.first, locked->balance_);
-        }();
+            return reveal->second.first;
+        }());
 
-        //Log() << "balance+ = " << balance << std::endl;
+        locked->balance_ += credit;
+        ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
-        if (!(Hash(Tie(reveal, nonce)).skip<16>().num<uint128_t>() <= ratio))
-            co_return;
+        const auto winner(Hash(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
+        if (winner && locked->commit_->first == commit)
+            Commit(locked);
 
-        { const auto locked(locked_());
-            if (locked->commit_->first == commit) {
-                Commit(locked); } }
+        return std::make_tuple(reveal, locked->balance_, winner);
+    }();
 
+    //Log() << "balance+ = " << balance << std::endl;
+
+    if (winner) {
         std::vector<Bytes32> old;
 
         static Selector<void,
@@ -216,11 +236,7 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
             funder, recipient,
             receipt, old
         );
-    } catch (const std::exception &error) {
-        Log() << error.what() << std::endl;
-    } });
-
-    co_await Invoice(this, destination, id);
+    }
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
@@ -229,21 +245,29 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
             return false;
         if (cashier_ == nullptr)
             return true;
-    try {
-        const auto [header, window] = Take<Header, Window>(data);
-        const auto &[magic, id] = header;
-        orc_assert(magic == Magic_);
 
-        Spawn([this, source, id = id, data = Beam(window)]() -> task<void> {
-            co_await Invoice(this, source, id, data);
-        });
-    } catch (const std::exception &error) {
-    } return true; })) Transfer(data, Inner(), false);
+        nest_.Hatch([&]() { return [this, source, data = Beam(data)]() -> task<void> {
+            const auto [header, window] = Take<Header, Window>(data);
+            const auto &[magic, id] = header;
+            orc_assert(magic == Magic_);
+
+            co_await Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
+                const auto [command, window] = Take<uint32_t, Window>(data);
+                if (command == Submit_);
+                    co_await Submit(this, id, window);
+            } catch (const std::exception &error) {
+            } });
+
+            co_await Invoice(this, source, id);
+        }; });
+
+        return true;
+    })) Send(Inner(), data);
 }
 
 void Server::Land(const Buffer &data) {
     if (Bill(data, true))
-        Transfer(data, this, false);
+        Send(this, data);
 }
 
 void Server::Stop(const std::string &error) {
@@ -265,6 +289,7 @@ task<void> Server::Open(Pipe<Buffer> *pipe) {
 task<void> Server::Shut() {
     co_await Bonded::Shut();
     co_await Inner()->Shut();
+    co_await nest_.Shut();
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {

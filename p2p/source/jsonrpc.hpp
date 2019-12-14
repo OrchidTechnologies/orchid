@@ -610,7 +610,7 @@ struct Coder {
     }
 };
 
-uint256_t Seconds();
+uint256_t Timestamp();
 uint256_t Monotonic();
 
 }

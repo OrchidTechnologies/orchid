@@ -12,7 +12,7 @@ export class OrchidContracts {
   static token_approval_max_gas: number = 50000;
 
   //static lottery_addr: Address = '0x730185a63b7141c1e54b41964f64dfd5bf701237'; // Main net with OTT
-  static lottery_addr: Address = '0x6Aa30A9619BFc5E539AEaF1027B5Cc259A120178'; // Main net with OXT
+  static lottery_addr: Address = '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1'; // Main net with OXT
 
   static lottery_push_max_gas: number = 800000;
   static lottery_push_method_hash: string =

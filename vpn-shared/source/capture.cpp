@@ -686,7 +686,7 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
     } else if (protocol == "orchid") {
-        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0x6Aa30A9619BFc5E539AEaF1027B5Cc259A120178"));
+        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"));
         const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
         const Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
