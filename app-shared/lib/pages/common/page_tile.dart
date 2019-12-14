@@ -30,7 +30,7 @@ class PageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 46,
+        height: 50,
         color: color,
         child: ListTile(
             title: Text(title),

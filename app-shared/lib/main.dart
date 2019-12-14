@@ -14,5 +14,3 @@ void main() {
   // Orientation.appDefault().then((_) { runApp(OrchidApp()); });
   runApp(OrchidApp());
 }
-
-

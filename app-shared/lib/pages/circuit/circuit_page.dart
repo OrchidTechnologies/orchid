@@ -1,16 +1,16 @@
 import 'dart:async';
 
+import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/keys/keys_page.dart';
+import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/util/collections.dart';
 
 import '../app_colors.dart';
@@ -32,19 +32,82 @@ class CircuitPage extends StatefulWidget {
   }
 }
 
-class CircuitPageState extends State<CircuitPage> {
+// TODO: This class has gotten pretty big. Time for some refactoring!
+class CircuitPageState extends State<CircuitPage>
+    with TickerProviderStateMixin {
   List<StreamSubscription> _rxSubs = List();
   List<UniqueHop> _hops;
-  bool _switchOn;
+  bool _switchOn = false;
 
   // Workaround for dragged switch state issue
   // https://github.com/flutter/flutter/issues/46046
   int _switchKey = 0;
 
+  // Master timeline for connect animation
+  AnimationController _masterConnectAnimController;
+
+  // Timeline paralleling master connect but for firewall only.
+  AnimationController _firewallConnectAnimController;
+
+  // The duck into hole animation
+  AnimationController _bunnyDuckAnimController;
+
+  // Animations driven by the master timelines
+  Animation<double> _connectAnimController;
+  Animation<double> _bunnyExitAnim;
+  Animation<double> _bunnyDuckAnimation;
+  Animation<double> _bunnyEnterAnim;
+  Animation<double> _holeTransformAnim;
+  Animation<Color> _hopColorTween;
+  Animation<Color> _firewallHopColorTween;
+
+  // Anim params
+  int _fadeAnimTime = 200;
+  int _connectAnimTime = 1200;
+  DateTime _lastInteractionTime;
+  Timer _bunnyDuckTimer;
+
   @override
   void initState() {
     super.initState();
     initStateAsync();
+
+    _masterConnectAnimController = AnimationController(
+        duration: Duration(milliseconds: _connectAnimTime), vsync: this);
+
+    _firewallConnectAnimController = AnimationController(
+        duration: Duration(milliseconds: _connectAnimTime), vsync: this);
+
+    _bunnyDuckAnimController =
+        AnimationController(duration: Duration(milliseconds: 300), vsync: this);
+
+    _connectAnimController = CurvedAnimation(
+        parent: _masterConnectAnimController, curve: Interval(0, 1.0));
+
+    _bunnyExitAnim = CurvedAnimation(
+        parent: _connectAnimController,
+        curve: Interval(0, 0.4, curve: Curves.easeInOutExpo));
+
+    _bunnyDuckAnimation = CurvedAnimation(
+        parent: _bunnyDuckAnimController, curve: Curves.easeOut);
+
+    _holeTransformAnim = CurvedAnimation(
+        parent: _connectAnimController,
+        curve: Interval(0.4, 0.5, curve: Curves.easeIn));
+
+    _bunnyEnterAnim = CurvedAnimation(
+        parent: _connectAnimController,
+        curve: Interval(0.6, 1.0, curve: Curves.easeInOutExpo));
+
+    _hopColorTween =
+        ColorTween(begin: Color(0xffa29ec0), end: Color(0xff8c61e1))
+            .animate(_connectAnimController);
+
+    _firewallHopColorTween =
+        ColorTween(begin: Color(0xffa29ec0), end: Color(0xff8c61e1))
+            .animate(_firewallConnectAnimController);
+
+    _bunnyDuckTimer = Timer.periodic(Duration(seconds: 1), _checkBunny);
   }
 
   void initStateAsync() async {
@@ -54,6 +117,10 @@ class CircuitPageState extends State<CircuitPage> {
     // Note: See `monitoring_page.dart` or `connect_page` for controls that track the
     // Note: system connection status.
     _switchOn = await UserPreferences().getDesiredVPNState();
+
+    // Force the correct animation states for the initial switch state
+    _masterConnectAnimController.value = _switchOn && _hasHops() ? 1.0 : 0.0;
+    _firewallConnectAnimController.value = _switchOn ? 1.0 : 0.0;
 
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
@@ -75,68 +142,48 @@ class CircuitPageState extends State<CircuitPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(gradient: AppGradients.basicGradient),
-      child: _buildBody(),
+    // Build the standalone wrapper for the page body
+    return Scaffold(
+      appBar: AppBar(
+        title: Image.asset("assets/images/name_logo.png",
+            color: Colors.white, height: 24),
+        actions: <Widget>[_buildSwitch()],
+      ),
+      body: _buildBody(),
+      drawer: SideDrawer(),
+      // Workaround for: https://github.com/flutter/flutter/issues/23926
+      resizeToAvoidBottomInset: false,
     );
   }
 
   Widget _buildBody() {
-    return Visibility(
-      visible: _hops != null,
-      replacement: Container(),
-      child: Stack(
-        children: <Widget>[
-          _buildHopList(),
-          if (_hasHops())
-            _buildFloatingActionButton()
-          else
-            _buildBottomButtonCallout()
-        ],
+    return NotificationListener(
+      onNotification: (notif) {
+        _userInteraction();
+        return false;
+      },
+      child: GestureDetector(
+        onTapDown: (_) {
+          _userInteraction();
+        },
+        child: Container(
+          decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+          child: Visibility(
+            visible: _hops != null,
+            replacement: Container(),
+            child: AnimatedBuilder(
+                animation: Listenable.merge([
+                  _connectAnimController,
+                  _firewallConnectAnimController,
+                  _bunnyDuckAnimation
+                ]),
+                builder: (BuildContext context, Widget child) {
+                  return _buildHopList();
+                }),
+          ),
+        ),
       ),
     );
-  }
-
-  Align _buildFloatingActionButton() {
-    return Align(
-        alignment: Alignment.bottomRight,
-        child: FloatingAddButton(onPressed: _addHop));
-  }
-
-  Widget _buildBottomButtonCallout() {
-    return OrientationBuilder(
-        builder: (BuildContext context, Orientation orientation) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Visibility(
-            visible: orientation == Orientation.portrait,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 45.0),
-              child: AppText.header(
-                  text: "Create your first hop for IP protection.",
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20.0),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                Image.asset("assets/images/drawnArrow.png"),
-                FloatingAddButton(
-                    padding:
-                        EdgeInsets.only(left: 24, right: 24, top: 0, bottom: 0),
-                    onPressed: _addHop),
-              ],
-            ),
-          ),
-        ],
-      );
-    });
   }
 
   // Warn when no vpn protection is actually in effect.
@@ -153,13 +200,27 @@ class CircuitPageState extends State<CircuitPage> {
   Widget _buildHopList() {
     return Column(
       children: <Widget>[
-        pady(24),
         Expanded(
           child: AppReorderableListView(
               header: Column(
                 children: <Widget>[
+                  AnimatedCrossFade(
+                    duration: Duration(milliseconds: _fadeAnimTime),
+                    crossFadeState: _showEnableVPNInstruction()
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+                    firstChild: _buildEnableVPNInstruction(),
+                    secondChild: pady(16),
+                  ),
                   _buildStartTile(),
-                  if (_showEnableVPNInstruction()) _buildEnableVPNInstruction(),
+                  AnimatedCrossFade(
+                    duration: Duration(milliseconds: _fadeAnimTime),
+                    crossFadeState: _showProtectedWarning()
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+                    firstChild: _buildWarningTile(),
+                    secondChild: SizedBox(height: 0),
+                  ),
                   _buildFirewallTile()
                 ],
               ),
@@ -168,8 +229,12 @@ class CircuitPageState extends State<CircuitPage> {
               }).toList(),
               footer: Column(
                 children: <Widget>[
+                  _buildNewHopTile(),
+                  if (!_hasHops()) _buildFirstHopInstruction(),
+                  HopTile.buildFlowDivider(
+                      padding: EdgeInsets.only(
+                          top: _hasHops() ? 16 : 2, bottom: 10)),
                   _buildEndTile(),
-                  if (_showProtectedWarning()) _buildWarningTile(),
                 ],
               ),
               onReorder: _onReorder),
@@ -180,34 +245,177 @@ class CircuitPageState extends State<CircuitPage> {
 
   // The starting (top) tile in the hop flow
   Widget _buildStartTile() {
-    return HopTile(
-        title: "Your Device",
-        image: Image.asset("assets/images/person.png"),
-        gradient: AppGradients.purpleTileHorizontal,
-        textColor: Colors.white,
-        trailing: _buildSwitch(),
-        showDragHandle: false,
-        // Show the bottom flow arrow unless we are showing the enable instructions
-        showFlowDividerBottom: !_showEnableVPNInstruction());
+    var bunnyWidth = 47.0;
+    var bunnyHeight = 75.0;
+    var clipOvalWidth = 130.0;
+    var holeOutlineStrokeWidth = 1.4;
+
+    // depth into the hole
+    var bunnyOffset =
+        _bunnyExitAnim.value * bunnyHeight + _bunnyDuckAnimation.value * 4.0;
+
+    return
+        // Top level container with the hole and clipped bunny image
+        Container(
+      height: bunnyHeight + holeOutlineStrokeWidth,
+      width: clipOvalWidth,
+      child: Stack(
+        children: <Widget>[
+          // hole
+          Opacity(
+            opacity: 1.0 - _holeTransformAnim.value,
+            child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Transform(
+                    alignment: Alignment.bottomCenter,
+                    transform: Matrix4.identity()
+                      ..scale(1.0 - _holeTransformAnim.value,
+                          1.0 + _holeTransformAnim.value),
+                    child: Image.asset("assets/images/layer35.png"))),
+          ),
+          // logo
+          Opacity(
+            opacity: _holeTransformAnim.value,
+            child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Transform(
+                    alignment: Alignment.bottomCenter,
+                    transform: Matrix4.identity()
+                      ..scale(1.0, _holeTransformAnim.value),
+                    child: Image.asset("assets/images/logo_purple.png"))),
+          ),
+
+          // positioned oval clipped bunny
+          Positioned(
+              // clipping oval should sit on the top of the hole outline
+              bottom: holeOutlineStrokeWidth,
+              child: _buildOvalClippedBunny(
+                bunnyHeight: bunnyHeight,
+                bunnyWidth: bunnyWidth,
+                clipOvalWidth: clipOvalWidth,
+                bunnyOffset: bunnyOffset,
+              )),
+        ],
+      ),
+    );
   }
 
-  // The ending (bottom) tile in the hop flow
+  // The ending (bottom) tile with the island and clipped bunny image
   Widget _buildEndTile() {
+    var bunnyWidth = 30.0;
+    var bunnyHeight = 48.0;
+    var clipOvalWidth = 83.0;
+
+    // depth into the hole
+    var bunnyOffset = (1.0 - _bunnyEnterAnim.value) * bunnyHeight;
+    var containerWidth = 375.0;
+
+    return Stack(
+      alignment: Alignment.center,
+      children: <Widget>[
+        // Set the overall size of the layout, leaving space for the background
+        Container(width: containerWidth, height: 200),
+
+        // connected animation
+        _buildBackgroundAnimation(),
+
+        // island
+        Image.asset("assets/images/island.png"),
+        Opacity(
+            opacity: _connectAnimController.value,
+            child: Image.asset("assets/images/vignetteHomeHeroSm.png")),
+
+        // positioned bunny
+        Positioned(
+            // clipping oval should sit on the top of the hole outline
+            top: 70.0,
+            left: containerWidth / 2 - clipOvalWidth / 2 + 5,
+            child: _buildOvalClippedBunny(
+              bunnyHeight: bunnyHeight,
+              bunnyWidth: bunnyWidth,
+              clipOvalWidth: clipOvalWidth,
+              bunnyOffset: bunnyOffset,
+            )),
+      ],
+    );
+  }
+
+  // Note: I tried a number of things here to position this relative to screen
+  // Note: width but nothing was very satisfying. This animation really should
+  // Note: probably be aligned with the island but stacked under the whole layout
+  // Note: with a transparent gradient extending under the other screen items.
+  // Note: Going with a fixed layout for now.
+  Widget _buildBackgroundAnimation() {
+    return Positioned(
+      top: -38,
+      child: Container(
+        width: 375,
+        height: 350,
+        child: Opacity(
+          opacity: _connectAnimController.value,
+          child: FlareActor(
+            "assets/flare/Connection_screens.flr",
+            color: Colors.deepPurple.withOpacity(0.4),
+            fit: BoxFit.fitHeight,
+            animation: "connectedLoop",
+          ),
+        ),
+      ),
+    );
+  }
+
+  // A transparent oval clipping container for the bunny with specified offset
+  ClipOval _buildOvalClippedBunny(
+      {double bunnyHeight,
+      double bunnyWidth,
+      double clipOvalWidth,
+      double bunnyOffset}) {
+    return ClipOval(
+      child: Container(
+          width: clipOvalWidth, // width of the hole
+          height: bunnyHeight,
+          //color: Colors.grey.withOpacity(0.3), // show clipping oval
+          child: Stack(
+            children: <Widget>[
+              Positioned(
+                  bottom: -bunnyOffset,
+                  left: clipOvalWidth / 2 - bunnyWidth / 2 + 5,
+                  child: Image.asset("assets/images/bunnypeek.png",
+                      height: bunnyHeight)),
+            ],
+          )),
+    );
+  }
+
+  Widget _buildNewHopTile() {
     return HopTile(
-        title: "The Internet",
-        image: Image.asset("assets/images/globe.png"),
-        gradient: AppGradients.purpleTileHorizontal,
-        textColor: Colors.white,
+        title: "New Hop",
+        image: Image.asset("assets/images/addCircleOutline.png"),
+        trailing: SizedBox(width: 40),
+        // match leading
+        textColor: Colors.deepPurple,
+        borderColor: Color(0xffb88dfc),
+        dottedBorder: true,
         showDragHandle: false,
-        showFlowDividerTop: _hops != null && _hops.length > 0);
+        onTap: _addHop);
   }
 
   Widget _buildWarningTile() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Text("️⚠️️ Your IP is exposed!",
-          style:
-              AppText.listItem.copyWith(fontSize: 18, color: Colors.redAccent)),
+      padding: const EdgeInsets.only(top: 16.0, right: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Image.asset("assets/images/warning.png"),
+          padx(5),
+          Text("Feeling exposed!",
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: Color(0xff504960),
+              )),
+        ],
+      ),
     );
   }
 
@@ -216,9 +424,13 @@ class CircuitPageState extends State<CircuitPage> {
     return HopTile(
         title: "Personal Firewall",
         image: Image.asset("assets/images/fire.png", color: color),
-        gradient: AppGradients.purpleTileHorizontal,
+        color: _firewallHopColorTween.value,
         textColor: color,
         showDragHandle: false,
+        onTap: () {
+          Navigator.pushNamed(context, '/traffic');
+        },
+        showFlowDividerTop: true,
         showFlowDividerBottom: true);
   }
 
@@ -245,9 +457,10 @@ class CircuitPageState extends State<CircuitPage> {
   }
 
   Widget _buildHopTile(UniqueHop uniqueHop) {
-    bool isFirstHop = uniqueHop.key == _hops.first.key;
-    bool hasMultipleHops = _hops.length > 1;
-    Color color = Colors.teal;
+    //bool isFirstHop = uniqueHop.key == _hops.first.key;
+    //bool hasMultipleHops = _hops.length > 1;
+    //bool isLastHop = uniqueHop.key == _hops.last.key;
+    Color color = Colors.white;
     Image image;
     switch (uniqueHop.hop.protocol) {
       case Protocol.Orchid:
@@ -259,40 +472,71 @@ class CircuitPageState extends State<CircuitPage> {
       default:
         throw new Exception();
     }
-    return HopTile(
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12),
+      child: HopTile(
         textColor: color,
+        color: _hopColorTween.value,
         image: image,
         onTap: () {
           _viewHop(uniqueHop);
         },
         key: Key(uniqueHop.key.toString()),
         title: uniqueHop.hop.displayName(),
-        showTopDivider: isFirstHop,
-        showDragHandle: hasMultipleHops);
+        showTopDivider: false,
+      ),
+    );
   }
 
   Container _buildEnableVPNInstruction() {
-    // Providing the instructions a fixed height allows this to work.
-    // TODO: Why doesn't IntrinsicHeight work here?
     return Container(
-        padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+        padding: EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
         child: SafeArea(
+          bottom: false,
+          left: false,
+          top: false,
           child: Row(
             children: <Widget>[
               Expanded(
-                child: AppText.header(
-                    text:
-                        "Turn Orchid on to activate your hops and protect your traffic",
-                    color: Colors.deepPurple,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20.0),
+                child: Text(
+                    "Turn Orchid on to activate your hops and protect your traffic",
+                    textAlign: TextAlign.right,
+                    style: AppText.hopsInstructionsCallout),
               ),
               Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: RotatedBox(
-                    child:
-                        Image.asset("assets/images/drawnArrow.png", height: 34),
-                    quarterTurns: 3),
+                // attempt to align the arrow with switch in the header and text vertically
+                padding: const EdgeInsets.only(left: 16, right: 6, bottom: 16),
+                child: Image.asset("assets/images/drawnArrow3.png", height: 48),
+              ),
+            ],
+          ),
+        ));
+  }
+
+  Container _buildFirstHopInstruction() {
+    return Container(
+        // match hop tile horizontal padding
+        padding: EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 0),
+        child: SafeArea(
+          left: true,
+          bottom: false,
+          right: false,
+          top: false,
+          child: Row(
+            children: <Widget>[
+              Padding(
+                // align the arrow with the hop tile leading and text vertically
+                padding: const EdgeInsets.only(left: 19, right: 0, bottom: 24),
+                child: Image.asset("assets/images/drawnArrow2.png", height: 48),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16),
+                  child: Text(
+                      "Create your first hop to protect your connection.",
+                      textAlign: TextAlign.left,
+                      style: AppText.hopsInstructionsCallout),
+                ),
               ),
             ],
           ),
@@ -420,8 +664,14 @@ class CircuitPageState extends State<CircuitPage> {
     _switchKey++;
     if (desiredEnabled) {
       _checkPermissionAndConnect();
+      if (_hasHops()) {
+        _masterConnectAnimController.forward();
+      }
+      _firewallConnectAnimController.forward();
     } else {
       _disconnect();
+      _masterConnectAnimController.reverse();
+      _firewallConnectAnimController.reverse();
     }
   }
 
@@ -493,11 +743,27 @@ class CircuitPageState extends State<CircuitPage> {
     OrchidAPI().updateConfiguration();
   }
 
+  void _userInteraction() {
+    if (_bunnyDuckAnimation.value == 0) {
+      _bunnyDuckAnimController.forward();
+    }
+    _lastInteractionTime = DateTime.now();
+  }
+
+  void _checkBunny(Timer timer) {
+    var bunnyHideTime = Duration(seconds: 3);
+    if (_bunnyDuckAnimation.value == 1.0 &&
+        DateTime.now().difference(_lastInteractionTime) > bunnyHideTime) {
+      _bunnyDuckAnimController.reverse();
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
     _rxSubs.forEach((sub) {
       sub.cancel();
     });
+    _bunnyDuckTimer.cancel();
   }
 }

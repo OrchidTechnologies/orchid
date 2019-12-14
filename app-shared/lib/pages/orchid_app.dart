@@ -6,14 +6,32 @@ import 'package:orchid/pages/connect/connect_page.dart';
 import 'circuit/circuit_page.dart';
 import 'monitoring/traffic_view.dart';
 
-class OrchidApp extends StatefulWidget {
+// Single page app layout
+class OrchidApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Note: keep the MaterialApp above the widget to set the navigation context.
+    return MaterialApp(
+        title: 'Orchid',
+        theme: ThemeData(
+          primarySwatch: Colors.deepPurple,
+        ),
+        routes: AppRoutes.routes,
+        home: CircuitPage());
+  }
+}
+
+// TODO: Remove if remains unused
+/// A bottom navigation tabbed layout of the app
+class OrchidAppTabbed extends StatefulWidget {
   static var showStatusTabPref = ChangeNotifier();
 
   @override
-  _OrchidAppState createState() => _OrchidAppState();
+  _OrchidAppTabbedState createState() => _OrchidAppTabbedState();
 }
 
-class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
+class _OrchidAppTabbedState extends State<OrchidAppTabbed>
+    with TickerProviderStateMixin {
   static var _logo = Image.asset("assets/images/name_logo.png",
       color: Colors.white, height: 24);
 
@@ -43,7 +61,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
 
   void initStateAsync() async {
     updateStatusTab();
-    OrchidApp.showStatusTabPref.addListener(() {
+    OrchidAppTabbed.showStatusTabPref.addListener(() {
       updateStatusTab();
     });
   }

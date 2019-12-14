@@ -30,6 +30,9 @@ class AppText {
             fontSize: fontSize));
   }
 
+  static TextStyle hopsInstructionsCallout = TextStyle(
+      color: Color(0xff28818f), fontWeight: FontWeight.bold, fontSize: 19.0);
+
   static TextStyle bodyStyle = TextStyle(
       color: AppColors.neutral_2,
       letterSpacing: 0.0,

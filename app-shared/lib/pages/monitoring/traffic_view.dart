@@ -6,6 +6,7 @@ import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
+import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
 import '../app_gradients.dart';
@@ -88,27 +89,30 @@ class _TrafficViewState extends State<TrafficView>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-      child: SafeArea(
-        child: Stack(
-          children: <Widget>[
-            Visibility(
-              visible: _uiInitialized(),
-              replacement: Container(),
-              child: Visibility(
-                visible: _showEmptyView(),
-                child: TrafficEmptyView(),
-                replacement: Column(
-                  children: <Widget>[
-                    _buildSearchView(),
-                    _buildNewContentIndicator(),
-                    _buildResultListView()
-                  ],
+    return TitledPage(
+      title: "Firewall Analysis",
+      child: Container(
+        decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
+        child: SafeArea(
+          child: Stack(
+            children: <Widget>[
+              Visibility(
+                visible: _uiInitialized(),
+                replacement: Container(),
+                child: Visibility(
+                  visible: _showEmptyView(),
+                  child: TrafficEmptyView(),
+                  replacement: Column(
+                    children: <Widget>[
+                      _buildSearchView(),
+                      _buildNewContentIndicator(),
+                      _buildResultListView()
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

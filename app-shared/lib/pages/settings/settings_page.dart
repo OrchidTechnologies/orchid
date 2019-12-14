@@ -74,6 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: AppTextField(
                     controller: _defaultCurator, margin: EdgeInsets.zero)),
           ),
+          /*
           pady(16),
           Divider(),
           PageTile(
@@ -87,12 +88,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 setState(() {
                   _showStatusTab = value;
                 });
-                OrchidApp.showStatusTabPref.notifyListeners();
+                OrchidAppTabbed.showStatusTabPref.notifyListeners();
               },
             ),
           ),
           pady(8),
           Divider(),
+           */
         ],
       ),
     );
