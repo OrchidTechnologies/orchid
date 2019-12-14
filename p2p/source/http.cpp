@@ -62,7 +62,7 @@ task<Response> Request_(Stream_ &stream, boost::beast::http::request<boost::beas
 }
 
 template <typename Socket_>
-task<Response> Request_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Response> Request_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
     boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), locator.path_, 11};
     req.set(boost::beast::http::field::host, locator.host_);
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -87,9 +87,12 @@ task<Response> Request_(Socket_ &socket, const std::string &method, const Locato
             context.set_verify_mode(asio::ssl::verify_peer);
 
             context.set_verify_callback([&](bool preverified, boost::asio::ssl::verify_context &context) {
-                auto store(context.native_handle());
-                const rtc::OpenSSLCertificate certificate(X509_STORE_CTX_get0_cert(store));
-                return verify(certificate);
+                const auto store(context.native_handle());
+                const auto chain(X509_STORE_CTX_get0_chain(store));
+                std::list<const rtc::OpenSSLCertificate> certificates;
+                for (auto e(sk_X509_num(chain)), i(decltype(e)(0)); i != e; i++)
+                    certificates.emplace_back(sk_X509_value(chain, i));
+                return verify(certificates);
             });
         }
 
@@ -125,7 +128,7 @@ task<Response> Request(Adapter &adapter, const std::string &method, const Locato
 }
 #endif
 
-task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
+task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
     // XXX: implement remote http requests
     const auto local(Break<Local>());
     const auto results(co_await Resolve(*local, locator.host_, locator.port_));
