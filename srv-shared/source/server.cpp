@@ -87,7 +87,7 @@ bool Server::Bill(const Buffer &data, bool force) {
         return true;
 
     const auto amount(cashier_->Bill(data.size()));
-    const auto floor(cashier_->Bill(12*1024));
+    const auto floor(cashier_->Bill(128*1024));
 
     S<Server> self;
 
