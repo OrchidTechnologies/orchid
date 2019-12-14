@@ -31,8 +31,21 @@ class Family :
     public Link<Buffer>
 {
   private:
-    uint32_t Analyze(const Buffer &data) {
-        return 2;
+    uint32_t Analyze(const Window &data) {
+        uint8_t vhl = 0;
+        data.each([&](const uint8_t *data, size_t size) {
+            if (size >= 1) {
+                vhl = data[0];
+                return false;
+            }
+            return true;
+        });
+        auto protocol(vhl >> 4);
+        switch (protocol) {
+        case 4: return AF_INET;
+        case 6: return AF_INET6;
+        }
+        return 0;
     }
 
   protected:
@@ -40,7 +53,7 @@ class Family :
 
     void Land(const Buffer &data) override {
         const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
-        orc_assert(protocol == Analyze(data));
+        orc_assert(protocol == Analyze(packet));
         return Link<Buffer>::Land(packet);
     }
 
