@@ -63,7 +63,7 @@ class Origin :
     virtual task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) = 0;
     virtual task<Socket> Unlid(Sunk<BufferSewer, Opening> *sunk) = 0;
 
-    task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify = nullptr);
+    task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
 };
 
 }

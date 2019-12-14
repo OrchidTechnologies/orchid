@@ -134,8 +134,11 @@ Client::Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provid
 }
 
 task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
-    const auto verify([this](const rtc::OpenSSLCertificate &certificate) -> bool {
-        return *remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate);
+    const auto verify([this](const std::list<const rtc::OpenSSLCertificate> &certificates) -> bool {
+        for (const auto &certificate : certificates)
+            if (*remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate))
+                return true;
+        return false;
     });
 
     const auto bonding(Bond());
