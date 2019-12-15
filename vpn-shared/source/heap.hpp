@@ -85,7 +85,9 @@ inline duk_double_t Heap::pop<duk_double_t>() {
 
 template <>
 inline std::string Heap::pop<std::string>() {
-    const std::string value(duk_get_string(duk_, -1));
+    const auto string(duk_get_string(duk_, -1));
+    orc_assert(string != nullptr);
+    const std::string value(string);
     duk_pop(duk_);
     return value;
 }
