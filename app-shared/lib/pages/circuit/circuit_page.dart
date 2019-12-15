@@ -4,6 +4,7 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
@@ -25,7 +26,7 @@ import 'model/circuit_hop.dart';
 class CircuitPage extends StatefulWidget {
   final WrappedSwitchController switchController;
 
-  CircuitPage({Key key, this.switchController }) : super(key: key);
+  CircuitPage({Key key, this.switchController}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -69,7 +70,7 @@ class CircuitPageState extends State<CircuitPage>
   void initStateAsync() async {
     // Hook up to the provided vpn switch
     widget.switchController.onChange = _setConnectionState;
-    
+
     // Set the initial state of the vpn switch based on the user pref.
     // Note: By design the switch on this page does not track or respond to the
     // Note: dynamic connection state but instead reflects the user pref.
@@ -151,10 +152,8 @@ class CircuitPageState extends State<CircuitPage>
             visible: _hops != null,
             replacement: Container(),
             child: AnimatedBuilder(
-                animation: Listenable.merge([
-                  _connectAnimController,
-                  _bunnyDuckAnimation
-                ]),
+                animation: Listenable.merge(
+                    [_connectAnimController, _bunnyDuckAnimation]),
                 builder: (BuildContext context, Widget child) {
                   return _buildHopList();
                 }),
@@ -191,14 +190,7 @@ class CircuitPageState extends State<CircuitPage>
                     secondChild: pady(16),
                   ),
                   _buildStartTile(),
-                  AnimatedCrossFade(
-                    duration: Duration(milliseconds: _fadeAnimTime),
-                    crossFadeState: _showProtectedWarning()
-                        ? CrossFadeState.showFirst
-                        : CrossFadeState.showSecond,
-                    firstChild: _buildWarningTile(),
-                    secondChild: SizedBox(height: 0),
-                  ),
+                  _buildStatusTile(),
                   HopTile.buildFlowDivider(),
                 ],
               ),
@@ -378,15 +370,27 @@ class CircuitPageState extends State<CircuitPage>
         onTap: _addHop);
   }
 
-  Widget _buildWarningTile() {
+  Widget _buildStatusTile() {
+    String text = "Orchid disabled";
+    Color color = Colors.redAccent.withOpacity(0.7);
+    if (_connected()) {
+      if (_hasHops()) {
+        var num = _hops.length;
+        text =
+            "${Intl.plural(num, zero: "No hops", one: "One hop", two: "Two hops", other: "$num hops")} configured";
+        color = Colors.greenAccent.withOpacity(0.7);
+      } else {
+        text = "No hops configured";
+      }
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, right: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Image.asset("assets/images/warning.png"),
+          Icon(Icons.fiber_manual_record, color: color, size: 18),
           padx(5),
-          Text("Feeling exposed!",
+          Text(text,
               style: TextStyle(
                 fontWeight: FontWeight.w500,
                 fontSize: 12,
@@ -677,7 +681,9 @@ class CircuitPageState extends State<CircuitPage>
 
   // Setter for the switch controller controlled state
   set _switchOn(bool on) {
-    if (widget.switchController == null) { return; }
+    if (widget.switchController == null) {
+      return;
+    }
     widget.switchController.controlledState.value = on;
   }
 
