@@ -150,9 +150,13 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
     setState(() {
       _selectedIndex = index;
       _pageTitle = titles[_showStatusTab ? index : index + 1];
-      _pageActions = index == (_showStatusTab ? 2 : 1)
-          ? [ClearTrafficActionButton(controller: _trafficButtonController)]
-          : [WrappedSwitch(controller: _vpnSwitchController)];
+      if (index == (_showStatusTab ? 1 : 0)) {
+        _pageActions = [WrappedSwitch(controller: _vpnSwitchController)];
+      } else if (index == (_showStatusTab ? 2 : 1)) {
+        _pageActions = [ClearTrafficActionButton(controller: _trafficButtonController)];
+      } else {
+        _pageActions = [];
+      }
     });
   }
 }
