@@ -10,10 +10,9 @@ import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/side_drawer.dart';
+import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/util/collections.dart';
 
-import '../app_colors.dart';
 import '../app_gradients.dart';
 import '../app_text.dart';
 import '../app_transitions.dart';
@@ -24,7 +23,9 @@ import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
 
 class CircuitPage extends StatefulWidget {
-  CircuitPage({Key key}) : super(key: key);
+  final WrappedSwitchController switchController;
+
+  CircuitPage({Key key, this.switchController }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -37,11 +38,6 @@ class CircuitPageState extends State<CircuitPage>
     with TickerProviderStateMixin {
   List<StreamSubscription> _rxSubs = List();
   List<UniqueHop> _hops;
-  bool _switchOn = false;
-
-  // Workaround for dragged switch state issue
-  // https://github.com/flutter/flutter/issues/46046
-  int _switchKey = 0;
 
   // Master timeline for connect animation
   AnimationController _masterConnectAnimController;
@@ -71,7 +67,43 @@ class CircuitPageState extends State<CircuitPage>
   void initState() {
     super.initState();
     initStateAsync();
+    initAnimations();
+  }
 
+  void initStateAsync() async {
+    // Hook up to the provided vpn switch
+    widget.switchController.onChange = _setConnectionState;
+    
+    // Set the initial state of the vpn switch based on the user pref.
+    // Note: By design the switch on this page does not track or respond to the
+    // Note: dynamic connection state but instead reflects the user pref.
+    // Note: See `monitoring_page.dart` or `connect_page` for controls that track the
+    // Note: system connection status.
+    _switchOn = await UserPreferences().getDesiredVPNState();
+
+    // Force the correct animation states for the initial switch state
+    _masterConnectAnimController.value = _switchOn && _hasHops() ? 1.0 : 0.0;
+    _firewallConnectAnimController.value = _switchOn ? 1.0 : 0.0;
+
+    var circuit = await UserPreferences().getCircuit();
+    if (mounted) {
+      setState(() {
+        // Wrap the hops with a locally unique id for the UI
+        _hops = mapIndexed(circuit?.hops ?? [], ((index, hop) {
+          var key = DateTime.now().millisecondsSinceEpoch + index;
+          return UniqueHop(key: key, hop: hop);
+        })).toList();
+      });
+    }
+
+    // Update the UI on connection status changes
+    _rxSubs.add(OrchidAPI().connectionStatus.listen((state) {
+      print("connection state changed: $state");
+      setState(() {});
+    }));
+  }
+
+  void initAnimations() {
     _masterConnectAnimController = AnimationController(
         duration: Duration(milliseconds: _connectAnimTime), vsync: this);
 
@@ -110,50 +142,9 @@ class CircuitPageState extends State<CircuitPage>
     _bunnyDuckTimer = Timer.periodic(Duration(seconds: 1), _checkBunny);
   }
 
-  void initStateAsync() async {
-    // Get the initial state of the vpn switch based on the connection state.
-    // Note: By design the switch on this page does not track or respond to the
-    // Note: dynamic connection state but instead reflects the user pref.
-    // Note: See `monitoring_page.dart` or `connect_page` for controls that track the
-    // Note: system connection status.
-    _switchOn = await UserPreferences().getDesiredVPNState();
-
-    // Force the correct animation states for the initial switch state
-    _masterConnectAnimController.value = _switchOn && _hasHops() ? 1.0 : 0.0;
-    _firewallConnectAnimController.value = _switchOn ? 1.0 : 0.0;
-
-    var circuit = await UserPreferences().getCircuit();
-    if (mounted) {
-      setState(() {
-        // Wrap the hops with a locally unique id for the UI
-        _hops = mapIndexed(circuit?.hops ?? [], ((index, hop) {
-          var key = DateTime.now().millisecondsSinceEpoch + index;
-          return UniqueHop(key: key, hop: hop);
-        })).toList();
-      });
-    }
-
-    // Update the UI on connection status changes
-    _rxSubs.add(OrchidAPI().connectionStatus.listen((state) {
-      print("connection state changed: $state");
-      setState(() {});
-    }));
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Build the standalone wrapper for the page body
-    return Scaffold(
-      appBar: AppBar(
-        title: Image.asset("assets/images/name_logo.png",
-            color: Colors.white, height: 24),
-        actions: <Widget>[_buildSwitch()],
-      ),
-      body: _buildBody(),
-      drawer: SideDrawer(),
-      // Workaround for: https://github.com/flutter/flutter/issues/23926
-      resizeToAvoidBottomInset: false,
-    );
+    return _buildBody();
   }
 
   Widget _buildBody() {
@@ -647,21 +638,10 @@ class CircuitPageState extends State<CircuitPage>
   /// Begin - VPN Switch Logic
   ///
 
-  Switch _buildSwitch() {
-    return Switch(
-        key: Key(_switchKey.toString()),
-        activeColor: AppColors.purple_5,
-        value: _switchOn ?? false,
-        onChanged: (bool newValue) {
-          _setConnectionState(newValue);
-        });
-  }
-
   // Note: By design the switch on this page does not track or respond to the
   // Note: connection state after initialization.  See `monitoring_page.dart`
   // Note: for a version of the switch that does attempt to track the connection.
   void _setConnectionState(bool desiredEnabled) {
-    _switchKey++;
     if (desiredEnabled) {
       _checkPermissionAndConnect();
       if (_hasHops()) {
@@ -725,6 +705,17 @@ class CircuitPageState extends State<CircuitPage>
   /// Begin - util
   ///
 
+  // Setter for the switch controller controlled state
+  set _switchOn(bool on) {
+    if (widget.switchController == null) { return; }
+    widget.switchController.controlledState.value = on;
+  }
+
+  // Getter for the switch controller controlled state
+  bool get _switchOn {
+    return widget.switchController?.controlledState?.value ?? false;
+  }
+
   bool _hasHops() {
     return _hops != null && _hops.length > 0;
   }
@@ -765,5 +756,6 @@ class CircuitPageState extends State<CircuitPage>
       sub.cancel();
     });
     _bunnyDuckTimer.cancel();
+    widget.switchController.onChange = null;
   }
 }

@@ -89,30 +89,27 @@ class _TrafficViewState extends State<TrafficView>
 
   @override
   Widget build(BuildContext context) {
-    return TitledPage(
-      title: "Firewall Analysis",
-      child: Container(
-        decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-        child: SafeArea(
-          child: Stack(
-            children: <Widget>[
-              Visibility(
-                visible: _uiInitialized(),
-                replacement: Container(),
-                child: Visibility(
-                  visible: _showEmptyView(),
-                  child: TrafficEmptyView(),
-                  replacement: Column(
-                    children: <Widget>[
-                      _buildSearchView(),
-                      _buildNewContentIndicator(),
-                      _buildResultListView()
-                    ],
-                  ),
+    return Container(
+      decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
+      child: SafeArea(
+        child: Stack(
+          children: <Widget>[
+            Visibility(
+              visible: _uiInitialized(),
+              replacement: Container(),
+              child: Visibility(
+                visible: _showEmptyView(),
+                child: TrafficEmptyView(),
+                replacement: Column(
+                  children: <Widget>[
+                    _buildSearchView(),
+                    _buildNewContentIndicator(),
+                    _buildResultListView()
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
