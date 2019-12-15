@@ -42,9 +42,6 @@ class CircuitPageState extends State<CircuitPage>
   // Master timeline for connect animation
   AnimationController _masterConnectAnimController;
 
-  // Timeline paralleling master connect but for firewall only.
-  AnimationController _firewallConnectAnimController;
-
   // The duck into hole animation
   AnimationController _bunnyDuckAnimController;
 
@@ -55,7 +52,6 @@ class CircuitPageState extends State<CircuitPage>
   Animation<double> _bunnyEnterAnim;
   Animation<double> _holeTransformAnim;
   Animation<Color> _hopColorTween;
-  Animation<Color> _firewallHopColorTween;
 
   // Anim params
   int _fadeAnimTime = 200;
@@ -83,7 +79,6 @@ class CircuitPageState extends State<CircuitPage>
 
     // Force the correct animation states for the initial switch state
     _masterConnectAnimController.value = _switchOn && _hasHops() ? 1.0 : 0.0;
-    _firewallConnectAnimController.value = _switchOn ? 1.0 : 0.0;
 
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
@@ -105,9 +100,6 @@ class CircuitPageState extends State<CircuitPage>
 
   void initAnimations() {
     _masterConnectAnimController = AnimationController(
-        duration: Duration(milliseconds: _connectAnimTime), vsync: this);
-
-    _firewallConnectAnimController = AnimationController(
         duration: Duration(milliseconds: _connectAnimTime), vsync: this);
 
     _bunnyDuckAnimController =
@@ -135,10 +127,6 @@ class CircuitPageState extends State<CircuitPage>
         ColorTween(begin: Color(0xffa29ec0), end: Color(0xff8c61e1))
             .animate(_connectAnimController);
 
-    _firewallHopColorTween =
-        ColorTween(begin: Color(0xffa29ec0), end: Color(0xff8c61e1))
-            .animate(_firewallConnectAnimController);
-
     _bunnyDuckTimer = Timer.periodic(Duration(seconds: 1), _checkBunny);
   }
 
@@ -165,7 +153,6 @@ class CircuitPageState extends State<CircuitPage>
             child: AnimatedBuilder(
                 animation: Listenable.merge([
                   _connectAnimController,
-                  _firewallConnectAnimController,
                   _bunnyDuckAnimation
                 ]),
                 builder: (BuildContext context, Widget child) {
@@ -212,7 +199,7 @@ class CircuitPageState extends State<CircuitPage>
                     firstChild: _buildWarningTile(),
                     secondChild: SizedBox(height: 0),
                   ),
-                  _buildFirewallTile()
+                  HopTile.buildFlowDivider(),
                 ],
               ),
               children: (_hops ?? []).map((uniqueHop) {
@@ -408,21 +395,6 @@ class CircuitPageState extends State<CircuitPage>
         ],
       ),
     );
-  }
-
-  Widget _buildFirewallTile() {
-    var color = Colors.white;
-    return HopTile(
-        title: "Personal Firewall",
-        image: Image.asset("assets/images/fire.png", color: color),
-        color: _firewallHopColorTween.value,
-        textColor: color,
-        showDragHandle: false,
-        onTap: () {
-          Navigator.pushNamed(context, '/traffic');
-        },
-        showFlowDividerTop: true,
-        showFlowDividerBottom: true);
   }
 
   Dismissible _buildDismissableHopTile(UniqueHop uniqueHop) {
@@ -647,11 +619,9 @@ class CircuitPageState extends State<CircuitPage>
       if (_hasHops()) {
         _masterConnectAnimController.forward();
       }
-      _firewallConnectAnimController.forward();
     } else {
       _disconnect();
       _masterConnectAnimController.reverse();
-      _firewallConnectAnimController.reverse();
     }
   }
 
