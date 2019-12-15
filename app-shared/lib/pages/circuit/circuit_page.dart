@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
@@ -79,9 +80,6 @@ class CircuitPageState extends State<CircuitPage>
     // Note: system connection status.
     _switchOn = await UserPreferences().getDesiredVPNState();
 
-    // Force the correct animation states for the initial switch state
-    _masterConnectAnimController.value = _switchOn && _hasHops() ? 1.0 : 0.0;
-
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
       setState(() {
@@ -91,13 +89,13 @@ class CircuitPageState extends State<CircuitPage>
           return UniqueHop(key: key, hop: hop);
         })).toList();
       });
-    }
 
-    // Update the UI on connection status changes
-    _rxSubs.add(OrchidAPI().connectionStatus.listen((state) {
-      print("connection state changed: $state");
-      setState(() {});
-    }));
+      // Set the correct animation states for the connection status
+      // Note: We cannot properly do this until we know if we have hops!
+      print("init state, setting initial connection state");
+      _connectionStateChanged(OrchidAPI().connectionStatus.value,
+          animated: false);
+    }
   }
 
   void initAnimations() {
@@ -130,6 +128,9 @@ class CircuitPageState extends State<CircuitPage>
             .animate(_connectAnimController);
 
     _bunnyDuckTimer = Timer.periodic(Duration(seconds: 1), _checkBunny);
+
+    // Update the UI on connection status changes
+    _rxSubs.add(OrchidAPI().connectionStatus.listen(_connectionStateChanged));
   }
 
   @override
@@ -162,13 +163,6 @@ class CircuitPageState extends State<CircuitPage>
         ),
       ),
     );
-  }
-
-  // Warn when no vpn protection is actually in effect.
-  bool _showProtectedWarning() {
-    // Note: The native side reports connected whenever the VPN is running,
-    // Note: including for traffic monitoring only.
-    return !_hasHops() || !_connected();
   }
 
   bool _showEnableVPNInstruction() {
@@ -384,6 +378,17 @@ class CircuitPageState extends State<CircuitPage>
         text = "No hops configured";
       }
     }
+
+    var status = OrchidAPI().connectionStatus.value;
+    if (status == OrchidConnectionState.Connecting) {
+      text = "Orchid connecting";
+      color = Colors.yellowAccent.withOpacity(0.7);
+    }
+    if (status == OrchidConnectionState.Disconnecting) {
+      text = "Orchid disconnecting";
+      color = Colors.yellowAccent.withOpacity(0.7);
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, right: 16),
       child: Row(
@@ -618,15 +623,55 @@ class CircuitPageState extends State<CircuitPage>
   // Note: By design the switch on this page does not track or respond to the
   // Note: connection state after initialization.  See `monitoring_page.dart`
   // Note: for a version of the switch that does attempt to track the connection.
-  void _setConnectionState(bool desiredEnabled) {
-    if (desiredEnabled) {
+  void _setConnectionState(bool toEnabled) {
+    if (toEnabled) {
       _checkPermissionAndConnect();
-      if (_hasHops()) {
-        _masterConnectAnimController.forward();
-      }
     } else {
       _disconnect();
-      _masterConnectAnimController.reverse();
+    }
+  }
+
+  // Note: By design the switch on this page does not track or respond to the
+  // Note: connection state after initialization.  See `monitoring_page.dart`
+  // Note: for a version of the switch that does attempt to track the connection.
+  bool _connected() {
+    var state = OrchidAPI().connectionStatus.value;
+    switch (state) {
+      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+        return false;
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Connected:
+        return true;
+      default:
+        throw Exception();
+    }
+  }
+
+  /// Called upon a change to Orchid connection state
+  void _connectionStateChanged(OrchidConnectionState state,
+      {bool animated = true}) {
+    // We can't determine which animations may need to be run until hops are loaded.
+    // Initialization will call us at least once after that.
+    if (_hops == null) {
+      return;
+    }
+
+    // Run animations based on which direction we are going.
+    bool shouldShowConnected = _connected();
+    bool showingConnected =
+        _masterConnectAnimController.status == AnimationStatus.completed ||
+            _masterConnectAnimController.status == AnimationStatus.forward;
+
+    if (shouldShowConnected && !showingConnected && _hasHops()) {
+      _masterConnectAnimController.forward(from: animated ? 0.0 : 1.0);
+    }
+    if (!shouldShowConnected && showingConnected) {
+      _masterConnectAnimController.reverse(from: animated ? 1.0 : 0.0);
+    }
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -695,14 +740,6 @@ class CircuitPageState extends State<CircuitPage>
 
   bool _hasHops() {
     return _hops != null && _hops.length > 0;
-  }
-
-  // Note: By design the switch on this page does not track or respond to the
-  // Note: connection state after initialization.  See `monitoring_page.dart`
-  // Note: for a version of the switch that does attempt to track the connection.
-  bool _connected() {
-    //return OrchidAPI().connectionStatus.value == OrchidConnectionState.Connected;
-    return _switchOn;
   }
 
   void _saveCircuit() async {

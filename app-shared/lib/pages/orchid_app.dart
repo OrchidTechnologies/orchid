@@ -144,7 +144,7 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
   void _handleTabSelection(int index) {
     var titles = [
       _logo,
-      Text("Hops"),
+      _logo,
       Text("Traffic"),
     ];
     setState(() {
