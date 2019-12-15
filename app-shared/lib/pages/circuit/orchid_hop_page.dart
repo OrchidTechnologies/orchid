@@ -127,6 +127,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       child: Column(
         children: <Widget>[
           _buildFunding(),
+          pady(24),
           Expanded(
             child: InstructionsView(
               image: Image.asset("assets/images/group7.png"),

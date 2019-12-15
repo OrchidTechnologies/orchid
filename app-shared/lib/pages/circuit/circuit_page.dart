@@ -10,6 +10,7 @@ import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/util/collections.dart';
@@ -708,6 +709,7 @@ class CircuitPageState extends State<CircuitPage>
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
     UserPreferences().setCircuit(circuit);
     OrchidAPI().updateConfiguration();
+    Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
   }
 
   void _userInteraction() {
