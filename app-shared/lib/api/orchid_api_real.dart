@@ -237,7 +237,7 @@ class RealOrchidAPI implements OrchidAPI {
     // Concatenate the user config and generated config
     var combinedConfig = generatedConfig + "\n" + (userConfig ?? "");
 
-    print("Saving combined config = $combinedConfig");
+    //print("Saving combined config = $combinedConfig");
     return combinedConfig;
   }
 
