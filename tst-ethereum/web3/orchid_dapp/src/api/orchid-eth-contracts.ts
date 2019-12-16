@@ -1,5 +1,7 @@
 import {Address} from "./orchid-types";
 import Contract from "web3/eth/contract";
+import {getParam} from "../util/util";
+import {isEthAddress} from "./orchid-eth";
 
 export class OrchidContracts {
 
@@ -11,8 +13,21 @@ export class OrchidContracts {
   static token_addr: Address = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb'; // OXT Main net
   static token_approval_max_gas: number = 50000;
 
-  //static lottery_addr: Address = '0x730185a63b7141c1e54b41964f64dfd5bf701237'; // Main net with OTT
-  static lottery_addr: Address = '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1'; // Main net with OXT
+  //static lottery_addr_final: Address = '0x730185a63b7141c1e54b41964f64dfd5bf701237'; // Main net with OTT
+  static lottery_addr_final: Address = '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1'; // Main net with OXT
+
+  static lottery_addr(): string {
+    let addr = getParam('lottery_addr');
+    // Some servers won't let you put a big hex string in the url
+    if (addr != null && !addr.startsWith("0x")) {
+      addr = "0x"+addr;
+    }
+    if (addr != null && isEthAddress(addr)) {
+      return addr;
+    } else {
+      return this.lottery_addr_final;
+    }
+  }
 
   static lottery_push_max_gas: number = 800000;
   static lottery_push_method_hash: string =

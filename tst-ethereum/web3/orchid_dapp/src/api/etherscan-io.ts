@@ -6,7 +6,7 @@ const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 export class EtherscanIO {
   apiKey: string = "73BIQR3R1ER56V53PSSAPNUTQUFVHCVVVH";
   api_url: string = 'https://api.etherscan.io/api';
-  lotteryContractAddress: Address = OrchidContracts.lottery_addr;
+  lotteryContractAddress: Address = OrchidContracts.lottery_addr();
   lotteryFundMethodHash: string = OrchidContracts.lottery_push_method_hash;
   startBlock: number = 872000;
 

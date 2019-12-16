@@ -107,7 +107,7 @@ export function orchidInitEthereum(providerUpdateCallback?: (props: any) => void
 
       try {
         OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr);
-        OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr);
+        OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
       } catch (err) {
         console.log("Error constructing contracts");
         resolve(WalletStatus.Error);
@@ -162,7 +162,7 @@ export async function orchidAddFunds(funder: Address, signer: Address, amount: B
   async function doApproveTx() {
     return new Promise<string>(function (resolve, reject) {
       OrchidContracts.token.methods.approve(
-        OrchidContracts.lottery_addr,
+        OrchidContracts.lottery_addr(),
         total.toString()
       ).send({
         from: funder,
