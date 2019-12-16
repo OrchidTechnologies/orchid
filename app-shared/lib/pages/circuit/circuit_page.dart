@@ -166,7 +166,8 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   bool _showEnableVPNInstruction() {
-    return _hasHops() && !_connected();
+    // Note: this instruction follows the switch, not the connected status
+    return _hasHops() && !_switchOn;
   }
 
   Widget _buildHopList() {
