@@ -65,6 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           Divider(),
            */
+          // Default curator
           pady(16),
           PageTile(
             title: "Default Curator",
@@ -74,6 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: AppTextField(
                     controller: _defaultCurator, margin: EdgeInsets.zero)),
           ),
+          // Show status page
           pady(16),
           Divider(),
           PageTile(
@@ -87,11 +89,23 @@ class _SettingsPageState extends State<SettingsPage> {
                 setState(() {
                   _showStatusTab = value;
                 });
-                OrchidApp.showStatusTabPref.notifyListeners();
+                OrchidAppTabbed.showStatusTabPref.notifyListeners();
               },
             ),
           ),
           pady(8),
+          Divider(),
+          pady(8),
+          PageTile(
+            title: "Show Instructions",
+            trailing: RaisedButton(
+              child: Text("Reset"),
+              onPressed: () {
+                UserPreferences().setVPNSwitchInstructionsViewed(false);
+              },
+            ),
+          ),
+          pady(16),
           Divider(),
         ],
       ),

@@ -6,6 +6,7 @@ import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
+import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
 import '../app_gradients.dart';

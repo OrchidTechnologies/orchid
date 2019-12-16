@@ -153,7 +153,7 @@ std::ostream &operator <<(std::ostream &out, const Address &address) {
     return out << "0x" << address.str(0, std::ios::hex);
 }
 
-uint256_t Seconds() {
+uint256_t Timestamp() {
     using std::chrono::system_clock;
     system_clock::time_point point(system_clock::now());
     system_clock::duration duration(point.time_since_epoch());

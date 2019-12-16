@@ -32,6 +32,7 @@ dependencies:
   intl: ^0.15.8
   flutter_html: ^0.10.4  # We may want to replace this with webview_flutter when it's ready.
   pointycastle: ^1.0.1
+  dotted_border: ^1.0.4
 
 dev_dependencies:
   flutter_test:

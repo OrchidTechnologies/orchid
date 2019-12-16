@@ -12,7 +12,5 @@ void main() {
   // Note: the orientation in the main plist:
   // Note: https://github.com/flutter/flutter/issues/27235
   // Orientation.appDefault().then((_) { runApp(OrchidApp()); });
-  runApp(OrchidApp());
+  runApp(OrchidAppTabbed());
 }
-
-

@@ -21,6 +21,7 @@ import 'budget/balance_page.dart';
 import 'circuit/circuit_page.dart';
 import 'help/help_overview.dart';
 import 'help/legal_page.dart';
+import 'monitoring/traffic_view.dart';
 
 class AppRoutes {
   static const String connect = "/connect";
@@ -46,10 +47,11 @@ class AppRoutes {
   static const String keygen = "/settings/keygen";
   static const String keys = "/settings/keys";
   static const String circuit = "/circuit";
+  static const String traffic = "/traffic";
   static const String home = "/";
 
   static final Map<String, WidgetBuilder> routes = {
-    //home: (context) => MonitoringPage(), // Don't define a home route when using tab layout.
+    //home: (context) => CircuitPageStandalone(),
     connect: (context) => QuickConnectPage(),
     settings: (context) => SettingsPage(),
     settings_wallet: (context) => SettingsLinkWalletPage(),
@@ -72,5 +74,6 @@ class AppRoutes {
     keygen: (context) => KeyGenPage(),
     keys: (context) => KeysPage(),
     circuit: (context) => CircuitPage(),
+    traffic: (context) => TrafficView(),
   };
 }

@@ -2,24 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
+import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/connect/connect_page.dart';
 import 'circuit/circuit_page.dart';
 import 'monitoring/traffic_view.dart';
 
-class OrchidApp extends StatefulWidget {
+// TODO: Remove if this remains unused
+// Single page app layout
+class OrchidApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Note: keep the MaterialApp above the widget to set the navigation context.
+    return MaterialApp(
+        title: 'Orchid',
+        theme: ThemeData(
+          primarySwatch: Colors.deepPurple,
+        ),
+        routes: AppRoutes.routes,
+        home: CircuitPage());
+  }
+}
+
+/// A bottom navigation tabbed layout of the app
+class OrchidAppTabbed extends StatefulWidget {
   static var showStatusTabPref = ChangeNotifier();
 
   @override
-  _OrchidAppState createState() => _OrchidAppState();
+  _OrchidAppTabbedState createState() => _OrchidAppTabbedState();
 }
 
-class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
+class _OrchidAppTabbedState extends State<OrchidAppTabbed>
+    with TickerProviderStateMixin {
   static var _logo = Image.asset("assets/images/name_logo.png",
       color: Colors.white, height: 24);
 
   Widget _pageTitle = _logo;
   List<Widget> _pageActions = [];
   var _trafficButtonController = ClearTrafficActionButtonController();
+  var _vpnSwitchController = WrappedSwitchController();
 
   final PageStorageBucket bucket = PageStorageBucket();
   int _selectedIndex = 0;
@@ -32,7 +52,8 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
 
     _tabs = [
       QuickConnectPage(key: PageStorageKey("1")),
-      CircuitPage(key: PageStorageKey("2")),
+      CircuitPage(
+          key: PageStorageKey("2"), switchController: _vpnSwitchController),
       TrafficView(
           key: PageStorageKey("3"),
           clearTrafficController: _trafficButtonController),
@@ -43,7 +64,7 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
 
   void initStateAsync() async {
     updateStatusTab();
-    OrchidApp.showStatusTabPref.addListener(() {
+    OrchidAppTabbed.showStatusTabPref.addListener(() {
       updateStatusTab();
     });
   }
@@ -123,15 +144,19 @@ class _OrchidAppState extends State<OrchidApp> with TickerProviderStateMixin {
   void _handleTabSelection(int index) {
     var titles = [
       _logo,
-      Text("Hops"),
+      _logo,
       Text("Traffic"),
     ];
     setState(() {
       _selectedIndex = index;
       _pageTitle = titles[_showStatusTab ? index : index + 1];
-      _pageActions = index == (_showStatusTab ? 2 : 1)
-          ? [ClearTrafficActionButton(controller: _trafficButtonController)]
-          : [];
+      if (index == (_showStatusTab ? 1 : 0)) {
+        _pageActions = [WrappedSwitch(controller: _vpnSwitchController)];
+      } else if (index == (_showStatusTab ? 2 : 1)) {
+        _pageActions = [ClearTrafficActionButton(controller: _trafficButtonController)];
+      } else {
+        _pageActions = [];
+      }
     });
   }
 }

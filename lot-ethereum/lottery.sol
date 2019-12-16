@@ -227,7 +227,7 @@ contract OrchidLottery {
         bytes memory receipt, bytes32[] memory old
     ) public {
         require(keccak256(abi.encode(reveal)) == commit);
-        require(uint128(uint256(keccak256(abi.encode(reveal, nonce)))) <= ratio);
+        require(uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))) <= ratio);
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 ticket; assembly { ticket := chainid() }
