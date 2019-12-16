@@ -81,6 +81,10 @@ class RealOrchidAPI implements OrchidAPI {
   Future<void> applicationReady() async {
     budget().applicationReady();
     _platform.invokeMethod('ready');
+
+    // Write the config file on startup
+    await updateConfiguration();
+
     // Set the initial VPN state from user preferences
     setConnected(await UserPreferences().getDesiredVPNState());
   }
