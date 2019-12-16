@@ -61,6 +61,8 @@ class CircuitPageState extends State<CircuitPage>
   int _connectAnimTime = 1200;
   DateTime _lastInteractionTime;
   Timer _bunnyDuckTimer;
+  
+  bool vpnSwitchInstructionsViewed = false;
 
   @override
   void initState() {
@@ -79,6 +81,8 @@ class CircuitPageState extends State<CircuitPage>
     // Note: See `monitoring_page.dart` or `connect_page` for controls that track the
     // Note: system connection status.
     _switchOn = await UserPreferences().getDesiredVPNState();
+
+    vpnSwitchInstructionsViewed = await UserPreferences().getVPNSwitchInstructionsViewed();
 
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
@@ -167,7 +171,7 @@ class CircuitPageState extends State<CircuitPage>
 
   bool _showEnableVPNInstruction() {
     // Note: this instruction follows the switch, not the connected status
-    return _hasHops() && !_switchOn;
+    return !vpnSwitchInstructionsViewed && _hasHops() && !_switchOn;
   }
 
   Widget _buildHopList() {
@@ -682,6 +686,12 @@ class CircuitPageState extends State<CircuitPage>
   // Note: duplicates code in monitoring_page and connect_page.
   void _checkPermissionAndConnect() {
     UserPreferences().setDesiredVPNState(true);
+    if (_showEnableVPNInstruction()) {
+      UserPreferences().setVPNSwitchInstructionsViewed(true);
+      setState(() {
+        vpnSwitchInstructionsViewed = true;
+      });
+    }
     // Get the most recent status, blocking if needed.
     _rxSubs
         .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {

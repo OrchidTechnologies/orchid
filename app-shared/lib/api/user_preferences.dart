@@ -225,6 +225,17 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.ShowStatusTab.toString(), value);
   }
+
+  Future<bool> getVPNSwitchInstructionsViewed() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.VPNSwitchInstructionsViewed.toString()) ??
+        false;
+  }
+
+  Future<bool> setVPNSwitchInstructionsViewed(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.VPNSwitchInstructionsViewed.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -241,5 +252,6 @@ enum UserPreferenceKey {
   DefaultCurator,
   QueryBalances,
   DesiredVPNState,
-  ShowStatusTab
+  ShowStatusTab,
+  VPNSwitchInstructionsViewed,
 }
