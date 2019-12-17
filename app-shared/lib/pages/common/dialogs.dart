@@ -94,7 +94,7 @@ class Dialogs {
     );
   }
 
-  static void showConfigurationChangeSuccess(BuildContext context, {bool warnOnly = false}) {
+  static Future<void> showConfigurationChangeSuccess(BuildContext context, {bool warnOnly = false}) {
     var warn;
     switch(OrchidAPI().connectionStatus.value) {
       case OrchidConnectionState.Invalid:
@@ -107,10 +107,10 @@ class Dialogs {
         warn = true;
     }
     if (warnOnly && !warn) {
-      return;
+      return null;
     }
     var warning = warn ? " Changes will take effect when the VPN is restarted." : "";
-    Dialogs.showAppDialog(
+    return Dialogs.showAppDialog(
         context: context,
         title: "Saved!",
         body: "Configuration saved.$warning");

@@ -91,6 +91,7 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
           backgroundColor: Colors.deepPurple,
           drawer: SideDrawer(),
         ),
+        debugShowCheckedModeBanner: false,
         routes: AppRoutes.routes);
   }
 

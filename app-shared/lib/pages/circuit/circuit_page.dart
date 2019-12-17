@@ -61,8 +61,9 @@ class CircuitPageState extends State<CircuitPage>
   int _connectAnimTime = 1200;
   DateTime _lastInteractionTime;
   Timer _bunnyDuckTimer;
-  
+
   bool vpnSwitchInstructionsViewed = false;
+  bool _dialogInProgress = false;
 
   @override
   void initState() {
@@ -82,7 +83,8 @@ class CircuitPageState extends State<CircuitPage>
     // Note: system connection status.
     _switchOn = await UserPreferences().getDesiredVPNState();
 
-    vpnSwitchInstructionsViewed = await UserPreferences().getVPNSwitchInstructionsViewed();
+    vpnSwitchInstructionsViewed =
+        await UserPreferences().getVPNSwitchInstructionsViewed();
 
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
@@ -754,10 +756,19 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   void _saveCircuit() async {
+    print("save circuit, dialog in progress: $_dialogInProgress");
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
     UserPreferences().setCircuit(circuit);
     OrchidAPI().updateConfiguration();
-    Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+    if (_dialogInProgress) {
+      return;
+    }
+    try {
+      _dialogInProgress = true;
+      await Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+    } finally {
+      _dialogInProgress = false;
+    }
   }
 
   void _userInteraction() {
