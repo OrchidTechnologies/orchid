@@ -122,14 +122,15 @@ void Cashier::Land(Json::Value data) {
     } else {
         const auto value(id.asString());
         const auto [identity] = Take<Identity>(Bless(value.substr(1)));
-        const auto result(Bless(data["result"].asString()));
+        const auto result(data["result"].asString());
         switch (value[0]) {
             case 'S': {
-                orc_assert(cache_()->subscriptions_.emplace(result.num<uint128_t>(), identity).second);
+                orc_assert(cache_()->subscriptions_.emplace(result, identity).second);
             } break;
 
             case 'C': {
-                Window window(result);
+                const auto data(Bless(result));
+                Window window(data);
                 const auto [amount, escrow, unlock, verify, codehash, shared] = Coded<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>>::Decode(window);
                 window.Stop();
 
