@@ -1,7 +1,7 @@
 import React, {FC, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {
-  isEthAddress, orchidAddFunds, oxtToWei, weiToOxtString
+  isEthAddress, orchidAddFunds, oxtToKeiki, keikiToOxtString
 } from "../api/orchid-eth";
 import {Divider, errorClass, parseFloatSafe, Visibility} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
@@ -58,8 +58,8 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       txResult.current.scrollIntoView();
     }
     try {
-      const amountWei = oxtToWei(addAmount);
-      const escrowWei = oxtToWei(addEscrow);
+      const amountWei = oxtToKeiki(addAmount);
+      const escrowWei = oxtToKeiki(addEscrow);
 
       let txId = await orchidAddFunds(walletAddress, signerAddress, amountWei, escrowWei);
       if (props.createAccount) {
@@ -93,7 +93,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
         </Col>
         <Col>
           <div className="oxt-1-pad">
-            {walletBalance == null ? "..." : weiToOxtString(walletBalance, 2)}
+            {walletBalance == null ? "..." : keikiToOxtString(walletBalance, 2)}
           </div>
         </Col>
       </Row>
@@ -133,7 +133,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
             onChange={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
               setAddAmount(amount);
-              setAmountError(amount == null || oxtToWei(amount) > (walletBalance || 0));
+              setAmountError(amount == null || oxtToKeiki(amount) > (walletBalance || 0));
             }}
             type="number"
             placeholder="0.00"

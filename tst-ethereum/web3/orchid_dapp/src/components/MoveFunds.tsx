@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {orchidMoveFundsToEscrow, oxtToWei, weiToOxtString} from "../api/orchid-eth";
+import {orchidMoveFundsToEscrow, oxtToKeiki, keikiToOxtString} from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
@@ -34,7 +34,7 @@ export class MoveFunds extends Component {
     this.setState({tx: TransactionStatus.running()});
 
     try {
-      const moveEscrowWei = oxtToWei(this.state.moveAmount);
+      const moveEscrowWei = oxtToKeiki(this.state.moveAmount);
       let txId = await orchidMoveFundsToEscrow(wallet.address, signer.address, moveEscrowWei);
       await api.updateLotteryPot();
       this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
@@ -52,15 +52,15 @@ export class MoveFunds extends Component {
         <Container className="form-style">
           <label className="title">Move Funds</label>
           <p className="instructions">
-            Move funds from your Lottery Pot balance to your escrow. Balance funds are used by
-            Orchid services and can be withdrawn at any time. Escrow funds are required to participate in
+            Move funds from your Lottery Pot balance to your deposit. Balance funds are used by
+            Orchid services and can be withdrawn at any time. Deposit funds are required to participate in
             the Orchid network and can be withdrawn after an unlock notice period.
           </p>
           <label>Available Lottery Pot Balance Amount</label>
           <input type="number" className="pot-balance" placeholder="Amount in OXT"
-                 value={this.state.potBalance == null ? "" : weiToOxtString(this.state.potBalance, 4)}
+                 value={this.state.potBalance == null ? "" : keikiToOxtString(this.state.potBalance, 4)}
                  readOnly/>
-          <label>Move to Escrow Amount<span className={errorClass(this.state.amountError)}> *</span></label>
+          <label>Move to Deposit Amount<span className={errorClass(this.state.amountError)}> *</span></label>
           <input
               type="number" placeholder="Amount in OXT" className="editable"
               onInput={(e) => {

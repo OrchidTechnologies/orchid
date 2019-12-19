@@ -56,9 +56,9 @@ export class LockFunds extends Component {
       <Container className="form-style">
         <label className="title">Lock / Unlock Funds</label>
         <p className="instructions">
-          To withdraw your full balance including the escrow the account must be unlocked.
+          To withdraw your full balance including the deposit the account must be unlocked.
           Funds will be available at the time shown below. If you wish to cancel the withdrawal
-          process and continue using your escrow re-lock your escrow.
+          process and continue using your deposit re-lock funds.
         </p>
         <LockStatus/>
         <div style={{marginTop: '24px'}} className="submit-button">

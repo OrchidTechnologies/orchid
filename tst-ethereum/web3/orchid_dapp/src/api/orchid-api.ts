@@ -1,12 +1,13 @@
 import {
   Wallet,
   LotteryPot,
+  Signer,
   orchidGetWallet,
   orchidGetLotteryPot,
   orchidInitEthereum,
-  Signer, orchidGetSigners
+  orchidGetSigners
 } from "./orchid-eth";
-import {BehaviorSubject, Observable} from "rxjs";
+import {BehaviorSubject, Observable, of} from "rxjs";
 import {filter, flatMap, map, shareReplay} from "rxjs/operators";
 import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
@@ -52,12 +53,16 @@ export class OrchidAPI {
   signer_wait: Observable<Signer> = this.signer.pipe(filter(isDefined), shareReplay(1));
 
   // The Lottery pot associated with the currently selected signer account.
-  lotteryPot: Observable<LotteryPot | null> = this.signer_wait.pipe(
-    flatMap((signer: Signer) => { // flatMap resolves promises
+  lotteryPot: Observable<LotteryPot|null> = this.signer.pipe(
+    // flatMap here resolves the promises
+    flatMap((signer: Signer|undefined) => {
+      if ( signer === undefined ) {
+        return of(null); // flatMap requires observables, even for null
+      }
       try {
         return orchidGetLotteryPot(signer.wallet, signer);
       } catch (err) {
-        console.log("Error getting lottery pot data for signer: ", signer);
+        console.log("lotteryPot: Error getting lottery pot data for signer: ", signer);
         this.walletStatus.next(WalletStatus.Error);
         throw err;
       }
@@ -80,11 +85,10 @@ export class OrchidAPI {
 
     const propsUpdate = listenForProviderChanges ?
       (props: any) => {
-        console.log("provider props change: ", props);
+        console.log("provider props changed: ", props);
         this.init(false);
       } : undefined;
 
-    // Allow init ethereum to create the web3 context for validation
     let status = await orchidInitEthereum(propsUpdate);
     if (status === WalletStatus.Connected) {
       await this.updateWallet();
@@ -106,10 +110,13 @@ export class OrchidAPI {
       if (!this.signer.value && signers.length > 0) {
         console.log("updateSigners setting default signer: ", signers[0]);
         this.signer.next(signers[0]);
+      } else {
+        this.signer.next(undefined);
       }
     } catch (err) {
       console.log("Error updating signers: ", err);
       this.walletStatus.next(WalletStatus.Error);
+      this.signer.next(undefined);
     }
   }
 
@@ -129,12 +136,11 @@ export class OrchidAPI {
   }
 
   async updateTransactions() {
-    console.log("update transactions");
     let io = new EtherscanIO();
     let funder = this.wallet.value;
     let signer = this.signer.value;
     if (!funder || !signer) {
-      console.log("can't update transactions, missing funder or signer");
+      //console.log("can't update transactions, missing funder or signer");
       return;
     }
     let events: LotteryPotUpdateEvent[] = await io.getEvents(funder.address, signer.address);

@@ -3,7 +3,7 @@ import {EtherscanIO} from "../api/etherscan-io";
 import {findDOMNode} from "react-dom";
 import {TransactionId} from "../api/orchid-types";
 
-enum TransactionState {
+export enum TransactionState {
   New, Running, Completed, Failed
 }
 

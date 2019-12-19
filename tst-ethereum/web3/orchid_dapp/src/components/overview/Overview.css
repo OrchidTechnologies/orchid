@@ -34,6 +34,7 @@
   letter-spacing: -0.24px;
   color: #3a3149;
 }
+
 .Overview-bottomText {
   margin-left: 15px;
   margin-right: 15px;
@@ -45,4 +46,30 @@
   line-height: 1.33;
   letter-spacing: -0.24px;
   color: #3a3149;
+}
+
+.quick-setup-instructions {
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-bottom: 16px;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+  color: #606060;
+}
+
+.link-button-style {
+  color: rebeccapurple;
+  text-decoration: underline;
+  font-size: 15px;
+}
+
+.address-input,
+.address-input::placeholder {
+  /* form style beats us in precedence */
+  text-align: left !important;
 }

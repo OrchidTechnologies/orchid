@@ -1,5 +1,6 @@
 import React, {FC} from "react";
 import {Row} from "react-bootstrap";
+import {isEthAddress} from "../api/orchid-eth";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -31,6 +32,19 @@ export function hashPath(): string|undefined {
 export function getParam(name: string): string|null {
   let params = new URL(window.location.href).searchParams;
   return params.get(name);
+}
+
+export function getEthAddressParam(name: string, defaultValue: string): string {
+  let addr = getParam(name);
+  // Some servers won't let you put a big hex string in the url
+  if (addr != null && !addr.startsWith("0x")) {
+    addr = "0x"+addr;
+  }
+  if (addr != null && isEthAddress(addr)) {
+    return addr;
+  } else {
+    return defaultValue;
+  }
 }
 
 export function isNumeric(val: any) {
@@ -78,3 +92,4 @@ export const Divider: FC<{ noGutters?: boolean }> = (props) => {
 export const Visibility: FC<{ visible: boolean }> = (props) => {
   return <div className={props.visible ? "" : "hidden"}>{props.children}</div>
 };
+

@@ -15,13 +15,14 @@ declare global {
   }
 }
 let web3: Web3;
+let web3ProviderListener: any;
 
 /// A Funder address containing ETH to perform contract transactions  and possibly
 /// OXT to fund a Lottery Pot.
 export class Wallet {
   public address: Address;
   public ethBalance: BigInt; // Wei
-  public oxtBalance: BigInt; // Oxt-Wei
+  public oxtBalance: BigInt; // Keiki (1e18 per OXT)
 
   constructor() {
     this.address = "";
@@ -45,8 +46,8 @@ export class Signer {
 /// A Lottery Pot containing OXT funds against which lottery tickets are issued.
 export class LotteryPot {
   public signer: Signer;
-  public balance: BigInt; // Wei
-  public escrow: BigInt; // Oxt-Wei
+  public balance: BigInt; // Keiki
+  public escrow: BigInt; // Keiki
   public unlock: Date | null;
 
   constructor(signer: Signer, balance: BigInt, escrow: BigInt, unlock: Date | null) {
@@ -72,12 +73,9 @@ export class LotteryPot {
 
 // Init the Web3 environment and the Orchid contracts
 export function orchidInitEthereum(providerUpdateCallback?: (props: any) => void): Promise<WalletStatus> {
-  console.log("init ethereum");
   return new Promise(function (resolve, reject) {
-    /*window.addEventListener('load',*/
     (async () => {
       if (window.ethereum) {
-        console.log("Modern dapp browser.");
         window.ethereum.autoRefreshOnNetworkChange = false;
         web3 = new Web3(window.ethereum);
         try {
@@ -100,13 +98,24 @@ export function orchidInitEthereum(providerUpdateCallback?: (props: any) => void
         resolve(WalletStatus.WrongNetwork);
       }
 
-      providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore &&
-      (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
-        providerUpdateCallback && providerUpdateCallback(props);
-      });
+      // Subscribe to provider account changes
+      if (providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore) {
+        // Note: The provider update callback should only be passed once, but to be safe.
+        if (web3ProviderListener) {
+          try {
+            web3ProviderListener.unsubscribe();
+            console.log("existing provider listener successfully unsubscribed");
+          } catch (err) {
+            console.log("failed to unsubscribe existing provider listener");
+          }
+        }
+        web3ProviderListener = (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
+          providerUpdateCallback && providerUpdateCallback(props);
+        });
+      }
 
       try {
-        OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr);
+        OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
         OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
       } catch (err) {
         console.log("Error constructing contracts");
@@ -118,7 +127,7 @@ export function orchidInitEthereum(providerUpdateCallback?: (props: any) => void
   });
 }
 
-/// Get the user's ETH wallet balance and OXT-wei token balance (1e18 parts OXT).
+/// Get the user's ETH wallet balance and Keiki token balance (1e18 per OXT).
 export async function orchidGetWallet(): Promise<Wallet> {
   console.log("orchid get wallet");
   const accounts = await web3.eth.getAccounts();
@@ -151,9 +160,9 @@ export async function orchidGetSigners(wallet: Wallet): Promise<Signer []> {
   return keys.map((key: Address) => new Signer(wallet, key));
 }
 
-/// Transfer the amount in OXT-wei from the user to the specified lottery pot address.
+/// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified lottery pot address.
 export async function orchidAddFunds(funder: Address, signer: Address, amount: BigInt, escrow: BigInt): Promise<string> {
-  // return fakeTx(false);
+  //return fakeTx(false);
   console.log("Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
   const amount_value = BigInt(amount); // Force our polyfill BigInt?
   const escrow_value = BigInt(escrow);
@@ -298,7 +307,6 @@ export async function orchidUnlock(funder: Address, signer: Address): Promise<st
 
 /// Get the lottery pot balance and escrow amount for the specified address.
 export async function orchidGetLotteryPot(funder: Wallet, signer: Signer): Promise<LotteryPot> {
-  console.log("get lottery pot for signer: ", signer);
   //console.log("get lottery pot for signer: ", signer);
   let result = await OrchidContracts.lottery.methods
     .look(funder.address, signer.address)
@@ -319,24 +327,28 @@ export function isEthAddress(str: string): boolean {
   return web3.utils.isAddress(str);
 }
 
-// Convert a wei value (string or number) to an OXT String rounded to the specified
+// Convert a keiki value to an OXT String rounded to the specified
 // number of decimal places.
-export function weiToOxtString(wei: BigInt, decimals: number) {
+export function keikiToOxtString(keiki: BigInt, decimals: number) {
   decimals = Math.round(decimals);
-  let val = parseFloat(web3.utils.fromWei(wei.toString()));
+  let val: number = keikiToOxt(keiki);
   return val.toFixed(decimals).toString();
 }
 
-export function oxtToWei(oxt: number): BigInt {
+// Convert keiki to an (approximate) OXT float value
+export function keikiToOxt(keiki: BigInt): number {
+  return parseFloat(web3.utils.fromWei(keiki.toString()));
+}
+
+export function oxtToKeiki(oxt: number): BigInt {
   return BigInt(oxt * 1e18);
 }
 
-export function oxtToWeiString(oxt: number): string {
-  return oxtToWei(oxt).toString();
+export function oxtToKeikiString(oxt: number): string {
+  return oxtToKeiki(oxt).toString();
 }
 
 // TEST UI ONLY:
-/*
 async function fakeTx(fail: boolean): Promise<string> {
   return new Promise<string>(async function (resolve, reject) {
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -347,4 +359,3 @@ async function fakeTx(fail: boolean): Promise<string> {
     }
   });
 }
- */

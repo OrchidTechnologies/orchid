@@ -22,8 +22,8 @@ import withdrawIcon from '../assets/withdraw-outlined.svg'
 import withdrawIconSelected from '../assets/withdraw.svg'
 import {Divider, hashPath, Visibility} from "../util/util";
 import {OrchidAPI, WalletStatus} from "../api/orchid-api";
-import {Overview} from "./Overview";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
+import {Overview} from "./overview/Overview";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
@@ -41,7 +41,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
   useEffect(() => {
     let api = OrchidAPI.shared();
     // Disable general nav for new user with no accounts.
-    let newUserSub = api.newUser_wait.subscribe(isNew=>{
+    let newUserSub = api.newUser_wait.subscribe(isNew => {
       setNavEnabledState(!isNew);
     });
     return () => {

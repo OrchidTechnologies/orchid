@@ -6,7 +6,7 @@ import {
 } from "react-bootstrap";
 import './Header.css';
 import {OrchidAPI} from "../api/orchid-api";
-import {Signer, weiToOxtString} from "../api/orchid-eth";
+import {Signer, keikiToOxtString} from "../api/orchid-eth";
 import {Visibility} from "../util/util";
 import {Route, RouteContext} from "./Route";
 
@@ -20,7 +20,7 @@ export const Header: React.FC = () => {
     let newSub = api.newUser_wait.subscribe(setNewUser);
     let signersSub = api.signersAvailable_wait.subscribe(setSigners);
     let lotSub = api.lotteryPot_wait.subscribe(pot => {
-      setOxtBalance(weiToOxtString(pot.balance, 2));
+      setOxtBalance(keikiToOxtString(pot.balance, 2));
     });
     return () => {
       lotSub.unsubscribe();

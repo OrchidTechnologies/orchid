@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {OrchidAPI} from "../api/orchid-api";
-import {weiToOxtString} from "../api/orchid-eth";
+import {keikiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
 import {errorClass} from "../util/util";
 import './Balances.css'
@@ -34,9 +34,9 @@ export class Balances extends Component {
         this.setState({
           signerAddress: signer.address,
           walletAddress: signer.wallet.address,
-          ethBalance: weiToOxtString(signer.wallet.ethBalance, 4),
+          ethBalance: keikiToOxtString(signer.wallet.ethBalance, 4),
           ethBalanceError: signer.wallet.ethBalance <= BigInt(0),
-          oxtBalance: weiToOxtString(signer.wallet.oxtBalance, 4),
+          oxtBalance: keikiToOxtString(signer.wallet.oxtBalance, 4),
           oxtBalanceError: signer.wallet.oxtBalance <= BigInt(0),
         });
       }));
@@ -44,8 +44,8 @@ export class Balances extends Component {
     this.subscriptions.push(
       api.lotteryPot_wait.subscribe(pot => {
         this.setState({
-          potBalance: weiToOxtString(pot.balance, 4),
-          potEscrow: weiToOxtString(pot.escrow, 4)
+          potBalance: keikiToOxtString(pot.balance, 4),
+          potEscrow: keikiToOxtString(pot.escrow, 4)
         });
       }));
   }
@@ -134,7 +134,7 @@ export class Balances extends Component {
                    type="text" readOnly/>
           </div>
           <div className="form-row col-1-2">
-            <label className="form-row-label">Escrow</label>
+            <label className="form-row-label">Deposit</label>
             <input className="form-row-field"
                    value={this.state.potEscrow}
                    type="text" readOnly/>

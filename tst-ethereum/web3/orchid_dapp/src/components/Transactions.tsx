@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {weiToOxtString} from "../api/orchid-eth";
+import {keikiToOxtString} from "../api/orchid-eth";
 import {EtherscanIO, LotteryPotUpdateEvent} from "../api/etherscan-io";
 import './Transactions.css'
 import {Col, Container, Row} from "react-bootstrap";
@@ -32,7 +32,7 @@ export const Transactions: FC = () => {
             <hr/>
             {!events.length && <div className="loading">Loading...</div>}
             {events.map((ev) => {
-              let balance = weiToOxtString(ev.balance, 2);
+              let balance = keikiToOxtString(ev.balance, 2);
               let date = ev.timeStamp.toLocaleDateString('en-US');
               let txHash = ev.transactionHash;
               let txLink = EtherscanIO.txLink(txHash);

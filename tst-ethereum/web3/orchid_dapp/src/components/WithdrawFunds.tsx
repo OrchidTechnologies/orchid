@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {
-  isEthAddress, oxtToWei, weiToOxtString,
+  isEthAddress, oxtToKeiki, keikiToOxtString,
   orchidWithdrawFunds, orchidWithdrawFundsAndEscrow
 } from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
@@ -67,7 +67,7 @@ export class WithdrawFunds extends Component {
         if (withdrawAmount == null) {
           return; // Shouldn't get here.
         }
-        const withdrawWei = oxtToWei(withdrawAmount);
+        const withdrawWei = oxtToKeiki(withdrawAmount);
         txId = await orchidWithdrawFunds(wallet.address, signer.address, targetAddress, withdrawWei);
       }
       await api.updateLotteryPot();
@@ -81,7 +81,7 @@ export class WithdrawFunds extends Component {
 
   render() {
     let withdrawAmount = this.state.withdrawAll ?
-      weiToOxtString(this.state.potBalance || BigInt(0), 4) :
+      keikiToOxtString(this.state.potBalance || BigInt(0), 4) :
       this.state.withdrawAmount;
 
     let api = OrchidAPI.shared();
@@ -103,7 +103,7 @@ export class WithdrawFunds extends Component {
           </Col>
           <Col>
             <div className="oxt-1-pad">
-              {this.state.potBalance == null ? "..." : weiToOxtString(this.state.potBalance, 2)}
+              {this.state.potBalance == null ? "..." : keikiToOxtString(this.state.potBalance, 2)}
             </div>
           </Col>
         </Row>
@@ -122,7 +122,7 @@ export class WithdrawFunds extends Component {
               onChange={(e) => {
                 let amount = parseFloatSafe(e.currentTarget.value);
                 const valid = amount != null && amount > 0
-                  && (this.state.potBalance == null || oxtToWei(amount) <= this.state.potBalance);
+                  && (this.state.potBalance == null || oxtToKeiki(amount) <= this.state.potBalance);
                 this.setState({
                   withdrawAmount: amount,
                   amountError: !valid
@@ -167,7 +167,7 @@ export class WithdrawFunds extends Component {
                   this.setState({withdrawAll: value});
                 }}
               />
-              <label>Withdraw Full Balance and Escrow</label>
+              <label>Withdraw Full Balance and Deposit</label>
             </div>
           </Col>
         </Row>
