@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
@@ -91,4 +93,36 @@ class Dialogs {
       },
     );
   }
+
+  static Future<void> showConfigurationChangeSuccess(BuildContext context, {bool warnOnly = false}) {
+    var warn;
+    switch(OrchidAPI().connectionStatus.value) {
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.Disconnecting:
+        warn = false;
+        break;
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Connected:
+        warn = true;
+    }
+    if (warnOnly && !warn) {
+      return null;
+    }
+    var warning = warn ? " Changes will take effect when the VPN is restarted." : "";
+    return Dialogs.showAppDialog(
+        context: context,
+        title: "Saved!",
+        body: "Configuration saved.$warning");
+  }
+
+  static void showConfigurationChangeFailed(BuildContext context) {
+    Dialogs.showAppDialog(
+        context: context,
+        title: "Whoops!",
+        body:
+        "Configuration failed to save.  Please check syntax and try again.");
+  }
+
+
 }

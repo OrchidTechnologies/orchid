@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
+import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/connect/connect_page.dart';
 import 'circuit/circuit_page.dart';
 import 'monitoring/traffic_view.dart';
 
+// TODO: Remove if this remains unused
 // Single page app layout
 class OrchidApp extends StatelessWidget {
   @override
@@ -21,7 +23,6 @@ class OrchidApp extends StatelessWidget {
   }
 }
 
-// TODO: Remove if remains unused
 /// A bottom navigation tabbed layout of the app
 class OrchidAppTabbed extends StatefulWidget {
   static var showStatusTabPref = ChangeNotifier();
@@ -38,6 +39,7 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
   Widget _pageTitle = _logo;
   List<Widget> _pageActions = [];
   var _trafficButtonController = ClearTrafficActionButtonController();
+  var _vpnSwitchController = WrappedSwitchController();
 
   final PageStorageBucket bucket = PageStorageBucket();
   int _selectedIndex = 0;
@@ -50,7 +52,8 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
 
     _tabs = [
       QuickConnectPage(key: PageStorageKey("1")),
-      CircuitPage(key: PageStorageKey("2")),
+      CircuitPage(
+          key: PageStorageKey("2"), switchController: _vpnSwitchController),
       TrafficView(
           key: PageStorageKey("3"),
           clearTrafficController: _trafficButtonController),
@@ -88,6 +91,7 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
           backgroundColor: Colors.deepPurple,
           drawer: SideDrawer(),
         ),
+        debugShowCheckedModeBanner: false,
         routes: AppRoutes.routes);
   }
 
@@ -141,15 +145,19 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
   void _handleTabSelection(int index) {
     var titles = [
       _logo,
-      Text("Hops"),
+      _logo,
       Text("Traffic"),
     ];
     setState(() {
       _selectedIndex = index;
       _pageTitle = titles[_showStatusTab ? index : index + 1];
-      _pageActions = index == (_showStatusTab ? 2 : 1)
-          ? [ClearTrafficActionButton(controller: _trafficButtonController)]
-          : [];
+      if (index == (_showStatusTab ? 1 : 0)) {
+        _pageActions = [WrappedSwitch(controller: _vpnSwitchController)];
+      } else if (index == (_showStatusTab ? 2 : 1)) {
+        _pageActions = [ClearTrafficActionButton(controller: _trafficButtonController)];
+      } else {
+        _pageActions = [];
+      }
     });
   }
 }

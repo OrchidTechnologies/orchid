@@ -109,39 +109,12 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
       if (saved) {
         UserPreferences().setUserConfig(newConfig);
         _configFileTextLast = newConfig;
-        _showSaveSuccess();
+        Dialogs.showConfigurationChangeSuccess(context);
       } else {
         _readyToSave.add(true);
-        _showSaveFailed();
+        Dialogs.showConfigurationChangeFailed(context);
       }
     });
-  }
-
-  void _showSaveSuccess() {
-    var warn;
-    switch(OrchidAPI().connectionStatus.value) {
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
-      case OrchidConnectionState.Disconnecting:
-        warn = false;
-        break;
-      case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Connected:
-        warn = true;
-    }
-    var warning = warn ? " Changes will take effect when the VPN is restarted." : "";
-    Dialogs.showAppDialog(
-        context: context,
-        title: "Saved!",
-        body: "Configuration saved.$warning");
-  }
-
-  void _showSaveFailed() {
-    Dialogs.showAppDialog(
-        context: context,
-        title: "Whoops!",
-        body:
-            "Configuration failed to save.  Please check syntax and try again.");
   }
 
   void dispose() {

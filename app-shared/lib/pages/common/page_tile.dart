@@ -15,7 +15,7 @@ class PageTile extends StatelessWidget {
       this.imageName,
       this.onTap,
       this.trailing,
-      this.color = Colors.white});
+      this.color = Colors.transparent });
 
   PageTile.route(
       {this.title,

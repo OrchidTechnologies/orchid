@@ -28,6 +28,11 @@ export function hashPath(): string|undefined {
   return new URL(window.location.href).hash;
 }
 
+export function getParam(name: string): string|null {
+  let params = new URL(window.location.href).searchParams;
+  return params.get(name);
+}
+
 export function isNumeric(val: any) {
   if (val == null || val === "") {
     return false;

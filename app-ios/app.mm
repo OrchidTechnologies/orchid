@@ -273,12 +273,6 @@
         }
     }];
 
-    // Install default config on first launch
-    if ([self getConfig] == nil) {
-        NSString *config = @"";
-        [self setConfig: config];
-    }
-
     [NETunnelProviderManager loadAllFromPreferencesWithCompletionHandler:^(NSArray<NETunnelProviderManager *> * _Nullable managers, NSError * _Nullable error) {
         if (error != nil) {
             NSLog(@"Error loading NE tunnel prefs.");
