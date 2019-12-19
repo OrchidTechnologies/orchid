@@ -25,7 +25,11 @@ class _TapToCopyTextState extends State<TapToCopyText> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      child: Text(_showText, style: widget.style),
+      behavior: HitTestBehavior.translucent,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 16),
+        child: Text(_showText, style: widget.style),
+      ),
       onTap: _onTap,
     );
   }

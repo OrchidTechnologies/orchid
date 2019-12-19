@@ -108,12 +108,14 @@ class _AddKeyPageState extends State<AddKeyPage> {
               _buildImportButton(),
 
               // Instructions
+              pady(24),
               Expanded(
                 child: InstructionsView(
                   image: Image.asset("assets/images/howToken.png"),
                   title: "Create a key",
                   body:
-                      "To ensure private browsing, you’ll need to link each new hop to a different funding source. Generate or import a new signer key here to link your hop to your funding source. This is a sentence describing what happens when you generate a signer key (need input).",
+                      "To ensure private browsing, you’ll need to link each new hop to a different funding source. "
+                          "Generate or import a new signer key here to link your hop to your funding source. ",
                 ),
               )
             ],
