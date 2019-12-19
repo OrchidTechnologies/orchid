@@ -79,8 +79,9 @@ class Sync final :
                 try {
                     writ = Read(beam);
                 } catch (const Error &error) {
-                    orc_insist(!error.text.empty());
-                    Link<Buffer>::Stop(error.text);
+                    const auto &what(error.what_);
+                    orc_insist(!what.empty());
+                    Link<Buffer>::Stop(what);
                     break;
                 }
 
@@ -95,8 +96,8 @@ class Sync final :
         }).detach();
     }
 
-    task<void> Shut() override {
-        sync_.close();
+    task<void> Shut() noexcept override {
+        orc_except({ sync_.close(); })
         co_await Link<Buffer>::Shut();
     }
 

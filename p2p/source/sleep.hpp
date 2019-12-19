@@ -27,7 +27,7 @@
 
 namespace orc {
 
-task<void> Sleep(unsigned seconds);
+task<void> Sleep(unsigned seconds) noexcept;
 
 }
 

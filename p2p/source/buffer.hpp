@@ -289,8 +289,8 @@ class Subset final :
     }
 
     Subset subset(size_t offset, size_t length) const {
-        orc_assert(offset <= size());
-        orc_assert(size() - offset >= length);
+        orc_insist(offset <= size());
+        orc_insist(size() - offset >= length);
         return {data() + offset, length};
     }
 };
@@ -612,8 +612,8 @@ class Beam :
     }
 
     Subset subset(size_t offset, size_t length) const {
-        orc_assert(offset <= size());
-        orc_assert(size() - offset >= length);
+        orc_insist(offset <= size());
+        orc_insist(size() - offset >= length);
         return {data() + offset, length};
     }
 
@@ -787,6 +787,8 @@ class Window :
 {
   private:
     size_t count_;
+    // XXX: I'm just being lazy here. :/
+    // NOLINTNEXTLINE (modernize-avoid-c-arrays)
     std::unique_ptr<Range[]> ranges_;
 
     const Range *range_;

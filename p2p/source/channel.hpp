@@ -50,7 +50,7 @@ class CreateObserver :
     webrtc::SessionDescriptionInterface *description_;
 
   protected:
-    void OnSuccess(webrtc::SessionDescriptionInterface *description) override {
+    void OnSuccess(webrtc::SessionDescriptionInterface *description) noexcept override {
         description_ = description;
         set();
     }
@@ -61,7 +61,7 @@ class SetObserver :
     public webrtc::SetSessionDescriptionObserver
 {
   protected:
-    void OnSuccess() override {
+    void OnSuccess() noexcept override {
         set();
     }
 };
@@ -85,6 +85,7 @@ class Peer :
     const S<Origin> origin_;
     const rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_;
 
+    // XXX: do I need to lock this?
     std::set<Channel *> channels_;
 
     cppcoro::async_manual_reset_event gathered_;
@@ -114,18 +115,18 @@ _trace();
     task<cricket::Candidate> Candidate();
 
 
-    void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) override {
+    void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) noexcept override {
         _trace();
     }
 
-    void OnRenegotiationNeeded() override {
+    void OnRenegotiationNeeded() noexcept override {
         _trace();
     }
 
-    void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) override;
-    void OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) override;
+    void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept override;
+    void OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept override;
 
-    void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state) override {
+    void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state) noexcept override {
         switch (state) {
             case webrtc::PeerConnectionInterface::kIceGatheringNew:
                 gathering_.clear();
@@ -135,23 +136,23 @@ _trace();
             break;
 
             case webrtc::PeerConnectionInterface::kIceGatheringComplete:
-                candidates_ = gathering_;
+                orc_except({ candidates_ = gathering_; })
                 gathered_.set();
             break;
         }
     }
 
-    void OnIceCandidate(const webrtc::IceCandidateInterface *candidate) override {
+    void OnIceCandidate(const webrtc::IceCandidateInterface *candidate) noexcept override {
         std::string sdp;
         candidate->ToString(&sdp);
         gathering_.push_back(sdp);
     }
 
-    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override;
+    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) noexcept override;
 
 
     task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
-        rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
+        const rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetLocalDescription(observer, description);
         co_await *observer;
         co_await Schedule();
@@ -168,7 +169,7 @@ _trace();
 
     task<std::string> Offer() {
         co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
-            rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
+            const rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
             webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
             peer_->CreateOffer(observer, options);
             co_await *observer;
@@ -180,8 +181,8 @@ _trace();
 
     task<void> Negotiate(const char *type, const std::string &sdp) {
         webrtc::SdpParseError error;
-        auto answer(webrtc::CreateSessionDescription(type, sdp, &error));
-        orc_assert(answer != nullptr);
+        const auto answer(webrtc::CreateSessionDescription(type, sdp, &error));
+        orc_assert_(answer != nullptr, "invalid " << type << ":\n" << sdp);
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetRemoteDescription(observer, answer);
         co_await *observer;
@@ -191,7 +192,7 @@ _trace();
     task<std::string> Answer(const std::string &offer) {
         co_await Negotiate("offer", offer);
         co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
-            rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
+            const rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
             webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
             peer_->CreateAnswer(observer, options);
             co_await *observer;
@@ -251,7 +252,7 @@ _trace();
         return peer_;
     }
 
-    void OnStateChange() override {
+    void OnStateChange() noexcept override {
         switch (channel_->state()) {
             case webrtc::DataChannelInterface::kConnecting:
                 if (Verbose)
@@ -274,29 +275,29 @@ _trace();
         }
     }
 
-    void OnBufferedAmountChange(uint64_t previous) override {
+    void OnBufferedAmountChange(uint64_t previous) noexcept override {
         //auto current(channel_->buffered_amount());
         //Log() << "channel: " << current << " (" << previous << ")" << std::endl;
     }
 
-    void OnMessage(const webrtc::DataBuffer &buffer) override {
-        Subset data(buffer.data.data(), buffer.data.size());
+    void OnMessage(const webrtc::DataBuffer &buffer) noexcept override {
+        const Subset data(buffer.data.data(), buffer.data.size());
         if (Verbose)
             Log() << "WebRTC >>> " << this << " " << data << std::endl;
         Pump::Land(data);
     }
 
-    void Stop(const std::string &error = std::string()) {
+    void Stop(const std::string &error = std::string()) noexcept {
         opened_.set();
         return Pump::Stop(error);
     }
 
-    task<void> Open() {
+    task<void> Open() noexcept {
         co_await opened_;
         co_await Schedule();
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         channel_->Close();
         co_await Pump::Shut();
     }

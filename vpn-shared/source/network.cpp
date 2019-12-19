@@ -64,7 +64,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
         static const Selector<Address, Bytes32> addr_("addr");
         const auto curator(co_await addr_.Call(endpoint, latest, resolver, 90000, node));
 
-        for (;;) try {
+        for (;;) { try {
             static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
             auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
             orc_assert(address != 0);
@@ -102,8 +102,7 @@ task<void> Network::Random(Sunk<> *sunk, const S<Origin> &origin, const std::str
             orc_assert(algorithm != algorithms_.end());
             co_return Descriptor{address, url.str(), std::make_unique<rtc::SSLFingerprint>(algorithm->second, fingerprint.data(), fingerprint.size())};
         } catch (const std::exception &error) {
-            co_await Sleep(2);
-        }
+        } co_await Sleep(2); }
     }();
 
     orc_assert(fingerprint != nullptr);

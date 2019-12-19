@@ -37,6 +37,7 @@
 
 #include "error.hpp"
 #include "forge.hpp"
+#include "nest.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
 
@@ -54,6 +55,7 @@ class Transport :
     openvpn_io::io_context &context_;
     openvpn::TransportClientParent *parent_;
     asio::executor_work_guard<openvpn_io::io_context::executor_type> work_;
+    Nest nest_;
 
   protected:
     virtual Pump<Buffer> *Inner() = 0;
@@ -72,7 +74,7 @@ class Transport :
         });
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
         parent_->transport_error(openvpn::Error::UNDEF, error);
     }
 
@@ -84,12 +86,12 @@ class Transport :
     {
     }
 
-    void transport_start() override {
+    void transport_start() noexcept override {
         // this function should not even exist in this API :/
         // it is always called immediately after construction
     }
 
-    void stop() override {
+    void stop() noexcept override {
 _trace();
         Wait([&]() -> task<void> {
             co_await Inner()->Shut();
@@ -97,50 +99,50 @@ _trace();
         work_.reset();
     }
 
-    bool transport_send_const(const openvpn::Buffer &data) override {
-        Spawn([this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
+    bool transport_send_const(const openvpn::Buffer &data) noexcept override {
+        nest_.Hatch([&]() noexcept { return [this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
             co_await Schedule();
             //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
             co_await Inner()->Send(buffer);
-        });
+        }; });
 
         return true;
     }
 
-    bool transport_send(openvpn::BufferAllocated &buffer) override {
-        Spawn([this, buffer = std::move(buffer)]() -> task<void> {
+    bool transport_send(openvpn::BufferAllocated &buffer) noexcept override {
+        nest_.Hatch([&]() noexcept { return [this, buffer = std::move(buffer)]() -> task<void> {
             co_await Schedule();
             Subset data(buffer.c_data(), buffer.size());
             //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
             co_await Inner()->Send(data);
-        });
+        }; });
 
         return true;
     }
 
-    bool transport_send_queue_empty() override {
+    bool transport_send_queue_empty() noexcept override {
         return false; }
-    bool transport_has_send_queue() override {
+    bool transport_has_send_queue() noexcept override {
         return false; }
-    unsigned int transport_send_queue_size() override {
+    unsigned int transport_send_queue_size() noexcept override {
         return 0; }
 
     // no one calls this. it has something to do with UWP
     // c0de92c7e43fbf7ed71622b9de8695651bafacb7 OVPN3-124
-    void transport_stop_requeueing() override {}
+    void transport_stop_requeueing() noexcept override {}
 
-    void reset_align_adjust(const size_t adjust) override {
+    void reset_align_adjust(const size_t adjust) noexcept override {
         // XXX: this has something to do with frames?
     }
 
-    openvpn::IP::Addr server_endpoint_addr() const override {
+    openvpn::IP::Addr server_endpoint_addr() const noexcept override {
         return openvpn::IP::Addr("0.0.0.0"); } // XXX
-    void server_endpoint_info(std::string &host, std::string &port, std::string &protocol, std::string &address) const override {
+    void server_endpoint_info(std::string &host, std::string &port, std::string &protocol, std::string &address) const noexcept override {
         host.clear(); port.clear(); protocol.clear(); address.clear(); }
-    openvpn::Protocol transport_protocol() const override {
+    openvpn::Protocol transport_protocol() const noexcept override {
         return openvpn::Protocol(openvpn::Protocol::UDPv4); }
 
-    void transport_reparent(openvpn::TransportClientParent *parent) override {
+    void transport_reparent(openvpn::TransportClientParent *parent) noexcept override {
         parent_ = parent;
     }
 };
@@ -159,10 +161,10 @@ class Factory :
     {
     }
 
-    openvpn::TransportClient::Ptr new_transport_client_obj(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) override {
+    openvpn::TransportClient::Ptr new_transport_client_obj(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) noexcept override {
         openvpn::RCPtr transport(new Sink<Transport>(context, parent));
 
-        Spawn([this, &context, parent, transport]() -> task<void> { try {
+        Spawn([this, &context, parent, transport]() noexcept -> task<void> { try {
             co_await Schedule();
 
             asio::dispatch(context, [parent]() {
@@ -202,52 +204,52 @@ class Middle :
         public openvpn::TunClient
     {
       private:
-        Middle *middle_;
+        Middle &middle_;
 
       public:
-        Tunnel(Middle *middle) :
+        Tunnel(Middle &middle) :
             middle_(middle)
         {
         }
 
-        void tun_start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) override {
-            middle_->Start(options, transport, settings);
+        void tun_start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) noexcept override {
+            middle_.Start(options, transport, settings);
         }
 
-        void stop() override {
-            middle_->Stop(std::string());
+        void stop() noexcept override {
+            middle_.Stop(std::string());
         }
 
-        void set_disconnect() override {
-            orc_assert(false);
+        void set_disconnect() noexcept override {
+            orc_insist(false);
         }
 
-        bool tun_send(openvpn::BufferAllocated &buffer) override {
-            middle_->Forge(buffer);
+        bool tun_send(openvpn::BufferAllocated &buffer) noexcept override {
+            middle_.Forge(buffer);
             Subset data(buffer.c_data(), buffer.size());
-            middle_->Land(data);
+            middle_.Land(data);
             return true;
         }
 
-        std::string tun_name() const override {
+        std::string tun_name() const noexcept override {
             return "tun_name()"; }
 
-        std::string vpn_ip4() const override {
+        std::string vpn_ip4() const noexcept override {
             return "vpn_ip4()"; }
-        std::string vpn_ip6() const override {
+        std::string vpn_ip6() const noexcept override {
             return "vpn_ip6()"; }
 
-        std::string vpn_gw4() const override {
+        std::string vpn_gw4() const noexcept override {
             return "vpn_gw4()"; }
-        std::string vpn_gw6() const override {
+        std::string vpn_gw6() const noexcept override {
             return "vpn_gw6()"; }
     };
 
-    void Start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) {
+    void Start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) noexcept {
         parent_->tun_pre_tun_config();
         parent_->tun_pre_route_config();
 
-        openvpn::TunProp::configure_builder(this, nullptr, config_.stats.get(), transport.server_endpoint_addr(), config_.tun_prop, options, nullptr, false);
+        orc_except({ openvpn::TunProp::configure_builder(this, nullptr, config_.stats.get(), transport.server_endpoint_addr(), config_.tun_prop, options, nullptr, false); })
 
         parent_->tun_connected();
     }
@@ -258,7 +260,7 @@ class Middle :
     }
 
   private:
-    S<Origin> origin_;
+    const S<Origin> origin_;
 
     std::thread thread_;
 
@@ -267,7 +269,7 @@ class Middle :
     cppcoro::async_manual_reset_event ready_;
 
     openvpn::IPv4::Addr ip4_;
-    uint32_t local_;
+    const uint32_t local_;
 
   protected:
     virtual Pipe<Buffer> *Inner() = 0;
@@ -277,7 +279,7 @@ class Middle :
         Link<Buffer>::Land(data);
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
         orc_insist(false);
     }
 
@@ -289,89 +291,89 @@ class Middle :
     {
     }
 
-    openvpn::TransportClientFactory *new_transport_factory(const openvpn::ExternalTransport::Config &config) override {
+    openvpn::TransportClientFactory *new_transport_factory(const openvpn::ExternalTransport::Config &config) noexcept override {
         return new orc::Factory(origin_, config);
     }
 
 
-    openvpn::TunClientFactory *new_tun_factory(const openvpn::ExternalTun::Config &config, const openvpn::OptionList &options) override {
+    openvpn::TunClientFactory *new_tun_factory(const openvpn::ExternalTun::Config &config, const openvpn::OptionList &options) noexcept override {
         config_ = config;
         return this;
     }
 
-    openvpn::TunClient::Ptr new_tun_client_obj(openvpn_io::io_context &context, openvpn::TunClientParent &parent, openvpn::TransportClient *transport) override {
+    openvpn::TunClient::Ptr new_tun_client_obj(openvpn_io::io_context &context, openvpn::TunClientParent &parent, openvpn::TransportClient *transport) noexcept override {
         parent_ = &parent;
-        return new Tunnel(this);
+        return new Tunnel(*this);
     }
 
 
-    void log(const openvpn::ClientAPI::LogInfo &info) override {
+    void log(const openvpn::ClientAPI::LogInfo &info) noexcept override {
         Log() << "OpenVPN: " << info.text << std::endl;
     }
 
-    void event(const openvpn::ClientAPI::Event &event) override {
+    void event(const openvpn::ClientAPI::Event &event) noexcept override {
         Log() << "OpenVPN[" << event.name << "]: " << event.info << std::endl;
     }
 
 
-    bool socket_protect(int socket, std::string remote, bool ipv6) override {
+    bool socket_protect(int socket, std::string remote, bool ipv6) noexcept override {
         // we do this by hooking the internal implementation of bind/connect
         return true;
     }
 
-    bool pause_on_connection_timeout() override {
+    bool pause_on_connection_timeout() noexcept override {
         return false;
     }
 
 
-    void external_pki_cert_request(openvpn::ClientAPI::ExternalPKICertRequest &request) override {
+    void external_pki_cert_request(openvpn::ClientAPI::ExternalPKICertRequest &request) noexcept override {
         request.error = true;
         request.errorText = "not implemented";
     }
 
-    void external_pki_sign_request(openvpn::ClientAPI::ExternalPKISignRequest &request) override {
+    void external_pki_sign_request(openvpn::ClientAPI::ExternalPKISignRequest &request) noexcept override {
         request.error = true;
         request.errorText = "not implemented";
     }
 
 
-    bool tun_builder_new() override {
+    bool tun_builder_new() noexcept override {
         return true; }
-    bool tun_builder_set_session_name(const std::string &name) override {
+    bool tun_builder_set_session_name(const std::string &name) noexcept override {
         return true; }
-    bool tun_builder_set_mtu(int mtu) override {
-        return true; }
-
-    bool tun_builder_set_remote_address(const std::string &address, bool ipv6) override {
+    bool tun_builder_set_mtu(int mtu) noexcept override {
         return true; }
 
-    bool tun_builder_add_address(const std::string &address, int prefix, const std::string &gateway, bool ipv6, bool net30) override {
+    bool tun_builder_set_remote_address(const std::string &address, bool ipv6) noexcept override {
+        return true; }
+
+    bool tun_builder_add_address(const std::string &address, int prefix, const std::string &gateway, bool ipv6, bool net30) noexcept override {
         orc_insist(!ipv6);
         ip4_ = openvpn::IPv4::Addr::from_string(address);
         return true;
     }
 
-    bool tun_builder_reroute_gw(bool ipv4, bool ipv6, unsigned int flags) override {
+    bool tun_builder_reroute_gw(bool ipv4, bool ipv6, unsigned int flags) noexcept override {
         return true; }
-    bool tun_builder_add_route(const std::string &address, int prefix, int metric, bool ipv6) override {
+    bool tun_builder_add_route(const std::string &address, int prefix, int metric, bool ipv6) noexcept override {
         return true; }
-    bool tun_builder_exclude_route(const std::string &address, int prefix, int metric, bool ipv6) override {
-        return true; }
-
-    bool tun_builder_add_dns_server(const std::string &address, bool ipv6) override {
-        return true; }
-    bool tun_builder_add_search_domain(const std::string &domain) override {
-        return true; }
-    bool tun_builder_add_wins_server(const std::string &wins) override {
+    bool tun_builder_exclude_route(const std::string &address, int prefix, int metric, bool ipv6) noexcept override {
         return true; }
 
-    bool tun_builder_set_proxy_auto_config_url(const std::string &url) override {
+    bool tun_builder_add_dns_server(const std::string &address, bool ipv6) noexcept override {
         return true; }
-    bool tun_builder_set_proxy_http(const std::string &host, int port) override {
+    bool tun_builder_add_search_domain(const std::string &domain) noexcept override {
         return true; }
-    bool tun_builder_set_proxy_https(const std::string &host, int port) override {
+    bool tun_builder_add_wins_server(const std::string &wins) noexcept override {
         return true; }
-    bool tun_builder_add_proxy_bypass(const std::string &proxy) override {
+
+    bool tun_builder_set_proxy_auto_config_url(const std::string &url) noexcept override {
+        return true; }
+    bool tun_builder_set_proxy_http(const std::string &host, int port) noexcept override {
+        return true; }
+    bool tun_builder_set_proxy_https(const std::string &host, int port) noexcept override {
+        return true; }
+    bool tun_builder_add_proxy_bypass(const std::string &proxy) noexcept override {
         return true; }
 
 
@@ -389,9 +391,9 @@ _trace();
     }
 
     task<void> Send(const orc::Buffer &data) override {
-        static size_t headroom(512);
-        static size_t payload(65536);
-        static size_t tailroom(512);
+        static const size_t headroom(512);
+        static const size_t payload(65536);
+        static const size_t tailroom(512);
         const auto size(data.size());
         orc_assert_(size <= payload, "orc_assert(Send: " << size << " {data.size()} <= " << payload << ") " << data);
 
@@ -412,7 +414,7 @@ _trace();
 };
 
 task<void> Connect(Sunk<> *sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password) {
-    auto middle(sunk->Wire<Sink<Middle>>(std::move(origin), local));
+    const auto middle(sunk->Wire<Sink<Middle>>(std::move(origin), local));
 
     {
         openvpn::ClientAPI::Config config;

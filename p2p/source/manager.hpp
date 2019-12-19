@@ -51,7 +51,7 @@ class Assistant :
     mutable rtc::Network network_;
 
   public:
-    Assistant(const Host &host, const std::string &name, const Host &network, unsigned bits) :
+    Assistant(const Host &host, const std::string &name, const Host &network, int bits) :
         network_(name, name, network, bits, rtc::ADAPTER_TYPE_VPN)
     {
         //network_.set_default_local_address_provider(this);

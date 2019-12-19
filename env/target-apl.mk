@@ -55,6 +55,9 @@ more += -fno-strict-return
 include $(pwd)/target-ndk.mk
 cxx += -stdlib=libc++
 
+xflags += -nostdinc++
+xflags += -isystem $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1
+
 endif
 
 define _

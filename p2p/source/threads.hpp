@@ -104,7 +104,7 @@ class Threads {
 };
 
 template <typename Code_>
-auto Post(Code_ code) -> task<decltype(code())> {
+auto Post(Code_ code) noexcept(noexcept(code())) -> task<decltype(code())> {
     Invoker invoker(std::move(code));
     auto value(co_await invoker(Threads::Get().signals_.get()));
     co_await Schedule();

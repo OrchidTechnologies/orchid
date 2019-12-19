@@ -48,13 +48,14 @@ class Incoming final :
         auto bonding(server_->Bond());
         auto channel(bonding->Wire<Channel>(shared_from_this(), interface));
 
-        Spawn([bonding, channel = std::move(channel), server = std::move(server_)]() -> task<void> {
+        Spawn([bonding, channel = std::move(channel), server = std::move(server_)]() noexcept -> task<void> {
             co_await channel->Open();
+            // XXX: this could fail; then what?
             co_await server->Open(bonding);
         });
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
         self_.reset();
     }
 
@@ -113,7 +114,7 @@ task<void> Server::Send(Pipe *pipe, const Buffer &data, bool force) {
 }
 
 void Server::Send(Pipe *pipe, const Buffer &data) {
-    nest_.Hatch([&]() { return [this, pipe, data = Beam(data)]() -> task<void> {
+    nest_.Hatch([&]() noexcept { return [this, pipe, data = Beam(data)]() -> task<void> {
         co_return co_await Send(pipe, data, false); }; });
 }
 
@@ -247,7 +248,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
         if (cashier_ == nullptr)
             return true;
 
-        nest_.Hatch([&]() { return [this, source, data = Beam(data)]() -> task<void> {
+        nest_.Hatch([&]() noexcept { return [this, source, data = Beam(data)]() -> task<void> {
             const auto [header, window] = Take<Header, Window>(data);
             const auto &[magic, id] = header;
             orc_assert(magic == Magic_);
@@ -271,7 +272,7 @@ void Server::Land(const Buffer &data) {
         Send(this, data);
 }
 
-void Server::Stop(const std::string &error) {
+void Server::Stop(const std::string &error) noexcept {
 }
 
 Server::Server(S<Origin> origin, S<Cashier> cashier) :
@@ -288,7 +289,7 @@ task<void> Server::Open(Pipe<Buffer> *pipe) {
         co_await Invoice(pipe, Port_, Zero<32>());
 }
 
-task<void> Server::Shut() {
+task<void> Server::Shut() noexcept {
     co_await Bonded::Shut();
     co_await Inner()->Shut();
     co_await nest_.Shut();

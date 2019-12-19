@@ -133,7 +133,7 @@ task<cricket::Candidate> Peer::Candidate() {
     });
 }
 
-void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
+void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
     switch (state) {
         case webrtc::PeerConnectionInterface::kIceConnectionNew:
             if (Verbose)
@@ -175,7 +175,7 @@ void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionS
     }
 }
 
-void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) {
+void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
     switch (state) {
         case webrtc::PeerConnectionInterface::kIceConnectionNew:
             if (Verbose)
@@ -203,7 +203,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
                 Log() << "OnStandardizedIceConnectionChange(kIceConnectionFailed)" << std::endl;
 
             // you can't close a PeerConnection if it is blocked in a signal
-            Spawn([self = shared_from_this()]() mutable -> task<void> {
+            Spawn([self = shared_from_this()]() mutable noexcept -> task<void> {
                 co_await Post([self = std::move(self)]() {
                     for (auto current(self->channels_.begin()); current != self->channels_.end(); ) {
                         auto next(current);
@@ -221,7 +221,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
             if (Verbose)
                 Log() << "OnStandardizedIceConnectionChange(kIceConnectionClosed)" << std::endl;
             // this is (annoyingly) only signaled via OnIceConnectionChange
-            orc_assert(false);
+            orc_insist(false);
         break;
 
         case webrtc::PeerConnectionInterface::kIceConnectionMax:
@@ -231,7 +231,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
     }
 }
 
-void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) {
+void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) noexcept {
     Land(std::move(interface));
 }
 
@@ -243,7 +243,7 @@ class Actor final :
         orc_assert(false);
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
         // XXX: how much does this matter?
 _trace();
     }

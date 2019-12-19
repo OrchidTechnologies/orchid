@@ -70,7 +70,7 @@ class File final :
         co_return writ;
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         file_.close();
         co_return;
     }

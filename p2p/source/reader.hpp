@@ -57,16 +57,17 @@ class Inverted final :
     {
     }
 
-    void Open() {
-        Spawn([this]() -> task<void> {
+    void Open() noexcept {
+        Spawn([this]() noexcept -> task<void> {
             Beam beam(2048);
             for (;;) {
                 size_t writ;
                 try {
                     writ = co_await stream_->Read(beam);
                 } catch (const Error &error) {
-                    orc_insist(!error.text.empty());
-                    Pump::Stop(error.text);
+                    const auto &what(error.what_);
+                    orc_insist(!what.empty());
+                    Pump::Stop(what);
                     break;
                 }
 
@@ -85,7 +86,7 @@ class Inverted final :
         co_return co_await stream_->Send(data);
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         co_await stream_->Shut();
         co_await Valve::Shut();
     }

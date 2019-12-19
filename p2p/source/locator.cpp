@@ -40,4 +40,8 @@ Locator Locator::Parse(const std::string &url) {
     return Locator(std::move(scheme), value.hostname(), port, value.pathname());
 }
 
+std::ostream &operator <<(std::ostream &out, const Locator &locator) {
+    return out << locator.scheme_ << "://" << locator.host_ << ":" << locator.port_ << locator.path_;
+}
+
 }

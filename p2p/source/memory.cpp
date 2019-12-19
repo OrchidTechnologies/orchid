@@ -38,6 +38,7 @@ static int file_(-1);
 
 class Out {
   private:
+    // NOLINTNEXTLINE (modernize-avoid-c-arrays)
     char data_[128];
     char *next_;
 
@@ -64,6 +65,7 @@ class Out {
     }
 
     Out &operator <<(size_t value) {
+        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         char buffer[32];
         char *end(buffer + sizeof(buffer));
         *--end = '\0';
@@ -72,7 +74,7 @@ class Out {
         else do {
             unsigned digit(value % 10);
             value /= 10;
-            *--end = '0' + digit;
+            *--end = static_cast<char>('0' + digit);
         } while (value != 0);
         return operator <<(end);
     }
@@ -90,6 +92,7 @@ class Out {
 
     Out &operator <<(void *pointer) {
         uintptr_t value(reinterpret_cast<uintptr_t>(pointer));
+        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         char buffer[32];
         char *end(buffer + sizeof(buffer));
         *--end = '\0';
@@ -98,7 +101,7 @@ class Out {
         else do {
             unsigned digit(value & 0xf);
             value >>= 4;
-            *--end = (digit < 10 ? '0' : 'a' - 10) + digit;
+            *--end = static_cast<char>((digit < 10 ? '0' : 'a' - 10) + digit);
         } while (value != 0);
         *--end = 'x';
         *--end = '0';

@@ -40,7 +40,7 @@ class Acceptor :
     asio::ip::tcp::acceptor acceptor_;
 
   protected:
-    void Stop(const std::string &error = std::string()) override {
+    void Stop(const std::string &error = std::string()) noexcept override {
         Valve::Stop();
     }
 
@@ -59,10 +59,9 @@ class Acceptor :
         return acceptor_.local_endpoint();
     }
 
-    task<bool> Next() {
+    task<bool> Next() noexcept {
         asio::ip::tcp::socket connection(Context());
         asio::ip::tcp::endpoint endpoint;
-
         try {
             co_await acceptor_.async_accept(connection, endpoint, Token());
         } catch (const asio::system_error &error) {
@@ -77,13 +76,13 @@ class Acceptor :
             co_return false;
         }
 
-        connection.non_blocking(true);
+        orc_except({ connection.non_blocking(true); })
         Land(std::move(connection), endpoint);
         co_return true;
     }
 
     void Open() {
-        Spawn([this]() -> task<void> {
+        Spawn([this]() noexcept -> task<void> {
             while (co_await Next());
         });
     }
@@ -96,8 +95,8 @@ class Acceptor :
         Open();
     }
 
-    task<void> Shut() override {
-        acceptor_.close();
+    task<void> Shut() noexcept override {
+        orc_except({ acceptor_.close(); })
         co_await Valve::Shut();
     }
 };

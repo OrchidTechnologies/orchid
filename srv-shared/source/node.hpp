@@ -38,24 +38,20 @@ class Node final {
   private:
     const S<Origin> origin_;
     const S<Cashier> cashier_;
+    const S<Egress> egress_;
     const std::vector<std::string> ice_;
-
-    S<Egress> egress_;
 
     struct Locked_ {
         std::map<std::string, W<Server>> servers_;
     }; Locked<Locked_> locked_;
 
   public:
-    Node(S<Origin> origin, S<Cashier> cashier, std::vector<std::string> ice) :
+    Node(S<Origin> origin, S<Cashier> cashier, S<Egress> egress, std::vector<std::string> ice) :
         origin_(std::move(origin)),
         cashier_(std::move(cashier)),
+        egress_(std::move(egress)),
         ice_(std::move(ice))
     {
-    }
-
-    S<Egress> &Wire() {
-        return egress_;
     }
 
     S<Server> Find(const std::string &fingerprint) {
@@ -63,7 +59,7 @@ class Node final {
         auto &cache(locked->servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
-        auto server(Break<Sink<Server>>(origin_, cashier_));
+        const auto server(Break<Sink<Server>>(origin_, cashier_));
         server->Wire<Translator>(egress_);
         server->self_ = server;
         cache = server;

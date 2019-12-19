@@ -33,6 +33,7 @@
 #include "local.hpp"
 #include "locked.hpp"
 #include "locator.hpp"
+#include "sleep.hpp"
 #include "station.hpp"
 
 namespace orc {
@@ -87,10 +88,10 @@ class Cashier :
 
   protected:
     void Land(Json::Value data) override;
-    void Stop(const std::string &error) override;
+    void Stop(const std::string &error) noexcept override;
 
   public:
-    Cashier(Endpoint endpoint, Locator locator, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
 
     virtual ~Cashier() = default;
 
@@ -106,8 +107,18 @@ class Cashier :
 
     template <typename Selector_, typename... Args_>
     void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {
-        Spawn([=]() mutable -> task<void> {
-            co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, 10*Gwei, std::forward<Args_>(args)...);
+        Spawn([=]() mutable noexcept -> task<void> {
+            for (;;) {
+                try {
+                    co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, 10*Gwei, std::forward<Args_>(args)...);
+                    break;
+                } catch (...) {
+                }
+
+                // XXX: I should dump these to a disk queue as they are worth "real money"
+                // XXX: that same disk queue should maybe be in charge of the old tickets?
+                co_await Sleep(5);
+            }
         });
     }
 };

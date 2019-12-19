@@ -40,7 +40,7 @@ class Pipe {
 
 class Basin {
   public:
-    virtual void Stop(const std::string &error = std::string()) = 0;
+    virtual void Stop(const std::string &error = std::string()) noexcept = 0;
 };
 
 template <typename Type_>
@@ -63,7 +63,7 @@ class Faucet :
         return basin_;
     }
 
-    void Stop(const std::string &error = std::string()) {
+    void Stop(const std::string &error = std::string()) noexcept {
         Valve::Stop();
         return Outer()->Stop(error);
     }
@@ -104,11 +104,11 @@ class Stopper :
     void Land(const Buffer &buffer) override {
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
     }
 
   public:
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         co_await Inner()->Shut();
         co_await Valve::Shut();
     }
@@ -124,7 +124,7 @@ class Link :
         return Pump<Type_>::Land(data);
     }
 
-    void Stop(const std::string &error = std::string()) override {
+    void Stop(const std::string &error = std::string()) noexcept override {
         return Pump<Type_>::Stop(error);
     }
 

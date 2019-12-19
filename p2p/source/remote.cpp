@@ -137,6 +137,8 @@ class Core {
     }
 };
 
+// XXX: none of this calls Stop
+
 class Base {
   protected:
     udp_pcb *pcb_;
@@ -192,7 +194,7 @@ class Association :
             orc_lwipcall(udp_connect(pcb_, &host, port)); }
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         { Core core;
             udp_disconnect(pcb_); }
         co_await Pump::Shut();
@@ -225,7 +227,7 @@ class RemoteOpening final :
         return Socket(pcb_->local_ip, pcb_->local_port);
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         co_return;
     }
 
@@ -237,14 +239,14 @@ class RemoteOpening final :
     }
 };
 
-task<void> Remote::Send(const Buffer &data) {
-    co_return co_await Inner()->Send(data);
+void Remote::Send(pbuf *buffer) {
+    nest_.Hatch([&]() noexcept { return [this, data = Chain(buffer)]() -> task<void> {
+        co_return co_await Inner()->Send(data);
+    }; });
 }
 
 err_t Remote::Output(netif *interface, pbuf *buffer, const ip4_addr_t *destination) {
-    Spawn([interface, data = Chain(buffer)]() -> task<void> {
-        co_return co_await static_cast<Remote *>(interface->state)->Send(data);
-    });
+    static_cast<Remote *>(interface->state)->Send(buffer);
     return ERR_OK;
 }
 
@@ -259,7 +261,7 @@ void Remote::Land(const Buffer &data) {
     orc_assert(tcpip_inpkt(Chain(data), &interface_, interface_.input) == ERR_OK);
 }
 
-void Remote::Stop(const std::string &error) {
+void Remote::Stop(const std::string &error) noexcept {
     netifapi_netif_set_link_down(&interface_);
     Origin::Stop();
 }
@@ -297,9 +299,10 @@ void Remote::Open() {
     netifapi_netif_set_link_up(&interface_);
 }
 
-task<void> Remote::Shut() {
+task<void> Remote::Shut() noexcept {
     co_await Inner()->Shut();
     co_await Valve::Shut();
+    co_await nest_.Shut();
     netifapi_netif_set_down(&interface_);
 }
 
@@ -324,10 +327,10 @@ rtc::BasicPacketSocketFactory &Remote::Factory() {
 }
 
 task<Socket> Remote::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto association(sunk->Wire<Association>(host_));
-    auto results(co_await Resolve(*this, host, port));
-    for (auto &result : results) {
-        Socket socket(result);
+    const auto association(sunk->Wire<Association>(host_));
+    const auto endpoints(co_await Resolve(*this, host, port));
+    for (const auto &endpoint : endpoints) {
+        Socket socket(endpoint);
         // XXX: socket.Host() should return a class Host
         association->Open(orc::Host(socket.Host()), socket.Port());
         co_return socket;
@@ -340,7 +343,7 @@ task<Socket> Remote::Connect(U<Stream> &stream, const std::string &host, const s
 }
 
 task<Socket> Remote::Unlid(Sunk<BufferSewer, Opening> *sunk) {
-    auto opening(sunk->Wire<RemoteOpening>(host_));
+    const auto opening(sunk->Wire<RemoteOpening>(host_));
     opening->Open();
     co_return opening->Local();
 }

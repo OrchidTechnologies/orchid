@@ -37,7 +37,6 @@
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 
-//#include "adapter.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
@@ -128,12 +127,13 @@ task<Response> Request(Adapter &adapter, const std::string &method, const Locato
 }
 #endif
 
-task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
+task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
     // XXX: implement remote http requests
     const auto local(Break<Local>());
-    const auto results(co_await Resolve(*local, locator.host_, locator.port_));
+    const auto endpoints(co_await Resolve(*local, locator.host_, locator.port_));
     asio::ip::tcp::socket socket(orc::Context());
-    (void) co_await asio::async_connect(socket, results.begin(), results.end(), orc::Token());
+    orc_block({ (void) co_await asio::async_connect(socket, endpoints, orc::Token()); },
+        "connecting to" << endpoints);
 
     const auto body(co_await Request_(socket, method, locator, headers, data, verify));
 
@@ -143,6 +143,6 @@ task<Response> Request(const std::string &method, const Locator &locator, const 
         throw boost::beast::system_error{error};
 
     co_return body;
-}
+}, "requesting " << locator); }
 
 }

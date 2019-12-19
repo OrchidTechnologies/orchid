@@ -46,13 +46,13 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
         Log() << request << std::endl;
 
         try {
-            auto body(request.body());
+            const auto offer(request.body());
+            // XXX: look up fingerprint
+
             static int fingerprint_(0);
             std::string fingerprint(std::to_string(fingerprint_++));
-            auto server(Find(fingerprint));
-
-            auto offer(body);
-            auto answer(Wait(server->Respond(offer, ice_)));
+            const auto server(Find(fingerprint));
+            const auto answer(Wait(server->Respond(offer, ice_)));
 
             Log() << std::endl;
             Log() << "^^^^^^^^^^^^^^^^" << std::endl;
@@ -79,6 +79,7 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
 
     HttpListener::launch(Context(), {bind, port}, [&](auto socket) {
         SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
+            // NOLINTNEXTLINE (clang-analyzer-optin.cplusplus.UninitializedObject)
             context.recv();
         }, fail);
     }, fail);

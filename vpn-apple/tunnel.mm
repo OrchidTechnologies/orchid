@@ -104,7 +104,7 @@ static std::string cfs(NSString *data) {
             sync = std::move(sync),
             config = std::move(config),
             handler = handler,
-        self]() mutable -> task<void> { try {
+        self]() mutable noexcept -> task<void> { try {
             co_await Schedule();
             co_await capture->Start(config);
             sync->Open();

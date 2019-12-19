@@ -35,11 +35,14 @@ namespace orc {
 class Duplex final :
     public Stream
 {
+  private:
+    S<Origin> origin_;
+
   protected:
     boost::beast::websocket::stream<boost::beast::tcp_stream> inner_;
 
   public:
-    Duplex();
+    Duplex(S<Origin> origin);
 
     decltype(inner_) *operator ->() {
         return &inner_;
@@ -49,7 +52,7 @@ class Duplex final :
 
     task<boost::asio::ip::tcp::endpoint> Open(const Locator &locator);
 
-    task<void> Shut() override;
+    task<void> Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;
 };

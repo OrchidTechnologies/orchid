@@ -20,40 +20,35 @@
 /* }}} */
 
 
-#ifndef ORCHID_SEWER_HPP
-#define ORCHID_SEWER_HPP
+#ifndef ORCHID_EVENT_HPP
+#define ORCHID_EVENT_HPP
 
-#include "buffer.hpp"
-#include "socket.hpp"
+#include <cppcoro/async_auto_reset_event.hpp>
+#include <cppcoro/single_consumer_event.hpp>
+
+#include "task.hpp"
 
 namespace orc {
 
-template <typename Type_>
-class Sewer {
-  public:
-    virtual void Land(Type_ data, Socket socket) = 0;
-    virtual void Stop(const std::string &error = std::string()) noexcept = 0;
-};
-
-using BufferSewer = Sewer<const Buffer &>;
-
-class Opening :
-    public Valve
-{
-  protected:
-    BufferSewer *const drain_;
+class Event {
+  private:
+    cppcoro::async_manual_reset_event ready_;
 
   public:
-    template <typename... Args_>
-    Opening(BufferSewer *drain) :
-        drain_(drain)
-    {
+    operator bool() {
+        return ready_.is_set();
     }
 
-    virtual Socket Local() const = 0;
-    virtual task<void> Send(const Buffer &data, const Socket &socket) = 0;
+    void operator ()() {
+        ready_.set();
+    }
+
+    task<void> Wait() {
+        co_await ready_;
+        co_await Schedule();
+    }
 };
 
 }
 
-#endif//ORCHID_SEWER_HPP
+#endif//ORCHID_EVENT_HPP

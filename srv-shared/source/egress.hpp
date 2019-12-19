@@ -26,6 +26,7 @@
 #include <map>
 
 #include "link.hpp"
+#include "locked.hpp"
 #include "socket.hpp"
 
 namespace orc {
@@ -49,20 +50,18 @@ class Egress :
         LRU_::iterator lru_iter_;
     };
 
-    typedef std::map<Three, Translation_> Translations_;
+    struct Locked_ {
+        std::map<Three, Translation_> translations_;
+        LRU_ lru_;
+    }; Locked<Locked_> locked_;
 
-    std::mutex mutex_;
-    Translations_ translations_;
-    LRU_ lru_;
-
-    Translations_::iterator Find(const Three &target);
+    std::optional<std::pair<const Socket, Translator &>> Find(const Three &target);
 
   protected:
     virtual Pump<Buffer> *Inner() = 0;
 
     void Land(const Buffer &data) override;
-
-    void Stop(const std::string &error) override;
+    void Stop(const std::string &error) noexcept override;
 
   public:
     Egress(uint32_t local) :
@@ -74,7 +73,7 @@ class Egress :
         orc_insist(false);
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         co_await Inner()->Shut();
         co_await Valve::Shut();
     }
@@ -83,7 +82,7 @@ class Egress :
         co_await Inner()->Send(data);
     }
 
-    const Socket &Translate(Translator &translator, const Three &three);
+    Socket Translate(Translator &translator, const Three &three);
 };
 
 
@@ -92,15 +91,21 @@ class Translator:
 {
   private:
     S<Egress> egress_;
-    std::mutex mutex_;
 
     typedef std::map<Three, Socket> Translations_;
-    Translations_ translations_;
 
-    Translations_::iterator Translate(const Three &source) {
-        auto socket(egress_->Translate(*this, source));
-        auto translation(translations_.emplace(source, socket));
-        return translation.first;
+    struct Locked_ {
+        Translations_ translations_;
+    }; Locked<Locked_> locked_;
+
+    Socket Translate(const Three &source) {
+        const auto locked(locked_());
+        const auto translation(locked->translations_.find(source));
+        if (translation != locked->translations_.end())
+            return translation->second;
+        const auto socket(egress_->Translate(*this, source));
+        orc_insist(locked->translations_.emplace(source, socket).second);
+        return socket;
     }
 
   public:
@@ -115,9 +120,10 @@ class Translator:
     using Link::Land;
 
     void Remove(const Three &source) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        orc_insist(translations_.find(source) != translations_.end());
-        translations_.erase(source);
+        const auto locked(locked_());
+        auto &translations(locked->translations_);
+        orc_insist(translations.find(source) != translations.end());
+        translations.erase(source);
     }
 };
 

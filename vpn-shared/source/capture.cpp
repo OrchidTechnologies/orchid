@@ -141,6 +141,7 @@ class Logger :
     }
 
     void get_DNS_answers(const Span<const uint8_t> &span) {
+        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         dns_decoded_t decoded[DNS_DECODEBUF_4K];
         size_t decodesize = sizeof(decoded);
 
@@ -191,10 +192,10 @@ class Logger :
         const auto &source(five.Source());
         const auto &destination(five.Target());
         // XXX: IPv6
-        auto row_id = insert_(five.Protocol(),
+        const auto row_id(insert_(five.Protocol(),
             source.Host(), source.Port(),
             destination.Host(), destination.Port()
-        );
+        ));
         flow_to_row_.emplace(five, row_id);
 
         auto hostname(dns_log_.find(destination.Host()));
@@ -204,28 +205,21 @@ class Logger :
     }
 
     void GotHostname(Five const &five, const std::string_view hostname) override {
-        auto flow_row(flow_to_row_.find(five));
-        if (flow_row == flow_to_row_.end()) {
-            orc_assert(false);
-            return;
-        }
+        const auto flow_row(flow_to_row_.find(five));
+        orc_assert(flow_row != flow_to_row_.end());
         update_hostname_(hostname, flow_row->second);
     }
 
     void GotProtocol(Five const &five, const std::string_view protocol, const std::string_view protocol_chain) override {
-        auto flow_row(flow_to_row_.find(five));
-        if (flow_row == flow_to_row_.end()) {
-            orc_assert(false);
-            return;
-        }
+        const auto flow_row(flow_to_row_.find(five));
+        orc_assert(flow_row != flow_to_row_.end());
         auto flow_protocol_chain(flow_to_protocol_chain_.find(five));
         if (flow_protocol_chain != flow_to_protocol_chain_.end()) {
-            auto s = flow_protocol_chain->second;
-            size_t specificity = std::count(protocol_chain.begin(), protocol_chain.end(), ':');
-            size_t current_specificity = std::count(s.begin(), s.end(), ':');
-            if (specificity < current_specificity) {
+            const auto s(flow_protocol_chain->second);
+            const auto specificity(std::count(protocol_chain.begin(), protocol_chain.end(), ':'));
+            const auto current_specificity(std::count(s.begin(), s.end(), ':'));
+            if (specificity < current_specificity)
                 return;
-            }
         }
         flow_to_protocol_chain_[five] = protocol_chain;
         update_protocol_(protocol, flow_row->second);
@@ -234,24 +228,24 @@ class Logger :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    if (internal_) nest_.Hatch([&]() { return [this, data = Beam(data)]() mutable -> task<void> {
+    if (internal_) nest_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
         if (co_await internal_->Send(data))
             analyzer_->Analyze(data.span());
     }; });
 }
 
-void Capture::Stop(const std::string &error) {
+void Capture::Stop(const std::string &error) noexcept {
     std::cerr << error << std::endl;
     orc_insist(false);
 }
 
 void Capture::Land(const Buffer &data, bool analyze) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-    Spawn([this, data = Beam(data), analyze]() mutable -> task<void> {
+    nest_.Hatch([&]() noexcept { return [this, data = Beam(data), analyze]() mutable -> task<void> {
         co_await Inner()->Send(data);
         if (analyze)
             analyzer_->AnalyzeIncoming(data.span());
-    });
+    }; });
 }
 
 Capture::Capture(const Host &local) :
@@ -276,7 +270,7 @@ class Punch :
 {
   private:
     Hole *const hole_;
-    Socket socket_;
+    const Socket socket_;
 
   protected:
     virtual Opening *Inner() = 0;
@@ -285,7 +279,7 @@ class Punch :
         hole_->Land(Datagram(socket, socket_, data));
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
         orc_insist(false);
     }
 
@@ -305,20 +299,21 @@ class Punch :
 
 class Plant {
   public:
-    virtual task<void> Pull(const Four &four) = 0;
+    virtual task<void> Pull(const Four &four) noexcept = 0;
 };
 
 class Flow {
   public:
-    Plant *plant_;
-    Four four_;
+    Plant *const plant_;
+    const Four four_;
+
     cppcoro::async_latch latch_;
     U<Stream> up_;
     U<Stream> down_;
 
   private:
     void Splice(Stream *input, Stream *output) {
-        Spawn([input, output, &latch = latch_]() -> task<void> {
+        Spawn([input, output, &latch = latch_]() noexcept -> task<void> {
             Beam beam(2048);
             for (;;) {
                 size_t writ;
@@ -352,7 +347,7 @@ class Flow {
     }
 
     void Open() {
-        Spawn([this]() -> task<void> {
+        Spawn([this]() noexcept -> task<void> {
             co_await latch_;
             co_await plant_->Pull(four_);
         });
@@ -370,7 +365,7 @@ class Split :
 {
   private:
     Capture *const capture_;
-    S<Origin> origin_;
+    const S<Origin> origin_;
 
     Socket local_;
     asio::ip::address_v4 remote_;
@@ -388,16 +383,16 @@ class Split :
     std::map<Socket, U<Punch>> udp_;
     LRU_ lru_;
 
-    void RemoveFlow(const Four &four) {
-        auto ephemeral(ephemerals_.find(four));
+    void RemoveFlow(const Four &four) noexcept {
+        const auto ephemeral(ephemerals_.find(four));
         orc_insist(ephemeral != ephemerals_.end());
-        auto flow(flows_.find(ephemeral->second.socket_));
+        const auto flow(flows_.find(ephemeral->second.socket_));
         orc_insist(flow != flows_.end());
         flows_.erase(flow);
     }
 
     void RemoveEmphemeral(const Four &four) {
-        auto ephemeral(ephemerals_.find(four));
+        const auto ephemeral(ephemerals_.find(four));
         orc_insist(ephemeral != ephemerals_.end());
         flows_.erase(ephemeral->second.socket_);
         lru_.erase(ephemeral->second.lru_iter_);
@@ -406,10 +401,10 @@ class Split :
 
   protected:
     void Land(asio::ip::tcp::socket connection, Socket socket) override {
-        Spawn([this, connection = std::move(connection), socket]() mutable -> task<void> {
-            auto flow(co_await [&]() -> task<S<Flow>> {
-                auto lock(co_await meta_.scoped_lock_async());
-                auto flow(flows_.find(socket));
+        Spawn([this, connection = std::move(connection), socket]() mutable noexcept -> task<void> {
+            const auto flow(co_await [&]() noexcept -> task<S<Flow>> {
+                const auto lock(co_await meta_.scoped_lock_async());
+                const auto flow(flows_.find(socket));
                 if (flow == flows_.end())
                     co_return nullptr;
                 co_return flow->second;
@@ -421,7 +416,7 @@ class Split :
         });
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
         orc_insist(false);
     }
 
@@ -444,15 +439,14 @@ class Split :
         emphemeral_iter->second.lru_iter_ = std::prev(lru_.end());
     }
 
-    task<void> Pull(const Four &four) override {
+    task<void> Pull(const Four &four) noexcept override {
         auto lock(co_await meta_.scoped_lock_async());
         RemoveFlow(four);
-        _trace();
     }
 
     // https://www.snellman.net/blog/archive/2016-02-01-tcp-rst/
     // https://superuser.com/questions/1056492/rst-sequence-number-and-window-size/1075512
-    void Reset(const Socket &source, const Socket &destination, uint32_t sequence, uint32_t acknowledge) {
+    void Reset(const Socket &source, const Socket &destination, uint32_t sequence, uint32_t acknowledge) noexcept {
         // XXX: rename this to Packet packet (leaving Header for UDP headers)
         struct Header {
             openvpn::IPv4Header ip4;
@@ -573,7 +567,7 @@ task<bool> Split::Send(const Beam &data) {
                     socket,
                     span,
                     &tcp,
-                this]() mutable -> task<void> {
+                this]() mutable noexcept -> task<void> {
                     bool reset(false);
 
                     try {
@@ -651,7 +645,7 @@ class Pass :
         return capture_->Land(data, true);
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
     }
 
   public:

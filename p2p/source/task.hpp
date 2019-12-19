@@ -71,31 +71,31 @@ Type_ Wait(task<Type_> code) {
 
 struct Detached {
     struct promise_type {
-        Detached get_return_object() {
+        Detached get_return_object() noexcept {
             return {};
         }
 
-        std::experimental::suspend_never initial_suspend() {
+        std::experimental::suspend_never initial_suspend() noexcept {
             return {};
         }
 
-        std::experimental::suspend_never final_suspend() {
+        std::experimental::suspend_never final_suspend() noexcept {
             return {};
         }
 
-        void return_void() {
+        void return_void() noexcept {
         }
 
         [[noreturn]]
-        void unhandled_exception() {
+        void unhandled_exception() noexcept {
             std::terminate();
         }
     };
 };
 
 template <typename Code_>
-void Spawn(Code_ code) {
-    [](Code_ code) mutable -> Detached {
+auto Spawn(Code_ code) noexcept -> typename std::enable_if<noexcept(code())>::type {
+    [](Code_ code) mutable noexcept -> Detached {
         co_await Schedule();
         co_await code();
     }(std::move(code));

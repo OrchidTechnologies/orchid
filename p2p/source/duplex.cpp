@@ -20,11 +20,13 @@
 /* }}} */
 
 
+#include "dns.hpp"
 #include "duplex.hpp"
 
 namespace orc {
 
-Duplex::Duplex() :
+Duplex::Duplex(S<Origin> origin) :
+    origin_(std::move(origin)),
     inner_(Context())
 {
 }
@@ -44,30 +46,30 @@ task<size_t> Duplex::Read(Beam &beam) {
     co_return writ;
 }
 
-task<boost::asio::ip::tcp::endpoint> Duplex::Open(const Locator &locator) {
-    auto endpoints(co_await asio::ip::tcp::resolver(Context()).async_resolve({locator.host_, locator.port_}, Token()));
+task<boost::asio::ip::tcp::endpoint> Duplex::Open(const Locator &locator) { orc_block({
+    const auto endpoints(co_await Resolve(*origin_, locator.host_, locator.port_));
     auto &lowest(boost::beast::get_lowest_layer(inner_));
-    auto endpoint(co_await lowest.async_connect(endpoints, Token()));
+    const auto endpoint(co_await orc_value(co_return co_await, lowest.async_connect(endpoints, Token()),
+        "connecting to" << endpoints));
     lowest.expires_never();
     co_await inner_.async_handshake(locator.host_, locator.path_, Token());
     co_return endpoint;
-}
+}, "opening " << locator); }
 
-task<void> Duplex::Shut() {
+task<void> Duplex::Shut() noexcept {
     try {
         co_await inner_.async_close(boost::beast::websocket::close_code::normal, Token());
     } catch (const asio::system_error &error) {
-        orc_adapt(error);
+        orc_except({ orc_adapt(error); })
     }
 }
 
 task<void> Duplex::Send(const Buffer &data) {
-    size_t writ;
-    try {
-        writ = co_await inner_.async_write(Sequence(data), Token());
+    const size_t writ(co_await [&]() -> task<size_t> { try {
+        co_return co_await inner_.async_write(Sequence(data), Token());
     } catch (const asio::system_error &error) {
         orc_adapt(error);
-    }
+    } }());
     orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
 }
 

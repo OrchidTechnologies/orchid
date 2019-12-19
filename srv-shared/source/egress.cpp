@@ -35,81 +35,77 @@ void Egress::Land(const Buffer &data) {
         case openvpn::IPCommon::TCP: {
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
             const Three destination(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(tcp.dest));
-            const auto translation(Find(destination));
-            if (translation == translations_.end())
-                return;
-            const auto &replace(translation->second.socket_);
-            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
-            Forge(tcp, &openvpn::TCPHeader::dest, replace.Port());
-            return translation->second.translator_.Land(beam);
+            if (const auto translation = Find(destination)) {
+                const auto &[replace, translator] = *translation;
+                ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
+                Forge(tcp, &openvpn::TCPHeader::dest, replace.Port());
+                return translator.Land(beam);
+            }
         } break;
 
         case openvpn::IPCommon::UDP: {
             auto &udp(span.cast<openvpn::UDPHeader>(length));
             const Three destination(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
-            const auto translation(Find(destination));
-            if (translation == translations_.end())
-                return;
-            const auto &replace(translation->second.socket_);
-            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
-            Forge(udp, &openvpn::UDPHeader::dest, replace.Port());
-            return translation->second.translator_.Land(beam);
+            if (const auto translation = Find(destination)) {
+                const auto &[replace, translator] = *translation;
+                ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
+                Forge(udp, &openvpn::UDPHeader::dest, replace.Port());
+                return translator.Land(beam);
+            }
         } break;
 
         case openvpn::IPCommon::ICMPv4: {
             auto &icmp(span.cast<openvpn::ICMPv4>());
             // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             const Three destination(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(icmp.id));
-            const auto translation(Find(destination));
-            if (translation == translations_.end())
-                return;
-            const auto &replace(translation->second.socket_);
-            ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
-            Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
-            return translation->second.translator_.Land(beam);
+            if (const auto translation = Find(destination)) {
+                const auto &[replace, translator] = *translation;
+                ForgeIP4(span, &openvpn::IPv4Header::daddr, replace.Host());
+                Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
+                return translator.Land(beam);
+            }
         } break;
     }
 }
 
-void Egress::Stop(const std::string &error) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    for (auto translation : translations_)
+void Egress::Stop(const std::string &error) noexcept {
+    const auto locked(locked_());
+    for (auto translation : locked->translations_)
         translation.second.translator_.Stop(error);
 }
 
-Egress::Translations_::iterator Egress::Find(const Three &target) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    const auto translation_iter(translations_.find(target));
-    if (translation_iter != translations_.end()) {
-        lru_.erase(translation_iter->second.lru_iter_);
-        lru_.push_back(translation_iter->first);
-        translation_iter->second.lru_iter_ = std::prev(lru_.end());
-    }
-    return translation_iter;
+std::optional<std::pair<const Socket, Translator &>> Egress::Find(const Three &target) {
+    const auto locked(locked_());
+    const auto translation_iter(locked->translations_.find(target));
+    if (translation_iter == locked->translations_.end())
+        return {};
+    locked->lru_.erase(translation_iter->second.lru_iter_);
+    locked->lru_.push_back(translation_iter->first);
+    translation_iter->second.lru_iter_ = std::prev(locked->lru_.end());
+    return {{translation_iter->second.socket_, std::ref(translation_iter->second.translator_)}};
 }
 
-const Socket &Egress::Translate(Translator &translator, const Three &three) {
-    auto ephemeral(ephemeral_base_ + translations_.size());
+Socket Egress::Translate(Translator &translator, const Three &three) {
+    const auto locked(locked_());
+    auto ephemeral(ephemeral_base_ + locked->translations_.size());
     if (ephemeral >= 65535) {
-        auto old_three(*lru_.begin());
-        auto old_translation_iter(translations_.find(old_three));
-        orc_insist(old_translation_iter != translations_.end());
+        auto old_three(*locked->lru_.begin());
+        auto old_translation_iter(locked->translations_.find(old_three));
+        orc_insist(old_translation_iter != locked->translations_.end());
         ephemeral = old_three.Port();
         auto old_translation(old_translation_iter->second);
         old_translation.translator_.Remove(Three(old_three.Protocol(), old_translation.socket_));
-        translations_.erase(old_translation_iter);
-        lru_.pop_front();
+        locked->translations_.erase(old_translation_iter);
+        locked->lru_.pop_front();
     }
     const auto new_three(Three(three.Protocol(), local_, ephemeral));
-    lru_.push_back(new_three);
-    const auto lru_iter(std::prev(lru_.end()));
-    const auto translation(translations_.emplace(new_three, Translation_{three.Two(), translator, lru_iter}));
-    orc_insist(translation.second);
-    return translation.first->first;
+    locked->lru_.push_back(new_three);
+    const auto lru_iter(std::prev(locked->lru_.end()));
+    orc_assert(locked->translations_.emplace(new_three, Translation_{three.Two(), translator, lru_iter}).second);
+    return new_three.Two();
 }
 
 task<void> Translator::Send(const Buffer &data) {
-    std::unique_lock<std::mutex> lock(mutex_);
     Beam beam(data);
     auto span(beam.span());
     auto &ip4(span.cast<openvpn::IPv4Header>());
@@ -119,10 +115,7 @@ task<void> Translator::Send(const Buffer &data) {
         case openvpn::IPCommon::TCP: {
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
             const Three source(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(tcp.source));
-            auto translation(translations_.find(source));
-            if (translation == translations_.end())
-                translation = Translate(source);
-            const auto &replace(translation->second);
+            const auto replace(Translate(source));
             ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host());
             Forge(tcp, &openvpn::TCPHeader::source, replace.Port());
             co_return co_await egress_->Send(beam);
@@ -131,10 +124,7 @@ task<void> Translator::Send(const Buffer &data) {
         case openvpn::IPCommon::UDP: {
             auto &udp(span.cast<openvpn::UDPHeader>(length));
             const Three source(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
-            auto translation(translations_.find(source));
-            if (translation == translations_.end())
-                translation = Translate(source);
-            const auto &replace(translation->second);
+            const auto replace(Translate(source));
             ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host());
             Forge(udp, &openvpn::UDPHeader::source, replace.Port());
             co_return co_await egress_->Send(beam);
@@ -144,10 +134,7 @@ task<void> Translator::Send(const Buffer &data) {
             auto &icmp(span.cast<openvpn::ICMPv4>());
             // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             const Three source(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(icmp.id));
-            auto translation(translations_.find(source));
-            if (translation == translations_.end())
-                translation = Translate(source);
-            const auto &replace(translation->second);
+            const auto replace(Translate(source));
             ForgeIP4(span, &openvpn::IPv4Header::saddr, replace.Host());
             Forge(icmp, &openvpn::ICMPv4::id, replace.Port());
             co_return co_await egress_->Send(beam);

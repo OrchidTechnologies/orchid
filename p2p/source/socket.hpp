@@ -105,6 +105,7 @@ class Host {
     }
 
     bool v4() const {
+        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         return memcmp(data_.data(), static_cast<const void *>((const uint8_t[]) {0,0,0,0, 0,0,0,0, 0,0,0xff,0xff}), 12) == 0;
     }
 

@@ -30,6 +30,7 @@
 #include <cppcoro/async_mutex.hpp>
 
 #include "baton.hpp"
+#include "dns.hpp"
 #include "link.hpp"
 #include "reader.hpp"
 #include "task.hpp"
@@ -45,7 +46,7 @@ class Connection final :
 
   public:
     template <typename... Args_>
-    Connection(Args_ &&...args) :
+    Connection(Args_ &&...args) noexcept(noexcept(Connection_(std::forward<Args_>(args)...))) :
         connection_(std::forward<Args_>(args)...)
     {
     }
@@ -71,23 +72,24 @@ class Connection final :
     }
 
     task<boost::asio::ip::basic_endpoint<typename Connection_::protocol_type>> Open(const std::string &host, const std::string &port) {
-        auto endpoints(co_await asio::ip::basic_resolver<typename Connection_::protocol_type>(Context()).async_resolve({host, port}, Token()));
+        const auto endpoints(co_await asio::ip::basic_resolver<typename Connection_::protocol_type>(Context()).async_resolve({host, port}, Token()));
         if (Verbose)
-            for (auto &endpoint : endpoints)
+            for (const auto &endpoint : endpoints)
                 Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
-        auto endpoint(co_await asio::async_connect(connection_, endpoints, Token()));
+        const auto endpoint(co_await orc_value(co_return co_await, asio::async_connect(connection_, endpoints, Token()),
+            "connecting to" << endpoints));
         connection_.non_blocking(true);
         co_return endpoint;
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         try {
             connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
         } catch (const asio::system_error &error) {
-            auto code(error.code());
+            const auto code(error.code());
             if (code == asio::error::not_connected)
                 co_return;
-            orc_adapt(error);
+            orc_except({ orc_adapt(error); })
         }
     }
 
@@ -95,12 +97,11 @@ class Connection final :
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-        size_t writ;
-        try {
-            writ = co_await connection_.async_send(Sequence(data), Token());
+        const size_t writ(co_await [&]() -> task<size_t> { try {
+            co_return co_await connection_.async_send(Sequence(data), Token());
         } catch (const asio::system_error &error) {
             orc_adapt(error);
-        }
+        } }());
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };

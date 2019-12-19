@@ -52,23 +52,27 @@ class LocalOpening final :
     }
 
     void Open() {
-        Spawn([this]() -> task<void> {
+        Spawn([this]() noexcept -> task<void> {
             for (;;) {
-                asio::ip::udp::endpoint endpoint;
-
+                // XXX: use Beam.subset
+                // NOLINTNEXTLINE (modernize-avoid-c-arrays)
                 char data[2048];
+                asio::ip::udp::endpoint endpoint;
                 size_t writ;
                 try {
                     writ = co_await connection_.async_receive_from(asio::buffer(data), endpoint, Token());
                 } catch (const asio::system_error &error) {
-                    orc_adapt(error);
+                    orc_catch({ orc_adapt(error); })
+                    continue;
                 }
 
-                Subset region(data, writ);
+                Subset subset(data, writ);
                 if (Verbose)
-                    Log() << "\e[33mRECV " << writ << " " << region << "\e[0m" << std::endl;
-                drain_->Land(region, endpoint);
+                    Log() << "\e[33mRECV " << writ << " " << subset << "\e[0m" << std::endl;
+                drain_->Land(subset, endpoint);
             }
+
+            Stop();
         });
     }
 
@@ -79,13 +83,13 @@ class LocalOpening final :
         Open();
     }
 
-    task<void> Shut() override {
-        connection_.close();
-        co_return;
+    task<void> Shut() noexcept override {
+        orc_except({ connection_.close(); })
+        co_await Opening::Shut();
     }
 
     task<void> Send(const Buffer &data, const Socket &socket) override {
-        auto writ(co_await connection_.async_send_to(Sequence(data), {socket.Host(), socket.Port()}, Token()));
+        const auto writ(co_await connection_.async_send_to(Sequence(data), {socket.Host(), socket.Port()}, Token()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };
@@ -111,12 +115,12 @@ class Host Local::Host() {
 }
 
 rtc::Thread *Local::Thread() {
-    static std::unique_ptr<rtc::Thread> thread;
-    if (thread == nullptr) {
-        thread = rtc::Thread::CreateWithSocketServer();
+    static const std::unique_ptr<rtc::Thread> thread([&]() {
+        auto thread(rtc::Thread::CreateWithSocketServer());
         thread->SetName("Orchid WebRTC Local", nullptr);
         thread->Start();
-    }
+        return thread;
+    }());
 
     return thread.get();
 }
@@ -128,21 +132,21 @@ rtc::BasicPacketSocketFactory &Local::Factory() {
 
 task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
     auto connection(std::make_unique<Connection<asio::ip::udp::socket>>(Context()));
-    auto endpoint(co_await connection->Open(host, port));
-    auto inverted(sunk->Wire<Inverted>(std::move(connection)));
+    const auto endpoint(co_await connection->Open(host, port));
+    const auto inverted(sunk->Wire<Inverted>(std::move(connection)));
     inverted->Open();
     co_return Socket(endpoint.address(), endpoint.port());
 }
 
 task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {
     auto connection(std::make_unique<Connection<asio::ip::tcp::socket>>(Context()));
-    auto endpoint(co_await connection->Open(host, port));
+    const auto endpoint(co_await connection->Open(host, port));
     stream = std::move(connection);
     co_return Socket(endpoint.address(), endpoint.port());
 }
 
 task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> *sunk) {
-    auto opening(sunk->Wire<LocalOpening>());
+    const auto opening(sunk->Wire<LocalOpening>());
     opening->Open({asio::ip::address_v4::any(), 0});
     co_return opening->Local();
 }

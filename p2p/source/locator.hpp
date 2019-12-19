@@ -45,6 +45,8 @@ class Locator final {
     }
 };
 
+std::ostream &operator <<(std::ostream &out, const Locator &locator);
+
 }
 
 #endif//ORCHID_LOCATOR_HPP

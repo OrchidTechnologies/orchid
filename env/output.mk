@@ -10,7 +10,8 @@
 
 
 checks := 
-checks += bugprone-exception-escape
+# XXX: this check simply doesn't work. I'm fixing it :/
+#checks += bugprone-exception-escape
 checks += bugprone-forwarding-reference-overload
 checks += bugprone-misplaced-widening-cast
 checks += bugprone-move-forwarding-reference
@@ -67,7 +68,8 @@ checks += modernize-use-bool-literals
 checks += modernize-use-emplace
 checks += modernize-use-equals-default
 checks += modernize-use-equals-delete
-checks += modernize-use-nodiscard
+# XXX: this check is super verbose on clang 9
+#checks += modernize-use-nodiscard
 checks += modernize-use-noexcept
 checks += modernize-use-nullptr
 checks += modernize-use-override
@@ -103,9 +105,13 @@ endif
 checks := $(subst $(space),$(comma),$(strip $(checks)))
 
 # XXX: this is not a very accurate filter expression
-tidy := 
-tidy += source/.*\.[ch]pp
-tidy := (^|/)($(subst $(space),|,$(patsubst %,%,($(strip $(tidy))))))$$
+filter := 
+filter += source/.*\.[ch]pp
+filter := (^|/)($(subst $(space),|,$(patsubst %,%,($(strip $(filter))))))$$
+
+tidy := $(llvm)/bin/clang-tidy
+#tidy := $(HOME)/llvm-project/build/bin/clang-tidy
+#tidy := $(HOME)/bin/android-ndk-r21-beta2/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang-tidy
 
 .PHONY: printenv
 printenv:
@@ -146,9 +152,9 @@ $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 ifeq ($(filter notidy,$(debug)),)
-	@if [[ $< =~ $(tidy) && ! $< =~ .*/(lwip|monitor)\.cpp ]]; then \
+	@if [[ $< =~ $(filter) && ! $< =~ .*/(lwip|monitor)\.cpp ]]; then \
 	    echo [CT] $(target)/$(arch) $<; \
-	    $(llvm)/bin/clang-tidy $< --quiet --warnings-as-errors='*' --header-filter='$(tidy)' --config='{Checks: "$(checks)", CheckOptions: [{key: "performance-move-const-arg.CheckTriviallyCopyableMove", value: 0}]}' -- \
+	    $(tidy) $< --quiet --warnings-as-errors='*' --header-filter='$(filter)' --config='{Checks: "$(checks)", CheckOptions: [{key: "performance-move-const-arg.CheckTriviallyCopyableMove", value: 0}, {key: "bugprone-exception-escape.IgnoredExceptions", value: "broken_promise"}]}' -- \
 	        $(wordlist 2,$(words $(cxx/$(arch))),$(cxx/$(arch))) -std=c++2a $(flags) $(xflags); \
 	fi
 endif

@@ -25,10 +25,11 @@
 
 #include <atomic>
 
-#include <cppcoro/single_consumer_async_auto_reset_event.hpp>
+#include <cppcoro/single_consumer_event.hpp>
 
 #include "log.hpp"
 #include "task.hpp"
+#include "trace.hpp"
 #include "valve.hpp"
 
 namespace orc {
@@ -37,9 +38,9 @@ class Nest :
     public Valve
 {
   private:
-    unsigned limit_;
+    std::atomic<unsigned> limit_;
     std::atomic<unsigned> count_ = 0;
-    cppcoro::single_consumer_async_auto_reset_event event_;
+    Event event_;
 
     class Count {
       private:
@@ -47,7 +48,7 @@ class Nest :
         unsigned count_;
 
       public:
-        Count(Nest *nest) :
+        Count(Nest *nest) noexcept :
             nest_(nest),
             count_(++nest_->count_)
         {
@@ -65,11 +66,11 @@ class Nest :
                 return;
             const auto count(--nest_->count_);
             if (count == 0)
-                nest_->event_.set();
+                nest_->event_();
             //Log() << "Nest[" << nest_ << "]: " << std::dec << count << std::endl;
         }
 
-        operator unsigned() const {
+        operator unsigned() const noexcept {
             return count_;
         }
     };
@@ -80,23 +81,25 @@ class Nest :
     {
     }
 
-    task<void> Shut() override {
-        for (;;) {
-            co_await event_;
+    task<void> Shut() noexcept override {
+        // XXX: do I need to do this?
+        limit_ = 0;
+        // XXX: this just seems entirely wrong
+        while (count_ != 0) {
+_trace();
+            co_await event_.Wait();
         }
         co_await Valve::Shut();
     }
 
     template <typename Code_>
-    void Hatch(Code_ code) {
+    auto Hatch(Code_ code) noexcept -> typename std::enable_if<noexcept(code())>::type {
         Count count(this);
         if (count > limit_)
             return;
-        Spawn([count = std::move(count), code = code()]() mutable -> task<void> { try {
-            co_await code();
-        } catch (...) {
-            // XXX: log error
-        } });
+        Spawn([count = std::move(count), code = code()]() mutable noexcept -> task<void> {
+            orc_catch({ co_await code(); })
+        });
     }
 };
 

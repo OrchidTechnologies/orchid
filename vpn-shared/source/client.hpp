@@ -32,6 +32,7 @@
 #include "crypto.hpp"
 #include "jsonrpc.hpp"
 #include "locked.hpp"
+#include "nest.hpp"
 #include "origin.hpp"
 #include "ticket.hpp"
 
@@ -65,6 +66,7 @@ class Client :
         Bytes32 commit_ = Zero<32>();
     }; Locked<Locked_> locked_;
 
+    Nest nest_;
     Socket socket_;
 
     task<void> Submit();
@@ -80,7 +82,7 @@ class Client :
     Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Address lottery, uint256_t chain, const Secret &secret, Address funder);
 
     task<void> Open(const S<Origin> &origin, const std::string &url);
-    task<void> Shut() override;
+    task<void> Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;
 };

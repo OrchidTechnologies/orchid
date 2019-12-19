@@ -74,6 +74,7 @@ std::string Stringify(bssl::UniquePtr<BIO> bio) {
     return {data, size};
 }
 
+// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 
@@ -333,36 +334,35 @@ int Main(int argc, const char *const argv[]) {
         }());
     }
 
-    const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
-
     auto cashier([&]() -> S<Cashier> {
+        const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
         if (price == 0)
             return nullptr;
         const Address personal(args["personal"].as<std::string>());
-        return Make<Cashier>(std::move(endpoint), Locator::Parse(args["ws"].as<std::string>()),
+        return Make<Cashier>(origin, std::move(endpoint), Locator::Parse(args["ws"].as<std::string>()),
             price, args["currency"].as<std::string>(),
             personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
         );
     }());
 
-    const auto node(Make<Node>(origin, std::move(cashier), std::move(ice)));
+    auto egress([&]() -> S<Egress> {
+        if (args.count("ovpn-file") != 0) {
+            std::string ovpnfile;
+            boost::filesystem::load_string_file(args["ovpn-file"].as<std::string>(), ovpnfile);
 
-    if (args.count("ovpn-file") != 0) {
-        std::string ovpnfile;
-        boost::filesystem::load_string_file(args["ovpn-file"].as<std::string>(), ovpnfile);
+            auto username(args["ovpn-user"].as<std::string>());
+            auto password(args["ovpn-pass"].as<std::string>());
 
-        auto username(args["ovpn-user"].as<std::string>());
-        auto password(args["ovpn-pass"].as<std::string>());
+            return Wait([origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() mutable -> task<S<Egress>> {
+                auto egress(Make<Sink<Egress>>(0));
+                co_await Connect(egress.get(), std::move(origin), 0, ovpnfile, username, password);
+                co_return egress;
+            }());
+        } else orc_assert(false);
+    }());
 
-        Spawn([&node, origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() mutable -> task<void> {
-            auto egress(Make<Sink<Egress>>(0));
-            co_await Connect(egress.get(), std::move(origin), 0, ovpnfile, username, password);
-            node->Wire() = std::move(egress);
-        });
-    }
-
-
+    const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));
     node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, path, key, chain, params);
     return 0;
 }

@@ -56,8 +56,7 @@ class SyncFile final :
     }
 
     size_t Read(Beam &beam) {
-        size_t writ;
-        try {
+        size_t writ; try {
             writ = sync_.read_some(asio::buffer(beam.data(), beam.size()));
         } catch (const asio::system_error &error) {
             auto code(error.code());
@@ -75,12 +74,12 @@ class SyncFile final :
         std::thread([this]() {
             Beam beam(2048);
             for (;;) {
-                size_t writ;
-                try {
+                size_t writ; try {
                     writ = Read(beam);
                 } catch (const Error &error) {
-                    orc_insist(!error.text.empty());
-                    Link<Buffer>::Stop(error.text);
+                    const auto &what(error.what_);
+                    orc_insist(!what.empty());
+                    Link<Buffer>::Stop(what);
                     break;
                 }
 
@@ -95,7 +94,7 @@ class SyncFile final :
         }).detach();
     }
 
-    task<void> Shut() override {
+    task<void> Shut() noexcept override {
         sync_.close();
         co_await Link<Buffer>::Shut();
     }

@@ -36,11 +36,30 @@ namespace orc {
 class Origin;
 
 typedef asio::ip::tcp::endpoint Result;
-//typedef asio::ip::basic_resolver_results<asio::ip::tcp> Results;
 typedef std::vector<Result> Results;
 
 task<Results> Resolve(Origin &origin, const std::string &host, const std::string &port);
 
 }
+
+namespace boost {
+namespace asio {
+namespace ip {
+
+template <typename Protocol_>
+std::ostream &operator <<(std::ostream &out, const std::vector<asio::ip::basic_endpoint<Protocol_>> &endpoints) {
+    for (const auto &endpoint : endpoints)
+        out << ' ' << endpoint.address().to_string() << ':' << std::dec << endpoint.port();
+    return out;
+}
+
+template <typename Protocol_>
+std::ostream &operator <<(std::ostream &out, const boost::asio::ip::basic_resolver_results<Protocol_> &endpoints) {
+    for (const auto &endpoint : endpoints)
+        out << ' ' << endpoint.host_name() << ':' << endpoint.service_name();
+    return out;
+}
+
+} } }
 
 #endif//ORCHID_DNS_HPP

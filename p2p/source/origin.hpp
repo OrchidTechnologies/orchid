@@ -47,7 +47,7 @@ class Origin :
     public Valve
 {
   private:
-    U<rtc::NetworkManager> manager_;
+    const U<rtc::NetworkManager> manager_;
 
   public:
     Origin(U<rtc::NetworkManager> manager);

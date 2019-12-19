@@ -26,6 +26,7 @@
 #include <cppcoro/async_manual_reset_event.hpp>
 
 #include "error.hpp"
+#include "event.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -40,12 +41,12 @@ class Valve {
     static void Remove(Valve *valve);
 
   private:
-    cppcoro::async_manual_reset_event shut_;
+    Event shut_;
 
   protected:
-    void Stop() {
-        orc_assert(!shut_.is_set());
-        shut_.set();
+    void Stop() noexcept {
+        orc_insist(!shut_);
+        shut_();
     }
 
   public:
@@ -54,13 +55,12 @@ class Valve {
     }
 
     virtual ~Valve() {
-        orc_insist(shut_.is_set());
+        orc_insist(shut_);
         Remove(this);
     }
 
-    virtual task<void> Shut() {
-        co_await shut_;
-        co_await Schedule();
+    virtual task<void> Shut() noexcept {
+        co_await shut_.Wait();
     }
 };
 

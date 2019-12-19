@@ -33,19 +33,19 @@ namespace orc {
 unsigned WinShift_(10);
 
 task<void> Client::Submit() {
-    Header header{Magic_, Zero<32>()};
+    const Header header{Magic_, Zero<32>()};
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header)));
 }
 
 task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Signature &signature) {
-    Header header{Magic_, hash};
+    const Header header{Magic_, hash};
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header,
         Command(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt_))
     )));
 }
 
 void Client::Issue(uint256_t amount) {
-    Spawn([this, amount = std::move(amount)]() -> task<void> {
+    nest_.Hatch([&]() noexcept { return [this, amount = std::move(amount)]() -> task<void> {
         if (amount == 0)
             // XXX: retry existing packet
             co_return co_await Submit();
@@ -67,7 +67,7 @@ void Client::Issue(uint256_t amount) {
         { const auto locked(locked_());
             locked->pending_.try_emplace(hash, ticket, signature); }
         co_return co_await Submit(hash, ticket, signature);
-    });
+    }; });
 }
 
 void Client::Transfer(size_t size) {
@@ -170,9 +170,10 @@ task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
     });
 }
 
-task<void> Client::Shut() {
+task<void> Client::Shut() noexcept {
     co_await Bonded::Shut();
     co_await Pump::Shut();
+    co_await nest_.Shut();
 }
 
 task<void> Client::Send(const Buffer &data) {

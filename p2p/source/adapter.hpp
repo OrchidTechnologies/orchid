@@ -28,6 +28,7 @@
 #include <cppcoro/async_auto_reset_event.hpp>
 
 #include "link.hpp"
+#include "locked.hpp"
 #include "trace.hpp"
 
 namespace orc {
@@ -51,13 +52,15 @@ class Converted final :
     {
     }
 
-    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const noexcept override {
         for (const auto &range : ranges_)
             if (!code(range.data(), range.size()))
                 return false;
         return true;
     }
 };
+
+// XXX: we need to map the error codes in this file to something better
 
 class Adapter :
     public BufferDrain
@@ -69,23 +72,23 @@ class Adapter :
   private:
     boost::asio::io_context &context_;
 
-    std::mutex mutex_;
-    std::queue<Beam> data_;
+    struct Locked_ {
+        std::queue<Beam> data_;
+        size_t offset_ = 0;
+    }; Locked<Locked_> locked_;
+
     cppcoro::async_auto_reset_event ready_;
-    size_t offset_ = 0;
 
   protected:
     virtual Pump<Buffer> *Inner() = 0;
 
     void Land(const Buffer &data) override {
-        std::unique_lock<std::mutex> lock(mutex_);
-        data_.emplace(data);
+        locked_()->data_.emplace(data);
         ready_.set();
     }
 
-    void Stop(const std::string &error) override {
-        std::unique_lock<std::mutex> lock(mutex_);
-        data_.emplace(Nothing());
+    void Stop(const std::string &error) noexcept override {
+        // XXX: locked_()->data_.emplace(Beam());
         ready_.set();
     }
 
@@ -105,14 +108,14 @@ class Adapter :
 
     template <typename Buffers_, typename Handler_>
     void async_read_some(const Buffers_ &buffers, Handler_ handler) {
-        Spawn([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
+        Spawn([this, buffers, handler = std::move(handler)]() mutable noexcept -> task<void> {
             for (;; co_await ready_, co_await Schedule()) {
-                std::unique_lock<std::mutex> lock(mutex_);
-                if (!data_.empty()) {
-                    const auto &beam(data_.front());
+                const auto locked(locked_());
+                if (!locked->data_.empty()) {
+                    const auto &beam(locked->data_.front());
                     // XXX: handle errors
-                    auto base(beam.data());
-                    auto rest(beam.size() - offset_);
+                    const auto base(beam.data());
+                    auto rest(beam.size() - locked->offset_);
                     auto writ(0);
 
                     const auto &buffer(buffers); do {
@@ -121,18 +124,18 @@ class Adapter :
                             break;
 
                         auto copy(std::min(buffer.size(), rest));
-                        memcpy(buffer.data(), base + offset_, copy);
+                        memcpy(buffer.data(), base + locked->offset_, copy);
 
                         // XXX: too many variables
                         rest -= copy;
-                        offset_ += copy;
+                        locked->offset_ += copy;
                         writ += copy;
                     //}
                     } while (false);
 
                     if (rest == 0) {
-                        data_.pop();
-                        offset_ = 0;
+                        locked->data_.pop();
+                        locked->offset_ = 0;
                     }
 
                     boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), writ));
@@ -144,10 +147,14 @@ class Adapter :
 
     template <typename Buffers_, typename Handler_>
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
-        Spawn([this, buffers, handler = std::move(handler)]() mutable -> task<void> {
-            Converted converted(buffers);
-            co_await Inner()->Send(converted);
-            boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));
+        Spawn([this, buffers, handler = std::move(handler)]() mutable noexcept -> task<void> {
+            try {
+                const Converted converted(buffers);
+                co_await Inner()->Send(converted);
+                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));
+            } catch (...) {
+                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::asio::error::invalid_argument, 0));
+            }
         });
     }
 };

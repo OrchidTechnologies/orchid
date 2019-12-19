@@ -35,33 +35,30 @@ class Error final :
     public std::exception
 {
   public:
-    const std::string file;
-    const int line;
-    std::string text;
+    std::string what_;
 
-    Error(const std::string &file, int line) :
-        file(file), line(line)
-    {
-    }
-
+    Error() = default;
     Error(Error &&error) = default;
 
-    const char *what() const noexcept override {
-        return text.c_str();
+    [[nodiscard]] const char *what() const noexcept override {
+        return what_.c_str();
     }
 
     template <typename Type_>
     Error operator <<(const Type_ &value) && {
         std::ostringstream data;
         data << value;
-        text += data.str();
+        what_ += data.str();
         return std::move(*this);
     }
 }; }
 
+#define orc_log(log, text) \
+    log << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text
+
 #define orc_insist_(code, text) do { \
     if ((code)) break; \
-    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text << std::endl; \
+    orc_log(orc::Log(), text << std::endl); \
     std::terminate(); \
 } while (false)
 
@@ -69,8 +66,8 @@ class Error final :
     orc_insist_(code, "orc_insist(" #code ")")
 
 #define orc_throw(text) do { \
-    orc::Log() << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text << std::endl; \
-    throw orc::Error{__FILE__, __LINE__} << text; \
+    orc_log(orc::Log(), text << std::endl); \
+    throw orc_log(orc::Error(), text); \
 } while (false)
 
 #define orc_adapt(error) do { \
@@ -87,5 +84,30 @@ class Error final :
 
 #define orc_assert(code) \
     orc_assert_(code, "orc_assert(" #code ")")
+
+#define orc_catch(code) \
+    try code catch (...) { \
+    }
+
+#define orc_except(code) \
+    try code catch (...) { \
+        orc_log(orc::Log(), "orc_except(" #code ")" << std::endl); \
+        std::terminate(); \
+    }
+
+#define orc_stack(text) \
+    catch (Error &error) { \
+        throw orc_log(std::move(error) << ' ', text); \
+    } catch (const std::exception &error) { \
+        throw orc_log(Error() << error.what() << ' ', text); \
+    }
+
+#define orc_block(code, text) \
+    do { try code orc_stack(text) } while (false)
+
+#define orc_value(ret, code, text) \
+    [&]() -> decltype(code) { try { \
+        ret (code); \
+    } orc_stack(text) }()
 
 #endif//ORCHID_ERROR_HPP

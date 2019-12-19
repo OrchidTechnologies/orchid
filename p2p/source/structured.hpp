@@ -39,7 +39,7 @@ class Structured :
         return Pump<Json::Value, Json::Value>::Land(Parse(data.str()));
     }
 
-    void Stop(const std::string &error) override {
+    void Stop(const std::string &error) noexcept override {
         return Pump<Json::Value, Json::Value>::Stop(error);
     }
 

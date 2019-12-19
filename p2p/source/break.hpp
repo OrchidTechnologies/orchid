@@ -31,8 +31,8 @@ template <typename Type_, typename... Args_>
 inline S<Type_> Break(Args_ &&...args) {
     auto valve(std::make_shared<Type_>(std::forward<Args_>(args)...));
     auto backup(valve.get());
-    return std::shared_ptr<Type_>(backup, [valve = std::move(valve)](Type_ *) mutable {
-        Spawn([valve = std::move(valve)]() -> task<void> {
+    return std::shared_ptr<Type_>(backup, [valve = std::move(valve)](Type_ *) mutable noexcept {
+        Spawn([valve = std::move(valve)]() noexcept -> task<void> {
             co_await valve->Shut();
         });
     });

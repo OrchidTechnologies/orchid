@@ -25,6 +25,7 @@
 
 #include <lwip/netif.h>
 
+#include "nest.hpp"
 #include "origin.hpp"
 #include "socket.hpp"
 
@@ -35,11 +36,12 @@ class Remote :
     public BufferDrain
 {
   private:
-    class Host host_;
-    netif interface_;
-    U<rtc::NetworkManager> manager_;
+    const class Host host_;
+    Nest nest_;
 
-    task<void> Send(const Buffer &data);
+    netif interface_;
+
+    void Send(pbuf *buffer);
     static err_t Output(netif *interface, pbuf *buffer, const ip4_addr_t *destination);
     static err_t Initialize(netif *interface);
 
@@ -47,7 +49,7 @@ class Remote :
     virtual Pump<Buffer> *Inner() = 0;
 
     void Land(const Buffer &data) override;
-    void Stop(const std::string &error) override;
+    void Stop(const std::string &error) noexcept override;
 
   private:
     Remote(const class Host &host);
@@ -56,7 +58,7 @@ class Remote :
     ~Remote() override;
 
     void Open();
-    task<void> Shut() override;
+    task<void> Shut() noexcept override;
 
     class Host Host() override;
 

@@ -79,7 +79,7 @@ int Main(int argc, const char *const argv[]) {
                 Log() << "Land" << data << std::endl;
             }
 
-            void Stop(const std::string &error) override {
+            void Stop(const std::string &error) noexcept override {
                 Log() << "Stop(" << error << ")" << std::endl;
                 error_ = error;
                 done_.set();

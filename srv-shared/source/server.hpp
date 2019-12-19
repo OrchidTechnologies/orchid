@@ -88,13 +88,13 @@ class Server :
     void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
 
     void Land(const Buffer &data) override;
-    void Stop(const std::string &error) override;
+    void Stop(const std::string &error) noexcept override;
 
   public:
     Server(S<Origin> origin, S<Cashier> cashier);
 
     task<void> Open(Pipe<Buffer> *pipe);
-    task<void> Shut() override;
+    task<void> Shut() noexcept override;
 
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
 };
