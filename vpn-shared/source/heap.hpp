@@ -37,8 +37,15 @@ class Heap {
     {
     }
 
+    Heap(Heap &&heap) noexcept :
+        duk_(heap.duk_)
+    {
+        heap.duk_ = nullptr;
+    }
+
     ~Heap() {
-        duk_destroy_heap(duk_);
+        if (duk_ != nullptr)
+            duk_destroy_heap(duk_);
     }
 
     operator duk_context *() {

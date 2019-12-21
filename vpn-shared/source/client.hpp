@@ -44,9 +44,10 @@ class Client :
 {
   private:
     const rtc::scoped_refptr<rtc::RTCCertificate> local_;
+
+    const std::string url_;
     const U<rtc::SSLFingerprint> remote_;
 
-    const Address provider_;
     const Bytes receipt_;
 
     const Address lottery_;
@@ -77,11 +78,13 @@ class Client :
 
   protected:
     void Land(Pipe *pipe, const Buffer &data) override;
+    void Stop() override;
 
   public:
-    Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Address lottery, uint256_t chain, const Secret &secret, Address funder);
+    Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder);
+    ~Client() override;
 
-    task<void> Open(const S<Origin> &origin, const std::string &url);
+    task<void> Open(const S<Origin> &origin);
     task<void> Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;

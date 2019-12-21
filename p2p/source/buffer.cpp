@@ -122,12 +122,12 @@ static uint8_t Bless(char value) {
         return value - 'a' + 10;
     if (value >= 'A' && value <= 'F')
         return value - 'A' + 10;
-    orc_assert(false);
+    orc_assert_(false, "'" << value << "' is not hex");
 }
 
 Beam Bless(const std::string &data) {
     size_t size(data.size());
-    orc_assert((size & 1) == 0);
+    orc_assert_((size & 1) == 0, "odd-length hex data");
     size >>= 1;
 
     if (size == 0)

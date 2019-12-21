@@ -86,8 +86,10 @@ class Error final :
     orc_assert_(code, "orc_assert(" #code ")")
 
 #define orc_catch(code) \
-    try code catch (...) { \
-    }
+    ({ bool _failed(false); \
+        try code catch (...) { \
+            _failed = true; \
+        } _failed; })
 
 #define orc_except(code) \
     try code catch (...) { \

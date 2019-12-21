@@ -27,14 +27,14 @@
 
 namespace orc {
 
-static Explode Verify(Json::Value &proofs, Brick<32> hash, const Region &path) {
+static Explode Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
     size_t offset(0);
     orc_assert(!proofs.isNull());
     for (auto e(proofs.size()), i(decltype(e)(0)); i != e; ++i) {
         const auto data(Bless(proofs[i].asString()));
         orc_assert(Hash(data) == hash);
 
-        Explode proof(data);
+        const Explode proof(data);
         switch (proof.size()) {
             case 17: {
                 if (offset == path.size() * 2)
@@ -73,7 +73,7 @@ Account::Account(const Block &block, Json::Value &value) :
     storage_(value["storageHash"].asString()),
     code_(value["codeHash"].asString())
 {
-    auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), Hash(Number<uint160_t>(value["address"].asString()))));
+    const auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), Hash(Number<uint160_t>(value["address"].asString()))));
     orc_assert(leaf.size() == 4);
     orc_assert(leaf[0].num() == nonce_);
     orc_assert(leaf[1].num() == balance_);
@@ -82,42 +82,84 @@ Account::Account(const Block &block, Json::Value &value) :
 }
 
 uint256_t Endpoint::Get(int index, Json::Value &storages, const Region &root, const uint256_t &key) const {
-    auto storage(storages[index]);
+    const auto storage(storages[index]);
     orc_assert(uint256_t(storage["key"].asString()) == key);
-    uint256_t value(storage["value"].asString());
-    auto leaf(Verify(storage["proof"], root, Hash(Number<uint256_t>(key))));
+    const uint256_t value(storage["value"].asString());
+    const auto leaf(Verify(storage["proof"], root, Hash(Number<uint256_t>(key))));
     orc_assert(leaf.num() == value);
     return value;
 }
 
+static Brick<32> Name(const std::string &name) {
+    if (name.empty())
+        return Zero<32>();
+    const auto period(name.find('.'));
+    if (period == std::string::npos)
+        return Hash(Tie(Zero<32>(), Hash(name)));
+    return Hash(Tie(Name(name.substr(period + 1)), Hash(name.substr(0, period))));
+}
+
 task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args) const {
-    Json::Value root;
-    root["jsonrpc"] = "2.0";
-    root["method"] = method;
-    root["id"] = "";
-    root["params"] = std::move(args);
-
     Json::FastWriter writer;
-    const auto data(Parse((co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, writer.write(root))).ok()));
-    Log() << root << " -> " << data << "" << std::endl;
 
+    const auto body(writer.write([&]() {
+        Json::Value root;
+        root["jsonrpc"] = "2.0";
+        root["method"] = method;
+        root["id"] = "";
+        root["params"] = std::move(args);
+        return root;
+    }()));
+
+  retry:
+    const auto data(Parse((co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
+    Log() << body << " -> " << data << "" << std::endl;
     orc_assert(data["jsonrpc"] == "2.0");
 
     const auto error(data["error"]);
-
-    const auto id(data["id"]);
-    orc_assert(!id.isNull() || !error.isNull());
-
-    orc_assert_(error.isNull(), ([&]() {
+    if (!error.isNull()) {
+        if (error["message"] == "header not found")
+            goto retry;
         auto text(writer.write(error));
         orc_assert(!text.empty());
         orc_assert(text[text.size() - 1] == '\n');
         text.resize(text.size() - 1);
-        return text;
-    }()));
+        orc_throw(text);
+    }
 
+    const auto id(data["id"]);
+    orc_assert(!id.isNull());
     orc_assert(id == "");
     co_return data["result"];
+}
+
+task<uint256_t> Endpoint::Latest() const {
+    const auto number(uint256_t((co_await operator ()("eth_blockNumber", {})).asString()));
+    orc_assert_(number != 0, "ethereum server has not synchronized any blocks");
+    co_return number;
+}
+
+task<Block> Endpoint::Header(uint256_t number) const {
+    co_return co_await operator ()("eth_getBlockByNumber", {number, false});
+}
+
+task<Brick<65>> Endpoint::Sign(const Address &signer, const Buffer &data) const {
+    co_return Bless((co_await operator ()("eth_sign", {signer, data})).asString());
+}
+
+task<Brick<65>> Endpoint::Sign(const Address &signer, const std::string &password, const Buffer &data) const {
+    co_return Bless((co_await operator ()("personal_sign", {signer, data, password})).asString());
+}
+
+task<Address> Endpoint::Resolve(const Argument &number, const std::string &name) const {
+    const auto node(Name(name));
+    static const Address ens("0x314159265dd8dbb310642f98f50c066173c1259b");
+
+    static const Selector<Address, Bytes32> resolver_("resolver");
+    const auto resolver(co_await resolver_.Call(*this, number, ens, 90000, node));
+
+    static const Selector<Address, Bytes32> addr_("addr");
+    co_return co_await addr_.Call(*this, number, resolver, 90000, node);
 }
 
 }

@@ -133,21 +133,32 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
     }
 }
 
-Client::Client(BufferDrain *drain, U<rtc::SSLFingerprint> remote, Address provider, Address lottery, uint256_t chain, const Secret &secret, Address funder) :
-    Pump(drain),
-    local_(Certify()),
-    remote_(std::move(remote)),
-    provider_(std::move(provider)),
-    lottery_(std::move(lottery)),
-    chain_(std::move(chain)),
-    secret_(secret),
-    funder_(std::move(funder)),
-    prepay_(uint256_t(0xb1a2bc2ec500)<<128)
-{
+void Client::Stop() {
+    Pump::Stop();
 }
 
-task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
-    const auto verify([this](const std::list<const rtc::OpenSSLCertificate> &certificates) -> bool {
+Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder) :
+    Pump(drain),
+    local_(Certify()),
+    url_(std::move(url)),
+    remote_(std::move(remote)),
+    lottery_(lottery),
+    chain_(chain),
+    secret_(secret),
+    funder_(funder),
+    prepay_(uint256_t(0xb1a2bc2ec500)<<128)
+{
+    // XXX: this class shouldn't derive from Valve twice...
+    Bonded::type_ = typeid(*this).name();
+    Pump::type_ = typeid(*this).name();
+}
+
+Client::~Client() {
+_trace();
+}
+
+task<void> Client::Open(const S<Origin> &origin) {
+    const auto verify([&](const std::list<const rtc::OpenSSLCertificate> &certificates) -> bool {
         for (const auto &certificate : certificates)
             if (*remote_ == *rtc::SSLFingerprint::Create(remote_->algorithm, certificate))
                 return true;
@@ -161,7 +172,7 @@ task<void> Client::Open(const S<Origin> &origin, const std::string &url) {
         configuration.tls_ = local_;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
-        const auto answer((co_await origin->Request("POST", Locator::Parse(url), {}, offer, verify)).ok());
+        const auto answer((co_await origin->Request("POST", Locator::Parse(url_), {}, offer, verify)).ok());
         if (true || Verbose) {
             Log() << "Offer: " << offer << std::endl;
             Log() << "Answer: " << answer << std::endl;

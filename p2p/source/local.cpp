@@ -62,7 +62,7 @@ class LocalOpening final :
                 try {
                     writ = co_await connection_.async_receive_from(asio::buffer(data), endpoint, Token());
                 } catch (const asio::system_error &error) {
-                    orc_catch({ orc_adapt(error); })
+                    orc_catch({ orc_adapt(error); });
                     continue;
                 }
 

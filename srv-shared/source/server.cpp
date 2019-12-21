@@ -267,6 +267,9 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     })) Send(Inner(), data);
 }
 
+void Server::Stop() {
+}
+
 void Server::Land(const Buffer &data) {
     if (Bill(data, true))
         Send(this, data);
@@ -280,6 +283,8 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
     origin_(std::move(origin)),
     cashier_(std::move(cashier))
 {
+    type_ = typeid(*this).name();
+
     const auto locked(locked_());
     Commit(locked);
 }

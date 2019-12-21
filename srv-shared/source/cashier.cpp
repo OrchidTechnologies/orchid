@@ -158,11 +158,11 @@ void Cashier::Land(Json::Value data) {
 }
 
 void Cashier::Stop(const std::string &error) noexcept {
+    orc_insist(false);
 }
 
 Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
-    locator_(std::move(locator)),
 
     price_(price),
     currency_(std::move(currency)),
@@ -190,7 +190,7 @@ Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, co
     Spawn([this]() noexcept -> task<void> {
         for (;;) {
             co_await Sleep(5 * 60);
-            orc_catch({ co_await Update(); })
+            orc_catch({ co_await Update(); });
         }
     });
 }

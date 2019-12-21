@@ -20,18 +20,36 @@
 /* }}} */
 
 
-#include "crypto.hpp"
-#include "ens.hpp"
+#ifndef ORCHID_TUBE_HPP
+#define ORCHID_TUBE_HPP
+
+#include "link.hpp"
 
 namespace orc {
 
-Brick<32> Name(const std::string &name) {
-    if (name.empty())
-        return Zero<32>();
-    const auto period(name.find('.'));
-    if (period == std::string::npos)
-        return Hash(Tie(Zero<32>(), Hash(name)));
-    return Hash(Tie(Name(name.substr(period + 1)), Hash(name.substr(0, period))));
-}
+class Tube :
+    public Link<Buffer>
+{
+  protected:
+    virtual Pump<Buffer> *Inner() = 0;
+
+  public:
+    Tube(BufferDrain *drain) :
+        Link<Buffer>(drain)
+    {
+        type_ = typeid(*this).name();
+    }
+
+    task<void> Shut() noexcept override {
+        co_await Inner()->Shut();
+        co_await Link::Shut();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        co_return co_await Inner()->Send(data);
+    }
+};
 
 }
+
+#endif//ORCHID_TUBE_HPP

@@ -86,6 +86,7 @@ class Server :
     virtual Pump<Buffer> *Inner() = 0;
 
     void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
+    void Stop() override;
 
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) noexcept override;

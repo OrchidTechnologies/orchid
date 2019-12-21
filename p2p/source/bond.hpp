@@ -78,17 +78,25 @@ class Bonded :
 
   protected:
     virtual void Land(Pipe<Buffer> *pipe, const Buffer &data) = 0;
+    virtual void Stop() = 0;
 
     void Stop(Bonding *bonding) {
         const auto locked(locked_());
         const auto iterator(locked->bondings_.find(bonding));
-        Spawn([bonding = std::move(iterator->second)]() noexcept -> task<void> {
-            co_await bonding->Shut();
-        });
+        if (iterator->second != nullptr)
+            Spawn([bonding = std::move(iterator->second)]() noexcept -> task<void> {
+                co_await bonding->Shut();
+            });
         locked->bondings_.erase(iterator);
+        if (locked->bondings_.empty())
+            Stop();
     }
 
   public:
+    Bonded() {
+        type_ = typeid(*this).name();
+    }
+
     Sink<Bonding> *Bond() {
         // XXX: this is non-obviously incorrect
         const auto locked(locked_());
@@ -110,8 +118,10 @@ class Bonded :
     task<void> Shut() noexcept override {
         std::vector<task<void>> shuts;
         { const auto locked(locked_());
-            for (const auto &bonding : locked->bondings_)
-                shuts.emplace_back(bonding.second->Shut()); }
+            for (auto &bonding : locked->bondings_)
+                shuts.emplace_back([](U<Bonding> bonding) -> task<void> {
+                    co_await bonding->Shut();
+                }(std::move(bonding.second))); }
         co_await cppcoro::when_all(std::move(shuts));
         orc_insist(locked_()->bondings_.empty());
         co_await Valve::Shut();

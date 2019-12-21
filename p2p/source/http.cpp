@@ -132,17 +132,19 @@ task<Response> Request(const std::string &method, const Locator &locator, const 
     const auto local(Break<Local>());
     const auto endpoints(co_await Resolve(*local, locator.host_, locator.port_));
     asio::ip::tcp::socket socket(orc::Context());
-    orc_block({ (void) co_await asio::async_connect(socket, endpoints, orc::Token()); },
-        "connecting to" << endpoints);
+    const auto endpoint(co_await orc_value(co_return co_await, asio::async_connect(socket, endpoints, orc::Token()),
+        "connecting to " << endpoints));
 
-    const auto body(co_await Request_(socket, method, locator, headers, data, verify));
+    orc_block({
+        const auto body(co_await Request_(socket, method, locator, headers, data, verify));
 
-    boost::beast::error_code error;
-    socket.shutdown(asio::ip::tcp::socket::shutdown_both, error);
-    if (error && error != boost::beast::errc::not_connected)
-        throw boost::beast::system_error{error};
+        boost::beast::error_code error;
+        socket.shutdown(asio::ip::tcp::socket::shutdown_both, error);
+        if (error && error != boost::beast::errc::not_connected)
+            throw boost::beast::system_error{error};
 
-    co_return body;
+        co_return body;
+    }, "connected to " << endpoint);
 }, "requesting " << locator); }
 
 }

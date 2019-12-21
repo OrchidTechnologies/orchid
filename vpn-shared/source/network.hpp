@@ -43,7 +43,7 @@ class Network {
   public:
     Network(const std::string &rpc, Address directory, Address location);
 
-    task<void> Random(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, Address lottery, uint256_t chain, const Secret &secret, Address funder);
+    task<void> Select(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder);
 };
 
 }

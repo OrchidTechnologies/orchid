@@ -79,19 +79,17 @@ class Endpoint final {
 
     task<Json::Value> operator ()(const std::string &method, Argument args) const;
 
-    task<uint256_t> Latest() const {
-        auto latest(uint256_t((co_await operator ()("eth_blockNumber", {})).asString()));
-        orc_assert_(latest != 0, "ethereum server has not synchronized any blocks");
-        co_return latest;
-    }
+    task<uint256_t> Latest() const;
+    task<Block> Header(uint256_t number) const;
 
-    task<Block> Header(uint256_t number) const {
-        co_return co_await operator ()("eth_getBlockByNumber", {number, false});
-    }
+    task<Brick<65>> Sign(const Address &signer, const Buffer &data) const;
+    task<Brick<65>> Sign(const Address &signer, const std::string &password, const Buffer &data) const;
+
+    task<Address> Resolve(const Argument &number, const std::string &name) const;
 
     template <typename... Args_>
     task<std::tuple<Account, typename Result<Args_>::type...>> Get(const Block &block, const Address &contract, Args_ &&...args) const {
-        auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
         std::tuple<Account, typename Result<Args_>::type...> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
         Get<0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
@@ -100,21 +98,13 @@ class Endpoint final {
 
     template <typename... Args_>
     task<std::tuple<Account, std::vector<uint256_t>>> Get(const Block &block, const Address &contract, const std::vector<uint256_t> &args) const {
-        auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
         std::tuple<Account, std::vector<uint256_t>> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
         auto storages(proof["storageProof"]);
         for (unsigned i(0); i != args.size(); ++i)
             std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
         co_return result;
-    }
-
-    task<Brick<65>> Sign(const Address &signer, const Buffer &data) const {
-        co_return Bless((co_await operator ()("eth_sign", {signer, data})).asString());
-    }
-
-    task<Brick<65>> Sign(const Address &signer, const std::string &password, const Buffer &data) const {
-        co_return Bless((co_await operator ()("personal_sign", {signer, data, password})).asString());
     }
 };
 
@@ -123,6 +113,7 @@ class Selector final :
     public Region
 {
   private:
+    const std::string name_;
     const uint32_t value_;
 
     template <bool Comma_, typename... Rest_>
@@ -144,19 +135,24 @@ class Selector final :
 
   public:
     Selector(uint32_t value) :
+        name_([&]() {
+            std::ostringstream signature;
+            signature << "0x" << std::hex << std::setfill('0') << std::setw(8) << value;
+            return signature.str();
+        }()),
         value_(boost::endian::native_to_big(value))
     {
     }
 
     Selector(const std::string &name) :
-        Selector([&]() {
+        name_([&]() {
             std::ostringstream signature;
             signature << name << '(';
             Args<false, Args_...>::Write(signature);
             signature << ')';
-            std::cerr << signature.str() << std::endl;
-            return Hash(signature.str()).Clip<4>().num<uint32_t>();
-        }())
+            return signature.str();
+        }()),
+        value_(boost::endian::native_to_big(Hash(name_).template Clip<4>().template num<uint32_t>()))
     {
     }
 
@@ -168,21 +164,25 @@ class Selector final :
         return sizeof(value_);
     }
 
-    task<Result_> Call(const Endpoint &endpoint, const Argument &block, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
+    const std::string &Name() const {
+        return name_;
+    }
+
+    task<Result_> Call(const Endpoint &endpoint, const Argument &number, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
             {"to", contract},
             {"gas", gas},
             {"data", Tie(*this, builder)},
-        }, block})).asString()));
+        }, number})).asString()));
         Window window(data);
         auto result(Coded<Result_>::Decode(window));
         window.Stop();
         co_return std::move(result);
-    }
+    }, "calling " << Name()); }
 
-    task<Result_> Call(const Endpoint &endpoint, const Address &from, const Argument &block, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
+    task<Result_> Call(const Endpoint &endpoint, const Address &from, const Argument &number, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Map{
@@ -190,14 +190,14 @@ class Selector final :
             {"to", contract},
             {"gas", gas},
             {"data", Tie(*this, builder)},
-        }, block})).asString()));
+        }, number})).asString()));
         Window window(data);
         auto result(Coded<Result_>::Decode(window));
         window.Stop();
         co_return std::move(result);
-    }
+    }, "calling " << Name()); }
 
-    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
+    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Map{
@@ -207,9 +207,9 @@ class Selector final :
             {"data", Tie(*this, builder)},
         }})).asString()).template num<uint256_t>());
         co_return std::move(transaction);
-    }
+    }, "sending " << Name()); }
 
-    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const Args_ &...args) const {
+    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Map{
@@ -219,9 +219,9 @@ class Selector final :
             {"data", Tie(*this, builder)},
         }, password})).asString()).template num<uint256_t>());
         co_return std::move(transaction);
-    }
+    }, "sending " << Name()); }
 
-    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const uint256_t &price, const Args_ &...args) const {
+    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const uint256_t &price, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Map{
@@ -232,7 +232,7 @@ class Selector final :
             {"data", Tie(*this, builder)},
         }, password})).asString()).template num<uint256_t>());
         co_return std::move(transaction);
-    }
+    }, "sending " << Name()); }
 };
 
 }

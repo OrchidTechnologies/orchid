@@ -35,6 +35,7 @@ class Valve {
   public:
     static uint64_t Unique_;
     const uint64_t unique_ = ++Unique_;
+    const char *type_ = nullptr;
 
   private:
     static void Insert(Valve *valve);
@@ -55,7 +56,7 @@ class Valve {
     }
 
     virtual ~Valve() {
-        orc_insist(shut_);
+        orc_insist_(shut_, "stuck " << type_);
         Remove(this);
     }
 

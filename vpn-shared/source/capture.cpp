@@ -43,6 +43,7 @@
 #include "network.hpp"
 #include "origin.hpp"
 #include "port.hpp"
+#include "retry.hpp"
 #include "remote.hpp"
 #include "syscall.hpp"
 #include "transport.hpp"
@@ -178,7 +179,7 @@ class Logger :
     void AnalyzeIncoming(Span<const uint8_t> span) override {
         auto &ip4(span.cast<const openvpn::IPv4Header>());
         if (ip4.protocol == openvpn::IPCommon::UDP) {
-            auto length(openvpn::IPv4Header::length(ip4.version_len));
+            const auto length(openvpn::IPv4Header::length(ip4.version_len));
             auto &udp(span.cast<const openvpn::UDPHeader>(length));
             if (boost::endian::native_to_big(udp.source) == 53)
                 get_DNS_answers(span + (length + sizeof(openvpn::UDPHeader)));
@@ -255,7 +256,9 @@ Capture::Capture(const Host &local) :
 {
 }
 
-Capture::~Capture() = default;
+Capture::~Capture() {
+_trace();
+}
 
 
 class Hole {
@@ -440,7 +443,7 @@ class Split :
     }
 
     task<void> Pull(const Four &four) noexcept override {
-        auto lock(co_await meta_.scoped_lock_async());
+        const auto lock(co_await meta_.scoped_lock_async());
         RemoveFlow(four);
     }
 
@@ -508,8 +511,8 @@ task<bool> Split::Send(const Beam &data) {
     auto span(beam.span());
     Subset subset(span);
 
-    auto &ip4(span.cast<openvpn::IPv4Header>());
-    auto length(openvpn::IPv4Header::length(ip4.version_len));
+    const auto &ip4(span.cast<openvpn::IPv4Header>());
+    const auto length(openvpn::IPv4Header::length(ip4.version_len));
 
     switch (ip4.protocol) {
         case openvpn::IPCommon::TCP: {
@@ -517,14 +520,14 @@ task<bool> Split::Send(const Beam &data) {
                 Log() << "TCP:" << subset << std::endl;
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
 
-            Four four(
+            const Four four(
                 {boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(tcp.source)},
                 {boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(tcp.dest)}
             );
 
             if (four.Source() == local_) {
-                auto lock(co_await meta_.scoped_lock_async());
-                auto flow(flows_.find(four.Target()));
+                const auto lock(co_await meta_.scoped_lock_async());
+                const auto flow(flows_.find(four.Target()));
                 if (flow == flows_.end())
                     break;
                 orc_insist(flow->second != nullptr);
@@ -535,8 +538,8 @@ task<bool> Split::Send(const Beam &data) {
                 co_return false;
             }
 
-            auto lock(co_await meta_.scoped_lock_async());
-            auto ephemeral(ephemerals_.find(four));
+            const auto lock(co_await meta_.scoped_lock_async());
+            const auto ephemeral(ephemerals_.find(four));
 
             if ((tcp.flags & openvpn::TCPHeader::FLAG_SYN) == 0) {
                 if (ephemeral == ephemerals_.end())
@@ -548,7 +551,7 @@ task<bool> Split::Send(const Beam &data) {
                 // port 0 is not valid
                 auto port(ephemerals_.size() + 1);
                 if (port >= 65535 - 1) {
-                    auto old_four(*lru_.begin());
+                    const auto old_four(*lru_.begin());
                     auto old_ephemeral(ephemerals_.find(old_four));
                     port = old_ephemeral->second.socket_.Port();
                     RemoveEmphemeral(old_four);
@@ -558,7 +561,7 @@ task<bool> Split::Send(const Beam &data) {
                 orc_insist(flow == nullptr);
                 flow = Make<Flow>(this, four);
                 lru_.push_back(four);
-                auto lru_iter(std::prev(lru_.end()));
+                const auto lru_iter(std::prev(lru_.end()));
                 ephemerals_.emplace(four, Ephemeral_{socket, lru_iter});
                 Spawn([
                     beam = std::move(beam),
@@ -569,7 +572,6 @@ task<bool> Split::Send(const Beam &data) {
                     &tcp,
                 this]() mutable noexcept -> task<void> {
                     bool reset(false);
-
                     try {
                         // XXX: it seems strange that Connect takes a string and not a Host
                         co_await origin_->Connect(flow->up_, four.Target().Host().String(), std::to_string(four.Target().Port()));
@@ -601,15 +603,10 @@ task<bool> Split::Send(const Beam &data) {
                 punch = std::move(sink);
             }
 
-            uint16_t offset(length + sizeof(openvpn::UDPHeader));
-            uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
-            Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
-            try {
-                co_await punch->Send(subset.subset(offset, size), destination);
-            } catch (...) {
-                // XXX: this is a hack. test on Travis' device
-                Log() << "FAIL TO SEND UDP from " << source << " to " << destination << std::endl;
-            }
+            const uint16_t offset(length + sizeof(openvpn::UDPHeader));
+            const uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
+            const Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
+            co_await punch->Send(subset.subset(offset, size), destination);
 
             co_return true;
         } break;
@@ -624,11 +621,10 @@ task<bool> Split::Send(const Beam &data) {
     co_return false;
 }
 
-task<void> Capture::Start(S<Origin> origin) {
+void Capture::Start(S<Origin> origin) {
     auto split(std::make_unique<Split>(this, std::move(origin)));
     split->Connect(local_);
     internal_ = std::move(split);
-    co_return;
 }
 
 class Pass :
@@ -646,6 +642,7 @@ class Pass :
     }
 
     void Stop(const std::string &error) noexcept override {
+        orc_insist(false);
     }
 
   public:
@@ -660,11 +657,11 @@ class Pass :
     }
 };
 
-task<Sunk<> *> Capture::Start() {
+Sunk<> *Capture::Start() {
     auto pass(std::make_unique<Sink<Pass>>(this));
     const auto backup(pass.get());
     internal_ = std::move(pass);
-    co_return backup;
+    return backup;
 }
 
 static duk_ret_t print(duk_context *ctx) {
@@ -675,18 +672,18 @@ static duk_ret_t print(duk_context *ctx) {
     return 0;
 }
 
-static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) {
+static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
     } else if (protocol == "orchid") {
         const Address lottery(heap.eval<std::string>(hops + ".lottery", "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"));
         const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
-        const Secret secret(Bless(heap.eval<std::string>(hops + ".secret")));
+        const auto secret(orc_value(return, Secret(Bless(heap.eval<std::string>(hops + ".secret"))), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
         const Address provider(heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000"));
-        co_await network.Random(sunk, origin, curator, provider, lottery, chain, secret, funder);
+        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder);
     } else if (protocol == "openvpn") {
         co_await Connect(sunk, origin, local,
             heap.eval<std::string>(hops + ".ovpnfile"),
@@ -694,14 +691,11 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
             heap.eval<std::string>(hops + ".password")
         );
     }
-}
+}, "parsing hop #" << hop); }
 
 extern unsigned WinShift_;
 
-task<void> Capture::Start(const std::string &path) {
-    std::string config;
-    boost::filesystem::load_string_file(path, config);
-
+void Capture::Start(const std::string &path) {
     Heap heap;
 
     duk_push_c_function(heap, &print, 1);
@@ -716,29 +710,37 @@ task<void> Capture::Start(const std::string &path) {
         //stun = "stun:stun.l.google.com:19302";
     )");
 
-    heap.eval<void>(config);
+    {
+        std::string config;
+        boost::filesystem::load_string_file(path, config);
+        heap.eval<void>(config);
+    }
 
     S<Origin> origin(Break<Local>());
 
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
-        co_return co_await Start(std::move(origin));
+        return Start(std::move(origin));
 
     WinShift_ = unsigned(heap.eval<double>("eth_winshift"));
 
-    Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
+    auto code([heap = std::move(heap), origin = std::move(origin), hops](Sunk<> *sunk) mutable -> task<void> {
+        Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
 
-    const auto host(origin->Host());
+        const auto host(origin->Host());
 
-    for (unsigned i(0); i != hops - 1; ++i) {
-        auto remote(Break<Sink<Remote>>());
-        co_await Single(remote.get(), heap, network, origin, remote->Host(), i);
-        remote->Open();
-        origin = std::move(remote);
-    }
+        for (unsigned i(0); i != hops - 1; ++i) {
+            auto remote(Break<Sink<Remote>>());
+            co_await Single(remote.get(), heap, network, origin, remote->Host(), i);
+            remote->Open();
+            origin = std::move(remote);
+        }
 
-    const auto sunk(co_await Start());
-    co_await Single(sunk, heap, network, origin, host, hops - 1);
+        co_await Single(sunk, heap, network, origin, host, hops - 1);
+    });
+
+    const auto retry(Start()->Wire<Retry<decltype(code)>>(std::move(code)));
+    retry->Open();
 }
 
 }

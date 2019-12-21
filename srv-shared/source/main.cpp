@@ -45,7 +45,6 @@
 
 #include "baton.hpp"
 #include "cashier.hpp"
-#include "ens.hpp"
 #include "channel.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"

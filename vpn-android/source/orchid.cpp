@@ -17,11 +17,6 @@
 
 namespace orc {
 
-#define ORC_CATCH() catch(...) { \
-    /* XXX: implement */ \
-    orc_insist(false); \
-}
-
 static JavaVM *jvm;
 static asio::io_context *executor_;
 std::string files_dir;
@@ -51,16 +46,11 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
 
     asio::io_context executor;
     auto work(asio::make_work_guard(executor));
-    Spawn([
-        capture = std::move(capture),
-        inverted = std::move(inverted),
-        config = std::move(config)
-    ]() mutable noexcept -> task<void> { try {
-        co_await Schedule();
-        co_await capture->Start(config);
-        inverted->Open();
-        capture_ = std::move(capture);
-    } ORC_CATCH() });
+
+    capture->Start(config);
+    inverted->Open();
+    capture_ = std::move(capture);
+
     executor_ = &executor;
     executor_->run();
 }

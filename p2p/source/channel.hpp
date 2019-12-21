@@ -224,6 +224,7 @@ class Channel final :
         peer_(peer),
         channel_(channel)
     {
+        type_ = typeid(*this).name();
         channel_->RegisterObserver(this);
         peer_->channels_.insert(this);
     }
@@ -299,6 +300,9 @@ _trace();
 
     task<void> Shut() noexcept override {
         channel_->Close();
+        // XXX: this should be checking if Peer has a data_transport
+        if (channel_->id() == -1)
+            Stop();
         co_await Pump::Shut();
     }
 

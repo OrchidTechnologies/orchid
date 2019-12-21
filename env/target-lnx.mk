@@ -72,7 +72,7 @@ endef
 $(each)
 
 $(output)/sysroot: env/sysroot.sh env/sysroot_.sh
-	env/sysroot.sh
+	env/sysroot.sh $@
 
 .PHONY: sysroot
 sysroot: $(output)/sysroot

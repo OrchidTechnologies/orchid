@@ -99,18 +99,10 @@ static std::string cfs(NSString *data) {
         auto family(capture->Wire<Sink<Family>>());
         auto sync(family->Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
 
-        Spawn([
-            capture = std::move(capture),
-            sync = std::move(sync),
-            config = std::move(config),
-            handler = handler,
-        self]() mutable noexcept -> task<void> { try {
-            co_await Schedule();
-            co_await capture->Start(config);
-            sync->Open();
-            capture_ = std::move(capture);
-            handler(nil);
-        } ORC_CATCH(handler) });
+        capture->Start(config);
+        sync->Open();
+        capture_ = std::move(capture);
+        handler(nil);
     } ORC_CATCH(handler) }];
 } ORC_CATCH(handler) }
 

@@ -2,7 +2,9 @@
 set -e
 set -o pipefail
 
-sysroot=out-lnx/sysroot
+sysroot=$1
+shift 1
+
 name=orchid
 
 function clean() {

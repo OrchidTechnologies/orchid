@@ -55,6 +55,7 @@ class Inverted final :
         Pump<Buffer>(drain),
         stream_(std::move(stream))
     {
+        type_ = typeid(*this).name();
     }
 
     void Open() noexcept {

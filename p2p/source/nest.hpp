@@ -79,6 +79,7 @@ class Nest :
     Nest(unsigned limit = -1) :
         limit_(limit)
     {
+        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {
@@ -93,13 +94,14 @@ _trace();
     }
 
     template <typename Code_>
-    auto Hatch(Code_ code) noexcept -> typename std::enable_if<noexcept(code())>::type {
+    auto Hatch(Code_ code) noexcept -> typename std::enable_if<noexcept(code()), bool>::type {
         Count count(this);
         if (count > limit_)
-            return;
+            return false;
         Spawn([count = std::move(count), code = code()]() mutable noexcept -> task<void> {
-            orc_catch({ co_await code(); })
+            orc_catch({ co_await code(); });
         });
+        return true;
     }
 };
 

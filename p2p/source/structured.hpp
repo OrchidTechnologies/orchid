@@ -47,6 +47,7 @@ class Structured :
     Structured(Drain<Json::Value> *drain) :
         Pump<Json::Value, Json::Value>(drain)
     {
+        type_ = typeid(*this).name();
     }
 
     task<void> Send(const Json::Value &data) override {

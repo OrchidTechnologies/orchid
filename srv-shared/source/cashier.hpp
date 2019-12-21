@@ -59,7 +59,6 @@ class Cashier :
 {
   private:
     const Endpoint endpoint_;
-    const Locator locator_;
 
     const Float price_;
     const std::string currency_;

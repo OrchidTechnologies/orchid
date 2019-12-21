@@ -189,14 +189,8 @@ int Main(int argc, const char *const argv[]) {
     (void) setuid(501);
 #endif
 
-    Wait([&]() -> task<void> { try {
-        co_await Schedule();
-        co_await capture->Start(args["config"].as<std::string>());
-        sync->Open();
-    } catch (const std::exception &error) {
-        std::cerr << error.what() << std::endl;
-        throw;
-    } }());
+    capture->Start(args["config"].as<std::string>());
+    sync->Open();
 
     Thread().join();
     return 0;

@@ -77,9 +77,9 @@ class Capture :
 
     void Land(const Buffer &data, bool analyze);
 
-    task<void> Start(S<Origin> origin);
-    task<Sunk<> *> Start();
-    task<void> Start(const std::string &path);
+    void Start(S<Origin> origin);
+    Sunk<> *Start();
+    void Start(const std::string &path);
 };
 
 }
