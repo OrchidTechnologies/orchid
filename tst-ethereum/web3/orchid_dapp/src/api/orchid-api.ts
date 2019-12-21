@@ -53,10 +53,10 @@ export class OrchidAPI {
   signer_wait: Observable<Signer> = this.signer.pipe(filter(isDefined), shareReplay(1));
 
   // The Lottery pot associated with the currently selected signer account.
-  lotteryPot: Observable<LotteryPot|null> = this.signer.pipe(
+  lotteryPot: Observable<LotteryPot | null> = this.signer.pipe(
     // flatMap here resolves the promises
-    flatMap((signer: Signer|undefined) => {
-      if ( signer === undefined ) {
+    flatMap((signer: Signer | undefined) => {
+      if (signer === undefined) {
         return of(null); // flatMap requires observables, even for null
       }
       try {
@@ -106,12 +106,17 @@ export class OrchidAPI {
     try {
       let signers = await orchidGetSigners(this.wallet.value);
       this.signersAvailable.next(signers);
-      // Select the first if available
-      if (!this.signer.value && signers.length > 0) {
+
+      // no signers available
+      if (signers.length == 0) {
+        this.signer.next(undefined);
+        return;
+      }
+
+      // Select the first if available as default
+      if (!this.signer.value) {
         console.log("updateSigners setting default signer: ", signers[0]);
         this.signer.next(signers[0]);
-      } else {
-        this.signer.next(undefined);
       }
     } catch (err) {
       console.log("Error updating signers: ", err);

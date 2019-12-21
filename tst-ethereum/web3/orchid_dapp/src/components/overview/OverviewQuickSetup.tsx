@@ -126,7 +126,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
     starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
 
   let submitEnabled = sufficientFunds && !tx.isRunning() && !signerKeyError;
-  let txCompletedSuccessfully = tx.state == TransactionState.Completed;
+  let txCompletedSuccessfully = tx.state === TransactionState.Completed;
 
   return (
     <Container className="form-style">
