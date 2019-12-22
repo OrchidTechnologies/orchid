@@ -320,20 +320,10 @@ class Flow {
             Beam beam(2048);
             for (;;) {
                 size_t writ;
-                try {
-                    writ = co_await input->Read(beam);
-                } catch (const Error &error) {
+                if (orc_catch({ writ = co_await input->Read(beam); }) || writ == 0)
                     break;
-                }
-
-                if (writ == 0)
+                if (orc_catch({ co_await output->Send(beam.subset(0, writ)); }))
                     break;
-
-                try {
-                    co_await output->Send(beam.subset(0, writ));
-                } catch (const Error &error) {
-                    break;
-                }
             }
 
             co_await output->Shut();
@@ -571,16 +561,10 @@ task<bool> Split::Send(const Beam &data) {
                     span,
                     &tcp,
                 this]() mutable noexcept -> task<void> {
-                    bool reset(false);
-                    try {
+                    if (orc_catch({
                         // XXX: it seems strange that Connect takes a string and not a Host
                         co_await origin_->Connect(flow->up_, four.Target().Host().String(), std::to_string(four.Target().Port()));
-                    } catch (const std::exception &error) {
-                        Log() << error.what() << std::endl;
-                        reset = true;
-                    }
-
-                    if (reset)
+                    }))
                         Reset(four.Target(), four.Source(), 0, boost::endian::big_to_native(tcp.seq) + 1);
                     else {
                         Forge(span, tcp, socket, local_);

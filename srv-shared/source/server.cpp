@@ -253,12 +253,11 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
             const auto &[magic, id] = header;
             orc_assert(magic == Magic_);
 
-            co_await Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
+            co_await Scan(window, [&, &id = id](const Buffer &data) -> task<void> { orc_catch({
                 const auto [command, window] = Take<uint32_t, Window>(data);
                 if (command == Submit_);
                     co_await Submit(this, id, window);
-            } catch (const std::exception &error) {
-            } });
+            }); });
 
             co_await Invoice(this, source, id);
         }; });

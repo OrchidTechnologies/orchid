@@ -108,11 +108,10 @@ class Cashier :
     void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {
         Spawn([=]() mutable noexcept -> task<void> {
             for (;;) {
-                try {
+                orc_catch({
                     co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, 10*Gwei, std::forward<Args_>(args)...);
                     break;
-                } catch (...) {
-                }
+                });
 
                 // XXX: I should dump these to a disk queue as they are worth "real money"
                 // XXX: that same disk queue should maybe be in charge of the old tickets?

@@ -66,7 +66,6 @@ class Error final :
     orc_insist_(code, "orc_insist(" #code ")")
 
 #define orc_throw(text) do { \
-    orc_log(orc::Log(), text << std::endl); \
     throw orc_log(orc::Error(), text); \
 } while (false)
 
@@ -87,7 +86,10 @@ class Error final :
 
 #define orc_catch(code) \
     ({ bool _failed(false); \
-        try code catch (...) { \
+        try code catch (std::exception &error) { \
+            orc_log(Log(), "caught: " << error.what()); \
+            _failed = true; \
+        } catch (...) { \
             _failed = true; \
         } _failed; })
 

@@ -153,6 +153,7 @@ class Adapter :
                 co_await Inner()->Send(converted);
                 boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));
             } catch (...) {
+                // XXX: convert Error
                 boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::asio::error::invalid_argument, 0));
             }
         });
