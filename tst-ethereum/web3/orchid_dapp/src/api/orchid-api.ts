@@ -108,7 +108,7 @@ export class OrchidAPI {
       this.signersAvailable.next(signers);
 
       // no signers available
-      if (signers.length == 0) {
+      if (signers.length === 0) {
         this.signer.next(undefined);
         return;
       }

@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState} from "react";
 import {Col, Container, Modal, Row} from "react-bootstrap";
 import {SubmitButton} from "../SubmitButton";
 import {Route, RouteContext} from "../Route";
-import {Overview, OverviewLoading, OverviewProps} from "./Overview";
+import {OverviewLoading, OverviewProps} from "./Overview";
 import {
   isEthAddress,
   keikiToOxt,

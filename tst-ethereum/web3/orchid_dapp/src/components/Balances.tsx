@@ -28,16 +28,20 @@ export class Balances extends Component {
     let api = OrchidAPI.shared();
 
     this.subscriptions.push(
-      api.signer_wait.subscribe(signer => {
-        console.log("Funding from account: ", signer.wallet.address);
-        console.log("Balance: ", signer.wallet.ethBalance);
+      api.signer.subscribe(signer => {
         this.setState({
-          signerAddress: signer.address,
-          walletAddress: signer.wallet.address,
-          ethBalance: keikiToOxtString(signer.wallet.ethBalance, 4),
-          ethBalanceError: signer.wallet.ethBalance <= BigInt(0),
-          oxtBalance: keikiToOxtString(signer.wallet.oxtBalance, 4),
-          oxtBalanceError: signer.wallet.oxtBalance <= BigInt(0),
+          signerAddress: signer != null ? signer.address : "",
+        });
+      }));
+
+    this.subscriptions.push(
+      api.wallet_wait.subscribe(wallet => {
+        this.setState({
+          walletAddress: wallet.address,
+          ethBalance: keikiToOxtString(wallet.ethBalance, 4),
+          ethBalanceError: wallet.ethBalance <= BigInt(0),
+          oxtBalance: keikiToOxtString(wallet.oxtBalance, 4),
+          oxtBalanceError: wallet.oxtBalance <= BigInt(0),
         });
       }));
 

@@ -349,6 +349,7 @@ export function oxtToKeikiString(oxt: number): string {
 }
 
 // TEST UI ONLY:
+/*
 async function fakeTx(fail: boolean): Promise<string> {
   return new Promise<string>(async function (resolve, reject) {
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -359,3 +360,4 @@ async function fakeTx(fail: boolean): Promise<string> {
     }
   });
 }
+ */
