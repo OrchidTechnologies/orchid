@@ -27,9 +27,8 @@
 
 #include "api/peer_connection_interface.h"
 
-#include <cppcoro/async_manual_reset_event.hpp>
-
 #include "error.hpp"
+#include "event.hpp"
 #include "link.hpp"
 #include "origin.hpp"
 #include "task.hpp"
@@ -43,7 +42,7 @@ namespace orc {
 class Socket;
 
 class CreateObserver :
-    public cppcoro::async_manual_reset_event,
+    public Event,
     public webrtc::CreateSessionDescriptionObserver
 {
   public:
@@ -52,17 +51,17 @@ class CreateObserver :
   protected:
     void OnSuccess(webrtc::SessionDescriptionInterface *description) noexcept override {
         description_ = description;
-        set();
+        operator ()();
     }
 };
 
 class SetObserver :
-    public cppcoro::async_manual_reset_event,
+    public Event,
     public webrtc::SetSessionDescriptionObserver
 {
   protected:
     void OnSuccess() noexcept override {
-        set();
+        operator ()();
     }
 };
 
@@ -75,7 +74,6 @@ struct Configuration final {
 
 class Peer :
     public std::enable_shared_from_this<Peer>,
-    //public cppcoro::async_manual_reset_event,
     public webrtc::PeerConnectionObserver,
     protected Drain<rtc::scoped_refptr<webrtc::DataChannelInterface>>
 {
@@ -88,11 +86,11 @@ class Peer :
     // XXX: do I need to lock this?
     std::set<Channel *> channels_;
 
-    cppcoro::async_manual_reset_event gathered_;
+    Event gathered_;
     std::vector<std::string> gathering_;
     std::vector<std::string> candidates_;
 
-    cppcoro::async_manual_reset_event closed_;
+    Event closed_;
 
   protected:
     void Close() {
@@ -104,7 +102,7 @@ class Peer :
 
     ~Peer() override {
 _trace();
-        orc_insist(closed_.is_set());
+        orc_insist(closed_);
     }
 
     webrtc::PeerConnectionInterface *operator->() {
@@ -137,7 +135,7 @@ _trace();
 
             case webrtc::PeerConnectionInterface::kIceGatheringComplete:
                 orc_except({ candidates_ = gathering_; })
-                gathered_.set();
+                gathered_();
             break;
         }
     }
@@ -154,14 +152,12 @@ _trace();
     task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
         const rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetLocalDescription(observer, description);
-        co_await *observer;
-        co_await Schedule();
+        co_await observer->Wait();
     }
 
     task<std::string> Negotiation(webrtc::SessionDescriptionInterface *description) {
         co_await Negotiate(description);
-        co_await gathered_;
-        co_await Schedule();
+        co_await gathered_.Wait();
         std::string sdp;
         peer_->local_description()->ToString(&sdp);
         co_return sdp;
@@ -172,8 +168,7 @@ _trace();
             const rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
             webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
             peer_->CreateOffer(observer, options);
-            co_await *observer;
-            co_await Schedule();
+            co_await observer->Wait();
             co_return observer->description_;
         }());
     }
@@ -185,8 +180,7 @@ _trace();
         orc_assert_(answer != nullptr, "invalid " << type << ":\n" << sdp);
         rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
         peer_->SetRemoteDescription(observer, answer);
-        co_await *observer;
-        co_await Schedule();
+        co_await observer->Wait();
     }
 
     task<std::string> Answer(const std::string &offer) {
@@ -195,8 +189,7 @@ _trace();
             const rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
             webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
             peer_->CreateAnswer(observer, options);
-            co_await *observer;
-            co_await Schedule();
+            co_await observer->Wait();
             co_return observer->description_;
         }());
     }
@@ -214,7 +207,7 @@ class Channel final :
     const S<Peer> peer_;
     const rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
 
-    cppcoro::async_manual_reset_event opened_;
+    Event opened_;
 
   public:
     static task<Socket> Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
@@ -262,7 +255,7 @@ _trace();
             case webrtc::DataChannelInterface::kOpen:
                 if (Verbose)
                     Log() << "OnStateChange(kOpen)" << std::endl;
-                opened_.set();
+                opened_();
                 break;
             case webrtc::DataChannelInterface::kClosing:
                 if (Verbose)
@@ -289,13 +282,12 @@ _trace();
     }
 
     void Stop(const std::string &error = std::string()) noexcept {
-        opened_.set();
+        opened_();
         return Pump::Stop(error);
     }
 
     task<void> Open() noexcept {
-        co_await opened_;
-        co_await Schedule();
+        co_await opened_.Wait();
     }
 
     task<void> Shut() noexcept override {

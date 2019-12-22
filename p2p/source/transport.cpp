@@ -36,6 +36,7 @@
 #include <boost/asio/executor_work_guard.hpp>
 
 #include "error.hpp"
+#include "event.hpp"
 #include "forge.hpp"
 #include "nest.hpp"
 #include "trace.hpp"
@@ -58,7 +59,7 @@ class Transport :
     Nest nest_;
 
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override {
         static size_t payload(65536);
@@ -101,7 +102,6 @@ _trace();
 
     bool transport_send_const(const openvpn::Buffer &data) noexcept override {
         nest_.Hatch([&]() noexcept { return [this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
-            co_await Schedule();
             //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
             co_await Inner()->Send(buffer);
         }; });
@@ -111,7 +111,6 @@ _trace();
 
     bool transport_send(openvpn::BufferAllocated &buffer) noexcept override {
         nest_.Hatch([&]() noexcept { return [this, buffer = std::move(buffer)]() -> task<void> {
-            co_await Schedule();
             Subset data(buffer.c_data(), buffer.size());
             //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
             co_await Inner()->Send(data);
@@ -165,8 +164,6 @@ class Factory :
         openvpn::RCPtr transport(new Sink<Transport>(context, parent));
 
         Spawn([this, &context, parent, transport]() noexcept -> task<void> { try {
-            co_await Schedule();
-
             asio::dispatch(context, [parent]() {
                 parent->transport_pre_resolve();
                 parent->transport_wait();
@@ -266,13 +263,13 @@ class Middle :
 
     openvpn::ExternalTun::Config config_;
     openvpn::TunClientParent *parent_ = nullptr;
-    cppcoro::async_manual_reset_event ready_;
+    Event ready_;
 
     openvpn::IPv4::Addr ip4_;
     const uint32_t local_;
 
   protected:
-    virtual Pipe<Buffer> *Inner() = 0;
+    virtual Pipe<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override {
         //std::cerr << data << std::endl;
@@ -280,7 +277,7 @@ class Middle :
     }
 
     void Stop(const std::string &error) noexcept override {
-        orc_insist(false);
+        orc_insist_(false, error);
     }
 
   public:
@@ -386,8 +383,8 @@ _trace();
         });
 
         // XXX: put this in the right place
-        ready_.set();
-        co_await ready_;
+        ready_();
+        co_await ready_.Wait();
     }
 
     task<void> Send(const orc::Buffer &data) override {

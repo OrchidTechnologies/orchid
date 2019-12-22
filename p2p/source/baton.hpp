@@ -23,8 +23,6 @@
 #ifndef ORCHID_BATON_HPP
 #define ORCHID_BATON_HPP
 
-#include <cppcoro/async_manual_reset_event.hpp>
-
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 
@@ -35,6 +33,7 @@
 
 #include <asio.hpp>
 #include "error.hpp"
+#include "event.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -48,7 +47,7 @@ class Baton;
 template <>
 class Baton<void> {
   private:
-    cppcoro::async_manual_reset_event ready_;
+    Event ready_;
 
   public:
     Baton() = default;
@@ -57,12 +56,11 @@ class Baton<void> {
     Baton(Baton<void> &&) = delete;
 
     void set() {
-        ready_.set();
+        ready_();
     }
 
     task<void> get() {
-        co_await ready_;
-        co_await Schedule();
+        co_await ready_.Wait();
     }
 };
 

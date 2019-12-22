@@ -46,7 +46,7 @@ class Remote :
     static err_t Initialize(netif *interface);
 
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) noexcept override;

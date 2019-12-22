@@ -21,6 +21,7 @@
 
 
 #include <cppcoro/async_latch.hpp>
+#include <cppcoro/async_mutex.hpp>
 
 #include <boost/filesystem/string_file.hpp>
 
@@ -236,8 +237,7 @@ void Capture::Land(const Buffer &data) {
 }
 
 void Capture::Stop(const std::string &error) noexcept {
-    std::cerr << error << std::endl;
-    orc_insist(false);
+    orc_insist_(false, error);
 }
 
 void Capture::Land(const Buffer &data, bool analyze) {
@@ -276,14 +276,14 @@ class Punch :
     const Socket socket_;
 
   protected:
-    virtual Opening *Inner() = 0;
+    virtual Opening *Inner() noexcept = 0;
 
     void Land(const Buffer &data, Socket socket) override {
         hole_->Land(Datagram(socket, socket_, data));
     }
 
     void Stop(const std::string &error) noexcept override {
-        orc_insist(false);
+        orc_insist_(false, error);
     }
 
   public:
@@ -320,9 +320,9 @@ class Flow {
             Beam beam(2048);
             for (;;) {
                 size_t writ;
-                if (orc_catch({ writ = co_await input->Read(beam); }) || writ == 0)
+                if (orc_ignore({ writ = co_await input->Read(beam); }) || writ == 0)
                     break;
-                if (orc_catch({ co_await output->Send(beam.subset(0, writ)); }))
+                if (orc_ignore({ co_await output->Send(beam.subset(0, writ)); }))
                     break;
             }
 
@@ -410,7 +410,7 @@ class Split :
     }
 
     void Stop(const std::string &error) noexcept override {
-        orc_insist(false);
+        orc_insist_(false, error);
     }
 
   public:
@@ -561,7 +561,7 @@ task<bool> Split::Send(const Beam &data) {
                     span,
                     &tcp,
                 this]() mutable noexcept -> task<void> {
-                    if (orc_catch({
+                    if (orc_ignore({
                         // XXX: it seems strange that Connect takes a string and not a Host
                         co_await origin_->Connect(flow->up_, four.Target().Host().String(), std::to_string(four.Target().Port()));
                     }))
@@ -619,14 +619,14 @@ class Pass :
     Capture *const capture_;
 
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override {
         return capture_->Land(data, true);
     }
 
     void Stop(const std::string &error) noexcept override {
-        orc_insist(false);
+        orc_insist_(false, error);
     }
 
   public:
@@ -675,7 +675,7 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
             heap.eval<std::string>(hops + ".password")
         );
     }
-}, "parsing hop #" << hop); }
+}, "building hop #" << hop); }
 
 extern unsigned WinShift_;
 
@@ -700,15 +700,15 @@ void Capture::Start(const std::string &path) {
         heap.eval<void>(config);
     }
 
-    S<Origin> origin(Break<Local>());
-
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
-        return Start(std::move(origin));
+        return Start(Break<Local>());
 
     WinShift_ = unsigned(heap.eval<double>("eth_winshift"));
 
-    auto code([heap = std::move(heap), origin = std::move(origin), hops](Sunk<> *sunk) mutable -> task<void> {
+    auto code([heap = std::move(heap), hops](Sunk<> *sunk) mutable -> task<void> {
+        S<Origin> origin(Break<Local>());
+
         Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
 
         const auto host(origin->Host());

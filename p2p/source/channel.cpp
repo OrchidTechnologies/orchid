@@ -114,23 +114,23 @@ task<struct socket *> Peer::Internal() {
 }
 
 task<cricket::Candidate> Peer::Candidate() {
-    auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
+    const auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
         return peer_->GetSctpTransport();
     }));
 
     orc_assert(sctp != nullptr);
 
-    co_return origin_->Thread()->Invoke<cricket::Candidate>(RTC_FROM_HERE, [&]() -> cricket::Candidate {
-        auto dtls(sctp->dtls_transport());
+    co_return co_await Post([&]() -> cricket::Candidate {
+        const auto dtls(sctp->dtls_transport());
         orc_assert(dtls != nullptr);
-        auto ice(dtls->ice_transport());
+        const auto ice(dtls->ice_transport());
         orc_assert(ice != nullptr);
-        auto internal(ice->internal());
+        const auto internal(ice->internal());
         orc_assert(internal != nullptr);
-        auto connection(internal->selected_connection());
+        const auto connection(internal->selected_connection());
         orc_assert(connection != nullptr);
         return connection->remote_candidate();
-    });
+    }, origin_->Thread());
 }
 
 void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
@@ -165,7 +165,7 @@ void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionS
         case webrtc::PeerConnectionInterface::kIceConnectionClosed:
             if (Verbose)
                 Log() << "OnIceConnectionChange(kIceConnectionClosed)" << std::endl;
-            closed_.set();
+            closed_();
         break;
 
         case webrtc::PeerConnectionInterface::kIceConnectionMax:
@@ -261,18 +261,18 @@ _trace();
 };
 
 task<Socket> Channel::Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
-    auto client(Make<Actor>(origin, std::move(configuration)));
-    auto channel(sunk->Wire<Channel>(client));
-    auto answer(co_await respond(Strip(co_await client->Offer())));
+    const auto client(Make<Actor>(origin, std::move(configuration)));
+    const auto channel(sunk->Wire<Channel>(client));
+    const auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);
     co_await channel->Open();
-    auto candidate(co_await client->Candidate());
+    const auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ipv4_address(), socket.port());
 }
 
 std::string Strip(const std::string &sdp) {
-    static std::regex re("\r?\na=candidate:[^\r\n]*");
+    static const std::regex re("\r?\na=candidate:[^\r\n]*");
     return std::regex_replace(sdp, re, "");
 }
 
@@ -285,8 +285,8 @@ rtc::scoped_refptr<rtc::RTCCertificate> Certify() {
 task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice) {
     Configuration configuration;
     configuration.ice_ = std::move(ice);
-    auto client(Make<Actor>(origin, std::move(configuration)));
-    auto stopper(Break<Sink<Stopper>>());
+    const auto client(Make<Actor>(origin, std::move(configuration)));
+    const auto stopper(Break<Sink<Stopper>>());
     stopper->Wire<Channel>(client);
     co_return co_await client->Offer();
 }

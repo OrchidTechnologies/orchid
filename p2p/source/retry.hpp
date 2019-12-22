@@ -53,7 +53,7 @@ class Retry final :
     void Stop(const std::string &error) noexcept override {
         Close(std::move(tube_));
         if (!Open())
-            Link::Stop();
+            Link::Stop(error);
     }
 
   public:
@@ -67,9 +67,11 @@ class Retry final :
     bool Open() noexcept {
         return nest_.Hatch([&]() noexcept { return [&]() noexcept -> task<void> {
             auto tube(std::make_unique<Sink<Tube>>(this));
-            if (orc_catch({ co_await code_(tube.get()); }))
+            if (orc_ignore({ co_await code_(tube.get()); })) {
+                if (!tube->Wired())
+                    tube->template Wire<Cap>();
                 Close(std::move(tube));
-            else
+            } else
                 tube_ = std::move(tube);
         }; });
     }

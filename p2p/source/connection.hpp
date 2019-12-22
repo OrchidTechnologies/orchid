@@ -26,9 +26,6 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/ip/udp.hpp>
 
-#include <cppcoro/async_manual_reset_event.hpp>
-#include <cppcoro/async_mutex.hpp>
-
 #include "baton.hpp"
 #include "dns.hpp"
 #include "link.hpp"

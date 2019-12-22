@@ -99,7 +99,7 @@ _trace();
         if (count > limit_)
             return false;
         Spawn([count = std::move(count), code = code()]() mutable noexcept -> task<void> {
-            orc_catch({ co_await code(); });
+            orc_ignore({ co_await code(); });
         });
         return true;
     }

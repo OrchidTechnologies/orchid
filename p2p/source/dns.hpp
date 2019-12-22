@@ -48,19 +48,19 @@ namespace ip {
 
 template <typename Protocol_>
 std::ostream &operator <<(std::ostream &out, const std::vector<asio::ip::basic_endpoint<Protocol_>> &endpoints) {
-    out << '[';
+    out << '{';
     for (const auto &endpoint : endpoints)
         out << endpoint.address().to_string() << ':' << std::dec << endpoint.port() << ',';
-    out << ']';
+    out << '}';
     return out;
 }
 
 template <typename Protocol_>
 std::ostream &operator <<(std::ostream &out, const boost::asio::ip::basic_resolver_results<Protocol_> &endpoints) {
-    out << '[';
+    out << '{';
     for (const auto &endpoint : endpoints)
         out << endpoint.host_name() << ':' << endpoint.service_name() << ',';
-    out << ']';
+    out << '}';
     return out;
 }
 

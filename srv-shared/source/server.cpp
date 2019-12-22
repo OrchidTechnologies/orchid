@@ -253,11 +253,11 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
             const auto &[magic, id] = header;
             orc_assert(magic == Magic_);
 
-            co_await Scan(window, [&, &id = id](const Buffer &data) -> task<void> { orc_catch({
+            co_await Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
                 const auto [command, window] = Take<uint32_t, Window>(data);
                 if (command == Submit_);
                     co_await Submit(this, id, window);
-            }); });
+            } orc_catch({}) });
 
             co_await Invoice(this, source, id);
         }; });
@@ -267,6 +267,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
 }
 
 void Server::Stop() {
+    _trace();
 }
 
 void Server::Land(const Buffer &data) {
@@ -286,6 +287,10 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
 
     const auto locked(locked_());
     Commit(locked);
+}
+
+Server::~Server() {
+    _trace();
 }
 
 task<void> Server::Open(Pipe<Buffer> *pipe) {

@@ -24,7 +24,6 @@
 #include <cstdio>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -37,6 +36,7 @@
 #include "server.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
+#include "event.hpp"
 #include "jsonrpc.hpp"
 #include "task.hpp"
 #include "trace.hpp"
@@ -70,10 +70,10 @@ int Main(int argc, const char *const argv[]) {
         {
           private:
             std::string error_;
-            cppcoro::async_manual_reset_event done_;
+            Event done_;
 
           protected:
-            virtual Link *Inner() = 0;
+            virtual Link *Inner() noexcept = 0;
 
             void Land(const Buffer &data) override {
                 Log() << "Land" << data << std::endl;
@@ -82,7 +82,7 @@ int Main(int argc, const char *const argv[]) {
             void Stop(const std::string &error) noexcept override {
                 Log() << "Stop(" << error << ")" << std::endl;
                 error_ = error;
-                done_.set();
+                done_();
             }
 
           public:

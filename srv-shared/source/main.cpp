@@ -22,7 +22,6 @@
 
 #include <cstdio>
 #include <iostream>
-#include <mutex>
 #include <regex>
 
 #include <unistd.h>

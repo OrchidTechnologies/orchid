@@ -83,7 +83,7 @@ class Server :
     task<void> Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &data);
 
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
     void Stop() override;
@@ -93,6 +93,7 @@ class Server :
 
   public:
     Server(S<Origin> origin, S<Cashier> cashier);
+    ~Server() override;
 
     task<void> Open(Pipe<Buffer> *pipe);
     task<void> Shut() noexcept override;

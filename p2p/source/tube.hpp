@@ -31,7 +31,7 @@ class Tube :
     public Link<Buffer>
 {
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
   public:
     Tube(BufferDrain *drain) :

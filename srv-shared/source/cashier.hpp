@@ -23,13 +23,11 @@
 #ifndef ORCHID_CASHIER_HPP
 #define ORCHID_CASHIER_HPP
 
-#include <mutex>
 #include <string>
-
-#include <cppcoro/async_manual_reset_event.hpp>
 
 #include "coinbase.hpp"
 #include "endpoint.hpp"
+#include "event.hpp"
 #include "local.hpp"
 #include "locked.hpp"
 #include "locator.hpp"
@@ -45,7 +43,7 @@ static std::string Combine(const Address &signer, const Address &funder) {
 }
 
 struct Pot :
-    public cppcoro::async_manual_reset_event
+    public Event
 {
     struct Locked_ {
         uint128_t amount_ = 0;
@@ -108,7 +106,7 @@ class Cashier :
     void Send(Selector_ &selector, const uint256_t &gas, Args_ &&...args) {
         Spawn([=]() mutable noexcept -> task<void> {
             for (;;) {
-                orc_catch({
+                orc_ignore({
                     co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, 10*Gwei, std::forward<Args_>(args)...);
                     break;
                 });

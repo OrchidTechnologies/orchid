@@ -39,7 +39,7 @@ task<Results> Resolve(Origin &origin, const std::string &host, const std::string
 
     Results results;
 
-    static std::regex re("[0-9.]+");
+    static const std::regex re("[0-9.]+");
     if (std::regex_match(host, re)) {
         const auto endpoints(co_await resolver.async_resolve(host, port, orc::Token()));
         for (auto &endpoint : endpoints)

@@ -23,7 +23,6 @@
 #ifndef ORCHID_NODE_HPP
 #define ORCHID_NODE_HPP
 
-#include <mutex>
 #include <vector>
 
 #include "cashier.hpp"

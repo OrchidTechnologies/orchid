@@ -45,14 +45,14 @@ class Bonded :
         Bonded *const bonded_;
 
       protected:
-        virtual Pump<Buffer> *Inner() = 0;
+        virtual Pump<Buffer> *Inner() noexcept = 0;
 
         void Land(const Buffer &data) override {
             return bonded_->Land(this, data);
         }
 
         void Stop(const std::string &error) noexcept override {
-            bonded_->Stop(this);
+            bonded_->Stop(this, error);
             Valve::Stop();
         }
 
@@ -80,7 +80,7 @@ class Bonded :
     virtual void Land(Pipe<Buffer> *pipe, const Buffer &data) = 0;
     virtual void Stop() = 0;
 
-    void Stop(Bonding *bonding) {
+    void Stop(Bonding *bonding, const std::string &error) {
         const auto locked(locked_());
         const auto iterator(locked->bondings_.find(bonding));
         if (iterator->second != nullptr)

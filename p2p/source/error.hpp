@@ -85,13 +85,14 @@ class Error final :
     orc_assert_(code, "orc_assert(" #code ")")
 
 #define orc_catch(code) \
-    ({ bool _failed(false); \
-        try code catch (std::exception &error) { \
-            orc_log(Log(), "caught: " << error.what()); \
-            _failed = true; \
-        } catch (...) { \
-            _failed = true; \
-        } _failed; })
+    catch (const std::exception &error) { \
+        orc_log(Log(), "handled error " << error.what()); \
+    code } catch (...) { code }
+
+#define orc_ignore(code) \
+    ({ bool _failed(false); try code \
+        orc_catch({ _failed = true; }) \
+    _failed; })
 
 #define orc_except(code) \
     try code catch (...) { \

@@ -49,7 +49,7 @@ class Family :
     }
 
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override {
         const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);

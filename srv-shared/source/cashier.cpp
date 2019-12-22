@@ -22,8 +22,6 @@
 
 #include <boost/multiprecision/cpp_bin_float.hpp>
 
-#include <cppcoro/async_manual_reset_event.hpp>
-
 #include "baton.hpp"
 #include "cashier.hpp"
 #include "duplex.hpp"
@@ -115,7 +113,7 @@ void Cashier::Land(Json::Value data) {
                 locked->unlock_ = unlock;
             }
 
-            pot->set();
+            (*pot)();
         } else if (event == Bound_) {
             std::cout << "BIND " << data << std::endl;
         } else orc_throw("unknown message " << data);
@@ -148,7 +146,7 @@ void Cashier::Land(Json::Value data) {
                     locked->unlock_ = unlock;
                 }
 
-                pot->set();
+                (*pot)();
             } break;
 
             default:
@@ -158,7 +156,7 @@ void Cashier::Land(Json::Value data) {
 }
 
 void Cashier::Stop(const std::string &error) noexcept {
-    orc_insist(false);
+    orc_insist_(false, error);
 }
 
 Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
@@ -190,7 +188,7 @@ Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, co
     Spawn([this]() noexcept -> task<void> {
         for (;;) {
             co_await Sleep(5 * 60);
-            orc_catch({ co_await Update(); });
+            orc_ignore({ co_await Update(); });
         }
     });
 }
@@ -232,7 +230,7 @@ task<void> Cashier::Check(const Address &signer, const Address &funder, const ui
         co_await Look(signer, funder, combined);
     }
 
-    co_await *pot;
+    co_await pot->Wait();
 
     const auto locked(pot->locked_());
     orc_assert(amount < locked->amount_);

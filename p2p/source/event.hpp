@@ -23,7 +23,7 @@
 #ifndef ORCHID_EVENT_HPP
 #define ORCHID_EVENT_HPP
 
-#include <cppcoro/async_auto_reset_event.hpp>
+#include <cppcoro/async_manual_reset_event.hpp>
 #include <cppcoro/single_consumer_event.hpp>
 
 #include "task.hpp"
@@ -43,6 +43,7 @@ class Event {
         ready_.set();
     }
 
+    // XXX: replace with operator co_await
     task<void> Wait() {
         co_await ready_;
         co_await Schedule();

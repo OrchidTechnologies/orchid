@@ -23,8 +23,6 @@
 #ifndef ORCHID_VALVE_HPP
 #define ORCHID_VALVE_HPP
 
-#include <cppcoro/async_manual_reset_event.hpp>
-
 #include "error.hpp"
 #include "event.hpp"
 #include "task.hpp"

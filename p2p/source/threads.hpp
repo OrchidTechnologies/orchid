@@ -23,13 +23,10 @@
 #ifndef ORCHID_THREADS_HPP
 #define ORCHID_THREADS_HPP
 
-#include <cppcoro/async_manual_reset_event.hpp>
-
+#include "event.hpp"
 #include "task.hpp"
 
 namespace orc {
-
-// XXX: support exceptions
 
 template <typename Type_>
 class Value {
@@ -68,13 +65,19 @@ class Invoker :
 
     Code_ code_;
 
+    std::exception_ptr error_;
     Value<Type_> value_;
-    cppcoro::async_manual_reset_event ready_;
+    Event ready_;
 
   protected:
     void OnMessage(rtc::Message *message) override {
-        value_.set(code_);
-        ready_.set();
+        try {
+            value_.set(code_);
+        } catch (const std::exception &exception) {
+            error_ = std::current_exception();
+        }
+
+        ready_();
     }
 
   public:
@@ -85,9 +88,11 @@ class Invoker :
 
     task<Value<Type_>> operator ()(rtc::Thread *thread) {
         // potentially pass value/ready as MessageData
-        orc_assert(!ready_.is_set());
+        orc_assert(!ready_);
         thread->Post(RTC_FROM_HERE, this);
-        co_await ready_;
+        co_await ready_.Wait();
+        if (error_)
+            std::rethrow_exception(error_);
         co_return std::move(value_);
     }
 };
@@ -104,11 +109,15 @@ class Threads {
 };
 
 template <typename Code_>
-auto Post(Code_ code) noexcept(noexcept(code())) -> task<decltype(code())> {
+auto Post(Code_ code, rtc::Thread *thread) noexcept(noexcept(code())) -> task<decltype(code())> {
     Invoker invoker(std::move(code));
-    auto value(co_await invoker(Threads::Get().signals_.get()));
-    co_await Schedule();
+    auto value(co_await invoker(thread));
     co_return value.get();
+}
+
+template <typename Code_>
+auto Post(Code_ code) noexcept(noexcept(code())) -> task<decltype(code())> {
+    co_return co_await Post(std::move(code), Threads::Get().signals_.get());
 }
 
 }

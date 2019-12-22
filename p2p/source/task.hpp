@@ -66,6 +66,7 @@ Scheduled Schedule();
 
 template <typename Type_>
 Type_ Wait(task<Type_> code) {
+    // XXX: centralize Schedule?
     return cppcoro::sync_wait(std::move(code));
 }
 

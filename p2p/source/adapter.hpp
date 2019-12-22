@@ -80,7 +80,7 @@ class Adapter :
     cppcoro::async_auto_reset_event ready_;
 
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override {
         locked_()->data_.emplace(data);
@@ -88,6 +88,7 @@ class Adapter :
     }
 
     void Stop(const std::string &error) noexcept override {
+        // XXX: store the exception to return from asio
         // XXX: locked_()->data_.emplace(Beam());
         ready_.set();
     }

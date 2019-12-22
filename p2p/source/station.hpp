@@ -33,7 +33,7 @@ class Station :
     public Drain<Json::Value>
 {
   protected:
-    virtual Pump<Json::Value, Json::Value> *Inner() = 0;
+    virtual Pump<Json::Value, Json::Value> *Inner() noexcept = 0;
 
     void Land(Json::Value data) override;
 

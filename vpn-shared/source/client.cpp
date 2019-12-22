@@ -84,12 +84,12 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
     if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
-    orc_catch({
+    try {
         const auto [header, window] = Take<Header, Window>(data);
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
-        Wait(Scan(window, [&, &id = id](const Buffer &data) -> task<void> { orc_catch({
+        Wait(Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
             const auto [command, window] = Take<uint32_t, Window>(data);
             if (command != Invoice_)
                 co_return;
@@ -124,8 +124,8 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
 
             if (prepay_ > predicted)
                 Issue(uint256_t(prepay_ * 2 - predicted));
-        }); }));
-    }); return true; })) {
+        } orc_catch({}) }));
+    } orc_catch({}) return true; })) {
         Transfer(data.size());
         Pump::Land(data);
     }

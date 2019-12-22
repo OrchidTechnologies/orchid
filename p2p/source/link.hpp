@@ -99,7 +99,7 @@ class Stopper :
     public BufferDrain
 {
   protected:
-    virtual Pump<Buffer> *Inner() = 0;
+    virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &buffer) override {
     }
@@ -111,6 +111,25 @@ class Stopper :
     task<void> Shut() noexcept override {
         co_await Inner()->Shut();
         co_await Valve::Shut();
+    }
+};
+
+class Cap :
+    public Pump<Buffer>
+{
+  public:
+    Cap(Drain<const Buffer &> *drain) :
+        Pump(drain)
+    {
+    }
+
+    task<void> Shut() noexcept override {
+        Pump::Stop();
+        co_await Pump::Shut();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        orc_assert(false);
     }
 };
 
@@ -140,12 +159,16 @@ class Sunk {
   protected:
     U<Inner_> inner_;
 
-    virtual Drain_ *Gave() = 0;
+    virtual Drain_ *Gave() noexcept = 0;
 
   public:
+    bool Wired() noexcept {
+        return inner_ != nullptr;
+    }
+
     template <typename Type_, typename... Args_>
-    Type_ *Wire(Args_ &&...args) {
-        orc_insist(inner_ == nullptr);
+    Type_ *Wire(Args_ &&...args) noexcept(noexcept(Type_(Gave(), std::forward<Args_>(args)...))) {
+        orc_insist(!Wired());
         auto inner(std::make_unique<Type_>(Gave(), std::forward<Args_>(args)...));
         const auto backup(inner.get());
         inner_ = std::move(inner);
@@ -167,13 +190,13 @@ class Sink final :
     public Sunk<Drain_, Inner_>
 {
   private:
-    Inner_ *Inner() override {
+    Inner_ *Inner() noexcept override {
         const auto inner(this->inner_.get());
         orc_insist_(inner != nullptr, typeid(decltype(inner)).name() << " " << typeid(Base_).name() << "::Inner() == nullptr");
         return inner;
     }
 
-    Drain_ *Gave() override {
+    Drain_ *Gave() noexcept override {
         return this;
     }
 
