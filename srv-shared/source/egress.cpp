@@ -79,7 +79,6 @@ std::optional<Egress::Translation> Egress::Find(const Three &destination) {
     auto &recents(locked->recents_);
     recents.splice(recents.begin(), recents, external->second.recent_);
     ++external->second.indirect_->second->usage_;
-            std::cerr << std::dec << external->second.indirect_->second->usage_ << std::endl;
     return {Translation(external->second.translated_, *external->second.indirect_->first, external->second.indirect_->second)};
 }
 
@@ -113,10 +112,8 @@ task<void> Egress::Shut(Translators::iterator indirect) noexcept {
         locked->translators_.erase(indirect);
 
         neutral.shutting_ = true;
-            std::cerr << std::dec << neutral.usage_ << std::endl;
-        if (neutral.usage_ == 0) {
+        if (neutral.usage_ == 0)
             neutral.shut_();
-        }
     }
 
     co_await neutral.shut_.Wait();

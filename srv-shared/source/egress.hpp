@@ -148,7 +148,6 @@ class Egress :
     task<void> Shut(Translators::iterator indirect) noexcept;
 
     task<void> Send(const Buffer &data) {
-        std::cout << data << std::endl;
         co_await Inner()->Send(data);
     }
 
