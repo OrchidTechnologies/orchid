@@ -59,7 +59,7 @@ class Node final {
         if (auto server = cache.lock())
             return server;
         const auto server(Break<Sink<Server>>(origin_, cashier_));
-        server->Wire<Translator>(egress_);
+        egress_->Wire(server.get());
         server->self_ = server;
         cache = server;
         return server;

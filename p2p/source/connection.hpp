@@ -34,7 +34,7 @@
 
 namespace orc {
 
-template <typename Connection_>
+template <typename Connection_, bool Close_>
 class Connection final :
     public Stream
 {
@@ -74,14 +74,16 @@ class Connection final :
             for (const auto &endpoint : endpoints)
                 Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
         const auto endpoint(co_await orc_value(co_return co_await, asio::async_connect(connection_, endpoints, Token()),
-            "connecting to" << endpoints));
+            "connecting to " << endpoints));
         connection_.non_blocking(true);
         co_return endpoint;
     }
 
     task<void> Shut() noexcept override {
-        try {
-            connection_.shutdown(Connection_::protocol_type::socket::shutdown_send);
+        if (Close_)
+            connection_.close();
+        else try {
+            connection_.shutdown(Connection_::shutdown_send);
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::not_connected)

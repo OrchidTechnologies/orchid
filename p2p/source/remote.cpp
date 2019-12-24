@@ -300,9 +300,9 @@ void Remote::Open() {
 }
 
 task<void> Remote::Shut() noexcept {
+    co_await nest_.Shut();
     co_await Inner()->Shut();
     co_await Valve::Shut();
-    co_await nest_.Shut();
     netifapi_netif_set_down(&interface_);
 }
 

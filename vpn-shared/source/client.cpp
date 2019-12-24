@@ -131,7 +131,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
     }
 }
 
-void Client::Stop() {
+void Client::Stop() noexcept {
     Pump::Stop();
 }
 
@@ -146,8 +146,6 @@ Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remot
     funder_(funder),
     prepay_(uint256_t(0xb1a2bc2ec500)<<128)
 {
-    // XXX: this class shouldn't derive from Valve twice...
-    Bonded::type_ = typeid(*this).name();
     Pump::type_ = typeid(*this).name();
 }
 
@@ -180,9 +178,9 @@ task<void> Client::Open(const S<Origin> &origin) {
 }
 
 task<void> Client::Shut() noexcept {
+    co_await nest_.Shut();
     co_await Bonded::Shut();
     co_await Pump::Shut();
-    co_await nest_.Shut();
 }
 
 task<void> Client::Send(const Buffer &data) {

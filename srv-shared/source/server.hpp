@@ -86,7 +86,7 @@ class Server :
     virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
-    void Stop() override;
+    void Stop() noexcept override;
 
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) noexcept override;
@@ -96,7 +96,7 @@ class Server :
     ~Server() override;
 
     task<void> Open(Pipe<Buffer> *pipe);
-    task<void> Shut() noexcept override;
+    task<void> Shut() noexcept;
 
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
 };

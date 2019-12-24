@@ -32,9 +32,7 @@
 
 namespace orc {
 
-class Bonded :
-    public Valve
-{
+class Bonded {
   private:
     class Bonding :
         public Valve,
@@ -78,9 +76,10 @@ class Bonded :
 
   protected:
     virtual void Land(Pipe<Buffer> *pipe, const Buffer &data) = 0;
-    virtual void Stop() = 0;
 
-    void Stop(Bonding *bonding, const std::string &error) {
+    virtual void Stop() noexcept = 0;
+
+    void Stop(Bonding *bonding, const std::string &error) noexcept {
         const auto locked(locked_());
         const auto iterator(locked->bondings_.find(bonding));
         if (iterator->second != nullptr)
@@ -93,10 +92,6 @@ class Bonded :
     }
 
   public:
-    Bonded() {
-        type_ = typeid(*this).name();
-    }
-
     Sink<Bonding> *Bond() {
         // XXX: this is non-obviously incorrect
         const auto locked(locked_());
@@ -115,7 +110,7 @@ class Bonded :
         return bonding->first;
     }
 
-    task<void> Shut() noexcept override {
+    task<void> Shut() noexcept {
         std::vector<task<void>> shuts;
         { const auto locked(locked_());
             for (auto &bonding : locked->bondings_)
@@ -124,7 +119,6 @@ class Bonded :
                 }(std::move(bonding.second))); }
         co_await cppcoro::when_all(std::move(shuts));
         orc_insist(locked_()->bondings_.empty());
-        co_await Valve::Shut();
     }
 
     task<void> Send(const Buffer &data) {

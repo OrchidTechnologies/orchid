@@ -65,7 +65,7 @@ class Nest :
             if (nest_ == nullptr)
                 return;
             const auto count(--nest_->count_);
-            if (count == 0)
+            if (count == 0 && nest_->limit_ == 0)
                 nest_->event_();
             //Log() << "Nest[" << nest_ << "]: " << std::dec << count << std::endl;
         }
@@ -83,13 +83,10 @@ class Nest :
     }
 
     task<void> Shut() noexcept override {
-        // XXX: do I need to do this?
         limit_ = 0;
-        // XXX: this just seems entirely wrong
-        while (count_ != 0) {
-_trace();
+        while (count_ != 0)
             co_await event_.Wait();
-        }
+        Valve::Stop();
         co_await Valve::Shut();
     }
 

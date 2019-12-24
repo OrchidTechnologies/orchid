@@ -93,8 +93,8 @@ class Transport :
     }
 
     void stop() noexcept override {
-_trace();
         Wait([&]() -> task<void> {
+            co_await nest_.Shut();
             co_await Inner()->Shut();
         }());
         work_.reset();
@@ -271,21 +271,13 @@ class Middle :
   protected:
     virtual Pipe<Buffer> *Inner() noexcept = 0;
 
-    void Land(const Buffer &data) override {
-        //std::cerr << data << std::endl;
-        Link<Buffer>::Land(data);
-    }
-
-    void Stop(const std::string &error) noexcept override {
-        orc_insist_(false, error);
-    }
-
   public:
     Middle(BufferDrain *drain, S<Origin> origin, uint32_t local) :
         Link<Buffer>(drain),
         origin_(std::move(origin)),
         local_(local)
     {
+        type_ = typeid(*this).name();
     }
 
     openvpn::TransportClientFactory *new_transport_factory(const openvpn::ExternalTransport::Config &config) noexcept override {
@@ -374,13 +366,33 @@ class Middle :
         return true; }
 
 
-    task<void> Connect() {
-        thread_ = std::thread([this]() {
-            auto v = connect();
-            Log() << __func__ << " " << __FILE__ << ":" << __LINE__ << " " << v.status << " " << v.message << " " << v.error << std::endl;
-_trace();
-            orc_insist(false);
-        });
+    task<void> Connect(std::string ovpnfile, std::string username, std::string password) {
+        try {
+            openvpn::ClientAPI::Config config;
+            config.content = std::move(ovpnfile);
+
+            const auto eval(eval_config(config));
+            orc_assert_(!eval.error, eval.message);
+
+            if (eval.autologin) {
+                orc_assert(username.empty());
+                orc_assert(password.empty());
+            } else {
+                openvpn::ClientAPI::ProvideCreds credentials;
+                credentials.username = std::move(username);
+                credentials.password = std::move(password);
+                const auto status(provide_creds(credentials));
+                orc_assert_(!status.error, status.status << ": " << status.message);
+            }
+
+            thread_ = std::thread([this]() {
+                const auto status(connect());
+                orc_insist_(!status.error, " " << status.status << ": " << status.message);
+                orc_insist(false);
+            });
+        } catch (const std::exception &error) {
+            co_return Stop(error.what());
+        }
 
         // XXX: put this in the right place
         ready_();
@@ -412,21 +424,7 @@ _trace();
 
 task<void> Connect(Sunk<> *sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password) {
     const auto middle(sunk->Wire<Sink<Middle>>(std::move(origin), local));
-
-    {
-        openvpn::ClientAPI::Config config;
-        config.content = std::move(ovpnfile);
-        middle->eval_config(config);
-    }
-
-    {
-        openvpn::ClientAPI::ProvideCreds credentials;
-        credentials.username = std::move(username);
-        credentials.password = std::move(password);
-        middle->provide_creds(credentials);
-    }
-
-    co_await middle->Connect();
+    co_await middle->Connect(std::move(ovpnfile), std::move(username), std::move(password));
 }
 
 }

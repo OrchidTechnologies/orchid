@@ -39,8 +39,8 @@
 namespace orc {
 
 class Client :
-    public Bonded,
-    public Pump<Buffer>
+    public Pump<Buffer>,
+    public Bonded
 {
   private:
     const rtc::scoped_refptr<rtc::RTCCertificate> local_;
@@ -78,7 +78,7 @@ class Client :
 
   protected:
     void Land(Pipe *pipe, const Buffer &data) override;
-    void Stop() override;
+    void Stop() noexcept override;
 
   public:
     Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder);

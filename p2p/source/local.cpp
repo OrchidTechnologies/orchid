@@ -131,7 +131,7 @@ rtc::BasicPacketSocketFactory &Local::Factory() {
 }
 
 task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
-    auto connection(std::make_unique<Connection<asio::ip::udp::socket>>(Context()));
+    auto connection(std::make_unique<Connection<asio::ip::udp::socket, true>>(Context()));
     const auto endpoint(co_await connection->Open(host, port));
     const auto inverted(sunk->Wire<Inverted>(std::move(connection)));
     inverted->Open();
@@ -139,7 +139,7 @@ task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::
 }
 
 task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {
-    auto connection(std::make_unique<Connection<asio::ip::tcp::socket>>(Context()));
+    auto connection(std::make_unique<Connection<asio::ip::tcp::socket, false>>(Context()));
     const auto endpoint(co_await connection->Open(host, port));
     stream = std::move(connection);
     co_return Socket(endpoint.address(), endpoint.port());

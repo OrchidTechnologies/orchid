@@ -266,8 +266,8 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
     })) Send(Inner(), data);
 }
 
-void Server::Stop() {
-    _trace();
+void Server::Stop() noexcept {
+    self_.reset();
 }
 
 void Server::Land(const Buffer &data) {
@@ -276,6 +276,7 @@ void Server::Land(const Buffer &data) {
 }
 
 void Server::Stop(const std::string &error) noexcept {
+    orc_insist_(error.empty(), error);
 }
 
 Server::Server(S<Origin> origin, S<Cashier> cashier) :
@@ -283,8 +284,6 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
     origin_(std::move(origin)),
     cashier_(std::move(cashier))
 {
-    type_ = typeid(*this).name();
-
     const auto locked(locked_());
     Commit(locked);
 }
@@ -299,9 +298,8 @@ task<void> Server::Open(Pipe<Buffer> *pipe) {
 }
 
 task<void> Server::Shut() noexcept {
-    co_await Bonded::Shut();
-    co_await Inner()->Shut();
     co_await nest_.Shut();
+    co_await cppcoro::when_all(Bonded::Shut(), Inner()->Shut());
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {

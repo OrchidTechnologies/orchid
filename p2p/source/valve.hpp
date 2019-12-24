@@ -33,7 +33,7 @@ class Valve {
   public:
     static uint64_t Unique_;
     const uint64_t unique_ = ++Unique_;
-    const char *type_ = nullptr;
+    const char *type_ = typeid(Valve).name();
 
   private:
     static void Insert(Valve *valve);

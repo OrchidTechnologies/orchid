@@ -23,39 +23,134 @@
 #ifndef ORCHID_EGRESS_HPP
 #define ORCHID_EGRESS_HPP
 
+// XXX: there is a serious denial of service attack in this system
+
 #include <map>
 
+#include "event.hpp"
 #include "link.hpp"
 #include "locked.hpp"
 #include "socket.hpp"
 
 namespace orc {
 
-class Translator;
-
 class Egress :
+    public std::enable_shared_from_this<Egress>,
     public Valve,
-    public Pipe<Buffer>,
     public BufferDrain
 {
   private:
     const uint32_t local_;
-    const uint16_t ephemeral_base_ = 4096;
+    const uint16_t ephemeral_ = 4096;
 
-    typedef std::list<const Three> LRU_;
+    class Translator;
 
-    struct Translation_ {
-        const Socket socket_;
-        Translator &translator_;
-        LRU_::iterator lru_iter_;
+    struct Neutral {
+        std::atomic<unsigned> usage_ = 0;
+        std::atomic<bool> shutting_ = false;
+        Event shut_;
     };
 
+    typedef std::map<Translator *, Neutral *> Translators;
+    typedef std::list<const Three> Recents;
+
+    struct Translation {
+        const Socket translated_;
+        Translator &translator_;
+        Neutral *neutral_;
+
+        Translation(Socket translated, Translator &translator, Neutral *neutral) :
+            translated_(translated),
+            translator_(translator),
+            neutral_(neutral)
+        {
+        }
+
+        Translation(const Translation &rhs) = delete;
+
+        Translation(Translation &&rhs) noexcept :
+            translated_(rhs.translated_),
+            translator_(rhs.translator_),
+            neutral_(rhs.neutral_)
+        {
+            rhs.neutral_ = nullptr;
+        }
+
+        ~Translation() {
+            if (neutral_ != nullptr && --neutral_->usage_ == 0 && neutral_->shutting_)
+                neutral_->shut_();
+        }
+    };
+
+    struct External {
+        const Socket translated_;
+        const Translators::iterator indirect_;
+        const Recents::iterator recent_;
+    };
+
+    typedef std::map<Three, External> Externals;
+
+    struct Internal {
+        const Socket translated_;
+        const Externals::iterator external_;
+    };
+
+    typedef std::map<Three, Internal> Internals;
+
     struct Locked_ {
-        std::map<Three, Translation_> translations_;
-        LRU_ lru_;
+        Externals externals_;
+        Translators translators_;
+        Recents recents_;
     }; Locked<Locked_> locked_;
 
-    std::optional<std::pair<const Socket, Translator &>> Find(const Three &target);
+    class Translator:
+        public Link<Buffer>
+    {
+        friend class Egress;
+
+      private:
+        const S<Egress> egress_;
+        Neutral neutral_;
+        const Translators::iterator indirect_;
+
+        struct Locked_ {
+            Internals internals_;
+        }; Locked<Locked_> locked_;
+
+        Socket Translate(const Three &source);
+
+        template <typename Code_>
+        auto Access(const Code_ &code) -> decltype(code(std::declval<Internals &>())) {
+            const auto locked(locked_());
+            return code(locked->internals_);
+        }
+
+      public:
+        Translator(BufferDrain *drain, S<Egress> egress) :
+            Link(drain),
+            egress_(std::move(egress)),
+            indirect_(egress_->Open(this, &neutral_))
+        {
+        }
+
+        task<void> Shut() noexcept override {
+            co_await egress_->Shut(indirect_);
+            co_await Link::Shut();
+        }
+
+        task<void> Send(const Buffer &data) override;
+    };
+
+    Socket Translate(Translators::iterator, const Three &source);
+    std::optional<Translation> Find(const Three &destination);
+
+    Translators::iterator Open(Translator *translator, Neutral *neutral);
+    task<void> Shut(Translators::iterator indirect) noexcept;
+
+    task<void> Send(const Buffer &data) {
+        std::cout << data << std::endl;
+        co_await Inner()->Send(data);
+    }
 
   protected:
     virtual Pump<Buffer> *Inner() noexcept = 0;
@@ -73,57 +168,12 @@ class Egress :
         orc_insist(false);
     }
 
+    void Wire(Sunk<> *sunk) {
+        sunk->Wire<Translator>(shared_from_this());
+    }
+
     task<void> Shut() noexcept override {
-        co_await Inner()->Shut();
-        co_await Valve::Shut();
-    }
-
-    task<void> Send(const Buffer &data) override {
-        co_await Inner()->Send(data);
-    }
-
-    Socket Translate(Translator &translator, const Three &three);
-};
-
-
-class Translator:
-    public Link<Buffer>
-{
-  private:
-    S<Egress> egress_;
-
-    typedef std::map<Three, Socket> Translations_;
-
-    struct Locked_ {
-        Translations_ translations_;
-    }; Locked<Locked_> locked_;
-
-    Socket Translate(const Three &source) {
-        const auto locked(locked_());
-        const auto translation(locked->translations_.find(source));
-        if (translation != locked->translations_.end())
-            return translation->second;
-        const auto socket(egress_->Translate(*this, source));
-        orc_insist(locked->translations_.emplace(source, socket).second);
-        return socket;
-    }
-
-  public:
-    Translator(BufferDrain *drain, S<Egress> egress) :
-        Link(drain),
-        egress_(std::move(egress))
-    {
-    }
-
-    task<void> Send(const Buffer &data) override;
-    using Link::Stop;
-    using Link::Land;
-
-    void Remove(const Three &source) {
-        const auto locked(locked_());
-        auto &translations(locked->translations_);
-        orc_insist(translations.find(source) != translations.end());
-        translations.erase(source);
+        orc_insist(false);
     }
 };
 

@@ -404,7 +404,7 @@ class Split :
             }());
             if (flow == nullptr)
                 co_return;
-            flow->down_ = std::make_unique<Connection<asio::ip::tcp::socket>>(std::move(connection));
+            flow->down_ = std::make_unique<Connection<asio::ip::tcp::socket, false>>(std::move(connection));
             flow->Open();
         });
     }
