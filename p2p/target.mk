@@ -146,7 +146,7 @@ source += $(pwd)/eEVM/3rdparty/keccak/KeccakSpongeWidth1600.c
 source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c
 
 cflags += -I$(pwd)/eEVM/3rdparty
-cflags += -I$(pwd)/eEVM/3rdparty/intx/include
+cflags += -I$(pwd)/intx/include
 cflags += -I$(pwd)/eEVM/include
 
 

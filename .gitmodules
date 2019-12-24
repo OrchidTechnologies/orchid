@@ -124,3 +124,6 @@
 [submodule "sequoia"]
 	path = p2p/sequoia
 	url = https://gitlab.com/sequoia-pgp/sequoia.git
+[submodule "intx"]
+	path = p2p/intx
+	url = https://github.com/chfast/intx.git
