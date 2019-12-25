@@ -255,7 +255,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
 
             co_await Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
                 const auto [command, window] = Take<uint32_t, Window>(data);
-                if (command == Submit_);
+                if (command == Submit_)
                     co_await Submit(this, id, window);
             } orc_catch({}) });
 
