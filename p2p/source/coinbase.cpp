@@ -41,8 +41,6 @@ task<Float> Price(const std::string &from, const std::string &to, const Float &a
         const auto &error(errors[0]);
         const auto id(error["id"].asString());
         const auto message(error["message"].asString());
-        if (response.code_ == boost::beast::http::status::not_found && id == "not_found" && message == "Invalid base currency")
-            co_return 0;
         orc_throw(response.code_ << "/" << id << ": " << message);
     }
 }

@@ -40,11 +40,7 @@ static const auto Bound_(Hash("Update(address,address)"));
 
 task<void> Cashier::Update() {
     auto eth(co_await Price("ETH", currency_, Ten18));
-    orc_assert(eth != 0);
-
     auto oxt(co_await Price("OXT", currency_, Ten18));
-    if (oxt == 0)
-        oxt = eth / 300;
 
     //auto predict(Parse(co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/predictTable.json"}, {}, {})));
 
