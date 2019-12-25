@@ -27,6 +27,7 @@
 #include <functional>
 #include <iostream>
 #include <list>
+#include <string>
 
 #include <asio.hpp>
 
@@ -38,6 +39,13 @@
 #include "trace.hpp"
 
 namespace orc {
+
+inline unsigned long To(const std::string &value) {
+    size_t end;
+    const auto number(stoul(value, &end));
+    orc_assert(end == value.size());
+    return number;
+}
 
 using boost::multiprecision::uint128_t;
 using boost::multiprecision::uint256_t;

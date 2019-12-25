@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <cppcoro/when_all.hpp>
+
 #include <boost/multiprecision/cpp_bin_float.hpp>
 
 #include "baton.hpp"
@@ -31,23 +33,37 @@
 
 namespace orc {
 
-static Float Ten18("1000000000000000000");
-static Float Two128(uint256_t(1) << 128);
-//static Float Two30(1024 * 1024 * 1024);
+static const Float Ten18("1000000000000000000");
+static const Float Two128(uint256_t(1) << 128);
+//static const Float Two30(1024 * 1024 * 1024);
 
 static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
 static const auto Bound_(Hash("Update(address,address)"));
 
-task<void> Cashier::Update() {
-    auto eth(co_await Price("ETH", currency_, Ten18));
-    auto oxt(co_await Price("OXT", currency_, Ten18));
+task<void> Cashier::UpdateCoin() { try {
+    auto [eth, oxt] = co_await cppcoro::when_all(Price("ETH", currency_, Ten18), Price("OXT", currency_, Ten18));
 
-    //auto predict(Parse(co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/predictTable.json"}, {}, {})));
+    const auto coin(coin_());
+    coin->eth_ = std::move(eth);
+    coin->oxt_ = std::move(oxt);
+} orc_stack("updating coin prices") }
 
-    const auto prices(prices_());
-    prices->eth_ = std::move(eth);
-    prices->oxt_ = std::move(oxt);
-}
+task<void> Cashier::UpdateGas() { try {
+    auto result(Parse((co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
+
+    const auto &range(result["gasPriceRange"]);
+    orc_assert(range.isObject());
+
+    S<const Prices> prices([&]() {
+        auto prices(std::make_shared<Prices>());
+        for (const auto &price : range.getMemberNames())
+            prices->emplace(To(price), range[price].asDouble() * 60);
+        return prices;
+    }());
+
+    const auto gas(gas_());
+    std::swap(gas->prices_, prices);
+} orc_stack("updating gas prices") }
 
 task<void> Cashier::Look(const Address &signer, const Address &funder, const std::string &combined) {
     static const auto look(Hash("look(address,address)").Clip<4>().num<uint32_t>());
@@ -168,7 +184,7 @@ Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, co
     chain_(chain),
     recipient_(recipient)
 {
-    Wait([&]() -> task<void> {
+    try { Wait([&]() -> task<void> {
         auto duplex(std::make_unique<Duplex>(origin));
         co_await duplex->Open(locator);
 
@@ -178,13 +194,18 @@ Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, co
         inverted->Open();
         station_ = std::move(station);
 
-        co_await Update();
-    }());
+        co_await cppcoro::when_all(UpdateCoin(), UpdateGas());
+    }()); } catch (const std::exception &error) {
+        Log() << error.what() << std::endl;
+        std::terminate();
+    }
 
     Spawn([this]() noexcept -> task<void> {
         for (;;) {
             co_await Sleep(5 * 60);
-            orc_ignore({ co_await Update(); });
+            auto [forex, gas] = co_await cppcoro::when_all_ready(UpdateCoin(), UpdateGas());
+            orc_ignore({ std::move(forex).result(); });
+            orc_ignore({ std::move(gas).result(); });
         }
     });
 }
@@ -194,13 +215,32 @@ Float Cashier::Bill(size_t size) const {
 }
 
 checked_int256_t Cashier::Convert(const Float &balance) const {
-    const auto oxt(prices_()->oxt_);
+    const auto oxt(coin_()->oxt_);
     return checked_int256_t(balance / oxt * Two128);
 }
 
-Float Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint256_t &until, const uint256_t &amount, const uint256_t &gas) const {
-    const auto oxt(prices_()->oxt_);
-    return Float(amount) * oxt / Two128;
+std::pair<Float, uint256_t> Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const {
+    const auto [oxt, eth] = [&]() {
+        const auto coin(coin_());
+        return std::make_pair(coin->oxt_, coin->eth_);
+    }();
+
+    const auto base(Float(amount) * oxt);
+    const auto until(start + range);
+
+    std::pair<Float, uint256_t> credit(0, 10*Gwei);
+
+    const auto prices(gas_()->prices_);
+    for (const auto &[price, time] : *prices) {
+        const auto when(now + unsigned(time));
+        if (when >= until) continue;
+        const auto cost(price * Gwei / 10);
+        const auto profit((start < when ? base * Float(range - (when - start)) / Float(range) : base) - Float(gas * cost) * eth);
+        if (profit > std::get<0>(credit))
+            credit = {profit, cost};
+    }
+
+    return credit;
 }
 
 task<void> Cashier::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {

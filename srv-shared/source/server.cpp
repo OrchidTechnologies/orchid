@@ -172,8 +172,11 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
     orc_assert(until > now);
 
     const uint256_t gas(100000);
-
-    const auto credit(cashier_->Credit(now, start, until, amount * (uint256_t(ratio) + 1), gas));
+    const auto [profit, price] = cashier_->Credit(now, start, range, amount, gas);
+    if (profit <= 0)
+        co_return;
+    static const Float Two128(uint256_t(1) << 128);
+    const auto expected(profit * Float(ratio + 1) / Two128);
 
     using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
     static const auto orchid(Hash("Orchid.grab"));
@@ -182,7 +185,7 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
 
     co_await cashier_->Check(signer, funder, amount, recipient, receipt);
 
-    const auto [reveal, balance, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio]() {
+    const auto [reveal, balance, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected]() {
         const auto locked(locked_());
 
         orc_assert(issued >= locked->issued_);
@@ -203,7 +206,7 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
             return reveal->second.first;
         }());
 
-        locked->balance_ += credit;
+        locked->balance_ += expected;
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
@@ -229,7 +232,7 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
             Bytes /*receipt*/, std::vector<Bytes32> /*old*/
         > grab("grab");
 
-        cashier_->Send(grab, gas,
+        cashier_->Send(grab, gas, price,
             reveal, commit,
             issued, nonce,
             v, r, s,
