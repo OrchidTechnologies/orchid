@@ -36,10 +36,6 @@ class Valve {
     const char *type_ = typeid(Valve).name();
 
   private:
-    static void Insert(Valve *valve);
-    static void Remove(Valve *valve);
-
-  private:
     Event shut_;
 
   protected:
@@ -49,14 +45,8 @@ class Valve {
     }
 
   public:
-    Valve() {
-        Insert(this);
-    }
-
-    virtual ~Valve() {
-        orc_insist_(shut_, "stuck " << type_);
-        Remove(this);
-    }
+    Valve();
+    virtual ~Valve();
 
     virtual task<void> Shut() noexcept {
         co_await shut_.Wait();

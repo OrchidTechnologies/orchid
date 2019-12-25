@@ -75,16 +75,16 @@ class Track {
     }
 };
 
-void Valve::Insert(Valve *valve) {
-    if (!tracking_)
-        return;
-    Track()->insert(valve);
+Valve::Valve() {
+    if (tracking_)
+        Track()->insert(this);
 }
 
-void Valve::Remove(Valve *valve) {
-    if (!tracking_)
-        return;
-    Track()->erase(valve);
+Valve::~Valve() {
+    orc_insist_(shut_, "stuck " << type_ << " (" << std::uncaught_exceptions() << ")");
+
+    if (tracking_)
+        Track()->erase(this);
 }
 
 }
