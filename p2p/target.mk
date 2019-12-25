@@ -46,10 +46,16 @@ endif
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
+cflags += -I$(pwd)/expected/include
 cflags += -I$(pwd)/url/include
+cflags += -I$(pwd)/url/src
 source += $(filter-out \
     %/filesystem.cpp \
-,$(wildcard $(pwd)/url/src/*.cpp))
+,$(wildcard \
+    $(pwd)/url/src/unicode/*.cpp \
+    $(pwd)/url/src/url/*.cpp \
+    $(pwd)/url/src/url/percent_encoding/*.cpp \
+))
 
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/*.c)

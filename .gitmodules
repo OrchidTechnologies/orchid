@@ -124,3 +124,6 @@
 [submodule "intx"]
 	path = p2p/intx
 	url = https://github.com/chfast/intx.git
+[submodule "expected"]
+	path = p2p/expected
+	url = https://github.com/TartanLlama/expected.git
