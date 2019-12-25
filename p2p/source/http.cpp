@@ -80,8 +80,7 @@ task<Response> Request_(Socket_ &socket, const std::string &method, const Locato
         asio::ssl::context context{asio::ssl::context::sslv23_client};
 
         if (!verify)
-            // XXX: verification did not work against infura
-            /*context.set_verify_callback(asio::ssl::rfc2818_verification(locator.host_))*/;
+            context.set_verify_callback(asio::ssl::rfc2818_verification(locator.host_));
         else {
             context.set_verify_mode(asio::ssl::verify_peer);
 
@@ -96,6 +95,8 @@ task<Response> Request_(Socket_ &socket, const std::string &method, const Locato
         }
 
         asio::ssl::stream<Socket_ &> stream{socket, context};
+        orc_assert(SSL_set_tlsext_host_name(stream.native_handle(), locator.host_.c_str()));
+        // XXX: beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
 
         try {
             co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
