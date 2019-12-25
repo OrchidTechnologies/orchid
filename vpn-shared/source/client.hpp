@@ -34,6 +34,7 @@
 #include "locked.hpp"
 #include "nest.hpp"
 #include "origin.hpp"
+#include "signed.hpp"
 #include "ticket.hpp"
 
 namespace orc {

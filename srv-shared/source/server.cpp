@@ -133,7 +133,7 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
     Header header{Magic_, id};
     co_await Send(pipe, Datagram(Port_, destination, Tie(header,
         Command(Stamp_, Monotonic()),
-        Command(Invoice_, serial, cashier_->Convert(balance), cashier_->Tuple(), commit)
+        Command(Invoice_, serial, Complement(cashier_->Convert(balance)), cashier_->Tuple(), commit)
     )), true);
 }
 

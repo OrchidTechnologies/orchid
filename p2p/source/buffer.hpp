@@ -41,7 +41,6 @@ namespace orc {
 
 using boost::multiprecision::uint128_t;
 using boost::multiprecision::uint256_t;
-using boost::multiprecision::checked_int256_t;
 
 class Region;
 class Beam;
@@ -78,11 +77,11 @@ struct Cast<Type_, typename std::enable_if<std::is_arithmetic<Type_>::value>::ty
     }
 };
 
-template <unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_>
-struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> {
+template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> {
     static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == Bits_ / 8);
-        boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value;
+        boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value;
         boost::multiprecision::import_bits(value, std::reverse_iterator(data + size), std::reverse_iterator(data), 8, false);
         return value;
     }
@@ -507,21 +506,21 @@ class Number<Type_, true> final :
     }
 };
 
-template <unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_>
-class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>, false> final :
+template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, false> final :
     public Data<(Bits_ >> 3)>
 {
   public:
     // NOLINTNEXTLINE (modernize-use-equals-default)
     using Data<(Bits_ >> 3)>::Data;
 
-    Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> value, uint8_t pad = 0) {
+    Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value, uint8_t pad = 0) {
         for (auto i(boost::multiprecision::export_bits(value, this->data_.rbegin(), 8, false)), e(this->data_.rend()); i != e; ++i)
             *i = pad;
     }
 
     Number(const std::string &value) :
-        Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>(value))
+        Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>(value))
     {
     }
 
@@ -686,9 +685,9 @@ inline typename std::enable_if<std::is_arithmetic<Type_>::value, bool>::type Eac
     return Number<Type_>(value).each(code);
 }
 
-template <unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_>
-inline typename std::enable_if<Bits_ % 8 == 0, bool>::type Each(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>> &value, const std::function<bool (const uint8_t *, size_t)> &code) {
-    return Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>>(value).each(code);
+template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+inline typename std::enable_if<Bits_ % 8 == 0, bool>::type Each(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value, const std::function<bool (const uint8_t *, size_t)> &code) {
+    return Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>>(value).each(code);
 }
 
 template <typename... Args_>
@@ -1037,13 +1036,13 @@ static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
 
-template <size_t Index_, unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_, typename... Taking_>
-struct Taking<Index_, boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type, Taking_...> final {
+template <size_t Index_, unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_, typename... Taking_>
+struct Taking<Index_, boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type, Taking_...> final {
 template <typename Tuple_, typename Buffer_>
 static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     Brick<Bits_ / 8> brick;
     window.Take(brick);
-    std::get<Index_>(tuple) = brick.template num<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_, void>>>();
+    std::get<Index_>(tuple) = brick.template num<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>>();
     return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
 
@@ -1131,7 +1130,6 @@ auto Take(Buffer_ &&buffer) {
         window.Stop();
     return tuple;
 }
-
 
 }
 

@@ -32,6 +32,7 @@
 #include "locked.hpp"
 #include "locator.hpp"
 #include "sleep.hpp"
+#include "signed.hpp"
 #include "station.hpp"
 
 namespace orc {

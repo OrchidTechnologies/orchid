@@ -94,7 +94,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             if (command != Invoice_)
                 co_return;
 
-            const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, checked_int256_t, Address, uint256_t, Address, Bytes32>(window);
+            const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
             orc_assert(lottery == lottery_);
             orc_assert(chain == chain_);
 
@@ -104,7 +104,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                 // XXX: implement rollover strategy
                 if (locked->serial_ < serial) {
                     locked->serial_ = serial;
-                    locked->balance_ = balance;
+                    locked->balance_ = Complement(balance);
                     locked->recipient_ = recipient;
                     locked->commit_ = commit;
                 }
