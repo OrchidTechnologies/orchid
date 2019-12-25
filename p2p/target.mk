@@ -54,7 +54,6 @@ source += $(filter-out \
 ,$(wildcard \
     $(pwd)/url/src/unicode/*.cpp \
     $(pwd)/url/src/url/*.cpp \
-    $(pwd)/url/src/url/percent_encoding/*.cpp \
 ))
 
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
