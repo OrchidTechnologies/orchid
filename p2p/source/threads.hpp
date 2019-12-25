@@ -23,8 +23,9 @@
 #ifndef ORCHID_THREADS_HPP
 #define ORCHID_THREADS_HPP
 
+#include <rtc_base/thread.h>
+
 #include "event.hpp"
-#include "task.hpp"
 
 namespace orc {
 

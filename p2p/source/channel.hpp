@@ -25,179 +25,11 @@
 
 #include <functional>
 
-#include "api/peer_connection_interface.h"
-
-#include "error.hpp"
-#include "event.hpp"
-#include "link.hpp"
-#include "origin.hpp"
-#include "task.hpp"
-#include "threads.hpp"
-#include "trace.hpp"
-
-struct socket;
+#include "peer.hpp"
 
 namespace orc {
 
 class Socket;
-
-class CreateObserver :
-    public Event,
-    public webrtc::CreateSessionDescriptionObserver
-{
-  public:
-    webrtc::SessionDescriptionInterface *description_;
-
-  protected:
-    void OnSuccess(webrtc::SessionDescriptionInterface *description) noexcept override {
-        description_ = description;
-        operator ()();
-    }
-};
-
-class SetObserver :
-    public Event,
-    public webrtc::SetSessionDescriptionObserver
-{
-  protected:
-    void OnSuccess() noexcept override {
-        operator ()();
-    }
-};
-
-class Channel;
-
-struct Configuration final {
-    rtc::scoped_refptr<rtc::RTCCertificate> tls_;
-    std::vector<std::string> ice_;
-};
-
-class Peer :
-    public std::enable_shared_from_this<Peer>,
-    public webrtc::PeerConnectionObserver,
-    protected Drain<rtc::scoped_refptr<webrtc::DataChannelInterface>>
-{
-    friend class Channel;
-
-  private:
-    const S<Origin> origin_;
-    const rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_;
-
-    // XXX: do I need to lock this?
-    std::set<Channel *> channels_;
-
-    Event gathered_;
-    std::vector<std::string> gathering_;
-    std::vector<std::string> candidates_;
-
-    Event closed_;
-
-  protected:
-    void Close() {
-        peer_->Close();
-    }
-
-  public:
-    Peer(const S<Origin> &origin, Configuration configuration = Configuration());
-
-    ~Peer() override {
-_trace();
-        orc_insist(closed_);
-    }
-
-    webrtc::PeerConnectionInterface *operator->() {
-        return peer_;
-    }
-
-    task<struct socket *> Internal();
-    task<cricket::Candidate> Candidate();
-
-
-    void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) noexcept override {
-        _trace();
-    }
-
-    void OnRenegotiationNeeded() noexcept override {
-        _trace();
-    }
-
-    void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept override;
-    void OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept override;
-
-    void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state) noexcept override {
-        switch (state) {
-            case webrtc::PeerConnectionInterface::kIceGatheringNew:
-                gathering_.clear();
-            break;
-
-            case webrtc::PeerConnectionInterface::kIceGatheringGathering:
-            break;
-
-            case webrtc::PeerConnectionInterface::kIceGatheringComplete:
-                orc_except({ candidates_ = gathering_; })
-                gathered_();
-            break;
-        }
-    }
-
-    void OnIceCandidate(const webrtc::IceCandidateInterface *candidate) noexcept override {
-        std::string sdp;
-        candidate->ToString(&sdp);
-        gathering_.push_back(sdp);
-    }
-
-    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) noexcept override;
-
-
-    task<void> Negotiate(webrtc::SessionDescriptionInterface *description) {
-        const rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
-        peer_->SetLocalDescription(observer, description);
-        co_await observer->Wait();
-    }
-
-    task<std::string> Negotiation(webrtc::SessionDescriptionInterface *description) {
-        co_await Negotiate(description);
-        co_await gathered_.Wait();
-        std::string sdp;
-        peer_->local_description()->ToString(&sdp);
-        co_return sdp;
-    }
-
-    task<std::string> Offer() {
-        co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
-            const rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-            peer_->CreateOffer(observer, options);
-            co_await observer->Wait();
-            co_return observer->description_;
-        }());
-    }
-
-
-    task<void> Negotiate(const char *type, const std::string &sdp) {
-        webrtc::SdpParseError error;
-        const auto answer(webrtc::CreateSessionDescription(type, sdp, &error));
-        orc_assert_(answer != nullptr, "invalid " << type << ":\n" << sdp);
-        rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
-        peer_->SetRemoteDescription(observer, answer);
-        co_await observer->Wait();
-    }
-
-    task<std::string> Answer(const std::string &offer) {
-        co_await Negotiate("offer", offer);
-        co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
-            const rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-            peer_->CreateAnswer(observer, options);
-            co_await observer->Wait();
-            co_return observer->description_;
-        }());
-    }
-
-    task<void> Negotiate(const std::string &sdp) {
-        co_return co_await Negotiate("answer", sdp);
-    }
-};
 
 class Channel final :
     public Pump<Buffer>,
@@ -310,8 +142,6 @@ _trace();
     }
 };
 
-std::string Strip(const std::string &sdp);
-rtc::scoped_refptr<rtc::RTCCertificate> Certify();
 task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice);
 
 }

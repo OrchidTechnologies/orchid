@@ -20,43 +20,24 @@
 /* }}} */
 
 
-#ifndef ORCHID_DUPLEX_HPP
-#define ORCHID_DUPLEX_HPP
-
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-
-#include "locator.hpp"
-#include "origin.hpp"
-#include "reader.hpp"
+#include "baton.hpp"
+#include "duplex.hpp"
 
 namespace orc {
 
-class Duplex final :
-    public Stream
-{
-  private:
-    S<Origin> origin_;
-
-  protected:
-    boost::beast::websocket::stream<boost::beast::tcp_stream> inner_;
-
-  public:
-    Duplex(S<Origin> origin);
-
-    decltype(inner_) *operator ->() {
-        return &inner_;
+task<size_t> Duplex::Read(Beam &beam) {
+    size_t writ;
+    try {
+        boost::beast::buffers_adaptor buffer(asio::buffer(beam.data(), beam.size()));
+        writ = co_await inner_.async_read(buffer, Token());
+    } catch (const asio::system_error &error) {
+        auto code(error.code());
+        if (code == asio::error::eof)
+            co_return 0;
+        orc_adapt(error);
     }
 
-    task<size_t> Read(Beam &beam) override;
-
-    task<boost::asio::ip::tcp::endpoint> Open(const Locator &locator);
-
-    task<void> Shut() noexcept override;
-
-    task<void> Send(const Buffer &data) override;
-};
-
+    co_return writ;
 }
 
-#endif//ORCHID_DUPLEX_HPP
+}

@@ -20,43 +20,23 @@
 /* }}} */
 
 
-#ifndef ORCHID_DUPLEX_HPP
-#define ORCHID_DUPLEX_HPP
-
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-
-#include "locator.hpp"
-#include "origin.hpp"
-#include "reader.hpp"
+#include "threads.hpp"
 
 namespace orc {
 
-class Duplex final :
-    public Stream
-{
-  private:
-    S<Origin> origin_;
-
-  protected:
-    boost::beast::websocket::stream<boost::beast::tcp_stream> inner_;
-
-  public:
-    Duplex(S<Origin> origin);
-
-    decltype(inner_) *operator ->() {
-        return &inner_;
-    }
-
-    task<size_t> Read(Beam &beam) override;
-
-    task<boost::asio::ip::tcp::endpoint> Open(const Locator &locator);
-
-    task<void> Shut() noexcept override;
-
-    task<void> Send(const Buffer &data) override;
-};
-
+const Threads &Threads::Get() {
+    static Threads threads;
+    return threads;
 }
 
-#endif//ORCHID_DUPLEX_HPP
+Threads::Threads() {
+    signals_ = rtc::Thread::Create();
+    signals_->SetName("Orchid WebRTC Signals", nullptr);
+    signals_->Start();
+
+    working_ = rtc::Thread::Create();
+    working_->SetName("Orchid WebRTC Workers", nullptr);
+    working_->Start();
+}
+
+}

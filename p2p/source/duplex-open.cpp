@@ -20,43 +20,20 @@
 /* }}} */
 
 
-#ifndef ORCHID_DUPLEX_HPP
-#define ORCHID_DUPLEX_HPP
-
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-
-#include "locator.hpp"
-#include "origin.hpp"
-#include "reader.hpp"
+#include "baton.hpp"
+#include "dns.hpp"
+#include "duplex.hpp"
 
 namespace orc {
 
-class Duplex final :
-    public Stream
-{
-  private:
-    S<Origin> origin_;
-
-  protected:
-    boost::beast::websocket::stream<boost::beast::tcp_stream> inner_;
-
-  public:
-    Duplex(S<Origin> origin);
-
-    decltype(inner_) *operator ->() {
-        return &inner_;
-    }
-
-    task<size_t> Read(Beam &beam) override;
-
-    task<boost::asio::ip::tcp::endpoint> Open(const Locator &locator);
-
-    task<void> Shut() noexcept override;
-
-    task<void> Send(const Buffer &data) override;
-};
+task<boost::asio::ip::tcp::endpoint> Duplex::Open(const Locator &locator) { orc_block({
+    const auto endpoints(co_await Resolve(*origin_, locator.host_, locator.port_));
+    auto &lowest(boost::beast::get_lowest_layer(inner_));
+    const auto endpoint(co_await orc_value(co_return co_await, lowest.async_connect(endpoints, Token()),
+        "connecting to" << endpoints));
+    lowest.expires_never();
+    co_await inner_.async_handshake(locator.host_, locator.path_, Token());
+    co_return endpoint;
+}, "opening " << locator); }
 
 }
-
-#endif//ORCHID_DUPLEX_HPP
