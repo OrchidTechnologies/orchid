@@ -169,9 +169,10 @@ void Cashier::Land(Json::Value data) {
 
 void Cashier::Stop(const std::string &error) noexcept {
     orc_insist_(false, error);
+    Valve::Stop();
 }
 
-Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
+Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
 
     price_(price),
@@ -184,7 +185,11 @@ Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, co
     chain_(chain),
     recipient_(recipient)
 {
-    try { Wait([&]() -> task<void> {
+    type_ = typeid(*this).name();
+}
+
+void Cashier::Open(const S<Origin> &origin, Locator locator) {
+    Wait([&]() -> task<void> {
         auto duplex(std::make_unique<Duplex>(origin));
         co_await duplex->Open(locator);
 
@@ -195,10 +200,7 @@ Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, co
         station_ = std::move(station);
 
         co_await cppcoro::when_all(UpdateCoin(), UpdateGas());
-    }()); } catch (const std::exception &error) {
-        Log() << error.what() << std::endl;
-        std::terminate();
-    }
+    }());
 
     Spawn([this]() noexcept -> task<void> {
         for (;;) {
@@ -208,6 +210,12 @@ Cashier::Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, co
             orc_ignore({ std::move(gas).result(); });
         }
     });
+}
+
+task<void> Cashier::Shut() noexcept {
+    if (station_ != nullptr)
+        co_await station_->Shut();
+    co_await Valve::Shut();
 }
 
 Float Cashier::Bill(size_t size) const {

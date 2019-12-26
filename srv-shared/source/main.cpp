@@ -337,12 +337,14 @@ int Main(int argc, const char *const argv[]) {
         if (price == 0)
             return nullptr;
         const Address personal(args["personal"].as<std::string>());
-        return Make<Cashier>(origin, std::move(endpoint), Locator::Parse(args["ws"].as<std::string>()),
+        return Break<Cashier>(std::move(endpoint),
             price, args["currency"].as<std::string>(),
             personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
         );
     }());
+
+    cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
 
     auto egress([&]() -> S<Egress> {
         if (args.count("ovpn-file") != 0) {

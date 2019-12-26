@@ -111,7 +111,7 @@ int Main(int argc, const char *const argv[]) {
 
 
     auto local(Host_);
-    auto capture(Make<Sink<Capture>>(local));
+    auto capture(Break<Sink<Capture>>(local));
 
 #if 0
 #elif defined(__APPLE__)

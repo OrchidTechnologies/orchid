@@ -41,9 +41,11 @@ class Analyzer {
     virtual void AnalyzeIncoming(Span<const uint8_t> span) = 0;
 };
 
-class Internal {
+class Internal :
+    public Valve
+{
   public:
-    virtual ~Internal();
+    ~Internal() override;
 
     virtual task<bool> Send(const Beam &beam) = 0;
 };
@@ -57,6 +59,7 @@ class MonitorLogger
 };
 
 class Capture :
+    public Valve,
     public BufferDrain
 {
   private:
@@ -73,13 +76,15 @@ class Capture :
 
   public:
     Capture(const Host &local);
-    virtual ~Capture();
+    ~Capture() override;
 
     void Land(const Buffer &data, bool analyze);
 
     void Start(S<Origin> origin);
     Sunk<> *Start();
     void Start(const std::string &path);
+
+    task<void> Shut() noexcept override;
 };
 
 }

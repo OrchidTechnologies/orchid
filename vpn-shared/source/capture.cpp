@@ -238,6 +238,7 @@ void Capture::Land(const Buffer &data) {
 
 void Capture::Stop(const std::string &error) noexcept {
     orc_insist_(false, error);
+    Valve::Stop();
 }
 
 void Capture::Land(const Buffer &data, bool analyze) {
@@ -421,6 +422,7 @@ class Split :
     }
 
     void Connect(const Host &local);
+    task<void> Shut() noexcept override;
 
     void Land(const Buffer &data) override;
     task<bool> Send(const Beam &data) override;
@@ -490,6 +492,10 @@ void Split::Connect(const Host &local) {
     local_ = Local();
     // XXX: this is sickening
     remote_ = asio::ip::address_v4(local_.Host().operator uint32_t() + 1);
+}
+
+task<void> Split::Shut() noexcept {
+    orc_insist(false);
 }
 
 void Split::Land(const Buffer &data) {
@@ -635,6 +641,10 @@ class Pass :
     {
     }
 
+    task<void> Shut() noexcept override {
+        co_await Inner()->Shut();
+    }
+
     task<bool> Send(const Beam &beam) override {
         co_await Inner()->Send(beam);
         co_return true;
@@ -725,6 +735,14 @@ void Capture::Start(const std::string &path) {
 
     const auto retry(Start()->Wire<Retry<decltype(code)>>(std::move(code)));
     retry->Open();
+}
+
+task<void> Capture::Shut() noexcept {
+    co_await nest_.Shut();
+    if (internal_ != nullptr)
+        co_await internal_->Shut();
+    co_await Inner()->Shut();
+    co_await Valve::Shut();
 }
 
 }

@@ -55,6 +55,7 @@ struct Pot :
 };
 
 class Cashier :
+    public Valve,
     public Drain<Json::Value>
 {
   private:
@@ -98,9 +99,11 @@ class Cashier :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Cashier(const S<Origin> &origin, Endpoint endpoint, Locator locator, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    ~Cashier() override = default;
 
-    virtual ~Cashier() = default;
+    void Open(const S<Origin> &origin, Locator locator);
+    task<void> Shut() noexcept override;
 
     auto Tuple() const {
         return std::tie(lottery_, chain_, recipient_);
