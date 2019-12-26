@@ -127,3 +127,6 @@
 [submodule "expected"]
 	path = p2p/expected
 	url = https://github.com/TartanLlama/expected.git
+[submodule "curl"]
+	path = p2p/curl
+	url = https://github.com/curl/curl.git
