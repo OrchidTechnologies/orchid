@@ -89,8 +89,8 @@ class Cashier :
         std::map<Identity, S<Pot>> pots_;
     }; Locked<Cache_> cache_;
 
-    task<void> UpdateCoin();
-    task<void> UpdateGas();
+    task<void> UpdateCoin(Origin &origin);
+    task<void> UpdateGas(Origin &origin);
 
     task<void> Look(const Address &signer, const Address &funder, const std::string &combined);
 
@@ -102,7 +102,7 @@ class Cashier :
     Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
     ~Cashier() override = default;
 
-    void Open(const S<Origin> &origin, Locator locator);
+    void Open(S<Origin> origin, Locator locator);
     task<void> Shut() noexcept override;
 
     auto Tuple() const {

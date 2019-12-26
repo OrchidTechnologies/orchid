@@ -54,7 +54,7 @@ class Family :
     void Land(const Buffer &data) override {
         const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
         orc_assert(protocol == Analyze(packet));
-        return Link<Buffer>::Land(packet);
+        return Link::Land(packet);
     }
 
   public:

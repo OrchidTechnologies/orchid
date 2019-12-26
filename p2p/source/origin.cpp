@@ -24,8 +24,6 @@
 #include <p2p/client/basic_port_allocator.h>
 #include <rtc_base/network.h>
 
-#include "adapter.hpp"
-#include "locator.hpp"
 #include "origin.hpp"
 #include "pirate.hpp"
 
@@ -52,17 +50,7 @@ U<cricket::PortAllocator> Origin::Allocator() {
 // XXX: for Local::Request, this should use NSURLSession on __APPLE__
 
 task<Response> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
-#if 0
-    // XXX: this implementation almost worked a while ago; needs updating
-    Sink<Adapter> adapter(orc::Context());
-    U<Stream> stream;
-    co_await Connect(stream, locator.host_, locator.port_);
-    const auto socket(adapter.Wire<Inverted>(std::move(stream)));
-    socket->Start();
-    co_return co_await orc::Request(adapter, method, locator, headers, data, verify);
-#else
-    co_return co_await orc::Request(method, locator, headers, data, verify);
-#endif
+    co_return co_await orc::Request(*this, method, locator, headers, data, verify);
 }
 
 }

@@ -59,9 +59,9 @@ class Origin :
     virtual rtc::BasicPacketSocketFactory &Factory() = 0;
     U<cricket::PortAllocator> Allocator();
 
-    virtual task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) = 0;
-    virtual task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) = 0;
+    virtual task<void> Associate(Sunk<> *sunk, const Socket &endpoint) = 0;
     virtual task<Socket> Unlid(Sunk<BufferSewer, Opening> *sunk) = 0;
+    virtual task<U<Stream>> Connect(const Socket &endpoint) = 0;
 
     task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
 };

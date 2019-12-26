@@ -75,13 +75,15 @@ class Track {
     }
 };
 
-Valve::Valve() {
+Valve::Valve(bool set) :
+    shut_(set)
+{
     if (tracking_)
         Track()->insert(this);
 }
 
 Valve::~Valve() {
-    orc_insist_(shut_, "stuck " << type_ << " (" << std::uncaught_exceptions() << ")");
+    orc_insist_(shut_, "stuck " << type_);
 
     if (tracking_)
         Track()->erase(this);

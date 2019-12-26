@@ -49,7 +49,7 @@ Brick<32> Hash(const Buffer &data) {
     Beam beam(data);
     const auto hash(ethash_keccak256(beam.data(), beam.size()));
     Brick<sizeof(hash)> value;
-    // the ethash_keccak56 API fundamentally requires a union
+    // the ethash_keccak256 API fundamentally requires a union
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
     memcpy(value.data(), hash.bytes, sizeof(hash));
     return value;
@@ -98,7 +98,7 @@ static Common Serialize(const secp256k1_context *context, secp256k1_pubkey &comm
     orc_assert(size == data.size());
 
     orc_assert(data[0] == 0x04);
-    return {&data[1], 64};
+    return Bounded<65>(data).skip<1>();
 }
 
 Common Commonize(const Secret &secret) {

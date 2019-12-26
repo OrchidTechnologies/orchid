@@ -200,6 +200,11 @@ class Socket {
     {
     }
 
+    template <typename Protocol_>
+    operator asio::ip::basic_endpoint<Protocol_>() const {
+        return {host_, port_};
+    }
+
     const Host &Host() const {
         return host_;
     }
@@ -222,7 +227,7 @@ class Socket {
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
-    return out << socket.Host() << ":" << std::dec << socket.Port();
+    return out << socket.Host().String() << ":" << std::dec << socket.Port();
 }
 
 class Four {

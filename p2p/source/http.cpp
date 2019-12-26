@@ -37,6 +37,7 @@
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 
+#include "adapter.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
@@ -122,14 +123,18 @@ task<Response> Request_(Socket_ &socket, const std::string &method, const Locato
     } else orc_assert(false);
 }
 
-#if 0
-task<Response> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const rtc::OpenSSLCertificate &)> &verify) {
-    return Request_(adapter, method, locator, headers, data, verify);
-}
-#endif
+task<Response> Request(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
+    const auto endpoints(co_await Resolve(origin, locator.host_, locator.port_));
+    for (const auto &endpoint : endpoints) {
+        Adapter adapter(Context(), co_await origin.Connect(endpoint));
+        orc_block({ co_return co_await Using(adapter, [&]() -> task<Response> {
+            co_return co_await Request_(adapter, method, locator, headers, data, verify);
+        }); }, "connected to " << endpoint);
+    }
+    orc_assert_(false, "failed connection");
+}, "requesting " << locator); }
 
 task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
-    // XXX: implement remote http requests
     const auto local(Break<Local>());
     const auto endpoints(co_await Resolve(*local, locator.host_, locator.port_));
     asio::ip::tcp::socket socket(orc::Context());

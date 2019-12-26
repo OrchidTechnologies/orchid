@@ -76,10 +76,10 @@ class LocalOpening final :
         });
     }
 
-    void Open(const Socket &socket) {
+    void Open(const Socket &endpoint) {
         connection_.open(asio::ip::udp::v4());
         connection_.non_blocking(true);
-        connection_.bind({socket.Host(), socket.Port()});
+        connection_.bind(endpoint);
         Open();
     }
 
@@ -130,25 +130,23 @@ rtc::BasicPacketSocketFactory &Local::Factory() {
     return factory;
 }
 
-task<Socket> Local::Associate(Sunk<> *sunk, const std::string &host, const std::string &port) {
+task<void> Local::Associate(Sunk<> *sunk, const Socket &endpoint) {
     auto connection(std::make_unique<Connection<asio::ip::udp::socket, true>>(Context()));
-    const auto endpoint(co_await connection->Open(host, port));
+    co_await connection->Open(endpoint);
     const auto inverted(sunk->Wire<Inverted>(std::move(connection)));
     inverted->Open();
-    co_return Socket(endpoint.address(), endpoint.port());
-}
-
-task<Socket> Local::Connect(U<Stream> &stream, const std::string &host, const std::string &port) {
-    auto connection(std::make_unique<Connection<asio::ip::tcp::socket, false>>(Context()));
-    const auto endpoint(co_await connection->Open(host, port));
-    stream = std::move(connection);
-    co_return Socket(endpoint.address(), endpoint.port());
 }
 
 task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> *sunk) {
     const auto opening(sunk->Wire<LocalOpening>());
     opening->Open({asio::ip::address_v4::any(), 0});
     co_return opening->Local();
+}
+
+task<U<Stream>> Local::Connect(const Socket &endpoint) {
+    auto connection(std::make_unique<Connection<asio::ip::tcp::socket, false>>(Context()));
+    co_await connection->Open(endpoint);
+    co_return connection;
 }
 
 }

@@ -35,8 +35,8 @@
 
 namespace orc {
 
-class Adapter;
 class Locator;
+class Origin;
 
 struct Response {
     boost::beast::http::status code_;
@@ -48,8 +48,7 @@ struct Response {
     }
 };
 
-task<Response> Request(Adapter &adapter, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
-
+task<Response> Request(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
 task<Response> Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
 
 }

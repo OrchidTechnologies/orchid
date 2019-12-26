@@ -43,6 +43,7 @@ class File final :
   public:
     template <typename... Args_>
     File(Args_ &&...args) :
+        Stream(true),
         file_(std::forward<Args_>(args)...)
     {
     }
@@ -52,15 +53,15 @@ class File final :
     }
 
     task<size_t> Read(Beam &beam) override {
-	size_t writ;
-	try {
-	    writ = co_await file_.async_read_some(asio::buffer(beam.data(), beam.size()), Token());
-	} catch (const asio::system_error &error) {
-	    const auto code(error.code());
-	    if (code == asio::error::eof)
+        size_t writ;
+        try {
+            writ = co_await file_.async_read_some(asio::buffer(beam.data(), beam.size()), Token());
+        } catch (const asio::system_error &error) {
+            const auto code(error.code());
+            if (code == asio::error::eof)
                 co_return 0;
             orc_adapt(error);
-	}
+        }
 
         if (Verbose)
             Log() << "\e[33mRECV " << writ << " " << beam.subset(0, writ) << "\e[0m" << std::endl;
@@ -69,7 +70,7 @@ class File final :
 
     task<void> Shut() noexcept override {
         file_.close();
-        co_return;
+        co_await Stream::Shut();
     }
 
     task<void> Send(const Buffer &data) override {

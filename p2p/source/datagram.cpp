@@ -63,7 +63,7 @@ Beam Datagram(const Socket &source, const Socket &destination, const Buffer &dat
     Beam beam(sizeof(Header) + data.size());
     auto span(beam.span());
     auto &header(span.cast<Header>(0));
-    span.copy(sizeof(header), data);
+    span.load(sizeof(header), data);
 
     header.ip4.version_len = openvpn::IPv4Header::ver_len(4, sizeof(header.ip4));
     header.ip4.tos = 0;

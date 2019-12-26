@@ -22,19 +22,16 @@
 
 #include <regex>
 
-#include "adapter.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
-#include "http.hpp"
 #include "json.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
-#include "trace.hpp"
 
 namespace orc {
 
-task<Results> Resolve(Origin &origin, const std::string &host, const std::string &port) {
+task<Results> Resolve(Origin &origin, const std::string &host, const std::string &port) { orc_block({
     asio::ip::tcp::resolver resolver(orc::Context());
 
     Results results;
@@ -58,6 +55,6 @@ task<Results> Resolve(Origin &origin, const std::string &host, const std::string
     }
 
     co_return results;
-}
+}, "resolving " << host << ":" << port); }
 
 }

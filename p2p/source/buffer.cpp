@@ -27,6 +27,8 @@
 
 namespace orc {
 
+std::atomic<uint64_t> copied_(0);
+
 size_t Buffer::size() const {
     size_t value(0);
     each([&](const uint8_t *data, size_t size) {
@@ -78,17 +80,15 @@ std::string Buffer::hex() const {
     return value.str();
 }
 
-size_t Buffer::copy(uint8_t *data, size_t size) const {
+void Buffer::copy(uint8_t *data, size_t size) const {
     auto here(data);
 
     each([&](const uint8_t *next, size_t writ) {
         orc_assert(data + size - here >= writ);
-        memcpy(here, next, writ);
+        Copy(here, next, writ);
         here += writ;
         return true;
     });
-
-    return here - data;
 }
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {

@@ -23,13 +23,9 @@
 #ifndef ORCHID_ADAPTER_HPP
 #define ORCHID_ADAPTER_HPP
 
-#include <queue>
+#include <boost/beast/core/buffers_range.hpp>
 
-#include <cppcoro/async_auto_reset_event.hpp>
-
-#include "link.hpp"
-#include "locked.hpp"
-#include "trace.hpp"
+#include "reader.hpp"
 
 namespace orc {
 
@@ -38,32 +34,24 @@ class Converted final :
     public Buffer
 {
   private:
-    const std::vector<Range> ranges_;
+    const Buffers_ &buffers_;
 
   public:
     Converted(const Buffers_ &buffers) :
-        ranges_([&]() {
-            std::vector<Range> ranges;
-            ranges.reserve(buffers.size());
-            for (const auto &buffer : buffers)
-                ranges.emplace_back(reinterpret_cast<const uint8_t *>(buffer.data()), buffer.size());
-            return ranges;
-        })
+        buffers_(buffers)
     {
     }
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const noexcept override {
-        for (const auto &range : ranges_)
-            if (!code(range.data(), range.size()))
+        for (const auto &range : boost::beast::buffers_range_ref(buffers_))
+            if (!code(static_cast<const uint8_t *>(range.data()), range.size()))
                 return false;
         return true;
     }
 };
 
-// XXX: we need to map the error codes in this file to something better
-
 class Adapter :
-    public BufferDrain
+    public Valve
 {
   public:
     typedef Adapter lowest_layer_type;
@@ -71,31 +59,12 @@ class Adapter :
 
   private:
     boost::asio::io_context &context_;
-
-    struct Locked_ {
-        std::queue<Beam> data_;
-        size_t offset_ = 0;
-    }; Locked<Locked_> locked_;
-
-    cppcoro::async_auto_reset_event ready_;
-
-  protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
-    void Land(const Buffer &data) override {
-        locked_()->data_.emplace(data);
-        ready_.set();
-    }
-
-    void Stop(const std::string &error) noexcept override {
-        // XXX: store the exception to return from asio
-        // XXX: locked_()->data_.emplace(Beam());
-        ready_.set();
-    }
+    U<Stream> stream_;
 
   public:
-    Adapter(boost::asio::io_context &context) :
-        context_(context)
+    Adapter(boost::asio::io_context &context, U<Stream> stream) :
+        context_(context),
+        stream_(std::move(stream))
     {
     }
 
@@ -110,49 +79,50 @@ class Adapter :
     template <typename Buffers_, typename Handler_>
     void async_read_some(const Buffers_ &buffers, Handler_ handler) {
         Spawn([this, buffers, handler = std::move(handler)]() mutable noexcept -> task<void> {
-            for (;; co_await ready_, co_await Schedule()) {
-                const auto locked(locked_());
-                if (!locked->data_.empty()) {
-                    const auto &beam(locked->data_.front());
-                    // XXX: handle errors
-                    const auto base(beam.data());
-                    auto rest(beam.size() - locked->offset_);
-                    auto writ(0);
+            try {
+                typedef std::pair<size_t, boost::system::error_code> Result;
+                const auto [writ, error] = co_await [&]() -> task<Result> {
+                    const auto size(boost::beast::buffer_bytes(buffers));
+                    if (size == 0)
+                        co_return Result(0, {});
 
-                    const auto &buffer(buffers); do {
-                    //for (const auto &buffer : buffers) {
-                        if (rest == 0)
-                            break;
+                    Beam beam(size);
+                    const auto writ(co_await stream_->Read(beam));
+                    if (writ == 0)
+                        co_return Result(0, asio::error::eof);
 
-                        auto copy(std::min(buffer.size(), rest));
-                        memcpy(buffer.data(), base + locked->offset_, copy);
-
-                        // XXX: too many variables
-                        rest -= copy;
-                        locked->offset_ += copy;
-                        writ += copy;
-                    //}
-                    } while (false);
-
-                    if (rest == 0) {
-                        locked->data_.pop();
-                        locked->offset_ = 0;
+                    auto data(beam.data());
+                    // XXX: this is copying way too much data
+                    for (const auto &range : boost::beast::buffers_range_ref(buffers)) {
+                        const auto size(range.size());
+                        Copy(range.data(), data, size);
+                        data += size;
                     }
 
-                    boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), writ));
-                    break;
-                }
+                    co_return Result(writ, {});
+                }();
+
+                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), error, writ));
+            } catch (...) {
+                // XXX: convert Error
+                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::asio::error::invalid_argument, 0));
             }
         });
+    }
+
+    task<void> Shut() noexcept override {
+        co_await stream_->Shut();
+        Valve::Stop();
+        co_await Valve::Shut();
     }
 
     template <typename Buffers_, typename Handler_>
     void async_write_some(const Buffers_ &buffers, Handler_ handler) {
         Spawn([this, buffers, handler = std::move(handler)]() mutable noexcept -> task<void> {
             try {
-                const Converted converted(buffers);
-                co_await Inner()->Send(converted);
-                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), converted.size()));
+                const Converted data(buffers);
+                co_await stream_->Send(data);
+                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), data.size()));
             } catch (...) {
                 // XXX: convert Error
                 boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::asio::error::invalid_argument, 0));

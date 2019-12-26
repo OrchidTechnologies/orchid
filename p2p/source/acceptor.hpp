@@ -87,9 +87,9 @@ class Acceptor :
         });
     }
 
-    void Open(const Socket &socket) {
+    void Open(const Socket &endpoint) {
         acceptor_.open(asio::ip::tcp::v4());
-        acceptor_.bind({socket.Host(), socket.Port()});
+        acceptor_.bind(endpoint);
         acceptor_.listen();
         acceptor_.non_blocking(true);
         Open();

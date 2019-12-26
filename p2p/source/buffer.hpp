@@ -23,6 +23,7 @@
 #ifndef ORCHID_BUFFER_HPP
 #define ORCHID_BUFFER_HPP
 
+#include <atomic>
 #include <deque>
 #include <functional>
 #include <iostream>
@@ -39,6 +40,13 @@
 #include "trace.hpp"
 
 namespace orc {
+
+extern std::atomic<uint64_t> copied_;
+
+inline void Copy(void *dst, const void *src, size_t len) {
+    memcpy(dst, src, len);
+    copied_ += len;
+}
 
 inline unsigned long To(const std::string &value) {
     size_t end;
@@ -62,10 +70,10 @@ class Buffer {
     virtual bool zero() const;
     virtual bool done() const;
 
-    size_t copy(uint8_t *data, size_t size) const;
+    void copy(uint8_t *data, size_t size) const;
 
-    size_t copy(char *data, size_t size) const {
-        return copy(reinterpret_cast<uint8_t *>(data), size);
+    void copy(char *data, size_t size) const {
+        copy(reinterpret_cast<uint8_t *>(data), size);
     }
 
     std::string str() const;
@@ -92,44 +100,6 @@ struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_i
         boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value;
         boost::multiprecision::import_bits(value, std::reverse_iterator(data + size), std::reverse_iterator(data), 8, false);
         return value;
-    }
-};
-
-class Region :
-    public Buffer
-{
-  public:
-    virtual const uint8_t *data() const = 0;
-    size_t size() const override = 0;
-
-    bool have(size_t value) const override {
-        return value <= size();
-    }
-
-    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
-        return code(data(), size());
-    }
-
-    uint8_t operator [](size_t index) const {
-        return data()[index];
-    }
-
-    operator asio::const_buffer() const {
-        return asio::const_buffer(data(), size());
-    }
-
-    template <typename Type_>
-    Type_ num() const {
-        return Cast<Type_>::Load(data(), size());
-    }
-
-    unsigned nib(size_t index) const {
-        orc_assert((index >> 1) < size());
-        const auto value(data()[index >> 1]);
-        if ((index & 0x1) == 0)
-            return value >> 4;
-        else
-            return value & 0xf;
     }
 };
 
@@ -203,14 +173,80 @@ class Span {
         return data_[index];
     }
 
-    void copy(size_t offset, const Buffer &data) {
+    void load(size_t offset, const Buffer &data) {
         orc_assert(offset <= size_);
         data.each([&](const uint8_t *data, size_t size) {
             orc_assert(size_ - offset >= size);
-            memcpy(data_ + offset, data, size);
+            Copy(data_ + offset, data, size);
             offset += size;
             return true;
         });
+    }
+};
+
+class Region :
+    public Buffer
+{
+  public:
+    virtual const uint8_t *data() const = 0;
+    size_t size() const override = 0;
+
+    bool have(size_t value) const override {
+        return value <= size();
+    }
+
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
+        return code(data(), size());
+    }
+
+    uint8_t operator [](size_t index) const {
+        return data()[index];
+    }
+
+    operator asio::const_buffer() const {
+        return asio::const_buffer(data(), size());
+    }
+
+    Span<const uint8_t> span() const {
+        return {data(), size()};
+    }
+
+    template <typename Type_>
+    Type_ num() const {
+        return Cast<Type_>::Load(data(), size());
+    }
+
+    unsigned nib(size_t index) const {
+        orc_assert((index >> 1) < size());
+        const auto value(data()[index >> 1]);
+        if ((index & 0x1) == 0)
+            return value >> 4;
+        else
+            return value & 0xf;
+    }
+};
+
+class Mutable :
+    public Region
+{
+  public:
+    using Region::data;
+    virtual uint8_t *data() = 0;
+
+    Mutable &operator =(const Span<const uint8_t> &span) {
+        orc_insist(span.size() == size());
+        Copy(data(), span.data(), size());
+        return *this;
+    }
+
+    Mutable &operator =(const Region &region) {
+        operator =(region.span());
+        return *this;
+    }
+
+    using Region::span;
+    Span<uint8_t> span() {
+        return {data(), size()};
     }
 };
 
@@ -315,6 +351,11 @@ class Bounded :
     {
     }
 
+    Bounded(const std::array<uint8_t, Size_> &data) :
+        Bounded(data.data())
+    {
+    }
+
     const uint8_t *data() const override {
         return data_;
     }
@@ -354,7 +395,7 @@ class Strung final :
 
 template <size_t Size_>
 class Data :
-    public Region
+    public Mutable
 {
   protected:
     std::array<uint8_t, Size_> data_;
@@ -362,12 +403,12 @@ class Data :
   public:
     Data() = default;
 
-    Data(const void *data, size_t size) {
-        copy(data, size);
+    Data(const Span<const uint8_t> &span) {
+        operator =(span);
     }
 
     Data(const Region &region) :
-        Data(region.data(), region.size())
+        Data(region.span())
     {
     }
 
@@ -376,26 +417,11 @@ class Data :
     {
     }
 
-    void copy(const void *data, size_t size) {
-        orc_assert(size == Size_);
-        memcpy(data_.data(), data, Size_);
-    }
-
-    Data &operator =(const Region &region) {
-        copy(region.data(), region.size());
-        return *this;
-    }
-
-    Data &operator =(const Range &range) {
-        copy(range.data(), range.size());
-        return *this;
-    }
-
     const uint8_t *data() const override {
         return data_.data();
     }
 
-    uint8_t *data() {
+    uint8_t *data() override {
         return data_.data();
     }
 
@@ -471,7 +497,7 @@ class Number;
 
 template <typename Type_>
 class Number<Type_, true> final :
-    public Region
+    public Mutable
 {
   private:
     Type_ value_;
@@ -501,7 +527,7 @@ class Number<Type_, true> final :
         return reinterpret_cast<const uint8_t *>(&value_);
     }
 
-    uint8_t *data() {
+    uint8_t *data() override {
         return reinterpret_cast<uint8_t *>(&value_);
     }
 
@@ -538,7 +564,7 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
 };
 
 class Beam :
-    public Region
+    public Mutable
 {
   private:
     size_t size_;
@@ -564,7 +590,7 @@ class Beam :
     Beam(const void *data, size_t size) :
         Beam(size)
     {
-        memcpy(data_, data, size_);
+        Copy(data_, data, size_);
     }
 
     Beam(const std::string &data) :
@@ -606,16 +632,12 @@ class Beam :
         return data_;
     }
 
-    uint8_t *data() {
+    uint8_t *data() override {
         return data_;
     }
 
     size_t size() const override {
         return size_;
-    }
-
-    Span<uint8_t> span() {
-        return {data(), size()};
     }
 
     Subset subset(size_t offset, size_t length) const {
@@ -901,7 +923,7 @@ class Window :
 
     void Take(uint8_t *here, size_t size) {
         Take([&](const uint8_t *data, size_t size) {
-            memcpy(here, data, size);
+            Copy(here, data, size);
             here += size;
         }, size);
     }

@@ -36,11 +36,11 @@ class Structured :
     virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override {
-        return Pump<Json::Value, Json::Value>::Land(Parse(data.str()));
+        return Pump::Land(Parse(data.str()));
     }
 
     void Stop(const std::string &error) noexcept override {
-        return Pump<Json::Value, Json::Value>::Stop(error);
+        return Pump::Stop(error);
     }
 
   public:

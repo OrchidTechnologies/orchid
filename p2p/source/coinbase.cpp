@@ -25,12 +25,13 @@
 #include "http.hpp"
 #include "json.hpp"
 #include "locator.hpp"
+#include "origin.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
-task<Float> Price(const std::string &from, const std::string &to, const Float &adjust) {
-    const auto response(co_await Request("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {}));
+task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust) {
+    const auto response(co_await origin.Request("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {}));
     const auto result(Parse(response.body_));
     if (response.code_ == boost::beast::http::status::ok) {
         const auto &data(result["data"]);

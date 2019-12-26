@@ -38,7 +38,7 @@ class Station :
     void Land(Json::Value data) override;
 
     void Stop(const std::string &error) noexcept override {
-        return Faucet<Drain<Json::Value>>::Stop(error);
+        return Faucet::Stop(error);
     }
 
   public:

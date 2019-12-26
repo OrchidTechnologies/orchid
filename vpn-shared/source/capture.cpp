@@ -568,8 +568,7 @@ task<bool> Split::Send(const Beam &data) {
                     &tcp,
                 this]() mutable noexcept -> task<void> {
                     if (orc_ignore({
-                        // XXX: it seems strange that Connect takes a string and not a Host
-                        co_await origin_->Connect(flow->up_, four.Target().Host().String(), std::to_string(four.Target().Port()));
+                        flow->up_ = co_await origin_->Connect(four.Target());
                     }))
                         Reset(four.Target(), four.Source(), 0, boost::endian::big_to_native(tcp.seq) + 1);
                     else {

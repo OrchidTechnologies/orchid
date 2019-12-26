@@ -34,7 +34,7 @@ class PacketInfo :
     virtual Pump<Buffer> *Inner() noexcept = 0;
 
     void Land(const Buffer &data) override {
-        return Link<Buffer>::Land(data);
+        return Link::Land(data);
     }
 
   public:

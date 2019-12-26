@@ -66,6 +66,8 @@ class Error final :
     orc_insist_(code, "orc_insist(" #code ")")
 
 #define orc_throw(text) do { \
+    if (orc::Verbose) \
+        orc_log(orc::Log() << "throw ", text); \
     throw orc_log(orc::Error(), text); \
 } while (false)
 
@@ -86,7 +88,7 @@ class Error final :
 
 #define orc_catch(code) \
     catch (const std::exception &error) { \
-        orc_log(Log(), "handled error " << error.what()); \
+        orc_log(orc::Log(), "handled error " << error.what()); \
     code } catch (...) { code }
 
 #define orc_ignore(code) \
@@ -101,10 +103,10 @@ class Error final :
     }
 
 #define orc_stack(text) \
-    catch (Error &error) { \
+    catch (orc::Error &error) { \
         throw orc_log(std::move(error) << ' ', text); \
     } catch (const std::exception &error) { \
-        throw orc_log(Error() << error.what() << ' ', text); \
+        throw orc_log(orc::Error() << error.what() << ' ', text); \
     }
 
 #define orc_block(code, text) \

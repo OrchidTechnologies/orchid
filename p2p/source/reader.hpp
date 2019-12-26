@@ -23,8 +23,13 @@
 #ifndef ORCHID_READER_HPP
 #define ORCHID_READER_HPP
 
+#include <queue>
+
+#include <cppcoro/async_auto_reset_event.hpp>
+
 #include "buffer.hpp"
 #include "link.hpp"
+#include "locked.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -36,12 +41,86 @@ class Reader {
 };
 
 class Stream :
-    public Reader,
-    public Pipe<Buffer>
+    public Valve,
+    public Pipe<Buffer>,
+    public Reader
 {
   public:
+    explicit Stream(bool set) :
+        Valve(set)
+    {
+    }
+
     ~Stream() override = default;
-    virtual task<void> Shut() = 0;
+};
+
+class Reverted :
+    public Stream,
+    public BufferDrain
+{
+  private:
+    struct Locked_ {
+        std::queue<Beam> data_;
+        size_t offset_ = 0;
+    }; Locked<Locked_> locked_;
+
+    cppcoro::async_auto_reset_event ready_;
+
+  protected:
+    virtual Pump<Buffer> *Inner() = 0;
+
+    void Land(const Buffer &data) override {
+        locked_()->data_.emplace(data);
+        ready_.set();
+    }
+
+    void Stop(const std::string &error) noexcept override {
+        locked_()->data_.emplace(Beam());
+        ready_.set();
+        Stream::Stop();
+    }
+
+  public:
+    Reverted() :
+        Stream(false)
+    {
+    }
+
+    task<size_t> Read(Beam &data) override {
+        for (;; co_await ready_, co_await Schedule()) {
+            const auto locked(locked_());
+            if (locked->data_.empty())
+                continue;
+            const auto &next(locked->data_.front());
+
+            // XXX: handle errors
+            const auto base(next.data());
+            const auto rest(next.size() - locked->offset_);
+            if (rest == 0)
+                co_return 0;
+
+            const auto writ(std::min(data.size(), rest));
+            Copy(data.data(), base + locked->offset_, writ);
+
+            if (rest != writ)
+                locked->offset_ += writ;
+            else {
+                locked->data_.pop();
+                locked->offset_ = 0;
+            }
+
+            co_return writ;
+        }
+    }
+
+    task<void> Shut() noexcept override {
+        co_await Inner()->Shut();
+        co_await Stream::Shut();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        co_return co_await Inner()->Send(data);
+    }
 };
 
 class Inverted final :

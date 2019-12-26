@@ -31,6 +31,8 @@ task<void> Duplex::Shut() noexcept {
     } catch (const asio::system_error &error) {
         orc_except({ orc_adapt(error); })
     }
+
+    co_await Stream::Shut();
 }
 
 }

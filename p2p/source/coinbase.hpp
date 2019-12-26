@@ -31,9 +31,11 @@
 
 namespace orc {
 
+class Origin;
+
 typedef boost::multiprecision::cpp_bin_float_oct Float;
 
-task<Float> Price(const std::string &from, const std::string &to, const Float &adjust);
+task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust);
 
 }
 

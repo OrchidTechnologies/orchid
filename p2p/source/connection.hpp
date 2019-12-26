@@ -30,6 +30,7 @@
 #include "dns.hpp"
 #include "link.hpp"
 #include "reader.hpp"
+#include "socket.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -44,6 +45,7 @@ class Connection final :
   public:
     template <typename... Args_>
     Connection(Args_ &&...args) noexcept(noexcept(Connection_(std::forward<Args_>(args)...))) :
+        Stream(true),
         connection_(std::forward<Args_>(args)...)
     {
     }
@@ -68,15 +70,9 @@ class Connection final :
         co_return writ;
     }
 
-    task<boost::asio::ip::basic_endpoint<typename Connection_::protocol_type>> Open(const std::string &host, const std::string &port) {
-        const auto endpoints(co_await asio::ip::basic_resolver<typename Connection_::protocol_type>(Context()).async_resolve({host, port}, Token()));
-        if (Verbose)
-            for (const auto &endpoint : endpoints)
-                Log() << endpoint.host_name() << ":" << endpoint.service_name() << " :: " << endpoint.endpoint() << std::endl;
-        const auto endpoint(co_await orc_value(co_return co_await, asio::async_connect(connection_, endpoints, Token()),
-            "connecting to " << endpoints));
+    task<void> Open(const Socket &endpoint) {
+        orc_block({ co_await connection_.async_connect(endpoint, Token()); }, "connecting to " << endpoint);
         connection_.non_blocking(true);
-        co_return endpoint;
     }
 
     task<void> Shut() noexcept override {
@@ -90,6 +86,8 @@ class Connection final :
                 co_return;
             orc_except({ orc_adapt(error); })
         }
+
+        co_await Stream::Shut();
     }
 
     task<void> Send(const Buffer &data) override {

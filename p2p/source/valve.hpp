@@ -45,13 +45,28 @@ class Valve {
     }
 
   public:
-    Valve();
+    explicit Valve(bool set = false);
     virtual ~Valve();
 
     virtual task<void> Shut() noexcept {
         co_await shut_.Wait();
     }
 };
+
+template <typename Code_>
+auto Using(Valve &valve, Code_ code) -> decltype(code()) {
+    std::exception_ptr error;
+    try {
+        const auto value(co_await code());
+        co_await valve.Shut();
+        co_return value;
+    } catch (...) {
+        error = std::current_exception();
+    }
+
+    co_await valve.Shut();
+    std::rethrow_exception(error);
+}
 
 }
 

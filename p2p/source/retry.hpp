@@ -47,7 +47,7 @@ class Retry final :
 
   protected:
     void Land(const Buffer &data) override {
-        return Link<Buffer>::Land(data);
+        return Link::Land(data);
     }
 
     void Stop(const std::string &error) noexcept override {

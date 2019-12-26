@@ -30,25 +30,57 @@
 
 namespace orc {
 
-class Event {
+// XXX: replace Wait() with operator co_await
+
+template <typename Type_>
+class Transfer {
   private:
     cppcoro::async_manual_reset_event ready_;
+    Type_ value_;
 
   public:
     operator bool() {
         return ready_.is_set();
     }
 
-    void operator ()() {
+    void operator ()(Type_ &&value) noexcept {
+        std::swap(value_, value);
         ready_.set();
     }
 
-    // XXX: replace with operator co_await
+    task<Type_> Wait() {
+        co_await ready_;
+        co_await Schedule();
+        co_return std::move(value_);
+    }
+};
+
+template <>
+class Transfer<void> {
+  private:
+    cppcoro::async_manual_reset_event ready_;
+
+  public:
+    explicit Transfer(bool set = false) :
+        ready_(set)
+    {
+    }
+
+    operator bool() {
+        return ready_.is_set();
+    }
+
+    void operator ()() noexcept {
+        ready_.set();
+    }
+
     task<void> Wait() {
         co_await ready_;
         co_await Schedule();
     }
 };
+
+typedef Transfer<void> Event;
 
 }
 

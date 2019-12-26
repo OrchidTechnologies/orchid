@@ -78,24 +78,24 @@ class Sync final :
                 } catch (const Error &error) {
                     const auto &what(error.what_);
                     orc_insist(!what.empty());
-                    Link<Buffer>::Stop(what);
+                    Link::Stop(what);
                     break;
                 }
 
                 if (writ == 0) {
-                    Link<Buffer>::Stop();
+                    Link::Stop();
                     break;
                 }
 
                 const auto subset(beam.subset(0, writ));
-                Link<Buffer>::Land(subset);
+                Link::Land(subset);
             }
         }).detach();
     }
 
     task<void> Shut() noexcept override {
         orc_except({ sync_.close(); })
-        co_await Link<Buffer>::Shut();
+        co_await Link::Shut();
     }
 
     task<void> Send(const Buffer &data) override {

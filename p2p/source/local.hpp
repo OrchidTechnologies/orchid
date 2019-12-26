@@ -41,9 +41,9 @@ class Local final :
     rtc::Thread *Thread() override;
     rtc::BasicPacketSocketFactory &Factory() override;
 
-    task<Socket> Associate(Sunk<> *sunk, const std::string &host, const std::string &port) override;
-    task<Socket> Connect(U<Stream> &stream, const std::string &host, const std::string &port) override;
+    task<void> Associate(Sunk<> *sunk, const Socket &endpoint) override;
     task<Socket> Unlid(Sunk<BufferSewer, Opening> *sunk) override;
+    task<U<Stream>> Connect(const Socket &endpoint) override;
 };
 
 }

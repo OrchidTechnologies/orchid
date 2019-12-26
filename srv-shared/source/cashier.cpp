@@ -40,16 +40,16 @@ static const Float Two128(uint256_t(1) << 128);
 static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
 static const auto Bound_(Hash("Update(address,address)"));
 
-task<void> Cashier::UpdateCoin() { try {
-    auto [eth, oxt] = co_await cppcoro::when_all(Price("ETH", currency_, Ten18), Price("OXT", currency_, Ten18));
+task<void> Cashier::UpdateCoin(Origin &origin) { try {
+    auto [eth, oxt] = co_await cppcoro::when_all(Price(origin, "ETH", currency_, Ten18), Price(origin, "OXT", currency_, Ten18));
 
     const auto coin(coin_());
     coin->eth_ = std::move(eth);
     coin->oxt_ = std::move(oxt);
 } orc_stack("updating coin prices") }
 
-task<void> Cashier::UpdateGas() { try {
-    auto result(Parse((co_await Request("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
+task<void> Cashier::UpdateGas(Origin &origin) { try {
+    auto result(Parse((co_await origin.Request("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
 
     const auto &range(result["gasPriceRange"]);
     orc_assert(range.isObject());
@@ -188,7 +188,7 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, co
     type_ = typeid(*this).name();
 }
 
-void Cashier::Open(const S<Origin> &origin, Locator locator) {
+void Cashier::Open(S<Origin> origin, Locator locator) {
     Wait([&]() -> task<void> {
         auto duplex(std::make_unique<Duplex>(origin));
         co_await duplex->Open(locator);
@@ -199,13 +199,14 @@ void Cashier::Open(const S<Origin> &origin, Locator locator) {
         inverted->Open();
         station_ = std::move(station);
 
-        co_await cppcoro::when_all(UpdateCoin(), UpdateGas());
+        co_await cppcoro::when_all(UpdateCoin(*origin), UpdateGas(*origin));
     }());
 
-    Spawn([this]() noexcept -> task<void> {
+    // XXX: this coroutine leaks after Shut
+    Spawn([this, origin = std::move(origin)]() noexcept -> task<void> {
         for (;;) {
             co_await Sleep(5 * 60);
-            auto [forex, gas] = co_await cppcoro::when_all_ready(UpdateCoin(), UpdateGas());
+            auto [forex, gas] = co_await cppcoro::when_all_ready(UpdateCoin(*origin), UpdateGas(*origin));
             orc_ignore({ std::move(forex).result(); });
             orc_ignore({ std::move(gas).result(); });
         }

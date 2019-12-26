@@ -35,6 +35,7 @@
 
 #include <boost/asio/executor_work_guard.hpp>
 
+#include "dns.hpp"
 #include "error.hpp"
 #include "event.hpp"
 #include "forge.hpp"
@@ -173,7 +174,11 @@ class Factory :
             const auto remote(config_.remote_list->first_item());
             orc_assert(remote != nullptr);
 
-            co_await origin_->Associate(transport.get(), remote->server_host, remote->server_port);
+            const auto endpoints(co_await Resolve(*origin_, remote->server_host, remote->server_port));
+            for (const auto &endpoint : endpoints) {
+                co_await origin_->Associate(transport.get(), endpoint);
+                break;
+            }
 
             asio::dispatch(context, [parent]() {
                 parent->transport_connecting();

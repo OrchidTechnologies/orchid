@@ -26,6 +26,7 @@
 namespace orc {
 
 Duplex::Duplex(S<Origin> origin) :
+    Stream(true),
     origin_(std::move(origin)),
     inner_(Context())
 {
