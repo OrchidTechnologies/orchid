@@ -33,6 +33,7 @@
 
 namespace orc {
 
+static const uint256_t Gwei(1000000000);
 static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 //static const Float Two30(1024 * 1024 * 1024);

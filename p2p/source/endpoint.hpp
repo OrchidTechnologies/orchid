@@ -30,8 +30,6 @@
 
 namespace orc {
 
-static const uint256_t Gwei = 1000000000;
-
 struct Block {
     const uint256_t number_;
     const uint256_t state_;

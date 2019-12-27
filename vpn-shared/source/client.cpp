@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <boost/multiprecision/cpp_bin_float.hpp>
+
 #include <rtc_base/openssl_identity.h>
 
 #include "channel.hpp"
@@ -30,7 +32,18 @@
 
 namespace orc {
 
-unsigned WinShift_(10);
+typedef boost::multiprecision::cpp_bin_float_oct Float;
+
+//static const uint128_t Gwei(1000000000);
+static const uint128_t Ten18(1000000000000000000);
+static const uint256_t Two128(uint256_t(1) << 128);
+
+template <typename Type_>
+Type_ Min(const Type_ &lhs, const Type_ &rhs) {
+    return lhs < rhs ? lhs : rhs;
+}
+
+double WinRatio_(0);
 
 task<void> Client::Submit() {
     const Header header{Magic_, Zero<32>()};
@@ -60,8 +73,9 @@ void Client::Issue(uint256_t amount) {
             return std::make_tuple(locked->recipient_, locked->commit_);
         }();
 
-        const auto ratio(uint128_t(1) << 127 >> WinShift_);
-        const Ticket ticket{commit, now, nonce, uint128_t(amount / ratio), ratio, start, 0, funder_, recipient};
+        const uint128_t face(1*Ten18-2); // REMOVE
+        const uint128_t ratio(WinRatio_ == 0 ? amount / face : uint256_t(Float(Two128) * WinRatio_ - 1));
+        const Ticket ticket{commit, now, nonce, face, ratio, start, 0, funder_, recipient};
         const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
         const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
         { const auto locked(locked_());

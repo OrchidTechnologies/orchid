@@ -684,7 +684,7 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
     }
 }, "building hop #" << hop); }
 
-extern unsigned WinShift_;
+extern double WinRatio_;
 
 void Capture::Start(const std::string &path) {
     Heap heap;
@@ -695,7 +695,7 @@ void Capture::Start(const std::string &path) {
     heap.eval<void>(R"(
         eth_directory = "0x918101FB64f467414e9a785aF9566ae69C3e22C5";
         eth_location = "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD";
-        eth_winshift = 10;
+        eth_winratio = 0;
         rpc = "https://cloudflare-eth.com:443/";
         hops = [];
         //stun = "stun:stun.l.google.com:19302";
@@ -713,7 +713,7 @@ void Capture::Start(const std::string &path) {
     if (hops == 0)
         return Start(std::move(origin));
 
-    WinShift_ = unsigned(heap.eval<double>("eth_winshift"));
+    WinRatio_ = heap.eval<double>("eth_winratio");
 
 #if 0
     auto remote(Break<Sink<Remote>>());
