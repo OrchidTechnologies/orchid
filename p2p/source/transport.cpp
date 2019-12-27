@@ -227,7 +227,8 @@ class Middle :
         }
 
         bool tun_send(openvpn::BufferAllocated &buffer) noexcept override {
-            middle_.Forge(buffer);
+            if (orc_ignore({ middle_.Forge(buffer); }))
+                return false;
             Subset data(buffer.c_data(), buffer.size());
             middle_.Land(data);
             return true;
@@ -258,7 +259,8 @@ class Middle :
 
     void Forge(openvpn::BufferAllocated &buffer) {
         Span span(buffer.data(), buffer.size());
-        ForgeIP4(span, &openvpn::IPv4Header::daddr, local_);
+        const auto remote(ForgeIP4(span, &openvpn::IPv4Header::daddr, local_));
+        orc_assert_(remote == remote_, "packet to " << Host(remote) << " != " << Host(remote_));
     }
 
   private:
@@ -270,8 +272,8 @@ class Middle :
     openvpn::TunClientParent *parent_ = nullptr;
     Event ready_;
 
-    openvpn::IPv4::Addr ip4_;
     const uint32_t local_;
+    uint32_t remote_ = 0;
 
   protected:
     virtual Pipe<Buffer> *Inner() noexcept = 0;
@@ -343,7 +345,7 @@ class Middle :
 
     bool tun_builder_add_address(const std::string &address, int prefix, const std::string &gateway, bool ipv6, bool net30) noexcept override {
         orc_insist(!ipv6);
-        ip4_ = openvpn::IPv4::Addr::from_string(address);
+        remote_ = Host(address);
         return true;
     }
 
@@ -417,13 +419,12 @@ class Middle :
         data.copy(buffer.data(), buffer.size());
 
         Span span(buffer.data(), buffer.size());
-        if (ForgeIP4(span, &openvpn::IPv4Header::saddr, ip4_.to_uint32()) != local_)
-            co_return;
-        //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
+        const auto local(ForgeIP4(span, &openvpn::IPv4Header::saddr, remote_));
+        orc_assert_(local == local_, "packet from " << Host(local) << " != " << Host(local_));
 
-        if (parent_ == nullptr)
-            co_return;
+        orc_assert(parent_ != nullptr);
         parent_->tun_recv(buffer);
+        co_return;
     }
 };
 

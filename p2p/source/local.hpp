@@ -43,7 +43,7 @@ class Local final :
 
     task<void> Associate(Sunk<> *sunk, const Socket &endpoint) override;
     task<Socket> Unlid(Sunk<BufferSewer, Opening> *sunk) override;
-    task<U<Stream>> Connect(const Socket &endpoint) override;
+    task<void> Connect(U<Stream> &stream, const Socket &endpoint) override;
 };
 
 }

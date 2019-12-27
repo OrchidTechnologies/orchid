@@ -62,10 +62,15 @@ class Adapter :
     U<Stream> stream_;
 
   public:
-    Adapter(boost::asio::io_context &context, U<Stream> stream) :
-        context_(context),
-        stream_(std::move(stream))
+    Adapter(boost::asio::io_context &context) :
+        context_(context)
     {
+        type_ = typeid(*this).name();
+    }
+
+    U<Stream> &Wire() {
+        orc_insist(stream_ == nullptr);
+        return stream_;
     }
 
     Adapter &lowest_layer() {

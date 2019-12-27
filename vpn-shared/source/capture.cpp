@@ -567,9 +567,7 @@ task<bool> Split::Send(const Beam &data) {
                     span,
                     &tcp,
                 this]() mutable noexcept -> task<void> {
-                    if (orc_ignore({
-                        flow->up_ = co_await origin_->Connect(four.Target());
-                    }))
+                    if (orc_ignore({ co_await origin_->Connect(flow->up_, four.Target()); }))
                         Reset(four.Target(), four.Source(), 0, boost::endian::big_to_native(tcp.seq) + 1);
                     else {
                         Forge(span, tcp, socket, local_);
@@ -709,18 +707,26 @@ void Capture::Start(const std::string &path) {
         heap.eval<void>(config);
     }
 
+    S<Origin> origin(Break<Local>());
+
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
-        return Start(Break<Local>());
+        return Start(std::move(origin));
 
     WinShift_ = unsigned(heap.eval<double>("eth_winshift"));
 
-    auto code([heap = std::move(heap), hops](Sunk<> *sunk) mutable -> task<void> {
-        S<Origin> origin(Break<Local>());
+#if 0
+    auto remote(Break<Sink<Remote>>());
+    const auto host(remote->Host());
+    const auto sunk(remote.get());
+#else
+    const S<Remote> remote;
+    const auto host(origin->Host());
+    const auto sunk(Start());
+#endif
 
+    auto code([heap = std::move(heap), hops, origin = std::move(origin), host](Sunk<> *sunk) mutable -> task<void> {
         Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
-
-        const auto host(origin->Host());
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<Sink<Remote>>());
@@ -732,8 +738,13 @@ void Capture::Start(const std::string &path) {
         co_await Single(sunk, heap, network, origin, host, hops - 1);
     });
 
-    const auto retry(Start()->Wire<Retry<decltype(code)>>(std::move(code)));
+    const auto retry(sunk->Wire<Retry<decltype(code)>>(std::move(code)));
     retry->Open();
+
+    if (remote != nullptr) {
+        remote->Open();
+        Start(std::move(remote));
+    }
 }
 
 task<void> Capture::Shut() noexcept {

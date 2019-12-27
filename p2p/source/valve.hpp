@@ -68,6 +68,14 @@ auto Using(Valve &valve, Code_ code) -> decltype(code()) {
     std::rethrow_exception(error);
 }
 
+template <typename Type_, typename Code_, typename... Args_>
+auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>())) {
+    Type_ valve(std::forward<Args_>(args)...);
+    co_return co_await Using(valve, [&]() -> decltype(code(std::declval<Type_ &>())) {
+        co_return co_await code(valve);
+    });
+}
+
 }
 
 #endif//ORCHID_VALVE_HPP

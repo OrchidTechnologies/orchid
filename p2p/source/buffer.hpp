@@ -581,7 +581,7 @@ class Beam :
     {
     }
 
-    Beam(size_t size) :
+    explicit Beam(size_t size) :
         size_(size),
         data_(new uint8_t[size_])
     {
@@ -899,7 +899,7 @@ class Window :
     }
 
     template <typename Code_>
-    void Take(Code_ &&code, size_t need) {
+    void Take(size_t need, Code_ &&code) {
         auto &here(range_);
         auto &step(offset_);
 
@@ -922,10 +922,10 @@ class Window :
     }
 
     void Take(uint8_t *here, size_t size) {
-        Take([&](const uint8_t *data, size_t size) {
+        Take(size, [&](const uint8_t *data, size_t size) {
             Copy(here, data, size);
             here += size;
-        }, size);
+        });
     }
 
     void Take(std::string &data) {
@@ -962,15 +962,15 @@ class Window :
     }
 
     void Skip(size_t size) {
-        Take([&](const uint8_t *data, size_t size) {
-        }, size);
+        Take(size, [&](const uint8_t *data, size_t size) {
+        });
     }
 
     void Zero(size_t size) {
-        Take([&](const uint8_t *data, size_t size) {
+        Take(size, [&](const uint8_t *data, size_t size) {
             for (decltype(size) i(0); i != size; ++i)
                 orc_assert(data[i] == 0);
-        }, size);
+        });
     }
 };
 
@@ -1159,6 +1159,19 @@ auto Take(Buffer_ &&buffer) {
     if (Taker<0, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer)))
         window.Stop();
     return tuple;
+}
+
+template <typename Code_>
+bool Chunk(const uint8_t *data, size_t size, Code_ code) noexcept(noexcept(code(nullptr, 0))) {
+    while (size != 0) {
+        const auto writ(code(data, size));
+        if (writ == 0)
+            return false;
+        orc_insist(writ <= size);
+        size -= writ;
+    }
+
+    return true;
 }
 
 }

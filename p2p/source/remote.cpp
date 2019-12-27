@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <cppcoro/async_mutex.hpp>
+
 #include <lwip/err.h>
 #include <lwip/ip.h>
 #include <lwip/netifapi.h>
@@ -37,7 +39,7 @@
 
 #define orc_lwipcall(call, expr) ({ \
     const auto _status(call expr); \
-    orc_assert_(_status == ERR_OK, "lwip " << #call << " (" << _status << ") \"" << lwip_strerr(_status) << "\""); \
+    orc_assert_(_status == ERR_OK, "lwip " << #call << " #" << int(_status) << " \"" << lwip_strerr(_status) << "\""); \
 _status; })
 
 extern "C" struct netif *hook_ip4_route_src(const ip4_addr_t *src, const ip4_addr_t *dest)
@@ -171,6 +173,7 @@ class RemoteCommon {
     void Open(const Core &core) {
         udp_recv(pcb_, [](void *arg, udp_pcb *pcb, pbuf *data, const ip4_addr_t *host, u16_t port) noexcept {
             static_cast<RemoteCommon *>(arg)->Land(Chain(data), Socket(*host, port));
+            pbuf_free(data);
         }, this);
     }
 
@@ -204,6 +207,7 @@ class RemoteAssociation :
 
     task<void> Shut() noexcept override {
         RemoteCommon::Shut();
+        Pump::Stop();
         co_await Pump::Shut();
     }
 
@@ -241,6 +245,7 @@ class RemoteOpening final :
 
     task<void> Shut() noexcept override {
         RemoteCommon::Shut();
+        Opening::Stop();
         co_await Opening::Shut();
     }
 
@@ -259,6 +264,9 @@ class RemoteConnection final :
     tcp_pcb *pcb_;
     Transfer<err_t> opened_;
 
+    cppcoro::async_mutex send_;
+    cppcoro::async_auto_reset_event ready_;
+
   public:
     RemoteConnection(BufferDrain *drain, const ip4_addr_t &host) :
         Pump(drain)
@@ -272,13 +280,15 @@ class RemoteConnection final :
 
     ~RemoteConnection() override {
         Core core;
-        orc_except({ orc_lwipcall(tcp_close, (pcb_)); });
+        if (pcb_ != nullptr)
+            orc_except({ orc_lwipcall(tcp_close, (pcb_)); });
     }
 
     task<void> Open(const ip4_addr_t &host, uint16_t port) {
         { Core core;
             tcp_recv(pcb_, [](void *arg, tcp_pcb *pcb, pbuf *data, err_t error) noexcept -> err_t {
                 const auto self(static_cast<RemoteConnection *>(arg));
+                orc_insist(pcb == self->pcb_);
 
                 // XXX: convert error
                 orc_insist(error == ERR_OK);
@@ -289,8 +299,32 @@ class RemoteConnection final :
                     const Chain chain(data);
                     self->Land(chain);
                     tcp_recved(pcb, chain.size());
+                    pbuf_free(data);
                 }
 
+                return ERR_OK;
+            });
+
+            tcp_err(pcb_, [](void *arg, err_t error) noexcept {
+                const auto self(static_cast<RemoteConnection *>(arg));
+                self->pcb_ = nullptr;
+                self->ready_.set();
+                if (!self->opened_)
+                    self->opened_(std::move(error));
+                else self->Stop([&]() { switch (error) {
+                    case ERR_ABRT:
+                        return "ERR_ABRT";
+                    case ERR_RST:
+                        return "ERR_RST";
+                    default:
+                        orc_insist_(false, "lwip tcp_err #" << int(error) << " \"" << lwip_strerr(error) << "\"");
+                } }());
+            });
+
+            tcp_sent(pcb_, [](void *arg, tcp_pcb *pcb, u16_t size) noexcept -> err_t {
+                const auto self(static_cast<RemoteConnection *>(arg));
+                orc_insist(pcb == self->pcb_);
+                self->ready_.set();
                 return ERR_OK;
             });
 
@@ -305,20 +339,37 @@ class RemoteConnection final :
     }
 
     task<void> Shut() noexcept override {
-        { Core core; orc_except({ orc_lwipcall(tcp_shutdown, (pcb_, false, true)); }); }
+        { Core core; if (pcb_ != nullptr) orc_except({ orc_lwipcall(tcp_shutdown, (pcb_, false, true)); }); }
         co_await Pump::Shut();
     }
 
     task<void> Send(const Buffer &data) override {
-        Core core;
+        const auto lock(co_await send_.scoped_lock_async());
+        for (Window window(data); !window.done(); co_await ready_, co_await Schedule()) {
+            Core core;
+            orc_assert(pcb_ != nullptr);
 
-        data.each([&](const uint8_t *data, size_t size) {
-            orc_insist(size < 0x10000);
-            orc_lwipcall(tcp_write, (pcb_, data, size, TCP_WRITE_FLAG_COPY));
-            return true;
-        });
+            auto rest(tcp_sndbuf(pcb_));
+            if (rest == 0)
+                continue;
+            const auto size(window.size());
+            if (rest > size)
+                rest = size;
 
-        co_return;
+            window.Take(rest, [&](const uint8_t *data, size_t size) {
+                return Chunk(data, size, [&](const uint8_t *data, size_t size) {
+                    orc_insist(size <= rest);
+                    if (size > 0xffff)
+                        size = 0xffff;
+                    rest -= size;
+
+                    orc_lwipcall(tcp_write, (pcb_, data, size, TCP_WRITE_FLAG_COPY));
+                    // XXX: consider avoiding copies by holding the buffer until send completes
+                    copied_ += size;
+                    return size;
+                });
+            });
+        }
     }
 };
 
@@ -371,6 +422,7 @@ static uint8_t quad_(3);
 Remote::Remote() :
     Remote({10,7,0,++quad_})
 {
+    type_ = typeid(*this).name();
 }
 
 Remote::~Remote() {
@@ -421,11 +473,11 @@ task<Socket> Remote::Unlid(Sunk<BufferSewer, Opening> *sunk) {
     co_return opening->Local();
 }
 
-task<U<Stream>> Remote::Connect(const Socket &endpoint) {
+task<void> Remote::Connect(U<Stream> &stream, const Socket &endpoint) {
     auto reverted(std::make_unique<Sink<Reverted>>());
     const auto connection(reverted->Wire<RemoteConnection>(host_));
+    stream = std::move(reverted);
     co_await connection->Open(endpoint.Host(), endpoint.Port());
-    co_return reverted;
 }
 
 }

@@ -32,6 +32,7 @@ namespace orc {
 Origin::Origin(U<rtc::NetworkManager> manager) :
     manager_(std::move(manager))
 {
+    type_ = typeid(*this).name();
 }
 
 Origin::~Origin() = default;

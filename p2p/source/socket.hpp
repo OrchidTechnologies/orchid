@@ -160,6 +160,10 @@ class Host {
     }
 };
 
+inline std::ostream &operator <<(std::ostream &out, const Host &host) {
+    return out << host.String();
+}
+
 class Socket {
   private:
     Host host_;
@@ -227,7 +231,7 @@ class Socket {
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Socket &socket) {
-    return out << socket.Host().String() << ":" << std::dec << socket.Port();
+    return out << socket.Host() << ":" << std::dec << socket.Port();
 }
 
 class Four {

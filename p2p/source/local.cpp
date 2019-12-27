@@ -97,6 +97,7 @@ class LocalOpening final :
 Local::Local(U<rtc::NetworkManager> manager) :
     Origin(std::move(manager))
 {
+    type_ = typeid(*this).name();
 }
 
 Local::Local(const class Host &host) :
@@ -143,10 +144,11 @@ task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> *sunk) {
     co_return opening->Local();
 }
 
-task<U<Stream>> Local::Connect(const Socket &endpoint) {
+task<void> Local::Connect(U<Stream> &stream, const Socket &endpoint) {
     auto connection(std::make_unique<Connection<asio::ip::tcp::socket, false>>(Context()));
-    co_await connection->Open(endpoint);
-    co_return connection;
+    const auto backup(connection.get());
+    stream = std::move(connection);
+    co_await backup->Open(endpoint);
 }
 
 }
