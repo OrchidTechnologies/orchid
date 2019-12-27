@@ -279,8 +279,8 @@ task<void> Cashier::Check(const Address &signer, const Address &funder, const ui
     co_await pot->Wait();
 
     const auto locked(pot->locked_());
-    orc_assert(amount < locked->amount_);
-    orc_assert(amount < locked->escrow_ / 2);
+    orc_assert(amount <= locked->amount_);
+    orc_assert(amount <= locked->escrow_ / 2);
     orc_assert(locked->unlock_ == 0);
 }
 
