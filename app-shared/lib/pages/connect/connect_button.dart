@@ -7,8 +7,8 @@ import 'package:rxdart/rxdart.dart';
 
 /// The primiary connect and reroute buttons.
 class ConnectButton extends StatefulWidget {
-  final Observable<OrchidConnectionState> connectionStatus;
-  final Observable<bool> enabledStatus;
+  final Stream<OrchidConnectionState> connectionStatus;
+  final Stream<bool> enabledStatus;
   final VoidCallback onConnectButtonPressed;
   final VoidCallback onRerouteButtonPressed;
 

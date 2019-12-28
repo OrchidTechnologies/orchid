@@ -15,7 +15,7 @@ class AppNotifications {
     var api = OrchidAPI();
 
     // Listen to all notification data sources and pass the changes to the evaluation method.
-    Observable.combineLatest2(
+    Rx.combineLatest2(
             api.networkConnectivity, api.syncStatus, _evaluateNotificationSources)
         .listen((AppNotificationType notificationType) {
       notification.add(notificationType);

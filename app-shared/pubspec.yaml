@@ -13,26 +13,26 @@ environment:
   sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
-  flutter:
-    sdk: flutter
-
   cupertino_icons: ^0.1.2
-
-  rxdart: ^0.21.0
+  dotted_border: ^1.0.4
+  email_validator: ^1.0.3
   flare_flutter:
     git:
       url: git://github.com/2d-inc/Flare-Flutter.git
       ref: dev
       path: flare_flutter
-  url_launcher: ^5.0.0
-  shared_preferences: ^0.5.2
-  email_validator: ^1.0.0
-  http: ^0.12.0+2
-  sqflite: ^1.1.6
-  intl: ^0.15.8
-  flutter_html: ^0.10.4  # We may want to replace this with webview_flutter when it's ready.
-  pointycastle: ^1.0.1
-  dotted_border: ^1.0.4
+  flutter:
+    sdk: flutter
+  flutter_html: ^0.11.1
+  http: ^0.12.0+3
+  intl: ^0.16.0
+  pointycastle: ^1.0.2
+  provider: ^4.0.0
+  rxdart: ^0.23.0
+  shared_preferences: ^0.5.6
+  sqflite: ^1.2.0
+  url_launcher: ^5.4.1
+  web3dart: ^1.2.1
 
 dev_dependencies:
   flutter_test:

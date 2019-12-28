@@ -42,7 +42,7 @@ class _HelpFeedbackPageState extends State<HelpFeedbackPage> {
     });
 
     // Validate the form data and update the send button.
-    Observable.combineLatest2(_emailText, _bodyText,
+    Rx.combineLatest2(_emailText, _bodyText,
         (String emailText, String bodyText) {
       bool emailValid = EmailValidator.validate(emailText);
       return emailValid && bodyText.length > 3;

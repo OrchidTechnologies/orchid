@@ -71,7 +71,7 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
     });
 
     // Validate the form data and update the save button.
-    Observable.combineLatest3(_userNameText, _passwordText, _vpnConfigFileText,
+    Rx.combineLatest3(_userNameText, _passwordText, _vpnConfigFileText,
         (String userName, String password, String vpnConfigFileText) {
       debugPrint("config text: $vpnConfigFileText");
       // TODO: update validation
