@@ -720,7 +720,7 @@ void Capture::Start(const std::string &path) {
     const auto host(remote->Host());
     const auto sunk(remote.get());
 #else
-    const S<Remote> remote;
+    S<Remote> remote;
     const auto host(origin->Host());
     const auto sunk(Start());
 #endif
