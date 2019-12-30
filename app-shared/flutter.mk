@@ -37,6 +37,5 @@ precompiled :=
 endif
 
 dart := $(shell find lib/ -name '*.dart')
+dart += flutter/packages/flutter/pubspec.lock
 dart += pubspec.lock
-dart += pubspec.yaml
-dart += flutter/packages/flutter/pubspec.yaml

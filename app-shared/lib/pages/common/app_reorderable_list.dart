@@ -541,7 +541,7 @@ class _ReorderableListContentState extends State<_ReorderableListContent> with T
           return _dragging == toAccept && toAccept != toWrap.key;
         },
         onAccept: (Key accepted) { },
-        onLeave: (Key leaving) { },
+        onLeave: (Object leaving) { },
       );
     });
   }
