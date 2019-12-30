@@ -54,7 +54,8 @@ $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xm
 
 $(bundle)/Frameworks/Flutter.framework/Flutter: $(engine)/Flutter.framework/Flutter
 	@mkdir -p $(dir $@)
-	lipo $(patsubst %,-extract %,$(archs)) $< -output $@
+	xcrun bitcode_strip -r $< -o $@
+	lipo $(patsubst %,-extract %,$(archs)) $@ -output $@
 	@touch $@
 
 $(bundle)/Frameworks/Flutter.framework/%: $(engine)/Flutter.framework/%
