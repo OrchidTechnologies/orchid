@@ -34,10 +34,6 @@ source += $(pwd)/SPCDNS/src/mappings.c
 source += $(pwd)/SPCDNS/src/output.c
 cflags += -I$(pwd)/SPCDNS/src
 
-%/GeoLite2-City.mmdb:
-	@mkdir -p $(dir $@)
-	curl https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz | tar -C $(dir $@) --strip-components 1 --exclude '*.txt' -zxvf-
-
 $(call include,duktape.mk)
 $(call include,sqlite.mk)
 
