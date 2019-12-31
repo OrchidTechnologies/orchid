@@ -59,14 +59,6 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
-    - name: make Android APK
-      run: make -j3 -C app-android
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchid-apk
-        path: app-android/out-and/Orchid.apk
-        #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
-
     - name: make Linux client
       run: make -j3 -C cli-shared debug=crossndk
     - uses: actions/upload-artifact@v1
@@ -80,3 +72,31 @@ jobs:
       with:
         name: orchidd-lnx
         path: srv-shared/out-lnx/x86_64/orchidd
+
+
+  build-and:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: apt-get install
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install bison flex gettext gperf groff ninja-build python3-pip python3-setuptools tcl
+    - name: pip install meson
+      run: sudo -E pip3 install meson==0.51.2
+
+    - name: git config
+      run: |
+        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
+        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
+        git config --global advice.detachedHead false
+    - uses: actions/checkout@v1
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
+    - name: make Android APK
+      run: make -j3 -C app-android
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-apk
+        path: app-android/out-and/Orchid.apk
+        #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
