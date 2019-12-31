@@ -196,7 +196,7 @@ cflags += -DHAVE_UINT64_T
 
 cflags += -DPACKAGE_STRING='""'
 # this matches the version of libmaxminddb
-cflags += -DPACKAGE_VERSION='"1.3.2"'
+cflags += -DPACKAGE_VERSION='"1.4.2"'
 
 cflags += -Wno-deprecated-declarations
 cflags += -Wno-inconsistent-missing-override
