@@ -64,5 +64,6 @@ define _
 ranlib/$(1) := ranlib
 ar/$(1) := ar
 strip/$(1) := strip
+windres/$(1) := false
 endef
 $(each)

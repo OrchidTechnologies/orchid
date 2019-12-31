@@ -41,6 +41,7 @@ webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event_log.cc
 webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
 
 webrtc += $(pwd)/webrtc/api/video/color_space.cc
+webrtc += $(pwd)/webrtc/api/video/encoded_image.cc
 webrtc += $(pwd)/webrtc/api/video/hdr_metadata.cc
 webrtc += $(pwd)/webrtc/api/video/video_content_type.cc
 webrtc += $(pwd)/webrtc/api/video/video_source_interface.cc
@@ -69,6 +70,8 @@ webrtc += $(pwd)/webrtc/modules/audio_processing/include/audio_processing_statis
 webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/include/*.cc)
 
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.cc
+webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_dependency_descriptor_reader.cc
+webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_dependency_descriptor_writer.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor_extension.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_header_extension_map.cc
@@ -77,6 +80,7 @@ webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_packet.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_packet_received.cc
 
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet.cc
+webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc
 

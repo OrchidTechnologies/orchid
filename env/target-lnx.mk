@@ -37,6 +37,7 @@ define _
 ranlib/$(1) := ranlib
 ar/$(1) := ar
 strip/$(1) := strip
+windres/$(1) := false
 endef
 $(each)
 
@@ -68,6 +69,7 @@ more/$(1) += -target $(1)-pc-linux-gnu
 ranlib/$(1) := $(llvm)/bin/$(1)-linux-android-ranlib
 ar/$(1) := $(llvm)/bin/$(1)-linux-android-ar
 strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
+windres/$(1) := false
 endef
 $(each)
 

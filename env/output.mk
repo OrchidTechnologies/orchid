@@ -162,7 +162,7 @@ endif
 	$(job)@$(prefix) $(cxx/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 define _
-$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)' '$(xflags)')
+$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)' '$(xflags)')
 endef
 $(each)
 

@@ -13,7 +13,7 @@ dll := dll
 lib := lib
 exe := .exe
 
-msys := windows
+meson := windows
 
 archs += i686
 openssl/i686 := mingw
@@ -48,6 +48,7 @@ define _
 ranlib/$(1) := $(1)-w64-mingw32-ranlib
 ar/$(1) := $(1)-w64-mingw32-ar
 strip/$(1) := $(1)-w64-mingw32-ar
+windres/$(1) := $(1)-w64-mingw32-windres
 endef
 $(each)
 
@@ -57,8 +58,9 @@ lflags += -lc++abi
 lflags += -pthread
 
 wflags += -fuse-ld=ld
+lflags += -Wl,--no-insert-timestamp
 
-cflags += -DNOMINMAX
+#cflags += -DNOMINMAX
 cflags += -DWIN32_LEAN_AND_MEAN=
 
 #cflags += -fms-compatibility
@@ -66,12 +68,16 @@ cflags += -DWIN32_LEAN_AND_MEAN=
 
 # pragma comment(lib, "...lib")
 # pragma warning(disable : ...)
+cflags += -Wno-pragma-pack
 cflags += -Wno-unknown-pragmas
+
+cflags += -I$(pwd)/win32
+cflags += -Wno-nonportable-include-path
 
 msys2 := 
 msys2 += crt-git-7.0.0.5397.291c4f8d-1
 msys2 += dlfcn-1.1.2-1
-msys2 += gcc-8.3.0-2
+msys2 += gcc-9.2.0-2
 msys2 += headers-git-7.0.0.5397.291c4f8d-1
 msys2 += libc++-8.0.0-8
 msys2 += libc++abi-8.0.0-8
@@ -80,7 +86,7 @@ msys2 += winpthreads-git-7.0.0.5325.11a5459d-1
 define _
 $(output)/$(1)/%.msys2:
 	@mkdir -p $$(dir $$@)
-	curl http://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.xz | tar -C $(output) -Jxvf-
+	curl http://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.xz | tar -C $(output)/$(1) -Jxvf-
 	@touch $$@
 
 sysroot += $(patsubst %,$(output)/$(1)/%.msys2,$(msys2))

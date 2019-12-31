@@ -40,10 +40,6 @@ $(call include,vpn/target.mk)
 
 source += $(wildcard source/*.cpp)
 
-ifeq ($(target),win)
-cflags += -I../vpn-windows/tap-windows6/src
-endif
-
 include env/output.mk
 
 $(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))

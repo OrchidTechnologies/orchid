@@ -33,8 +33,8 @@ lflags += -lws2_32
 c_logging += -Wno-undef
 c_checks += -Wno-format
 
-c_platform_thread_types += -include $(pwd)/setname.hpp
-c_thread_identity += -include pthread.h
+c_platform_thread_types := -include $(pwd)/setname.hpp
+c_thread_identity := -include pthread.h
 
 source += $(pwd)/webrtc/rtc_base/synchronization/rw_lock_win.cc
 source += $(pwd)/webrtc/rtc_base/win32.cc

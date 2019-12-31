@@ -31,11 +31,11 @@
 #include "rtc_base/socket_server.h"
 #include "rtc_base/system/rtc_export.h"
 
-typedef int SOCKET;
-
 using namespace rtc;
 
 namespace orc {
+
+typedef int SOCKET;
 
 // Event constants for the Dispatcher class.
 enum DispatcherEvent {

@@ -38,12 +38,7 @@
     orc_throw(error); \
 } }()
 
-#ifdef __MINGW32__
-#define orc_packed \
-    __attribute__((__packed__, __gcc_struct__))
-#else
 #define orc_packed \
     __attribute__((__packed__))
-#endif
 
 #endif//ORCHID_SYSCALL_HPP

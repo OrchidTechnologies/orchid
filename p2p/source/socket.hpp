@@ -71,6 +71,7 @@ class Host {
     }
 
     Host(const in_addr &host) :
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         Host(boost::endian::big_to_native(host.s_addr))
     {
     }
@@ -123,6 +124,7 @@ class Host {
 
     operator in_addr() const {
         in_addr address;
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         address.s_addr = boost::endian::native_to_big(operator uint32_t());
         return address;
     }

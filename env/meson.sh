@@ -8,13 +8,14 @@ curdir=${3}
 meson=${4}
 ar=${5}
 strip=${6}
-cc=${7}
-cxx=${8}
-objc=${9}
-qflags=${10}
-wflags=${11}
-xflags=${12}
-shift 12
+windres=${7}
+cc=${8}
+cxx=${9}
+objc=${10}
+qflags=${11}
+wflags=${12}
+xflags=${13}
+shift 13
 
 if [[ $# -ne 0 ]]; then
     exit 1
@@ -72,6 +73,7 @@ cpp = '${cxx[0]}'
 objc = '${objc[0]}'
 ar = '${ar}'
 strip = '${strip}'
+windres = '${windres}'
 pkgconfig = '${curdir}/env/pkg-config'
 EOF
 

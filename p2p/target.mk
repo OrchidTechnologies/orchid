@@ -32,6 +32,7 @@ cflags += -fcoroutines-ts
 cflags += -I$(pwd)/extra
 # XXX: cflags += -I$(output)/$(pwd)
 
+
 cflags += -I$(pwd)/cppcoro/include
 
 source += $(pwd)/cppcoro/lib/async_auto_reset_event.cpp
@@ -43,8 +44,10 @@ ifeq ($(target),win)
 source += $(pwd)/cppcoro/lib/win32.cpp
 endif
 
+
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
+
 
 cflags += -I$(pwd)/expected/include
 cflags += -I$(pwd)/url/include
@@ -56,23 +59,27 @@ source += $(filter-out \
     $(pwd)/url/src/url/*.cpp \
 ))
 
+
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/ipv4/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/ipv6/*.c)
-source += $(wildcard $(pwd)/lwip/src/netif/*.c)
+source += $(pwd)/lwip/src/netif/ethernet.c
 
 ifeq ($(target),win)
-#source += $(pwd)/lwip/contrib/ports/win32/sys_arch.c
-source += $(pwd)/lwip/contrib/ports/win32/sio.c
+source += $(pwd)/lwip/contrib/ports/win32/sys_arch.c
+cflags += -I$(pwd)/lwip/contrib/ports/win32/include
+c_lwip := -DLWIP_TIMEVAL_PRIVATE=0
 else
 source += $(pwd)/lwip/contrib/ports/unix/port/sys_arch.c
+cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
 endif
 
 cflags += -I$(pwd)/lwip/src/include
-cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
 
 cflags += -DLWIP_ERRNO_STDINCLUDE
+cflags_sys_arch += -UWIN32_LEAN_AND_MEAN
+
 
 cflags_transport += -Wno-unused-private-field
 
@@ -141,6 +148,10 @@ cflags += -DECMULT_WINDOW_SIZE=15
 cflags += -DECMULT_GEN_PREC_BITS=4
 
 
+cflags += -I$(pwd)/intx/include
+source += $(pwd)/intx/lib/intx/div.cpp
+
+
 source += $(pwd)/eEVM/src/processor.cpp
 source += $(pwd)/eEVM/src/stack.cpp
 source += $(pwd)/eEVM/src/transaction.cpp
@@ -151,7 +162,6 @@ source += $(pwd)/eEVM/3rdparty/keccak/KeccakSpongeWidth1600.c
 source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c
 
 cflags += -I$(pwd)/eEVM/3rdparty
-cflags += -I$(pwd)/intx/include
 cflags += -I$(pwd)/eEVM/include
 
 

@@ -63,6 +63,7 @@ boost += tokenizer
 boost += type_index
 boost += type_traits
 boost += utility
+boost += winapi
 cflags += $(patsubst %,-I$(pwd)/boost/libs/%/include,$(boost))
 
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))

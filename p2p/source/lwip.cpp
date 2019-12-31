@@ -23,8 +23,13 @@
 #include "log.hpp"
 
 #define LWIP_SOCKET_EXTERNAL_HEADERS 1
+#ifdef __MINGW32__
+#define LWIP_SOCKET_EXTERNAL_HEADER_INET_H <winsock2.h>
+#define LWIP_SOCKET_EXTERNAL_HEADER_SOCKETS_H <winsock2.h>
+#else
 #define LWIP_SOCKET_EXTERNAL_HEADER_INET_H <arpa/inet.h>
 #define LWIP_SOCKET_EXTERNAL_HEADER_SOCKETS_H <sys/socket.h>
+#endif
 
 #include <lwip/opt.h>
 #include <lwip/sockets.h>
@@ -58,9 +63,6 @@
 
 #include <string.h>
 #include <signal.h>
-#include <sys/ioctl.h>
-#include <sys/select.h>
-#include <sys/time.h>
 #include <unistd.h>
 
 #include <errno.h>

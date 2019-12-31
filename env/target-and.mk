@@ -53,6 +53,7 @@ more/$(1) :=
 ranlib/$(1) := ranlib
 ar/$(1) := ar
 strip/$(1) := strip
+windres/$(1) := false
 endef
 $(each)
 
@@ -75,6 +76,7 @@ temp := $(word 1,$(meson/$(1)))-$$(temp)
 ranlib/$(1) := $(llvm)/bin/$$(temp)-ranlib
 ar/$(1) := $(llvm)/bin/$$(temp)-ar
 strip/$(1) := $(llvm)/bin/$$(temp)-strip
+windres/$(1) := false
 endef
 $(each)
 
