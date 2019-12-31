@@ -53,4 +53,5 @@ $(output)/%/orchidd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cxx/$*) $(wflags) -o $@ $^ $(lflags)
+	@openssl sha256 -r $@
 	@ls -la $@

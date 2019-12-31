@@ -102,6 +102,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(patsubst %,$(output)/$(defaul
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cxx/$(default)) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
+	@openssl sha256 -r $@
 
 $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	@mkdir -p $(dir $@)

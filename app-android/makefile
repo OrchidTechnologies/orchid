@@ -38,6 +38,7 @@ $(output)/jnilibs/%/liborchid.so: $(patsubst %,$(output)/$$*/%,$(object) $(linke
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cxx/$*) -shared $(wflags) -o $@ $^ $(lflags)
+	@openssl sha256 -r $@
 	@ls -la $@
 
 assets := $(output)/assets/flutter_assets
