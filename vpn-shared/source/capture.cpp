@@ -66,7 +66,7 @@ class LoggerDatabase :
 
         Statement<Skip>(*this, R"(pragma journal_mode = wal)")();
         Statement<Skip>(*this, R"(pragma secure_delete = on)")();
-        Statement<None>(*this, R"(pragma synchronous = full)")();
+        Statement<None>(*this, R"(pragma synchronous = normal)")();
 
         Statement<None>(*this, R"(begin)")();
 
