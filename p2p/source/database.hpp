@@ -76,7 +76,7 @@ class Statement {
 
     orc_bind(double, double, value)
     orc_bind(int, int, value)
-    orc_bind(int, uint, value)
+    orc_bind(int, unsigned, value)
     orc_bind(int64, sqlite3_int64, value)
     orc_bind(null, nullptr_t)
 

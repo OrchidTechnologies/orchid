@@ -121,8 +121,13 @@ object := $(foreach _,$(sort $(source)),$(_).o)
 
 code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)
 
-flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags)) \
-    $(foreach dir,$(subst /, ,$*),$(c_$(dir))) $(cflags_$(basename $(notdir $<)))
+dflags = $(foreach dir,$(subst /, ,$*),$(c_$(dir)))
+
+flags = $(qflags)
+flags += $(filter -I%,$(dflags))
+flags += $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags))
+flags += $(filter-out -I%,$(dflags))
+flags += $(cflags_$(basename $(notdir $<)))
 
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)
@@ -162,7 +167,7 @@ endif
 	$(job)@$(prefix) $(cxx/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 define _
-$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)' '$(xflags)')
+$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
 endef
 $(each)
 
@@ -170,7 +175,7 @@ $(each)
 	env/autogen.sh $(dir $@)
 	cd $(dir $@); $(a_$(subst -,_,$(notdir $(patsubst %/configure.ac,%,$<))))
 
-$(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot)
+$(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,$$(folder))
 	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
@@ -181,7 +186,7 @@ $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot)
 	    --enable-static --disable-shared $(subst =@/,=$(CURDIR)/$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
 
-$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt
+$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $$(call head,$$(folder))
 	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)

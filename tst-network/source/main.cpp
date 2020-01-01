@@ -33,11 +33,13 @@
 
 #include "baton.hpp"
 #include "channel.hpp"
-#include "server.hpp"
+#include "client.hpp"
 #include "crypto.hpp"
 #include "error.hpp"
 #include "event.hpp"
 #include "jsonrpc.hpp"
+#include "link.hpp"
+#include "local.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 
@@ -65,15 +67,16 @@ int Main(int argc, const char *const argv[]) {
         co_await Schedule();
 
         class Watch :
-            public Pipe,
-            public BufferDrain
+            public Pipe<Buffer>,
+            public BufferDrain,
+            public Valve
         {
           private:
             std::string error_;
             Event done_;
 
           protected:
-            virtual Link *Inner() noexcept = 0;
+            virtual Pump<Buffer> *Inner() noexcept = 0;
 
             void Land(const Buffer &data) override {
                 Log() << "Land" << data << std::endl;
@@ -91,15 +94,15 @@ int Main(int argc, const char *const argv[]) {
             }
 
             task<void> Done() {
-                co_await done_;
+                co_await done_.Wait();
                 orc_assert_(error_.empty(), error_);
             }
         };
 
         Sink<Watch> watch;
 
-        auto origin(co_await Setup());
-        co_await origin->Connect(&watch, host, port);
+        auto origin(Break<Local>());
+        //co_await origin->Connect(&watch, Socket(host, port));
 
         co_await watch.Send(Beam("test\n"));
 

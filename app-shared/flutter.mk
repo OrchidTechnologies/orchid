@@ -18,7 +18,7 @@
 # }}}
 
 
-flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml ../.git/modules/flutter/HEAD
+flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(call head,flutter)
 	cd flutter && git clean -fxd
 	cd flutter && bin/flutter precache
 	cd flutter && bin/flutter update-packages

@@ -95,6 +95,9 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
+    - name: make Windows test
+      run: make -j3 -C tst-network target=win
+
     - name: make Windows server
       run: make -j3 -C srv-shared target=win
     - uses: actions/upload-artifact@v1

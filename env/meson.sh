@@ -15,7 +15,8 @@ objc=${10}
 qflags=${11}
 wflags=${12}
 xflags=${13}
-shift 13
+mflags=${14}
+shift 14
 
 if [[ $# -ne 0 ]]; then
     exit 1
@@ -59,14 +60,6 @@ cpu_family = '${meson[1]}'
 cpu = '${meson[1]}'
 endian = 'little'
 
-[properties]
-c_args = [$(args "${cc[@]}" "${cflags[@]}")]
-cpp_args = [$(args "${cxx[@]}" "${cflags[@]} ${xflags[@]}")]
-objc_args = [$(args "${objc[@]}" "${cflags[@]}")]
-c_link_args = [$(args "${cc[@]}" "${lflags[@]}")]
-cpp_link_args = [$(args "${cxx[@]}" "${lflags[@]}")]
-objc_link_args = [$(args "${objc[@]}" "${lflags[@]}")]
-
 [binaries]
 c = '${cc[0]}'
 cpp = '${cxx[0]}'
@@ -75,6 +68,17 @@ ar = '${ar}'
 strip = '${strip}'
 windres = '${windres}'
 pkgconfig = '${curdir}/env/pkg-config'
+
+[properties]
+c_args = [$(args "${cc[@]}" "${cflags[@]}")]
+cpp_args = [$(args "${cxx[@]}" "${cflags[@]} ${xflags[@]}")]
+objc_args = [$(args "${objc[@]}" "${cflags[@]}")]
+c_link_args = [$(args "${cc[@]}" "${lflags[@]}")]
+cpp_link_args = [$(args "${cxx[@]}" "${lflags[@]}")]
+objc_link_args = [$(args "${objc[@]}" "${lflags[@]}")]
+$(for mflag in ${mflags[@]}; do
+    echo "${mflag%%=*} = ${mflag#*=}"
+done)
 EOF
 
 if diff "${output}/${arch}"/meson.{new,txt} &>/dev/null; then

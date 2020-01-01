@@ -48,4 +48,8 @@ $(eval temp := $(subst /,$(space),$(1)))
 $(subst $(space),/,$(wordlist 2,$(words $(temp)),$(temp)))
 endef
 
+define head
+$(shell cd $(1) && git rev-parse --git-dir)/HEAD
+endef
+
 # XXX: implement a split and then reimplement specific in terms of it

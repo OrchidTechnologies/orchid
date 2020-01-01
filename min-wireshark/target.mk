@@ -41,7 +41,17 @@ wireshark := $(filter-out \
 ,$(wireshark))
 endif
 
-ifneq ($(target),w32)
+ifeq ($(target),win)
+c_wireshark += -D_UNICODE
+c_wireshark += -DUNICODE
+
+c_wireshark += -DSTRSAFE_NO_DEPRECATE
+c_wireshark += -include malloc.h
+c_wireshark += -Wno-format
+c_wireshark += -Wno-missing-braces
+
+c_getopt_long += -DNO_OLDNAMES
+else
 wireshark := $(filter-out \
     %/file_util.c \
     %/win32-utils.c \
@@ -49,12 +59,13 @@ wireshark := $(filter-out \
 
 c_wireshark += -DHAVE_ALLOCA_H
 c_wireshark += -DHAVE_ARPA_INET_H
-c_wireshark += -DHAVE_FCNTL_H
 c_wireshark += -DHAVE_GRP_H
 c_wireshark += -DHAVE_MKSTEMPS
 c_wireshark += -DHAVE_PWD_H
-c_wireshark += -DHAVE_UNISTD_H
 endif
+
+c_wireshark += -DHAVE_FCNTL_H
+c_wireshark += -DHAVE_UNISTD_H
 
 ifneq ($(msys),darwin)
 wireshark := $(filter-out \
@@ -69,8 +80,8 @@ wireshark := $(filter-out \
 ,$(wireshark))
 
 source += $(wireshark)
+cflags += -I$(pwd)/extra
 cflags += -I$(pwd)/wireshark
-c_wireshark += -I$(pwd)/extra
 
 # XXX: this doesn't actually fix the problem. ENABLE_STATIC is ignored for __GNUC__ and needs to be fixed upstream :/
 # vpn/wsk/wireshark/epan/conversation.c:1616:15: error: dllimport cannot be applied to non-inline function definition
@@ -229,23 +240,31 @@ w_glib :=
 w_glib += -Dlibmount=false
 w_glib += -Diconv=gnu
 
-m_glib := sed -i -e 's@^\(build all:.*\) tests/child-test@\1@; s@^\(build all:.*\) tests/gio-test@\1@;' build.ninja
+m_glib := 
 
-deps := 
-deps += glib/gmodule/libgmodule-2.0.a
-deps += glib/glib/libglib-2.0.a
+m_glib += sed -i -e ' \
+    s@-Werror=format=2@-Werror=format@g; \
+' build.ninja;
+
+m_glib += sed -i -e ' \
+    s@^G_BEGIN_DECLS$$@\#define G_INTL_STATIC_COMPILATION 1'$$'\\\n''G_BEGIN_DECLS@; \
+' glib/glibconfig.h;
+
+glib := 
+glib += gmodule/libgmodule-2.0.a
+glib += glib/libglib-2.0.a
 ifneq ($(target),lnx)
-deps += glib/subprojects/proxy-libintl/libintl.a
+glib += subprojects/proxy-libintl/libintl.a
 endif
-deps := $(patsubst %,$(pwd)/%,$(deps))
+temp := $(patsubst %,$(pwd)/glib/%,$(glib))
 
 $(call depend,$(pwd)/glib/build.ninja,@/usr/include/iconv.h @/usr/lib/libiconv.a)
 $(call depend,$(pwd)/glib/glib/glibconfig.h,@/$(pwd)/glib/build.ninja)
 
-$(subst @,%,$(patsubst %,$(output)/@/%,$(deps))): $(output)/%/$(pwd)/glib/build.ninja
-	cd $(dir $<) && ninja
+$(subst @,%,$(patsubst %,$(output)/@/%,$(temp))): $(output)/%/$(pwd)/glib/build.ninja
+	cd $(dir $<) && ninja $(glib) && touch $(glib)
 
-linked += $(deps)
+linked += $(temp)
 
 header += @/$(pwd)/glib/build.ninja
 cflags += -I@/$(pwd)/glib/glib

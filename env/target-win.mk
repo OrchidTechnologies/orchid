@@ -40,7 +40,7 @@ more/$(1) += -B$$(dir $$(temp))$(1)-w64-mingw32-
 endef
 $(each)
 
-more := -D_WIN32_WINNT=0x0600
+more := -D_WIN32_WINNT=0x0601
 include $(pwd)/target-ndk.mk
 cxx += -stdlib=libc++
 
@@ -66,10 +66,14 @@ cflags += -DWIN32_LEAN_AND_MEAN=
 #cflags += -fms-compatibility
 #cflags += -D__GNUC__
 
+mflags += has_function_stpcpy=false
+
 # pragma comment(lib, "...lib")
 # pragma warning(disable : ...)
 cflags += -Wno-pragma-pack
 cflags += -Wno-unknown-pragmas
+
+cflags += -Wno-unused-const-variable
 
 cflags += -I$(pwd)/win32
 cflags += -Wno-nonportable-include-path

@@ -3,6 +3,8 @@
 all: all-cli-lnx
 all: all-cli-mac
 
+all: all-tst-win
+
 all: all-app-ios
 all: all-app-sim
 all: all-app-and
@@ -10,7 +12,7 @@ all: all-app-and
 all: all-srv-and
 all: all-srv-lnx
 all: all-srv-mac
-#all: all-srv-win
+all: all-srv-win
 
 .PHONY: tst-ethereum
 tst-ethereum:
@@ -23,6 +25,10 @@ all-cli-lnx:
 .PHONY: all-cli-mac
 all-cli-mac:
 	$(MAKE) -C cli-shared target=mac
+
+.PHONY: all-tst-win
+all-tst-win:
+	$(MAKE) -C tst-network target=win
 
 .PHONY: all-srv-and
 all-srv-and:

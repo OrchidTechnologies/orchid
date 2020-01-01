@@ -21,6 +21,8 @@ cflags += -DABSL_FORCE_THREAD_IDENTITY_MODE=ABSL_THREAD_IDENTITY_MODE_USE_TLS
 
 # XXX: technically for boost
 lflags += -lmswsock
+# XXX: technically for glib
+lflags += -lole32
 
 lflags += -lcrypt32
 lflags += -liphlpapi
