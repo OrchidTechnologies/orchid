@@ -21,6 +21,7 @@ $(output)/sqlite/Makefile:
 
 $(output)/$(pwd/sqlite)3%h $(output)/sqlite/sqlite3%c: $(output)/sqlite/Makefile
 	touch $(pwd/sqlite)/manifest{,.uuid}
+	rm -f $(output)/sqlite/fts5.c
 	$(MAKE) -C $(output)/sqlite sqlite3.c
 	rm -f $(pwd/sqlite)/manifest{,.uuid}
 	mkdir -p $(dir $(output)/$(pwd/sqlite))
