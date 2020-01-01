@@ -49,6 +49,12 @@ l_tor += -lws2_32
 w_tor += --disable-gcc-hardening
 endif
 
+ifeq ($(target),lnx)
+# XXX: tor tries -lssl after -lpthread; I think this is a bug
+l_tor += -Wl,--whole-archive
+l_tor += -Wl,--allow-multiple-definition
+endif
+
 tor := 
 tor += core/libtor-app.a
 tor += lib/libtor-buf.a
