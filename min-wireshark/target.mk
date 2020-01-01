@@ -83,11 +83,6 @@ source += $(wireshark)
 cflags += -I$(pwd)/extra
 cflags += -I$(pwd)/wireshark
 
-# XXX: this doesn't actually fix the problem. ENABLE_STATIC is ignored for __GNUC__ and needs to be fixed upstream :/
-# vpn/wsk/wireshark/epan/conversation.c:1616:15: error: dllimport cannot be applied to non-inline function definition
-c_wireshark += -DENABLE_STATIC
-c_wireshark += -Wno-inconsistent-dllimport
-
 c_wireshark += -D'DATA_DIR=""'
 c_wireshark += -D'EXTCAP_DIR=""'
 c_wireshark += -D'PLUGIN_PATH_ID=""'
