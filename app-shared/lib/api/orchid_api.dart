@@ -33,6 +33,7 @@ abstract class OrchidAPI {
   /// Publish the connection status.
   final BehaviorSubject<OrchidConnectionState> connectionStatus;
 
+  // TODO: Remove
   /// Publish the synchronization status.
   final BehaviorSubject<OrchidSyncStatus> syncStatus;
 
@@ -44,6 +45,9 @@ abstract class OrchidAPI {
   /// Note: On iOS this corresponds to having successfully saved the Orchid VPN configuration via the
   /// NEVPNManager API.
   final BehaviorSubject<bool> vpnPermissionStatus;
+
+  /// Publish notifications that the circuit hop configuration has changed.
+  final BehaviorSubject<void> circuitConfigurationChanged;
 
   /// The Flutter application uses this method to indicate to the native channel code
   /// that the UI has finished launching and all listeners have been established.

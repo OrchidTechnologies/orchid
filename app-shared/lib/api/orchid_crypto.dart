@@ -137,7 +137,7 @@ class StoredEthereumKey {
   }
 
   StoredEthereumKeyRef ref() {
-    return StoredEthereumKeyRef(uid);
+    return StoredEthereumKeyRef.from(uid);
   }
 
   StoredEthereumKey.fromJson(Map<String, dynamic> json)
@@ -147,6 +147,7 @@ class StoredEthereumKey {
         this.private = BigInt.parse(json['private']);
 
   Map<String, dynamic> toJson() => {
+        'uuid': uid,
         'time': time.millisecondsSinceEpoch,
         'imported': imported,
         'private': private.toString()
@@ -158,18 +159,31 @@ class StoredEthereumKey {
 class StoredEthereumKeyRef {
   String keyUid;
 
-  StoredEthereumKeyRef(this.keyUid);
+  StoredEthereumKeyRef.from(String keyUid) {
+    if (keyUid == null) {
+      throw Exception("null key");
+    }
+    this.keyUid = keyUid;
+  }
 
   // Resolve the reference
   Future<StoredEthereumKey> get() async {
     var keys = await UserPreferences().getKeys();
-    return getFrom(keys);
+    try {
+      return getFrom(keys);
+    } catch(err) {
+      throw Exception("get key error: $err");
+    }
   }
 
   StoredEthereumKey getFrom(List<StoredEthereumKey> keys) {
-    return keys.firstWhere((key) {
-      return key.uid == keyUid;
-    });
+    try {
+      return keys.firstWhere((key) {
+        return key.uid == keyUid;
+      });
+    } catch(err) {
+      throw Exception("getFrom(key) error: $err");
+    }
   }
 
   @override

@@ -14,7 +14,7 @@ class OrchidHop extends CircuitHop {
 
   OrchidHop(
       {@required this.curator, @required this.funder, @required this.keyRef})
-      : super(Protocol.Orchid);
+      : super(HopProtocol.Orchid);
 
   // Construct an Orchid Hop using an existing hop's properties as defaults.
   // The hop may be null, in which case this serves as a loose constructor.
@@ -28,7 +28,7 @@ class OrchidHop extends CircuitHop {
   factory OrchidHop.fromJson(Map<String, dynamic> json) {
     var curator = json['curator'];
     var funder = EthereumAddress.from(json['funder']);
-    var keyRef = StoredEthereumKeyRef(json['keyRef']);
+    var keyRef = StoredEthereumKeyRef.from(json['keyRef']);
     return OrchidHop(curator: curator, funder: funder, keyRef: keyRef);
   }
 

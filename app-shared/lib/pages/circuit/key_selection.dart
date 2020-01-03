@@ -37,7 +37,11 @@ class _KeySelectionState extends State<KeySelection> {
 
     // If an initial key selection is provided use it
     if (widget.initialSelection != null) {
-      this._selectedKey = widget.initialSelection?.getFrom(_keys);
+      try {
+        this._selectedKey = widget.initialSelection?.getFrom(_keys);
+      } catch(err) {
+        print("KeySelection can't find initial selection: ${widget.initialSelection}");
+      }
     }
 
     // Update all state

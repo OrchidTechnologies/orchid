@@ -50,9 +50,8 @@ class MainActivity(): FlutterActivity() {
                     result.success(text);
                 }
                 "set_config" -> {
-                    Log.d("Orchid", "in set config")
+                    Log.d("Orchid", "set config")
                     var text: String? = call.argument<String>("text")
-                    Log.d("Orchid", "arg = "+text)
                     if ( text == null ) {
                         Log.d("Orchid", "invalid argument in set_config")
                         text = "";

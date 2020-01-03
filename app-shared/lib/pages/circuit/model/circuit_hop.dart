@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 
-enum Protocol { Orchid, OpenVPN }
+enum HopProtocol { Orchid, OpenVPN }
 
 // A hop element of a circuit
 class CircuitHop {
-  Protocol protocol;
+  HopProtocol protocol;
 
   CircuitHop(this.protocol);
 
@@ -15,10 +15,10 @@ class CircuitHop {
 
   String displayName() {
     switch (protocol) {
-      case Protocol.Orchid:
+      case HopProtocol.Orchid:
         return "Orchid";
         break;
-      case Protocol.OpenVPN:
+      case HopProtocol.OpenVPN:
         return "OpenVPN";
         break;
       default:
@@ -26,15 +26,18 @@ class CircuitHop {
     }
   }
 
+  // Return the protocol matching the string name ignoring case
   static stringToProtocol(String s) {
-    return Protocol.values.firstWhere((e) => e.toString() == "Protocol." + s,
+    return HopProtocol.values.firstWhere(
+        (e) =>
+            e.toString().toLowerCase() == ("$HopProtocol." + s).toLowerCase(),
         orElse: () {
       return null;
     }); // ug
   }
 
-  static protocolToString(Protocol type) {
-    return type.toString().substring("Protocol.".length);
+  static protocolToString(HopProtocol type) {
+    return type.toString().substring("$HopProtocol.".length);
   }
 }
 
@@ -47,9 +50,6 @@ class UniqueHop {
   UniqueHop({@required this.key, @required this.hop});
 
   // Create a UniqueHop preserving any key from a previous UniqueHop.
-  UniqueHop.from(UniqueHop uniqueHop, {CircuitHop hop, int index = 0})
-      : this(
-            key:
-                uniqueHop?.key ?? DateTime.now().millisecondsSinceEpoch + index,
-            hop: hop);
+  UniqueHop.from(UniqueHop uniqueHop, {CircuitHop hop})
+      : this(key: uniqueHop?.key, hop: hop);
 }

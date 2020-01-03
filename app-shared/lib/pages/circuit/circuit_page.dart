@@ -86,12 +86,19 @@ class CircuitPageState extends State<CircuitPage>
     vpnSwitchInstructionsViewed =
         await UserPreferences().getVPNSwitchInstructionsViewed();
 
+    OrchidAPI().circuitConfigurationChanged.listen((_){
+      _updateCircuit();
+    });
+  }
+
+  void _updateCircuit() async {
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
       setState(() {
+        var keyBase = DateTime.now().millisecondsSinceEpoch;
         // Wrap the hops with a locally unique id for the UI
         _hops = mapIndexed(circuit?.hops ?? [], ((index, hop) {
-          var key = DateTime.now().millisecondsSinceEpoch + index;
+          var key = keyBase + index;
           return UniqueHop(key: key, hop: hop);
         })).toList();
       });
@@ -443,10 +450,10 @@ class CircuitPageState extends State<CircuitPage>
     Color color = Colors.white;
     Image image;
     switch (uniqueHop.hop.protocol) {
-      case Protocol.Orchid:
+      case HopProtocol.Orchid:
         image = Image.asset("assets/images/logo2.png", color: color);
         break;
-      case Protocol.OpenVPN:
+      case HopProtocol.OpenVPN:
         image = Image.asset("assets/images/security.png", color: color);
         break;
       default:
@@ -572,11 +579,11 @@ class CircuitPageState extends State<CircuitPage>
     EditableHop editableHop = EditableHop(uniqueHop);
     var editor;
     switch (uniqueHop.hop.protocol) {
-      case Protocol.Orchid:
+      case HopProtocol.Orchid:
         editor =
             OrchidHopPage(editableHop: editableHop, mode: HopEditorMode.View);
         break;
-      case Protocol.OpenVPN:
+      case HopProtocol.OpenVPN:
         editor = OpenVPNHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Edit,
