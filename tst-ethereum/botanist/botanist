@@ -1,3 +1,0 @@
-#!/bin/bash
-set -e
-go run src/botanist.go "$@"
