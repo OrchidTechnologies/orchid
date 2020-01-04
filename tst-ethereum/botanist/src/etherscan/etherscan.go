@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"math/big"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/ethereum"
+	"../ethereum"
 	log "github.com/sirupsen/logrus"
 )
 

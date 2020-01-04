@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/ethereum"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/etherscan"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/util"
+	"../ethereum"
+	"../etherscan"
+	"../util"
 )
 
 type Lottery struct {

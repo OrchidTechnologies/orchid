@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/orchid"
+	"../orchid"
 	"math"
 	"strconv"
 )
