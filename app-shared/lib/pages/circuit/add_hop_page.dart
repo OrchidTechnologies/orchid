@@ -32,9 +32,9 @@ class _AddHopPageState extends State<AddHopPage> {
         child: Column(
           children: <Widget>[
             pady(8),
-            _buildHopChoice(text: "Orchid Hop", hopType: Protocol.Orchid),
+            _buildHopChoice(text: "Orchid Hop", hopType: HopProtocol.Orchid),
             _divider(),
-            _buildHopChoice(text: "OpenVPN Hop", hopType: Protocol.OpenVPN),
+            _buildHopChoice(text: "OpenVPN Hop", hopType: HopProtocol.OpenVPN),
             _divider(),
             pady(32),
             Expanded(
@@ -50,7 +50,7 @@ class _AddHopPageState extends State<AddHopPage> {
     );
   }
 
-  Widget _buildHopChoice({String text, Protocol hopType}) {
+  Widget _buildHopChoice({String text, HopProtocol hopType}) {
     return ListTile(
         contentPadding: EdgeInsets.only(left: 24, right: 24, top: 8, bottom: 8),
         trailing: Icon(Icons.chevron_right, color: Colors.black),
@@ -61,18 +61,18 @@ class _AddHopPageState extends State<AddHopPage> {
         });
   }
 
-  void _addHopType(Protocol hopType) async {
+  void _addHopType(HopProtocol hopType) async {
     EditableHop editableHop = EditableHop.empty();
     HopEditor editor;
     switch (hopType) {
-      case Protocol.Orchid:
+      case HopProtocol.Orchid:
         editor = OrchidHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,
           onAddFlowComplete: widget.onAddFlowComplete,
         );
         break;
-      case Protocol.OpenVPN:
+      case HopProtocol.OpenVPN:
         editor = OpenVPNHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,

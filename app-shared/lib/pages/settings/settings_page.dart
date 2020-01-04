@@ -7,6 +7,7 @@ import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
+import '../app_text.dart';
 import '../orchid_app.dart';
 
 /// The main settings page.
@@ -17,6 +18,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   var _defaultCurator = TextEditingController();
+
   //bool _queryBalances = false;
   bool _showStatusTab = false;
 
@@ -32,7 +34,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
     _showStatusTab = await UserPreferences().getShowStatusTab();
-    setState(() { });
+    setState(() {});
   }
 
   Widget build(BuildContext context) {
@@ -48,7 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
               routeName: '/settings/log',
               context: context),
            */
-          /* TODO:
+          /*
           PageTile(
             title: "Query Address",
             //imageName: "assets/images/assignment.png",
@@ -75,9 +77,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: AppTextField(
                     controller: _defaultCurator, margin: EdgeInsets.zero)),
           ),
+
           // Show status page
           pady(16),
           Divider(),
+          PageTile(
+            title: "Show Instructions",
+            trailing: RaisedButton(
+              child: Text("Reset"),
+              onPressed: () {
+                UserPreferences().setVPNSwitchInstructionsViewed(false);
+              },
+            ),
+          ),
+          pady(8),
+          Divider(),
+          pady(8),
           PageTile(
             title: "Show Status Page (beta)",
             //imageName: "assets/images/assignment.png",
@@ -95,17 +110,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           pady(8),
           Divider(),
+          PageTile.route(
+              title: "Manage Configuration (beta)",
+              routeName: '/settings/manage_config',
+              context: context),
           pady(8),
-          PageTile(
-            title: "Show Instructions",
-            trailing: RaisedButton(
-              child: Text("Reset"),
-              onPressed: () {
-                UserPreferences().setVPNSwitchInstructionsViewed(false);
-              },
-            ),
-          ),
-          pady(16),
           Divider(),
         ],
       ),

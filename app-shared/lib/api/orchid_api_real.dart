@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
@@ -72,6 +70,7 @@ class RealOrchidAPI implements OrchidAPI {
   final syncStatus = BehaviorSubject<OrchidSyncStatus>();
   final routeStatus = BehaviorSubject<OrchidRoute>();
   final vpnPermissionStatus = BehaviorSubject<bool>();
+  final circuitConfigurationChanged = BehaviorSubject<void>.seeded(null);
 
   /// Transient, in-memory log implementation.
   OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
@@ -188,39 +187,10 @@ class RealOrchidAPI implements OrchidAPI {
 
   // Generate the portion of the VPN config managed by the GUI.
   // The desired format is (JavaScript, not JSON) e.g.:
-  // hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}, {protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
   static Future<String> generateManagedConfig() async {
-    Circuit circuit = await UserPreferences().getCircuit();
-    List<StoredEthereumKey> keys = await UserPreferences().getKeys();
-    List<CircuitHop> hops = circuit?.hops ?? [];
-
-    // Convert the hops to a json map and replace its value with a quoted string
-    // to match the JS object literal notation.
-    var hopsListConfig = hops.map((hop) {
-      return hop.toJson().map((key, value) {
-        // Key references are replaced with the actual key values.
-        // Null keyRefs are explicitly allowed by the UI
-        if (key == "keyRef") {
-          String secret;
-          if (value != null) {
-            var keyRef = StoredEthereumKeyRef(value);
-            StoredEthereumKey key = keyRef.getFrom(keys);
-            secret = "\"${key.private.toRadixString(16)}\"";
-          } else {
-            secret = null;
-          }
-          return MapEntry("secret", secret);
-        }
-        // The protocol value is transformed to lowercase.
-        if (key == "protocol") {
-          value = value.toString().toLowerCase();
-        }
-        return MapEntry(key, "\"$value\"");
-      }).toString();
-    }).toList();
-
-    var generatedConfig = "hops = $hopsListConfig;";
-    return generatedConfig;
+    var hopsListConfig = await OrchidVPNConfig.generateHopsConfig();
+    //  Currently the hops list is the only managed config.
+    return hopsListConfig;
   }
 
   // Generate the combined user config and generated config
@@ -231,13 +201,11 @@ class RealOrchidAPI implements OrchidAPI {
       generatedConfig = await generateManagedConfig();
     } catch (err) {
       OrchidAPI().logger().write("Error rendering config: $err");
-      generatedConfig = "// Error rendering config";
+      generatedConfig = " ";
     }
 
     // Concatenate the user config and generated config
     var combinedConfig = generatedConfig + "\n" + (userConfig ?? "");
-
-    //print("Saving combined config = $combinedConfig");
     return combinedConfig;
   }
 

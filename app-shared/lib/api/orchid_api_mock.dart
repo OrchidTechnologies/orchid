@@ -82,6 +82,8 @@ class MockOrchidAPI implements OrchidAPI {
   /// NEVPNManager API.
   final vpnPermissionStatus = BehaviorSubject<bool>();
 
+  final circuitConfigurationChanged = BehaviorSubject<void>.seeded(null);
+
   OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
 
   /// The Flutter application uses this method to indicate to the native channel code

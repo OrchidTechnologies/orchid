@@ -115,12 +115,16 @@ class UserPreferences {
     return Budget.fromJson(jsonDecode(value));
   }
 
+  // Set the circuit / hops configuration
   Future<bool> setCircuit(Circuit circuit) async {
     String value = jsonEncode(circuit);
-    return (await SharedPreferences.getInstance())
+    var result = (await SharedPreferences.getInstance())
         .setString(UserPreferenceKey.Circuit.toString(), value);
+    OrchidAPI().circuitConfigurationChanged.add(null);
+    return result;
   }
 
+  // Get the circuit / hops configuration
   Future<Circuit> getCircuit() async {
     String value = (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.Circuit.toString());
@@ -171,6 +175,7 @@ class UserPreferences {
   }
 
   Future<bool> setKeys(List<StoredEthereumKey> keys) async {
+    print("setKeys: storing keys: ${jsonEncode(keys)}");
     try {
       return (await SharedPreferences.getInstance())
           .setString(UserPreferenceKey.Keys.toString(), jsonEncode(keys));

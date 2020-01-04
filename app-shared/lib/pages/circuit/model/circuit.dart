@@ -13,9 +13,9 @@ class Circuit {
         .map((el) {
           CircuitHop hop = CircuitHop.fromJson(el);
           switch (hop.protocol) {
-            case Protocol.Orchid:
+            case HopProtocol.Orchid:
               return OrchidHop.fromJson(el);
-            case Protocol.OpenVPN:
+            case HopProtocol.OpenVPN:
               return OpenVPNHop.fromJson(el);
             default:
               return null;

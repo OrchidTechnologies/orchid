@@ -6,7 +6,7 @@ class OpenVPNHop extends CircuitHop {
   final String ovpnConfig;
 
   OpenVPNHop({this.userName, this.userPassword, this.ovpnConfig})
-      : super(Protocol.OpenVPN);
+      : super(HopProtocol.OpenVPN);
 
   factory OpenVPNHop.fromJson(Map<String, dynamic> json) {
     return OpenVPNHop(
