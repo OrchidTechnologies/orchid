@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
@@ -179,7 +180,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
     // Save the imported circuit.
     await UserPreferences().setCircuit(parsedCircuit.circuit);
     print("Import saved ${parsedCircuit.circuit.hops.length} hop circuit.");
-
+    OrchidAPI().circuitConfigurationChanged.add(null);
     Navigator.pop(context);
   }
 }
