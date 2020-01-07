@@ -2,17 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var rootCmd = &cobra.Command{
-  Use:   "botanist",
-  Short: "Botanist tobulates metrics for monitoring Orchid",
-  Long: ``,
-  PersistentPreRun: func(cmd *cobra.Command, args []string) {
-  },
-  TraverseChildren: true,
+	Use:   "botanist",
+	Short: "Botanist tobulates metrics for monitoring Orchid",
+	Long:  ``,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	},
+	TraverseChildren: true,
 }
 
 func init() {
@@ -23,11 +23,10 @@ func init() {
 }
 
 func Execute() {
-  if err := rootCmd.Execute(); err != nil {
-    fmt.Println(err)
-    os.Exit(1)
-  }
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 var StartBlock, EndBlock, ApiKey, LottoAddr string
-

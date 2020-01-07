@@ -1,9 +1,9 @@
 package util
 
 import (
-    "strings"
-    "errors"
-    "fmt"
+	"errors"
+	"fmt"
+	"strings"
 )
 
 func AppendIfUnique(s []string, v string) []string {
@@ -27,11 +27,10 @@ func Columnize(list ColumnList) (string, error) {
 		if len(s) > l {
 			return "", errors.New(fmt.Sprintf("String \"%s\" is longer than length %d", s, l))
 		}
-		pad := strings.Repeat(" ", (l - len(s)) / 2)
+		pad := strings.Repeat(" ", (l-len(s))/2)
 		outstr := pad + s + pad
-		outstr += strings.Repeat(" ", l - len(outstr))
+		outstr += strings.Repeat(" ", l-len(outstr))
 		out = append(out, outstr)
 	}
 	return strings.Join(out, " "), nil
 }
-

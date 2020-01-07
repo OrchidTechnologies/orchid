@@ -2,27 +2,25 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/orchid"
+	"github.com/spf13/cobra"
 	"math"
 	"strconv"
 )
 
-
-
 var talliesCmd = &cobra.Command{
-  Use:   "tallies",
-  Short: "Print tallies of useful metrics",
-  Long: ``,
-  Run: func(cmd *cobra.Command, args []string) {
-	grabsize, _ := strconv.Atoi(MinFaceValue)
-	err, lot := orchid.NewLotteryFromEtherscan(ApiKey, LottoAddr, StartBlock, EndBlock)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	lot.Tallies(int64(math.Pow10(grabsize)))
-  },
+	Use:   "tallies",
+	Short: "Print tallies of useful metrics",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		grabsize, _ := strconv.Atoi(MinFaceValue)
+		err, lot := orchid.NewLotteryFromEtherscan(ApiKey, LottoAddr, StartBlock, EndBlock)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		lot.Tallies(int64(math.Pow10(grabsize)))
+	},
 }
 
 func init() {

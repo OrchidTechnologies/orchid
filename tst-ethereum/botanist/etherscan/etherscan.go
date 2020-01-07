@@ -1,15 +1,15 @@
 package etherscan
 
 import (
-	"fmt"
-	"strings"
-	"io/ioutil"
 	"encoding/json"
-	"net/http"
-	"strconv"
-	"math/big"
+	"fmt"
 	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/ethereum"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"math/big"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 const apiBaseUrl = "https://api.etherscan.io/api"
@@ -116,7 +116,7 @@ func AccountTransactions(key string, addr string, start string, end string, cont
 	startStr := fmt.Sprintf("startblock=%s", start)
 	endStr := fmt.Sprintf("endblock=%s", end)
 	argstr := strings.Join([]string{addrStr, startStr, endStr}, "&")
-	
+
 	err, result := apiCallPlural(key, "account", "tokentx", argstr)
 	if err != nil {
 		log.Error(err)
@@ -135,7 +135,7 @@ func AccountTransactions(key string, addr string, start string, end string, cont
 		}
 
 		cur := ethereum.DigitalCurrency{t["tokenSymbol"], d}
-		
+
 		err, txres := apiCallSingular(key, "proxy", "eth_getTransactionByHash", fmt.Sprintf("txhash=%s", t["hash"]))
 		fstr := "00000000"
 		if err == nil {
@@ -144,9 +144,8 @@ func AccountTransactions(key string, addr string, start string, end string, cont
 				fstr = contract.Functions[fstr]
 			}
 		}
-		
+
 		out = append(out, EtherscanTxn{t["hash"], t["from"], t["to"], amt, cur, fstr})
 	}
 	return nil, out
 }
-

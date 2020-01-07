@@ -1,9 +1,9 @@
 package main
 
 import (
-  "github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/cmd"
+	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/cmd"
 )
 
 func main() {
-  cmd.Execute()
+	cmd.Execute()
 }
