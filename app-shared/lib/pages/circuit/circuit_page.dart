@@ -546,7 +546,7 @@ class CircuitPageState extends State<CircuitPage>
         var addFlowCompletion = (CircuitHop result) {
           Navigator.pop(context, result);
         };
-        var editor = AddHopPage(onAddFlowComplete: addFlowCompletion);
+        var editor = AddHopPage(onAddFlowComplete: addFlowCompletion, showCallouts: _hops.isEmpty);
         var route = MaterialPageRoute<CircuitHop>(
             builder: (context) => editor, settings: settings);
         return route;
