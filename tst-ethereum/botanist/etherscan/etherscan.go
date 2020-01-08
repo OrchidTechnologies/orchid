@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const apiBaseUrl = "https://api.etherscan.io/api"
@@ -79,12 +80,13 @@ func apiCallSingular(key string, module string, action string, argstr string) (e
 }
 
 type EtherscanTxn struct {
-	Hash     string
-	From     string
-	To       string
-	Amount   *big.Int
-	Currency ethereum.DigitalCurrency
-	Function string
+	Hash      string
+	Timestamp time.Time
+	From      string
+	To        string
+	Amount    *big.Int
+	Currency  ethereum.DigitalCurrency
+	Function  string
 }
 
 func AccountTransactions(key string, addr string, start string, end string, contract ethereum.Contract) (error, []EtherscanTxn) {
@@ -145,7 +147,11 @@ func AccountTransactions(key string, addr string, start string, end string, cont
 			}
 		}
 
-		out = append(out, EtherscanTxn{t["hash"], t["from"], t["to"], amt, cur, fstr})
+		tval, err := strconv.ParseInt(t["timeStamp"], 10, 64)
+		if err != nil {
+			tval = 0
+		}
+		out = append(out, EtherscanTxn{t["hash"], time.Unix(tval, 0), t["from"], t["to"], amt, cur, fstr})
 	}
 	return nil, out
 }

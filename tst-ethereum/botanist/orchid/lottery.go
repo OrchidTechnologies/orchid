@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/big"
 	"strings"
+	"time"
 )
 
 type Lottery struct {
@@ -16,6 +17,31 @@ type Lottery struct {
 	Address         string
 	Transactions    []LotteryTransaction
 	LotteryContract ethereum.Contract
+}
+
+type LotteryAccount struct {
+	Funder       string
+	Signer       string
+	Balance      int
+	Deposit      int
+	Transactions []LotteryTransaction
+}
+
+type LotteryFunction int
+
+const (
+	In LotteryFunction = iota
+	Out
+)
+
+type LotteryTransaction struct {
+	Contract  Lottery
+	Hash      string
+	Timestamp time.Time
+	From      string
+	To        string
+	Amount    *big.Int
+	TxnType   string
 }
 
 func NewLotteryFromEtherscan(key string, addr string, start string, end string) (error, *Lottery) {
@@ -32,7 +58,7 @@ func NewLotteryFromEtherscan(key string, addr string, start string, end string) 
 
 	ltxns := make([]LotteryTransaction, 0)
 	for _, t := range txns {
-		ltxns = append(ltxns, LotteryTransaction{out, t.Hash, t.From, t.To, t.Amount, t.Function})
+		ltxns = append(ltxns, LotteryTransaction{out, t.Hash, t.Timestamp, t.From, t.To, t.Amount, t.Function})
 		out.Currency = t.Currency
 	}
 	out.Transactions = ltxns
@@ -47,13 +73,13 @@ func (lotto *Lottery) Tallies(grabsize int64) string {
 	var c, d int
 	dec := int64(math.Pow10(lotto.Currency.Decimals))
 	div := new(big.Int).SetInt64(dec)
-	headstr, _ := util.Columnize(util.ColumnList{"Txn Hash": 66, "Recipient": 42, "Face Value": 15})
+	headstr, _ := util.Columnize(util.ColumnList{"Date": 29, "Txn Hash": 66, "Recipient": 42, "Face Value": 15})
 	fmt.Println(headstr)
 	for _, txn := range lotto.Transactions {
 		if txn.TxnType == "grab" {
 			if txn.Amount.Cmp(new(big.Int).SetInt64(grabsize)) != -1 {
 				face := new(big.Float).Quo(new(big.Float).SetInt(txn.Amount), new(big.Float).SetInt(div))
-				fmt.Println(txn.Hash, txn.To, face)
+				fmt.Println(txn.Timestamp, txn.Hash, txn.To, face)
 				c++
 				tottfr.Add(tottfr, face)
 			}
@@ -82,28 +108,4 @@ func (lotto *Lottery) Tallies(grabsize int64) string {
 	fmt.Println("Net held in contract: ", net, lotto.Currency.Ticker)
 	fmt.Println("Accounts: ", len(funders))
 	return ""
-}
-
-type LotteryAccount struct {
-	Funder       string
-	Signer       string
-	Balance      int
-	Deposit      int
-	Transactions []LotteryTransaction
-}
-
-type LotteryFunction int
-
-const (
-	In LotteryFunction = iota
-	Out
-)
-
-type LotteryTransaction struct {
-	Contract Lottery
-	Hash     string
-	From     string
-	To       string
-	Amount   *big.Int
-	TxnType  string
 }
