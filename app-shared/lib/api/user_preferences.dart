@@ -182,6 +182,13 @@ class UserPreferences {
     }
   }
 
+  /// Add a key to the user's keystore.
+  // Note: Minimizes exposure to the full setKeys()
+  Future<bool> addKey(StoredEthereumKey key) async {
+    var keys = (await UserPreferences().getKeys()) + [key];
+    return UserPreferences().setKeys(keys);
+  }
+
   Future<String> getDefaultCurator() async {
     return (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.DefaultCurator.toString());

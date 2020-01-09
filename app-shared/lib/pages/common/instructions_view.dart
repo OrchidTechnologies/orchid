@@ -12,15 +12,15 @@ class InstructionsView extends StatelessWidget {
   final List<Widget> children;
   final double bodyFontSize;
 
-  const InstructionsView(
-      {Key key,
-      this.image,
-      @required this.title,
-      @required this.body,
-      this.hideInLandscape = true,
-      this.children = const <Widget>[],
-      this.bodyFontSize})
-      : super(key: key);
+  const InstructionsView({
+    Key key,
+    this.image,
+    @required this.title,
+    this.body,
+    this.hideInLandscape = true,
+    this.children = const <Widget>[],
+    this.bodyFontSize,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -34,33 +34,28 @@ class InstructionsView extends StatelessWidget {
           visible: orientation == Orientation.portrait || !hideInLandscape,
           child: SafeArea(
               child: Column(
-            children: <Widget>[
-                  //Spacer(flex: 1),
-                  image ?? Container(),
-                  SizedBox(height: 20),
-                  AppText.header(
-                      text: title,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                      fontSize: 20.0),
-                  SizedBox(height: 20),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 450),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 45),
-                      child: AppText.body(
-                          text: body,
-                          fontWeight: FontWeight.w500,
-                          fontSize: bodyFontSize ?? 11.0,
-                          color: textColor),
-                    ),
-                  ),
-                ] +
-                children +
-                <Widget>[
-                  Spacer(flex: 1),
-                ],
-          )),
+                  children: <Widget>[
+                        image ?? Container(),
+                        SizedBox(height: 20),
+                        AppText.header(
+                            text: title,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                            fontSize: 18.0),
+                        SizedBox(height: 20),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 450),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 45),
+                            child: body != null ? AppText.body(
+                                text: body,
+                                fontWeight: FontWeight.w500,
+                                fontSize: bodyFontSize ?? 11.0,
+                                color: textColor) : Container(),
+                          ),
+                        ),
+                      ] +
+                      children)),
         );
       },
     );

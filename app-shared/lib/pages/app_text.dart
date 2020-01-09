@@ -111,6 +111,12 @@ class AppText {
       fontStyle: FontStyle.normal,
       fontSize: 14.0);
 
+  static TextStyle pasteButtonStyle =
+      TextStyle(
+          fontWeight: FontWeight.w400,
+          fontSize: 17, color: Colors.deepPurple
+      );
+
   static TextStyle dialogTitle = const TextStyle(
       color: const Color(0xff3a3149),
       fontWeight: FontWeight.w400,

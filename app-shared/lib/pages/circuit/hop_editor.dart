@@ -31,11 +31,13 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
         @required this.mode,
         this.onAddFlowComplete});
 
-  Widget buildSaveButton(BuildContext context, {bool isValid = true}) {
+  Widget buildSaveButton(BuildContext context,
+      AddFlowCompletion onAddFlowComplete,
+      {bool isValid = true}) {
     return SaveActionButton(
         isValid: isValid,
         onPressed: () {
-          this.onAddFlowComplete(this.editableHop.value.hop);
+          onAddFlowComplete(this.editableHop.value.hop);
         });
   }
 
