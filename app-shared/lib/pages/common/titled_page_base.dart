@@ -27,6 +27,7 @@ class TitledPage extends StatelessWidget {
   final List<Widget> actions;
   final VoidCallback backAction;
   final bool cancellable;
+  final BoxDecoration decoration;
 
   TitledPage({
     @required this.title,
@@ -35,6 +36,7 @@ class TitledPage extends StatelessWidget {
     this.actions = const [],
     this.backAction,
     this.cancellable = false,
+    this.decoration,
   });
 
   @override
@@ -52,7 +54,7 @@ class TitledPage extends StatelessWidget {
           elevation: 0.0),
       body: Container(
         child: child,
-        decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+        decoration: decoration ?? BoxDecoration(gradient: AppGradients.basicGradient),
       ),
 
       // Note: Setting this to false is a workaround for:

@@ -1,4 +1,4 @@
-package ethereum
+package main
 
 type Contract struct {
 	Name      string

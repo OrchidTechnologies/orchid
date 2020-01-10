@@ -1,4 +1,4 @@
-package ethereum
+package main
 
 type DigitalCurrency struct {
 	Ticker   string

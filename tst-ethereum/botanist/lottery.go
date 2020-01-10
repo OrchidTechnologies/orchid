@@ -1,22 +1,19 @@
-package orchid
+package main
 
 import (
 	"fmt"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/ethereum"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/etherscan"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/util"
 	"math"
 	"math/big"
-	"strings"
 	"time"
+	"strings"
 )
 
 type Lottery struct {
 	Accounts        []LotteryAccount
-	Currency        ethereum.DigitalCurrency
+	Currency        DigitalCurrency
 	Address         string
 	Transactions    []LotteryTransaction
-	LotteryContract ethereum.Contract
+	LotteryContract Contract
 }
 
 type LotteryAccount struct {
@@ -47,10 +44,10 @@ type LotteryTransaction struct {
 func NewLotteryFromEtherscan(key string, addr string, start string, end string) (error, *Lottery) {
 	out := Lottery{}
 	out.Address = addr
-	out.LotteryContract = ethereum.Contract{"Lottery", addr,
+	out.LotteryContract = Contract{"Lottery", addr,
 		map[string]string{"66458bbd": "grab", "73fb4644": "push", "5f51b34e": "yank", "a6cbd6e3": "pull"}}
 
-	err, txns := etherscan.AccountTransactions(key, addr, start, end, out.LotteryContract)
+	err, txns := AccountTransactions(key, addr, start, end, out.LotteryContract)
 	if err != nil {
 		fmt.Println(err)
 		return err, nil
@@ -73,7 +70,7 @@ func (lotto *Lottery) Tallies(grabsize int64) string {
 	var c, d int
 	dec := int64(math.Pow10(lotto.Currency.Decimals))
 	div := new(big.Int).SetInt64(dec)
-	headstr, _ := util.Columnize(util.ColumnList{"Date": 29, "Txn Hash": 66, "Recipient": 42, "Face Value": 15})
+	headstr, _ := Columnize(ColumnList{"Date": 29, "Txn Hash": 66, "Recipient": 42, "Face Value": 15})
 	fmt.Println(headstr)
 	for _, txn := range lotto.Transactions {
 		if txn.TxnType == "grab" {
@@ -86,7 +83,7 @@ func (lotto *Lottery) Tallies(grabsize int64) string {
 			d++
 		}
 		if strings.EqualFold(txn.To, lotto.Address) {
-			funders = util.AppendIfUnique(funders, txn.From)
+			funders = AppendIfUnique(funders, txn.From)
 			intot.Add(intot, txn.Amount)
 		}
 		if strings.EqualFold(txn.From, lotto.Address) {

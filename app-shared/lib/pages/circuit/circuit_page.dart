@@ -389,7 +389,8 @@ class CircuitPageState extends State<CircuitPage>
             "${Intl.plural(num, zero: "No hops", one: "One hop", two: "Two hops", other: "$num hops")} configured";
         color = Colors.greenAccent.withOpacity(0.7);
       } else {
-        text = "No hops configured";
+        text = "Traffic monitoring only";
+        color = Colors.yellowAccent.withOpacity(0.7);
       }
     }
 
@@ -545,7 +546,7 @@ class CircuitPageState extends State<CircuitPage>
         var addFlowCompletion = (CircuitHop result) {
           Navigator.pop(context, result);
         };
-        var editor = AddHopPage(onAddFlowComplete: addFlowCompletion);
+        var editor = AddHopPage(onAddFlowComplete: addFlowCompletion, showCallouts: _hops.isEmpty);
         var route = MaterialPageRoute<CircuitHop>(
             builder: (context) => editor, settings: settings);
         return route;
@@ -763,7 +764,6 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   void _saveCircuit() async {
-    print("save circuit, dialog in progress: $_dialogInProgress");
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
     UserPreferences().setCircuit(circuit);
     OrchidAPI().updateConfiguration();

@@ -1,9 +1,8 @@
-package etherscan
+package main
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/ethereum"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math/big"
@@ -85,11 +84,11 @@ type EtherscanTxn struct {
 	From      string
 	To        string
 	Amount    *big.Int
-	Currency  ethereum.DigitalCurrency
+	Currency  DigitalCurrency
 	Function  string
 }
 
-func AccountTransactions(key string, addr string, start string, end string, contract ethereum.Contract) (error, []EtherscanTxn) {
+func AccountTransactions(key string, addr string, start string, end string, contract Contract) (error, []EtherscanTxn) {
 	log.Trace("Etherscan key" + key)
 
 	type Transaction struct {
@@ -136,7 +135,7 @@ func AccountTransactions(key string, addr string, start string, end string, cont
 			continue
 		}
 
-		cur := ethereum.DigitalCurrency{t["tokenSymbol"], d}
+		cur := DigitalCurrency{t["tokenSymbol"], d}
 
 		err, txres := apiCallSingular(key, "proxy", "eth_getTransactionByHash", fmt.Sprintf("txhash=%s", t["hash"]))
 		fstr := "00000000"

@@ -108,7 +108,6 @@ class UserPreferences {
   Future<Budget> getBudget() async {
     String value = (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.Budget.toString());
-    print("getBudget found: $value");
     if (value == null) {
       return null;
     }
@@ -118,10 +117,8 @@ class UserPreferences {
   // Set the circuit / hops configuration
   Future<bool> setCircuit(Circuit circuit) async {
     String value = jsonEncode(circuit);
-    var result = (await SharedPreferences.getInstance())
+    return (await SharedPreferences.getInstance())
         .setString(UserPreferenceKey.Circuit.toString(), value);
-    OrchidAPI().circuitConfigurationChanged.add(null);
-    return result;
   }
 
   // Get the circuit / hops configuration

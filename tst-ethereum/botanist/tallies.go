@@ -1,8 +1,7 @@
-package cmd
+package main
 
 import (
 	"fmt"
-	"github.com/OrchidTechnologies/orchid/tst-ethereum/botanist/orchid"
 	"github.com/spf13/cobra"
 	"math"
 	"strconv"
@@ -14,7 +13,7 @@ var talliesCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		grabsize, _ := strconv.Atoi(MinFaceValue)
-		err, lot := orchid.NewLotteryFromEtherscan(ApiKey, LottoAddr, StartBlock, EndBlock)
+		err, lot := NewLotteryFromEtherscan(ApiKey, LottoAddr, StartBlock, EndBlock)
 		if err != nil {
 			fmt.Println(err)
 			return
