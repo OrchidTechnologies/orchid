@@ -87,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
             trailing: RaisedButton(
               child: Text("Reset"),
               onPressed: () {
-                UserPreferences().setVPNSwitchInstructionsViewed(false);
+                UserPreferences().resetInstructions();
               },
             ),
           ),
