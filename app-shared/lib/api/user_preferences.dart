@@ -17,6 +17,13 @@ class UserPreferences {
     debugPrint("constructed user prefs API");
   }
 
+  /// Reset all instructional / onboarding / first launch experience
+  /// options to their default state.
+  void resetInstructions() {
+    setVPNSwitchInstructionsViewed(false);
+    setFirstLaunchInstructionsViewed(false);
+  }
+
   ///
   /// Onboarding pages related preferences
   /// TODO: Replace these with one StringList?
@@ -182,6 +189,13 @@ class UserPreferences {
     }
   }
 
+  /// Add a key to the user's keystore.
+  // Note: Minimizes exposure to the full setKeys()
+  Future<bool> addKey(StoredEthereumKey key) async {
+    var keys = ((await UserPreferences().getKeys()) ?? []) + [key];
+    return UserPreferences().setKeys(keys);
+  }
+
   Future<String> getDefaultCurator() async {
     return (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.DefaultCurator.toString());
@@ -238,6 +252,17 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.VPNSwitchInstructionsViewed.toString(), value);
   }
+
+  Future<bool> getFirstLaunchInstructionsViewed() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.FirstLaunchInstructionsViewed.toString()) ??
+        false;
+  }
+
+  Future<bool> setFirstLaunchInstructionsViewed(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.FirstLaunchInstructionsViewed.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -256,4 +281,5 @@ enum UserPreferenceKey {
   DesiredVPNState,
   ShowStatusTab,
   VPNSwitchInstructionsViewed,
+  FirstLaunchInstructionsViewed
 }

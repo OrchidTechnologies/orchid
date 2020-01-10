@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/pages/common/app_text_field.dart';
 
-typedef KeySelectionCallback = void Function(StoredEthereumKey key);
+typedef KeySelectionCallback = void Function(KeySelectionItem key);
 
-class KeySelection extends StatefulWidget {
+class KeySelectionDropdown extends StatefulWidget {
   final KeySelectionCallback onSelection;
-  final StoredEthereumKeyRef initialSelection;
+  final KeySelectionItem initialSelection;
   final bool enabled;
 
-  KeySelection(
+  // Fixed options
+  static final generateKeyOption =
+      KeySelectionMenuOption(displayName: "Generate new key");
+  static final importKeyOption =
+      KeySelectionMenuOption(displayName: "Import key");
+
+  KeySelectionDropdown(
       {Key key,
       @required this.onSelection,
       this.initialSelection,
@@ -17,12 +24,12 @@ class KeySelection extends StatefulWidget {
       : super(key: key);
 
   @override
-  _KeySelectionState createState() => _KeySelectionState();
+  _KeySelectionDropdownState createState() => _KeySelectionDropdownState();
 }
 
-class _KeySelectionState extends State<KeySelection> {
+class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
   List<StoredEthereumKey> _keys = [];
-  StoredEthereumKey _selectedKey;
+  KeySelectionItem _selectedItem;
 
   @override
   void initState() {
@@ -31,17 +38,11 @@ class _KeySelectionState extends State<KeySelection> {
   }
 
   void initStateAsync() async {
-    var keys = await UserPreferences().getKeys();
-
-    this._keys = keys;
+    this._keys = await UserPreferences().getKeys();
 
     // If an initial key selection is provided use it
     if (widget.initialSelection != null) {
-      try {
-        this._selectedKey = widget.initialSelection?.getFrom(_keys);
-      } catch(err) {
-        print("KeySelection can't find initial selection: ${widget.initialSelection}");
-      }
+      this._selectedItem = widget.initialSelection;
     }
 
     // Update all state
@@ -50,36 +51,86 @@ class _KeySelectionState extends State<KeySelection> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Container(
-        child: IgnorePointer(
-          ignoring: !widget.enabled,
-          child: DropdownButton<StoredEthereumKey>(
+    return Container(
+      padding: EdgeInsets.only(left: 16, right: 16),
+      decoration:
+          widget.enabled ? AppTextField.textFieldEnabledDecoration : null,
+      child: IgnorePointer(
+        ignoring: !widget.enabled,
+        child: Container(
+          child: DropdownButton<KeySelectionItem>(
             hint: Text("Choose key"),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
-            underline: !widget.enabled ? Container() : null,
-            value: _selectedKey,
-            items: _keys != null
-                ? _keys.map((key) {
-                    var address = key.keys().address;
-                    return new DropdownMenuItem<StoredEthereumKey>(
-                      value: key,
-                      child: Text(address,
-                          overflow: TextOverflow.ellipsis, style: TextStyle()),
-                    );
-                  }).toList()
-                : [],
-            onChanged: (key) {
+            //underline: !widget.enabled ? Container() : null,
+            underline: Container(),
+            // suppress the underline
+            value: _selectedItem,
+            items: _getDropdownItems(),
+            onChanged: (KeySelectionItem item) {
               setState(() {
-                _selectedKey = key;
+                _selectedItem = item;
               });
-              widget.onSelection(key);
+              widget.onSelection(item);
             },
           ),
         ),
       ),
     );
   }
+
+  List<DropdownMenuItem<KeySelectionItem>> _getDropdownItems() {
+    List<DropdownMenuItem<KeySelectionItem>> items = [];
+
+    // Add the fixed options
+    items.addAll([
+      DropdownMenuItem<KeySelectionItem>(
+        value: KeySelectionItem(option: KeySelectionDropdown.generateKeyOption),
+        child: Text(KeySelectionDropdown.generateKeyOption.displayName),
+      ),
+      DropdownMenuItem<KeySelectionItem>(
+        value: KeySelectionItem(option: KeySelectionDropdown.importKeyOption),
+        child: Text(KeySelectionDropdown.importKeyOption.displayName),
+      )
+    ]);
+
+    if (_keys != null) {
+      items.addAll(_keys.map((key) {
+        var address = key.keys().address;
+        return new DropdownMenuItem<KeySelectionItem>(
+          value: KeySelectionItem(keyRef: key.ref()),
+          child: Text(address,
+              overflow: TextOverflow.ellipsis, style: TextStyle()),
+        );
+      }).toList());
+    }
+
+    return items;
+  }
+}
+
+/// Represents a fixed option such as "generate a new key"
+class KeySelectionMenuOption {
+  final String displayName;
+
+  KeySelectionMenuOption({this.displayName});
+}
+
+/// An item in the key selection drop down list.
+/// Holds either a key or a key selection option.
+class KeySelectionItem {
+  StoredEthereumKeyRef keyRef;
+  KeySelectionMenuOption option;
+
+  KeySelectionItem(
+      {StoredEthereumKeyRef keyRef, KeySelectionMenuOption option}) {
+    assert(keyRef == null || option == null);
+    this.keyRef = keyRef;
+    this.option = option;
+  }
+
+  bool operator ==(o) =>
+      o is KeySelectionItem &&
+      o.option == option &&
+      o.keyRef?.keyUid == keyRef?.keyUid;
 }

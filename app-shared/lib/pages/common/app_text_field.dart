@@ -67,12 +67,12 @@ class AppTextField extends StatelessWidget {
 
   static BoxDecoration textFieldEnabledDecoration = BoxDecoration(
       color: AppColors.neutral_7,
-      borderRadius: BorderRadius.circular(4.0),
+      borderRadius: BorderRadius.circular(8.0),
       border: Border.all(color: AppColors.neutral_5, width: 2.0));
 
   static BoxDecoration textFieldFocusedDecoration = BoxDecoration(
       color: AppColors.neutral_7,
-      borderRadius: BorderRadius.circular(4.0),
+      borderRadius: BorderRadius.circular(8.0),
       border: Border.all(color: AppColors.teal_4, width: 3.0));
 }
 

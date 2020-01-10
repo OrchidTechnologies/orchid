@@ -11,17 +11,17 @@ import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
+import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/keys/add_key_page.dart';
-import 'package:orchid/util/units.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 import 'budget_page.dart';
 import 'curator_page.dart';
 import 'hop_editor.dart';
 import 'key_selection.dart';
+import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
 
 /// Create / edit / view an Orchid Hop
@@ -40,8 +40,9 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 class _OrchidHopPageState extends State<OrchidHopPage> {
   var _funderField = TextEditingController();
   var _curatorField = TextEditingController();
-  StoredEthereumKeyRef _initialKeyRef;
-  StoredEthereumKeyRef _selectedKeyRef;
+  var _importKeyField = TextEditingController();
+  KeySelectionItem _initialSelectedItem;
+  KeySelectionItem _selectedKeyItem;
   bool _showBalance = false;
   LotteryPot _lotteryPot; // initially null
   Timer _balanceTimer;
@@ -50,9 +51,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void initState() {
     super.initState();
     // Disable rotation until we update the screen design
-    if (widget.readOnly()) {
-      ScreenOrientation.portrait();
-    }
+    ScreenOrientation.portrait();
     initStateAsync();
   }
 
@@ -68,15 +67,20 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     setState(() {
       OrchidHop hop = _hop();
       _funderField.text = hop?.funder?.toString();
-      _selectedKeyRef = hop?.keyRef;
       _curatorField.text = hop?.curator;
-      _initialKeyRef = _selectedKeyRef;
+      _initialSelectedItem = hop?.keyRef != null
+          ? KeySelectionItem(keyRef: hop.keyRef)
+          : KeySelectionItem(option: KeySelectionDropdown.generateKeyOption);
+      _selectedKeyItem = _initialSelectedItem;
     });
-    _funderField.addListener(_textFieldChanged);
+
+    if (widget.editable()) {
+      _funderField.addListener(_textFieldChanged);
+      _importKeyField.addListener(_textFieldChanged);
+    }
 
     // init balance polling
-    // TODO: Disabled balances
-    if (false /*widget.readOnly() && await UserPreferences().getQueryBalances()*/) {
+    if (widget.readOnly() && await UserPreferences().getQueryBalances()) {
       setState(() {
         _showBalance = true;
       });
@@ -100,11 +104,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       child: TitledPage(
         title: "Orchid Hop",
         actions: widget.mode == HopEditorMode.Create
-            ? [widget.buildSaveButton(context, isValid: isValid)]
+            ? [widget.buildSaveButton(context, _onSave, isValid: isValid)]
             : [],
         child: SafeArea(
-          child: _buildContent(),
+          child: SingleChildScrollView(child: _buildContent()),
         ),
+        decoration: BoxDecoration(),
       ),
     );
   }
@@ -122,20 +127,49 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildCreateModeContent() {
+    var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
+    var richText = TextSpan(
+      children: <TextSpan>[
+        TextSpan(
+            text: "To create an Orchid hop you need an Orchid account.  Open ",
+            style: bodyStyle),
+
+        // Use 'package:flutter_html/rich_text_parser.dart' now or our own?
+        LinkTextSpan(
+          text: "account.orchid.com",
+          style: AppText.linkStyle.copyWith(fontSize: 15),
+          url: 'https://account.orchid.com/',
+        ),
+
+        TextSpan(
+          text:
+              " in a Web3 browser and follow the steps."
+          "  Paste in your Ethereum address below.  ",
+          style: bodyStyle,
+        ),
+
+        LinkTextSpan(
+          text: "LEARN MORE",
+          style: AppText.linkStyle.copyWith(fontSize: 15),
+          url: 'https://orchid.com/join',
+        ),
+      ],
+    );
+
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 30.0),
       child: Column(
         children: <Widget>[
-          _buildFunding(),
-          pady(24),
-          Expanded(
-            child: InstructionsView(
-              image: Image.asset("assets/images/group7.png"),
-              title: "Link your account",
-              body:
-                  "To link your hop with your Orchid credentials, enter your Ethereum address and designate a signer key above. Manage your Orchid account using your preferred dApp browser."
-            ),
+          pady(36),
+          InstructionsView(
+            image: Image.asset("assets/images/group12.png"),
+            title: "Orchid requires OXT",
           ),
+          RichText(text: richText),
+          pady(24),
+          divider(),
+          pady(24),
+          _buildFunding(),
         ],
       ),
     );
@@ -159,7 +193,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           divider(),
           pady(24),
           _buildSection(
-              title: "Rate Limit", child: _buildBudget(), onDetail: _editBudget),
+              title: "Rate Limit",
+              child: _buildBudget(),
+              onDetail: _editBudget),
         ],
       ),
     );
@@ -194,6 +230,120 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildFunding() {
+    return Column(
+      children: <Widget>[
+        // Balance and Deposit
+        Visibility(
+          visible: _showBalance,
+          child: _buildBalance(),
+        ),
+
+        // Wallet address (funder)
+        _buildWalletAddress(),
+
+        // Signer key
+        pady(widget.readOnly() ? 0 : 24),
+        _buildSignerKey(),
+      ],
+    );
+  }
+
+  // Build the signer key entry dropdown selector
+  Column _buildSignerKey() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text("Signer Key:",
+            style: AppText.textLabelStyle.copyWith(
+                fontSize: 16,
+                color: _keyRefValid()
+                    ? AppColors.neutral_1
+                    : AppColors.neutral_3)),
+        pady(8),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: KeySelectionDropdown(
+                  key: ValueKey(_initialSelectedItem.toString()),
+                  enabled: widget.editable(),
+                  initialSelection: _initialSelectedItem,
+                  onSelection: _onKeySelected),
+            ),
+            // Copy key button
+            Visibility(
+              visible: widget.readOnly(),
+              child: RoundedRectRaisedButton(
+                  backgroundColor: Colors.grey,
+                  textColor: Colors.white,
+                  text: "Copy",
+                  onPressed: _onCopyButton),
+            ),
+          ],
+        ),
+
+        pady(16),
+        // Show the import key field if the user has selected the option
+        Visibility(
+          visible: widget.editable() &&
+              _selectedKeyItem?.option == KeySelectionDropdown.importKeyOption,
+          child: _buildImportKey(),
+        )
+      ],
+    );
+  }
+
+  // Build the import key field
+  Widget _buildImportKey() {
+    return AppTextField(
+        hintText: "0x...",
+        margin: EdgeInsets.zero,
+        controller: _importKeyField,
+        trailing: FlatButton(
+            color: Colors.transparent,
+            padding: EdgeInsets.zero,
+            child: Text("Paste", style: AppText.pasteButtonStyle),
+            onPressed: _pasteImportedKey));
+  }
+
+  Column _buildWalletAddress() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text("Ethereum Address:",
+            style: AppText.textLabelStyle.copyWith(
+                fontSize: 16,
+                color: _funderValid()
+                    ? AppColors.neutral_1
+                    : AppColors.neutral_3)),
+        pady(widget.readOnly() ? 4 : 8),
+        AppTextField(
+            hintText: "0x...",
+            margin: EdgeInsets.zero,
+            controller: _funderField,
+            readOnly: widget.readOnly(),
+            enabled: widget.editable(),
+            trailing: widget.editable()
+                ? FlatButton(
+                    color: Colors.transparent,
+                    padding: EdgeInsets.zero,
+                    child: Text("Paste", style: AppText.pasteButtonStyle),
+                    onPressed: _pasteWalletAddress)
+                : null)
+      ],
+    );
+  }
+
+  void _pasteWalletAddress() async {
+    ClipboardData data = await Clipboard.getData('text/plain');
+    _funderField.text = data.text;
+  }
+
+  void _pasteImportedKey() async {
+    ClipboardData data = await Clipboard.getData('text/plain');
+    _importKeyField.text = data.text;
+  }
+
+  Column _buildBalance() {
     const color = Color(0xff3a3149);
     const valueStyle = TextStyle(
         color: color,
@@ -203,112 +353,36 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         fontFamily: "SFProText-Regular",
         height: 20.0 / 15.0);
     var balanceText = _lotteryPot?.balance != null
-        ? _lotteryPot?.balance.toStringAsFixed(4) + " OXT"
+        ? (_lotteryPot?.balance?.toStringAsFixed(4) ?? "") + " OXT"
         : "...";
     var depositText = _lotteryPot?.deposit != null
-        ? _lotteryPot?.deposit.toStringAsFixed(4) + " OXT"
+        ? (_lotteryPot?.deposit?.toStringAsFixed(4) ?? "") + " OXT"
         : "...";
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        // Balance and Deposit
-        Visibility(
-          visible: _showBalance,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              // Balance
-              Text("Amount:",
-                  style: AppText.textLabelStyle
-                      .copyWith(fontSize: 20, color: AppColors.neutral_1)),
-              pady(4),
-              Padding(
-                padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
-                child: Text(balanceText,
-                    textAlign: TextAlign.left, style: valueStyle),
-              ),
-              pady(16),
-              // Deposit
-              Text("Deposit:",
-                  style: AppText.textLabelStyle
-                      .copyWith(fontSize: 20, color: AppColors.neutral_1)),
-              pady(4),
-              Padding(
-                padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
-                child: Text(depositText,
-                    textAlign: TextAlign.left, style: valueStyle),
-              ),
-              pady(16)
-            ],
-          ),
+        // Balance
+        Text("Amount:",
+            style: AppText.textLabelStyle
+                .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+        pady(4),
+        Padding(
+          padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
+          child:
+              Text(balanceText, textAlign: TextAlign.left, style: valueStyle),
         ),
-
-        // Wallet address (funder)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text("Ethereum Address:",
-                style: AppText.textLabelStyle.copyWith(
-                    fontSize: 20,
-                    color: _funderValid()
-                        ? AppColors.neutral_1
-                        : AppColors.neutral_3)),
-            pady(widget.readOnly() ? 4 : 8),
-            AppTextField(
-              hintText: "Paste here",
-              margin: EdgeInsets.zero,
-              controller: _funderField,
-              readOnly: widget.readOnly(),
-              enabled: widget.editable(),
-            )
-          ],
+        pady(16),
+        // Deposit
+        Text("Deposit:",
+            style: AppText.textLabelStyle
+                .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+        pady(4),
+        Padding(
+          padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
+          child:
+              Text(depositText, textAlign: TextAlign.left, style: valueStyle),
         ),
-
-        // Signer key
-        pady(widget.readOnly() ? 0 : 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text("Signer Key:",
-                style: AppText.textLabelStyle.copyWith(
-                    fontSize: 20,
-                    color: _keyRefValid()
-                        ? AppColors.neutral_1
-                        : AppColors.neutral_3)),
-            pady(4),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16.0),
-                      child: KeySelection(
-                          key: ValueKey(_initialKeyRef.toString()),
-                          enabled: widget.editable(),
-                          initialSelection: _initialKeyRef,
-                          onSelection: _keySelected),
-                    ),
-                  ),
-                ),
-                // Copy key button
-                Visibility(
-                  visible: widget.readOnly(),
-                  child: RoundedRectRaisedButton(
-                      backgroundColor: Colors.grey,
-                      textColor: Colors.white,
-                      text: "Copy",
-                      onPressed: _onCopyButton),
-                ),
-
-                // Add key button
-                Visibility(
-                  visible: widget.editable(),
-                  child: _buidAddKeyButton(),
-                )
-              ],
-            ),
-          ],
-        ),
+        pady(16)
       ],
     );
   }
@@ -345,16 +419,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Widget _buidAddKeyButton() {
-    return Container(
-      width: 35,
-      child: FlatButton(
-          padding: EdgeInsets.only(right: 5),
-          child: Icon(Icons.add_circle_outline, color: Colors.grey),
-          onPressed: _onAddKeyButton),
-    );
-  }
-
   void _editCurator() async {
     var route = MaterialPageRoute(
         builder: (context) =>
@@ -370,10 +434,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     Navigator.push(context, route);
   }
 
-  void _keySelected(StoredEthereumKey key) {
+  void _onKeySelected(KeySelectionItem key) {
     setState(() {
-      _selectedKeyRef = key.ref();
+      _selectedKeyItem = key;
     });
+    // clear the keyboard
+    FocusScope.of(context).requestFocus(new FocusNode());
   }
 
   void _textFieldChanged() {
@@ -381,12 +447,37 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   bool _keyRefValid() {
-    return _selectedKeyRef != null;
+    // invalid selection
+    if (_selectedKeyItem == null) {
+      return false;
+    }
+    // key value selected
+    if (_selectedKeyItem.keyRef != null) {
+      return true;
+    }
+    // generate option handled upon save
+    if (_selectedKeyItem.option == KeySelectionDropdown.generateKeyOption) {
+      return true;
+    }
+    // import option
+    if (_selectedKeyItem.option == KeySelectionDropdown.importKeyOption) {
+      return _importKeyValid();
+    }
+    return false;
   }
 
   bool _funderValid() {
     try {
       EthereumAddress.parse(_funderField.text);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  bool _importKeyValid() {
+    try {
+      Crypto.parseEthereumPrivateKey(_importKeyField.text);
       return true;
     } catch (err) {
       return false;
@@ -403,36 +494,56 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     } catch (err) {
       funder = null; // don't update it
     }
+    // The selected key ref may be null here in the case of the generate
+    // or import options.  In those cases the key will be filled in upon save.
     widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,
-        funder: funder, keyRef: _selectedKeyRef));
+        funder: funder, keyRef: _selectedKeyItem?.keyRef));
   }
 
-  /// Copy the log data to the clipboard
+  /// Copy the wallet address to the clipboard
   void _onCopyButton() async {
-    StoredEthereumKey key = await _selectedKeyRef.get();
+    StoredEthereumKey key = await _selectedKeyItem.keyRef.get();
     Clipboard.setData(ClipboardData(text: key.keys().address));
   }
 
-  void _onAddKeyButton() async {
-    var route = MaterialPageRoute<StoredEthereumKey>(
-        builder: (context) => AddKeyPage(), fullscreenDialog: true);
-    StoredEthereumKey key = await Navigator.push(context, route);
-
-    // User cancelled
-    if (key == null) {
-      return;
+  // Participate in the save operation and then delegate to the on complete handler.
+  void _onSave(CircuitHop result) async {
+    if (_selectedKeyItem.option == KeySelectionDropdown.importKeyOption) {
+      await _importKey();
     }
+    if (_selectedKeyItem.option == KeySelectionDropdown.generateKeyOption) {
+      await _generateKey();
+    }
+    // Pass on the updated hop
+    widget.onAddFlowComplete(widget.editableHop.value.hop);
+  }
 
-    // Save the new key
-    var keys = await UserPreferences().getKeys() ?? [];
-    keys.add(key);
-    await UserPreferences().setKeys(keys);
+  /// Import the user pasted key and apply it to the hop.
+  /// Called on save when the import key option is selected.
+  Future<bool> _importKey() async {
+    var secret = Crypto.parseEthereumPrivateKey(_importKeyField.text);
+    return _saveAndApplyNewKey(secret: secret, imported: true);
+  }
 
-    // Select the new key in the list
-    setState(() {
-      _initialKeyRef = key.ref(); // rebuild the dropdown
-      _selectedKeyRef = _initialKeyRef;
-    });
+  /// Generate a new key and apply it to the hop.
+  /// Called on save when the generate new key option is selected.
+  Future<bool> _generateKey() async {
+    // Generate a new key
+    var keyPair = Crypto.generateKeyPair();
+    return _saveAndApplyNewKey(secret: keyPair.private, imported: false);
+  }
+
+  /// Save a newly generated or imported key secret and apply it to the hop
+  Future<bool> _saveAndApplyNewKey({BigInt secret, bool imported}) async {
+    var key = StoredEthereumKey(
+        time: DateTime.now(), imported: false, private: secret);
+    await UserPreferences().addKey(key);
+
+    // Update the hop
+    _selectedKeyItem = KeySelectionItem(keyRef: key.ref());
+    _updateHop();
+
+    return true;
   }
 
   OrchidHop _hop() {

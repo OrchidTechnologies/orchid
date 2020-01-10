@@ -55,6 +55,26 @@ class Crypto {
     });
     return result.toString();
   }
+
+  /// Parse the string with an optional 0x prefix and return the BigInt or
+  /// throw an exception if invalid.
+  static BigInt parseEthereumPrivateKey(String text) {
+    try {
+      if (text.toLowerCase().startsWith('0x')) {
+        text = text.substring(2);
+      }
+      var keyInt = BigInt.parse(text, radix: 16);
+      if (keyInt > BigInt.from(0) &&
+          keyInt < ((BigInt.from(1) << 256) - BigInt.from(1))) {
+        return keyInt;
+      } else {
+        throw Exception("invalid range");
+      }
+    } catch (err) {
+      throw Exception("invalid key");
+    }
+  }
+
 }
 
 class EthereumKeyPair {

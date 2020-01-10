@@ -59,7 +59,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
       child: TitledPage(
         title: "OpenVPN Hop",
         actions: widget.mode == HopEditorMode.Create
-            ? [widget.buildSaveButton(context)]
+            ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
             : [],
         child: Padding(
           padding: const EdgeInsets.all(24.0),

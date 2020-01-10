@@ -14,6 +14,7 @@ import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
+import 'package:orchid/pages/onboarding/welcome_dialog.dart';
 import 'package:orchid/util/collections.dart';
 
 import '../app_gradients.dart';
@@ -89,6 +90,11 @@ class CircuitPageState extends State<CircuitPage>
     OrchidAPI().circuitConfigurationChanged.listen((_){
       _updateCircuit();
     });
+
+    if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
+      WelcomeDialog.show(context: context);
+      UserPreferences().setFirstLaunchInstructionsViewed(true);
+    }
   }
 
   void _updateCircuit() async {

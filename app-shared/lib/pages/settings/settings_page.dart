@@ -19,7 +19,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   var _defaultCurator = TextEditingController();
 
-  //bool _queryBalances = false;
+  bool _queryBalances = false;
   bool _showStatusTab = false;
 
   @override
@@ -30,7 +30,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void initStateAsync() async {
-    //_queryBalances = await UserPreferences().getQueryBalances();
+    _queryBalances = await UserPreferences().getQueryBalances();
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
     _showStatusTab = await UserPreferences().getShowStatusTab();
@@ -50,9 +50,22 @@ class _SettingsPageState extends State<SettingsPage> {
               routeName: '/settings/log',
               context: context),
            */
-          /*
+          // Default curator
+          pady(16),
           PageTile(
-            title: "Query Address",
+            title: "Default Curator",
+            //imageName: "assets/images/assignment.png",
+            trailing: Container(
+                width: screenWidth * 0.5,
+                child: AppTextField(
+                    controller: _defaultCurator, margin: EdgeInsets.zero)),
+          ),
+          pady(16),
+          Divider(),
+
+          // Balance query
+          PageTile(
+            title: "Query Balances",
             //imageName: "assets/images/assignment.png",
             trailing: Switch(
               activeColor: AppColors.purple_3,
@@ -65,28 +78,16 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
           ),
-          Divider(),
-           */
-          // Default curator
-          pady(16),
-          PageTile(
-            title: "Default Curator",
-            //imageName: "assets/images/assignment.png",
-            trailing: Container(
-                width: screenWidth * 0.5,
-                child: AppTextField(
-                    controller: _defaultCurator, margin: EdgeInsets.zero)),
-          ),
 
           // Show status page
-          pady(16),
+          pady(8),
           Divider(),
           PageTile(
             title: "Show Instructions",
             trailing: RaisedButton(
               child: Text("Reset"),
               onPressed: () {
-                UserPreferences().setVPNSwitchInstructionsViewed(false);
+                UserPreferences().resetInstructions();
               },
             ),
           ),
