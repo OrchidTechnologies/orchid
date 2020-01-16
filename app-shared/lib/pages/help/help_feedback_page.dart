@@ -157,6 +157,6 @@ class _HelpFeedbackPageState extends State<HelpFeedbackPage> {
     return Dialogs.showAppDialog(
         context: context,
         title: "Feedback Sent!",
-        body: "Your feedback has been submitted.");
+        bodyText: "Your feedback has been submitted.");
   }
 }

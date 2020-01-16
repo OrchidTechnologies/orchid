@@ -50,7 +50,7 @@ class OrchidVPNConfig {
             secret = "${key.private.toRadixString(16)}";
           } catch (err) {
             print("existing key refs: ");
-            for(var key in keys) {
+            for (var key in keys) {
               print("keyref = ${key.uid}");
             }
             throw Exception("resolveKeyReferences invalid key ref: $keyRef");
@@ -73,7 +73,6 @@ class OrchidVPNConfig {
   /// Note: https://github.com/NeilFraser/JS-Interpreter
   static ParseCircuitResult parseCircuit(
       String js, List<StoredEthereumKey> existingKeys) {
-
     js = js.replaceAll("\n", " ");
     js = js.replaceAll("\r", " ");
 
@@ -99,6 +98,11 @@ class OrchidVPNConfig {
     var tempKeys = List<StoredEthereumKey>();
     var uid = DateTime.now().millisecondsSinceEpoch;
     json['hops'].asMap().forEach((index, hop) {
+      // Only interested in Orchid hops here
+      if (hop['protocol'] != "orchid") {
+        return;
+      }
+
       var secret = hop['secret'];
       if (secret == null) {
         throw Exception("missing secret");
@@ -131,7 +135,6 @@ class OrchidVPNConfig {
         circuit: Circuit.fromJson(json), newKeys: tempKeys);
   }
 
-
   /// Import a new configuration file, replacing any existing configuration.
   /// Existing signer keys are unaffected.
   static Future<bool> importConfig(String config) async {
@@ -156,7 +159,6 @@ typedef OrchidConfigValidator = bool Function(String config);
 
 /// Validation logic for imported VPN configurations.
 class OrchidVPNConfigValidation {
-
   /// Validate the orchid configuration.
   /// @See OrchidConfigValidator.
   static bool configValid(String config) {
@@ -164,11 +166,12 @@ class OrchidVPNConfigValidation {
       return false;
     }
     try {
-      var parsedCircuit = OrchidVPNConfig.parseCircuit(config, []/*no existing keys*/);
+      var parsedCircuit =
+          OrchidVPNConfig.parseCircuit(config, [] /*no existing keys*/);
       var circuit = parsedCircuit.circuit;
       return _isValidCircuitForImport(circuit);
-    } catch (err) {
-      print("invalid circuit: {$err}");
+    } catch (err, s) {
+      print("invalid circuit: {$err}, $s");
       return false;
     }
   }
@@ -188,8 +191,6 @@ class OrchidVPNConfigValidation {
     return true;
   }
 }
-
-
 
 /// Result holding a parsed circuit and temporary keys referenced in its hops.
 /// Keys are suitable for saving to the user's keystore but should be reconciled

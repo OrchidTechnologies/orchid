@@ -10,7 +10,8 @@ class Dialogs {
   static Future<void> showAppDialog({
     @required BuildContext context,
     @required String title,
-    @required String body,
+    String bodyText,
+    Widget body,
     bool linkSettings = false,
   }) {
     return showDialog(
@@ -21,7 +22,7 @@ class Dialogs {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
           title: Text(title, style: AppText.dialogTitle),
-          content: Text(body, style: AppText.dialogBody),
+          content: body ?? Text(bodyText, style: AppText.dialogBody),
           actions: <Widget>[
             linkSettings
                 ? FlatButton(
@@ -113,14 +114,14 @@ class Dialogs {
     return Dialogs.showAppDialog(
         context: context,
         title: "Saved!",
-        body: "Configuration saved.$warning");
+        bodyText: "Configuration saved.$warning");
   }
 
   static void showConfigurationChangeFailed(BuildContext context) {
     Dialogs.showAppDialog(
         context: context,
         title: "Whoops!",
-        body:
+        bodyText:
         "Configuration failed to save.  Please check syntax and try again.");
   }
 

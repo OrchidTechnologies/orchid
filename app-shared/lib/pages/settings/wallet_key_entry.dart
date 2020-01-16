@@ -143,7 +143,7 @@ class _WalletKeyEntryState extends State<WalletKeyEntry> {
     return Dialogs.showAppDialog(
         context: context,
         title: "Wallet linked!",
-        body:
+        bodyText:
             "Your linked wallet will be used to pay for bandwidth on Orchid.");
   }
 
@@ -152,7 +152,7 @@ class _WalletKeyEntryState extends State<WalletKeyEntry> {
     return Dialogs.showAppDialog(
         context: context,
         title: "Whoops!",
-        body:
+        bodyText:
             "Orchid was unable to connect to an Ethereum wallet using the private key you provided.\n\nPlease check and make sure the information you entered was correct.");
   }
 }

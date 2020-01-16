@@ -175,14 +175,14 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
     return Dialogs.showAppDialog(
         context: context,
         title: "VPN Credentials Saved!",
-        body: "Your credentials have been saved.");
+        bodyText: "Your credentials have been saved.");
   }
 
   Future<void> _showCredentialsSaveFailedDialog() {
     return Dialogs.showAppDialog(
         context: context,
         title: "Whoops!",
-        body:
+        bodyText:
             "Orchid was unable to save your credentials.\n\nPlease check and make sure the information you entered was correct.");
   }
 }

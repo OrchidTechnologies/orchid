@@ -228,7 +228,7 @@ class _BudgetPageState extends State<BudgetPage> {
       Dialogs.showAppDialog(
           context: context,
           title: "Add Funds",
-          body:
+          bodyText:
               "Please return to the balance screen and add funds to your account before selecting a budget.");
       return;
     }
@@ -236,7 +236,7 @@ class _BudgetPageState extends State<BudgetPage> {
       Dialogs.showAppDialog(
           context: context,
           title: "Add Funds",
-          body:
+          bodyText:
               "Your current balance is too low to select that budget.  Please return to the balance screen and add funds before selecting this plan.");
       return;
     }

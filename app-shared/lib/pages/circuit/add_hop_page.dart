@@ -229,7 +229,7 @@ class _AddHopPageState extends State<AddHopPage> {
     Dialogs.showAppDialog(
         context: context,
         title: "Invalid QR Code",
-        body:
+        bodyText:
         "The QR code you scanned does not contain a valid configuration.");
   }
 

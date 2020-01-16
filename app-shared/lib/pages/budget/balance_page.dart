@@ -309,7 +309,7 @@ class _BalancePageState extends State<BalancePage> {
       Dialogs.showAppDialog(
           context: context,
           title: "Error",
-          body:
+          bodyText:
               "Unable to generate funding URL.  Waiting for balance or budget data.");
       return null;
     }
@@ -327,7 +327,7 @@ class _BalancePageState extends State<BalancePage> {
       Dialogs.showAppDialog(
           context: context,
           title: "No Funding Needed",
-          body:
+          bodyText:
               "Your current balance and deposit are sufficient for your selected budget.");
       return null;
     }
@@ -347,7 +347,7 @@ class _BalancePageState extends State<BalancePage> {
     Dialogs.showAppDialog(
         context: context,
         title: "Orchid URL Copied",
-        body: "The Orchid Funding Dapp URL has been copied to the clipboard." +
+        bodyText: "The Orchid Funding Dapp URL has been copied to the clipboard." +
             " Paste this URL into your crypto wallet's dapp browser to proceed with funding.\n");
   }
 

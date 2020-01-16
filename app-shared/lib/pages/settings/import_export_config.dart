@@ -4,9 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../app_colors.dart';
@@ -227,5 +229,21 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
     }
   }
 
-  void _exportQR() {}
+  void _exportQR() {
+    Dialogs.showAppDialog(
+        context: context,
+        title: "My Orchid Config:",
+        body:
+        Container(
+          width: 250, height: 250,
+          child: Center(
+            child: QrImage(
+              data: _configFileTextController.text = widget.config,
+              version: QrVersions.auto,
+              size: 250.0,
+            ),
+          ),
+        )
+    );
+  }
 }

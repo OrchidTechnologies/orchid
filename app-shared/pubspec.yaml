@@ -39,6 +39,7 @@ dependencies:
       git:
           url: git@github.com:apptreesoftware/flutter_barcode_reader.git
           ref: 39ecc57bc0eef7b0465c891d900d2fb1f34a2390
+  qr_flutter: ^3.1.0
 
 dev_dependencies:
   flutter_test:
