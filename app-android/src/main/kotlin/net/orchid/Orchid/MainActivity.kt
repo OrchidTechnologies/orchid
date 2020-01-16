@@ -12,6 +12,8 @@ import android.content.Intent;
 import android.net.VpnService;
 import java.io.*
 
+const val VPN_SERVICE_REQUEST = 1
+
 class MainActivity(): FlutterActivity() {
     lateinit var feedback: MethodChannel
 
@@ -29,7 +31,7 @@ class MainActivity(): FlutterActivity() {
                 "connect" -> {
                     val intent = VpnService.prepare(this);
                     if (intent != null) {
-                        startActivityForResult(intent, 0)
+                        startActivityForResult(intent, VPN_SERVICE_REQUEST)
                     } else {
                         startService(getServiceIntent())
                         feedback.invokeMethod("connectionStatus", "Connected")
@@ -76,9 +78,12 @@ class MainActivity(): FlutterActivity() {
     }
 
     override fun onActivityResult(request: Int, result: Int, data: Intent?) {
-        if (result == RESULT_OK) {
-            startService(getServiceIntent());
-            feedback.invokeMethod("connectionStatus", "Connected")
+        super.onActivityResult(request, result, data)
+        if (request == VPN_SERVICE_REQUEST) {
+            if (result == RESULT_OK) {
+                startService(getServiceIntent());
+                feedback.invokeMethod("connectionStatus", "Connected")
+            }
         }
     }
 

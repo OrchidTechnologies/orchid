@@ -1,7 +1,10 @@
+import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
+import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:rxdart/rxdart.dart';
@@ -12,7 +15,6 @@ import '../app_text.dart';
 enum ImportExportMode { Import, Export }
 
 // Returns true if the configuration string is valid
-typedef ConfigValidator = bool Function(String config);
 typedef ImportResult = void Function(String config);
 
 /// A page presenting a full screen editable text box for importing or
@@ -21,7 +23,7 @@ typedef ImportResult = void Function(String config);
 class ImportExportConfig extends StatefulWidget {
   final ImportExportMode mode;
   final String title;
-  final ConfigValidator validator;
+  final OrchidConfigValidator validator;
   final ImportResult onImport;
   final String config;
 
@@ -35,8 +37,14 @@ class ImportExportConfig extends StatefulWidget {
       : super(key: key);
 
   ImportExportConfig.import(
-      {@required String title, ConfigValidator validator, ImportResult onImport})
-      : this(title: title, mode: ImportExportMode.Import, validator: validator, onImport: onImport);
+      {@required String title,
+      OrchidConfigValidator validator,
+      ImportResult onImport})
+      : this(
+            title: title,
+            mode: ImportExportMode.Import,
+            validator: validator,
+            onImport: onImport);
 
   ImportExportConfig.export({@required String title, @required String config})
       : this(title: title, mode: ImportExportMode.Export, config: config);
@@ -123,16 +131,23 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
             ),
 
             // Import / Export button
-            Center(
-              child: Container(
-                child: StreamBuilder<Object>(
-                    stream: _actionEnabled.stream,
-                    builder: (context, snapshot) {
-                      return RoundedRectRaisedButton(
-                          text: widget.mode == ImportExportMode.Import ? "IMPORT" : "COPY",
-                          onPressed: _actionEnabled.value ? _doAction : null);
-                    }),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                _buildScanButton(),
+                padx(8),
+                Container(
+                  child: StreamBuilder<Object>(
+                      stream: _actionEnabled.stream,
+                      builder: (context, snapshot) {
+                        return RoundedRectRaisedButton(
+                            text: widget.mode == ImportExportMode.Import
+                                ? "IMPORT"
+                                : "COPY",
+                            onPressed: _actionEnabled.value ? _doAction : null);
+                      }),
+                ),
+              ],
             ),
 
             SizedBox(height: 24)
@@ -142,26 +157,75 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
     );
   }
 
+  Widget _buildScanButton() {
+    return FlatButton(
+        child: Container(
+            decoration: BoxDecoration(
+                //borderRadius: BorderRadius.all(Radius.circular(4)),
+                border: Border.all(width: 1, color: Colors.black54)),
+            child: Image.asset(
+              "assets/images/qrcode.png",
+              height: 50,
+            )),
+        onPressed: _doQRCodeAction);
+  }
+
   void _doAction() {
     if (widget.mode == ImportExportMode.Import) {
-      _import();
+      _importText();
     } else {
-      _copy();
+      _copyToClipboard();
     }
   }
 
-  void _import() {
+  void _importText() {
     _actionEnabled.add(false);
     var newConfig = _configFileTextController.text;
     widget.onImport(newConfig);
   }
 
-  void _copy() {
+  void _copyToClipboard() {
     Clipboard.setData(ClipboardData(text: widget.config));
+  }
+
+  void _doQRCodeAction() {
+    if (widget.mode == ImportExportMode.Import) {
+      _importQR();
+    } else {
+      _exportQR();
+    }
   }
 
   void dispose() {
     super.dispose();
     _actionEnabled.close();
   }
+
+  // TODO: Factor out error handling with add hop page when we have it settled.
+  void _importQR() async {
+    try {
+      String text = await BarcodeScanner.scan();
+      if (widget.validator(text)) {
+        setState(() {
+          _configFileTextController.text = text;
+        });
+      }
+    } on PlatformException catch (e) {
+      print("barcode platform exception: $e");
+      if (e.code == BarcodeScanner.CameraAccessDenied) {
+        // 'The user did not grant the camera permission!';
+        // TODO: Offer to send the user back to settings?
+      } else {
+        // 'Unknown error
+      }
+    } on FormatException {
+      // 'null (User returned using the "back"-button before scanning anything. Result)'
+      print("barcode format exception");
+    } catch (e) {
+      // 'Unknown error
+      print("barcode unknown exception: $e");
+    }
+  }
+
+  void _exportQR() {}
 }

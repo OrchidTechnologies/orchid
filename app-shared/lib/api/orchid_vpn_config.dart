@@ -4,6 +4,9 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
+import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+
+import 'orchid_api.dart';
 
 // TODO: Add unit tests.
 /// Support for generating the JavaScript configuration file used by the Orchid VPN.
@@ -127,7 +130,66 @@ class OrchidVPNConfig {
     return ParseCircuitResult(
         circuit: Circuit.fromJson(json), newKeys: tempKeys);
   }
+
+
+  /// Import a new configuration file, replacing any existing configuration.
+  /// Existing signer keys are unaffected.
+  static Future<bool> importConfig(String config) async {
+    var existingKeys = await UserPreferences().getKeys();
+    var parsedCircuit = OrchidVPNConfig.parseCircuit(config, existingKeys);
+
+    // Save any newly imported keys
+    if (parsedCircuit.newKeys.length > 0) {
+      print("Import added ${parsedCircuit.newKeys.length} new keys.");
+      await UserPreferences().addKeys(parsedCircuit.newKeys);
+    }
+
+    // Save the imported circuit.
+    await UserPreferences().setCircuit(parsedCircuit.circuit);
+    print("Import saved ${parsedCircuit.circuit.hops.length} hop circuit.");
+    OrchidAPI().circuitConfigurationChanged.add(null);
+    return true;
+  }
 }
+
+typedef OrchidConfigValidator = bool Function(String config);
+
+/// Validation logic for imported VPN configurations.
+class OrchidVPNConfigValidation {
+
+  /// Validate the orchid configuration.
+  /// @See OrchidConfigValidator.
+  static bool configValid(String config) {
+    if (config == null || config == "") {
+      return false;
+    }
+    try {
+      var parsedCircuit = OrchidVPNConfig.parseCircuit(config, []/*no existing keys*/);
+      var circuit = parsedCircuit.circuit;
+      return _isValidCircuitForImport(circuit);
+    } catch (err) {
+      print("invalid circuit: {$err}");
+      return false;
+    }
+  }
+
+  // A few sanity checks
+  static bool _isValidCircuitForImport(Circuit circuit) {
+    return circuit.hops != null &&
+        circuit.hops.length > 0 &&
+        circuit.hops.every(_isValidHopForImport);
+  }
+
+  // A few sanity checks
+  static bool _isValidHopForImport(CircuitHop hop) {
+    if (hop is OrchidHop) {
+      return hop.funder != null && hop.keyRef != null;
+    }
+    return true;
+  }
+}
+
+
 
 /// Result holding a parsed circuit and temporary keys referenced in its hops.
 /// Keys are suitable for saving to the user's keystore but should be reconciled

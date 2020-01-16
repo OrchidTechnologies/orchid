@@ -53,7 +53,7 @@ class Dialogs {
       actionText = "OK",
       Color actionColor = AppColors.purple_3,
       VoidCallback cancelAction,
-      VoidCallback action}) {
+      VoidCallback commitAction}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -82,8 +82,8 @@ class Dialogs {
               child: Text(actionText,
                   style: AppText.dialogButton.copyWith(color: actionColor)),
               onPressed: () {
-                if (action != null) {
-                  action();
+                if (commitAction != null) {
+                  commitAction();
                 }
                 Navigator.of(context).pop();
               },

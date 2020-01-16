@@ -76,7 +76,7 @@ class _OnboardingVPNPermissionPageState
             "\n\nAn icon will be shown at the top of your screen while the VPN is in use. Allow?",
         cancelText: "CANCEL",
         actionText: "OK",
-        action: () {
+        commitAction: () {
           _next();
         });
   }

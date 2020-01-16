@@ -245,7 +245,7 @@ class _BudgetPageState extends State<BudgetPage> {
         title: "Confirm Budget Change",
         body:
             "Do you want to change your budget to ${newBudget.spendRate.toStringAsFixed(2)} OXT per month?",
-        action: () {
+        commitAction: () {
           //OrchidAPI().budget().setBudget(newBudget);
           Navigator.of(context).pop();
         });

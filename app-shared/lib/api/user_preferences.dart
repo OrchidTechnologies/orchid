@@ -157,7 +157,7 @@ class UserPreferences {
     String value = (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.Keys.toString());
     if (value == null) {
-      return null;
+      return [];
     }
     try {
       var jsonList = jsonDecode(value) as List<dynamic>;
@@ -193,6 +193,13 @@ class UserPreferences {
   // Note: Minimizes exposure to the full setKeys()
   Future<bool> addKey(StoredEthereumKey key) async {
     var keys = ((await UserPreferences().getKeys()) ?? []) + [key];
+    return UserPreferences().setKeys(keys);
+  }
+
+  /// Add a list of keys to the user's keystore.
+  // Note: Minimizes exposure to the full setKeys()
+  Future<bool> addKeys(List<StoredEthereumKey> newKeys) async {
+    var keys = ((await UserPreferences().getKeys()) ?? []) + newKeys;
     return UserPreferences().setKeys(keys);
   }
 

@@ -35,6 +35,10 @@ dependencies:
   sqflite: ^1.2.0
   url_launcher: ^5.4.1
   web3dart: ^1.2.1
+  barcode_scan: 
+      git:
+          url: git@github.com:apptreesoftware/flutter_barcode_reader.git
+          ref: 39ecc57bc0eef7b0465c891d900d2fb1f34a2390
 
 dev_dependencies:
   flutter_test:

@@ -1,13 +1,19 @@
+import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_vpn_config.dart';
+import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_text.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
+import 'package:flutter/services.dart';
 
 typedef AddFlowCompletion = void Function(CircuitHop result);
 
@@ -58,13 +64,23 @@ class _AddHopPageState extends State<AddHopPage> {
                 if (widget.showCallouts) _buildOrchidInstruction(),
                 _divider(),
                 _buildHopChoice(
+                    text: "Scan QR Code",
+                    onTap: () { _importQRCode(context); },
+                    imageName: "assets/images/scan.png",
+                    trailing: SizedBox(width: 1)),
+                _divider(),
+                _buildHopChoice(
                     text: "Orchid Hop",
-                    hopType: HopProtocol.Orchid,
+                    onTap: () {
+                      _addHopType(HopProtocol.Orchid);
+                    },
                     imageName: "assets/images/logo_small_purple.png"),
                 _divider(),
                 _buildHopChoice(
                     text: "OpenVPN Hop",
-                    hopType: HopProtocol.OpenVPN,
+                    onTap: () {
+                      _addHopType(HopProtocol.OpenVPN);
+                    },
                     imageName: "assets/images/security_purple.png"),
                 _divider(),
                 if (widget.showCallouts) _buildVPNInstruction(),
@@ -77,11 +93,12 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   Widget _buildHopChoice(
-      {String text, HopProtocol hopType, imageName: String}) {
+      {String text, imageName: String, VoidCallback onTap, Widget trailing}) {
     return ListTile(
         contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
         leading: Image.asset(imageName, width: 24, height: 24),
-        trailing: Icon(Icons.chevron_right, color: Colors.deepPurple),
+        trailing:
+            trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
         title: Text(text,
             textAlign: TextAlign.left,
             style: const TextStyle(
@@ -90,9 +107,7 @@ class _AddHopPageState extends State<AddHopPage> {
                 fontFamily: "SFProText",
                 fontStyle: FontStyle.normal,
                 fontSize: 18.0)),
-        onTap: () {
-          _addHopType(hopType);
-        });
+        onTap: onTap);
   }
 
   void _addHopType(HopProtocol hopType) async {
@@ -181,6 +196,64 @@ class _AddHopPageState extends State<AddHopPage> {
         ],
       ),
     ));
+  }
+
+  // TODO: Factor out error handling with import/export page when we have it settled.
+  void _importQRCode(BuildContext context) async {
+    try {
+      String text = await BarcodeScanner.scan();
+      if (OrchidVPNConfigValidation.configValid(text)) {
+        // successfully scanned config...
+        _confirmImport(context, text);
+      } else {
+        _importError();
+      }
+    } on PlatformException catch (e) {
+      print("barcode platform exception: $e");
+      if (e.code == BarcodeScanner.CameraAccessDenied) {
+        // 'The user did not grant the camera permission!';
+        // TODO: Offer to send the user back to settings?
+      } else {
+        // 'Unknown error
+      }
+    } on FormatException {
+      // 'null (User returned using the "back"-button before scanning anything. Result)'
+      print("barcode format exception");
+    } catch (e) {
+      // 'Unknown error
+      print("barcode unknown exception: $e");
+    }
+  }
+
+  void _importError() {
+    Dialogs.showAppDialog(
+        context: context,
+        title: "Invalid QR Code",
+        body:
+        "The QR code you scanned does not contain a valid configuration.");
+  }
+
+  void _confirmImport(BuildContext context, String text) async {
+    // If there are no existing hops add the config without confirmation
+    var hops = (await UserPreferences().getCircuit())?.hops ?? [];
+    if (hops.isEmpty) {
+      _importConfig(context, text);
+    } else {
+      Dialogs.showConfirmationDialog(
+          context: context,
+          title: "Confirm Import",
+          body: "The import you scanned is a complete hops configuration. "
+              "Saving it will replace any existing hops that you had previously configured.  "
+              "Are you sure you want to import this hop configuration?",
+          commitAction: () {
+            _importConfig(context, text);
+          });
+    }
+  }
+
+  void _importConfig(BuildContext context, String config) async {
+    await OrchidVPNConfig.importConfig(config);
+    widget.onAddFlowComplete(null);
   }
 
   Divider _divider() =>

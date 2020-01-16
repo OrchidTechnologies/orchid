@@ -146,5 +146,9 @@
 
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+
+    <key>NSCameraUsageDescription</key>
+    <string>Orchid uses the camera for QR code scanning.</string>
+
 </dict>
 </plist>

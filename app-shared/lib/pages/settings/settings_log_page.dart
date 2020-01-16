@@ -187,7 +187,7 @@ class _SettingsLogPage extends State<SettingsLogPage> {
         body: "Clear all log data?",
         cancelText: "CANCEL",
         actionText: "DELETE",
-        action: () {
+        commitAction: () {
           _performDelete();
         });
   }

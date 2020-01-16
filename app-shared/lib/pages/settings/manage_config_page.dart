@@ -22,8 +22,6 @@ class ManageConfigPage extends StatefulWidget {
 }
 
 class _ManageConfigPageState extends State<ManageConfigPage> {
-  List<StoredEthereumKey> _existingKeys;
-
   @override
   void initState() {
     super.initState();
@@ -32,7 +30,6 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   }
 
   void initStateAsync() async {
-    _existingKeys = await UserPreferences().getKeys() ?? [];
   }
 
   Widget build(BuildContext context) {
@@ -126,61 +123,15 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return ImportExportConfig.import(
         title: "Import Hops Configuration",
-        validator: _configValid,
-        onImport: _onImport,
+        validator: OrchidVPNConfigValidation.configValid,
+        onImport: _importConfig,
       );
     }));
   }
 
-  bool _configValid(String config) {
-    if (config == null || config == "") {
-      return false;
-    }
-    try {
-      var parsedCircuit = OrchidVPNConfig.parseCircuit(config, _existingKeys);
-      var circuit = parsedCircuit.circuit;
-      //print("config valid parsed: $circuit, hops = ${circuit.hops}, keys=${parsedCircuit.keys}");
-      return _isValidCircuitForImport(circuit);
-    } catch (err) {
-      print("invalid circuit: {$err}");
-      return false;
-    }
-  }
-
-  // A few sanity checks
-  bool _isValidCircuitForImport(Circuit circuit) {
-    return circuit.hops != null &&
-        circuit.hops.length > 0 &&
-        circuit.hops.every(_isValidHopForImport);
-  }
-
-  // A few sanity checks
-  bool _isValidHopForImport(CircuitHop hop) {
-    if (hop is OrchidHop) {
-      return hop.funder != null && hop.keyRef != null;
-    }
-    return true;
-  }
-
-  void _onImport(String config) async {
-    print("import");
-    if (_existingKeys == null) {
-      return;
-    }
-    print("import config: $config");
-    var parsedCircuit = OrchidVPNConfig.parseCircuit(config, _existingKeys);
-
-    // Save any newly imported keys
-    if (parsedCircuit.newKeys.length > 0) {
-      print("Import added ${parsedCircuit.newKeys.length} new keys.");
-      _existingKeys.addAll(parsedCircuit.newKeys);
-      await UserPreferences().setKeys(_existingKeys);
-    }
-
-    // Save the imported circuit.
-    await UserPreferences().setCircuit(parsedCircuit.circuit);
-    print("Import saved ${parsedCircuit.circuit.hops.length} hop circuit.");
-    OrchidAPI().circuitConfigurationChanged.add(null);
+  void _importConfig(String config) async {
+    await OrchidVPNConfig.importConfig(config);
     Navigator.pop(context);
   }
 }
+

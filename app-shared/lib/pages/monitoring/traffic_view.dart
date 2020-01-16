@@ -436,7 +436,7 @@ class ClearTrafficActionButton extends StatelessWidget {
         body: "This will delete all recorded traffic data within the app.",
         cancelText: "CANCEL",
         actionText: "OK",
-        action: () async {
+        commitAction: () async {
           await AnalysisDb().clear();
         });
   }
