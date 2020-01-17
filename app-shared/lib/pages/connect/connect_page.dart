@@ -285,7 +285,7 @@ class _QuickConnectPageState
     String message;
     switch (_connectionState) {
       case OrchidConnectionState.Disconnecting:
-        message = 'Disonnecting...';
+        message = 'Disconnecting...';
         break;
       case OrchidConnectionState.Connecting:
         message = 'Connecting...';
