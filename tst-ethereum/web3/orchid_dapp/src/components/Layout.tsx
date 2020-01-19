@@ -5,7 +5,7 @@ import {
 import {Transactions} from "./Transactions";
 import {AddFunds} from "./AddFunds";
 import {WithdrawFunds} from "./WithdrawFunds";
-import {Balances} from "./Balances";
+import {Info} from "./Info";
 import {DebugPanel} from "./DebugPanel";
 import {MoveFunds} from "./MoveFunds";
 import {LockFunds} from "./LockFunds";
@@ -29,6 +29,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   const [route, setRoute] = useState(pathToRoute(hashPath()) || Route.Overview);
   const [navEnabledState, setNavEnabledState] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(true);
 
   const moreMenuItems = new Map<Route, string>([
     [Route.Balances, "Info"],
@@ -40,9 +41,10 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    // Disable general nav for new user with no accounts.
     let newUserSub = api.newUser_wait.subscribe(isNew => {
-      setNavEnabledState(!isNew);
+      // Disable general nav for new user with no accounts.
+      setIsNewUser(isNew);
+      //setNavEnabledState(!isNew);
     });
     return () => {
       newUserSub.unsubscribe();
@@ -60,7 +62,6 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
         setNavEnabledState(enabled)
       },
       setRoute: (route:Route)=>{ setURL(route); setRoute(route); }
-
     }}>
       <Container className="main-content">
         <Row>
@@ -96,9 +97,9 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
         <Row className="page-content">
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>
-            <Visibility visible={route === Route.Balances}><Balances/></Visibility>
+            <Visibility visible={route === Route.Balances}><Info/></Visibility>
             <Visibility visible={route === Route.AddFunds || route === Route.CreateAccount}>
-              <AddFunds createAccount={route === Route.CreateAccount}/></Visibility>
+              <AddFunds createAccount={route === Route.CreateAccount || isNewUser}/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
             <Visibility visible={route === Route.Transactions}><Transactions/></Visibility>
             <Visibility visible={route === Route.MoveFunds}><MoveFunds/></Visibility>

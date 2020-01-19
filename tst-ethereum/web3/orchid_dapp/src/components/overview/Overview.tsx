@@ -5,6 +5,8 @@ import {OrchidAPI} from "../../api/orchid-api";
 import {OverviewEarn} from "./OverviewEarn";
 import {OverviewDefault} from "./OverviewDefault";
 import {OverviewQuickSetup} from "./OverviewQuickSetup";
+import {TransactionStatus} from "../TransactionProgress";
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export interface OverviewProps {
@@ -21,6 +23,14 @@ export const Overview: React.FC = () => {
   const [walletEthEmpty, setWalletEthEmpty] = useState<boolean | undefined>(undefined);
   const [walletOxtEmpty, setWalletOxtEmpty] = useState<boolean | undefined>(undefined);
   const [potFunded, setPotFunded] = useState<boolean | undefined>(undefined);
+
+  // The result of any recent (in-memory transient) quick setup transaction.
+  const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(undefined);
+  // TESTING:
+  // const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(
+  //   TransactionStatus.result("0x1234", "Transaction Complete!",
+  //     new Signer(new Wallet(), "0x12345", "12345"))
+  // );
 
   // Set the min balance and deposit considered funded.
   // const minFundedBalance = oxtToKeiki(20.0);
@@ -71,10 +81,15 @@ export const Overview: React.FC = () => {
   } else {
     let {noAccount, walletEthEmpty, walletOxtEmpty} = props;
     console.log(`overview, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
-    // If the user is ready to fund a new account send to quick setup.
-    if (noAccount && !walletEthEmpty && !walletOxtEmpty) {
-      return <OverviewQuickSetup{...props}/>;
+    // If the user is ready to fund a new account or has a quick setup transaction result send to quick setup.
+    if ((noAccount && !walletEthEmpty && !walletOxtEmpty) || quickSetupResultTx != null) {
+      console.log("showing quick setup");
+      return <OverviewQuickSetup
+        initialTxStatus={quickSetupResultTx} {...props}
+        txResultSetter={setQuickSetupResultTx}
+      />;
     } else {
+      console.log("showing default setup");
       return <OverviewDefault {...props}/>;
     }
   }

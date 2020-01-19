@@ -2,16 +2,18 @@ import React, {Component} from 'react';
 import {OrchidAPI} from "../api/orchid-api";
 import {keikiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
-import {errorClass} from "../util/util";
-import './Balances.css'
+import {errorClass, Visibility} from "../util/util";
+import './Info.css'
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {Subscription} from "rxjs";
+import {AccountQRCode} from "./AccountQRCode";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export class Balances extends Component {
+export class Info extends Component {
   state = {
     signerAddress: "",
+    signerConfigString: undefined,
     walletAddress: "",
     ethBalance: "",
     ethBalanceError: true,
@@ -31,6 +33,7 @@ export class Balances extends Component {
       api.signer.subscribe(signer => {
         this.setState({
           signerAddress: signer != null ? signer.address : "",
+          signerConfigString: signer != null ? signer.toConfigString() : undefined
         });
       }));
 
@@ -128,6 +131,11 @@ export class Balances extends Component {
           </Col>
         </Row>
 
+        {/*account QR Code*/}
+        <Visibility visible={this.state.signerConfigString !== undefined}>
+          <AccountQRCode data={this.state.signerConfigString}/>
+        </Visibility>
+
         {/*pot balance and escrow*/}
         <label style={{fontWeight: "bold", marginTop: "16px"}}>Lottery Pot</label>
         <div className="form-row col-1-1">
@@ -148,9 +156,9 @@ export class Balances extends Component {
         {/*pot lock status*/}
         <div style={{marginTop: "16px"}}/>
         <LockStatus/>
+
       </Container>
     );
   }
 }
-
 

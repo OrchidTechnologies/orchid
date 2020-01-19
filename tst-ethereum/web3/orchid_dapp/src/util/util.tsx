@@ -93,3 +93,12 @@ export const Visibility: FC<{ visible: boolean }> = (props) => {
   return <div className={props.visible ? "" : "hidden"}>{props.children}</div>
 };
 
+export function copyTextToClipboard(text: string) {
+  // https://stackoverflow.com/questions/49618618/copy-current-url-to-clipboard
+  let dummy = document.createElement('input');
+  document.body.appendChild(dummy);
+  dummy.value = text;
+  dummy.select();
+  document.execCommand('copy');
+  document.body.removeChild(dummy);
+}

@@ -4,19 +4,14 @@ import './NoWallet.css';
 import bugs from '../assets/bugs.png';
 import {SubmitButton} from "./SubmitButton";
 import {WalletStatus} from "../api/orchid-api";
+import {copyTextToClipboard} from "../util/util";
 
 export const NoWallet: FC<{ walletStatus: WalletStatus }> = (props) => {
   const [buttonCopiedState, setButtonCopiedState] = useState(false);
 
   function copyUrl() {
-    // https://stackoverflow.com/questions/49618618/copy-current-url-to-clipboard
-    let dummy = document.createElement('input');
     let text = window.location.href;
-    document.body.appendChild(dummy);
-    dummy.value = text;
-    dummy.select();
-    document.execCommand('copy');
-    document.body.removeChild(dummy);
+    copyTextToClipboard(text);
 
     // Show copied message in the button
     setButtonCopiedState(true);

@@ -2,6 +2,9 @@ import React, {Component} from "react";
 import {EtherscanIO} from "../api/etherscan-io";
 import {findDOMNode} from "react-dom";
 import {TransactionId} from "../api/orchid-types";
+import {Visibility} from "../util/util";
+import {Signer} from "../api/orchid-eth";
+import {AccountQRCode} from "./AccountQRCode";
 
 export enum TransactionState {
   New, Running, Completed, Failed
@@ -11,15 +14,18 @@ export class TransactionStatus {
   state: TransactionState;
   result: string | null;
   txId: string | null;
+  signer: Signer | null;
 
   constructor(
     state: TransactionState = TransactionState.New,
     result: string = "",
-    txId: string|null = null)
-  {
+    txId: string | null = null,
+    signer: Signer | null = null
+  ) {
     this.state = state;
     this.result = result;
     this.txId = txId;
+    this.signer = signer;
   }
 
   isRunning(): boolean {
@@ -33,11 +39,9 @@ export class TransactionStatus {
       txId || "");
   }
 
-  static result(txId: TransactionId, text: string = ""): TransactionStatus {
+  static result(txId: TransactionId, text: string = "", signer: Signer | null = null): TransactionStatus {
     return new TransactionStatus(
-      TransactionState.Completed,
-      text,
-      txId);
+      TransactionState.Completed, text, txId, signer);
   }
 
   static error(error: string): TransactionStatus {
@@ -48,9 +52,11 @@ export class TransactionStatus {
   }
 }
 
+// Note: this is a component to support the `scrollIntoView` method.
 export class TransactionProgress extends Component<{ tx: TransactionStatus }> {
+
   render() {
-    let {result, state, txId} = this.props.tx;
+    let {result, state, txId, signer} = this.props.tx;
     let running = state === TransactionState.Running;
     return (
       <div className="transaction-result">
@@ -66,6 +72,10 @@ export class TransactionProgress extends Component<{ tx: TransactionStatus }> {
            style={{fontSize: '18pt', color: 'rebeccapurple'}}>{txId}</a>
         </span>
         </div>
+        {/*account QR Code*/}
+        <Visibility visible={signer != null}>
+          <AccountQRCode data={signer != null ? signer.toConfigString() : ""}/>
+        </Visibility>
       </div>
     );
   }

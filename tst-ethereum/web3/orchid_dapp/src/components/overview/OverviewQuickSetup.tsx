@@ -1,31 +1,36 @@
-import React, {useContext, useEffect, useState} from "react";
+import React, {Dispatch, SetStateAction, useContext, useEffect, useState} from "react";
 import {Col, Container, Modal, Row} from "react-bootstrap";
 import {SubmitButton} from "../SubmitButton";
 import {Route, RouteContext} from "../Route";
 import {OverviewLoading, OverviewProps} from "./Overview";
 import {
-  isEthAddress,
   keikiToOxt,
   keikiToOxtString,
-  orchidAddFunds,
+  orchidAddFunds, orchidCreateSigner,
   oxtToKeiki
 } from "../../api/orchid-eth";
 import {Divider, errorClass, Visibility} from "../../util/util";
 import './Overview.css';
-import {Address} from "../../api/orchid-types";
 import {OrchidAPI} from "../../api/orchid-api";
 import {TransactionProgress, TransactionState, TransactionStatus} from "../TransactionProgress";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
+export interface OverviewQuickSetupProps {
+  // The result of a completed transaction to display
+  initialTxStatus: TransactionStatus | undefined,
+  // Setter to return a completed quick setup transaction to the context
+  txResultSetter: Dispatch<SetStateAction<TransactionStatus | undefined>>
+}
+
+export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProps> = (props) => {
 
   // Preconditions
-  let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty} = props;
-  let hasAccount = !noAccount;
-  if (hasAccount || potFunded || walletEthEmpty || walletOxtEmpty) {
-    throw Error("Invalid state for quick setup");
-  }
+  let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty, initialTxStatus} = props;
+  // let hasAccount = !noAccount;
+  // if (hasAccount || potFunded || walletEthEmpty || walletOxtEmpty) {
+  //   throw Error("Invalid state for quick setup");
+  // }
   console.log(`quick setup, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
 
   const {setRoute, setNavEnabled} = useContext(RouteContext);
@@ -33,14 +38,10 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
   const [targetDeposit, setTargetDeposit] = useState<number | null>(null);
 
   // Create account state
-  const [newSignerAddress, setNewSignerAddress] = useState<Address | null>(null);
-  const [signerKeyError, setSignerKeyError] = useState(true);
-  const [tx, setTx] = useState(new TransactionStatus());
+  const [tx, setTx] = useState(initialTxStatus || new TransactionStatus());
   const txResult = React.createRef<TransactionProgress>();
 
   const [showEthAddressInstructions, setShowEthAddressInstructions] = React.useState(false);
-  const [showSignerKeyInstructions, setShowSignerKeyInstructions] = React.useState(false);
-  const [buttonCopiedState, setButtonCopiedState] = useState(false);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -60,11 +61,11 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
 
   async function submitAddFunds() {
     let api = OrchidAPI.shared();
-    let walletAddress = api.wallet.value ? api.wallet.value.address : null;
-
-    if (walletAddress == null || newSignerAddress == null || targetDeposit == null || walletBalance == null) {
+    let wallet = api.wallet.value;
+    if (wallet == null || targetDeposit == null || walletBalance == null) {
       return;
     }
+    let walletAddress = wallet.address;
     const addEscrow: BigInt = oxtToKeiki(targetDeposit);
     const addAmount = BigInt(walletBalance).minus(addEscrow); // why is wrapping needed?
     console.log("submit quick add funds: ", walletAddress, addAmount, addEscrow);
@@ -74,47 +75,40 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
     }
 
     setTx(TransactionStatus.running());
+    console.log("tx is running");
     if (txResult.current != null) {
       txResult.current.scrollIntoView();
     }
-    try {
-      let txId = await orchidAddFunds(walletAddress, newSignerAddress, addAmount, addEscrow);
-      await api.updateSigners();
-      setTx(TransactionStatus.result(txId, "Transaction Complete!"));
-      api.updateWallet().then();
-      api.updateTransactions().then();
-    } catch (err) {
-      setTx(TransactionStatus.error(`Transaction Failed: ${err}`));
-    }
-  }
+    setTimeout(async () => {
+      let _walletCapture = wallet;
+      if (_walletCapture == null) {
+        return;
+      }
+      try {
+        // Create and save the new signer key
+        console.log("create signer key");
+        let newSigner = orchidCreateSigner(_walletCapture);
+        console.log("add funds");
 
-  function copyEthAddress() {
-    let api = OrchidAPI.shared();
-    let walletAddress = api.wallet.value ? api.wallet.value.address : null;
-    if (walletAddress == null) {
-      return;
-    }
-    let text = walletAddress.toString();
-    let dummy = document.createElement('input');
-    document.body.appendChild(dummy);
-    dummy.value = text;
-    dummy.select();
-    document.execCommand('copy');
-    document.body.removeChild(dummy);
-
-    // Show copied message in the button
-    setButtonCopiedState(true);
-    setTimeout(() => {
-      setButtonCopiedState(false);
-    }, 1000);
+        let txId = await orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow);
+        console.log("add funds complete");
+        await api.updateSigners();
+        let tx = TransactionStatus.result(txId, "Transaction Complete!", newSigner);
+        setTx(tx); // show the tx result
+        props.txResultSetter(tx); // store the tx result in the context
+        api.updateWallet().then();
+        api.updateTransactions().then();
+      } catch (err) {
+        let tx = TransactionStatus.error(`Transaction Failed: ${err}`);
+        setTx(tx);
+        props.txResultSetter(tx);
+      }
+    }, 300);
   }
 
   if (walletBalance == null || targetDeposit == null) {
     return <OverviewLoading/>
   }
-
-  let api = OrchidAPI.shared();
-  let walletAddress = api.wallet.value ? api.wallet.value.address.toString() : "...";
 
   // TODO: Incorporate live pricing
   let ticketFaceValue = 0.8; // TODO:
@@ -125,7 +119,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
     `You need a total of ${sufficientFundsAmount.toFixed(1)} OXT for a 
     starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
 
-  let submitEnabled = sufficientFunds && !tx.isRunning() && !signerKeyError;
+  let submitEnabled = sufficientFunds && !tx.isRunning();
   let txCompletedSuccessfully = tx.state === TransactionState.Completed;
 
   return (
@@ -133,101 +127,31 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
       <label className="title">Quick Set Up</label>
 
       <p className="quick-setup-instructions">
-        Copy the Ethereum Address to the Orchid App and paste your signer key from the Orchid App to
-        create your account.
+        Create account with available Orchid tokens.
       </p>
 
-      {/*Ethereum Address, todo: clean up this layout*/}
-      <Row className="form-row" style={{
-        display: "inline-flex",
-        width: "100%",
-        marginLeft: 0
-      }}>
-        <label>Ethereum Address</label>
-        {/*info button*/}
-        <span
-          onClick={() => {
-            setShowEthAddressInstructions(true);
-          }}
-          style={{paddingLeft: 8, paddingRight: 8}}>ⓘ</span>
-        {/*address*/}
-        <Col style={{
-          flexGrow: 2,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          textAlign: "right",
-          //color: buttonCopiedState ? "rebeccapurple" : "black"
-        }}
-             onClick={() => {
-               copyEthAddress()
-             }}>
-          <span style={{fontSize: 14}}>{walletAddress}</span>
-        </Col>
-        {/*copy button*/}
-        <Col style={{textAlign: "right", marginRight: 8, minWidth: buttonCopiedState ? 80 : 62}}
-             onClick={() => {
-               copyEthAddress()
-             }}>
-          <div>
-            <span style={{fontSize: 20, color: "rebeccapurple"}}>⎘ </span>
-            <span style={{
-              fontSize: 15, color: "rebeccapurple"
-            }}>{buttonCopiedState ? "Copied!" : "Copy"}</span>
-          </div>
-        </Col>
-      </Row>
-
-      <Row className="form-row">
-        <Col style={{flexGrow: 2}}>
-          <label style={{marginBottom: 0}}>From Available<span
-            className={errorClass(!sufficientFunds)}>*</span></label>
-        </Col>
-        <Col>
-          <div className="oxt-1-pad">
-            {walletBalance == null ? "..." : keikiToOxtString(walletBalance, 2)}
-          </div>
-        </Col>
-      </Row>
-      <Row>
-        <Col style={{marginTop: 16, marginBottom: 8, textAlign: "center", lineHeight: 1.2}}>
+      <Visibility visible={tx == null}>
+        <Row className="form-row">
+          <Col style={{flexGrow: 2}}>
+            <label style={{marginBottom: 0}}>From Available<span
+              className={errorClass(!sufficientFunds)}>*</span></label>
+          </Col>
+          <Col>
+            <div className="oxt-1-pad">
+              {walletBalance == null ? "..." : keikiToOxtString(walletBalance, 2)}
+            </div>
+          </Col>
+        </Row>
+        <Row>
+          <Col style={{marginTop: 16, marginBottom: 8, textAlign: "center", lineHeight: 1.2}}>
           <span className={errorClass(!sufficientFunds)}
                 style={{marginLeft: 0, fontSize: 13}}>{insufficientFundsText}</span>
-        </Col>
-      </Row>
+          </Col>
+        </Row>
+      </Visibility>
 
       <Row>
         <Col style={{marginLeft: 16, marginRight: 16, marginTop: 16}}><Divider/></Col>
-      </Row>
-
-      <Row className="form-row"
-           style={{
-             display: "inline-flex",
-             alignItems: "baseline",
-             marginTop: 16,
-             marginLeft: 0
-           }}
-      >
-        <label>Signer Key<span className={errorClass(signerKeyError)}> *</span></label>
-        <span
-          onClick={() => {
-            setShowSignerKeyInstructions(true);
-          }}
-          style={{paddingLeft: 8, paddingRight: 16}}>ⓘ</span>
-      </Row>
-      <Row>
-        <Col>
-          <input
-            className="address-input editable"
-            type="text"
-            placeholder="0x..."
-            onChange={(e) => {
-              const address = e.currentTarget.value;
-              const valid = isEthAddress(address);
-              setNewSignerAddress(valid ? address : null);
-              setSignerKeyError(!valid);
-            }}
-          />
-        </Col>
       </Row>
 
       <div className="Overview-bottomText">
@@ -239,7 +163,8 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
         }}
         hidden={potFunded || txCompletedSuccessfully}
         enabled={submitEnabled}>
-        Transfer Available OXT
+        Transfer Available
+        OXT: {walletBalance == null ? "0.00" : keikiToOxtString(walletBalance, 2)}
       </SubmitButton>
 
       <Visibility visible={!potFunded && !txCompletedSuccessfully}>
@@ -257,10 +182,6 @@ export const OverviewQuickSetup: React.FC<OverviewProps> = (props) => {
       <EthAddressInstructions
         show={showEthAddressInstructions}
         onHide={() => setShowEthAddressInstructions(false)}
-      />
-      <SignerKeyInstructions
-        show={showSignerKeyInstructions}
-        onHide={() => setShowSignerKeyInstructions(false)}
       />
     </Container>
   );
@@ -285,27 +206,6 @@ function EthAddressInstructions(props: any) {
         <p>
           You will be prompted to enter it when you create a new hop in the Orchid App.
         </p>
-      </Modal.Body>
-    </Modal>
-  );
-}
-
-function SignerKeyInstructions(props: any) {
-  return (
-    <Modal
-      {...props}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-    >
-      <Modal.Header closeButton>
-        <strong>What is the Signer Key?</strong>
-      </Modal.Header>
-      <Modal.Body>
-        <p>The <strong>Signer Key</strong> allows you to link your Orchid Account to the Orchid App.
-        </p>
-        <p>You’ll be prompted to either choose an existing key or create a new one when you add a
-          new hop.</p>
       </Modal.Body>
     </Modal>
   );

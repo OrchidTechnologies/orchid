@@ -2,12 +2,13 @@
 // Orchid Ethereum Contracts Lib
 //
 import {OrchidContracts} from "./orchid-eth-contracts";
-import {Address} from "./orchid-types";
+import {Address, Secret} from "./orchid-types";
 import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
 import {WalletStatus} from "./orchid-api";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
+const ORCHID_SIGNER_KEYS_WALLET = "orchid-signer-keys";
 
 declare global {
   interface Window {
@@ -34,14 +35,30 @@ export class Wallet {
 /// A Wallet may have many signers, each of which is essentially an "Orchid Account",
 // controlling a Lottery Pot.
 export class Signer {
+  // The wallet with which this signer is associated.
   public wallet: Wallet;
+  // The signer public address.
   public address: Address;
+  // The signer private key, if available.
+  public secret: Secret | undefined;
 
-  constructor(wallet: Wallet, address: Address) {
+  constructor(wallet: Wallet, address: Address, secret?: Secret) {
     this.wallet = wallet;
     this.address = address;
+    this.secret = secret;
+  }
+
+  toConfigString() : string {
+    return `account={protocol:"orchid",funder:"${this.wallet.address}",secret:"${this.secret}"}`;
   }
 }
+
+interface EthereumKey {
+  address: string
+  privateKey: string
+}
+
+export type Web3Wallet = any;
 
 /// A Lottery Pot containing OXT funds against which lottery tickets are issued.
 export class LotteryPot {
@@ -122,6 +139,7 @@ export function orchidInitEthereum(providerUpdateCallback?: (props: any) => void
         resolve(WalletStatus.Error);
       }
 
+      (window as any).web3 = web3; // replace any injected version
       resolve(WalletStatus.Connected);
     })();
   });
@@ -149,21 +167,42 @@ export async function orchidGetWallet(): Promise<Wallet> {
 }
 
 export async function orchidGetSigners(wallet: Wallet): Promise<Signer []> {
-  let keys;
+  let signerAddresses;
   try {
-    keys = await OrchidContracts.lottery.methods.keys(wallet.address).call();
+    signerAddresses = await OrchidContracts.lottery.methods.keys(wallet.address).call();
   } catch (err) {
     console.log("Error getting signers list", err);
     throw err;
   }
-  console.log("orchid signers: ", keys);
-  return keys.map((key: Address) => new Signer(wallet, key));
+  console.log("orchid signers: ", signerAddresses);
+
+  // Add the signer keys for any signers created in this wallet.
+  let signerKeys = orchidGetSignerKeys() as EthereumKey [];
+  return signerAddresses.map((address: Address) => {
+    let found = Array.from(signerKeys).find(key => key.address === address);
+    let secret = found === undefined ? undefined : found.privateKey;
+    return new Signer(wallet, address, secret);
+  });
+}
+
+/// Get the Orchid signer keys wallet in local storage.
+function orchidGetSignerKeys(): Web3Wallet {
+  return web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
+}
+
+/// Create a new signer keypair and save it in the Orchid signer keys wallet in local storage.
+export function orchidCreateSigner(wallet: Wallet): Signer {
+  let signersWallet = orchidGetSignerKeys();
+  let signerAccount = web3.eth.accounts.create();
+  signersWallet.add(signerAccount);
+  signersWallet.save("", ORCHID_SIGNER_KEYS_WALLET);
+  return new Signer(wallet, signerAccount.address, signerAccount.privateKey);
 }
 
 /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified lottery pot address.
 export async function orchidAddFunds(funder: Address, signer: Address, amount: BigInt, escrow: BigInt): Promise<string> {
-  //return fakeTx(false);
   console.log("Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
+  //return fakeTx(false);
   const amount_value = BigInt(amount); // Force our polyfill BigInt?
   const escrow_value = BigInt(escrow);
   const total = amount_value + escrow_value;
