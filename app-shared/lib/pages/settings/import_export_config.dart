@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
+import 'package:orchid/api/qrcode.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
@@ -203,29 +204,12 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
     _actionEnabled.close();
   }
 
-  // TODO: Factor out error handling with add hop page when we have it settled.
   void _importQR() async {
-    try {
-      String text = await BarcodeScanner.scan();
-      if (widget.validator(text)) {
-        setState(() {
-          _configFileTextController.text = text;
-        });
-      }
-    } on PlatformException catch (e) {
-      print("barcode platform exception: $e");
-      if (e.code == BarcodeScanner.CameraAccessDenied) {
-        // 'The user did not grant the camera permission!';
-        // TODO: Offer to send the user back to settings?
-      } else {
-        // 'Unknown error
-      }
-    } on FormatException {
-      // 'null (User returned using the "back"-button before scanning anything. Result)'
-      print("barcode format exception");
-    } catch (e) {
-      // 'Unknown error
-      print("barcode unknown exception: $e");
+    String text = await QRCode.scan();
+    if (widget.validator(text)) {
+      setState(() {
+        _configFileTextController.text = text;
+      });
     }
   }
 

@@ -1,19 +1,17 @@
-import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/dialogs.dart';
+import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
+import 'model/orchid_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
-import 'package:flutter/services.dart';
 
 typedef AddFlowCompletion = void Function(CircuitHop result);
 
@@ -63,11 +61,7 @@ class _AddHopPageState extends State<AddHopPage> {
                 pady(24),
                 if (widget.showCallouts) _buildOrchidInstruction(),
                 _divider(),
-                _buildHopChoice(
-                    text: "Scan QR Code",
-                    onTap: () { _importQRCode(context); },
-                    imageName: "assets/images/scan.png",
-                    trailing: SizedBox(width: 1)),
+                ScanOrPasteOrchidAccount(onImportAccount: _importAccount),
                 _divider(),
                 _buildHopChoice(
                     text: "Orchid Hop",
@@ -150,7 +144,7 @@ class _AddHopPageState extends State<AddHopPage> {
           Padding(
             // align the arrow with the hop tile leading and text vertically
             padding:
-                const EdgeInsets.only(left: 11, right: 0, top: 0, bottom: 12),
+                const EdgeInsets.only(left: 11, right: 0, top: 12, bottom: 12),
             child: RotatedBox(
               child: Image.asset("assets/images/drawnArrow3.png", height: 32),
               quarterTurns: 2,
@@ -198,64 +192,19 @@ class _AddHopPageState extends State<AddHopPage> {
     ));
   }
 
-  // TODO: Factor out error handling with import/export page when we have it settled.
-  void _importQRCode(BuildContext context) async {
-    try {
-      String text = await BarcodeScanner.scan();
-      if (OrchidVPNConfigValidation.configValid(text)) {
-        // successfully scanned config...
-        _confirmImport(context, text);
-      } else {
-        _importError();
-      }
-    } on PlatformException catch (e) {
-      print("barcode platform exception: $e");
-      if (e.code == BarcodeScanner.CameraAccessDenied) {
-        // 'The user did not grant the camera permission!';
-        // TODO: Offer to send the user back to settings?
-      } else {
-        // 'Unknown error
-      }
-    } on FormatException {
-      // 'null (User returned using the "back"-button before scanning anything. Result)'
-      print("barcode format exception");
-    } catch (e) {
-      // 'Unknown error
-      print("barcode unknown exception: $e");
-    }
-  }
-
-  void _importError() {
-    Dialogs.showAppDialog(
-        context: context,
-        title: "Invalid QR Code",
-        bodyText:
-        "The QR code you scanned does not contain a valid configuration.");
-  }
-
-  void _confirmImport(BuildContext context, String text) async {
-    // If there are no existing hops add the config without confirmation
-    var hops = (await UserPreferences().getCircuit())?.hops ?? [];
-    if (hops.isEmpty) {
-      _importConfig(context, text);
-    } else {
-      Dialogs.showConfirmationDialog(
-          context: context,
-          title: "Confirm Import",
-          body: "The import you scanned is a complete hops configuration. "
-              "Saving it will replace any existing hops that you had previously configured.  "
-              "Are you sure you want to import this hop configuration?",
-          commitAction: () {
-            _importConfig(context, text);
-          });
-    }
-  }
-
-  void _importConfig(BuildContext context, String config) async {
-    await OrchidVPNConfig.importConfig(config);
-    widget.onAddFlowComplete(null);
+  void _importAccount(ParseOrchidAccountResult result) async {
+    print("result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
+    // Note: keys are saved here but the hop will be saved by the add hop flow caller
+    await UserPreferences().addKeys(result.newKeys);
+    CircuitHop hop = OrchidHop(
+      curator: OrchidHop.appDefaultCurator,
+      funder: result.account.funder,
+      keyRef: result.account.signer.ref(),
+    );
+    widget.onAddFlowComplete(hop);
   }
 
   Divider _divider() =>
       Divider(color: Colors.black.withOpacity(0.3), height: 1.0);
+
 }

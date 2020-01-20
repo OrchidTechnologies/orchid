@@ -801,11 +801,11 @@ class CircuitPageState extends State<CircuitPage>
 
   @override
   void dispose() {
-    super.dispose();
     _rxSubs.forEach((sub) {
       sub.cancel();
     });
     _bunnyDuckTimer.cancel();
     widget.switchController.onChange = null;
+    super.dispose();
   }
 }

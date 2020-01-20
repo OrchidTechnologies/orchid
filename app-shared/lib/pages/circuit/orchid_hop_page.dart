@@ -142,9 +142,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         ),
 
         TextSpan(
-          text:
-              " in a Web3 browser and follow the steps."
-          "  Paste in your Ethereum address below.  ",
+          text: " in a Web3 browser and follow the steps."
+              "  Paste in your Ethereum address below.  ",
           style: bodyStyle,
         ),
 
@@ -534,6 +533,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   /// Save a newly generated or imported key secret and apply it to the hop
+  /// Note: the hop itself is actually returned to and saved by the caller of the
+  /// add hop flow (via the nav context).  It would be better if any new key and
+  /// hop were saved together at one point in the code.
   Future<bool> _saveAndApplyNewKey({BigInt secret, bool imported}) async {
     var key = StoredEthereumKey(
         time: DateTime.now(), imported: false, private: secret);
