@@ -48,7 +48,10 @@ export class Signer {
     this.secret = secret;
   }
 
-  toConfigString() : string {
+  toConfigString() : string|undefined {
+    if (this.secret == undefined) {
+      return undefined;
+    }
     return `account={protocol:"orchid",funder:"${this.wallet.address}",secret:"${this.secret}"}`;
   }
 }
