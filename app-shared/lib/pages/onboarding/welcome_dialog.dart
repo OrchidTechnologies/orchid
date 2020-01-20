@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
@@ -58,6 +59,7 @@ class WelcomeDialog {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
+        double screenWidth = MediaQuery.of(context).size.width;
         return AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
@@ -71,7 +73,7 @@ class WelcomeDialog {
                   children: <Widget>[
                     RichText(
                         text: TextSpan(
-                            text: "Add Orchid Account",
+                            text: screenWidth > AppSizes.iphone_se.width ? "Add Orchid Account" : "Add Account",
                             style: AppText.dialogTitle)),
                     Container(
                       width: 40,
@@ -87,7 +89,7 @@ class WelcomeDialog {
                 RichText(text: topText),
                 pady(12),
                 ScanOrPasteOrchidAccount(
-                    spacing: 8,
+                    spacing: screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
                     onImportAccount: (result) {
                       _importAccount(context, result);
                     }),

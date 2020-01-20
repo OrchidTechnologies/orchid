@@ -1,10 +1,10 @@
-import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/qrcode.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
@@ -29,6 +29,8 @@ class ScanOrPasteOrchidAccount extends StatefulWidget {
 class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    var showIcons = screenWidth >= AppSizes.iphone_xs.width;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
@@ -36,15 +38,15 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
         children: <Widget>[
           _buildButton(
               text: "Scan",
-              trailing:
-                  Image.asset("assets/images/scan.png", color: Colors.white),
+              trailing: showIcons ?
+                  Image.asset("assets/images/scan.png", color: Colors.white) : SizedBox(),
               textColor: Colors.white,
               backgroundColor: Colors.deepPurple,
               onPressed: _scanQRCode),
           padx(widget.spacing ?? 24),
           _buildButton(
               text: "Paste",
-              trailing: Icon(Icons.content_paste, color: Colors.deepPurple),
+              trailing: showIcons ? Icon(Icons.content_paste, color: Colors.deepPurple) : SizedBox(),
               textColor: Colors.deepPurple,
               backgroundColor: Colors.white,
               onPressed: _pasteCode),
@@ -68,7 +70,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
           borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding:
-            const EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 10),
+            const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
         child: Row(
           children: <Widget>[
             AppText.body(
@@ -76,7 +78,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
                 color: textColor,
                 letterSpacing: 1.25,
                 lineHeight: 1.14),
-            padx(12),
+            padx(4),
             trailing
           ],
         ),
