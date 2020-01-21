@@ -813,7 +813,7 @@ class CircuitPageState extends State<CircuitPage>
 
   void _welcomeScreenAddHop(CircuitHop hop) async {
     // Save the new hop
-    var circuit = await UserPreferences().getCircuit();
+    var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
     circuit.hops.add(hop);
     await UserPreferences().setCircuit(circuit);
     // Notify that the hops config has changed externally
