@@ -133,7 +133,7 @@ class UserPreferences {
     String value = (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.Circuit.toString());
     if (value == null) {
-      return null;
+      return Circuit([]);
     }
     return Circuit.fromJson(jsonDecode(value));
   }

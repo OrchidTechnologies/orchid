@@ -771,6 +771,7 @@ class CircuitPageState extends State<CircuitPage>
     return _hops != null && _hops.length > 0;
   }
 
+  // TODO: Refactor with _welcomeScreenAddHop
   void _saveCircuit() async {
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
     UserPreferences().setCircuit(circuit);
@@ -784,6 +785,16 @@ class CircuitPageState extends State<CircuitPage>
     } finally {
       _dialogInProgress = false;
     }
+  }
+
+  // TODO: Refactor with _saveCircuit
+  void _welcomeScreenAddHop(CircuitHop hop) async {
+    var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
+    circuit.hops.add(hop);
+    await UserPreferences().setCircuit(circuit);
+    OrchidAPI().updateConfiguration();
+    // Notify that the hops config has changed externally
+    OrchidAPI().circuitConfigurationChanged.add(null);
   }
 
   void _userInteraction() {
@@ -809,14 +820,5 @@ class CircuitPageState extends State<CircuitPage>
     _bunnyDuckTimer.cancel();
     widget.switchController.onChange = null;
     super.dispose();
-  }
-
-  void _welcomeScreenAddHop(CircuitHop hop) async {
-    // Save the new hop
-    var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
-    circuit.hops.add(hop);
-    await UserPreferences().setCircuit(circuit);
-    // Notify that the hops config has changed externally
-    OrchidAPI().circuitConfigurationChanged.add(null);
   }
 }
