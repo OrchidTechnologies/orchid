@@ -87,12 +87,13 @@ class CircuitPageState extends State<CircuitPage>
     vpnSwitchInstructionsViewed =
         await UserPreferences().getVPNSwitchInstructionsViewed();
 
-    OrchidAPI().circuitConfigurationChanged.listen((_){
+    OrchidAPI().circuitConfigurationChanged.listen((_) {
       _updateCircuit();
     });
 
     if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
-      WelcomeDialog.show(context: context);
+      WelcomeDialog.show(
+          context: context, onAddFlowComplete: _welcomeScreenAddHop);
       UserPreferences().setFirstLaunchInstructionsViewed(true);
     }
   }
@@ -552,7 +553,8 @@ class CircuitPageState extends State<CircuitPage>
         var addFlowCompletion = (CircuitHop result) {
           Navigator.pop(context, result);
         };
-        var editor = AddHopPage(onAddFlowComplete: addFlowCompletion, showCallouts: _hops.isEmpty);
+        var editor = AddHopPage(
+            onAddFlowComplete: addFlowCompletion, showCallouts: _hops.isEmpty);
         var route = MaterialPageRoute<CircuitHop>(
             builder: (context) => editor, settings: settings);
         return route;
@@ -807,5 +809,14 @@ class CircuitPageState extends State<CircuitPage>
     _bunnyDuckTimer.cancel();
     widget.switchController.onChange = null;
     super.dispose();
+  }
+
+  void _welcomeScreenAddHop(CircuitHop hop) async {
+    // Save the new hop
+    var circuit = await UserPreferences().getCircuit();
+    circuit.hops.add(hop);
+    await UserPreferences().setCircuit(circuit);
+    // Notify that the hops config has changed externally
+    OrchidAPI().circuitConfigurationChanged.add(null);
   }
 }

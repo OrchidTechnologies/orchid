@@ -1,15 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/orchid_vpn_config.dart';
-import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/pages/onboarding/welcome_dialog.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
-import 'model/orchid_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
 
@@ -30,7 +26,7 @@ class _AddHopPageState extends State<AddHopPage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "New Hop",
+      title: "Link Account",
       cancellable: true,
       backAction: () {
         widget.onAddFlowComplete(null);
@@ -50,7 +46,7 @@ class _AddHopPageState extends State<AddHopPage> {
                   child: Image.asset("assets/images/approach.png", height: 100),
                 ),
                 pady(24),
-                Text("Choose your Hop type",
+                Text("Select your hop",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 18,
@@ -59,25 +55,30 @@ class _AddHopPageState extends State<AddHopPage> {
                         letterSpacing: 0.16,
                         color: Color(0xff504960))),
                 pady(24),
-                if (widget.showCallouts) _buildOrchidInstruction(),
-                _divider(),
-                ScanOrPasteOrchidAccount(onImportAccount: _importAccount),
                 _divider(),
                 _buildHopChoice(
-                    text: "Orchid Hop",
+                    text: "I have a QR code",
+                    onTap: () {
+                      WelcomeDialog.show(
+                          context: context,
+                          onAddFlowComplete: widget.onAddFlowComplete);
+                    },
+                    imageName: "assets/images/scan.png"),
+                _divider(),
+                _buildHopChoice(
+                    text: "I want to try Orchid",
                     onTap: () {
                       _addHopType(HopProtocol.Orchid);
                     },
                     imageName: "assets/images/logo_small_purple.png"),
                 _divider(),
                 _buildHopChoice(
-                    text: "OpenVPN Hop",
+                    text: "I have a VPN subscription",
                     onTap: () {
                       _addHopType(HopProtocol.OpenVPN);
                     },
                     imageName: "assets/images/security_purple.png"),
                 _divider(),
-                if (widget.showCallouts) _buildVPNInstruction(),
               ],
             ),
           ),
@@ -92,7 +93,7 @@ class _AddHopPageState extends State<AddHopPage> {
         contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
         leading: Image.asset(imageName, width: 24, height: 24),
         trailing:
-            trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
+        trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
         title: Text(text,
             textAlign: TextAlign.left,
             style: const TextStyle(
@@ -131,80 +132,6 @@ class _AddHopPageState extends State<AddHopPage> {
     }
   }
 
-  Container _buildOrchidInstruction() {
-    return Container(
-        // match hop tile horizontal padding
-        child: SafeArea(
-      left: true,
-      bottom: false,
-      right: false,
-      top: false,
-      child: Row(
-        children: <Widget>[
-          Padding(
-            // align the arrow with the hop tile leading and text vertically
-            padding:
-                const EdgeInsets.only(left: 11, right: 0, top: 12, bottom: 12),
-            child: RotatedBox(
-              child: Image.asset("assets/images/drawnArrow3.png", height: 32),
-              quarterTurns: 2,
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 21),
-              child: Text("I want to try Orchid",
-                  textAlign: TextAlign.left,
-                  style: AppText.hopsInstructionsCallout),
-            ),
-          ),
-        ],
-      ),
-    ));
-  }
-
-  Container _buildVPNInstruction() {
-    return Container(
-        // match hop tile horizontal padding
-        child: SafeArea(
-      left: true,
-      bottom: false,
-      right: false,
-      top: false,
-      child: Row(
-        children: <Widget>[
-          Padding(
-            // align the arrow with the hop tile leading and text vertically
-            padding:
-                const EdgeInsets.only(left: 11, right: 0, top: 12, bottom: 12),
-            child: Image.asset("assets/images/drawnArrow2.png", height: 32),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16),
-              child: Text("I have a VPN subscription",
-                  textAlign: TextAlign.left,
-                  style: AppText.hopsInstructionsCallout),
-            ),
-          ),
-        ],
-      ),
-    ));
-  }
-
-  void _importAccount(ParseOrchidAccountResult result) async {
-    print("result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
-    // Note: keys are saved here but the hop will be saved by the add hop flow caller
-    await UserPreferences().addKeys(result.newKeys);
-    CircuitHop hop = OrchidHop(
-      curator: OrchidHop.appDefaultCurator,
-      funder: result.account.funder,
-      keyRef: result.account.signer.ref(),
-    );
-    widget.onAddFlowComplete(hop);
-  }
-
   Divider _divider() =>
       Divider(color: Colors.black.withOpacity(0.3), height: 1.0);
-
 }

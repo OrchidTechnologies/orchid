@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
+import 'package:orchid/pages/circuit/add_hop_page.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
@@ -11,9 +11,9 @@ import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/link_text.dart';
 
 class WelcomeDialog {
-  static Future<void> show({
-    @required BuildContext context,
-  }) {
+  static Future<void> show(
+      {@required BuildContext context,
+        AddFlowCompletion onAddFlowComplete}) {
     var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
 
     var topText = TextSpan(
@@ -73,7 +73,9 @@ class WelcomeDialog {
                   children: <Widget>[
                     RichText(
                         text: TextSpan(
-                            text: screenWidth > AppSizes.iphone_se.width ? "Add Orchid Account" : "Add Account",
+                            text: screenWidth > AppSizes.iphone_se.width
+                                ? "Add Orchid Account"
+                                : "Add Account",
                             style: AppText.dialogTitle)),
                     Container(
                       width: 40,
@@ -89,9 +91,11 @@ class WelcomeDialog {
                 RichText(text: topText),
                 pady(12),
                 ScanOrPasteOrchidAccount(
-                    spacing: screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
-                    onImportAccount: (result) {
-                      _importAccount(context, result);
+                    spacing:
+                        screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
+                    onImportAccount: (ParseOrchidAccountResult result) {
+                      _importAccount(context,
+                          result: result, onAddFlowComplete: onAddFlowComplete);
                     }),
                 Divider(thickness: 1.0),
                 pady(16),
@@ -107,9 +111,11 @@ class WelcomeDialog {
     );
   }
 
-  // Save the new hop
-  static void _importAccount(
-      BuildContext context, ParseOrchidAccountResult result) async {
+  /// Create a hop from the parse result, save any new keys, and return the hop
+  /// to the add flow completion.
+  static void _importAccount(BuildContext context,
+      {ParseOrchidAccountResult result,
+      AddFlowCompletion onAddFlowComplete}) async {
     print(
         "result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
     // Save any new keys
@@ -120,13 +126,8 @@ class WelcomeDialog {
       funder: result.account.funder,
       keyRef: result.account.signer.ref(),
     );
-    // Save the new hop
-    var circuit = await UserPreferences().getCircuit();
-    circuit.hops.add(hop);
-    await UserPreferences().setCircuit(circuit);
-    // Notify that the hops config has changed externally
-    OrchidAPI().circuitConfigurationChanged.add(null);
     // End the dialog
     Navigator.of(context).pop();
+    onAddFlowComplete(hop);
   }
 }
