@@ -36,52 +36,24 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          _buildButton(
+          TitleIconButton(
               text: "Scan",
-              trailing: showIcons ?
-                  Image.asset("assets/images/scan.png", color: Colors.white) : SizedBox(),
+              trailing: showIcons
+                  ? Image.asset("assets/images/scan.png", color: Colors.white)
+                  : SizedBox(),
               textColor: Colors.white,
               backgroundColor: Colors.deepPurple,
               onPressed: _scanQRCode),
           padx(widget.spacing ?? 24),
-          _buildButton(
+          TitleIconButton(
               text: "Paste",
-              trailing: showIcons ? Icon(Icons.content_paste, color: Colors.deepPurple) : SizedBox(),
+              trailing: showIcons
+                  ? Icon(Icons.content_paste, color: Colors.deepPurple)
+                  : SizedBox(),
               textColor: Colors.deepPurple,
               backgroundColor: Colors.white,
               onPressed: _pasteCode),
         ],
-      ),
-    );
-  }
-
-  Widget _buildButton(
-      {String text,
-      Widget trailing,
-      Color textColor,
-      Color backgroundColor,
-      @required VoidCallback onPressed}) {
-    return FlatButton(
-      color: backgroundColor,
-      onPressed: onPressed,
-      shape: RoundedRectangleBorder(
-          side: BorderSide(
-              color: Colors.deepPurple, width: 1, style: BorderStyle.solid),
-          borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding:
-            const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
-        child: Row(
-          children: <Widget>[
-            AppText.body(
-                text: text,
-                color: textColor,
-                letterSpacing: 1.25,
-                lineHeight: 1.14),
-            padx(4),
-            trailing
-          ],
-        ),
       ),
     );
   }
@@ -141,5 +113,50 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
       BuildContext context, String config) async {
     var existingKeys = await UserPreferences().getKeys();
     return OrchidVPNConfig.parseOrchidAccount(config, existingKeys);
+  }
+}
+
+class TitleIconButton extends StatelessWidget {
+  final String text;
+  final Widget trailing;
+  final Color textColor;
+  final Color backgroundColor;
+  final VoidCallback onPressed;
+  final double spacing;
+
+  const TitleIconButton({
+    Key key,
+    @required this.text,
+    @required this.trailing,
+    @required this.textColor,
+    @required this.backgroundColor,
+    @required this.onPressed,
+    this.spacing = 4,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      color: backgroundColor,
+      onPressed: onPressed,
+      shape: RoundedRectangleBorder(
+          side: BorderSide(
+              color: Colors.deepPurple, width: 1, style: BorderStyle.solid),
+          borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
+        child: Row(
+          children: <Widget>[
+            AppText.body(
+                text: text,
+                color: textColor,
+                letterSpacing: 1.25,
+                lineHeight: 1.14),
+            padx(spacing),
+            trailing
+          ],
+        ),
+      ),
+    );
   }
 }

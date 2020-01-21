@@ -7,14 +7,17 @@ import 'package:orchid/api/cloudflare.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 import 'budget_page.dart';
@@ -243,6 +246,16 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         // Signer key
         pady(widget.readOnly() ? 0 : 24),
         _buildSignerKey(),
+        if (widget.readOnly())
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                _buildExportAccountButton(),
+              ],
+            ),
+          )
       ],
     );
   }
@@ -585,5 +598,33 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         _lotteryPot = null; // no balance available
       });
     }
+  }
+
+  Widget _buildExportAccountButton() {
+    return TitleIconButton(
+        text: "Share Orchid Account",
+        spacing: 24,
+        trailing: Image.asset("assets/images/scan.png", color: Colors.white),
+        textColor: Colors.white,
+        backgroundColor: Colors.deepPurple,
+        onPressed: _exportAccount);
+  }
+
+  void _exportAccount() async {
+    var config = await _hop().accountConfigString();
+    Dialogs.showAppDialog(
+        context: context,
+        title: "My Orchid Account:",
+        body: Container(
+          width: 250,
+          height: 250,
+          child: Center(
+            child: QrImage(
+              data: config,
+              version: QrVersions.auto,
+              size: 250.0,
+            ),
+          ),
+        ));
   }
 }

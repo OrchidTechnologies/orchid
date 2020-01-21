@@ -26,7 +26,7 @@ class _AddHopPageState extends State<AddHopPage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "Link Account",
+      title: "Add Hop",
       cancellable: true,
       backAction: () {
         widget.onAddFlowComplete(null);

@@ -41,4 +41,10 @@ class OrchidHop extends CircuitHop {
 
         'keyRef': keyRef.toString(),
       };
+
+  Future<String> accountConfigString() async {
+    var funder  = this.funder.toString();
+    var secret = (await this.keyRef.get()).private.toRadixString(16);
+    return 'account={ protocol: "orchid", funder: "$funder", secret: "$secret" }';
+  }
 }
