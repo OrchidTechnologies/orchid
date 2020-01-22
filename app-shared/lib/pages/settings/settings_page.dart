@@ -7,7 +7,6 @@ import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
-import '../app_text.dart';
 import '../orchid_app.dart';
 
 /// The main settings page.
@@ -21,6 +20,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   bool _queryBalances = false;
   bool _showStatusTab = false;
+  bool _allowNoHopVPN = false;
 
   @override
   void initState() {
@@ -34,6 +34,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
     _showStatusTab = await UserPreferences().getShowStatusTab();
+    _allowNoHopVPN = await UserPreferences().getAllowNoHopVPN();
     setState(() {});
   }
 
@@ -60,10 +61,28 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: AppTextField(
                     controller: _defaultCurator, margin: EdgeInsets.zero)),
           ),
+          pady(8),
+
+          // Allow enable vpn with no hops
           pady(16),
           Divider(),
+          PageTile(
+            title: "Allow No Hop VPN\n(Traffic Monitoring Only)",
+            trailing: Switch(
+              activeColor: AppColors.purple_3,
+              value: _allowNoHopVPN,
+              onChanged: (bool value) {
+                UserPreferences().setAllowNoHopVPN(value);
+                setState(() {
+                  _allowNoHopVPN = value;
+                });
+              },
+            ),
+          ),
 
           // Balance query
+          pady(8),
+          Divider(),
           PageTile(
             title: "Query Balances",
             //imageName: "assets/images/assignment.png",
@@ -91,8 +110,17 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
           ),
+
+          // Configuration
           pady(8),
           Divider(),
+          PageTile.route(
+              title: "Manage Configuration (beta)",
+              routeName: '/settings/manage_config',
+              context: context),
+          Divider(),
+
+          // Status page
           pady(8),
           PageTile(
             title: "Show Status Page (beta)",
@@ -109,14 +137,8 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
           ),
-          pady(8),
-          Divider(),
-          PageTile.route(
-              title: "Manage Configuration (beta)",
-              routeName: '/settings/manage_config',
-              context: context),
-          pady(8),
-          Divider(),
+
+
         ],
       ),
     );

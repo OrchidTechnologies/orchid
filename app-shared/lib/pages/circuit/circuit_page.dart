@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
@@ -75,7 +76,7 @@ class CircuitPageState extends State<CircuitPage>
 
   void initStateAsync() async {
     // Hook up to the provided vpn switch
-    widget.switchController.onChange = _setConnectionState;
+    widget.switchController.onChange = _connectSwitchChanged;
 
     // Set the initial state of the vpn switch based on the user pref.
     // Note: By design the switch on this page does not track or respond to the
@@ -92,8 +93,7 @@ class CircuitPageState extends State<CircuitPage>
     });
 
     if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
-      WelcomeDialog.show(
-          context: context, onAddFlowComplete: _welcomeScreenAddHop);
+      _showWelcomeDialog();
       UserPreferences().setFirstLaunchInstructionsViewed(true);
     }
   }
@@ -549,7 +549,6 @@ class CircuitPageState extends State<CircuitPage>
     // remove the entire flow with the correct animation.
     var addFlow = Navigator(
       onGenerateRoute: (RouteSettings settings) {
-        print("generate route: $settings");
         var addFlowCompletion = (CircuitHop result) {
           Navigator.pop(context, result);
         };
@@ -564,7 +563,6 @@ class CircuitPageState extends State<CircuitPage>
         builder: (context) => addFlow, fullscreenDialog: true);
 
     var hop = await Navigator.push(context, route);
-    print("hop = $hop");
 
     if (hop == null) {
       return; // user cancelled
@@ -646,9 +644,15 @@ class CircuitPageState extends State<CircuitPage>
   // Note: By design the switch on this page does not track or respond to the
   // Note: connection state after initialization.  See `monitoring_page.dart`
   // Note: for a version of the switch that does attempt to track the connection.
-  void _setConnectionState(bool toEnabled) {
+  void _connectSwitchChanged(bool toEnabled) async {
     if (toEnabled) {
-      _checkPermissionAndConnect();
+      bool allowNoHopVPN = await UserPreferences().getAllowNoHopVPN();
+      if (_hasHops() || allowNoHopVPN) {
+        _checkPermissionAndConnect();
+      } else {
+        _switchOn = false; // force the switch off
+        _showWelcomeDialog();
+      }
     } else {
       _disconnect();
     }
@@ -795,6 +799,11 @@ class CircuitPageState extends State<CircuitPage>
     OrchidAPI().updateConfiguration();
     // Notify that the hops config has changed externally
     OrchidAPI().circuitConfigurationChanged.add(null);
+  }
+
+  void _showWelcomeDialog() {
+    WelcomeDialog.show(
+        context: context, onAddFlowComplete: _welcomeScreenAddHop);
   }
 
   void _userInteraction() {

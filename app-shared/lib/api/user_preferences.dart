@@ -270,6 +270,17 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.FirstLaunchInstructionsViewed.toString(), value);
   }
+
+  Future<bool> getAllowNoHopVPN() async {
+    return (await SharedPreferences.getInstance())
+        .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
+        false;
+  }
+
+  Future<bool> setAllowNoHopVPN(bool value) async {
+    return (await SharedPreferences.getInstance())
+        .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
+  }
 }
 
 enum UserPreferenceKey {
@@ -288,5 +299,6 @@ enum UserPreferenceKey {
   DesiredVPNState,
   ShowStatusTab,
   VPNSwitchInstructionsViewed,
-  FirstLaunchInstructionsViewed
+  FirstLaunchInstructionsViewed,
+  AllowNoHopVPN
 }

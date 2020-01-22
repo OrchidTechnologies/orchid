@@ -1,4 +1,5 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../app_colors.dart';
 
@@ -6,15 +7,17 @@ typedef WrappedSwitchCallback = void Function(bool status);
 
 class WrappedSwitchController {
   // The value published by the containing view and subscribed to by the switch.
-  ValueNotifier<bool> controlledState;
+  // This allows programmatic control of the switch.
+  WrappedSwitchValueNotifier controlledState;
 
-  // Callback to indicate user interactive state change to the containing view.
-  // Note: We could use another ValueNotifier here but the meaning of the value 
-  // Note: after firing would be ambiguous.
+  // Callback indicating that a user interaction has changed the switch value.
+  // This allows observation of user input actions driving the switch.
+  // Note: We could use another ValueNotifier here but there would then be
+  // Note: ambiguity between the controlled and user driven values.
   WrappedSwitchCallback onChange;
 
   WrappedSwitchController({bool initialValue = false}) {
-    this.controlledState = ValueNotifier<bool>(initialValue);
+    this.controlledState = WrappedSwitchValueNotifier(initialValue);
   }
 }
 
@@ -40,6 +43,7 @@ class _WrappedSwitchState extends State<WrappedSwitch> {
 
   // The desired switch state specified by the containing view changed
   void _valueChanged() {
+    print("switch value changed");
     setState(() {
       _switchKey++;
     });
@@ -47,6 +51,7 @@ class _WrappedSwitchState extends State<WrappedSwitch> {
 
   @override
   Widget build(BuildContext context) {
+    print("building switch with value: ${widget.controller.controlledState.value}, key=$_switchKey");
     return Switch(
         key: Key(_switchKey.toString()),
         activeColor: AppColors.purple_5,
@@ -62,3 +67,18 @@ class _WrappedSwitchState extends State<WrappedSwitch> {
   }
 }
 
+/// This is just a ValueNotifier that fires on every set rather than comparing
+/// new values for equality first.
+class WrappedSwitchValueNotifier extends ChangeNotifier implements ValueListenable<bool> {
+  bool _value;
+
+  WrappedSwitchValueNotifier(this._value);
+
+  @override
+  bool get value => _value;
+
+  set value(bool newValue) {
+    _value = newValue;
+    notifyListeners();
+  }
+}
