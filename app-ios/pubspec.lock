@@ -28,7 +28,7 @@ packages:
       path: "."
       ref: "39ecc57bc0eef7b0465c891d900d2fb1f34a2390"
       resolved-ref: "39ecc57bc0eef7b0465c891d900d2fb1f34a2390"
-      url: "git@github.com:apptreesoftware/flutter_barcode_reader.git"
+      url: "git://github.com/apptreesoftware/flutter_barcode_reader.git"
     source: git
     version: "1.0.0"
   boolean_selector:

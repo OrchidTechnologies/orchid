@@ -13,6 +13,10 @@ environment:
   sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
+  barcode_scan:
+    git:
+      url: git://github.com/apptreesoftware/flutter_barcode_reader.git
+      ref: 39ecc57bc0eef7b0465c891d900d2fb1f34a2390
   cupertino_icons: ^0.1.2
   dotted_border: ^1.0.4
   email_validator: ^1.0.3
@@ -30,16 +34,12 @@ dependencies:
   intl: ^0.16.0
   pointycastle: ^1.0.2
   provider: ^4.0.1
+  qr_flutter: ^3.1.0
   rxdart: ^0.23.0
   shared_preferences: ^0.5.6
   sqflite: ^1.2.0
   url_launcher: ^5.4.1
   web3dart: ^1.2.1
-  barcode_scan: 
-      git:
-          url: git@github.com:apptreesoftware/flutter_barcode_reader.git
-          ref: 39ecc57bc0eef7b0465c891d900d2fb1f34a2390
-  qr_flutter: ^3.1.0
 
 dev_dependencies:
   flutter_test:
