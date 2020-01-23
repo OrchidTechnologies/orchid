@@ -83,9 +83,18 @@ msys2 += crt-git-7.0.0.5397.291c4f8d-1
 msys2 += dlfcn-1.1.2-1
 msys2 += gcc-9.2.0-2
 msys2 += headers-git-7.0.0.5397.291c4f8d-1
+msys2 += winpthreads-git-7.0.0.5325.11a5459d-1
+
+# XXX: this doesn't work with Apple clang
+libc++ := $(shell $(cxx) --version | sed -e '1!d;s/.*clang version //;s/\.[0-9]* .*//')
+ifeq ($(libc++),8.0)
 msys2 += libc++-8.0.0-8
 msys2 += libc++abi-8.0.0-8
-msys2 += winpthreads-git-7.0.0.5325.11a5459d-1
+endif
+ifeq ($(libc++),9.0)
+msys2 += libc++-9.0.0-5
+msys2 += libc++abi-9.0.0-5
+endif
 
 define _
 $(output)/$(1)/%.msys2:
