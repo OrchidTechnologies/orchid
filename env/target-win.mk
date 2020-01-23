@@ -43,7 +43,11 @@ $(each)
 more := -D_WIN32_WINNT=0x0601
 include $(pwd)/target-ndk.mk
 include $(pwd)/target-cxx.mk
-c_libcxx += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
+
+source += $(pwd)/libcxx/src/support/win32/locale_win32.cpp
+source += $(pwd)/libcxx/src/support/win32/support.cpp
+cflags += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
+lflags += -nostdlib++ -lsupc++
 
 define _
 ranlib/$(1) := $(1)-w64-mingw32-ranlib
