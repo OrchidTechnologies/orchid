@@ -81,6 +81,9 @@ cflags += -DLWIP_ERRNO_STDINCLUDE
 cflags_sys_arch += -UWIN32_LEAN_AND_MEAN
 
 
+# Android sockaddr_storage is more indirect
+cflags_lwip += -Wno-missing-braces
+
 cflags_transport += -Wno-unused-private-field
 
 cflags += -I$(pwd)/BeastHttp/BeastHttp/include
