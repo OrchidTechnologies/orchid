@@ -101,6 +101,8 @@ ifeq ($(target),win)
 # XXX: boost asio threading on win32
 checks += -clang-analyzer-cplusplus.NewDelete
 checks += -clang-analyzer-cplusplus.NewDeleteLeaks
+# XXX: -Wno-nonportable-include-path isn't working
+checks += -clang-diagnostic-nonportable-include-path
 endif
 checks := $(subst $(space),$(comma),$(strip $(checks)))
 

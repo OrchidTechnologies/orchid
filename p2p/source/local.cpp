@@ -148,6 +148,7 @@ task<void> Local::Connect(U<Stream> &stream, const Socket &endpoint) {
     auto connection(std::make_unique<Connection<asio::ip::tcp::socket, false>>(Context()));
     const auto backup(connection.get());
     stream = std::move(connection);
+    // NOLINTNEXTLINE (clang-analyzer-optin.cplusplus.VirtualCall)
     co_await backup->Open(endpoint);
 }
 

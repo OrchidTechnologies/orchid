@@ -165,6 +165,7 @@ int Main(int argc, const char *const argv[]) {
     struct ifreq ifr = {.ifr_flags = IFF_TUN | IFF_NO_PI};
     // XXX: NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     orc_assert(ioctl(file, TUNSETIFF, (void*)&ifr) >= 0);
+    // XXX: NOLINTNEXTLINE (modernize-avoid-c-arrays)
     char dev[IFNAMSIZ];
     // XXX: correct memory management in this code ASAP after NL
     // XXX: NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.strcpy,cppcoreguidelines-pro-type-union-access)

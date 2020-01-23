@@ -48,6 +48,7 @@
 using boost::multiprecision::uint256_t;
 
 namespace orc {
+// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     orc_assert(argc == 3);
     std::string host(argv[1]);
