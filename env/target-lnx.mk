@@ -52,15 +52,9 @@ more :=
 more += --sysroot $(CURDIR)/$(output)/sysroot
 more += --gcc-toolchain=$(CURDIR)/$(output)/sysroot/usr
 include $(pwd)/target-ndk.mk
-
-xflags += -nostdinc++
-xflags += -isystem $(CURDIR)/$(pwd)/libcxx/include
+include $(pwd)/target-cxx.mk
 
 lflags += -lrt
-
-source += $(wildcard $(pwd)/libcxx/src/*.cpp)
-c_libcxx += -D_LIBCPP_BUILDING_LIBRARY
-c_libcxx += -D__GLIBCXX__
 
 define _
 more/$(1) := 
