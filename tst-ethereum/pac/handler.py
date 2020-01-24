@@ -141,9 +141,10 @@ def fund_PAC(signer, total_usd, funder_pubkey, funder_privkey) -> str:
         escrow_usd = 0.5 * total_usd
 
     usd_per_oxt = get_usd_per_oxt()
+    oxt_per_usd = 1.0 / usd_per_oxt;
 
-    total_oxt = total_usd * usd_per_oxt
-    escrow_oxt = escrow_usd * usd_per_oxt
+    total_oxt = total_usd * oxt_per_usd
+    escrow_oxt = escrow_usd * oxt_per_usd
 
     print(
         f"Funding PAC  signer: {signer}, \
