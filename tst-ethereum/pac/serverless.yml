@@ -1,0 +1,49 @@
+service: pac-test
+app: pac
+org: orchid
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    zip: false
+    slim: false
+  myEnvironment:
+    TOKEN:
+      prod: "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb"
+      dev: "0xff9978B7b309021D39a76f52Be377F2B95D72394"
+    LOTTERY:
+      prod: "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"
+      dev: "0xE0dCc70880bee5579DD93C317d272a4121A80117"
+provider:
+  name: aws
+  stage: ${opt:stage,'dev'}
+  environment:
+    TOKEN: ${self:custom.myEnvironment.TOKEN.${self:provider.stage}}
+    LOTTERY: ${self:custom.myEnvironment.LOTTERY.${self:provider.stage}}
+    RECEIPT_SANDBOX: 'False'
+    AUTO_RETRY_WRONG_ENV_REQUEST: 'True'
+    WEB3_INFURA_PROJECT_ID: ${ssm:WEB3_INFURA_PROJECT_ID~true}
+    # WEB3_INFURA_PROJECT_SECRET: ${ssm:WEB3_INFURA_PROJECT_SECRET~true}
+  runtime: python3.6
+  region: us-west-2
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "ssm:GetParameter"
+      Resource:
+        - "arn:aws:ssm:us-west-2:985168550967:parameter/PAC_FUNDER_PUBKEY"
+        - "arn:aws:ssm:us-west-2:985168550967:parameter/PAC_FUNDER_PRIVKEY"
+        - "arn:aws:ssm:us-west-2:985168550967:parameter/WEB3_INFURA_PROJECT_ID"
+        - "arn:aws:ssm:us-west-2:985168550967:parameter/WEB3_INFURA_PROJECT_SECRET"
+functions:
+  pac:
+    handler: handler.main
+    events:
+      - http:
+          path: test
+          method: post
+plugins:
+  - serverless-python-requirements
+package:
+  exclude:
+    - venv/**
