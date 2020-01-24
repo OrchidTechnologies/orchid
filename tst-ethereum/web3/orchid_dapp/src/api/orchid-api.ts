@@ -100,12 +100,13 @@ export class OrchidAPI {
   }
 
   async updateSigners() {
-    if (this.wallet.value == null) {
+    let wallet = this.wallet.value;
+    if (wallet === undefined) {
       return;
     }
     try {
       console.log("getting signers");
-      let signers = await orchidGetSigners(this.wallet.value);
+      let signers = await orchidGetSigners(wallet);
       console.log("got signers");
       this.signersAvailable.next(signers);
 
