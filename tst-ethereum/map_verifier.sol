@@ -30,7 +30,7 @@ interface OrchidVerifier {
 }
 
 
-contract CuratedPAC is OrchidVerifier {
+contract OrchidListVerifier is OrchidVerifier {
 
     OrchidList internal curator_;
 
