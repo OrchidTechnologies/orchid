@@ -14,12 +14,16 @@ custom:
     LOTTERY:
       prod: "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"
       dev: "0xE0dCc70880bee5579DD93C317d272a4121A80117"
+    VERIFIER:
+      prod: "0x5D18Fe86BF42a3b2DdaEbDF7FD8Bc0578EAB71f7"
+      dev: "0x5D18Fe86BF42a3b2DdaEbDF7FD8Bc0578EAB71f7"
 provider:
   name: aws
   stage: ${opt:stage,'dev'}
   environment:
     TOKEN: ${self:custom.myEnvironment.TOKEN.${self:provider.stage}}
     LOTTERY: ${self:custom.myEnvironment.LOTTERY.${self:provider.stage}}
+    VERIFIER: ${self:custom.myEnvironment.VERIFIER.${self:provider.stage}}
     RECEIPT_SANDBOX: 'False'
     AUTO_RETRY_WRONG_ENV_REQUEST: 'True'
     WEB3_INFURA_PROJECT_ID: ${ssm:WEB3_INFURA_PROJECT_ID~true}

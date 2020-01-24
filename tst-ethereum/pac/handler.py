@@ -46,6 +46,7 @@ def fund_PAC_(
 
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
+    verifier_addr = w3.toChecksumAddress(os.environ['VERIFIER'])
 
     lottery_main = w3.eth.contract(
         abi=lottery_abi,
@@ -85,6 +86,23 @@ def fund_PAC_(
     approve_txn_hash = w3.eth.sendRawTransaction(
         approve_txn_signed.rawTransaction)
     print(f"Submitted approve transaction with hash: {approve_txn_hash.hex()}")
+
+    nonce = nonce + 1
+    print(f"Funder nonce: {nonce}")
+
+    print(f"Assembling bind transaction:")
+    bind_txn = lottery_main.functions.bind(signer, verifier_addr, w3.toBytes(0)
+        ).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 200000, 'gasPrice': w3.toWei('8', 'gwei'), 'nonce': nonce,}
+    )
+    print(bind_txn)
+
+    print(f"Funder signed transaction:")
+    bind_txn_signed = w3.eth.account.sign_transaction(bind_txn, private_key=funder_privkey)
+    print(bind_txn_signed)
+
+    print(f"Submitting bind transaction:")
+    bind_txn_hash = w3.eth.sendRawTransaction(bind_txn_signed.rawTransaction)
+    print(f"Submitted bind transaction with hash: {bind_txn_hash.hex()}")
 
     nonce = nonce + 1
     print(f"Funder nonce: {nonce}")
