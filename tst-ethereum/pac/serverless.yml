@@ -35,10 +35,10 @@ provider:
       Action:
         - "ssm:GetParameter"
       Resource:
-        - "arn:aws:ssm:us-west-2:985168550967:parameter/PAC_FUNDER_PUBKEY"
-        - "arn:aws:ssm:us-west-2:985168550967:parameter/PAC_FUNDER_PRIVKEY"
-        - "arn:aws:ssm:us-west-2:985168550967:parameter/WEB3_INFURA_PROJECT_ID"
-        - "arn:aws:ssm:us-west-2:985168550967:parameter/WEB3_INFURA_PROJECT_SECRET"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/PAC_FUNDER_PUBKEY"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/PAC_FUNDER_PRIVKEY"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_ID"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_SECRET"
 functions:
   pac:
     handler: handler.main
@@ -47,6 +47,7 @@ functions:
           path: test
           method: post
 plugins:
+  - serverless-pseudo-parameters
   - serverless-python-requirements
 package:
   exclude:

@@ -9,6 +9,7 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
+    "serverless-pseudo-parameters": "^2.5.0",
     "serverless-python-requirements": "^5.0.1"
   }
 }
