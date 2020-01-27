@@ -1,25 +1,28 @@
 import {
   Wallet,
   LotteryPot,
-  Signer,
-  orchidGetWallet,
-  orchidGetLotteryPot,
-  orchidInitEthereum,
-  orchidGetSigners
+  Signer, OrchidEthereumAPI,
 } from "./orchid-eth";
 import {BehaviorSubject, Observable, of} from "rxjs";
 import {filter, flatMap, map, shareReplay} from "rxjs/operators";
 import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
+// import {MockQuickSetup} from "./orchid-eth-mock";
 
 export enum WalletStatus {
   NoWallet, NotConnected, Connected, Error, WrongNetwork
 }
 
+/// The high level API for observation of a user's Ethereum wallet and lottery pot state.
 export class OrchidAPI {
   private static instance: OrchidAPI;
 
+  // Specify the Orchid Ethereum api or a mock here for testing.
+  // private static OrchidEthereumAPIClass = MockQuickSetup;
+  private static OrchidEthereumAPIClass = OrchidEthereumAPI;
+
   private constructor() {
+    this.eth = new OrchidAPI.OrchidEthereumAPIClass();
   }
 
   static shared() {
@@ -28,6 +31,8 @@ export class OrchidAPI {
     }
     return OrchidAPI.instance;
   }
+
+  eth: OrchidEthereumAPI;
 
   // Wallet connection or error status.  Wallet.Error may indicate the lack of a valid web3
   // environment or the failure of core contract calls.
@@ -60,7 +65,7 @@ export class OrchidAPI {
         return of(null); // flatMap requires observables, even for null
       }
       try {
-        return orchidGetLotteryPot(signer.wallet, signer);
+        return this.eth.orchidGetLotteryPot(signer.wallet, signer);
       } catch (err) {
         console.log("lotteryPot: Error getting lottery pot data for signer: ", signer);
         this.walletStatus.next(WalletStatus.Error);
@@ -89,7 +94,7 @@ export class OrchidAPI {
         this.init(false);
       } : undefined;
 
-    let status = await orchidInitEthereum(propsUpdate);
+    let status = await this.eth.orchidInitEthereum(propsUpdate);
     if (status === WalletStatus.Connected) {
       await this.updateWallet();
       await this.updateSigners();
@@ -105,8 +110,8 @@ export class OrchidAPI {
       return;
     }
     try {
-      console.log("getting signers");
-      let signers = await orchidGetSigners(wallet);
+      console.log("get signers");
+      let signers = await this.eth.orchidGetSigners(wallet);
       console.log("got signers");
       this.signersAvailable.next(signers);
 
@@ -130,7 +135,7 @@ export class OrchidAPI {
 
   async updateWallet() {
     try {
-      this.wallet.next(await orchidGetWallet());
+      this.wallet.next(await this.eth.orchidGetWallet());
     } catch (err) {
       console.log("Error updating wallet: ", err);
       this.walletStatus.next(WalletStatus.Error);
@@ -187,6 +192,4 @@ export class OrchidAPI {
     return (typeof window.orientation !== "undefined");
   };
 }
-
-
 

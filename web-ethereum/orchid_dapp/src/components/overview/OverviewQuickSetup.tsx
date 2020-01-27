@@ -6,7 +6,6 @@ import {OverviewLoading, OverviewProps} from "./Overview";
 import {
   keikiToOxt,
   keikiToOxtString,
-  orchidAddFunds, orchidCreateSigner,
   oxtToKeiki
 } from "../../api/orchid-eth";
 import {Divider, errorClass, Visibility} from "../../util/util";
@@ -87,10 +86,10 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
       try {
         // Create and save the new signer key
         console.log("create signer key");
-        let newSigner = orchidCreateSigner(_walletCapture);
+        let newSigner = api.eth.orchidCreateSigner(_walletCapture);
         console.log("add funds");
 
-        let txId = await orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow);
+        let txId = await api.eth.orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow);
         console.log("add funds complete");
         await api.updateSigners();
         let tx = TransactionStatus.result(txId, "Transaction Complete!", newSigner);

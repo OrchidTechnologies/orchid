@@ -2,7 +2,6 @@ import React, {Component} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {
   isEthAddress, oxtToKeiki, keikiToOxtString,
-  orchidWithdrawFunds, orchidWithdrawFundsAndEscrow
 } from "../api/orchid-eth";
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
@@ -62,16 +61,17 @@ export class WithdrawFunds extends Component {
     try {
       let txId;
       if (this.state.withdrawAll) {
-        txId = await orchidWithdrawFundsAndEscrow(wallet.address, signer.address, targetAddress);
+        txId = await api.eth.orchidWithdrawFundsAndEscrow(wallet.address, signer.address, targetAddress);
       } else {
         if (withdrawAmount == null) {
           return; // Shouldn't get here.
         }
         const withdrawWei = oxtToKeiki(withdrawAmount);
-        txId = await orchidWithdrawFunds(wallet.address, signer.address, targetAddress, withdrawWei);
+        txId = await api.eth.orchidWithdrawFunds(wallet.address, signer.address, targetAddress, withdrawWei);
       }
       await api.updateLotteryPot();
       await api.updateWallet();
+      await api.updateSigners();
       this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
       api.updateTransactions().then();
     } catch (err) {

@@ -48,8 +48,8 @@ export class Signer {
     this.secret = secret;
   }
 
-  toConfigString() : string|undefined {
-    if (this.secret == undefined) {
+  toConfigString(): string | undefined {
+    if (this.secret === undefined) {
       return undefined;
     }
     return `account={protocol:"orchid",funder:"${this.wallet.address}",secret:"${this.secret}"}`;
@@ -91,293 +91,299 @@ export class LotteryPot {
   }
 }
 
-// Init the Web3 environment and the Orchid contracts
-export function orchidInitEthereum(providerUpdateCallback?: (props: any) => void): Promise<WalletStatus> {
-  return new Promise(function (resolve, reject) {
-    (async () => {
-      if (window.ethereum) {
-        window.ethereum.autoRefreshOnNetworkChange = false;
-        web3 = new Web3(window.ethereum);
-        try {
-          await window.ethereum.enable();
-        } catch (error) {
-          resolve(WalletStatus.NotConnected);
-          console.log("User denied account access...");
-        }
-      } else if (web3) {
-        console.log("Legacy dapp browser.");
-        web3 = new Web3(web3.currentProvider);
-      } else {
-        console.log('Non-Ethereum browser.');
-        resolve(WalletStatus.NoWallet);
-      }
+export class OrchidEthereumAPI {
 
-      let networkNumber = await web3.eth.net.getId();
-      console.log("network number: ", networkNumber);
-      if (networkNumber !== 1) {
-        resolve(WalletStatus.WrongNetwork);
-      }
-
-      // Subscribe to provider account changes
-      if (providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore) {
-        // Note: The provider update callback should only be passed once, but to be safe.
-        if (web3ProviderListener) {
+  /// Init the Web3 environment and the Orchid contracts
+  orchidInitEthereum(providerUpdateCallback?: (props: any) => void): Promise<WalletStatus> {
+    return new Promise(function (resolve, reject) {
+      (async () => {
+        if (window.ethereum) {
+          window.ethereum.autoRefreshOnNetworkChange = false;
+          web3 = new Web3(window.ethereum);
           try {
-            web3ProviderListener.unsubscribe();
-            console.log("existing provider listener successfully unsubscribed");
-          } catch (err) {
-            console.log("failed to unsubscribe existing provider listener");
+            await window.ethereum.enable();
+          } catch (error) {
+            resolve(WalletStatus.NotConnected);
+            console.log("User denied account access...");
           }
+        } else if (web3) {
+          console.log("Legacy dapp browser.");
+          web3 = new Web3(web3.currentProvider);
+        } else {
+          console.log('Non-Ethereum browser.');
+          resolve(WalletStatus.NoWallet);
         }
-        web3ProviderListener = (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
-          providerUpdateCallback && providerUpdateCallback(props);
-        });
-      }
 
-      try {
-        OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
-        OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
-      } catch (err) {
-        console.log("Error constructing contracts");
-        resolve(WalletStatus.Error);
-      }
+        let networkNumber = await web3.eth.net.getId();
+        console.log("network number: ", networkNumber);
+        if (networkNumber !== 1) {
+          resolve(WalletStatus.WrongNetwork);
+        }
 
-      (window as any).web3 = web3; // replace any injected version
-      resolve(WalletStatus.Connected);
-    })();
-  });
-}
+        // Subscribe to provider account changes
+        if (providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore) {
+          // Note: The provider update callback should only be passed once, but to be safe.
+          if (web3ProviderListener) {
+            try {
+              web3ProviderListener.unsubscribe();
+              console.log("existing provider listener successfully unsubscribed");
+            } catch (err) {
+              console.log("failed to unsubscribe existing provider listener");
+            }
+          }
+          web3ProviderListener = (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
+            providerUpdateCallback && providerUpdateCallback(props);
+          });
+        }
 
-/// Get the user's ETH wallet balance and Keiki token balance (1e18 per OXT).
-export async function orchidGetWallet(): Promise<Wallet> {
-  console.log("orchid get wallet");
-  const accounts = await web3.eth.getAccounts();
-  const wallet = new Wallet();
-  wallet.address = accounts[0];
-  try {
-    wallet.ethBalance = BigInt(await web3.eth.getBalance(accounts[0]));
-  } catch (err) {
-    console.log("Error getting eth balance", err);
-    throw err;
+        try {
+          OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
+          OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
+        } catch (err) {
+          console.log("Error constructing contracts");
+          resolve(WalletStatus.Error);
+        }
+
+        (window as any).web3 = web3; // replace any injected version
+        resolve(WalletStatus.Connected);
+      })();
+    });
   }
-  try {
-    wallet.oxtBalance = BigInt(await OrchidContracts.token.methods.balanceOf(accounts[0]).call());
-  } catch (err) {
-    console.log("Error getting oxt balance", err);
-    throw err;
+
+  /// Get the user's ETH wallet balance and Keiki token balance (1e18 per OXT).
+  async orchidGetWallet(): Promise<Wallet> {
+    console.log("orchid get wallet");
+    const accounts = await web3.eth.getAccounts();
+    const wallet = new Wallet();
+    wallet.address = accounts[0];
+    try {
+      wallet.ethBalance = BigInt(await web3.eth.getBalance(accounts[0]));
+    } catch (err) {
+      console.log("Error getting eth balance", err);
+      throw err;
+    }
+    try {
+      wallet.oxtBalance = BigInt(await OrchidContracts.token.methods.balanceOf(accounts[0]).call());
+    } catch (err) {
+      console.log("Error getting oxt balance", err);
+      throw err;
+    }
+    return wallet;
   }
-  return wallet;
-}
 
-export async function orchidGetSigners(wallet: Wallet): Promise<Signer []> {
-  let signerAddresses;
-  try {
-    signerAddresses = await OrchidContracts.lottery.methods.keys(wallet.address).call();
-  } catch (err) {
-    console.log("Error getting signers list", err);
-    throw err;
+  async orchidGetSigners(wallet: Wallet): Promise<Signer []> {
+    let signerAddresses;
+    try {
+      signerAddresses = await OrchidContracts.lottery.methods.keys(wallet.address).call();
+    } catch (err) {
+      console.log("Error getting signers list", err);
+      throw err;
+    }
+    console.log("orchidGetSigners: orchid signers: ", signerAddresses);
+
+    // Add the signer keys for any signers created in this wallet.
+    let signerKeys = this.orchidGetSignerKeys() as EthereumKey [];
+    return signerAddresses.map((address: Address) => {
+      let found = Array.from(signerKeys).find(key => key.address === address);
+      let secret = found === undefined ? undefined : found.privateKey;
+      return new Signer(wallet, address, secret);
+    });
   }
-  console.log("orchid signers: ", signerAddresses);
 
-  // Add the signer keys for any signers created in this wallet.
-  let signerKeys = orchidGetSignerKeys() as EthereumKey [];
-  return signerAddresses.map((address: Address) => {
-    let found = Array.from(signerKeys).find(key => key.address === address);
-    let secret = found === undefined ? undefined : found.privateKey;
-    return new Signer(wallet, address, secret);
-  });
-}
+  /// Get the Orchid signer keys wallet in local storage.
+  orchidGetSignerKeys(): Web3Wallet {
+    console.log("load signer keys wallet");
+    let keys = web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
+    console.log("loaded signer keys wallet");
+    return keys;
+  }
 
-/// Get the Orchid signer keys wallet in local storage.
-function orchidGetSignerKeys(): Web3Wallet {
-  return web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
-}
+  /// Create a new signer keypair and save it in the Orchid signer keys wallet in local storage.
+  orchidCreateSigner(wallet: Wallet): Signer {
+    let signersWallet = this.orchidGetSignerKeys();
+    let signerAccount = web3.eth.accounts.create();
+    signersWallet.add(signerAccount);
+    signersWallet.save("", ORCHID_SIGNER_KEYS_WALLET);
+    return new Signer(wallet, signerAccount.address, signerAccount.privateKey);
+  }
 
-/// Create a new signer keypair and save it in the Orchid signer keys wallet in local storage.
-export function orchidCreateSigner(wallet: Wallet): Signer {
-  let signersWallet = orchidGetSignerKeys();
-  let signerAccount = web3.eth.accounts.create();
-  signersWallet.add(signerAccount);
-  signersWallet.save("", ORCHID_SIGNER_KEYS_WALLET);
-  return new Signer(wallet, signerAccount.address, signerAccount.privateKey);
-}
+  /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified lottery pot address.
+  async orchidAddFunds(funder: Address, signer: Address, amount: BigInt, escrow: BigInt): Promise<string> {
+    console.log("Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
+    //return fakeTx(false);
+    const amount_value = BigInt(amount); // Force our polyfill BigInt?
+    const escrow_value = BigInt(escrow);
+    const total = amount_value + escrow_value;
 
-/// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified lottery pot address.
-export async function orchidAddFunds(funder: Address, signer: Address, amount: BigInt, escrow: BigInt): Promise<string> {
-  console.log("Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
-  //return fakeTx(false);
-  const amount_value = BigInt(amount); // Force our polyfill BigInt?
-  const escrow_value = BigInt(escrow);
-  const total = amount_value + escrow_value;
+    async function doApproveTx() {
+      return new Promise<string>(function (resolve, reject) {
+        OrchidContracts.token.methods.approve(
+          OrchidContracts.lottery_addr(),
+          total.toString()
+        ).send({
+          from: funder,
+          gas: OrchidContracts.token_approval_max_gas,
+        })
+          .on("transactionHash", (hash) => {
+            console.log("Approval hash: ", hash);
+            resolve(hash);
+          })
+          .on('confirmation', (confirmationNumber, receipt) => {
+            console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
+          })
+          .on('error', (err) => {
+            console.log("Approval error: ", JSON.stringify(err));
+            // If there is an error in the approval assume Funding will fail.
+            reject(err['message']);
+          });
+      });
+    }
 
-  async function doApproveTx() {
+    async function doFundTx() {
+      console.log("do fund tx");
+      return new Promise<string>(function (resolve, reject) {
+        OrchidContracts.lottery.methods.push(
+          signer,
+          total.toString(),
+          escrow_value.toString()
+        ).send({
+          from: funder,
+          gas: OrchidContracts.lottery_push_max_gas,
+        })
+          .on("transactionHash", (hash) => {
+            console.log("Fund hash: ", hash);
+          })
+          .on('confirmation', (confirmationNumber, receipt) => {
+            console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
+            // Wait for confirmations on the funding tx.
+            const requiredConfirmations = 2;
+            if (confirmationNumber >= requiredConfirmations) {
+              const hash = receipt['transactionHash'];
+              resolve(hash);
+            } else {
+              console.log("waiting for more confirmations...");
+            }
+          })
+          .on('error', (err) => {
+            console.log("Fund error: ", JSON.stringify(err));
+            reject(err['message']);
+          });
+      });
+    }
+
+    // The approval tx resolves immediately after the user submits.
+    await doApproveTx();
+    // The UI monitors the funding tx.
+    return doFundTx();
+  }
+
+  /// Evaluate an Orchid method call, returning the confirmation transaction has or error.
+  private evalOrchidTx<T>(promise: PromiEvent<T>): Promise<string> {
     return new Promise<string>(function (resolve, reject) {
-      OrchidContracts.token.methods.approve(
-        OrchidContracts.lottery_addr(),
-        total.toString()
-      ).send({
-        from: funder,
-        gas: OrchidContracts.token_approval_max_gas,
-      })
+      promise
         .on("transactionHash", (hash) => {
-          console.log("Approval hash: ", hash);
+          console.log("hash: ", hash);
+        })
+        .on('confirmation', (confirmationNumber, receipt) => {
+          console.log("confirmation", confirmationNumber, JSON.stringify(receipt));
+          // Wait for one confirmation on the tx.
+          const hash = receipt['transactionHash'];
           resolve(hash);
         })
-        .on('confirmation', (confirmationNumber, receipt) => {
-          console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
-        })
         .on('error', (err) => {
-          console.log("Approval error: ", JSON.stringify(err));
-          // If there is an error in the approval assume Funding will fail.
-          reject(err['message']);
+          console.log("error: ", JSON.stringify(err));
+          reject(err);
         });
     });
   }
 
-  async function doFundTx() {
-    console.log("do fund tx");
-    return new Promise<string>(function (resolve, reject) {
-      OrchidContracts.lottery.methods.push(
-        signer,
-        total.toString(),
-        escrow_value.toString()
-      ).send({
+  async orchidMoveFundsToEscrow(funder: Address, signer: Address, amount: BigInt): Promise<string> {
+    console.log(`moveFunds amount: ${amount.toString()}`);
+    return this.evalOrchidTx(
+      OrchidContracts.lottery.methods.move(signer, amount.toString()).send({
         from: funder,
-        gas: OrchidContracts.lottery_push_max_gas,
+        gas: OrchidContracts.lottery_move_max_gas,
       })
-        .on("transactionHash", (hash) => {
-          console.log("Fund hash: ", hash);
-        })
-        .on('confirmation', (confirmationNumber, receipt) => {
-          console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
-          // Wait for confirmations on the funding tx.
-          const requiredConfirmations = 2;
-          if (confirmationNumber >= requiredConfirmations) {
-            const hash = receipt['transactionHash'];
-            resolve(hash);
-          } else {
-            console.log("waiting for more confirmations...");
-          }
-        })
-        .on('error', (err) => {
-          console.log("Fund error: ", JSON.stringify(err));
-          reject(err['message']);
-        });
-    });
+    );
   }
 
-  // The approval tx resolves immediately after the user submits.
-  await doApproveTx();
-  // The UI monitors the funding tx.
-  return doFundTx();
-}
-
-/// Evaluate an Orchid method call, returning the confirmation transaction has or error.
-function evalOrchidTx<T>(promise: PromiEvent<T>): Promise<string> {
-  return new Promise<string>(function (resolve, reject) {
-    promise
-      .on("transactionHash", (hash) => {
-        console.log("hash: ", hash);
+  async orchidWithdrawFunds(funder: Address, signer: Address, targetAddress: Address, amount: BigInt): Promise<string> {
+    console.log(`withdrawFunds to: ${targetAddress} amount: ${amount}`);
+    // pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external {
+    let autolock = true;
+    let escrow = BigInt(0);
+    return this.evalOrchidTx(
+      OrchidContracts.lottery.methods.pull(signer, targetAddress, autolock, amount.toString(), escrow.toString()).send({
+        from: funder,
+        gas: OrchidContracts.lottery_pull_amount_max_gas,
       })
-      .on('confirmation', (confirmationNumber, receipt) => {
-        console.log("confirmation", confirmationNumber, JSON.stringify(receipt));
-        // Wait for one confirmation on the tx.
-        const hash = receipt['transactionHash'];
-        resolve(hash);
-      })
-      .on('error', (err) => {
-        console.log("error: ", JSON.stringify(err));
-        reject(err);
-      });
-  });
-}
-
-export async function orchidMoveFundsToEscrow(funder: Address, signer: Address, amount: BigInt): Promise<string> {
-  console.log(`moveFunds amount: ${amount.toString()}`);
-  return evalOrchidTx(
-    OrchidContracts.lottery.methods.move(signer, amount.toString()).send({
-      from: funder,
-      gas: OrchidContracts.lottery_move_max_gas,
-    })
-  );
-}
-
-export async function orchidWithdrawFunds(funder: Address, signer: Address, targetAddress: Address, amount: BigInt): Promise<string> {
-  console.log(`withdrawFunds to: ${targetAddress} amount: ${amount}`);
-  // pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external {
-  let autolock = true;
-  let escrow = BigInt(0);
-  return evalOrchidTx(
-    OrchidContracts.lottery.methods.pull(signer, targetAddress, autolock, amount.toString(), escrow.toString()).send({
-      from: funder,
-      gas: OrchidContracts.lottery_pull_amount_max_gas,
-    })
-  );
-}
-
-/// Pull all funds and escrow, subject to lock time.
-export async function orchidWithdrawFundsAndEscrow(funder: Address, signer: Address, targetAddress: Address): Promise<string> {
-  console.log("withdrawFundsAndEscrow");
-  let autolock = true;
-  return evalOrchidTx(
-    OrchidContracts.lottery.methods.yank(signer, targetAddress, autolock).send({
-      from: funder,
-      gas: OrchidContracts.lottery_pull_all_max_gas
-    })
-  );
-}
-
-/// Clear the unlock / warn time period.
-export async function orchidLock(funder: Address, signer: Address): Promise<string> {
-  return evalOrchidTx(
-    OrchidContracts.lottery.methods.lock(signer).send({
-      from: funder,
-      gas: OrchidContracts.lottery_lock_max_gas
-    })
-  );
-}
-
-/// Start the unlock / warn time period (one day in the future).
-export async function orchidUnlock(funder: Address, signer: Address): Promise<string> {
-  return evalOrchidTx(
-    OrchidContracts.lottery.methods.warn(signer).send({
-      from: funder,
-      gas: OrchidContracts.lottery_warn_max_gas
-    })
-  );
-}
-
-/// Get the lottery pot balance and escrow amount for the specified address.
-export async function orchidGetLotteryPot(funder: Wallet, signer: Signer): Promise<LotteryPot> {
-  //console.log("get lottery pot for signer: ", signer);
-  let result = await OrchidContracts.lottery.methods
-    .look(funder.address, signer.address)
-    .call({from: funder.address});
-  if (result == null || result._length < 3) {
-    console.log("get lottery pot failed");
-    throw new Error("Unable to get lottery pot");
+    );
   }
-  const balance: BigInt = result[0];
-  const escrow: BigInt = result[1];
-  const unlock: number = Number(result[2]);
-  const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
-  console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
-  return new LotteryPot(signer, balance, escrow, unlockDate);
+
+  /// Pull all funds and escrow, subject to lock time.
+  async orchidWithdrawFundsAndEscrow(funder: Address, signer: Address, targetAddress: Address): Promise<string> {
+    console.log("withdrawFundsAndEscrow");
+    let autolock = true;
+    return this.evalOrchidTx(
+      OrchidContracts.lottery.methods.yank(signer, targetAddress, autolock).send({
+        from: funder,
+        gas: OrchidContracts.lottery_pull_all_max_gas
+      })
+    );
+  }
+
+  /// Clear the unlock / warn time period.
+  async orchidLock(funder: Address, signer: Address): Promise<string> {
+    return this.evalOrchidTx(
+      OrchidContracts.lottery.methods.lock(signer).send({
+        from: funder,
+        gas: OrchidContracts.lottery_lock_max_gas
+      })
+    );
+  }
+
+  /// Start the unlock / warn time period (one day in the future).
+  async orchidUnlock(funder: Address, signer: Address): Promise<string> {
+    return this.evalOrchidTx(
+      OrchidContracts.lottery.methods.warn(signer).send({
+        from: funder,
+        gas: OrchidContracts.lottery_warn_max_gas
+      })
+    );
+  }
+
+  /// Get the lottery pot balance and escrow amount for the specified address.
+  async orchidGetLotteryPot(funder: Wallet, signer: Signer): Promise<LotteryPot> {
+    //console.log("get lottery pot for signer: ", signer);
+    let result = await OrchidContracts.lottery.methods
+      .look(funder.address, signer.address)
+      .call({from: funder.address});
+    if (result == null || result._length < 3) {
+      console.log("get lottery pot failed");
+      throw new Error("Unable to get lottery pot");
+    }
+    const balance: BigInt = result[0];
+    const escrow: BigInt = result[1];
+    const unlock: number = Number(result[2]);
+    const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
+    console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
+    return new LotteryPot(signer, balance, escrow, unlockDate);
+  }
 }
 
 export function isEthAddress(str: string): boolean {
   return web3.utils.isAddress(str);
 }
 
-// Convert a keiki value to an OXT String rounded to the specified
-// number of decimal places.
+/// Convert a keiki value to an OXT String rounded to the specified
+/// number of decimal places.
 export function keikiToOxtString(keiki: BigInt, decimals: number) {
   decimals = Math.round(decimals);
   let val: number = keikiToOxt(keiki);
   return val.toFixed(decimals).toString();
 }
 
-// Convert keiki to an (approximate) OXT float value
+/// Convert keiki to an (approximate) OXT float value
 export function keikiToOxt(keiki: BigInt): number {
   return parseFloat(web3.utils.fromWei(keiki.toString()));
 }
@@ -390,16 +396,3 @@ export function oxtToKeikiString(oxt: number): string {
   return oxtToKeiki(oxt).toString();
 }
 
-// TEST UI ONLY:
-/*
-async function fakeTx(fail: boolean): Promise<string> {
-  return new Promise<string>(async function (resolve, reject) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (fail) {
-      reject("tx error");
-    } else {
-      resolve('0x12341234123412341234123');
-    }
-  });
-}
- */

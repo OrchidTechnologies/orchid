@@ -1,14 +1,12 @@
 import React, {FC, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {
-  isEthAddress, orchidAddFunds, oxtToKeiki, keikiToOxtString
-} from "../api/orchid-eth";
 import {Divider, errorClass, parseFloatSafe, Visibility} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
 import {Address} from "../api/orchid-types";
+import {isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 interface AddFundsProps {
@@ -61,7 +59,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       const amountWei = oxtToKeiki(addAmount);
       const escrowWei = oxtToKeiki(addEscrow);
 
-      let txId = await orchidAddFunds(walletAddress, signerAddress, amountWei, escrowWei);
+      let txId = await api.eth.orchidAddFunds(walletAddress, signerAddress, amountWei, escrowWei);
       if (props.createAccount) {
         await api.updateSigners();
       } else {

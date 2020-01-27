@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {LockStatus} from "./LockStatus";
-import {LotteryPot, orchidLock, orchidUnlock} from "../api/orchid-eth";
+import {LotteryPot} from "../api/orchid-eth";
 import {OrchidAPI} from "../api/orchid-api";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {Container} from "react-bootstrap";
@@ -36,8 +36,8 @@ export class LockFunds extends Component {
     this.setState({tx: TransactionStatus.running()});
     try {
       let txId = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ?
-        await orchidLock(wallet.address, signer.address) :
-        await orchidUnlock(wallet.address, signer.address);
+        await api.eth.orchidLock(wallet.address, signer.address) :
+        await api.eth.orchidUnlock(wallet.address, signer.address);
       this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
       api.updateLotteryPot().then();
     } catch (err) {
