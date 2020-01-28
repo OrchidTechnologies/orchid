@@ -10,7 +10,7 @@ jobs:
     steps:
 
     - name: brew install
-      run: brew install meson autoconf automake libtool
+      run: brew install meson autoconf automake libtool awscli
     - name: brew link
       run: brew link --force gettext
     - name: pip install
