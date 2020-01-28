@@ -35,6 +35,7 @@ jobs:
     - name: make macOS client
       run: |
         make -j3 -C cli-shared
+        aws configure set default.s3.multipart_threshold 1GB
         aws s3 cp --acl public-read ./cli-shared/out-mac/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-mac/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchid
         aws s3 cp --acl public-read ./cli-shared/out-mac/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-mac/LATEST/orchid
     - uses: actions/upload-artifact@v1
@@ -45,6 +46,7 @@ jobs:
     - name: make macOS server
       run: |
         make -j3 -C srv-shared
+        aws configure set default.s3.multipart_threshold 1GB
         aws s3 cp --acl public-read ./srv-shared/out-mac/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-mac/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd
         aws s3 cp --acl public-read ./srv-shared/out-mac/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-mac/LATEST/orchidd
     - uses: actions/upload-artifact@v1
@@ -82,6 +84,7 @@ jobs:
     - name: make Linux client
       run: |
         make -j3 -C cli-shared debug=crossndk
+        aws configure set default.s3.multipart_threshold 1GB
         aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchid
         aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/LATEST/orchid
     - uses: actions/upload-artifact@v1
@@ -93,6 +96,7 @@ jobs:
     - name: make Linux server
       run: |
         make -j3 -C srv-shared debug=crossndk
+        aws configure set default.s3.multipart_threshold 1GB
         aws s3 cp --acl public-read ./srv-shared/out-lnx/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-lnx/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd
         aws s3 cp --acl public-read ./srv-shared/out-lnx/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-lnx/LATEST/orchidd
     - uses: actions/upload-artifact@v1
@@ -135,6 +139,7 @@ jobs:
     - name: make Windows server
       run: |
         make -j3 -C srv-shared target=win
+        aws configure set default.s3.multipart_threshold 1GB
         aws s3 cp --acl public-read ./srv-shared/out-win/x86_64/orchidd.exe s3://orchid-github-actions-artifacts/orchidd-w64/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd.exe
         aws s3 cp --acl public-read ./srv-shared/out-win/x86_64/orchidd.exe s3://orchid-github-actions-artifacts/orchidd-w64/LATEST/orchidd.exe
     - uses: actions/upload-artifact@v1
@@ -172,6 +177,7 @@ jobs:
     - name: make Android APK
       run: |
         make -j3 -C app-android
+        aws configure set default.s3.multipart_threshold 1GB
         aws s3 cp --acl public-read ./app-android/out-and/Orchid.apk s3://orchid-github-actions-artifacts/orchid-apk/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/Orchid.apk
         aws s3 cp --acl public-read ./app-android/out-and/Orchid.apk s3://orchid-github-actions-artifacts/orchid-apk/LATEST/Orchid.apk
     - uses: actions/upload-artifact@v1
