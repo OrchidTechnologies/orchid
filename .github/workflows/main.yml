@@ -10,7 +10,7 @@ jobs:
     steps:
 
     - name: brew install
-      run: brew install meson autoconf automake libtool awscli
+      run: brew install meson autoconf automake libtool
     - name: brew link
       run: brew link --force gettext
     - name: pip install
@@ -25,30 +25,15 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-2
-
     - name: make macOS client
-      run: |
-        make -j3 -C cli-shared
-        aws configure set default.s3.multipart_threshold 1GB
-        aws s3 cp --acl public-read ./cli-shared/out-mac/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-mac/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchid
-        aws s3 cp --acl public-read ./cli-shared/out-mac/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-mac/LATEST/orchid
+      run: make -j3 -C cli-shared
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-mac
         path: cli-shared/out-mac/x86_64/orchid
 
     - name: make macOS server
-      run: |
-        make -j3 -C srv-shared
-        aws configure set default.s3.multipart_threshold 1GB
-        aws s3 cp --acl public-read ./srv-shared/out-mac/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-mac/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd
-        aws s3 cp --acl public-read ./srv-shared/out-mac/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-mac/LATEST/orchidd
+      run: make -j3 -C srv-shared
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-mac
@@ -74,30 +59,15 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-2
-
     - name: make Linux client
-      run: |
-        make -j3 -C cli-shared debug=crossndk
-        aws configure set default.s3.multipart_threshold 1GB
-        aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchid
-        aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/LATEST/orchid
+      run: make -j3 -C cli-shared debug=crossndk
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
         path: cli-shared/out-lnx/x86_64/orchid
 
     - name: make Linux server
-      run: |
-        make -j3 -C srv-shared debug=crossndk
-        aws configure set default.s3.multipart_threshold 1GB
-        aws s3 cp --acl public-read ./srv-shared/out-lnx/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-lnx/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd
-        aws s3 cp --acl public-read ./srv-shared/out-lnx/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-lnx/LATEST/orchidd
+      run: make -j3 -C srv-shared debug=crossndk
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx
@@ -125,22 +95,11 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-2
-
     - name: make Windows test
       run: make -j3 -C tst-network target=win
 
     - name: make Windows server
-      run: |
-        make -j3 -C srv-shared target=win
-        aws configure set default.s3.multipart_threshold 1GB
-        aws s3 cp --acl public-read ./srv-shared/out-win/x86_64/orchidd.exe s3://orchid-github-actions-artifacts/orchidd-w64/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd.exe
-        aws s3 cp --acl public-read ./srv-shared/out-win/x86_64/orchidd.exe s3://orchid-github-actions-artifacts/orchidd-w64/LATEST/orchidd.exe
+      run: make -j3 -C srv-shared target=win
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-w64
@@ -166,19 +125,8 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-2
-
     - name: make Android APK
-      run: |
-        make -j3 -C app-android
-        aws configure set default.s3.multipart_threshold 1GB
-        aws s3 cp --acl public-read ./app-android/out-and/Orchid.apk s3://orchid-github-actions-artifacts/orchid-apk/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/Orchid.apk
-        aws s3 cp --acl public-read ./app-android/out-and/Orchid.apk s3://orchid-github-actions-artifacts/orchid-apk/LATEST/Orchid.apk
+      run: make -j3 -C app-android
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-apk
