@@ -88,7 +88,6 @@ jobs:
         aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchid
         aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/LATEST/orchid
     - uses: actions/upload-artifact@v1
-    - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
         path: cli-shared/out-lnx/x86_64/orchid
