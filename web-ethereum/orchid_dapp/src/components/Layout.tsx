@@ -1,6 +1,16 @@
 import React, {FC, useContext, useEffect, useState} from "react";
 import {
-  Button, Col, Container, Image, ListGroup, ListGroupItem, Nav, Navbar, OverlayTrigger, Popover, Row
+  Button,
+  Col,
+  Container,
+  Image,
+  ListGroup,
+  ListGroupItem,
+  Nav,
+  Navbar,
+  OverlayTrigger,
+  Popover,
+  Row
 } from "react-bootstrap";
 import {Transactions} from "./Transactions";
 import {AddFunds} from "./AddFunds";
@@ -24,12 +34,15 @@ import {Divider, hashPath, Visibility} from "../util/util";
 import {OrchidAPI, WalletStatus} from "../api/orchid-api";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 import {Overview} from "./overview/Overview";
+import {TransactionPanel} from "./TransactionPanel";
+import {OrchidTransactionDetail} from "../api/orchid-tx";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   const [route, setRoute] = useState(pathToRoute(hashPath()) || Route.Overview);
   const [navEnabledState, setNavEnabledState] = useState(true);
   const [isNewUser, setIsNewUser] = useState(true);
+  const [orchidTransactions, setOrchidTransactions] = useState<OrchidTransactionDetail[]>([]);
 
   const moreMenuItems = new Map<Route, string>([
     [Route.Balances, "Info"],
@@ -46,10 +59,18 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
       setIsNewUser(isNew);
       //setNavEnabledState(!isNew);
     });
+    let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
+      setOrchidTransactions(txs);
+    });
     return () => {
       newUserSub.unsubscribe();
+      orchidTransactionsSub.unsubscribe();
     };
   }, []);
+
+  let bannerTransactions = orchidTransactions.map(orcTx => {
+    return (<Row key={orcTx.hash}><TransactionPanel tx={orcTx}/></Row>);
+  });
 
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
@@ -94,6 +115,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Divider/>
           </Col>
         </Row>
+        {bannerTransactions}
         <Row className="page-content">
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>

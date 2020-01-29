@@ -1,28 +1,16 @@
-import {
-  Wallet,
-  LotteryPot,
-  Signer, OrchidEthereumAPI,
-} from "./orchid-eth";
+/* eslint-disable @typescript-eslint/no-use-before-define */
+import {Wallet, LotteryPot, Signer, OrchidEthereumAPI} from "./orchid-eth";
 import {BehaviorSubject, Observable, of} from "rxjs";
 import {filter, flatMap, map, shareReplay} from "rxjs/operators";
 import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
-// import {MockQuickSetup} from "./orchid-eth-mock";
-
-export enum WalletStatus {
-  NoWallet, NotConnected, Connected, Error, WrongNetwork
-}
+import {OrchidTransactionDetail, OrchidTransactionMonitor} from "./orchid-tx";
 
 /// The high level API for observation of a user's Ethereum wallet and lottery pot state.
 export class OrchidAPI {
   private static instance: OrchidAPI;
 
-  // Specify the Orchid Ethereum api or a mock here for testing.
-  // private static OrchidEthereumAPIClass = MockQuickSetup;
-  private static OrchidEthereumAPIClass = OrchidEthereumAPI;
-
   private constructor() {
-    this.eth = new OrchidAPI.OrchidEthereumAPIClass();
   }
 
   static shared() {
@@ -32,7 +20,13 @@ export class OrchidAPI {
     return OrchidAPI.instance;
   }
 
-  eth: OrchidEthereumAPI;
+  // The Orchid Ethereum API
+  // eth = new MockQuickSetup();
+  eth = new OrchidEthereumAPI();
+
+  // The Orchid transaction monitor
+  // transactionMonitor = new MockOrchidTransactionMonitor();
+  transactionMonitor = new OrchidTransactionMonitor();
 
   // Wallet connection or error status.  Wallet.Error may indicate the lack of a valid web3
   // environment or the failure of core contract calls.
@@ -79,6 +73,10 @@ export class OrchidAPI {
   transactions = new BehaviorSubject<LotteryPotUpdateEvent[] | null>(null);
   transactions_wait: Observable<LotteryPotUpdateEvent[]> = this.transactions.pipe(filter(isNotNull), shareReplay(1));
 
+  // Currently monitored user transactions on Ethereum
+  orchid_transactions = new BehaviorSubject<OrchidTransactionDetail [] | undefined>(undefined);
+  orchid_transactions_wait: Observable<OrchidTransactionDetail []> = this.orchid_transactions.pipe(filter(isDefined), shareReplay(1));
+
   // Logging
   debugLog = "";
   debugLogChanged = new BehaviorSubject(true);
@@ -101,6 +99,16 @@ export class OrchidAPI {
       this.updateTransactions();
     }
     this.walletStatus.next(status);
+
+    // Init the transaction monitor
+    this.transactionMonitor.init(transactions => {
+      // TODO: Update the wallet / signers here if a transaction changed status
+      if (transactions.length > 0) {
+        console.log("txs: ", transactions.toString());
+      }
+      this.orchid_transactions.next(transactions);
+    });
+
     return status;
   }
 
@@ -179,7 +187,6 @@ export class OrchidAPI {
       if (error && error.stack) {
         text = error.stack.toString()
       }
-      ;
       console.log('Error: ' + text + ": " + error);
       console.log('Error json: ', JSON.stringify(error));
     };
@@ -191,5 +198,9 @@ export class OrchidAPI {
   private static isMobileDevice() {
     return (typeof window.orientation !== "undefined");
   };
+}
+
+export enum WalletStatus {
+  NoWallet, NotConnected, Connected, Error, WrongNetwork
 }
 

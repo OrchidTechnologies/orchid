@@ -80,7 +80,7 @@ export const Overview: React.FC = () => {
     return <OverviewEarn {...props}/>;
   } else {
     let {noAccount, walletEthEmpty, walletOxtEmpty} = props;
-    console.log(`overview, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
+    // console.log(`overview, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
     // If the user is ready to fund a new account or has a quick setup transaction result send to quick setup.
     if ((noAccount && !walletEthEmpty && !walletOxtEmpty) || quickSetupResultTx != null) {
       console.log("showing quick setup");
@@ -89,7 +89,6 @@ export const Overview: React.FC = () => {
         txResultSetter={setQuickSetupResultTx}
       />;
     } else {
-      console.log("showing default setup");
       return <OverviewDefault {...props}/>;
     }
   }

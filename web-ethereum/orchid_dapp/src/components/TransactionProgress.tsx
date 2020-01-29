@@ -60,17 +60,21 @@ export class TransactionProgress extends Component<{ tx: TransactionStatus }> {
     let running = state === TransactionState.Running;
     return (
       <div className="transaction-result">
-        <div style={{marginBottom: '8px'}}
-             className={["spinner", running ? "" : "hidden"].join(" ")}/>
-        <div style={{marginTop: '8px', overflowX: 'hidden'}}
-             className={[!running ? "" : "hidden"].join(" ")}>
+        {/*Show the spinner when running.*/}
+        {/*<div style={{marginBottom: '8px'}}*/}
+        {/*     className={["spinner", running ? "" : "hidden"].join(" ")}/>*/}
+        <div
+          style={{
+            marginTop: '8px', overflowX: 'hidden', textOverflow: "ellipsis"
+          }}
+          className={[!running ? "" : "hidden"].join(" ")}>
           <span style={{fontSize: '18pt'}}>{result || ""}</span>
           <br/>
           <span>
-        <a target="_blank" rel="noopener noreferrer"
-           href={EtherscanIO.txLink(txId || "")}
-           style={{fontSize: '18pt', color: 'rebeccapurple'}}>{txId}</a>
-        </span>
+            <a target="_blank" rel="noopener noreferrer"
+               href={EtherscanIO.txLink(txId || "")}
+               style={{fontSize: '18pt', color: 'rebeccapurple'}}>{txId}</a>
+          </span>
         </div>
         {/*account QR Code*/}
         <Visibility visible={signer != null}>

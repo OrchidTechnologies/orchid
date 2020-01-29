@@ -5,7 +5,8 @@ import {OrchidContracts} from "./orchid-eth-contracts";
 import {Address, Secret} from "./orchid-types";
 import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
-import {WalletStatus} from "./orchid-api";
+import {OrchidAPI, WalletStatus} from "./orchid-api";
+import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 const ORCHID_SIGNER_KEYS_WALLET = "orchid-signer-keys";
@@ -15,7 +16,7 @@ declare global {
     ethereum: any
   }
 }
-let web3: Web3;
+export let web3: Web3;
 let web3ProviderListener: any;
 
 /// A Funder address containing ETH to perform contract transactions  and possibly
@@ -153,7 +154,6 @@ export class OrchidEthereumAPI {
 
   /// Get the user's ETH wallet balance and Keiki token balance (1e18 per OXT).
   async orchidGetWallet(): Promise<Wallet> {
-    console.log("orchid get wallet");
     const accounts = await web3.eth.getAccounts();
     const wallet = new Wallet();
     wallet.address = accounts[0];
@@ -193,9 +193,7 @@ export class OrchidEthereumAPI {
 
   /// Get the Orchid signer keys wallet in local storage.
   orchidGetSignerKeys(): Web3Wallet {
-    console.log("load signer keys wallet");
     let keys = web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
-    console.log("loaded signer keys wallet");
     return keys;
   }
 
@@ -240,8 +238,7 @@ export class OrchidEthereumAPI {
       });
     }
 
-    async function doFundTx() {
-      console.log("do fund tx");
+    async function doFundTx(approvalHash: string) {
       return new Promise<string>(function (resolve, reject) {
         OrchidContracts.lottery.methods.push(
           signer,
@@ -253,12 +250,13 @@ export class OrchidEthereumAPI {
         })
           .on("transactionHash", (hash) => {
             console.log("Fund hash: ", hash);
+            OrchidAPI.shared().transactionMonitor.add(
+              new OrchidTransaction(new Date(), OrchidTransactionType.AddFunds, [approvalHash, hash]));
           })
           .on('confirmation', (confirmationNumber, receipt) => {
             console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
-            const requiredConfirmations = 2;
-            if (confirmationNumber >= requiredConfirmations) {
+            if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
               const hash = receipt['transactionHash'];
               resolve(hash);
             } else {
@@ -273,17 +271,27 @@ export class OrchidEthereumAPI {
     }
 
     // The approval tx resolves immediately after the user submits.
-    await doApproveTx();
+    let approvalHash = await doApproveTx();
+
+    // Introduce a short artificial delay before issuing the second tx
+    // Issue: We have had reports of problems where only one dialog is presented to the user.
+    // Issue: Trying this to see if it mitigates any race conditions in the wallet.
+    await new Promise(r => setTimeout(r, 1000));
+
     // The UI monitors the funding tx.
-    return doFundTx();
+    return doFundTx(approvalHash);
   }
 
   /// Evaluate an Orchid method call, returning the confirmation transaction has or error.
-  private evalOrchidTx<T>(promise: PromiEvent<T>): Promise<string> {
+  private evalOrchidTx<T>(promise: PromiEvent<T>, type: OrchidTransactionType): Promise<string> {
     return new Promise<string>(function (resolve, reject) {
       promise
         .on("transactionHash", (hash) => {
           console.log("hash: ", hash);
+          if (type) {
+            OrchidAPI.shared().transactionMonitor.add(
+              new OrchidTransaction(new Date(), type, [hash]));
+          }
         })
         .on('confirmation', (confirmationNumber, receipt) => {
           console.log("confirmation", confirmationNumber, JSON.stringify(receipt));
@@ -293,7 +301,7 @@ export class OrchidEthereumAPI {
         })
         .on('error', (err) => {
           console.log("error: ", JSON.stringify(err));
-          reject(err);
+          reject(err['message']);
         });
     });
   }
@@ -304,7 +312,7 @@ export class OrchidEthereumAPI {
       OrchidContracts.lottery.methods.move(signer, amount.toString()).send({
         from: funder,
         gas: OrchidContracts.lottery_move_max_gas,
-      })
+      }), OrchidTransactionType.MoveFundsToEscrow
     );
   }
 
@@ -317,7 +325,7 @@ export class OrchidEthereumAPI {
       OrchidContracts.lottery.methods.pull(signer, targetAddress, autolock, amount.toString(), escrow.toString()).send({
         from: funder,
         gas: OrchidContracts.lottery_pull_amount_max_gas,
-      })
+      }), OrchidTransactionType.WithdrawFunds
     );
   }
 
@@ -329,7 +337,7 @@ export class OrchidEthereumAPI {
       OrchidContracts.lottery.methods.yank(signer, targetAddress, autolock).send({
         from: funder,
         gas: OrchidContracts.lottery_pull_all_max_gas
-      })
+      }), OrchidTransactionType.WithdrawFunds
     );
   }
 
@@ -339,7 +347,7 @@ export class OrchidEthereumAPI {
       OrchidContracts.lottery.methods.lock(signer).send({
         from: funder,
         gas: OrchidContracts.lottery_lock_max_gas
-      })
+      }), OrchidTransactionType.Lock
     );
   }
 
@@ -349,7 +357,7 @@ export class OrchidEthereumAPI {
       OrchidContracts.lottery.methods.warn(signer).send({
         from: funder,
         gas: OrchidContracts.lottery_warn_max_gas
-      })
+      }), OrchidTransactionType.Unlock
     );
   }
 
