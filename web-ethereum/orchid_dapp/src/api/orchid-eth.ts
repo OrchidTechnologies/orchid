@@ -112,6 +112,7 @@ export class OrchidEthereumAPI {
         } else {
           console.log('Non-Ethereum browser.');
           resolve(WalletStatus.NoWallet);
+          return;
         }
 
         let networkNumber = await web3.eth.net.getId();
