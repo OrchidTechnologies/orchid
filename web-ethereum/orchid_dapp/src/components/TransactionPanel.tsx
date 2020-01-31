@@ -30,6 +30,9 @@ export const TransactionPanel: React.FC<{
     case OrchidTransactionType.MoveFundsToEscrow:
       type = "Move Funds To Deposit";
       break;
+    case OrchidTransactionType.Reset:
+      type = "Reset Account";
+      break;
   }
 
   let status: string = "";

@@ -378,6 +378,17 @@ export class OrchidEthereumAPI {
     console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
     return new LotteryPot(signer, balance, escrow, unlockDate);
   }
+
+  // Exercise the reset account feature of the lotter_test_reset contract.
+  async orchidReset(funder: Wallet): Promise<string> {
+    return this.evalOrchidTx(
+      OrchidContracts.lottery.methods.reset(funder.address)
+        .send({
+        from: funder.address,
+        gas: OrchidContracts.lottery_move_max_gas,
+      }), OrchidTransactionType.Reset
+    );
+  }
 }
 
 export function isEthAddress(str: string): boolean {

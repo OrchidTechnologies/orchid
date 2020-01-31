@@ -49,7 +49,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
     [Route.Transactions, "Transactions"],
     [Route.MoveFunds, "Move Funds"],
     [Route.LockFunds, "Lock / Unlock Funds"],
-    [Route.DebugPanel, "Debug Panel"]
+    [Route.DebugPanel, "Advanced"]
   ]);
 
   useEffect(() => {

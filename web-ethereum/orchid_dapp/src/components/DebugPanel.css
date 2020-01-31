@@ -2,7 +2,7 @@
 .DebugPanel-container {
   border: 1px solid gray;
   padding: 5px;
-  max-height: 250px;
+  max-height: 450px;
   min-height: 100px;
   overflow-x: auto;
   overflow-y: scroll;
@@ -10,6 +10,7 @@
 }
 
 .DebugPanel-log {
+  width: 100%;
   color: gray;
   font-size: 8pt;
   font-family: monospace
