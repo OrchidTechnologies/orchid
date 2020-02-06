@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/generated/l10n.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
 
 class TrafficEmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    S s = S.of(context);
     return OrientationBuilder(
       builder: (BuildContext context, Orientation orientation) {
         return Center(
@@ -40,14 +42,17 @@ class TrafficEmptyView extends StatelessWidget {
                               children: <Widget>[
                                 Spacer(flex: 1),
                                 AppText.header(
-                                    text: "Welcome to Orchid",
+                                    text: s.welcomeToOrchid,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 28.0),
                                 SizedBox(height: 20),
                                 AppText.body(
                                     text: !connected
-                                        ? "This release is Orchid’s advanced VPN client, supporting multi-hop and local traffic analysis.\n\n   To get started, enable the VPN.   "
-                                        : "Nothing to display yet. Traffic will appear here when there’s something to show.",
+                                        ? s.thisReleaseVPNInstruction +
+                                            "\n\n   " +
+                                            s.toGetStartedInstruction +
+                                            "   "
+                                        : s.nothingToDisplayYet,
                                     fontSize: 15.0,
                                     color: AppColors.neutral_1),
                                 Spacer(flex: 1),

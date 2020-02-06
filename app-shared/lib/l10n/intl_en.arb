@@ -139,6 +139,11 @@
 
   "generateNewKey": "Generate new key",
   "importKey": "Import key",
-  "chooseKey": "Choose key"
+  "chooseKey": "Choose key",
+
+  "welcomeToOrchid": "Welcome to Orchid",
+  "thisReleaseVPNInstruction": "This release is Orchid’s advanced VPN client, supporting multi-hop and local traffic analysis.",
+  "toGetStartedInstruction": "To get started, enable the VPN.",
+  "nothingToDisplayYet": "Nothing to display yet. Traffic will appear here when there’s something to show."
 }
 

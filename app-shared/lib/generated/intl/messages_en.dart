@@ -82,6 +82,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "newContent" : MessageLookupByLibrary.simpleMessage("New Content"),
     "newHop" : MessageLookupByLibrary.simpleMessage("New Hop"),
     "noVersion" : MessageLookupByLibrary.simpleMessage("No version"),
+    "nothingToDisplayYet" : MessageLookupByLibrary.simpleMessage("Nothing to display yet. Traffic will appear here when there’s something to show."),
     "numHopsConfigured" : m0,
     "ok" : MessageLookupByLibrary.simpleMessage("OK"),
     "okButtonTitle" : MessageLookupByLibrary.simpleMessage("OK"),
@@ -122,8 +123,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "status" : MessageLookupByLibrary.simpleMessage("Status"),
     "theCodeYouPastedDoesNot" : MessageLookupByLibrary.simpleMessage("The code you pasted does not contain a valid account configuration."),
     "theQRCodeYouScannedDoesNot" : MessageLookupByLibrary.simpleMessage("The QR code you scanned does not contain a valid account configuration."),
+    "thisReleaseVPNInstruction" : MessageLookupByLibrary.simpleMessage("This release is Orchid’s advanced VPN client, supporting multi-hop and local traffic analysis."),
     "thisWillDeleteRecorded" : MessageLookupByLibrary.simpleMessage("This will delete all recorded traffic data within the app."),
     "time" : MessageLookupByLibrary.simpleMessage("Time"),
+    "toGetStartedInstruction" : MessageLookupByLibrary.simpleMessage("To get started, enable the VPN."),
     "traffic" : MessageLookupByLibrary.simpleMessage("Traffic"),
     "trafficListView" : MessageLookupByLibrary.simpleMessage("traffic list view"),
     "trafficMonitoringOnly" : MessageLookupByLibrary.simpleMessage("Traffic monitoring only"),
@@ -134,6 +137,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "warningExportedConfiguration" : MessageLookupByLibrary.simpleMessage("Warning: Exported configuration includes the signer private key secrets for the exported hops.  Revealing private keys exposes you to loss of all funds in the associated Orchid accounts."),
     "warningImportedConfiguration" : MessageLookupByLibrary.simpleMessage("Warning: Imported configuration will replace any existing hops that you have created in the app.  Signer keys previously generated or imported on this device will be retained and remain accessible for creating new hops, however all other configuration including OpenVPN hop configuration will be lost."),
     "warningThesefeature" : MessageLookupByLibrary.simpleMessage("Warning: These features are intended for advanced users only.  Please read all instructions."),
+    "welcomeToOrchid" : MessageLookupByLibrary.simpleMessage("Welcome to Orchid"),
     "whoops" : MessageLookupByLibrary.simpleMessage("Whoops"),
     "youNeedEthereumWallet" : MessageLookupByLibrary.simpleMessage("You\'ll need an Ethereum Wallet in order to create an Orchid account.")
   };

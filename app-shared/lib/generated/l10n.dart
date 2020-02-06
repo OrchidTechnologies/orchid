@@ -1049,6 +1049,42 @@ class S {
       args: [],
     );
   }
+
+  String get welcomeToOrchid {
+    return Intl.message(
+      'Welcome to Orchid',
+      name: 'welcomeToOrchid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get thisReleaseVPNInstruction {
+    return Intl.message(
+      'This release is Orchid’s advanced VPN client, supporting multi-hop and local traffic analysis.',
+      name: 'thisReleaseVPNInstruction',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get toGetStartedInstruction {
+    return Intl.message(
+      'To get started, enable the VPN.',
+      name: 'toGetStartedInstruction',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get nothingToDisplayYet {
+    return Intl.message(
+      'Nothing to display yet. Traffic will appear here when there’s something to show.',
+      name: 'nothingToDisplayYet',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
