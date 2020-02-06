@@ -27,11 +27,13 @@ dependencies:
       path: flare_flutter
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_cupertino_localizations: ^1.0.1
   flutter_html: ^0.11.1
   flutter_svg: ^0.15.0
   font_awesome_flutter: ^8.5.0
   http: ^0.12.0+3
-  intl: ^0.16.0
   pointycastle: ^1.0.2
   provider: ^4.0.1
   qr_flutter: ^3.1.0
@@ -53,3 +55,7 @@ flutter:
     - assets/flare/
     - assets/images/
     - assets/shared/
+    -
+flutter_intl:
+  enabled: true
+

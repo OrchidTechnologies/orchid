@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_docs.dart';
-import 'package:orchid/pages/common/plain_text_box.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html/dom.dart' as dom;
@@ -13,7 +13,6 @@ class HelpOverviewPage extends StatefulWidget {
 }
 
 class _HelpOverviewPageState extends State<HelpOverviewPage> {
-  final String title = "Orchid Overview";
   String _helpText = "";
 
   @override
@@ -29,6 +28,7 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    String title = s.orchidOverview;
     return TitledPage(title: title, child: buildPage(context));
   }
 
@@ -71,5 +71,9 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
         return baseStyle;
       },
     );
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

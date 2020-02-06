@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_docs.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/plain_text_box.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
@@ -10,7 +11,6 @@ class OpenSourcePage extends StatefulWidget {
 }
 
 class _OpenSourcePageState extends State<OpenSourcePage> {
-  final String title = "Open Source Licenses";
   String _licenseText = "";
 
   @override
@@ -26,6 +26,7 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
 
   @override
   Widget build(BuildContext context) {
+    String title = s.openSourceLicenses;
     return TitledPage(title: title, child: buildPage(context));
   }
 
@@ -42,5 +43,9 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
         ),
       ),
     );
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

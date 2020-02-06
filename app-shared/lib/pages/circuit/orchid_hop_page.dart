@@ -7,6 +7,7 @@ import 'package:orchid/api/cloudflare.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
@@ -26,6 +27,7 @@ import 'hop_editor.dart';
 import 'key_selection.dart';
 import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
+import 'package:intl/intl.dart';
 
 /// Create / edit / view an Orchid Hop
 class OrchidHopPage extends HopEditor<OrchidHop> {
@@ -105,7 +107,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var isValid = _funderValid() && _keyRefValid();
     return TapClearsFocus(
       child: TitledPage(
-        title: "Orchid Hop",
+        title: s.orchidHop,
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, _onSave, isValid: isValid)]
             : [],
@@ -133,9 +135,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
     var richText = TextSpan(
       children: <TextSpan>[
-        TextSpan(
-            text: "To create an Orchid hop you need an Orchid account.  Open ",
-            style: bodyStyle),
+        TextSpan(text: s.createInstruction1 + " ", style: bodyStyle),
 
         // Use 'package:flutter_html/rich_text_parser.dart' now or our own?
         LinkTextSpan(
@@ -145,13 +145,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         ),
 
         TextSpan(
-          text: " in a Web3 browser and follow the steps."
-              "  Paste in your Ethereum address below.  ",
+          text: "  " + s.createInstructions2 + "  ",
           style: bodyStyle,
         ),
 
         LinkTextSpan(
-          text: "LEARN MORE",
+          text: s.learnMoreButtonTitle,
           style: AppText.linkStyle.copyWith(fontSize: 15),
           url: 'https://orchid.com/join',
         ),
@@ -165,7 +164,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           pady(36),
           InstructionsView(
             image: Image.asset("assets/images/group12.png"),
-            title: "Orchid requires OXT",
+            title: s.orchidRequiresOXT,
           ),
           RichText(text: richText),
           pady(24),
@@ -183,21 +182,19 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       child: Column(
         children: <Widget>[
           _buildSection(
-              title: "Credentials", child: _buildFunding(), onDetail: null),
+              title: s.credentials, child: _buildFunding(), onDetail: null),
           pady(16),
           divider(),
           pady(24),
           _buildSection(
-              title: "Curation",
+              title: s.curation,
               child: _buildCuration(),
               onDetail: _editCurator),
           pady(36),
           divider(),
           pady(24),
           _buildSection(
-              title: "Rate Limit",
-              child: _buildBudget(),
-              onDetail: _editBudget),
+              title: s.rateLimit, child: _buildBudget(), onDetail: _editBudget),
         ],
       ),
     );
@@ -265,7 +262,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text("Signer Key:",
+        Text(s.signerKey + ":",
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
                 color: _keyRefValid()
@@ -287,7 +284,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               child: RoundedRectRaisedButton(
                   backgroundColor: Colors.grey,
                   textColor: Colors.white,
-                  text: "Copy",
+                  text: s.copy,
                   onPressed: _onCopyButton),
             ),
           ],
@@ -321,7 +318,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text("Ethereum Address:",
+        Text(s.ethereumAddress + ":",
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
                 color: _funderValid()
@@ -338,7 +335,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 ? FlatButton(
                     color: Colors.transparent,
                     padding: EdgeInsets.zero,
-                    child: Text("Paste", style: AppText.pasteButtonStyle),
+                    child: Text(s.paste, style: AppText.pasteButtonStyle),
                     onPressed: _pasteWalletAddress)
                 : null)
       ],
@@ -364,17 +361,19 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         letterSpacing: -0.24,
         fontFamily: "SFProText-Regular",
         height: 20.0 / 15.0);
+
     var balanceText = _lotteryPot?.balance != null
-        ? (_lotteryPot?.balance?.toStringAsFixed(4) ?? "") + " OXT"
+        ? NumberFormat("#0.0###").format(_lotteryPot?.balance.value) + " ${s.oxt}"
         : "...";
     var depositText = _lotteryPot?.deposit != null
-        ? (_lotteryPot?.deposit?.toStringAsFixed(4) ?? "") + " OXT"
+        ? NumberFormat("#0.0###").format(_lotteryPot?.deposit.value) + " ${s.oxt}"
         : "...";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         // Balance
-        Text("Amount:",
+        Text(s.amount + ":",
             style: AppText.textLabelStyle
                 .copyWith(fontSize: 20, color: AppColors.neutral_1)),
         pady(4),
@@ -385,7 +384,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         ),
         pady(16),
         // Deposit
-        Text("Deposit:",
+        Text(s.deposit + ":",
             style: AppText.textLabelStyle
                 .copyWith(fontSize: 20, color: AppColors.neutral_1)),
         pady(4),
@@ -425,7 +424,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         pady(16),
-        Text("View or modify your rate limit.",
+        Text(s.viewOrModifyRateLimit,
             textAlign: TextAlign.left, style: AppText.dialogBody),
       ],
     );
@@ -602,7 +601,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildExportAccountButton() {
     return TitleIconButton(
-        text: "Share Orchid Account",
+        text: s.shareOrchidAccount,
         spacing: 24,
         trailing: Image.asset("assets/images/scan.png", color: Colors.white),
         textColor: Colors.white,
@@ -614,7 +613,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var config = await _hop().accountConfigString();
     Dialogs.showAppDialog(
         context: context,
-        title: "My Orchid Account:",
+        title: s.myOrchidAccount + ":",
         body: Container(
           width: 250,
           height: 250,
@@ -626,5 +625,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             ),
           ),
         ));
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

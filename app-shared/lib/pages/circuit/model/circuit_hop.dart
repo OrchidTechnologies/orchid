@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 
 enum HopProtocol { Orchid, OpenVPN }
 
@@ -13,13 +15,13 @@ class CircuitHop {
 
   Map<String, dynamic> toJson() => {'protocol': protocolToString(protocol)};
 
-  String displayName() {
+  String displayName(BuildContext context) {
     switch (protocol) {
       case HopProtocol.Orchid:
-        return "Orchid";
+        return S.of(context).orchid;
         break;
       case HopProtocol.OpenVPN:
-        return "OpenVPN";
+        return S.of(context).openVPN;
         break;
       default:
         return "";

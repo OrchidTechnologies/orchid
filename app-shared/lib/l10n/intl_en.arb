@@ -1,0 +1,144 @@
+{
+  "newHop": "New Hop",
+  "@newHop": {
+    "description": "New network hop"
+  },
+  "orchidHop": "Orchid Hop",
+  "@orchidHop": {
+    "description": "Orchid network hop"
+  },
+  "orchidDisabled": "Orchid disabled",
+  "trafficMonitoringOnly": "Traffic monitoring only",
+  "orchidConnecting": "Orchid connecting",
+  "orchidDisconnecting": "Orchid disconnecting",
+  "numHopsConfigured": "{num, plural, zero{No hops configured} one{One hop configured} two{Two hops configured} other{{num} hops configured}}",
+  "delete": "Delete",
+  "turnOnToActivate": "Turn Orchid on to activate your hops and protect your traffic",
+  "createFirstHop": "Create your first hop to protect your connection.",
+  "orchid": "Orchid",
+  "openVPN": "OpenVPN",
+  "status": "Status",
+  "hops": "Hops",
+  "@hops": {
+    "description": "Network hops"
+  },
+  "traffic": "Traffic",
+  "@traffic": {
+    "description": "Network traffic"
+  },
+
+  "createInstruction1": "To create an Orchid hop you need an Orchid account.  Open",
+  "createInstructions2": "in a Web3 browser and follow the steps.  Paste in your Ethereum address below.",
+  "learnMoreButtonTitle": "LEARN MORE",
+  "orchidRequiresOXT": "Orchid requires OXT",
+  "credentials": "Credentials",
+  "curation": "Curation",
+  "rateLimit": "Rate Limit",
+  "signerKey": "Signer Key",
+  "copy": "Copy",
+  "paste": "Paste",
+  "ethereumAddress": "Ethereum Address",
+  "oxt": "OXT",
+  "amount": "Amount",
+  "deposit": "Deposit",
+  "curator": "Curator",
+  "viewOrModifyRateLimit": "View or modify your rate limit.",
+  "shareOrchidAccount": "Share Orchid Account",
+  "myOrchidAccount": "My Orchid Account",
+
+  "budget": "Budget",
+  "ok": "OK",
+
+  "settingsButtonTitle": "SETTINGS",
+  "confirmThisAction": "Confirm this action",
+  "cancelButtonTitle": "CANCEL",
+  "changesWillTakeEffectInstruction": "Changes will take effect when the VPN is restarted.",
+  "saved": "Saved",
+  "configurationSaved": "Configuration saved",
+  "whoops": "Whoops",
+  "configurationFailedInstruction": "Configuration failed to save.  Please check syntax and try again.",
+
+  "addHop": "Add Hop",
+  "selectYourHop": "Select your hop",
+  "iHaveAQRCode": "I have a QR code",
+  "iWantToTryOrchid": "I want to try Orchid",
+  "iHaveAVPNSubscription": "I have a VPN subscription",
+
+  "orchidRequiresAccountInstruction": "Orchid requires an Orchid account.  Scan or paste your existing account below to get started.",
+  "createOrchidAccount": "Create Orchid Account",
+  "youNeedEthereumWallet": "You'll need an Ethereum Wallet in order to create an Orchid account.",
+  "loadMsg": "Load",
+  "inYourWalletBrowserInstruction": "in your wallet's browser to get started.",
+  "needMoreHelp": "Need more help",
+  "readTheGuide": "Read the guide",
+  "addOrchidAccount": "Add Orchid Account",
+  "addAccount": "Add Account",
+
+  "scan": "Scan",
+  "invalidQRCode": "Invalid QR Code",
+  "theQRCodeYouScannedDoesNot": "The QR code you scanned does not contain a valid account configuration.",
+  "invalidCode": "Invalid Code",
+  "theCodeYouPastedDoesNot": "The code you pasted does not contain a valid account configuration.",
+
+  "openVPNHop": "OpenVPN Hop",
+  "username": "Username",
+  "password": "Password",
+  "config": "Config",
+  "pasteYourOVPN": "Paste your OVPN config file here",
+  "enterYourCredentials": "Enter your credentials",
+  "enterLoginInformationInstruction": "Enter the login information for your VPN provider above. Then paste the contents of your provider’s OpenVPN config file into the field provided.",
+
+  "save": "Save",
+
+  "help": "Help",
+  "privacyPolicy": "Privacy Policy",
+  "openSourceLicenses": "Open Source Licenses",
+  "settings": "Settings",
+  "advanced": "Advanced",
+  "version": "Version",
+  "noVersion": "No version",
+  "setup": "Setup",
+
+  "orchidOverview": "Orchid Overview",
+
+  "log": "Log",
+  "defaultCurator": "Default Curator",
+  "allowNoHopVPN": "Allow No Hop VPN",
+  "queryBalances": "Query Balances",
+  "showInstructions": "Show Instructions",
+  "reset": "Reset",
+  "manageConfiguration": "Manage Configuration",
+  "showStatusPage": "Show Status Page",
+  "beta": "beta",
+
+  "warningThesefeature": "Warning: These features are intended for advanced users only.  Please read all instructions.",
+  "exportHopsConfiguration": "Export Hops Configuration",
+  "export": "Export",
+  "warningExportedConfiguration": "Warning: Exported configuration includes the signer private key secrets for the exported hops.  Revealing private keys exposes you to loss of all funds in the associated Orchid accounts.",
+  "importHopsConfiguration": "Import Hops Configuration",
+  "import": "Import",
+  "warningImportedConfiguration": "Warning: Imported configuration will replace any existing hops that you have created in the app.  Signer keys previously generated or imported on this device will be retained and remain accessible for creating new hops, however all other configuration including OpenVPN hop configuration will be lost.",
+
+  "configuration": "Configuration",
+  "saveButtonTitle": "SAVE",
+
+  "search": "Search",
+  "trafficListView": "traffic list view",
+  "newContent": "New Content",
+  "clear": "Clear",
+  "deleteAllData": "Delete all data",
+  "thisWillDeleteRecorded": "This will delete all recorded traffic data within the app.",
+  "okButtonTitle": "OK",
+
+  "connectionDetail": "Connection Detail",
+  "host": "Host",
+  "time": "Time",
+  "sourcePort": "Source Port",
+  "destination": "Destination",
+  "destinationPort": "Destination Port",
+
+  "generateNewKey": "Generate new key",
+  "importKey": "Import key",
+  "chooseKey": "Choose key"
+}
+

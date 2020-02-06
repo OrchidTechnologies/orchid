@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
@@ -26,7 +27,7 @@ class _AddHopPageState extends State<AddHopPage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "Add Hop",
+      title: s.addHop,
       cancellable: true,
       backAction: () {
         widget.onAddFlowComplete(null);
@@ -46,7 +47,7 @@ class _AddHopPageState extends State<AddHopPage> {
                   child: Image.asset("assets/images/approach.png", height: 100),
                 ),
                 pady(24),
-                Text("Select your hop",
+                Text(s.selectYourHop,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 18,
@@ -57,7 +58,7 @@ class _AddHopPageState extends State<AddHopPage> {
                 pady(24),
                 _divider(),
                 _buildHopChoice(
-                    text: "I have a QR code",
+                    text: s.iHaveAQRCode,
                     onTap: () {
                       WelcomeDialog.show(
                           context: context,
@@ -66,14 +67,14 @@ class _AddHopPageState extends State<AddHopPage> {
                     imageName: "assets/images/scan.png"),
                 _divider(),
                 _buildHopChoice(
-                    text: "I want to try Orchid",
+                    text: s.iWantToTryOrchid,
                     onTap: () {
                       _addHopType(HopProtocol.Orchid);
                     },
                     imageName: "assets/images/logo_small_purple.png"),
                 _divider(),
                 _buildHopChoice(
-                    text: "I have a VPN subscription",
+                    text: s.iHaveAVPNSubscription,
                     onTap: () {
                       _addHopType(HopProtocol.OpenVPN);
                     },
@@ -93,7 +94,7 @@ class _AddHopPageState extends State<AddHopPage> {
         contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
         leading: Image.asset(imageName, width: 24, height: 24),
         trailing:
-        trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
+            trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
         title: Text(text,
             textAlign: TextAlign.left,
             style: const TextStyle(
@@ -134,4 +135,8 @@ class _AddHopPageState extends State<AddHopPage> {
 
   Divider _divider() =>
       Divider(color: Colors.black.withOpacity(0.3), height: 1.0);
+
+  S get s {
+    return S.of(context);
+  }
 }

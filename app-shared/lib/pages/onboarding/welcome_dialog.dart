@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/circuit/add_hop_page.dart';
@@ -12,27 +13,22 @@ import 'package:orchid/pages/common/link_text.dart';
 
 class WelcomeDialog {
   static Future<void> show(
-      {@required BuildContext context,
-        AddFlowCompletion onAddFlowComplete}) {
+      {@required BuildContext context, AddFlowCompletion onAddFlowComplete}) {
+    S s = S.of(context);
     var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
 
     var topText = TextSpan(
       children: <TextSpan>[
         TextSpan(
-            text:
-                "\nOrchid requires an Orchid account.  Scan or paste your existing account below"
-                " to get started.",
-            style: bodyStyle),
+            text: "\n" + s.orchidRequiresAccountInstruction, style: bodyStyle),
       ],
     );
 
     var bodyText = TextSpan(
       children: <TextSpan>[
-        TextSpan(text: "Create Orchid Account", style: AppText.dialogTitle),
+        TextSpan(text: s.createOrchidAccount, style: AppText.dialogTitle),
         TextSpan(
-            text:
-                ("\n\nYou'll need an Ethereum Wallet in order to create an Orchid account."
-                    "\n\nLoad "),
+            text: "\n\n" + s.youNeedEthereumWallet + "\n\n" + s.loadMsg + " ",
             style: bodyStyle),
         LinkTextSpan(
           text: "account.orchid.com",
@@ -40,16 +36,15 @@ class WelcomeDialog {
           url: 'https://account.orchid.com',
         ),
         TextSpan(
-            text: " in your wallet's browser to get started.",
-            style: bodyStyle),
+            text: " " + s.inYourWalletBrowserInstruction, style: bodyStyle),
       ],
     );
 
     var bottomText = TextSpan(
       children: <TextSpan>[
-        TextSpan(text: "Need more help?", style: AppText.dialogTitle),
+        TextSpan(text: s.needMoreHelp + "?", style: AppText.dialogTitle),
         LinkTextSpan(
-          text: "\n\nRead the guide.",
+          text: "\n\n"+s.readTheGuide+".",
           style: AppText.linkStyle.copyWith(fontSize: 15),
           url: 'https://orchid.com/join',
         ),
@@ -74,8 +69,8 @@ class WelcomeDialog {
                     RichText(
                         text: TextSpan(
                             text: screenWidth > AppSizes.iphone_se.width
-                                ? "Add Orchid Account"
-                                : "Add Account",
+                                ? s.addOrchidAccount
+                                : s.addAccount,
                             style: AppText.dialogTitle)),
                     Container(
                       width: 40,

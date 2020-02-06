@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
@@ -144,9 +145,10 @@ class SaveActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    S s = S.of(context);
     return FlatButton(
         child: Text(
-          "Save",
+          s.save,
           style: AppText.actionButtonStyle.copyWith(
               // TODO: We need to get the TitledPage to publish colors on the context (theme)
               color: isValid ? Colors.white : Colors.white.withOpacity(0.4)),

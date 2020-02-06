@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
@@ -30,7 +31,7 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
   Widget build(BuildContext context) {
     return TapClearsFocus(
       child: TitledPage(
-        title: "Curation",
+        title: s.curation,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.only(left: 16, right: 16, top: 24),
@@ -48,8 +49,8 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
     return Row(
       children: <Widget>[
         Container(
-          width: 75,
-          child: Text("Curator:",
+          width: 80,
+          child: Text(s.curator+":",
               style: AppText.textLabelStyle
                   .copyWith(fontSize: 20, color: AppColors.neutral_1)),
         ),
@@ -64,5 +65,9 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
   void _updateHop() {
     widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,
         curator: _curatorField.text));
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

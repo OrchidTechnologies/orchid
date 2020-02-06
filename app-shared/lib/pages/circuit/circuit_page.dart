@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
@@ -70,6 +69,8 @@ class CircuitPageState extends State<CircuitPage>
   @override
   void initState() {
     super.initState();
+    // Test Localization
+    //S.load(Locale('zh', 'CN'));
     initStateAsync();
     initAnimations();
   }
@@ -375,7 +376,7 @@ class CircuitPageState extends State<CircuitPage>
 
   Widget _buildNewHopTile() {
     return HopTile(
-        title: "New Hop",
+        title: s.newHop,
         image: Image.asset("assets/images/addCircleOutline.png"),
         trailing: SizedBox(width: 40),
         // match leading
@@ -387,27 +388,26 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildStatusTile() {
-    String text = "Orchid disabled";
+    String text = s.orchidDisabled;
     Color color = Colors.redAccent.withOpacity(0.7);
     if (_connected()) {
       if (_hasHops()) {
         var num = _hops.length;
-        text =
-            "${Intl.plural(num, zero: "No hops", one: "One hop", two: "Two hops", other: "$num hops")} configured";
+        text = s.numHopsConfigured(num);
         color = Colors.greenAccent.withOpacity(0.7);
       } else {
-        text = "Traffic monitoring only";
+        text = s.trafficMonitoringOnly;
         color = Colors.yellowAccent.withOpacity(0.7);
       }
     }
 
     var status = OrchidAPI().connectionStatus.value;
     if (status == OrchidConnectionState.Connecting) {
-      text = "Orchid connecting";
+      text = s.orchidConnecting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
     if (status == OrchidConnectionState.Disconnecting) {
-      text = "Orchid disconnecting";
+      text = s.orchidDisconnecting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
 
@@ -439,7 +439,7 @@ class CircuitPageState extends State<CircuitPage>
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                "Delete",
+                s.delete,
                 style: TextStyle(color: Colors.white),
               ),
             )),
@@ -477,7 +477,7 @@ class CircuitPageState extends State<CircuitPage>
           _viewHop(uniqueHop);
         },
         key: Key(uniqueHop.key.toString()),
-        title: uniqueHop.hop.displayName(),
+        title: uniqueHop.hop.displayName(context),
         showTopDivider: false,
       ),
     );
@@ -493,8 +493,7 @@ class CircuitPageState extends State<CircuitPage>
           child: Row(
             children: <Widget>[
               Expanded(
-                child: Text(
-                    "Turn Orchid on to activate your hops and protect your traffic",
+                child: Text(s.turnOnToActivate,
                     textAlign: TextAlign.right,
                     style: AppText.hopsInstructionsCallout),
               ),
@@ -527,8 +526,7 @@ class CircuitPageState extends State<CircuitPage>
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16),
-                  child: Text(
-                      "Create your first hop to protect your connection.",
+                  child: Text(s.createFirstHop,
                       textAlign: TextAlign.left,
                       style: AppText.hopsInstructionsCallout),
                 ),
@@ -819,6 +817,10 @@ class CircuitPageState extends State<CircuitPage>
         DateTime.now().difference(_lastInteractionTime) > bunnyHideTime) {
       _bunnyDuckAnimController.reverse();
     }
+  }
+
+  S get s {
+    return S.of(context);
   }
 
   @override
