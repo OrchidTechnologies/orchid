@@ -52,7 +52,7 @@ export const NoWallet: FC<{ walletStatus: WalletStatus }> = (props) => {
         </div>
 
         <div className="NoWallet-smalltext">
-          Privacy note: we recommend using a new Ethereum wallet for Orchid that is not linked to other Ethereum products or services you use. <a href="https://www.orchid.com/join">(learn more)</a>
+          Privacy note: we recommend using a new Ethereum wallet for Orchid that is not linked to other Ethereum products or services you use. <a href="https://www.orchid.com/faq#orchid-app--why-new-wallet">(learn more)</a>
         </div>
 
         <div style={{marginTop: '16px'}}>
