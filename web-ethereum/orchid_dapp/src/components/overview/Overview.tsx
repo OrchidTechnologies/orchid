@@ -18,6 +18,12 @@ export interface OverviewProps {
   minFundedDeposit: BigInt
 }
 
+// Set the min balance and deposit considered funded.
+// const minFundedBalance = oxtToKeiki(20.0);
+// const minFundedDeposit = oxtToKeiki(10.0);
+const minFundedBalance = BigInt(1); // allow anything greater than zero
+const minFundedDeposit = BigInt(1);
+
 export const Overview: React.FC = () => {
   const [newUser, setNewUser] = useState<boolean | undefined>(undefined);
   const [walletEthEmpty, setWalletEthEmpty] = useState<boolean | undefined>(undefined);
@@ -31,12 +37,6 @@ export const Overview: React.FC = () => {
   //   TransactionStatus.result("0x1234", "Transaction Complete!",
   //     new Signer(new Wallet(), "0x12345", "12345"))
   // );
-
-  // Set the min balance and deposit considered funded.
-  // const minFundedBalance = oxtToKeiki(20.0);
-  // const minFundedDeposit = oxtToKeiki(10.0);
-  const minFundedBalance = BigInt(1); // allow anything greater than zero
-  const minFundedDeposit = BigInt(1);
 
   useEffect(() => {
     let api = OrchidAPI.shared();

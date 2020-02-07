@@ -4,6 +4,7 @@ import {SubmitButton} from "../SubmitButton";
 import {Route, RouteContext} from "../Route";
 import {OverviewLoading, OverviewProps} from "./Overview";
 import {
+  GasPricingStrategy,
   keikiToOxt,
   keikiToOxtString,
   oxtToKeiki
@@ -12,6 +13,7 @@ import {Divider, errorClass, Visibility} from "../../util/util";
 import './Overview.css';
 import {OrchidAPI} from "../../api/orchid-api";
 import {TransactionProgress, TransactionState, TransactionStatus} from "../TransactionProgress";
+import {OrchidContracts} from "../../api/orchid-eth-contracts";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -78,6 +80,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
     if (txResult.current != null) {
       txResult.current.scrollIntoView();
     }
+    // TODO: I believe this delay was to help allow the spinner to start. We should probably remove it.
     setTimeout(async () => {
       let _walletCapture = wallet;
       if (_walletCapture == null) {
@@ -89,7 +92,16 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         let newSigner = api.eth.orchidCreateSigner(_walletCapture);
         console.log("add funds");
 
-        let txId = await api.eth.orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow);
+        // Choose a gas price
+        let medianGasPrice = await api.eth.medianGasPrice();
+        let gasPrice = GasPricingStrategy.chooseGasPrice(
+          OrchidContracts.add_funds_total_max_gas, medianGasPrice, _walletCapture.ethBalance);
+        if (!gasPrice) {
+          console.log("Add funds: gas price potentially too low.");
+        }
+
+        // Submit the tx
+        let txId = await api.eth.orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow, gasPrice);
         console.log("add funds complete");
         await api.updateSigners();
         let tx = TransactionStatus.result(txId, "Transaction Complete!", newSigner);

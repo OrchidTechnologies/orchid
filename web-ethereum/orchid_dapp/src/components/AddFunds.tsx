@@ -6,7 +6,9 @@ import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
 import {Address} from "../api/orchid-types";
-import {isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
+import {GasPricingStrategy, isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
+import {OrchidContracts} from "../api/orchid-eth-contracts";
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 interface AddFundsProps {
@@ -43,7 +45,11 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
 
   async function submitAddFunds() {
     let api = OrchidAPI.shared();
-    let walletAddress = api.wallet.value ? api.wallet.value.address : null;
+    let wallet = api.wallet.value;
+    if (!wallet) {
+      return;
+    }
+    let walletAddress = wallet.address;
     console.log("submit add funds: ", walletAddress, addAmount, addEscrow);
     let signerAddress = props.createAccount ? newSignerAddress :
       (api.signer.value ? api.signer.value.address : null);
@@ -59,7 +65,15 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       const amountWei = oxtToKeiki(addAmount);
       const escrowWei = oxtToKeiki(addEscrow);
 
-      let txId = await api.eth.orchidAddFunds(walletAddress, signerAddress, amountWei, escrowWei);
+      // Choose a gas price
+      let medianGasPrice = await api.eth.medianGasPrice();
+      let gasPrice = GasPricingStrategy.chooseGasPrice(
+        OrchidContracts.add_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
+      if (!gasPrice) {
+        console.log("Add funds: gas price potentially too low.");
+      }
+
+      let txId = await api.eth.orchidAddFunds(walletAddress, signerAddress, amountWei, escrowWei, gasPrice);
       if (props.createAccount) {
         await api.updateSigners();
       } else {

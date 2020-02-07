@@ -9,8 +9,6 @@ export class OrchidContracts {
 
   // TODO: We can get the token address from the lottery contract with `what()` now.
   static token_addr_final: Address = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb'; // OXT Main net
-  static token_approval_max_gas: number = 50000;
-
   static token_addr(): Address {
     return getEthAddressParam('token_addr', this.token_addr_final);
   }
@@ -20,15 +18,21 @@ export class OrchidContracts {
     return getEthAddressParam('lottery_addr', this.lottery_addr_final);
   }
 
-  static lottery_push_max_gas: number = 200000;
   static lottery_push_method_hash: string =
     '0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc'; // This is topic[0] of the push event.
 
-  static lottery_pull_amount_max_gas: number = 200000;
-  static lottery_pull_all_max_gas: number = 200000;
-  static lottery_lock_max_gas: number = 200000;
-  static lottery_warn_max_gas: number = 200000;
-  static lottery_move_max_gas: number = 200000;
+  // TODO: Now that the contracts are final we can figure out the actual max gas these methods
+  // TODO: can possibly consume, taking into account variation in storage allocation for new users.
+  static token_approval_max_gas: number = 50000;
+  static lottery_push_max_gas: number = 175000;
+  static lottery_pull_amount_max_gas: number = 150000;
+  static lottery_pull_all_max_gas: number = 150000;
+  static lottery_lock_max_gas: number = 25000;
+  static lottery_warn_max_gas: number = 50000;
+  static lottery_move_max_gas: number = 150000;
+
+  // Total max gas used by an add funds operation.
+  static add_funds_total_max_gas: number = OrchidContracts.token_approval_max_gas + OrchidContracts.lottery_push_max_gas;
 
   static token_abi = [
     {

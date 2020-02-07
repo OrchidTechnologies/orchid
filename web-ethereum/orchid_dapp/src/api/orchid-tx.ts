@@ -24,8 +24,9 @@ export class EthereumTransaction {
 
   static fromReceipt(currentBlock: number, receipt: TransactionReceipt): EthereumTransaction {
     let confirmations = currentBlock - receipt.blockNumber + 1;
-    // Note: receipt.status may be undefined here, contrary to the API.
-    return new EthereumTransaction(receipt.transactionHash, confirmations, receipt.status === false);
+    return new EthereumTransaction(receipt.transactionHash, confirmations,
+      // Note: receipt.status may be undefined here, contrary to the API.
+      receipt.status === false);
   }
 
   static pending(hash: string): EthereumTransaction {

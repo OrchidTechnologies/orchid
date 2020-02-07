@@ -207,7 +207,9 @@ export class OrchidEthereumAPI {
   }
 
   /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified lottery pot address.
-  async orchidAddFunds(funder: Address, signer: Address, amount: BigInt, escrow: BigInt): Promise<string> {
+  async orchidAddFunds(
+    funder: Address, signer: Address, amount: BigInt, escrow: BigInt, gasPrice?: number
+  ): Promise<string> {
     console.log("Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
     //return fakeTx(false);
     const amount_value = BigInt(amount); // Force our polyfill BigInt?
@@ -222,6 +224,7 @@ export class OrchidEthereumAPI {
         ).send({
           from: funder,
           gas: OrchidContracts.token_approval_max_gas,
+          gasPrice: gasPrice
         })
           .on("transactionHash", (hash) => {
             console.log("Approval hash: ", hash);
@@ -247,6 +250,7 @@ export class OrchidEthereumAPI {
         ).send({
           from: funder,
           gas: OrchidContracts.lottery_push_max_gas,
+          gasPrice: gasPrice
         })
           .on("transactionHash", (hash) => {
             console.log("Fund hash: ", hash);
@@ -384,10 +388,64 @@ export class OrchidEthereumAPI {
     return this.evalOrchidTx(
       OrchidContracts.lottery.methods.reset(funder.address)
         .send({
-        from: funder.address,
-        gas: OrchidContracts.lottery_move_max_gas,
-      }), OrchidTransactionType.Reset
+          from: funder.address,
+          gas: OrchidContracts.lottery_move_max_gas,
+        }), OrchidTransactionType.Reset
     );
+  }
+
+  // The current median gas price for the past few blocks
+  async medianGasPrice(): Promise<number> {
+    return await web3.eth.getGasPrice()
+  }
+}
+
+export class GasPricingStrategy {
+
+  /// Choose a gas price taking into account current gas price and the wallet balance.
+  /// This strategy uses a multiple of the current median gas price up to a hard limit on
+  /// both gas price and fraction of the wallet's remaiing ETH balance.
+  // Note: Some of the usage of BigInt in here is convoluted due to the need to import the polyfill.
+  static chooseGasPrice(
+    targetGasAmount: number, currentMedianGasPrice: number, currentEthBalance: BigInt): number | undefined {
+    let maxPriceGwei = 21.0;
+    let minPriceGwei = 2.0;
+    let medianMultiplier = 2.0;
+    let maxWalletFrac = 0.9;
+
+    // Target our multiple of the median price
+    let targetPrice: BigInt = BigInt(currentMedianGasPrice).multiply(medianMultiplier);
+
+    // Don't exceed max price
+    let maxPrice: BigInt = BigInt(maxPriceGwei).multiply(1e9);
+    if (maxPrice < targetPrice) {
+      console.log("Gas price calculation: limited by max price to : ", maxPriceGwei)
+    }
+    targetPrice = BigInt.min(targetPrice, maxPrice);
+
+    // Don't fall below min price
+    let minPrice: BigInt = BigInt(minPriceGwei).multiply(1e9);
+    if (minPrice > targetPrice) {
+      console.log("Gas price calculation: limited by min price to : ", minPriceGwei)
+    }
+    targetPrice = BigInt.max(targetPrice, minPrice);
+
+    // Don't exceed max wallet fraction
+    let targetSpend: BigInt = BigInt(targetPrice).multiply(targetGasAmount);
+    let maxSpend = BigInt(Math.floor(BigInt(currentEthBalance) * maxWalletFrac));
+    if (targetSpend > maxSpend) {
+      console.log("Gas price calculation: limited by wallet balance: ", currentEthBalance)
+    }
+    targetSpend = BigInt.min(targetSpend, maxSpend);
+
+    // Recalculate the price
+    let price = BigInt(targetSpend).divide(targetGasAmount);
+
+    console.log(`Gas price calculation, `
+      + `targetGasAmount: ${targetGasAmount}, medianGasPrice: ${currentMedianGasPrice}, ethBalance: ${currentEthBalance}, chose price: ${BigInt(price).divide(1e9)}`
+    );
+
+    return price.toJSNumber();
   }
 }
 

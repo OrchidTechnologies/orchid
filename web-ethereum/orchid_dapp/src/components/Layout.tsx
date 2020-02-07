@@ -57,9 +57,11 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
     let newUserSub = api.newUser_wait.subscribe(isNew => {
       // Disable general nav for new user with no accounts.
       setIsNewUser(isNew);
-      //setNavEnabledState(!isNew);
+      setNavEnabledState(!isNew);
     });
     let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
+      // avoid some logging
+      if (orchidTransactions.length === 0 && txs.length === 0) { return; }
       setOrchidTransactions(txs);
     });
     return () => {
