@@ -29,6 +29,8 @@ contract PACFunder {
 
     OrchidLottery internal lottery_;
     address owner_;
+    mapping(bytes32 => bool) claimed_;
+
 
     constructor(OrchidLottery lottery) public {
         lottery_ = lottery;
@@ -46,10 +48,16 @@ contract PACFunder {
     function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external { require(msg.sender == owner_); lottery_.pull(signer,target,autolock,amount,escrow); }
     function yank(address signer, address payable target, bool autolock) external { require(msg.sender == owner_); lottery_.yank(signer,target,autolock); }
     
-    function bind_push(address signer, OrchidVerifier verify, bytes calldata shared, uint128 total, uint128 escrow) external {
+    function bind_push(address signer, OrchidVerifier verify, bytes memory shared, uint128 total, uint128 escrow) private {
         require(msg.sender == owner_);
     	lottery_.bind(signer, verify, shared);
     	lottery_.push(signer, total, escrow);
+    }
+    
+    function fund(bytes32 reciept, address signer, OrchidVerifier verify, bytes calldata shared, uint128 total, uint128 escrow) external {
+        require(claimed_[reciept] == false);
+        bind_push(signer,verify,shared,total,escrow);
+        claimed_[reciept] = true;
     }
     
 }
