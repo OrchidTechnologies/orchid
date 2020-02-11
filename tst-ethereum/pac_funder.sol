@@ -54,10 +54,11 @@ contract PACFunder {
     	lottery_.push(signer, total, escrow);
     }
     
-    function fund(bytes32 reciept, address signer, OrchidVerifier verify, bytes calldata shared, uint128 total, uint128 escrow) external {
-        require(claimed_[reciept] == false);
+    function fund(bytes32 receipt, address signer, OrchidVerifier verify, bytes calldata shared, uint128 total, uint128 escrow) external {
+        require(msg.sender == owner_);
+        require(claimed_[receipt] == false);
         bind_push(signer,verify,shared,total,escrow);
-        claimed_[reciept] = true;
+        claimed_[receipt] = true;
     }
     
 }
