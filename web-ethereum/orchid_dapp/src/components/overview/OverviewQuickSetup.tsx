@@ -14,6 +14,7 @@ import './Overview.css';
 import {OrchidAPI} from "../../api/orchid-api";
 import {TransactionProgress, TransactionState, TransactionStatus} from "../TransactionProgress";
 import {OrchidContracts} from "../../api/orchid-eth-contracts";
+import {S} from "../../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -104,13 +105,13 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         let txId = await api.eth.orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow, gasPrice);
         console.log("add funds complete");
         await api.updateSigners();
-        let tx = TransactionStatus.result(txId, "Transaction Complete!", newSigner);
+        let tx = TransactionStatus.result(txId, S.transactionComplete, newSigner);
         setTx(tx); // show the tx result
         props.txResultSetter(tx); // store the tx result in the context
         api.updateWallet().then();
         api.updateTransactions().then();
       } catch (err) {
-        let tx = TransactionStatus.error(`Transaction Failed: ${err}`);
+        let tx = TransactionStatus.error(`${S.transactionFailed}: ${err}`);
         setTx(tx);
         props.txResultSetter(tx);
       }
@@ -127,18 +128,18 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
   let sufficientFundsAmount = targetDeposit + targetBalance;
   let sufficientFunds = keikiToOxt(walletBalance) >= sufficientFundsAmount;
   let insufficientFundsText =
-    `You need a total of ${sufficientFundsAmount.toFixed(1)} OXT for a 
-    starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
+    `You need a total of ${sufficientFundsAmount.toFixedLocalized(1)} OXT for a starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
 
   let submitEnabled = sufficientFunds && !tx.isRunning();
   let txCompletedSuccessfully = tx.state === TransactionState.Completed;
 
   return (
     <Container className="form-style">
-      <label className="title">Quick Set Up</label>
+      <label className="title">{S.quickSetUp}</label>
 
       <p className="quick-setup-instructions">
         Create account with available Orchid tokens.
+        {S.createAccountWithAvailable}
       </p>
 
       <Visibility visible={tx == null}>
@@ -173,9 +174,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
           submitAddFunds();
         }}
         hidden={potFunded || txCompletedSuccessfully}
-        enabled={submitEnabled}>
-        Transfer Available
-        OXT: {walletBalance == null ? "0.00" : keikiToOxtString(walletBalance, 2)}
+        enabled={submitEnabled}>{S.transferAvailable} OXT: {walletBalance == null ? "0.00" : keikiToOxtString(walletBalance, 2)}
       </SubmitButton>
 
       <Visibility visible={!potFunded && !txCompletedSuccessfully}>
@@ -185,7 +184,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         }} onClick={() => {
           setNavEnabled(true);
           setRoute(Route.CreateAccount)
-        }}><span className={"link-button-style"}>Enter custom amount</span></Row>
+        }}><span className={"link-button-style"}>{S.enterCustomAmount}</span></Row>
       </Visibility>
 
       <TransactionProgress ref={txResult} tx={tx}/>

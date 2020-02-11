@@ -9,12 +9,37 @@ import './css/form-style.css'
 import './css/button-style.css'
 import {Layout} from "./components/Layout"
 import {NoWallet} from "./components/NoWallet";
+import {createIntl, createIntlCache, IntlProvider} from "react-intl";
+import messages_en from './i18n/en.json';
+import {getParam, testLocalization_} from "./util/util";
+
+const messages: Record<string, Record<string, any>> = {
+  'en': messages_en,
+};
+
+let language = navigator.language.split(/[-_]/)[0]; // TODO: country
+if (getParam('testLocalization')) {
+  // Spanish number / date formatting with mixed case English
+  language = 'es';
+  messages[language] = testLocalization_(messages['en']);
+}
+
+const cache = createIntlCache();
+export const intl = createIntl({
+  locale: language,
+  messages: messages[language]
+}, cache);
 
 OrchidAPI.shared().init().then((walletStatus) => {
-  render(<App walletStatus={walletStatus}/>, document.getElementById('root'));
+  render(
+    <IntlProvider locale={language} messages={messages[language]}>
+      <App walletStatus={walletStatus}/>
+    </IntlProvider>,
+    document.getElementById('root')
+  );
 });
 
-const App: FC<{walletStatus: WalletStatus}> = (props) => {
+const App: FC<{ walletStatus: WalletStatus }> = (props) => {
   const [walletStatus, setWalletStatus] = useState(props.walletStatus);
 
   useEffect(() => {
@@ -29,7 +54,7 @@ const App: FC<{walletStatus: WalletStatus}> = (props) => {
   }, []);
 
   let el: any;
-  switch(walletStatus) {
+  switch (walletStatus) {
     case WalletStatus.NoWallet:
     case WalletStatus.Error:
     case WalletStatus.WrongNetwork:

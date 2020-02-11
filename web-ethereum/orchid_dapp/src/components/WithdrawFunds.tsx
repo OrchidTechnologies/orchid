@@ -8,6 +8,7 @@ import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Address} from "../api/orchid-types";
 import {Col, Container, Row} from "react-bootstrap";
+import {S} from "../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -72,10 +73,10 @@ export class WithdrawFunds extends Component {
       await api.updateLotteryPot();
       await api.updateWallet();
       await api.updateSigners();
-      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
+      this.setState({tx: TransactionStatus.result(txId, S.transactionComplete)});
       api.updateTransactions().then();
     } catch (err) {
-      this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
+      this.setState({tx: TransactionStatus.error(`${S.transactionFailed}: ${err}`)});
     }
   };
 
@@ -94,12 +95,12 @@ export class WithdrawFunds extends Component {
     let currentInputAmount = this.amountInput.current == null ? "" : this.amountInput.current.value;
     return (
       <Container className="form-style">
-        <label className="title">Withdraw from balance</label>
+        <label className="title">{S.withdrawFromBalance}</label>
 
         {/*Balance*/}
         <Row className="form-row">
           <Col>
-            <label>Balance</label>
+            <label>{S.balance}</label>
           </Col>
           <Col>
             <div className="oxt-1-pad">
@@ -110,14 +111,14 @@ export class WithdrawFunds extends Component {
 
         <Row className="form-row">
           <Col>
-            <label>Withdraw<span className={errorClass(this.state.amountError)}> *</span></label>
+            <label>{S.withdraw}<span className={errorClass(this.state.amountError)}> *</span></label>
           </Col>
           <Col>
             <input
               ref={this.amountInput}
               type="number"
               className="withdraw-amount editable"
-              placeholder="0.00"
+              placeholder={(0).toFixedLocalized(2)}
               value={withdrawAmount == null ? currentInputAmount : withdrawAmount}
               onChange={(e) => {
                 let amount = parseFloatSafe(e.currentTarget.value);
@@ -134,12 +135,12 @@ export class WithdrawFunds extends Component {
 
         <Row>
           <Col>
-            <label>Withdrawing to:<span
+            <label>{S.withdrawingTo}:<span
               className={errorClass(this.state.addressError)}> *</span></label>
             <input
               type="text"
               className="send-to-address editable"
-              placeholder="Address"
+              placeholder={S.address}
               onChange={(e) => {
                 const address = e.currentTarget.value;
                 const valid = isEthAddress(address);
@@ -167,18 +168,15 @@ export class WithdrawFunds extends Component {
                   this.setState({withdrawAll: value});
                 }}
               />
-              <label>Withdraw Full Balance and Deposit</label>
+              <label>{S.withdrawFullBalanceAndDeposit}</label>
             </div>
           </Col>
         </Row>
 
-        <p className="instructions-narrow">
-          Note: If an overdraft occurs on your Orchid<br/>
-          balance, your deposit will be lost.
-        </p>
+        <p className="instructions-narrow" style={{width: '75%'}}>{S.noteIfOverdraftOccurs}</p>
         <div style={{marginTop: '16px'}}>
           <SubmitButton onClick={() => this.submitWithdrawFunds().then()} enabled={submitEnabled}>
-            Withdraw OXT</SubmitButton>
+            {S.withdrawOXT}</SubmitButton>
         </div>
 
         <TransactionProgress ref={this.txResult} tx={this.state.tx}/>

@@ -1,4 +1,5 @@
 import React from "react";
+import {S} from "../i18n/S";
 
 export const SubmitButton: React.FC<{
   onClick: () => void,
@@ -12,7 +13,7 @@ export const SubmitButton: React.FC<{
           props.onClick();
         }}
         disabled={!props.enabled}>
-        {props.children || <span>Submit</span>}
+        {props.children || <span>{S.submit}</span>}
       </button>
     </div>
   );
