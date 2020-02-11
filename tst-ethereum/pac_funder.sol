@@ -53,12 +53,15 @@ contract PACFunder {
     	lottery_.bind(signer, verify, shared);
     	lottery_.push(signer, total, escrow);
     }
+
+    event Fund(bytes32 indexed receipt, address indexed signer, uint128 total, uint128 escrow);
     
     function fund(bytes32 receipt, address signer, OrchidVerifier verify, bytes calldata shared, uint128 total, uint128 escrow) external {
         require(msg.sender == owner_);
         require(claimed_[receipt] == false);
         bind_push(signer,verify,shared,total,escrow);
         claimed_[receipt] = true;
+        emit Fund(receipt,signer,total,escrow);
     }
     
 }
