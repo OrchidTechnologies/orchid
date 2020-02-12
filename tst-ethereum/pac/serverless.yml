@@ -1,4 +1,4 @@
-service: pac-test
+service: pac
 app: pac
 org: orchid
 
@@ -44,7 +44,7 @@ functions:
     handler: handler.main
     events:
       - http:
-          path: test
+          path: submit
           method: post
 plugins:
   - serverless-pseudo-parameters
