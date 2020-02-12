@@ -126,7 +126,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
   let ticketFaceValue = 0.8; // TODO:
   const targetBalance = 2 * ticketFaceValue;
   let sufficientFundsAmount = targetDeposit + targetBalance;
-  let sufficientFunds = keikiToOxt(walletBalance) >= sufficientFundsAmount;
+  let sufficientFunds = walletBalance >= oxtToKeiki(sufficientFundsAmount);
   let insufficientFundsText =
     `You need a total of ${sufficientFundsAmount.toFixedLocalized(1)} OXT for a starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
 

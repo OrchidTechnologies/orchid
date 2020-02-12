@@ -7,7 +7,6 @@ import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
 import {OrchidAPI, WalletStatus} from "./orchid-api";
 import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
-import {intl} from "../index";
 import "../i18n/i18n_util";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
@@ -216,7 +215,7 @@ export class OrchidEthereumAPI {
     //return fakeTx(false);
     const amount_value = BigInt(amount); // Force our polyfill BigInt?
     const escrow_value = BigInt(escrow);
-    const total = amount_value + escrow_value;
+    const total = amount_value.add(escrow_value);
 
     async function doApproveTx() {
       return new Promise<string>(function (resolve, reject) {
