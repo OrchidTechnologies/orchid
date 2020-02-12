@@ -1,16 +1,7 @@
 import React, {FC, useContext, useEffect, useState} from "react";
 import {
-  Button,
-  Col,
-  Container,
-  Image,
-  ListGroup,
-  ListGroupItem,
-  Nav,
-  Navbar,
-  OverlayTrigger,
-  Popover,
-  Row
+  Button, Col, Container, Image, ListGroup, ListGroupItem,
+  Nav, Navbar, OverlayTrigger, Popover, Row
 } from "react-bootstrap";
 import {Transactions} from "./Transactions";
 import {AddFunds} from "./AddFunds";
@@ -36,6 +27,7 @@ import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 import {Overview} from "./overview/Overview";
 import {TransactionPanel} from "./TransactionPanel";
 import {OrchidTransactionDetail} from "../api/orchid-tx";
+import {S} from "../i18n/S";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
@@ -45,11 +37,11 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
   const [orchidTransactions, setOrchidTransactions] = useState<OrchidTransactionDetail[]>([]);
 
   const moreMenuItems = new Map<Route, string>([
-    [Route.Balances, "Info"],
-    [Route.Transactions, "Transactions"],
-    [Route.MoveFunds, "Move Funds"],
-    [Route.LockFunds, "Lock / Unlock Funds"],
-    [Route.DebugPanel, "Advanced"]
+    [Route.Balances, S.info],
+    [Route.Transactions, S.transactions],
+    [Route.MoveFunds, S.moveFunds],
+    [Route.LockFunds, S.lockUnlockFunds],
+    [Route.DebugPanel, S.advanced]
   ]);
 
   useEffect(() => {
@@ -61,7 +53,9 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
     });
     let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
       // avoid some logging
-      if (orchidTransactions.length === 0 && txs.length === 0) { return; }
+      if (orchidTransactions.length === 0 && txs.length === 0) {
+        return;
+      }
       setOrchidTransactions(txs);
     });
     return () => {
@@ -92,9 +86,9 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Header/>
             <Divider/>
             <Navbar className={navEnabled ? "" : "disabled-faded"}>
-              <NavButton route={Route.Overview} icon={homeIcon} iconSelected={homeIconSelected}>Overview </NavButton>
-              <NavButton route={Route.AddFunds} icon={addIcon} iconSelected={addIconSelected}>Add </NavButton>
-              <NavButton route={Route.WithdrawFunds} icon={withdrawIcon} iconSelected={withdrawIconSelected}>Withdraw </NavButton>
+              <NavButton route={Route.Overview} icon={homeIcon} iconSelected={homeIconSelected}>{S.overview}</NavButton>
+              <NavButton route={Route.AddFunds} icon={addIcon} iconSelected={addIconSelected}>{S.add}</NavButton>
+              <NavButton route={Route.WithdrawFunds} icon={withdrawIcon} iconSelected={withdrawIconSelected}>{S.withdraw}</NavButton>
                 <OverlayTrigger
                   rootClose={true} trigger="click" placement='bottom'
                   overlay={
@@ -110,7 +104,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
                   }>
                   <Button className={"Layout-nav-button "}>
                       <Image src={moreItemsSelected ? moreIconSelected : moreIcon}/>
-                      <Nav.Link className={moreItemsSelected ? "selected" : ""}>More</Nav.Link>
+                      <Nav.Link className={moreItemsSelected ? "selected" : ""}>{S.more}</Nav.Link>
                   </Button>
                 </OverlayTrigger>
             </Navbar>

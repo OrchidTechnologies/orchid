@@ -7,6 +7,8 @@ import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
 import {OrchidAPI, WalletStatus} from "./orchid-api";
 import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
+import {intl} from "../index";
+import "../i18n/i18n_util";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 const ORCHID_SIGNER_KEYS_WALLET = "orchid-signer-keys";
@@ -458,7 +460,7 @@ export function isEthAddress(str: string): boolean {
 export function keikiToOxtString(keiki: BigInt, decimals: number) {
   decimals = Math.round(decimals);
   let val: number = keikiToOxt(keiki);
-  return val.toFixed(decimals).toString();
+  return val.toFixedLocalized(decimals);
 }
 
 /// Convert keiki to an (approximate) OXT float value

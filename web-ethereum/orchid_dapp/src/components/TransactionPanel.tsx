@@ -6,6 +6,7 @@ import {
 } from "../api/orchid-tx";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OrchidAPI} from "../api/orchid-api";
+import {S} from "../i18n/S";
 
 export const TransactionPanel: React.FC<{
   tx: OrchidTransactionDetail
@@ -16,35 +17,35 @@ export const TransactionPanel: React.FC<{
   let type: string = "";
   switch (props.tx.type) {
     case OrchidTransactionType.AddFunds:
-      type = "Add Funds";
+      type = S.addFunds;
       break;
     case OrchidTransactionType.WithdrawFunds:
-      type = "Withdraw Funds";
+      type = S.withdrawFunds;
       break;
     case OrchidTransactionType.Lock:
-      type = "Lock";
+      type = S.lock;
       break;
     case OrchidTransactionType.Unlock:
-      type = "Unlock";
+      type = S.unlock;
       break;
     case OrchidTransactionType.MoveFundsToEscrow:
-      type = "Move Funds To Deposit";
+      type = S.moveFundsToDeposit;
       break;
     case OrchidTransactionType.Reset:
-      type = "Reset Account";
+      type = S.resetAccount;
       break;
   }
 
   let status: string = "";
   switch(props.tx.status) {
     case EthereumTransactionStatus.PENDING:
-      status = "Pending";
+      status = S.pending;
       break;
     case EthereumTransactionStatus.SUCCESS:
-      status = "Complete";
+      status = S.complete;
       break;
     case EthereumTransactionStatus.FAILURE:
-      status = "Failed!";
+      status = S.failed;
       break;
 
   }
@@ -56,7 +57,7 @@ export const TransactionPanel: React.FC<{
 
   let ethTxs = props.tx.transactions.map(tx => {
     let status = multiple ? (
-      <Row style={{marginTop: '4px'}}><Col>Status: {
+      <Row style={{marginTop: '4px'}}><Col>{S.status}: {
         EthereumTransactionStatus[tx.status]
       }</Col></Row>) : "";
     return <Row key={tx.hash}>
@@ -67,7 +68,7 @@ export const TransactionPanel: React.FC<{
             fontSize: '14px', textOverflow: "ellipsis", overflowX: 'hidden',
             whiteSpace: 'nowrap',
           }}>
-            Hash: {tx.hash}
+            {S.hash}: {tx.hash}
           </Col>
         </Row>
         <Row>
@@ -76,13 +77,13 @@ export const TransactionPanel: React.FC<{
               fontStyle: 'italic', fontSize: '14px', textOverflow: "ellipsis",
               whiteSpace: 'nowrap',
             }}>
-            <a style={{color: "lightblue"}} href={tx.getLink()}>View on blockchain</a>
+            <a style={{color: "lightblue"}} href={tx.getLink()}>{S.viewOnBlockchain}</a>
           </Col>
         </Row>
         {status}
         <Row>
           <Col style={{marginTop: '2px'}}>
-            Confirmations: {tx.confirmations}
+            {S.confirmations}: {tx.confirmations}
           </Col>
         </Row>
       </Col>
@@ -115,7 +116,7 @@ export const TransactionPanel: React.FC<{
           <div style={{fontSize: '16px', width: '5px'}}>{open ? "▾" : "▸"}</div>
         </Col>
         <Col>
-          <span>Transaction {status}</span>
+          <span>{S.transaction} {status}</span>
           <div style={{fontStyle: 'italic', fontSize: '14px',}}>{type}</div>
         </Col>
         <Col

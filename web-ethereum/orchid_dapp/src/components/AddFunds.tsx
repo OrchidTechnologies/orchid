@@ -8,6 +8,7 @@ import './AddFunds.css'
 import {Address} from "../api/orchid-types";
 import {GasPricingStrategy, isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
+import {S} from "../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -79,11 +80,11 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       } else {
         await api.updateLotteryPot();
       }
-      setTx(TransactionStatus.result(txId, "Transaction Complete!"));
+      setTx(TransactionStatus.result(txId, S.transactionComplete));
       api.updateWallet().then();
       api.updateTransactions().then();
     } catch (err) {
-      setTx(TransactionStatus.error(`Transaction Failed: ${err}`));
+      setTx(TransactionStatus.error(`${S.transactionFailed}: ${err}`));
     }
   }
 
@@ -96,12 +97,12 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
 
   return (
     <Container className="form-style">
-      <label className="title">{props.createAccount ? "Create New Account" : "Add Funds"}</label>
+      <label className="title">{props.createAccount ? S.createNewAccount : S.addFunds}</label>
 
       {/*Available Wallet Balance*/}
       <Row className="form-row">
         <Col>
-          <label>From Available</label>
+          <label>{S.fromAvailable}</label>
         </Col>
         <Col>
           <div className="oxt-1-pad">
@@ -114,14 +115,14 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       <Visibility visible={props.createAccount}>
         <Row className="form-row" noGutters={true}>
           <Col>
-            <label>Signer Key<span
+            <label>{S.signerKey}<span
               className={errorClass(signerKeyError)}> *</span></label>
           </Col>
           <Col>
             <input
               className="send-to-address editable"
               type="text"
-              placeholder="Address"
+              placeholder={S.address}
               onChange={(e) => {
                 const address = e.currentTarget.value;
                 const valid = isEthAddress(address);
@@ -136,7 +137,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       {/*Add to Balance*/}
       <Row className="form-row" noGutters={true}>
         <Col>
-          <label>Add to Balance<span
+          <label>{S.addToBalance}<span
             className={errorClass(amountError)}> *</span></label>
         </Col>
         <Col>
@@ -148,7 +149,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
               setAmountError(amount == null || oxtToKeiki(amount) > (walletBalance || 0));
             }}
             type="number"
-            placeholder="0.00"
+            placeholder={(0).toFixedLocalized(2)}
             defaultValue={props.defaultAddAmount}
           />
         </Col>
@@ -157,7 +158,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       {/*Deposit*/}
       <Row className="form-row" noGutters={true}>
         <Col>
-          <label>Add to Deposit<span
+          <label>{S.addToDeposit}<span
             className={errorClass(escrowError)}> *</span></label>
         </Col>
         <Col>
@@ -168,33 +169,33 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
               setAddEscrow(amount);
               setEscrowError(amount == null);
             }}
-            type="number" placeholder="0.00"
+            type="number"
+            placeholder={(0).toFixedLocalized(2)}
             defaultValue={props.defaultAddEscrow}
           />
         </Col>
       </Row>
 
       <p className="instructions">
-        Your deposit secures access to the Orchid network and demonstrates authenticity to
-        bandwidth sellers.
+        {S.yourDepositSecuresAccessInstruction}
       </p>
       <Divider noGutters={true}/>
 
       {/*Total*/}
       <Row className="total-row" noGutters={true}>
         <Col>
-          <label>Total</label>
+          <label>{S.total}</label>
         </Col>
         <Col>
           <div className="oxt-1">{
-            ((addEscrow || 0) + (addAmount || 0)).toFixed(2)
+            ((addEscrow || 0) + (addAmount || 0)).toFixedLocalized(2)
           } OXT
           </div>
         </Col>
       </Row>
 
       <SubmitButton onClick={() => submitAddFunds()} enabled={submitEnabled}>
-        {props.createAccount ? "Create Account" : "Add OXT"}
+        {props.createAccount ? S.createAccount : S.addOXT}
       </SubmitButton>
 
       <TransactionProgress ref={txResult} tx={tx}/>

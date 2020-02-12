@@ -1,6 +1,7 @@
 import React, {FC} from "react";
 import {Row} from "react-bootstrap";
 import {isEthAddress} from "../api/orchid-eth";
+import {MessageFormatElement} from "intl-messageformat-parser";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -101,4 +102,23 @@ export function copyTextToClipboard(text: string) {
   dummy.select();
   document.execCommand('copy');
   document.body.removeChild(dummy);
+}
+
+export function testLocalization_(en: Record<string, any>) {
+  let msgs: Record<string, string> = {};
+  Object.keys(en).forEach(key=>{
+
+    // Mix the case
+    let org = en[key];
+    if ((typeof org) !== "string") {
+      return;
+    }
+    let mod = "";
+    for (let i=0; i < org.length; i++) {
+      let char = (org as string).charAt(i);
+      mod += i % 2 === 0 ? char.toUpperCase() : char.toLowerCase();
+    }
+    msgs[key] = mod;
+  });
+  return msgs;
 }

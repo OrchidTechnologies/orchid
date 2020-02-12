@@ -4,6 +4,7 @@ import {LotteryPot} from "../api/orchid-eth";
 import {OrchidAPI} from "../api/orchid-api";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {Container} from "react-bootstrap";
+import {S} from "../i18n/S";
 
 export class LockFunds extends Component {
 
@@ -38,11 +39,11 @@ export class LockFunds extends Component {
       let txId = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ?
         await api.eth.orchidLock(wallet.address, signer.address) :
         await api.eth.orchidUnlock(wallet.address, signer.address);
-      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
+      this.setState({tx: TransactionStatus.result(txId, S.transactionComplete)});
       api.updateLotteryPot().then();
     } catch (err) {
       console.log("error: ", err);
-      this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
+      this.setState({tx: TransactionStatus.error(`${S.transactionFailed}: ${err}`)});
     }
   }
 
@@ -50,15 +51,15 @@ export class LockFunds extends Component {
     if (this.state.pot == null) {
       return <div/>;
     }
-    let text = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? "Lock" : "Unlock";
+    let text = (this.state.pot.isUnlocked() || this.state.pot.isUnlocking()) ? S.lock : S.unlock;
     let submitEnabled = !this.state.tx.isRunning();
     return (
       <Container className="form-style">
-        <label className="title">Lock / Unlock Funds</label>
+        <label className="title">{S.lockUnlockFunds}</label>
         <p className="instructions">
-          To withdraw your full balance including the deposit the account must be unlocked.
-          Funds will be available at the time shown below. If you wish to cancel the withdrawal
-          process and continue using your deposit re-lock funds.
+          {S.toWithdrawYourFullBalance + "  "}
+          {S.fundsWillBeAvailableAt+ "  "}
+          {S.ifYouWishToCancelWithdrawal}
         </p>
         <LockStatus/>
         <div style={{marginTop: '24px'}} className="submit-button">
@@ -69,7 +70,7 @@ export class LockFunds extends Component {
             disabled={!submitEnabled}
           ><span>{text}</span></button>
         </div>
-        <TransactionProgress /*ref={txResult}*/ tx={this.state.tx}/>
+        <TransactionProgress tx={this.state.tx}/>
       </Container>
     );
   }

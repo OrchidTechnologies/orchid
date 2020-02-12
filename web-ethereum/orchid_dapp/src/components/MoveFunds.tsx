@@ -5,6 +5,7 @@ import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Container} from "react-bootstrap";
+import {S} from "../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -37,9 +38,9 @@ export class MoveFunds extends Component {
       const moveEscrowWei = oxtToKeiki(this.state.moveAmount);
       let txId = await api.eth.orchidMoveFundsToEscrow(wallet.address, signer.address, moveEscrowWei);
       await api.updateLotteryPot();
-      this.setState({tx: TransactionStatus.result(txId, "Transaction Complete!")});
+      this.setState({tx: TransactionStatus.result(txId, S.transactionComplete)});
     } catch (err) {
-      this.setState({tx: TransactionStatus.error(`Transaction Failed: ${err}`)});
+      this.setState({tx: TransactionStatus.error(`${S.transactionFailed}: ${err}`)});
     }
   }
 
@@ -50,20 +51,22 @@ export class MoveFunds extends Component {
       && this.state.moveAmount != null;
     return (
       <Container className="form-style">
-        <label className="title">Move Funds</label>
+        <label className="title">{S.moveFunds}</label>
         <p className="instructions">
-          Move funds from your Lottery Pot balance to your deposit. Balance funds are used by
-          Orchid services and can be withdrawn at any time. Deposit funds are required to
-          participate in
-          the Orchid network and can be withdrawn after an unlock notice period.
+          {S.moveFundsFromYourLotteryPot + "  "}
+          {S.balanceFundsAreUsedByOrchid + "  "}
+          {S.depositFundsAreRequiredToParticipate}
         </p>
-        <label>Available Lottery Pot Balance Amount</label>
-        <input type="number" className="pot-balance" placeholder="Amount in OXT"
+        <label>{S.availableLotteryPotBalance}</label>
+        <input type="number" className="pot-balance"
+               placeholder={S.amountInOXT}
                value={this.state.potBalance == null ? "" : keikiToOxtString(this.state.potBalance, 4)}
                readOnly/>
-        <label>Move to Deposit Amount<span className={errorClass(this.state.amountError)}> *</span></label>
+        <label>{S.moveToDepositAmount}<span className={errorClass(this.state.amountError)}> *</span></label>
         <input
-          type="number" placeholder="Amount in OXT" className="editable"
+          type="number"
+          placeholder={S.amountInOXT}
+          className="editable"
           onInput={(e) => {
             let amount = parseFloatSafe(e.currentTarget.value);
             const valid = amount != null && amount > 0
@@ -75,7 +78,7 @@ export class MoveFunds extends Component {
           }}
         />
         <SubmitButton onClick={() => this.submitMoveFunds().then()} enabled={submitEnabled}/>
-        <TransactionProgress /*ref={txResult}*/ tx={this.state.tx}/>
+        <TransactionProgress tx={this.state.tx}/>
       </Container>
     );
   }

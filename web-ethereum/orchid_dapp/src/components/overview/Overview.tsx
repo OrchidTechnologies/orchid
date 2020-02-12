@@ -6,6 +6,7 @@ import {OverviewEarn} from "./OverviewEarn";
 import {OverviewDefault} from "./OverviewDefault";
 import {OverviewQuickSetup} from "./OverviewQuickSetup";
 import {TransactionStatus} from "../TransactionProgress";
+import {S} from "../../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -34,7 +35,7 @@ export const Overview: React.FC = () => {
   const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(undefined);
   // TESTING:
   // const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(
-  //   TransactionStatus.result("0x1234", "Transaction Complete!",
+  //   TransactionStatus.result("0x1234", S.transactionComplete,
   //     new Signer(new Wallet(), "0x12345", "12345"))
   // );
 
@@ -95,5 +96,5 @@ export const Overview: React.FC = () => {
 };
 
 export const OverviewLoading: React.FC = () => {
-  return <div style={{textAlign: 'center', marginTop: '24px'}}>Checking Wallet Status...</div>
+  return <div style={{textAlign: 'center', marginTop: '24px'}}>{S.checkingWalletStatus}...</div>
 };
