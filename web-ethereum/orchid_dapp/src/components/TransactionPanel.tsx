@@ -56,10 +56,23 @@ export const TransactionPanel: React.FC<{
   }
 
   let ethTxs = props.tx.transactions.map(tx => {
-    let status = multiple ? (
-      <Row style={{marginTop: '4px'}}><Col>{S.status}: {
-        EthereumTransactionStatus[tx.status]
-      }</Col></Row>) : "";
+
+    let statusTerm: string = "";
+    switch(tx.status) {
+      case EthereumTransactionStatus.PENDING:
+        statusTerm = S.pending;
+        break;
+      case EthereumTransactionStatus.SUCCESS:
+        statusTerm = S.complete;
+        break;
+      case EthereumTransactionStatus.FAILURE:
+        statusTerm = S.failed;
+        break;
+    }
+
+    let status = multiple ?
+      (<Row style={{marginTop: '4px'}}><Col>{S.status}: { statusTerm }</Col></Row>) : "";
+
     return <Row key={tx.hash}>
       <Col style={{marginTop: '0px'}}>
         <hr style={{borderColor: "grey"}}/>
