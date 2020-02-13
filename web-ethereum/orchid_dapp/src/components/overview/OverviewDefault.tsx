@@ -17,12 +17,12 @@ export const OverviewDefault: React.FC<OverviewProps> = (props) => {
   if (potFunded) {
     instructions = S.yourOrchidAccountIsFunded;
   } else if (walletEthEmpty && walletOxtEmpty) {
-    instructions = S.yourWalletIsEmpty + ".  " + S.transferOXTandEnoughETH;
+    instructions = S.yourWalletIsEmpty + "  " + S.transferOXTandEnoughETH;
   } else if (walletEthEmpty) {
     instructions =
-      S.yourWalletETHbalanceIsEmpty + ".  " + S.transferEnoughETHtoCoverTwo;
+      S.yourWalletETHbalanceIsEmpty + "  " + S.transferEnoughETHtoCoverTwo;
   } else if (walletOxtEmpty) {
-    instructions = S.yourWalletOXTbalanceIsEmpty + ".  " + S.transferOXTToThisDappWallet;
+    instructions = S.yourWalletOXTbalanceIsEmpty + "  " + S.transferOXTToThisDappWallet;
   } else if (noAccount) {
     instructions = S.youAreReadyToCreateOrchidAccount + "  " + S.continueBelowToCreateAccount;
   } else {

@@ -23,23 +23,23 @@ export class S {
   static get yourOrchidAccountIsFunded() { return intl.formatMessage({id: 'yourOrchidAccountIsFunded',
     defaultMessage: 'Your Orchid Account is funded and ready to go!'}); }
   static get yourWalletIsEmpty() { return intl.formatMessage({id: 'yourWalletIsEmpty',
-    defaultMessage: 'Your wallet is empty. '}); }
+    defaultMessage: 'Your wallet is empty.'}); }
   static get transferOXTandEnoughETH() { return intl.formatMessage({id: 'transferOXTandEnoughETH',
     defaultMessage: 'Transfer OXT and enough ETH to cover two transactions to this dapp wallet in order to continue.'}); }
   static get yourWalletETHbalanceIsEmpty() { return intl.formatMessage({id: 'yourWalletETHbalanceIsEmpty',
-    defaultMessage: 'Your wallet ETH balance is empty. '}); }
+    defaultMessage: 'Your wallet ETH balance is empty.'}); }
   static get transferEnoughETHtoCoverTwo() { return intl.formatMessage({id: 'transferEnoughETHtoCoverTwo',
     defaultMessage: 'Transfer enough ETH to cover two transactions to this dapp wallet in order to continue.'}); }
   static get yourWalletOXTbalanceIsEmpty() { return intl.formatMessage({id: 'yourWalletOXTbalanceIsEmpty',
-    defaultMessage: 'Your wallet OXT balance is empty. '}); }
+    defaultMessage: 'Your wallet OXT balance is empty.'}); }
   static get transferOXTToThisDappWallet() { return intl.formatMessage({id: 'transferOXTToThisDappWallet',
     defaultMessage: 'Transfer OXT to this dapp wallet in order to continue.'}); }
   static get youAreReadyToCreateOrchidAccount() { return intl.formatMessage({id: 'youAreReadyToCreateOrchidAccount',
-    defaultMessage: 'You are ready to create an Orchid account with funds from your wallet. '}); }
+    defaultMessage: 'You are ready to create an Orchid account with funds from your wallet.'}); }
   static get continueBelowToCreateAccount() { return intl.formatMessage({id: 'continueBelowToCreateAccount',
     defaultMessage: 'Continue below to create your account.'}); }
   static get yourOrchidAccountIsReadyToReceive() { return intl.formatMessage({id: 'yourOrchidAccountIsReadyToReceive',
-    defaultMessage: 'Your Orchid Account is ready to receive funds from your wallet. '}); }
+    defaultMessage: 'Your Orchid Account is ready to receive funds from your wallet.'}); }
   static get proceedBelowToAddFunds() { return intl.formatMessage({id: 'proceedBelowToAddFunds',
     defaultMessage: 'Proceed below to add funds to your account.'}); }
   static get info() { return intl.formatMessage({id: 'info',

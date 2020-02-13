@@ -138,7 +138,6 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
       <label className="title">{S.quickSetUp}</label>
 
       <p className="quick-setup-instructions">
-        Create account with available Orchid tokens.
         {S.createAccountWithAvailable}
       </p>
 
