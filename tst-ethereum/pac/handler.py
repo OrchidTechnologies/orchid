@@ -231,11 +231,11 @@ def generate_config(
     funder='0xE85C49919615A4aE3bFf08A350AEd7853340D4A0',
 ):
     if secret is not None:
-        return f'hops = [{{curator:"{curator}", protocol: "{protocol}", \
-funder: "{funder}", secret: "{secret}"}}];'
+        return f'account = {{curator:"{curator}", protocol: "{protocol}", \
+funder: "{funder}", secret: "{secret}"}};'
     else:
-        return f'hops = [{{curator:"{curator}", protocol: "{protocol}", \
-funder: "{funder}"}}];'
+        return f'account = {{curator:"{curator}", protocol: "{protocol}", \
+funder: "{funder}"}};'
 
 
 def product_to_usd(product_id: str) -> float:
