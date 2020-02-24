@@ -335,7 +335,7 @@ def main(event, context):
     if (apple_response[0] or verify_receipt == 'False'):
         validation_result: dict = apple_response[1]
         bundle_id = validation_result['receipt']['bundle_id']
-        if bundle_id != 'OrchidTechnologies.PAC-Test':
+        if bundle_id != 'OrchidTechnologies.PAC-Test' and verify_receipt != 'False':
             print(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
             response = {
                 "isBase64Encoded": False,
