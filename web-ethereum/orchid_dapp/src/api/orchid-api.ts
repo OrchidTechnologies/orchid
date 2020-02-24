@@ -118,9 +118,9 @@ export class OrchidAPI {
       return;
     }
     try {
-      console.log("get signers");
+      //console.log("get signers");
       let signers = await this.eth.orchidGetSigners(wallet);
-      console.log("got signers");
+      //console.log("got signers");
       this.signersAvailable.next(signers);
 
       // no signers available
