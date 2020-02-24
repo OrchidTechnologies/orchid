@@ -142,6 +142,7 @@ export class OrchidEthereumAPI {
         try {
           OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
           OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
+          OrchidContracts.directory = new web3.eth.Contract(OrchidContracts.directory_abi, OrchidContracts.directory_addr());
         } catch (err) {
           console.log("Error constructing contracts");
           resolve(WalletStatus.Error);
@@ -285,6 +286,88 @@ export class OrchidEthereumAPI {
 
     // The UI monitors the funding tx.
     return doFundTx(approvalHash);
+  }
+
+  /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified directory address.
+  async orchidStakeFunds(
+    funder: Address, stakee: Address, amount: BigInt, delay: BigInt, gasPrice?: number
+  ): Promise<string> {
+    console.log("Stake funds amount: ", amount);
+    const amount_value = BigInt(amount); // Force our polyfill BigInt?
+    const delay_value = BigInt(delay);
+
+    async function doApproveTx() {
+      return new Promise<string>(function (resolve, reject) {
+        OrchidContracts.token.methods.approve(
+          OrchidContracts.directory_addr(),
+          amount_value.toString()
+        ).send({
+          from: funder,
+          gas: OrchidContracts.token_approval_max_gas,
+          gasPrice: gasPrice
+        })
+          .on("transactionHash", (hash) => {
+            console.log("Approval hash: ", hash);
+            resolve(hash);
+          })
+          .on('confirmation', (confirmationNumber, receipt) => {
+            console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
+          })
+          .on('error', (err) => {
+            console.log("Approval error: ", JSON.stringify(err));
+            // If there is an error in the approval assume Funding will fail.
+            reject(err['message']);
+          });
+      });
+    }
+
+    async function doFundTx(approvalHash: string) {
+      return new Promise<string>(function (resolve, reject) {
+        OrchidContracts.directory.methods.push(
+          stakee, amount_value.toString(), delay_value.toString()
+        ).send({
+          from: funder,
+          gas: OrchidContracts.directory_push_max_gas,
+          gasPrice: gasPrice
+        })
+          .on("transactionHash", (hash) => {
+            console.log("Stake hash: ", hash);
+            OrchidAPI.shared().transactionMonitor.add(
+              new OrchidTransaction(new Date(), OrchidTransactionType.StakeFunds, [approvalHash, hash]));
+          })
+          .on('confirmation', (confirmationNumber, receipt) => {
+            console.log("Stake confirmation", confirmationNumber, JSON.stringify(receipt));
+            // Wait for confirmations on the funding tx.
+            if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
+              const hash = receipt['transactionHash'];
+              resolve(hash);
+            } else {
+              console.log("waiting for more confirmations...");
+            }
+          })
+          .on('error', (err) => {
+            console.log("Stake error: ", JSON.stringify(err));
+            reject(err['message']);
+          });
+      });
+    }
+
+    // The approval tx resolves immediately after the user submits.
+    let approvalHash = await doApproveTx();
+
+    // Introduce a short artificial delay before issuing the second tx
+    // Issue: We have had reports of problems where only one dialog is presented to the user.
+    // Issue: Trying this to see if it mitigates any race conditions in the wallet.
+    await new Promise(r => setTimeout(r, 1000));
+
+    // The UI monitors the funding tx.
+    return doFundTx(approvalHash);
+  }
+
+  async orchidGetStake(stakee: Address): Promise<BigInt> {
+    console.log("orchid get stake");
+    let stake = await OrchidContracts.directory.methods.heft(stakee).call();
+    return stake || BigInt(0);
   }
 
   /// Evaluate an Orchid method call, returning the confirmation transaction has or error.

@@ -28,6 +28,7 @@ import {Overview} from "./overview/Overview";
 import {TransactionPanel} from "./TransactionPanel";
 import {OrchidTransactionDetail} from "../api/orchid-tx";
 import {S} from "../i18n/S";
+import {StakeFunds} from "./StakeFunds";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
@@ -118,6 +119,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Visibility visible={route === Route.Balances}><Info/></Visibility>
             <Visibility visible={route === Route.AddFunds || route === Route.CreateAccount}>
               <AddFunds createAccount={route === Route.CreateAccount || isNewUser}/></Visibility>
+            <Visibility visible={route === Route.StakeFunds}><StakeFunds/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
             <Visibility visible={route === Route.Transactions}><Transactions/></Visibility>
             <Visibility visible={route === Route.MoveFunds}><MoveFunds/></Visibility>

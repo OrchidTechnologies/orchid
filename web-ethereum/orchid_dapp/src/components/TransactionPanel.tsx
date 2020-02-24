@@ -19,6 +19,9 @@ export const TransactionPanel: React.FC<{
     case OrchidTransactionType.AddFunds:
       type = S.addFunds;
       break;
+    case OrchidTransactionType.StakeFunds:
+      type = S.stakeFunds;
+      break;
     case OrchidTransactionType.WithdrawFunds:
       type = S.withdrawFunds;
       break;

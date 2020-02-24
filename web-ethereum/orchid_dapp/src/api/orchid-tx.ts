@@ -53,7 +53,7 @@ export class EthereumTransaction {
 }
 
 export enum OrchidTransactionType {
-  AddFunds, WithdrawFunds, Lock, Unlock, MoveFundsToEscrow, Reset
+  AddFunds, WithdrawFunds, Lock, Unlock, MoveFundsToEscrow, Reset, StakeFunds
 }
 
 /// A Orchid transaction that may be composed of multiple ETH transactions.

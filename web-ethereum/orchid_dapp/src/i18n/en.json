@@ -121,5 +121,14 @@
   "fundsWillBeAvailableAt": "Funds will be available at the time shown below.",
   "ifYouWishToCancelWithdrawal": "If you wish to cancel the withdrawal process and continue using your deposit re-lock funds.",
 
-  "debugOutput": "Debug Output"
+  "debugOutput": "Debug Output",
+
+  "currentStake": "Current Stake",
+  "@currentStake": {
+    "description": "Current financial stake"
+  },
+  "addToStake": "Add to Stake",
+  "stakeFunds": "Stake Funds",
+  "stakeOxt": "Stake OXT"
+
 }

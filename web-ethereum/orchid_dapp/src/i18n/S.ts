@@ -190,4 +190,13 @@ export class S {
     defaultMessage: 'If you wish to cancel the withdrawal process and continue using your deposit re-lock funds.'}); }
   static get debugOutput() { return intl.formatMessage({id: 'debugOutput',
     defaultMessage: 'Debug Output'}); }
+  static get currentStake() { return intl.formatMessage({id: 'currentStake',
+    defaultMessage: 'Current Stake'}); }
+
+  static get addToStake() { return intl.formatMessage({id: 'addToStake',
+    defaultMessage: 'Add to Stake'}); }
+  static get stakeFunds() { return intl.formatMessage({id: 'stakeFunds',
+    defaultMessage: 'Stake Funds'}); }
+  static get stakeOxt() { return intl.formatMessage({id: 'stakeOxt',
+    defaultMessage: 'Stake OXT'}); }
 }
