@@ -1,4 +1,5 @@
 import boto3
+import datetime
 import json
 import os
 import requests
@@ -6,6 +7,7 @@ import sha3
 import time  # noqa: F401
 import web3.exceptions  # noqa: F401
 
+from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Tuple
@@ -41,6 +43,7 @@ def fund_PAC_(
     escrow: float,
     funder_pubkey: str,
     funder_privkey: str,
+    nonce: int,
 ) -> str:
     print(f"Funding PAC  signer: {signer}, total: {total}, escrow: {escrow} ")
 
@@ -57,8 +60,6 @@ def fund_PAC_(
         address=token_addr,
     )
 
-    print(f"Getting nonce for funder_pubkey: {funder_pubkey}")
-    nonce = w3.eth.getTransactionCount(account=funder_pubkey)
     print(f"Funder nonce: {nonce}")
 
     print(f"Assembling approve transaction:")
@@ -135,8 +136,14 @@ def fund_PAC_(
     return txn_hash
 
 
-def fund_PAC(signer, total_usd, funder_pubkey, funder_privkey) -> str:
-    escrow_usd = 2
+def fund_PAC(total_usd:float, nonce:int) -> Tuple[str, str]:
+    wallet = generate_wallet()
+    signer = wallet['address']
+    secret = wallet['private']
+    config = generate_config(
+        secret=secret,
+    )
+    escrow_usd:float = 2
     if (total_usd < 4):
         escrow_usd = 0.5 * total_usd
 
@@ -149,11 +156,20 @@ def fund_PAC(signer, total_usd, funder_pubkey, funder_privkey) -> str:
     print(
         f"Funding PAC  signer: {signer}, \
 total: ${total_usd}{total_oxt} oxt, \
-escrow: ${escrow_usd} {escrow_oxt}oxt")
+escrow: ${escrow_usd}{escrow_oxt} oxt ")
 
-    txn_hash = fund_PAC_(signer, w3.toWei(total_oxt, 'ether'), w3.toWei(
-        escrow_oxt, 'ether'), funder_pubkey, funder_privkey)
-    return txn_hash
+    funder_pubkey=get_secret(key='PAC_FUNDER_PUBKEY')
+    funder_privkey = get_secret(key='PAC_FUNDER_PRIVKEY')
+
+    txn_hash = fund_PAC_(
+        signer=signer,
+        total=w3.toWei(total_oxt, 'ether'),
+        escrow=w3.toWei(escrow_oxt, 'ether'),
+        funder_pubkey=funder_pubkey,
+        funder_privkey=funder_privkey,
+        nonce=nonce,
+        )
+    return txn_hash, config
 
 
 def process_app_pay_receipt(
@@ -194,22 +210,7 @@ def process_app_pay_receipt(
     return (True, validation_result)
 
 
-# https://github.com/vkobel/ethereum-generate-wallet/blob/master/ethereum-wallet-generator.py
-def checksum_encode(addr_str):  # Takes a hex (string) address as input
-    keccak = sha3.keccak_256()
-    out = ''
-    addr = addr_str.lower().replace('0x', '')
-    keccak.update(addr.encode('ascii'))
-    hash_addr = keccak.hexdigest()
-    for i, c in enumerate(addr):
-        if int(hash_addr[i], 16) >= 8:
-            out += c.upper()
-        else:
-            out += c
-    return '0x' + out
-
-
-def generate_wallet():
+def generate_wallet() -> Dict[str, str]:
     keccak = sha3.keccak_256()
     priv = SigningKey.generate(curve=SECP256k1)
     pub = priv.get_verifying_key().to_string()
@@ -219,17 +220,17 @@ def generate_wallet():
     wallet = {
         'private': priv.to_string().hex(),
         'public': pub.hex(),
-        'address': checksum_encode(address),
+        'address': w3.toChecksumAddress(address),
     }
     return wallet
 
 
 def generate_config(
-    secret=None,
-    curator='partners.orch1d.eth',
-    protocol='orchid',
-    funder='0xE85C49919615A4aE3bFf08A350AEd7853340D4A0',
-):
+    secret:str=None,
+    curator:str='partners.orch1d.eth',
+    protocol:str='orchid',
+    funder:str=get_secret(key='PAC_FUNDER_PUBKEY'),
+) -> str:
     if secret is not None:
         return f'account = {{curator:"{curator}", protocol: "{protocol}", \
 funder: "{funder}", secret: "{secret}"}};'
@@ -245,6 +246,80 @@ def product_to_usd(product_id: str) -> float:
     return mapping.get(product_id, -1)
 
 
+def get_account(price:float) -> Tuple[str, str]:
+    print(f'Getting Account with Price:{price}')
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(os.environ['TABLE_NAME'])
+    response = table.scan()
+    for item in response['Items']:
+        if float(price) == float(item['price']):
+            config = item['config']
+            push_txn_hash = item['push_txn_hash']
+            print(f'Found available account ({push_txn_hash}): {config}')
+            key = {
+                'price': item['price'],
+                'config': config,
+            }
+            table.delete_item(Key=key)
+            call_maintain_pool()
+            return push_txn_hash, config
+    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
+    nonce = w3.eth.getTransactionCount(account=funder_pubkey)
+    return fund_PAC(
+        total_usd=price,
+        nonce=nonce,
+    )
+
+def call_maintain_pool():
+    client = boto3.client('lambda')
+    response = client.invoke(
+        FunctionName=f"pac-{os.environ['STAGE']}-MaintainPool",
+        InvocationType='Event',
+    )
+    return response
+
+
+def maintain_pool_wrapper(event=None, context=None):
+    prices = [1, 1.1, 1.2]
+    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
+    nonce = w3.eth.getTransactionCount(account=funder_pubkey)
+    for price in prices:
+        maintain_pool(price=price, nonce=nonce)
+        nonce += 3
+
+
+def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']), nonce:int=None):
+    print(f'Maintaining Pool of size:{pool_size} and price:{price}')
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(os.environ['TABLE_NAME'])
+    response = table.scan()
+    actual_pool_size = 0
+    for item in response['Items']:
+        if float(price) == float(item['price']):
+            actual_pool_size += 1
+    accounts_to_create =  max(pool_size - actual_pool_size, 0)
+    print(f'Actual Pool Size: {actual_pool_size}. Need to create {accounts_to_create} accounts')
+    print(f'Need to create {accounts_to_create} accounts')
+    if nonce is None:
+        funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
+        nonce = w3.eth.getTransactionCount(account=funder_pubkey)
+    for _ in range(accounts_to_create):
+        push_txn_hash, config = fund_PAC(
+            total_usd=price,
+            nonce=nonce,
+        )
+        creation_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+        item = {
+            'price': price,
+            'config': config,
+            'push_txn_hash': push_txn_hash,
+            'creation_time': creation_time,
+        }
+        ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+        table.put_item(Item=ddb_item)
+        nonce += 3
+
+
 def main(event, context):
     print(f'event: {event}')
     print(f'context: {context}')
@@ -253,25 +328,8 @@ def main(event, context):
     print(f'body: {body}')
     total_usd = body['total_usd']
     receipt = body['receipt']
-    signer = body.get('signer', '')
 
     verify_receipt = body.get('verify_receipt', 'False')
-    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
-    funder_privkey = get_secret(key='PAC_FUNDER_PRIVKEY')
-
-    if signer == '':
-        wallet = generate_wallet()
-        signer = wallet['address']
-        secret = wallet['private']
-        config = generate_config(
-            secret=secret,
-            funder=funder_pubkey,
-        )
-    else:
-        config = generate_config(
-            funder=funder_pubkey,
-        )
-
     apple_response = process_app_pay_receipt(receipt, total_usd)
 
     if (apple_response[0] or verify_receipt == 'False'):
@@ -285,7 +343,8 @@ def main(event, context):
                 "headers": {},
                 "body": json.dumps({
                     'message': f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)',
-                    'config': config,
+                    'push_txn_hash': None,
+                    'config': None,
                 })
             }
         else:
@@ -303,18 +362,18 @@ def main(event, context):
                     "headers": {},
                     "body": json.dumps({
                         'message': f"Unknown product_id: {product_id}",
-                        'config': config,
+                        'push_txn_hash': None,
+                        'config': None,
                     })
                 }
             else:
-                txn_hash = fund_PAC(signer, float(total_usd),
-                                    funder_pubkey, funder_privkey)
+                push_txn_hash, config = get_account(price=total_usd)
                 response = {
                     "isBase64Encoded": False,
                     "statusCode": 200,
                     "headers": {},
                     "body": json.dumps({
-                        "push_txn": txn_hash,
+                        "push_txn_hash": push_txn_hash,
                         "config": config,
                     })
                 }
@@ -325,7 +384,8 @@ def main(event, context):
             "headers": {},
             "body": json.dumps({
                 "message": f"Validation Failure: {apple_response[1]}",
-                "config": config,
+                "push_txn_hash": None,
+                "config": None,
             })
         }
     print(f'response: {response}')
