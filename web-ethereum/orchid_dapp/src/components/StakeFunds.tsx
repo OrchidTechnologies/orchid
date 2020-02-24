@@ -20,8 +20,8 @@ export const StakeFunds: FC = () => {
   const [addStakeAmount, setAddStakeAmount] = useState<number | null>(null);
   const [addStakeAmountError, setAddStakeAmountError] = useState(true);
 
-  const [stakeAddress, setStakeAddress] = useState<Address | null>(null);
-  const [stakeAddressError, setStakeAddressError] = useState(true);
+  const [stakeeAddress, setStakeeAddress] = useState<Address | null>(null);
+  const [stakeeAddressError, setStakeeAddressError] = useState(true);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -36,16 +36,16 @@ export const StakeFunds: FC = () => {
 
   useEffect(() => {
     updateCurrentStake().then();
-  }, [stakeAddress]);
+  }, [stakeeAddress]);
 
   async function updateCurrentStake() {
     console.log("update current stake");
     let api = OrchidAPI.shared();
-    if (stakeAddress === null) {
-      console.log("missing stake address");
+    if (stakeeAddress === null) {
+      console.log("missing stakee address");
       return;
     }
-    let stake = await api.eth.orchidGetStake(stakeAddress);
+    let stake = await api.eth.orchidGetStake(stakeeAddress);
     setCurrentStakeAmount(stake);
   }
 
@@ -57,7 +57,7 @@ export const StakeFunds: FC = () => {
     }
     let walletAddress = wallet.address;
     console.log("submit add funds: ", walletAddress, addStakeAmount);
-    if (walletAddress == null || addStakeAmount == null || stakeAddress == null) {
+    if (walletAddress == null || addStakeAmount == null || stakeeAddress == null) {
       return;
     }
 
@@ -74,7 +74,7 @@ export const StakeFunds: FC = () => {
       }
 
       let delayValue = BigInt(0);
-      await api.eth.orchidStakeFunds(walletAddress, stakeAddress, amountWei, delayValue, gasPrice);
+      await api.eth.orchidStakeFunds(walletAddress, stakeeAddress, amountWei, delayValue, gasPrice);
       api.updateWallet().then();
       console.log("updating stake");
       updateCurrentStake().then();
@@ -116,8 +116,8 @@ export const StakeFunds: FC = () => {
       {/*Stakee Address*/}
       <Row className="form-row" noGutters={true}>
         <Col>
-          <label>{"Stake Address"}<span
-            className={errorClass(stakeAddressError)}> *</span></label>
+          <label>{"Stakee (Provider) Address"}<span
+            className={errorClass(stakeeAddressError)}> *</span></label>
         </Col>
         <Col>
           <input
@@ -128,10 +128,10 @@ export const StakeFunds: FC = () => {
               const address = e.currentTarget.value;
               const valid = isEthAddress(address);
               console.log("valid = ", valid, address);
-              console.log("setStakeAddress(", valid ? address : null);
+              console.log("setStakeeAddress(", valid ? address : null);
               setStakeAddress(valid ? address : null);
-              console.log("stake address set to: ", stakeAddress);
-              setStakeAddressError(!valid);
+              console.log("stakee address set to: ", stakeeAddress);
+              setStakeeAddressError(!valid);
             }}
           />
         </Col>
