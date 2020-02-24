@@ -129,7 +129,7 @@ export const StakeFunds: FC = () => {
               const valid = isEthAddress(address);
               console.log("valid = ", valid, address);
               console.log("setStakeeAddress(", valid ? address : null);
-              setStakeAddress(valid ? address : null);
+              setStakeeAddress(valid ? address : null);
               console.log("stakee address set to: ", stakeeAddress);
               setStakeeAddressError(!valid);
             }}
