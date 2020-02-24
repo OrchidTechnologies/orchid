@@ -153,7 +153,10 @@ export const TransactionPanel: React.FC<{
           justifyContent: 'center',
           alignItems: 'center',
         }}
-          onClick={() => dismiss()}
+          onClick={(e:any) => {
+            dismiss();
+            e.stopPropagation();
+          }}
         >
           <div>×</div>
         </Col>

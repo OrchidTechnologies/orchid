@@ -28,7 +28,7 @@ export const AccountQRCode: React.FC<{
         marginTop: "16px",
         marginBottom: "0px"
       }}>
-        <QRCode style={{}} size={150} value={props.data || ""}/>
+        <QRCode size={150} includeMargin={true} value={props.data || ""}/>
         <div style={{
           position: "absolute",
           width: "100%",

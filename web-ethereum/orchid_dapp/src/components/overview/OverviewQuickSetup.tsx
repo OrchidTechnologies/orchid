@@ -5,7 +5,6 @@ import {Route, RouteContext} from "../Route";
 import {OverviewLoading, OverviewProps} from "./Overview";
 import {
   GasPricingStrategy,
-  keikiToOxt,
   keikiToOxtString,
   oxtToKeiki
 } from "../../api/orchid-eth";
@@ -28,12 +27,13 @@ export interface OverviewQuickSetupProps {
 export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProps> = (props) => {
 
   // Preconditions
-  let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty, initialTxStatus} = props;
+  //let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty, initialTxStatus} = props;
   // let hasAccount = !noAccount;
   // if (hasAccount || potFunded || walletEthEmpty || walletOxtEmpty) {
   //   throw Error("Invalid state for quick setup");
   // }
-  console.log(`quick setup, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
+  //console.log(`quick setup, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
+  let {potFunded, initialTxStatus} = props;
 
   const {setRoute, setNavEnabled} = useContext(RouteContext);
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);

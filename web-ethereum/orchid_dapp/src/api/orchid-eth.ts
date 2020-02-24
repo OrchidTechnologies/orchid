@@ -8,6 +8,7 @@ import PromiEvent from "web3/promiEvent";
 import {OrchidAPI, WalletStatus} from "./orchid-api";
 import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
 import "../i18n/i18n_util";
+import {getParam} from "../util/util";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 const ORCHID_SIGNER_KEYS_WALLET = "orchid-signer-keys";
@@ -175,6 +176,9 @@ export class OrchidEthereumAPI {
   }
 
   async orchidGetSigners(wallet: Wallet): Promise<Signer []> {
+    if (getParam("no_signers")) {
+      return [];
+    }
     let signerAddresses;
     try {
       signerAddresses = await OrchidContracts.lottery.methods.keys(wallet.address).call();

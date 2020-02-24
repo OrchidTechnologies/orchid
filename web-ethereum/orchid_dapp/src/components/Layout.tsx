@@ -53,10 +53,6 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
       setNavEnabledState(!isNew);
     });
     let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
-      // avoid some logging
-      if (orchidTransactions.length === 0 && txs.length === 0) {
-        return;
-      }
       setOrchidTransactions(txs);
     });
     return () => {

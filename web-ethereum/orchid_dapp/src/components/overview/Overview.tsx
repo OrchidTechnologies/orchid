@@ -84,7 +84,6 @@ export const Overview: React.FC = () => {
     // console.log(`overview, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
     // If the user is ready to fund a new account or has a quick setup transaction result send to quick setup.
     if ((noAccount && !walletEthEmpty && !walletOxtEmpty) || quickSetupResultTx != null) {
-      console.log("showing quick setup");
       return <OverviewQuickSetup
         initialTxStatus={quickSetupResultTx} {...props}
         txResultSetter={setQuickSetupResultTx}

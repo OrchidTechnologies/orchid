@@ -12,7 +12,7 @@ import {S} from "../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export class WithdrawFunds extends Component {
+export class WithdrawFunds extends Component<any, any> {
   txResult = React.createRef<TransactionProgress>();
 
   state = {

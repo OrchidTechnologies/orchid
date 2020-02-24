@@ -74,7 +74,7 @@ export const StakeFunds: FC = () => {
       }
 
       let delayValue = BigInt(0);
-      let txId = await api.eth.orchidStakeFunds(walletAddress, stakeAddress, amountWei, delayValue, gasPrice);
+      await api.eth.orchidStakeFunds(walletAddress, stakeAddress, amountWei, delayValue, gasPrice);
       api.updateWallet().then();
       console.log("updating stake");
       updateCurrentStake().then();

@@ -11,7 +11,7 @@ import {S} from "../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export class Info extends Component {
+export class Info extends Component<any, any> {
   state = {
     signerAddress: "",
     signerConfigString: undefined,

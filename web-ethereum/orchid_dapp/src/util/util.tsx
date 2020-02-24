@@ -1,7 +1,6 @@
 import React, {FC} from "react";
 import {Row} from "react-bootstrap";
 import {isEthAddress} from "../api/orchid-eth";
-import {MessageFormatElement} from "intl-messageformat-parser";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
