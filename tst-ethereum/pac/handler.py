@@ -288,6 +288,25 @@ def maintain_pool_wrapper(event=None, context=None):
         nonce += 3
 
 
+def get_transaction_confirm_count(txhash):
+    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
+    blocknum = w3.eth.getTransactionCount(account=funder_pubkey)
+    trans = w3.eth.getTransaction(txhash)
+    return blocknum - trans['blockNumber']
+
+def get_transaction_status(txhash):
+    try:
+        count = get_transaction_confirm_count(txhash)
+        if (count >= 12):
+            return "confirmed"
+        elif :
+            return "unconfirmed"
+    except TransactionNotFound as ex:
+        return "unknown"
+    except w3.TransactionNotFound as ex:
+        return "unknown"
+    return "unknown"
+
 def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']), nonce:int=None):
     print(f'Maintaining Pool of size:{pool_size} and price:{price}')
     dynamodb = boto3.resource('dynamodb')
