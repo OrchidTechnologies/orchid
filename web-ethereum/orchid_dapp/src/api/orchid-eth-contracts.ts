@@ -31,7 +31,7 @@ export class OrchidContracts {
   // TODO: can possibly consume, taking into account variation in storage allocation for new users.
   static token_approval_max_gas: number = 50000;
   static lottery_push_max_gas: number = 175000;
-  static directory_push_max_gas: number = OrchidContracts.lottery_push_max_gas;
+  static directory_push_max_gas: number = 300000;
   static lottery_pull_amount_max_gas: number = 150000;
   static lottery_pull_all_max_gas: number = 150000;
   static lottery_lock_max_gas: number = 25000;
