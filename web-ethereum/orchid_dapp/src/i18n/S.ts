@@ -178,6 +178,8 @@ export class S {
     defaultMessage: 'Available Lottery Pot Balance Amount'}); }
   static get amountInOXT() { return intl.formatMessage({id: 'amountInOXT',
     defaultMessage: 'Amount in OXT'}); }
+  static get oxt() { return intl.formatMessage({id: 'oxt',
+    defaultMessage: 'OXT'}); }
   static get moveToDepositAmount() { return intl.formatMessage({id: 'moveToDepositAmount',
     defaultMessage: 'Move to Deposit Amount'}); }
   static get submit() { return intl.formatMessage({id: 'submit',
@@ -199,4 +201,16 @@ export class S {
     defaultMessage: 'Stake Funds'}); }
   static get stakeOxt() { return intl.formatMessage({id: 'stakeOxt',
     defaultMessage: 'Stake OXT'}); }
+  static get stakeeAddress() { return intl.formatMessage({id: 'stakeeAddress',
+    defaultMessage: 'Stakee (Provider) Address'}); }
+  static get stakeeProvider() { return intl.formatMessage({id: 'stakeeProvider',
+    defaultMessage: 'Stakee (Provider)'}); }
+  static get delay() { return intl.formatMessage({id: 'delay',
+    defaultMessage: 'Delay'}); }
+  static get delayDays() { return intl.formatMessage({id: 'delayDays',
+    defaultMessage: 'Delay Days'}); }
+  static get delaySeconds() { return intl.formatMessage({id: 'delaySeconds',
+    defaultMessage: 'Delay Seconds'}); }
+  static get days() { return intl.formatMessage({id: 'days',
+    defaultMessage: 'Days'}); }
 }

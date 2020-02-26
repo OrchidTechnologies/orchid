@@ -1,6 +1,6 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useEffect, useRef, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {errorClass, parseFloatSafe} from "../util/util";
+import {errorClass, parseFloatSafe, parseIntSafe} from "../util/util";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
@@ -12,6 +12,7 @@ import {S} from "../i18n/S";
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const StakeFunds: FC = () => {
+  const defaultStakeDelay = 90 * 24 * 3600; // 90 days in seconds
 
   // Add funds state
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
@@ -22,6 +23,12 @@ export const StakeFunds: FC = () => {
 
   const [stakeeAddress, setStakeeAddress] = useState<Address | null>(null);
   const [stakeeAddressError, setStakeeAddressError] = useState(true);
+
+  const [stakeDelay, setStakeDelay] = useState<number | null>(defaultStakeDelay);
+  const [stakeDelayError, setStakeDelayError] = useState(false);
+
+  const [txRunning, setTxRunning] = useState(false);
+  let amountInput = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -39,7 +46,6 @@ export const StakeFunds: FC = () => {
   }, [stakeeAddress]);
 
   async function updateCurrentStake() {
-    console.log("update current stake");
     let api = OrchidAPI.shared();
     if (stakeeAddress === null) {
       console.log("missing stakee address");
@@ -49,6 +55,13 @@ export const StakeFunds: FC = () => {
     setCurrentStakeAmount(stake);
   }
 
+  function clearForm() {
+    let field = amountInput.current;
+    if (field != null) {
+      field.value = "";
+    }
+  }
+
   async function submitAddStake() {
     let api = OrchidAPI.shared();
     let wallet = api.wallet.value;
@@ -56,14 +69,14 @@ export const StakeFunds: FC = () => {
       return;
     }
     let walletAddress = wallet.address;
-    console.log("submit add funds: ", walletAddress, addStakeAmount);
-    if (walletAddress == null || addStakeAmount == null || stakeeAddress == null) {
+    console.log("submit add funds: ", walletAddress, addStakeAmount, stakeDelay);
+    if (walletAddress == null || addStakeAmount == null || stakeeAddress == null || stakeDelay == null) {
       return;
     }
 
     try {
+      setTxRunning(true);
       const amountWei = oxtToKeiki(addStakeAmount);
-      // TODO: reset the form
 
       // Choose a gas price
       let medianGasPrice = await api.eth.medianGasPrice();
@@ -73,18 +86,26 @@ export const StakeFunds: FC = () => {
         console.log("Add funds: gas price potentially too low.");
       }
 
-      let delayValue = BigInt(0);
+      let delayValue = BigInt(stakeDelay * 24 * 3600); // days to seconds
       await api.eth.orchidStakeFunds(walletAddress, stakeeAddress, amountWei, delayValue, gasPrice);
       api.updateWallet().then();
       console.log("updating stake");
       updateCurrentStake().then();
+      clearForm();
     } catch (err) {
       console.log("error in staking: ", err);
+    } finally {
+      setTxRunning(false);
     }
   }
 
-  let submitEnabled = OrchidAPI.shared().wallet.value !== undefined && !addStakeAmountError;
-
+  let submitEnabled =
+    OrchidAPI.shared().wallet.value !== undefined
+    && !addStakeAmountError
+    && !stakeeAddressError
+    && !txRunning;
+  let stakeDelayDaysStr =
+    stakeDelay != null ? ((stakeDelay / (24 * 3600)).toLocaleString() + " " + S.days) : "";
   return (
     <Container className="form-style">
       <label className="title">{S.stakeFunds}</label>
@@ -114,23 +135,22 @@ export const StakeFunds: FC = () => {
       </Row>
 
       {/*Stakee Address*/}
-      <Row className="form-row" noGutters={true}>
-        <Col>
-          <label>{"Stakee (Provider) Address"}<span
+      <Row
+        className="form-row" noGutters={true}>
+        <Col style={{whiteSpace: 'nowrap'}}>
+          <label>{S.stakeeProvider}<span
             className={errorClass(stakeeAddressError)}> *</span></label>
         </Col>
         <Col>
           <input
-            className="send-to-address editable"
+            spellCheck={false}
+            className="editable"
             type="text"
-            placeholder={S.address}
+            placeholder={S.address+'    '}
             onChange={(e) => {
               const address = e.currentTarget.value;
               const valid = isEthAddress(address);
-              console.log("valid = ", valid, address);
-              console.log("setStakeeAddress(", valid ? address : null);
               setStakeeAddress(valid ? address : null);
-              console.log("stakee address set to: ", stakeeAddress);
               setStakeeAddressError(!valid);
             }}
           />
@@ -145,6 +165,7 @@ export const StakeFunds: FC = () => {
         </Col>
         <Col>
           <input
+            ref={amountInput}
             className="editable"
             onChange={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
@@ -152,9 +173,30 @@ export const StakeFunds: FC = () => {
               setAddStakeAmountError(amount == null || oxtToKeiki(amount) > (walletBalance || 0));
             }}
             type="number"
-            placeholder={(0).toFixedLocalized(2)}
+            placeholder={S.oxt}
             defaultValue={undefined}
           />
+        </Col>
+      </Row>
+
+      {/*Stake Delay*/}
+      <Row className="form-row" noGutters={true}>
+        <Col>
+          <label>{S.delaySeconds}<span className={errorClass(stakeDelayError)}> *</span></label>
+        </Col>
+        <Col>
+          <input
+            className="editable"
+            onChange={(e) => {
+              let delay = parseIntSafe(e.currentTarget.value);
+              setStakeDelay(delay);
+              setStakeDelayError(delay == null || delay < 0);
+            }}
+            type="number"
+            placeholder={(0).toString()}
+            defaultValue={defaultStakeDelay}
+          />
+          <label style={{textAlign: "center"}}>{stakeDelayDaysStr}</label>
         </Col>
       </Row>
 
