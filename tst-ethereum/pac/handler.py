@@ -174,7 +174,6 @@ escrow: ${escrow_usd}{escrow_oxt} oxt ")
 
 def process_app_pay_receipt(
     receipt,
-    total_usd,
     shared_secret=None
 ) -> Tuple[bool, dict]:
     bundle_id = 'OrchidTechnologies.PAC-Test'
@@ -343,11 +342,10 @@ def main(event, context):
 
     body = json.loads(event['body'])
     print(f'body: {body}')
-    total_usd = body['total_usd']
     receipt = body['receipt']
 
     verify_receipt = body.get('verify_receipt', 'False')
-    apple_response = process_app_pay_receipt(receipt, total_usd)
+    apple_response = process_app_pay_receipt(receipt)
 
     if (apple_response[0] or verify_receipt == 'False'):
         validation_result: dict = apple_response[1]
