@@ -81,7 +81,7 @@ class IOSOrchidPurchaseAPI
     }
     SKPaymentQueueWrapper().setTransactionObserver(this);
     var productIds = [
-      OrchidPurchaseAPI.pacTest.productId,
+      //OrchidPurchaseAPI.pacTest.productId,
       OrchidPurchaseAPI.pacTier1.productId,
       OrchidPurchaseAPI.pacTier2.productId,
       OrchidPurchaseAPI.pacTier3.productId
