@@ -241,7 +241,7 @@ funder: "{funder}"}};'
 
 def product_to_usd(product_id: str) -> float:
     mapping = {
-        'BuyUS10': 10.00,
+        'net.orchid.US499': 4.99,
     }
     return mapping.get(product_id, -1)
 
@@ -299,10 +299,8 @@ def get_transaction_status(txhash):
         count = get_transaction_confirm_count(txhash)
         if (count >= 12):
             return "confirmed"
-        elif :
+        else:
             return "unconfirmed"
-    except TransactionNotFound as ex:
-        return "unknown"
     except w3.TransactionNotFound as ex:
         return "unknown"
     return "unknown"
