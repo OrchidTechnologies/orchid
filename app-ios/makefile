@@ -58,6 +58,7 @@ frameworks :=
 frameworks += Flutter
 frameworks += SafariServices
 frameworks += UIKit
+frameworks += StoreKit
 
 local := 
 local += app.mm.o

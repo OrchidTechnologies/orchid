@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:orchid/api/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
+import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
 import 'openvpn_hop_page.dart';
@@ -24,6 +26,19 @@ class AddHopPage extends StatefulWidget {
 }
 
 class _AddHopPageState extends State<AddHopPage> {
+  bool _showPACs = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initStateAsync();
+  }
+
+  void initStateAsync() async {
+    _showPACs = await OrchidPurchaseAPI.purchaseEnabled();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return TitledPage(
@@ -56,6 +71,8 @@ class _AddHopPageState extends State<AddHopPage> {
                         letterSpacing: 0.16,
                         color: Color(0xff504960))),
                 pady(24),
+
+                // QR Code
                 _divider(),
                 _buildHopChoice(
                     text: s.iHaveAQRCode,
@@ -65,13 +82,29 @@ class _AddHopPageState extends State<AddHopPage> {
                           onAddFlowComplete: widget.onAddFlowComplete);
                     },
                     imageName: "assets/images/scan.png"),
+
+                // PAC Purchase
+                if (_showPACs)
+                  _divider(),
+                if (_showPACs)
+                  _buildHopChoice(
+                      text: s.purchasePAC,
+                      onTap: () {
+                        _addHopFromPACPurchase();
+                      },
+                      imageName: "assets/images/logo_small_purple.png"),
+
+                // Try Orchid
                 _divider(),
                 _buildHopChoice(
-                    text: s.iWantToTryOrchid,
+                    //text: s.iWantToTryOrchid,
+                    text: s.iHaveOrchidAccount,
                     onTap: () {
                       _addHopType(HopProtocol.Orchid);
                     },
                     imageName: "assets/images/logo_small_purple.png"),
+
+                // VPN Subscription
                 _divider(),
                 _buildHopChoice(
                     text: s.iHaveAVPNSubscription,
@@ -79,6 +112,7 @@ class _AddHopPageState extends State<AddHopPage> {
                       _addHopType(HopProtocol.OpenVPN);
                     },
                     imageName: "assets/images/security_purple.png"),
+
                 _divider(),
               ],
             ),
@@ -106,6 +140,7 @@ class _AddHopPageState extends State<AddHopPage> {
         onTap: onTap);
   }
 
+  // Push a hop editor and then await the CircuitHop result.
   void _addHopType(HopProtocol hopType) async {
     EditableHop editableHop = EditableHop.empty();
     HopEditor editor;
@@ -126,9 +161,26 @@ class _AddHopPageState extends State<AddHopPage> {
         break;
     }
     var route = MaterialPageRoute<CircuitHop>(builder: (context) => editor);
-    var hop = await Navigator.push(context, route);
-    // If we have a hop the user saved, else allow another choice.
+    _pushCircuitBuilderRoute(route);
+  }
+
+  // Perform a PAC purchase and await the resulting hop result.
+  // Return the resulting hop on the navigation stack as we pop this view.
+  void _addHopFromPACPurchase() async {
+    var route = MaterialPageRoute<CircuitHop>(builder: (BuildContext context) {
+      return PurchasePage(onAddFlowComplete: widget.onAddFlowComplete);
+    });
+    _pushCircuitBuilderRoute(route);
+  }
+
+  // Push the editor or other builder that returns a circuit hop.
+  void _pushCircuitBuilderRoute(MaterialPageRoute<CircuitHop> route) async {
+    // If the editor invokes the addFlowComplete, which should be the case on a save,
+    // this entire flow will be popped to the caller and control will not return here.
+    CircuitHop hop = await Navigator.push(context, route);
+    // If hop is null the user backed out of the editor: Fall through and allow another choice.
     if (hop != null) {
+      // Handle a return here for completeness.
       Navigator.pop(context, hop);
     }
   }
