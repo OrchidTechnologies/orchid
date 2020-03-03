@@ -178,7 +178,8 @@ class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
 class OrchidPACServer {
   /// Submit an app store receipt to the PAC server to receive the pot info.
   static Future<String> submit(String appStoreReceipt) async {
-    //var url='https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/submit'; // dev
+    //var url =
+    //'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/submit'; // dev
     var url =
         'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/submit'; // prod
 
@@ -186,14 +187,13 @@ class OrchidPACServer {
 
     var logPostBody = '{'
         '"receipt": "${appStoreReceipt.substring(0, 32)}...",'
-        '"verify_receipt": "$verifyReceipt",'
+        '"verify_receipt": "$verifyReceipt"'
         '}';
     print("xxx: log post body = $logPostBody");
 
-    // TODO: Get rid of total_usd field!
     var postBody = '{'
         '"receipt": "$appStoreReceipt",'
-        '"verify_receipt": "$verifyReceipt",'
+        '"verify_receipt": "$verifyReceipt"'
         '}';
 
     // do the post
