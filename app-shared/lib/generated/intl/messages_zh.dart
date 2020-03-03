@@ -21,6 +21,6 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
-    "newHop" : MessageLookupByLibrary.simpleMessage("New Hop (中文)")
+    "newHop" : MessageLookupByLibrary.simpleMessage("New Hop")
   };
 }
