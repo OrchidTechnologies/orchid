@@ -30,9 +30,7 @@ abstract class OrchidPurchaseAPI {
   //static PAC pacTest = PAC('test_purchase_1', USD(4.99), "\$4.99 USD");
   static String domain = 'orchid';
   static PAC pacTier1 = PAC('net.$domain.US499', USD(4.99), "\$4.99 USD");
-  // TODO: product id
   static PAC pacTier2 = PAC('net.$domain.US499', USD(9.99), "\$9.99 USD");
-  // TODO: product id
   static PAC pacTier3 = PAC('net.$domain.US499', USD(19.99), "\$19.99 USD");
 
   OrchidPurchaseAPI._init();
@@ -59,7 +57,6 @@ abstract class OrchidPurchaseAPI {
   /// has been confirmed and return the store receipt which can then be
   /// submitted to the PAC server for delivery.
   Future<String> purchase(PAC pac);
-
 }
 
 class IOSOrchidPurchaseAPI
@@ -75,7 +72,7 @@ class IOSOrchidPurchaseAPI
     print("xxx: init store listener");
     try {
       var receiptData = await SKReceiptManager.retrieveReceiptData();
-      print("xxx: app receipt: BEGIN:${receiptData.substring(0,32)}:END");
+      print("xxx: app receipt: BEGIN:${receiptData.substring(0, 32)}:END");
     } catch (err) {
       print("xxx: unable to load app receipt");
     }
@@ -88,7 +85,8 @@ class IOSOrchidPurchaseAPI
     ];
     SkProductResponseWrapper productResponse =
         await SKRequestMaker().startProductRequest(productIds);
-    print("xxx: product response: ${productResponse.products.map((p)=>p.productIdentifier)}");
+    print(
+        "xxx: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
   }
 
   @override
@@ -115,10 +113,11 @@ class IOSOrchidPurchaseAPI
       {List<SKPaymentTransactionWrapper> transactions}) async {
     for (var tx in transactions) {
       print("xxx: updated transaction: $tx");
-      if(tx.error != null) {
+      if (tx.error != null) {
         print("xxx: tx error = ${tx.error.code}, ${tx.error.userInfo}");
       }
-      print("xxx: updateTransactions pending purchases: ${pendingPurchases.length}");
+      print(
+          "xxx: updateTransactions pending purchases: ${pendingPurchases.length}");
       var completion = pendingPurchases[tx.payment.productIdentifier];
       if (tx.transactionState == SKPaymentTransactionStateWrapper.purchased) {
         pendingPurchases.remove(tx.payment.productIdentifier);
@@ -149,8 +148,13 @@ class IOSOrchidPurchaseAPI
     }
     pendingPurchases[pac.productId] = completion;
     var payment = SKPaymentWrapper(productIdentifier: pac.productId);
-    await SKPaymentQueueWrapper().addPayment(payment);
-    return completion.future;
+    try {
+      await SKPaymentQueueWrapper().addPayment(payment);
+      return completion.future;
+    } catch (err) {
+      pendingPurchases.remove(pac.productId);
+      throw err;
+    }
   }
 }
 
@@ -172,18 +176,17 @@ class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
 }
 
 class OrchidPACServer {
-
   /// Submit an app store receipt to the PAC server to receive the pot info.
   static Future<String> submit(String appStoreReceipt) async {
+    //var url='https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/submit'; // dev
+    var url =
+        'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/submit'; // prod
 
-    var url='https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/submit';
-
-    var verifyReceipt='False';
+    var verifyReceipt = 'False';
 
     var logPostBody = '{'
-        '"receipt": "${appStoreReceipt.substring(0,32)}...",'
+        '"receipt": "${appStoreReceipt.substring(0, 32)}...",'
         '"verify_receipt": "$verifyReceipt",'
-        '"total_usd": "10"'
         '}';
     print("xxx: log post body = $logPostBody");
 
@@ -191,12 +194,12 @@ class OrchidPACServer {
     var postBody = '{'
         '"receipt": "$appStoreReceipt",'
         '"verify_receipt": "$verifyReceipt",'
-        '"total_usd": "10"'
         '}';
 
     // do the post
     var response = await http.post(url,
-        headers: {"Content-Type": "application/json; charset=utf-8"}, body: postBody);
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: postBody);
 
     print("xxx: pac server response: ${response.statusCode}, ${response.body}");
     if (response.statusCode != 200) {

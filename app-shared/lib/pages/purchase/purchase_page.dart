@@ -266,10 +266,12 @@ class _PurchasePageState extends State<PurchasePage> {
     try {
       purchaseReceipt = await OrchidPurchaseAPI().purchase(purchase);
     } catch (err) {
-      var skerror = err as SKError;
-      if (skerror.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
-        print("xxx: user cancelled");
-        return null;
+      if (err is SKError) {
+        var skerror = err as SKError;
+        if (skerror.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
+          print("xxx: user cancelled");
+          return null;
+        }
       }
       print("xxx: Error in purchase call: $err");
       _purchaseError();
