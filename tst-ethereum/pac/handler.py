@@ -6,6 +6,8 @@ import requests
 import sha3
 import time  # noqa: F401
 import web3.exceptions  # noqa: F401
+import uuid
+import random
 
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
@@ -136,7 +138,7 @@ def fund_PAC_(
     return txn_hash
 
 
-def fund_PAC(total_usd:float, nonce:int) -> Tuple[str, str]:
+def fund_PAC(total_usd:float, nonce:int) -> Tuple[str, str, str]:
     wallet = generate_wallet()
     signer = wallet['address']
     secret = wallet['private']
@@ -169,7 +171,7 @@ escrow: ${escrow_usd}{escrow_oxt} oxt ")
         funder_privkey=funder_privkey,
         nonce=nonce,
         )
-    return txn_hash, config
+    return txn_hash, config, signer
 
 
 def process_app_pay_receipt(
@@ -246,11 +248,21 @@ def product_to_usd(product_id: str) -> float:
     return mapping.get(product_id, -1)
 
 
-def get_account(price:float) -> Tuple[str, str]:
+def randomString(stringLength=10):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
+
+def random_scan(table):
+    rand_key = uuid.uuid4().hex + uuid.uuid4().hex + uuid.uuid4().hex + uuid.uuid4().hex
+    response = table.query(KeyConditionExpression=Key('signer_funder').gte(rand_key)
+    return response
+
+def get_account(price:float) -> Tuple[str, str, str]:
     print(f'Getting Account with Price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
-    response = table.scan()
+    #response = table.scan()
     for item in response['Items']:
         if float(price) == float(item['price']):
             config = item['config']
@@ -323,12 +335,13 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
         funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
         nonce = w3.eth.getTransactionCount(account=funder_pubkey)
     for _ in range(accounts_to_create):
-        push_txn_hash, config = fund_PAC(
+        push_txn_hash, config, signer_pubkey = fund_PAC(
             total_usd=price,
             nonce=nonce,
         )
         creation_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         item = {
+            'signer_funder' : signer_pubkey + funder_pubkey,
             'price': price,
             'config': config,
             'push_txn_hash': push_txn_hash,
@@ -386,7 +399,7 @@ def main(event, context):
                     })
                 }
             else:
-                push_txn_hash, config = get_account(price=total_usd)
+                push_txn_hash, config, signer_pubkey = get_account(price=total_usd)
                 response = {
                     "isBase64Encoded": False,
                     "statusCode": 200,

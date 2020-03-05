@@ -2,7 +2,8 @@ import os
 import sys
 from inapppy import AppStoreValidator, InAppPyValidationError
 
-os.environ['WEB3_INFURA_PROJECT_ID'] = 'aca6dac91cf34aadb23005b60d38b603'
+#export WEB3_INFURA_PROJECT_ID=aca6dac91cf34aadb23005b60d38b603
+#os.environ['WEB3_INFURA_PROJECT_ID'] = 'aca6dac91cf34aadb23005b60d38b603'
 from web3.auto.infura import w3
 
 import web3.exceptions
