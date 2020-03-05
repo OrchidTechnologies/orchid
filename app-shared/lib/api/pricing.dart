@@ -17,7 +17,7 @@ class OrchidPricingAPI {
   Future<Pricing> getPricing() async {
 //    return null;
     // TODO: Placeholder, need a service
-    return Pricing(oxtToUsdRate: 0.5);
+    return Pricing(oxtToUsdRate: 0.33);
   }
 }
 

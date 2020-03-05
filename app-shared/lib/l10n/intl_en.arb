@@ -61,7 +61,9 @@
   "addHop": "Add Hop",
   "selectYourHop": "Select your hop",
   "iHaveAQRCode": "I have a QR code",
+  "purchasePAC": "Purchase an Account (PAC)",
   "iWantToTryOrchid": "I want to try Orchid",
+  "iHaveOrchidAccount": "I have an Orchid Account",
   "iHaveAVPNSubscription": "I have a VPN subscription",
 
   "orchidRequiresAccountInstruction": "Orchid requires an Orchid account.  Scan or paste your existing account below to get started.",

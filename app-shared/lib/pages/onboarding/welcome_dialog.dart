@@ -44,7 +44,7 @@ class WelcomeDialog {
       children: <TextSpan>[
         TextSpan(text: s.needMoreHelp + "?", style: AppText.dialogTitle),
         LinkTextSpan(
-          text: "\n\n"+s.readTheGuide+".",
+          text: "\n\n" + s.readTheGuide + ".",
           style: AppText.linkStyle.copyWith(fontSize: 15),
           url: 'https://orchid.com/join',
         ),
@@ -88,9 +88,10 @@ class WelcomeDialog {
                 ScanOrPasteOrchidAccount(
                     spacing:
                         screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
-                    onImportAccount: (ParseOrchidAccountResult result) {
-                      _importAccount(context,
-                          result: result, onAddFlowComplete: onAddFlowComplete);
+                    onImportAccount: (ParseOrchidAccountResult result) async {
+                      var hop = await OrchidVPNConfig.importAccountAsHop(result);
+                      Navigator.of(context).pop(); // TODO: probably not necessary?
+                      onAddFlowComplete(hop);
                     }),
                 Divider(thickness: 1.0),
                 pady(16),
@@ -106,23 +107,4 @@ class WelcomeDialog {
     );
   }
 
-  /// Create a hop from the parse result, save any new keys, and return the hop
-  /// to the add flow completion.
-  static void _importAccount(BuildContext context,
-      {ParseOrchidAccountResult result,
-      AddFlowCompletion onAddFlowComplete}) async {
-    print(
-        "result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
-    // Save any new keys
-    await UserPreferences().addKeys(result.newKeys);
-    // Create the new hop
-    CircuitHop hop = OrchidHop(
-      curator: OrchidHop.appDefaultCurator,
-      funder: result.account.funder,
-      keyRef: result.account.signer.ref(),
-    );
-    // End the dialog
-    Navigator.of(context).pop();
-    onAddFlowComplete(hop);
-  }
 }

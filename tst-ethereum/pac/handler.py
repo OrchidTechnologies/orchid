@@ -176,7 +176,6 @@ escrow: ${escrow_usd}{escrow_oxt} oxt ")
 
 def process_app_pay_receipt(
     receipt,
-    total_usd,
     shared_secret=None
 ) -> Tuple[bool, dict]:
     bundle_id = 'OrchidTechnologies.PAC-Test'
@@ -243,7 +242,7 @@ funder: "{funder}"}};'
 
 def product_to_usd(product_id: str) -> float:
     mapping = {
-        'BuyUS10': 10.00,
+        'net.orchid.US499': 4.99,
     }
     return mapping.get(product_id, -1)
 
@@ -311,10 +310,8 @@ def get_transaction_status(txhash):
         count = get_transaction_confirm_count(txhash)
         if (count >= 12):
             return "confirmed"
-        elif :
+        else:
             return "unconfirmed"
-    except TransactionNotFound as ex:
-        return "unknown"
     except w3.TransactionNotFound as ex:
         return "unknown"
     return "unknown"
@@ -358,11 +355,10 @@ def main(event, context):
 
     body = json.loads(event['body'])
     print(f'body: {body}')
-    total_usd = body['total_usd']
     receipt = body['receipt']
 
     verify_receipt = body.get('verify_receipt', 'False')
-    apple_response = process_app_pay_receipt(receipt, total_usd)
+    apple_response = process_app_pay_receipt(receipt)
 
     if (apple_response[0] or verify_receipt == 'False'):
         validation_result: dict = apple_response[1]

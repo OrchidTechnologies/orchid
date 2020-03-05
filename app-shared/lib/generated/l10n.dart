@@ -447,10 +447,28 @@ class S {
     );
   }
 
+  String get purchasePAC {
+    return Intl.message(
+      'Purchase an Account (PAC)',
+      name: 'purchasePAC',
+      desc: '',
+      args: [],
+    );
+  }
+
   String get iWantToTryOrchid {
     return Intl.message(
       'I want to try Orchid',
       name: 'iWantToTryOrchid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get iHaveOrchidAccount {
+    return Intl.message(
+      'I have an Orchid Account',
+      name: 'iHaveOrchidAccount',
       desc: '',
       args: [],
     );

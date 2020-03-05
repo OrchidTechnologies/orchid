@@ -42,6 +42,7 @@ dependencies:
   sqflite: ^1.2.0
   url_launcher: ^5.4.1
   web3dart: ^1.2.1
+  in_app_purchase: ^0.3.1+1
 
 dev_dependencies:
   flutter_test:

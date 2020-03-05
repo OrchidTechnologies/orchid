@@ -113,6 +113,7 @@
   "depositFundsAreRequiredToParticipate": "Deposit funds are required to participate in the Orchid network and can be withdrawn after an unlock notice period.",
   "availableLotteryPotBalance": "Available Lottery Pot Balance Amount",
   "amountInOXT": "Amount in OXT",
+  "oxt": "OXT",
   "moveToDepositAmount": "Move to Deposit Amount",
 
   "submit": "Submit",
@@ -129,6 +130,12 @@
   },
   "addToStake": "Add to Stake",
   "stakeFunds": "Stake Funds",
-  "stakeOxt": "Stake OXT"
+  "stakeOxt": "Stake OXT",
+  "stakeeAddress": "Stakee (Provider) Address",
+  "stakeeProvider": "Stakee (Provider)",
+  "delay": "Delay",
+  "delayDays": "Delay Days",
+  "delaySeconds": "Delay Seconds",
+  "days": "Days"
 
 }

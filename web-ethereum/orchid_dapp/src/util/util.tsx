@@ -59,6 +59,12 @@ export function parseFloatSafe(val: string): number | null {
   return isNumeric(val) ? parseFloat(val) : null;
 }
 
+// Return the int value or null if not numeric.
+export function parseIntSafe(val: string): number | null {
+  let ivalue = parseInt(val);
+  return (''+ivalue === val) ? ivalue : null;
+}
+
 // Return the BigInt value or null if not numeric.
 export function parseBigIntSafe(val: string): BigInt | null {
   return isNumeric(val) ? BigInt(parseFloat(val)) : null;
