@@ -246,15 +246,13 @@ def product_to_usd(product_id: str) -> float:
     }
     return mapping.get(product_id, -1)
 
-
-def randomString(stringLength=10):
-    """Generate a random string of fixed length """
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
-
 def random_scan(table):
+    #generate a random 64 byte address (2 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex + uuid.uuid4().hex + uuid.uuid4().hex
-    response = table.query(KeyConditionExpression=Key('signer_funder').gte(rand_key)
+    if (random() % 2 == 0):
+        response = table.query(KeyConditionExpression=Key('signer_funder').gte(rand_key)
+    elif :
+        response = table.query(KeyConditionExpression=Key('signer_funder').lte(rand_key)
     return response
 
 def get_account(price:float) -> Tuple[str, str, str]:
@@ -262,6 +260,7 @@ def get_account(price:float) -> Tuple[str, str, str]:
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     #response = table.scan()
+    response = random_scan(table)
     for item in response['Items']:
         if float(price) == float(item['price']):
             config = item['config']
