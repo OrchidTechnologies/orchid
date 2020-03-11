@@ -11,10 +11,17 @@ import {Layout} from "./components/Layout"
 import {NoWallet} from "./components/NoWallet";
 import {createIntl, createIntlCache, IntlProvider} from "react-intl";
 import messages_en from './i18n/en.json';
+import messages_zh from './i18n/zh.json';
+import messages_ru from './i18n/ru.json';
+import messages_id from './i18n/id.json';
 import {getParam, testLocalization_} from "./util/util";
 
-const messages: Record<string, Record<string, any>> = {
+//const messages: Record<string, Record<string, any>> = {
+const messages: any = {
   'en': messages_en,
+  'zh': messages_zh,
+  'ru': messages_ru,
+  'id': messages_id,
 };
 
 let language = navigator.language.split(/[-_]/)[0]; // TODO: country

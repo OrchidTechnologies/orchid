@@ -51,8 +51,6 @@ abstract class OrchidPurchaseAPI {
     return _shared;
   }
 
-  void testPurchase();
-
   /// Make the app store purchase. The future will resolve when the purchase
   /// has been confirmed and return the store receipt which can then be
   /// submitted to the PAC server for delivery.
@@ -135,12 +133,6 @@ class IOSOrchidPurchaseAPI
     }
   }
 
-  @override
-  void testPurchase() {
-    var payment = SKPaymentWrapper(productIdentifier: "test_purchase_1");
-    SKPaymentQueueWrapper().addPayment(payment);
-  }
-
   Future<String> purchase(PAC pac) async {
     var completion = Completer<String>();
     if (pendingPurchases.containsKey(pac.productId)) {
@@ -162,16 +154,10 @@ class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
   @override
   initStoreListener() {
     // TODO: implement initStoreListener
-    throw UnimplementedError();
-  }
-
-  @override
-  void testPurchase() {
-    // TODO: implement testPurchase
   }
 
   Future<String> purchase(PAC pac) {
-    throw UnimplementedError();
+    // TODO: implement purchase
   }
 }
 
