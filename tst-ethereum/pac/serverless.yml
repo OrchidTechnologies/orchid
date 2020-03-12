@@ -85,14 +85,10 @@ resources:
       Properties:
         TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
-          - AttributeName: price
-            AttributeType: N
-          - AttributeName: config
+          - AttributeName: signer
             AttributeType: S
         KeySchema:
-          - AttributeName: price
+          - AttributeName: signer
             KeyType: HASH
-          - AttributeName: config
-            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Retain
