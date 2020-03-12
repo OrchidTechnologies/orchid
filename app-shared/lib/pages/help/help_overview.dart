@@ -13,21 +13,24 @@ class HelpOverviewPage extends StatefulWidget {
 }
 
 class _HelpOverviewPageState extends State<HelpOverviewPage> {
-  String _helpText = "";
+  String _helpText;
 
   @override
   void initState() {
     super.initState();
-
-    OrchidDocs.helpOverview().then((text) {
-      setState(() {
-        _helpText = text;
-      });
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_helpText == null) {
+      _helpText = "";
+      OrchidDocs.helpOverview(context).then((text) {
+        setState(() {
+          _helpText = text;
+        });
+      });
+    }
+
     String title = s.orchidOverview;
     return TitledPage(title: title, child: buildPage(context));
   }

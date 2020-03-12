@@ -53,6 +53,7 @@ flutter:
 
   assets:
     - assets/docs/
+    - assets/docs/help/
     - assets/flare/
     - assets/images/
     - assets/shared/
