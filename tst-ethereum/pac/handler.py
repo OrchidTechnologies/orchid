@@ -247,12 +247,12 @@ def product_to_usd(product_id: str) -> float:
     return mapping.get(product_id, -1)
 
 def random_scan(table):
-    #generate a random 64 byte address (2 x 32 byte ethereum address)
-    rand_key = uuid.uuid4().hex + uuid.uuid4().hex + uuid.uuid4().hex + uuid.uuid4().hex
+    #generate a random 32 byte address (1 x 32 byte ethereum address)
+    rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     if (random() % 2 == 0):
-        response = table.query(KeyConditionExpression=Key('signer_funder').gte(rand_key)
+        response = table.query(KeyConditionExpression=Key('signer').gte(rand_key)
     elif :
-        response = table.query(KeyConditionExpression=Key('signer_funder').lte(rand_key)
+        response = table.query(KeyConditionExpression=Key('signer').lte(rand_key)
     return response
 
 def get_account(price:float) -> Tuple[str, str, str]:
@@ -337,7 +337,7 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
         )
         creation_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         item = {
-            'signer_funder' : signer_pubkey + funder_pubkey,
+            'signer' : signer_pubkey,
             'price': price,
             'config': config,
             'push_txn_hash': push_txn_hash,
