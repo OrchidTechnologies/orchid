@@ -241,6 +241,7 @@ funder: "{funder}"}};'
 
 
 def product_to_usd(product_id: str) -> float:
+    #todo: full price mapping
     mapping = {
         'net.orchid.US499': 4.99,
     }
@@ -263,6 +264,7 @@ def get_account(price:float) -> Tuple[str, str, str]:
     response = random_scan(table)
     for item in response['Items']:
         if float(price) == float(item['price']):
+            # todo: need to check status - make sure pot is ready
             config = item['config']
             push_txn_hash = item['push_txn_hash']
             print(f'Found available account ({push_txn_hash}): {config}')
@@ -271,6 +273,7 @@ def get_account(price:float) -> Tuple[str, str, str]:
                 'config': config,
             }
             table.delete_item(Key=key)
+            # todo: move this call_maintain_pool() out of loop?
             call_maintain_pool()
             return push_txn_hash, config
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
@@ -322,6 +325,7 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
     response = table.scan()
     actual_pool_size = 0
     for item in response['Items']:
+        #todo: update status here with get_transaction_status(.)
         if float(price) == float(item['price']):
             actual_pool_size += 1
     accounts_to_create =  max(pool_size - actual_pool_size, 0)
@@ -347,7 +351,7 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
         table.put_item(Item=ddb_item)
         nonce += 3
 
-
+#todo: replay prevention through receipt hash map
 def main(event, context):
     print(f'event: {event}')
     print(f'context: {context}')
