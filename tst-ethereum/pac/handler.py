@@ -363,6 +363,7 @@ def main(event, context):
     print(f'body: {body}')
     receipt = body['receipt']
 
+    #todo: Prevent setting verify_receipt outside of dev
     verify_receipt = body.get('verify_receipt', 'False')
     apple_response = process_app_pay_receipt(receipt)
 
@@ -382,7 +383,7 @@ def main(event, context):
                 })
             }
         else:
-            product_id = validation_result['receipt']['in_app'][0]['product_id']
+            product_id = body.get('product_id', validation_result['receipt']['in_app'][0]['product_id'])
             quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
             total_usd = product_to_usd(product_id=product_id) * quantity
             print(f'product_id: {product_id}')

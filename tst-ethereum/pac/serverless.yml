@@ -32,6 +32,7 @@ provider:
     WEB3_INFURA_PROJECT_ID: ${ssm:WEB3_INFURA_PROJECT_ID~true}
     # WEB3_INFURA_PROJECT_SECRET: ${ssm:WEB3_INFURA_PROJECT_SECRET~true}
     TABLE_NAME: PAC-${self:provider.stage}
+    RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
   runtime: python3.6
   region: us-west-2
@@ -89,6 +90,18 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: signer
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+      DeletionPolicy: Retain
+    ReceiptTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:provider.environment.RECEIPT_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: receipt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: receipt
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Retain
