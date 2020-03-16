@@ -279,12 +279,7 @@ def get_account(price:float) -> Tuple[str, str, str]:
     call_maintain_pool()
     if ret:
         return ret
-    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
-    nonce = w3.eth.getTransactionCount(account=funder_pubkey)
-    return fund_PAC(
-        total_usd=price,
-        nonce=nonce,
-    )
+    return None, None
 
 def call_maintain_pool():
     client = boto3.client('lambda')
@@ -403,6 +398,17 @@ def main(event, context):
                 }
             else:
                 push_txn_hash, config, signer_pubkey = get_account(price=total_usd)
+                if config is None:
+                    response = {
+                        "isBase64Encoded": False,
+                        "statusCode": 404,
+                        "headers": {},
+                        "body": json.dumps({
+                            "message": "No Account Found"
+                            "push_txn_hash": push_txn_hash,
+                            "config": config,
+                        })
+                }
                 response = {
                     "isBase64Encoded": False,
                     "statusCode": 200,
