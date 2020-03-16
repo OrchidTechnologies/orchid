@@ -262,6 +262,7 @@ def get_account(price:float) -> Tuple[str, str, str]:
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     #response = table.scan()
     response = random_scan(table)
+    ret = None
     for item in response['Items']:
         if float(price) == float(item['price']):
             # todo: need to check status - make sure pot is ready
@@ -273,9 +274,11 @@ def get_account(price:float) -> Tuple[str, str, str]:
                 'config': config,
             }
             table.delete_item(Key=key)
-            # todo: move this call_maintain_pool() out of loop?
-            call_maintain_pool()
-            return push_txn_hash, config
+            ret = push_txn_hash, config
+            break
+    call_maintain_pool()
+    if ret:
+        return ret
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     nonce = w3.eth.getTransactionCount(account=funder_pubkey)
     return fund_PAC(
