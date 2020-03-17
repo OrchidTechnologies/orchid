@@ -14,6 +14,8 @@ import messages_en from './i18n/en.json';
 import messages_zh from './i18n/zh.json';
 import messages_ru from './i18n/ru.json';
 import messages_id from './i18n/id.json';
+import messages_ja from './i18n/ja.json';
+import messages_ko from './i18n/ko.json';
 import {getParam, testLocalization_} from "./util/util";
 
 //const messages: Record<string, Record<string, any>> = {
@@ -22,6 +24,8 @@ const messages: any = {
   'zh': messages_zh,
   'ru': messages_ru,
   'id': messages_id,
+  'ja': messages_ja,
+  'ko': messages_ko,
 };
 
 let language = navigator.language.split(/[-_]/)[0]; // TODO: country
