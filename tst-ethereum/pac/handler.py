@@ -244,6 +244,9 @@ def product_to_usd(product_id: str) -> float:
     #todo: full price mapping
     mapping = {
         'net.orchid.US499': 4.99,
+        'net.orchid.pactier1': 4.99,
+        'net.orchid.pactier2': 9.99,
+        'net.orchid.pactier3': 19.99,
     }
     return mapping.get(product_id, -1)
 
