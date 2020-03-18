@@ -1110,7 +1110,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
 
   List<Locale> get supportedLocales {
     return const <Locale>[
-      Locale('id', ''), Locale('zh', ''), Locale('en', ''), Locale('ru', ''),
+      Locale('ko', ''), Locale('id', ''), Locale('zh', ''), Locale('ja', ''), Locale('en', ''), Locale('ru', ''),
     ];
   }
 
