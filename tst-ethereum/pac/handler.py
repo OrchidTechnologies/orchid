@@ -8,6 +8,7 @@ import time  # noqa: F401
 import web3.exceptions  # noqa: F401
 import uuid
 import random
+import hashlib
 
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
@@ -254,9 +255,9 @@ def random_scan(table):
     #generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     if (random() % 2 == 0):
-        response = table.query(KeyConditionExpression=Key('signer').gte(rand_key)
+        response = table.query(KeyConditionExpression=Key('signer').gte(rand_key))
     elif :
-        response = table.query(KeyConditionExpression=Key('signer').lte(rand_key)
+        response = table.query(KeyConditionExpression=Key('signer').lte(rand_key))
     return response
 
 def get_account(price:float) -> Tuple[str, str, str]:
@@ -352,18 +353,42 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
         table.put_item(Item=ddb_item)
         nonce += 3
 
+
 #todo: replay prevention through receipt hash map
 def main(event, context):
     print(f'event: {event}')
     print(f'context: {context}')
 
     body = json.loads(event['body'])
+
     print(f'body: {body}')
     receipt = body['receipt']
 
+    dynamodb = boto3.resource('dynamodb')
+    receipt_hash_table = dynamodb.Table(os.environ['RECEIPT_TABLE_NAME'])
+
     #todo: Prevent setting verify_receipt outside of dev
     verify_receipt = body.get('verify_receipt', 'False')
+
+    receipt_hash = hashlib.sha256(receipt).hexdigest()
+    if (verify_receipt == 'True'):
+        result = receipt_hash_table.query(KeyConditionExpression=Key('receipt').eq(receipt_hash))
+        if (result['Count'] > 0): # we found a match - reject on duplicate
+            response = {
+                "isBase64Encoded": False,
+                "statusCode": 200,
+                "headers": {},
+                "body": json.dumps({
+                    "message": "Validation Failure: duplicate receipt!",
+                    "push_txn_hash": None,
+                    "config": None,
+                })
+            }
+            print(f'response: {response}')
+            return response
+
     apple_response = process_app_pay_receipt(receipt)
+
 
     if (apple_response[0] or verify_receipt == 'False'):
         validation_result: dict = apple_response[1]
@@ -412,15 +437,22 @@ def main(event, context):
                             "config": config,
                         })
                 }
-                response = {
-                    "isBase64Encoded": False,
-                    "statusCode": 200,
-                    "headers": {},
-                    "body": json.dumps({
-                        "push_txn_hash": push_txn_hash,
-                        "config": config,
-                    })
-                }
+                else:
+                    response = {
+                        "isBase64Encoded": False,
+                        "statusCode": 200,
+                        "headers": {},
+                        "body": json.dumps({
+                            "push_txn_hash": push_txn_hash,
+                            "config": config,
+                        })
+                    }
+                    item = {
+                        'receipt' : receipt_hash,
+                    }
+                    ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+                    receipt_hash_table.put_item(Item=ddb_item)
+
     else:
         response = {
             "isBase64Encoded": False,
