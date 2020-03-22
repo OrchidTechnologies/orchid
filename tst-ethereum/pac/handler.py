@@ -367,7 +367,20 @@ def main(event, context):
     dynamodb = boto3.resource('dynamodb')
     receipt_hash_table = dynamodb.Table(os.environ['RECEIPT_TABLE_NAME'])
 
-    #todo: Prevent setting verify_receipt outside of dev
+    if os.environ['STAGE'] != 'dev':
+        if body.get('verify_receipt') or body.get('product_id'):  # todo: Use a whitelist rather than a blacklist
+            response = {
+                'isBase64Encoded': False,
+                'statusCode': 400,
+                'headers': {},
+                'body': json.dumps({
+                    'message': 'dev-only parameter included in request!',
+                    'push_txn_hash': None,
+                    'config': None,
+                })
+            }
+            return response
+
     verify_receipt = body.get('verify_receipt', 'False')
 
     receipt_hash = hashlib.sha256(receipt).hexdigest()
