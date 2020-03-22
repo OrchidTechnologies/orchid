@@ -10,10 +10,11 @@ import uuid
 import random
 import hashlib
 
+from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 from web3.auto.infura import w3
 
 
@@ -253,19 +254,19 @@ def product_to_usd(product_id: str) -> float:
 def random_scan(table):
     #generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
-    if (random() % 2 == 0):
+    if (random.random() % 2 == 0):
         response = table.query(KeyConditionExpression=Key('signer').gte(rand_key))
-    elif :
+    else:
         response = table.query(KeyConditionExpression=Key('signer').lte(rand_key))
     return response
 
-def get_account(price:float) -> Tuple[str, str, str]:
+def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     print(f'Getting Account with Price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
-    #response = table.scan()
     response = random_scan(table)
     ret = None
+    signer_pubkey = '0xTODO'  # todo: Actually return signer_pubkey
     for item in response['Items']:
         if float(price) == float(item['price']):
             # todo: need to check status - make sure pot is ready
@@ -277,12 +278,12 @@ def get_account(price:float) -> Tuple[str, str, str]:
                 'config': config,
             }
             table.delete_item(Key=key)
-            ret = push_txn_hash, config
+            ret = push_txn_hash, config, signer_pubkey
             break
     call_maintain_pool()
     if ret:
         return ret
-    return None, None
+    return None, None, None
 
 def call_maintain_pool():
     client = boto3.client('lambda')
@@ -431,11 +432,11 @@ def main(event, context):
                         "statusCode": 404,
                         "headers": {},
                         "body": json.dumps({
-                            "message": "No Account Found"
+                            "message": "No Account Found",
                             "push_txn_hash": push_txn_hash,
                             "config": config,
                         })
-                }
+                    }
                 else:
                     response = {
                         "isBase64Encoded": False,
