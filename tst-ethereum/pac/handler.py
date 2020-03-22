@@ -242,7 +242,6 @@ funder: "{funder}"}};'
 
 
 def product_to_usd(product_id: str) -> float:
-    #todo: full price mapping
     mapping = {
         'net.orchid.US499': 4.99,
         'net.orchid.pactier1': 4.99,
@@ -376,7 +375,7 @@ def main(event, context):
         if (result['Count'] > 0): # we found a match - reject on duplicate
             response = {
                 "isBase64Encoded": False,
-                "statusCode": 200,
+                "statusCode": 402,
                 "headers": {},
                 "body": json.dumps({
                     "message": "Validation Failure: duplicate receipt!",
@@ -397,7 +396,7 @@ def main(event, context):
             print(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
             response = {
                 "isBase64Encoded": False,
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": {},
                 "body": json.dumps({
                     'message': f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)',
@@ -416,7 +415,7 @@ def main(event, context):
                 print('Unknown product_id')
                 response = {
                     "isBase64Encoded": False,
-                    "statusCode": 200,
+                    "statusCode": 400,
                     "headers": {},
                     "body": json.dumps({
                         'message': f"Unknown product_id: {product_id}",
@@ -456,7 +455,7 @@ def main(event, context):
     else:
         response = {
             "isBase64Encoded": False,
-            "statusCode": 200,
+            "statusCode": 402,
             "headers": {},
             "body": json.dumps({
                 "message": f"Validation Failure: {apple_response[1]}",
