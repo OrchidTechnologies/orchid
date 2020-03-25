@@ -266,10 +266,11 @@ def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = random_scan(table)
     ret = None
-    signer_pubkey = '0xTODO'  # todo: Actually return signer_pubkey
+    signer_pubkey = '0xTODO'
     for item in response['Items']:
         if float(price) == float(item['price']):
             # todo: need to check status - make sure pot is ready
+            signer_pubkey = item['signer']
             config = item['config']
             push_txn_hash = item['push_txn_hash']
             print(f'Found available account ({push_txn_hash}): {config}')
