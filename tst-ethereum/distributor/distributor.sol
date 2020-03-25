@@ -41,7 +41,7 @@ contract ContinuousDistributor {
     }
 
     mapping(address => Linear []) limits_;
-    mapping(address => uint) times_;
+    mapping(address => uint) lastup_;
     address [] recipients_;
     uint i_;
 
@@ -49,17 +49,18 @@ contract ContinuousDistributor {
     constructor(IERC20 token) public {
         token_ = token;
         owner_ = msg.sender;
+        i_     = 0;
     }
 
     function what() external view returns (IERC20) {
         return token_;
     }
-    
+
     function update(address rec, uint idx, uint beg, uint end, uint128 amt) public {
         require(msg.sender == owner_);
-        if (times_[rec] == 0) {
+        if (lastup_[rec] == 0) {
             recipients_.push(rec);
-            times_[rec] = 1;
+            lastup_[rec] = 1;
         }
         while (idx >= limits_[rec].length) {
             limits_[rec].push(Linear(0,0,0));
@@ -69,36 +70,41 @@ contract ContinuousDistributor {
         func.end_ = end;
         func.amt_ = amt;
     }
-    
-    function calculate(Linear memory f, uint t) private pure returns (uint128) {
+
+    function calculate_(Linear memory f, uint t) private pure returns (uint128) {
         t = t > f.beg_ ? t : f.beg_;
         t = t < f.end_ ? t : f.end_;
         uint128 amt = uint128( (uint256(f.amt_) * uint256(t - f.beg_)) / uint256(f.end_ - f.beg_) );
         return amt;
     }
-    
-    function compute_owed(address a, uint t) private view returns (uint128) {
-        uint lt = times_[a];
+
+    function calculate(address a, uint t) private view returns (uint128) {
         Linear [] memory limits = limits_[a];
         if (limits.length == 0) return 0;
         uint128 amt = uint128(-1);
         for (uint i = 0; i < limits.length; i++) {
-            uint128 total = calculate(limits[i], t);
-            uint128 sent  = calculate(limits[i], lt);
-            uint128 owed  = total - sent;
-            amt = amt < owed ? amt : owed;
+           uint128 x = calculate_(limits[i], t);
+           amt = amt < x ? amt : x;
         }
         if (amt == uint128(-1)) amt = 0;
         return amt;
+    }
+
+    function compute_owed(address a, uint t) private view returns (uint128) {
+        uint lt = lastup_[a];
+        uint128 total = calculate(a, t);
+        uint128 sent  = calculate(a, lt);
+        sent = sent > total ? total : sent;
+        return total - sent;
     }
 
     function distribute(address recipient, uint t) private {
         uint128 amt = compute_owed(recipient, t);
         if (amt != 0)
             require(token_.transfer(recipient, amt));
-        times_[recipient] = t;
+        lastup_[recipient] = t;
     }
-    
+
     function distribute_all() public {
         uint t = block.timestamp;
         for (uint i = 0; i < recipients_.length; i++) {
@@ -106,7 +112,7 @@ contract ContinuousDistributor {
             distribute(recipient, t);
         }
     }
-    
+
     function distribute_partial(uint N) public {
         N = N > 8 ? N : 8;
         N = N < recipients_.length ? N : recipients_.length;
@@ -118,6 +124,6 @@ contract ContinuousDistributor {
         i_ += N;
     }
 
- 
-    
+
+
 }
