@@ -10,10 +10,11 @@ import uuid
 import random
 import hashlib
 
+from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 from web3.auto.infura import w3
 
 
@@ -242,7 +243,6 @@ funder: "{funder}"}};'
 
 
 def product_to_usd(product_id: str) -> float:
-    #todo: full price mapping
     mapping = {
         'net.orchid.US499': 4.99,
         'net.orchid.pactier1': 4.99,
@@ -254,19 +254,19 @@ def product_to_usd(product_id: str) -> float:
 def random_scan(table):
     #generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
-    if (random() % 2 == 0):
+    if (random.random() % 2 == 0):
         response = table.query(KeyConditionExpression=Key('signer').gte(rand_key))
-    elif :
+    else:
         response = table.query(KeyConditionExpression=Key('signer').lte(rand_key))
     return response
 
-def get_account(price:float) -> Tuple[str, str, str]:
+def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     print(f'Getting Account with Price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
-    #response = table.scan()
     response = random_scan(table)
     ret = None
+    signer_pubkey = '0xTODO'  # todo: Actually return signer_pubkey
     for item in response['Items']:
         if float(price) == float(item['price']):
             # todo: need to check status - make sure pot is ready
@@ -278,12 +278,12 @@ def get_account(price:float) -> Tuple[str, str, str]:
                 'config': config,
             }
             table.delete_item(Key=key)
-            ret = push_txn_hash, config
+            ret = push_txn_hash, config, signer_pubkey
             break
     call_maintain_pool()
     if ret:
         return ret
-    return None, None
+    return None, None, None
 
 def call_maintain_pool():
     client = boto3.client('lambda')
@@ -367,7 +367,20 @@ def main(event, context):
     dynamodb = boto3.resource('dynamodb')
     receipt_hash_table = dynamodb.Table(os.environ['RECEIPT_TABLE_NAME'])
 
-    #todo: Prevent setting verify_receipt outside of dev
+    if os.environ['STAGE'] != 'dev':
+        if body.get('verify_receipt') or body.get('product_id'):  # todo: Use a whitelist rather than a blacklist
+            response = {
+                'isBase64Encoded': False,
+                'statusCode': 400,
+                'headers': {},
+                'body': json.dumps({
+                    'message': 'dev-only parameter included in request!',
+                    'push_txn_hash': None,
+                    'config': None,
+                })
+            }
+            return response
+
     verify_receipt = body.get('verify_receipt', 'False')
 
     receipt_hash = hashlib.sha256(receipt).hexdigest()
@@ -376,7 +389,7 @@ def main(event, context):
         if (result['Count'] > 0): # we found a match - reject on duplicate
             response = {
                 "isBase64Encoded": False,
-                "statusCode": 200,
+                "statusCode": 402,
                 "headers": {},
                 "body": json.dumps({
                     "message": "Validation Failure: duplicate receipt!",
@@ -397,7 +410,7 @@ def main(event, context):
             print(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
             response = {
                 "isBase64Encoded": False,
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": {},
                 "body": json.dumps({
                     'message': f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)',
@@ -416,7 +429,7 @@ def main(event, context):
                 print('Unknown product_id')
                 response = {
                     "isBase64Encoded": False,
-                    "statusCode": 200,
+                    "statusCode": 400,
                     "headers": {},
                     "body": json.dumps({
                         'message': f"Unknown product_id: {product_id}",
@@ -432,11 +445,11 @@ def main(event, context):
                         "statusCode": 404,
                         "headers": {},
                         "body": json.dumps({
-                            "message": "No Account Found"
+                            "message": "No Account Found",
                             "push_txn_hash": push_txn_hash,
                             "config": config,
                         })
-                }
+                    }
                 else:
                     response = {
                         "isBase64Encoded": False,
@@ -456,7 +469,7 @@ def main(event, context):
     else:
         response = {
             "isBase64Encoded": False,
-            "statusCode": 200,
+            "statusCode": 402,
             "headers": {},
             "body": json.dumps({
                 "message": f"Validation Failure: {apple_response[1]}",

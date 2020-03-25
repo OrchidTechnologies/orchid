@@ -150,5 +150,15 @@
     <key>NSCameraUsageDescription</key>
     <string>Orchid uses the camera for QR code scanning.</string>
 
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>id</string>
+        <string>ja</string>
+        <string>ko</string>
+        <string>ru</string>
+        <string>zh</string>
+    </array>
+
 </dict>
 </plist>
