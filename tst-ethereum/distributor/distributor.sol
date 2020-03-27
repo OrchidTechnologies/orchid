@@ -90,7 +90,7 @@ contract ContinuousDistributor {
         return amt;
     }
 
-    function compute_owed(address a, uint t) private view returns (uint128) {
+    function compute_owed_(address a, uint t) public view returns (uint128) {
         uint lt = lastup_[a];
         uint128 total = calculate(a, t);
         uint128 sent  = calculate(a, lt);
@@ -98,8 +98,13 @@ contract ContinuousDistributor {
         return total - sent;
     }
 
+    function compute_owed(address a) public view returns (uint128) {
+        uint t = block.timestamp;
+        return compute_owed_(a,t);
+    }
+
     function distribute(address recipient, uint t) private {
-        uint128 amt = compute_owed(recipient, t);
+        uint128 amt = compute_owed_(recipient, t);
         if (amt != 0)
             require(token_.transfer(recipient, amt));
         lastup_[recipient] = t;
