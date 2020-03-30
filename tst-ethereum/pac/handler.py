@@ -482,5 +482,24 @@ def main(event, context):
     return response
 
 
+def apple(event, context):
+    return main(event, context)
+
+
+def google(event, context):
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 501,
+        "headers": {},
+        "body": json.dumps({
+            "message": f"Google Support Not Implemented Yet!",
+            "push_txn_hash": None,
+            "config": None,
+        })
+        }
+    print(f'response: {response}')
+    return response
+
+
 if __name__ == "__main__":
     main(event='', context='')

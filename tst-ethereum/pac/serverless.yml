@@ -70,6 +70,18 @@ functions:
       - http:
           path: submit
           method: post
+  apple:
+    handler: handler.apple
+    events:
+      - http:
+          path: apple
+          method: post
+  google:
+    handler: handler.google
+    events:
+      - http:
+          path: google
+          method: post
   MaintainPool:
     handler: handler.maintain_pool_wrapper
     # events:
