@@ -93,9 +93,17 @@ class CircuitPageState extends State<CircuitPage>
       _updateCircuit();
     });
 
+    _checkFirstLaunch();
+  }
+
+  void _checkFirstLaunch() async {
     if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
-      _showWelcomeDialog();
-      UserPreferences().setFirstLaunchInstructionsViewed(true);
+      // TODO: Language choice is initially unreliable on iOS?
+      // TODO: Adding a short delay to give it time to settle.
+      Future.delayed(Duration(seconds: 1), () {
+        _showWelcomeDialog();
+        UserPreferences().setFirstLaunchInstructionsViewed(true);
+      });
     }
   }
 
