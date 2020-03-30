@@ -49,6 +49,7 @@ $(bundle)/Frameworks/App.framework/Info.plist: flutter/packages/flutter_tools/te
 signed += $(bundle)/Frameworks/App.framework$(signature)
 $(bundle)/Frameworks/App.framework$(signature): $(output)/ents-$(target)-dart.xml $(bundle)/Frameworks/App.framework/Info.plist $(bundle)/Frameworks/App.framework/App .flutter-plugins
 	@rm -rf $(dir $@)
+	xattr -cr $(bundle)/Frameworks/App.framework
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/App.framework
 	@touch $@
 
@@ -80,5 +81,6 @@ $(patsubst %,$(engine)/Flutter.framework/%,$(flutter)): .flutter-plugins
 signed += $(bundle)/Frameworks/Flutter.framework$(signature)
 $(bundle)/Frameworks/Flutter.framework$(signature): $(output)/ents-$(target)-flutter.xml $(patsubst %,$(bundle)/Frameworks/Flutter.framework/%,$(flutter))
 	@rm -rf $(dir $@)
+	xattr -cr $(bundle)/Frameworks/Flutter.framework
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/Frameworks/Flutter.framework
 	@touch $@
