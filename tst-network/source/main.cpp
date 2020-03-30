@@ -20,27 +20,18 @@
 /* }}} */
 
 
-#include <condition_variable>
-#include <cstdio>
 #include <iostream>
-#include <memory>
-#include <thread>
 #include <vector>
 
-#include <unistd.h>
-
-#include <cppcoro/sync_wait.hpp>
-
-#include "baton.hpp"
-#include "channel.hpp"
+#include "dns.hpp"
+#include "coinbase.hpp"
 #include "client.hpp"
 #include "crypto.hpp"
-#include "error.hpp"
-#include "event.hpp"
 #include "jsonrpc.hpp"
-#include "link.hpp"
 #include "local.hpp"
-#include "task.hpp"
+#include "network.hpp"
+#include "remote.hpp"
+#include "sleep.hpp"
 #include "trace.hpp"
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -48,69 +39,79 @@
 using boost::multiprecision::uint256_t;
 
 namespace orc {
+
+static const Float Ten18("1000000000000000000");
+static const Float Two128(uint256_t(1) << 128);
+
+task<std::string> Test(const S<Origin> &origin, const Float &price, Network &network, std::string provider, std::string name, const Secret &secret, const std::string &funder) {
+    try {
+        std::cout << provider << " " << name << std::endl;
+        auto remote(Break<Sink<Remote>>());
+        const auto client(co_await network.Select(remote.get(), origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder));
+        remote->Open();
+        const auto body((co_await remote->Request("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
+        client->Update();
+        co_await Sleep(3);
+        const auto balance(client->Balance());
+        const auto spent(client->Spent());
+        const auto cost(Float(spent - balance) / body.size() * (1024 * 1024 * 1024) * price / Two128);
+        std::ostringstream string;
+        string << cost;
+        Log() << "\e[32m[" << name << "] " << string.str() << "\e[0m" << std::endl;
+        co_return string.str();
+    } catch (const std::exception &error) {
+        Log() << "\e[32m[" << name << "] " << error.what() << "\e[0m" << std::endl;
+        co_return error.what();
+    }
+}
+
+extern double WinRatio_;
+
 // NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
-    orc_assert(argc == 3);
-    std::string host(argv[1]);
-    std::string port(argv[2]);
+    orc_assert(argc == 1);
+    //WinRatio_ = 10;
 
-    /*Wait([&]() -> task<void> {
-        boost::asio::system_timer timer(Context());
-        timer.expires_after(std::chrono::seconds(3));
-        co_await timer.async_wait(Token());
-        std::cerr << "WOOT" << std::endl;
-        timer.expires_after(std::chrono::seconds(3));
-        co_await timer.async_wait(Token());
-        std::cerr << "WOOT" << std::endl;
-    }());*/
+    const std::string rpc("http://localhost:8545/");
+
+    const Secret secret(Bless("d3b7d9e431efff753769bbcf727a00a0b3c6d3e2f62d322e6b3ea6b256ca651c"));
+    const std::string funder("0x2b1ce95573ec1b927a90cb488db113b40eeb064a");
+
+    const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
+    const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
 
     return Wait([&]() -> task<int> {
         co_await Schedule();
 
-        class Watch :
-            public Pipe<Buffer>,
-            public BufferDrain,
-            public Valve
-        {
-          private:
-            std::string error_;
-            Event done_;
+        const auto origin(Break<Local>());
 
-          protected:
-            virtual Pump<Buffer> *Inner() noexcept = 0;
+        //for (;;) (void) co_await Resolve(*origin, "www.saurik.com", "80");
 
-            void Land(const Buffer &data) override {
-                Log() << "Land" << data << std::endl;
+        const auto price(co_await Price(*origin, "OXT", "USD", Ten18));
+        Network network(rpc, directory, location);
+
+        for (;;) {
+            std::vector<task<std::string>> tests;
+
+            for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
+                //{"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "bolehvpn"},
+                //{"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "liquidvpn"},
+                {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "vpnsecure"},
+                //{"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "tenta"},
+            }) {
+                tests.emplace_back(Test(origin, price, network, provider, name, secret, funder));
             }
 
-            void Stop(const std::string &error) noexcept override {
-                Log() << "Stop(" << error << ")" << std::endl;
-                error_ = error;
-                done_();
-            }
+            co_await cppcoro::when_all(std::move(tests));
+            _trace();
+            co_await Sleep(120);
+        }
 
-          public:
-            task<void> Send(const Buffer &data) override {
-                co_return co_await Inner()->Send(data);
-            }
-
-            task<void> Done() {
-                co_await done_.Wait();
-                orc_assert_(error_.empty(), error_);
-            }
-        };
-
-        Sink<Watch> watch;
-
-        auto origin(Break<Local>());
-        //co_await origin->Connect(&watch, Socket(host, port));
-
-        co_await watch.Send(Beam("test\n"));
-
-        co_await watch.Done();
         co_return 0;
     }());
-} }
+}
+
+}
 
 int main(int argc, const char *const argv[]) { try {
     return orc::Main(argc, argv);

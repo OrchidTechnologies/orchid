@@ -23,7 +23,7 @@ include env/target.mk
 
 version := 0.9
 
-args := 127.0.0.1 9999
+args := 
 
 .PHONY: all
 all: $(output)/$(default)/orchid$(exe)
