@@ -41,6 +41,16 @@ def get_usd_per_oxt() -> float:
     return usd_per_oxt
 
 
+def get_product_id_mapping() -> dict:
+    mapping = {
+        'net.orchid.US499': 4.99,
+        'net.orchid.pactier1': 4.99,
+        'net.orchid.pactier2': 9.99,
+        'net.orchid.pactier3': 19.99,
+    }
+    return mapping
+
+
 def fund_PAC_(
     signer: str,
     total: float,
@@ -243,13 +253,9 @@ funder: "{funder}"}};'
 
 
 def product_to_usd(product_id: str) -> float:
-    mapping = {
-        'net.orchid.US499': 4.99,
-        'net.orchid.pactier1': 4.99,
-        'net.orchid.pactier2': 9.99,
-        'net.orchid.pactier3': 19.99,
-    }
+    mapping = get_product_id_mapping()
     return mapping.get(product_id, -1)
+
 
 def random_scan(table):
     #generate a random 32 byte address (1 x 32 byte ethereum address)
@@ -259,6 +265,7 @@ def random_scan(table):
     else:
         response = table.query(KeyConditionExpression=Key('signer').lte(rand_key))
     return response
+
 
 def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     print(f'Getting Account with Price:{price}')
@@ -286,6 +293,7 @@ def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str
         return ret
     return None, None, None
 
+
 def call_maintain_pool():
     client = boto3.client('lambda')
     response = client.invoke(
@@ -296,10 +304,11 @@ def call_maintain_pool():
 
 
 def maintain_pool_wrapper(event=None, context=None):
-    prices = [1, 1.1, 1.2]
+    mapping = get_product_id_mapping()
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     nonce = w3.eth.getTransactionCount(account=funder_pubkey)
-    for price in prices:
+    for product_id in mapping:
+        price = mapping[product_id]
         maintain_pool(price=price, nonce=nonce)
         nonce += 3
 
