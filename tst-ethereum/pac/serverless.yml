@@ -57,6 +57,7 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - "Fn::GetAtt": [ PACTable, Arn ]
+        - "Fn::GetAtt": [ReceiptTable, Arn ]
     - Effect: "Allow"
       Action:
         - "lambda:InvokeFunction"
@@ -92,6 +93,7 @@ plugins:
 package:
   exclude:
     - venv/**
+    - node_modules/**
 resources:
   Resources:
     PACTable:

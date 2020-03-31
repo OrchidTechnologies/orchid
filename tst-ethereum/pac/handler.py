@@ -393,7 +393,7 @@ def main(event, context):
 
     verify_receipt = body.get('verify_receipt', 'False')
 
-    receipt_hash = hashlib.sha256(receipt).hexdigest()
+    receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
     if (verify_receipt == 'True'):
         result = receipt_hash_table.query(KeyConditionExpression=Key('receipt').eq(receipt_hash))
         if (result['Count'] > 0): # we found a match - reject on duplicate
