@@ -271,13 +271,13 @@ def product_to_usd(product_id: str) -> float:
     return mapping.get(product_id, -1)
 
 
-def random_scan(table):
+def random_scan(table, price):
     #generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     if (random.random() % 2 == 0):
-        response = table.query(KeyConditionExpression=Key('signer').gte(rand_key))
+        response = table.query(KeyConditionExpression=Key('price').eq(price) & Key('signer').gte(rand_key))
     else:
-        response = table.query(KeyConditionExpression=Key('signer').lte(rand_key))
+        response = table.query(KeyConditionExpression=Key('price').eq(price) & Key('signer').lte(rand_key))
     return response
 
 
@@ -285,7 +285,7 @@ def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str
     print(f'Getting Account with Price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
-    response = random_scan(table)
+    response = random_scan(table, price)
     ret = None
     signer_pubkey = '0xTODO'
     for item in response['Items']:
