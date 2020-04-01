@@ -252,6 +252,14 @@ funder: "{funder}", secret: "{secret}"}};'
 funder: "{funder}"}};'
 
 
+def wildcard_product_to_usd(product_id: str) -> float:
+    mapping = get_product_id_mapping()
+    for id in mapping:
+        if id.split('.')[-1] == product_id.split('.')[-1]:
+            return mapping[id]
+    return -1
+
+
 def product_to_usd(product_id: str) -> float:
     mapping = get_product_id_mapping()
     return mapping.get(product_id, -1)
@@ -431,7 +439,10 @@ def main(event, context):
         else:
             product_id = body.get('product_id', validation_result['receipt']['in_app'][0]['product_id'])
             quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
-            total_usd = product_to_usd(product_id=product_id) * quantity
+            if os.environ['STAGE'] == 'dev':
+                total_usd = wildcard_product_to_usd(product_id=product_id) * quantity
+            else:
+                total_usd = product_to_usd(product_id=product_id) * quantity
             print(f'product_id: {product_id}')
             print(f'quantity: {quantity}')
             print(f'total_usd: {total_usd}')
