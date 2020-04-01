@@ -7,6 +7,7 @@ from web3.auto.infura import w3
 
 import web3.exceptions
 import time
+import datetime
 import requests
 
 
@@ -29,12 +30,15 @@ Distributor = w3.eth.contract(abi=distributor_abi)
 
 distributor_main = Distributor(address = '0x3d971E78e9F5390d4AF4be8EDd88bCCD9040c75E')
 
-def update(rec, idx, beg, end, amt, funder_pubkey, funder_privkey, nonce):
+def update(rec, idx, beg, end, amt, amt_sent, funder_pubkey, funder_privkey, nonce):
 
+	time = (beg << 32) | end;
+	print(f"time:{time} beg:{beg} end:{end}");
     #function update(address rec, uint idx, uint beg, uint end, uint128 amt) public {
 
-	txn = distributor_main.functions.update(rec, idx, beg, end, w3.toWei(amt, 'ether')
-		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 350000, 'gasPrice': w3.toWei('8', 'gwei'), 'nonce': nonce,}
+	'''
+	txn = distributor_main.functions.update(rec, idx, beg, end, w3.toWei(amt, 'ether'), w3.toWei(amt_sent, 'ether')
+		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 350000, 'gasPrice': w3.toWei('8', 'gwei'), }
 	)
 
 	print(f"Funder signed transaction:");
@@ -48,6 +52,29 @@ def update(rec, idx, beg, end, amt, funder_pubkey, funder_privkey, nonce):
 	owed_wei = distributor_main.functions.compute_owed(rec).call();
 	owed = w3.fromWei(owed_wei, 'ether');
 	print(f"owed to {rec} : {owed}");
+
+	'''
+
+def date(m,d,y):
+	unixtime = int(time.mktime(datetime.date(y,m,d).timetuple()));
+	return unixtime;
+
+
+def add_employee(addr, sdate, amt_owed, amt_sent, k0,k1,n):
+	update(addr, 0, date( 7,11,2019), date( 7,11,2019), amt_owed, amt_sent, k0,k1,n); # cliff 1 year from start date
+	update(addr, 1, date( 7,11,2018), date( 7,11,2022), amt_owed, amt_sent, k0,k1,n); # 4 year vest
+	update(addr, 2, date(12,25,2019), date(12,25,2020), amt_owed, amt_sent, k0,k1,n); # 1 year trade lockup
+
+def send_list(funder_pubkey, funder_privkey, k0,k1,n):
+
+	#todo: add flag for update that they have received correct amount up to some date
+	#todo: how much has been sent to that address already
+	add_employee('0x7361c5B033dc7209a81e8e60BF5e19DD66270672', date( 7,11,2019), 3000000, 0, k0,k1,n); # cliff 1 year from start date
+
+	#todo: import csv file?
+
+	#update('0x25A20D9bd3e69a4c20E636F2679F2a19f595dA25', 1, date(3,27,2020), 1616813426, 3000000, k0,k1,n);
+
 
 def send(funder_pubkey, funder_privkey):
 
@@ -81,7 +108,10 @@ def send(funder_pubkey, funder_privkey):
 	owed_wei = distributor_main.functions.compute_owed_(rec, 1716813426).call(); owed = w3.fromWei(owed_wei, 'ether');
 	print(f"owed to {rec} at 1716813426 : {owed}");
 
-	#update('0x25A20D9bd3e69a4c20E636F2679F2a19f595dA25', 0, 1585277426, 1616813426, 1.0, k0,k1,n);
+	unixtime = date(3,27,2020)
+	print(f"3/27/2020: {unixtime}");
+
+	send_list(funder_pubkey, funder_privkey, k0,k1,n);
 
 
 def main():

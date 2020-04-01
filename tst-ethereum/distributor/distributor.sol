@@ -35,13 +35,12 @@ contract ContinuousDistributor {
     address owner_;
 
     struct Linear {
-        uint    beg_;
-        uint    end_;
+        uint128 time_;
         uint128 amt_;
     }
 
     mapping(address => Linear []) limits_;
-    mapping(address => uint) lastup_;
+    mapping(address => uint128) sent_;
     address [] recipients_;
     uint i_;
 
@@ -56,25 +55,26 @@ contract ContinuousDistributor {
         return token_;
     }
 
-    function update(address rec, uint idx, uint beg, uint end, uint128 amt) public {
+    function update(address rec, uint idx, uint128 time, uint128 amt, uint128 sent) public {
         require(msg.sender == owner_);
-        if (lastup_[rec] == 0) {
+        if (sent_[rec] == 0) {
             recipients_.push(rec);
-            lastup_[rec] = 1;
         }
+        sent_[rec] = sent > 1 ? sent : 1;
         while (idx >= limits_[rec].length) {
-            limits_[rec].push(Linear(0,0,0));
+            limits_[rec].push(Linear(0,0));
         }
         Linear storage func = limits_[rec][idx];
-        func.beg_ = beg;
-        func.end_ = end;
-        func.amt_ = amt;
+        func.time_ = time;
+        func.amt_  = amt;
     }
 
     function calculate_(Linear memory f, uint t) private pure returns (uint128) {
-        t = t > f.beg_ ? t : f.beg_;
-        t = t < f.end_ ? t : f.end_;
-        uint128 amt = uint128( (uint256(f.amt_) * uint256(t - f.beg_)) / uint256(f.end_ - f.beg_) );
+        uint beg = f.time_ >> 64;
+        uint end = (f.time_ << 64) >> 64;
+        t = t > beg ? t : beg;
+        t = t < end ? t : end;
+        uint128 amt = uint128( (uint256(f.amt_) * uint256(t - beg)) / uint256(end - beg) );
         return amt;
     }
 
@@ -91,9 +91,8 @@ contract ContinuousDistributor {
     }
 
     function compute_owed_(address a, uint t) public view returns (uint128) {
-        uint lt = lastup_[a];
         uint128 total = calculate(a, t);
-        uint128 sent  = calculate(a, lt);
+        uint128 sent  = sent_[a];
         sent = sent > total ? total : sent;
         return total - sent;
     }
@@ -107,7 +106,7 @@ contract ContinuousDistributor {
         uint128 amt = compute_owed_(recipient, t);
         if (amt != 0)
             require(token_.transfer(recipient, amt));
-        lastup_[recipient] = t;
+        sent_[recipient] = amt;
     }
 
     function distribute_all() public {
