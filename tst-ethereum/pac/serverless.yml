@@ -101,11 +101,15 @@ resources:
       Properties:
         TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
+          - AttributeName: price
+            AttributeType: N
           - AttributeName: signer
             AttributeType: S
         KeySchema:
-          - AttributeName: signer
+          - AttributeName: price
             KeyType: HASH
+          - AttributeName: signer
+            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Retain
     ReceiptTable:
