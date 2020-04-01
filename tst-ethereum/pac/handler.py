@@ -41,14 +41,15 @@ def get_usd_per_oxt() -> float:
     return usd_per_oxt
 
 
-def get_product_id_mapping() -> dict:
-    mapping = {
+def get_product_id_mapping(store: str = 'apple') -> dict:
+    mapping = {}
+    mapping['apple'] = {
         'net.orchid.US499': 4.99,
         'net.orchid.pactier1': 4.99,
         'net.orchid.pactier2': 9.99,
         'net.orchid.pactier3': 19.99,
     }
-    return mapping
+    return mapping.get(store, {})
 
 
 def fund_PAC_(
