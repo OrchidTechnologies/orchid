@@ -27,7 +27,7 @@ app := $(bundle)$(contents)/Frameworks/App.framework
 embed := $(bundle)$(contents)/Frameworks/$(framework).framework
 
 ifeq ($(target),mac)
-generated := 
+generated := macos/Flutter/GeneratedPluginRegistrant%swift
 temp := 
 else
 generated := ios/Runner/GeneratedPluginRegistrant%m
