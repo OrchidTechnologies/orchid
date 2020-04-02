@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
@@ -18,7 +19,7 @@ class _LegalPageState extends State<LegalPage> {
     return Column(
       children: <Widget>[
         PageTile.route(
-            title: "Privacy Policy",
+            title: s.privacyPolicy,
             //imageName: "assets/images/account_balance_wallet.png",
             routeName: '/help/privacy',
             context: context),
@@ -29,5 +30,9 @@ class _LegalPageState extends State<LegalPage> {
             context: context),
       ],
     );
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

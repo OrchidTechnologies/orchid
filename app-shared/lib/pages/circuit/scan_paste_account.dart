@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/qrcode.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/dialogs.dart';
@@ -37,7 +38,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           TitleIconButton(
-              text: "Scan",
+              text: s.scan,
               trailing: showIcons
                   ? Image.asset("assets/images/scan.png", color: Colors.white)
                   : SizedBox(),
@@ -46,7 +47,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
               onPressed: _scanQRCode),
           padx(widget.spacing ?? 24),
           TitleIconButton(
-              text: "Paste",
+              text: s.paste,
               trailing: showIcons
                   ? Icon(Icons.content_paste, color: Colors.deepPurple)
                   : SizedBox(),
@@ -96,23 +97,25 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   void _scanQRCodeError() {
     Dialogs.showAppDialog(
         context: context,
-        title: "Invalid QR Code",
-        bodyText:
-            "The QR code you scanned does not contain a valid account configuration.");
+        title: s.invalidQRCode,
+        bodyText: s.theQRCodeYouScannedDoesNot);
   }
 
   void _pasteCodeError() {
     Dialogs.showAppDialog(
         context: context,
-        title: "Invalid Code",
-        bodyText:
-            "The code you pasted does not contain a valid account configuration.");
+        title: s.invalidCode,
+        bodyText: s.theCodeYouPastedDoesNot);
   }
 
   Future<ParseOrchidAccountResult> _parseConfig(
       BuildContext context, String config) async {
     var existingKeys = await UserPreferences().getKeys();
     return OrchidVPNConfig.parseOrchidAccount(config, existingKeys);
+  }
+
+  S get s {
+    return S.of(context);
   }
 }
 

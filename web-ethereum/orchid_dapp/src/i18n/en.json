@@ -1,0 +1,141 @@
+{
+  "title": "This is the title",
+  "hello": "Hello, {name}, you have {itemCount, plural, =0 {no items} one {# item} other {# items} }",
+  "letsGetStarted": "Let’s get started!",
+  "youreAlmostThere": "You’re almost there!",
+  "pleaseSelectEthNetwork": "Please select the Ethereum Main Network in your Dapp Browser!",
+  "createAccount": "Create Account",
+  "addFundsToYourAccount": "Add Funds to your Account",
+  "welcomeToYourOrchidAccount": "Welcome to your Orchid Account",
+
+  "yourOrchidAccountIsFunded": "Your Orchid Account is funded and ready to go!",
+  "yourWalletIsEmpty": "Your wallet is empty.",
+  "transferOXTandEnoughETH": "Transfer OXT and enough ETH to cover two transactions to this dapp wallet in order to continue.",
+  "yourWalletETHbalanceIsEmpty": "Your wallet ETH balance is empty.",
+  "transferEnoughETHtoCoverTwo": "Transfer enough ETH to cover two transactions to this dapp wallet in order to continue.",
+  "yourWalletOXTbalanceIsEmpty": "Your wallet OXT balance is empty.",
+  "transferOXTToThisDappWallet": "Transfer OXT to this dapp wallet in order to continue.",
+  "youAreReadyToCreateOrchidAccount": "You are ready to create an Orchid account with funds from your wallet.",
+  "continueBelowToCreateAccount": "Continue below to create your account.",
+  "yourOrchidAccountIsReadyToReceive": "Your Orchid Account is ready to receive funds from your wallet.",
+  "proceedBelowToAddFunds": "Proceed below to add funds to your account.",
+
+  "info": "Info",
+  "transactions": "Transactions",
+  "moveFunds": "Move Funds",
+  "lockUnlockFunds": "Lock / Unlock Funds",
+  "advanced": "Advanced",
+
+  "overview": "Overview",
+  "add": "Add",
+  "withdraw": "Withdraw",
+  "more": "More",
+
+  "balanceCaps": "BALANCE",
+
+  "quickSetUp": "Quick Set Up",
+  "createAccountWithAvailable": "Create account with available Orchid tokens.",
+  "fromAvailable": "From Available",
+
+  "enterCustomAmount": "Enter custom amount",
+  "transferAvailable": "Transfer Available",
+
+  "transactionComplete": "Transaction Complete!",
+  "transactionFailed": "Transaction Failed",
+
+  "addFunds": "Add Funds",
+  "withdrawFunds": "Withdraw Funds",
+  "lock": "Lock",
+  "unlock": "Unlock",
+  "moveFundsToDeposit": "Move Funds To Deposit",
+  "resetAccount": "Reset Account",
+  "pending": "Pending",
+  "complete": "Complete",
+  "failed": "Failed!",
+  "transaction": "Transaction",
+
+  "checkingWalletStatus": "Checking Wallet Status",
+
+  "viewOnBlockchain": "View on blockchain",
+  "status": "Status",
+  "confirmations": "Confirmations",
+  "hash": "Hash",
+
+  "createNewAccount": "Create New Account",
+  "addToBalance": "Add to Balance",
+  "addToDeposit": "Add to Deposit",
+
+  "signerKey": "Signer Key",
+  "address": "Address",
+
+  "yourDepositSecuresAccessInstruction": "Your deposit secures access to the Orchid network and demonstrates authenticity to bandwidth sellers.",
+  "total": "Total",
+  "addOXT": "Add OXT",
+
+  "withdrawFromBalance": "Withdraw from balance",
+  "balance": "Balance",
+  "withdrawingTo": "Withdrawing to",
+
+  "withdrawFullBalanceAndDeposit": "Withdraw Full Balance and Deposit",
+  "noteIfOverdraftOccurs": "Note: If an overdraft occurs on your Orchid balance, your deposit will be lost.",
+  "withdrawOXT": "Withdraw OXT",
+
+  "walletAddress": "Wallet Address",
+
+  "copy": "Copy",
+  "signerAddress": "Signer Address",
+
+  "lotteryPot": "Lottery Pot",
+  "deposit": "Deposit",
+  "fundsStatus": "Funds Status",
+  "locked": "Locked",
+  "unlocked": "Unlocked",
+  "lockedUntil": "Locked until",
+  "@lockedUntil": {
+    "description": "Locked until date/time"
+  },
+
+  "accountQRCode": "Account QR Code",
+  "revealQR": "Reveal QR",
+  "copyCode": "Copy Code",
+
+  "date": "Date",
+  "tx": "Tx",
+  "@tx": {
+    "description": "abbreviation for 'transactions'"
+  },
+  "loading": "Loading",
+
+  "account": "Account",
+
+  "moveFundsFromYourLotteryPot": "Move funds from your Lottery Pot balance to your deposit.",
+  "balanceFundsAreUsedByOrchid": "Balance funds are used by Orchid services and can be withdrawn at any time.",
+  "depositFundsAreRequiredToParticipate": "Deposit funds are required to participate in the Orchid network and can be withdrawn after an unlock notice period.",
+  "availableLotteryPotBalance": "Available Lottery Pot Balance Amount",
+  "amountInOXT": "Amount in OXT",
+  "oxt": "OXT",
+  "moveToDepositAmount": "Move to Deposit Amount",
+
+  "submit": "Submit",
+
+  "toWithdrawYourFullBalance": "To withdraw your full balance including the deposit the account must be unlocked.",
+  "fundsWillBeAvailableAt": "Funds will be available at the time shown below.",
+  "ifYouWishToCancelWithdrawal": "If you wish to cancel the withdrawal process and continue using your deposit re-lock funds.",
+
+  "debugOutput": "Debug Output",
+
+  "currentStake": "Current Stake",
+  "@currentStake": {
+    "description": "Current financial stake"
+  },
+  "addToStake": "Add to Stake",
+  "stakeFunds": "Stake Funds",
+  "stakeOxt": "Stake OXT",
+  "stakeeAddress": "Stakee (Provider) Address",
+  "stakeeProvider": "Stakee (Provider)",
+  "delay": "Delay",
+  "delayDays": "Delay Days",
+  "delaySeconds": "Delay Seconds",
+  "days": "Days"
+
+}

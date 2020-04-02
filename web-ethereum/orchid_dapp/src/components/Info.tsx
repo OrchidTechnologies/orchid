@@ -7,10 +7,11 @@ import './Info.css'
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {Subscription} from "rxjs";
 import {AccountQRCode} from "./AccountQRCode";
+import {S} from "../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export class Info extends Component {
+export class Info extends Component<any, any> {
   state = {
     signerAddress: "",
     signerConfigString: undefined,
@@ -83,19 +84,19 @@ export class Info extends Component {
   render() {
     return (
       <Container className="Balances form-style">
-        <label className="title">Info</label>
+        <label className="title">{S.info}</label>
 
         {/*wallet address*/}
-        <label style={{fontWeight: "bold"}}>Wallet Address </label>
+        <label style={{fontWeight: "bold"}}>{S.walletAddress}</label>
         <Row noGutters={true}>
           <Col style={{flexGrow: 10}}>
             <input type="text"
                    style={{textOverflow: "ellipsis"}}
                    ref={this.walletAddressInput}
-                   value={this.state.walletAddress} placeholder="Address" readOnly/>
+                   value={this.state.walletAddress} placeholder={S.address} readOnly/>
           </Col>
           <Col style={{marginLeft: '8px'}}>
-            <Button variant="light" onClick={this.copyWalletAddress.bind(this)}>Copy</Button>
+            <Button variant="light" onClick={this.copyWalletAddress.bind(this)}>{S.copy}</Button>
           </Col>
         </Row>
 
@@ -118,16 +119,16 @@ export class Info extends Component {
         </div>
 
         {/*signer address*/}
-        <label style={{fontWeight: "bold", marginTop: "16px"}}>Signer Address </label>
+        <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.signerAddress}</label>
         <Row noGutters={true}>
           <Col style={{flexGrow: 10}}>
             <input type="text"
                    style={{textOverflow: "ellipsis"}}
                    ref={this.signerAddressInput}
-                   value={this.state.signerAddress} placeholder="Address" readOnly/>
+                   value={this.state.signerAddress} placeholder={S.address} readOnly/>
           </Col>
           <Col style={{marginLeft: '8px'}}>
-            <Button variant="light" onClick={this.copySignerAddress.bind(this)}>Copy</Button>
+            <Button variant="light" onClick={this.copySignerAddress.bind(this)}>{S.copy}</Button>
           </Col>
         </Row>
 
@@ -137,16 +138,16 @@ export class Info extends Component {
         </Visibility>
 
         {/*pot balance and escrow*/}
-        <label style={{fontWeight: "bold", marginTop: "16px"}}>Lottery Pot</label>
+        <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.lotteryPot}</label>
         <div className="form-row col-1-1">
           <div className="form-row col-1-2">
-            <label className="form-row-label">Balance</label>
+            <label className="form-row-label">{S.balance}</label>
             <input className="form-row-field"
                    value={this.state.potBalance}
                    type="text" readOnly/>
           </div>
           <div className="form-row col-1-2">
-            <label className="form-row-label">Deposit</label>
+            <label className="form-row-label">{S.deposit}</label>
             <input className="form-row-field"
                    value={this.state.potEscrow}
                    type="text" readOnly/>

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/common/tap_copy_text.dart';
 import 'package:orchid/util/units.dart';
@@ -61,8 +62,7 @@ class _SideDrawerState extends State<SideDrawer> {
             padding: EdgeInsets.zero,
             children: <Widget>[
               SideDrawerTile(
-                  title: "Help",
-                  //imageName: 'assets/images/help.png',
+                  title: s.help,
                   icon: Icons.help_outline,
                   showDetail: true,
                   onPressed: () {
@@ -70,7 +70,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               divider(),
               SideDrawerTile(
-                  title: "Privacy Policy",
+                  title: s.privacyPolicy,
                   imageName: 'assets/images/fileDocumentOutline.png',
                   showDetail: true,
                   hoffset: 4.0,
@@ -79,7 +79,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               divider(),
               SideDrawerTile(
-                  title: "Open Source Licenses",
+                  title: s.openSourceLicenses,
                   imageName: 'assets/images/fileDocumentBoxMultipleOutline.png',
                   showDetail: true,
                   hoffset: 4.0,
@@ -88,7 +88,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               divider(),
               SideDrawerTile(
-                  title: "Settings",
+                  title: s.settings,
                   imageName: 'assets/images/settings.png',
                   showDetail: true,
                   hoffset: 4.0,
@@ -97,7 +97,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               divider(),
               SideDrawerTile(
-                  title: "Advanced",
+                  title: s.advanced,
                   imageName: 'assets/images/settings.png',
                   showDetail: true,
                   hoffset: 4.0,
@@ -114,7 +114,7 @@ class _SideDrawerState extends State<SideDrawer> {
             children: <Widget>[
               divider(),
               SizedBox(height: 16),
-              TapToCopyText("Version: " + (_version ?? "<no version>"),
+              TapToCopyText(s.version+": " + (_version ?? "<"+s.noVersion+">"),
                   key: ValueKey(_version),
                   style:
                       AppText.noteStyle.copyWith(color: AppColors.neutral_4)),
@@ -130,6 +130,10 @@ class _SideDrawerState extends State<SideDrawer> {
       color: Colors.white.withAlpha((0.12 * 255).toInt()),
       height: 1.0,
     );
+  }
+
+  S get s {
+    return S.of(context);
   }
 }
 
@@ -205,6 +209,7 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
 
   @override
   Widget build(BuildContext context) {
+    S s = S.of(context);
     return ListTile(
         contentPadding: EdgeInsets.only(left: 20, right: 20),
         leading: Image(
@@ -221,8 +226,8 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
                 textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
             Text(
                 _balance == null
-                    ? "(Setup)"
-                    : "${_balance.value.toStringAsFixed(2)} OXT",
+                    ? "("+s.setup+")"
+                    : "${_balance.value.toStringAsFixed(2)} "+s.oxt,
                 textAlign: TextAlign.left,
                 style: AppText.sideDrawerTitleStyle
                     .copyWith(fontSize: 12, height: 1.2)),
@@ -237,4 +242,5 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
     super.dispose();
     _balanceListener.cancel();
   }
+
 }

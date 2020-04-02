@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_docs.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/plain_text_box.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
@@ -10,7 +11,6 @@ class PrivacyPage extends StatefulWidget {
 }
 
 class _PrivacyPageState extends State<PrivacyPage> {
-  final String title = "Privacy Policy";
   String _privacyText = "";
 
   @override
@@ -26,6 +26,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
 
   @override
   Widget build(BuildContext context) {
+    String title = s.privacyPolicy;
     return TitledPage(title: title, child: buildPage(context));
   }
 
@@ -42,5 +43,9 @@ class _PrivacyPageState extends State<PrivacyPage> {
         ),
       ),
     );
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

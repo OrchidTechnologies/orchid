@@ -9,6 +9,7 @@ import {OrchidAPI} from "../api/orchid-api";
 import {Signer, keikiToOxtString} from "../api/orchid-eth";
 import {Visibility} from "../util/util";
 import {Route, RouteContext} from "./Route";
+import {S} from "../i18n/S";
 
 export const Header: React.FC = () => {
   const [oxtBalance, setOxtBalance] = useState<string | null>(null);
@@ -72,7 +73,7 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
                     api.signer.next(new Signer(wallet, signer.address))
                   }}
                   key={signer.address}>
-                  <span style={{fontWeight: 'bold'}}>Account: </span><span style={{fontFamily: 'Monospace'}}>{address}</span>
+                  <span style={{fontWeight: 'bold'}}>{S.account}: </span><span style={{fontFamily: 'Monospace'}}>{address}</span>
                 </ListGroupItem>
               })
             }
@@ -85,7 +86,7 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
                   fontWeight: 'bold',
                   backgroundColor: 'transparent'
                 }}>
-              <span >Create New Account</span>
+              <span>{S.createNewAccount}</span>
             </ListGroupItem>
             </ListGroup>
           </Popover.Content>
@@ -104,7 +105,7 @@ function AccountBalance(props: { oxtBalance: string }) {
       <Col style={{flexGrow: 2}}>
         <Row noGutters={true}>
           <Col>
-            <div className="header-balance">BALANCE</div>
+            <div className="header-balance">{S.balanceCaps}</div>
             <div className="header-balance-value">{props.oxtBalance || ""} OXT</div>
           </Col>
           <Col style={{flexGrow: 0}}>

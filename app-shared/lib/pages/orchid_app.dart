@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
@@ -7,19 +9,25 @@ import 'package:orchid/pages/connect/connect_page.dart';
 import 'circuit/circuit_page.dart';
 import 'monitoring/traffic_view.dart';
 
-// TODO: Remove if this remains unused
-// Single page app layout
+// Provide the MaterialApp wrapper and localization context.
 class OrchidApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Note: keep the MaterialApp above the widget to set the navigation context.
-    return MaterialApp(
+    return new MaterialApp(
         title: 'Orchid',
+        // No localization
+        localizationsDelegates: [
+          S.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: S.delegate.supportedLocales,
         theme: ThemeData(
           primarySwatch: Colors.deepPurple,
         ),
-        routes: AppRoutes.routes,
-        home: CircuitPage());
+        home: OrchidAppTabbed(),
+        debugShowCheckedModeBanner: false,
+        routes: AppRoutes.routes);
   }
 }
 
@@ -69,30 +77,18 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
     });
   }
 
-  void updateStatusTab() async {
-    _showStatusTab = await UserPreferences().getShowStatusTab();
-    _handleTabSelection(_selectedIndex);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
-        title: 'Orchid',
-        theme: ThemeData(
-          primarySwatch: Colors.deepPurple,
-        ),
-        home: Scaffold(
-          appBar: AppBar(
-            title: _pageTitle,
-            actions: _pageActions,
-          ),
-          body: _buildBody(),
-          bottomNavigationBar: _buildBottomNav(),
-          backgroundColor: Colors.deepPurple,
-          drawer: SideDrawer(),
-        ),
-        debugShowCheckedModeBanner: false,
-        routes: AppRoutes.routes);
+    return Scaffold(
+      appBar: AppBar(
+        title: _pageTitle,
+        actions: _pageActions,
+      ),
+      body: _buildBody(),
+      bottomNavigationBar: _buildBottomNav(),
+      backgroundColor: Colors.deepPurple,
+      drawer: SideDrawer(),
+    );
   }
 
   PageStorage _buildBody() {
@@ -114,14 +110,14 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
           items: <BottomNavigationBarItem>[
             if (_showStatusTab)
               BottomNavigationBarItem(
-                  title: Text("Status"),
+                  title: Text(s.status),
                   icon: Image.asset(
                     "assets/images/statusV2.png",
                     height: 27,
                     color: _selectedIndex == 0 ? Colors.white : Colors.white60,
                   )),
             BottomNavigationBarItem(
-                title: Text("Hops"),
+                title: Text(s.hops),
                 icon: Image.asset(
                   "assets/images/rerouteAlt.png",
                   height: 27,
@@ -130,7 +126,7 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
                       : Colors.white60,
                 )),
             BottomNavigationBarItem(
-                title: Text("Traffic"),
+                title: Text(s.traffic),
                 icon: Image.asset(
                   "assets/images/swapVert.png",
                   height: 24,
@@ -142,11 +138,16 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
     );
   }
 
+  void updateStatusTab() async {
+    _showStatusTab = await UserPreferences().getShowStatusTab();
+    _handleTabSelection(_selectedIndex);
+  }
+
   void _handleTabSelection(int index) {
     var titles = [
       _logo,
       _logo,
-      Text("Traffic"),
+      Text(s.traffic),
     ];
     setState(() {
       _selectedIndex = index;
@@ -154,10 +155,16 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
       if (index == (_showStatusTab ? 1 : 0)) {
         _pageActions = [WrappedSwitch(controller: _vpnSwitchController)];
       } else if (index == (_showStatusTab ? 2 : 1)) {
-        _pageActions = [ClearTrafficActionButton(controller: _trafficButtonController)];
+        _pageActions = [
+          ClearTrafficActionButton(controller: _trafficButtonController)
+        ];
       } else {
         _pageActions = [];
       }
     });
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/hop_editor.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
@@ -18,12 +19,15 @@ class _BudgetEditorState extends State<BudgetEditorPage> {
   Widget build(BuildContext context) {
     return TapClearsFocus(
       child: TitledPage(
-        title: "Budget",
+        title: s.budget,
         child: SafeArea(
           child: Container(),
         ),
       ),
     );
+  }
+  S get s {
+    return S.of(context);
   }
 }
 

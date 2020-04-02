@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/pages/purchase/purchase_page.dart';
 
 import '../app_colors.dart';
 import '../orchid_app.dart';
@@ -40,8 +42,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
+    var betaSuffix = " (" + s.beta + ")";
     return TitledPage(
-      title: "Settings",
+      title: s.settings,
       child: Column(
         children: <Widget>[
           /*
@@ -54,7 +57,7 @@ class _SettingsPageState extends State<SettingsPage> {
           // Default curator
           pady(16),
           PageTile(
-            title: "Default Curator",
+            title: s.defaultCurator,
             //imageName: "assets/images/assignment.png",
             trailing: Container(
                 width: screenWidth * 0.5,
@@ -67,7 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
           pady(16),
           Divider(),
           PageTile(
-            title: "Allow No Hop VPN\n(Traffic Monitoring Only)",
+            title: s.allowNoHopVPN + "\n(" + s.trafficMonitoringOnly + ")",
             trailing: Switch(
               activeColor: AppColors.purple_3,
               value: _allowNoHopVPN,
@@ -84,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
           pady(8),
           Divider(),
           PageTile(
-            title: "Query Balances",
+            title: s.queryBalances,
             //imageName: "assets/images/assignment.png",
             trailing: Switch(
               activeColor: AppColors.purple_3,
@@ -102,9 +105,9 @@ class _SettingsPageState extends State<SettingsPage> {
           pady(8),
           Divider(),
           PageTile(
-            title: "Show Instructions",
+            title: s.showInstructions,
             trailing: RaisedButton(
-              child: Text("Reset"),
+              child: Text(s.reset),
               onPressed: () {
                 UserPreferences().resetInstructions();
               },
@@ -115,7 +118,7 @@ class _SettingsPageState extends State<SettingsPage> {
           pady(8),
           Divider(),
           PageTile.route(
-              title: "Manage Configuration (beta)",
+              title: s.manageConfiguration + betaSuffix,
               routeName: '/settings/manage_config',
               context: context),
           Divider(),
@@ -123,7 +126,7 @@ class _SettingsPageState extends State<SettingsPage> {
           // Status page
           pady(8),
           PageTile(
-            title: "Show Status Page (beta)",
+            title: s.showStatusPage + betaSuffix,
             //imageName: "assets/images/assignment.png",
             trailing: Switch(
               activeColor: AppColors.purple_3,
@@ -138,10 +141,30 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
 
-
+          /*
+          // Test Purchase
+          pady(8),
+          Divider(),
+          PageTile(
+            title: "Test Purchase",
+            trailing: RaisedButton(
+              child: Text("Buy"),
+              onPressed: () {
+                //OrchidPurchaseAPI().testPurchase();
+                _showPurchasePage();
+              },
+            ),
+          ),
+           */
         ],
       ),
     );
+  }
+
+  void _showPurchasePage() {
+    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
+      return PurchasePage(onAddFlowComplete: (hop) {});
+    }));
   }
 
   void _curatorChanged() {
@@ -152,5 +175,9 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     super.dispose();
     _defaultCurator.removeListener(_curatorChanged);
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

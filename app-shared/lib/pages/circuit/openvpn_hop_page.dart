@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
@@ -57,7 +58,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
   Widget build(BuildContext context) {
     return TapClearsFocus(
       child: TitledPage(
-        title: "OpenVPN Hop",
+        title: s.openVPNHop,
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
             : [],
@@ -71,11 +72,11 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text("Username:",
+                    Text(s.username + ":",
                         style: AppText.textLabelStyle.copyWith(fontSize: 20)),
                     pady(8),
                     AppTextField(
-                        hintText: "Username",
+                        hintText: s.username,
                         margin: EdgeInsets.zero,
                         controller: _userName)
                   ],
@@ -86,11 +87,11 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text("Password:",
+                    Text(s.password + ":",
                         style: AppText.textLabelStyle.copyWith(fontSize: 20)),
                     pady(8),
                     AppTextField(
-                        hintText: "Password",
+                        hintText: s.password,
                         margin: EdgeInsets.zero,
                         controller: _userPassword)
                   ],
@@ -100,7 +101,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                 pady(16),
                 Align(
                     alignment: Alignment.centerLeft,
-                    child: Text("Config:",
+                    child: Text(s.config + ":",
                         style: AppText.textLabelStyle.copyWith(fontSize: 20))),
                 Expanded(
                   flex: 2,
@@ -120,7 +121,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                         controller: _ovpnConfig,
                         maxLines: 99999,
                         decoration: InputDecoration(
-                          hintText: "Paste your OVPN config file here",
+                          hintText: s.pasteYourOVPN,
                           border: InputBorder.none,
                           labelStyle: AppText.textLabelStyle,
                         ),
@@ -143,9 +144,8 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                     child: InstructionsView(
                       // TODO: This screen is being told it's in landscape mode in the simulator?
                       //hideInLandscape: false,
-                      title: "Enter your credentials",
-                      body:
-                          "Enter the login information for your VPN provider above. Then paste the contents of your provider’s OpenVPN config file into the field provided. ",
+                      title: s.enterYourCredentials,
+                      body: s.enterLoginInformationInstruction + " ",
                     ),
                   ),
                 ),
@@ -175,5 +175,9 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     _userName.removeListener(_updateHop);
     _userPassword.removeListener(_updateHop);
     _ovpnConfig.removeListener(_updateHop);
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

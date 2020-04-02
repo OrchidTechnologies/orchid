@@ -5,6 +5,8 @@ import {Route, RouteContext} from "../Route";
 import './Overview.css';
 import beaver from '../../assets/beaver1.svg';
 import {OverviewProps} from "./Overview";
+import {S} from "../../i18n/S";
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const OverviewDefault: React.FC<OverviewProps> = (props) => {
@@ -13,30 +15,26 @@ export const OverviewDefault: React.FC<OverviewProps> = (props) => {
 
   let instructions: string;
   if (potFunded) {
-    instructions = "Your Orchid Account is funded and ready to go!."
+    instructions = S.yourOrchidAccountIsFunded;
   } else if (walletEthEmpty && walletOxtEmpty) {
-    instructions = "Your wallet is empty. " +
-      "Transfer OXT and enough ETH to cover two transactions to this dapp wallet in order to continue.";
+    instructions = S.yourWalletIsEmpty + "  " + S.transferOXTandEnoughETH;
   } else if (walletEthEmpty) {
-    instructions = "Your wallet ETH balance is empty. " +
-      "Transfer enough ETH to cover two transactions to this dapp wallet in order to continue.";
+    instructions =
+      S.yourWalletETHbalanceIsEmpty + "  " + S.transferEnoughETHtoCoverTwo;
   } else if (walletOxtEmpty) {
-    instructions = "Your wallet OXT balance is empty. " +
-      "Transfer OXT to this dapp wallet in order to continue.";
+    instructions = S.yourWalletOXTbalanceIsEmpty + "  " + S.transferOXTToThisDappWallet;
   } else if (noAccount) {
-    instructions = "You are ready to create an Orchid account with funds from your wallet. " +
-      "Continue below to create your account.";
+    instructions = S.youAreReadyToCreateOrchidAccount + "  " + S.continueBelowToCreateAccount;
   } else {
     // You have an existing account but it has no OXT.
-    instructions = "Your Orchid Account is ready to receive funds from your wallet. " +
-      "Proceed to below to add funds to your account.";
+    instructions = S.yourOrchidAccountIsReadyToReceive + "  " + S.proceedBelowToAddFunds;
   }
 
   return (
     <div>
       <div className="Overview-box">
         <Row><Col>
-          <div className="Overview-title">Welcome to your Orchid Account</div>
+          <div className="Overview-title">{S.welcomeToYourOrchidAccount}</div>
         </Col></Row>
         <Row style={{marginTop: '24px'}} noGutters={true}>
           <Col className="Overview-copy">
@@ -56,7 +54,7 @@ export const OverviewDefault: React.FC<OverviewProps> = (props) => {
         }}
         hidden={potFunded}
         enabled={!potFunded && !walletOxtEmpty && !walletEthEmpty}>
-        {noAccount ? "Create Account" : "Add Funds to your Account"}
+        {noAccount ? S.createAccount : S.addFundsToYourAccount}
       </SubmitButton>
     </div>
   );

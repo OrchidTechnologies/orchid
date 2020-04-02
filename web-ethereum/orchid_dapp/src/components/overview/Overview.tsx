@@ -6,6 +6,7 @@ import {OverviewEarn} from "./OverviewEarn";
 import {OverviewDefault} from "./OverviewDefault";
 import {OverviewQuickSetup} from "./OverviewQuickSetup";
 import {TransactionStatus} from "../TransactionProgress";
+import {S} from "../../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -18,6 +19,12 @@ export interface OverviewProps {
   minFundedDeposit: BigInt
 }
 
+// Set the min balance and deposit considered funded.
+// const minFundedBalance = oxtToKeiki(20.0);
+// const minFundedDeposit = oxtToKeiki(10.0);
+const minFundedBalance = BigInt(1); // allow anything greater than zero
+const minFundedDeposit = BigInt(1);
+
 export const Overview: React.FC = () => {
   const [newUser, setNewUser] = useState<boolean | undefined>(undefined);
   const [walletEthEmpty, setWalletEthEmpty] = useState<boolean | undefined>(undefined);
@@ -28,15 +35,9 @@ export const Overview: React.FC = () => {
   const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(undefined);
   // TESTING:
   // const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(
-  //   TransactionStatus.result("0x1234", "Transaction Complete!",
+  //   TransactionStatus.result("0x1234", S.transactionComplete,
   //     new Signer(new Wallet(), "0x12345", "12345"))
   // );
-
-  // Set the min balance and deposit considered funded.
-  // const minFundedBalance = oxtToKeiki(20.0);
-  // const minFundedDeposit = oxtToKeiki(10.0);
-  const minFundedBalance = BigInt(1); // allow anything greater than zero
-  const minFundedDeposit = BigInt(1);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -80,21 +81,19 @@ export const Overview: React.FC = () => {
     return <OverviewEarn {...props}/>;
   } else {
     let {noAccount, walletEthEmpty, walletOxtEmpty} = props;
-    console.log(`overview, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
+    // console.log(`overview, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
     // If the user is ready to fund a new account or has a quick setup transaction result send to quick setup.
-    if ((noAccount && !walletEthEmpty && !walletOxtEmpty) || quickSetupResultTx != null) {
-      console.log("showing quick setup");
+    if ((noAccount && !walletEthEmpty && !walletOxtEmpty) || quickSetupResultTx) {
       return <OverviewQuickSetup
         initialTxStatus={quickSetupResultTx} {...props}
         txResultSetter={setQuickSetupResultTx}
       />;
     } else {
-      console.log("showing default setup");
       return <OverviewDefault {...props}/>;
     }
   }
 };
 
 export const OverviewLoading: React.FC = () => {
-  return <div style={{textAlign: 'center', marginTop: '24px'}}>Checking Wallet Status...</div>
+  return <div style={{textAlign: 'center', marginTop: '24px'}}>{S.checkingWalletStatus}...</div>
 };

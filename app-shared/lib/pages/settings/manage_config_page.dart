@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_api_real.dart';
-import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
-import 'package:orchid/api/user_preferences.dart';
-import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
-import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
@@ -29,14 +23,13 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
     initStateAsync();
   }
 
-  void initStateAsync() async {
-  }
+  void initStateAsync() async {}
 
   Widget build(BuildContext context) {
     var instructionsStyle = AppText.listItem.copyWith(
         color: Colors.black54, fontStyle: FontStyle.italic, fontSize: 14);
     return TitledPage(
-      title: "Manage Configuration",
+      title: s.manageConfiguration,
       child: Column(
         children: <Widget>[
           pady(24),
@@ -50,14 +43,14 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           Divider(),
           pady(16),
           PageTile(
-            title: "Export Hops Configuration",
+            title: s.exportHopsConfiguration,
             trailing: RaisedButton(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Icon(Icons.save),
                   padx(8),
-                  Text("Export"),
+                  Text(s.export),
                 ],
               ),
               onPressed: _doExport,
@@ -66,22 +59,20 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           Padding(
             padding:
                 const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16),
-            child: Text(
-                "Warning: Exported configuration includes the signer private key secrets for the exported hops."
-                "  Revealing private keys exposes you to loss of all funds in the associated Orchid accounts.",
-                style: instructionsStyle),
+            child:
+                Text(s.warningExportedConfiguration, style: instructionsStyle),
           ),
           Divider(),
           pady(16),
           PageTile(
-            title: "Import Hops Configuration",
+            title: s.importHopsConfiguration,
             trailing: RaisedButton(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Icon(Icons.input),
                   padx(8),
-                  Text("Import"),
+                  Text(s.import),
                 ],
               ),
               onPressed: _doImport,
@@ -90,11 +81,8 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           Padding(
             padding:
                 const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16),
-            child: Text(
-                "Warning: Imported configuration will replace any existing hops that you have created in the app."
-                "  Signer keys previously generated or imported on this device will be retained and remain"
-                " accessible for creating new hops, however all other configuration including OpenVPN hop configuration will be lost.",
-                style: instructionsStyle),
+            child:
+                Text(s.warningImportedConfiguration, style: instructionsStyle),
           ),
           pady(16),
           Divider(),
@@ -113,7 +101,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
     String hopsConfig = await OrchidVPNConfig.generateHopsConfig();
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return ImportExportConfig.export(
-        title: "Export Hops Configuration",
+        title: s.exportHopsConfiguration,
         config: hopsConfig,
       );
     }));
@@ -122,7 +110,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   void _doImport() {
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return ImportExportConfig.import(
-        title: "Import Hops Configuration",
+        title: s.importHopsConfiguration,
         validator: OrchidVPNConfigValidation.configValid,
         onImport: _importConfig,
       );
@@ -133,5 +121,8 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
     await OrchidVPNConfig.importConfig(config);
     Navigator.pop(context);
   }
-}
 
+  S get s {
+    return S.of(context);
+  }
+}

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/pages/circuit/add_hop_page.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
@@ -226,6 +228,21 @@ class OrchidVPNConfig {
         RegExp(r'([A-Za-z0-9_-]{1,})\s*:'), (Match m) => '"${m[1]}":');
   }
 
+  /// Create a hop from an account parse result, save any new keys, and return the hop
+  /// to the add flow completion.
+  static Future<CircuitHop> importAccountAsHop(
+      ParseOrchidAccountResult result) async {
+    print("result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
+    // Save any new keys
+    await UserPreferences().addKeys(result.newKeys);
+    // Create the new hop
+    CircuitHop hop = OrchidHop(
+      curator: OrchidHop.appDefaultCurator,
+      funder: result.account.funder,
+      keyRef: result.account.signer.ref(),
+    );
+    return hop;
+  }
 } // OrchidVPNConfig
 
 typedef OrchidConfigValidator = bool Function(String config);

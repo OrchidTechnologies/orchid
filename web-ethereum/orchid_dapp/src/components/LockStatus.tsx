@@ -1,6 +1,7 @@
 import React, {Component} from "react";
 import {LotteryPot} from "../api/orchid-eth";
 import {OrchidAPI} from "../api/orchid-api";
+import {S} from "../i18n/S";
 
 export class LockStatus extends Component {
   state = {
@@ -23,21 +24,21 @@ export class LockStatus extends Component {
     let icon: string, text: string;
     if (this.state.pot.unlock == null) {
       icon = "🔒";
-      text = "Locked";
+      text = S.locked;
     } else {
       if (this.state.pot.unlock > new Date()) {
         icon = "🔒";
-        text = `Locked until: ${this.state.pot.unlock.toLocaleString('en-US')}`;
+        text = `${S.lockedUntil}: ${this.state.pot.unlock.toLocaleString()}`;
       } else {
         icon = "🔓";
-        text = "Unlocked";
+        text = S.unlocked;
       }
     }
     // language=HTML
     return (
         <div>
           <label
-              style={{fontWeight: 'bold', marginTop: '12px'}}>Funds Status:
+              style={{fontWeight: 'bold', marginTop: '12px'}}>{S.fundsStatus}:
             <span style={{marginLeft: '8px'}}>{icon}</span>
           </label>
           <span>{text}</span>

@@ -20,16 +20,16 @@ export function basePath(): string {
   return pathComponents.join('/');
 }
 
-export function extraPath(): string|undefined {
+export function extraPath(): string | undefined {
   let pathComponents = new URL(window.location.href).pathname.split('/');
   return pathComponents.pop();
 }
 
-export function hashPath(): string|undefined {
+export function hashPath(): string | undefined {
   return new URL(window.location.href).hash;
 }
 
-export function getParam(name: string): string|null {
+export function getParam(name: string): string | null {
   let params = new URL(window.location.href).searchParams;
   return params.get(name);
 }
@@ -38,7 +38,7 @@ export function getEthAddressParam(name: string, defaultValue: string): string {
   let addr = getParam(name);
   // Some servers won't let you put a big hex string in the url
   if (addr != null && !addr.startsWith("0x")) {
-    addr = "0x"+addr;
+    addr = "0x" + addr;
   }
   if (addr != null && isEthAddress(addr)) {
     return addr;
@@ -57,6 +57,12 @@ export function isNumeric(val: any) {
 // Return the float value or null if not numeric.
 export function parseFloatSafe(val: string): number | null {
   return isNumeric(val) ? parseFloat(val) : null;
+}
+
+// Return the int value or null if not numeric.
+export function parseIntSafe(val: string): number | null {
+  let ivalue = parseInt(val);
+  return (''+ivalue === val) ? ivalue : null;
 }
 
 // Return the BigInt value or null if not numeric.
@@ -102,3 +108,31 @@ export function copyTextToClipboard(text: string) {
   document.execCommand('copy');
   document.body.removeChild(dummy);
 }
+
+export function testLocalization_(en: Record<string, any>) {
+  let msgs: Record<string, string> = {};
+  Object.keys(en).forEach(key => {
+
+    // Mix the case
+    let org = en[key];
+    if ((typeof org) !== "string") {
+      return;
+    }
+    let mod = "";
+    for (let i = 0; i < org.length; i++) {
+      let char = (org as string).charAt(i);
+      mod += i % 2 === 0 ? char.toUpperCase() : char.toLowerCase();
+    }
+    msgs[key] = mod;
+  });
+  return msgs;
+}
+
+/// Remove any "0x" prefix on a hex string.
+export function removeHexPrefix(value: string | undefined): string | undefined {
+  if (!value) {
+    return value;
+  }
+  return value.startsWith('0x') ? value.substr(2) : value;
+}
+

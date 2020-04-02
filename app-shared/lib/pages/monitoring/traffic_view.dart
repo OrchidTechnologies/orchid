@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
 import '../app_gradients.dart';
@@ -122,7 +122,7 @@ class _TrafficViewState extends State<TrafficView>
         autocorrect: false,
         controller: _searchTextController,
         decoration: InputDecoration(
-          hintText: "Search",
+          hintText: s.search,
           hintStyle: TextStyle(color: AppColors.neutral_5),
           suffixIcon: _searchTextController.text.isEmpty
               ? null
@@ -243,7 +243,7 @@ class _TrafficViewState extends State<TrafficView>
                         size: 16,
                       ),
                       SizedBox(width: 12),
-                      Text("New Content",
+                      Text(s.newContent,
                           style: AppText.textLabelStyle
                               .copyWith(color: color, fontSize: 14.0)),
                       SizedBox(width: 12),
@@ -394,6 +394,10 @@ class _TrafficViewState extends State<TrafficView>
     super.dispose();
     _pollTimer.cancel();
   }
+
+  S get s {
+    return S.of(context);
+  }
 }
 
 class ClearTrafficActionButtonController {
@@ -408,6 +412,7 @@ class ClearTrafficActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    S s = S.of(context);
     return ValueListenableBuilder<bool>(
         valueListenable: controller.enabled,
         builder: (context, enabledOrNull, child) {
@@ -417,7 +422,7 @@ class ClearTrafficActionButton extends StatelessWidget {
             child: Opacity(
               opacity: enabled ? 1.0 : 0.3,
               child: FlatButton(
-                child: Text("Clear", style: AppText.actionButtonStyle),
+                child: Text(s.clear, style: AppText.actionButtonStyle),
                 onPressed: enabled
                     ? () {
                         _confirmDelete(context);
@@ -430,14 +435,16 @@ class ClearTrafficActionButton extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context) {
+    S s = S.of(context);
     Dialogs.showConfirmationDialog(
         context: context,
-        title: "Delete all data?",
-        body: "This will delete all recorded traffic data within the app.",
-        cancelText: "CANCEL",
-        actionText: "OK",
+        title: s.deleteAllData+"?",
+        body: s.thisWillDeleteRecorded,
+        cancelText: s.cancelButtonTitle,
+        actionText: s.okButtonTitle,
         commitAction: () async {
           await AnalysisDb().clear();
         });
   }
+
 }

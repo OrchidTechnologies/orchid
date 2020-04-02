@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
 class Dialogs {
-
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
   static Future<void> showAppDialog({
     @required BuildContext context,
@@ -14,6 +14,7 @@ class Dialogs {
     Widget body,
     bool linkSettings = false,
   }) {
+    S s = S.of(context);
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -26,7 +27,8 @@ class Dialogs {
           actions: <Widget>[
             linkSettings
                 ? FlatButton(
-                    child: Text("SETTINGS", style: AppText.dialogButton),
+                    child: Text(s.settingsButtonTitle,
+                        style: AppText.dialogButton),
                     onPressed: () {
                       Navigator.of(context).pop();
                       Navigator.pushNamed(context, '/settings');
@@ -34,7 +36,7 @@ class Dialogs {
                   )
                 : null,
             FlatButton(
-              child: Text("OK", style: AppText.dialogButton),
+              child: Text(s.ok, style: AppText.dialogButton),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -48,16 +50,17 @@ class Dialogs {
   static void showConfirmationDialog(
       {@required BuildContext context,
       String title,
-      String body = "Confirm this action?",
-      String cancelText = "CANCEL",
+      String body,
+      String cancelText,
       Color cancelColor = AppColors.purple_3,
-      actionText = "OK",
+      actionText,
       Color actionColor = AppColors.purple_3,
       VoidCallback cancelAction,
       VoidCallback commitAction}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        S s = S.of(context);
         return AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
@@ -66,11 +69,11 @@ class Dialogs {
                   style:
                       AppText.dialogTitle.copyWith(color: AppColors.neutral_1))
               : null,
-          content: Text(body,
+          content: Text(body ?? s.confirmThisAction + "?",
               style: AppText.dialogBody.copyWith(color: AppColors.neutral_2)),
           actions: <Widget>[
             FlatButton(
-              child: Text(cancelText,
+              child: Text(cancelText ?? s.cancelButtonTitle,
                   style: AppText.dialogButton.copyWith(color: cancelColor)),
               onPressed: () {
                 if (cancelAction != null) {
@@ -80,7 +83,7 @@ class Dialogs {
               },
             ),
             FlatButton(
-              child: Text(actionText,
+              child: Text(actionText ?? S.of(context).ok,
                   style: AppText.dialogButton.copyWith(color: actionColor)),
               onPressed: () {
                 if (commitAction != null) {
@@ -95,9 +98,11 @@ class Dialogs {
     );
   }
 
-  static Future<void> showConfigurationChangeSuccess(BuildContext context, {bool warnOnly = false}) {
+  static Future<void> showConfigurationChangeSuccess(BuildContext context,
+      {bool warnOnly = false}) {
+    S s = S.of(context);
     var warn;
-    switch(OrchidAPI().connectionStatus.value) {
+    switch (OrchidAPI().connectionStatus.value) {
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Disconnecting:
@@ -110,20 +115,18 @@ class Dialogs {
     if (warnOnly && !warn) {
       return null;
     }
-    var warning = warn ? " Changes will take effect when the VPN is restarted." : "";
+    var warning = warn ? s.changesWillTakeEffectInstruction : "";
     return Dialogs.showAppDialog(
         context: context,
-        title: "Saved!",
-        bodyText: "Configuration saved.$warning");
+        title: s.saved + "!",
+        bodyText: s.configurationSaved + " " + warning);
   }
 
   static void showConfigurationChangeFailed(BuildContext context) {
+    S s = S.of(context);
     Dialogs.showAppDialog(
         context: context,
-        title: "Whoops!",
-        bodyText:
-        "Configuration failed to save.  Please check syntax and try again.");
+        title: s.whoops + "!",
+        bodyText: s.configurationFailedInstruction);
   }
-
-
 }

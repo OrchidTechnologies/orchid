@@ -1,6 +1,7 @@
 import React, {FC, useContext, useEffect, useState} from "react";
 import {
-  Button, Col, Container, Image, ListGroup, ListGroupItem, Nav, Navbar, OverlayTrigger, Popover, Row
+  Button, Col, Container, Image, ListGroup, ListGroupItem,
+  Nav, Navbar, OverlayTrigger, Popover, Row
 } from "react-bootstrap";
 import {Transactions} from "./Transactions";
 import {AddFunds} from "./AddFunds";
@@ -24,19 +25,24 @@ import {Divider, hashPath, Visibility} from "../util/util";
 import {OrchidAPI, WalletStatus} from "../api/orchid-api";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 import {Overview} from "./overview/Overview";
+import {TransactionPanel} from "./TransactionPanel";
+import {OrchidTransactionDetail} from "../api/orchid-tx";
+import {S} from "../i18n/S";
+import {StakeFunds} from "./StakeFunds";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   const [route, setRoute] = useState(pathToRoute(hashPath()) || Route.Overview);
   const [navEnabledState, setNavEnabledState] = useState(true);
   const [isNewUser, setIsNewUser] = useState(true);
+  const [orchidTransactions, setOrchidTransactions] = useState<OrchidTransactionDetail[]>([]);
 
   const moreMenuItems = new Map<Route, string>([
-    [Route.Balances, "Info"],
-    [Route.Transactions, "Transactions"],
-    [Route.MoveFunds, "Move Funds"],
-    [Route.LockFunds, "Lock / Unlock Funds"],
-    [Route.DebugPanel, "Debug Panel"]
+    [Route.Balances, S.info],
+    [Route.Transactions, S.transactions],
+    [Route.MoveFunds, S.moveFunds],
+    [Route.LockFunds, S.lockUnlockFunds],
+    [Route.DebugPanel, S.advanced]
   ]);
 
   useEffect(() => {
@@ -44,12 +50,20 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
     let newUserSub = api.newUser_wait.subscribe(isNew => {
       // Disable general nav for new user with no accounts.
       setIsNewUser(isNew);
-      //setNavEnabledState(!isNew);
+      setNavEnabledState(!isNew);
+    });
+    let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
+      setOrchidTransactions(txs);
     });
     return () => {
       newUserSub.unsubscribe();
+      orchidTransactionsSub.unsubscribe();
     };
   }, []);
+
+  let bannerTransactions = orchidTransactions.map(orcTx => {
+    return (<Row key={orcTx.hash}><TransactionPanel tx={orcTx}/></Row>);
+  });
 
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
@@ -69,9 +83,9 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Header/>
             <Divider/>
             <Navbar className={navEnabled ? "" : "disabled-faded"}>
-              <NavButton route={Route.Overview} icon={homeIcon} iconSelected={homeIconSelected}>Overview </NavButton>
-              <NavButton route={Route.AddFunds} icon={addIcon} iconSelected={addIconSelected}>Add </NavButton>
-              <NavButton route={Route.WithdrawFunds} icon={withdrawIcon} iconSelected={withdrawIconSelected}>Withdraw </NavButton>
+              <NavButton route={Route.Overview} icon={homeIcon} iconSelected={homeIconSelected}>{S.overview}</NavButton>
+              <NavButton route={Route.AddFunds} icon={addIcon} iconSelected={addIconSelected}>{S.add}</NavButton>
+              <NavButton route={Route.WithdrawFunds} icon={withdrawIcon} iconSelected={withdrawIconSelected}>{S.withdraw}</NavButton>
                 <OverlayTrigger
                   rootClose={true} trigger="click" placement='bottom'
                   overlay={
@@ -87,19 +101,21 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
                   }>
                   <Button className={"Layout-nav-button "}>
                       <Image src={moreItemsSelected ? moreIconSelected : moreIcon}/>
-                      <Nav.Link className={moreItemsSelected ? "selected" : ""}>More</Nav.Link>
+                      <Nav.Link className={moreItemsSelected ? "selected" : ""}>{S.more}</Nav.Link>
                   </Button>
                 </OverlayTrigger>
             </Navbar>
             <Divider/>
           </Col>
         </Row>
+        {bannerTransactions}
         <Row className="page-content">
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>
             <Visibility visible={route === Route.Balances}><Info/></Visibility>
             <Visibility visible={route === Route.AddFunds || route === Route.CreateAccount}>
               <AddFunds createAccount={route === Route.CreateAccount || isNewUser}/></Visibility>
+            <Visibility visible={route === Route.StakeFunds}><StakeFunds/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
             <Visibility visible={route === Route.Transactions}><Transactions/></Visibility>
             <Visibility visible={route === Route.MoveFunds}><MoveFunds/></Visibility>

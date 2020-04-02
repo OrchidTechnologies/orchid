@@ -53,6 +53,16 @@ html, body {
   /*top: 50%;*/
 }
 
+.spinner-small {
+  border: 8px solid lightgray;
+  border-top: 8px solid mediumpurple;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  animation: spin 2s linear infinite;
+  margin: auto;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);

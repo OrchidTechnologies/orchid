@@ -4,6 +4,7 @@ import {keikiToOxtString} from "../api/orchid-eth";
 import {EtherscanIO, LotteryPotUpdateEvent} from "../api/etherscan-io";
 import './Transactions.css'
 import {Col, Container, Row} from "react-bootstrap";
+import {S} from "../i18n/S";
 
 export const Transactions: FC = () => {
   const [events, setEvents] = useState<LotteryPotUpdateEvent[]>([]);
@@ -22,18 +23,18 @@ export const Transactions: FC = () => {
     <Container className="form-style wide">
       <Row>
         <Col>
-          <label className="title">Transactions</label>
+          <label className="title">{S.transactions}</label>
           <div className="transactions-list">
             <div className="transactions-header-row">
-              <label className="transactions-col">Date</label>
-              <label className="transactions-col2">Balance</label>
-              <label className="transactions-col3">Tx</label>
+              <label className="transactions-col">{S.date}</label>
+              <label className="transactions-col2">{S.balance}</label>
+              <label className="transactions-col3">{S.tx}</label>
             </div>
             <hr/>
-            {!events.length && <div className="loading">Loading...</div>}
+            {!events.length && <div className="loading">{S.loading}...</div>}
             {events.map((ev) => {
               let balance = keikiToOxtString(ev.balance, 2);
-              let date = ev.timeStamp.toLocaleDateString('en-US');
+              let date = ev.timeStamp.toLocaleDateString();
               let txHash = ev.transactionHash;
               let txLink = EtherscanIO.txLink(txHash);
               return (

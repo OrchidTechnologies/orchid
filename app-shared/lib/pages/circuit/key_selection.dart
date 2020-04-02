@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 
 typedef KeySelectionCallback = void Function(KeySelectionItem key);
@@ -12,9 +13,12 @@ class KeySelectionDropdown extends StatefulWidget {
 
   // Fixed options
   static final generateKeyOption =
-      KeySelectionMenuOption(displayName: "Generate new key");
-  static final importKeyOption =
-      KeySelectionMenuOption(displayName: "Import key");
+      KeySelectionMenuOption(displayStringGenerator: (context) {
+    return S.of(context).generateNewKey;
+  });
+  static final importKeyOption = KeySelectionMenuOption(displayStringGenerator: (context) {
+    return S.of(context).importKey;
+  });
 
   KeySelectionDropdown(
       {Key key,
@@ -59,7 +63,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
         ignoring: !widget.enabled,
         child: Container(
           child: DropdownButton<KeySelectionItem>(
-            hint: Text("Choose key"),
+            hint: Text(s.chooseKey),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             //underline: !widget.enabled ? Container() : null,
@@ -86,11 +90,12 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     items.addAll([
       DropdownMenuItem<KeySelectionItem>(
         value: KeySelectionItem(option: KeySelectionDropdown.generateKeyOption),
-        child: Text(KeySelectionDropdown.generateKeyOption.displayName),
+        child:
+            Text(KeySelectionDropdown.generateKeyOption.displayName(context)),
       ),
       DropdownMenuItem<KeySelectionItem>(
         value: KeySelectionItem(option: KeySelectionDropdown.importKeyOption),
-        child: Text(KeySelectionDropdown.importKeyOption.displayName),
+        child: Text(KeySelectionDropdown.importKeyOption.displayName(context)),
       )
     ]);
 
@@ -107,13 +112,21 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
 
     return items;
   }
+
+  S get s {
+    return S.of(context);
+  }
 }
 
 /// Represents a fixed option such as "generate a new key"
 class KeySelectionMenuOption {
-  final String displayName;
+  String Function(BuildContext context) displayStringGenerator;
 
-  KeySelectionMenuOption({this.displayName});
+  String displayName(BuildContext context) {
+    return displayStringGenerator(context);
+  }
+
+  KeySelectionMenuOption({this.displayStringGenerator});
 }
 
 /// An item in the key selection drop down list.

@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:orchid/api/orchid_purchase.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
+import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
 import 'openvpn_hop_page.dart';
@@ -23,10 +26,23 @@ class AddHopPage extends StatefulWidget {
 }
 
 class _AddHopPageState extends State<AddHopPage> {
+  bool _showPACs = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initStateAsync();
+  }
+
+  void initStateAsync() async {
+    _showPACs = await OrchidPurchaseAPI.purchaseEnabled();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "Add Hop",
+      title: s.addHop,
       cancellable: true,
       backAction: () {
         widget.onAddFlowComplete(null);
@@ -46,7 +62,7 @@ class _AddHopPageState extends State<AddHopPage> {
                   child: Image.asset("assets/images/approach.png", height: 100),
                 ),
                 pady(24),
-                Text("Select your hop",
+                Text(s.selectYourHop,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 18,
@@ -55,29 +71,48 @@ class _AddHopPageState extends State<AddHopPage> {
                         letterSpacing: 0.16,
                         color: Color(0xff504960))),
                 pady(24),
+
+                // QR Code
                 _divider(),
                 _buildHopChoice(
-                    text: "I have a QR code",
+                    text: s.iHaveAQRCode,
                     onTap: () {
                       WelcomeDialog.show(
                           context: context,
                           onAddFlowComplete: widget.onAddFlowComplete);
                     },
                     imageName: "assets/images/scan.png"),
+
+                // PAC Purchase
+                if (_showPACs)
+                  _divider(),
+                if (_showPACs)
+                  _buildHopChoice(
+                      text: s.purchasePAC,
+                      onTap: () {
+                        _addHopFromPACPurchase();
+                      },
+                      imageName: "assets/images/logo_small_purple.png"),
+
+                // Try Orchid
                 _divider(),
                 _buildHopChoice(
-                    text: "I want to try Orchid",
+                    //text: s.iWantToTryOrchid,
+                    text: s.iHaveOrchidAccount,
                     onTap: () {
                       _addHopType(HopProtocol.Orchid);
                     },
                     imageName: "assets/images/logo_small_purple.png"),
+
+                // VPN Subscription
                 _divider(),
                 _buildHopChoice(
-                    text: "I have a VPN subscription",
+                    text: s.iHaveAVPNSubscription,
                     onTap: () {
                       _addHopType(HopProtocol.OpenVPN);
                     },
                     imageName: "assets/images/security_purple.png"),
+
                 _divider(),
               ],
             ),
@@ -93,7 +128,7 @@ class _AddHopPageState extends State<AddHopPage> {
         contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
         leading: Image.asset(imageName, width: 24, height: 24),
         trailing:
-        trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
+            trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
         title: Text(text,
             textAlign: TextAlign.left,
             style: const TextStyle(
@@ -105,6 +140,7 @@ class _AddHopPageState extends State<AddHopPage> {
         onTap: onTap);
   }
 
+  // Push a hop editor and then await the CircuitHop result.
   void _addHopType(HopProtocol hopType) async {
     EditableHop editableHop = EditableHop.empty();
     HopEditor editor;
@@ -125,13 +161,34 @@ class _AddHopPageState extends State<AddHopPage> {
         break;
     }
     var route = MaterialPageRoute<CircuitHop>(builder: (context) => editor);
-    var hop = await Navigator.push(context, route);
-    // If we have a hop the user saved, else allow another choice.
+    _pushCircuitBuilderRoute(route);
+  }
+
+  // Perform a PAC purchase and await the resulting hop result.
+  // Return the resulting hop on the navigation stack as we pop this view.
+  void _addHopFromPACPurchase() async {
+    var route = MaterialPageRoute<CircuitHop>(builder: (BuildContext context) {
+      return PurchasePage(onAddFlowComplete: widget.onAddFlowComplete);
+    });
+    _pushCircuitBuilderRoute(route);
+  }
+
+  // Push the editor or other builder that returns a circuit hop.
+  void _pushCircuitBuilderRoute(MaterialPageRoute<CircuitHop> route) async {
+    // If the editor invokes the addFlowComplete, which should be the case on a save,
+    // this entire flow will be popped to the caller and control will not return here.
+    CircuitHop hop = await Navigator.push(context, route);
+    // If hop is null the user backed out of the editor: Fall through and allow another choice.
     if (hop != null) {
+      // Handle a return here for completeness.
       Navigator.pop(context, hop);
     }
   }
 
   Divider _divider() =>
       Divider(color: Colors.black.withOpacity(0.3), height: 1.0);
+
+  S get s {
+    return S.of(context);
+  }
 }

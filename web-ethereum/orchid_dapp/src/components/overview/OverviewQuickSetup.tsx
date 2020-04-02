@@ -4,7 +4,7 @@ import {SubmitButton} from "../SubmitButton";
 import {Route, RouteContext} from "../Route";
 import {OverviewLoading, OverviewProps} from "./Overview";
 import {
-  keikiToOxt,
+  GasPricingStrategy,
   keikiToOxtString,
   oxtToKeiki
 } from "../../api/orchid-eth";
@@ -12,6 +12,8 @@ import {Divider, errorClass, Visibility} from "../../util/util";
 import './Overview.css';
 import {OrchidAPI} from "../../api/orchid-api";
 import {TransactionProgress, TransactionState, TransactionStatus} from "../TransactionProgress";
+import {OrchidContracts} from "../../api/orchid-eth-contracts";
+import {S} from "../../i18n/S";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -25,12 +27,13 @@ export interface OverviewQuickSetupProps {
 export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProps> = (props) => {
 
   // Preconditions
-  let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty, initialTxStatus} = props;
+  //let {noAccount, potFunded, walletEthEmpty, walletOxtEmpty, initialTxStatus} = props;
   // let hasAccount = !noAccount;
   // if (hasAccount || potFunded || walletEthEmpty || walletOxtEmpty) {
   //   throw Error("Invalid state for quick setup");
   // }
-  console.log(`quick setup, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
+  //console.log(`quick setup, noAccount=${noAccount}, potFunded=${potFunded}, walletEthEmpty=${walletEthEmpty}, walletOxtEmpty=${walletOxtEmpty}`)
+  let {potFunded, initialTxStatus} = props;
 
   const {setRoute, setNavEnabled} = useContext(RouteContext);
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
@@ -78,6 +81,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
     if (txResult.current != null) {
       txResult.current.scrollIntoView();
     }
+    // TODO: I believe this delay was to help allow the spinner to start. We should probably remove it.
     setTimeout(async () => {
       let _walletCapture = wallet;
       if (_walletCapture == null) {
@@ -89,16 +93,25 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         let newSigner = api.eth.orchidCreateSigner(_walletCapture);
         console.log("add funds");
 
-        let txId = await api.eth.orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow);
+        // Choose a gas price
+        let medianGasPrice = await api.eth.medianGasPrice();
+        let gasPrice = GasPricingStrategy.chooseGasPrice(
+          OrchidContracts.add_funds_total_max_gas, medianGasPrice, _walletCapture.ethBalance);
+        if (!gasPrice) {
+          console.log("Add funds: gas price potentially too low.");
+        }
+
+        // Submit the tx
+        let txId = await api.eth.orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow, gasPrice);
         console.log("add funds complete");
         await api.updateSigners();
-        let tx = TransactionStatus.result(txId, "Transaction Complete!", newSigner);
+        let tx = TransactionStatus.result(txId, S.transactionComplete, newSigner);
         setTx(tx); // show the tx result
         props.txResultSetter(tx); // store the tx result in the context
         api.updateWallet().then();
         api.updateTransactions().then();
       } catch (err) {
-        let tx = TransactionStatus.error(`Transaction Failed: ${err}`);
+        let tx = TransactionStatus.error(`${S.transactionFailed}: ${err}`);
         setTx(tx);
         props.txResultSetter(tx);
       }
@@ -113,20 +126,19 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
   let ticketFaceValue = 0.8; // TODO:
   const targetBalance = 2 * ticketFaceValue;
   let sufficientFundsAmount = targetDeposit + targetBalance;
-  let sufficientFunds = keikiToOxt(walletBalance) >= sufficientFundsAmount;
+  let sufficientFunds = walletBalance >= oxtToKeiki(sufficientFundsAmount);
   let insufficientFundsText =
-    `You need a total of ${sufficientFundsAmount.toFixed(1)} OXT for a 
-    starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
+    `You need a total of ${sufficientFundsAmount.toFixedLocalized(1)} OXT for a starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
 
   let submitEnabled = sufficientFunds && !tx.isRunning();
   let txCompletedSuccessfully = tx.state === TransactionState.Completed;
 
   return (
     <Container className="form-style">
-      <label className="title">Quick Set Up</label>
+      <label className="title">{S.quickSetUp}</label>
 
       <p className="quick-setup-instructions">
-        Create account with available Orchid tokens.
+        {S.createAccountWithAvailable}
       </p>
 
       <Visibility visible={tx == null}>
@@ -161,9 +173,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
           submitAddFunds();
         }}
         hidden={potFunded || txCompletedSuccessfully}
-        enabled={submitEnabled}>
-        Transfer Available
-        OXT: {walletBalance == null ? "0.00" : keikiToOxtString(walletBalance, 2)}
+        enabled={submitEnabled}>{S.transferAvailable} OXT: {walletBalance == null ? "0.00" : keikiToOxtString(walletBalance, 2)}
       </SubmitButton>
 
       <Visibility visible={!potFunded && !txCompletedSuccessfully}>
@@ -173,7 +183,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         }} onClick={() => {
           setNavEnabled(true);
           setRoute(Route.CreateAccount)
-        }}><span className={"link-button-style"}>Enter custom amount</span></Row>
+        }}><span className={"link-button-style"}>{S.enterCustomAmount}</span></Row>
       </Visibility>
 
       <TransactionProgress ref={txResult} tx={tx}/>

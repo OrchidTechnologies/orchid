@@ -3,10 +3,11 @@ Description=Orchid Linux Server Node
 After=network.target
 
 [Service]
-Environment=ORCHID_CONFIG=/etc/orchid.conf
+Environment=ORCHID_CONFIG=/etc/orchidd.conf
 Type=simple
-ExecStart=/usr/bin/orchid
+ExecStart=/usr/bin/orchidd
 Restart=always
+StartLimitIntervalSec=0
 
 [Install]
 WantedBy=multi-user.target

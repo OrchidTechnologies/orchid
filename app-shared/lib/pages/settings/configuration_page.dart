@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
@@ -19,8 +20,6 @@ class ConfigurationPage extends StatefulWidget {
 }
 
 class _ConfigurationPageState extends State<ConfigurationPage> {
-  final String title = "Configuration";
-
   String _configFileTextLast = "";
   BehaviorSubject<bool> _readyToSave = BehaviorSubject<bool>.seeded(false);
   final _configFileTextController = TextEditingController();
@@ -44,7 +43,9 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return TapClearsFocus(child: TitledPage(title: title, child: buildPage(context)));
+    String title = s.configuration;
+    return TapClearsFocus(
+        child: TitledPage(title: title, child: buildPage(context)));
   }
 
   Widget buildPage(BuildContext context) {
@@ -59,20 +60,21 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                 padding: const EdgeInsets.only(
                     left: 16, right: 16, top: 24, bottom: 24),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: SingleChildScrollView(
                       child: TextFormField(
-                        autocorrect: false,
-                        autofocus: false,
-                        keyboardType: TextInputType.multiline,
-                        style: AppText.logStyle.copyWith(color: AppColors.grey_2),
-                        controller: _configFileTextController,
-                        maxLines: 99999,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          labelStyle: AppText.textLabelStyle,
-                        ),
-                      )),
+                    autocorrect: false,
+                    autofocus: false,
+                    keyboardType: TextInputType.multiline,
+                    style: AppText.logStyle.copyWith(color: AppColors.grey_2),
+                    controller: _configFileTextController,
+                    maxLines: 99999,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      labelStyle: AppText.textLabelStyle,
+                    ),
+                  )),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -89,7 +91,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                     stream: _readyToSave.stream,
                     builder: (context, snapshot) {
                       return RoundedRectRaisedButton(
-                          text: "SAVE",
+                          text: s.saveButtonTitle,
                           onPressed: _readyToSave.value ? _save : null);
                     }),
               ),
@@ -120,5 +122,9 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   void dispose() {
     super.dispose();
     _readyToSave.close();
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

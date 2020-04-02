@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
 import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/circuit/add_hop_page.dart';
@@ -12,27 +13,22 @@ import 'package:orchid/pages/common/link_text.dart';
 
 class WelcomeDialog {
   static Future<void> show(
-      {@required BuildContext context,
-        AddFlowCompletion onAddFlowComplete}) {
+      {@required BuildContext context, AddFlowCompletion onAddFlowComplete}) {
+    S s = S.of(context);
     var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
 
     var topText = TextSpan(
       children: <TextSpan>[
         TextSpan(
-            text:
-                "\nOrchid requires an Orchid account.  Scan or paste your existing account below"
-                " to get started.",
-            style: bodyStyle),
+            text: "\n" + s.orchidRequiresAccountInstruction, style: bodyStyle),
       ],
     );
 
     var bodyText = TextSpan(
       children: <TextSpan>[
-        TextSpan(text: "Create Orchid Account", style: AppText.dialogTitle),
+        TextSpan(text: s.createOrchidAccount, style: AppText.dialogTitle),
         TextSpan(
-            text:
-                ("\n\nYou'll need an Ethereum Wallet in order to create an Orchid account."
-                    "\n\nLoad "),
+            text: "\n\n" + s.youNeedEthereumWallet + "\n\n" + s.loadMsg + " ",
             style: bodyStyle),
         LinkTextSpan(
           text: "account.orchid.com",
@@ -40,16 +36,15 @@ class WelcomeDialog {
           url: 'https://account.orchid.com',
         ),
         TextSpan(
-            text: " in your wallet's browser to get started.",
-            style: bodyStyle),
+            text: " " + s.inYourWalletBrowserInstruction, style: bodyStyle),
       ],
     );
 
     var bottomText = TextSpan(
       children: <TextSpan>[
-        TextSpan(text: "Need more help?", style: AppText.dialogTitle),
+        TextSpan(text: s.needMoreHelp + "?", style: AppText.dialogTitle),
         LinkTextSpan(
-          text: "\n\nRead the guide.",
+          text: "\n\n" + s.readTheGuide + ".",
           style: AppText.linkStyle.copyWith(fontSize: 15),
           url: 'https://orchid.com/join',
         ),
@@ -74,8 +69,8 @@ class WelcomeDialog {
                     RichText(
                         text: TextSpan(
                             text: screenWidth > AppSizes.iphone_se.width
-                                ? "Add Orchid Account"
-                                : "Add Account",
+                                ? s.addOrchidAccount
+                                : s.addAccount,
                             style: AppText.dialogTitle)),
                     Container(
                       width: 40,
@@ -93,9 +88,10 @@ class WelcomeDialog {
                 ScanOrPasteOrchidAccount(
                     spacing:
                         screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
-                    onImportAccount: (ParseOrchidAccountResult result) {
-                      _importAccount(context,
-                          result: result, onAddFlowComplete: onAddFlowComplete);
+                    onImportAccount: (ParseOrchidAccountResult result) async {
+                      var hop = await OrchidVPNConfig.importAccountAsHop(result);
+                      Navigator.of(context).pop(); // TODO: probably not necessary?
+                      onAddFlowComplete(hop);
                     }),
                 Divider(thickness: 1.0),
                 pady(16),
@@ -111,23 +107,4 @@ class WelcomeDialog {
     );
   }
 
-  /// Create a hop from the parse result, save any new keys, and return the hop
-  /// to the add flow completion.
-  static void _importAccount(BuildContext context,
-      {ParseOrchidAccountResult result,
-      AddFlowCompletion onAddFlowComplete}) async {
-    print(
-        "result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
-    // Save any new keys
-    await UserPreferences().addKeys(result.newKeys);
-    // Create the new hop
-    CircuitHop hop = OrchidHop(
-      curator: OrchidHop.appDefaultCurator,
-      funder: result.account.funder,
-      keyRef: result.account.signer.ref(),
-    );
-    // End the dialog
-    Navigator.of(context).pop();
-    onAddFlowComplete(hop);
-  }
 }
