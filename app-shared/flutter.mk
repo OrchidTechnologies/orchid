@@ -22,7 +22,7 @@ flutter := flutter/bin/flutter --suppress-analytics --verbose
 
 flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(call head,flutter)
 	cd flutter && git clean -fxd
-	cd flutter && bin/flutter precache
+	cd flutter && bin/flutter precache --macos
 	cd flutter && bin/flutter update-packages
 
 pubspec%lock %flutter-plugins %packages: pubspec.yaml
