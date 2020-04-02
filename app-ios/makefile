@@ -25,6 +25,11 @@ cflags += '-DORCHID_DOMAIN="$(domain)"'
 cflags += '-DORCHID_NAME="$(name)"'
 
 bundle := $(output)/Payload/$(name).app
+
+assemble := ios
+platform := ios
+framework := Flutter
+
 signed := 
 
 .PHONY: all
@@ -90,7 +95,7 @@ replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REV
 cflags += -Fflutter/bin/cache/artifacts/engine/ios
 lflags += -Fflutter/bin/cache/artifacts/engine/ios
 
-include flutter.mk
+include shared/apple.mk
 
 
 $(output)/ents-%.xml: ents-%.xml.in
@@ -141,23 +146,29 @@ $(bundle)/Info.plist: info-main.plist.in
 
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
-	ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $< 2>&1 | cat
+	@mkdir -p $(output)/info
+	ibtool --output-format human-readable-text --errors --warnings --notices \
+	    --target-device iphone --target-device ipad --minimum-deployment-target 8.0 \
+	    --module Runner --auto-activate-custom-fonts \
+	    --output-partial-info-plist $(output)/info/ibtool.plist \
+	    --compilation-directory $(dir $@) $< 2>&1 | cat
 
 
 signed += $(bundle)/Assets.car
-$(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
+$(bundle)/Assets.car: $(wildcard Assets.xcassets/*/*)
 	@mkdir -p $(output)/info
 	# XXX: --launch-image LaunchImage
-	actool --output-format human-readable-text --notices --warnings \
+	actool --output-format human-readable-text --errors --warnings --notices \
+	    --target-device iphone --target-device ipad --minimum-deployment-target 11.0 \
+	    --platform iphoneos \
 	    --app-icon AppIcon \
-	    --compress-pngs --enable-on-demand-resources YES \
-	    --platform iphoneos --minimum-deployment-target 11.0 \
-	    --target-device iphone --target-device ipad \
+	    --compress-pngs \
+	    --enable-on-demand-resources YES \
 	    --output-partial-info-plist $(output)/info/actool.plist \
-	    --compile $(bundle) Images.xcassets 2>&1 | cat
+	    --compile $(bundle) Assets.xcassets 2>&1 | cat
 
-signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))
-$(bundle)/%: resource/%
+signed += $(patsubst resource/%,$(bundle)$(contents)$(resources)/%,$(wildcard resource/*))
+$(bundle)$(contents)$(resources)/%: resource/%
 	@mkdir -p $(dir $@)
 	cp -af $< $@
 	@touch $@

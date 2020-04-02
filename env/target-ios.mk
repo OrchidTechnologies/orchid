@@ -26,3 +26,7 @@ include $(pwd)/target-apl.mk
 
 default := arm64
 support := iPhoneOS
+
+contents := 
+resources := 
+versions := 

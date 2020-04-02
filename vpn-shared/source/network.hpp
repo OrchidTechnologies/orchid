@@ -32,6 +32,8 @@
 
 namespace orc {
 
+class Client;
+
 class Network {
   private:
     const Locator locator_;
@@ -43,7 +45,7 @@ class Network {
   public:
     Network(const std::string &rpc, Address directory, Address location);
 
-    task<void> Select(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder);
+    task<Client *> Select(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder);
 };
 
 }

@@ -42,9 +42,13 @@ struct Response {
     boost::beast::http::status code_;
     std::string body_;
 
-    std::string ok() && {
-        orc_assert_(code_ == boost::beast::http::status::ok, "{ code: " << code_ << ", body: ```" << body_ << "``` }");
+    std::string is(boost::beast::http::status code) && {
+        orc_assert_(code_ == code, "{ code: " << code_ << ", body: ```" << body_ << "``` }");
         return std::move(body_);
+    }
+
+    std::string ok() && {
+        return std::move(*this).is(boost::beast::http::status::ok);
     }
 };
 

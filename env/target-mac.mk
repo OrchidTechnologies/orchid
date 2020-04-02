@@ -25,3 +25,7 @@ more := -mmacosx-version-min=10.14
 include $(pwd)/target-apl.mk
 
 default := x86_64
+
+contents := /Contents
+resources := /Resources
+versions := /Versions/A

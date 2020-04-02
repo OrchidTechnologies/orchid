@@ -159,6 +159,8 @@ class Address :
     }
 
     Address(const std::string &address);
+    Address(const char *address);
+
     Address(const Brick<64> &common);
 
     bool operator <(const Address &rhs) const {
