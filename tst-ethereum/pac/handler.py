@@ -274,11 +274,10 @@ def random_scan(table, price):
     #generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
-    if (random.random() % 2 == 0):
-        response = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
-    else:
-        response = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
-    return response
+    response0 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
+    response1 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
+    response0['Items'] = response0['Items'] + response1['Items'];
+    return response0
 
 
 def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
