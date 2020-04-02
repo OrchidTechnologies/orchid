@@ -20,8 +20,10 @@ lflags += -Wl,-no_dead_strip_inits_and_terms
 
 signature := /_CodeSignature/CodeResources
 
-more += -isysroot $(shell xcrun --sdk $(sdk) --show-sdk-path)
+path := $(shell xcrun --sdk $(sdk) --show-sdk-path)
+toolchain := $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain
 
+more += -isysroot $(path)
 ifneq ($(sdk),macosx)
 more += -idirafter $(shell xcrun --sdk macosx --show-sdk-path)/usr/include
 endif
@@ -56,7 +58,7 @@ include $(pwd)/target-ndk.mk
 cxx += -stdlib=libc++
 
 xflags += -nostdinc++
-xflags += -isystem $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1
+xflags += -isystem $(toolchain)/usr/include/c++/v1
 
 endif
 

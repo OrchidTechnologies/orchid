@@ -23,6 +23,8 @@ include env/target.mk
 
 apk := build/outputs/apk/release/app-android-release-unsigned.apk
 
+assemble := android
+
 .PHONY: all
 all: $(output)/Orchid.apk
 

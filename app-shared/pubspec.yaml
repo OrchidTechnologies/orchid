@@ -10,7 +10,7 @@ description: Silicon Valley (Season 4)
 version: 0.9.0+1
 
 environment:
-  sdk: ">=2.2.2 <3.0.0"
+  sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
   barcode_scan:

@@ -20,8 +20,7 @@
 /* }}} */
 
 
-#include <Flutter/Flutter.h>
-#include <UIKit/UIKit.h>
+#include <FlutterMacOS/FlutterMacOS.h>
 #include <NetworkExtension/NetworkExtension.h>
 
 
@@ -32,13 +31,13 @@
 @end
 
 
-@interface AppDelegate : FlutterAppDelegate
+@interface MainFlutterWindow : NSWindow
 
 @property(strong,nonatomic) NETunnelProviderManager *providerManager;
 
 @end
 
-@interface AppDelegate () {
+@interface MainFlutterWindow () {
     FlutterMethodChannel *feedback_;
 
     // The application's desired VPN state: true for on, false for off.
@@ -48,7 +47,7 @@
 
 @end
 
-@implementation AppDelegate
+@implementation MainFlutterWindow
 
 #pragma mark - VPN State
 
@@ -234,19 +233,17 @@
 
 #pragma mark - Lifecycle Methods
 
-- (BOOL) application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)options {
-
-    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    [self.window makeKeyAndVisible];
-    self.window.backgroundColor = [UIColor whiteColor];
+- (void) awakeFromNib {
 
     FlutterViewController *flutter([FlutterViewController new]);
-    self.window.rootViewController = flutter;
+    const auto frame(self.frame);
+    self.contentViewController = flutter;
+    [self setFrame:frame display:YES];
 
     // Flutter plugins use [UIApplication sharedApplication].delegate.window.rootViewController to get the FlutterViewController
-    [GeneratedPluginRegistrant registerWithRegistry:self];
+    [GeneratedPluginRegistrant registerWithRegistry:flutter];
 
-    feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter.binaryMessenger];
+    feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter.engine.binaryMessenger];
 
     __weak typeof(self) weakSelf = self;
     [feedback_ setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
@@ -287,7 +284,7 @@
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onConfigurationChange:) name:NEVPNConfigurationChangeNotification object:nil];
 
-    return [super application:application didFinishLaunchingWithOptions:options];
+    return [super awakeFromNib];
 }
 
 // Get the shared group container path
@@ -343,23 +340,17 @@
     [self updateConnectionStatus];
 }
 
-- (void) applicationWillResignActive:(UIApplication *)application {
-}
+@end
 
 
-- (void) applicationDidEnterBackground:(UIApplication *)application {
-}
+@interface AppDelegate : FlutterAppDelegate
 
+@end
 
-- (void) applicationWillEnterForeground:(UIApplication *)application {
-    [self setDesiredConnectionStateIfNeeded];
-}
+@implementation AppDelegate
 
-
-- (void) applicationDidBecomeActive:(UIApplication *)application {
-}
-
-- (void) applicationWillTerminate:(UIApplication *)application {
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)application {
+    return YES;
 }
 
 @end
@@ -367,6 +358,6 @@
 
 int main(int argc, char *argv[]) {
     @autoreleasepool {
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+        return NSApplicationMain(argc, const_cast<const char **>(argv));
     }
 }

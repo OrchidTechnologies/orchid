@@ -18,13 +18,16 @@
 # }}}
 
 
+flutter := flutter/bin/flutter --suppress-analytics --verbose
+
 flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(call head,flutter)
 	cd flutter && git clean -fxd
 	cd flutter && bin/flutter precache
 	cd flutter && bin/flutter update-packages
 
-pubspec.lock: pubspec.yaml
-	flutter/bin/flutter pub get
+pubspec%lock %flutter-plugins %packages: pubspec.yaml
+	mkdir -p $(assemble)
+	$(flutter) pub get
 
 ifeq ($(filter noaot,$(debug)),)
 mode := release
@@ -36,6 +39,10 @@ engine :=
 precompiled := 
 endif
 
+engine := flutter/bin/cache/artifacts/engine/$(platform)$(engine)
+
 dart := $(shell find lib/ -name '*.dart')
 dart += flutter/packages/flutter/pubspec.lock
 dart += pubspec.lock
+dart += .flutter-plugins
+dart += .packages
