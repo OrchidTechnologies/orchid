@@ -157,7 +157,6 @@ $(bundle)$(contents)$(resources)/Assets.car: $(wildcard Assets.xcassets/*/*)
 	    --app-icon AppIcon \
 	    --enable-on-demand-resources NO \
 	    --sticker-pack-identifier-prefix "$(domain).$(name).sticker-pack." \
-	    --development-region en \
 	    --output-partial-info-plist $(output)/info/actool.plist \
 	    --compile $(bundle)$(contents)$(resources) Assets.xcassets 2>&1 | cat
 
