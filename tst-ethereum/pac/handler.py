@@ -298,7 +298,7 @@ def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str
             print(f'Found available account ({push_txn_hash}): {config}')
             key = {
                 'price': item['price'],
-                'config': config,
+                'signer': signer_pubkey,
             }
             table.delete_item(Key=key)
             ret = push_txn_hash, config, signer_pubkey
@@ -430,7 +430,7 @@ def main(event, context):
 
     if (apple_response[0] or verify_receipt == 'False'):
         validation_result: dict = apple_response[1]
-        bundle_id = validation_result['receipt']['bundle_id']
+        bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
         if bundle_id != 'OrchidTechnologies.PAC-Test' and verify_receipt != 'False':
             print(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
             response = {
