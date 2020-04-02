@@ -85,8 +85,8 @@ functions:
           method: post
   MaintainPool:
     handler: handler.maintain_pool_wrapper
-    # events:
-    #   - schedule: cron(0/15 * * * ? *)
+    events:
+      - schedule: cron(0/15 * * * ? *)
 plugins:
   - serverless-pseudo-parameters
   - serverless-python-requirements
