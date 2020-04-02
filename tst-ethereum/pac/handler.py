@@ -276,7 +276,7 @@ def random_scan(table, price):
     ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
     response0 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
     response1 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
-    response0['Items'] = response0['Items'] + response1['Items'];
+    response0['Items'].extend(response1['Items'])
     return response0
 
 
