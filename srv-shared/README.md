@@ -5,10 +5,13 @@
 sudo apt-get update
 sudo apt-get install \
      bison \
+     clang \
      flex \
      gettext \
+     git \
      gperf \
      groff \
+     make \
      ninja-build \
      python3-pip \
      python3-setuptools \
