@@ -246,6 +246,22 @@
     // Flutter plugins use [UIApplication sharedApplication].delegate.window.rootViewController to get the FlutterViewController
     [GeneratedPluginRegistrant registerWithRegistry:self];
 
+    // Work-around for https://github.com/flutter/flutter/issues/39032
+    // This is safe to remove once the fix for that is available in the SDK
+    NSLocale* currentLocale = [NSLocale currentLocale];
+    if (currentLocale.languageCode != nil) {
+      [flutter.engine.localizationChannel
+        invokeMethod:@"setLocale"
+        arguments: @[
+          currentLocale.languageCode,
+          currentLocale.countryCode ? currentLocale.countryCode : @"",
+          currentLocale.scriptCode ? currentLocale.scriptCode : @"",
+          currentLocale.variantCode ? currentLocale.variantCode : @""
+          ]
+        ];
+    }
+    // End work-around
+
     feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter.binaryMessenger];
 
     __weak typeof(self) weakSelf = self;
