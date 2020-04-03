@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/preferences/observable_preference.dart';
+import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'orchid_api.dart';
-import 'orchid_budget_api.dart';
+import '../orchid_api.dart';
+import '../orchid_budget_api.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -15,6 +17,20 @@ class UserPreferences {
 
   UserPreferences._internal() {
     debugPrint("constructed user prefs API");
+  }
+
+  static Future<SharedPreferences> sharedPreferences() {
+    return SharedPreferences.getInstance();
+  }
+
+  static Future<String> loadStringValueForKey(UserPreferenceKey key) async {
+    return (await sharedPreferences()).getString(key.toString());
+  }
+
+  // This method accepts null as equivalent to removing the preference.
+  static Future<void> storeStringValueForKey(
+      UserPreferenceKey key, String value) async {
+    return await (await sharedPreferences()).setString(key.toString(), value);
   }
 
   /// Reset all instructional / onboarding / first launch experience
@@ -29,19 +45,6 @@ class UserPreferences {
   /// TODO: Replace these with one StringList?
   ///
 
-  /// Was the user shown the introductory pages as part of onboarding
-  Future<bool> getWalkthroughCompleted() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.WalkthroughCompleted.toString()) ??
-        false;
-  }
-
-  /// Was the user shown the introductory pages as part of onboarding
-  Future<bool> setWalkthroughCompleted(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.WalkthroughCompleted.toString(), value);
-  }
-
   /// Was the user prompted for the necessary permissions to install the VPN
   /// extension as part of onboarding
   Future<bool> getPromptedForVPNPermission() async {
@@ -55,54 +58,6 @@ class UserPreferences {
   Future<bool> setPromptedForVPNPermission(bool value) async {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.PromptedForVPNPermission.toString(), value);
-  }
-
-  Future<bool> getPromptedToLinkWallet() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.PromptedToLinkWallet.toString()) ??
-        false;
-  }
-
-  Future<bool> setPromptedToLinkWallet(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.PromptedToLinkWallet.toString(), value);
-  }
-
-  Future<bool> getLinkWalletAcknowledged() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.LinkWalletAcknowledged.toString()) ??
-        false;
-  }
-
-  Future<bool> setLinkWalletAcknowledged(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.LinkWalletAcknowledged.toString(), value);
-  }
-
-  Future<bool> getPromptedForVPNCredentials() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.PromptedForVPNCredentials.toString()) ??
-        false;
-  }
-
-  Future<bool> setPromptedForVPNCredentials(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.PromptedForVPNCredentials.toString(), value);
-  }
-
-  /// Get the user's lottery pots primary address.  The value should have been
-  /// set once upon app initialization.
-  Future<String> getLotteryPotsPrimaryAddress() async {
-    return (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.LotteryPotsPrimaryAddress.toString());
-  }
-
-  /// Set the lottery pots primary address. This should be called once upon
-  /// app initialization. This method is currently guarded to prevent
-  /// overwriting the stored value.
-  Future<bool> setLotteryPotsPrimaryAddress(String value) async {
-    return (await SharedPreferences.getInstance()).setString(
-        UserPreferenceKey.LotteryPotsPrimaryAddress.toString(), value);
   }
 
   Future<bool> setBudget(Budget budget) async {
@@ -138,13 +93,13 @@ class UserPreferences {
     return Circuit.fromJson(jsonDecode(value));
   }
 
-  // Get the user visible portion of the configuration file text.
+  // Get the user editable configuration file text.
   Future<String> getUserConfig() async {
     return (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.UserConfig.toString());
   }
 
-  // Set the user visible portion of the configuration file text.
+  // Set the user editable configuration file text.
   Future<bool> setUserConfig(String value) async {
     return (await SharedPreferences.getInstance())
         .setString(UserPreferenceKey.UserConfig.toString(), value);
@@ -228,7 +183,7 @@ class UserPreferences {
   // Defaults to false if never set.
   Future<bool> getDesiredVPNState() async {
     return (await SharedPreferences.getInstance())
-        .getBool(UserPreferenceKey.DesiredVPNState.toString()) ??
+            .getBool(UserPreferenceKey.DesiredVPNState.toString()) ??
         false;
   }
 
@@ -240,7 +195,7 @@ class UserPreferences {
 
   Future<bool> getShowStatusTab() async {
     return (await SharedPreferences.getInstance())
-        .getBool(UserPreferenceKey.ShowStatusTab.toString()) ??
+            .getBool(UserPreferenceKey.ShowStatusTab.toString()) ??
         false;
   }
 
@@ -250,30 +205,30 @@ class UserPreferences {
   }
 
   Future<bool> getVPNSwitchInstructionsViewed() async {
-    return (await SharedPreferences.getInstance())
-        .getBool(UserPreferenceKey.VPNSwitchInstructionsViewed.toString()) ??
+    return (await SharedPreferences.getInstance()).getBool(
+            UserPreferenceKey.VPNSwitchInstructionsViewed.toString()) ??
         false;
   }
 
   Future<bool> setVPNSwitchInstructionsViewed(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.VPNSwitchInstructionsViewed.toString(), value);
+    return (await SharedPreferences.getInstance()).setBool(
+        UserPreferenceKey.VPNSwitchInstructionsViewed.toString(), value);
   }
 
   Future<bool> getFirstLaunchInstructionsViewed() async {
-    return (await SharedPreferences.getInstance())
-        .getBool(UserPreferenceKey.FirstLaunchInstructionsViewed.toString()) ??
+    return (await SharedPreferences.getInstance()).getBool(
+            UserPreferenceKey.FirstLaunchInstructionsViewed.toString()) ??
         false;
   }
 
   Future<bool> setFirstLaunchInstructionsViewed(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.FirstLaunchInstructionsViewed.toString(), value);
+    return (await SharedPreferences.getInstance()).setBool(
+        UserPreferenceKey.FirstLaunchInstructionsViewed.toString(), value);
   }
 
   Future<bool> getAllowNoHopVPN() async {
     return (await SharedPreferences.getInstance())
-        .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
+            .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
         false;
   }
 
@@ -281,15 +236,24 @@ class UserPreferences {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
   }
+
+  /// Stores the shared, single, outstanding PAC transaction or null if there is none.
+  ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
+      key: UserPreferenceKey.PacTransaction,
+      loadValue: (key) async {
+        String value = await loadStringValueForKey(key);
+        return value != null
+            ? PacTransaction.fromJson(jsonDecode(value))
+            : null;
+      },
+      storeValue: (key, tx) {
+        String value = tx != null ? jsonEncode(tx) : null;
+        return storeStringValueForKey(key, value);
+      });
 }
 
 enum UserPreferenceKey {
-  WalkthroughCompleted,
   PromptedForVPNPermission,
-  PromptedToLinkWallet,
-  LinkWalletAcknowledged,
-  PromptedForVPNCredentials,
-  LotteryPotsPrimaryAddress,
   Budget,
   Circuit,
   UserConfig,
@@ -300,5 +264,6 @@ enum UserPreferenceKey {
   ShowStatusTab,
   VPNSwitchInstructionsViewed,
   FirstLaunchInstructionsViewed,
-  AllowNoHopVPN
+  AllowNoHopVPN,
+  PacTransaction
 }

@@ -9,25 +9,23 @@ import 'intl/messages_all.dart';
 // **************************************************************************
 
 class S {
-  S(this.localeName);
+  S();
   
   static const AppLocalizationDelegate delegate =
     AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
-    final String name = locale.countryCode.isEmpty ? locale.languageCode : locale.toString();
+    final String name = (locale.countryCode?.isEmpty ?? false) ? locale.languageCode : locale.toString();
     final String localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
-      return S(localeName);
+      return S();
     });
   } 
 
   static S of(BuildContext context) {
     return Localizations.of<S>(context, S);
   }
-
-  final String localeName;
 
   String get newHop {
     return Intl.message(
@@ -83,7 +81,7 @@ class S {
     );
   }
 
-  String numHopsConfigured(dynamic num) {
+  String numHopsConfigured(num num) {
     return Intl.plural(
       num,
       zero: 'No hops configured',
@@ -1110,7 +1108,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
 
   List<Locale> get supportedLocales {
     return const <Locale>[
-      Locale('ko', ''), Locale('id', ''), Locale('zh', ''), Locale('ja', ''), Locale('en', ''), Locale('ru', ''),
+      Locale.fromSubtags(languageCode: 'en'), Locale.fromSubtags(languageCode: 'ko'), Locale.fromSubtags(languageCode: 'id'), Locale.fromSubtags(languageCode: 'zh'), Locale.fromSubtags(languageCode: 'ja'), Locale.fromSubtags(languageCode: 'ru'),
     ];
   }
 

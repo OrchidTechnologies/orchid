@@ -11,7 +11,6 @@ class OrchidDocs {
   }
   static Future<String> helpOverview(BuildContext context) async {
     Locale locale = Localizations.localeOf(context);
-    print("xxx: locale = $locale");
     var languageCode = locale.languageCode.toLowerCase();
     if (languageCode.endsWith('_')) {
       languageCode = languageCode.substring(0, languageCode.length-1);

@@ -51,7 +51,7 @@ class _WrappedSwitchState extends State<WrappedSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    print("building switch with value: ${widget.controller.controlledState.value}, key=$_switchKey");
+    //print("building switch with value: ${widget.controller.controlledState.value}, key=$_switchKey");
     return Switch(
         key: Key(_switchKey.toString()),
         activeColor: AppColors.purple_5,
