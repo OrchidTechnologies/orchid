@@ -301,7 +301,6 @@ def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str
             table.delete_item(Key=key)
             ret = push_txn_hash, config, signer_pubkey
             break
-    call_maintain_pool()
     if ret:
         return ret
     return None, None, None
