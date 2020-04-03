@@ -18,6 +18,12 @@
 # }}}
 
 
+ifeq ($(target),mac)
+generated := macos/Flutter/GeneratedPluginRegistrant%swift
+else
+generated := ios/Runner/GeneratedPluginRegistrant%m
+endif
+
 include shared/flutter.mk
 
 cflags += -Fflutter/bin/cache/artifacts/engine/$(platform)
@@ -27,10 +33,8 @@ app := $(bundle)$(contents)/Frameworks/App.framework
 embed := $(bundle)$(contents)/Frameworks/$(framework).framework
 
 ifeq ($(target),mac)
-generated := macos/Flutter/GeneratedPluginRegistrant%swift
 temp := 
 else
-generated := ios/Runner/GeneratedPluginRegistrant%m
 temp := ios/Flutter/AppFrameworkInfo.plist
 $(temp): flutter/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
 	mkdir -p $(dir $@)
@@ -39,7 +43,7 @@ endif
 
 rsync := rsync -a --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature Headers Modules)
 
-$(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist $(generated): $(dart) $(temp)
+$(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist: $(dart) $(temp)
 	rm -rf $(app) $(embed)
 	$(flutter) assemble \
 	    -dTargetPlatform="$(platform)" \

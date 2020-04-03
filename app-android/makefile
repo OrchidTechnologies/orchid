@@ -45,6 +45,8 @@ $(output)/jnilibs/%/liborchid.so: $(patsubst %,$(output)/$$*/%,$(object) $(linke
 
 assets := $(output)/assets/flutter_assets
 
+generated := src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java
+
 include shared/flutter.mk
 
 ifneq ($(precompiled),)
@@ -60,7 +62,7 @@ endif
 jni := armeabi-v7a arm64-v8a
 #jnis := $(subst $(space),$(comma),$(foreach arch,$(jni),android-$(flutter/$(arch))))
 
-$(assets)/AssetManifest%json %flutter-plugins src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java: flutter/packages/flutter/pubspec.lock pubspec.lock pubspec.yaml $(dart)
+$(assets)/AssetManifest%json %flutter-plugins: flutter/packages/flutter/pubspec.lock pubspec.lock pubspec.yaml $(dart)
 	rm -rf $(assets) $(output)/snapshot_blob.bin.d $(output)/snapshot_blob.bin.d.fingerprint
 	@mkdir -p build $(output) $(assets)
 	flutter/bin/flutter --suppress-analytics --verbose build bundle -t lib/main.dart \
