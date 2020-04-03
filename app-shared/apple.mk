@@ -58,7 +58,9 @@ $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%pl
 ifeq ($(target),mac)
 	rm -rf $(dir $(embed))$(framework).framework{,$(versions)}/{Headers,Modules}
 else
-	$(rsync) $(engine)/Flutter.framework $(dir $(embed))
+	$(rsync) --filter '- Flutter' $(engine)/Flutter.framework $(dir $(embed))
+	xcrun bitcode_strip -r $(engine)/Flutter.framework/Flutter -o $(embed)/Flutter
+	lipo $(patsubst %,-extract %,$(archs)) $(embed)/Flutter -output $(embed)/Flutter
 endif
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))
 
