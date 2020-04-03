@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/cloudflare.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/app_buttons.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/orchid_purchase.dart';
+import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
@@ -35,7 +35,7 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   void initStateAsync() async {
-    _showPACs = await OrchidPurchaseAPI.purchaseEnabled();
+    _showPACs = await OrchidPurchaseAPI.pacsEnabled();
     setState(() {});
   }
 

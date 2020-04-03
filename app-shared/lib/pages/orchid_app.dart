@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
@@ -79,6 +79,8 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
 
   @override
   Widget build(BuildContext context) {
+    Locale locale = Localizations.localeOf(context);
+    print("locale = $locale");
     return Scaffold(
       appBar: AppBar(
         title: _pageTitle,

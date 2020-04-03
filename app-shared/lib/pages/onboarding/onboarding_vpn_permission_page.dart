@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/common/dialogs.dart';

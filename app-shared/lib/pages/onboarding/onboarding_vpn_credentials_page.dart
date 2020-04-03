@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/accommodate_keyboard.dart';
@@ -74,7 +74,7 @@ class _OnboardingVPNCredentialsPageState
 
   // Note that the user has viewed this screen and move on.
   void _complete() async {
-    await UserPreferences().setPromptedForVPNCredentials(true);
+    //await UserPreferences().setPromptedForVPNCredentials(true);
     AppOnboarding().pageComplete(context);
   }
 }

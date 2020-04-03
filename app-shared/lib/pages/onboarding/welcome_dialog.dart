@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_vpn_config.dart';
-import 'package:orchid/api/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/circuit/add_hop_page.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
-import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/link_text.dart';

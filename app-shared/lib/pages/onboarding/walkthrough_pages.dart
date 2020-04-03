@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/app_sizes.dart';
@@ -85,7 +85,7 @@ class _WalkthroughPagesState extends State<WalkthroughPages> {
   }
 
   void _onComplete() async {
-    await UserPreferences().setWalkthroughCompleted(true);
+    //await UserPreferences().setWalkthroughCompleted(true);
     AppOnboarding().pageComplete(context);
   }
 

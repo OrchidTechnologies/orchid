@@ -222,8 +222,7 @@ def process_app_pay_receipt(
         # handle validation error
         # contains actual response from AppStore service.
         response_from_apple = ex.raw_response
-        print("validation failure:")
-        print(response_from_apple)
+        print(f"validation failure: {response_from_apple}")
         return (False, response_from_apple)
 
     return (True, validation_result)
@@ -275,11 +274,10 @@ def random_scan(table, price):
     #generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
-    if (random.random() % 2 == 0):
-        response = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
-    else:
-        response = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
-    return response
+    response0 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
+    response1 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
+    response0['Items'].extend(response1['Items'])
+    return response0
 
 
 def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
@@ -384,10 +382,10 @@ def main(event, context):
     print(f'event: {event}')
     print(f'context: {context}')
 
-    body = json.loads(event['body'])
+    body = json.loads(event.get('body', {}))
 
     print(f'body: {body}')
-    receipt = body['receipt']
+    receipt = body.get('receipt', '')
 
     dynamodb = boto3.resource('dynamodb')
     receipt_hash_table = dynamodb.Table(os.environ['RECEIPT_TABLE_NAME'])
@@ -430,8 +428,11 @@ def main(event, context):
 
     if (apple_response[0] or verify_receipt == 'False'):
         validation_result: dict = apple_response[1]
-        bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
-        if bundle_id != 'OrchidTechnologies.PAC-Test' and verify_receipt != 'False':
+        if validation_result is None:
+            bundle_id = ''
+        else:
+            bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
+        if bundle_id != 'OrchidTechnologies.PAC-Test' and verify_receipt != 'False':  # Bad bundle_id and set to verify_receipts
             print(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
             response = {
                 "isBase64Encoded": False,
@@ -443,7 +444,7 @@ def main(event, context):
                     'config': None,
                 })
             }
-        else:
+        else:  # Good bundle_id or not verifying receipts
             product_id = body.get('product_id', validation_result['receipt']['in_app'][0]['product_id'])
             quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
             if os.environ['STAGE'] == 'dev':

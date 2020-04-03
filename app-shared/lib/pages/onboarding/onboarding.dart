@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/app_transitions.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
@@ -20,7 +20,6 @@ class AppOnboarding {
   }
 
   Future<void> reset() async {
-    await UserPreferences().setWalkthroughCompleted(false);
     await UserPreferences().setPromptedForVPNPermission(false);
     await OrchidAPI().clearWallet();
     OrchidAPI().vpnPermissionStatus.add(false);

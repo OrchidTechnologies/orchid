@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/common/app_bar.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
@@ -50,7 +50,7 @@ class _OnboardingLinkWalletSuccessPageState
 
   // Note that the user has viewed this screen and move on.
   void _complete() async {
-    await UserPreferences().setLinkWalletAcknowledged(true);
+    //await UserPreferences().setLinkWalletAcknowledged(true);
     AppOnboarding().pageComplete(context);
   }
 }
