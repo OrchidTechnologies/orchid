@@ -20,6 +20,9 @@ custom:
     DEFAULT_POOL_SIZE:
       prod: "3"
       dev: "3"
+    LOG_LEVEL:
+      prod: "WARNING"
+      dev: "DEBUG"
 provider:
   name: aws
   stage: ${opt:stage,'dev'}
