@@ -84,5 +84,8 @@
 
     <key>NSCameraUsageDescription</key>
     <string>Orchid uses the camera for QR code scanning.</string>
+
+    <key>LSMultipleInstancesProhibited</key>
+    <true/>
 </dict>
 </plist>

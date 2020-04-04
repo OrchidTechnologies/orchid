@@ -5,6 +5,7 @@
 /*.ovpn
 /*.p12
 /*.pem
+/*.provisionprofile
 bundle.js
 .idea
 site/

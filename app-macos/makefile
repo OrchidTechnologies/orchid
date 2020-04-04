@@ -99,16 +99,26 @@ $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN: $(p
 	@$(cxx/$(default)) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework JavaScriptCore
 	@openssl sha256 -r $@
 
-$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(resources)/Info.plist: info-vpn.plist.in
+$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist: info-vpn.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
 
 signed += $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature)
-$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(resources)/Info.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN
+$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)$(contents)/PlugIns/$(name).VPN.appex
 	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)$(contents)/PlugIns/$(name).VPN.appex
 	@touch $@
+
+ifneq ($(provision),)
+$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/embedded.provisionprofile
+$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/embedded.provisionprofile: $(provision)vpn.provisionprofile
+	cp -f $< $@
+
+signed += $(bundle)$(contents)/embedded.provisionprofile
+$(bundle)$(contents)/embedded.provisionprofile: $(provision)main.provisionprofile
+	cp -f $< $@
+endif
 
 define _
 $(eval temp := $(bundle)$(contents)/Frameworks/$(notdir $(1)))
