@@ -41,6 +41,7 @@ app: $(bundle)$(contents)$(signature)
 .PHONY: install
 install: $(bundle)$(contents)$(signature)
 	rsync -Pa --del $(bundle) /Applications/
+	pluginkit -a /Applications/Orchid.app/Contents/PlugIns/Orchid.VPN.appex
 
 .PHONY: test
 test: $(bundle)$(contents)$(signature)
