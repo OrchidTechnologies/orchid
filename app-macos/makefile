@@ -44,8 +44,8 @@ install: $(bundle)$(contents)$(signature)
 	pluginkit -a /Applications/Orchid.app/Contents/PlugIns/Orchid.VPN.appex
 
 .PHONY: test
-test: $(bundle)$(contents)$(signature)
-	$(bundle)$(contents)/MacOS/$(name)
+test: install
+	/Applications/Orchid.app/Contents/MacOS/Orchid
 
 $(call include,vpn/target.mk)
 
