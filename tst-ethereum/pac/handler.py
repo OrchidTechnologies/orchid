@@ -1,6 +1,7 @@
 import boto3
 import datetime
 import json
+import logging
 import os
 import requests
 import sha3
@@ -18,6 +19,8 @@ from typing import Any, Dict, Optional, Tuple
 from web3.auto.infura import w3
 
 
+logger = logging.getLogger()
+logger.setLevel(level=os.environ.get('LOG_LEVEL', "DEBUG"))
 client = boto3.client('ssm')
 
 
@@ -35,9 +38,9 @@ lottery_abi = [{"inputs": [{"internalType": "contract IERC20", "name": "token", 
 def get_usd_per_oxt() -> float:
     r = requests.get(url="https://api.coinbase.com/v2/prices/OXT-USD/spot")
     data = r.json()
-    print(data)
+    logging.debug(data)
     usd_per_oxt = float(data['data']['amount'])
-    print(f"usd_per_oxt: {usd_per_oxt}")
+    logging.debug(f"usd_per_oxt: {usd_per_oxt}")
     return usd_per_oxt
 
 
@@ -65,7 +68,7 @@ def fund_PAC_(
     funder_privkey: str,
     nonce: int,
 ) -> str:
-    print(f"Funding PAC  signer: {signer}, total: {total}, escrow: {escrow} ")
+    logging.debug(f"Funding PAC  signer: {signer}, total: {total}, escrow: {escrow} ")
 
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
@@ -80,9 +83,9 @@ def fund_PAC_(
         address=token_addr,
     )
 
-    print(f"Funder nonce: {nonce}")
+    logging.debug(f"Funder nonce: {nonce}")
 
-    print(f"Assembling approve transaction:")
+    logging.debug(f"Assembling approve transaction:")
     approve_txn = token_main.functions.approve(
         lottery_addr,
         total,
@@ -95,40 +98,40 @@ def fund_PAC_(
             'nonce': nonce,
         }
     )
-    print(approve_txn)
+    logging.debug(approve_txn)
 
-    print(f"Funder signed transaction:")
+    logging.debug(f"Funder signed transaction:")
     approve_txn_signed = w3.eth.account.sign_transaction(
         approve_txn, private_key=funder_privkey)
-    print(approve_txn_signed)
+    logging.debug(approve_txn_signed)
 
-    print(f"Submitting approve transaction:")
+    logging.debug(f"Submitting approve transaction:")
 
     approve_txn_hash = w3.eth.sendRawTransaction(
         approve_txn_signed.rawTransaction)
-    print(f"Submitted approve transaction with hash: {approve_txn_hash.hex()}")
+    logging.debug(f"Submitted approve transaction with hash: {approve_txn_hash.hex()}")
 
     nonce = nonce + 1
-    print(f"Funder nonce: {nonce}")
+    logging.debug(f"Funder nonce: {nonce}")
 
-    print(f"Assembling bind transaction:")
+    logging.debug(f"Assembling bind transaction:")
     bind_txn = lottery_main.functions.bind(signer, verifier_addr, w3.toBytes(0)
         ).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 200000, 'gasPrice': w3.toWei('8', 'gwei'), 'nonce': nonce,}
     )
-    print(bind_txn)
+    logging.debug(bind_txn)
 
-    print(f"Funder signed transaction:")
+    logging.debug(f"Funder signed transaction:")
     bind_txn_signed = w3.eth.account.sign_transaction(bind_txn, private_key=funder_privkey)
-    print(bind_txn_signed)
+    logging.debug(bind_txn_signed)
 
-    print(f"Submitting bind transaction:")
+    logging.debug(f"Submitting bind transaction:")
     bind_txn_hash = w3.eth.sendRawTransaction(bind_txn_signed.rawTransaction)
-    print(f"Submitted bind transaction with hash: {bind_txn_hash.hex()}")
+    logging.debug(f"Submitted bind transaction with hash: {bind_txn_hash.hex()}")
 
     nonce = nonce + 1
-    print(f"Funder nonce: {nonce}")
+    logging.debug(f"Funder nonce: {nonce}")
 
-    print(f"Assembling funding transaction:")
+    logging.debug(f"Assembling funding transaction:")
     funding_txn = lottery_main.functions.push(
         signer,
         total,
@@ -142,17 +145,17 @@ def fund_PAC_(
             'nonce': nonce,
         }
     )
-    print(funding_txn)
+    logging.debug(funding_txn)
 
-    print(f"Funder signed transaction:")
+    logging.debug(f"Funder signed transaction:")
     funding_txn_signed = w3.eth.account.sign_transaction(
         funding_txn, private_key=funder_privkey)
-    print(funding_txn_signed)
+    logging.debug(funding_txn_signed)
 
-    print(f"Submitting funding transaction:")
+    logging.debug(f"Submitting funding transaction:")
     txn_hash: str = w3.eth.sendRawTransaction(
         funding_txn_signed.rawTransaction).hex()
-    print(f"Submitted funding transaction with hash: {txn_hash}")
+    logging.debug(f"Submitted funding transaction with hash: {txn_hash}")
     return txn_hash
 
 
@@ -173,7 +176,7 @@ def fund_PAC(total_usd:float, nonce:int) -> Tuple[str, str, str]:
     total_oxt = total_usd * oxt_per_usd
     escrow_oxt = escrow_usd * oxt_per_usd
 
-    print(
+    logging.debug(
         f"Funding PAC  signer: {signer}, \
 total: ${total_usd}{total_oxt} oxt, \
 escrow: ${escrow_usd}{escrow_oxt} oxt ")
@@ -211,18 +214,18 @@ def process_app_pay_receipt(
     try:
         # if True, include only the latest renewal transaction
         exclude_old_transactions = False
-        print("Validating AppStore Receipt:")
+        logging.debug("Validating AppStore Receipt:")
         validation_result: Dict[Any, Any] = validator.validate(
             receipt=receipt,
             shared_secret=shared_secret,
             exclude_old_transactions=exclude_old_transactions
         )
-        print(f'Validation Result: {validation_result}')
+        logging.debug(f'Validation Result: {validation_result}')
     except InAppPyValidationError as ex:
         # handle validation error
         # contains actual response from AppStore service.
         response_from_apple = ex.raw_response
-        print(f"validation failure: {response_from_apple}")
+        logging.debug(f"validation failure: {response_from_apple}")
         return (False, response_from_apple)
 
     return (True, validation_result)
@@ -281,7 +284,7 @@ def random_scan(table, price):
 
 
 def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    print(f'Getting Account with Price:{price}')
+    logging.debug(f'Getting Account with Price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = random_scan(table, price)
@@ -293,7 +296,7 @@ def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str
             signer_pubkey = item['signer']
             config = item['config']
             push_txn_hash = item['push_txn_hash']
-            print(f'Found available account ({push_txn_hash}): {config}')
+            logging.debug(f'Found available account ({push_txn_hash}): {config}')
             key = {
                 'price': item['price'],
                 'signer': signer_pubkey,
@@ -343,7 +346,7 @@ def get_transaction_status(txhash):
     return "unknown"
 
 def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']), nonce:int=None):
-    print(f'Maintaining Pool of size:{pool_size} and price:{price}')
+    logging.debug(f'Maintaining Pool of size:{pool_size} and price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = table.scan()
@@ -353,8 +356,8 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
         if float(price) == float(item['price']):
             actual_pool_size += 1
     accounts_to_create =  max(pool_size - actual_pool_size, 0)
-    print(f'Actual Pool Size: {actual_pool_size}. Need to create {accounts_to_create} accounts')
-    print(f'Need to create {accounts_to_create} accounts')
+    logging.debug(f'Actual Pool Size: {actual_pool_size}. Need to create {accounts_to_create} accounts')
+    logging.debug(f'Need to create {accounts_to_create} accounts')
     if nonce is None:
         funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
         nonce = w3.eth.getTransactionCount(account=funder_pubkey)
@@ -378,12 +381,12 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
 
 #todo: replay prevention through receipt hash map
 def main(event, context):
-    print(f'event: {event}')
-    print(f'context: {context}')
+    logging.debug(f'event: {event}')
+    logging.debug(f'context: {context}')
 
     body = json.loads(event.get('body', {}))
 
-    print(f'body: {body}')
+    logging.debug(f'body: {body}')
     receipt = body.get('receipt', '')
 
     dynamodb = boto3.resource('dynamodb')
@@ -419,7 +422,7 @@ def main(event, context):
                     "config": None,
                 })
             }
-            print(f'response: {response}')
+            logging.debug(f'response: {response}')
             return response
 
     apple_response = process_app_pay_receipt(receipt)
@@ -432,7 +435,7 @@ def main(event, context):
         else:
             bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
         if bundle_id != 'OrchidTechnologies.PAC-Test' and verify_receipt != 'False':  # Bad bundle_id and set to verify_receipts
-            print(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
+            logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
             response = {
                 "isBase64Encoded": False,
                 "statusCode": 400,
@@ -450,11 +453,11 @@ def main(event, context):
                 total_usd = wildcard_product_to_usd(product_id=product_id) * quantity
             else:
                 total_usd = product_to_usd(product_id=product_id) * quantity
-            print(f'product_id: {product_id}')
-            print(f'quantity: {quantity}')
-            print(f'total_usd: {total_usd}')
+            logging.debug(f'product_id: {product_id}')
+            logging.debug(f'quantity: {quantity}')
+            logging.debug(f'total_usd: {total_usd}')
             if total_usd < 0:
-                print('Unknown product_id')
+                logging.debug('Unknown product_id')
                 response = {
                     "isBase64Encoded": False,
                     "statusCode": 400,
@@ -505,7 +508,7 @@ def main(event, context):
                 "config": None,
             })
         }
-    print(f'response: {response}')
+    logging.debug(f'response: {response}')
     return response
 
 
@@ -524,7 +527,7 @@ def google(event, context):
             "config": None,
         })
         }
-    print(f'response: {response}')
+    logging.debug(f'response: {response}')
     return response
 
 
