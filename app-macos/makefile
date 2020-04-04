@@ -33,7 +33,14 @@ framework := FlutterMacOS
 signed := 
 
 .PHONY: all
-all: $(bundle)$(contents)$(signature)
+all: $(output)/$(name).zip
+
+.PHONY: app
+app: $(bundle)$(contents)$(signature)
+
+.PHONY: install
+install: $(bundle)$(contents)$(signature)
+	rsync -Pa --del $(bundle) /Applications/
 
 .PHONY: test
 test: $(bundle)$(contents)$(signature)
@@ -183,6 +190,12 @@ $(bundle)$(contents)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	codesign -fs $(codesign) --entitlement $< -v $(bundle)
 	@touch $@
 
-$(output)/$(name).dmg: $(bundle)$(contents)$(signature)
+ifeq ($(filter nocompress,$(debug)),)
+zflags := -9
+else
+zflags := -0
+endif
+
+$(output)/$(name).zip: $(bundle)$(contents)$(signature)
 	@rm -f $@
-	cd $(output); zip -rXy0 $(name).dmg Payload
+	cd $(output)/Payload; zip -rXy $(zflags) ../$(name).zip $(name).app
