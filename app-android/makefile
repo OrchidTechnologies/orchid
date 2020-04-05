@@ -70,6 +70,7 @@ $(assets)/AssetManifest%json %flutter-plugins: flutter/packages/flutter/pubspec.
 	    --target-platform=android-arm --$(mode) $(precompiled)
 
 flutter/bin/cache/artifacts/engine/android-%-release/flutter.jar: flutter/packages/flutter/pubspec.lock
+	@
 
 jni := $(foreach arch,$(jni),$(foreach jni,orchid flutter app,$(output)/jnilibs/$(arch)/lib$(jni).so))
 
