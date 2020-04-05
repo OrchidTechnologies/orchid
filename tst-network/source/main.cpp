@@ -93,6 +93,7 @@ int Main(int argc, const char *const argv[]) {
         for (;;) {
             std::vector<task<std::string>> tests;
 
+            // NOLINTNEXTLINE (modernize-avoid-c-arrays)
             for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
                 //{"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "bolehvpn"},
                 //{"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "liquidvpn"},
