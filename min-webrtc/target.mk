@@ -47,6 +47,8 @@ webrtc += $(pwd)/webrtc/api/video/video_content_type.cc
 webrtc += $(pwd)/webrtc/api/video/video_source_interface.cc
 webrtc += $(pwd)/webrtc/api/video/video_timing.cc
 
+webrtc += $(pwd)/webrtc/api/video_codecs/sdp_video_format.cc
+
 webrtc += $(pwd)/webrtc/call/call_config.cc 
 webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
 
