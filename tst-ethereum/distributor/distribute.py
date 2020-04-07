@@ -52,8 +52,9 @@ def update(rec, idx, beg, end, amt, amt_sent, funder_pubkey, funder_privkey, non
 
 def distribute_partial(N, funder_pubkey, funder_privkey, nonce):
 
+	gas = 32000 + 40000*N;
 	txn = distributor_main.functions.distribute_partial(N
-		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 250000, 'gasPrice': w3.toWei('8', 'gwei'), 'nonce':nonce, }
+		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': gas, 'gasPrice': w3.toWei('1', 'gwei'), 'nonce':nonce, }
 	)
 
 	print(f"Funder signed transaction:");
