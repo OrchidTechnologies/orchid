@@ -188,7 +188,7 @@ $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,
 	    --enable-static --disable-shared $(subst =@/,=$(CURDIR)/$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
 
-$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $$(call head,$$(folder))
+$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $(sysroot) $$(call head,$$(folder))
 	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
