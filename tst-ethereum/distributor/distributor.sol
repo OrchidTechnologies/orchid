@@ -35,7 +35,8 @@ contract ContinuousDistributor {
     address owner_;
 
     struct Linear {
-        uint128 time_;
+        uint128 beg_;
+        uint128 end_;
         uint128 amt_;
     }
 
@@ -55,32 +56,55 @@ contract ContinuousDistributor {
         return token_;
     }
 
-    function update(address rec, uint idx, uint128 time, uint128 amt, uint128 sent) public {
+    function update(address rec, uint idx, uint128 beg, uint128 end, uint128 amt, uint128 sent) public {
         require(msg.sender == owner_);
         if (sent_[rec] == 0) {
             recipients_.push(rec);
         }
         sent_[rec] = sent > 1 ? sent : 1;
         while (idx >= limits_[rec].length) {
-            limits_[rec].push(Linear(0,0));
+            limits_[rec].push(Linear(0,0,0));
         }
         Linear storage func = limits_[rec][idx];
-        func.time_ = time;
+        func.beg_  = beg;
+        func.end_  = end;
         func.amt_  = amt;
     }
 
     function calculate_(Linear memory f, uint t) private pure returns (uint128) {
-        uint beg = f.time_ >> 64;
-        uint end = (f.time_ << 64) >> 64;
+        uint beg = f.beg_;
+        uint end = f.end_;
+        end = end <= beg ? beg+1 : end;
         t = t > beg ? t : beg;
         t = t < end ? t : end;
         uint128 amt = uint128( (uint256(f.amt_) * uint256(t - beg)) / uint256(end - beg) );
         return amt;
     }
 
-    function calculate(address a, uint t) private view returns (uint128) {
+    function num_limits(address a) public view returns (uint128) {
         Linear [] memory limits = limits_[a];
-        if (limits.length == 0) return 0;
+        return uint128(limits.length);
+    }
+
+    function get_beg(address a, uint i) public view returns (uint128) {
+        return limits_[a][i].beg_;
+    }
+
+    function get_end(address a, uint i) public view returns (uint128) {
+        return limits_[a][i].end_;
+    }
+
+    function get_amt(address a, uint i) public view returns (uint128) {
+        return limits_[a][i].amt_;
+    }
+
+    function calculate_at(address a, uint t, uint i) public view returns (uint128) {
+        return calculate_(limits_[a][i], t);
+    }
+
+    function calculate(address a, uint t) public view returns (uint128) {
+        Linear [] memory limits = limits_[a];
+        if (limits.length == 0) return uint128(0);
         uint128 amt = uint128(-1);
         for (uint i = 0; i < limits.length; i++) {
            uint128 x = calculate_(limits[i], t);
@@ -94,7 +118,7 @@ contract ContinuousDistributor {
         uint128 total = calculate(a, t);
         uint128 sent  = sent_[a];
         sent = sent > total ? total : sent;
-        return total - sent;
+        return uint128(total - sent);
     }
 
     function compute_owed(address a) public view returns (uint128) {
