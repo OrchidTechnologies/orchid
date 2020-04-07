@@ -19,8 +19,8 @@ token_abi = [{"inputs": [], "payable": False, "stateMutability": "nonpayable", "
 distributor_abi = [{"inputs":[{"internalType":"contract IERC20","name":"token","type":"address"}],"payable":False,"stateMutability":"nonpayable","type":"constructor"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"},{"internalType":"uint256","name":"t","type":"uint256"}],"name":"calculate","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"},{"internalType":"uint256","name":"t","type":"uint256"},{"internalType":"uint256","name":"i","type":"uint256"}],"name":"calculate_at","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"}],"name":"compute_owed","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"},{"internalType":"uint256","name":"t","type":"uint256"}],"name":"compute_owed_","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[],"name":"distribute_all","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"uint256","name":"N","type":"uint256"}],"name":"distribute_partial","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"},{"internalType":"uint256","name":"i","type":"uint256"}],"name":"get_amt","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"},{"internalType":"uint256","name":"i","type":"uint256"}],"name":"get_beg","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"},{"internalType":"uint256","name":"i","type":"uint256"}],"name":"get_end","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"a","type":"address"}],"name":"num_limits","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"rec","type":"address"},{"internalType":"uint256","name":"idx","type":"uint256"},{"internalType":"uint128","name":"beg","type":"uint128"},{"internalType":"uint128","name":"end","type":"uint128"},{"internalType":"uint128","name":"amt","type":"uint128"},{"internalType":"uint128","name":"sent","type":"uint128"}],"name":"update","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"what","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"}]
 
 test_account = w3.eth.account.create('test')
-print(f"test_account.address: {test_account.address} ");
-print(f"test_account.privateKey: {test_account.privateKey.hex()} ");
+#print(f"test_account.address: {test_account.address} ");
+#print(f"test_account.privateKey: {test_account.privateKey.hex()} ");
 
 
 print("Creating Token contract object from abi.");
@@ -50,6 +50,22 @@ def update(rec, idx, beg, end, amt, amt_sent, funder_pubkey, funder_privkey, non
 	print(f"Submitted transaction with hash: {txn_hash.hex()}");
 
 
+def distribute_partial(N, funder_pubkey, funder_privkey, nonce):
+
+	gas = 32000 + 40000*N;
+	txn = distributor_main.functions.distribute_partial(N
+		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': gas, 'gasPrice': w3.toWei('1', 'gwei'), 'nonce':nonce, }
+	)
+
+	print(f"Funder signed transaction:");
+	txn_signed = w3.eth.account.sign_transaction(txn, private_key=funder_privkey)
+	print(txn_signed);
+
+	print(f"Submitting transaction:");
+	txn_hash = w3.eth.sendRawTransaction(txn_signed.rawTransaction);
+	print(f"Submitted transaction with hash: {txn_hash.hex()}");
+
+
 def date(m,d,y):
 	unixtime = int(time.mktime(datetime.date(y,m,d).timetuple()));
 	return unixtime;
@@ -60,36 +76,19 @@ def add_employee(addr, M,D,Y, amt_owed, amt_sent, k0,k1,n):
 	update(addr, 1, date( M,D,Y+0),  date( M, D,Y+4),  amt_owed, amt_sent, k0,k1,n+1); # 4 year vest
 	update(addr, 2, date(12,31,2019),date(12, 5,2020), amt_owed, amt_sent, k0,k1,n+2); # 1 year trade lockup
 
-def send_list(funder_pubkey, funder_privkey, k0,k1,n):
+def send_list(k0,k1,n):
 
-	#todo: add flag for update that they have received correct amount up to some date
-	#todo: how much has been sent to that address already
 	add_employee('0x7361c5B033dc7209a81e8e60BF5e19DD66270672', 7,11,2018, 3000000, 570000, k0,k1,n); n+=3; # cliff 1 year from start date
 
 	return n;
 
-def send(funder_pubkey, funder_privkey):
 
-	print("Distributor functions:");
-	print( Distributor.all_functions() )
-
-	#token_address = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb'
-	#token_main = Token(address = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb')
-	#distributor_main = Distributor(address = '0x3d971E78e9F5390d4AF4be8EDd88bCCD9040c75E')
-
-	#funder.privateKey
-
-	nonce = w3.eth.getTransactionCount(funder_pubkey);
-	print(f"Funder nonce: {nonce}");
-
-	k0 = funder_pubkey;
-	k1 = funder_privkey;
-	n  = nonce;
-
+def debug_send(k0,k1,n):
 
 	#badrec = '0x4a31c1B033dc7209a82e8e60BF5e19DD662705e8';
 	#owed_wei = distributor_main.functions.calculate(badrec, date(3,5,2020) ).call(); owed = w3.fromWei(owed_wei, 'ether');
 	#print(f"total to {badrec} at 3/5/2020 : {owed}");
+
 
 	rec = '0x7361c5B033dc7209a81e8e60BF5e19DD66270672';
 
@@ -142,19 +141,40 @@ def send(funder_pubkey, funder_privkey):
 
 	unixtime = date(3,27,2020)
 	print(f"3/27/2020: {unixtime}");
-	'''
-	'''
 
-	#n = send_list(funder_pubkey, funder_privkey, k0,k1,n);
+
+def send(funder_pubkey, funder_privkey, N):
+
+	print("Distributor functions:");
+	print( Distributor.all_functions() )
+
+	nonce = w3.eth.getTransactionCount(funder_pubkey);
+	print(f"Funder nonce: {nonce}");
+
+	k0 = funder_pubkey;
+	k1 = funder_privkey;
+	n  = nonce;
+
+	print("Updating distribution list.");
+	#n = send_list(k0,k1,n);
+
+	print(f"Sending {N}.");
+	for i in range(int(N/8)):
+		print(".");
+		distribute_partial(8,k0,k1,n);
+		n+=1;
 
 
 def main():
 
-	if len(sys.argv) > 1 :
+	if len(sys.argv) > 2 :
 		#signer = sys.argv[1];
-		send(sys.argv[1], sys.argv[2])
+		N = 8;
+		if len(sys.argv) > 3:
+			N = sys.argv[3];
+		send(sys.argv[1], sys.argv[2], int(N))
 	else :
-		print("usage: distribute.py FUNDER_PUBKEY FUNDER_PRIVKEY ");
+		print("usage: distribute.py FUNDER_PUBKEY FUNDER_PRIVKEY N");
 
 
 if __name__ == "__main__":
