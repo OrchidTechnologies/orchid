@@ -9,6 +9,7 @@
 # }}}
 
 
+pre := lib
 dll := dylib
 lib := a
 exe := 

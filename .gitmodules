@@ -50,7 +50,7 @@
 	path = p2p/BeastHttp
 	url = https://github.com/0xdead4ead/BeastHttp.git
 [submodule "boringtun"]
-	path = vpn-shared/boringtun
+	path = p2p/boringtun
 	url = https://github.com/cloudflare/boringtun.git
 [submodule "tor"]
 	path = vpn-shared/tor
@@ -127,3 +127,6 @@
 [submodule "curl"]
 	path = p2p/curl
 	url = https://github.com/curl/curl.git
+[submodule "challenge-bypass-ristretto-ffi"]
+	path = p2p/challenge-bypass-ristretto
+	url = https://github.com/brave-intl/challenge-bypass-ristretto-ffi.git

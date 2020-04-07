@@ -169,6 +169,14 @@ cflags += -I$(pwd)/eEVM/3rdparty
 cflags += -I$(pwd)/eEVM/include
 
 
+linked += $(pwd)/challenge-bypass-ristretto/$(pre)rust.$(lib)
+cflags += -I$(pwd)/challenge-bypass-ristretto/src
+
+
+linked += $(pwd)/boringtun/$(pre)rust.$(lib)
+cflags += -I$(pwd)/boringtun/src
+
+
 include $(pwd)/asio.mk
 $(call include,rtc/target.mk)
 

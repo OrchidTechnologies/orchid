@@ -196,6 +196,16 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 
+.PHONY: $(output)/%.rustup
+$(output)/%.rustup:
+	rustup target add $*
+
+$(output)/%/$(pre)rust.$(lib): $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
+	$(specific)
+	@mkdir -p $(dir $@)
+	cd $(folder) && TARGET_CC='$(binary/$(arch))' RUSTFLAGS='$(rflags/$(arch))' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
+	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/$(pre)$(subst -,_,$(notdir $(folder))).$(lib) $@
+
 .PHONY: clean
 clean:
 	git clean -fXd
