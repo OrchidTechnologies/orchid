@@ -59,7 +59,7 @@ abstract class OrchidPurchaseAPI {
   }
 
   /// Return the active API config: either hard-coded or selected in settings.
-  /// e.g. pacsEnv=dev
+  /// e.g. pacsEnv='dev'
   static Future<PACApiConfig> apiConfig() async {
     var config = (await OrchidAPI().getConfiguration()) ?? "";
     bool isDev = config.contains(RegExp('pacs[Ee]nv *= *[\'"]?[Dd]ev[\'"]?'));
@@ -69,7 +69,7 @@ abstract class OrchidPurchaseAPI {
   /// Return an override for the pacs endpoint URL or null if there is none.
   /// This URL will override the endpoint default in the prod or dev setting
   /// and will be treated as the prod or dev endpont.
-  /// e.g. pacsUrl=https://foo.bar/gah
+  /// e.g. pacsUrl='https://foo.bar/gah'
   static Future<String> overridePACServerUrl() async {
     var config = (await OrchidAPI().getConfiguration()) ?? "";
     var match = RegExp('pacs[Uu]rl *= *[\'"]?(https://.*)[\'"]?').firstMatch(config);
