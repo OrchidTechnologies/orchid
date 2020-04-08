@@ -204,7 +204,7 @@ $(output)/%/$(pre)rust.$(lib): $$(specific) $$(folder)/Cargo.toml $(output)/$$(t
 	$(specific)
 	@mkdir -p $(dir $@)
 	cd $(folder) && TARGET_CC='$(binary/$(arch))' RUSTFLAGS='$(rflags/$(arch))' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
-	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/$(pre)$(subst -,_,$(notdir $(folder))).$(lib) $@
+	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/$(pre)$(subst -,_,$(notdir $(folder))).$(lib) $@
 
 .PHONY: clean
 clean:

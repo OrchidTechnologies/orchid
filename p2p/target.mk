@@ -178,6 +178,8 @@ cflags += -I$(pwd)/boringtun/src
 
 
 include $(pwd)/asio.mk
-$(call include,rtc/target.mk)
+#include $(pwd)/nettle.mk
+#include $(pwd)/sequoia.mk
 
+$(call include,rtc/target.mk)
 $(call include,openvpn3.mk)
