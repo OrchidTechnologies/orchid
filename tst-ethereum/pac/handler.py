@@ -16,25 +16,11 @@ from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from abis import lottery_abi, token_abi
 from typing import Any, Dict, Optional, Tuple
+from utils import configure_logging, get_secret, is_false, is_true
 from web3.auto.infura import w3
 
 
-if len(logging.getLogger().handlers) > 0:
-    # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
-    # `.basicConfig` does not execute. Thus we set the level directly.
-    logging.getLogger().setLevel(level=os.environ.get('LOG_LEVEL', "DEBUG"))
-else:
-    logging.basicConfig(level=os.environ.get('LOG_LEVEL', "DEBUG"))
-
-client = boto3.client('ssm')
-
-
-def get_secret(key: str) -> str:
-    resp: dict = client.get_parameter(
-        Name=key,
-        WithDecryption=True,
-    )
-    return resp['Parameter']['Value']
+configure_logging()
 
 
 def get_usd_per_oxt() -> float:
@@ -214,13 +200,13 @@ def process_app_pay_receipt(
     bundle_id = 'OrchidTechnologies.PAC-Test'
     # if True, automatically query sandbox endpoint
     # if validation fails on production endpoint
-    if os.environ['AUTO_RETRY_WRONG_ENV_REQUEST'] == 'True':
+    if is_true(os.environ['AUTO_RETRY_WRONG_ENV_REQUEST']):
         auto_retry_wrong_env_request = True
     else:
         auto_retry_wrong_env_request = False
     validator = AppStoreValidator(
         bundle_id=bundle_id,
-        sandbox=os.environ['RECEIPT_SANDBOX'] == 'True',
+        sandbox=is_true(os.environ['RECEIPT_SANDBOX']),
         auto_retry_wrong_env_request=auto_retry_wrong_env_request,
     )
     try:
@@ -405,6 +391,9 @@ def main(event, context):
 
     body = json.loads(event.get('body', {}))
 
+    if is_true(body.get('debug')):
+        configure_logging(level="DEBUG")
+
     logging.debug(f'body: {body}')
     receipt = body.get('receipt', '')
 
@@ -428,7 +417,7 @@ def main(event, context):
     verify_receipt = body.get('verify_receipt', 'False')
 
     receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
-    if (verify_receipt == 'True'):
+    if (is_true(verify_receipt)):
         result = receipt_hash_table.query(KeyConditionExpression=Key('receipt').eq(receipt_hash))
         if (result['Count'] > 0):  # we found a match - reject on duplicate
             response = {
@@ -452,7 +441,7 @@ def main(event, context):
             bundle_id = ''
         else:
             bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
-        if bundle_id != 'OrchidTechnologies.PAC-Test' and verify_receipt != 'False':  # Bad bundle_id and set to verify_receipts
+        if bundle_id != 'OrchidTechnologies.PAC-Test' and is_true(verify_receipt):  # Bad bundle_id and set to verify_receipts
             logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
             response = {
                 "isBase64Encoded": False,

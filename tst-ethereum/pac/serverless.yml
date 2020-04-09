@@ -90,6 +90,8 @@ functions:
     handler: handler.maintain_pool_wrapper
     events:
       - schedule: cron(0/15 * * * ? *)
+  balance:
+    handler: balance.main
 plugins:
   - serverless-pseudo-parameters
   - serverless-python-requirements
