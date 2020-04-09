@@ -37,7 +37,7 @@ abstract class OrchidPurchaseAPI {
 
   // Prod service endpoint configuration.
   static PACApiConfig prodAPIConfig = PACApiConfig(
-    endpoint:
+    url:
         'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/submit',
   );
 
@@ -46,21 +46,35 @@ abstract class OrchidPurchaseAPI {
   // and optionally override the product id prefix.
   static PACApiConfig devAPIConfig = PACApiConfig(
     isDev: true,
-    endpoint:
+    url:
         'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/submit',
     verifyReceipt: false,
   );
 
+  /// Feature flag for testing PAC purchases
+  /// e.g. pacs=true
+  static Future<bool> pacsEnabled() async {
+    var config = (await OrchidAPI().getConfiguration()) ?? "";
+    return config.contains(RegExp(r'pacs *= *[Tt]rue'));
+  }
+
+  /// Return the active API config: either hard-coded or selected in settings.
+  /// e.g. pacsEnv='dev'
   static Future<PACApiConfig> apiConfig() async {
-    bool isDev = ((await OrchidAPI().getConfiguration()) ?? "")
-        .contains(RegExp(r'pacs[Ee]nv *= *[Dd]ev'));
+    var config = (await OrchidAPI().getConfiguration()) ?? "";
+    bool isDev = config.contains(RegExp('pacs[Ee]nv *= *[\'"]?[Dd]ev[\'"]?'));
     return isDev ? devAPIConfig : prodAPIConfig;
   }
 
-  // Feature flag for testing PAC purchases
-  static Future<bool> pacsEnabled() async {
-    return ((await OrchidAPI().getConfiguration()) ?? "")
-        .contains(RegExp(r'pacs *= *[Tt]rue'));
+  /// Return an override for the pacs endpoint URL or null if there is none.
+  /// This URL will override the endpoint default in the prod or dev setting
+  /// and will be treated as the prod or dev endpont.
+  /// e.g. pacsUrl='https://foo.bar/gah'
+  static Future<String> overridePACServerUrl() async {
+    var config = (await OrchidAPI().getConfiguration()) ?? "";
+    var match = RegExp('pacs[Uu]rl *= *[\'"]?(https://.*)[\'"]?').firstMatch(config);
+    var url = match != null ? match.group(0) : null;
+    return url;
   }
 
   // The raw value from the iOS API
@@ -78,7 +92,7 @@ class PACApiConfig {
   bool isDev;
 
   // PAC Server URL
-  String endpoint;
+  String url;
 
   // Optionally disable receipt verification in dev.
   bool verifyReceipt;
@@ -89,7 +103,7 @@ class PACApiConfig {
   }
 
   PACApiConfig({
-    @required this.endpoint,
+    @required this.url,
     this.isDev = false,
     this.verifyReceipt = true,
   });

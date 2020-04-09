@@ -101,14 +101,16 @@ class OrchidPACServer {
     var postBody = jsonEncode(params);
     // Note: the receipt exceeds the console log line length so keep it last
     // Note: or explicitly truncate it.
-    print("iap: posting to ${apiConfig.isDev ? "Dev" : "Prod"}, json = $postBody");
+    print(
+        "iap: posting to ${apiConfig.isDev ? "Dev" : "Prod"}, json = $postBody");
 
     // TESTING
     //await Future.delayed(Duration(seconds: 1), () {});
     //throw Exception("testing");
 
-    // do the post
-    var response = await http.post(apiConfig.endpoint,
+    // Do the post
+    var url = (await OrchidPurchaseAPI.overridePACServerUrl()) ?? apiConfig.url;
+    var response = await http.post(url,
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: postBody);
 
@@ -127,4 +129,3 @@ class OrchidPACServer {
     return response.body;
   }
 }
-
