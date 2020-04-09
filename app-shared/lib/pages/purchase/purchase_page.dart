@@ -287,7 +287,7 @@ class _PurchasePageState extends State<PurchasePage> {
         height: 25.0 / 20.0);
     const valueSubtitleStyle = TextStyle(
         color: Colors.white,
-        fontSize: 12.0,
+        fontSize: 13.0,
         fontWeight: FontWeight.normal,
         fontFamily: "SFProText-Regular",
         height: 16.0 / 12.0);
@@ -316,39 +316,48 @@ class _PurchasePageState extends State<PurchasePage> {
           child: Row(
             children: <Widget>[
               // left side usage description
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    title,
-                    textAlign: TextAlign.left,
-                    style: titleStyle,
-                  ),
-                  pady(8),
-                  Text(
-                    subtitle,
-                    textAlign: TextAlign.left,
-                    style: subtitleStyle,
-                  )
-                ],
-              ),
-              Spacer(),
-
-              // right side value display
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Row(
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text("$usdString",
-                        style:
-                            valueStyle.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      title,
+                      textAlign: TextAlign.left,
+                      style: titleStyle,
+                    ),
+                    pady(8),
+                    FittedBox(
+                      child: Text(
+                        subtitle,
+                        textAlign: TextAlign.left,
+                        style: subtitleStyle,
+                      ),
+                    )
                   ],
                 ),
-                pady(2),
-                Visibility(
-                  visible: _pricing != null,
-                  child: Text("~ $oxtString OXT", style: valueSubtitleStyle),
+              ),
+              padx(4),
+              // right side value display
+              Expanded(
+                flex: 1,
+                child: FittedBox(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    Row(
+                      children: <Widget>[
+                        Text("$usdString",
+                            style:
+                                valueStyle.copyWith(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    pady(2),
+                    Visibility(
+                      visible: _pricing != null,
+                      child: Text("~ $oxtString OXT", style: valueSubtitleStyle),
+                    ),
+                  ]),
                 ),
-              ]),
+              ),
             ],
           ),
         ),

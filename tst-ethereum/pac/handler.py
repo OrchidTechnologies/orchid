@@ -8,19 +8,24 @@ import sha3
 import time  # noqa: F401
 import web3.exceptions  # noqa: F401
 import uuid
-import random
 import hashlib
 
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
+from abis import lottery_abi, token_abi
 from typing import Any, Dict, Optional, Tuple
 from web3.auto.infura import w3
 
 
-logger = logging.getLogger()
-logger.setLevel(level=os.environ.get('LOG_LEVEL', "DEBUG"))
+if len(logging.getLogger().handlers) > 0:
+    # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
+    # `.basicConfig` does not execute. Thus we set the level directly.
+    logging.getLogger().setLevel(level=os.environ.get('LOG_LEVEL', "DEBUG"))
+else:
+    logging.basicConfig(level=os.environ.get('LOG_LEVEL', "DEBUG"))
+
 client = boto3.client('ssm')
 
 
@@ -30,9 +35,6 @@ def get_secret(key: str) -> str:
         WithDecryption=True,
     )
     return resp['Parameter']['Value']
-
-token_abi = [{"inputs": [], "payable": False, "stateMutability": "nonpayable", "type": "constructor"}, {"anonymous": False, "inputs": [{"indexed": True, "internalType": "address", "name": "owner", "type": "address"}, {"indexed": True, "internalType": "address", "name": "spender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"}], "name": "Approval", "type": "event"}, {"anonymous": False, "inputs": [{"indexed": True, "internalType": "address", "name": "from", "type": "address"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"}], "name": "Transfer", "type": "event"}, {"constant": True, "inputs": [{"internalType": "address", "name": "owner", "type": "address"}, {"internalType": "address", "name": "spender", "type": "address"}], "name": "allowance", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "approve", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [{"internalType": "address", "name": "account", "type": "address"}], "name": "balanceOf", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": True, "inputs": [], "name": "decimals", "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "subtractedValue", "type": "uint256"}], "name": "decreaseAllowance", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "addedValue", "type": "uint256"}], "name": "increaseAllowance", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [], "name": "name", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": True, "inputs": [], "name": "symbol", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": True, "inputs": [], "name": "totalSupply", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "recipient", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "transfer", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "sender", "type": "address"}, {"internalType": "address", "name": "recipient", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "transferFrom", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "payable": False, "stateMutability": "nonpayable", "type": "function"}]  # noqa: E501
-lottery_abi = [{"inputs": [{"internalType": "contract IERC20", "name": "token", "type": "address"}], "payable": False, "stateMutability": "nonpayable", "type": "constructor"}, {"anonymous": False, "inputs": [{"indexed": True, "internalType": "address", "name": "funder", "type": "address"}, {"indexed": True, "internalType": "address", "name": "signer", "type": "address"}, {"indexed": False, "internalType": "uint128", "name": "amount", "type": "uint128"}, {"indexed": False, "internalType": "uint128", "name": "escrow", "type": "uint128"}, {"indexed": False, "internalType": "uint256", "name": "unlock", "type": "uint256"}], "name": "Update", "type": "event"}, {"constant": False, "inputs": [{"internalType": "address", "name": "signer", "type": "address"}, {"internalType": "contract OrchidVerifier", "name": "verify", "type": "address"}, {"internalType": "bytes", "name": "shared", "type": "bytes"}], "name": "bind", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "funder", "type": "address"}, {"internalType": "address payable", "name": "target", "type": "address"}, {"internalType": "uint128", "name": "amount", "type": "uint128"}, {"internalType": "bytes", "name": "receipt", "type": "bytes"}], "name": "give", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "bytes32", "name": "seed", "type": "bytes32"}, {"internalType": "bytes32", "name": "hash", "type": "bytes32"}, {"internalType": "bytes32", "name": "nonce", "type": "bytes32"}, {"internalType": "uint256", "name": "start", "type": "uint256"}, {"internalType": "uint128", "name": "range", "type": "uint128"}, {"internalType": "uint128", "name": "amount", "type": "uint128"}, {"internalType": "uint128", "name": "ratio", "type": "uint128"}, {"internalType": "address", "name": "funder", "type": "address"}, {"internalType": "address payable", "name": "target", "type": "address"}, {"internalType": "bytes", "name": "receipt", "type": "bytes"}, {"internalType": "uint8", "name": "v", "type": "uint8"}, {"internalType": "bytes32", "name": "r", "type": "bytes32"}, {"internalType": "bytes32", "name": "s", "type": "bytes32"}, {"internalType": "bytes32[]", "name": "old", "type": "bytes32[]"}], "name": "grab", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [{"internalType": "address", "name": "funder", "type": "address"}], "name": "keys", "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "bytes32", "name": "ticket", "type": "bytes32"}], "name": "kill", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "signer", "type": "address"}], "name": "lock", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [{"internalType": "address", "name": "funder", "type": "address"}, {"internalType": "address", "name": "signer", "type": "address"}], "name": "look", "outputs": [{"internalType": "uint128", "name": "", "type": "uint128"}, {"internalType": "uint128", "name": "", "type": "uint128"}, {"internalType": "uint256", "name": "", "type": "uint256"}, {"internalType": "contract OrchidVerifier", "name": "", "type": "address"}, {"internalType": "bytes", "name": "", "type": "bytes"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "signer", "type": "address"}, {"internalType": "uint128", "name": "amount", "type": "uint128"}], "name": "move", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [{"internalType": "address", "name": "funder", "type": "address"}, {"internalType": "uint256", "name": "offset", "type": "uint256"}, {"internalType": "uint256", "name": "count", "type": "uint256"}], "name": "page", "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "signer", "type": "address"}, {"internalType": "address payable", "name": "target", "type": "address"}], "name": "pull", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "signer", "type": "address"}, {"internalType": "address payable", "name": "target", "type": "address"}, {"internalType": "uint128", "name": "amount", "type": "uint128"}], "name": "pull", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "signer", "type": "address"}, {"internalType": "uint128", "name": "total", "type": "uint128"}, {"internalType": "uint128", "name": "escrow", "type": "uint128"}], "name": "push", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [{"internalType": "address", "name": "funder", "type": "address"}, {"internalType": "uint256", "name": "offset", "type": "uint256"}], "name": "seek", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": True, "inputs": [{"internalType": "address", "name": "funder", "type": "address"}], "name": "size", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "signer", "type": "address"}], "name": "warn", "outputs": [], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [], "name": "what", "outputs": [{"internalType": "contract IERC20", "name": "", "type": "address"}], "payable": False, "stateMutability": "view", "type": "function"}]  # noqa: E501
 
 
 def get_usd_per_oxt() -> float:
@@ -115,8 +117,18 @@ def fund_PAC_(
     logging.debug(f"Funder nonce: {nonce}")
 
     logging.debug(f"Assembling bind transaction:")
-    bind_txn = lottery_main.functions.bind(signer, verifier_addr, w3.toBytes(0)
-        ).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 200000, 'gasPrice': w3.toWei('8', 'gwei'), 'nonce': nonce,}
+    bind_txn = lottery_main.functions.bind(
+        signer,
+        verifier_addr,
+        w3.toBytes(0),
+    ).buildTransaction(
+        {
+            'chainId': 1,
+            'from': funder_pubkey,
+            'gas': 200000,
+            'gasPrice': w3.toWei('8', 'gwei'),
+            'nonce': nonce,
+        }
     )
     logging.debug(bind_txn)
 
@@ -159,19 +171,19 @@ def fund_PAC_(
     return txn_hash
 
 
-def fund_PAC(total_usd:float, nonce:int) -> Tuple[str, str, str]:
+def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     wallet = generate_wallet()
     signer = wallet['address']
     secret = wallet['private']
     config = generate_config(
         secret=secret,
     )
-    escrow_usd:float = 2
+    escrow_usd: float = 2
     if (total_usd < 4):
         escrow_usd = 0.5 * total_usd
 
     usd_per_oxt = get_usd_per_oxt()
-    oxt_per_usd = 1.0 / usd_per_oxt;
+    oxt_per_usd = 1.0 / usd_per_oxt
 
     total_oxt = total_usd * oxt_per_usd
     escrow_oxt = escrow_usd * oxt_per_usd
@@ -181,7 +193,7 @@ def fund_PAC(total_usd:float, nonce:int) -> Tuple[str, str, str]:
 total: ${total_usd}{total_oxt} oxt, \
 escrow: ${escrow_usd}{escrow_oxt} oxt ")
 
-    funder_pubkey=get_secret(key='PAC_FUNDER_PUBKEY')
+    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     funder_privkey = get_secret(key='PAC_FUNDER_PRIVKEY')
 
     txn_hash = fund_PAC_(
@@ -247,10 +259,10 @@ def generate_wallet() -> Dict[str, str]:
 
 
 def generate_config(
-    secret:str=None,
-    curator:str='partners.orch1d.eth',
-    protocol:str='orchid',
-    funder:str=get_secret(key='PAC_FUNDER_PUBKEY'),
+    secret: str = None,
+    curator: str = 'partners.orch1d.eth',
+    protocol: str = 'orchid',
+    funder: str = get_secret(key='PAC_FUNDER_PUBKEY'),
 ) -> str:
     if secret is not None:
         return f'account = {{curator:"{curator}", protocol: "{protocol}", \
@@ -274,7 +286,7 @@ def product_to_usd(product_id: str) -> float:
 
 
 def random_scan(table, price):
-    #generate a random 32 byte address (1 x 32 byte ethereum address)
+    # generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
     response0 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
@@ -283,7 +295,7 @@ def random_scan(table, price):
     return response0
 
 
-def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     logging.debug(f'Getting Account with Price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
@@ -339,6 +351,7 @@ def get_transaction_confirm_count(txhash):
     trans = w3.eth.getTransaction(txhash)
     return blocknum - trans['blockNumber']
 
+
 def get_transaction_status(txhash):
     try:
         count = get_transaction_confirm_count(txhash)
@@ -346,21 +359,22 @@ def get_transaction_status(txhash):
             return "confirmed"
         else:
             return "unconfirmed"
-    except w3.TransactionNotFound as ex:
+    except w3.TransactionNotFound:
         return "unknown"
     return "unknown"
 
-def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']), nonce:int=None):
+
+def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SIZE']), nonce: int = None):
     logging.debug(f'Maintaining Pool of size:{pool_size} and price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = table.scan()
     actual_pool_size = 0
     for item in response['Items']:
-        #todo: update status here with get_transaction_status(.)
+        # todo: update status here with get_transaction_status(.)
         if float(price) == float(item['price']):
             actual_pool_size += 1
-    accounts_to_create =  max(pool_size - actual_pool_size, 0)
+    accounts_to_create = max(pool_size - actual_pool_size, 0)
     logging.debug(f'Actual Pool Size: {actual_pool_size}. Need to create {accounts_to_create} accounts')
     logging.debug(f'Need to create {accounts_to_create} accounts')
     if nonce is None:
@@ -373,7 +387,7 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
         )
         creation_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         item = {
-            'signer' : signer_pubkey,
+            'signer': signer_pubkey,
             'price': price,
             'config': config,
             'push_txn_hash': push_txn_hash,
@@ -384,7 +398,7 @@ def maintain_pool(price:float, pool_size:int=int(os.environ['DEFAULT_POOL_SIZE']
         nonce += 3
 
 
-#todo: replay prevention through receipt hash map
+# todo: replay prevention through receipt hash map
 def main(event, context):
     logging.debug(f'event: {event}')
     logging.debug(f'context: {context}')
@@ -416,7 +430,7 @@ def main(event, context):
     receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
     if (verify_receipt == 'True'):
         result = receipt_hash_table.query(KeyConditionExpression=Key('receipt').eq(receipt_hash))
-        if (result['Count'] > 0): # we found a match - reject on duplicate
+        if (result['Count'] > 0):  # we found a match - reject on duplicate
             response = {
                 "isBase64Encoded": False,
                 "statusCode": 402,
@@ -431,7 +445,6 @@ def main(event, context):
             return response
 
     apple_response = process_app_pay_receipt(receipt)
-
 
     if (apple_response[0] or verify_receipt == 'False'):
         validation_result: dict = apple_response[1]
@@ -497,7 +510,7 @@ def main(event, context):
                         })
                     }
                     item = {
-                        'receipt' : receipt_hash,
+                        'receipt': receipt_hash,
                     }
                     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
                     receipt_hash_table.put_item(Item=ddb_item)
