@@ -60,8 +60,6 @@ source += $(filter-out \
     $(pwd)/url/src/url/percent_encoding/*.cpp \
 ))
 
-cflags_url_serialize += -D_LIBCPP_DISABLE_AVAILABILITY
-
 
 source += $(wildcard $(pwd)/lwip/src/api/*.c)
 source += $(wildcard $(pwd)/lwip/src/core/*.c)
