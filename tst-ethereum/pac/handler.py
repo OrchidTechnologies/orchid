@@ -301,9 +301,14 @@ def get_account(price:float) -> Tuple[Optional[str], Optional[str], Optional[str
                 'price': item['price'],
                 'signer': signer_pubkey,
             }
-            table.delete_item(Key=key)
-            ret = push_txn_hash, config, signer_pubkey
-            break
+
+            delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
+            if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
+            # update succeeded
+                ret = push_txn_hash, config, signer_pubkey
+                break
+            else:
+                logging.debug('Account was already deleted!')
     if ret:
         return ret
     return None, None, None
