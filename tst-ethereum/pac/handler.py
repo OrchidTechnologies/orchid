@@ -391,7 +391,7 @@ def main(event, context):
 
     body = json.loads(event.get('body', {}))
 
-    if is_true(body.get('debug')):
+    if is_true(body.get('debug', '')):
         configure_logging(level="DEBUG")
 
     logging.debug(f'body: {body}')

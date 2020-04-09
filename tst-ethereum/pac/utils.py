@@ -3,7 +3,7 @@ import logging
 import os
 
 
-def configure_logging(level=os.environ.get('LOG_LEVEL', "DEBUG"):
+def configure_logging(level=os.environ.get('LOG_LEVEL', "DEBUG")):
     if len(logging.getLogger().handlers) > 0:
         # The Lambda environment pre-configures a handler logging to stderr.
         # If a handler is already configured, `.basicConfig` does not execute.
