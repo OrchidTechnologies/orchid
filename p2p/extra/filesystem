@@ -1,0 +1,3 @@
+#if !TARGET_OS_IPHONE
+#include_next <filesystem>
+#endif
