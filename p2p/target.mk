@@ -169,7 +169,17 @@ cflags += -I$(pwd)/eEVM/3rdparty
 cflags += -I$(pwd)/eEVM/include
 
 
-include $(pwd)/asio.mk
-$(call include,rtc/target.mk)
+linked += $(pwd)/challenge-bypass-ristretto/$(pre)rust.$(lib)
+cflags += -I$(pwd)/challenge-bypass-ristretto/src
 
+
+linked += $(pwd)/boringtun/$(pre)rust.$(lib)
+cflags += -I$(pwd)/boringtun/src
+
+
+include $(pwd)/asio.mk
+#include $(pwd)/nettle.mk
+#include $(pwd)/sequoia.mk
+
+$(call include,rtc/target.mk)
 $(call include,openvpn3.mk)

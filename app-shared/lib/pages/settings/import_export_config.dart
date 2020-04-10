@@ -2,7 +2,7 @@ import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:orchid/api/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/qrcode.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';

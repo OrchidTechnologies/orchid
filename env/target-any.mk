@@ -80,7 +80,6 @@ $(each)
 define depend
 $(foreach arch,$(archs),$(eval $(output)/$(arch)/$(1): $(patsubst @/%,$(output)/$(arch)/%,$(2))))
 endef
-$(each)
 
 define preamble
 $(eval temp := $(subst /,$(space),$*))

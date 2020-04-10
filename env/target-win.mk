@@ -9,6 +9,7 @@
 # }}}
 
 
+pre := 
 dll := dll
 lib := lib
 exe := .exe
@@ -18,12 +19,14 @@ meson := windows
 archs += i686
 openssl/i686 := mingw
 host/i686 := i686-w64-mingw32
+triple/i686 := i686-pc-windows-gnu
 meson/i686 := x86
 bits/i686 := 32
 
 archs += x86_64
 openssl/x86_64 := mingw64
 host/x86_64 := x86_64-w64-mingw32
+triple/x86_64 := x86_64-pc-windows-gnu
 meson/x86_64 := x86_64
 bits/x86_64 := 64
 
@@ -54,8 +57,16 @@ ranlib/$(1) := $(1)-w64-mingw32-ranlib
 ar/$(1) := $(1)-w64-mingw32-ar
 strip/$(1) := $(1)-w64-mingw32-ar
 windres/$(1) := $(1)-w64-mingw32-windres
+export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(shell realpath $(shell which $(1)-w64-mingw32-gcc))
 endef
 $(each)
+
+# XXX: Rust does not work on 32-bit Windows :(
+# panic calls _Unwind_Resume instead of _Unwind_Sjlj_Resume
+# https://github.com/rust-lang/rust/issues/12859
+# XXX: just setting panic=abort doesn't work either
+# we need to use cargo xbuild to rebuild libcore
+# rflags/i686 := -C panic=abort
 
 lflags += -static
 lflags += -pthread

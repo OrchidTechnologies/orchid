@@ -6,7 +6,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
-import 'package:orchid/api/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/pricing.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/add_hop_page.dart';

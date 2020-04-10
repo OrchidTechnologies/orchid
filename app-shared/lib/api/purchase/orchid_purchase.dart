@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/util/units.dart';
 import '../orchid_api.dart';
 
@@ -11,7 +12,6 @@ import 'orchid_pac.dart';
 /// Support in-app purchase of purchased access credits (PACs).
 /// @See the iOS and Android implementations of this class.
 abstract class OrchidPurchaseAPI {
-
   static OrchidPurchaseAPI _shared;
 
   factory OrchidPurchaseAPI() {
@@ -35,46 +35,27 @@ abstract class OrchidPurchaseAPI {
   static PAC pacTier2 = PAC('pactier2', USD(9.99), "\$9.99 USD");
   static PAC pacTier3 = PAC('pactier3', USD(19.99), "\$19.99 USD");
 
-  // Prod service endpoint configuration.
+  /// Default prod service endpoint configuration.
+  /// May be overridden in configuration with e.g.
+  /// 'pacs = {
+  ///    enabled: true,
+  ///    url: 'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/apple',
+  ///    verifyReceipt: false,
+  ///    debug: true
+  ///  }'
   static PACApiConfig prodAPIConfig = PACApiConfig(
-    url:
-        'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/submit',
-  );
+      enabled: false,
+      baseUrl: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod');
 
-  // Dev service endpoint configuration: For local development allow use of
-  // the dev (OTT) PAC service, optionally turn off receipt validation,
-  // and optionally override the product id prefix.
-  static PACApiConfig devAPIConfig = PACApiConfig(
-    isDev: true,
-    url:
-        'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/submit',
-    verifyReceipt: false,
-  );
-
-  /// Feature flag for testing PAC purchases
-  /// e.g. pacs=true
-  static Future<bool> pacsEnabled() async {
-    var config = (await OrchidAPI().getConfiguration()) ?? "";
-    return config.contains(RegExp(r'pacs *= *[Tt]rue'));
-  }
-
-  /// Return the active API config: either hard-coded or selected in settings.
-  /// e.g. pacsEnv='dev'
+  /// Return the API config allowing overrides from configuration.
   static Future<PACApiConfig> apiConfig() async {
-    var config = (await OrchidAPI().getConfiguration()) ?? "";
-    bool isDev = config.contains(RegExp('pacs[Ee]nv *= *[\'"]?[Dd]ev[\'"]?'));
-    return isDev ? devAPIConfig : prodAPIConfig;
-  }
-
-  /// Return an override for the pacs endpoint URL or null if there is none.
-  /// This URL will override the endpoint default in the prod or dev setting
-  /// and will be treated as the prod or dev endpont.
-  /// e.g. pacsUrl='https://foo.bar/gah'
-  static Future<String> overridePACServerUrl() async {
-    var config = (await OrchidAPI().getConfiguration()) ?? "";
-    var match = RegExp('pacs[Uu]rl *= *[\'"]?(https://.*)[\'"]?').firstMatch(config);
-    var url = match != null ? match.group(0) : null;
-    return url;
+    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    return PACApiConfig(
+        enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
+        baseUrl: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
+        verifyReceipt: jsConfig.evalBoolDefault(
+            'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
+        debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug));
   }
 
   // The raw value from the iOS API
@@ -89,22 +70,34 @@ abstract class OrchidPurchaseAPI {
 }
 
 class PACApiConfig {
-  bool isDev;
+  // PAC Server URL base (will have platform appended)
+  // e.g. 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod" + "/apple'
+  final String baseUrl;
 
-  // PAC Server URL
-  String url;
-
-  // Optionally disable receipt verification in dev.
-  bool verifyReceipt;
-
-  // Optionally disable receipt verification in dev.
-  String verifyReceiptValue() {
-    return verifyReceipt ? 'True' : 'False';
+  // Platform-specific PAC service URL
+  String get url {
+    if (Platform.isIOS) {
+      return baseUrl + '/apple';
+    }
+    if (Platform.isAndroid) {
+      return baseUrl + '/google';
+    }
+    throw Exception("unsupported platform");
   }
 
+  // Feature flag for PACs
+  final bool enabled;
+
+  // Optionally disable receipt verification in dev.
+  final bool verifyReceipt;
+
+  // Enable debug tracing.
+  final bool debug;
+
   PACApiConfig({
-    @required this.url,
-    this.isDev = false,
+    @required this.enabled,
+    @required this.baseUrl,
     this.verifyReceipt = true,
+    this.debug = false,
   });
 }

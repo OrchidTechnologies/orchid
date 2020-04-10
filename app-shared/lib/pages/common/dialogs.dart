@@ -122,11 +122,13 @@ class Dialogs {
         bodyText: s.configurationSaved + " " + warning);
   }
 
-  static void showConfigurationChangeFailed(BuildContext context) {
+  static void showConfigurationChangeFailed(BuildContext context,
+      {String errorText}) {
     S s = S.of(context);
     Dialogs.showAppDialog(
         context: context,
         title: s.whoops + "!",
-        bodyText: s.configurationFailedInstruction);
+        bodyText: s.configurationFailedInstruction +
+            (errorText != null ? '\n\n' + errorText : ""));
   }
 }

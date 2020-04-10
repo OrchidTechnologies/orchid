@@ -87,30 +87,31 @@ class OrchidPACServer {
       throw Exception("receipt is null");
     }
     var apiConfig = await OrchidPurchaseAPI.apiConfig();
-    var verifyReceipt = apiConfig.verifyReceiptValue();
 
     Map<String, String> params = {};
+
     // Optional dev testing params
-    if (apiConfig.isDev) {
-      params.addAll(
-          {'verify_receipt': verifyReceipt, 'product_id': tx.productId});
+    if (!apiConfig.verifyReceipt) {
+      params.addAll({'verify_receipt': 'False'});
     }
+    if (apiConfig.debug) {
+      params.addAll({'debug': 'True'});
+    }
+
     // Main params
     params.addAll({'receipt': tx.receipt});
 
     var postBody = jsonEncode(params);
     // Note: the receipt exceeds the console log line length so keep it last
     // Note: or explicitly truncate it.
-    print(
-        "iap: posting to ${apiConfig.isDev ? "Dev" : "Prod"}, json = $postBody");
+    print("iap: posting to ${apiConfig.url}, json = $postBody");
 
     // TESTING
     //await Future.delayed(Duration(seconds: 1), () {});
     //throw Exception("testing");
 
     // Do the post
-    var url = (await OrchidPurchaseAPI.overridePACServerUrl()) ?? apiConfig.url;
-    var response = await http.post(url,
+    var response = await http.post(apiConfig.url,
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: postBody);
 

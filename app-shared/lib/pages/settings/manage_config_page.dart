@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';

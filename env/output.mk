@@ -188,13 +188,23 @@ $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,
 	    --enable-static --disable-shared $(subst =@/,=$(CURDIR)/$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
 
-$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $$(call head,$$(folder))
+$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $(sysroot) $$(call head,$$(folder))
 	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
 	cd $(dir $<) && meson --cross-file $(CURDIR)/$(output)/$(arch)/meson.txt $(CURDIR)/$(dir $@) \
 	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
+
+.PHONY: $(output)/%.rustup
+$(output)/%.rustup:
+	rustup target add $*
+
+$(output)/%/$(pre)rust.$(lib): $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
+	$(specific)
+	@mkdir -p $(dir $@)
+	cd $(folder) && TARGET_CC='$(binary/$(arch))' RUSTFLAGS='$(rflags/$(arch))' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
+	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/$(pre)$(subst -,_,$(notdir $(folder))).$(lib) $@
 
 .PHONY: clean
 clean:
