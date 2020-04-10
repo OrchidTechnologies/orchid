@@ -2,7 +2,7 @@ name := Orchid
 domain := com.example
 
 teamid := XXX
-codesign := "iPhone Developer: XXX ($(teamid))"
+identity := "iPhone Developer: XXX ($(teamid))"
 
 provision := 
 

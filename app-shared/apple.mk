@@ -18,6 +18,8 @@
 # }}}
 
 
+codesign = codesign -vfs $(identity) --entitlements $(2) $(1)
+
 ifeq ($(target),mac)
 generated := macos/Flutter/GeneratedPluginRegistrant%swift
 else
@@ -72,12 +74,12 @@ signed += $(app)$(versions)$(signature)
 $(app)$(versions)$(signature): shared/empty.xml $(app)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
 	xattr -cr $(app)
-	codesign -vfs $(codesign) --entitlement $< $(app)
+	$(call codesign,$(app),$<)
 	@touch $@
 
 signed += $(embed)$(versions)$(signature)
 $(embed)$(versions)$(signature): shared/empty.xml $(embed)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
 	xattr -cr $(embed)
-	codesign -vfs $(codesign) --entitlement $< $(embed)
+	$(call codesign,$(embed),$<)
 	@touch $@
