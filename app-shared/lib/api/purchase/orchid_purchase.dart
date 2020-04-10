@@ -52,7 +52,7 @@ abstract class OrchidPurchaseAPI {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
     return PACApiConfig(
         enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
-        baseUrl: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
+        baseUrl: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.baseUrl),
         verifyReceipt: jsConfig.evalBoolDefault(
             'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
         debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug));
