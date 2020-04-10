@@ -115,6 +115,8 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
                     readOnly: widget.mode == ImportExportMode.Export,
                     autocorrect: false,
                     autofocus: false,
+                    smartQuotesType: SmartQuotesType.disabled,
+                    smartDashesType: SmartDashesType.disabled,
                     keyboardType: TextInputType.multiline,
                     style: AppText.logStyle.copyWith(color: AppColors.grey_2),
                     controller: _configFileTextController,
@@ -217,9 +219,9 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
     Dialogs.showAppDialog(
         context: context,
         title: "My Orchid Config:",
-        body:
-        Container(
-          width: 250, height: 250,
+        body: Container(
+          width: 250,
+          height: 250,
           child: Center(
             child: QrImage(
               data: _configFileTextController.text = widget.config,
@@ -227,7 +229,6 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
               size: 250.0,
             ),
           ),
-        )
-    );
+        ));
   }
 }
