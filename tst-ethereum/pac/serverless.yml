@@ -33,7 +33,6 @@ provider:
     RECEIPT_SANDBOX: 'False'
     AUTO_RETRY_WRONG_ENV_REQUEST: 'True'
     WEB3_INFURA_PROJECT_ID: ${ssm:WEB3_INFURA_PROJECT_ID~true}
-    # WEB3_INFURA_PROJECT_SECRET: ${ssm:WEB3_INFURA_PROJECT_SECRET~true}
     TABLE_NAME: PAC-${self:provider.stage}
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}

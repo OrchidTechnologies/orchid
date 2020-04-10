@@ -64,7 +64,14 @@ def check_oxt():
             threshold=warn_threshold,
         )
     else:
-        logging.debug(f"OXT Balance of {balance} is within acceptable bounds.")
+        ok(
+            message=f"OXT Balance of {balance} is within acceptable bounds.",
+            value=balance,
+        )
+
+
+def ok(message: str, value: float):
+    pass
 
 
 def warn(message: str, value: float, threshold: float):
@@ -76,6 +83,9 @@ def alert(message: str, value: float, threshold: float):
 
 
 def main(event, context):
+    logging.debug(f'Event: {event}')
+    logging.debug(f'Context: {context}')
+
     get_oxt_balance()
     get_eth_balance()
 
