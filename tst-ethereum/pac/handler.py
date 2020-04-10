@@ -178,15 +178,13 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     config = generate_config(
         secret=secret,
     )
-    escrow_usd: float = 2
-    if (total_usd < 4):
-        escrow_usd = 0.5 * total_usd
 
-    usd_per_oxt = get_usd_per_oxt()
-    oxt_per_usd = 1.0 / usd_per_oxt
-
-    total_oxt = total_usd * oxt_per_usd
-    escrow_oxt = escrow_usd * oxt_per_usd
+    usd_per_oxt = get_usd_per_oxt();
+    oxt_per_usd = 1.0 / usd_per_oxt;
+    total_oxt = total_usd * oxt_per_usd;
+    escrow_oxt = 3.0;
+    if (escrow_oxt >= 0.9*total_oxt):
+        escrow_oxt = 0.5*total_oxt;
 
     logging.debug(
         f"Funding PAC  signer: {signer}, \
