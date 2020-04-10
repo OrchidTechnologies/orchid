@@ -37,6 +37,7 @@ provider:
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
+    LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
   runtime: python3.6
   region: us-west-2
   iamRoleStatements:
