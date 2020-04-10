@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/gradients.dart';
@@ -285,17 +286,17 @@ class _QuickConnectPageState
     String message;
     switch (_connectionState) {
       case OrchidConnectionState.Disconnecting:
-        message = 'Disconnecting...';
+        message = s.orchidDisconnecting;
         break;
       case OrchidConnectionState.Connecting:
-        message = 'Connecting...';
+        message = s.orchidConnecting;
         break;
     case OrchidConnectionState.Invalid:
     case OrchidConnectionState.NotConnected:
-        message = 'Push to connect.';
+        message = s.pushToConnect;
         break;
       case OrchidConnectionState.Connected:
-        message = 'Orchid is running!';
+        message = s.orchidIsRunning;
     }
 
     Color color =
@@ -510,5 +511,8 @@ class _QuickConnectPageState
     });
   }
 
+  S get s {
+    return S.of(context);
+  }
 //@override bool get wantKeepAlive => true;
 }

@@ -67,6 +67,8 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                       child: TextFormField(
                     autocorrect: false,
                     autofocus: false,
+                    smartQuotesType: SmartQuotesType.disabled,
+                    smartDashesType: SmartDashesType.disabled,
                     keyboardType: TextInputType.multiline,
                     style: AppText.logStyle.copyWith(color: AppColors.grey_2),
                     controller: _configFileTextController,

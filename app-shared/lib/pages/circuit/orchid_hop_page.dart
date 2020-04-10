@@ -363,10 +363,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         height: 20.0 / 15.0);
 
     var balanceText = _lotteryPot?.balance != null
-        ? NumberFormat("#0.0###").format(_lotteryPot?.balance.value) + " ${s.oxt}"
+        ? NumberFormat("#0.0###").format(_lotteryPot?.balance?.value) + " ${s.oxt}"
         : "...";
     var depositText = _lotteryPot?.deposit != null
-        ? NumberFormat("#0.0###").format(_lotteryPot?.deposit.value) + " ${s.oxt}"
+        ? NumberFormat("#0.0###").format(_lotteryPot?.deposit?.value) + " ${s.oxt}"
         : "...";
 
     return Column(
