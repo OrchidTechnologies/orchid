@@ -174,8 +174,8 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
 
     logging.debug(
         f"Funding PAC  signer: {signer}, \
-total: ${total_usd}{total_oxt} oxt, \
-escrow: ${escrow_usd}{escrow_oxt} oxt ")
+total: ${total_usd}{total_oxt} OXT, \
+escrow: {escrow_oxt} OXT ")
 
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     funder_privkey = get_secret(key='PAC_FUNDER_PRIVKEY')
