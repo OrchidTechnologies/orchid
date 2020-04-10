@@ -118,7 +118,7 @@ signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
-	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
+	codesign -vfs $(codesign) --entitlement $< $(bundle)/PlugIns/$(name).VPN.appex
 	@touch $@
 
 ifneq ($(provision),)
@@ -177,7 +177,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 $(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
-	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
+	codesign -vfs $(codesign) --entitlement $< $(bundle)
 	@touch $@
 
 ifeq ($(filter nocompress,$(debug)),)

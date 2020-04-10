@@ -69,15 +69,15 @@ endif
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))
 
 signed += $(app)$(versions)$(signature)
-$(app)$(versions)$(signature): $(output)/ents-$(target)-dart.xml $(app)$(versions)$(resources)/Info.plist
+$(app)$(versions)$(signature): shared/empty.xml $(app)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
 	xattr -cr $(app)
-	codesign --deep -fs $(codesign) --entitlement $< -v $(app)
+	codesign -vfs $(codesign) --entitlement $< $(app)
 	@touch $@
 
 signed += $(embed)$(versions)$(signature)
-$(embed)$(versions)$(signature): $(output)/ents-$(target)-flutter.xml $(embed)$(versions)$(resources)/Info.plist
+$(embed)$(versions)$(signature): shared/empty.xml $(embed)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
 	xattr -cr $(embed)
-	codesign --deep -fs $(codesign) --entitlement $< -v $(embed)
+	codesign -vfs $(codesign) --entitlement $< $(embed)
 	@touch $@

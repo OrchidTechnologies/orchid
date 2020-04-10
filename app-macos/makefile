@@ -115,7 +115,7 @@ signed += $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature)
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)$(contents)/PlugIns/$(name).VPN.appex
-	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)$(contents)/PlugIns/$(name).VPN.appex
+	codesign -vfs $(codesign) --entitlement $< $(bundle)$(contents)/PlugIns/$(name).VPN.appex
 	@touch $@
 
 ifneq ($(provision),)
@@ -131,10 +131,10 @@ endif
 define _
 $(eval temp := $(bundle)$(contents)/Frameworks/$(notdir $(1)))
 signed += $(temp)$(versions)$(resources)/Info.plist
-$(temp)$(versions)$(resources)/Info.plist: $(output)/XCBuildData/build.db
+$(temp)$(versions)$(resources)/Info.plist: shared/empty.xml $(output)/XCBuildData/build.db
 	$(rsync) $(1) $(dir $(temp))
 	xattr -cr $(temp)
-	codesign --deep -fs $(codesign) -v $(temp)
+	codesign -vfs $(codesign) --entitlement $< $(temp)
 	@touch $$@
 endef
 $(foreach pod,$(pods),$(eval $(call _,$(pod))))
@@ -188,7 +188,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 $(bundle)$(contents)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
-	codesign -fs $(codesign) --entitlement $< -v $(bundle)
+	codesign -vfs $(codesign) --entitlement $< $(bundle)
 	@touch $@
 
 ifeq ($(filter nocompress,$(debug)),)
