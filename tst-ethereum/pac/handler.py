@@ -20,6 +20,9 @@ from utils import configure_logging, get_secret, is_false, is_true
 from web3.auto.infura import w3
 
 
+configure_logging()
+
+
 def get_usd_per_oxt() -> float:
     r = requests.get(url="https://api.coinbase.com/v2/prices/OXT-USD/spot")
     data = r.json()
@@ -317,6 +320,7 @@ def call_maintain_pool():
 
 
 def maintain_pool_wrapper(event=None, context=None):
+    configure_logging(level="DEBUG")
     mapping = get_product_id_mapping()
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     nonce = w3.eth.getTransactionCount(account=funder_pubkey)
@@ -381,8 +385,6 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
 
 # todo: replay prevention through receipt hash map
 def main(event, context):
-    configure_logging()
-
     logging.debug(f'event: {event}')
     logging.debug(f'context: {context}')
 
@@ -409,6 +411,7 @@ def main(event, context):
                     'config': None,
                 })
             }
+            logging.debug(f'response: {response}')
             return response
 
     verify_receipt = body.get('verify_receipt', 'False')
@@ -521,7 +524,6 @@ def apple(event, context):
 
 
 def google(event, context):
-    configure_logging()
     response = {
         "isBase64Encoded": False,
         "statusCode": 501,

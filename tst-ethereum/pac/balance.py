@@ -83,6 +83,7 @@ def alert(message: str, value: float, threshold: float):
 
 
 def main(event, context):
+    configure_logging(level="DEBUG")
     logging.debug(f'Event: {event}')
     logging.debug(f'Context: {context}')
 
