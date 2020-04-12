@@ -86,7 +86,7 @@
 	path = vpn-shared/sqlite
 	url = https://github.com/mackyle/sqlite.git
 [submodule "SPCDNS"]
-	path = vpn-shared/SPCDNS
+	path = p2p/SPCDNS
 	url = https://github.com/spc476/SPCDNS
 [submodule "wireshark"]
 	path = min-wireshark/wireshark

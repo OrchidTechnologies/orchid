@@ -177,6 +177,12 @@ linked += $(pwd)/boringtun/$(pre)rust.$(lib)
 cflags += -I$(pwd)/boringtun/src
 
 
+source += $(pwd)/SPCDNS/src/codec.c
+source += $(pwd)/SPCDNS/src/mappings.c
+source += $(pwd)/SPCDNS/src/output.c
+cflags += -I$(pwd)/SPCDNS/src
+
+
 include $(pwd)/asio.mk
 #include $(pwd)/nettle.mk
 #include $(pwd)/sequoia.mk
