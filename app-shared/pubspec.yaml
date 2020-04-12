@@ -27,10 +27,10 @@ dependencies:
       path: flare_flutter
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
   flutter_cupertino_localizations: ^1.0.1
   flutter_html: ^0.11.1
+  flutter_localizations:
+    sdk: flutter
   flutter_svg: ^0.15.0
   font_awesome_flutter: ^8.5.0
   http: ^0.12.0+3
