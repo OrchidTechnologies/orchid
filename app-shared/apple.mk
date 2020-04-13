@@ -71,14 +71,14 @@ endif
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))
 
 signed += $(app)$(versions)$(signature)
-$(app)$(versions)$(signature): shared/empty.xml $(app)$(versions)$(resources)/Info.plist
+$(app)$(versions)$(signature): shared/empty.plist $(app)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
 	xattr -cr $(app)
 	$(call codesign,$(app),$<)
 	@touch $@
 
 signed += $(embed)$(versions)$(signature)
-$(embed)$(versions)$(signature): shared/empty.xml $(embed)$(versions)$(resources)/Info.plist
+$(embed)$(versions)$(signature): shared/empty.plist $(embed)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
 	xattr -cr $(embed)
 	$(call codesign,$(embed),$<)

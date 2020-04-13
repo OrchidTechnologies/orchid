@@ -96,7 +96,7 @@ replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REV
 include shared/apple.mk
 
 
-$(output)/ents-%.xml: ents-%.xml.in
+$(output)/ents-%.plist: ents-%.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
 
@@ -112,7 +112,7 @@ $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist: info-vpn.p
 	$(replace)
 
 signed += $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature)
-$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN
+$(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(output)/ents-$(target)-vpn.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)$(contents)/PlugIns/$(name).VPN.appex
 	$(call codesign,$(bundle)$(contents)/PlugIns/$(name).VPN.appex,$<)
@@ -131,7 +131,7 @@ endif
 define _
 $(eval temp := $(bundle)$(contents)/Frameworks/$(notdir $(1)))
 signed += $(temp)$(versions)$(resources)/Info.plist
-$(temp)$(versions)$(resources)/Info.plist: shared/empty.xml $(output)/XCBuildData/build.db
+$(temp)$(versions)$(resources)/Info.plist: shared/empty.plist $(output)/XCBuildData/build.db
 	$(rsync) $(1) $(dir $(temp))
 	xattr -cr $(temp)
 	$$(call codesign,$(temp),$$<)
@@ -186,7 +186,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 	@touch $@
 
 
-$(bundle)$(contents)$(signature): $(output)/ents-$(target)-app.xml $(signed)
+$(bundle)$(contents)$(signature): $(output)/ents-$(target)-app.plist $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
 	$(call codesign,$(bundle),$<)

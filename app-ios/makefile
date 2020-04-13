@@ -98,7 +98,7 @@ lflags += -Fflutter/bin/cache/artifacts/engine/ios
 include shared/apple.mk
 
 
-$(output)/ents-%.xml: ents-%.xml.in
+$(output)/ents-%.plist: ents-%.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
 
@@ -115,7 +115,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	$(replace)
 
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
-$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
+$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.plist $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
 	$(call codesign,$(bundle)/PlugIns/$(name).VPN.appex,$<)
@@ -174,7 +174,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 	@touch $@
 
 
-$(bundle)$(signature): $(output)/ents-$(target)-app.xml $(signed)
+$(bundle)$(signature): $(output)/ents-$(target)-app.plist $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
 	$(call codesign,$(bundle),$<)
