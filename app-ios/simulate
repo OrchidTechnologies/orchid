@@ -23,8 +23,8 @@ echo "Waiting 10s for attach..."
 sleep 10
 
 # launch
-name=$(grep '^name' ../identity.mk | sed 's/^.*:=[ ]*\([^ ]\{1,\}\).*/\1/')
-domain=$(grep '^domain' ../identity.mk | sed 's/^.*:=[ ]*\([^ ]\{1,\}\).*/\1/')
+name=$(grep '^name' ../local.mk | sed 's/^.*:=[ ]*\([^ ]\{1,\}\).*/\1/')
+domain=$(grep '^domain' ../local.mk | sed 's/^.*:=[ ]*\([^ ]\{1,\}\).*/\1/')
 app="${domain}.${name}"
 xcrun simctl launch booted "$app"
 

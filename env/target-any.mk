@@ -58,7 +58,7 @@ cflags += -ftemplate-backtrace-limit=0
 beta := false
 
 include ../default.mk
--include ../identity.mk
+-include ../local.mk
 
 ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s
