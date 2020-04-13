@@ -124,7 +124,7 @@ $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/embedded.provisionprof
 	cp -f $< $@
 
 signed += $(bundle)$(contents)/embedded.provisionprofile
-$(bundle)$(contents)/embedded.provisionprofile: $(provision)main.provisionprofile
+$(bundle)$(contents)/embedded.provisionprofile: $(provision)app.provisionprofile
 	cp -f $< $@
 endif
 
@@ -150,7 +150,7 @@ $(bundle)$(contents)/PkgInfo:
 	echo -n 'APPL????' >$@
 
 signed += $(bundle)$(contents)/Info.plist
-$(bundle)$(contents)/Info.plist: info-main.plist.in
+$(bundle)$(contents)/Info.plist: info-app.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
 
@@ -186,7 +186,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 	@touch $@
 
 
-$(bundle)$(contents)$(signature): $(output)/ents-$(target)-main.xml $(signed)
+$(bundle)$(contents)$(signature): $(output)/ents-$(target)-app.xml $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
 	$(call codesign,$(bundle),$<)

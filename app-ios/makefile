@@ -127,7 +127,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision: $(provision)vpn.mo
 	cp -f $< $@
 
 signed += $(bundle)/embedded.mobileprovision
-$(bundle)/embedded.mobileprovision: $(provision)main.mobileprovision
+$(bundle)/embedded.mobileprovision: $(provision)app.mobileprovision
 	cp -f $< $@
 endif
 endif
@@ -140,7 +140,7 @@ $(bundle)/$(name): $(patsubst %,$(output)/$(default)/%,$(local)) $(output)/XCBui
 	@$(cxx/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) $(output)/Release-$(sdk)/libPods-Runner.a $(output)/Release-$(sdk)/*/lib*.a
 
 signed += $(bundle)/Info.plist
-$(bundle)/Info.plist: info-main.plist.in
+$(bundle)/Info.plist: info-app.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
 
@@ -174,7 +174,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 	@touch $@
 
 
-$(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
+$(bundle)$(signature): $(output)/ents-$(target)-app.xml $(signed)
 	@rm -rf $(dir $@)
 	xattr -cr $(bundle)
 	$(call codesign,$(bundle),$<)
