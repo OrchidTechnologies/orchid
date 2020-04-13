@@ -45,9 +45,7 @@ $(output)/jnilibs/%/liborchid.so: $(patsubst %,$(output)/$$*/%,$(object) $(linke
 
 assets := $(output)/assets/flutter_assets
 
-generated := src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java
-
-include shared/flutter.mk
+include shared/target-and.mk
 
 ifneq ($(precompiled),)
 $(output)/%/aot/app.so: $(dart)

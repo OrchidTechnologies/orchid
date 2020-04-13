@@ -65,16 +65,6 @@ local += app.mm.o
 local += $(patsubst %,%.o,$(swifts))
 $(foreach swift,$(swifts),$(call depend,$(swift).o,macos/Pods/Manifest.lock))
 
-cflags += -Imacos/Pods/Headers/Public
-
-macos/Pods/Manifest.lock: macos/Podfile shared/gui/.flutter-plugins
-	cd macos && pod install
-	touch $@
-
-$(output)/XCBuildData/build.db: macos/Pods/Manifest.lock
-	xcodebuild -project macos/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
-
-
 include env/output.mk
 
 $(output)/%.swift.o: $$(specific) $$(folder).swift $$(code) $(swifts)
@@ -89,16 +79,8 @@ define _
 endef
 $(each)
 
+include shared/target-mac.mk
 
-replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if test -n "$(filter noaot,$(debug))"; then sed -e 's/^@D@/   /'; else sed -e '/^@D@/d'; fi | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
-
-
-include shared/apple.mk
-
-
-$(output)/ents-%.plist: ents-%.plist.in
-	@mkdir -p $(dir $@)
-	$(replace)
 
 
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN: $(patsubst %,$(output)/$(default)/%,$(object) $(linked))

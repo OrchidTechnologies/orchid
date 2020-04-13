@@ -20,13 +20,7 @@
 
 codesign = codesign -vfs $(identity) --entitlements $(2) $(1)
 
-ifeq ($(target),mac)
-generated := macos/Flutter/GeneratedPluginRegistrant%swift
-else
-generated := ios/Runner/GeneratedPluginRegistrant%m
-endif
-
-include shared/flutter.mk
+include shared/target-all.mk
 
 cflags += -Fflutter/bin/cache/artifacts/engine/$(platform)
 lflags += -Fflutter/bin/cache/artifacts/engine/$(platform)
@@ -83,3 +77,20 @@ $(embed)$(versions)$(signature): shared/empty.plist $(embed)$(versions)$(resourc
 	xattr -cr $(embed)
 	$(call codesign,$(embed),$<)
 	@touch $@
+
+
+cflags += -I$(assemble)/Pods/Headers/Public
+
+$(assemble)/Pods/Manifest.lock: $(assemble)/Podfile shared/gui/.flutter-plugins
+	cd $(assemble) && pod install
+	touch $@
+
+$(output)/XCBuildData/build.db: $(assemble)/Pods/Manifest.lock
+	xcodebuild -project $(assemble)/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
+
+
+replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if test -n "$(filter noaot,$(debug))"; then sed -e 's/^@D@/   /'; else sed -e '/^@D@/d'; fi | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
+
+$(output)/ents-%.plist: ents-%.plist.in
+	@mkdir -p $(dir $@)
+	$(replace)

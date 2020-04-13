@@ -71,16 +71,6 @@ local += app.mm.o
 local += ios/Runner/GeneratedPluginRegistrant.m.o
 $(call depend,ios/Runner/GeneratedPluginRegistrant.m.o,ios/Pods/Manifest.lock)
 
-cflags += -Iios/Pods/Headers/Public
-
-ios/Pods/Manifest.lock: ios/Podfile shared/gui/.flutter-plugins
-	cd ios && pod install
-	touch $@
-
-$(output)/XCBuildData/build.db: ios/Pods/Manifest.lock
-	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
-
-
 include env/output.mk
 
 define _
@@ -89,18 +79,11 @@ endef
 $(each)
 
 
-replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if test -n "$(filter noaot,$(debug))"; then sed -e 's/^@D@/   /'; else sed -e '/^@D@/d'; fi | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
-
-
 cflags += -Fflutter/bin/cache/artifacts/engine/ios
 lflags += -Fflutter/bin/cache/artifacts/engine/ios
 
-include shared/apple.mk
+include shared/target-ios.mk
 
-
-$(output)/ents-%.plist: ents-%.plist.in
-	@mkdir -p $(dir $@)
-	$(replace)
 
 
 ifneq ($(target),sim)
