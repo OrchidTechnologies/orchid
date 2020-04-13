@@ -67,12 +67,12 @@ $(foreach swift,$(swifts),$(call depend,$(swift).o,macos/Pods/Manifest.lock))
 
 cflags += -Imacos/Pods/Headers/Public
 
-macos/Pods/Manifest.lock: macos/Podfile .flutter-plugins
+macos/Pods/Manifest.lock: macos/Podfile shared/gui/.flutter-plugins
 	cd macos && pod install
 	touch $@
 
 $(output)/XCBuildData/build.db: macos/Pods/Manifest.lock
-	xcodebuild -project macos/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=../../$(output)
+	xcodebuild -project macos/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
 
 
 include env/output.mk
@@ -153,6 +153,7 @@ signed += $(bundle)$(contents)/Info.plist
 $(bundle)$(contents)/Info.plist: info-main.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
+
 
 signed += $(bundle)$(contents)$(resources)/Base.lproj/MainMenu.nib
 $(bundle)$(contents)$(resources)/Base.lproj/MainMenu.nib: MainMenu.xib

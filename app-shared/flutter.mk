@@ -18,7 +18,7 @@
 # }}}
 
 
-flutter := flutter/bin/flutter --suppress-analytics --verbose
+flutter := $(CURDIR)/flutter/bin/flutter --suppress-analytics --verbose
 
 flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(call head,flutter)
 	cd flutter && git clean -fxd
@@ -26,9 +26,10 @@ flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(c
 	cd flutter && bin/flutter precache --macos
 	cd flutter && bin/flutter update-packages
 
-pubspec%lock %flutter-plugins %packages $(generated): pubspec.yaml flutter/packages/flutter/pubspec.lock
-	mkdir -p $(assemble)
-	$(flutter) pub get
+shared/gui/%flutter-plugins %packages $(generated): shared/gui/pubspec.yaml shared/gui/pubspec.lock flutter/packages/flutter/pubspec.lock
+	mkdir -p shared/gui/android shared/gui/ios shared/gui/macos
+	cd shared/gui && $(flutter) pub get
+	@touch shared/gui/.packages
 
 ifeq ($(filter noaot,$(debug)),)
 mode := release
@@ -43,7 +44,5 @@ endif
 engine := flutter/bin/cache/artifacts/engine/$(platform)$(engine)
 
 dart := $(shell find lib/ -name '*.dart')
-dart += flutter/packages/flutter/pubspec.lock
-dart += pubspec.lock
-dart += .flutter-plugins
+dart += shared/gui/.flutter-plugins
 dart += .packages

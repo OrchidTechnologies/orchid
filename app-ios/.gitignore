@@ -1,14 +1,3 @@
-.idea
-/android
-/build
 /.dart_tool
 /flutter_*.log
-/.flutter-plugins
-/.flutter-plugins-dependencies
-/ios/.symlinks
-/ios/build
-/ios/Flutter
-/ios/Pods
-/ios/Runner
 /out-*
-/.packages

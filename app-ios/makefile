@@ -73,12 +73,12 @@ $(call depend,ios/Runner/GeneratedPluginRegistrant.m.o,ios/Pods/Manifest.lock)
 
 cflags += -Iios/Pods/Headers/Public
 
-ios/Pods/Manifest.lock: ios/Podfile .flutter-plugins
+ios/Pods/Manifest.lock: ios/Podfile shared/gui/.flutter-plugins
 	cd ios && pod install
 	touch $@
 
 $(output)/XCBuildData/build.db: ios/Pods/Manifest.lock
-	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=../../$(output)
+	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
 
 
 include env/output.mk
@@ -144,6 +144,7 @@ $(bundle)/Info.plist: info-main.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
 
+
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
 	@mkdir -p $(output)/info
@@ -152,7 +153,6 @@ $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
 	    --module Runner --auto-activate-custom-fonts \
 	    --output-partial-info-plist $(output)/info/ibtool.plist \
 	    --compilation-directory $(dir $@) $< 2>&1 | cat
-
 
 signed += $(bundle)/Assets.car
 $(bundle)/Assets.car: $(wildcard Assets.xcassets/*/*)

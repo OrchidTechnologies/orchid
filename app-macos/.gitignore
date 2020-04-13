@@ -1,9 +1,3 @@
-.idea
 /.dart_tool
 /flutter_*.log
-/.flutter-plugins
-/.flutter-plugins-dependencies
-/macos/Flutter
-/macos/Pods
 /out-*
-/.packages

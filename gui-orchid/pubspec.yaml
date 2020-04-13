@@ -56,7 +56,6 @@ flutter:
     - assets/docs/help/
     - assets/flare/
     - assets/images/
-    - assets/shared/
 
 flutter_intl:
   enabled: true
