@@ -166,6 +166,14 @@ class Selector final :
         return name_;
     }
 
+    auto Decode(const Buffer &buffer) {
+        auto [tag, window] = Take<Number<uint32_t>, Window>(buffer);
+        orc_assert(tag == *this);
+        const auto result(Coded<std::tuple<Args_...>>::Decode(window));
+        window.Stop();
+        return result;
+    }
+
     task<Result_> Call(const Endpoint &endpoint, const Argument &number, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);

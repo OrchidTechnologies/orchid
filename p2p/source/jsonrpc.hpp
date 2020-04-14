@@ -493,6 +493,11 @@ struct Coded<std::vector<Type_>, void> {
         signature << "[]";
     }
 
+    static std::vector<Type_> Decode(Window &window) {
+        orc_assert(Coded<uint256_t>::Decode(window) == 0);
+        return {};
+    }
+
     static void Encode(Builder &builder, const std::vector<Type_> &values) {
         Coded<uint256_t>::Encode(builder, values.size());
         for (const auto &value : values)
