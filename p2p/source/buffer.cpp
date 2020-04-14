@@ -147,7 +147,7 @@ Beam Bless(const std::string &data) {
     return beam;
 }
 
-bool operator ==(const Beam &lhs, const Buffer &rhs) {
+bool operator ==(const Region &lhs, const Buffer &rhs) {
     auto here(lhs.data());
     auto left(lhs.size());
 
