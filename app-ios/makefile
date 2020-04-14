@@ -100,9 +100,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.plist $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
-	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
-	$(call codesign,$(bundle)/PlugIns/$(name).VPN.appex,$<)
-	@touch $@
+	$(call codesign,$(bundle)/PlugIns/$(name).VPN.appex,$<,$@)
 
 ifneq ($(provision),)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision
@@ -159,9 +157,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 
 $(bundle)$(signature): $(output)/ents-$(target)-app.plist $(signed)
 	@rm -rf $(dir $@)
-	xattr -cr $(bundle)
-	$(call codesign,$(bundle),$<)
-	@touch $@
+	$(call codesign,$(bundle),$<,$@)
 
 ifeq ($(filter nocompress,$(debug)),)
 zflags := -9

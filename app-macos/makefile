@@ -96,9 +96,7 @@ $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist: info-vpn.p
 signed += $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature)
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(output)/ents-$(target)-vpn.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN
 	@rm -rf $(dir $@)
-	xattr -cr $(bundle)$(contents)/PlugIns/$(name).VPN.appex
-	$(call codesign,$(bundle)$(contents)/PlugIns/$(name).VPN.appex,$<)
-	@touch $@
+	$(call codesign,$(bundle)$(contents)/PlugIns/$(name).VPN.appex,$<,$@)
 
 ifneq ($(provision),)
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/embedded.provisionprofile
@@ -114,10 +112,9 @@ define _
 $(eval temp := $(bundle)$(contents)/Frameworks/$(notdir $(1)))
 signed += $(temp)$(versions)$(resources)/Info.plist
 $(temp)$(versions)$(resources)/Info.plist: shared/empty.plist $(output)/XCBuildData/build.db
+	@mkdir -p $(dir $(temp))
 	$(rsync) $(1) $(dir $(temp))
-	xattr -cr $(temp)
-	$$(call codesign,$(temp),$$<)
-	@touch $$@
+	$$(call codesign,$(temp),$$<,$$@)
 endef
 $(foreach pod,$(pods),$(eval $(call _,$(pod))))
 
@@ -170,9 +167,7 @@ $(bundle)$(contents)$(resources)/%: resource/%
 
 $(bundle)$(contents)$(signature): $(output)/ents-$(target)-app.plist $(signed)
 	@rm -rf $(dir $@)
-	xattr -cr $(bundle)
-	$(call codesign,$(bundle),$<)
-	@touch $@
+	$(call codesign,$(bundle),$<,$@)
 
 ifeq ($(filter nocompress,$(debug)),)
 zflags := -9

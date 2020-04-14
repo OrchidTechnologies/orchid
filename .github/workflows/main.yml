@@ -9,19 +9,9 @@ jobs:
 
     steps:
 
-    - name: brew install
-      run: brew install meson autoconf automake libtool
-    - name: brew link
-      run: brew link --force gettext
-    - name: pip install
-      run: pip install pyyaml
-
-    - name: git config
-      run: |
-        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
-        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
-        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup-mac.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
@@ -40,34 +30,58 @@ jobs:
         path: srv-shared/out-mac/x86_64/orchidd
 
 
+  build-app:
+    runs-on: macos-latest
+
+    steps:
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup-mac.sh
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
+    - name: pod install
+      run: make -C app-macos out-mac/XCBuildData/build.db
+    - name: make macOS .app
+      run: debug=ldid make -j3 -C app-macos
+
+
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup-mac.sh
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
+    - name: make iOS .ipa
+      run: debug=ldid make -j3 -C app-ios
+
+
   build-lnx:
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install bison flex gettext gperf groff ninja-build python3-pip python3-setuptools tcl
-    - name: pip install meson
-      run: sudo -E pip3 install meson==0.51.2
-
-    - name: git config
-      run: |
-        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
-        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
-        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup-lnx.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
     - name: make Linux client
-      run: make -j3 -C cli-shared debug=crossndk
+      run: debug=crossndk make -j3 -C cli-shared
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
         path: cli-shared/out-lnx/x86_64/orchid
 
     - name: make Linux server
-      run: make -j3 -C srv-shared debug=crossndk
+      run: debug=crossndk make -j3 -C srv-shared
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx
@@ -80,18 +94,11 @@ jobs:
     steps:
 
     - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install bison flex gettext gperf groff ninja-build python3-pip python3-setuptools tcl
-    - name: pip install meson
-      run: sudo -E pip3 install meson==0.51.2
-    - name: apt-get install
       run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install mingw-w64
 
-    - name: git config
-      run: |
-        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
-        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
-        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup-lnx.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
@@ -111,21 +118,13 @@ jobs:
 
     steps:
 
-    - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install bison flex gettext gperf groff ninja-build python3-pip python3-setuptools tcl
-    - name: pip install meson
-      run: sudo -E pip3 install meson==0.51.2
-
-    - name: git config
-      run: |
-        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
-        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
-        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup-lnx.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
-    - name: make Android APK
+    - name: make Android .apk
       run: make -j3 -C app-android
     - uses: actions/upload-artifact@v1
       with:

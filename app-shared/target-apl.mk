@@ -18,7 +18,18 @@
 # }}}
 
 
-codesign = codesign -vfs $(identity) --entitlements $(2) $(1)
+ifeq ($(filter ldid,$(debug)),)
+codesign = xattr -cr $(1) && codesign -vfs $(identity) --entitlements $(2) $(1)
+else
+ifneq ($(identity),)
+# XXX: the ldid in homebrew doesn't actually work :(
+codesign = ldid -K$(identity) -S$(2) $(1)
+else
+codesign = mkdir -p $(dir $(3))
+endif
+endif
+
+codesign += && touch $(3)
 
 include shared/target-all.mk
 
@@ -67,16 +78,12 @@ endif
 signed += $(app)$(versions)$(signature)
 $(app)$(versions)$(signature): shared/empty.plist $(app)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
-	xattr -cr $(app)
-	$(call codesign,$(app),$<)
-	@touch $@
+	$(call codesign,$(app),$<,$@)
 
 signed += $(embed)$(versions)$(signature)
 $(embed)$(versions)$(signature): shared/empty.plist $(embed)$(versions)$(resources)/Info.plist
 	@rm -rf $(dir $@)
-	xattr -cr $(embed)
-	$(call codesign,$(embed),$<)
-	@touch $@
+	$(call codesign,$(embed),$<,$@)
 
 
 cflags += -I$(assemble)/Pods/Headers/Public
