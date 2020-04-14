@@ -2,7 +2,8 @@ import logging
 import os
 
 from abis import token_abi
-from utils import configure_logging, get_secret
+from datadog_lambda.metric import lambda_metric
+from utils import configure_logging, get_secret, is_true
 from web3.auto.infura import w3
 
 
@@ -32,6 +33,17 @@ def get_oxt_balance(address=get_secret(key='PAC_FUNDER_PUBKEY')) -> float:
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
+    if is_true(os.environ.get('ENABLE_MONITORING', '')):
+        lambda_metric(
+            f"orchid.pac.balance.{token_symbol.lower()}",
+            balance,
+            tags=[
+                f'account:{address}',
+                f'token_name:{token_name}',
+                f'token_symbol:{token_symbol}',
+                f'token_decimals:{token_decimals}',
+            ]
+        )
     return balance
 
 
@@ -44,6 +56,17 @@ def get_eth_balance(address=get_secret(key='PAC_FUNDER_PUBKEY')) -> float:
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
+    if is_true(os.environ.get('ENABLE_MONITORING', '')):
+        lambda_metric(
+            f"orchid.pac.balance.{token_symbol.lower()}",
+            balance,
+            tags=[
+                f'account:{address}',
+                f'token_name:{token_name}',
+                f'token_symbol:{token_symbol}',
+                f'token_decimals:{token_decimals}',
+            ]
+        )
     return balance
 
 

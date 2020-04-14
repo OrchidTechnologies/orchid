@@ -1,6 +1,6 @@
 service: pac
-app: pac
-org: orchid
+#app: pac
+#org: orchid
 
 custom:
   pythonRequirements:
@@ -23,6 +23,13 @@ custom:
     LOG_LEVEL:
       prod: "WARNING"
       dev: "DEBUG"
+    ENABLE_MONITORING:
+      prod: 'True'
+      dev: 'True'
+  datadog:
+    addLayers: true
+    flushMetricsToLogs: true
+    apiKey: ${ssm:DATADOG_API_KEY~true}
 provider:
   name: aws
   stage: ${opt:stage,'dev'}
@@ -38,6 +45,7 @@ provider:
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
     LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
+    ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
   runtime: python3.6
   region: us-west-2
   iamRoleStatements:
@@ -92,7 +100,10 @@ functions:
       - schedule: cron(0/15 * * * ? *)
   balance:
     handler: balance.main
+    events:
+      - schedule: cron(5/15 * * * ? *)
 plugins:
+  - serverless-plugin-datadog
   - serverless-pseudo-parameters
   - serverless-python-requirements
 package:
