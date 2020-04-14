@@ -1101,6 +1101,285 @@ class S {
       args: [],
     );
   }
+
+  String get disconnecting {
+    return Intl.message(
+      'Disconnecting...',
+      name: 'disconnecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get connecting {
+    return Intl.message(
+      'Connecting...',
+      name: 'connecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get pushToConnect {
+    return Intl.message(
+      'Push to connect.',
+      name: 'pushToConnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get orchidIsRunning {
+    return Intl.message(
+      'Orchid is running!',
+      name: 'orchidIsRunning',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get purchase {
+    return Intl.message(
+      'Purchase',
+      name: 'purchase',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get lowUsage {
+    return Intl.message(
+      'Low Usage',
+      name: 'lowUsage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get internetBrowsing {
+    return Intl.message(
+      'Internet browsing',
+      name: 'internetBrowsing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get lowVideoStraming {
+    return Intl.message(
+      'Low video streaming',
+      name: 'lowVideoStraming',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get averageUsage {
+    return Intl.message(
+      'Average Usage',
+      name: 'averageUsage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get moderateVideoStreaming {
+    return Intl.message(
+      'Moderate video streaming',
+      name: 'moderateVideoStreaming',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get highUsage {
+    return Intl.message(
+      'High Usage',
+      name: 'highUsage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get videoStreamingCalls {
+    return Intl.message(
+      'Video Streaming / calls',
+      name: 'videoStreamingCalls',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get gaming {
+    return Intl.message(
+      'Gaming',
+      name: 'gaming',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get pacPurchaseWaiting {
+    return Intl.message(
+      'PAC Purchase Waiting',
+      name: 'pacPurchaseWaiting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get retry {
+    return Intl.message(
+      'Retry',
+      name: 'retry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get getHelpResolvingIssue {
+    return Intl.message(
+      'Get help resolving this issue.',
+      name: 'getHelpResolvingIssue',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get copyDebugInfo {
+    return Intl.message(
+      'Copy Debug Info',
+      name: 'copyDebugInfo',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get contactOrchid {
+    return Intl.message(
+      'Contact Orchid',
+      name: 'contactOrchid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get remove {
+    return Intl.message(
+      'Remove',
+      name: 'remove',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get deleteTransaction {
+    return Intl.message(
+      'Delete Transaction',
+      name: 'deleteTransaction',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get clearThisInProgressTransactionExplain {
+    return Intl.message(
+      'Clear this in-progress transaction. This will not refund your in-app purchase.  You must contact Orchid to resolve the issue.',
+      name: 'clearThisInProgressTransactionExplain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get chooseYourPurchase {
+    return Intl.message(
+      'Choose your purchase',
+      name: 'chooseYourPurchase',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get basedOnYourBandwidth {
+    return Intl.message(
+      'Based on your bandwidth usage',
+      name: 'basedOnYourBandwidth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get preparingPurchase {
+    return Intl.message(
+      'Preparing Purchase',
+      name: 'preparingPurchase',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get fetchingPurchasedPAC {
+    return Intl.message(
+      'Fetching Purchased PAC',
+      name: 'fetchingPurchasedPAC',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get retryingPurchasedPAC {
+    return Intl.message(
+      'Retrying Purchased PAC',
+      name: 'retryingPurchasedPAC',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get retryPurchasedPAC {
+    return Intl.message(
+      'Retry Purchased PAC',
+      name: 'retryPurchasedPAC',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get setUpAccount {
+    return Intl.message(
+      'Set up Account',
+      name: 'setUpAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get purchaseError {
+    return Intl.message(
+      'Purchase Error',
+      name: 'purchaseError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get thereWasAnErrorInPurchasingContact {
+    return Intl.message(
+      'There was an error in purchasing.  Please contact Orchid Support.',
+      name: 'thereWasAnErrorInPurchasingContact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get retryingPurchasedPac {
+    return Intl.message(
+      'Retrying Purchased PAC',
+      name: 'retryingPurchasedPac',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

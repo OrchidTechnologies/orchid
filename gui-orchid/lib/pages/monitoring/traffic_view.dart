@@ -120,6 +120,8 @@ class _TrafficViewState extends State<TrafficView>
       padding: EdgeInsets.only(left: 8.0, bottom: 12.0),
       child: TextFormField(
         autocorrect: false,
+        smartQuotesType: SmartQuotesType.disabled,
+        smartDashesType: SmartDashesType.disabled,
         controller: _searchTextController,
         decoration: InputDecoration(
           hintText: s.search,

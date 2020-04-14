@@ -1,19 +1,30 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/pages/circuit/add_hop_page.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/util/hex.dart';
 
-import 'orchid_api.dart';
+import '../orchid_api.dart';
+import 'js_config.dart';
 
-// TODO: Refactor this file and add unit tests.
-/// Support for generating the JavaScript configuration file used by the Orchid VPN.
+// TODO: The parsing in this class should be simplified using the (real) JSConfig parser.
+/// Support for reading and generating the JavaScript configuration file used by the Orchid VPN.
 class OrchidVPNConfig {
+
+  /// Return a JS queryable representation of the user visible configuration
+  /// If there is an error parsing the configuation an empty JSConfig is returned.
+  static Future<JSConfig> getUserConfigJS() async {
+    try {
+      return JSConfig(await OrchidAPI().getConfiguration());
+    } catch(err) {
+      print("Error parsing user entered configuration as JS: $err");
+    }
+    return JSConfig("");
+  }
+
   /// Generate the hops list portion of the VPN config managed by the GUI.
   /// The desired format is a JavaScript object literal assignment, e.g.:
   /// hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}, {protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
@@ -70,9 +81,8 @@ class OrchidVPNConfig {
   /// Parse JavaScript text containing a variable assignment expression for the `hops`
   /// configuration list and return the Circuit.  e.g.
   ///   hops = [{curator: "partners.orch1d.eth", protocol: "orchid", funder: "0x405bc10e04e3f487e9925ad5815e4406d78b769e", secret: "894643a2de07568a51f7fe59650365dea0e04376819ecff08e686face92ca16e"}];
-  /// Note: For now we are transforming the JS object literal into JSON.
-  /// Note: When this grows more complex we will switch to the samurai JS parser:
-  /// Note: https://github.com/samurai-dart/samurai
+  /// TODO: For now we are transforming the JS object literal into JSON for parsing.
+  /// TODO: We should update this to use our JSConfig (real) JS parser.
   static ParseCircuitResult parseCircuit(
       String js, List<StoredEthereumKey> existingKeys) {
 
@@ -113,6 +123,7 @@ class OrchidVPNConfig {
   }
 
   /// Parse an imported Orchid account from JS (input text containing a valid account assignment).
+  /// TODO: We should update this to use our JSConfig (real) JS parser.
   static ParseOrchidAccountResult parseOrchidAccount(
       String js, List<StoredEthereumKey> existingKeys) {
     // Remove newlines, etc.

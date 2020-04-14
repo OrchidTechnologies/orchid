@@ -115,6 +115,8 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                           child: TextFormField(
                         autocorrect: false,
                         autofocus: false,
+                        smartQuotesType: SmartQuotesType.disabled,
+                        smartDashesType: SmartDashesType.disabled,
                         keyboardType: TextInputType.multiline,
                         style:
                             AppText.logStyle.copyWith(color: AppColors.grey_2),

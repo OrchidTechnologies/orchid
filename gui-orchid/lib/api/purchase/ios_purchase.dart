@@ -93,7 +93,8 @@ class IOSOrchidPurchaseAPI
             print("iap: was cancelled");
             PacTransaction.shared.clear();
           } else {
-            print("iap: IAP was Failed, error: ${tx.error}");
+            print(
+                "iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
             PacTransaction.shared.set(PacTransaction.error("iap failed"));
           }
           break;
@@ -112,7 +113,8 @@ class IOSOrchidPurchaseAPI
 
     // Recover from a re-install with a completed iap pending
     if (pacTx == null) {
-      print("iap: Found completed iap purchase with no pending PAC tx. Cleaning.");
+      print(
+          "iap: Found completed iap purchase with no pending PAC tx. Cleaning.");
       // Note: If this happens we have lost the receipt data in the bundle.
       // Note: For now let's assume the user wanted out and finish the tx.
       await PacTransaction.shared.clear();
@@ -123,7 +125,7 @@ class IOSOrchidPurchaseAPI
     try {
       pacTx.receipt = await SKReceiptManager.retrieveReceiptData();
       pacTx.save();
-    } catch(err) {
+    } catch (err) {
       print("iap: error getting receipt data for comleted iap");
     }
 
@@ -138,8 +140,9 @@ class IOSOrchidPurchaseAPI
     ];
     print("iap: product ids requested: $productIds");
     SkProductResponseWrapper productResponse =
-    await SKRequestMaker().startProductRequest(productIds);
-    print("iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
+        await SKRequestMaker().startProductRequest(productIds);
+    print(
+        "iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
   }
 
   @override

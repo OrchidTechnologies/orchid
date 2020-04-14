@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:orchid/api/configuration/js_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -66,6 +67,8 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                       child: TextFormField(
                     autocorrect: false,
                     autofocus: false,
+                    smartQuotesType: SmartQuotesType.disabled,
+                    smartDashesType: SmartDashesType.disabled,
                     keyboardType: TextInputType.multiline,
                     style: AppText.logStyle.copyWith(color: AppColors.grey_2),
                     controller: _configFileTextController,
@@ -106,6 +109,13 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
 
   void _save() {
     var newConfig = _configFileTextController.text;
+    try {
+      JSConfig(newConfig); // Validate by parsing it.
+    } catch (err) {
+      print("Error parsing config: $err");
+      Dialogs.showConfigurationChangeFailed(context, errorText: err.toString());
+      return;
+    }
     OrchidAPI().setConfiguration(newConfig).then((bool saved) {
       _readyToSave.add(false);
       if (saved) {

@@ -164,20 +164,18 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     config = generate_config(
         secret=secret,
     )
-    escrow_usd: float = 2
-    if (total_usd < 4):
-        escrow_usd = 0.5 * total_usd
 
-    usd_per_oxt = get_usd_per_oxt()
-    oxt_per_usd = 1.0 / usd_per_oxt
-
-    total_oxt = total_usd * oxt_per_usd
-    escrow_oxt = escrow_usd * oxt_per_usd
+    usd_per_oxt = get_usd_per_oxt();
+    oxt_per_usd = 1.0 / usd_per_oxt;
+    total_oxt = total_usd * oxt_per_usd;
+    escrow_oxt = 3.0;
+    if (escrow_oxt >= 0.9*total_oxt):
+        escrow_oxt = 0.5*total_oxt;
 
     logging.debug(
         f"Funding PAC  signer: {signer}, \
-total: ${total_usd}{total_oxt} oxt, \
-escrow: ${escrow_usd}{escrow_oxt} oxt ")
+total: ${total_usd}{total_oxt} OXT, \
+escrow: {escrow_oxt} OXT ")
 
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     funder_privkey = get_secret(key='PAC_FUNDER_PRIVKEY')
@@ -322,6 +320,7 @@ def call_maintain_pool():
 
 
 def maintain_pool_wrapper(event=None, context=None):
+    configure_logging(level="DEBUG")
     mapping = get_product_id_mapping()
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     nonce = w3.eth.getTransactionCount(account=funder_pubkey)
@@ -412,6 +411,7 @@ def main(event, context):
                     'config': None,
                 })
             }
+            logging.debug(f'response: {response}')
             return response
 
     verify_receipt = body.get('verify_receipt', 'False')

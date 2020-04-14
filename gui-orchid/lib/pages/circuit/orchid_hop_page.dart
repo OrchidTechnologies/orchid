@@ -50,7 +50,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   KeySelectionItem _selectedKeyItem;
   bool _showBalance = false;
   LotteryPot _lotteryPot; // initially null
+  DateTime _lotteryPotLastUpdate;
   Timer _balanceTimer;
+  bool _balancePollInProgress = false;
 
   @override
   void initState() {
@@ -363,10 +365,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         height: 20.0 / 15.0);
 
     var balanceText = _lotteryPot?.balance != null
-        ? NumberFormat("#0.0###").format(_lotteryPot?.balance.value) + " ${s.oxt}"
+        ? NumberFormat("#0.0###").format(_lotteryPot?.balance?.value) +
+            " ${s.oxt}"
         : "...";
     var depositText = _lotteryPot?.deposit != null
-        ? NumberFormat("#0.0###").format(_lotteryPot?.deposit.value) + " ${s.oxt}"
+        ? NumberFormat("#0.0###").format(_lotteryPot?.deposit?.value) +
+            " ${s.oxt}"
         : "...";
 
     return Column(
@@ -580,6 +584,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   void _pollBalance() async {
+    if (_balancePollInProgress) {
+      return;
+    }
+    _balancePollInProgress = true;
     print("polling balance");
     try {
       // funder and signer from the stored hop
@@ -587,15 +595,36 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       StoredEthereumKey signerKey = await _hop()?.keyRef?.get();
       EthereumAddress signer = EthereumAddress.from(signerKey.keys().address);
       // Fetch the pot balance
-      LotteryPot pot = await CloudFlare.getLotteryPot(funder, signer);
-      setState(() {
-        _lotteryPot = pot;
-      });
+      LotteryPot pot;
+      try {
+        pot = await CloudFlare.getLotteryPot(funder, signer)
+            .timeout(Duration(seconds: 60));
+        print("got pot: $pot");
+      } catch (err) {
+        print("Error fetching lottery pot: $err");
+        return;
+      }
+      if (mounted) {
+        setState(() {
+          _lotteryPot = pot;
+        });
+      }
+      _lotteryPotLastUpdate = DateTime.now();
     } catch (err) {
       print("Can't fetch balance: $err");
-      setState(() {
-        _lotteryPot = null; // no balance available
-      });
+
+      // Allow a stale balance for a period of time.
+      if (_lotteryPotLastUpdate != null &&
+          _lotteryPotLastUpdate.difference(DateTime.now()) >
+              Duration(hours: 1)) {
+        if (mounted) {
+          setState(() {
+            _lotteryPot = null; // no balance available
+          });
+        }
+      }
+    } finally {
+      _balancePollInProgress = false;
     }
   }
 
