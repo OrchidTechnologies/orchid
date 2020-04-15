@@ -363,7 +363,7 @@ def main(event, context):
 
     receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
     if (is_true(verify_receipt)):
-        result = receipt_hash_table.query(KeyConditionExpression=Key('receipt').eq(receipt_hash))
+        result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
         if (result['Count'] > 0):  # we found a match - reject on duplicate
             response = {
                 "isBase64Encoded": False,
