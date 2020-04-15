@@ -1,5 +1,4 @@
 import boto3
-import datetime
 import json
 import logging
 import os
@@ -10,13 +9,13 @@ import web3.exceptions  # noqa: F401
 import uuid
 import hashlib
 
+from abis import lottery_abi, token_abi
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
-from abis import lottery_abi, token_abi
 from typing import Any, Dict, Optional, Tuple
-from utils import configure_logging, get_secret, is_false, is_true
+from utils import configure_logging, get_secret, is_true
 from web3.auto.infura import w3
 
 
@@ -165,12 +164,12 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
         secret=secret,
     )
 
-    usd_per_oxt = get_usd_per_oxt();
-    oxt_per_usd = 1.0 / usd_per_oxt;
-    total_oxt = total_usd * oxt_per_usd;
-    escrow_oxt = 3.0;
+    usd_per_oxt = get_usd_per_oxt()
+    oxt_per_usd = 1.0 / usd_per_oxt
+    total_oxt = total_usd * oxt_per_usd
+    escrow_oxt = 3.0
     if (escrow_oxt >= 0.9*total_oxt):
-        escrow_oxt = 0.5*total_oxt;
+        escrow_oxt = 0.5*total_oxt
 
     logging.debug(
         f"Funding PAC  signer: {signer}, \
@@ -310,26 +309,6 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     return None, None, None
 
 
-def call_maintain_pool():
-    client = boto3.client('lambda')
-    response = client.invoke(
-        FunctionName=f"pac-{os.environ['STAGE']}-MaintainPool",
-        InvocationType='Event',
-    )
-    return response
-
-
-def maintain_pool_wrapper(event=None, context=None):
-    configure_logging(level="DEBUG")
-    mapping = get_product_id_mapping()
-    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
-    nonce = w3.eth.getTransactionCount(account=funder_pubkey)
-    for product_id in mapping:
-        price = mapping[product_id]
-        maintain_pool(price=price, nonce=nonce)
-        nonce += 3
-
-
 def get_transaction_confirm_count(txhash):
     funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
     blocknum = w3.eth.getTransactionCount(account=funder_pubkey)
@@ -347,40 +326,6 @@ def get_transaction_status(txhash):
     except w3.TransactionNotFound:
         return "unknown"
     return "unknown"
-
-
-def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SIZE']), nonce: int = None):
-    logging.debug(f'Maintaining Pool of size:{pool_size} and price:{price}')
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table(os.environ['TABLE_NAME'])
-    response = table.scan()
-    actual_pool_size = 0
-    for item in response['Items']:
-        # todo: update status here with get_transaction_status(.)
-        if float(price) == float(item['price']):
-            actual_pool_size += 1
-    accounts_to_create = max(pool_size - actual_pool_size, 0)
-    logging.debug(f'Actual Pool Size: {actual_pool_size}. Need to create {accounts_to_create} accounts')
-    logging.debug(f'Need to create {accounts_to_create} accounts')
-    if nonce is None:
-        funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
-        nonce = w3.eth.getTransactionCount(account=funder_pubkey)
-    for _ in range(accounts_to_create):
-        push_txn_hash, config, signer_pubkey = fund_PAC(
-            total_usd=price,
-            nonce=nonce,
-        )
-        creation_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
-        item = {
-            'signer': signer_pubkey,
-            'price': price,
-            'config': config,
-            'push_txn_hash': push_txn_hash,
-            'creation_time': creation_time,
-        }
-        ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
-        table.put_item(Item=ddb_item)
-        nonce += 3
 
 
 # todo: replay prevention through receipt hash map

@@ -95,7 +95,7 @@ functions:
           path: google
           method: post
   MaintainPool:
-    handler: handler.maintain_pool_wrapper
+    handler: pool.maintain_pool_wrapper
     events:
       - schedule: cron(0/15 * * * ? *)
   balance:
