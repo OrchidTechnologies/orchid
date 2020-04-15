@@ -35,7 +35,7 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   void initStateAsync() async {
-    _showPACs = (await OrchidPurchaseAPI.apiConfig()).enabled;
+    _showPACs = (await OrchidPurchaseAPI().apiConfig()).enabled;
     setState(() {});
   }
 

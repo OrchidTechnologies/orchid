@@ -6,8 +6,26 @@ import 'orchid_purchase.dart';
 
 class IOSOrchidPurchaseAPI
     implements OrchidPurchaseAPI, SKTransactionObserverWrapper {
+  /// Default prod service endpoint configuration.
+  /// May be overridden in configuration with e.g.
+  /// 'pacs = {
+  ///    enabled: true,
+  ///    url: 'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/apple',
+  ///    verifyReceipt: false,
+  ///    debug: true
+  ///  }'
+  static PACApiConfig prodAPIConfig = PACApiConfig(
+      enabled: true,
+      url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple');
+
+  /// Return the API config allowing overrides from configuration.
   @override
-  initStoreListener() async {
+  Future<PACApiConfig> apiConfig() async {
+    return OrchidPurchaseAPI.apiConfigWithOverrides(prodAPIConfig);
+  }
+
+  @override
+  void initStoreListener() async {
     print("iap: init store listener");
     SKPaymentQueueWrapper().setTransactionObserver(this);
 

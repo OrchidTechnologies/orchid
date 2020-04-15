@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/util/units.dart';
-import '../orchid_api.dart';
 
 import 'android_purchase.dart';
 import 'ios_purchase.dart';
@@ -35,55 +34,36 @@ abstract class OrchidPurchaseAPI {
   static PAC pacTier2 = PAC('pactier2', USD(9.99), "\$9.99 USD");
   static PAC pacTier3 = PAC('pactier3', USD(19.99), "\$19.99 USD");
 
-  /// Default prod service endpoint configuration.
-  /// May be overridden in configuration with e.g.
-  /// 'pacs = {
-  ///    enabled: true,
-  ///    url: 'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/apple',
-  ///    verifyReceipt: false,
-  ///    debug: true
-  ///  }'
-  static PACApiConfig prodAPIConfig = PACApiConfig(
-      enabled: true,
-      baseUrl: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod');
-
-  /// Return the API config allowing overrides from configuration.
-  static Future<PACApiConfig> apiConfig() async {
-    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
-    return PACApiConfig(
-        enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
-        baseUrl: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.baseUrl),
-        verifyReceipt: jsConfig.evalBoolDefault(
-            'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
-        debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug));
-  }
-
   // The raw value from the iOS API
   static const int SKErrorPaymentCancelled = 2;
 
-  initStoreListener() {}
+  Future<PACApiConfig> apiConfig();
+
+  void initStoreListener();
 
   /// Make the app store purchase. The future will resolve when the purchase
   /// has been confirmed and return the store receipt which can then be
   /// submitted to the PAC server for delivery.
   Future<void> purchase(PAC pac);
+
+  /// Return the API config allowing overrides from configuration.
+  static Future<PACApiConfig> apiConfigWithOverrides(
+      PACApiConfig prodAPIConfig) async {
+    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    return PACApiConfig(
+        enabled:
+            jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
+        url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
+        verifyReceipt: jsConfig.evalBoolDefault(
+            'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
+        debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug));
+  }
 }
 
 class PACApiConfig {
-  // PAC Server URL base (will have platform appended)
-  // e.g. 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod" + "/apple'
-  final String baseUrl;
-
-  // Platform-specific PAC service URL
-  String get url {
-    if (Platform.isIOS) {
-      return baseUrl + '/apple';
-    }
-    if (Platform.isAndroid) {
-      return baseUrl + '/google';
-    }
-    throw Exception("unsupported platform");
-  }
+  // Platform-specific PAC Server URL
+  // e.g. 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple'
+  final String url;
 
   // Feature flag for PACs
   final bool enabled;
@@ -96,7 +76,7 @@ class PACApiConfig {
 
   PACApiConfig({
     @required this.enabled,
-    @required this.baseUrl,
+    @required this.url,
     this.verifyReceipt = true,
     this.debug = false,
   });
