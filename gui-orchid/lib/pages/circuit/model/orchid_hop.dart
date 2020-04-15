@@ -26,7 +26,7 @@ class OrchidHop extends CircuitHop {
             keyRef: keyRef ?? hop?.keyRef);
 
   factory OrchidHop.fromJson(Map<String, dynamic> json) {
-    var curator = json['curator'];
+    var curator = json['curator'] ?? appDefaultCurator;
     var funder = EthereumAddress.from(json['funder']);
     var keyRef = StoredEthereumKeyRef.from(json['keyRef']);
     return OrchidHop(curator: curator, funder: funder, keyRef: keyRef);

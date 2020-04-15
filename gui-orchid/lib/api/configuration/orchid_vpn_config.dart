@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
@@ -13,13 +14,12 @@ import 'js_config.dart';
 // TODO: The parsing in this class should be simplified using the (real) JSConfig parser.
 /// Support for reading and generating the JavaScript configuration file used by the Orchid VPN.
 class OrchidVPNConfig {
-
   /// Return a JS queryable representation of the user visible configuration
   /// If there is an error parsing the configuation an empty JSConfig is returned.
   static Future<JSConfig> getUserConfigJS() async {
     try {
       return JSConfig(await OrchidAPI().getConfiguration());
-    } catch(err) {
+    } catch (err) {
       print("Error parsing user entered configuration as JS: $err");
     }
     return JSConfig("");
@@ -65,7 +65,7 @@ class OrchidVPNConfig {
           } catch (err) {
             //print("existing key refs: ");
             //for (var key in keys) {
-              //print("keyref = ${key.uid}");
+            //print("keyref = ${key.uid}");
             //}
             throw Exception("resolveKeyReferences invalid key ref: $keyRef");
           }
@@ -85,7 +85,6 @@ class OrchidVPNConfig {
   /// TODO: We should update this to use our JSConfig (real) JS parser.
   static ParseCircuitResult parseCircuit(
       String js, List<StoredEthereumKey> existingKeys) {
-
     // Remove newlines, etc.
     js = _normalizeInputJSON(js);
 
@@ -131,7 +130,8 @@ class OrchidVPNConfig {
 
     // Match an 'account' variable assignment to a JS object literal:
     // 'account = {protocol:"orchid",funder:"0x2Be...",secret:"0xfb5d5..."}'
-    RegExp exp = RegExp(r'\s*[Aa][Cc][Cc][Oo][Uu][Nn][Tt]\s*=\s*(\{.*\})\s*;?\s*');
+    RegExp exp =
+        RegExp(r'\s*[Aa][Cc][Cc][Oo][Uu][Nn][Tt]\s*=\s*(\{.*\})\s*;?\s*');
     var match = exp.firstMatch(js);
     var accountString = match.group(1);
 
@@ -148,12 +148,15 @@ class OrchidVPNConfig {
 
     EthereumAddress funder = EthereumAddress.from(json['funder']);
     String secret = json['secret'];
+    String curator = json['curator'];
 
     // Resolve imported secrets to existing stored keys or new temporary keys
     var newKeys = List<StoredEthereumKey>();
     var uid = DateTime.now().millisecondsSinceEpoch;
-    StoredEthereumKey key = _resolveImportedKey(secret, existingKeys, uid, newKeys);
-    var orchidAccount = OrchidAccount(funder: funder, signer: key);
+    StoredEthereumKey key =
+        _resolveImportedKey(secret, existingKeys, uid, newKeys);
+    var orchidAccount =
+        OrchidAccount(curator: curator, funder: funder, signer: key);
     return ParseOrchidAccountResult(account: orchidAccount, newKeys: newKeys);
   }
 
@@ -171,7 +174,8 @@ class OrchidVPNConfig {
     if (hop['keyRef'] != null) {
       throw Exception("keyRef in parsed json");
     }
-    StoredEthereumKey key = _resolveImportedKey(secret, existingKeys, nextKeyUid, newKeys);
+    StoredEthereumKey key =
+        _resolveImportedKey(secret, existingKeys, nextKeyUid, newKeys);
     hop['keyRef'] = key.ref().toString();
   }
 
@@ -243,12 +247,13 @@ class OrchidVPNConfig {
   /// to the add flow completion.
   static Future<CircuitHop> importAccountAsHop(
       ParseOrchidAccountResult result) async {
-    print("result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
+    print(
+        "result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
     // Save any new keys
     await UserPreferences().addKeys(result.newKeys);
     // Create the new hop
     CircuitHop hop = OrchidHop(
-      curator: OrchidHop.appDefaultCurator,
+      curator: result.account.curator ?? OrchidHop.appDefaultCurator,
       funder: result.account.funder,
       keyRef: result.account.signer.ref(),
     );
@@ -305,11 +310,12 @@ class ParseCircuitResult {
 
 // An Orchid account
 class OrchidAccount {
-  EthereumAddress funder;
-  StoredEthereumKey signer;
+  final String curator;
+  final EthereumAddress funder;
+  final StoredEthereumKey signer;
 
-  OrchidAccount({this.funder, this.signer});
-
+  OrchidAccount(
+      {@required this.curator, @required this.funder, @required this.signer});
 }
 
 /// Result holding a parsed imported Orchid account. The account signer key refers
@@ -321,4 +327,3 @@ class ParseOrchidAccountResult {
 
   ParseOrchidAccountResult({this.account, this.newKeys});
 }
-
