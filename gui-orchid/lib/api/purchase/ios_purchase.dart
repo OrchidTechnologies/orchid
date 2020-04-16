@@ -35,6 +35,11 @@ class IOSOrchidPurchaseAPI
       print("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
     });
 
+    // Note: This is an attempt to mitigate an "unable to connect to iTunes Store"
+    // Note: error observed in TestFlight by starting the connection process earlier.
+    // Note: Products are otherwise fetched immediately prior to purchase.
+    await _requestProducts();
+
     // Reset any existing tx after an app restart.
     var pacTx = await PacTransaction.shared.get();
     if (pacTx != null) {
