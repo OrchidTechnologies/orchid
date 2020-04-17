@@ -209,6 +209,7 @@
   "onlyForTheOrchidApp": "Only for the Orchid App",
   "orchidTokensInTheFormOfAccessCreditsAreUnable": "Orchid tokens in the form of access credits are unable to be used or transferred outside of the Orchid App.",
   "bandwidthValueWillVary": "Bandwidth value will vary",
-  "bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill": "Bandwidth is purchased in a VPN marketplace so price will fluctuate based on market dynamics."
+  "bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill": "Bandwidth is purchased in a VPN marketplace so price will fluctuate based on market dynamics.",
+  "scanOrPasteYourExistingAccountBelowToAddIt": "Scan or paste your existing account below to add it as a hop."
 }
 

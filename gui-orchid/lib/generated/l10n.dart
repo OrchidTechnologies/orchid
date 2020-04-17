@@ -1560,6 +1560,15 @@ class S {
       args: [],
     );
   }
+
+  String get scanOrPasteYourExistingAccountBelowToAddIt {
+    return Intl.message(
+      'Scan or paste your existing account below to add it as a hop.',
+      name: 'scanOrPasteYourExistingAccountBelowToAddIt',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

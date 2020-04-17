@@ -158,6 +158,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "saved" : MessageLookupByLibrary.simpleMessage("Saved"),
     "scan" : MessageLookupByLibrary.simpleMessage("Scan"),
     "scanOrPasteAccount" : MessageLookupByLibrary.simpleMessage("Scan or Paste Account"),
+    "scanOrPasteYourExistingAccountBelowToAddIt" : MessageLookupByLibrary.simpleMessage("Scan or paste your existing account below to add it as a hop."),
     "scanYourExistingAccountCreateACustomAccountOrEnter" : MessageLookupByLibrary.simpleMessage("Scan your existing account, create a custom account or enter OVPN credentials."),
     "search" : MessageLookupByLibrary.simpleMessage("Search"),
     "seeTheOptions" : MessageLookupByLibrary.simpleMessage("See the options"),

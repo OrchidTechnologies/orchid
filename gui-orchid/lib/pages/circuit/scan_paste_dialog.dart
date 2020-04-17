@@ -44,7 +44,7 @@ class ScanOrPasteDialog extends StatelessWidget {
               pady(16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text("Scan or paste your existing account below to get started."),
+                child: Text(s.scanOrPasteYourExistingAccountBelowToAddIt),
               ),
               pady(16),
               FittedBox(
