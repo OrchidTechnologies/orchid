@@ -31,7 +31,6 @@ class ScanOrPasteDialog extends StatelessWidget {
             children: <Widget>[
               FittedBox(
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     RichText(
                         text: TextSpan(
@@ -43,6 +42,11 @@ class ScanOrPasteDialog extends StatelessWidget {
                 ),
               ),
               pady(16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text("Scan or paste your existing account below to get started."),
+              ),
+              pady(16),
               FittedBox(
                 child: ScanOrPasteOrchidAccount(
                     spacing: screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
@@ -52,7 +56,7 @@ class ScanOrPasteDialog extends StatelessWidget {
                       onAddFlowComplete(hop);
                     }),
               ),
-              pady(24),
+              pady(16),
             ],
           ),
         ],

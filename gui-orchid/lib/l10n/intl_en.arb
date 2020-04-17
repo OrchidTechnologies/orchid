@@ -182,7 +182,7 @@
   "purchaseError": "Purchase Error",
   "thereWasAnErrorInPurchasingContact": "There was an error in purchasing.  Please contact Orchid Support.",
 
-  "orchidIsUniqueAsItSupportsMultipleVPN": "Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a \"hop\".\n\n Each hop needs an active account, choose an option below.",
+  "orchidIsUniqueAsItSupportsMultipleVPN": "Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a \"hop\".\n\nEach hop needs an active account, choose an option below.",
   "buyVpnCredits": "Buy VPN credits",
   "importAnOrchidAccount": "Import an Orchid account",
   "createACustomAccount": "Create a custom account",

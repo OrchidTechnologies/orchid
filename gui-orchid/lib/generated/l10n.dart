@@ -1374,7 +1374,7 @@ class S {
 
   String get orchidIsUniqueAsItSupportsMultipleVPN {
     return Intl.message(
-      'Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a "hop".\n\n Each hop needs an active account, choose an option below.',
+      'Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a "hop".\n\nEach hop needs an active account, choose an option below.',
       name: 'orchidIsUniqueAsItSupportsMultipleVPN',
       desc: '',
       args: [],

@@ -128,7 +128,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "orchidDisconnecting" : MessageLookupByLibrary.simpleMessage("Orchid disconnecting"),
     "orchidHop" : MessageLookupByLibrary.simpleMessage("Orchid Hop"),
     "orchidIsRunning" : MessageLookupByLibrary.simpleMessage("Orchid is running!"),
-    "orchidIsUniqueAsItSupportsMultipleVPN" : MessageLookupByLibrary.simpleMessage("Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a \"hop\".\n\n Each hop needs an active account, choose an option below."),
+    "orchidIsUniqueAsItSupportsMultipleVPN" : MessageLookupByLibrary.simpleMessage("Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a \"hop\".\n\nEach hop needs an active account, choose an option below."),
     "orchidOverview" : MessageLookupByLibrary.simpleMessage("Orchid Overview"),
     "orchidRequiresAccountInstruction" : MessageLookupByLibrary.simpleMessage("Orchid requires an Orchid account.  Scan or paste your existing account below to get started."),
     "orchidRequiresOXT" : MessageLookupByLibrary.simpleMessage("Orchid requires OXT"),
