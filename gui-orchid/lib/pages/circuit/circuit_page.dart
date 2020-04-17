@@ -3,7 +3,6 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -15,6 +14,7 @@ import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
+import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/util/collections.dart';
 
 import '../app_gradients.dart';
@@ -98,12 +98,8 @@ class CircuitPageState extends State<CircuitPage>
 
   void _checkFirstLaunch() async {
     if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
-      // TODO: Language choice is initially unreliable on iOS?
-      // TODO: Adding a short delay to give it time to settle.
-      Future.delayed(Duration(seconds: 1), () {
-        _showWelcomeDialog();
-        UserPreferences().setFirstLaunchInstructionsViewed(true);
-      });
+      _showWelcomeDialog();
+      UserPreferences().setFirstLaunchInstructionsViewed(true);
     }
   }
 
@@ -550,10 +546,10 @@ class CircuitPageState extends State<CircuitPage>
 
   // Show the add hop flow and save the result if completed successfully.
   void _addHop() async {
-    // Create a nested navigation context for the flow.
-    // Performing a pop() from this outer context at any point will properly
-    // remove the entire flow with the correct animation.
-    var addFlow = Navigator(
+    // Create a nested navigation context for the flow. Performing a pop() from
+    // this outer context at any point will properly remove the entire flow
+    // (possibly multiple screens) with one appropriate animation.
+    Navigator addFlow = Navigator(
       onGenerateRoute: (RouteSettings settings) {
         var addFlowCompletion = (CircuitHop result) {
           Navigator.pop(context, result);
@@ -567,9 +563,41 @@ class CircuitPageState extends State<CircuitPage>
     );
     var route = MaterialPageRoute<CircuitHop>(
         builder: (context) => addFlow, fullscreenDialog: true);
+    _pushEditorRoute(route);
+  }
 
+  // Show the purchase PAC screen directly as a modal, skipping the "add hop"
+  // choice screen. This is used by the welcome dialog.
+  void _addHopFromPACPurchase() async {
+    var addFlowCompletion = (CircuitHop result) {
+      Navigator.pop(context, result);
+    };
+    var route = MaterialPageRoute<CircuitHop>(
+        builder: (BuildContext context) {
+          return PurchasePage(
+            onAddFlowComplete: addFlowCompletion,
+            cancellable: true,
+          );
+        },
+        fullscreenDialog: true);
+    _pushEditorRoute(route);
+  }
+
+  // Push the specified hop editor, await the hop result, and save it to the circuit.
+  // Note: The paradigm here of the hop editors returning newly created or edited hops
+  // Note: on the navigation stack decouples them but makes them more dependent on
+  // Note: this update and save logic. We should consider centralizing this logic and
+  // Note: relying on observation with `OrchidAPI.circuitConfigurationChanged` here.
+  // Note: e.g.
+  // Note: void _AddHopExternal(CircuitHop hop) async {
+  // Note:   var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
+  // Note:   circuit.hops.add(hop);
+  // Note:   await UserPreferences().setCircuit(circuit);
+  // Note:   OrchidAPI().updateConfiguration();
+  // Note:   OrchidAPI().circuitConfigurationChanged.add(null);
+  // Note: }
+  void _pushEditorRoute(MaterialPageRoute route) async {
     var hop = await Navigator.push(context, route);
-
     if (hop == null) {
       return; // user cancelled
     }
@@ -581,9 +609,9 @@ class CircuitPageState extends State<CircuitPage>
     _saveCircuit();
 
     // View the newly created hop:
-    // Note: ideally we would like this to act like the iOS Contacts add flow,
+    // Note: We would like this to behave like the iOS Contacts add flow,
     // Note: revealing the already pushed navigation state upon completing the
-    // Note: add flow.  Doing a non-animated push approximates this.
+    // Note: add flow.  The non-animated push approximates this.
     _viewHop(uniqueHop, animated: false);
   }
 
@@ -781,7 +809,6 @@ class CircuitPageState extends State<CircuitPage>
     return _hops != null && _hops.length > 0;
   }
 
-  // TODO: Refactor with _welcomeScreenAddHop
   void _saveCircuit() async {
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
     UserPreferences().setCircuit(circuit);
@@ -797,19 +824,17 @@ class CircuitPageState extends State<CircuitPage>
     }
   }
 
-  // TODO: Refactor with _saveCircuit
-  void _welcomeScreenAddHop(CircuitHop hop) async {
-    var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
-    circuit.hops.add(hop);
-    await UserPreferences().setCircuit(circuit);
-    OrchidAPI().updateConfiguration();
-    // Notify that the hops config has changed externally
-    OrchidAPI().circuitConfigurationChanged.add(null);
-  }
-
   void _showWelcomeDialog() {
-    WelcomeDialog.show(
-        context: context, onAddFlowComplete: _welcomeScreenAddHop);
+//    WelcomeDialog.show(
+//        context: context, onAddFlowComplete: _welcomeScreenAddHop);
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return WelcomeDialog(
+            onBuyCredits: _addHopFromPACPurchase,
+            onSeeOptions: _addHop,
+          );
+        });
   }
 
   void _userInteraction() {

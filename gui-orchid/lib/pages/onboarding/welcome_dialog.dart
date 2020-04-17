@@ -1,107 +1,159 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/generated/l10n.dart';
-import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/circuit/add_hop_page.dart';
-import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/link_text.dart';
+import '../app_colors.dart';
 
-class WelcomeDialog {
-  static Future<void> show(
-      {@required BuildContext context, AddFlowCompletion onAddFlowComplete}) {
+class WelcomeDialog extends StatelessWidget {
+  final VoidCallback onBuyCredits;
+  final VoidCallback onSeeOptions;
+
+  const WelcomeDialog({
+    Key key,
+    @required this.onBuyCredits,
+    @required this.onSeeOptions,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     S s = S.of(context);
-    var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
+    var textColor = Color(0xff3A3149);
+    var bodyStyle = TextStyle(fontSize: 15, color: textColor);
 
     var topText = TextSpan(
       children: <TextSpan>[
         TextSpan(
-            text: "\n" + s.orchidRequiresAccountInstruction, style: bodyStyle),
+            text: s.buyPrepaidCreditsToGetStartedTheresNoMonthlyFee,
+            style: bodyStyle),
       ],
     );
 
     var bodyText = TextSpan(
       children: <TextSpan>[
-        TextSpan(text: s.createOrchidAccount, style: AppText.dialogTitle),
         TextSpan(
-            text: "\n\n" + s.youNeedEthereumWallet + "\n\n" + s.loadMsg + " ",
-            style: bodyStyle),
-        LinkTextSpan(
-          text: "account.orchid.com",
-          style: AppText.linkStyle.copyWith(fontSize: 15),
-          url: 'https://account.orchid.com',
-        ),
+            text: s.haveAnOrchidAccountOrVpnSubscription,
+            style: TextStyle(
+                color: textColor,
+                fontSize: 17.0,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.41,
+                height: 1.29)),
         TextSpan(
-            text: " " + s.inYourWalletBrowserInstruction, style: bodyStyle),
+            text: "\n\n" + s.scanYourExistingAccountCreateACustomAccountOrEnter,
+            style: TextStyle(
+                color: textColor,
+                fontSize: 15.0,
+                letterSpacing: -0.24,
+                height: 1.33)),
       ],
     );
 
-    var bottomText = TextSpan(
-      children: <TextSpan>[
-        TextSpan(text: s.needMoreHelp + "?", style: AppText.dialogTitle),
-        LinkTextSpan(
-          text: "\n\n" + s.readTheGuide + ".",
-          style: AppText.linkStyle.copyWith(fontSize: 15),
-          url: 'https://orchid.com/join',
-        ),
-      ],
-    );
-
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        double screenWidth = MediaQuery.of(context).size.width;
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8.0))),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    RichText(
-                        text: TextSpan(
-                            text: screenWidth > AppSizes.iphone_se.width
-                                ? s.addOrchidAccount
-                                : s.addAccount,
-                            style: AppText.dialogTitle)),
-                    Container(
-                      width: 40,
-                      child: FlatButton(
-                        child: Icon(Icons.close),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20.0))),
+      contentPadding: EdgeInsets.zero,
+      content: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                color: Color(0xffE7EAF4),
+                child: Padding(
+                  padding: EdgeInsets.only(top: 12, left: 30, right: 30),
+                  child: Column(
+                    children: <Widget>[
+                      FittedBox(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            RichText(
+                                text: TextSpan(
+                                    text: s.needAnAccount,
+                                    style: AppText.dialogTitle
+                                        .copyWith(fontWeight: FontWeight.bold))),
+                            _buildCloseButton(context)
+                          ],
+                        ),
                       ),
-                    )
+                      RichText(text: topText),
+                      pady(16),
+                      Center(
+                          child: _buildButton(
+                              text: s.buyCredits,
+                              onPressed: () {
+                                Navigator.pop(context);
+                                onBuyCredits();
+                              })),
+                      pady(24),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 12, left: 30, right: 30),
+                child: Column(
+                  children: <Widget>[
+                    pady(16),
+                    RichText(text: bodyText),
+                    pady(16),
+                    Center(
+                        child: _buildButton(
+                            text: s.seeTheOptions,
+                            bgColor: Colors.white,
+                            textColor: AppColors.purple_3,
+                            onPressed: () {
+                              Navigator.pop(context);
+                              onSeeOptions();
+                            })),
+                    pady(16)
                   ],
                 ),
-                RichText(text: topText),
-                pady(12),
-                ScanOrPasteOrchidAccount(
-                    spacing:
-                        screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
-                    onImportAccount: (ParseOrchidAccountResult result) async {
-                      var hop = await OrchidVPNConfig.importAccountAsHop(result);
-                      Navigator.of(context).pop(); // TODO: probably not necessary?
-                      onAddFlowComplete(hop);
-                    }),
-                Divider(thickness: 1.0),
-                pady(16),
-                RichText(text: bodyText),
-                pady(24),
-                RichText(text: bottomText),
-                pady(24)
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
+  Container _buildCloseButton(BuildContext context) {
+    return Container(
+      width: 40,
+      child: FlatButton(
+        child: Icon(Icons.close),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  Container _buildButton(
+      {@required String text,
+      Color bgColor = AppColors.purple_3,
+      Color borderColor = AppColors.purple_3,
+      Color textColor = Colors.white,
+      VoidCallback onPressed}) {
+    return Container(
+      width: 210,
+      height: 48,
+      child: FlatButton(
+        color: bgColor,
+        onPressed: onPressed,
+        shape: RoundedRectangleBorder(
+            side: BorderSide(
+                color: borderColor, width: 1, style: BorderStyle.solid),
+            borderRadius: BorderRadius.all(Radius.circular(24))),
+        child: Text(text,
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: 14.0,
+              color: textColor,
+            )),
+      ),
+    );
+  }
 }

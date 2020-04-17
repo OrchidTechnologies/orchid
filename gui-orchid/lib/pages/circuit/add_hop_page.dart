@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/onboarding/welcome_dialog.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
@@ -62,43 +63,45 @@ class _AddHopPageState extends State<AddHopPage> {
                   child: Image.asset("assets/images/approach.png", height: 100),
                 ),
                 pady(24),
-                Text(s.selectYourHop,
-                    textAlign: TextAlign.center,
+                Text(s.orchidIsUniqueAsItSupportsMultipleVPN,
+                    textAlign: TextAlign.left,
                     style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        height: 22.0 / 17.0,
-                        letterSpacing: 0.16,
+                        fontSize: 15,
+                        fontWeight: FontWeight.normal,
+                        height: 1.12,
+                        letterSpacing: -0.24,
                         color: Color(0xff504960))),
                 pady(24),
-
-                // QR Code
-                _divider(),
-                _buildHopChoice(
-                    text: s.iHaveAQRCode,
-                    onTap: () {
-                      WelcomeDialog.show(
-                          context: context,
-                          onAddFlowComplete: widget.onAddFlowComplete);
-                    },
-                    imageName: "assets/images/scan.png"),
 
                 // PAC Purchase
                 if (_showPACs)
                   _divider(),
                 if (_showPACs)
                   _buildHopChoice(
-                      text: s.purchasePAC,
+                      text: s.buyVpnCredits,
                       onTap: () {
                         _addHopFromPACPurchase();
                       },
-                      imageName: "assets/images/logo_small_purple.png"),
+                      svgName: "assets/svg/attach_money.svg"),
 
-                // Try Orchid
+                // Import Account
                 _divider(),
                 _buildHopChoice(
-                    //text: s.iWantToTryOrchid,
-                    text: s.iHaveOrchidAccount,
+                    text: s.importAnOrchidAccount,
+                    onTap: () {
+                      return showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return ScanOrPasteDialog(
+                                onAddFlowComplete: widget.onAddFlowComplete);
+                          });
+                    },
+                    imageName: "assets/images/scan.png"),
+
+                // Custom Account
+                _divider(),
+                _buildHopChoice(
+                    text: s.createACustomAccount,
                     onTap: () {
                       _addHopType(HopProtocol.Orchid);
                     },
@@ -107,7 +110,7 @@ class _AddHopPageState extends State<AddHopPage> {
                 // VPN Subscription
                 _divider(),
                 _buildHopChoice(
-                    text: s.iHaveAVPNSubscription,
+                    text: s.enterOvpnCredentials,
                     onTap: () {
                       _addHopType(HopProtocol.OpenVPN);
                     },
@@ -123,10 +126,17 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   Widget _buildHopChoice(
-      {String text, imageName: String, VoidCallback onTap, Widget trailing}) {
+      {String text,
+      String imageName,
+      String svgName,
+      VoidCallback onTap,
+      Widget trailing}) {
+    print("svg name = $svgName");
     return ListTile(
         contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
-        leading: Image.asset(imageName, width: 24, height: 24),
+        leading: svgName != null
+            ? SvgPicture.asset(svgName, width: 24, height: 24)
+            : Image.asset(imageName, width: 24, height: 24),
         trailing:
             trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
         title: Text(text,

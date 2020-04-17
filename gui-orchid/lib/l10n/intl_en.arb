@@ -176,9 +176,39 @@
   "preparingPurchase": "Preparing Purchase",
   "fetchingPurchasedPAC": "Fetching Purchased PAC",
   "retryingPurchasedPAC": "Retrying Purchased PAC",
+
   "retryPurchasedPAC": "Retry Purchased PAC",
   "setUpAccount": "Set up Account",
   "purchaseError": "Purchase Error",
   "thereWasAnErrorInPurchasingContact": "There was an error in purchasing.  Please contact Orchid Support.",
+
+  "orchidIsUniqueAsItSupportsMultipleVPN": "Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a \"hop\".\n\n Each hop needs an active account, choose an option below.",
+  "buyVpnCredits": "Buy VPN credits",
+  "importAnOrchidAccount": "Import an Orchid account",
+  "createACustomAccount": "Create a custom account",
+  "enterOvpnCredentials": "Enter OVPN credentials",
+  "needAnAccount": "Need an Account?",
+  "buyPrepaidCreditsToGetStartedTheresNoMonthlyFee": "Buy prepaid credits to get started. There’s no monthly fee and you only pay for what you use.",
+  "buyCredits": "Buy Credits",
+  "haveAnOrchidAccountOrVpnSubscription": "Have an Orchid account or VPN subscription?",
+  "scanYourExistingAccountCreateACustomAccountOrEnter": "Scan your existing account, create a custom account or enter OVPN credentials.",
+  "seeTheOptions": "See the options",
+  "scanOrPasteAccount": "Scan or Paste Account",
+  "chooseYourAmount": "Choose your amount",
+  "payOnlyForWhatYouUseWithVpnCreditsOnly": "Pay only for what you use with VPN credits, only spent while the VPN is active. No expiration period, monthly fees or charges.",
+  "approximately": "Approximately",
+
+  "gb": "GB",
+  "@gb": {
+    "description": "Gigabytes"
+  },
+  "ofTraffic": "of traffic",
+  "@ofTraffic": {
+    "description": "GB of traffic"
+  },
+  "onlyForTheOrchidApp": "Only for the Orchid App",
+  "orchidTokensInTheFormOfAccessCreditsAreUnable": "Orchid tokens in the form of access credits are unable to be used or transferred outside of the Orchid App.",
+  "bandwidthValueWillVary": "Bandwidth value will vary",
+  "bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill": "Bandwidth is purchased in a VPN marketplace so price will fluctuate based on market dynamics."
 }
 

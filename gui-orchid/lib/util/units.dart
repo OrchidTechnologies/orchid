@@ -7,6 +7,7 @@ class ScalarValue<T extends num> {
     return value.toString();
   }
 
+  // Note: This is *not* locale sensitive. See NumberFormat.
   String toStringAsFixed(int len) {
     return value.toStringAsFixed(len);
   }
