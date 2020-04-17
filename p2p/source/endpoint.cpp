@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <regex>
+
 #include "endpoint.hpp"
 #include "error.hpp"
 #include "http.hpp"
@@ -152,8 +154,12 @@ task<Brick<65>> Endpoint::Sign(const Address &signer, const std::string &passwor
 }
 
 task<Address> Endpoint::Resolve(const Argument &number, const std::string &name) const {
+    static const std::regex re("0x[0-9A-Fa-f]{40}");
+    if (std::regex_match(name, re))
+        co_return name;
+
     const auto node(Name(name));
-    static const Address ens("0x314159265dd8dbb310642f98f50c066173c1259b");
+    static const Address ens("0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e");
 
     static const Selector<Address, Bytes32> resolver_("resolver");
     const auto resolver(co_await resolver_.Call(*this, number, ens, 90000, node));
