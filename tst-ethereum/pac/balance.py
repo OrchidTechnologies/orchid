@@ -3,7 +3,7 @@ import os
 
 from abis import token_abi
 from datadog_lambda.metric import lambda_metric
-from utils import configure_logging, get_secret, is_true
+from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
 from web3.auto.infura import w3
 
 
@@ -25,9 +25,9 @@ def get_oxt_balance(address=get_secret(key='PAC_FUNDER_PUBKEY')) -> float:
         abi=token_abi,
         address=token_addr,
     )
-    token_name = token_contract.functions.name().call()
-    token_symbol = token_contract.functions.symbol().call()
-    token_decimals = token_contract.functions.decimals().call()
+    token_name = get_token_name(token_addr)
+    token_symbol = get_token_symbol(token_addr)
+    token_decimals = get_token_decimals(token_addr)
     DECIMALS = 10 ** token_decimals
     raw_balance = token_contract.functions.balanceOf(address).call()
     balance = raw_balance / DECIMALS

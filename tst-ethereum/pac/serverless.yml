@@ -1,6 +1,6 @@
 service: pac
-#app: pac
-#org: orchid
+app: pac
+org: orchid
 
 custom:
   pythonRequirements:
@@ -30,6 +30,8 @@ custom:
     addLayers: true
     flushMetricsToLogs: true
     apiKey: ${ssm:DATADOG_API_KEY~true}
+  enterprise:
+    logIngestMode: pull
 provider:
   name: aws
   stage: ${opt:stage,'dev'}

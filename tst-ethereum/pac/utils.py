@@ -2,6 +2,9 @@ import boto3
 import logging
 import os
 
+from abis import token_abi
+from web3.auto.infura import w3
+
 
 def configure_logging(level=os.environ.get('LOG_LEVEL', "DEBUG")):
     logging.debug(f'Setting log level: {level}')
@@ -29,3 +32,36 @@ def is_false(value: str) -> bool:
 
 def is_true(value: str) -> bool:
     return value.lower() in ['true', '1', 'yes']
+
+
+def get_token_name(address: str):
+    token_addr = w3.toChecksumAddress(address)
+    token_contract = w3.eth.contract(
+        abi=token_abi,
+        address=token_addr,
+    )
+    token_name = token_contract.functions.name().call()
+    logging.debug(f'Token Name: {token_name}')
+    return token_name
+
+
+def get_token_symbol(address: str):
+    token_addr = w3.toChecksumAddress(address)
+    token_contract = w3.eth.contract(
+        abi=token_abi,
+        address=token_addr,
+    )
+    token_symbol = token_contract.functions.symbol().call()
+    logging.debug(f'Token Symbol: {token_symbol}')
+    return token_symbol
+
+
+def get_token_decimals(address: str):
+    token_addr = w3.toChecksumAddress(address)
+    token_contract = w3.eth.contract(
+        abi=token_abi,
+        address=token_addr,
+    )
+    token_decimals = token_contract.functions.decimals().call()
+    logging.debug(f'Token Decimals: {token_decimals}')
+    return token_decimals

@@ -11,11 +11,12 @@ import hashlib
 
 from abis import lottery_abi, token_abi
 from boto3.dynamodb.conditions import Key
+from datadog_lambda.metric import lambda_metric
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
-from utils import configure_logging, get_secret, is_true
+from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
 from web3.auto.infura import w3
 
 
@@ -299,7 +300,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
 
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
-            # update succeeded
+                # update succeeded
                 ret = push_txn_hash, config, signer_pubkey
                 break
             else:
@@ -448,6 +449,21 @@ def main(event, context):
                     }
                     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
                     receipt_hash_table.put_item(Item=ddb_item)
+                    if is_true(os.environ.get('ENABLE_MONITORING', '')):
+                        token_name = get_token_name(address=os.environ['TOKEN'])
+                        token_symbol = get_token_symbol(address=os.environ['TOKEN'])
+                        token_decimals = get_token_decimals(address=os.environ['TOKEN'])
+                        pac_tokens = look(funder=get_secret(key='PAC_FUNDER_PUBKEY'), signer=signer_pubkey)
+                        # lambda_metric(
+                        #     f"orchid.pac.sale.{token_symbol.lower()}",
+                        #     pac_tokens,
+                        #     tags=[
+                        #         f'token_name:{token_name}',
+                        #         f'token_symbol:{token_symbol}',
+                        #         f'token_decimals:{token_decimals}',
+                        #         f'usd:{total_usd}',
+                        #     ]
+                        # )
 
     else:
         response = {
@@ -462,6 +478,26 @@ def main(event, context):
         }
     logging.debug(f'response: {response}')
     return response
+
+
+def look(funder: str, signer: str):
+    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    edited_lottery_abi = lottery_abi.copy()
+    for function in edited_lottery_abi:
+        if function.get('name') == 'look':
+            for output in function['outputs']:
+                if output['type'] == 'bytes':
+                    output['type'] = 'uint256'
+                    break
+            break
+    lottery_contract = w3.eth.contract(
+        abi=edited_lottery_abi,
+        address=lottery_addr,
+    )
+    amount, escrow, _, _, _ = lottery_contract.functions.look(w3.toChecksumAddress(funder), w3.toChecksumAddress(signer)).call()
+    account_total = amount + escrow
+    logging.debug(f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + {escrow} (escrow) = {account_total} (total)')
+    return account_total
 
 
 def apple(event, context):
