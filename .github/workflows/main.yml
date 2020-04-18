@@ -3,8 +3,7 @@ on: [push]
 
 jobs:
 
-
-  build-mac:
+  build-mac-all:
     runs-on: macos-latest
 
     steps:
@@ -29,8 +28,11 @@ jobs:
         name: orchidd-mac
         path: srv-shared/out-mac/x86_64/orchidd
 
+    - name: df -k
+      run: df -k
 
-  build-app:
+
+  build-mac-app:
     runs-on: macos-latest
 
     steps:
@@ -46,8 +48,11 @@ jobs:
     - name: make macOS .app
       run: debug=ldid make -j3 -C app-macos
 
+    - name: df -k
+      run: df -k
 
-  build-ios:
+
+  build-ios-app:
     runs-on: macos-latest
 
     steps:
@@ -61,8 +66,11 @@ jobs:
     - name: make iOS .ipa
       run: debug=ldid make -j3 -C app-ios
 
+    - name: df -k
+      run: df -k
 
-  build-lnx:
+
+  build-lnx-cli:
     runs-on: ubuntu-latest
 
     steps:
@@ -80,6 +88,21 @@ jobs:
         name: orchid-lnx
         path: cli-shared/out-lnx/x86_64/orchid
 
+    - name: df -k
+      run: df -k
+
+
+  build-lnx-srv:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
     - name: make Linux server
       run: debug=crossndk make -j3 -C srv-shared
     - uses: actions/upload-artifact@v1
@@ -87,8 +110,36 @@ jobs:
         name: orchidd-lnx
         path: srv-shared/out-lnx/x86_64/orchidd
 
+    - name: df -k
+      run: df -k
 
-  build-win:
+
+  build-win-srv:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: apt-get install
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install mingw-w64
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
+    - name: make Windows server
+      run: make -j3 -C srv-shared target=win
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidd-w64
+        path: srv-shared/out-win/x86_64/orchidd.exe
+
+    - name: df -k
+      run: df -k
+
+
+  build-win-tst:
     runs-on: ubuntu-latest
 
     steps:
@@ -105,15 +156,11 @@ jobs:
     - name: make Windows test
       run: make -j3 -C tst-network target=win
 
-    - name: make Windows server
-      run: make -j3 -C srv-shared target=win
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidd-w64
-        path: srv-shared/out-win/x86_64/orchidd.exe
+    - name: df -k
+      run: df -k
 
 
-  build-and:
+  build-and-a64:
     runs-on: ubuntu-latest
 
     steps:
@@ -121,13 +168,20 @@ jobs:
     - uses: actions/checkout@v1
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule
-      run: git submodule update --init --recursive --jobs 3
+    - name: git submodule (deep)
+      # XXX: flutter needs deep for an unknown reason; maybe this can be fixed?
+      # XXX: the other repositories need uploadpack.allowReachableSHA1InWant :(
+      run: git submodule update --init --recursive --jobs 3 -- app-shared/flutter min-wireshark/{gnulib,libiconv} p2p/lwip vpn-shared/{libssh,tor}
+    - name: git submodule (shallow)
+      run: git submodule update --init --recursive --jobs 3 --depth 1
 
     - name: make Android .apk
-      run: make -j3 -C app-android
+      run: make -j3 -C app-android precache=--no-ios jni=arm64-v8a
     - uses: actions/upload-artifact@v1
       with:
-        name: orchid-apk
+        name: orchid-apk64
         path: app-android/out-and/Orchid.apk
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
+
+    - name: df -k
+      run: df -k

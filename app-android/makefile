@@ -71,13 +71,13 @@ $(assets)/AssetManifest%json: $(dart)
 flutter/bin/cache/artifacts/engine/android-%-release/flutter.jar: flutter/packages/flutter/pubspec.lock
 	@
 
-jni := $(foreach arch,$(jni),$(foreach jni,orchid flutter app,$(output)/jnilibs/$(arch)/lib$(jni).so))
+temp := $(foreach arch,$(jni),$(foreach base,orchid flutter app,$(output)/jnilibs/$(arch)/lib$(base).so))
 
 $(output)/jnilibs/%/libflutter.so: flutter/bin/cache/artifacts/engine/android-$$(flutter/$$*)-release/flutter.jar
 	@mkdir -p $(dir $@)
 	unzip -p $< lib/$*/libflutter.so >$@
 
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(jni) src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java $(assets)/AssetManifest.json flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java $(assets)/AssetManifest.json flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar
 	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all \
 	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
 	    -PflutterJar=flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar

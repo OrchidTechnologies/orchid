@@ -20,10 +20,12 @@
 
 flutter := $(CURDIR)/flutter/bin/flutter --suppress-analytics --verbose
 
+precache := --macos
+
 flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(call head,flutter)
 	cd flutter && git clean -fxd
 	cd flutter && bin/flutter config --enable-macos-desktop
-	cd flutter && bin/flutter precache --macos
+	cd flutter && bin/flutter precache $(precache)
 	cd flutter && bin/flutter update-packages
 
 shared/gui/%flutter-plugins %packages $(generated): shared/gui/pubspec.yaml shared/gui/pubspec.lock flutter/packages/flutter/pubspec.lock
