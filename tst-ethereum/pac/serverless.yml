@@ -91,7 +91,7 @@ functions:
           path: apple
           method: post
   google:
-    handler: handler.google
+    handler: google.main
     events:
       - http:
           path: google
