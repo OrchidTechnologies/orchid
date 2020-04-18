@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
 import 'orchid_budget_api.dart';
 import 'orchid_crypto.dart';
 
-class CloudFlare {
-  // Cloudflare API
-  static var url = 'https://cloudflare-eth.com';
+class OrchidEthereum {
+  static var providerUrl = 'https://cloudflare-eth.com';
+  // TODO: Temporarily using this api-key bound solution with Infura due to
+  // TODO: unreliability of Cloudflare. This is a short term workaround.
+//  static var providerUrl = 'https://mainnet.infura.io/v3/3befe648c1e54c94a815948c088b1f83';
 
   // Lottery contract address on main net
   static var lotteryContractAddress =
@@ -17,6 +20,12 @@ class CloudFlare {
   // The ABI identifier for the `look` method.
   // Note: The first four bytes of the signature hash (Remix can provide this).
   static var lotteryLookMethodHash = '1554ad5d';
+
+  // Get the provider URL allowing override in the advanced config
+  static Future<String> get url async {
+    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    return jsConfig.evalStringDefault('ethProviderUrl', providerUrl);
+  }
 
   /*
     Example:
@@ -33,7 +42,7 @@ class CloudFlare {
   */
   static Future<LotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
-    print("fetch pot for: $funder, $signer");
+    print("fetch pot for: $funder, $signer, url = ${await url}");
     // construct the abi encoded eth_call
     var params = '[{'
         '"to": "$lotteryContractAddress", '
@@ -42,9 +51,8 @@ class CloudFlare {
     var postBody =
         '{"jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": ${params}}';
 
-    //print("post body = $postBody");
     // do the post
-    var response = await http.post(url,
+    var response = await http.post(await url,
         headers: {"Content-Type": "application/json"}, body: postBody);
 
     if (response.statusCode != 200) {

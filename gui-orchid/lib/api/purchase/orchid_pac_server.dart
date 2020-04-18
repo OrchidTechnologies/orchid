@@ -86,7 +86,7 @@ class OrchidPACServer {
       print("iap: null receipt");
       throw Exception("receipt is null");
     }
-    var apiConfig = await OrchidPurchaseAPI.apiConfig();
+    var apiConfig = await OrchidPurchaseAPI().apiConfig();
 
     Map<String, String> params = {};
 

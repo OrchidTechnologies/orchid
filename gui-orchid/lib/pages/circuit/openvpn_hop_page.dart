@@ -25,7 +25,6 @@ class OpenVPNHopPage extends HopEditor<OpenVPNHop> {
 }
 
 class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
-  // TODO: Validation logic
   var _userName = TextEditingController();
   var _userPassword = TextEditingController();
   var _ovpnConfig = TextEditingController();
@@ -56,78 +55,48 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
 
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return TapClearsFocus(
       child: TitledPage(
         title: s.openVPNHop,
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
             : [],
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: SafeArea(
-            child: Column(
-              children: <Widget>[
-                // Username
-                pady(16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(s.username + ":",
-                        style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-                    pady(8),
-                    AppTextField(
-                        hintText: s.username,
-                        margin: EdgeInsets.zero,
-                        controller: _userName)
-                  ],
-                ),
-
-                // Password
-                pady(16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(s.password + ":",
-                        style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-                    pady(8),
-                    AppTextField(
-                        hintText: s.password,
-                        margin: EdgeInsets.zero,
-                        controller: _userPassword)
-                  ],
-                ),
-
-                // OPVN Config
-                pady(16),
-                Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(s.config + ":",
-                        style: AppText.textLabelStyle.copyWith(fontSize: 20))),
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        left: 0, right: 0, top: 8, bottom: 8),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: <Widget>[
+                  _buildUserName(),
+                  _buildPassword(),
+                  pady(16),
+                  // OPVN Config
+                  Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(s.config + ":",
+                          style: AppText.textLabelStyle.copyWith(fontSize: 20))),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 8),
                     child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      child: SingleChildScrollView(
-                          child: TextFormField(
+                      height: screenHeight/2.8,
+                      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: TextFormField(
                         autocorrect: false,
                         autofocus: false,
                         smartQuotesType: SmartQuotesType.disabled,
                         smartDashesType: SmartDashesType.disabled,
                         keyboardType: TextInputType.multiline,
                         style:
-                            AppText.logStyle.copyWith(color: AppColors.grey_2),
+                        AppText.logStyle.copyWith(color: AppColors.grey_2),
                         controller: _ovpnConfig,
                         maxLines: 99999,
                         decoration: InputDecoration(
-                          hintText: s.pasteYourOVPN,
-                          border: InputBorder.none,
-                          labelStyle: AppText.textLabelStyle,
+                      hintText: s.pasteYourOVPN,
+                      border: InputBorder.none,
+                      labelStyle: AppText.textLabelStyle,
                         ),
-                      )),
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -136,13 +105,10 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                       ),
                     ),
                   ),
-                ),
 
-                // Instructions
-                Visibility(
-                  visible: widget.mode == HopEditorMode.Create,
-                  child: Expanded(
-                    flex: 1,
+                  // Instructions
+                  Visibility(
+                    visible: widget.mode == HopEditorMode.Create,
                     child: InstructionsView(
                       // TODO: This screen is being told it's in landscape mode in the simulator?
                       //hideInLandscape: false,
@@ -150,13 +116,45 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                       body: s.enterLoginInformationInstruction + " ",
                     ),
                   ),
-                ),
-                pady(24)
-              ],
+                  pady(24)
+                ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Column _buildPassword() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        pady(16),
+        Text(s.password + ":",
+            style: AppText.textLabelStyle.copyWith(fontSize: 20)),
+        pady(8),
+        AppTextField(
+            hintText: s.password,
+            margin: EdgeInsets.zero,
+            controller: _userPassword)
+      ],
+    );
+  }
+
+  Column _buildUserName() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        pady(16),
+        Text(s.username + ":",
+            style: AppText.textLabelStyle.copyWith(fontSize: 20)),
+        pady(8),
+        AppTextField(
+            hintText: s.username,
+            margin: EdgeInsets.zero,
+            controller: _userName)
+      ],
     );
   }
 

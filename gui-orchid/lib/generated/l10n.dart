@@ -1372,10 +1372,199 @@ class S {
     );
   }
 
-  String get retryingPurchasedPac {
+  String get orchidIsUniqueAsItSupportsMultipleVPN {
     return Intl.message(
-      'Retrying Purchased PAC',
-      name: 'retryingPurchasedPac',
+      'Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a "hop".\n\nEach hop needs an active account, choose an option below.',
+      name: 'orchidIsUniqueAsItSupportsMultipleVPN',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get buyVpnCredits {
+    return Intl.message(
+      'Buy VPN credits',
+      name: 'buyVpnCredits',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get importAnOrchidAccount {
+    return Intl.message(
+      'Import an Orchid account',
+      name: 'importAnOrchidAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get createACustomAccount {
+    return Intl.message(
+      'Create a custom account',
+      name: 'createACustomAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get enterOvpnCredentials {
+    return Intl.message(
+      'Enter OVPN credentials',
+      name: 'enterOvpnCredentials',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get needAnAccount {
+    return Intl.message(
+      'Need an Account?',
+      name: 'needAnAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get buyPrepaidCreditsToGetStartedTheresNoMonthlyFee {
+    return Intl.message(
+      'Buy prepaid credits to get started. There’s no monthly fee and you only pay for what you use.',
+      name: 'buyPrepaidCreditsToGetStartedTheresNoMonthlyFee',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get buyCredits {
+    return Intl.message(
+      'Buy Credits',
+      name: 'buyCredits',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get haveAnOrchidAccountOrVpnSubscription {
+    return Intl.message(
+      'Have an Orchid account or VPN subscription?',
+      name: 'haveAnOrchidAccountOrVpnSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get scanYourExistingAccountCreateACustomAccountOrEnter {
+    return Intl.message(
+      'Scan your existing account, create a custom account or enter OVPN credentials.',
+      name: 'scanYourExistingAccountCreateACustomAccountOrEnter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get seeTheOptions {
+    return Intl.message(
+      'See the options',
+      name: 'seeTheOptions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get scanOrPasteAccount {
+    return Intl.message(
+      'Scan or Paste Account',
+      name: 'scanOrPasteAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get chooseYourAmount {
+    return Intl.message(
+      'Choose your amount',
+      name: 'chooseYourAmount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get payOnlyForWhatYouUseWithVpnCreditsOnly {
+    return Intl.message(
+      'Pay only for what you use with VPN credits, only spent while the VPN is active. No expiration period, monthly fees or charges.',
+      name: 'payOnlyForWhatYouUseWithVpnCreditsOnly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get approximately {
+    return Intl.message(
+      'Approximately',
+      name: 'approximately',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get gb {
+    return Intl.message(
+      'GB',
+      name: 'gb',
+      desc: 'Gigabytes',
+      args: [],
+    );
+  }
+
+  String get ofTraffic {
+    return Intl.message(
+      'of traffic',
+      name: 'ofTraffic',
+      desc: 'GB of traffic',
+      args: [],
+    );
+  }
+
+  String get onlyForTheOrchidApp {
+    return Intl.message(
+      'Only for the Orchid App',
+      name: 'onlyForTheOrchidApp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get orchidTokensInTheFormOfAccessCreditsAreUnable {
+    return Intl.message(
+      'Orchid tokens in the form of access credits are unable to be used or transferred outside of the Orchid App.',
+      name: 'orchidTokensInTheFormOfAccessCreditsAreUnable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get bandwidthValueWillVary {
+    return Intl.message(
+      'Bandwidth value will vary',
+      name: 'bandwidthValueWillVary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill {
+    return Intl.message(
+      'Bandwidth is purchased in a VPN marketplace so price will fluctuate based on market dynamics.',
+      name: 'bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get scanOrPasteYourExistingAccountBelowToAddIt {
+    return Intl.message(
+      'Scan or paste your existing account below to add it as a hop.',
+      name: 'scanOrPasteYourExistingAccountBelowToAddIt',
       desc: '',
       args: [],
     );

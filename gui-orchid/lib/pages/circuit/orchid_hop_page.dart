@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/api/cloudflare.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
@@ -597,7 +597,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       // Fetch the pot balance
       LotteryPot pot;
       try {
-        pot = await CloudFlare.getLotteryPot(funder, signer)
+        pot = await OrchidEthereum.getLotteryPot(funder, signer)
             .timeout(Duration(seconds: 60));
         print("got pot: $pot");
       } catch (err) {

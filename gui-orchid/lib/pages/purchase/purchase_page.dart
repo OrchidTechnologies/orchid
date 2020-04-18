@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
@@ -18,12 +19,16 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import '../app_colors.dart';
 import '../app_text.dart';
+import 'package:intl/intl.dart';
 
 class PurchasePage extends StatefulWidget {
   final AddFlowCompletion onAddFlowComplete;
+  final bool cancellable;
 
-  const PurchasePage({Key key, @required this.onAddFlowComplete})
+  const PurchasePage(
+      {Key key, @required this.onAddFlowComplete, this.cancellable = false})
       : super(key: key);
 
   @override
@@ -50,66 +55,83 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void initStateAsync() async {
-    _pricing = await OrchidAPI().pricing().getPricing();
-    setState(() {});
+    // Disable price display
+    //_pricing = await OrchidAPI().pricing().getPricing();
+    //setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return TitledPage(
+      decoration: BoxDecoration(color: Colors.transparent),
       title: s.purchase,
       child: buildPage(context),
       lightTheme: true,
+      cancellable: widget.cancellable,
     );
   }
 
-  // TODO: Localize
   Widget buildPage(BuildContext context) {
-    const String bullet = "•";
     return Stack(
       children: <Widget>[
-        Padding(
-          padding:
-              const EdgeInsets.only(left: 30, right: 30, top: 16, bottom: 16),
-          child: Column(
-            children: <Widget>[
-              pady(8),
-              _buildInstructions(),
-              pady(16),
-              _buildPurchaseCardView(
-                  pac: OrchidPurchaseAPI.pacTier1,
-                  title: s.lowUsage,
-                  subtitle: "$bullet " +
-                      s.internetBrowsing +
-                      "\n$bullet " +
-                      s.lowVideoStraming,
-                  gradBegin: 0,
-                  gradEnd: 2),
-              pady(24),
-              _buildPurchaseCardView(
-                  pac: OrchidPurchaseAPI.pacTier2,
-                  title: s.averageUsage,
-                  subtitle: "$bullet " +
-                      s.internetBrowsing +
-                      "\n$bullet " +
-                      s.moderateVideoStreaming,
-                  gradBegin: -2,
-                  gradEnd: 1),
-              pady(24),
-              _buildPurchaseCardView(
-                pac: OrchidPurchaseAPI.pacTier3,
-                title: s.highUsage,
-                subtitle: "$bullet " +
-                    s.videoStreamingCalls +
-                    "\n$bullet " +
-                    s.gaming,
-                gradBegin: -1,
-                gradEnd: -1,
-              ),
-            ],
+        SingleChildScrollView(
+          child: Padding(
+            padding:
+                const EdgeInsets.only(left: 30, right: 30, top: 16, bottom: 16),
+            child: Column(
+              children: <Widget>[
+                pady(8),
+                _buildInstructions(),
+                pady(16),
+                _buildPurchaseCardView(
+                    pac: OrchidPurchaseAPI.pacTier1,
+                    subtitle: _buildTierDescriptionText(100),
+                    gradBegin: 0,
+                    gradEnd: 2),
+                pady(24),
+                _buildPurchaseCardView(
+                    pac: OrchidPurchaseAPI.pacTier2,
+                    subtitle: _buildTierDescriptionText(200),
+                    gradBegin: -2,
+                    gradEnd: 1),
+                pady(24),
+                _buildPurchaseCardView(
+                  pac: OrchidPurchaseAPI.pacTier3,
+                  subtitle: _buildTierDescriptionText(500),
+                  gradBegin: -1,
+                  gradEnd: -1,
+                ),
+                pady(32),
+                _buildInfoPanel(
+                    svgName: "assets/svg/orchid_icon.svg",
+                    title: s.onlyForTheOrchidApp,
+                    body: s.orchidTokensInTheFormOfAccessCreditsAreUnable),
+                pady(19),
+                _buildInfoPanel(
+                    svgName: "assets/svg/bandwidth_icon.svg",
+                    title: s.bandwidthValueWillVary,
+                    body: s.bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill,
+                    linkText: "Learn more",
+                    linkUrl: 'https://www.orchid.com/' // TODO:
+                    )
+              ],
+            ),
           ),
         ),
         if (_showOverlayPane) _buildOverlay()
+      ],
+    );
+  }
+
+  TextSpan _buildTierDescriptionText(int gb) {
+    const subtitleStyle =
+        TextStyle(color: Color(0xffF1FFF8), fontSize: 13.0, height: 1.33);
+    var subtitleStyleBold = subtitleStyle.copyWith(fontWeight: FontWeight.bold);
+    return TextSpan(
+      children: [
+        TextSpan(text: s.approximately + "\n", style: subtitleStyle),
+        TextSpan(text: gb.toString() + s.gb, style: subtitleStyleBold),
+        TextSpan(text: " " + s.ofTraffic, style: subtitleStyle)
       ],
     );
   }
@@ -157,7 +179,7 @@ class _PurchasePageState extends State<PurchasePage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
-          s.pacPurchaseWaiting, // TODO: Localize
+          s.pacPurchaseWaiting,
           style: TextStyle(fontSize: 20),
         ),
         pady(16),
@@ -166,7 +188,7 @@ class _PurchasePageState extends State<PurchasePage> {
             child: Text(
               s.retry,
               style: TextStyle(color: Colors.white),
-            ), // TODO: Localize
+            ),
             onPressed: _retryPurchase),
         _showHelp ? _buildHelpExpanded() : _buildHelp()
       ],
@@ -190,7 +212,6 @@ class _PurchasePageState extends State<PurchasePage> {
         FlatButton(
             color: AppText.linkStyle.color,
             child: Text(s.copyDebugInfo, style: TextStyle(color: Colors.white)),
-            // TODO: Localize
             onPressed: _copyDebugInfo),
         pady(24),
         LinkText(s.contactOrchid,
@@ -199,7 +220,6 @@ class _PurchasePageState extends State<PurchasePage> {
         FlatButton(
             color: Colors.redAccent,
             child: Text(s.remove, style: TextStyle(color: Colors.white)),
-            // TODO: Localize
             onPressed: _deleteTransaction),
       ],
     );
@@ -244,19 +264,17 @@ class _PurchasePageState extends State<PurchasePage> {
       fontFamily: 'SFProText-Semibold',
     );
     const subtitleStyle = TextStyle(
-      color: Colors.grey,
-      fontSize: 15.0,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.3,
-      fontFamily: 'SFProText-Semibold',
-    );
+        color: AppColors.neutral_3,
+        fontSize: 12.0,
+        fontWeight: FontWeight.normal,
+        height: 1.33);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Text(s.chooseYourPurchase, style: titleStyle),
+        Text(s.chooseYourAmount, style: titleStyle),
         pady(16),
-        Text(s.basedOnYourBandwidth, style: subtitleStyle),
+        Text(s.payOnlyForWhatYouUseWithVpnCreditsOnly, style: subtitleStyle),
       ],
     );
   }
@@ -264,7 +282,7 @@ class _PurchasePageState extends State<PurchasePage> {
   Widget _buildPurchaseCardView(
       {PAC pac,
       String title,
-      String subtitle,
+      TextSpan subtitle,
       double gradBegin = 0.0,
       double gradEnd = 1.0}) {
     const titleStyle = TextStyle(
@@ -274,17 +292,10 @@ class _PurchasePageState extends State<PurchasePage> {
         letterSpacing: 0.4,
         fontFamily: 'SFProText-Semibold',
         height: 22.0 / 17.0);
-    const subtitleStyle = TextStyle(
-      color: Colors.white,
-      fontSize: 13.0,
-      fontWeight: FontWeight.w300,
-      letterSpacing: 0.5,
-      fontFamily: 'SFProText-Semibold',
-    );
     const valueStyle = TextStyle(
         color: Colors.white,
         fontSize: 18.0,
-        fontWeight: FontWeight.normal,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0.38,
         fontFamily: 'SFProText-Regular',
         height: 25.0 / 20.0);
@@ -295,9 +306,9 @@ class _PurchasePageState extends State<PurchasePage> {
         fontFamily: 'SFProText-Regular',
         height: 16.0 / 12.0);
 
-    var usdString = pac.displayName;
-    var oxtString =
-        _pricing?.toOXT(pac.usdPurchasePrice)?.toStringAsFixed(2) ?? "";
+    var usdString = NumberFormat("0.00").format(pac.usdPurchasePrice.value);
+    var oxtString = NumberFormat("0.00")
+        .format(_pricing?.toOXT(pac.usdPurchasePrice)?.value ?? 0);
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
@@ -315,8 +326,10 @@ class _PurchasePageState extends State<PurchasePage> {
           gradient: grad,
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+          padding:
+              const EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 14),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               // left side usage description
               Expanded(
@@ -324,17 +337,17 @@ class _PurchasePageState extends State<PurchasePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      title,
-                      textAlign: TextAlign.left,
-                      style: titleStyle,
-                    ),
-                    pady(8),
-                    FittedBox(
-                      child: Text(
-                        subtitle,
+                    if (title != null)
+                      Text(
+                        title,
                         textAlign: TextAlign.left,
-                        style: subtitleStyle,
+                        style: titleStyle,
+                      ),
+                    if (title != null) pady(8),
+                    FittedBox(
+                      child: RichText(
+                        text: subtitle,
+                        textAlign: TextAlign.left,
                       ),
                     )
                   ],
@@ -345,23 +358,29 @@ class _PurchasePageState extends State<PurchasePage> {
               Expanded(
                 flex: 1,
                 child: FittedBox(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Row(
-                          children: <Widget>[
-                            Text("$usdString",
-                                style: valueStyle.copyWith(
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        pady(2),
-                        Visibility(
-                          visible: _pricing != null,
-                          child: Text("~ $oxtString OXT",
-                              style: valueSubtitleStyle),
-                        ),
-                      ]),
+                  child: Column(children: [
+                    Row(children: <Widget>[
+                      RichText(
+                          text: TextSpan(
+                        children: [
+                          TextSpan(
+                              text: "$usdString ",
+                              style: valueStyle.copyWith(
+                                  fontWeight: FontWeight.bold)),
+                          TextSpan(
+                              text: "USD",
+                              style: valueStyle.copyWith(
+                                  fontWeight: FontWeight.normal)),
+                        ],
+                      ))
+                    ]),
+                    pady(2),
+                    Visibility(
+                      visible: _pricing != null,
+                      child:
+                          Text("~ $oxtString OXT", style: valueSubtitleStyle),
+                    ),
+                  ]),
                 ),
               ),
             ],
@@ -369,6 +388,37 @@ class _PurchasePageState extends State<PurchasePage> {
         ),
       ),
     );
+  }
+
+  Widget _buildInfoPanel(
+      {String svgName,
+      String title,
+      String body,
+      String linkText,
+      String linkUrl}) {
+    var style = TextStyle(fontSize: 12, height: 1.25);
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SvgPicture.asset(svgName, width: 24, height: 24),
+      padx(19),
+      Expanded(
+          child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: style.copyWith(fontWeight: FontWeight.bold),
+          ),
+          pady(3),
+          Text(body, style: style),
+          if (linkText != null) pady(10),
+          if (linkText != null)
+            LinkText(linkText,
+                style: AppText.linkStyle
+                    .copyWith(fontSize: 12, fontWeight: FontWeight.normal),
+                url: linkUrl),
+        ],
+      ))
+    ]);
   }
 
   Future<void> _purchase({PAC purchase}) async {
@@ -405,7 +455,7 @@ class _PurchasePageState extends State<PurchasePage> {
         _showOverlay(s.fetchingPurchasedPAC);
         break;
       case PacTransactionState.WaitingForRetry:
-        _showOverlay(s.retryingPurchasedPac);
+        _showOverlay(s.retryingPurchasedPAC);
         break;
       case PacTransactionState.WaitingForUserAction:
         _showOverlay(s.retryPurchasedPAC, requiresUserAction: true);
@@ -501,7 +551,6 @@ class _PurchasePageState extends State<PurchasePage> {
 
     await Dialogs.showAppDialog(
       context: context,
-      // TODO: Localize
       title: s.purchaseError,
       bodyText: s.thereWasAnErrorInPurchasingContact,
     );
