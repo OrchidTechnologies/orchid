@@ -33,7 +33,11 @@ typedef int SOCKET;
 
 namespace orc {
 
-int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t), const sockaddr *address, socklen_t length);
+int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t)
+#ifdef _WIN32
+__attribute__((stdcall))
+#endif
+, const sockaddr *address, socklen_t length);
 
 }
 
