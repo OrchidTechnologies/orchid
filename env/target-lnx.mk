@@ -74,8 +74,8 @@ ar/$(1) := $(llvm)/bin/$(1)-linux-android-ar
 strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
 windres/$(1) := false
 binary/$(1) := $(cc) $$(more/$(1))
-$$(shell mkdir -p $(output)/$(1) && echo -e '#!/bin/bash\n$$(binary/$(1)) "$$$$@"' >$(output)/$(1)/rust-clang && chmod 755 $(output)/$(1)/rust-clang)
-export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(CURDIR)/$(output)/$(1)/rust-clang
+export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_RUSTFLAGS := $$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $$(more/$(1)),-C link-arg=$$(arg))
+export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword $(cc))
 endef
 $(each)
 
