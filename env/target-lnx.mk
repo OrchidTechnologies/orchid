@@ -50,7 +50,7 @@ cxx := clang++$(suffix)
 
 cxx += -stdlib=libc++
 
-tidy := $(shell which clang-tidy >/dev/null)
+tidy := $(shell which clang-tidy 2>/dev/null)
 ifeq ($(tidy)$(filter notidy,$(debug)),)
 debug += notidy
 endif
