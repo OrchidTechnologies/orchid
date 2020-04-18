@@ -13,7 +13,7 @@ sudo apt-get install \
      python3-pip \
      python3-setuptools \
      tcl
-sudo pip3 install meson==0.51.2
+sudo pip3 install meson
 git clone https://github.com/OrchidTechnologies/orchid.git
 cd orchid/
 git submodule update --init --recursive
