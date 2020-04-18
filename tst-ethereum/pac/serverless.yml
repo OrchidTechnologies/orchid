@@ -48,7 +48,7 @@ provider:
     STAGE: ${self:provider.stage}
     LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
     ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
-  runtime: python3.6
+  runtime: python3.8
   region: us-west-2
   iamRoleStatements:
     - Effect: "Allow"
