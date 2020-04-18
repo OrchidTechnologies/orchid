@@ -30,6 +30,7 @@ meson/aarch64 := aarch64
 
 include $(pwd)/target-gnu.mk
 
+lflags += -fuse-ld=gold
 lflags += -Wl,--icf=all
 lflags += -pthread
 qflags += -fPIC
@@ -48,6 +49,11 @@ cc := clang$(suffix)
 cxx := clang++$(suffix)
 
 cxx += -stdlib=libc++
+
+tidy := $(shell which clang-tidy >/dev/null)
+ifeq ($(tidy)$(filter notidy,$(debug)),)
+debug += notidy
+endif
 
 else
 

@@ -114,6 +114,27 @@ jobs:
       run: df -k
 
 
+  build-lnx-bad:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: apt-get install
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install clang-tidy-9 libc++-9-dev libc++abi-9-dev
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
+    - name: make Linux server
+      run: make -j3 -C srv-shared
+
+    - name: df -k
+      run: df -k
+
+
   build-win-srv:
     runs-on: ubuntu-latest
 

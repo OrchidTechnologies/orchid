@@ -111,10 +111,6 @@ filter :=
 filter += source/.*\.[ch]pp
 filter := (^|/)($(subst $(space),|,$(patsubst %,%,($(strip $(filter))))))$$
 
-tidy := $(llvm)/bin/clang-tidy
-#tidy := $(HOME)/llvm-project/build/bin/clang-tidy
-#tidy := $(HOME)/bin/android-ndk-r21-beta2/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang-tidy
-
 .PHONY: printenv
 printenv:
 	printenv
