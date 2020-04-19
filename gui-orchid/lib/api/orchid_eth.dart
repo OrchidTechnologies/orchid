@@ -24,7 +24,8 @@ class OrchidEthereum {
   // Get the provider URL allowing override in the advanced config
   static Future<String> get url async {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
-    return jsConfig.evalStringDefault('ethProviderUrl', providerUrl);
+    // Note: This var is also used by the tunnel for the eth provider.
+    return jsConfig.evalStringDefault('rpc', providerUrl);
   }
 
   /*
