@@ -696,7 +696,7 @@ void Capture::Start(const std::string &path) {
         eth_directory = "0x918101FB64f467414e9a785aF9566ae69C3e22C5";
         eth_location = "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD";
         eth_winratio = 0;
-        rpc = "https://cloudflare-eth.com:443/";
+        rpc = "https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf";
         hops = [];
         //stun = "stun:stun.l.google.com:19302";
     )");

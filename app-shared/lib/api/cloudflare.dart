@@ -8,7 +8,7 @@ import 'orchid_crypto.dart';
 
 class CloudFlare {
   // Cloudflare API
-  static var url = 'https://cloudflare-eth.com';
+  static var url = 'https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf';
 
   // Lottery contract address on main net
   static var lotteryContractAddress =
