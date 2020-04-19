@@ -45,7 +45,7 @@ stanzas:
 
 Once you have the submodules downloaded, you'll need to configure the developer
 signing identity that Apple will use. To set up this part of the build, copy
-`local.mk.in` to `local.mk`. Then edit the `local.mk` file. You'll
+`identity.mk.in` to `identity.mk`. Then edit the `identity.mk` file. You'll
 need your Apple developer information. Get your Team ID from here:
 https://developer.apple.com/account/#/membership.
 

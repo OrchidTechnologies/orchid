@@ -9,7 +9,6 @@
 # }}}
 
 
-pre := lib
 dll := so
 lib := a
 exe := 
@@ -19,18 +18,15 @@ meson := linux
 archs += x86_64
 openssl/x86_64 := linux-x86_64
 host/x86_64 := x86_64-linux-gnu
-triple/x86_64 := x86_64-unknown-linux-gnu
 meson/x86_64 := x86_64
 
 archs += aarch64
 openssl/aarch64 := linux-aarch64
 host/aarch64 := aarch64-linux-gnu
-triple/aarch64 := aarch64-unknown-linux-gnu
 meson/aarch64 := aarch64
 
 include $(pwd)/target-gnu.mk
 
-lflags += -fuse-ld=gold
 lflags += -Wl,--icf=all
 lflags += -pthread
 qflags += -fPIC
@@ -50,11 +46,6 @@ cxx := clang++$(suffix)
 
 cxx += -stdlib=libc++
 
-tidy := $(shell which clang-tidy >/dev/null)
-ifeq ($(tidy)$(filter notidy,$(debug)),)
-debug += notidy
-endif
-
 else
 
 more := 
@@ -73,9 +64,6 @@ ranlib/$(1) := $(llvm)/bin/$(1)-linux-android-ranlib
 ar/$(1) := $(llvm)/bin/$(1)-linux-android-ar
 strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
 windres/$(1) := false
-binary/$(1) := $(cc) $$(more/$(1))
-$$(shell mkdir -p $(output)/$(1) && echo -e '#!/bin/bash\n$$(binary/$(1)) "$$$$@"' >$(output)/$(1)/rust-clang && chmod 755 $(output)/$(1)/rust-clang)
-export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(CURDIR)/$(output)/$(1)/rust-clang
 endef
 $(each)
 

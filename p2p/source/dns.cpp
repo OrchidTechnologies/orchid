@@ -22,9 +22,6 @@
 
 #include <regex>
 
-#include <dns.h>
-#include <mappings.h>
-
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
@@ -35,9 +32,6 @@
 namespace orc {
 
 task<Results> Resolve(Origin &origin, const std::string &host, const std::string &port) { orc_block({
-    if (host == "localhost")
-        co_return co_await Resolve(origin, "127.0.0.1", port);
-
     asio::ip::tcp::resolver resolver(orc::Context());
 
     Results results;
@@ -51,9 +45,6 @@ task<Results> Resolve(Origin &origin, const std::string &host, const std::string
         const auto result(Parse((co_await origin.Request("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
             {"accept", "application/dns-json"}
         }, {})).ok()));
-
-        const auto status(result["Status"].asUInt());
-        orc_assert_(status == 0, dns_rcode_text(static_cast<dns_rcode_t>(status)));
 
         for (const auto &answer : result["Answer"])
             if (answer["type"].asUInt64() == 1) {

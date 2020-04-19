@@ -25,11 +25,6 @@ cflags += '-DORCHID_DOMAIN="$(domain)"'
 cflags += '-DORCHID_NAME="$(name)"'
 
 bundle := $(output)/Payload/$(name).app
-
-assemble := ios
-platform := ios
-framework := Flutter
-
 signed := 
 
 .PHONY: all
@@ -71,6 +66,16 @@ local += app.mm.o
 local += ios/Runner/GeneratedPluginRegistrant.m.o
 $(call depend,ios/Runner/GeneratedPluginRegistrant.m.o,ios/Pods/Manifest.lock)
 
+cflags += -Iios/Pods/Headers/Public
+
+ios/Pods/Manifest.lock: ios/Podfile .flutter-plugins
+	cd ios && pod install
+	touch $@
+
+$(output)/XCBuildData/build.db: ios/Pods/Manifest.lock
+	xcodebuild -project ios/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=../../$(output)
+
+
 include env/output.mk
 
 define _
@@ -79,11 +84,18 @@ endef
 $(each)
 
 
+replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if test -n "$(filter noaot,$(debug))"; then sed -e 's/^@D@/   /'; else sed -e '/^@D@/d'; fi | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
+
+
 cflags += -Fflutter/bin/cache/artifacts/engine/ios
 lflags += -Fflutter/bin/cache/artifacts/engine/ios
 
-include shared/target-ios.mk
+include flutter.mk
 
+
+$(output)/ents-%.xml: ents-%.xml.in
+	@mkdir -p $(dir $@)
+	$(replace)
 
 
 ifneq ($(target),sim)
@@ -98,9 +110,11 @@ $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
 	$(replace)
 
 signed += $(bundle)/PlugIns/$(name).VPN.appex$(signature)
-$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.plist $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
+$(bundle)/PlugIns/$(name).VPN.appex$(signature): $(output)/ents-$(target)-vpn.xml $(bundle)/PlugIns/$(name).VPN.appex/Info.plist $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN
 	@rm -rf $(dir $@)
-	$(call codesign,$(bundle)/PlugIns/$(name).VPN.appex,$<,$@)
+	xattr -cr $(bundle)/PlugIns/$(name).VPN.appex
+	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)/PlugIns/$(name).VPN.appex
+	@touch $@
 
 ifneq ($(provision),)
 $(bundle)/PlugIns/$(name).VPN.appex$(signature): $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision
@@ -108,7 +122,7 @@ $(bundle)/PlugIns/$(name).VPN.appex/embedded.mobileprovision: $(provision)vpn.mo
 	cp -f $< $@
 
 signed += $(bundle)/embedded.mobileprovision
-$(bundle)/embedded.mobileprovision: $(provision)app.mobileprovision
+$(bundle)/embedded.mobileprovision: $(provision)main.mobileprovision
 	cp -f $< $@
 endif
 endif
@@ -121,43 +135,39 @@ $(bundle)/$(name): $(patsubst %,$(output)/$(default)/%,$(local)) $(output)/XCBui
 	@$(cxx/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) $(output)/Release-$(sdk)/libPods-Runner.a $(output)/Release-$(sdk)/*/lib*.a
 
 signed += $(bundle)/Info.plist
-$(bundle)/Info.plist: info-app.plist.in
+$(bundle)/Info.plist: info-main.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)
 
-
 signed += $(bundle)/Base.lproj/LaunchScreen.storyboardc
 $(bundle)/Base.lproj/LaunchScreen.storyboardc: LaunchScreen.storyboard
-	@mkdir -p $(output)/info
-	ibtool --output-format human-readable-text --errors --warnings --notices \
-	    --target-device iphone --target-device ipad --minimum-deployment-target 8.0 \
-	    --module Runner --auto-activate-custom-fonts \
-	    --output-partial-info-plist $(output)/info/ibtool.plist \
-	    --compilation-directory $(dir $@) $< 2>&1 | cat
+	ibtool --errors --warnings --notices --module Runner --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 8.0 --output-format human-readable-text --compilation-directory $(dir $@) $< 2>&1 | cat
+
 
 signed += $(bundle)/Assets.car
-$(bundle)/Assets.car: $(wildcard Assets.xcassets/*/*)
+$(bundle)/Assets.car: $(wildcard Images.xcassets/*/*)
 	@mkdir -p $(output)/info
 	# XXX: --launch-image LaunchImage
-	actool --output-format human-readable-text --errors --warnings --notices \
-	    --target-device iphone --target-device ipad --minimum-deployment-target 11.0 \
-	    --platform iphoneos \
+	actool --output-format human-readable-text --notices --warnings \
 	    --app-icon AppIcon \
-	    --compress-pngs \
-	    --enable-on-demand-resources YES \
+	    --compress-pngs --enable-on-demand-resources YES \
+	    --platform iphoneos --minimum-deployment-target 11.0 \
+	    --target-device iphone --target-device ipad \
 	    --output-partial-info-plist $(output)/info/actool.plist \
-	    --compile $(bundle) Assets.xcassets 2>&1 | cat
+	    --compile $(bundle) Images.xcassets 2>&1 | cat
 
-signed += $(patsubst resource/%,$(bundle)$(contents)$(resources)/%,$(wildcard resource/*))
-$(bundle)$(contents)$(resources)/%: resource/%
+signed += $(patsubst resource/%,$(bundle)/%,$(wildcard resource/*))
+$(bundle)/%: resource/%
 	@mkdir -p $(dir $@)
 	cp -af $< $@
 	@touch $@
 
 
-$(bundle)$(signature): $(output)/ents-$(target)-app.plist $(signed)
+$(bundle)$(signature): $(output)/ents-$(target)-main.xml $(signed)
 	@rm -rf $(dir $@)
-	$(call codesign,$(bundle),$<,$@)
+	xattr -cr $(bundle)
+	codesign --deep -fs $(codesign) --entitlement $< -v $(bundle)
+	@touch $@
 
 ifeq ($(filter nocompress,$(debug)),)
 zflags := -9

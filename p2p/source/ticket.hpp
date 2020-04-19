@@ -38,10 +38,6 @@ struct Ticket {
     Address funder_;
     Address recipient_;
 
-    uint256_t Value() const {
-        return (ratio_ + uint256_t(1)) * amount_;
-    }
-
     Builder Encode(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
         static const auto orchid_(Hash("Orchid.grab"));
 

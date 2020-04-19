@@ -1,11 +1,9 @@
-/local.mk
+/identity.mk
 /orchid.cfg
 /*.keystore
 /*.mobileprovision
 /*.ovpn
 /*.p12
 /*.pem
-/*.provisionprofile
 bundle.js
 .idea
-site/

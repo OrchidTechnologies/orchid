@@ -6,8 +6,6 @@ PODS:
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
-  - in_app_purchase (0.0.1):
-    - Flutter
   - MTBBarcodeScanner (5.0.11)
   - shared_preferences (0.0.1):
     - Flutter
@@ -28,7 +26,6 @@ PODS:
 DEPENDENCIES:
   - barcode_scan (from `.symlinks/plugins/barcode_scan/ios`)
   - Flutter (from `Flutter`)
-  - in_app_purchase (from `.symlinks/plugins/in_app_purchase/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - shared_preferences_macos (from `.symlinks/plugins/shared_preferences_macos/ios`)
   - shared_preferences_web (from `.symlinks/plugins/shared_preferences_web/ios`)
@@ -47,8 +44,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/barcode_scan/ios"
   Flutter:
     :path: Flutter
-  in_app_purchase:
-    :path: ".symlinks/plugins/in_app_purchase/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
   shared_preferences_macos:
@@ -68,7 +63,6 @@ SPEC CHECKSUMS:
   barcode_scan: 33f586d02270046fc6559135038b34b5754eaa4f
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
-  in_app_purchase: 6b3a6d6944354f353d59eb1f2a0db3fd7a40917b
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   shared_preferences: 430726339841afefe5142b9c1f50cb6bd7793e01
   shared_preferences_macos: f3f29b71ccbb56bf40c9dd6396c9acf15e214087
@@ -78,6 +72,6 @@ SPEC CHECKSUMS:
   url_launcher_macos: fd7894421cd39320dce5f292fc99ea9270b2a313
   url_launcher_web: e5527357f037c87560776e36436bf2b0288b965c
 
-PODFILE CHECKSUM: f32fb4e7c14f8b3ca19a369d7be425dd9241af27
+PODFILE CHECKSUM: 3dbe063e9c90a5d7c9e4e76e70a821b9e2c1d271
 
 COCOAPODS: 1.8.4

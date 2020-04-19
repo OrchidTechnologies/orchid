@@ -9,7 +9,6 @@
 # }}}
 
 
-pre := lib
 dll := dylib
 lib := a
 exe := 
@@ -21,10 +20,8 @@ lflags += -Wl,-no_dead_strip_inits_and_terms
 
 signature := /_CodeSignature/CodeResources
 
-path := $(shell xcrun --sdk $(sdk) --show-sdk-path)
-toolchain := $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain
+more += -isysroot $(shell xcrun --sdk $(sdk) --show-sdk-path)
 
-more += -isysroot $(path)
 ifneq ($(sdk),macosx)
 more += -idirafter $(shell xcrun --sdk macosx --show-sdk-path)/usr/include
 endif
@@ -39,12 +36,9 @@ clang := $(shell xcrun -f clang)
 objc := $(clang) $(more)
 
 ifeq ($(filter crossndk,$(debug)),)
+debug += notidy
 cc := $(clang) $(more)
 cxx := $(shell xcrun -f clang++) $(more)
-
-ifeq ($(tidy)$(filter notidy,$(debug)),)
-debug += notidy
-endif
 else
 
 define _
@@ -62,7 +56,7 @@ include $(pwd)/target-ndk.mk
 cxx += -stdlib=libc++
 
 xflags += -nostdinc++
-xflags += -isystem $(toolchain)/usr/include/c++/v1
+xflags += -isystem $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1
 
 endif
 

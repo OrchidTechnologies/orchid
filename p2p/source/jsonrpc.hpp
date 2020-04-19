@@ -159,8 +159,6 @@ class Address :
     }
 
     Address(const std::string &address);
-    Address(const char *address);
-
     Address(const Brick<64> &common);
 
     bool operator <(const Address &rhs) const {
@@ -491,11 +489,6 @@ struct Coded<std::vector<Type_>, void> {
     static void Name(std::ostringstream &signature) {
         Coded<Type_>::Name(signature);
         signature << "[]";
-    }
-
-    static std::vector<Type_> Decode(Window &window) {
-        orc_assert(Coded<uint256_t>::Decode(window) == 0);
-        return {};
     }
 
     static void Encode(Builder &builder, const std::vector<Type_> &values) {

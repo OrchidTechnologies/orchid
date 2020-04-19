@@ -1,4 +1,3 @@
 *.deb
 *.rpm
-orchidd
-*.8
+orchid-server

@@ -654,35 +654,41 @@ class Beam :
 Beam Bless(const std::string &data);
 
 template <typename Data_>
-inline bool operator ==(const Region &lhs, const std::string &rhs) {
+inline bool operator ==(const Beam &lhs, const std::string &rhs) {
+    const auto size(lhs.size());
+    return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
+}
+
+template <typename Data_>
+inline bool operator ==(const Beam &lhs, const Strung<Data_> &rhs) {
     const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
 template <size_t Size_>
-inline bool operator ==(const Region &lhs, const Data<Size_> &rhs) {
+inline bool operator ==(const Beam &lhs, const Brick<Size_> &rhs) {
     const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
-inline bool operator ==(const Region &lhs, const Range &rhs) {
+inline bool operator ==(const Beam &lhs, const Range &rhs) {
     const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
-inline bool operator ==(const Region &lhs, const Region &rhs) {
+inline bool operator ==(const Beam &lhs, const Beam &rhs) {
     const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
-bool operator ==(const Region &lhs, const Buffer &rhs);
+bool operator ==(const Beam &lhs, const Buffer &rhs);
 
 template <typename Buffer_>
-inline bool operator !=(const Region &lhs, const Buffer_ &rhs) {
+inline bool operator !=(const Beam &lhs, const Buffer_ &rhs) {
     return !(lhs == rhs);
 }
 
-inline bool operator <(const Region &lhs, const Region &rhs) {
+inline bool operator <(const Beam &lhs, const Beam &rhs) {
     const auto size(lhs.size());
     return size < rhs.size() || size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) < 0;
 }

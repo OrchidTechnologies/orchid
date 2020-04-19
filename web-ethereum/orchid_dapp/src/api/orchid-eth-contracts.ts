@@ -34,7 +34,7 @@ export class OrchidContracts {
   static directory_push_max_gas: number = 300000;
   static lottery_pull_amount_max_gas: number = 150000;
   static lottery_pull_all_max_gas: number = 150000;
-  static lottery_lock_max_gas: number = 50000;
+  static lottery_lock_max_gas: number = 25000;
   static lottery_warn_max_gas: number = 50000;
   static lottery_move_max_gas: number = 150000;
 

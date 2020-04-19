@@ -29,6 +29,11 @@ c_libmaxminddb := -DUNICODE
 
 cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 
+source += $(pwd)/SPCDNS/src/codec.c
+source += $(pwd)/SPCDNS/src/mappings.c
+source += $(pwd)/SPCDNS/src/output.c
+cflags += -I$(pwd)/SPCDNS/src
+
 $(call include,duktape.mk)
 $(call include,sqlite.mk)
 

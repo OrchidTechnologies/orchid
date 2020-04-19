@@ -123,20 +123,14 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                     locked->commit_ = commit;
                 }
 
-                if (!id.zero()) {
-                    auto pending(locked->pending_.find(id));
-                    if (pending != locked->pending_.end()) {
-                        const auto &ticket(pending->second.first);
-                        locked->spent_ += ticket.Value();
-                        locked->pending_.erase(pending);
-                    }
-                }
+                if (!id.zero())
+                    locked->pending_.erase(id);
 
                 auto predicted(locked->balance_);
                 for (const auto &pending : locked->pending_) {
                     const auto &ticket(pending.second.first);
                     // XXX: subtract predicted transaction fees
-                    predicted += ticket.Value();
+                    predicted += ticket.amount_ * (ticket.ratio_ + 1);
                 }
 
                 return predicted;
@@ -206,22 +200,6 @@ task<void> Client::Shut() noexcept {
 task<void> Client::Send(const Buffer &data) {
     Transfer(data.size());
     co_return co_await Bonded::Send(data);
-}
-
-void Client::Update() {
-    Issue(0);
-}
-
-uint256_t Client::Spent() {
-    const auto locked(locked_());
-    orc_assert(locked->pending_.empty());
-    return locked->spent_;
-}
-
-checked_int256_t Client::Balance() {
-    // XXX: return task<int256> and merge Update
-    const auto locked(locked_());
-    return locked->balance_;
 }
 
 }

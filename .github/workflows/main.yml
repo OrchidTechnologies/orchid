@@ -3,206 +3,184 @@ on: [push]
 
 jobs:
 
-  build-mac-all:
+
+  build-mac:
     runs-on: macos-latest
 
     steps:
 
+    - name: brew install
+      run: brew install meson autoconf automake libtool awscli
+    - name: brew link
+      run: brew link --force gettext
+    - name: pip install
+      run: pip install pyyaml
+
+    - name: git config
+      run: |
+        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
+        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
+        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
     - name: make macOS client
-      run: make -j3 -C cli-shared
+      run: |
+        make -j3 -C cli-shared
+        aws configure set default.s3.multipart_threshold 1GB
+        aws s3 cp --acl public-read ./cli-shared/out-mac/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-mac/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchid
+        aws s3 cp --acl public-read ./cli-shared/out-mac/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-mac/LATEST/orchid
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-mac
         path: cli-shared/out-mac/x86_64/orchid
 
     - name: make macOS server
-      run: make -j3 -C srv-shared
+      run: |
+        make -j3 -C srv-shared
+        aws configure set default.s3.multipart_threshold 1GB
+        aws s3 cp --acl public-read ./srv-shared/out-mac/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-mac/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd
+        aws s3 cp --acl public-read ./srv-shared/out-mac/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-mac/LATEST/orchidd
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-mac
         path: srv-shared/out-mac/x86_64/orchidd
 
-    - name: df -k
-      run: df -k
 
-
-  build-mac-app:
-    runs-on: macos-latest
-
-    steps:
-
-    - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: git submodule update --init --recursive --jobs 3
-
-    - name: pod install
-      run: make -C app-macos out-mac/XCBuildData/build.db
-    - name: make macOS .app
-      run: debug=ldid make -j3 -C app-macos
-
-    - name: df -k
-      run: df -k
-
-
-  build-ios-app:
-    runs-on: macos-latest
-
-    steps:
-
-    - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: git submodule update --init --recursive --jobs 3
-
-    - name: make iOS .ipa
-      run: debug=ldid make -j3 -C app-ios
-
-    - name: df -k
-      run: df -k
-
-
-  build-lnx-cli:
+  build-lnx:
     runs-on: ubuntu-latest
 
     steps:
 
+    - name: apt-get install
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install bison flex gettext gperf groff ninja-build python3-pip python3-setuptools tcl
+    - name: pip install meson
+      run: sudo -E pip3 install meson==0.51.2
+
+    - name: git config
+      run: |
+        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
+        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
+        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
     - name: make Linux client
-      run: debug=crossndk make -j3 -C cli-shared
+      run: |
+        make -j3 -C cli-shared debug=crossndk
+        aws configure set default.s3.multipart_threshold 1GB
+        aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchid
+        aws s3 cp --acl public-read ./cli-shared/out-lnx/x86_64/orchid s3://orchid-github-actions-artifacts/orchid-lnx/LATEST/orchid
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
         path: cli-shared/out-lnx/x86_64/orchid
 
-    - name: df -k
-      run: df -k
-
-
-  build-lnx-srv:
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: git submodule update --init --recursive --jobs 3
-
     - name: make Linux server
-      run: debug=crossndk make -j3 -C srv-shared
+      run: |
+        make -j3 -C srv-shared debug=crossndk
+        aws configure set default.s3.multipart_threshold 1GB
+        aws s3 cp --acl public-read ./srv-shared/out-lnx/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-lnx/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd
+        aws s3 cp --acl public-read ./srv-shared/out-lnx/x86_64/orchidd s3://orchid-github-actions-artifacts/orchidd-lnx/LATEST/orchidd
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx
         path: srv-shared/out-lnx/x86_64/orchidd
 
-    - name: df -k
-      run: df -k
 
-
-  build-lnx-bad:
+  build-win:
     runs-on: ubuntu-latest
 
     steps:
 
     - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install clang-tidy-9 libc++-9-dev libc++abi-9-dev
-
-    - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: git submodule update --init --recursive --jobs 3
-
-    - name: make Linux server
-      run: make -j3 -C srv-shared
-
-    - name: df -k
-      run: df -k
-
-
-  build-win-srv:
-    runs-on: ubuntu-latest
-
-    steps:
-
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install bison flex gettext gperf groff ninja-build python3-pip python3-setuptools tcl
+    - name: pip install meson
+      run: sudo -E pip3 install meson==0.51.2
     - name: apt-get install
       run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install mingw-w64
 
+    - name: git config
+      run: |
+        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
+        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
+        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: make Windows test
+      run: make -j3 -C tst-network target=win
+
     - name: make Windows server
-      run: make -j3 -C srv-shared target=win
+      run: |
+        make -j3 -C srv-shared target=win
+        aws configure set default.s3.multipart_threshold 1GB
+        aws s3 cp --acl public-read ./srv-shared/out-win/x86_64/orchidd.exe s3://orchid-github-actions-artifacts/orchidd-w64/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/orchidd.exe
+        aws s3 cp --acl public-read ./srv-shared/out-win/x86_64/orchidd.exe s3://orchid-github-actions-artifacts/orchidd-w64/LATEST/orchidd.exe
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-w64
         path: srv-shared/out-win/x86_64/orchidd.exe
 
-    - name: df -k
-      run: df -k
 
-
-  build-win-tst:
+  build-and:
     runs-on: ubuntu-latest
 
     steps:
 
     - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install mingw-w64
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install bison flex gettext gperf groff ninja-build python3-pip python3-setuptools tcl
+    - name: pip install meson
+      run: sudo -E pip3 install meson==0.51.2
 
+    - name: git config
+      run: |
+        git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/"
+        git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/"
+        git config --global advice.detachedHead false
     - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
     - name: git submodule
       run: git submodule update --init --recursive --jobs 3
 
-    - name: make Windows test
-      run: make -j3 -C tst-network target=win
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
 
-    - name: df -k
-      run: df -k
-
-
-  build-and-a64:
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - uses: actions/checkout@v1
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule (deep)
-      # XXX: flutter needs deep for an unknown reason; maybe this can be fixed?
-      # XXX: the other repositories need uploadpack.allowReachableSHA1InWant :(
-      run: git submodule update --init --recursive --jobs 3 -- app-shared/flutter min-wireshark/{gnulib,libiconv} p2p/lwip vpn-shared/{libssh,tor}
-    - name: git submodule (shallow)
-      run: git submodule update --init --recursive --jobs 3 --depth 1
-
-    - name: make Android .apk
-      run: make -j3 -C app-android precache=--no-ios jni=arm64-v8a
+    - name: make Android APK
+      run: |
+        make -j3 -C app-android
+        aws configure set default.s3.multipart_threshold 1GB
+        aws s3 cp --acl public-read ./app-android/out-and/Orchid.apk s3://orchid-github-actions-artifacts/orchid-apk/$(date +%Y-%m-%dT%H:%M:%S%z)/$GITHUB_SHA/Orchid.apk
+        aws s3 cp --acl public-read ./app-android/out-and/Orchid.apk s3://orchid-github-actions-artifacts/orchid-apk/LATEST/Orchid.apk
     - uses: actions/upload-artifact@v1
       with:
-        name: orchid-apk64
+        name: orchid-apk
         path: app-android/out-and/Orchid.apk
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
-
-    - name: df -k
-      run: df -k

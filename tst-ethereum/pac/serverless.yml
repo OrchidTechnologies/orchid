@@ -20,18 +20,6 @@ custom:
     DEFAULT_POOL_SIZE:
       prod: "3"
       dev: "3"
-    LOG_LEVEL:
-      prod: "WARNING"
-      dev: "DEBUG"
-    ENABLE_MONITORING:
-      prod: 'True'
-      dev: 'True'
-  datadog:
-    addLayers: true
-    flushMetricsToLogs: true
-    apiKey: ${ssm:DATADOG_API_KEY~true}
-  enterprise:
-    logIngestMode: pull
 provider:
   name: aws
   stage: ${opt:stage,'dev'}
@@ -42,13 +30,11 @@ provider:
     RECEIPT_SANDBOX: 'False'
     AUTO_RETRY_WRONG_ENV_REQUEST: 'True'
     WEB3_INFURA_PROJECT_ID: ${ssm:WEB3_INFURA_PROJECT_ID~true}
+    # WEB3_INFURA_PROJECT_SECRET: ${ssm:WEB3_INFURA_PROJECT_SECRET~true}
     TABLE_NAME: PAC-${self:provider.stage}
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
-    STAGE: ${self:provider.stage}
-    LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
-    ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
-  runtime: python3.8
+  runtime: python3.6
   region: us-west-2
   iamRoleStatements:
     - Effect: "Allow"
@@ -70,7 +56,6 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - "Fn::GetAtt": [ PACTable, Arn ]
-        - "Fn::GetAtt": [ReceiptTable, Arn ]
     - Effect: "Allow"
       Action:
         - "lambda:InvokeFunction"
@@ -84,34 +69,16 @@ functions:
       - http:
           path: submit
           method: post
-  apple:
-    handler: handler.apple
-    events:
-      - http:
-          path: apple
-          method: post
-  google:
-    handler: google.main
-    events:
-      - http:
-          path: google
-          method: post
   MaintainPool:
-    handler: pool.maintain_pool_wrapper
-    events:
-      - schedule: cron(0/15 * * * ? *)
-  balance:
-    handler: balance.main
-    events:
-      - schedule: cron(5/15 * * * ? *)
+    handler: handler.maintain_pool_wrapper
+    # events:
+    #   - schedule: cron(0/15 * * * ? *)
 plugins:
-  - serverless-plugin-datadog
   - serverless-pseudo-parameters
   - serverless-python-requirements
 package:
   exclude:
     - venv/**
-    - node_modules/**
 resources:
   Resources:
     PACTable:
@@ -119,15 +86,11 @@ resources:
       Properties:
         TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
-          - AttributeName: price
-            AttributeType: N
           - AttributeName: signer
             AttributeType: S
         KeySchema:
-          - AttributeName: price
-            KeyType: HASH
           - AttributeName: signer
-            KeyType: RANGE
+            KeyType: HASH
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Retain
     ReceiptTable:

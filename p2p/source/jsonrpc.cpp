@@ -143,11 +143,6 @@ Address::Address(const std::string &address) :
     //orc_assert(eevm::is_checksum_address(address));
 }
 
-Address::Address(const char *address) :
-    uint160_t(std::string(address))
-{
-}
-
 Address::Address(const Brick<64> &common) :
     Address(Hash(common).skip<12>().num<uint160_t>())
 {

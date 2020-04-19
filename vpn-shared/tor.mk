@@ -45,7 +45,6 @@ w_tor += tor_cv_library_zlib_dir="(system)"
 ifeq ($(target),win)
 l_tor += -Wl,--start-group
 l_tor += -lcrypt32
-l_tor += -liphlpapi
 l_tor += -lws2_32
 w_tor += --disable-gcc-hardening
 endif

@@ -57,7 +57,6 @@ source += $(filter-out \
 ,$(wildcard \
     $(pwd)/url/src/unicode/*.cpp \
     $(pwd)/url/src/url/*.cpp \
-    $(pwd)/url/src/url/percent_encoding/*.cpp \
 ))
 
 
@@ -169,23 +168,7 @@ cflags += -I$(pwd)/eEVM/3rdparty
 cflags += -I$(pwd)/eEVM/include
 
 
-linked += $(pwd)/challenge-bypass-ristretto/$(pre)rust.$(lib)
-cflags += -I$(pwd)/challenge-bypass-ristretto/src
-
-
-linked += $(pwd)/boringtun/$(pre)rust.$(lib)
-cflags += -I$(pwd)/boringtun/src
-
-
-source += $(pwd)/SPCDNS/src/codec.c
-source += $(pwd)/SPCDNS/src/mappings.c
-source += $(pwd)/SPCDNS/src/output.c
-cflags += -I$(pwd)/SPCDNS/src
-
-
 include $(pwd)/asio.mk
-#include $(pwd)/nettle.mk
-#include $(pwd)/sequoia.mk
-
 $(call include,rtc/target.mk)
+
 $(call include,openvpn3.mk)

@@ -58,7 +58,7 @@ cflags += -ftemplate-backtrace-limit=0
 beta := false
 
 include ../default.mk
--include ../local.mk
+-include ../identity.mk
 
 ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s
@@ -80,6 +80,7 @@ $(each)
 define depend
 $(foreach arch,$(archs),$(eval $(output)/$(arch)/$(1): $(patsubst @/%,$(output)/$(arch)/%,$(2))))
 endef
+$(each)
 
 define preamble
 $(eval temp := $(subst /,$(space),$*))

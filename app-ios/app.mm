@@ -40,7 +40,7 @@
 
 @interface AppDelegate () {
     FlutterMethodChannel *feedback_;
-
+    
     // The application's desired VPN state: true for on, false for off.
     // This is populated from user preferences at launch.
     NSNumber *desiredVPNState_;
@@ -246,22 +246,6 @@
     // Flutter plugins use [UIApplication sharedApplication].delegate.window.rootViewController to get the FlutterViewController
     [GeneratedPluginRegistrant registerWithRegistry:self];
 
-    // Work-around for https://github.com/flutter/flutter/issues/39032
-    // This is safe to remove once the fix for that is available in the SDK
-    NSLocale* currentLocale = [NSLocale currentLocale];
-    if (currentLocale.languageCode != nil) {
-      [flutter.engine.localizationChannel
-        invokeMethod:@"setLocale"
-        arguments: @[
-          currentLocale.languageCode,
-          currentLocale.countryCode ? currentLocale.countryCode : @"",
-          currentLocale.scriptCode ? currentLocale.scriptCode : @"",
-          currentLocale.variantCode ? currentLocale.variantCode : @""
-          ]
-        ];
-    }
-    // End work-around
-
     feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter.binaryMessenger];
 
     __weak typeof(self) weakSelf = self;
@@ -352,13 +336,6 @@
     result([self setConfig: text] ? @"true" : @"false"); // todo
 }
 
-// Called when the flutter application startup is complete and listeners are registered.
-- (void) applicationReady {
-    NSLog(@"Application ready");
-    [self updateProviderStatus];
-    [self updateConnectionStatus];
-}
-
 - (void) applicationWillResignActive:(UIApplication *)application {
 }
 
@@ -373,6 +350,13 @@
 
 
 - (void) applicationDidBecomeActive:(UIApplication *)application {
+}
+
+// Called when the flutter application startup is complete and listeners are registered.
+- (void) applicationReady {
+    NSLog(@"Application ready");
+    [self updateProviderStatus];
+    [self updateConnectionStatus];
 }
 
 - (void) applicationWillTerminate:(UIApplication *)application {
