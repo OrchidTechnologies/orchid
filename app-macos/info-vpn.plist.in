@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundlePackageType</key>
+    <string>XPC!</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+
+    <key>CFBundleExecutable</key>
+    <string>@NAME@.VPN</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>@DOMAIN@.@NAME@.VPN</string>
+    <key>CFBundleName</key>
+    <string>@NAME@</string>
+    <key>CFBundleDisplayName</key>
+    <string>@NAME@ VPN</string>
+    <key>CFBundleShortVersionString</key>
+    <string>@VERSION@</string>
+    <key>CFBundleVersion</key>
+    <string>@REVISION@</string>
+
+    <key>BuildMachineOSBuild</key>
+    <string>18E226</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+
+    <key>DTCompiler</key>
+    <string>com.apple.compilers.llvm.clang.1_0</string>
+    <key>DTPlatformVersion</key>
+    <string>GM</string>
+    <key>DTPlatformBuild</key>
+    <string>11C505</string>
+    <key>DTSDKBuild</key>
+    <string>19B90</string>
+    <key>DTSDKName</key>
+    <string>macosx10.15</string>
+    <key>DTXcode</key>
+    <string>1130</string>
+    <key>DTXcodeBuild</key>
+    <string>11C505</string>
+
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2019 The @NAME@ Authors</string>
+
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionPrincipalClass</key>
+        <string>OrchidPacketTunnelProvider</string>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.networkextension.packet-tunnel</string>
+    </dict>
+
+    <key>SBUsesNetwork</key>
+    <integer>11</integer>
+
+    <key>MinimumOSVersion</key>
+    <string>11.0</string>
+
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>MacOSX</string>
+    </array>
+</dict>
+</plist>

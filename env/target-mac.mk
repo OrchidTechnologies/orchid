@@ -12,11 +12,13 @@
 archs += i386
 openssl/i386 := darwin-i386-cc
 host/i386 := i386-apple-darwin
+triple/i386 := i686-apple-darwin
 meson/i386 := x86
 
 archs += x86_64
 openssl/x86_64 := darwin64-x86_64-cc
 host/x86_64 := x86_64-apple-darwin
+triple/x86_64 := x86_64-apple-darwin
 meson/x86_64 := x86_64
 
 sdk := macosx
@@ -25,3 +27,7 @@ more := -mmacosx-version-min=10.14
 include $(pwd)/target-apl.mk
 
 default := x86_64
+
+contents := /Contents
+resources := /Resources
+versions := /Versions/A

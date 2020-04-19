@@ -18,6 +18,7 @@ venv/
 *.egg-info/
 .installed.cfg
 *.egg
+__pycache__/
 
 # Serverless directories
 node_modules

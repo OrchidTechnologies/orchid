@@ -44,3 +44,5 @@ export PATH := $(llvm)/bin:$(PATH)
 
 cc := $(llvm)/bin/clang $(more)
 cxx := $(llvm)/bin/clang++ $(more)
+
+tidy := $(llvm)/bin/clang-tidy

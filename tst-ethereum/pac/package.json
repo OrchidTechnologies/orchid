@@ -9,7 +9,11 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
+    "serverless": "^1.67.0",
     "serverless-pseudo-parameters": "^2.5.0",
     "serverless-python-requirements": "^5.0.1"
+  },
+  "devDependencies": {
+    "serverless-plugin-datadog": "^0.22.0"
   }
 }

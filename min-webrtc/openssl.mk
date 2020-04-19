@@ -11,7 +11,7 @@
 
 pwd/openssl := $(pwd)/openssl
 
-$(output)/%/openssl/Makefile $(output)/%/openssl/include/openssl/opensslconf.h: $(pwd/openssl)/Configure $(sysroot)
+$(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/include/openssl/%.h,opensslconf opensslv)): $(pwd/openssl)/Configure $(pwd/openssl)/include/openssl/opensslv.h $(sysroot)
 	rm -rf $(output)/$*/openssl
 	mkdir -p $(output)/$*/openssl
 	cd $(output)/$*/openssl && $(CURDIR)/$(pwd/openssl)/Configure $(openssl/$*) \
@@ -24,6 +24,8 @@ $(output)/%/openssl/Makefile $(output)/%/openssl/include/openssl/opensslconf.h: 
 	    no-weak-ssl-ciphers \
 	    CC="$(cc/$*)" CFLAGS="$(qflags)" RANLIB="$(ranlib/$*)" AR="$(ar/$*)"
 	$(MAKE) -C $(output)/$*/openssl include/openssl/opensslconf.h
+	# XXX: this is needed because the rust openssl-sys package only accepts a single include folder
+	cp -f $(pwd/openssl)/include/openssl/opensslv.h $(output)/$*/openssl/include/openssl
 
 $(output)/%/openssl/libssl.a $(output)/%/openssl/libcrypto.a: $(output)/%/openssl/Makefile $(sysroot)
 	$(MAKE) -C $(output)/$*/openssl build_libs
@@ -33,3 +35,9 @@ cflags += -I@/openssl/include
 linked += openssl/libssl.a
 linked += openssl/libcrypto.a
 header += @/openssl/include/openssl/opensslconf.h
+
+define _
+export $(subst -,_,$(call uc,$(triple/$(1))))_OPENSSL_LIB_DIR := $(CURDIR)/$(output)/$(1)/openssl
+export $(subst -,_,$(call uc,$(triple/$(1))))_OPENSSL_INCLUDE_DIR := $(CURDIR)/$(output)/$(1)/openssl/include
+endef
+$(each)

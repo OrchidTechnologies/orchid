@@ -48,6 +48,10 @@ class CreateObserver :
         description_ = description;
         operator ()();
     }
+
+    void OnFailure(webrtc::RTCError error) noexcept override {
+        orc_insist(false);
+    }
 };
 
 class SetObserver :
@@ -57,6 +61,10 @@ class SetObserver :
   protected:
     void OnSuccess() noexcept override {
         operator ()();
+    }
+
+    void OnFailure(webrtc::RTCError error) noexcept override {
+        orc_insist(false);
     }
 };
 

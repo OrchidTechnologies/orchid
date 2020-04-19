@@ -50,7 +50,7 @@
 	path = p2p/BeastHttp
 	url = https://github.com/0xdead4ead/BeastHttp.git
 [submodule "boringtun"]
-	path = vpn-shared/boringtun
+	path = p2p/boringtun
 	url = https://github.com/cloudflare/boringtun.git
 [submodule "tor"]
 	path = vpn-shared/tor
@@ -61,9 +61,6 @@
 [submodule "flutter-desktop-embedding"]
 	path = app-shared/flutter-desktop-embedding
 	url = https://github.com/google/flutter-desktop-embedding
-[submodule "flutter_web"]
-	path = pmp-ethereum/flutter_web
-	url = https://github.com/flutter/flutter_web.git
 [submodule "url"]
 	path = p2p/url
 	url = https://github.com/cpp-netlib/url
@@ -89,7 +86,7 @@
 	path = vpn-shared/sqlite
 	url = https://github.com/mackyle/sqlite.git
 [submodule "SPCDNS"]
-	path = vpn-shared/SPCDNS
+	path = p2p/SPCDNS
 	url = https://github.com/spc476/SPCDNS
 [submodule "wireshark"]
 	path = min-wireshark/wireshark
@@ -119,7 +116,7 @@
 	path = vpn-shared/duktape
 	url = https://github.com/svaarala/duktape.git
 [submodule "sequoia"]
-	path = p2p/sequoia
+	path = p2p/sequoia-openpgp-ffi
 	url = https://gitlab.com/sequoia-pgp/sequoia.git
 [submodule "intx"]
 	path = p2p/intx
@@ -130,3 +127,9 @@
 [submodule "curl"]
 	path = p2p/curl
 	url = https://github.com/curl/curl.git
+[submodule "challenge-bypass-ristretto-ffi"]
+	path = p2p/challenge-bypass-ristretto
+	url = https://github.com/brave-intl/challenge-bypass-ristretto-ffi.git
+[submodule "nettle"]
+	path = p2p/nettle
+	url = https://git.lysator.liu.se/nettle/nettle.git

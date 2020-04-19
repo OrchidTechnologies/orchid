@@ -61,6 +61,7 @@ class Client :
     struct Locked_ {
         uint64_t benefit_ = 0;
         std::map<Bytes32, std::pair<Ticket, Signature>> pending_;
+        uint256_t spent_ = 0;
 
         int64_t serial_ = -1;
         checked_int256_t balance_ = 0;
@@ -89,6 +90,10 @@ class Client :
     task<void> Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;
+
+    void Update();
+    uint256_t Spent();
+    checked_int256_t Balance();
 };
 
 }

@@ -9,6 +9,7 @@
 # }}}
 
 
+pre := lib
 dll := so
 lib := a
 exe := 
@@ -18,23 +19,27 @@ meson := linux
 archs += armeabi-v7a
 openssl/armeabi-v7a := android-arm
 host/armeabi-v7a := armv7a-linux-androideabi
+triple/armeabi-v7a := armv7-linux-androideabi
 meson/armeabi-v7a := arm
 flutter/armeabi-v7a := arm
 
 archs += arm64-v8a
 openssl/arm64-v8a := android-arm64
 host/arm64-v8a := aarch64-linux-android
+triple/arm64-v8a := aarch64-linux-android
 meson/arm64-v8a := aarch64
 flutter/arm64-v8a := arm64
 
 archs += x86
 openssl/x86 := android-x86
 host/x86 := i686-linux-android
+triple/x86 := i686-linux-android
 meson/x86 := x86
 
 archs += x86_64
 openssl/x86_64 := android-x86_64
 host/x86_64 := x86_64-linux-android
+triple/x86_64 := x86_64-linux-android
 meson/x86_64 := x86_64
 
 include $(pwd)/target-gnu.mk
@@ -77,6 +82,8 @@ ranlib/$(1) := $(llvm)/bin/$$(temp)-ranlib
 ar/$(1) := $(llvm)/bin/$$(temp)-ar
 strip/$(1) := $(llvm)/bin/$$(temp)-strip
 windres/$(1) := false
+binary/$(1) := $(ndk)/toolchains/llvm/prebuilt/$(prebuilt)/bin/$(host/$(1))$(aver)-clang
+export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $$(binary/$(1))
 endef
 $(each)
 

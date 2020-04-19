@@ -23,7 +23,7 @@ include env/target.mk
 
 version := 0.9
 
-args := 127.0.0.1 9999
+args := 
 
 .PHONY: all
 all: $(output)/$(default)/orchid$(exe)
@@ -44,5 +44,5 @@ include env/output.mk
 
 $(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@echo [LD] $@
-	@set -o pipefail; $(cxx/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(lflags) 2>&1 | nl
+	@set -o pipefail; $(cxx/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 | nl
 	@ls -la $@

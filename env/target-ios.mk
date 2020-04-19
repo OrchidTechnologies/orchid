@@ -12,11 +12,13 @@
 archs += armv7
 openssl/armv7 := ios-xcrun
 host/armv7 := arm-apple-darwin
+triple/armv7 := armv7-apple-ios
 meson/armv7 := arm
 
 archs += arm64
 openssl/arm64 := ios64-xcrun
 host/arm64 := aarch64-apple-darwin
+triple/arm64 := aarch64-apple-ios
 meson/arm64 := aarch64
 
 sdk := iphoneos
@@ -26,3 +28,7 @@ include $(pwd)/target-apl.mk
 
 default := arm64
 support := iPhoneOS
+
+contents := 
+resources := 
+versions := 
