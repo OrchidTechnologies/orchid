@@ -26,4 +26,8 @@ ios:
 test:
 	flutter/bin/flutter run
 
-include shared/flutter.mk
+.PHONY: run
+run:
+	while [[ 1 ]]; do make test; done
+
+include shared/target-all.mk
