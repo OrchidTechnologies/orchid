@@ -8,7 +8,7 @@ sudo apt-get install \
      clang \
      flex \
      g++-8 \
-     gcc-8
+     gcc-8 \
      gettext \
      git \
      gperf \
