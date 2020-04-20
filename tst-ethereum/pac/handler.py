@@ -177,8 +177,8 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
 total: ${total_usd}{total_oxt} OXT, \
 escrow: {escrow_oxt} OXT ")
 
-    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
-    funder_privkey = get_secret(key='PAC_FUNDER_PRIVKEY')
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+    funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
 
     txn_hash = fund_PAC_(
         signer=signer,
@@ -246,7 +246,7 @@ def generate_config(
     secret: str = None,
     curator: str = 'partners.orch1d.eth',
     protocol: str = 'orchid',
-    funder: str = get_secret(key='PAC_FUNDER_PUBKEY'),
+    funder: str = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']),
 ) -> str:
     if secret is not None:
         return f'account = {{curator:"{curator}", protocol: "{protocol}", \
@@ -311,7 +311,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
 
 
 def get_transaction_confirm_count(txhash):
-    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     blocknum = w3.eth.getTransactionCount(account=funder_pubkey)
     trans = w3.eth.getTransaction(txhash)
     return blocknum - trans['blockNumber']
@@ -453,7 +453,7 @@ def main(event, context):
                         token_name = get_token_name(address=os.environ['TOKEN'])
                         token_symbol = get_token_symbol(address=os.environ['TOKEN'])
                         token_decimals = get_token_decimals(address=os.environ['TOKEN'])
-                        pac_tokens = look(funder=get_secret(key='PAC_FUNDER_PUBKEY'), signer=signer_pubkey)
+                        pac_tokens = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
                         # lambda_metric(
                         #     f"orchid.pac.sale.{token_symbol.lower()}",
                         #     pac_tokens,
@@ -502,21 +502,6 @@ def look(funder: str, signer: str):
 
 def apple(event, context):
     return main(event, context)
-
-
-def google(event, context):
-    response = {
-        "isBase64Encoded": False,
-        "statusCode": 501,
-        "headers": {},
-        "body": json.dumps({
-            "message": f"Google Support Not Implemented Yet!",
-            "push_txn_hash": None,
-            "config": None,
-        })
-        }
-    logging.debug(f'response: {response}')
-    return response
 
 
 if __name__ == "__main__":

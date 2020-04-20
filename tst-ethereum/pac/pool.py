@@ -25,7 +25,7 @@ def call_maintain_pool():
 def maintain_pool_wrapper(event=None, context=None):
     configure_logging(level="DEBUG")
     mapping = get_product_id_mapping()
-    funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     nonce = w3.eth.getTransactionCount(account=funder_pubkey)
     for product_id in mapping:
         price = mapping[product_id]
@@ -47,7 +47,7 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
     logging.debug(f'Actual Pool Size: {actual_pool_size}. Need to create {accounts_to_create} accounts')
     logging.debug(f'Need to create {accounts_to_create} accounts')
     if nonce is None:
-        funder_pubkey = get_secret(key='PAC_FUNDER_PUBKEY')
+        funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
         nonce = w3.eth.getTransactionCount(account=funder_pubkey)
     for _ in range(accounts_to_create):
         push_txn_hash, config, signer_pubkey = fund_PAC(

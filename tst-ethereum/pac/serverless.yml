@@ -26,6 +26,12 @@ custom:
     ENABLE_MONITORING:
       prod: 'True'
       dev: 'True'
+    PAC_FUNDER_PUBKEY_SECRET:
+      prod: 'PAC_FUNDER_PUBKEY'
+      dev: 'PAC_FUNDER_PUBKEY_DEV'
+    PAC_FUNDER_PRIVKEY_SECRET:
+      prod: 'PAC_FUNDER_PRIVKEY'
+      dev: 'PAC_FUNDER_PRIVKEY_DEV'
   datadog:
     addLayers: true
     flushMetricsToLogs: true
@@ -48,6 +54,8 @@ provider:
     STAGE: ${self:provider.stage}
     LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
     ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
+    PAC_FUNDER_PUBKEY_SECRET: ${self:custom.myEnvironment.PAC_FUNDER_PUBKEY_SECRET.${self:provider.stage}}
+    PAC_FUNDER_PRIVKEY_SECRET: ${self:custom.myEnvironment.PAC_FUNDER_PRIVKEY_SECRET.${self:provider.stage}}
   runtime: python3.8
   region: us-west-2
   iamRoleStatements:

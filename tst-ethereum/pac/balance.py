@@ -19,7 +19,7 @@ else:
     logging.basicConfig(level=os.environ.get('LOG_LEVEL', "DEBUG"))
 
 
-def get_oxt_balance(address=get_secret(key='PAC_FUNDER_PUBKEY')) -> float:
+def get_oxt_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
     token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
     token_contract = w3.eth.contract(
         abi=token_abi,
@@ -47,7 +47,7 @@ def get_oxt_balance(address=get_secret(key='PAC_FUNDER_PUBKEY')) -> float:
     return balance
 
 
-def get_eth_balance(address=get_secret(key='PAC_FUNDER_PUBKEY')) -> float:
+def get_eth_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
     token_name = 'Ethereum'
     token_symbol = 'ETH'
     token_decimals = 18
