@@ -1,0 +1,64 @@
+FROM ubuntu:18.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /usr/src
+
+RUN set -ex \
+	&& apt-get update \
+	&& apt-get -y dist-upgrade \
+	&& apt-get install -qq --no-install-recommends \
+	git ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/OrchidTechnologies/orchid.git
+
+WORKDIR orchid
+
+RUN git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git.savannah.gnu.org/git/" \
+	&& git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/" \
+	&& git config --global advice.detachedHead false
+
+RUN git submodule update --init --recursive --jobs 3
+
+RUN set -ex \
+	&& apt-get update \
+	&& apt-get install -qq --no-install-recommends \
+	build-essential \
+	clang-8 \
+	clang++-8 \
+	clang-tidy-8 \
+	libc++-8-dev \
+	libc++abi-8-dev \
+	bc \
+	libboost-all-dev \
+	bison \
+	flex \
+	gettext \
+    gperf \
+    groff \
+    ninja-build \
+    python3-pip \
+    python3-setuptools \
+    tcl \
+	&& rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-8 100
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-8 100
+RUN update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-8 100
+
+RUN set -ex \
+	&& perl -pi -e 's/\$\(llvm\)\/bin\/clang-tidy/\/usr\/bin\/clang-tidy/g' env/output.mk \
+	&& perl -pi -e 's/,--icf=all//g' env/target-lnx.mk
+
+RUN set -ex \
+	&& pip3 install meson==0.51.2
+
+RUN set -ex \
+	make -j3 -C cli-shared
+
+RUN set -ex \
+	&& make -C srv-shared
+
+RUN mkdir -p /mnt/artifacts \
+	&& cp srv-shared/out-lnx/x86_64/orchidd /mnt/artifacts/
