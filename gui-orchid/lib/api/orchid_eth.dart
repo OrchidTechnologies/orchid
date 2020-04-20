@@ -8,10 +8,10 @@ import 'orchid_budget_api.dart';
 import 'orchid_crypto.dart';
 
 class OrchidEthereum {
-  static var providerUrl = 'https://cloudflare-eth.com';
+  //static var providerUrl = 'https://cloudflare-eth.com';
   // TODO: Temporarily using this api-key bound solution with Infura due to
-  // TODO: unreliability of Cloudflare. This is a short term workaround.
-//  static var providerUrl = 'https://mainnet.infura.io/v3/3befe648c1e54c94a815948c088b1f83';
+  // TODO: unreliability of Cloudflare.
+  static var providerUrl = 'https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf';
 
   // Lottery contract address on main net
   static var lotteryContractAddress =
@@ -24,7 +24,8 @@ class OrchidEthereum {
   // Get the provider URL allowing override in the advanced config
   static Future<String> get url async {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
-    return jsConfig.evalStringDefault('ethProviderUrl', providerUrl);
+    // Note: This var is also used by the tunnel for the eth provider.
+    return jsConfig.evalStringDefault('rpc', providerUrl);
   }
 
   /*

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
@@ -13,6 +14,7 @@ import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
+import 'package:orchid/pages/onboarding/legacy_welcome_dialog.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/util/collections.dart';
@@ -824,17 +826,34 @@ class CircuitPageState extends State<CircuitPage>
     }
   }
 
-  void _showWelcomeDialog() {
-//    WelcomeDialog.show(
-//        context: context, onAddFlowComplete: _welcomeScreenAddHop);
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return WelcomeDialog(
-            onBuyCredits: _addHopFromPACPurchase,
-            onSeeOptions: _addHop,
-          );
-        });
+  void _showWelcomeDialog() async {
+    var pacsEnabled = (await OrchidPurchaseAPI().apiConfig()).enabled;
+    if (pacsEnabled) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return WelcomeDialog(
+              onBuyCredits: _addHopFromPACPurchase,
+              onSeeOptions: _addHop,
+            );
+          });
+    } else {
+      // TODO: Remove after PACs are in place on all platforms or when an alternate
+      // TODO: fallback for the PACs feature flag exists.
+      LegacyWelcomeDialog.show(
+          context: context, onAddFlowComplete: _legacyWelcomeScreenAddHop);
+    }
+  }
+
+  // TODO: Remove after PACs are in place on all platforms or when an alternate
+  // TODO: fallback for the PACs feature flag exists.
+  void _legacyWelcomeScreenAddHop(CircuitHop hop) async {
+    var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
+    circuit.hops.add(hop);
+    await UserPreferences().setCircuit(circuit);
+    OrchidAPI().updateConfiguration();
+    // Notify that the hops config has changed externally
+    OrchidAPI().circuitConfigurationChanged.add(null);
   }
 
   void _userInteraction() {
