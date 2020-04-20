@@ -22,24 +22,10 @@
 
 pragma solidity 0.5.13;
 
-import "dir-ethereum/curator.sol";
-
-// note: this interface defines book as a view function instead of pure
-interface OrchidVerifier {
-    function book(bytes calldata shared, address target, bytes calldata receipt) external view;
+interface OrchidSeller {
+    function ring(bytes calldata shared, address target) external view returns (bytes memory);
 }
 
-
-contract OrchidListVerifier is OrchidVerifier {
-
-    OrchidList internal curator_;
-
-    constructor(OrchidList curator) public {
-        curator_ = curator;
-    }
-
-    function book(bytes calldata, address target, bytes calldata receipt) external view {
-        require(curator_.good(target, receipt) != uint128(0));
-    }
-    
+interface OrchidVerifier {
+    function book(bytes calldata shared, address target, bytes calldata receipt) external pure;
 }

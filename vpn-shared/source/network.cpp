@@ -73,6 +73,7 @@ task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std:
             look_.Call(endpoint, latest, location_, 90000, address)
         );
 
+        orc_assert(good != 0);
         const auto &[set, url, tls, gpg] = look;
 
         Window window(tls);

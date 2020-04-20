@@ -1,0 +1,3 @@
+#!/bin/bash
+set -e
+solc --evm-version homestead --bin --overwrite --allow-paths . "$@" -o build verifier.sol

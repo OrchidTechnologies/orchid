@@ -22,13 +22,11 @@
 
 pragma solidity 0.5.13;
 
+import "./include.sol";
+
 interface IERC20 {
     function transfer(address recipient, uint256 amount) external returns (bool);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-}
-
-interface OrchidVerifier {
-    function book(bytes calldata shared, address target, bytes calldata receipt) external pure;
 }
 
 contract OrchidLottery {
