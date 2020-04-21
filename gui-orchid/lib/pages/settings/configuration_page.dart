@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:orchid/api/configuration/js_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -9,6 +8,7 @@ import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:jsparser/jsparser.dart';
 
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -109,7 +109,8 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   void _save() {
     var newConfig = _configFileTextController.text;
     try {
-      JSConfig(newConfig); // Validate by parsing it.
+      // Just parse it to the AST to catch gross syntax errors.
+      parsejs(newConfig, filename: 'program.js');
     } catch (err) {
       print("Error parsing config: $err");
       Dialogs.showConfigurationChangeFailed(context, errorText: err.toString());
