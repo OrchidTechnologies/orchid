@@ -7,7 +7,7 @@ WORKDIR /usr/src
 RUN set -ex \
 	&& apt-get update \
 	&& apt-get -y dist-upgrade \
-	&& apt-get install -qq --no-install-recommends \
+	&& apt-get install -y --no-install-recommends \
 	git ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -23,7 +23,7 @@ RUN git submodule update --init --recursive --jobs "$(nproc)"
 
 RUN set -ex \
 	&& apt-get update \
-	&& apt-get install -qq --no-install-recommends \
+	&& apt-get install -y --no-install-recommends \
 	build-essential \
 	clang-8 \
 	clang++-8 \
