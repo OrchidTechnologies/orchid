@@ -11,7 +11,7 @@ RUN set -ex \
 	git ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/OrchidTechnologies/orchid.git
+RUN git clone --depth 1 https://github.com/OrchidTechnologies/orchid.git
 
 WORKDIR orchid
 
