@@ -35,12 +35,12 @@ RUN set -ex \
 	bison \
 	flex \
 	gettext \
-    gperf \
-    groff \
-    ninja-build \
-    python3-pip \
-    python3-setuptools \
-    tcl \
+	gperf \
+	groff \
+	ninja-build \
+	python3-pip \
+	python3-setuptools \
+	tcl \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-8 100
