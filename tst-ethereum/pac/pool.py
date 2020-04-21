@@ -27,13 +27,13 @@ def maintain_pool_wrapper(event=None, context=None):
     mapping = get_product_id_mapping()
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     nonce = w3.eth.getTransactionCount(account=funder_pubkey)
+    logging.debug(f"maintain_pool_wrapper Funder nonce: {nonce}")
     for product_id in mapping:
         price = mapping[product_id]
-        maintain_pool(price=price, nonce=nonce)
-        nonce += 3
+        nonce = maintain_pool(price=price, nonce=nonce)
 
 
-def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SIZE']), nonce: int = None):
+def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SIZE']), nonce: int = None) -> int:
     logging.debug(f'Maintaining Pool of size:{pool_size} and price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
@@ -65,3 +65,4 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
         ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
         table.put_item(Item=ddb_item)
         nonce += 3
+    return nonce
