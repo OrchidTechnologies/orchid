@@ -63,8 +63,8 @@ provider:
       Action:
         - "ssm:GetParameter"
       Resource:
-        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/PAC_FUNDER_PUBKEY"
-        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/PAC_FUNDER_PRIVKEY"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:provider.environment.PAC_FUNDER_PUBKEY_SECRET}"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:provider.environment.PAC_FUNDER_PRIVKEY_SECRET}"
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_ID"
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_SECRET"
     - Effect: Allow
@@ -97,12 +97,6 @@ functions:
     events:
       - http:
           path: apple
-          method: post
-  google:
-    handler: google.main
-    events:
-      - http:
-          path: google
           method: post
   MaintainPool:
     handler: pool.maintain_pool_wrapper

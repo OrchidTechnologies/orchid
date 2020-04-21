@@ -9,15 +9,6 @@
   request:
     body:
       receipt: ""
-- name: 501 google not implemented
-  endpoint:
-    function: google
-  response:
-    status: 501
-    body:
-      message: Google Support Not Implemented Yet!
-      push_txn_hash: null
-      config: null
 - name: 200 No Verify Apple
   endpoint:
     function: apple
