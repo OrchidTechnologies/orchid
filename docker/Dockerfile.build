@@ -19,7 +19,7 @@ RUN git config --global url."git://git.savannah.gnu.org/".insteadOf "https://git
 	&& git config --global url."git://git.savannah.nongnu.org/".insteadOf "https://git.savannah.nongnu.org/git/" \
 	&& git config --global advice.detachedHead false
 
-RUN git submodule update --init --recursive --jobs 3
+RUN git submodule update --init --recursive --jobs "$(nproc)"
 
 RUN set -ex \
 	&& apt-get update \
@@ -55,7 +55,7 @@ RUN set -ex \
 	&& pip3 install meson==0.51.2
 
 RUN set -ex \
-	make -j3 -C cli-shared
+	make -j"$(nproc)" -C cli-shared
 
 RUN set -ex \
 	&& make -C srv-shared
