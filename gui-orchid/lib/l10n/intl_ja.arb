@@ -1,4 +1,5 @@
 {
+	"@@locale": "ja",
 	"newHop": "新しいホップ",
 	"@newHop": {
 		"description": "新しいネットワーク ホップ"

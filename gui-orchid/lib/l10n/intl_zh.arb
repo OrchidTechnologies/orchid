@@ -1,4 +1,5 @@
 {
+	"@@locale": "zh",
 	"newHop": "新跃点",
 	"@newHop": {
 		"description": "新的网络跃点"

@@ -1,4 +1,5 @@
 {
+	"@@locale": "ko",
 	"newHop": "새 홉",
 	"@newHop": {
 		"description": "새 네트워크 홉"

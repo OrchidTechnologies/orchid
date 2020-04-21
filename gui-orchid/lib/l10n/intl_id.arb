@@ -1,4 +1,5 @@
 {
+	"@@locale": "id",
 	"newHop": "Lompatan baru",
 	"@newHop": {
 		"description": "Lompatan jaringan baru"

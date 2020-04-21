@@ -1,4 +1,5 @@
 {
+	"@@locale": "en",
 	"newHop": "New Hop",
 	"@newHop": {
 		"description": "New network hop"
