@@ -51,10 +51,6 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-8 100
 RUN update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-8 100
 
 RUN set -ex \
-	&& perl -pi -e 's/\$\(llvm\)\/bin\/clang-tidy/\/usr\/bin\/clang-tidy/g' env/output.mk \
-	&& perl -pi -e 's/,--icf=all//g' env/target-lnx.mk
-
-RUN set -ex \
 	&& pip3 install meson==0.51.2
 
 RUN set -ex \
