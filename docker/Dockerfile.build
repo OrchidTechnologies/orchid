@@ -6,7 +6,6 @@ WORKDIR /usr/src
 
 RUN set -ex \
 	&& apt-get update \
-	&& apt-get -y dist-upgrade \
 	&& apt-get install -y --no-install-recommends \
 	git ca-certificates curl \
 	&& rm -rf /var/lib/apt/lists/*
