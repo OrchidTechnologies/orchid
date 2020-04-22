@@ -13,7 +13,7 @@ function clean() {
 
 clean 2>/dev/null || true
 
-docker run -i --name "${name}" -v "${PWD}/env/sysroot_.sh:/init" centos:6 /init
+docker run -i --name "${name}" centos:6 yum -y install gcc-c++
 trap clean EXIT
 
 env/export.sh "${name}" "${sysroot}"
