@@ -20,6 +20,13 @@ ndk := $(wildcard $(ANDROID_HOME)/ndk-bundle)
 endif
 
 ifeq ($(ndk),)
+ndk := $(shell ls $(ANDROID_HOME)/ndk | sort -nr | head -n1)
+ifneq ($(ndk),)
+ndk := $(ANDROID_HOME)/ndk/$(ndk)
+endif
+endif
+
+ifeq ($(ndk),)
 ndk := $(wildcard /usr/local/share/android-ndk)
 endif
 
