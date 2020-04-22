@@ -343,6 +343,7 @@ def main(event, context):
     receipt = body.get('receipt', '')
 
     dynamodb = boto3.resource('dynamodb')
+    result_hash_table = dynamodb.Table(os.environ['RESULT_TABLE_NAME'])
     receipt_hash_table = dynamodb.Table(os.environ['RECEIPT_TABLE_NAME'])
 
     if os.environ['STAGE'] != 'dev':
@@ -360,9 +361,26 @@ def main(event, context):
             logging.debug(f'response: {response}')
             return response
 
-    verify_receipt = body.get('verify_receipt', 'False')
-
     receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
+
+    result = result_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
+    if (result['Count'] > 0):  # we found a match, return it
+        item = result['Items'][0]
+        config = item['config']
+        push_txn_hash = item['push_txn_hash']
+        response = {
+            "isBase64Encoded": False,
+            "statusCode": 200,
+            "headers": {},
+            "body": json.dumps({
+                "push_txn_hash": push_txn_hash,
+                "config": config,
+            })
+        }
+        logging.debug(f'response: {response}')
+        return response
+
+    verify_receipt = body.get('verify_receipt', 'False')
     if (is_true(verify_receipt)):
         result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
         if (result['Count'] > 0):  # we found a match - reject on duplicate
@@ -449,7 +467,16 @@ def main(event, context):
                     }
                     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
                     receipt_hash_table.put_item(Item=ddb_item)
-                    if is_true(os.environ.get('ENABLE_MONITORING', '')):
+
+                    item = {
+                        'receipt': receipt_hash,
+                        'config': config,
+                        'push_txn_hash': push_txn_hash,
+                    }
+                    ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+                    result_hash_table.put_item(Item=ddb_item)
+
+                    if is_true(os.environ.get('ENABLE_MONITORING', '')): # Jay may not like this
                         token_name = get_token_name(address=os.environ['TOKEN'])
                         token_symbol = get_token_symbol(address=os.environ['TOKEN'])
                         token_decimals = get_token_decimals(address=os.environ['TOKEN'])
