@@ -8,8 +8,12 @@ RUN set -ex \
 	&& apt-get update \
 	&& apt-get -y dist-upgrade \
 	&& apt-get install -y --no-install-recommends \
-	git ca-certificates \
+	git ca-certificates curl \
 	&& rm -rf /var/lib/apt/lists/*
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+ENV PATH=/root/.cargo/bin:$PATH
 
 RUN git clone --depth 1 https://github.com/OrchidTechnologies/orchid.git
 
