@@ -192,6 +192,10 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 
+ifeq ($(shell which rustup),)
+export PATH := $(HOME)/.cargo/bin:$(PATH)
+endif
+
 .PHONY: $(output)/%.rustup
 $(output)/%.rustup:
 	rustup target add $*
