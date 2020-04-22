@@ -79,7 +79,7 @@ export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword
 endef
 $(each)
 
-$(output)/sysroot: env/sysroot.sh env/sysroot_.sh
+$(output)/sysroot: env/sysroot.sh
 	env/sysroot.sh $@
 
 .PHONY: sysroot
