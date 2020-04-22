@@ -37,6 +37,10 @@ test: $(binary)
 debug: $(binary)
 	lldb -o 'b malloc_error_break' -o 'run $(args)' $<
 
+.PHONY: install
+install: $(binary)
+	cp -a $< $(usr)/sbin/
+
 
 source += $(wildcard source/*.cpp)
 cflags += -Isource

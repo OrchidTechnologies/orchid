@@ -57,6 +57,8 @@ cflags += -ftemplate-backtrace-limit=0
 
 beta := false
 
+usr := /usr/local
+
 include ../default.mk
 -include ../local.mk
 

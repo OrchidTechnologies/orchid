@@ -114,6 +114,21 @@ jobs:
       run: df -k
 
 
+  build-srv-dkr:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup-all.sh
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
+    - name: make Linux server
+      run: cd srv-shared && ./docker.sh
+
+
   build-lnx-bad:
     runs-on: ubuntu-latest
 
