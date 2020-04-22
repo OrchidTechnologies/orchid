@@ -13,6 +13,10 @@ ifeq ($(ANDROID_HOME),)
 export ANDROID_HOME := $(wildcard ~/Library/Android/sdk)
 endif
 
+ifeq ($(ANDROID_HOME),)
+export ANDROID_HOME := $(wildcard /usr/local/lib/android/sdk)
+endif
+
 ndk := $(ANDROID_NDK_HOME)
 
 ifeq ($(ndk),)
