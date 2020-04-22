@@ -10,7 +10,7 @@ rm -rf "${sysroot}"
 mkdir -p "${sysroot}"
 cd "${sysroot}"
 
-docker export "${name}" | fakeroot tar --exclude 'dev/*' -xmvf-
+docker export "${name}" | fakeroot tar --exclude dev -xmvf- "$@"
 
 find . -type d ! -perm 755 -exec chmod 755 {} +
 
