@@ -4,12 +4,13 @@ set -o pipefail
 
 name=$1
 sysroot=$2
+shift 2
 
 rm -rf "${sysroot}"
 mkdir -p "${sysroot}"
 cd "${sysroot}"
 
-docker export "${name}" | tar --exclude 'dev/*' -xvf-
+docker export "${name}" | fakeroot tar --exclude 'dev/*' -xmvf-
 
 find . -type d ! -perm 755 -exec chmod 755 {} +
 
