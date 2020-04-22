@@ -66,3 +66,5 @@ RUN set -ex \
 
 RUN mkdir -p /mnt/artifacts \
 	&& cp srv-shared/out-lnx/x86_64/orchidd /mnt/artifacts/
+
+RUN echo 'orchidd has been successfully built and is available at /mnt/artifacts/orchidd within the container'
