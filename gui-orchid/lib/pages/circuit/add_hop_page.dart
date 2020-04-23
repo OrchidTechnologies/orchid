@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -84,10 +86,10 @@ class _AddHopPageState extends State<AddHopPage> {
                       },
                       svgName: "assets/svg/attach_money.svg"),
 
-                // Import Account
+                // Link Account
                 _divider(),
                 _buildHopChoice(
-                    text: s.importAnOrchidAccount,
+                    text: s.linkAnOrchidAccount,
                     onTap: () {
                       return showDialog(
                           context: context,
@@ -99,18 +101,20 @@ class _AddHopPageState extends State<AddHopPage> {
                     imageName: "assets/images/scan.png"),
 
                 // Custom Account
-                _divider(),
-                _buildHopChoice(
-                    text: s.createACustomAccount,
-                    onTap: () {
-                      _addHopType(HopProtocol.Orchid);
-                    },
-                    imageName: "assets/images/logo_small_purple.png"),
+                if (!Platform.isIOS && !Platform.isMacOS) ...[
+                  _divider(),
+                  _buildHopChoice(
+                      text: s.createACustomAccount,
+                      onTap: () {
+                        _addHopType(HopProtocol.Orchid);
+                      },
+                      imageName: "assets/images/logo_small_purple.png"),
+                ],
 
-                // VPN Subscription
+                // OVPN Subscription
                 _divider(),
                 _buildHopChoice(
-                    text: s.enterOvpnCredentials,
+                    text: s.enterOvpnProfile,
                     onTap: () {
                       _addHopType(HopProtocol.OpenVPN);
                     },

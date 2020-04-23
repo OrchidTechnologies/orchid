@@ -174,5 +174,7 @@
 	"scanYourExistingAccountCreateACustomAccountOrEnter": "Pindai akun Anda yang ada, buat akun khusus atau masukkan kredensial OVPN.",
 	"seeTheOptions": "Lihat opsi",
 	"setUpAccount": "Siapkan Akun",
-	"thereWasAnErrorInPurchasingContact": "Terjadi kesalahan dalam pembelian. Silakan hubungi Dukungan Anggrek."
+	"thereWasAnErrorInPurchasingContact": "Terjadi kesalahan dalam pembelian. Silakan hubungi Dukungan Anggrek.",
+	"enterOvpnProfile": "Masukkan Profil OVPN",
+	"linkAnOrchidAccount": "Tautkan Akun Anggrek"
 }
