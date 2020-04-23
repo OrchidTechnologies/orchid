@@ -11,7 +11,6 @@ RUN git checkout githubci
 
 RUN git submodule update --init --recursive --jobs 3
 
-# XXX: this doesn't actually work because it relies on docker internally :(
 RUN env/setup-dkr.sh make -j3 -C srv-shared install debug=crossndk usr=/usr
 
 WORKDIR ..

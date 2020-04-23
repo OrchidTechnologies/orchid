@@ -114,7 +114,7 @@ jobs:
       run: df -k
 
 
-  build-srv-dkr:
+  build-lnx-dkr:
     runs-on: ubuntu-latest
 
     steps:
@@ -127,6 +127,34 @@ jobs:
 
     - name: make Linux server
       run: cd srv-shared && ./docker.sh
+
+
+  build-lnx-bld:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v1
+    - name: make Linux server
+      run: docker build -t orchidd:latest srv-docker
+
+
+  build-lnx-mac:
+    runs-on: macos-latest
+
+    steps:
+
+    - name: install NDK r21
+      run: echo y | sudo -E "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.0.6113669"
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: git submodule update --init --recursive --jobs 3
+
+    - name: make Linux server
+      run: ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.0.6113669 debug=crossndk make -j3 -C srv-shared
 
 
   build-lnx-bad:
