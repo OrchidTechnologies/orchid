@@ -177,5 +177,6 @@
 	"thereWasAnErrorInPurchasingContact": "购买时出错。请联系兰花支持。",
 	"enterOvpnProfile": "输入OVPN配置文件",
 	"linkAnOrchidAccount": "关联兰花帐户",
-	"buyOrchidAccount": "购买兰花帐户"
+	"buyOrchidAccount": "购买兰花帐户",
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "关联您现有的Orchid帐户或输入OVPN配置文件。"
 }

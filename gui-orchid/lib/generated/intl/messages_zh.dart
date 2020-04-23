@@ -100,6 +100,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidQRCode" : MessageLookupByLibrary.simpleMessage("无效二维码"),
     "learnMoreButtonTitle" : MessageLookupByLibrary.simpleMessage("了解更多"),
     "linkAnOrchidAccount" : MessageLookupByLibrary.simpleMessage("关联兰花帐户"),
+    "linkYourExistingOrchidAccountOrEnterAnOvpnProfile" : MessageLookupByLibrary.simpleMessage("关联您现有的Orchid帐户或输入OVPN配置文件。"),
     "loadMsg" : MessageLookupByLibrary.simpleMessage("加载"),
     "log" : MessageLookupByLibrary.simpleMessage("日志"),
     "manageConfiguration" : MessageLookupByLibrary.simpleMessage("管理配置"),

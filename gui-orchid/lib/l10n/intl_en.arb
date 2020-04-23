@@ -183,6 +183,6 @@
 	"scanOrPasteYourExistingAccountBelowToAddIt": "Scan or paste your existing account below to add it as a hop.",
 	"linkAnOrchidAccount": "Link Orchid Account",
 	"enterOvpnProfile": "Enter OVPN Profile",
-	"buyOrchidAccount": "Buy Orchid Account"
+	"buyOrchidAccount": "Buy Orchid Account",
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Link your existing Orchid account or enter an OVPN profile."
 }
-

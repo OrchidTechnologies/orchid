@@ -1524,6 +1524,15 @@ class S {
       args: [],
     );
   }
+
+  String get linkYourExistingOrchidAccountOrEnterAnOvpnProfile {
+    return Intl.message(
+      'Link your existing Orchid account or enter an OVPN profile.',
+      name: 'linkYourExistingOrchidAccountOrEnterAnOvpnProfile',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

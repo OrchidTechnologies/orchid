@@ -100,6 +100,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidQRCode" : MessageLookupByLibrary.simpleMessage("無効な QR コード"),
     "learnMoreButtonTitle" : MessageLookupByLibrary.simpleMessage("詳細情報"),
     "linkAnOrchidAccount" : MessageLookupByLibrary.simpleMessage("オーキッドアカウントをリンクする"),
+    "linkYourExistingOrchidAccountOrEnterAnOvpnProfile" : MessageLookupByLibrary.simpleMessage("既存のOrchidアカウントをリンクするか、またはOVPNプロファイルを入力します。"),
     "loadMsg" : MessageLookupByLibrary.simpleMessage("ウォレットのブラウザに"),
     "log" : MessageLookupByLibrary.simpleMessage("ログ"),
     "manageConfiguration" : MessageLookupByLibrary.simpleMessage("構成の管理"),

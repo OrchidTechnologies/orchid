@@ -100,6 +100,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidQRCode" : MessageLookupByLibrary.simpleMessage("잘못된 QR 코드"),
     "learnMoreButtonTitle" : MessageLookupByLibrary.simpleMessage("자세히 보기"),
     "linkAnOrchidAccount" : MessageLookupByLibrary.simpleMessage("난초 계정 연결"),
+    "linkYourExistingOrchidAccountOrEnterAnOvpnProfile" : MessageLookupByLibrary.simpleMessage("기존 난초 계정을 연결하거나 OVPN 프로필을 입력하십시오."),
     "loadMsg" : MessageLookupByLibrary.simpleMessage("시작하려면"),
     "log" : MessageLookupByLibrary.simpleMessage("로그"),
     "manageConfiguration" : MessageLookupByLibrary.simpleMessage("구성 관리"),

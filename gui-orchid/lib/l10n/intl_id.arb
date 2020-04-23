@@ -177,5 +177,6 @@
 	"thereWasAnErrorInPurchasingContact": "Terjadi kesalahan dalam pembelian. Silakan hubungi Dukungan Anggrek.",
 	"enterOvpnProfile": "Masukkan Profil OVPN",
 	"linkAnOrchidAccount": "Tautkan Akun Anggrek",
-	"buyOrchidAccount": "Beli Akun Anggrek"
+	"buyOrchidAccount": "Beli Akun Anggrek",
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Tautkan akun Anggrek Anda yang ada atau masukkan profil OVPN."
 }

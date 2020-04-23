@@ -100,6 +100,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidQRCode" : MessageLookupByLibrary.simpleMessage("Неверный QR-код"),
     "learnMoreButtonTitle" : MessageLookupByLibrary.simpleMessage("ПОДРОБНЕЕ"),
     "linkAnOrchidAccount" : MessageLookupByLibrary.simpleMessage("Связать аккаунт Orchid"),
+    "linkYourExistingOrchidAccountOrEnterAnOvpnProfile" : MessageLookupByLibrary.simpleMessage("Свяжите свою существующую учетную запись Orchid или войдите в профиль OVPN."),
     "loadMsg" : MessageLookupByLibrary.simpleMessage("Откройте"),
     "log" : MessageLookupByLibrary.simpleMessage("Журнал"),
     "manageConfiguration" : MessageLookupByLibrary.simpleMessage("Управление конфигурацией"),

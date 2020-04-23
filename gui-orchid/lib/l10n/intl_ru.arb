@@ -177,5 +177,6 @@
 	"thereWasAnErrorInPurchasingContact": "Произошла ошибка при покупке. Пожалуйста, свяжитесь со службой поддержки Orchid.",
 	"enterOvpnProfile": "Введите профиль OVPN",
 	"linkAnOrchidAccount": "Связать аккаунт Orchid",
-	"buyOrchidAccount": "Купить Орхидея"
+	"buyOrchidAccount": "Купить Орхидея",
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Свяжите свою существующую учетную запись Orchid или войдите в профиль OVPN."
 }

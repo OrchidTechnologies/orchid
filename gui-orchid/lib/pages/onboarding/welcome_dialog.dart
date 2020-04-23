@@ -39,7 +39,7 @@ class WelcomeDialog extends StatelessWidget {
                 letterSpacing: -0.41,
                 height: 1.29)),
         TextSpan(
-            text: "\n\n" + s.scanYourExistingAccountCreateACustomAccountOrEnter,
+            text: "\n\n" + s.linkYourExistingOrchidAccountOrEnterAnOvpnProfile,
             style: TextStyle(
                 color: textColor,
                 fontSize: 15.0,
@@ -72,8 +72,8 @@ class WelcomeDialog extends StatelessWidget {
                             RichText(
                                 text: TextSpan(
                                     text: s.needAnAccount,
-                                    style: AppText.dialogTitle
-                                        .copyWith(fontWeight: FontWeight.bold))),
+                                    style: AppText.dialogTitle.copyWith(
+                                        fontWeight: FontWeight.bold))),
                             _buildCloseButton(context)
                           ],
                         ),

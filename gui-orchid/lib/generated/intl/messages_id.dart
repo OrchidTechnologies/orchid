@@ -100,6 +100,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidQRCode" : MessageLookupByLibrary.simpleMessage("Kode QR tidak valid"),
     "learnMoreButtonTitle" : MessageLookupByLibrary.simpleMessage("KETAHUI LEBIH LANJUT"),
     "linkAnOrchidAccount" : MessageLookupByLibrary.simpleMessage("Tautkan Akun Anggrek"),
+    "linkYourExistingOrchidAccountOrEnterAnOvpnProfile" : MessageLookupByLibrary.simpleMessage("Tautkan akun Anggrek Anda yang ada atau masukkan profil OVPN."),
     "loadMsg" : MessageLookupByLibrary.simpleMessage("Kunjungi"),
     "log" : MessageLookupByLibrary.simpleMessage("Log"),
     "manageConfiguration" : MessageLookupByLibrary.simpleMessage("Kelola konfigurasi"),
