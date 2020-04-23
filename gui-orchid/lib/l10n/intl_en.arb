@@ -182,5 +182,7 @@
 	"bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill": "Bandwidth is purchased in a VPN marketplace so price will fluctuate based on market dynamics.",
 	"scanOrPasteYourExistingAccountBelowToAddIt": "Scan or paste your existing account below to add it as a hop.",
 	"linkAnOrchidAccount": "Link Orchid Account",
-	"enterOvpnProfile": "Enter OVPN Profile"
+	"enterOvpnProfile": "Enter OVPN Profile",
+	"buyOrchidAccount": "Buy Orchid Account"
 }
+

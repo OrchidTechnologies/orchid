@@ -80,7 +80,7 @@ class _AddHopPageState extends State<AddHopPage> {
                   _divider(),
                 if (_showPACs)
                   _buildHopChoice(
-                      text: s.buyVpnCredits,
+                      text: s.buyOrchidAccount,
                       onTap: () {
                         _addHopFromPACPurchase();
                       },

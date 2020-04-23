@@ -36,6 +36,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "beta" : MessageLookupByLibrary.simpleMessage("베타"),
     "budget" : MessageLookupByLibrary.simpleMessage("예산"),
     "buyCredits" : MessageLookupByLibrary.simpleMessage("크레딧 구매"),
+    "buyOrchidAccount" : MessageLookupByLibrary.simpleMessage("난초 계정 구매"),
     "buyPrepaidCreditsToGetStartedTheresNoMonthlyFee" : MessageLookupByLibrary.simpleMessage("시작하려면 선불 크레딧을 구매하십시오. 월 사용료가 없으며 사용한만큼만 지불합니다."),
     "buyVpnCredits" : MessageLookupByLibrary.simpleMessage("VPN 크레딧 구매"),
     "cancelButtonTitle" : MessageLookupByLibrary.simpleMessage("취소"),

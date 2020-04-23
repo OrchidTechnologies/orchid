@@ -36,6 +36,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "beta" : MessageLookupByLibrary.simpleMessage("бета-версия"),
     "budget" : MessageLookupByLibrary.simpleMessage("Бюджет"),
     "buyCredits" : MessageLookupByLibrary.simpleMessage("Купить кредиты"),
+    "buyOrchidAccount" : MessageLookupByLibrary.simpleMessage("Купить Орхидея"),
     "buyPrepaidCreditsToGetStartedTheresNoMonthlyFee" : MessageLookupByLibrary.simpleMessage("Купите предоплаченные кредиты, чтобы начать. Там нет ежемесячной платы, и вы платите только за то, что вы используете."),
     "buyVpnCredits" : MessageLookupByLibrary.simpleMessage("Купить VPN кредиты"),
     "cancelButtonTitle" : MessageLookupByLibrary.simpleMessage("ОТМЕНА"),

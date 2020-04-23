@@ -176,5 +176,6 @@
 	"setUpAccount": "アカウントを設定する",
 	"thereWasAnErrorInPurchasingContact": "購入時にエラーが発生しました。オーキッドサポートまでご連絡ください。",
 	"enterOvpnProfile": "OVPNプロファイルを入力してください",
-	"linkAnOrchidAccount": "オーキッドアカウントをリンクする"
+	"linkAnOrchidAccount": "オーキッドアカウントをリンクする",
+	"buyOrchidAccount": "オーキッドアカウントを購入"
 }

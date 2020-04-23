@@ -176,5 +176,6 @@
 	"setUpAccount": "계정 설정",
 	"thereWasAnErrorInPurchasingContact": "구매하는 중에 오류가 발생했습니다. 난초 지원 센터에 문의하십시오.",
 	"enterOvpnProfile": "OVPN 프로파일 입력",
-	"linkAnOrchidAccount": "난초 계정 연결"
+	"linkAnOrchidAccount": "난초 계정 연결",
+	"buyOrchidAccount": "난초 계정 구매"
 }

@@ -1515,6 +1515,15 @@ class S {
       args: [],
     );
   }
+
+  String get buyOrchidAccount {
+    return Intl.message(
+      'Buy Orchid Account',
+      name: 'buyOrchidAccount',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

@@ -36,6 +36,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "beta" : MessageLookupByLibrary.simpleMessage("beta"),
     "budget" : MessageLookupByLibrary.simpleMessage("Anggaran"),
     "buyCredits" : MessageLookupByLibrary.simpleMessage("Membeli kredit"),
+    "buyOrchidAccount" : MessageLookupByLibrary.simpleMessage("Beli Akun Anggrek"),
     "buyPrepaidCreditsToGetStartedTheresNoMonthlyFee" : MessageLookupByLibrary.simpleMessage("Beli kredit prabayar untuk memulai. Tidak ada biaya bulanan dan Anda hanya membayar apa yang Anda gunakan."),
     "buyVpnCredits" : MessageLookupByLibrary.simpleMessage("Beli kredit VPN"),
     "cancelButtonTitle" : MessageLookupByLibrary.simpleMessage("Batalkan"),
