@@ -19,8 +19,6 @@ rm -f android-sdk.zip
 echo y | /usr/local/lib/android/sdk/tools/bin/sdkmanager "ndk;21.0.6113669" >/dev/null
 
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain=stable --profile=minimal
-#rustup component add rustfmt clippy
-#cargo install bindgen cbindgen
 
 env/setup-lnx.sh
 exec "$@"
