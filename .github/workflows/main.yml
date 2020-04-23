@@ -135,8 +135,15 @@ jobs:
     steps:
 
     - uses: actions/checkout@v1
+
     - name: make Linux server
       run: docker build -t orchidd:latest srv-docker
+    - name: docker save
+      run: docker save -o orchidd.tar orchidd:latest
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidd-dkr
+        path: orchidd.tar
 
 
   build-lnx-mac:

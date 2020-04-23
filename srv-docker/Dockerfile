@@ -1,18 +1,12 @@
 FROM ubuntu:bionic
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update
-RUN apt-get -y install git-core
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install git-core
 
 WORKDIR /usr/src
-RUN git clone https://github.com/OrchidTechnologies/orchid.git
+RUN git clone https://github.com/OrchidTechnologies/orchid.git && cd orchid && git checkout githubci && git submodule update --init --recursive --jobs 3
+
 WORKDIR orchid
-RUN git checkout githubci
+RUN env/setup-dkr.sh make -j3 -C srv-shared install debug=crossndk usr=/usr && rm -rf /usr/src/orchid /usr/local/lib/android
 
-RUN git submodule update --init --recursive --jobs 3
 
-RUN env/setup-dkr.sh make -j3 -C srv-shared install debug=crossndk usr=/usr
-
-WORKDIR ..
-RUN rm -rf orchid
-RUN cp -a srv-shared/out-lnx/x86_64/orchidd /mnt/
+FROM ubuntu:bionic
+COPY --from=0 /usr/sbin/orchidd /usr/sbin/
