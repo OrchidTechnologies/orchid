@@ -50,6 +50,7 @@ provider:
     WEB3_INFURA_PROJECT_ID: ${ssm:WEB3_INFURA_PROJECT_ID~true}
     TABLE_NAME: PAC-${self:provider.stage}
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
+    RESULT_TABLE_NAME: PAC-Result-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
     LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
@@ -144,3 +145,15 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Retain
+    ResultTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:provider.environment.RESULT_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: receipt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: receipt
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+      DeletionPolicy: Delete
