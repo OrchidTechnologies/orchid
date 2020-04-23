@@ -10,7 +10,7 @@ mkdir -p "${sysroot}"
 cd "${sysroot}"
 
 # XXX: this currently doesn't work as non-root (and fakechroot didn't work right)
-if [[ $(uname -s) == Linux && $(id -u) == 0 ]] && which skopeo 2>/dev/null; then
+if [[ $(uname -s) == Linux && $(id -u) == 0 ]] && which skopeo &>/dev/null; then
     skopeo copy docker://centos:6 dir:.
     jq -r '.layers [] .digest' manifest.json | while IFS=: read -r alg dig; do fakeroot tar -zxvf "${dig}"; done
     # XXX: this doesn't work on GitHub CI due to some kind of systemd-resolved nonsense
