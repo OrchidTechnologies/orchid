@@ -57,3 +57,5 @@ cc := $(llvm)/bin/clang $(more)
 cxx := $(llvm)/bin/clang++ $(more)
 
 tidy := $(llvm)/bin/clang-tidy
+
+qflags += -fdebug-prefix-map=$(llvm)=~/ndk
