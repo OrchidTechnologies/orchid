@@ -32,6 +32,8 @@ include $(pwd)/target-gnu.mk
 
 lflags += -fuse-ld=gold
 lflags += -Wl,--icf=all
+lflags += -Wl,-z,relro
+lflags += -Wl,--hash-style=gnu
 lflags += -pthread
 qflags += -fPIC
 
