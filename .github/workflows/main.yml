@@ -152,7 +152,7 @@ jobs:
     steps:
 
     - name: install NDK r21
-      run: echo y | sudo -E "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.0.6113669"
+      run: echo y | sudo -E "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.0.6113669" >/dev/null
 
     - uses: actions/checkout@v1
     - name: env/setup
