@@ -56,6 +56,6 @@ include env/output.mk
 $(output)/%/orchidd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cxx/$*) $(wflags) -o $@ $^ $(lflags)
+	@$(cxx) $(more/$*) $(wflags) -o $@ $^ $(lflags)
 	@openssl sha256 -r $@
 	@ls -la $@

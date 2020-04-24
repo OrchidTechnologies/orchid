@@ -75,7 +75,6 @@ ranlib/$(1) := $(llvm)/bin/$(1)-linux-android-ranlib
 ar/$(1) := $(llvm)/bin/$(1)-linux-android-ar
 strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
 windres/$(1) := false
-binary/$(1) := $(cc) $$(more/$(1))
 export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_RUSTFLAGS := $$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $$(more/$(1)),-C link-arg=$$(arg))
 export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword $(cc))
 endef

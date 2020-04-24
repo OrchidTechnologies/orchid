@@ -86,7 +86,7 @@ include shared/target-mac.mk
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN: $(patsubst %,$(output)/$(default)/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cxx/$(default)) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework JavaScriptCore
+	@$(cxx) $(more/$(default)) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework JavaScriptCore
 	@openssl sha256 -r $@
 
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist: info-vpn.plist.in
@@ -122,7 +122,7 @@ signed += $(bundle)$(contents)/MacOS/$(name)
 $(bundle)$(contents)/MacOS/$(name): $(patsubst %,$(output)/$(default)/%,$(local)) $(output)/XCBuildData/build.db $(bundle)$(contents)/Frameworks/App.framework$(versions)$(resources)/Info.plist
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	$(cxx/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath /usr/lib/swift -rpath @executable_path/../Frameworks $(patsubst %,-framework %,$(frameworks)) $(bundle)$(contents)/Frameworks/App.framework$(versions)/App $(output)/Release/Pods_Runner.framework$(versions)/Pods_Runner $(foreach pod,$(pods),-F$(dir $(pod))) -L/usr/lib/swift -L$(toolchain)/usr/lib/swift/$(sdk)
+	$(cxx) $(more/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath /usr/lib/swift -rpath @executable_path/../Frameworks $(patsubst %,-framework %,$(frameworks)) $(bundle)$(contents)/Frameworks/App.framework$(versions)/App $(output)/Release/Pods_Runner.framework$(versions)/Pods_Runner $(foreach pod,$(pods),-F$(dir $(pod))) -L/usr/lib/swift -L$(toolchain)/usr/lib/swift/$(sdk)
 
 signed += $(bundle)$(contents)/PkgInfo
 $(bundle)$(contents)/PkgInfo:

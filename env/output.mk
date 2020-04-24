@@ -131,25 +131,25 @@ $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cc/$(arch)) -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cc) $(more/$(arch)) -MD -MP -c -o $@ $< $(flags)
 
 $(output)/%.m.o: $$(specific) $$(folder).m $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cc/$(arch)) -fobjc-arc -MD -MP -c -o $@ $< $(flags)
+	$(job)@$(prefix) $(cc) $(more/$(arch)) -fobjc-arc -MD -MP -c -o $@ $< $(flags)
 
 $(output)/%.mm.o: $$(specific) $$(folder).mm $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx/$(arch)) -std=gnu++17 -fobjc-arc -MD -MP -c -o $@ $< $(flags) $(xflags)
+	$(job)@$(prefix) $(cxx) $(more/$(arch)) -std=gnu++17 -fobjc-arc -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 $(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx/$(arch)) -std=c++14 -MD -MP -c -o $@ $< $(flags) $(xflags)
+	$(job)@$(prefix) $(cxx) $(more/$(arch)) -std=c++14 -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
@@ -158,14 +158,14 @@ ifeq ($(filter notidy,$(debug)),)
 	@if [[ $< =~ $(filter) && ! $< =~ .*/(lwip|monitor)\.cpp ]]; then \
 	    echo [CT] $(target)/$(arch) $<; \
 	    $(tidy) $< --quiet --warnings-as-errors='*' --header-filter='$(filter)' --config='{Checks: "$(checks)", CheckOptions: [{key: "performance-move-const-arg.CheckTriviallyCopyableMove", value: 0}, {key: "bugprone-exception-escape.IgnoredExceptions", value: "broken_promise"}]}' -- \
-	        $(wordlist 2,$(words $(cxx/$(arch))),$(cxx/$(arch))) -std=c++2a $(flags) $(xflags); \
+	        $(wordlist 2,$(words $(cxx)),$(cxx)) $(more/$(arch)) -std=c++2a $(flags) $(xflags); \
 	fi
 endif
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags) $(xflags)
+	$(job)@$(prefix) $(cxx) $(more/$(arch)) -std=c++2a -MD -MP -c -o $@ $< $(flags) $(xflags)
 
 define _
-$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc/$(1))' '$(cxx/$(1))' '$(objc/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
+$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
 endef
 $(each)
 
@@ -178,7 +178,7 @@ $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
 	cd $(dir $@) && $(CURDIR)/$< --host=$(host/$(arch)) --prefix=$(CURDIR)/$(output)/$(arch)/usr \
-	    CC="$(cc/$(arch))" CFLAGS="$(qflags)" RANLIB="$(ranlib/$(arch))" AR="$(ar/$(arch))" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
+	    CC="$(cc) $(more/$(arch))" CFLAGS="$(qflags)" RANLIB="$(ranlib/$(arch))" AR="$(ar/$(arch))" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
 	    CPPFLAGS="$(patsubst -I@/%,-I$(CURDIR)/$(output)/$(arch)/%,$(p_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
 	    LDFLAGS="$(wflags) $(patsubst -L@/%,-L$(CURDIR)/$(output)/$(arch)/%,$(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
 	    --enable-static --disable-shared $(subst =@/,=$(CURDIR)/$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
@@ -203,7 +203,7 @@ $(output)/%.rustup:
 $(output)/%/$(pre)rust.$(lib): $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
 	$(specific)
 	@mkdir -p $(dir $@)
-	cd $(folder) && TARGET_CC='$(binary/$(arch))' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
+	cd $(folder) && TARGET_CC='$(cc) $(more/$(arch))' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
 	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/$(pre)$(subst -,_,$(notdir $(folder))).$(lib) $@
 
 .PHONY: clean

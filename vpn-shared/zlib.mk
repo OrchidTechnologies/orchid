@@ -12,7 +12,7 @@
 $(output)/%/zlib/Makefile: $(pwd)/zlib/configure $(sysroot) $(parts)
 	rm -rf $(output)/$*/zlib
 	mkdir -p $(output)/$*/zlib
-	cd $(output)/$*/zlib && CC="$(cc/$*)" CFLAGS="$(qflags)" $(CURDIR)/$< --static
+	cd $(output)/$*/zlib && CC="$(cc) $(more/$*)" CFLAGS="$(qflags)" $(CURDIR)/$< --static
 
 $(output)/%/zlib/libz.a: $(output)/%/zlib/Makefile $(sysroot)
 	$(MAKE) -C $(output)/$*/zlib libz.a RANLIB="$(ranlib/$*)" AR="$(ar/$*)" ARFLAGS="-r"

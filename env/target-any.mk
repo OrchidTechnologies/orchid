@@ -73,9 +73,6 @@ cflags += -I@/usr/include
 
 define _
 cflags/$(1) := -I$(output)/$(1)/usr/include
-cc/$(1) := $(cc) $(more/$(1))
-cxx/$(1) := $(cxx) $(more/$(1))
-objc/$(1) := $(objc) $(more/$(1))
 endef
 $(each)
 

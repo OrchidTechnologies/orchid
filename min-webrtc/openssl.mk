@@ -22,7 +22,7 @@ $(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/includ
 	    no-ui-console \
 	    no-unit-test \
 	    no-weak-ssl-ciphers \
-	    CC="$(cc/$*)" CFLAGS="$(qflags)" RANLIB="$(ranlib/$*)" AR="$(ar/$*)"
+	    CC="$(cc) $(more/$*)" CFLAGS="$(qflags)" RANLIB="$(ranlib/$*)" AR="$(ar/$*)"
 	$(MAKE) -C $(output)/$*/openssl include/openssl/opensslconf.h
 	# XXX: this is needed because the rust openssl-sys package only accepts a single include folder
 	cp -f $(pwd/openssl)/include/openssl/opensslv.h $(output)/$*/openssl/include/openssl

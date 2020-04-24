@@ -39,7 +39,7 @@ include env/output.mk
 $(output)/jnilibs/%/liborchid.so: $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cxx/$*) -shared $(wflags) -o $@ $^ $(lflags)
+	@$(cxx) $(more/$*) -shared $(wflags) -o $@ $^ $(lflags)
 	@openssl sha256 -r $@
 	@ls -la $@
 
