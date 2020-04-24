@@ -75,6 +75,11 @@ ranlib/$(1) := $(llvm)/bin/$(1)-linux-android-ranlib
 ar/$(1) := $(llvm)/bin/$(1)-linux-android-ar
 strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
 windres/$(1) := false
+# XXX: this check is horrible and doesn't _usually_ work
+# https://github.com/rust-lang/cargo/issues/8147
+ifeq ($(uname-s)-$(1),Linux-x86_64)
+ccrs/$(1) := HOST
+endif
 export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_RUSTFLAGS := $$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $$(more/$(1)),-C link-arg=$$(arg))
 export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword $(cc))
 endef
