@@ -31,6 +31,7 @@ each = $(call loop,_,$(archs))
 
 cflags := 
 qflags := 
+rflags := 
 lflags := 
 wflags := 
 xflags := 
@@ -47,6 +48,7 @@ qflags += -gfull -Os
 
 qflags += -fdebug-prefix-map=./=
 qflags += -fdebug-prefix-map=$(CURDIR)=.
+rflags += --remap-path-prefix=$(CURDIR)=.
 
 cflags += -Wall
 cflags += -Werror
