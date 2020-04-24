@@ -161,7 +161,7 @@ jobs:
       run: git submodule update --init --recursive --jobs 3
 
     - name: make Linux server
-      run: ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.0.6113669 debug=crossndk make -j3 -C srv-shared
+      run: ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.0.6113669 make -j3 -C srv-shared target=lnx
 
 
   build-lnx-bad:
