@@ -174,5 +174,9 @@
 	"scanYourExistingAccountCreateACustomAccountOrEnter": "기존 계정을 스캔하거나 사용자 정의 계정을 생성하거나 OVPN 자격 증명을 입력하십시오.",
 	"seeTheOptions": "옵션보기",
 	"setUpAccount": "계정 설정",
-	"thereWasAnErrorInPurchasingContact": "구매하는 중에 오류가 발생했습니다. 난초 지원 센터에 문의하십시오."
+	"thereWasAnErrorInPurchasingContact": "구매하는 중에 오류가 발생했습니다. 난초 지원 센터에 문의하십시오.",
+	"enterOvpnProfile": "OVPN 프로파일 입력",
+	"linkAnOrchidAccount": "난초 계정 연결",
+	"buyOrchidAccount": "난초 계정 구매",
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "기존 난초 계정을 연결하거나 OVPN 프로필을 입력하십시오."
 }

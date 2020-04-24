@@ -174,5 +174,9 @@
 	"scanYourExistingAccountCreateACustomAccountOrEnter": "既存のアカウントをスキャンするか、カスタムアカウントを作成するか、またはOVPN資格情報を入力します。",
 	"seeTheOptions": "オプションを見る",
 	"setUpAccount": "アカウントを設定する",
-	"thereWasAnErrorInPurchasingContact": "購入時にエラーが発生しました。オーキッドサポートまでご連絡ください。"
+	"thereWasAnErrorInPurchasingContact": "購入時にエラーが発生しました。オーキッドサポートまでご連絡ください。",
+	"enterOvpnProfile": "OVPNプロファイルを入力してください",
+	"linkAnOrchidAccount": "オーキッドアカウントをリンクする",
+	"buyOrchidAccount": "オーキッドアカウントを購入",
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "既存のOrchidアカウントをリンクするか、またはOVPNプロファイルを入力します。"
 }

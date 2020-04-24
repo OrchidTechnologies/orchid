@@ -174,5 +174,9 @@
 	"scanYourExistingAccountCreateACustomAccountOrEnter": "Сканируйте существующую учетную запись, создайте пользовательскую учетную запись или введите учетные данные OVPN.",
 	"seeTheOptions": "Смотрите варианты",
 	"setUpAccount": "Настроить учетную запись",
-	"thereWasAnErrorInPurchasingContact": "Произошла ошибка при покупке. Пожалуйста, свяжитесь со службой поддержки Orchid."
+	"thereWasAnErrorInPurchasingContact": "Произошла ошибка при покупке. Пожалуйста, свяжитесь со службой поддержки Orchid.",
+	"enterOvpnProfile": "Введите профиль OVPN",
+	"linkAnOrchidAccount": "Связать аккаунт Orchid",
+	"buyOrchidAccount": "Купить Орхидея",
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Свяжите свою существующую учетную запись Orchid или войдите в профиль OVPN."
 }

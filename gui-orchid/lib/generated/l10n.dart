@@ -1497,6 +1497,42 @@ class S {
       args: [],
     );
   }
+
+  String get linkAnOrchidAccount {
+    return Intl.message(
+      'Link Orchid Account',
+      name: 'linkAnOrchidAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get enterOvpnProfile {
+    return Intl.message(
+      'Enter OVPN Profile',
+      name: 'enterOvpnProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get buyOrchidAccount {
+    return Intl.message(
+      'Buy Orchid Account',
+      name: 'buyOrchidAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get linkYourExistingOrchidAccountOrEnterAnOvpnProfile {
+    return Intl.message(
+      'Link your existing Orchid account or enter an OVPN profile.',
+      name: 'linkYourExistingOrchidAccountOrEnterAnOvpnProfile',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
