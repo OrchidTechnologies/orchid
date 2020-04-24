@@ -25,7 +25,6 @@ make -C srv-shared
 /usr/bin/ruby -e \
     "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install meson autoconf automake libtool
-brew link --force gettext
 pip install pyyaml
 git clone https://github.com/OrchidTechnologies/orchid.git
 cd orchid/

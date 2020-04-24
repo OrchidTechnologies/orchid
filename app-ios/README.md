@@ -71,7 +71,6 @@ The system python should be fine for python2.
 ```bash
 pip install pyyaml
 brew install gettext
-brew link --force gettext
 brew install libgpg-error
 pip3 install meson
 pip3 install ninja

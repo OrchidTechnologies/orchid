@@ -14,3 +14,5 @@ target := mac
 endif
 
 prebuilt := darwin-x86_64
+
+export PATH := /usr/local/opt/gettext/bin:$(PATH)
