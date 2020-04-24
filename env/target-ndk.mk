@@ -58,4 +58,5 @@ cxx := $(llvm)/bin/clang++ $(more)
 
 tidy := $(llvm)/bin/clang-tidy
 
-qflags += -fdebug-prefix-map=$(llvm)=~/ndk
+$(shell rm -f $(output)/ndk && mkdir -p $(output) && ln -sf $(llvm) $(output)/ndk)
+qflags += -fdebug-prefix-map=$(llvm)=$(output)/ndk
