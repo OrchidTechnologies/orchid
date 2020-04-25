@@ -1,2 +1,3 @@
 #!/bin/bash
-exec env/"uname-$(uname -s).sh"
+env/"uname-$(uname -s).sh"
+env/setup-git.sh

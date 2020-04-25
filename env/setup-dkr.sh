@@ -21,4 +21,4 @@ echo y | /usr/local/lib/android/sdk/tools/bin/sdkmanager "ndk;21.0.6113669" >/de
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain=stable --profile=minimal
 
 env/setup-lnx.sh
-exec "$@"
+"$@"
