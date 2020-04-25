@@ -152,7 +152,7 @@ jobs:
     steps:
 
     - name: install NDK r21
-      run: echo y | sudo -E "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.0.6113669" >/dev/null
+      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.0.6113669" >/dev/null
 
     - uses: actions/checkout@v1
     - name: env/setup
@@ -170,7 +170,7 @@ jobs:
     steps:
 
     - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install clang-tidy-9 libc++-9-dev libc++abi-9-dev
+      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install clang-tidy-9 libc++-9-dev libc++abi-9-dev
 
     - uses: actions/checkout@v1
     - name: env/setup
@@ -191,7 +191,7 @@ jobs:
     steps:
 
     - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install mingw-w64
+      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - uses: actions/checkout@v1
     - name: env/setup
@@ -216,7 +216,7 @@ jobs:
     steps:
 
     - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get -y install mingw-w64
+      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - uses: actions/checkout@v1
     - name: env/setup
