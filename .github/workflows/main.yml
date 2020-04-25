@@ -231,10 +231,13 @@ jobs:
       run: df -k
 
 
-  build-and-a64:
+  build-and-apk:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: rm -rf /opt
+      run: sudo rm -rf /opt
 
     - uses: actions/checkout@v1
     - name: env/setup
@@ -243,10 +246,10 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make Android .apk
-      run: make -j3 -C app-android precache=--no-ios jni=arm64-v8a
+      run: make -j3 -C app-android precache=--no-ios
     - uses: actions/upload-artifact@v1
       with:
-        name: orchid-apk64
+        name: orchid-apk
         path: app-android/out-and/Orchid.apk
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
 
