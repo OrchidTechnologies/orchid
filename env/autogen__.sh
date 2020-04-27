@@ -6,6 +6,8 @@ cd "${src}"
 if [[ -e ./autogen.sh ]]; then
     ./autogen.sh
 else
-    autoheader
+    if grep AC_CONFIG_HEADERS configure.ac &>/dev/null; then
+        autoheader
+    fi
     autoconf
 fi
