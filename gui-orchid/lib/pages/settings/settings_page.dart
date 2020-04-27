@@ -42,7 +42,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
-    var betaSuffix = " (" + s.beta + ")";
     return TitledPage(
       title: s.settings,
       child: Column(
@@ -118,7 +117,7 @@ class _SettingsPageState extends State<SettingsPage> {
           pady(8),
           Divider(),
           PageTile.route(
-              title: s.manageConfiguration + betaSuffix,
+              title: s.manageConfiguration,
               routeName: '/settings/manage_config',
               context: context),
           Divider(),
@@ -126,7 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
           // Status page
           pady(8),
           PageTile(
-            title: s.showStatusPage + betaSuffix,
+            title: s.showStatusPage,
             //imageName: "assets/images/assignment.png",
             trailing: Switch(
               activeColor: AppColors.purple_3,
