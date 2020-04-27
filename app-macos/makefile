@@ -55,6 +55,7 @@ frameworks :=
 frameworks += $(framework)
 frameworks += AppKit
 frameworks += SafariServices
+frameworks += StoreKit
 
 pods := $(wildcard out-mac/Release/*/*.framework)
 swifts := $(wildcard *.swift) macos/Flutter/GeneratedPluginRegistrant.swift

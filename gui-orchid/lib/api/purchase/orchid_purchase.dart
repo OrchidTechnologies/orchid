@@ -15,7 +15,7 @@ abstract class OrchidPurchaseAPI {
 
   factory OrchidPurchaseAPI() {
     if (_shared == null) {
-      if (Platform.isIOS) {
+      if (Platform.isIOS | Platform.isMacOS) {
         _shared = IOSOrchidPurchaseAPI();
       } else if (Platform.isAndroid) {
         _shared = AndroidOrchidPurchaseAPI();

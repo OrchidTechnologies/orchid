@@ -42,7 +42,12 @@ dependencies:
   sqflite: ^1.2.0
   url_launcher: ^5.4.1
   web3dart: ^1.2.1
-  in_app_purchase: ^0.3.1+1
+  in_app_purchase:
+    # We forked this to add the MacOS support.  I have a PR in the works.
+    git:
+      url: https://github.com/patniemeyer/plugins.git
+      path: packages/in_app_purchase
+      ref: support_macos
   dartjsengine: ^1.0.1
 
 dev_dependencies:
