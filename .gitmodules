@@ -133,3 +133,6 @@
 [submodule "nettle"]
 	path = p2p/nettle
 	url = https://git.lysator.liu.se/nettle/nettle.git
+[submodule "icu"]
+	path = min-icu4c/icu
+	url = https://github.com/unicode-org/icu.git

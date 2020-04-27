@@ -41,17 +41,15 @@ debug: $(binary)
 install: $(binary)
 	cp -a $< $(usr)/sbin/
 
-
 source += $(wildcard source/*.cpp)
 cflags += -Isource
 
-cflags += -Iextra
 $(call include,p2p/target.mk)
 cflags += -Ip2p/rtc/openssl/test/ossl_shim/include
 
+$(call include,icu/target.mk)
 
 include env/output.mk
-
 
 $(output)/%/orchidd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
