@@ -119,6 +119,9 @@ jobs:
 
     steps:
 
+    - name: rm -rf /opt
+      run: sudo rm -rf /opt
+
     - uses: actions/checkout@v1
     - name: env/setup
       run: env/setup-git.sh
@@ -133,6 +136,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: rm -rf /opt
+      run: sudo rm -rf /opt
 
     - uses: actions/checkout@v1
 
