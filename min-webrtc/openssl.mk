@@ -14,7 +14,7 @@ pwd/openssl := $(pwd)/openssl
 $(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/include/openssl/%.h,opensslconf opensslv)): $(pwd/openssl)/Configure $(pwd/openssl)/include/openssl/opensslv.h $(sysroot)
 	rm -rf $(output)/$*/openssl
 	mkdir -p $(output)/$*/openssl
-	cd $(output)/$*/openssl && $(CURDIR)/$(pwd/openssl)/Configure $(openssl/$*) \
+	cd $(output)/$*/openssl && PATH=$(dir $(word 1,$(cc))):$${PATH} $(CURDIR)/$(pwd/openssl)/Configure $(openssl/$*) \
 	    no-dso \
 	    no-engine \
 	    no-shared \
@@ -28,7 +28,7 @@ $(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/includ
 	cp -f $(pwd/openssl)/include/openssl/opensslv.h $(output)/$*/openssl/include/openssl
 
 $(output)/%/openssl/libssl.a $(output)/%/openssl/libcrypto.a: $(output)/%/openssl/Makefile $(sysroot)
-	$(MAKE) -C $(output)/$*/openssl build_libs
+	PATH=$(dir $(word 1,$(cc))):$${PATH} $(MAKE) -C $(output)/$*/openssl build_libs
 
 cflags += -I$(pwd)/openssl/include
 cflags += -I@/openssl/include

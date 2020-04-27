@@ -51,7 +51,6 @@ export ANDROID_NDK_HOME := $(ndk)
 endif
 
 llvm := $(ndk)/toolchains/llvm/prebuilt/$(prebuilt)
-export PATH := $(llvm)/bin:$(PATH)
 
 cc := $(llvm)/bin/clang $(more)
 cxx := $(llvm)/bin/clang++ $(more)

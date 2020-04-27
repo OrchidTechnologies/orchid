@@ -204,7 +204,7 @@ $(output)/%.rustup:
 $(output)/%/$(pre)rust.$(lib): $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
 	$(specific)
 	@mkdir -p $(dir $@)
-	cd $(folder) && CARGO_HOME='$(CURDIR)/$(output)/cargo' $(if $(ccrs/$(arch)),$(ccrs/$(arch)),TARGET)_CC='$(cc) $(more/$(arch)) $(qflags)' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
+	cd $(folder) && CARGO_HOME='$(CURDIR)/$(output)/cargo' $(if $(ccrs/$(arch)),$(ccrs/$(arch)),TARGET)_CC='$(cc) $(more/$(arch)) $(qflags)' AR='$(ar/$(arch))' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
 	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/$(pre)$(subst -,_,$(notdir $(folder))).$(lib) $@
 
 .PHONY: clean
