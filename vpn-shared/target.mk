@@ -34,7 +34,6 @@ $(call include,sqlite.mk)
 
 $(call include,tor.mk)
 $(call include,libevent.mk)
-$(call include,zlib.mk)
 
 $(call include,wsk/target.mk)
 $(call include,p2p/target.mk)

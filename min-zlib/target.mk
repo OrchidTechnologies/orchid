@@ -9,13 +9,10 @@
 # }}}
 
 
-$(output)/%/zlib/Makefile: $(pwd)/zlib/configure $(sysroot) $(parts)
-	rm -rf $(output)/$*/zlib
-	mkdir -p $(output)/$*/zlib
-	cd $(output)/$*/zlib && CC="$(cc) $(more/$*)" CFLAGS="$(qflags)" $(CURDIR)/$< --static
-
-$(output)/%/zlib/libz.a: $(output)/%/zlib/Makefile $(sysroot)
-	$(MAKE) -C $(output)/$*/zlib libz.a RANLIB="$(ranlib/$*)" AR="$(ar/$*)" ARFLAGS="-r"
-
-cflags += -I$(pwd)/zlib
-linked += zlib/libz.a
+source += $(wildcard $(pwd)/libz/*.c)
+archive += $(pwd)/libz
+c_libz += -Wno-unused-variable
+qflags += -DCHROMIUM_ZLIB_NO_CHROMECONF
+cflags += -I$(pwd)/libz
+cflags += -I$(pwd)/extra
+cflags += -I$(pwd)

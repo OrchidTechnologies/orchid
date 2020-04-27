@@ -1,0 +1,1 @@
+#define BUILDFLAG(x) x

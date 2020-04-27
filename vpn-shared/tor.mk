@@ -36,10 +36,10 @@ deps += openssl/libssl.a
 deps += openssl/libcrypto.a
 w_tor += tor_cv_library_openssl_dir="(system)"
 
-p_tor += -I@/zlib
-p_tor += -I$(CURDIR)/$(pwd)/zlib
-l_tor += -L@/zlib
-deps += zlib/libz.a
+p_tor += -I@/$(pwd)/zlb/libz
+p_tor += -I$(CURDIR)/$(pwd)/zlb/libz
+l_tor += -L@/$(pwd)/zlb
+deps += $(pwd)/zlb/libz.a
 w_tor += tor_cv_library_zlib_dir="(system)"
 
 ifeq ($(target),win)
@@ -110,3 +110,5 @@ $(subst @,%,$(patsubst %,$(output)/@/%,$(tor))): $(output)/%/$(pwd)/tor/Makefile
 
 cflags += -I$(pwd)/tor/src
 linked += $(tor)
+
+$(call include,zlb/target.mk)

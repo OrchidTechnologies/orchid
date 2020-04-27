@@ -74,8 +74,8 @@
 	path = vpn-shared/libssh
 	url = https://git.libssh.org/projects/libssh.git
 [submodule "zlib"]
-	path = vpn-shared/zlib
-	url = https://github.com/madler/zlib.git
+	path = min-zlib/libz
+	url = https://chromium.googlesource.com/chromium/src/third_party/zlib.git
 [submodule "eEVM"]
 	path = p2p/eEVM
 	url = https://github.com/microsoft/eEVM.git
@@ -136,3 +136,12 @@
 [submodule "icu"]
 	path = min-icu4c/icu
 	url = https://github.com/unicode-org/icu.git
+[submodule "googletest"]
+	path = min-zlib/googletest
+	url = https://chromium.googlesource.com/external/github.com/google/googletest.git
+[submodule "base"]
+	path = min-zlib/base
+	url = https://chromium.googlesource.com/chromium/src/base
+[submodule "build"]
+	path = min-zlib/build
+	url = https://chromium.googlesource.com/chromium/src/build.git
