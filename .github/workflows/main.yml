@@ -105,10 +105,6 @@ jobs:
 
     - name: make Linux server
       run: debug=crossndk make -j3 -C srv-shared
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidd-lnx
-        path: srv-shared/out-lnx/x86_64/orchidd
 
     - name: df -k
       run: df -k
@@ -168,6 +164,10 @@ jobs:
 
     - name: make Linux server
       run: ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.0.6113669 make -j3 -C srv-shared target=lnx
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidd-lnx
+        path: srv-shared/out-lnx/x86_64/orchidd
 
 
   build-lnx-bad:
@@ -192,12 +192,12 @@ jobs:
 
 
   build-win-srv:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
 
-    - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
+    - name: install mingw-w64
+      run: brew install mingw-w64 coreutils
 
     - uses: actions/checkout@v1
     - name: env/setup
@@ -221,7 +221,7 @@ jobs:
 
     steps:
 
-    - name: apt-get install
+    - name: install mingw-w64
       run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - uses: actions/checkout@v1
