@@ -7,13 +7,11 @@ sudo apt-get install \
      bison \
      clang \
      flex \
-     g++-9 \
-     gcc-9 \
      gettext \
      git \
      gperf \
      groff \
-     libc++-dev \
+     libc++-9 \
      lld \
      make \
      ninja-build \
