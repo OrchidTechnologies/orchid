@@ -7,8 +7,8 @@ sudo apt-get install \
      bison \
      clang \
      flex \
-     g++-8 \
-     gcc-8 \
+     g++-9 \
+     gcc-9 \
      gettext \
      git \
      gperf \
