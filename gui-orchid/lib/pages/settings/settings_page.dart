@@ -6,6 +6,7 @@ import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
+import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 
@@ -28,6 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    ScreenOrientation.portrait();
     initStateAsync();
     _defaultCurator.addListener(_curatorChanged);
   }
@@ -165,6 +167,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     super.dispose();
+    ScreenOrientation.reset();
     _defaultCurator.removeListener(_curatorChanged);
   }
 
