@@ -58,6 +58,7 @@ def fund_PAC_(
 ) -> str:
     logging.debug(f"Funding PAC  signer: {signer}, total: {total}, escrow: {escrow} ")
 
+    gas_price = int(os.environ['DEFAULT_GAS'])
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
     verifier_addr = w3.toChecksumAddress(os.environ['VERIFIER'])
@@ -82,7 +83,7 @@ def fund_PAC_(
             'chainId': 1,
             'from': funder_pubkey,
             'gas': 50000,
-            'gasPrice': w3.toWei('8', 'gwei'),
+            'gasPrice': w3.toWei(gas_price, 'gwei'),
             'nonce': nonce,
         }
     )
@@ -112,7 +113,7 @@ def fund_PAC_(
             'chainId': 1,
             'from': funder_pubkey,
             'gas': 200000,
-            'gasPrice': w3.toWei('8', 'gwei'),
+            'gasPrice': w3.toWei(gas_price, 'gwei'),
             'nonce': nonce,
         }
     )
@@ -139,7 +140,7 @@ def fund_PAC_(
             'chainId': 1,
             'from': funder_pubkey,
             'gas': 200000,
-            'gasPrice': w3.toWei('8', 'gwei'),
+            'gasPrice': w3.toWei(gas_price, 'gwei'),
             'nonce': nonce,
         }
     )
