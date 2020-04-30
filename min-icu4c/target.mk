@@ -11,24 +11,40 @@
 
 $(output)/icu4c/Makefile: $(pwd)/icu4c/configure
 	mkdir -p $(dir $@)
-	cd $(dir $@) && $(CURDIR)/$<
+	cd $(dir $@) && $(CURDIR)/$< --enable-static
 
-$(output)/icu4c/bin/uconv: $(output)/icu4c/Makefile
+$(output)/icu%c/bin/uconv $(output)/icu%c/lib/libicuuc.a $(output)/icu%c/lib/libicudata.a: $(output)/icu4c/Makefile
 	$(MAKE) -C $(dir $<) RM='rm -f'
 
 $(call depend,$(pwd)/icu4c/Makefile,$(output)/icu4c/bin/uconv)
 
 w_icu4c += --with-cross-build=$(CURDIR)/$(output)/icu4c
+w_icu4c += SHELL=/bin/bash
+
+ifeq ($(target),win)
+uflags += MSYS_VERSION=
+uflags += CURR_FULL_DIR=
+uflags += CURR_SRCCODE_FULL_DIR=
+endif
 
 define icu4c
-$(output)/%/$(pwd)/icu4c/lib/libicu$(1).a: $(output)/%/$(pwd)/icu4c/Makefile
+$(output)/%/$(pwd)/icu4c/lib/$(1).a: $(output)/%/$(pwd)/icu4c/Makefile
 	mkdir -p $$(dir $$@)
-	$$(MAKE) -C $$(dir $$<)/$(2)
-linked += $(pwd)/icu4c/lib/libicu$(1).a
+	$$(MAKE) -C $$(dir $$<)/$(2) $(uflags)
+linked += $(pwd)/icu4c/lib/$(1).a
 endef
 
-$(eval $(call icu4c,i18n,i18n))
-$(eval $(call icu4c,uc,common))
-$(eval $(call icu4c,data,data))
+ifeq ($(target),win)
+$(eval $(call icu4c,libsicuin,i18n))
+$(eval $(call icu4c,libsicuuc,common))
+$(eval $(call icu4c,sicudt,data))
+else
+$(eval $(call icu4c,libicui18n,i18n))
+$(eval $(call icu4c,libicuuc,common))
+$(eval $(call icu4c,libicudata,data))
+endif
 
-cflags += -I$(pwd)/extra/{common,i18n}
+icu4c := -I$(pwd)/extra/{common,i18n}
+cflags += $(icu4c)
+
+cflags += -DU_STATIC_IMPLEMENTATION

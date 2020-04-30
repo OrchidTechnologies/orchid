@@ -113,6 +113,7 @@ source += $(filter-out \
 
 cflags += -I$(pwd)/libutp
 c_libutp += -Wno-unused-const-variable
+c_libutp += -Wno-unused-variable
 
 ifeq ($(target),win)
 source += $(pwd)/libutp/libutp_inet_ntop.cpp
@@ -155,6 +156,8 @@ cflags += -DECMULT_GEN_PREC_BITS=4
 cflags += -I$(pwd)/intx/include
 source += $(pwd)/intx/lib/intx/div.cpp
 
+
+cflags += -I$(pwd)/fmt/include
 
 source += $(pwd)/eEVM/src/processor.cpp
 source += $(pwd)/eEVM/src/stack.cpp

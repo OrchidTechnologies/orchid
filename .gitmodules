@@ -145,3 +145,21 @@
 [submodule "build"]
 	path = min-zlib/build
 	url = https://chromium.googlesource.com/chromium/src/build.git
+[submodule "v8"]
+	path = min-v8/v8
+	url = https://chromium.googlesource.com/v8/v8
+[submodule "trace_event"]
+	path = min-v8/trace_event
+	url = https://chromium.googlesource.com/chromium/src/base/trace_event/common.git
+[submodule "protobuf"]
+	path = min-v8/protobuf
+	url = https://chromium.googlesource.com/external/github.com/google/protobuf
+[submodule "jinja2"]
+	path = min-v8/jinja2
+	url = https://chromium.googlesource.com/chromium/src/third_party/jinja2.git
+[submodule "markupsafe"]
+	path = min-v8/markupsafe
+	url = https://chromium.googlesource.com/chromium/src/third_party/markupsafe.git
+[submodule "fmt"]
+	path = p2p/fmt
+	url = https://github.com/fmtlib/fmt.git

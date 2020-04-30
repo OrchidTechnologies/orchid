@@ -122,10 +122,11 @@ code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)
 dflags = $(foreach dir,$(subst /, ,$*),$(c_$(dir)))
 
 flags = $(qflags)
-flags += $(filter -I%,$(dflags))
+flags += $(filter -I%,$(dflags) $(cflags/./$(dir $<)))
 flags += $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags))
-flags += $(filter-out -I%,$(dflags))
+flags += $(filter-out -I%,$(dflags) $(cflags/./$(dir $<)))
 flags += $(cflags_$(basename $(notdir $<)))
+flags += $(cflags/./$<)
 
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)

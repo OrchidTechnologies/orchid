@@ -76,7 +76,9 @@ lflags += -Wl,--no-insert-timestamp
 
 #cflags += -DNOMINMAX
 cflags += -DWIN32_LEAN_AND_MEAN=
+cflags += -D_CRT_RAND_S=
 
+cflags += -fms-extensions
 #cflags += -fms-compatibility
 #cflags += -D__GNUC__
 
@@ -93,11 +95,11 @@ cflags += -I$(pwd)/win32
 cflags += -Wno-nonportable-include-path
 
 msys2 := 
-msys2 += crt-git-7.0.0.5397.291c4f8d-1
-msys2 += dlfcn-1.1.2-1
-msys2 += gcc-9.2.0-2
-msys2 += headers-git-7.0.0.5397.291c4f8d-1
-msys2 += winpthreads-git-7.0.0.5325.11a5459d-1
+msys2 += crt-git-7.0.0.5553.e922460c-1
+msys2 += dlfcn-1.2.0-1
+msys2 += gcc-9.3.0-2
+msys2 += headers-git-7.0.0.5553.e922460c-1
+msys2 += winpthreads-git-7.0.0.5544.15da3ce2-1
 
 define _
 $(output)/$(1)/%.msys2:

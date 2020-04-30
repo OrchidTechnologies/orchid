@@ -22,7 +22,9 @@ jobs:
         path: cli-shared/out-mac/x86_64/orchid
 
     - name: make macOS server
-      run: make -j3 -C srv-shared
+      # XXX: v8 cannot be compiled using Xcode due to something I haven't spent the time to investigate :(
+      # exception specification of explicitly defaulted copy constructor does not match the calculated one
+      run: debug=crossndk make -j3 -C srv-shared
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-mac
@@ -108,6 +110,8 @@ jobs:
 
     - name: df -k
       run: df -k
+    - name: git status
+      run: git status
 
 
   build-lnx-dkr:
@@ -175,9 +179,6 @@ jobs:
 
     steps:
 
-    - name: apt-get install
-      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install clang-tidy-9 libc++-9-dev libc++abi-9-dev
-
     - uses: actions/checkout@v1
     - name: env/setup
       run: env/setup.sh
@@ -205,6 +206,10 @@ jobs:
     - name: git submodule
       run: env/submodule.sh --jobs 3
 
+    - name: sed -ie base/win/scoped_handle.h
+      # XXX: (this is a temporary hack to fix a bug I filed upstream)
+      # https://bugs.chromium.org/p/chromium/issues/detail?id=1076523
+      run: sed -i -e 's@(\\ @(@' min-zlib/base/win/scoped_handle.h
     - name: make Windows server
       run: make -j3 -C srv-shared target=win
     - uses: actions/upload-artifact@v1
@@ -212,6 +217,8 @@ jobs:
         name: orchidd-w64
         path: srv-shared/out-win/x86_64/orchidd.exe
 
+    - name: git status
+      run: git status
     - name: df -k
       run: df -k
 

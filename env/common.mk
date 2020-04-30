@@ -54,4 +54,8 @@ define head
 $(shell cd $(1) && git rev-parse --git-dir)/HEAD
 endef
 
+define patternize
+$(foreach temp,$(1),$(basename $(temp))%$(patsubst .%,%,$(suffix $(temp))))
+endef
+
 # XXX: implement a split and then reimplement specific in terms of it

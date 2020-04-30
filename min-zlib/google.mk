@@ -1,5 +1,5 @@
-# Cycc/Cympile - Shared Build Scripts for Make
-# Copyright (C) 2013-2019  Jay Freeman (saurik)
+# Orchid - WebRTC P2P VPN Market (on Ethereum)
+# Copyright (C) 2017-2019  The Orchid Authors
 
 # Zero Clause BSD license {{{
 #
@@ -9,11 +9,10 @@
 # }}}
 
 
-xflags += -nostdinc++
-xflags += -isystem $(CURDIR)/$(pwd)/libcxx/include
-xflags += -isystem $(CURDIR)/$(pwd)/libcxxabi/include
+source += $(filter-out %_unittest.cc,$(wildcard $(pwd)/libz/google/*.cc))
 
-source += $(wildcard $(pwd)/libcxx/src/*.cpp)
-c_libcxx += -D_LIBCPP_BUILDING_LIBRARY
-c_libcxx += -D__GLIBCXX__
-qflags += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
+ifeq ($(target),win)
+c_libz += -DUNICODE
+# XXX: there is a __declspec(empty_bases) that needs to be better scoped
+c_libz += -Wno-ignored-attributes
+endif

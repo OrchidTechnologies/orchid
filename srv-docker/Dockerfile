@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:eoan
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install git-core
 
 ARG GIT_REPOSITORY=https://github.com/OrchidTechnologies/orchid.git
