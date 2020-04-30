@@ -3,6 +3,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
@@ -100,28 +101,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
 
-          // Show status page
-          pady(8),
-          Divider(),
-          PageTile(
-            title: s.showInstructions,
-            trailing: RaisedButton(
-              child: Text(s.reset),
-              onPressed: () {
-                UserPreferences().resetInstructions();
-              },
-            ),
-          ),
-
-          // Configuration
-          pady(8),
-          Divider(),
-          PageTile.route(
-              title: s.manageConfiguration,
-              routeName: '/settings/manage_config',
-              context: context),
-          Divider(),
-
           // Status page
           pady(8),
           PageTile(
@@ -140,30 +119,43 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
 
-          /*
-          // Test Purchase
+          // Advanced Configuration
+          pady(8),
+          Divider(),
+          PageTile.route(
+              title: "Advanced Configuration",
+              routeName: '/settings/configuration',
+              context: context),
+
+          // Manage Data
+          pady(8),
+          Divider(),
+          PageTile.route(
+              title: "Configuration Management",
+              routeName: '/settings/manage_config',
+              context: context),
+
+          // Reset instructions
           pady(8),
           Divider(),
           PageTile(
-            title: "Test Purchase",
+            title: s.showInstructions,
             trailing: RaisedButton(
-              child: Text("Buy"),
-              onPressed: () {
-                //OrchidPurchaseAPI().testPurchase();
-                _showPurchasePage();
-              },
+              child: Text(s.reset),
+              onPressed: _resetInstructions,
             ),
           ),
-           */
         ],
       ),
     );
   }
 
-  void _showPurchasePage() {
-    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
-      return PurchasePage(onAddFlowComplete: (hop) {});
-    }));
+  void _resetInstructions() async {
+    UserPreferences().resetInstructions();
+    Dialogs.showAppDialog(
+        context: context,
+        title: "Reset",
+        bodyText: "Help instructions will be shown again in appropriate places.");
   }
 
   void _curatorChanged() {
