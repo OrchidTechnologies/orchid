@@ -280,6 +280,25 @@ def random_scan(table, price):
     return response0
 
 
+def get_transaction_confirm_count(txhash):
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+    blocknum = w3.eth.getTransactionCount(account=funder_pubkey)
+    trans = w3.eth.getTransaction(txhash)
+    return blocknum - trans['blockNumber']
+
+
+def get_transaction_status(txhash):
+    try:
+        count = get_transaction_confirm_count(txhash)
+        if (count >= 12):
+            return "confirmed"
+        else:
+            return "unconfirmed"
+    except w3.TransactionNotFound:
+        return "unknown"
+    return "unknown"
+
+
 def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     logging.debug(f'Getting Account with Price:{price}')
     dynamodb = boto3.resource('dynamodb')
@@ -289,10 +308,15 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     signer_pubkey = '0xTODO'
     for item in response['Items']:
         if float(price) == float(item['price']):
-            # todo: need to check status - make sure pot is ready
             signer_pubkey = item['signer']
             config = item['config']
             push_txn_hash = item['push_txn_hash']
+            # check status - make sure pot is ready
+            #status = item['status']
+            status = get_transaction_status(push_txn_hash)
+            if (status != 'confirmed'):
+                logging.debug(f'Skipping account ({push_txn_hash}) with status: {status}')
+                continue
             logging.debug(f'Found available account ({push_txn_hash}): {config}')
             key = {
                 'price': item['price'],
@@ -311,23 +335,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     return None, None, None
 
 
-def get_transaction_confirm_count(txhash):
-    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
-    blocknum = w3.eth.getTransactionCount(account=funder_pubkey)
-    trans = w3.eth.getTransaction(txhash)
-    return blocknum - trans['blockNumber']
 
-
-def get_transaction_status(txhash):
-    try:
-        count = get_transaction_confirm_count(txhash)
-        if (count >= 12):
-            return "confirmed"
-        else:
-            return "unconfirmed"
-    except w3.TransactionNotFound:
-        return "unknown"
-    return "unknown"
 
 
 # todo: replay prevention through receipt hash map
