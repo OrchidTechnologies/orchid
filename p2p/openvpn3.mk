@@ -27,12 +27,12 @@ cflags += -I$(pwd)/openvpn3/client
 cflags += -DOPENVPN_EXTERNAL_TRANSPORT_FACTORY
 cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
 
-c_openvpn3 += -Wno-address-of-temporary
-c_openvpn3 += -Wno-delete-non-virtual-dtor
-c_openvpn3 += -Wno-unused-private-field
-c_openvpn3 += -Wno-unused-variable
-c_openvpn3 += -Wno-vexing-parse
+cflags/$(pwd)/openvpn3/ += -Wno-address-of-temporary
+cflags/$(pwd)/openvpn3/ += -Wno-delete-non-virtual-dtor
+cflags/$(pwd)/openvpn3/ += -Wno-unused-private-field
+cflags/$(pwd)/openvpn3/ += -Wno-unused-variable
+cflags/$(pwd)/openvpn3/ += -Wno-vexing-parse
 
 ifeq ($(target),ios)
-c_openvpn3 += -ObjC++
+cflags/$(pwd)/openvpn3/ += -ObjC++
 endif

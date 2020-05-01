@@ -14,7 +14,7 @@ cflags += -DHAVE_SCONN_LEN
 
 cflags += -D__APPLE_USE_RFC_2292
 cflags += -D__Userspace_os_Darwin
-c_usrsctp += -U__APPLE__
+cflags/$(pwd)/usrsctp/ += -U__APPLE__
 
 lflags += -framework CoreFoundation
 lflags += -framework Foundation

@@ -69,8 +69,9 @@ source += $(pwd)/lwip/src/netif/ethernet.c
 
 ifeq ($(target),win)
 source += $(pwd)/lwip/contrib/ports/win32/sys_arch.c
+cflags/$(pwd)/lwip/contrib/ports/win32/sys_arch.c += -UWIN32_LEAN_AND_MEAN
 cflags += -I$(pwd)/lwip/contrib/ports/win32/include
-c_lwip := -DLWIP_TIMEVAL_PRIVATE=0
+cflags/$(pwd)/lwip/ += -DLWIP_TIMEVAL_PRIVATE=0
 else
 source += $(pwd)/lwip/contrib/ports/unix/port/sys_arch.c
 cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include
@@ -79,13 +80,13 @@ endif
 cflags += -I$(pwd)/lwip/src/include
 
 cflags += -DLWIP_ERRNO_STDINCLUDE
-cflags_sys_arch += -UWIN32_LEAN_AND_MEAN
 
 
 # Android sockaddr_storage is more indirect
-cflags_lwip += -Wno-missing-braces
+cflags/$(pwd)/lwip/ += -Wno-missing-braces
+cflags/$(pwd)/source/lwip.cpp += -Wno-missing-braces
 
-cflags_transport += -Wno-unused-private-field
+cflags/$(pwd)/source/transport.cpp += -Wno-unused-private-field
 
 cflags += -I$(pwd)/BeastHttp/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
@@ -95,7 +96,7 @@ source += $(wildcard $(pwd)/boost/libs/random/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
 
 ifeq ($(target),win)
-c_operations += -Wno-unused-const-variable
+cflags/$(pwd)/boost/libs/filesystem/src/operations.cpp += -Wno-unused-const-variable
 endif
 
 
@@ -112,8 +113,8 @@ source += $(filter-out \
 ,$(wildcard $(pwd)/libutp/*.cpp))
 
 cflags += -I$(pwd)/libutp
-c_libutp += -Wno-unused-const-variable
-c_libutp += -Wno-unused-variable
+cflags/$(pwd)/libutp/ += -Wno-unused-const-variable
+cflags/$(pwd)/libutp/ += -Wno-unused-variable
 
 ifeq ($(target),win)
 source += $(pwd)/libutp/libutp_inet_ntop.cpp
@@ -123,23 +124,21 @@ cflags += -DPOSIX
 endif
 
 
-source += $(pwd)/secp256k1/src/secp256k1.c
-cflags += -I$(pwd)/secp256k1/include
-
-c_secp256k1 := 
-c_secp256k1 += -I$(pwd)/secp256k1
-c_secp256k1 += -I$(pwd)/secp256k1/src
-c_secp256k1 += -include $(pwd)/field.h
-
 pwd/secp256k1 := $(pwd)/secp256k1
+source += $(pwd/secp256k1)/src/secp256k1.c
+cflags += -I$(pwd/secp256k1)/include
+
+cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)
+cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)/src
+cflags/$(pwd/secp256k1)/ += -include $(pwd/secp256k1)/../field.h
 
 $(output)/gen_context: $(pwd/secp256k1)/src/gen_context.c
 	gcc -o $@ $< -I$(pwd/secp256k1) -DECMULT_GEN_PREC_BITS=4
 
-$(pwd)/secp256k1/src/ecmult_static_context.h: $(output)/gen_context
+$(pwd/secp256k1)/src/ecmult_static_context.h: $(output)/gen_context
 	cd $(pwd/secp256k1) && $(CURDIR)/$(output)/gen_context
 
-$(call depend,$(pwd)/secp256k1/src/secp256k1.c.o,$(pwd)/secp256k1/src/ecmult_static_context.h)
+$(call depend,$(pwd/secp256k1)/src/secp256k1.c.o,$(pwd/secp256k1)/src/ecmult_static_context.h)
 
 cflags += -DENABLE_MODULE_RECOVERY
 cflags += -DENABLE_MODULE_ECDH

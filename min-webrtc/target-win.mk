@@ -32,11 +32,11 @@ lflags += -lshlwapi
 lflags += -lwinmm
 lflags += -lws2_32
 
-c_logging += -Wno-undef
-c_checks += -Wno-format
+cflags/$(pwd)/webrtc/rtc_base/logging.cc += -Wno-undef
+cflags/$(pwd)/webrtc/rtc_base/checks.cc += -Wno-format
 
-c_platform_thread_types := -include $(pwd)/setname.hpp
-c_thread_identity := -include pthread.h
+cflags/$(pwd)/webrtc/rtc_base/platform_thread_types.cc += -include $(pwd/webrtc)/../setname.hpp
+cflags/$(pwd)/abseil-cpp/absl/base/internal/thread_identity.cc += -include pthread.h
 
 source += $(pwd)/webrtc/rtc_base/synchronization/rw_lock_win.cc
 source += $(pwd)/webrtc/rtc_base/win32.cc

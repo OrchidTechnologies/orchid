@@ -9,12 +9,12 @@
 # }}}
 
 
+pwd/webrtc := $(pwd)/webrtc
+
 source += $(pwd)/stub.cc
 
 cflags += -I$(pwd)/extra
 cflags += -I$(pwd)/webrtc
-
-c_webrtc += -Wundef
 
 webrtc := 
 
@@ -119,12 +119,13 @@ webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/*.cc)
 cflags += -I$(pwd)/abseil-cpp
 
 
-webrtc += $(wildcard $(pwd)/libsrtp/srtp/*.c)
-cflags += -I$(pwd)/libsrtp/include
-webrtc += $(wildcard $(pwd)/libsrtp/crypto/*/*.c)
-cflags += -I$(pwd)/libsrtp/crypto/include
-c_libsrtp := -I$(pwd)/libsrtp/config -DHAVE_CONFIG_H
-cflags_srtp_session := -I$(pwd)/libsrtp/config -DHAVE_CONFIG_H
+pwd/libsrtp := $(pwd)/libsrtp
+webrtc += $(wildcard $(pwd/libsrtp)/srtp/*.c)
+cflags += -I$(pwd/libsrtp)/include
+webrtc += $(wildcard $(pwd/libsrtp)/crypto/*/*.c)
+cflags += -I$(pwd/libsrtp)/crypto/include
+cflags/$(pwd/libsrtp)/ += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
+cflags/$(pwd)/webrtc/pc/srtp_session.cc += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c)

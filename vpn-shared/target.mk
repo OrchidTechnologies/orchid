@@ -25,7 +25,7 @@ cflags += -I$(pwd)/extra
 
 source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
 cflags += -I$(pwd)/libmaxminddb/include
-c_libmaxminddb := -DUNICODE
+cflags/$(pwd)/libmaxminddb/ += -DUNICODE
 
 cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 

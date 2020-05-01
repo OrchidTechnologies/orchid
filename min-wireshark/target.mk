@@ -9,30 +9,31 @@
 # }}}
 
 
-archive += $(pwd)/wireshark
+pwd/wireshark := $(pwd)/wireshark
+archive += $(pwd/wireshark)
 
 wireshark := 
-c_wireshark := 
+cflags/$(pwd/wireshark)/ := 
 
-wireshark += $(wildcard $(pwd)/wireshark/epan/*.c)
-wireshark += $(wildcard $(pwd)/wireshark/epan/crypt/*.c)
-wireshark += $(wildcard $(pwd)/wireshark/epan/dfilter/*.c)
-wireshark += $(wildcard $(pwd)/wireshark/epan/dissectors/*.c)
-wireshark += $(wildcard $(pwd)/wireshark/epan/ftypes/*.c)
-wireshark += $(wildcard $(pwd)/wireshark/epan/wmem/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/epan/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/epan/crypt/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/epan/dfilter/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/epan/dissectors/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/epan/ftypes/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/epan/wmem/*.c)
 
-wireshark += $(wildcard $(pwd)/wireshark/wiretap/*.c)
-wireshark += $(wildcard $(pwd)/wireshark/wsutil/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/wiretap/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/wsutil/*.c)
 
-wireshark += $(pwd)/wireshark/cfile.c
-wireshark += $(pwd)/wireshark/frame_tvbuff.c
-wireshark += $(pwd)/wireshark/version_info.c
+wireshark += $(pwd/wireshark)/cfile.c
+wireshark += $(pwd/wireshark)/frame_tvbuff.c
+wireshark += $(pwd/wireshark)/version_info.c
 
 ifeq ($(target),and)
 # XXX: end??ent was added with SDK level 26
 # we should attempt to call it, if possible
-cflags_privileges += -D'endpwent()='
-cflags_privileges += -D'endgrent()='
+cflags/$(pwd/wireshark)/wsutil/privileges.c += -D'endpwent()='
+cflags/$(pwd/wireshark)/wsutil/privileges.c += -D'endgrent()='
 
 # XXX: ws_pipe uses getdtablesize(), which
 # is a broken API not supported on Android
@@ -42,30 +43,30 @@ wireshark := $(filter-out \
 endif
 
 ifeq ($(target),win)
-c_wireshark += -D_UNICODE
-c_wireshark += -DUNICODE
+cflags/$(pwd/wireshark)/ += -D_UNICODE
+cflags/$(pwd/wireshark)/ += -DUNICODE
 
-c_wireshark += -DSTRSAFE_NO_DEPRECATE
-c_wireshark += -include malloc.h
-c_wireshark += -Wno-format
-c_wireshark += -Wno-missing-braces
+cflags/$(pwd/wireshark)/ += -DSTRSAFE_NO_DEPRECATE
+cflags/$(pwd/wireshark)/ += -include malloc.h
+cflags/$(pwd/wireshark)/ += -Wno-format
+cflags/$(pwd/wireshark)/ += -Wno-missing-braces
 
-c_getopt_long += -DNO_OLDNAMES
+cflags/$(pwd/wireshark)/wsutil/getopt_long.c += -DNO_OLDNAMES
 else
 wireshark := $(filter-out \
     %/file_util.c \
     %/win32-utils.c \
 ,$(wireshark))
 
-c_wireshark += -DHAVE_ALLOCA_H
-c_wireshark += -DHAVE_ARPA_INET_H
-c_wireshark += -DHAVE_GRP_H
-c_wireshark += -DHAVE_MKSTEMPS
-c_wireshark += -DHAVE_PWD_H
+cflags/$(pwd/wireshark)/ += -DHAVE_ALLOCA_H
+cflags/$(pwd/wireshark)/ += -DHAVE_ARPA_INET_H
+cflags/$(pwd/wireshark)/ += -DHAVE_GRP_H
+cflags/$(pwd/wireshark)/ += -DHAVE_MKSTEMPS
+cflags/$(pwd/wireshark)/ += -DHAVE_PWD_H
 endif
 
-c_wireshark += -DHAVE_FCNTL_H
-c_wireshark += -DHAVE_UNISTD_H
+cflags/$(pwd/wireshark)/ += -DHAVE_FCNTL_H
+cflags/$(pwd/wireshark)/ += -DHAVE_UNISTD_H
 
 ifneq ($(msys),darwin)
 wireshark := $(filter-out \
@@ -81,55 +82,55 @@ wireshark := $(filter-out \
 
 source += $(wireshark)
 cflags += -I$(pwd)/extra
-cflags += -I$(pwd)/wireshark
+cflags += -I$(pwd/wireshark)
 
-c_wireshark += -D'DATA_DIR=""'
-c_wireshark += -D'EXTCAP_DIR=""'
-c_wireshark += -D'PLUGIN_PATH_ID=""'
+cflags/$(pwd/wireshark)/ += -D'DATA_DIR=""'
+cflags/$(pwd/wireshark)/ += -D'EXTCAP_DIR=""'
+cflags/$(pwd/wireshark)/ += -D'PLUGIN_PATH_ID=""'
 
-c_wireshark += -D'PACKAGE="wireshark"'
-c_wireshark += -D'VERSION="0.0.0"'
-c_wireshark += -D'VERSION_MAJOR=0'
-c_wireshark += -D'VERSION_MINOR=0'
-c_wireshark += -D'VERSION_MICRO=0'
+cflags/$(pwd/wireshark)/ += -D'PACKAGE="wireshark"'
+cflags/$(pwd/wireshark)/ += -D'VERSION="0.0.0"'
+cflags/$(pwd/wireshark)/ += -D'VERSION_MAJOR=0'
+cflags/$(pwd/wireshark)/ += -D'VERSION_MINOR=0'
+cflags/$(pwd/wireshark)/ += -D'VERSION_MICRO=0'
 
-c_wireshark += -Wno-pointer-sign
+cflags/$(pwd/wireshark)/ += -Wno-pointer-sign
 
 # XXX: fwrite used without check; submit patch
-cflags/$(pwd)/wireshark/wsutil/json_dumper.c += -Wno-unused-result
+cflags/$(pwd/wireshark)/wsutil/json_dumper.c += -Wno-unused-result
 
-c_wireshark += -I$(pwd)/wireshark/epan
-c_wireshark += -I$(pwd)/wireshark/epan/dfilter
-c_wireshark += -I$(pwd)/wireshark/epan/dissectors
-c_wireshark += -I$(pwd)/wireshark/epan/ftypes
-c_wireshark += -I$(pwd)/wireshark/tools/lemon
-c_wireshark += -I$(pwd)/wireshark/wiretap
+cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan
+cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan/dfilter
+cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan/dissectors
+cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan/ftypes
+cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/tools/lemon
+cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/wiretap
 
 
-$(output)/$(pwd)/wireshark/epan/ps.c: $(pwd)/wireshark/tools/rdps.py $(pwd)/wireshark/epan/print.ps
+$(output)/$(pwd/wireshark)/epan/ps.c: $(pwd/wireshark)/tools/rdps.py $(pwd/wireshark)/epan/print.ps
 	@mkdir -p $(dir $@)
 	$^ $@
 
-source += $(output)/$(pwd)/wireshark/epan/ps.c
+source += $(output)/$(pwd/wireshark)/epan/ps.c
 
 
 ifeq ($(meson),darwin)
-source += $(pwd)/wireshark.c
+source += $(pwd/wireshark)/../wireshark.c
 else
-$(output)/$(pwd)/wireshark/epan/dissectors.c: $(pwd)/wireshark/tools/make-regs.py $(filter $(pwd)/wireshark/epan/dissectors/%.c,$(wireshark))
+$(output)/$(pwd/wireshark)/epan/dissectors.c: $(pwd/wireshark)/tools/make-regs.py $(filter $(pwd/wireshark)/epan/dissectors/%.c,$(wireshark))
 	@mkdir -p $(dir $@)
 	@echo [EX] $(target) $<
 	@python3 $< dissectors $@ $(filter %.c,$^)
 
-source += $(output)/$(pwd)/wireshark/epan/dissectors.c
+source += $(output)/$(pwd/wireshark)/epan/dissectors.c
 endif
 
 
-$(output)/$(pwd)/wireshark/epan/dissectors/packet-ncp2222.c: $(pwd)/wireshark/tools/ncp2222.py
+$(output)/$(pwd/wireshark)/epan/dissectors/packet-ncp2222.c: $(pwd/wireshark)/tools/ncp2222.py
 	@mkdir -p $(dir $@)
 	python $< -o $@
 
-source += $(output)/$(pwd)/wireshark/epan/dissectors/packet-ncp2222.c
+source += $(output)/$(pwd/wireshark)/epan/dissectors/packet-ncp2222.c
 
 
 $(output)/$(pwd)/%.c $(output)/$(pwd)/%_lex.h: pwd := $(pwd)
@@ -142,41 +143,41 @@ $(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.y
 	@mkdir -p $(dir $(output)/$(pwd)/$*)
 	bison --name-prefix=ascend --output=$(output)/$(pwd)/$*.c --defines=$(output)/$(pwd)/$*.h $<
 
-$(output)/$(pwd)/wireshark/tools/lemon/lemon: $(pwd)/wireshark/tools/lemon/lemon.c
+$(output)/$(pwd/wireshark)/tools/lemon/lemon: $(pwd/wireshark)/tools/lemon/lemon.c
 	@mkdir -p $(dir $@)
 	gcc -o $@ $<
 
-$(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.lemon $(output)/$(pwd)/wireshark/tools/lemon/lemon
+$(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.lemon $(output)/$(pwd/wireshark)/tools/lemon/lemon
 	@mkdir -p $(dir $@)
 	@echo [LM] $(target) $<
-	@$(word 2,$^) -T$(pwd)/wireshark/tools/lemon/lempar.c -d$(dir $@) $(word 1,$^)
+	@$(word 2,$^) -T$(pwd/wireshark)/tools/lemon/lempar.c -d$(dir $@) $(word 1,$^)
 	@touch $(basename $@).h
 
-source += $(output)/$(pwd)/wireshark/epan/dtd_preparse.c
-source += $(output)/$(pwd)/wireshark/epan/diam_dict.c
-source += $(output)/$(pwd)/wireshark/epan/radius_dict.c
-source += $(output)/$(pwd)/wireshark/epan/uat_load.c
-source += $(output)/$(pwd)/wireshark/wiretap/k12text.c
+source += $(output)/$(pwd/wireshark)/epan/dtd_preparse.c
+source += $(output)/$(pwd/wireshark)/epan/diam_dict.c
+source += $(output)/$(pwd/wireshark)/epan/radius_dict.c
+source += $(output)/$(pwd/wireshark)/epan/uat_load.c
+source += $(output)/$(pwd/wireshark)/wiretap/k12text.c
 
-source += $(output)/$(pwd)/wireshark/epan/dtd_parse.c
-$(call depend,$(output)/$(pwd)/wireshark/epan/dtd_parse.c.o,$(output)/$(pwd)/wireshark/epan/dtd_grammar.h)
-source += $(output)/$(pwd)/wireshark/epan/dtd_grammar.c
+source += $(output)/$(pwd/wireshark)/epan/dtd_parse.c
+$(call depend,$(output)/$(pwd/wireshark)/epan/dtd_parse.c.o,$(output)/$(pwd/wireshark)/epan/dtd_grammar.h)
+source += $(output)/$(pwd/wireshark)/epan/dtd_grammar.c
 
-source += $(output)/$(pwd)/wireshark/epan/dfilter/scanner.c
-$(call depend,$(output)/$(pwd)/wireshark/epan/dfilter/scanner.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/grammar.h)
-source += $(output)/$(pwd)/wireshark/epan/dfilter/grammar.c
-$(call depend,$(pwd)/wireshark/epan/dfilter/dfilter.c.o,$(output)/$(pwd)/wireshark/epan/dfilter/scanner_lex.h)
-cflags_dfilter := -I$(output)/$(pwd)/wireshark/epan/dfilter
+source += $(output)/$(pwd/wireshark)/epan/dfilter/scanner.c
+$(call depend,$(output)/$(pwd/wireshark)/epan/dfilter/scanner.c.o,$(output)/$(pwd/wireshark)/epan/dfilter/grammar.h)
+source += $(output)/$(pwd/wireshark)/epan/dfilter/grammar.c
+$(call depend,$(pwd/wireshark)/epan/dfilter/dfilter.c.o,$(output)/$(pwd/wireshark)/epan/dfilter/scanner_lex.h)
+cflags/$(pwd/wireshark)/epan/dfilter/dfilter.c += -I$(output)/$(pwd/wireshark)/epan/dfilter
 
-source += $(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c
-$(call depend,$(output)/$(pwd)/wireshark/wiretap/ascend_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/ascend.h)
-source += $(output)/$(pwd)/wireshark/wiretap/ascend.c
-$(call depend,$(output)/$(pwd)/wireshark/wiretap/ascend.c.o,$(output)/$(pwd)/wireshark/wiretap/ascend_scanner_lex.h)
+source += $(output)/$(pwd/wireshark)/wiretap/ascend_scanner.c
+$(call depend,$(output)/$(pwd/wireshark)/wiretap/ascend_scanner.c.o,$(output)/$(pwd/wireshark)/wiretap/ascend.h)
+source += $(output)/$(pwd/wireshark)/wiretap/ascend.c
+$(call depend,$(output)/$(pwd/wireshark)/wiretap/ascend.c.o,$(output)/$(pwd/wireshark)/wiretap/ascend_scanner_lex.h)
 
-source += $(output)/$(pwd)/wireshark/wiretap/candump_scanner.c
-$(call depend,$(output)/$(pwd)/wireshark/wiretap/candump_scanner.c.o,$(output)/$(pwd)/wireshark/wiretap/candump_parser.h)
-source += $(output)/$(pwd)/wireshark/wiretap/candump_parser.c
-$(call depend,$(output)/$(pwd)/wireshark/wiretap/candump_parser.c.o,$(output)/$(pwd)/wireshark/wiretap/candump_scanner_lex.h)
+source += $(output)/$(pwd/wireshark)/wiretap/candump_scanner.c
+$(call depend,$(output)/$(pwd/wireshark)/wiretap/candump_scanner.c.o,$(output)/$(pwd/wireshark)/wiretap/candump_parser.h)
+source += $(output)/$(pwd/wireshark)/wiretap/candump_parser.c
+$(call depend,$(output)/$(pwd/wireshark)/wiretap/candump_parser.c.o,$(output)/$(pwd/wireshark)/wiretap/candump_scanner_lex.h)
 
 
 # XXX: this is currently shared by libiconv and libgpg-error; it might be sharable by more stuff

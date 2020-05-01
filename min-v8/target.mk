@@ -9,6 +9,8 @@
 # }}}
 
 
+pwd/v8 := $(pwd)/v8
+
 $(call include,icu/target.mk)
 $(call include,zlb/target.mk)
 $(call include,zlb/google.mk)
@@ -93,7 +95,6 @@ ifeq ($(target),win)
 vflags += -DUNICODE
 endif
 
-pwd/v8 := $(pwd)/v8
 vflags += -I$(pwd/v8)
 vflags += -I$(output)/$(pwd/v8)
 
@@ -183,8 +184,8 @@ cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd)/extra
 
 ifeq ($(target),win)
-c_v8 += -Wno-format
+cflags/$(pwd)/v8/ += -Wno-format
 endif
 
 # XXX: macro-assembler-x64.cc checks TARGET_ARCH_* without including this :/
-c_v8 += -include base/build_config.h
+cflags/$(pwd)/v8/ += -include base/build_config.h

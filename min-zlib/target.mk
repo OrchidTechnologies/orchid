@@ -11,7 +11,7 @@
 
 source += $(wildcard $(pwd)/libz/*.c)
 archive += $(pwd)/libz
-c_libz += -Wno-unused-variable
+cflags/$(pwd)/libz/ += -Wno-unused-variable
 qflags += -DCHROMIUM_ZLIB_NO_CHROMECONF
 cflags += -I$(pwd)/libz
 cflags += -I$(pwd)/extra

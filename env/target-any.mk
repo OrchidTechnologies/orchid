@@ -78,11 +78,6 @@ include $(pwd)/target-$(target).mk
 
 cflags += -I@/usr/include
 
-define _
-cflags/$(1) := -I$(output)/$(1)/usr/include
-endef
-$(each)
-
 define depend
 $(foreach arch,$(archs),$(eval $(output)/$(arch)/$(1): $(patsubst @/%,$(output)/$(arch)/%,$(2))))
 endef

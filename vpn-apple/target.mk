@@ -28,6 +28,6 @@ source += $(pwd)/directory.mm
 source += $(pwd)/protect.cpp
 source += $(pwd)/tunnel.mm
 
-cflags_tunnel := -Wno-arc-retain-cycles
+cflags/$(pwd)/tunnel.mm += -Wno-arc-retain-cycles
 
 $(call include,shared/target.mk)

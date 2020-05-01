@@ -48,12 +48,12 @@ cflags += -D'OPENVPN_PACKET_LOG="packet.log"'
 cflags += -Ivpn/p2p/openvpn3
 cflags += -Ivpn/p2p/openvpn3/client
 
-c_openvpn3 += -Wno-address-of-temporary
-c_openvpn3 += -Wno-delete-non-virtual-dtor
-c_openvpn3 += -Wno-inconsistent-missing-override
+cflags/vpn/p2p/openvpn3 += -Wno-address-of-temporary
+cflags/vpn/p2p/openvpn3 += -Wno-delete-non-virtual-dtor
+cflags/vpn/p2p/openvpn3 += -Wno-inconsistent-missing-override
 
 ifeq ($(target),ios)
-c_openvpn3 += -ObjC++
+cflags/vpn/p2p/openvpn3 += -ObjC++
 endif
 
 cflags += -Ivpn/p2p/source

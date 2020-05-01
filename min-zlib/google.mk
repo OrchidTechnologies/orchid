@@ -12,7 +12,7 @@
 source += $(filter-out %_unittest.cc,$(wildcard $(pwd)/libz/google/*.cc))
 
 ifeq ($(target),win)
-c_libz += -DUNICODE
+cflags/$(pwd)/libz/ += -DUNICODE
 # XXX: there is a __declspec(empty_bases) that needs to be better scoped
-c_libz += -Wno-ignored-attributes
+cflags/$(pwd)/libz/ += -Wno-ignored-attributes
 endif

@@ -119,13 +119,14 @@ object := $(foreach _,$(sort $(source)),$(_).o)
 
 code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)
 
-dflags = $(foreach dir,$(subst /, ,$*),$(c_$(dir)))
+# XXX: replace cflags with cflags/ once I fix pwd to not begin with ./
+# in this model, cflags would be something controlled only by the user
+dflags = $(if $(filter ./,$(1)),,$(call dflags,$(dir $(patsubst %/,%,$(1)))) $(cflags/$(1)))
 
 flags = $(qflags)
-flags += $(filter -I%,$(dflags) $(cflags/./$(dir $<)))
+flags += $(filter -I%,$(call dflags,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<)))))
 flags += $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags))
-flags += $(filter-out -I%,$(dflags) $(cflags/./$(dir $<)))
-flags += $(cflags_$(basename $(notdir $<)))
+flags += $(filter-out -I%,$(call dflags,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<)))))
 flags += $(cflags/./$<)
 
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
