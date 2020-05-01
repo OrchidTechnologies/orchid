@@ -206,10 +206,6 @@ jobs:
     - name: git submodule
       run: env/submodule.sh --jobs 3
 
-    - name: sed -ie base/win/scoped_handle.h
-      # XXX: (this is a temporary hack to fix a bug I filed upstream)
-      # https://bugs.chromium.org/p/chromium/issues/detail?id=1076523
-      run: sed -i -e 's@(\\ @(@' min-zlib/base/win/scoped_handle.h
     - name: make Windows server
       run: make -j3 -C srv-shared target=win
     - uses: actions/upload-artifact@v1
