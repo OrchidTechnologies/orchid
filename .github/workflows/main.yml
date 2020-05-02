@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
 
-  build-mac-all:
+  build-mac-cli:
     runs-on: macos-latest
 
     steps:
@@ -20,6 +20,18 @@ jobs:
       with:
         name: orchid-mac
         path: cli-shared/out-mac/x86_64/orchid
+
+
+  build-mac-srv:
+    runs-on: macos-latest
+
+    steps:
+
+    - uses: actions/checkout@v1
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
 
     - name: make macOS server
       # XXX: v8 cannot be compiled using Xcode due to something I haven't spent the time to investigate :(
