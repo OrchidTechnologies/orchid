@@ -56,14 +56,13 @@ frameworks += $(framework)
 frameworks += AppKit
 frameworks += SafariServices
 
-pods := $(wildcard out-mac/Release/*/*.framework)
 swifts := $(wildcard *.swift) macos/Flutter/GeneratedPluginRegistrant.swift
 
 local := 
 local += app.mm.o
 
 local += $(patsubst %,%.o,$(swifts))
-$(foreach swift,$(swifts),$(call depend,$(swift).o,macos/Pods/Manifest.lock))
+$(foreach swift,$(swifts),$(call depend,$(swift).o,$(output)/XCBuildData/build.db))
 
 include env/output.mk
 
@@ -71,7 +70,7 @@ $(output)/%.swift.o: $$(specific) $$(folder).swift $$(code) $(swifts)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	swift -frontend -sdk $(path) -c -o $@ -primary-file $< $(filter-out $<,$(swifts)) -module-name $(name) -Fmacos/Flutter/ephemeral/.symlinks/flutter/darwin-x64 $(foreach pod,$(pods),-F$(dir $(pod)))
+	swift -frontend -sdk $(path) -c -o $@ -primary-file $< $(filter-out $<,$(swifts)) -module-name $(name) -Fmacos/Flutter/ephemeral/.symlinks/flutter/darwin-x64 $(foreach pod,$(wildcard $(output)/Release/*/*.framework),-F$(dir $(pod)))
 	@touch $@
 
 define _
@@ -108,21 +107,11 @@ $(bundle)$(contents)/embedded.provisionprofile: $(provision)app.provisionprofile
 	cp -f $< $@
 endif
 
-define _
-$(eval temp := $(bundle)$(contents)/Frameworks/$(notdir $(1)))
-signed += $(temp)$(versions)$(resources)/Info.plist
-$(temp)$(versions)$(resources)/Info.plist: shared/empty.plist $(output)/XCBuildData/build.db
-	@mkdir -p $(dir $(temp))
-	$(rsync) $(1) $(dir $(temp))
-	$$(call codesign,$(temp),$$<,$$@)
-endef
-$(foreach pod,$(pods),$(eval $(call _,$(pod))))
-
 signed += $(bundle)$(contents)/MacOS/$(name)
 $(bundle)$(contents)/MacOS/$(name): $(patsubst %,$(output)/$(default)/%,$(local)) $(output)/XCBuildData/build.db $(bundle)$(contents)/Frameworks/App.framework$(versions)$(resources)/Info.plist
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	$(cxx) $(more/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath /usr/lib/swift -rpath @executable_path/../Frameworks $(patsubst %,-framework %,$(frameworks)) $(bundle)$(contents)/Frameworks/App.framework$(versions)/App $(output)/Release/Pods_Runner.framework$(versions)/Pods_Runner $(foreach pod,$(pods),-F$(dir $(pod))) -L/usr/lib/swift -L$(toolchain)/usr/lib/swift/$(sdk)
+	$(cxx) $(more/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath /usr/lib/swift -rpath @executable_path/../Frameworks $(patsubst %,-framework %,$(frameworks)) $(bundle)$(contents)/Frameworks/App.framework$(versions)/App $(output)/Release/Pods_Runner.framework$(versions)/Pods_Runner $(foreach pod,$(wildcard $(output)/Release/*/*.framework),-F$(dir $(pod))) -L/usr/lib/swift -L$(toolchain)/usr/lib/swift/$(sdk)
 
 signed += $(bundle)$(contents)/PkgInfo
 $(bundle)$(contents)/PkgInfo:

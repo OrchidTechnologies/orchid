@@ -45,8 +45,6 @@ jobs:
     - name: git submodule
       run: env/submodule.sh --jobs 3
 
-    - name: pod install
-      run: make -C app-macos out-mac/XCBuildData/build.db
     - name: make macOS .app
       run: debug=ldid make -j3 -C app-macos
 
