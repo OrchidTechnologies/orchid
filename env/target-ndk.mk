@@ -19,14 +19,16 @@ endif
 
 ndk := $(ANDROID_NDK_HOME)
 
+ifneq ($(ANDROID_HOME),)
 ifeq ($(ndk),)
 ndk := $(wildcard $(ANDROID_HOME)/ndk-bundle)
 endif
 
 ifeq ($(ndk),)
-ndk := $(shell ls $(ANDROID_HOME)/ndk | sort -nr | head -n1)
+ndk := $(shell ls $(ANDROID_HOME)/ndk 2>/dev/null | sort -nr | head -n1)
 ifneq ($(ndk),)
 ndk := $(ANDROID_HOME)/ndk/$(ndk)
+endif
 endif
 endif
 
