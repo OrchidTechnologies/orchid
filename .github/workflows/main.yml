@@ -253,3 +253,26 @@ jobs:
         path: app-android/out-and/Orchid.apk
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
 
+
+  build-srv-all:
+    needs: [build-lnx-mac, build-lnx-bld]
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: download orchidd-dkr
+      uses: actions/download-artifact@v2
+      with:
+        name: orchidd-dkr
+    - name: extract docker image
+      run: tar -xvf orchidd.tar
+    - name: extract docker layer
+      run: tar -xvf "$(jq -r '.[0].Layers | .[]' manifest.json | tail -n1)"
+
+    - name: download orchidd-lnx
+      uses: actions/download-artifact@v2
+      with:
+        name: orchidd-lnx
+    - name: verify reproduction
+      run: diff -u <(xxd orchidd) <(xxd usr/sbin/orchidd)
+
