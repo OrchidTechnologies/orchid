@@ -173,7 +173,6 @@ $(each)
 
 %/configure: %/configure.ac
 	env/autogen.sh $(dir $@)
-	cd $(dir $@); $(a_$(subst -,_,$(notdir $(patsubst %/configure.ac,%,$<))))
 
 $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,$$(folder))
 	$(specific)

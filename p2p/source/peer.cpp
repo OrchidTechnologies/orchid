@@ -225,9 +225,9 @@ void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interf
 
 
 rtc::scoped_refptr<rtc::RTCCertificate> Certify() {
-    return rtc::RTCCertificate::Create(U<rtc::OpenSSLIdentity>(rtc::OpenSSLIdentity::GenerateWithExpiration(
+    return rtc::RTCCertificate::Create(rtc::OpenSSLIdentity::CreateWithExpiration(
         "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
-    )));
+    ));
 }
 
 }

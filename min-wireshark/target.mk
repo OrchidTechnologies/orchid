@@ -278,9 +278,6 @@ w_libiconv := LDFLAGS="$(wflags)"
 export GNULIB_SRCDIR := $(CURDIR)/$(pwd)/gnulib
 export GNULIB_TOOL := $(GNULIB_SRCDIR)/gnulib-tool
 
-# XXX: autogen.sh fails (without failing) before this step
-a_libiconv := cd preload && make -f Makefile.devel all
-
 linked += usr/lib/libiconv.a
 header += @/usr/include/iconv.h
 # }}}
