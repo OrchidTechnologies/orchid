@@ -30,8 +30,8 @@ jobs:
         name: orchidd-mac
         path: srv-shared/out-mac/x86_64/orchidd
 
-    - name: df -k
-      run: df -k
+    - name: git status
+      run: git status
 
 
   build-mac-app:
@@ -48,9 +48,6 @@ jobs:
     - name: make macOS .app
       run: debug=ldid make -j3 -C app-macos
 
-    - name: df -k
-      run: df -k
-
 
   build-ios-app:
     runs-on: macos-latest
@@ -65,9 +62,6 @@ jobs:
 
     - name: make iOS .ipa
       run: debug=ldid make -j3 -C app-ios
-
-    - name: df -k
-      run: df -k
 
 
   build-lnx-cli:
@@ -88,9 +82,6 @@ jobs:
         name: orchid-lnx
         path: cli-shared/out-lnx/x86_64/orchid
 
-    - name: df -k
-      run: df -k
-
 
   build-lnx-srv:
     runs-on: ubuntu-latest
@@ -106,8 +97,6 @@ jobs:
     - name: make Linux server
       run: debug=crossndk make -j3 -C srv-shared
 
-    - name: df -k
-      run: df -k
     - name: git status
       run: git status
 
@@ -186,9 +175,6 @@ jobs:
     - name: make Linux server
       run: make -j3 -C srv-shared
 
-    - name: df -k
-      run: df -k
-
 
   build-win-srv:
     runs-on: macos-latest
@@ -213,8 +199,6 @@ jobs:
 
     - name: git status
       run: git status
-    - name: df -k
-      run: df -k
 
 
   build-win-tst:
@@ -233,9 +217,6 @@ jobs:
 
     - name: make Windows test
       run: make -j3 -C tst-network target=win
-
-    - name: df -k
-      run: df -k
 
 
   build-and-apk:
@@ -260,5 +241,3 @@ jobs:
         path: app-android/out-and/Orchid.apk
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
 
-    - name: df -k
-      run: df -k
