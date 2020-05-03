@@ -28,7 +28,7 @@
 #include "log.hpp"
 
 #define _trace() do { \
-    Log() << "\e[31m[" << std::hex << pthread_self() << "] _trace(" << __FILE__ << ":" << std::dec << __LINE__ << "): " << __FUNCTION__ << "\e[0m" << std::endl; \
+    orc::Log() << "\e[31m[" << std::hex << pthread_self() << "] _trace(" << __FILE__ << ":" << std::dec << __LINE__ << "): " << __FUNCTION__ << "\e[0m" << std::endl; \
 } while (false)
 
 #endif//ORCHID_TRACE_HPP
