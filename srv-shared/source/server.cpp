@@ -130,11 +130,10 @@ void Server::Commit(const Lock<Locked_> &locked) {
 }
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit) {
-    const Float adjust(balance > 0 ? balance : 0); // REMOVE
     Header header{Magic_, id};
     co_await Send(pipe, Datagram(Port_, destination, Tie(header,
         Command(Stamp_, Monotonic()),
-        Command(Invoice_, serial, Complement(cashier_->Convert(adjust)), cashier_->Tuple(), commit)
+        Command(Invoice_, serial, Complement(cashier_->Convert(balance)), cashier_->Tuple(), commit)
     )), true);
 }
 
