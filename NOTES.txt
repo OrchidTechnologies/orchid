@@ -1,7 +1,3 @@
-apt-get install curl make autoconf libtool git clang-8 libc++-8-dev libc++abi-8-dev golang-go
-
-git submodule update --init --recursive
-
 https://faucet.ropsten.be/
 
 https://lewissbaker.github.io/2017/09/25/coroutine-theory
