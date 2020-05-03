@@ -35,6 +35,9 @@
 #include <openssl/base.h>
 #include <openssl/pkcs12.h>
 
+#include <libplatform/libplatform.h>
+#include <v8.h>
+
 #include <api/jsep_session_description.h>
 #include <pc/webrtc_sdp.h>
 
@@ -49,6 +52,7 @@
 #include "jsonrpc.hpp"
 #include "local.hpp"
 #include "node.hpp"
+#include "scope.hpp"
 #include "server.hpp"
 #include "task.hpp"
 #include "trace.hpp"
@@ -370,6 +374,16 @@ int Main(int argc, const char *const argv[]) {
 }
 
 int main(int argc, const char *const argv[]) { try {
+    v8::V8::InitializeICUDefaultLocation(argv[0]);
+    v8::V8::InitializeExternalStartupData(argv[0]);
+
+    const auto platform(v8::platform::NewDefaultPlatform());
+    v8::V8::InitializePlatform(platform.get());
+    _scope({ v8::V8::ShutdownPlatform(); });
+
+    v8::V8::Initialize();
+    _scope({ v8::V8::Dispose(); });
+
     return orc::Main(argc, argv);
 } catch (const std::exception &error) {
     std::cerr << error.what() << std::endl;
