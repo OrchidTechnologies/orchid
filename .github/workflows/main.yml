@@ -142,7 +142,7 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: make Linux server
-      run: docker build --build-arg GIT_REPOSITORY=https://github.com/${{ github.repository }}.git --build-arg GIT_COMMIT=${{ github.sha }} -t orchidd:latest srv-docker
+      run: docker build --build-arg GIT_REPOSITORY=https://github.com/${{ github.repository }}.git --build-arg GIT_COMMIT=${{ github.sha }} --build-arg GIT_SETUP=env/setup-git.sh -t orchidd:latest srv-docker
     - name: docker save
       run: docker save -o orchidd.tar orchidd:latest
     - uses: actions/upload-artifact@v1
