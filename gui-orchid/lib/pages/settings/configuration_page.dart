@@ -110,7 +110,9 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     var newConfig = _configFileTextController.text;
     try {
       // Just parse it to the AST to catch gross syntax errors.
-      parsejs(newConfig, filename: 'program.js');
+      if (newConfig.trim().isNotEmpty) {
+        parsejs(newConfig, filename: 'program.js');
+      }
     } catch (err) {
       print("Error parsing config: $err");
       Dialogs.showConfigurationChangeFailed(context, errorText: err.toString());

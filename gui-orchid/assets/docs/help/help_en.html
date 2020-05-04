@@ -1,12 +1,19 @@
+
 <h1>Orchid Help</h1>
+
 <p>Welcome to Orchid. Please email contact@orchid.com for help needed, or for general feedback.</p>
 
 <h1>The Orchid app</h1>
-<p>Using Orchid is different from other VPN apps. Orchid connects you to a VPN marketplace with multiple VPNs offering service to you. Each time you connect, you are assigned a provider from the pool in accordance with the stake-weighted directory structure. If at anytime you dislike your service, you can turn Orchid off and then on again to recycle the connection and get reassigned to a provider.</p>
 
-<p>To pay the VPN providers for service, the app needs access to an Orchid account. Learn how to setup an Orchid account using the OXT and ETH digital currencies below, or how to add an existing account that someone has shared with you. The <a href="https://www.orchid.com/join">Join page</a> on the website has the most up to date directions and a video walk-through.</p>
+<p>Orchid connects you to a VPN marketplace with multiple VPN providers offering service to you. Each time you connect, you are assigned a provider randomly from the network. If at anytime you dislike your service, you can turn Orchid off and then on again to recycle the connection and get reassigned to a provider. To pay the VPN providers for service, the app will need access to at least one Orchid account.</p>
 
-<h1>Setting up an Orchid account</h1>
+<h2>Purchasing an Orchid account</h2>
+
+<p>The easiest way to get Orchid setup is to purchase an Orchid account in the app. Tap on the add hop button from the homescreen and then the Buy Orchid account option. From there, you can see the options that are available to purchase. Once the purchase completes, you are taken to the hop detail page to see the deatils of the account you just purchased. Tap the back arrow in the upper left to return to the homescreen where you will see your new hop and can then turn Orchid on.</p>
+
+<!-- BEGIN: EXCLUDE(iOS,macOS) -->
+
+<h2>Setting up an Orchid account</h2>
 <p>An Orchid account consists of OXT that has been moved into the Orchid nanopayment smart contract. Once the account is setup, anyone with access to the account can send nanopayments backed by the OXT in that account. Seting up the account costs ETH in 'gas', so creating an Orchid account requires both OXT and ETH digital currencies. </p>
 
 <h2>Get OXT and ETH</h2>
@@ -39,11 +46,49 @@
 
 <p>Once your account is created, a QR code will appear on the page. If you don't see the QR code on the Overview page, it is available by clicking on the More link in the upper right of the page and selecting Info. From there you can see your account balance and the QR code.</p>
 
+<!-- END: EXCLUDE(iOS,macOS) -->
 
-<h2>Adding your Orchid account to the app</h2>
+<!-- BEGIN: EXCLUDE(macOS) -->
 
-<p>To add your newly created Orchid account, simply open the app and press the QR code icon on the initial help text pop. If that doesn't appear for you, select "New Hop" on the homescreen and then "I have a QR code" from the add hop screen. Scan or copy/paste the code into the app.</p>
+<h2>Linking an existing Orchid account</h2>
 
-<p>Once you scan the QR code, the app will create a hop using that Orchid account and your default curator settings. You will then be dropped into the hop information screen that shows the saved information. Using the "Share Orchid Account" button, you can pop a QR code and share the Orchid account you just created with other people or devices. Press the back arrow to get back to the main screen. </p>
+<p>Once an account is created from within the app or elsewhere, they can be shared. To link an existing account, tap on the add hop button from the homescreen and then tap on Link Orchid account. You can then scan or paste the Orchid account, which will then be added as a hop to your home screen. You will then be dropped into the hop information screen that shows the saved information. Using the "Share Orchid Account" button, you can pop a QR code and share the Orchid account you just created with other people or devices. Press the back arrow to get back to the main screen. </p>
 
-<p>From the main screen, turn the toggle in the upper right to turn Orchid on.</p>
+<!-- END: EXCLUDE(macOS) -->
+
+
+<h2>Turning Orchid On</h2>
+
+<p>To enable the VPN, turn Orchid on by flipping the switch in the upper right of the homescreen. You will need to authorize VPN permissions the first time you turn Orchid on. Each time you turn Orchid on, you randomly connect to a provider on the network. Turning the switch off and then on again will recycle your connection and will then randomly connect you again.</p>
+
+<h2>Home Screen</h2>
+
+<p>The Orchid’s home screen is a representation of your device’s Internet connection. The switch in the upper right corner turns Orchid on/off and the middle section allows you to add and delete ‘hops’ which are VPN connections. On the bottom, there are two tabs. One is for Hops, which is the home screen, and the Traffic tab is a network protocol analyzer that allows you to see information about your phone's network connections.</p>
+
+<p>The simplest configuration for Orchid is to use just one VPN connection. When configured with one hop, Orchid is similar to a typical VPN app, which can only connect to one VPN server at a time. Websites that you visit will then see the IP address and details of the VPN server as opposed to the IP address associated with your device.</p> 
+
+<p>When you add multiple connections, Orchid uses layered encryption to route your traffic through each connection. If a multiple hop route is constructed, traffic flows through the hops from the top to the bottom. The Orchid app supports Orchid VPN connections as well as typical OpenVPN connections.</p>
+
+<p>Add a hop by clicking on the Add Hop button in the middle of the screen and then going to the hop selection screen. To delete a hop, swipe it to the right or left.</p>
+
+<p>Each hop to an Orchid node requires an Orchid account to pay for service. Read more about how to setup an Orchid account.</p>
+
+<h2>Hops</h2>
+
+<p>Orchid ‘hops’ are vpn connections to the Internet. Examples include a connection to an Orchid node or an OpenVPN connection to a VPN server. You can add and delete hops from the homescreen. Each hop will need a form of authentication to make the server connection. </p>
+
+<p>Add a hop by clicking on the Add Hop button from the home screen and then selecting a way to add the hop. To add an Orchid hop, select "I have a QR code" if you generated a QR code from your Orchid account or select “I have an Orchid account” to manually input your Ethereum wallet address and generate a signing key that you can put into the app. To add an OpenVPN hop, select “I have an existing VPN subscription” and input the credentials.</p>
+
+<h2>OpenVPN hops</h2>
+
+<p>Orchid supports OpenVPN. If you have an existing VPN provider, you can add a hop using OpenVPN credentials. To add an OpenVPN hop, click Add Hop -> I have an existing VPN subscription. Then enter your username, password and paste in the configuration for your OpenVPN connection.</p>
+
+<h2>Orchid hops</h2>
+
+<p>Orchid has its own VPN wireline protocol, the Orchid protocol. The traffic to and from Orchid nodes uses the Orchid protocol. The traffic looks like webRTC traffic, which is advantageous for security and includes tiny nanopyments that flow with the traffic.</p>
+
+<p>Each Orchid hop also has a curator. When a connection is initiated, the Orchid client uses the curator to only route traffic through trusted Orchid nodes.</p> 
+
+<p>The main component of the Orchid hop is going to be the Orchid account associated with it. Each hop requires a valid Orchid account to continue to pay for VPN service.</p>
+
+

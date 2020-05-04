@@ -42,6 +42,10 @@ class OrchidVPNConfig {
         if (key == "protocol") {
           value = value.toString().toLowerCase();
         }
+        // Escape newlines in string values
+        if (value is String) {
+          value = value.replaceAll('\n', '\\n');
+        }
         // Quote all values for now
         return MapEntry(key, "\"$value\"");
       }).toString();

@@ -95,6 +95,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.settings);
                   }),
+              /*
               divider(),
               SideDrawerTile(
                   title: s.advanced,
@@ -104,6 +105,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.configuration);
                   }),
+               */
             ],
           ),
         ),

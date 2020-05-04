@@ -61,6 +61,7 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
             'config': config,
             'push_txn_hash': push_txn_hash,
             'creation_time': creation_time,
+            'status': 'pending',
         }
         ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
         table.put_item(Item=ddb_item)

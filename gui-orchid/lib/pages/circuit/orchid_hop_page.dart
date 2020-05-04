@@ -193,10 +193,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               child: _buildCuration(),
               onDetail: _editCurator),
           pady(36),
+          /*
           divider(),
           pady(24),
           _buildSection(
               title: s.rateLimit, child: _buildBudget(), onDetail: _editBudget),
+           */
         ],
       ),
     );

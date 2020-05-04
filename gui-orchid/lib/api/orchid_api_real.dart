@@ -180,6 +180,7 @@ class RealOrchidAPI implements OrchidAPI {
   /// and publish it to the VPN.
   Future<bool> setConfiguration(String userConfig) async {
     String combinedConfig = await generateCombinedConfig(userConfig);
+    print("combined config = {$combinedConfig}");
 
     // todo: return a bool from the native side?
     String result = await _platform

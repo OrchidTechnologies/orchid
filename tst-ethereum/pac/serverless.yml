@@ -32,6 +32,9 @@ custom:
     PAC_FUNDER_PRIVKEY_SECRET:
       prod: 'PAC_FUNDER_PRIVKEY'
       dev: 'PAC_FUNDER_PRIVKEY_DEV'
+    DEFAULT_GAS:
+      prod: "13"
+      dev: "13"
   datadog:
     addLayers: true
     flushMetricsToLogs: true
@@ -57,6 +60,7 @@ provider:
     ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
     PAC_FUNDER_PUBKEY_SECRET: ${self:custom.myEnvironment.PAC_FUNDER_PUBKEY_SECRET.${self:provider.stage}}
     PAC_FUNDER_PRIVKEY_SECRET: ${self:custom.myEnvironment.PAC_FUNDER_PRIVKEY_SECRET.${self:provider.stage}}
+    DEFAULT_GAS: ${self:custom.myEnvironment.DEFAULT_GAS.${self:provider.stage}}
   runtime: python3.8
   region: us-west-2
   iamRoleStatements:
