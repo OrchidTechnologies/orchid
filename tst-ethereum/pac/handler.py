@@ -281,10 +281,13 @@ def random_scan(table, price):
 
 
 def get_transaction_confirm_count(txhash):
-    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
-    blocknum = w3.eth.getTransactionCount(account=funder_pubkey)
+    blocknum  = w3.eth.blockNumber
+    block     = w3.eth.getBlock('latest')
+    blocknum2 = block['number']
     trans = w3.eth.getTransaction(txhash)
-    return blocknum - trans['blockNumber']
+    diff  = blocknum - trans['blockNumber']
+    logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum},{blocknum2}) diff({diff}) ')
+    return diff
 
 
 def get_transaction_status(txhash):
@@ -316,7 +319,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
             status = get_transaction_status(push_txn_hash)
             if (status != 'confirmed'):
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status}')
-                continue
+                #continue
             logging.debug(f'Found available account ({push_txn_hash}): {config}')
             key = {
                 'price': item['price'],
