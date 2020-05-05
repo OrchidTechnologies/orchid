@@ -1533,6 +1533,15 @@ class S {
       args: [],
     );
   }
+
+  String get weAreSorryButThisPurchaseWouldExceedTheDaily {
+    return Intl.message(
+      'We are sorry but this purchase would exceed the daily purchase limit for access credits.  Please try again later.',
+      name: 'weAreSorryButThisPurchaseWouldExceedTheDaily',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
@@ -1540,7 +1549,12 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
 
   List<Locale> get supportedLocales {
     return const <Locale>[
-      Locale.fromSubtags(languageCode: 'en'), Locale.fromSubtags(languageCode: 'ko'), Locale.fromSubtags(languageCode: 'id'), Locale.fromSubtags(languageCode: 'zh'), Locale.fromSubtags(languageCode: 'ja'), Locale.fromSubtags(languageCode: 'ru'),
+      Locale.fromSubtags(languageCode: 'en'),
+      Locale.fromSubtags(languageCode: 'id'),
+      Locale.fromSubtags(languageCode: 'ja'),
+      Locale.fromSubtags(languageCode: 'ko'),
+      Locale.fromSubtags(languageCode: 'ru'),
+      Locale.fromSubtags(languageCode: 'zh'),
     ];
   }
 

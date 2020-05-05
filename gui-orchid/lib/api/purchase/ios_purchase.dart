@@ -53,6 +53,9 @@ class IOSOrchidPurchaseAPI
   /// for progress and results.
   Future<void> purchase(PAC pac) async {
     print("iap: purchase pac");
+    if (!await OrchidPurchaseAPI.isWithinPurchaseRateLimit(pac)) {
+      throw PACPurchaseExceedsRateLimit();
+    }
 
     // Refresh the products list:
     // Note: Doing this on app start does not seem to be sufficient.

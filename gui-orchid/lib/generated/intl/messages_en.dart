@@ -187,6 +187,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "warningExportedConfiguration" : MessageLookupByLibrary.simpleMessage("Warning: Exported configuration includes the signer private key secrets for the exported hops.  Revealing private keys exposes you to loss of all funds in the associated Orchid accounts."),
     "warningImportedConfiguration" : MessageLookupByLibrary.simpleMessage("Warning: Imported configuration will replace any existing hops that you have created in the app.  Signer keys previously generated or imported on this device will be retained and remain accessible for creating new hops, however all other configuration including OpenVPN hop configuration will be lost."),
     "warningThesefeature" : MessageLookupByLibrary.simpleMessage("Warning: These features are intended for advanced users only.  Please read all instructions."),
+    "weAreSorryButThisPurchaseWouldExceedTheDaily" : MessageLookupByLibrary.simpleMessage("We are sorry but this purchase would exceed the daily purchase limit for access credits.  Please try again later."),
     "welcomeToOrchid" : MessageLookupByLibrary.simpleMessage("Welcome to Orchid"),
     "whoops" : MessageLookupByLibrary.simpleMessage("Whoops"),
     "youNeedEthereumWallet" : MessageLookupByLibrary.simpleMessage("You\'ll need an Ethereum Wallet in order to create an Orchid account.")

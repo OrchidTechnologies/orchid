@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/preferences/user_secure_storage.dart';
+import 'package:orchid/api/purchase/orchid_pac_server.dart';
+import 'package:orchid/api/purchase/purchase_rate.dart';
 import 'package:orchid/util/units.dart';
-
 import 'android_purchase.dart';
 import 'ios_purchase.dart';
 import 'orchid_pac.dart';
@@ -34,6 +37,14 @@ abstract class OrchidPurchaseAPI {
   static PAC pacTier2 = PAC('pactier2', USD(9.99), "\$9.99 USD");
   static PAC pacTier3 = PAC('pactier3', USD(19.99), "\$19.99 USD");
 
+  static PAC pacForProductId(String productId) {
+    return [
+      OrchidPurchaseAPI.pacTier1,
+      OrchidPurchaseAPI.pacTier2,
+      OrchidPurchaseAPI.pacTier3
+    ].firstWhere((p) => p.productId == productId);
+  }
+
   // The raw value from the iOS API
   static const int SKErrorPaymentCancelled = 2;
 
@@ -41,9 +52,8 @@ abstract class OrchidPurchaseAPI {
 
   void initStoreListener();
 
-  /// Make the app store purchase. The future will resolve when the purchase
-  /// has been confirmed and return the store receipt which can then be
-  /// submitted to the PAC server for delivery.
+  /// Make the app store purchase. This method will throw
+  /// PACPurchaseExceedsRateLimit if the daily purchase rate has been exceeded.
   Future<void> purchase(PAC pac);
 
   /// Return the API config allowing overrides from configuration.
@@ -58,20 +68,50 @@ abstract class OrchidPurchaseAPI {
             'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
         debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug));
   }
+
+  /// Daily per-device PAC purchase limit in USD.
+  static const pacDailyPurchaseLimit = USD(200.0);
+
+  /// Return true if the prospective purchase is allowed within the restrictions
+  /// of the PAC purchase rate limit.
+  static Future<bool> isWithinPurchaseRateLimit(PAC pac) async {
+    PurchaseRateHistory history =
+        await UserSecureStorage().getPurchaseRateHistory();
+    history.removeOlderThan(Duration(days: 1));
+
+    /// Optionally override to lower the PAC daily purchase limit.
+    /// Note: This can never raise the limit.
+    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    var overrideDailyPurchaseLimit = jsConfig.evalDoubleDefault(
+        'pacs.pacDailyPurchaseLimit', pacDailyPurchaseLimit.value);
+    var dailyPurchaseLimit =
+        min(overrideDailyPurchaseLimit, pacDailyPurchaseLimit.value);
+
+    return history.sum() + pac.usdPurchasePrice.value <= dailyPurchaseLimit;
+  }
+
+  /// Record a purchase in the PAC purchase rate limit history.
+  static void addPurchaseToRateLimit(PAC pac) async {
+    PurchaseRateHistory history =
+        await UserSecureStorage().getPurchaseRateHistory();
+    history.removeOlderThan(Duration(days: 1));
+    history.add(pac);
+    history.save();
+  }
 }
 
 class PACApiConfig {
-  // Platform-specific PAC Server URL
-  // e.g. 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple'
+  /// Platform-specific PAC Server URL
+  /// e.g. 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple'
   final String url;
 
-  // Feature flag for PACs
+  /// Feature flag for PACs
   final bool enabled;
 
-  // Optionally disable receipt verification in dev.
+  /// Optionally disable receipt verification in dev.
   final bool verifyReceipt;
 
-  // Enable debug tracing.
+  /// Enable debug tracing.
   final bool debug;
 
   PACApiConfig({
@@ -81,3 +121,5 @@ class PACApiConfig {
     this.debug = false,
   });
 }
+
+class PACPurchaseExceedsRateLimit implements Exception {}

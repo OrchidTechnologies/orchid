@@ -49,6 +49,7 @@ dependencies:
       path: packages/in_app_purchase
       ref: support_macos
   dartjsengine: ^1.0.1
+  flutter_secure_storage: ^3.3.3
 
 dev_dependencies:
   flutter_test:

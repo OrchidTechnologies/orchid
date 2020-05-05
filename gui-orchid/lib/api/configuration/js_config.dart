@@ -45,6 +45,23 @@ class JSConfig {
     throw Exception("Expression not int: $val");
   }
 
+  double evalDoubleDefault(String expression, double defaultValue) {
+    try {
+      return evalDouble(expression);
+    } catch (err) {
+      return defaultValue;
+    }
+  }
+
+  double evalDouble(String expression) {
+    JsObject val = _eval(expression);
+    if (val?.valueOf is double) {
+      return val.valueOf;
+    }
+    throw Exception("Expression not double: $val");
+  }
+
+
   String evalStringDefault(String expression, String defaultValue) {
     try {
       return evalString(expression);

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/preferences/user_secure_storage.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
@@ -436,7 +436,7 @@ class _PurchasePageState extends State<PurchasePage> {
         }
       }
       print("iap: Error in purchase call: $err");
-      _purchaseError();
+      _purchaseError(rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
       return null;
     }
   }
@@ -497,6 +497,14 @@ class _PurchasePageState extends State<PurchasePage> {
     //OrchidPurchaseAPI().finishTransaction(tx.transactionId);
     PacTransaction.shared.clear();
 
+    // Record the purchase for rate limiting
+    try {
+      PAC pac = OrchidPurchaseAPI.pacForProductId(tx.productId);
+      OrchidPurchaseAPI.addPurchaseToRateLimit(pac);
+    } catch (err) {
+      print("pac: Unable to find pac for product id!");
+    }
+
     // Parse the account response and create a hop
     setState(() {
       _overlayStatusMessage = s.setUpAccount;
@@ -537,12 +545,12 @@ class _PurchasePageState extends State<PurchasePage> {
 
   /// Handle a purchase error by clearing any error pac transaction and
   /// showing a dialog.
-  void _purchaseError() async {
-    print("iap: purchase page: showing error");
+  void _purchaseError({bool rateLimitExceeded = false}) async {
+    print("iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
     var tx = await PacTransaction.shared.get();
-    if (tx.state == PacTransactionState.Error) {
+    if (tx != null && tx.state == PacTransactionState.Error) {
       print("iap: clearing error tx");
       await PacTransaction.shared.clear();
     } else {
@@ -552,7 +560,9 @@ class _PurchasePageState extends State<PurchasePage> {
     await Dialogs.showAppDialog(
       context: context,
       title: s.purchaseError,
-      bodyText: s.thereWasAnErrorInPurchasingContact,
+      bodyText: rateLimitExceeded
+          ? s.weAreSorryButThisPurchaseWouldExceedTheDaily
+          : s.thereWasAnErrorInPurchasingContact,
     );
   }
 
