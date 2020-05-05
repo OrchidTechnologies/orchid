@@ -365,6 +365,7 @@ def main(event, context):
                     'message': 'dev-only parameter included in request!',
                     'push_txn_hash': None,
                     'config': None,
+                    'seller': None,
                 })
             }
             logging.debug(f'response: {response}')
@@ -384,6 +385,7 @@ def main(event, context):
             "body": json.dumps({
                 "push_txn_hash": push_txn_hash,
                 "config": config,
+                "seller": os.environ['VERIFIER'],
             })
         }
         logging.debug(f'response: {response}')
@@ -401,6 +403,7 @@ def main(event, context):
                     "message": "Validation Failure: duplicate receipt!",
                     "push_txn_hash": None,
                     "config": None,
+                    "seller": None,
                 })
             }
             logging.debug(f'response: {response}')
@@ -424,6 +427,7 @@ def main(event, context):
                     'message': f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)',
                     'push_txn_hash': None,
                     'config': None,
+                    'seller': None,
                 })
             }
         else:  # Good bundle_id or not verifying receipts
@@ -446,6 +450,7 @@ def main(event, context):
                         'message': f"Unknown product_id: {product_id}",
                         'push_txn_hash': None,
                         'config': None,
+                        'seller': None,
                     })
                 }
             else:
@@ -457,8 +462,9 @@ def main(event, context):
                         "headers": {},
                         "body": json.dumps({
                             "message": "No Account Found",
-                            "push_txn_hash": push_txn_hash,
-                            "config": config,
+                            "push_txn_hash": None,
+                            "config": None,
+                            "seller": None,
                         })
                     }
                 else:
@@ -469,6 +475,7 @@ def main(event, context):
                         "body": json.dumps({
                             "push_txn_hash": push_txn_hash,
                             "config": config,
+                            "seller": os.environ['VERIFIER'],
                         })
                     }
                     item = {
@@ -481,6 +488,7 @@ def main(event, context):
                         'receipt': receipt_hash,
                         'config': config,
                         'push_txn_hash': push_txn_hash,
+                        'seller': os.environ['VERIFIER'],
                     }
                     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
                     result_hash_table.put_item(Item=ddb_item)
@@ -510,6 +518,7 @@ def main(event, context):
                 "message": f"Validation Failure: {apple_response[1]}",
                 "push_txn_hash": None,
                 "config": None,
+                "seller": None,
             })
         }
     logging.debug(f'response: {response}')
