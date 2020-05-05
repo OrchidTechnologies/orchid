@@ -83,7 +83,8 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - "Fn::GetAtt": [ PACTable, Arn ]
-        - "Fn::GetAtt": [ReceiptTable, Arn ]
+        - "Fn::GetAtt": [ ReceiptTable, Arn ]
+        - "Fn::GetAtt": [ ResultTable, Arn ]
     - Effect: "Allow"
       Action:
         - "lambda:InvokeFunction"
