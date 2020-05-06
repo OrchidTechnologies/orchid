@@ -319,7 +319,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
             status = get_transaction_status(push_txn_hash)
             if (status != 'confirmed'):
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status}')
-                #continue
+                continue
             logging.debug(f'Found available account ({push_txn_hash}): {config}')
             key = {
                 'price': item['price'],
