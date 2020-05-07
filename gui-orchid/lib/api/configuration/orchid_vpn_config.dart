@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
@@ -25,7 +27,7 @@ class OrchidVPNConfig {
     return JSConfig("");
   }
 
-  /// Generate the hops list portion of the VPN config managed by the GUI.
+  /// Generate the circuit hops list portion of the VPN config managed by the UI.
   /// The desired format is a JavaScript object literal assignment, e.g.:
   /// hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}, {protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
   static Future<String> generateHopsConfig() async {
@@ -34,10 +36,28 @@ class OrchidVPNConfig {
     List<CircuitHop> hops = circuit?.hops ?? [];
 
     /// Convert each hop to a json map and replace values as required by the rendered config.
-    var hopsListConfig = hops.map((hop) {
+    var hopsListConfig = hops.map((hop) async {
+      // To JSON
+      var hopJson = hop.toJson();
+
+      // TODO: The PAC server returns the seller and we are planning to store it
+      // TODO: with the account itself when we have a persistent "account" model.
+      // TODO: For now we'll do a just-in-time lookup here.
+      // For Orchid hops using PACs look up the verifier address and add it as
+      // a "seller" field for the tunnel.
+      if (hop is OrchidHop) {
+        LotteryPot lotteryPot = await OrchidEthereum.getLotteryPot(hop.funder,
+            EthereumAddress.from(hop.keyRef.getFrom(keys).keys().address));
+        if (lotteryPot.verifier != null) {
+          hopJson['seller'] = lotteryPot.verifier.toString();
+        }
+      }
+
       // Resolve key references
-      var resolvedHop = resolveKeyReferencesForExport(hop.toJson(), keys);
-      return resolvedHop.map((String key, dynamic value) {
+      var resolvedKeysHop = resolveKeyReferencesForExport(hopJson, keys);
+
+      // Perform any needed transformations on the individual key/values in the json.
+      return resolvedKeysHop.map((String key, dynamic value) {
         // The protocol value is transformed to lowercase.
         if (key == "protocol") {
           value = value.toString().toLowerCase();
@@ -51,7 +71,11 @@ class OrchidVPNConfig {
       }).toString();
     }).toList();
 
-    return "hops = $hopsListConfig;";
+    // TODO: Remove this when the map above no longer requires async for the
+    // TODO: seller lookup.
+    List<String> result = await Future.wait(hopsListConfig);
+
+    return "hops = $result;";
   }
 
   /// Replace JSON "keyRef" key references with private key "secret" values.

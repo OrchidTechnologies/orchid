@@ -1,8 +1,9 @@
 import 'package:orchid/util/units.dart';
 
+import 'orchid_crypto.dart';
+
 // Funds and Budgeting API
 class OrchidBudgetAPI {
-
   static OrchidBudgetAPI _shared = OrchidBudgetAPI._init();
 
   OrchidBudgetAPI._init();
@@ -11,15 +12,22 @@ class OrchidBudgetAPI {
     return _shared;
   }
 
-  void applicationReady() async { }
+  void applicationReady() async {}
 }
 
 /// Lottery pot balance and deposit amounts.
 class LotteryPot {
-  OXT deposit;
-  OXT balance;
+  final OXT deposit;
+  final OXT balance;
+  final BigInt unlock;
+  final EthereumAddress verifier;
 
-  LotteryPot({this.deposit, this.balance});
+  LotteryPot({
+    this.deposit,
+    this.balance,
+    this.unlock,
+    this.verifier,
+  });
 }
 
 // TODO: Placeholder budget api

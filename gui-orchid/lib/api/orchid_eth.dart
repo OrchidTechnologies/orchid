@@ -11,7 +11,8 @@ class OrchidEthereum {
   //static var providerUrl = 'https://cloudflare-eth.com';
   // TODO: Temporarily using this api-key bound solution with Infura due to
   // TODO: unreliability of Cloudflare.
-  static var providerUrl = 'https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf';
+  static var providerUrl =
+      'https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf';
 
   // Lottery contract address on main net
   static var lotteryContractAddress =
@@ -29,6 +30,11 @@ class OrchidEthereum {
   }
 
   /*
+    function look(address funder, address signer) external view returns (uint128, uint128, uint256, OrchidVerifier, bytes32, bytes memory) {
+      Pot storage pot = lotteries_[funder].pots_[signer];
+      return (pot.amount_, pot.escrow_, pot.unlock_, pot.verify_, pot.codehash_, pot.shared_);
+    }
+
     Example:
     curl https://cloudflare-eth.com -H 'Content-Type: application/json' --data
       '{"jsonrpc":"2.0",
@@ -71,12 +77,20 @@ class OrchidEthereum {
       throw Exception();
     }
 
+    // Parse the results
     var buff = HexStringBuffer(result);
     OXT balance = OXT.fromWei(buff.take(64)); // uint128 padded
     OXT deposit = OXT.fromWei(buff.take(64)); // uint128 padded
-    //BigInt unlock = buff.take(64); // uint256
+    BigInt unlock = buff.take(64); // uint256
 
-    return LotteryPot(balance: balance, deposit: deposit);
+    // The verifier only has a non-zero value for PACs.
+    EthereumAddress verifier;
+    try {
+      verifier = EthereumAddress(buff.take(64));
+    } catch (err) {}
+
+    return LotteryPot(
+        balance: balance, deposit: deposit, unlock: unlock, verifier: verifier);
   }
 
   // Pad a 40 character address to 64 characters with no prefix
