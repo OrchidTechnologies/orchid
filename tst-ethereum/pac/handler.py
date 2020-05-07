@@ -344,15 +344,14 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
 def main(event, context):
     Stage = os.environ['STAGE']
 
+    body = json.loads(event.get('body', {}))
+
     if is_true(body.get('debug', '')):
         configure_logging(level="DEBUG")
 
     logging.debug(f'main entry Stage:{Stage} ')
     logging.debug(f'event: {event}')
     logging.debug(f'context: {context}')
-
-    body = json.loads(event.get('body', {}))
-
     logging.debug(f'body: {body}')
     receipt = body.get('receipt', '')
 
