@@ -341,15 +341,17 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
 
 
 
-# todo: replay prevention through receipt hash map
 def main(event, context):
+    Stage = os.environ['STAGE']
+
+    if is_true(body.get('debug', '')):
+        configure_logging(level="DEBUG")
+
+    logging.debug(f'main entry Stage:{Stage} ')
     logging.debug(f'event: {event}')
     logging.debug(f'context: {context}')
 
     body = json.loads(event.get('body', {}))
-
-    if is_true(body.get('debug', '')):
-        configure_logging(level="DEBUG")
 
     logging.debug(f'body: {body}')
     receipt = body.get('receipt', '')
@@ -371,13 +373,13 @@ def main(event, context):
                     'seller': None,
                 })
             }
-            logging.debug(f'response: {response}')
+            logging.debug(f'dev-only parameter included in request! response: {response}')
             return response
 
     receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
 
     result = result_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
-    if (result['Count'] > 0):  # we found a match, return it
+    if (Stage != 'dev' and result['Count'] > 0):  # we found a match, return it
         item = result['Items'][0]
         config = item['config']
         push_txn_hash = item['push_txn_hash']
@@ -391,7 +393,7 @@ def main(event, context):
                 "seller": os.environ['VERIFIER'],
             })
         }
-        logging.debug(f'response: {response}')
+        logging.debug(f'found existing match for receipt_hash({receipt_hash}), result: {response}')
         return response
 
     verify_receipt = body.get('verify_receipt', 'False')
