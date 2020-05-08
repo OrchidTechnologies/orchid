@@ -348,7 +348,8 @@ int Main(int argc, const char *const argv[]) {
         );
     }());
 
-    cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
+    if (cashier != nullptr)
+        cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
 
     auto egress([&]() -> S<Egress> {
         if (args.count("ovpn-file") != 0) {
