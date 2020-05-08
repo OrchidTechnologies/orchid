@@ -385,6 +385,7 @@ int main(int argc, const char *const argv[]) { try {
     v8::V8::Initialize();
     _scope({ v8::V8::Dispose(); });
 
+    rtc::LogMessage::LogToDebug(rtc::LS_INFO);
     return orc::Main(argc, argv);
 } catch (const std::exception &error) {
     std::cerr << error.what() << std::endl;
