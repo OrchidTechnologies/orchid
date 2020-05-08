@@ -60,6 +60,7 @@ class Server :
     struct Locked_ {
         uint64_t serial_ = 0;
         Float balance_ = 0;
+        std::map<Bytes32, Float> expected_;
 
         std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
         decltype(reveals_.end()) commit_ = reveals_.end();
@@ -76,11 +77,12 @@ class Server :
     task<void> Send(const Buffer &data) override;
 
     void Commit(const Lock<Locked_> &locked);
+    Float Expected(const Lock<Locked_> &locked);
 
     task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit);
-    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id);
+    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id = Zero<32>());
 
-    task<void> Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &data);
+    void Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data);
 
   protected:
     virtual Pump<Buffer> *Inner() noexcept = 0;

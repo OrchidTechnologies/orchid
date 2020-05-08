@@ -103,10 +103,10 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
-        Wait(Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
+        Scan(window, [&, &id = id](const Buffer &data) { try {
             const auto [command, window] = Take<uint32_t, Window>(data);
             if (command != Invoice_)
-                co_return;
+                return;
 
             const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
             orc_assert(lottery == lottery_);
@@ -144,7 +144,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
 
             if (prepay_ > predicted)
                 Issue(uint256_t(prepay_ * 2 - predicted));
-        } orc_catch({}) }));
+        } orc_catch({}) });
     } orc_catch({}) return true; })) {
         Transfer(data.size());
         Pump::Land(data);

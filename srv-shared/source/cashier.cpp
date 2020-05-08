@@ -253,7 +253,7 @@ std::pair<Float, uint256_t> Cashier::Credit(const uint256_t &now, const uint256_
     return credit;
 }
 
-task<void> Cashier::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {
+task<bool> Cashier::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {
     const auto [pot, subscribe] = [&]() -> std::tuple<S<Pot>, bool> {
         const auto cache(cache_());
         auto &pot(cache->pots_[{signer, funder}]);
@@ -279,9 +279,13 @@ task<void> Cashier::Check(const Address &signer, const Address &funder, const ui
     co_await pot->Wait();
 
     const auto locked(pot->locked_());
-    orc_assert(amount <= locked->amount_);
-    orc_assert(amount <= locked->escrow_ / 2);
-    orc_assert(locked->unlock_ == 0);
+    if (amount > locked->amount_)
+        co_return false;
+    if (amount > locked->escrow_ / 2)
+        co_return false;
+    if (locked->unlock_ != 0)
+        co_return false;
+    co_return true;
 }
 
 }

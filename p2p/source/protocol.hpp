@@ -39,7 +39,7 @@ static uint32_t Stamp_(0xee6d796e);
 static uint32_t Submit_(0xfd90e312);
 static uint32_t Invoice_(0x01959987);
 
-task<void> Scan(const Buffer &data, const std::function<task<void> (const Buffer &)> &code);
+void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code);
 
 template <typename... Args_>
 auto Command(const Args_ &...args) {

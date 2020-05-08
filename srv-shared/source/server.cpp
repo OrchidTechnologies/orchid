@@ -100,9 +100,7 @@ bool Server::Bill(const Buffer &data, bool force) {
     locked->balance_ -= amount;
     ++locked->serial_;
 
-    //Log() << "balance- = " << locked->balance_ << " [floor: " << floor << "]" << std::endl;
-
-    if (locked->balance_ >= -floor)
+    if (Expected(locked) >= -floor)
         return true;
     std::swap(self, self_);
     return false;
@@ -129,6 +127,13 @@ void Server::Commit(const Lock<Locked_> &locked) {
     locked->commit_ = locked->reveals_.try_emplace(Hash(reveal), reveal, 0).first;
 }
 
+Float Server::Expected(const Lock<Locked_> &locked) {
+    auto balance(locked->balance_);
+    for (const auto &expected : locked->expected_)
+        balance += expected.second;
+    return balance;
+}
+
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit) {
     Header header{Magic_, id};
     co_await Send(pipe, Datagram(Port_, destination, Tie(header,
@@ -139,11 +144,11 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
 
 task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id) {
     const auto [serial, balance, commit] = [&]() { const auto locked(locked_());
-        return std::make_tuple(locked->serial_, locked->balance_, locked->commit_->first); }();
+        return std::make_tuple(locked->serial_, Expected(locked), locked->commit_->first); }();
     co_await Invoice(pipe, destination, id, serial, balance, commit);
 }
 
-task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &data) {
+void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data) {
     const auto [
         v, r, s,
         commit,
@@ -174,7 +179,7 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
     const uint256_t gas(100000);
     const auto [profit, price] = cashier_->Credit(now, start, range, amount, gas);
     if (profit <= 0)
-        co_return;
+        return;
     static const Float Two128(uint256_t(1) << 128);
     const auto expected(profit * Float(ratio + 1) / Two128);
 
@@ -183,9 +188,7 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
     const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
     const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
 
-    co_await cashier_->Check(signer, funder, amount, recipient, receipt);
-
-    const auto [reveal, balance, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected]() {
+    const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
         const auto locked(locked_());
 
         orc_assert(issued >= locked->issued_);
@@ -206,7 +209,7 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
             return reveal->second.first;
         }());
 
-        locked->balance_ += expected;
+        orc_assert(locked->expected_.emplace(ticket, expected).second);
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
@@ -214,12 +217,29 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
         if (winner && locked->commit_->first == commit)
             Commit(locked);
 
-        return std::make_tuple(reveal, locked->balance_, winner);
+        return std::make_tuple(reveal, winner);
     }();
 
-    //Log() << "balance+ = " << balance << std::endl;
+    Spawn([=, price = price, commit = commit, issued = issued, nonce = nonce, v = v, r = r, s = s, amount = amount, ratio = ratio, start = start, range = range, funder = funder, recipient = recipient, reveal = reveal, winner = winner]() noexcept -> task<void> { try {
+        const auto valid(co_await cashier_->Check(signer, funder, amount, recipient, receipt));
 
-    if (winner) {
+        {
+            const auto locked(locked_());
+            const auto expected(locked->expected_.find(ticket));
+            orc_assert(expected != locked->expected_.end());
+            if (valid)
+                locked->balance_ += expected->second;
+            else
+                ++locked->serial_;
+            locked->expected_.erase(expected);
+        }
+
+        if (!valid) {
+            co_await Invoice(this, source);
+            co_return;
+        } else if (!winner)
+            co_return;
+
         std::vector<Bytes32> old;
 
         static Selector<void,
@@ -241,7 +261,7 @@ task<void> Server::Submit(Pipe<Buffer> *pipe, const Bytes32 &id, const Buffer &d
             funder, recipient,
             receipt, old
         );
-    }
+    } orc_catch({}) });
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
@@ -256,10 +276,10 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
             const auto &[magic, id] = header;
             orc_assert(magic == Magic_);
 
-            co_await Scan(window, [&, &id = id](const Buffer &data) -> task<void> { try {
+            Scan(window, [&, &id = id](const Buffer &data) { try {
                 const auto [command, window] = Take<uint32_t, Window>(data);
                 if (command == Submit_)
-                    co_await Submit(this, id, window);
+                    Submit(this, source, id, window);
             } orc_catch({}) });
 
             co_await Invoice(this, source, id);
@@ -297,7 +317,7 @@ Server::~Server() {
 
 task<void> Server::Open(Pipe<Buffer> *pipe) {
     if (cashier_ != nullptr)
-        co_await Invoice(pipe, Port_, Zero<32>());
+        co_await Invoice(pipe, Port_);
 }
 
 task<void> Server::Shut() noexcept {

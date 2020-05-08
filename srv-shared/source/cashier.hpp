@@ -113,7 +113,7 @@ class Cashier :
     checked_int256_t Convert(const Float &balance) const;
 
     std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const;
-    task<void> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt);
+    task<bool> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt);
 
     template <typename Selector_, typename... Args_>
     void Send(Selector_ &selector, const uint256_t &gas, const uint256_t &price, Args_ &&...args) {
