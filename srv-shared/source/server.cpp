@@ -100,7 +100,7 @@ bool Server::Bill(const Buffer &data, bool force) {
     locked->balance_ -= amount;
     ++locked->serial_;
 
-    if (Expected(locked) >= -floor)
+    if (locked->balance_ >= -floor)
         return true;
     std::swap(self, self_);
     return false;
