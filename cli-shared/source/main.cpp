@@ -143,16 +143,16 @@ int Main(int argc, const char *const argv[]) {
         orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " -interface " + utun).c_str()) == 0);
     else {
         // XXX: having a default route causes connect() to fail with "Network is unreachable"
-        //orc_assert(system(("route -n add 0.0.0.0/1 -interface " + utun).c_str()) == 0);
-        //orc_assert(system(("route -n add 128.0.0.0/1 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 1/8 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 2/7 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 4/6 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 8/5 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 16/4 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 32/3 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 64/2 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add 128/1 -interface " + utun).c_str()) == 0);
+        //orc_assert(system(("route -n add -net 0.0.0.0/1 -interface " + utun).c_str()) == 0);
+        //orc_assert(system(("route -n add -net 128.0.0.0/1 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 1/8 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 2/7 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 4/6 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 8/5 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 16/4 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 32/3 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 64/2 -interface " + utun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 128/1 -interface " + utun).c_str()) == 0);
     }
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 #elif defined(__linux__)
@@ -175,8 +175,8 @@ int Main(int argc, const char *const argv[]) {
     if (args.count("capture") != 0)
         orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " dev " + tun).c_str()) == 0);
     else {
-        orc_assert(system(("route -n add 0.0.0.0/1 dev " + tun).c_str()) == 0);
-        orc_assert(system(("route -n add 128.0.0.0/1 dev " + tun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 0.0.0.0/1 dev " + tun).c_str()) == 0);
+        orc_assert(system(("route -n add -net 128.0.0.0/1 dev " + tun).c_str()) == 0);
     }
     orc_assert(system(("route -n add 10.7.0.4 dev " + tun).c_str()) == 0);
 #else
