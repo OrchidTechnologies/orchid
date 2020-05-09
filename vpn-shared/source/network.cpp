@@ -96,7 +96,11 @@ task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std:
         co_return Descriptor{address, url.str(), std::make_unique<rtc::SSLFingerprint>(algorithm->second, fingerprint.data(), fingerprint.size())};
     }();
 
-    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), lottery, chain, secret, funder));
+    static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look_("look");
+    const auto [amount, escrow, unlock, verify, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
+    orc_assert(unlock == 0);
+
+    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), lottery, chain, secret, funder, escrow / 2));
     co_await client->Open(origin);
     co_return client;
 }
