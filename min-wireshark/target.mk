@@ -97,7 +97,7 @@ cflags/$(pwd/wireshark)/ += -D'VERSION_MICRO=0'
 cflags/$(pwd/wireshark)/ += -Wno-pointer-sign
 
 # XXX: fwrite used without check; submit patch
-cflags/$(pwd/wireshark)/wsutil/json_dumper.c += -Wno-unused-result
+cflags/$(pwd/wireshark)/ += -Wno-unused-result
 
 cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan
 cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan/dfilter
