@@ -100,7 +100,7 @@ task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std:
     const auto [amount, escrow, unlock, verify, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
     orc_assert(unlock == 0);
 
-    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), lottery, chain, secret, funder, escrow / 2));
+    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), lottery, chain, secret, funder, std::min(amount, escrow / 2)));
     co_await client->Open(origin);
     co_return client;
 }
