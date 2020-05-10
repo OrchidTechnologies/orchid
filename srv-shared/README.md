@@ -12,7 +12,7 @@ sudo apt-get install \
      ninja-build \
      python3-pip \
      python3-setuptools \
-     tcl
+     tcl -y
 sudo pip3 install meson
 git clone https://github.com/OrchidTechnologies/orchid.git
 cd orchid/
