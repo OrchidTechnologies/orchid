@@ -672,9 +672,10 @@ static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Ori
         const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
         const auto secret(orc_value(return, Secret(Bless(heap.eval<std::string>(hops + ".secret"))), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
+        const Address seller(heap.eval<std::string>(hops + ".seller", "0x0000000000000000000000000000000000000000"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
         const Address provider(heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000"));
-        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder);
+        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder, seller);
     } else if (protocol == "openvpn") {
         co_await Connect(sunk, origin, local,
             heap.eval<std::string>(hops + ".ovpnfile"),

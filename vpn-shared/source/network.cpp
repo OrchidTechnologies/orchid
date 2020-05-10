@@ -40,7 +40,7 @@ Network::Network(const std::string &rpc, Address directory, Address location) :
     generator_.seed(boost::random::random_device()());
 }
 
-task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder) {
+task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller) {
     const Endpoint endpoint(origin, locator_);
 
     // XXX: this adjustment is suboptimal; it seems to help?
@@ -100,7 +100,7 @@ task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std:
     const auto [amount, escrow, unlock, verify, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
     orc_assert(unlock == 0);
 
-    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), lottery, chain, secret, funder, std::min(amount, escrow / 2)));
+    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), lottery, chain, secret, funder, seller, std::min(amount, escrow / 2)));
     co_await client->Open(origin);
     co_return client;
 }

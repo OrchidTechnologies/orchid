@@ -153,7 +153,7 @@ void Client::Stop() noexcept {
     Pump::Stop();
 }
 
-Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const uint128_t &face) :
+Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face) :
     Pump(drain),
     local_(Certify()),
     url_(std::move(url)),
@@ -162,6 +162,7 @@ Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remot
     chain_(chain),
     secret_(secret),
     funder_(funder),
+    seller_(seller),
     face_(face),
     prepay_(uint256_t(0xb1a2bc2ec500)<<128)
 {

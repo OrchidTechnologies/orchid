@@ -51,11 +51,11 @@ namespace po = boost::program_options;
 static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 
-task<std::string> Test(const S<Origin> &origin, const Float &price, Network &network, std::string provider, std::string name, const Secret &secret, const std::string &funder) {
+task<std::string> Test(const S<Origin> &origin, const Float &price, Network &network, std::string provider, std::string name, const Secret &secret, const Address &funder, const Address &seller) {
     try {
         std::cout << provider << " " << name << std::endl;
         auto remote(Break<Sink<Remote>>());
-        const auto client(co_await network.Select(remote.get(), origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder));
+        const auto client(co_await network.Select(remote.get(), origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
         remote->Open();
         const auto body((co_await remote->Request("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
         client->Update();
@@ -84,6 +84,7 @@ int Main(int argc, const char *const argv[]) {
         ("help", "produce help message")
         ("funder", po::value<std::string>())
         ("secret", po::value<std::string>())
+        ("seller", po::value<std::string>()->default_value("0x0000000000000000000000000000000000000000"))
     ;
 
     po::store(po::parse_command_line(argc, argv, po::options_description()
@@ -104,8 +105,9 @@ int Main(int argc, const char *const argv[]) {
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
 
-    const std::string funder(args["funder"].as<std::string>());
+    const Address funder(args["funder"].as<std::string>());
     const Secret secret(Bless(args["secret"].as<std::string>()));
+    const Address seller(args["seller"].as<std::string>());
 
     return Wait([&]() -> task<int> {
         co_await Schedule();
@@ -127,7 +129,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
             }) {
                 names.push_back(name);
-                tests.emplace_back(Test(origin, price, network, provider, name, secret, funder));
+                tests.emplace_back(Test(origin, price, network, provider, name, secret, funder, seller));
             }
 
             const auto costs(co_await cppcoro::when_all(std::move(tests)));
