@@ -22,8 +22,6 @@ include env/target.mk
 
 version := 0.9
 
-args := 
-
 .PHONY: all
 all: $(output)/$(default)/orchid$(exe)
 

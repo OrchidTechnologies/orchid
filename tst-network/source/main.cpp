@@ -36,11 +36,17 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+
 #include <rtc_base/logging.h>
 
 using boost::multiprecision::uint256_t;
 
 namespace orc {
+
+namespace po = boost::program_options;
 
 static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
@@ -71,43 +77,65 @@ extern double WinRatio_;
 
 // NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
-    orc_assert(argc == 1);
-    //WinRatio_ = 10;
+    po::variables_map args;
+
+    po::options_description options("command-line (only)");
+    options.add_options()
+        ("help", "produce help message")
+        ("funder", po::value<std::string>())
+        ("secret", po::value<std::string>())
+    ;
+
+    po::store(po::parse_command_line(argc, argv, po::options_description()
+        .add(options)
+    ), args);
+
+    po::notify(args);
+
+    if (args.count("help") != 0) {
+        std::cout << po::options_description()
+            .add(options)
+        << std::endl;
+        return 0;
+    }
 
     const std::string rpc("http://localhost:8545/");
 
-    const Secret secret(Bless("d3b7d9e431efff753769bbcf727a00a0b3c6d3e2f62d322e6b3ea6b256ca651c"));
-    const std::string funder("0x2b1ce95573ec1b927a90cb488db113b40eeb064a");
-
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
+
+    const std::string funder(args["funder"].as<std::string>());
+    const Secret secret(Bless(args["secret"].as<std::string>()));
 
     return Wait([&]() -> task<int> {
         co_await Schedule();
 
         const auto origin(Break<Local>());
 
-        //for (;;) (void) co_await Resolve(*origin, "www.saurik.com", "80");
-
         const auto price(co_await Price(*origin, "OXT", "USD", Ten18));
         Network network(rpc, directory, location);
 
         for (;;) {
+            std::vector<std::string> names;
             std::vector<task<std::string>> tests;
 
             // NOLINTNEXTLINE (modernize-avoid-c-arrays)
             for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
-                //{"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "bolehvpn"},
-                //{"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "liquidvpn"},
-                {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "vpnsecure"},
-                //{"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "tenta"},
+                {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
+                {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
+                {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
+                {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
             }) {
+                names.push_back(name);
                 tests.emplace_back(Test(origin, price, network, provider, name, secret, funder));
             }
 
-            co_await cppcoro::when_all(std::move(tests));
-            _trace();
-            co_await Sleep(120);
+            const auto costs(co_await cppcoro::when_all(std::move(tests)));
+
+            std::cout << std::endl;
+            for (unsigned i(0); i != names.size(); ++i)
+                std::cout << "\e[32m[" << names[i] << "] " << costs[i] << "\e[0m" << std::endl;
+            _exit(0);
         }
 
         co_return 0;
