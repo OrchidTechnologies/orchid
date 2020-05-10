@@ -220,6 +220,8 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
         return std::make_tuple(reveal, winner);
     }();
 
+    // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
+    // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
     Spawn([=, price = price, commit = commit, issued = issued, nonce = nonce, v = v, r = r, s = s, amount = amount, ratio = ratio, start = start, range = range, funder = funder, recipient = recipient, reveal = reveal, winner = winner]() noexcept -> task<void> { try {
         const auto valid(co_await cashier_->Check(signer, funder, amount, recipient, receipt));
 
