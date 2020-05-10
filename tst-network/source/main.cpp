@@ -145,7 +145,6 @@ int Main(int argc, const char *const argv[]) {
 }
 
 int main(int argc, const char *const argv[]) { try {
-    rtc::LogMessage::LogToDebug(rtc::LS_INFO);
     return orc::Main(argc, argv);
 } catch (const std::exception &error) {
     std::cerr << error.what() << std::endl;

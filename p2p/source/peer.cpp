@@ -38,6 +38,18 @@ struct SetupSSL {
     ~SetupSSL() { rtc::CleanupSSL(); }
 } setup_;
 
+struct Logger :
+    public rtc::LogSink
+{
+    Logger() {
+        rtc::LogMessage::AddLogToStream(this, rtc::LS_INFO);
+    }
+
+    void OnLogMessage(const std::string &message) override {
+        Log() << message << std::endl;
+    }
+} logger_;
+
 
 Peer::Peer(const S<Origin> &origin, Configuration configuration) :
     origin_(origin),
