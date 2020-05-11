@@ -128,7 +128,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
                 {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
             }) {
-                names.push_back(name);
+                names.emplace_back(name);
                 tests.emplace_back(Test(origin, price, network, provider, name, secret, funder, seller));
             }
 
