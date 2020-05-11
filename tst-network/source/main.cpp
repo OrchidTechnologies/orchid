@@ -100,7 +100,7 @@ int Main(int argc, const char *const argv[]) {
         return 0;
     }
 
-    const std::string rpc("http://localhost:8545/");
+    const std::string rpc("https://cloudflare-eth.com:443/");
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
