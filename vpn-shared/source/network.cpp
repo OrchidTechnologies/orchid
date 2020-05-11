@@ -41,7 +41,7 @@ Network::Network(const std::string &rpc, Address directory, Address location) :
 }
 
 task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller) {
-    const Endpoint endpoint(origin, locator_);
+    Endpoint endpoint(origin, locator_);
 
     // XXX: this adjustment is suboptimal; it seems to help?
     //const auto latest(co_await endpoint.Latest() - 1);
@@ -62,7 +62,7 @@ task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std:
         orc_assert(delay >= 90*24*60*60);
 
         // XXX: this is a stupid hack
-        if (provider != 0)
+        if (provider != Address(0))
             address = provider;
 
         static const Selector<uint128_t, Address, Bytes> good_("good");
@@ -100,7 +100,7 @@ task<Client *> Network::Select(Sunk<> *sunk, const S<Origin> &origin, const std:
     const auto [amount, escrow, unlock, verify, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
     orc_assert(unlock == 0);
 
-    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), lottery, chain, secret, funder, seller, std::min(amount, escrow / 2)));
+    const auto client(sunk->Wire<Client>(std::move(url), std::move(fingerprint), std::move(endpoint), lottery, chain, secret, funder, seller, std::min(amount, escrow / 2)));
     co_await client->Open(origin);
     co_return client;
 }

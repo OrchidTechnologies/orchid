@@ -49,10 +49,10 @@ task<void> Client::Submit() {
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header)));
 }
 
-task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Signature &signature) {
+task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature) {
     const Header header{Magic_, hash};
     co_await Bonded::Send(Datagram(Port_, Port_, Tie(header,
-        Command(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt_))
+        Command(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt))
     )));
 }
 
@@ -62,23 +62,25 @@ void Client::Issue(uint256_t amount) {
             // XXX: retry existing packet
             co_return co_await Submit();
 
+        const auto [commit, recipient, ring] = [&]() {
+            const auto locked(locked_());
+            return std::make_tuple(locked->commit_, locked->recipient_, locked->ring_);
+        }();
+
+        const auto receipt(co_await ring);
+
         const auto nonce(Random<32>());
 
         const auto now(Timestamp());
         const auto start(now + 60 * 60 * 2);
 
-        const auto [recipient, commit] = [&]() {
-            const auto locked(locked_());
-            return std::make_tuple(locked->recipient_, locked->commit_);
-        }();
-
         const uint128_t ratio(WinRatio_ == 0 ? amount / face_ : uint256_t(Float(Two128) * WinRatio_ - 1));
         const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
-        const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt_)));
+        const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
         const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
         { const auto locked(locked_());
             locked->pending_.try_emplace(hash, ticket, signature); }
-        co_return co_await Submit(hash, ticket, signature);
+        co_return co_await Submit(hash, ticket, receipt, signature);
     }; });
 }
 
@@ -90,6 +92,15 @@ void Client::Transfer(size_t size) {
     else
         return; }
     Issue(0);
+}
+
+// XXX: the implications of when this function gets called concern me :(
+cppcoro::shared_task<Bytes> Client::Ring(Address recipient) {
+    if (seller_ == Address(0))
+        co_return Bytes();
+    static const Selector<Bytes, Bytes, Address> ring_("ring");
+    static const std::string latest("latest");
+    co_return co_await ring_.Call(endpoint_, latest, seller_, 90000, shared_, recipient);
 }
 
 void Client::Land(Pipe *pipe, const Buffer &data) {
@@ -117,8 +128,12 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                 if (locked->serial_ < serial) {
                     locked->serial_ = serial;
                     locked->balance_ = Complement(balance);
-                    locked->recipient_ = recipient;
                     locked->commit_ = commit;
+
+                    if (locked->recipient_ != recipient) {
+                        locked->recipient_ = recipient;
+                        locked->ring_ = Ring(recipient);
+                    }
                 }
 
                 if (!id.zero()) {
@@ -153,11 +168,12 @@ void Client::Stop() noexcept {
     Pump::Stop();
 }
 
-Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face) :
+Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face) :
     Pump(drain),
     local_(Certify()),
     url_(std::move(url)),
     remote_(std::move(remote)),
+    endpoint_(std::move(endpoint)),
     lottery_(lottery),
     chain_(chain),
     secret_(secret),

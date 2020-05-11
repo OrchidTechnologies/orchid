@@ -25,11 +25,18 @@
 
 #include <atomic>
 
+// XXX: give a patch to Lewis Baker to fix this
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreorder"
+#include <cppcoro/shared_task.hpp>
+#pragma clang diagnostic pop
+
 #include <rtc_base/rtc_certificate.h>
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "bond.hpp"
 #include "crypto.hpp"
+#include "endpoint.hpp"
 #include "jsonrpc.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
@@ -49,13 +56,16 @@ class Client :
     const std::string url_;
     const U<rtc::SSLFingerprint> remote_;
 
-    const Bytes receipt_;
+    const Endpoint endpoint_;
 
     const Address lottery_;
     const uint256_t chain_;
+
     const Secret secret_;
     const Address funder_;
+
     const Address seller_;
+    const Bytes shared_;
 
     const uint128_t face_;
     const uint256_t prepay_;
@@ -67,25 +77,28 @@ class Client :
 
         int64_t serial_ = -1;
         checked_int256_t balance_ = 0;
-        Address recipient_ = 0;
         Bytes32 commit_ = Zero<32>();
+        Address recipient_ = 0;
+        cppcoro::shared_task<Bytes> ring_;
     }; Locked<Locked_> locked_;
 
     Nest nest_;
     Socket socket_;
 
     task<void> Submit();
-    task<void> Submit(const Bytes32 &hash, const Ticket &ticket, const Signature &signature);
+    task<void> Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature);
 
     void Issue(uint256_t amount);
     void Transfer(size_t size);
+
+    cppcoro::shared_task<Bytes> Ring(Address recipient);
 
   protected:
     void Land(Pipe *pipe, const Buffer &data) override;
     void Stop() noexcept override;
 
   public:
-    Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face);
+    Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face);
     ~Client() override;
 
     task<void> Open(const S<Origin> &origin);

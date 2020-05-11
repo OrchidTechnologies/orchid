@@ -46,13 +46,13 @@ struct Account final {
     Account(const Block &block, Json::Value &value);
 };
 
-template <typename Type_>
-struct Result final {
-    typedef uint256_t type;
-};
-
 class Endpoint final {
   private:
+    template <typename Type_>
+    struct Result_ final {
+        typedef uint256_t type;
+    };
+
     const S<Origin> origin_;
     const Locator locator_;
 
@@ -86,9 +86,9 @@ class Endpoint final {
     task<Address> Resolve(const Argument &number, const std::string &name) const;
 
     template <typename... Args_>
-    task<std::tuple<Account, typename Result<Args_>::type...>> Get(const Block &block, const Address &contract, Args_ &&...args) const {
+    task<std::tuple<Account, typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, Args_ &&...args) const {
         const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
-        std::tuple<Account, typename Result<Args_>::type...> result(Account(block, proof));
+        std::tuple<Account, typename Result_<Args_>::type...> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
         Get<0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
         co_return result;

@@ -174,6 +174,10 @@ class Address :
 
 std::ostream &operator <<(std::ostream &out, const Address &address);
 
+inline bool operator !=(const Address &lhs, const Address &rhs) {
+    return static_cast<const uint160_t &>(lhs) != static_cast<const uint160_t &>(rhs);
+}
+
 inline bool Each(const Address &address, const std::function<bool (const uint8_t *, size_t)> &code) {
     return Number<uint160_t>(address).each(code);
 }
