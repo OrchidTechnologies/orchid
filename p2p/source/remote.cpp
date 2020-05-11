@@ -44,7 +44,8 @@ _status; })
 
 extern "C" struct netif *hook_ip4_route_src(const ip4_addr_t *src, const ip4_addr_t *dest)
 {
-    orc_insist(src != nullptr);
+    if (src == nullptr)
+        return nullptr;
     struct netif *netif;
     NETIF_FOREACH(netif) {
         if (netif_is_up(netif) && netif_is_link_up(netif) && ip4_addr_cmp(src, netif_ip4_addr(netif))) {
