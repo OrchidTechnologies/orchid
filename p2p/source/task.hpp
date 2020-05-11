@@ -24,7 +24,6 @@
 #define ORCHID_TASK_HPP
 
 #include <functional>
-#include <thread>
 
 #include <cppcoro/sync_wait.hpp>
 #include <cppcoro/task.hpp>
