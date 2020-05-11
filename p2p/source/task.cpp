@@ -21,8 +21,9 @@
 
 
 #include <iostream>
-#include <mutex>
 #include <thread>
+
+#include <cppcoro/detail/lightweight_manual_reset_event.hpp>
 
 #include <rtc_base/thread.h>
 
@@ -38,8 +39,7 @@ namespace orc {
 class Pool {
   private:
     std::atomic<Stacked *> stack_ = nullptr;
-    std::mutex mutex_;
-    std::condition_variable ready_;
+    cppcoro::detail::lightweight_manual_reset_event ready_;
 
   public:
     void Drain() {
@@ -54,9 +54,9 @@ class Pool {
 
     void Run() {
         for (;;) {
+            ready_.reset();
             Drain();
-            std::unique_lock<std::mutex> lock(mutex_);
-            ready_.wait(lock);
+            ready_.wait();
         }
     }
 
@@ -67,7 +67,7 @@ class Pool {
             stacked->next_ = stack;
         } while (!stack_.compare_exchange_strong(stack, stacked));
 
-        ready_.notify_one();
+        ready_.set();
     }
 };
 
