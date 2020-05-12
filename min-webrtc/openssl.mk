@@ -31,6 +31,7 @@ $(output)/%/openssl/libssl.a $(output)/%/openssl/libcrypto.a: $(output)/%/openss
 	PATH=$(dir $(word 1,$(cc))):$${PATH} $(MAKE) -C $(output)/$*/openssl build_libs
 
 cflags += -I$(pwd)/openssl/include
+cflags += -I$(pwd)/openssl/test/ossl_shim/include
 cflags += -I@/openssl/include
 linked += openssl/libssl.a
 linked += openssl/libcrypto.a

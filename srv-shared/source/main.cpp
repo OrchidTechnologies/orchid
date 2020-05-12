@@ -32,9 +32,6 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-#include <openssl/base.h>
-#include <openssl/pkcs12.h>
-
 #include <libplatform/libplatform.h>
 #include <v8.h>
 
@@ -54,27 +51,15 @@
 #include "node.hpp"
 #include "scope.hpp"
 #include "server.hpp"
+#include "store.hpp"
 #include "task.hpp"
 #include "trace.hpp"
 #include "transport.hpp"
 #include "utility.hpp"
 
-namespace bssl {
-    BORINGSSL_MAKE_DELETER(PKCS12, PKCS12_free)
-    BORINGSSL_MAKE_STACK_DELETER(X509, X509_free)
-}
-
 namespace orc {
 
 namespace po = boost::program_options;
-
-std::string Stringify(bssl::UniquePtr<BIO> bio) {
-    char *data;
-    // BIO_get_mem_data is an inline macro with a char * cast
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
-    size_t size(BIO_get_mem_data(bio.get(), &data));
-    return {data, size};
-}
 
 // NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
@@ -183,77 +168,30 @@ int Main(int argc, const char *const argv[]) {
         boost::filesystem::load_string_file(args["dh"].as<std::string>(), params);
 
 
-    std::string key;
-    std::string chain;
+    const auto store([&]() -> Store {
+        if (args.count("tls") == 0) {
+            const auto pem(Certify()->ToPEM());
+            auto key(pem.private_key());
+            auto chain(pem.certificate());
 
-    if (args.count("tls") == 0) {
-        const auto pem(Certify()->ToPEM());
+            // XXX: generate .p12 file (for Nathan)
+            std::cerr << key << std::endl;
+            std::cerr << chain << std::endl;
 
-        key = pem.private_key();
-        chain = pem.certificate();
-
-        // XXX: generate .p12 file (for Nathan)
-        std::cerr << key << std::endl;
-        std::cerr << chain << std::endl;
-    } else {
-        bssl::UniquePtr<PKCS12> p12([&]() {
-            std::string str;
-            boost::filesystem::load_string_file(args["tls"].as<std::string>(), str);
-
-            bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(str.data(), str.size()));
-            orc_assert(bio);
-
-            return d2i_PKCS12_bio(bio.get(), nullptr);
-        }());
-
-        orc_assert(p12);
-
-        bssl::UniquePtr<EVP_PKEY> pkey;
-        bssl::UniquePtr<X509> x509;
-        bssl::UniquePtr<STACK_OF(X509)> stack;
-
-        std::tie(pkey, x509, stack) = [&]() {
-            EVP_PKEY *pkey(nullptr);
-            X509 *x509(nullptr);
-            STACK_OF(X509) *stack(nullptr);
-            orc_assert(PKCS12_parse(p12.get(), "", &pkey, &x509, &stack));
-
-            return std::tuple<
-                bssl::UniquePtr<EVP_PKEY>,
-                bssl::UniquePtr<X509>,
-                bssl::UniquePtr<STACK_OF(X509)>
-            >(pkey, x509, stack);
-        }();
-
-        orc_assert(pkey);
-        orc_assert(x509);
-
-        key = Stringify([&]() {
-            bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
-            orc_assert(PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr));
-            return bio;
-        }());
-
-        chain = Stringify([&]() {
-            bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
-            orc_assert(PEM_write_bio_X509(bio.get(), x509.get()));
-            return bio;
-        }());
-
-        for (auto e(stack != nullptr ? sk_X509_num(stack.get()) : 0), i(decltype(e)(0)); i != e; i++)
-            chain += Stringify([&]() {
-                bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
-                orc_assert(PEM_write_bio_X509(bio.get(), sk_X509_value(stack.get(), i)));
-                return bio;
-            }());
-    }
+            return Store(std::move(key), std::move(chain));
+        } else {
+            std::string store;
+            boost::filesystem::load_string_file(args["tls"].as<std::string>(), store);
+            return Store(store);
+        }
+    }());
 
 
     // XXX: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
-    //U<rtc::OpenSSLIdentity> identity(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(key, chain));
+    //U<rtc::OpenSSLIdentity> identity(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(store.Key(), store.Chain()));
 
-    rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(key, chain)));
+    rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(store.Key(), store.Chain())));
     U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateFromCertificate(*certificate));
 
 
@@ -368,7 +306,7 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));
-    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, path, key, chain, params);
+    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, path, store.Key(), store.Chain(), params);
     return 0;
 }
 

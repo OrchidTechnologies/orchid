@@ -45,7 +45,6 @@ source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
 $(call include,p2p/target.mk)
-cflags += -I$(pwd)/p2p/rtc/openssl/test/ossl_shim/include
 $(call include,cv8/target.mk)
 
 include env/output.mk
