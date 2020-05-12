@@ -46,9 +46,6 @@
 [submodule "lwip"]
 	path = p2p/lwip
 	url = https://git.savannah.nongnu.org/git/lwip.git
-[submodule "BeastHttp"]
-	path = p2p/BeastHttp
-	url = https://github.com/0xdead4ead/BeastHttp.git
 [submodule "boringtun"]
 	path = p2p/boringtun
 	url = https://github.com/cloudflare/boringtun.git

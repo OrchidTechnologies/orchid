@@ -32,8 +32,8 @@ namespace orc {
 
 task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust) {
     const auto response(co_await origin.Fetch("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {}));
-    const auto result(Parse(response.body_));
-    if (response.code_ == boost::beast::http::status::ok) {
+    const auto result(Parse(response.body()));
+    if (response.result() == http::status::ok) {
         const auto &data(result["data"]);
         co_return Float(data["amount"].asString()) / adjust;
     } else {
@@ -42,7 +42,7 @@ task<Float> Price(Origin &origin, const std::string &from, const std::string &to
         const auto &error(errors[0]);
         const auto id(error["id"].asString());
         const auto message(error["message"].asString());
-        orc_throw(response.code_ << "/" << id << ": " << message);
+        orc_throw(response.result() << "/" << id << ": " << message);
     }
 }
 

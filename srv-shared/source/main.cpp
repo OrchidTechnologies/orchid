@@ -49,6 +49,7 @@
 #include "jsonrpc.hpp"
 #include "local.hpp"
 #include "node.hpp"
+#include "router.hpp"
 #include "scope.hpp"
 #include "server.hpp"
 #include "store.hpp"
@@ -152,18 +153,8 @@ int Main(int argc, const char *const argv[]) {
 
 
     std::string params;
-
     if (args.count("dh") == 0)
-        params =
-            "-----BEGIN DH PARAMETERS-----\n"
-            "MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb\n"
-            "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft\n"
-            "awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT\n"
-            "mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh\n"
-            "fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq\n"
-            "5RXSJhiY+gUQFXKOWoqsqmj//////////wIBAg==\n"
-            "-----END DH PARAMETERS-----\n"
-        ;
+        params = Params();
     else
         boost::filesystem::load_string_file(args["dh"].as<std::string>(), params);
 
@@ -306,7 +297,7 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));
-    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, path, store.Key(), store.Chain(), params);
+    node->Run(path, asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
     return 0;
 }
 

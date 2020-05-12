@@ -20,26 +20,39 @@
 /* }}} */
 
 
-#ifndef ORCHID_HTTP_HPP
-#define ORCHID_HTTP_HPP
+#ifndef ORCHID_ROUTER_HPP
+#define ORCHID_ROUTER_HPP
 
+#include <functional>
 #include <list>
-#include <map>
+#include <regex>
 #include <string>
 
-#include <rtc_base/openssl_certificate.h>
+#include <boost/beast/version.hpp>
 
 #include "response.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-class Locator;
-class Origin;
+const char *Params();
 
-task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
-task<Response> Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
+typedef http::request<http::string_body> Request;
+
+class Router {
+  private:
+    std::list<std::tuple<http::verb, std::regex, std::function<task<Response> (Request)>>> routes_;
+
+  public:
+    void Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params = Params());
+
+    void operator()(http::verb verb, const std::string &path, std::function<task<Response> (Request)> code) {
+        routes_.emplace_back(verb, path, std::move(code));
+    }
+};
+
+Response Respond(const Request &request, http::status status, const std::string &type, std::string body);
 
 }
 
-#endif//ORCHID_HTTP_HPP
+#endif//ORCHID_ROUTER_HPP

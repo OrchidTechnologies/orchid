@@ -23,17 +23,21 @@
 #include <iostream>
 #include <vector>
 
-#include "dns.hpp"
+#include "baton.hpp"
 #include "coinbase.hpp"
 #include "client.hpp"
 #include "crypto.hpp"
+#include "dns.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
 #include "network.hpp"
 #include "remote.hpp"
+#include "router.hpp"
 #include "sleep.hpp"
+#include "store.hpp"
 #include "trace.hpp"
 
+#include <boost/filesystem/string_file.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <boost/program_options/parsers.hpp>
@@ -51,26 +55,18 @@ namespace po = boost::program_options;
 static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 
-task<std::string> Test(const S<Origin> &origin, const Float &price, Network &network, std::string provider, std::string name, const Secret &secret, const Address &funder, const Address &seller) {
-    try {
-        std::cout << provider << " " << name << std::endl;
-        auto remote(Break<Sink<Remote>>());
-        const auto client(co_await network.Select(remote.get(), origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
-        remote->Open();
-        const auto body((co_await remote->Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
-        client->Update();
-        co_await Sleep(3);
-        const auto balance(client->Balance());
-        const auto spent(client->Spent());
-        const auto cost(Float(spent - balance) / body.size() * (1024 * 1024 * 1024) * price / Two128);
-        std::ostringstream string;
-        string << cost;
-        Log() << "\e[32m[" << name << "] " << string.str() << "\e[0m" << std::endl;
-        co_return string.str();
-    } catch (const std::exception &error) {
-        Log() << "\e[32m[" << name << "] " << error.what() << "\e[0m" << std::endl;
-        co_return error.what();
-    }
+task<Float> Test(const S<Origin> &origin, const Float &price, Network &network, std::string provider, std::string name, const Secret &secret, const Address &funder, const Address &seller) {
+    std::cout << provider << " " << name << std::endl;
+    auto remote(Break<Sink<Remote>>());
+    const auto client(co_await network.Select(remote.get(), origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
+    remote->Open();
+    const auto body((co_await remote->Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
+    client->Update();
+    co_await Sleep(3);
+    const auto balance(client->Balance());
+    const auto spent(client->Spent());
+    const auto cost(Float(spent - balance) / body.size() * (1024 * 1024 * 1024) * price / Two128);
+    co_return cost;
 }
 
 extern double WinRatio_;
@@ -82,6 +78,9 @@ int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
         ("help", "produce help message")
+
+        ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
+
         ("funder", po::value<std::string>())
         ("secret", po::value<std::string>())
         ("seller", po::value<std::string>()->default_value("0x0000000000000000000000000000000000000000"))
@@ -100,7 +99,9 @@ int Main(int argc, const char *const argv[]) {
         return 0;
     }
 
+    const auto origin(Break<Local>());
     const std::string rpc("https://cloudflare-eth.com:443/");
+    Endpoint endpoint(origin, Locator::Parse(rpc));
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
@@ -109,20 +110,17 @@ int Main(int argc, const char *const argv[]) {
     const Secret secret(Bless(args["secret"].as<std::string>()));
     const Address seller(args["seller"].as<std::string>());
 
-    return Wait([&]() -> task<int> {
-        co_await Schedule();
-
-        const auto origin(Break<Local>());
-
+    Spawn([&]() noexcept -> task<void> {
         const auto price(co_await Price(*origin, "OXT", "USD", Ten18));
         Network network(rpc, directory, location);
 
         for (;;) {
             std::vector<std::string> names;
-            std::vector<task<std::string>> tests;
+            std::vector<task<Float>> tests;
 
             // NOLINTNEXTLINE (modernize-avoid-c-arrays)
             for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
+                {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
                 {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
                 {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
@@ -132,16 +130,45 @@ int Main(int argc, const char *const argv[]) {
                 tests.emplace_back(Test(origin, price, network, provider, name, secret, funder, seller));
             }
 
-            const auto costs(co_await cppcoro::when_all(std::move(tests)));
+            const auto now(Timestamp());
+            (void) now;
+            auto costs(co_await cppcoro::when_all_ready(std::move(tests)));
 
             std::cout << std::endl;
-            for (unsigned i(0); i != names.size(); ++i)
-                std::cout << "\e[32m[" << names[i] << "] " << costs[i] << "\e[0m" << std::endl;
-            _exit(0);
-        }
+            for (unsigned i(0); i != names.size(); ++i) {
+                const auto text([&]() -> std::string { try {
+                    std::ostringstream cost;
+                    cost << std::move(costs[i]).result();
+                    return cost.str();
+                } catch (const std::exception &error) {
+                    return error.what();
+                } }());
+                std::cout << "\e[32m[" << names[i] << "] " << text << "\e[0m" << std::endl;
+            }
 
-        co_return 0;
+            co_await Sleep(10);
+        }
+    });
+
+    const Store store([&]() {
+        std::string store;
+        boost::filesystem::load_string_file(args["tls"].as<std::string>(), store);
+        return store;
     }());
+
+    Router router;
+
+    router(http::verb::get, R"(.*)", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "text/plain", "");
+    });
+
+    router(http::verb::unknown, R"(.*)", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::method_not_allowed, "text/plain", "");
+    });
+
+    router.Run(boost::asio::ip::make_address("0.0.0.0"), 443, store.Key(), store.Chain());
+    Thread().join();
+    return 0;
 }
 
 }

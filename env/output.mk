@@ -93,6 +93,8 @@ checks += readability-redundant-string-cstr
 #checks += readability-redundant-string-init
 checks += readability-static-definition-in-anonymous-namespace
 checks += readability-uniqueptr-delete-release
+# XXX: boost asio reactor::per_descriptor_data reactor_data_
+checks += -clang-analyzer-optin.cplusplus.UninitializedObject
 ifeq ($(target),and)
 # XXX: boost multiprecision on android
 checks += -clang-analyzer-core.UndefinedBinaryOperatorResult

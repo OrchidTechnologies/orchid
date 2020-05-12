@@ -21,75 +21,47 @@
 
 
 #include "baton.hpp"
-#include "beast.hpp"
 #include "node.hpp"
+#include "router.hpp"
 
 namespace orc {
 
-void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &path, const std::string &key, const std::string &chain, const std::string &params) {
-    boost::asio::ssl::context context{boost::asio::ssl::context::tlsv12};
+void Node::Run(const std::string &path, const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params) {
+    Router router;
 
-    context.set_options(
-        boost::asio::ssl::context::default_workarounds |
-        boost::asio::ssl::context::no_sslv2 |
-        boost::asio::ssl::context::single_dh_use |
-    0);
+    router(http::verb::post, path, [&](Request request) -> task<Response> {
+        const auto offer(request.body());
+        // XXX: look up fingerprint
+        static int fingerprint_(0);
+        std::string fingerprint(std::to_string(fingerprint_++));
 
-    context.use_certificate_chain(boost::asio::buffer(chain.data(), chain.size()));
-    context.use_private_key(boost::asio::buffer(key.data(), key.size()), boost::asio::ssl::context::file_format::pem);
-    context.use_tmp_dh(boost::asio::buffer(params.data(), params.size()));
+        // XXX: this is a fingerprint I used once in a curl command for testing and now spams the server
+        if (offer.find("DB:7F:E8:DC:D7:D2:70:56:49:66:71:F7:A0:D9:1E:36:40:53:ED:EB:39:59:0A:D1:35:DA:88:C5:E9:A1:C5:78") != std::string::npos)
+            co_return Respond(request, http::status::ok, "text/plain", "v=");
 
+        const auto server(Find(fingerprint));
+        auto answer(co_await server->Respond(offer, ice_));
 
-    http::basic_router<SslHttpSession> router{std::regex::ECMAScript};
+        Log() << std::endl;
+        Log() << "^^^^^^^^^^^^^^^^" << std::endl;
+        Log() << offer << std::endl;
+        Log() << "================" << std::endl;
+        Log() << answer << std::endl;
+        Log() << "vvvvvvvvvvvvvvvv" << std::endl;
+        Log() << std::endl;
 
-    router.post(path, [&](auto request, auto context) {
-        Log() << request << std::endl;
-
-        try {
-            const auto offer(request.body());
-            // XXX: look up fingerprint
-            static int fingerprint_(0);
-            std::string fingerprint(std::to_string(fingerprint_++));
-
-            // XXX: this is a fingerprint I used once in a curl command for testing and now spams the server
-            if (offer.find("DB:7F:E8:DC:D7:D2:70:56:49:66:71:F7:A0:D9:1E:36:40:53:ED:EB:39:59:0A:D1:35:DA:88:C5:E9:A1:C5:78") != std::string::npos) {
-                Respond(context, request, "text/plain", "v=");
-                return;
-            }
-
-            const auto server(Find(fingerprint));
-            const auto answer(Wait(server->Respond(offer, ice_)));
-
-            Log() << std::endl;
-            Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-            Log() << offer << std::endl;
-            Log() << "================" << std::endl;
-            Log() << answer << std::endl;
-            Log() << "vvvvvvvvvvvvvvvv" << std::endl;
-            Log() << std::endl;
-
-            Respond(context, request, "text/plain", answer);
-        } catch (...) {
-            Respond(context, request, "text/plain", "", boost::beast::http::status::not_found);
-        }
+        co_return Respond(request, http::status::ok, "text/plain", std::move(answer));
     });
 
-    router.all(R"(^.*$)", [&](auto request, auto context) {
-        Log() << request << std::endl;
-        Respond(context, request, "text/plain", "");
+    router(http::verb::get, R"(^.*$)", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "text/plain", "");
     });
 
-    auto fail([](auto code, auto from) {
-        Log() << "ERROR " << code << " " << from << std::endl;
+    router(http::verb::unknown, R"(^.*$)", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::method_not_allowed, "text/plain", "");
     });
 
-    HttpListener::launch(Context(), {bind, port}, [&](auto socket) {
-        SslHttpSession::handshake(context, std::move(socket), router, [](auto context) {
-            // NOLINTNEXTLINE (clang-analyzer-optin.cplusplus.UninitializedObject)
-            context.recv();
-        }, fail);
-    }, fail);
-
+    router.Run(bind, port, key, chain, params);
     Thread().join();
 }
 

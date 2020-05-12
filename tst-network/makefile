@@ -18,6 +18,9 @@
 # }}}
 
 
+args := 
+args += --tls ../network.p12
+
 include env/target.mk
 
 version := 0.9

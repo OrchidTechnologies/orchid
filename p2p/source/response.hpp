@@ -20,31 +20,35 @@
 /* }}} */
 
 
-#include <asio.hpp>
+#ifndef ORCHID_RESPONSE_HPP
+#define ORCHID_RESPONSE_HPP
 
-#include "backend.hpp"
-#include "baton.hpp"
-#include "log.hpp"
-#include "shared.hpp"
-#include "router.hpp"
-#include "trace.hpp"
+#include <map>
+#include <string>
+
+#include <boost/beast/http/message.hpp>
+#include <boost/beast/http/status.hpp>
+#include <boost/beast/http/string_body.hpp>
 
 namespace orc {
 
-void Backend() {
-#if 0
-    auto router(Make<Router>());
+namespace http = boost::beast::http;
 
-    (*router)(http::verb::get, R"(^.*$)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::verb::ok, "text/plain", "");
-    });
+struct Response :
+    public http::response<http::string_body>
+{
+    using http::response<http::string_body>::response;
 
-    (*router)(http::verb::unknown, R"(^.*$)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::verb::method_not_allowed, "text/plain", "");
-    });
+    std::string is(http::status code) && {
+        orc_assert_(result() == code, "{ code: " << result() << ", body: ```" << body() << "``` }");
+        return std::move(body());
+    }
 
-    router->Run(asio::ip::make_address("127.0.0.1"), 8080);
-#endif
+    std::string ok() && {
+        return std::move(*this).is(http::status::ok);
+    }
+};
+
 }
 
-}
+#endif//ORCHID_RESPONSE_HPP

@@ -49,28 +49,30 @@
 namespace orc {
 
 template <typename Stream_>
-task<Response> Fetch_(Stream_ &stream, boost::beast::http::request<boost::beast::http::string_body> &req) {
-    (void) co_await boost::beast::http::async_write(stream, req, orc::Token());
+task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) {
+    (void) co_await http::async_write(stream, req, orc::Token());
 
     // this buffer must be maintained if this socket object is ever reused
     boost::beast::flat_buffer buffer;
-    boost::beast::http::response<boost::beast::http::dynamic_body> res;
-    (void) co_await boost::beast::http::async_read(stream, buffer, res, orc::Token());
+    http::response<http::dynamic_body> res;
+    (void) co_await http::async_read(stream, buffer, res, orc::Token());
 
     // XXX: I can probably return this as a buffer array
-    co_return Response{res.result(), boost::beast::buffers_to_string(res.body().data())};
+    Response response(res.result(), req.version());;
+    response.body() = boost::beast::buffers_to_string(res.body().data());
+    co_return response;
 }
 
 template <typename Socket_>
 task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
-    boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::string_to_verb(method), locator.path_, 11};
-    req.set(boost::beast::http::field::host, locator.host_);
-    req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    http::request<http::string_body> req{http::string_to_verb(method), locator.path_, 11};
+    req.set(http::field::host, locator.host_);
+    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
     for (auto &[name, value] : headers)
         req.set(name, value);
 
-    req.set(boost::beast::http::field::content_length, data.size());
+    req.set(http::field::content_length, data.size());
     req.body() = data;
 
     if (false) {
