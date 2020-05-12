@@ -57,7 +57,7 @@ task<std::string> Test(const S<Origin> &origin, const Float &price, Network &net
         auto remote(Break<Sink<Remote>>());
         const auto client(co_await network.Select(remote.get(), origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
         remote->Open();
-        const auto body((co_await remote->Request("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
+        const auto body((co_await remote->Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
         client->Update();
         co_await Sleep(3);
         const auto balance(client->Balance());

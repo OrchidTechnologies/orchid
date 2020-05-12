@@ -48,7 +48,7 @@ task<Results> Resolve(Origin &origin, const std::string &host, const std::string
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
-        const auto result(Parse((co_await origin.Request("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
+        const auto result(Parse((co_await origin.Fetch("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
             {"accept", "application/dns-json"}
         }, {})).ok()));
 

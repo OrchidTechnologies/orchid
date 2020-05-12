@@ -48,10 +48,10 @@ U<cricket::PortAllocator> Origin::Allocator() {
     });
 }
 
-// XXX: for Local::Request, this should use NSURLSession on __APPLE__
+// XXX: for Local::Fetch, this should use NSURLSession on __APPLE__
 
-task<Response> Origin::Request(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
-    co_return co_await orc::Request(*this, method, locator, headers, data, verify);
+task<Response> Origin::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
+    co_return co_await orc::Fetch(*this, method, locator, headers, data, verify);
 }
 
 }

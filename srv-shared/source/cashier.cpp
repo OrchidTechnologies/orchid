@@ -50,7 +50,7 @@ task<void> Cashier::UpdateCoin(Origin &origin) { try {
 } orc_stack("updating coin prices") }
 
 task<void> Cashier::UpdateGas(Origin &origin) { try {
-    auto result(Parse((co_await origin.Request("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
+    auto result(Parse((co_await origin.Fetch("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
 
     const auto &range(result["gasPriceRange"]);
     orc_assert(range.isObject());

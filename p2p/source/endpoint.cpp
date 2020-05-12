@@ -114,7 +114,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     }()));
 
   retry:
-    const auto data(Parse((co_await origin_->Request("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
+    const auto data(Parse((co_await origin_->Fetch("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
     Log() << body << " -> " << data << "" << std::endl;
     orc_assert(data["jsonrpc"] == "2.0");
 
