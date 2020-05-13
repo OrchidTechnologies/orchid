@@ -31,7 +31,7 @@ def __find_pac(price: int, receipt_hash: str) -> PAC:
     # TODO: We really should have a transaction wrapped around the following receipt
     # TODO: and PAC grab operations but boto3 doesn't support this yet?
 
-    # De-duplication: Insure only one thread is using the receipt
+    # De-duplication: Ensure only one thread is using the receipt
     __claim_receipt(receipt_hash)
 
     # Claim the pot, updating status and adding the receipt
