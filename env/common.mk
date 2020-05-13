@@ -17,7 +17,7 @@
 MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-builtin-variables
 
-SHELL := /bin/bash
+SHELL := /bin/bash -o pipefail
 
 empty := 
 space := $(empty) #
