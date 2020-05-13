@@ -345,7 +345,8 @@ def hash_receipt_body(receipt):
     # Load the contents of the receipt file
     # receipt_file = open('./receipt_data.bin', 'rb').read()
     logging.debug(f'hashing receipt')
-    receipt_file = bytearray.fromhex(receipt);
+    #receipt_file = bytearray.fromhex(receipt);
+    receipt_file = bytes.fromhex(receipt)
 
     # Use asn1crypto's cms definitions to parse the PKCS#7 format
     pkcs_container = ContentInfo.load(receipt_file)
