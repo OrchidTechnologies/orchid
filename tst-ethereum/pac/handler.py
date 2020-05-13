@@ -8,6 +8,7 @@ import time  # noqa: F401
 import web3.exceptions  # noqa: F401
 import uuid
 import hashlib
+import base64
 
 from abis import lottery_abi, token_abi
 from boto3.dynamodb.conditions import Key
@@ -346,7 +347,8 @@ def hash_receipt_body(receipt):
     # receipt_file = open('./receipt_data.bin', 'rb').read()
     logging.debug(f'hashing receipt')
     #receipt_file = bytearray.fromhex(receipt);
-    receipt_file = bytes.fromhex(receipt)
+    #receipt_file = bytes.fromhex(receipt)
+    receipt_file = base64.decodebytes(receipt.encode('utf-8'));
 
     # Use asn1crypto's cms definitions to parse the PKCS#7 format
     pkcs_container = ContentInfo.load(receipt_file)
