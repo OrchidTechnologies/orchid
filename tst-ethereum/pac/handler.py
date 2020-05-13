@@ -359,7 +359,7 @@ def hash_receipt_body(receipt):
     receipt_data = pkcs_container['content']['encap_content_info']['content']
     logging.debug(f'extracted certificates {len(str(certificates))}B  signer_info {len(str(signer_info))}B  receipt_data {len(str(receipt_data))}B')
 
-    receipt_hash = hashlib.sha256(receipt_data.encode('utf-8')).hexdigest()
+    receipt_hash = hashlib.sha256(str(receipt_data).encode('utf-8')).hexdigest()
     logging.debug(f'receipt_hash: {receipt_hash}')
 
     return receipt_hash;
