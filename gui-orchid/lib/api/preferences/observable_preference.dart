@@ -61,10 +61,10 @@ class ObservableStringPreference extends ObservablePreference<String> {
       : super(
       key: key,
       loadValue: (key) {
-        return UserPreferences.loadStringValueForKey(key);
+        return UserPreferences.readStringForKey(key);
       },
       storeValue: (key, value) {
-        return UserPreferences.storeStringValueForKey(key, value);
+        return UserPreferences.writeStringForKey(key, value);
       });
 }
 

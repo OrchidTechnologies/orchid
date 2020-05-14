@@ -1,7 +1,23 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// TODO: Stand-in this until we have support for MacOS
+//import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
+
 import 'package:orchid/api/purchase/purchase_rate.dart';
+
+// TODO: Stand-in until we have support for MacOS
+class NonSecureStorage {
+  Future<String> read({String key}) async {
+    return (await UserPreferences.sharedPreferences())
+        .getString(key.toString());
+  }
+
+  Future<void> write({String key, String value}) async {
+    return await (await UserPreferences.sharedPreferences())
+        .setString(key.toString(), value);
+  }
+}
 
 class UserSecureStorage {
   static final UserSecureStorage _singleton = UserSecureStorage._internal();
@@ -15,7 +31,9 @@ class UserSecureStorage {
   }
 
   Future<PurchaseRateHistory> getPurchaseRateHistory() async {
-    final storage = FlutterSecureStorage();
+    // TODO: Stand-in until we have support for MacOS
+    //final storage = FlutterSecureStorage();
+    final storage = NonSecureStorage();
     var str = await storage.read(
         key: UserSecureStorageKey.PACPurchaseRateHistory.toString());
     if (str == null) {
@@ -33,7 +51,9 @@ class UserSecureStorage {
   Future<void> setPurchaseRateHistory(PurchaseRateHistory history) async {
     print(
         "pac: saving rate history, ${history.purchases.length} items totalling: ${history.sum()}");
-    final storage = FlutterSecureStorage();
+    // TODO: Stand-in until we have support for MacOS
+    // final storage = FlutterSecureStorage();
+    final storage = NonSecureStorage();
     try {
       String json = jsonEncode(history);
       return storage.write(
