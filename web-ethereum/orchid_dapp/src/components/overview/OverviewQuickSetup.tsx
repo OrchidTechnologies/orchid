@@ -138,7 +138,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         {S.createAccountWithAvailable}
       </p>
 
-      <Visibility visible={tx == null}>
+      <Visibility visible={tx.state === TransactionState.New}>
         <Row className="form-row">
           <Col style={{flexGrow: 2}}>
             <label style={{marginBottom: 0}}>From Available<span
@@ -146,7 +146,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
           </Col>
           <Col>
             <div className="oxt-1-pad">
-              {walletBalance == null ? "..." : keikiToOxtString(walletBalance, 2)}
+              {keikiToOxtString(walletBalance, 2)}
             </div>
           </Col>
         </Row>
