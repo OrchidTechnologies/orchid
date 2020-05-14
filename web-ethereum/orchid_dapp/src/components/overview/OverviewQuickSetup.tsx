@@ -125,7 +125,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
   let sufficientFundsAmount = targetDeposit + targetBalance;
   let sufficientFunds = walletBalance >= oxtToKeiki(sufficientFundsAmount);
   let insufficientFundsText =
-    `You need a total of ${sufficientFundsAmount.toFixedLocalized(1)} OXT for a starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
+    `You need a total of at least ${sufficientFundsAmount.toFixedLocalized(1)} OXT for a starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
 
   let submitEnabled = sufficientFunds && !tx.isRunning();
   let txCompletedSuccessfully = tx.state === TransactionState.Completed;
