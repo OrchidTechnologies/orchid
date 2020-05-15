@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -97,6 +99,8 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   }
 
   Widget buildPage(BuildContext context) {
+    bool showQRImportExportButton = widget.mode == ImportExportMode.Export ||
+        (widget.mode == ImportExportMode.Import && !Platform.isMacOS);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -139,8 +143,10 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                _buildScanButton(),
-                padx(8),
+                if (showQRImportExportButton) ...[
+                  _buildQRImportExportButton(),
+                  padx(8),
+                ],
                 Container(
                   child: StreamBuilder<Object>(
                       stream: _actionEnabled.stream,
@@ -162,7 +168,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
     );
   }
 
-  Widget _buildScanButton() {
+  Widget _buildQRImportExportButton() {
     return FlatButton(
         child: Container(
             decoration: BoxDecoration(

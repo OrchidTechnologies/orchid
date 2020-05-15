@@ -41,7 +41,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          if (pasteOnly) ...[
+          if (!pasteOnly) ...[
             _buildScanButton(showIcons),
             padx(widget.spacing ?? 24),
           ],
