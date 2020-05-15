@@ -135,7 +135,6 @@ class _AddHopPageState extends State<AddHopPage> {
       String svgName,
       VoidCallback onTap,
       Widget trailing}) {
-    print("svg name = $svgName");
     return ListTile(
         contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
         leading: svgName != null

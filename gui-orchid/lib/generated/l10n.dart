@@ -1542,6 +1542,24 @@ class S {
       args: [],
     );
   }
+
+  String get pasteAccount {
+    return Intl.message(
+      'Paste Account',
+      name: 'pasteAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get pasteYourExistingAccountBelowToAddItAsA {
+    return Intl.message(
+      'Paste your existing account below to add it as a hop.',
+      name: 'pasteYourExistingAccountBelowToAddItAsA',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

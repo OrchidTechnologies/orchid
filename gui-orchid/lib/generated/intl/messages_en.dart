@@ -134,6 +134,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "pacPurchaseWaiting" : MessageLookupByLibrary.simpleMessage("PAC Purchase Waiting"),
     "password" : MessageLookupByLibrary.simpleMessage("Password"),
     "paste" : MessageLookupByLibrary.simpleMessage("Paste"),
+    "pasteAccount" : MessageLookupByLibrary.simpleMessage("Paste Account"),
+    "pasteYourExistingAccountBelowToAddItAsA" : MessageLookupByLibrary.simpleMessage("Paste your existing account below to add it as a hop."),
     "pasteYourOVPN" : MessageLookupByLibrary.simpleMessage("Paste your OVPN config file here"),
     "payOnlyForWhatYouUseWithVpnCreditsOnly" : MessageLookupByLibrary.simpleMessage("Pay only for what you use with VPN credits, only spent while the VPN is active. No expiration period, monthly fees or charges."),
     "preparingPurchase" : MessageLookupByLibrary.simpleMessage("Preparing Purchase"),
