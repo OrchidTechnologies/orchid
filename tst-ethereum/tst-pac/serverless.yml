@@ -1,0 +1,76 @@
+service: serverless-app
+
+provider:
+  name: aws
+  runtime: python3.7
+
+functions:
+  retrieve:
+    handler: handler.retrieve
+    events:
+      - http:
+          path: retrieve
+          method: get
+  hourly_maintenance:
+    handler: handler.hourly_maintenance
+    events:
+      - schedule: rate(1 hour)
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  dynamodb:
+    stages:
+      - ${self:provider.stage}
+    start:
+      migrate: true
+
+resources:
+  Resources: # CloudFormation template syntax
+    PACTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        # The PAC table, uniquely indexed by signer as the id
+        TableName: PAC
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: signer
+            AttributeType: S
+          - AttributeName: receipt
+            AttributeType: S
+          - AttributeName: price_status
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          # Index for query by price and status
+          - IndexName: PACPriceStatus
+            KeySchema:
+              - AttributeName: price_status
+                KeyType: HASH
+              - AttributeName: signer
+                KeyType: RANGE
+            Projection:
+              ProjectionType: KEYS_ONLY
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          # Index for query by receipt hash
+          - IndexName: PACReceipt
+            KeySchema:
+              - AttributeName: receipt
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+
+

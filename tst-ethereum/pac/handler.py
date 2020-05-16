@@ -8,6 +8,7 @@ import time  # noqa: F401
 import web3.exceptions  # noqa: F401
 import uuid
 import hashlib
+import base64
 
 from abis import lottery_abi, token_abi
 from boto3.dynamodb.conditions import Key
@@ -18,6 +19,7 @@ from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
 from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
 from web3.auto.infura import w3
+from asn1crypto.cms import ContentInfo
 
 
 configure_logging()
@@ -339,6 +341,28 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
 
 
 
+def hash_receipt_body(receipt):
+
+    # Load the contents of the receipt file
+    # receipt_file = open('./receipt_data.bin', 'rb').read()
+    logging.debug(f'hashing receipt')
+    #receipt_file = bytearray.fromhex(receipt);
+    #receipt_file = bytes.fromhex(receipt)
+    receipt_file = base64.decodebytes(receipt.encode('utf-8'));
+
+    # Use asn1crypto's cms definitions to parse the PKCS#7 format
+    pkcs_container = ContentInfo.load(receipt_file)
+
+    # Extract the certificates, signature, and receipt_data
+    certificates = pkcs_container['content']['certificates']
+    signer_info  = pkcs_container['content']['signer_infos'][0]
+    receipt_data = pkcs_container['content']['encap_content_info']['content']
+    logging.debug(f'extracted certificates {len(str(certificates))}B  signer_info {len(str(signer_info))}B  receipt_data {len(str(receipt_data))}B')
+
+    receipt_hash = hashlib.sha256(str(receipt_data).encode('utf-8')).hexdigest()
+    logging.debug(f'receipt_hash: {receipt_hash}')
+
+    return receipt_hash;
 
 
 def main(event, context):
@@ -375,7 +399,8 @@ def main(event, context):
             logging.debug(f'dev-only parameter included in request! response: {response}')
             return response
 
-    receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
+    #receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
+    receipt_hash = hash_receipt_body(receipt);
 
     result = result_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
     if (Stage != 'dev' and result['Count'] > 0):  # we found a match, return it
@@ -395,7 +420,7 @@ def main(event, context):
         logging.debug(f'found existing match for receipt_hash({receipt_hash}), result: {response}')
         return response
 
-    verify_receipt = body.get('verify_receipt', 'False')
+    verify_receipt = body.get('verify_receipt', 'True')
     if (is_true(verify_receipt)):
         result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
         if (result['Count'] > 0):  # we found a match - reject on duplicate

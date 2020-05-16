@@ -37,7 +37,6 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
 
   const {setRoute, setNavEnabled} = useContext(RouteContext);
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
-  const [targetDeposit, setTargetDeposit] = useState<number | null>(null);
 
   // Create account state
   const [tx, setTx] = useState(initialTxStatus || new TransactionStatus());
@@ -48,12 +47,9 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
   useEffect(() => {
     let api = OrchidAPI.shared();
     let walletSubscription = api.wallet_wait.subscribe(wallet => {
-      console.log("add funds got wallet: ", wallet);
+      console.log("quick setup funds got wallet: ", wallet);
       setWalletBalance(wallet.oxtBalance);
     });
-
-    // TODO: use live pricing: max(2 OXT, 2 USD)
-    setTargetDeposit(2.0); // OXT
 
     return () => {
       walletSubscription.unsubscribe();
@@ -64,7 +60,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
   async function submitAddFunds() {
     let api = OrchidAPI.shared();
     let wallet = api.wallet.value;
-    if (wallet == null || targetDeposit == null || walletBalance == null) {
+    if (wallet == null || walletBalance == null) {
       return;
     }
     let walletAddress = wallet.address;
@@ -118,17 +114,18 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
     }, 300);
   }
 
-  if (walletBalance == null || targetDeposit == null) {
+  if (walletBalance == null) {
     return <OverviewLoading/>
   }
 
   // TODO: Incorporate live pricing
-  let ticketFaceValue = 0.8; // TODO:
-  const targetBalance = 2 * ticketFaceValue;
+  // Determine required deposit and balance minimums
+  const targetDeposit = 15.0 // OXT
+  const targetBalance = 23.0 // OXT
   let sufficientFundsAmount = targetDeposit + targetBalance;
   let sufficientFunds = walletBalance >= oxtToKeiki(sufficientFundsAmount);
   let insufficientFundsText =
-    `You need a total of ${sufficientFundsAmount.toFixedLocalized(1)} OXT for a starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
+    `You need a total of at least ${sufficientFundsAmount.toFixedLocalized(1)} OXT for a starting balance of ${targetBalance} OXT and a ${targetDeposit} OXT deposit.`;
 
   let submitEnabled = sufficientFunds && !tx.isRunning();
   let txCompletedSuccessfully = tx.state === TransactionState.Completed;
@@ -141,7 +138,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         {S.createAccountWithAvailable}
       </p>
 
-      <Visibility visible={tx == null}>
+      <Visibility visible={tx.state === TransactionState.New}>
         <Row className="form-row">
           <Col style={{flexGrow: 2}}>
             <label style={{marginBottom: 0}}>From Available<span
@@ -149,7 +146,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
           </Col>
           <Col>
             <div className="oxt-1-pad">
-              {walletBalance == null ? "..." : keikiToOxtString(walletBalance, 2)}
+              {keikiToOxtString(walletBalance, 2)}
             </div>
           </Col>
         </Row>
