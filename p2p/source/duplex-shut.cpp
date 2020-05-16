@@ -25,14 +25,12 @@
 
 namespace orc {
 
-task<void> Duplex::Shut() noexcept {
-    try {
+void Duplex::Shut() noexcept {
+    Spawn([&]() noexcept -> task<void> { try {
         co_await inner_.async_close(boost::beast::websocket::close_code::normal, Token());
     } catch (const asio::system_error &error) {
         orc_except({ orc_adapt(error); })
-    }
-
-    co_await Stream::Shut();
+    } });
 }
 
 }

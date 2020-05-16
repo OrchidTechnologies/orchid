@@ -20,7 +20,7 @@ namespace orc {
 static JavaVM *jvm;
 static asio::io_context *executor_;
 std::string files_dir;
-U<Sink<Capture>> capture_;
+U<BufferSink<Capture>> capture_;
 
 extern "C" JNIEXPORT void JNICALL
 Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
@@ -40,15 +40,15 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
     std::string config = files_dir + std::string("/orchid.cfg");
     Log() << config << std::endl;
 
-    auto capture(std::make_unique<Sink<Capture>>(local));
+    auto capture(std::make_unique<BufferSink<Capture>>(local));
     auto connection(std::make_unique<File<asio::posix::stream_descriptor>>(Context(), file));
-    auto inverted(capture->Wire<Inverted>(std::move(connection)));
+    auto &inverted(capture->Wire<Inverted>(std::move(connection)));
 
     asio::io_context executor;
     auto work(asio::make_work_guard(executor));
 
     capture->Start(config);
-    inverted->Open();
+    inverted.Open();
     capture_ = std::move(capture);
 
     executor_ = &executor;

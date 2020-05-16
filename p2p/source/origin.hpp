@@ -23,7 +23,6 @@
 #ifndef ORCHID_ORIGIN_HPP
 #define ORCHID_ORIGIN_HPP
 
-#include "break.hpp"
 #include "http.hpp"
 #include "link.hpp"
 #include "reader.hpp"
@@ -55,13 +54,13 @@ class Origin :
 
     virtual Host Host() = 0;
 
-    virtual rtc::Thread *Thread() = 0;
+    virtual rtc::Thread &Thread() = 0;
     virtual rtc::BasicPacketSocketFactory &Factory() = 0;
     U<cricket::PortAllocator> Allocator();
 
-    virtual task<void> Associate(Sunk<> *sunk, const Socket &endpoint) = 0;
-    virtual task<Socket> Unlid(Sunk<BufferSewer, Opening> *sunk) = 0;
-    virtual task<void> Connect(U<Stream> &stream, const Socket &endpoint) = 0;
+    virtual task<void> Associate(BufferSunk &sunk, const Socket &endpoint) = 0;
+    virtual task<Socket> Unlid(Sunk<BufferSewer, Opening> &sunk) = 0;
+    virtual task<U<Stream>> Connect(const Socket &endpoint) = 0;
 
     task<Response> Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
 };

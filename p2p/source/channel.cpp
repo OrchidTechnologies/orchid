@@ -23,6 +23,7 @@
 #include <regex>
 
 #include "channel.hpp"
+#include "tube.hpp"
 
 namespace orc {
 
@@ -51,12 +52,12 @@ _trace();
     }
 };
 
-task<Socket> Channel::Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
+task<Socket> Channel::Wire(BufferSunk &sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
     const auto client(Make<Actor>(origin, std::move(configuration)));
-    const auto channel(sunk->Wire<Channel>(client));
+    auto &channel(sunk.Wire<Channel>(client));
     const auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);
-    co_await channel->Open();
+    co_await channel.Open();
     const auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ipv4_address(), socket.port());
@@ -66,7 +67,7 @@ task<std::string> Description(const S<Origin> &origin, std::vector<std::string> 
     Configuration configuration;
     configuration.ice_ = std::move(ice);
     const auto client(Make<Actor>(origin, std::move(configuration)));
-    const auto stopper(Break<Sink<Stopper>>());
+    const auto stopper(Break<BufferSink<Stopper>>());
     stopper->Wire<Channel>(client);
     co_return co_await client->Offer();
 }

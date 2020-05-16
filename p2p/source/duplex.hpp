@@ -52,7 +52,7 @@ class Duplex final :
 
     task<boost::asio::ip::tcp::endpoint> Open(const Locator &locator);
 
-    task<void> Shut() noexcept override;
+    void Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;
 };

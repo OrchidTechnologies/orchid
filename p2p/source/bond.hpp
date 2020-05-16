@@ -37,14 +37,13 @@ class Bonded {
     class Bonding :
         public Valve,
         public Pipe<Buffer>,
-        public BufferDrain
+        public BufferDrain,
+        public Sunken<Pump<Buffer>>
     {
       private:
         Bonded *const bonded_;
 
       protected:
-        virtual Pump<Buffer> *Inner() noexcept = 0;
-
         void Land(const Buffer &data) override {
             return bonded_->Land(this, data);
         }
@@ -61,12 +60,12 @@ class Bonded {
         }
 
         task<void> Shut() noexcept override {
-            co_await Inner()->Shut();
+            co_await Sunken::Shut();
             co_await Valve::Shut();
         }
 
         task<void> Send(const Buffer &data) override {
-            co_return co_await Inner()->Send(data);
+            co_return co_await Inner().Send(data);
         }
     };
 
@@ -92,12 +91,12 @@ class Bonded {
     }
 
   public:
-    Sink<Bonding> *Bond() {
+    BufferSink<Bonding> &Bond() {
         // XXX: this is non-obviously incorrect
         const auto locked(locked_());
-        auto bonding(std::make_unique<Sink<Bonding>>(this));
-        const auto backup(bonding.get());
-        locked->bondings_.emplace(backup, std::move(bonding));
+        auto bonding(std::make_unique<BufferSink<Bonding>>(this));
+        auto &backup(*bonding);
+        locked->bondings_.emplace(&backup, std::move(bonding));
         return backup;
     }
 

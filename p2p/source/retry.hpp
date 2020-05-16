@@ -57,7 +57,7 @@ class Retry final :
     }
 
   public:
-    Retry(BufferDrain *drain, Code_ code) :
+    Retry(BufferDrain &drain, Code_ code) :
         Link<Buffer>(drain),
         code_(std::move(code))
     {
@@ -66,8 +66,8 @@ class Retry final :
 
     bool Open() noexcept {
         return nest_.Hatch([&]() noexcept { return [&]() noexcept -> task<void> {
-            auto tube(std::make_unique<Sink<Tube>>(this));
-            if (orc_ignore({ co_await code_(tube.get()); })) {
+            auto tube(std::make_unique<BufferSink<Tube>>(*this));
+            if (orc_ignore({ co_await code_(*tube); })) {
                 if (!tube->Wired())
                     tube->template Wire<Cap>();
                 Close(std::move(tube));

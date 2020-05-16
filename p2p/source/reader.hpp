@@ -23,13 +23,8 @@
 #ifndef ORCHID_READER_HPP
 #define ORCHID_READER_HPP
 
-#include <queue>
-
-#include <cppcoro/async_auto_reset_event.hpp>
-
 #include "buffer.hpp"
 #include "link.hpp"
-#include "locked.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -41,87 +36,17 @@ class Reader {
 };
 
 class Stream :
-    public Valve,
-    public Pipe<Buffer>,
     public Reader
 {
   public:
-    explicit Stream(bool set) :
-        Valve(set)
-    {
-    }
-
     ~Stream() override = default;
+    virtual void Shut() noexcept = 0;
+    virtual task<void> Send(const Buffer &data) = 0;
 };
 
-class Reverted :
-    public Stream,
-    public BufferDrain
-{
-  private:
-    struct Locked_ {
-        std::queue<Beam> data_;
-        size_t offset_ = 0;
-    }; Locked<Locked_> locked_;
 
-    cppcoro::async_auto_reset_event ready_;
-
-  protected:
-    virtual Pump<Buffer> *Inner() = 0;
-
-    void Land(const Buffer &data) override {
-        locked_()->data_.emplace(data);
-        ready_.set();
-    }
-
-    void Stop(const std::string &error) noexcept override {
-        locked_()->data_.emplace(Beam());
-        ready_.set();
-        Stream::Stop();
-    }
-
-  public:
-    Reverted() :
-        Stream(false)
-    {
-    }
-
-    task<size_t> Read(Beam &data) override {
-        for (;; co_await ready_, co_await Schedule()) {
-            const auto locked(locked_());
-            if (locked->data_.empty())
-                continue;
-            const auto &next(locked->data_.front());
-
-            // XXX: handle errors
-            const auto base(next.data());
-            const auto rest(next.size() - locked->offset_);
-            if (rest == 0)
-                co_return 0;
-
-            const auto writ(std::min(data.size(), rest));
-            Copy(data.data(), base + locked->offset_, writ);
-
-            if (rest != writ)
-                locked->offset_ += writ;
-            else {
-                locked->data_.pop();
-                locked->offset_ = 0;
-            }
-
-            co_return writ;
-        }
-    }
-
-    task<void> Shut() noexcept override {
-        co_await Inner()->Shut();
-        co_await Stream::Shut();
-    }
-
-    task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(data);
-    }
-};
+// XXX: the Stream interface doesn't support reading truncated messages correctly
+// we should remove Inverted and provide a better framework for Duplex and UDP :/
 
 class Inverted final :
     public Pump<Buffer>
@@ -130,7 +55,7 @@ class Inverted final :
     U<Stream> stream_;
 
   public:
-    Inverted(BufferDrain *drain, U<Stream> stream) :
+    Inverted(BufferDrain &drain, U<Stream> stream) :
         Pump<Buffer>(drain),
         stream_(std::move(stream))
     {
@@ -162,13 +87,13 @@ class Inverted final :
         });
     }
 
-    task<void> Send(const Buffer &data) override {
-        co_return co_await stream_->Send(data);
+    task<void> Shut() noexcept override {
+        stream_->Shut();
+        co_await Valve::Shut();
     }
 
-    task<void> Shut() noexcept override {
-        co_await stream_->Shut();
-        co_await Valve::Shut();
+    task<void> Send(const Buffer &data) override {
+        co_return co_await stream_->Send(data);
     }
 };
 

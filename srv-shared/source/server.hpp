@@ -43,7 +43,8 @@ class Cashier;
 class Server :
     public Bonded,
     protected Pipe<Buffer>,
-    public BufferDrain
+    public BufferDrain,
+    public Sunken<Pump<Buffer>>
 {
   public:
     S<Server> self_;
@@ -71,22 +72,20 @@ class Server :
 
     bool Bill(const Buffer &data, bool force);
 
-    task<void> Send(Pipe *pipe, const Buffer &data, bool force);
-    void Send(Pipe *pipe, const Buffer &data);
+    task<void> Send(Pipe &pipe, const Buffer &data, bool force);
+    void Send(Pipe &pipe, const Buffer &data);
 
     task<void> Send(const Buffer &data) override;
 
     void Commit(const Lock<Locked_> &locked);
     Float Expected(const Lock<Locked_> &locked);
 
-    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit);
-    task<void> Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id = Zero<32>());
+    task<void> Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit);
+    task<void> Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id = Zero<32>());
 
     void Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data);
 
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
     void Stop() noexcept override;
 
@@ -97,7 +96,7 @@ class Server :
     Server(S<Origin> origin, S<Cashier> cashier);
     ~Server() override;
 
-    task<void> Open(Pipe<Buffer> *pipe);
+    task<void> Open(Pipe<Buffer> &pipe);
     task<void> Shut() noexcept;
 
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);

@@ -30,6 +30,8 @@
 #include <boost/beast/http/status.hpp>
 #include <boost/beast/http/string_body.hpp>
 
+#include "error.hpp"
+
 namespace orc {
 
 namespace http = boost::beast::http;

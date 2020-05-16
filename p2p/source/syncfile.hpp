@@ -42,7 +42,7 @@ class SyncFile final :
 
   public:
     template <typename... Args_>
-    SyncFile(BufferDrain *drain, Args_ &&...args) :
+    SyncFile(BufferDrain &drain, Args_ &&...args) :
         Link<Buffer>(drain),
         sync_(std::forward<Args_>(args)...)
     {

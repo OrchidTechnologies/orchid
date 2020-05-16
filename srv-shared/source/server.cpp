@@ -45,11 +45,11 @@ class Incoming final :
 
   protected:
     void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
-        auto bonding(server_->Bond());
-        auto channel(bonding->Wire<Channel>(shared_from_this(), interface));
+        auto &bonding(server_->Bond());
+        auto &channel(bonding.Wire<Channel>(shared_from_this(), interface));
 
-        Spawn([bonding, channel = std::move(channel), server = std::move(server_)]() noexcept -> task<void> {
-            co_await channel->Open();
+        Spawn([&bonding, &channel, server = std::move(server_)]() noexcept -> task<void> {
+            co_await channel.Open();
             // XXX: this could fail; then what?
             co_await server->Open(bonding);
         });
@@ -106,13 +106,13 @@ bool Server::Bill(const Buffer &data, bool force) {
     return false;
 }
 
-task<void> Server::Send(Pipe *pipe, const Buffer &data, bool force) {
+task<void> Server::Send(Pipe &pipe, const Buffer &data, bool force) {
     if (Bill(data, force))
-        co_return co_await pipe->Send(data);
+        co_return co_await pipe.Send(data);
 }
 
-void Server::Send(Pipe *pipe, const Buffer &data) {
-    nest_.Hatch([&]() noexcept { return [this, pipe, data = Beam(data)]() -> task<void> {
+void Server::Send(Pipe &pipe, const Buffer &data) {
+    nest_.Hatch([&]() noexcept { return [this, &pipe, data = Beam(data)]() -> task<void> {
         co_return co_await Send(pipe, data, false); }; });
 }
 
@@ -134,7 +134,7 @@ Float Server::Expected(const Lock<Locked_> &locked) {
     return balance;
 }
 
-task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit) {
+task<void> Server::Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit) {
     Header header{Magic_, id};
     co_await Send(pipe, Datagram(Port_, destination, Tie(header,
         Command(Stamp_, Monotonic()),
@@ -142,7 +142,7 @@ task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const 
     )), true);
 }
 
-task<void> Server::Invoice(Pipe<Buffer> *pipe, const Socket &destination, const Bytes32 &id) {
+task<void> Server::Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id) {
     const auto [serial, balance, commit] = [&]() { const auto locked(locked_());
         return std::make_tuple(locked->serial_, Expected(locked), locked->commit_->first); }();
     co_await Invoice(pipe, destination, id, serial, balance, commit);
@@ -237,7 +237,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
         }
 
         if (!valid) {
-            co_await Invoice(this, source);
+            co_await Invoice(*this, source);
             co_return;
         } else if (!winner)
             co_return;
@@ -284,7 +284,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
                     Submit(this, source, id, window);
             } orc_catch({}) });
 
-            co_await Invoice(this, source, id);
+            co_await Invoice(*this, source, id);
         }; });
 
         return true;
@@ -297,7 +297,7 @@ void Server::Stop() noexcept {
 
 void Server::Land(const Buffer &data) {
     if (Bill(data, true))
-        Send(this, data);
+        Send(*this, data);
 }
 
 void Server::Stop(const std::string &error) noexcept {
@@ -317,14 +317,14 @@ Server::~Server() {
     _trace();
 }
 
-task<void> Server::Open(Pipe<Buffer> *pipe) {
+task<void> Server::Open(Pipe<Buffer> &pipe) {
     if (cashier_ != nullptr)
         co_await Invoice(pipe, Port_);
 }
 
 task<void> Server::Shut() noexcept {
     co_await nest_.Shut();
-    co_await cppcoro::when_all(Bonded::Shut(), Inner()->Shut());
+    co_await cppcoro::when_all(Bonded::Shut(), Sunken::Shut());
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {

@@ -30,11 +30,10 @@ namespace orc {
 
 class Station :
     public Faucet<Drain<Json::Value>>,
-    public Drain<Json::Value>
+    public Drain<Json::Value>,
+    public Sunken<Pump<Json::Value, Json::Value>>
 {
   protected:
-    virtual Pump<Json::Value, Json::Value> *Inner() noexcept = 0;
-
     void Land(Json::Value data) override;
 
     void Stop(const std::string &error) noexcept override {
@@ -42,9 +41,14 @@ class Station :
     }
 
   public:
-    Station(Drain<Json::Value> *drain) :
+    Station(Drain<Json::Value> &drain) :
         Faucet<Drain<Json::Value>>(drain)
     {
+    }
+
+    task<void> Shut() noexcept override {
+        co_await Sunken::Shut();
+        co_await Faucet::Shut();
     }
 
     task<void> Send(const std::string &method, const std::string &id, Argument args);

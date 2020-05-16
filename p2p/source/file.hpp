@@ -43,7 +43,6 @@ class File final :
   public:
     template <typename... Args_>
     File(Args_ &&...args) :
-        Stream(true),
         file_(std::forward<Args_>(args)...)
     {
     }
@@ -68,9 +67,8 @@ class File final :
         co_return writ;
     }
 
-    task<void> Shut() noexcept override {
+    void Shut() noexcept override {
         file_.close();
-        co_await Stream::Shut();
     }
 
     task<void> Send(const Buffer &data) override {

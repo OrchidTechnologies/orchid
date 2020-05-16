@@ -32,7 +32,7 @@ namespace orc {
 
 void Initialize();
 
-task<void> Connect(Sunk<> *sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password);
+task<void> Connect(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password);
 
 }
 

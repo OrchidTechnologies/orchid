@@ -37,7 +37,7 @@ class LocalOpening final :
 
   public:
     template <typename... Args_>
-    LocalOpening(BufferSewer *drain, Args_ &&...args) :
+    LocalOpening(BufferSewer &drain, Args_ &&...args) :
         Opening(drain),
         connection_(Context(), std::forward<Args_>(args)...)
     {
@@ -69,7 +69,7 @@ class LocalOpening final :
                 Subset subset(data, writ);
                 if (Verbose)
                     Log() << "\e[33mRECV " << writ << " " << subset << "\e[0m" << std::endl;
-                drain_->Land(subset, endpoint);
+                drain_.Land(subset, endpoint);
             }
 
             Stop();
@@ -115,7 +115,7 @@ class Host Local::Host() {
     return Host_;
 }
 
-rtc::Thread *Local::Thread() {
+rtc::Thread &Local::Thread() {
     static const std::unique_ptr<rtc::Thread> thread([&]() {
         auto thread(rtc::Thread::CreateWithSocketServer());
         thread->SetName("Orchid WebRTC Local", nullptr);
@@ -123,33 +123,32 @@ rtc::Thread *Local::Thread() {
         return thread;
     }());
 
-    return thread.get();
+    return *thread;
 }
 
 rtc::BasicPacketSocketFactory &Local::Factory() {
-    static rtc::BasicPacketSocketFactory factory(Thread());
+    static rtc::BasicPacketSocketFactory factory(&Thread());
     return factory;
 }
 
-task<void> Local::Associate(Sunk<> *sunk, const Socket &endpoint) {
+task<void> Local::Associate(BufferSunk &sunk, const Socket &endpoint) {
     auto connection(std::make_unique<Connection<asio::ip::udp::socket, true>>(Context()));
     co_await connection->Open(endpoint);
-    const auto inverted(sunk->Wire<Inverted>(std::move(connection)));
-    inverted->Open();
+    auto &inverted(sunk.Wire<Inverted>(std::move(connection)));
+    inverted.Open();
 }
 
-task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> *sunk) {
-    const auto opening(sunk->Wire<LocalOpening>());
-    opening->Open({asio::ip::address_v4::any(), 0});
-    co_return opening->Local();
+task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> &sunk) {
+    auto &opening(sunk.Wire<LocalOpening>());
+    opening.Open({asio::ip::address_v4::any(), 0});
+    co_return opening.Local();
 }
 
-task<void> Local::Connect(U<Stream> &stream, const Socket &endpoint) {
+task<U<Stream>> Local::Connect(const Socket &endpoint) {
     auto connection(std::make_unique<Connection<asio::ip::tcp::socket, false>>(Context()));
-    const auto backup(connection.get());
-    stream = std::move(connection);
     // NOLINTNEXTLINE (clang-analyzer-optin.cplusplus.VirtualCall)
-    co_await backup->Open(endpoint);
+    co_await connection->Open(endpoint);
+    co_return connection;
 }
 
 }

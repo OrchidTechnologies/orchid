@@ -38,12 +38,12 @@ class Local final :
 
     class Host Host() override;
 
-    rtc::Thread *Thread() override;
+    rtc::Thread &Thread() override;
     rtc::BasicPacketSocketFactory &Factory() override;
 
-    task<void> Associate(Sunk<> *sunk, const Socket &endpoint) override;
-    task<Socket> Unlid(Sunk<BufferSewer, Opening> *sunk) override;
-    task<void> Connect(U<Stream> &stream, const Socket &endpoint) override;
+    task<void> Associate(BufferSunk &sunk, const Socket &endpoint) override;
+    task<Socket> Unlid(Sunk<BufferSewer, Opening> &sunk) override;
+    task<U<Stream>> Connect(const Socket &endpoint) override;
 };
 
 }

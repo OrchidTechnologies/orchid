@@ -60,7 +60,8 @@ class MonitorLogger
 
 class Capture :
     public Valve,
-    public BufferDrain
+    public BufferDrain,
+    public Sunken<Pump<Buffer>>
 {
   private:
     const Host local_;
@@ -69,8 +70,6 @@ class Capture :
     U<Internal> internal_;
 
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) noexcept override;
 
@@ -81,7 +80,7 @@ class Capture :
     void Land(const Buffer &data, bool analyze);
 
     void Start(S<Origin> origin);
-    Sunk<> *Start();
+    BufferSunk &Start();
     void Start(const std::string &path);
 
     task<void> Shut() noexcept override;

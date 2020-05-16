@@ -87,10 +87,10 @@ class Invoker :
     {
     }
 
-    task<Value<Type_>> operator ()(rtc::Thread *thread) {
+    task<Value<Type_>> operator ()(rtc::Thread &thread) {
         // potentially pass value/ready as MessageData
         orc_assert(!ready_);
-        thread->Post(RTC_FROM_HERE, this);
+        thread.Post(RTC_FROM_HERE, this);
         co_await ready_.Wait();
         if (error_)
             std::rethrow_exception(error_);
@@ -110,7 +110,7 @@ class Threads {
 };
 
 template <typename Code_>
-auto Post(Code_ code, rtc::Thread *thread) noexcept(noexcept(code())) -> task<decltype(code())> {
+auto Post(Code_ code, rtc::Thread &thread) noexcept(noexcept(code())) -> task<decltype(code())> {
     Invoker invoker(std::move(code));
     auto value(co_await invoker(thread));
     co_return value.get();
@@ -118,7 +118,7 @@ auto Post(Code_ code, rtc::Thread *thread) noexcept(noexcept(code())) -> task<de
 
 template <typename Code_>
 auto Post(Code_ code) noexcept(noexcept(code())) -> task<decltype(code())> {
-    co_return co_await Post(std::move(code), Threads::Get().signals_.get());
+    co_return co_await Post(std::move(code), *Threads::Get().signals_);
 }
 
 }

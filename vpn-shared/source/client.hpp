@@ -98,7 +98,7 @@ class Client :
     void Stop() noexcept override;
 
   public:
-    Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face);
+    Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face);
     ~Client() override;
 
     task<void> Open(const S<Origin> &origin);
