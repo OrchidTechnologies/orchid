@@ -100,7 +100,7 @@ class LoggerDatabase :
 // IP => hostname (most recent)
 typedef std::map<asio::ip::address, std::string> DnsLog;
 
-class Logger :
+class Nameless :
     public Analyzer,
     public MonitorLogger
 {
@@ -114,7 +114,7 @@ class Logger :
     std::map<Five, std::string> flow_to_protocol_chain_;
 
   public:
-    Logger(const std::string &path) :
+    Nameless(const std::string &path) :
         database_(path),
         insert_(database_, R"(
             insert into "flow" (
@@ -253,7 +253,7 @@ void Capture::Land(const Buffer &data, bool analyze) {
 Capture::Capture(const Host &local) :
     local_(local),
     nest_(32),
-    analyzer_(std::make_unique<Logger>(Group() + "/analysis.db"))
+    analyzer_(std::make_unique<Nameless>(Group() + "/analysis.db"))
 {
 }
 
