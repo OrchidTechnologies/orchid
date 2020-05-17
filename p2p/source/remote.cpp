@@ -304,7 +304,7 @@ class RemoteConnection final :
     ~RemoteConnection() override {
         Core core;
         if (pcb_ != nullptr)
-            orc_except({ orc_lwipcall(tcp_close, (pcb_)); });
+            tcp_abort(pcb_);
     }
 
     task<size_t> Read(Beam &data) override {
@@ -355,6 +355,7 @@ class RemoteConnection final :
 
             tcp_err(pcb_, [](void *arg, err_t error) noexcept {
                 const auto self(static_cast<RemoteConnection *>(arg));
+                orc_insist(self->pcb_ != nullptr);
                 orc_insist(error != ERR_OK);
 
                 self->pcb_ = nullptr;
@@ -391,6 +392,8 @@ class RemoteConnection final :
 
         orc_lwipcall(co_await, opened_.Wait());
     }
+
+    // XXX: provide support for tcp_close and unify with Connection's semantics in Stream via Adapter
 
     void Shut() noexcept override {
         Core core;

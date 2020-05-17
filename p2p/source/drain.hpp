@@ -96,9 +96,10 @@ class Sink final :
     }
 
     task<void> Drop() noexcept override {
-        const auto inner(std::move(this->inner_));
-        if (inner != nullptr)
+        if (const auto inner = std::move(this->inner_))
             co_await inner->Shut();
+        else
+            Base_::Stop(std::string());
     }
 
     Drain_ &Gave() noexcept override {

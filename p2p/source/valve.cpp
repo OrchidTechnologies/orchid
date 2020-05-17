@@ -76,9 +76,7 @@ class Track {
     }
 };
 
-Valve::Valve(bool set) :
-    shut_(set)
-{
+Valve::Valve() {
     if (tracking_)
         Track()->insert(this);
 }

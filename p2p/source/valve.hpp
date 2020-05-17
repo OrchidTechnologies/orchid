@@ -46,7 +46,7 @@ class Valve {
     }
 
   public:
-    explicit Valve(bool set = false);
+    Valve();
     virtual ~Valve();
 
     virtual task<void> Shut() noexcept {
