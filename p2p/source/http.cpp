@@ -127,13 +127,20 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
 
 task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
     const auto endpoints(co_await Resolve(origin, locator.host_, locator.port_));
-    // XXX: actually use the other endpoints?
-    for (const auto &endpoint : endpoints) {
-        Adapter adapter(Context(), co_await origin.Connect(endpoint));
-        orc_block({ co_return co_await Fetch_(adapter, method, locator, headers, data, verify); },
-            "connected to " << endpoint);
+    std::exception_ptr error;
+    for (const auto &endpoint : endpoints) try {
+        Adapter adapter(Context(), co_await orc_value(co_return co_await, origin.Connect(endpoint), "connecting to " << endpoint));
+        const auto response(co_await orc_value(co_return co_await, Fetch_(adapter, method, locator, headers, data, verify), "connected to " << endpoint));
+        // XXX: potentially allow this to be passed in as a custom response validator
+        orc_assert_(response.result() != boost::beast::http::status::bad_gateway, response);
+        co_return response;
+    } catch (...) {
+        // XXX: maybe I should merge the exceptions? that would be cool
+        if (error == nullptr)
+            error = std::current_exception();
     }
-    orc_assert_(false, "failed connection");
+    orc_assert_(error != nullptr, "failed connection");
+    std::rethrow_exception(error);
 }, "requesting " << locator); }
 
 task<Response> Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
