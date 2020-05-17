@@ -276,8 +276,8 @@ def random_scan(table, price):
     # generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
-    response0 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
-    response1 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
+    response0 = table.query(Limit=4,KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
+    response1 = table.query(Limit=4,KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
     response0['Items'].extend(response1['Items'])
     return response0
 
@@ -304,8 +304,8 @@ def get_transaction_status(txhash):
     return "unknown"
 
 
-def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    logging.debug(f'Getting Account with Price:{price}')
+def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    logging.debug(f'get_account_ price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = random_scan(table, price)
@@ -338,6 +338,17 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     if ret:
         return ret
     return None, None, None
+
+
+def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    logging.debug(f'Getting Account with Price:{price}')
+    push_txn_hash, config, signer_pubkey = None
+    count = 0
+    while push_txh_hash == None
+        push_txn_hash, config, signer_pubkey = get_account_(price=total_usd)
+        count = count + 1
+        if (count >= 16) break;
+    return push_txn_hash, config, signer_pubkey
 
 
 
