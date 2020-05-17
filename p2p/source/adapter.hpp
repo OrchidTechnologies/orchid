@@ -50,9 +50,7 @@ class Converted final :
     }
 };
 
-class Adapter :
-    public Valve
-{
+class Adapter {
   public:
     typedef Adapter lowest_layer_type;
     typedef boost::asio::io_context::executor_type executor_type;
@@ -62,15 +60,10 @@ class Adapter :
     U<Stream> stream_;
 
   public:
-    Adapter(boost::asio::io_context &context) :
-        context_(context)
+    Adapter(boost::asio::io_context &context, U<Stream> stream) :
+        context_(context),
+        stream_(std::move(stream))
     {
-        type_ = typeid(*this).name();
-    }
-
-    U<Stream> &Wire() {
-        orc_insist(stream_ == nullptr);
-        return stream_;
     }
 
     Adapter &lowest_layer() {
@@ -115,10 +108,9 @@ class Adapter :
         });
     }
 
-    task<void> Shut() noexcept override {
-        co_await stream_->Shut();
-        Valve::Stop();
-        co_await Valve::Shut();
+    void shutdown(boost::asio::socket_base::shutdown_type type) noexcept {
+        if (type != boost::asio::socket_base::shutdown_receive)
+            stream_->Shut();
     }
 
     template <typename Buffers_, typename Handler_>

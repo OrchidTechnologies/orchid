@@ -42,7 +42,7 @@ class Sync final :
 
   public:
     template <typename... Args_>
-    Sync(BufferDrain *drain, Args_ &&...args) :
+    Sync(BufferDrain &drain, Args_ &&...args) :
         Link<Buffer>(drain),
         sync_(std::forward<Args_>(args)...)
     {

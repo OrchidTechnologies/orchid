@@ -28,23 +28,27 @@
 namespace orc {
 
 class PacketInfo :
-    public Link<Buffer>
+    public Link<Buffer>,
+    public Sunken<Pump<Buffer>>
 {
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override {
         return Link::Land(data);
     }
 
   public:
-    PacketInfo(BufferDrain *drain) :
+    PacketInfo(BufferDrain &drain) :
         Link<Buffer>(drain)
     {
     }
 
+    task<void> Shut() noexcept override {
+        co_await Sunken::Shut();
+        co_await Link::Shut();
+    }
+
     task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(data);
+        co_return co_await Inner().Send(data);
     }
 };
 

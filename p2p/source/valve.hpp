@@ -25,6 +25,7 @@
 
 #include "error.hpp"
 #include "event.hpp"
+#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -53,11 +54,26 @@ class Valve {
     }
 };
 
-template <typename Code_>
-auto Using(Valve &valve, Code_ code) -> decltype(code()) {
+template <typename Type_, typename... Args_>
+inline S<Type_> Break(Args_ &&...args) {
+    auto valve(std::make_shared<Type_>(std::forward<Args_>(args)...));
+    const auto backup(valve.get());
+    return std::shared_ptr<Type_>(backup, [valve = std::move(valve)](Type_ *) mutable noexcept {
+        Spawn([valve = std::move(valve)]() noexcept -> task<void> {
+            co_await valve->Shut();
+        });
+    });
+}
+
+template <typename Type_, typename Code_, typename... Args_>
+auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>())) {
+    Type_ valve(std::forward<Args_>(args)...);
     std::exception_ptr error;
+
+    // the reason this works is that Shut() is noexcept
+
     try {
-        const auto value(co_await code());
+        const auto value(co_await code(valve));
         co_await valve.Shut();
         co_return value;
     } catch (...) {
@@ -66,14 +82,6 @@ auto Using(Valve &valve, Code_ code) -> decltype(code()) {
 
     co_await valve.Shut();
     std::rethrow_exception(error);
-}
-
-template <typename Type_, typename Code_, typename... Args_>
-auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>())) {
-    Type_ valve(std::forward<Args_>(args)...);
-    co_return co_await Using(valve, [&]() -> decltype(code(std::declval<Type_ &>())) {
-        co_return co_await code(valve);
-    });
 }
 
 }

@@ -45,7 +45,6 @@ class Connection final :
   public:
     template <typename... Args_>
     Connection(Args_ &&...args) noexcept(noexcept(Connection_(std::forward<Args_>(args)...))) :
-        Stream(true),
         connection_(std::forward<Args_>(args)...)
     {
     }
@@ -75,7 +74,7 @@ class Connection final :
         connection_.non_blocking(true);
     }
 
-    task<void> Shut() noexcept override {
+    void Shut() noexcept override {
         if (Close_)
             connection_.close();
         else try {
@@ -83,11 +82,9 @@ class Connection final :
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::not_connected)
-                co_return;
+                return;
             orc_except({ orc_adapt(error); })
         }
-
-        co_await Stream::Shut();
     }
 
     task<void> Send(const Buffer &data) override {

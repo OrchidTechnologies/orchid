@@ -33,7 +33,8 @@ namespace orc {
 
 class Remote :
     public Origin,
-    public BufferDrain
+    public BufferDrain,
+    public Sunken<Pump<Buffer>>
 {
   private:
     const class Host host_;
@@ -46,8 +47,6 @@ class Remote :
     static err_t Initialize(netif *interface);
 
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) noexcept override;
 
@@ -62,12 +61,12 @@ class Remote :
 
     class Host Host() override;
 
-    rtc::Thread *Thread() override;
+    rtc::Thread &Thread() override;
     rtc::BasicPacketSocketFactory &Factory() override;
 
-    task<void> Associate(Sunk<> *sunk, const Socket &endpoint) override;
-    task<Socket> Unlid(Sunk<BufferSewer, Opening> *sunk) override;
-    task<void> Connect(U<Stream> &stream, const Socket &endpoint) override;
+    task<void> Associate(BufferSunk &sunk, const Socket &endpoint) override;
+    task<Socket> Unlid(Sunk<BufferSewer, Opening> &sunk) override;
+    task<U<Stream>> Connect(const Socket &endpoint) override;
 };
 
 }

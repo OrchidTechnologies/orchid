@@ -57,7 +57,7 @@ static std::string cfs(NSString *data) {
 }
 
 @interface OrchidPacketTunnelProvider : NEPacketTunnelProvider {
-    U<Sink<Capture>> capture_;
+    U<BufferSink<Capture>> capture_;
 }
 
 @end
@@ -95,12 +95,12 @@ static std::string cfs(NSString *data) {
         int file([value intValue]);
         orc_assert(file != -1);
 
-        auto capture(std::make_unique<Sink<Capture>>(local));
-        auto family(capture->Wire<Sink<Family>>());
-        auto sync(family->Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
+        auto capture(std::make_unique<BufferSink<Capture>>(local));
+        auto &family(capture->Wire<BufferSink<Family>>());
+        auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
 
         capture->Start(config);
-        sync->Open();
+        sync.Open();
         capture_ = std::move(capture);
         handler(nil);
     } ORC_CATCH(handler) }];

@@ -194,10 +194,10 @@ void Cashier::Open(S<Origin> origin, Locator locator) {
         auto duplex(std::make_unique<Duplex>(origin));
         co_await duplex->Open(locator);
 
-        auto station(std::make_unique<Sink<Station, Drain<Json::Value>>>(this));
-        const auto structured(station->Wire<Sink<Structured>>());
-        const auto inverted(structured->Wire<Inverted>(std::move(duplex)));
-        inverted->Open();
+        auto station(std::make_unique<Sink<Station, Drain<Json::Value>>>(*this));
+        auto &structured(station->Wire<BufferSink<Structured>>());
+        auto &inverted(structured.Wire<Inverted>(std::move(duplex)));
+        inverted.Open();
         station_ = std::move(station);
 
         co_await cppcoro::when_all(UpdateCoin(*origin), UpdateGas(*origin));

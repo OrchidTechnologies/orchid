@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -14,6 +16,7 @@ import 'package:flutter/services.dart';
 typedef ImportAccountCompletion = void Function(
     ParseOrchidAccountResult result);
 
+// Used from the LegacyWelcomeDialog and AddHopPage->ScanOrPasteDialog
 class ScanOrPasteOrchidAccount extends StatefulWidget {
   final ImportAccountCompletion onImportAccount;
   final double spacing;
@@ -32,31 +35,42 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     var showIcons = screenWidth >= AppSizes.iphone_xs.width;
+    bool pasteOnly = Platform.isMacOS;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          TitleIconButton(
-              text: s.scan,
-              trailing: showIcons
-                  ? Image.asset("assets/images/scan.png", color: Colors.white)
-                  : SizedBox(),
-              textColor: Colors.white,
-              backgroundColor: Colors.deepPurple,
-              onPressed: _scanQRCode),
-          padx(widget.spacing ?? 24),
-          TitleIconButton(
-              text: s.paste,
-              trailing: showIcons
-                  ? Icon(Icons.content_paste, color: Colors.deepPurple)
-                  : SizedBox(),
-              textColor: Colors.deepPurple,
-              backgroundColor: Colors.white,
-              onPressed: _pasteCode),
+          if (!pasteOnly) ...[
+            _buildScanButton(showIcons),
+            padx(widget.spacing ?? 24),
+          ],
+          _buildPasteButton(showIcons),
         ],
       ),
     );
+  }
+
+  TitleIconButton _buildPasteButton(bool showIcons) {
+    return TitleIconButton(
+        text: s.paste,
+        trailing: showIcons
+            ? Icon(Icons.content_paste, color: Colors.deepPurple)
+            : SizedBox(),
+        textColor: Colors.deepPurple,
+        backgroundColor: Colors.white,
+        onPressed: _pasteCode);
+  }
+
+  TitleIconButton _buildScanButton(bool showIcons) {
+    return TitleIconButton(
+        text: s.scan,
+        trailing: showIcons
+            ? Image.asset("assets/images/scan.png", color: Colors.white)
+            : SizedBox(),
+        textColor: Colors.white,
+        backgroundColor: Colors.deepPurple,
+        onPressed: _scanQRCode);
   }
 
   void _scanQRCode() async {

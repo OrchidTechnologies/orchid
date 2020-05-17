@@ -42,9 +42,9 @@ class Channel final :
     Event opened_;
 
   public:
-    static task<Socket> Wire(Sunk<> *sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
+    static task<Socket> Wire(BufferSunk &sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
-    Channel(BufferDrain *drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
+    Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
         Pump<Buffer>(drain),
         peer_(peer),
         channel_(channel)
@@ -54,7 +54,7 @@ class Channel final :
         peer_->channels_.insert(this);
     }
 
-    Channel(BufferDrain *drain, const S<Peer> &peer, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string()) :
+    Channel(BufferDrain &drain, const S<Peer> &peer, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string()) :
         Channel(drain, peer, [&]() {
             webrtc::DataChannelInit init;
             init.ordered = false;

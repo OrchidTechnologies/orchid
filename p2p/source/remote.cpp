@@ -20,6 +20,9 @@
 /* }}} */
 
 
+#include <queue>
+
+#include <cppcoro/async_auto_reset_event.hpp>
 #include <cppcoro/async_mutex.hpp>
 
 #include <lwip/err.h>
@@ -33,13 +36,14 @@
 
 #include "dns.hpp"
 #include "event.hpp"
+#include "locked.hpp"
 #include "lwip.hpp"
 #include "manager.hpp"
 #include "remote.hpp"
 
 #define orc_lwipcall(call, expr) ({ \
     const auto _status(call expr); \
-    orc_assert_(_status == ERR_OK, "lwip " << #call << " #" << int(_status) << " \"" << lwip_strerr(_status) << "\""); \
+    orc_assert_(_status == ERR_OK, "lwip " << #call << ": " << lwip_strerr(_status)); \
 _status; })
 
 extern "C" struct netif *hook_ip4_route_src(const ip4_addr_t *src, const ip4_addr_t *dest)
@@ -146,8 +150,6 @@ class Core {
     }
 };
 
-// XXX: none of this calls Stop
-
 class RemoteCommon {
   protected:
     udp_pcb *pcb_;
@@ -194,7 +196,7 @@ class RemoteAssociation :
     }
 
   public:
-    RemoteAssociation(BufferDrain *drain, const ip4_addr_t &host) :
+    RemoteAssociation(BufferDrain &drain, const ip4_addr_t &host) :
         Pump(drain),
         RemoteCommon(host)
     {
@@ -225,11 +227,11 @@ class RemoteOpening final :
 {
   protected:
     void Land(const Buffer &data, const Socket &socket) override {
-        drain_->Land(data, socket);
+        drain_.Land(data, socket);
     }
 
   public:
-    RemoteOpening(BufferSewer *drain, const ip4_addr_t &host) :
+    RemoteOpening(BufferSewer &drain, const ip4_addr_t &host) :
         Opening(drain),
         RemoteCommon(host)
     {
@@ -259,19 +261,39 @@ class RemoteOpening final :
 };
 
 class RemoteConnection final :
-    public Pump<Buffer>
+    public Stream
 {
-  protected:
+  private:
     tcp_pcb *pcb_;
     Transfer<err_t> opened_;
 
     cppcoro::async_mutex send_;
-    cppcoro::async_auto_reset_event ready_;
+    cppcoro::async_auto_reset_event sent_;
+
+    cppcoro::async_auto_reset_event read_;
+
+    struct Locked_ {
+        std::exception_ptr error_;
+        std::queue<Beam> data_;
+        size_t offset_ = 0;
+    }; Locked<Locked_> locked_;
+
+  protected:
+    void Land(const Buffer &data) {
+        locked_()->data_.emplace(data);
+        read_.set();
+    }
+
+    void Stop(const std::exception_ptr &error) noexcept {
+        if (error != nullptr)
+            locked_()->error_ = error;
+        else
+            locked_()->data_.emplace(Beam());
+        read_.set();
+    }
 
   public:
-    RemoteConnection(BufferDrain *drain, const ip4_addr_t &host) :
-        Pump(drain)
-    {
+    RemoteConnection(const ip4_addr_t &host) {
         Core core;
         pcb_ = tcp_new();
         orc_assert(pcb_ != nullptr);
@@ -285,17 +307,42 @@ class RemoteConnection final :
             orc_except({ orc_lwipcall(tcp_close, (pcb_)); });
     }
 
+    task<size_t> Read(Beam &data) override {
+        for (;; co_await read_, co_await Schedule()) {
+            const auto locked(locked_());
+            if (!locked->data_.empty()) {
+                const auto &next(locked->data_.front());
+
+                const auto base(next.data());
+                const auto rest(next.size() - locked->offset_);
+                if (rest == 0)
+                    co_return 0;
+
+                const auto writ(std::min(data.size(), rest));
+                Copy(data.data(), base + locked->offset_, writ);
+
+                if (rest != writ)
+                    locked->offset_ += writ;
+                else {
+                    locked->data_.pop();
+                    locked->offset_ = 0;
+                }
+
+                co_return writ;
+            } else if (locked->error_ != nullptr)
+                std::rethrow_exception(locked->error_);
+        }
+    }
+
     task<void> Open(const ip4_addr_t &host, uint16_t port) {
         { Core core;
             tcp_recv(pcb_, [](void *arg, tcp_pcb *pcb, pbuf *data, err_t error) noexcept -> err_t {
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
-
-                // XXX: convert error
                 orc_insist(error == ERR_OK);
 
                 if (data == nullptr)
-                    self->Stop();
+                    self->Stop(nullptr);
                 else {
                     const Chain chain(data);
                     self->Land(chain);
@@ -308,29 +355,35 @@ class RemoteConnection final :
 
             tcp_err(pcb_, [](void *arg, err_t error) noexcept {
                 const auto self(static_cast<RemoteConnection *>(arg));
+                orc_insist(error != ERR_OK);
+
                 self->pcb_ = nullptr;
-                self->ready_.set();
+                self->sent_.set();
+
                 if (!self->opened_)
                     self->opened_(std::move(error));
-                else self->Stop([&]() { switch (error) {
-                    case ERR_ABRT:
-                        return "ERR_ABRT";
-                    case ERR_RST:
-                        return "ERR_RST";
-                    default:
-                        orc_insist_(false, "lwip tcp_err #" << int(error) << " \"" << lwip_strerr(error) << "\"");
-                } }());
+                else try {
+                    orc_lwipcall(, error);
+                    orc_insist(false);
+                } catch (...) {
+                    self->Stop(std::current_exception());
+                }
             });
 
+            // XXX: I feel like I should be verifying that size covered the entire sent packet
             tcp_sent(pcb_, [](void *arg, tcp_pcb *pcb, u16_t size) noexcept -> err_t {
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
-                self->ready_.set();
+
+                self->sent_.set();
                 return ERR_OK;
             });
 
             orc_lwipcall(tcp_connect, (pcb_, &host, port, [](void *arg, tcp_pcb *pcb, err_t error) noexcept -> err_t {
                 const auto self(static_cast<RemoteConnection *>(arg));
+                orc_insist(pcb == self->pcb_);
+                orc_insist(error == ERR_OK);
+
                 self->opened_(std::move(error));
                 return ERR_OK;
             }));
@@ -339,14 +392,15 @@ class RemoteConnection final :
         orc_lwipcall(co_await, opened_.Wait());
     }
 
-    task<void> Shut() noexcept override {
-        { Core core; if (pcb_ != nullptr) orc_except({ orc_lwipcall(tcp_shutdown, (pcb_, false, true)); }); }
-        co_await Pump::Shut();
+    void Shut() noexcept override {
+        Core core;
+        orc_insist(pcb_ != nullptr);
+        orc_except({ orc_lwipcall(tcp_shutdown, (pcb_, false, true)); });
     }
 
     task<void> Send(const Buffer &data) override {
         const auto lock(co_await send_.scoped_lock_async());
-        for (Window window(data); !window.done(); co_await ready_, co_await Schedule()) {
+        for (Window window(data); !window.done(); co_await sent_, co_await Schedule()) {
             Core core;
             orc_assert(pcb_ != nullptr);
 
@@ -376,7 +430,7 @@ class RemoteConnection final :
 
 void Remote::Send(pbuf *buffer) {
     nest_.Hatch([&]() noexcept { return [this, data = Chain(buffer)]() -> task<void> {
-        co_return co_await Inner()->Send(data);
+        co_return co_await Inner().Send(data);
     }; });
 }
 
@@ -437,7 +491,7 @@ void Remote::Open() {
 
 task<void> Remote::Shut() noexcept {
     co_await nest_.Shut();
-    co_await Inner()->Shut();
+    co_await Sunken::Shut();
     co_await Valve::Shut();
     netifapi_netif_set_down(&interface_);
 }
@@ -446,7 +500,7 @@ class Host Remote::Host() {
     return host_;
 }
 
-rtc::Thread *Remote::Thread() {
+rtc::Thread &Remote::Thread() {
     static std::unique_ptr<rtc::Thread> thread;
     if (thread == nullptr) {
         thread = std::make_unique<rtc::Thread>(std::make_unique<LwipSocketServer>());
@@ -454,31 +508,30 @@ rtc::Thread *Remote::Thread() {
         thread->Start();
     }
 
-    return thread.get();
+    return *thread;
 }
 
 rtc::BasicPacketSocketFactory &Remote::Factory() {
-    static rtc::BasicPacketSocketFactory factory(Thread());
+    static rtc::BasicPacketSocketFactory factory(&Thread());
     return factory;
 }
 
-task<void> Remote::Associate(Sunk<> *sunk, const Socket &endpoint) {
-    const auto association(sunk->Wire<RemoteAssociation>(host_));
-    association->Open(endpoint.Host(), endpoint.Port());
+task<void> Remote::Associate(BufferSunk &sunk, const Socket &endpoint) {
+    auto &association(sunk.Wire<RemoteAssociation>(host_));
+    association.Open(endpoint.Host(), endpoint.Port());
     co_return;
 }
 
-task<Socket> Remote::Unlid(Sunk<BufferSewer, Opening> *sunk) {
-    const auto opening(sunk->Wire<RemoteOpening>(host_));
-    opening->Open();
-    co_return opening->Local();
+task<Socket> Remote::Unlid(Sunk<BufferSewer, Opening> &sunk) {
+    auto &opening(sunk.Wire<RemoteOpening>(host_));
+    opening.Open();
+    co_return opening.Local();
 }
 
-task<void> Remote::Connect(U<Stream> &stream, const Socket &endpoint) {
-    auto reverted(std::make_unique<Sink<Reverted>>());
-    const auto connection(reverted->Wire<RemoteConnection>(host_));
-    stream = std::move(reverted);
+task<U<Stream>> Remote::Connect(const Socket &endpoint) {
+    auto connection(std::make_unique<RemoteConnection>(host_));
     co_await connection->Open(endpoint.Host(), endpoint.Port());
+    co_return connection;
 }
 
 }

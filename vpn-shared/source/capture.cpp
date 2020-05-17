@@ -100,7 +100,7 @@ class LoggerDatabase :
 // IP => hostname (most recent)
 typedef std::map<asio::ip::address, std::string> DnsLog;
 
-class Logger :
+class Nameless :
     public Analyzer,
     public MonitorLogger
 {
@@ -114,7 +114,7 @@ class Logger :
     std::map<Five, std::string> flow_to_protocol_chain_;
 
   public:
-    Logger(const std::string &path) :
+    Nameless(const std::string &path) :
         database_(path),
         insert_(database_, R"(
             insert into "flow" (
@@ -244,7 +244,7 @@ void Capture::Stop(const std::string &error) noexcept {
 void Capture::Land(const Buffer &data, bool analyze) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
     nest_.Hatch([&]() noexcept { return [this, data = Beam(data), analyze]() mutable -> task<void> {
-        co_await Inner()->Send(data);
+        co_await Inner().Send(data);
         if (analyze)
             analyzer_->AnalyzeIncoming(data.span());
     }; });
@@ -253,7 +253,7 @@ void Capture::Land(const Buffer &data, bool analyze) {
 Capture::Capture(const Host &local) :
     local_(local),
     nest_(32),
-    analyzer_(std::make_unique<Logger>(Group() + "/analysis.db"))
+    analyzer_(std::make_unique<Nameless>(Group() + "/analysis.db"))
 {
 }
 
@@ -270,15 +270,14 @@ class Hole {
 };
 
 class Punch :
-    public BufferSewer
+    public BufferSewer,
+    public Sunken<Opening>
 {
   private:
     Hole *const hole_;
     const Socket socket_;
 
   protected:
-    virtual Opening *Inner() noexcept = 0;
-
     void Land(const Buffer &data, Socket socket) override {
         hole_->Land(Datagram(socket, socket_, data));
     }
@@ -297,7 +296,7 @@ class Punch :
     virtual ~Punch() = default;
 
     task<void> Send(const Buffer &data, const Socket &socket) {
-        co_return co_await Inner()->Send(data, socket);
+        co_return co_await Inner().Send(data, socket);
     }
 };
 
@@ -327,7 +326,7 @@ class Flow {
                     break;
             }
 
-            co_await output->Shut();
+            output->Shut();
             latch.count_down();
         });
     }
@@ -352,9 +351,9 @@ class Flow {
 };
 
 class Split :
+    public Internal,
     public Acceptor,
     public Plant,
-    public Internal,
     public Hole
 {
   private:
@@ -567,7 +566,7 @@ task<bool> Split::Send(const Beam &data) {
                     span,
                     &tcp,
                 this]() mutable noexcept -> task<void> {
-                    if (orc_ignore({ co_await origin_->Connect(flow->up_, four.Target()); }))
+                    if (orc_ignore({ flow->up_ = co_await origin_->Connect(four.Target()); }))
                         Reset(four.Target(), four.Source(), 0, boost::endian::big_to_native(tcp.seq) + 1);
                     else {
                         Forge(span, tcp, socket, local_);
@@ -586,7 +585,7 @@ task<bool> Split::Send(const Beam &data) {
             auto &punch(udp_[source]);
             if (punch == nullptr) {
                 auto sink(std::make_unique<Sink<Punch, BufferSewer>>(this, source));
-                co_await origin_->Unlid(sink.get());
+                co_await origin_->Unlid(*sink);
                 punch = std::move(sink);
             }
 
@@ -615,15 +614,14 @@ void Capture::Start(S<Origin> origin) {
 }
 
 class Pass :
+    public Internal,
     public BufferDrain,
-    public Internal
+    public Sunken<Pump<Buffer>>
 {
   private:
     Capture *const capture_;
 
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override {
         return capture_->Land(data, true);
     }
@@ -639,18 +637,18 @@ class Pass :
     }
 
     task<void> Shut() noexcept override {
-        co_await Inner()->Shut();
+        co_await Sunken::Shut();
     }
 
     task<bool> Send(const Beam &beam) override {
-        co_await Inner()->Send(beam);
+        co_await Inner().Send(beam);
         co_return true;
     }
 };
 
-Sunk<> *Capture::Start() {
-    auto pass(std::make_unique<Sink<Pass>>(this));
-    const auto backup(pass.get());
+BufferSunk &Capture::Start() {
+    auto pass(std::make_unique<BufferSink<Pass>>(this));
+    auto &backup(*pass);
     internal_ = std::move(pass);
     return backup;
 }
@@ -663,7 +661,7 @@ static duk_ret_t print(duk_context *ctx) {
     return 0;
 }
 
-static task<void> Single(Sunk<> *sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) { orc_block({
+static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
@@ -717,21 +715,21 @@ void Capture::Start(const std::string &path) {
     WinRatio_ = heap.eval<double>("eth_winratio");
 
 #if 0
-    auto remote(Break<Sink<Remote>>());
+    auto remote(Break<BufferSink<Remote>>());
     const auto host(remote->Host());
-    const auto sunk(remote.get());
+    auto &sunk(*remote);
 #else
     S<Remote> remote;
     const auto host(origin->Host());
-    const auto sunk(Start());
+    auto &sunk(Start());
 #endif
 
-    auto code([heap = std::move(heap), hops, origin = std::move(origin), host](Sunk<> *sunk) mutable -> task<void> {
+    auto code([heap = std::move(heap), hops, origin = std::move(origin), host](BufferSunk &sunk) mutable -> task<void> {
         Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
 
         for (unsigned i(0); i != hops - 1; ++i) {
-            auto remote(Break<Sink<Remote>>());
-            co_await Single(remote.get(), heap, network, origin, remote->Host(), i);
+            auto remote(Break<BufferSink<Remote>>());
+            co_await Single(*remote, heap, network, origin, remote->Host(), i);
             remote->Open();
             origin = std::move(remote);
         }
@@ -739,8 +737,8 @@ void Capture::Start(const std::string &path) {
         co_await Single(sunk, heap, network, origin, host, hops - 1);
     });
 
-    const auto retry(sunk->Wire<Retry<decltype(code)>>(std::move(code)));
-    retry->Open();
+    auto &retry(sunk.Wire<Retry<decltype(code)>>(std::move(code)));
+    retry.Open();
 
     if (remote != nullptr) {
         remote->Open();
@@ -752,7 +750,7 @@ task<void> Capture::Shut() noexcept {
     co_await nest_.Shut();
     if (internal_ != nullptr)
         co_await internal_->Shut();
-    co_await Inner()->Shut();
+    co_await Sunken::Shut();
     co_await Valve::Shut();
 }
 

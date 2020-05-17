@@ -28,7 +28,8 @@
 namespace orc {
 
 class Family :
-    public Link<Buffer>
+    public Link<Buffer>,
+    public Sunken<Pump<Buffer>>
 {
   private:
     uint32_t Analyze(const Window &data) {
@@ -49,8 +50,6 @@ class Family :
     }
 
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override {
         const auto [protocol, packet] = Take<Number<uint32_t>, Window>(data);
         orc_assert(protocol == Analyze(packet));
@@ -58,13 +57,18 @@ class Family :
     }
 
   public:
-    Family(BufferDrain *drain) :
+    Family(BufferDrain &drain) :
         Link<Buffer>(drain)
     {
     }
 
+    task<void> Shut() noexcept override {
+        co_await Sunken::Shut();
+        co_await Link::Shut();
+    }
+
     task<void> Send(const Buffer &data) override {
-        co_return co_await Inner()->Send(Tie(Number<uint32_t>(Analyze(data)), data));
+        co_return co_await Inner().Send(Tie(Number<uint32_t>(Analyze(data)), data));
     }
 };
 

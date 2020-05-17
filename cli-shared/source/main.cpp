@@ -111,14 +111,14 @@ int Main(int argc, const char *const argv[]) {
 
 
     auto local(Host_);
-    auto capture(Break<Sink<Capture>>(local));
+    auto capture(Break<BufferSink<Capture>>(local));
 
 #if 0
 #elif defined(__APPLE__)
-    auto family(capture->Wire<Sink<Family>>());
-    auto sync(family->Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+    auto &family(capture->Wire<BufferSink<Family>>());
+    auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
 
-    auto file((*sync)->native_handle());
+    auto file(sync->native_handle());
 
     ctl_info info;
     memset(&info, 0, sizeof(info));
@@ -156,11 +156,11 @@ int Main(int argc, const char *const argv[]) {
     }
     orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
 #elif defined(__linux__)
-    auto family(capture->Wire<Sink<PacketInfo>>());
+    auto &family(capture->Wire<BufferSink<PacketInfo>>());
     // XXX: NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-    auto sync(family->Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
+    auto &sync(family.Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
 
-    auto file((*sync)->native_handle());
+    auto file(sync->native_handle());
 
     struct ifreq ifr = {.ifr_flags = IFF_TUN | IFF_NO_PI};
     // XXX: NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
@@ -191,7 +191,7 @@ int Main(int argc, const char *const argv[]) {
 #endif
 
     capture->Start(args["config"].as<std::string>());
-    sync->Open();
+    sync.Open();
 
     Thread().join();
     return 0;

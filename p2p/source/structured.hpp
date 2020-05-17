@@ -30,11 +30,10 @@ namespace orc {
 
 class Structured :
     public Pump<Json::Value, Json::Value>,
-    public BufferDrain
+    public BufferDrain,
+    public Sunken<Pump<Buffer>>
 {
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override {
         return Pump::Land(Parse(data.str()));
     }
@@ -44,14 +43,19 @@ class Structured :
     }
 
   public:
-    Structured(Drain<Json::Value> *drain) :
+    Structured(Drain<Json::Value> &drain) :
         Pump<Json::Value, Json::Value>(drain)
     {
         type_ = typeid(*this).name();
     }
 
+    task<void> Shut() noexcept override {
+        co_await Sunken::Shut();
+        co_await Pump::Shut();
+    }
+
     task<void> Send(const Json::Value &data) override {
-        co_return co_await Inner()->Send(Strung(Json::FastWriter().write(data)));
+        co_return co_await Inner().Send(Strung(Json::FastWriter().write(data)));
     }
 };
 

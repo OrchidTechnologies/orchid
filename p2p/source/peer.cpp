@@ -58,7 +58,7 @@ Peer::Peer(const S<Origin> &origin, Configuration configuration) :
 
         auto factory(webrtc::CreateModularPeerConnectionFactory([&]() {
             webrtc::PeerConnectionFactoryDependencies dependencies;
-            dependencies.network_thread = origin_->Thread();
+            dependencies.network_thread = &origin_->Thread();
             dependencies.worker_thread = threads.working_.get();
             dependencies.signaling_thread = threads.signals_.get();
             return dependencies;

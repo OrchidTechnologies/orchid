@@ -41,11 +41,11 @@ class Opening :
     public Valve
 {
   protected:
-    BufferSewer *const drain_;
+    BufferSewer &drain_;
 
   public:
     template <typename... Args_>
-    Opening(BufferSewer *drain) :
+    Opening(BufferSewer &drain) :
         drain_(drain)
     {
     }

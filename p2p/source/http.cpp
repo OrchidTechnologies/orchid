@@ -127,12 +127,11 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
 
 task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
     const auto endpoints(co_await Resolve(origin, locator.host_, locator.port_));
+    // XXX: actually use the other endpoints?
     for (const auto &endpoint : endpoints) {
-        co_return co_await Using<Adapter>([&](Adapter &adapter) -> task<Response> {
-            co_await origin.Connect(adapter.Wire(), endpoint);
-            orc_block({ co_return co_await Fetch_(adapter, method, locator, headers, data, verify); },
-                "connected to " << endpoint);
-        }, Context());
+        Adapter adapter(Context(), co_await origin.Connect(endpoint));
+        orc_block({ co_return co_await Fetch_(adapter, method, locator, headers, data, verify); },
+            "connected to " << endpoint);
     }
     orc_assert_(false, "failed connection");
 }, "requesting " << locator); }

@@ -37,7 +37,8 @@ namespace orc {
 class Egress :
     public std::enable_shared_from_this<Egress>,
     public Valve,
-    public BufferDrain
+    public BufferDrain,
+    public Sunken<Pump<Buffer>>
 {
   private:
     const uint32_t local_;
@@ -126,7 +127,7 @@ class Egress :
         }
 
       public:
-        Translator(BufferDrain *drain, S<Egress> egress) :
+        Translator(BufferDrain &drain, S<Egress> egress) :
             Link(drain),
             egress_(std::move(egress)),
             indirect_(egress_->Open(this, &neutral_))
@@ -148,12 +149,10 @@ class Egress :
     task<void> Shut(Translators::iterator indirect) noexcept;
 
     task<void> Send(const Buffer &data) {
-        co_await Inner()->Send(data);
+        co_await Inner().Send(data);
     }
 
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override;
     void Stop(const std::string &error) noexcept override;
 
@@ -167,11 +166,13 @@ class Egress :
         orc_insist(false);
     }
 
-    void Wire(Sunk<> *sunk) {
-        sunk->Wire<Translator>(shared_from_this());
+    void Wire(BufferSunk &sunk) {
+        sunk.Wire<Translator>(shared_from_this());
     }
 
     task<void> Shut() noexcept override {
+        co_await Sunken::Shut();
+        co_await Valve::Shut();
         orc_insist(false);
     }
 };

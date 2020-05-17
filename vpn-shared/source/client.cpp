@@ -168,7 +168,7 @@ void Client::Stop() noexcept {
     Pump::Stop();
 }
 
-Client::Client(BufferDrain *drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face) :
+Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face) :
     Pump(drain),
     local_(Certify()),
     url_(std::move(url)),
@@ -197,7 +197,7 @@ task<void> Client::Open(const S<Origin> &origin) {
         return false;
     });
 
-    const auto bonding(Bond());
+    auto &bonding(Bond());
 
     socket_ = co_await Channel::Wire(bonding, origin, [&]() {
         Configuration configuration;

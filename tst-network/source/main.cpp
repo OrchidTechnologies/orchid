@@ -30,6 +30,7 @@
 #include "dns.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
+#include "markup.hpp"
 #include "network.hpp"
 #include "remote.hpp"
 #include "router.hpp"
@@ -57,19 +58,32 @@ static const Float Two128(uint256_t(1) << 128);
 
 task<Float> Test(const S<Origin> &origin, const Float &price, Network &network, std::string provider, std::string name, const Secret &secret, const Address &funder, const Address &seller) {
     std::cout << provider << " " << name << std::endl;
-    auto remote(Break<Sink<Remote>>());
-    const auto client(co_await network.Select(remote.get(), origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
-    remote->Open();
-    const auto body((co_await remote->Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
-    client->Update();
-    co_await Sleep(3);
-    const auto balance(client->Balance());
-    const auto spent(client->Spent());
-    const auto cost(Float(spent - balance) / body.size() * (1024 * 1024 * 1024) * price / Two128);
-    co_return cost;
+
+    co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Float> {
+        auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
+        remote.Open();
+        const auto body((co_await remote.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
+        client.Update();
+        co_await Sleep(3);
+        const auto balance(client.Balance());
+        const auto spent(client.Spent());
+        const auto cost(Float(spent - balance) / body.size() * (1024 * 1024 * 1024) * price / Two128);
+        std::cout << name << ": DONE" << std::endl;
+        co_return cost;
+    });
 }
 
-extern double WinRatio_;
+struct State {
+    uint256_t timestamp_;
+    std::map<std::string, std::string> providers_;
+
+    State(uint256_t timestamp) :
+        timestamp_(std::move(timestamp))
+    {
+    }
+};
+
+std::shared_ptr<State> state_;
 
 // NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
@@ -131,11 +145,12 @@ int Main(int argc, const char *const argv[]) {
             }
 
             const auto now(Timestamp());
-            (void) now;
             auto costs(co_await cppcoro::when_all_ready(std::move(tests)));
+            auto state(std::make_shared<State>(now));
 
             std::cout << std::endl;
             for (unsigned i(0); i != names.size(); ++i) {
+                const auto name(names[i]);
                 const auto text([&]() -> std::string { try {
                     std::ostringstream cost;
                     cost << std::move(costs[i]).result();
@@ -143,10 +158,13 @@ int Main(int argc, const char *const argv[]) {
                 } catch (const std::exception &error) {
                     return error.what();
                 } }());
-                std::cout << "\e[32m[" << names[i] << "] " << text << "\e[0m" << std::endl;
+
+                state->providers_[name] = text;
+                std::cout << "\e[32m[" << name << "] " << text << "\e[0m" << std::endl;
             }
 
-            co_await Sleep(10);
+            std::atomic_store(&state_, state);
+            co_await Sleep(15*60);
         }
     });
 
@@ -157,6 +175,20 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     Router router;
+
+    router(http::verb::get, R"(/)", [&](Request request) -> task<Response> {
+        const auto state(std::atomic_load(&state_));
+        orc_assert(state);
+
+        Markup body("Orchid Status");
+
+        body << "@" << state->timestamp_.str() << "\n";
+        body << "\n";
+        for (const auto &provider : state->providers_)
+            body << provider.first << ": " << provider.second << "\n";
+
+        co_return Respond(request, http::status::ok, "text/html", body());
+    });
 
     router(http::verb::get, R"(.*)", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, "text/plain", "");

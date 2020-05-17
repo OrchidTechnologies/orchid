@@ -51,7 +51,8 @@ void Initialize() {
 
 class Transport :
     public openvpn::TransportClient,
-    public BufferDrain
+    public BufferDrain,
+    public Sunken<Pump<Buffer>>
 {
   private:
     openvpn_io::io_context &context_;
@@ -60,8 +61,6 @@ class Transport :
     Nest nest_;
 
   protected:
-    virtual Pump<Buffer> *Inner() noexcept = 0;
-
     void Land(const Buffer &data) override {
         static size_t payload(65536);
         const auto size(data.size());
@@ -88,23 +87,25 @@ class Transport :
     {
     }
 
+    task<void> Shut() noexcept {
+        co_await nest_.Shut();
+        co_await Sunken::Shut();
+    }
+
     void transport_start() noexcept override {
         // this function should not even exist in this API :/
         // it is always called immediately after construction
     }
 
     void stop() noexcept override {
-        Wait([&]() -> task<void> {
-            co_await nest_.Shut();
-            co_await Inner()->Shut();
-        }());
+        Wait(Shut());
         work_.reset();
     }
 
     bool transport_send_const(const openvpn::Buffer &data) noexcept override {
         nest_.Hatch([&]() noexcept { return [this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
             //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
-            co_await Inner()->Send(buffer);
+            co_await Inner().Send(buffer);
         }; });
 
         return true;
@@ -114,7 +115,7 @@ class Transport :
         nest_.Hatch([&]() noexcept { return [this, buffer = std::move(buffer)]() -> task<void> {
             Subset data(buffer.c_data(), buffer.size());
             //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-            co_await Inner()->Send(data);
+            co_await Inner().Send(data);
         }; });
 
         return true;
@@ -162,7 +163,7 @@ class Factory :
     }
 
     openvpn::TransportClient::Ptr new_transport_client_obj(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) noexcept override {
-        openvpn::RCPtr transport(new Sink<Transport>(context, parent));
+        openvpn::RCPtr transport(new BufferSink<Transport>(context, parent));
 
         Spawn([this, &context, parent, transport]() noexcept -> task<void> { try {
             asio::dispatch(context, [parent]() {
@@ -176,7 +177,7 @@ class Factory :
 
             const auto endpoints(co_await Resolve(*origin_, remote->server_host, remote->server_port));
             for (const auto &endpoint : endpoints) {
-                co_await origin_->Associate(transport.get(), endpoint);
+                co_await origin_->Associate(*transport, endpoint);
                 break;
             }
 
@@ -275,11 +276,8 @@ class Middle :
     const uint32_t local_;
     uint32_t remote_ = 0;
 
-  protected:
-    virtual Pipe<Buffer> *Inner() noexcept = 0;
-
   public:
-    Middle(BufferDrain *drain, S<Origin> origin, uint32_t local) :
+    Middle(BufferDrain &drain, S<Origin> origin, uint32_t local) :
         Link<Buffer>(drain),
         origin_(std::move(origin)),
         local_(local)
@@ -406,6 +404,11 @@ class Middle :
         co_await ready_.Wait();
     }
 
+    task<void> Shut() noexcept override {
+        // XXX: this isn't really shutting anything
+        co_await Link::Shut();
+    }
+
     task<void> Send(const orc::Buffer &data) override {
         static const size_t headroom(512);
         static const size_t payload(65536);
@@ -428,9 +431,9 @@ class Middle :
     }
 };
 
-task<void> Connect(Sunk<> *sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password) {
-    const auto middle(sunk->Wire<Sink<Middle>>(std::move(origin), local));
-    co_await middle->Connect(std::move(ovpnfile), std::move(username), std::move(password));
+task<void> Connect(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password) {
+    auto &middle(sunk.Wire<Middle>(std::move(origin), local));
+    co_await middle.Connect(std::move(ovpnfile), std::move(username), std::move(password));
 }
 
 }

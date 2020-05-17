@@ -185,5 +185,7 @@
 	"enterOvpnProfile": "Enter OVPN Profile",
 	"buyOrchidAccount": "Buy Orchid Account",
 	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Link your existing Orchid account or enter an OVPN profile.",
-  "weAreSorryButThisPurchaseWouldExceedTheDaily": "We are sorry but this purchase would exceed the daily purchase limit for access credits.  Please try again later."
+  "weAreSorryButThisPurchaseWouldExceedTheDaily": "We are sorry but this purchase would exceed the daily purchase limit for access credits.  Please try again later.",
+  "pasteAccount": "Paste Account",
+	"pasteYourExistingAccountBelowToAddItAsA": "Paste your existing account below to add it as a hop."
 }

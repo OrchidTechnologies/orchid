@@ -26,7 +26,7 @@ namespace orc {
 
 void Station::Land(Json::Value data) {
     orc_assert(data["jsonrpc"] == "2.0");
-    return Outer()->Land(std::move(data));
+    return Outer().Land(std::move(data));
 }
 
 task<void> Station::Send(const std::string &method, const std::string &id, Argument args) {
@@ -35,7 +35,7 @@ task<void> Station::Send(const std::string &method, const std::string &id, Argum
     root["method"] = method;
     root["id"] = id;
     root["params"] = std::move(args);
-    co_await Inner()->Send(root);
+    co_await Inner().Send(root);
 }
 
 }

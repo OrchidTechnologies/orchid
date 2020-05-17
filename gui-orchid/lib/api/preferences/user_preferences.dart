@@ -23,12 +23,12 @@ class UserPreferences {
     return SharedPreferences.getInstance();
   }
 
-  static Future<String> loadStringValueForKey(UserPreferenceKey key) async {
+  static Future<String> readStringForKey(UserPreferenceKey key) async {
     return (await sharedPreferences()).getString(key.toString());
   }
 
   // This method accepts null as equivalent to removing the preference.
-  static Future<void> storeStringValueForKey(
+  static Future<void> writeStringForKey(
       UserPreferenceKey key, String value) async {
     return await (await sharedPreferences()).setString(key.toString(), value);
   }
@@ -241,14 +241,14 @@ class UserPreferences {
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
       key: UserPreferenceKey.PacTransaction,
       loadValue: (key) async {
-        String value = await loadStringValueForKey(key);
+        String value = await readStringForKey(key);
         return value != null
             ? PacTransaction.fromJson(jsonDecode(value))
             : null;
       },
       storeValue: (key, tx) {
         String value = tx != null ? jsonEncode(tx) : null;
-        return storeStringValueForKey(key, value);
+        return writeStringForKey(key, value);
       });
 }
 

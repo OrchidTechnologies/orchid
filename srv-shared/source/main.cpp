@@ -289,8 +289,8 @@ int Main(int argc, const char *const argv[]) {
             auto password(args["ovpn-pass"].as<std::string>());
 
             return Wait([origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() mutable -> task<S<Egress>> {
-                auto egress(Make<Sink<Egress>>(0));
-                co_await Connect(egress.get(), std::move(origin), 0, ovpnfile, username, password);
+                auto egress(Make<BufferSink<Egress>>(0));
+                co_await Connect(*egress, std::move(origin), 0, ovpnfile, username, password);
                 co_return egress;
             }());
         } else orc_assert(false);
