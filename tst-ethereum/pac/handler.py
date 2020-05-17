@@ -345,7 +345,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     push_txn_hash = config = signer_pubkey = None
     count = 0
     while ((push_txn_hash == None) and (count < 16)):
-        push_txn_hash, config, signer_pubkey = get_account_(price=total_usd)
+        push_txn_hash, config, signer_pubkey = get_account_(price=price)
         count = count + 1
     return push_txn_hash, config, signer_pubkey
 
