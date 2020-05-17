@@ -342,7 +342,7 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
 
 def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     logging.debug(f'Getting Account with Price:{price}')
-    push_txn_hash, config, signer_pubkey = None
+    push_txn_hash = config = signer_pubkey = None
     count = 0
     while ((push_txh_hash == None) and (count < 16)):
         push_txn_hash, config, signer_pubkey = get_account_(price=total_usd)
