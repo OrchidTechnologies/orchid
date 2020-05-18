@@ -613,7 +613,7 @@ def main(event, context):
                     claim_receipt(receipt_hash_table, receipt_hash)
 
                     #store result (idempotency)
-                    store_result(result_hash_table, receipt_hash, config, psh_txn_hash, os.environ['VERIFIER'])
+                    store_result(result_hash_table, receipt_hash, config, push_txn_hash, os.environ['VERIFIER'])
 
                     if is_true(os.environ.get('ENABLE_MONITORING', '')): # Jay may not like this
                         do_evil_monitoring()
