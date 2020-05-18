@@ -23,6 +23,7 @@
 #include <queue>
 
 #include <cppcoro/async_auto_reset_event.hpp>
+#include <cppcoro/async_manual_reset_event.hpp>
 #include <cppcoro/async_mutex.hpp>
 
 #include <lwip/err.h>
@@ -268,7 +269,7 @@ class RemoteConnection final :
     Transfer<err_t> opened_;
 
     cppcoro::async_mutex send_;
-    cppcoro::async_auto_reset_event sent_;
+    cppcoro::async_manual_reset_event sent_;
 
     cppcoro::async_auto_reset_event read_;
 
@@ -403,31 +404,39 @@ class RemoteConnection final :
 
     task<void> Send(const Buffer &data) override {
         const auto lock(co_await send_.scoped_lock_async());
-        for (Window window(data); !window.done(); co_await sent_, co_await Schedule()) {
+
+        Window window(data);
+        auto rest(window.size());
+
+        goto start; do {
+            co_await sent_;
+            co_await Schedule();
+
+          start:
             Core core;
             orc_assert(pcb_ != nullptr);
 
-            auto rest(tcp_sndbuf(pcb_));
-            if (rest == 0)
+            const auto need(tcp_sndbuf(pcb_));
+            if (need == 0) {
+                sent_.reset();
                 continue;
-            const auto size(window.size());
-            if (rest > size)
-                rest = size;
+            }
 
-            window.Take(rest, [&](const uint8_t *data, size_t size) {
-                return Chunk(data, size, [&](const uint8_t *data, size_t size) {
-                    orc_insist(size <= rest);
-                    if (size > 0xffff)
-                        size = 0xffff;
-                    rest -= size;
+            window.Take(std::min<size_t>(rest, need), [&](const uint8_t *data, size_t size) {
+                // XXX: this can't actually happen as need is a uint16_t, but for type safety...
+                if (size > 0xffff)
+                    size = 0xffff;
+                rest -= size;
 
-                    orc_lwipcall(tcp_write, (pcb_, data, size, TCP_WRITE_FLAG_COPY));
-                    // XXX: consider avoiding copies by holding the buffer until send completes
-                    copied_ += size;
-                    return size;
-                });
+                // XXX: consider avoiding copies by holding the buffer until send completes
+                u8_t flags(TCP_WRITE_FLAG_COPY);
+                if (rest != 0)
+                    flags |= TCP_WRITE_FLAG_MORE;
+                orc_lwipcall(tcp_write, (pcb_, data, size, flags));
+                copied_ += size;
+                return size;
             });
-        }
+        } while (rest != 0);
     }
 };
 

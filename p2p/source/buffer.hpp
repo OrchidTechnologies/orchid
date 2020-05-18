@@ -894,24 +894,20 @@ class Window :
 
     template <typename Code_>
     void Take(size_t need, Code_ &&code) {
-        auto &here(range_);
-        auto &step(offset_);
-
-        for (auto rest(ranges_.get() + count_ - here); need != 0; step = 0, ++here, --rest) {
+        for (auto rest(ranges_.get() + count_ - range_); need != 0; offset_ = 0, ++range_, --rest) {
             orc_assert(rest != 0);
 
-            const auto size(here->size() - step);
-            if (size == 0)
-                continue;
-
-            if (need < size) {
-                code(here->data() + step, need);
-                step += need;
-                break;
+            const auto data(range_->data());
+            auto size(std::min(need, range_->size() - offset_));
+            while (size != 0) {
+                const auto writ(code(data + offset_, size));
+                orc_insist(writ <= size);
+                offset_ += writ;
+                need -= writ;
+                if (need == 0)
+                    return;
+                size -= writ;
             }
-
-            code(here->data() + step, size);
-            need -= size;
         }
     }
 
@@ -919,6 +915,7 @@ class Window :
         Take(size, [&](const uint8_t *data, size_t size) {
             Copy(here, data, size);
             here += size;
+            return size;
         });
     }
 
@@ -957,6 +954,7 @@ class Window :
 
     void Skip(size_t size) {
         Take(size, [&](const uint8_t *data, size_t size) {
+            return size;
         });
     }
 
@@ -964,6 +962,7 @@ class Window :
         Take(size, [&](const uint8_t *data, size_t size) {
             for (decltype(size) i(0); i != size; ++i)
                 orc_assert(data[i] == 0);
+            return size;
         });
     }
 };
