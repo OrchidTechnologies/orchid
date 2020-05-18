@@ -59,6 +59,7 @@ class Transport :
     openvpn::TransportClientParent *parent_;
     asio::executor_work_guard<openvpn_io::io_context::executor_type> work_;
     Nest nest_;
+    bool stop_;
 
   protected:
     void Land(const Buffer &data) override {
@@ -76,14 +77,16 @@ class Transport :
     }
 
     void Stop(const std::string &error) noexcept override {
-        parent_->transport_error(openvpn::Error::UNDEF, error);
+        if (!stop_)
+            parent_->transport_error(openvpn::Error::UNDEF, error);
     }
 
   public:
     Transport(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) :
         context_(context),
         parent_(parent),
-        work_(context_.get_executor())
+        work_(context_.get_executor()),
+        stop_(false)
     {
     }
 
@@ -98,6 +101,7 @@ class Transport :
     }
 
     void stop() noexcept override {
+        stop_ = true;
         Wait(Shut());
         work_.reset();
     }
