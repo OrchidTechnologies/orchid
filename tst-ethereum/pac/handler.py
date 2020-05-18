@@ -512,8 +512,8 @@ def claim_receipt(receipt_hash_table, receipt_hash):
     receipt_hash_table.put_item(Item=ddb_item)
 
 def store_result(result_hash_table, receipt_hash, config, psh_txn_hash, verifier):
-    item = {
     logging.debug(f'store_result({receipt_hash},...)')
+    item = {
         'receipt': receipt_hash,
         'config': config,
         'push_txn_hash': push_txn_hash,
