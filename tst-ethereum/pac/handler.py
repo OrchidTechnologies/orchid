@@ -567,7 +567,7 @@ def main(event, context):
     receipt_hash = hash_receipt_body(receipt)
 
     #find any matching previous pot result and conditionally return it (idempotency)
-    response = find_previous_pot(result_hash_table, receipt_hash, os.environ['VERIFIER'], Stage):
+    response = find_previous_pot(result_hash_table, receipt_hash, os.environ['VERIFIER'], Stage)
     if (response != None):
         return response
 
