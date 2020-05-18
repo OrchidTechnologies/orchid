@@ -276,8 +276,8 @@ def random_scan(table, price):
     # generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
-    response0 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
-    response1 = table.query(KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
+    response0 = table.query(Limit=4,KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
+    response1 = table.query(Limit=4,KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
     response0['Items'].extend(response1['Items'])
     return response0
 
@@ -304,8 +304,8 @@ def get_transaction_status(txhash):
     return "unknown"
 
 
-def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    logging.debug(f'Getting Account with Price:{price}')
+def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    logging.debug(f'get_account_ price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = random_scan(table, price)
@@ -340,8 +340,20 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     return None, None, None
 
 
+def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    logging.debug(f'Getting Account with Price:{price}')
+    push_txn_hash = config = signer_pubkey = None
+    count = 0
+    while ((push_txn_hash == None) and (count < 16)):
+        push_txn_hash, config, signer_pubkey = get_account_(price=price)
+        count = count + 1
+    return push_txn_hash, config, signer_pubkey
+
+
 
 def hash_receipt_body(receipt):
+
+    #receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
 
     # Load the contents of the receipt file
     # receipt_file = open('./receipt_data.bin', 'rb').read()
@@ -365,6 +377,169 @@ def hash_receipt_body(receipt):
     return receipt_hash;
 
 
+def response_error_invalid_dev_param():
+    response = {
+        'isBase64Encoded': False,
+        'statusCode': 400,
+        'headers': {},
+        'body': json.dumps({
+            'message': 'dev-only parameter included in request!',
+            'push_txn_hash': None,
+            'config': None,
+            'seller': None,
+        })
+    }
+    logging.debug(f'dev-only parameter included in request! response: {response}')
+    return response
+
+def response_invalid_bundle(bundle_id):
+    logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 400,
+        "headers": {},
+        "body": json.dumps({
+            'message': f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)',
+            'push_txn_hash': None,
+            'config': None,
+            'seller': None,
+        })
+    }
+    return response
+
+def response_invalid_product(product_id):
+    logging.debug('Unknown product_id')
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 400,
+        "headers": {},
+        "body": json.dumps({
+            'message': f"Unknown product_id: {product_id}",
+            'push_txn_hash': None,
+            'config': None,
+            'seller': None,
+        })
+    }
+    return response
+
+def response_no_account():
+    logging.debug('Failed to find pot!')
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 404,
+        "headers": {},
+        "body": json.dumps({
+            "message": "No Account Found",
+            "push_txn_hash": None,
+            "config": None,
+            "seller": None,
+        })
+    }
+    return response
+
+def response_invalid_receipt(apple_response):
+    logging.debug('Invalid apple receipt')
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 402,
+        "headers": {},
+        "body": json.dumps({
+            "message": f"Validation Failure: {apple_response[1]}",
+            "push_txn_hash": None,
+            "config": None,
+            "seller": None,
+        })
+    }
+    return response
+
+def response_valid_account(push_txn_hash, config, verifier):
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 200,
+        "headers": {},
+        "body": json.dumps({
+            "push_txn_hash": push_txn_hash,
+            "config": config,
+            "seller": verifier,
+        })
+    }
+    return response
+
+def find_previous_pot(result_hash_table, receipt_hash, verifier, Stage):
+    result = result_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
+    if (Stage != 'dev' and result['Count'] > 0):  # we found a match, return it
+        item = result['Items'][0]
+        config = item['config']
+        push_txn_hash = item['push_txn_hash']
+        response = {
+            "isBase64Encoded": False,
+            "statusCode": 200,
+            "headers": {},
+            "body": json.dumps({
+                "push_txn_hash": push_txn_hash,
+                "config": config,
+                "seller": verifier,
+            })
+        }
+        logging.debug(f'found existing match for receipt_hash({receipt_hash}), result: {response}')
+        return response
+    return None
+
+def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
+    result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
+    if (result['Count'] > 0):  # we found a match - reject on duplicate
+        response = {
+            "isBase64Encoded": False,
+            "statusCode": 402,
+            "headers": {},
+            "body": json.dumps({
+                "message": "Validation Failure: duplicate receipt!",
+                "push_txn_hash": None,
+                "config": None,
+                "seller": None,
+            })
+        }
+        logging.debug(f'duplicate receipt! response: {response}')
+        return response
+    return None
+
+def claim_receipt(receipt_hash_table, receipt_hash):
+    logging.debug(f'claim_receipt({receipt_hash})')
+    item = {
+        'receipt': receipt_hash,
+    }
+    ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+    receipt_hash_table.put_item(Item=ddb_item)
+
+def store_result(result_hash_table, receipt_hash, config, psh_txn_hash, verifier):
+    logging.debug(f'store_result({receipt_hash},...)')
+    item = {
+        'receipt': receipt_hash,
+        'config': config,
+        'push_txn_hash': push_txn_hash,
+        'seller': verifier,
+    }
+    ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+    result_hash_table.put_item(Item=ddb_item)
+
+
+def do_evil_monitoring():
+    logging.debug(f'do_evil_monitoring()')
+    #token_name = get_token_name(address=os.environ['TOKEN'])
+    #token_symbol = get_token_symbol(address=os.environ['TOKEN'])
+    #token_decimals = get_token_decimals(address=os.environ['TOKEN'])
+    #pac_tokens = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
+    # lambda_metric(
+    #     f"orchid.pac.sale.{token_symbol.lower()}",
+    #     pac_tokens,
+    #     tags=[
+    #         f'token_name:{token_name}',
+    #         f'token_symbol:{token_symbol}',
+    #         f'token_decimals:{token_decimals}',
+    #         f'usd:{total_usd}',
+    #     ]
+    # )
+
 def main(event, context):
     Stage = os.environ['STAGE']
 
@@ -383,59 +558,24 @@ def main(event, context):
     result_hash_table = dynamodb.Table(os.environ['RESULT_TABLE_NAME'])
     receipt_hash_table = dynamodb.Table(os.environ['RECEIPT_TABLE_NAME'])
 
+    #check for dev params, respond with error in prod
     if os.environ['STAGE'] != 'dev':
-        if body.get('verify_receipt') or body.get('product_id'):  # todo: Use a whitelist rather than a blacklist
-            response = {
-                'isBase64Encoded': False,
-                'statusCode': 400,
-                'headers': {},
-                'body': json.dumps({
-                    'message': 'dev-only parameter included in request!',
-                    'push_txn_hash': None,
-                    'config': None,
-                    'seller': None,
-                })
-            }
-            logging.debug(f'dev-only parameter included in request! response: {response}')
-            return response
+        if body.get('verify_receipt') or body.get('product_id'):
+            return response_error_invalid_dev_param()
 
-    #receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
-    receipt_hash = hash_receipt_body(receipt);
+    #extract and hash the receipt body payload
+    receipt_hash = hash_receipt_body(receipt)
 
-    result = result_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
-    if (Stage != 'dev' and result['Count'] > 0):  # we found a match, return it
-        item = result['Items'][0]
-        config = item['config']
-        push_txn_hash = item['push_txn_hash']
-        response = {
-            "isBase64Encoded": False,
-            "statusCode": 200,
-            "headers": {},
-            "body": json.dumps({
-                "push_txn_hash": push_txn_hash,
-                "config": config,
-                "seller": os.environ['VERIFIER'],
-            })
-        }
-        logging.debug(f'found existing match for receipt_hash({receipt_hash}), result: {response}')
+    #find any matching previous pot result and conditionally return it (idempotency)
+    response = find_previous_pot(result_hash_table, receipt_hash, os.environ['VERIFIER'], Stage)
+    if (response != None):
         return response
 
+    #find and error return for any previous claim of the receipt (replay prevention) todo: this is not concurrent-safe, claim needs to be atomic
     verify_receipt = body.get('verify_receipt', 'True')
     if (is_true(verify_receipt)):
-        result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
-        if (result['Count'] > 0):  # we found a match - reject on duplicate
-            response = {
-                "isBase64Encoded": False,
-                "statusCode": 402,
-                "headers": {},
-                "body": json.dumps({
-                    "message": "Validation Failure: duplicate receipt!",
-                    "push_txn_hash": None,
-                    "config": None,
-                    "seller": None,
-                })
-            }
-            logging.debug(f'response: {response}')
+        response = find_previous_receipt_claim(receipt_hash_table, receipt_hash)
+        if (response != None):
             return response
 
     apple_response = process_app_pay_receipt(receipt)
@@ -446,19 +586,9 @@ def main(event, context):
             bundle_id = ''
         else:
             bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
+
         if bundle_id != 'OrchidTechnologies.PAC-Test' and is_true(verify_receipt):  # Bad bundle_id and set to verify_receipts
-            logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
-            response = {
-                "isBase64Encoded": False,
-                "statusCode": 400,
-                "headers": {},
-                "body": json.dumps({
-                    'message': f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)',
-                    'push_txn_hash': None,
-                    'config': None,
-                    'seller': None,
-                })
-            }
+            response = response_invalid_bundle(bundle_id)
         else:  # Good bundle_id or not verifying receipts
             product_id = body.get('product_id', validation_result['receipt']['in_app'][0]['product_id'])
             quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
@@ -469,87 +599,27 @@ def main(event, context):
             logging.debug(f'product_id: {product_id}')
             logging.debug(f'quantity: {quantity}')
             logging.debug(f'total_usd: {total_usd}')
-            if total_usd < 0:
-                logging.debug('Unknown product_id')
-                response = {
-                    "isBase64Encoded": False,
-                    "statusCode": 400,
-                    "headers": {},
-                    "body": json.dumps({
-                        'message': f"Unknown product_id: {product_id}",
-                        'push_txn_hash': None,
-                        'config': None,
-                        'seller': None,
-                    })
-                }
+            if total_usd <= 0:
+                response = response_invalid_product(product_id)
             else:
+                #find/claim a valid pot
                 push_txn_hash, config, signer_pubkey = get_account(price=total_usd)
                 if config is None:
-                    response = {
-                        "isBase64Encoded": False,
-                        "statusCode": 404,
-                        "headers": {},
-                        "body": json.dumps({
-                            "message": "No Account Found",
-                            "push_txn_hash": None,
-                            "config": None,
-                            "seller": None,
-                        })
-                    }
+                    response = response_no_account()
                 else:
-                    response = {
-                        "isBase64Encoded": False,
-                        "statusCode": 200,
-                        "headers": {},
-                        "body": json.dumps({
-                            "push_txn_hash": push_txn_hash,
-                            "config": config,
-                            "seller": os.environ['VERIFIER'],
-                        })
-                    }
-                    item = {
-                        'receipt': receipt_hash,
-                    }
-                    ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
-                    receipt_hash_table.put_item(Item=ddb_item)
+                    response = response_valid_account(push_txn_hash, config, os.environ['VERIFIER'])
 
-                    item = {
-                        'receipt': receipt_hash,
-                        'config': config,
-                        'push_txn_hash': push_txn_hash,
-                        'seller': os.environ['VERIFIER'],
-                    }
-                    ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
-                    result_hash_table.put_item(Item=ddb_item)
+                    #claim the receipt  todo: should be atomic, handle failure
+                    claim_receipt(receipt_hash_table, receipt_hash)
+
+                    #store result (idempotency)
+                    store_result(result_hash_table, receipt_hash, config, push_txn_hash, os.environ['VERIFIER'])
 
                     if is_true(os.environ.get('ENABLE_MONITORING', '')): # Jay may not like this
-                        token_name = get_token_name(address=os.environ['TOKEN'])
-                        token_symbol = get_token_symbol(address=os.environ['TOKEN'])
-                        token_decimals = get_token_decimals(address=os.environ['TOKEN'])
-                        pac_tokens = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
-                        # lambda_metric(
-                        #     f"orchid.pac.sale.{token_symbol.lower()}",
-                        #     pac_tokens,
-                        #     tags=[
-                        #         f'token_name:{token_name}',
-                        #         f'token_symbol:{token_symbol}',
-                        #         f'token_decimals:{token_decimals}',
-                        #         f'usd:{total_usd}',
-                        #     ]
-                        # )
+                        do_evil_monitoring()
 
     else:
-        response = {
-            "isBase64Encoded": False,
-            "statusCode": 402,
-            "headers": {},
-            "body": json.dumps({
-                "message": f"Validation Failure: {apple_response[1]}",
-                "push_txn_hash": None,
-                "config": None,
-                "seller": None,
-            })
-        }
+        response = response_invalid_receipt(apple_response)
     logging.debug(f'response: {response}')
     return response
 
