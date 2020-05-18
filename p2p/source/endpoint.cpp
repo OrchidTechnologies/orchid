@@ -24,7 +24,6 @@
 
 #include "endpoint.hpp"
 #include "error.hpp"
-#include "http.hpp"
 #include "json.hpp"
 
 namespace orc {

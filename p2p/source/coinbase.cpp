@@ -22,7 +22,6 @@
 
 #include "coinbase.hpp"
 #include "error.hpp"
-#include "http.hpp"
 #include "json.hpp"
 #include "locator.hpp"
 #include "origin.hpp"

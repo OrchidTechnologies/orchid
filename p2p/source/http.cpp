@@ -145,23 +145,4 @@ task<Response> Fetch(Origin &origin, const std::string &method, const Locator &l
     std::rethrow_exception(error);
 }, "requesting " << locator); }
 
-task<Response> Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
-    const auto local(Break<Local>());
-    const auto endpoints(co_await Resolve(*local, locator.host_, locator.port_));
-    asio::ip::tcp::socket socket(orc::Context());
-    const auto endpoint(co_await orc_value(co_return co_await, asio::async_connect(socket, endpoints, orc::Token()),
-        "connecting to " << endpoints));
-
-    orc_block({
-        const auto body(co_await Fetch_(socket, method, locator, headers, data, verify));
-
-        boost::beast::error_code error;
-        socket.shutdown(asio::ip::tcp::socket::shutdown_both, error);
-        if (error && error != boost::beast::errc::not_connected)
-            throw boost::beast::system_error{error};
-
-        co_return body;
-    }, "connected to " << endpoint);
-}, "requesting " << locator); }
-
 }
