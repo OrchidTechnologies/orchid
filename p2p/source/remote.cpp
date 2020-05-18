@@ -494,9 +494,6 @@ Remote::Remote() :
     type_ = typeid(*this).name();
 }
 
-Remote::~Remote() {
-}
-
 void Remote::Open() {
     netifapi_netif_set_up(&interface_);
     netifapi_netif_set_link_up(&interface_);

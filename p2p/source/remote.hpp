@@ -54,7 +54,6 @@ class Remote :
     Remote(const class Host &host);
   public:
     Remote();
-    ~Remote() override;
 
     void Open();
     task<void> Shut() noexcept override;
