@@ -464,6 +464,8 @@ void Remote::Land(const Buffer &data) {
 
 void Remote::Stop(const std::string &error) noexcept {
     netifapi_netif_set_link_down(&interface_);
+    netifapi_netif_set_down(&interface_);
+    netifapi_netif_remove(&interface_);
     Origin::Stop();
 }
 
@@ -493,7 +495,6 @@ Remote::Remote() :
 }
 
 Remote::~Remote() {
-    netifapi_netif_remove(&interface_);
 }
 
 void Remote::Open() {
@@ -505,7 +506,6 @@ task<void> Remote::Shut() noexcept {
     co_await nest_.Shut();
     co_await Sunken::Shut();
     co_await Valve::Shut();
-    netifapi_netif_set_down(&interface_);
 }
 
 class Host Remote::Host() {
