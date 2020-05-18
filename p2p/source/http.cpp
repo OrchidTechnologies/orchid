@@ -50,12 +50,14 @@ namespace orc {
 
 template <typename Stream_>
 task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) {
-    (void) co_await http::async_write(stream, req, orc::Token());
+    orc_block({ (void) co_await http::async_write(stream, req, orc::Token()); },
+        "writing http request");
 
     // this buffer must be maintained if this socket object is ever reused
     boost::beast::flat_buffer buffer;
     http::response<http::dynamic_body> res;
-    (void) co_await http::async_read(stream, buffer, res, orc::Token());
+    orc_block({ (void) co_await http::async_read(stream, buffer, res, orc::Token()); },
+        "reading http response");
 
     // XXX: I can probably return this as a buffer array
     Response response(res.result(), req.version());;
@@ -101,15 +103,15 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
         orc_assert(SSL_set_tlsext_host_name(stream.native_handle(), locator.host_.c_str()));
         // XXX: beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
 
-        try {
+        orc_block({ try {
             co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
         } catch (const asio::system_error &error) {
             orc_adapt(error);
-        }
+        } }, "in ssl handshake");
 
         const auto response(co_await Fetch_(stream, req));
 
-        try {
+        orc_block({ try {
             co_await stream.async_shutdown(orc::Token());
         } catch (const asio::system_error &error) {
             auto code(error.code());
@@ -119,7 +121,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
             else if (code == asio::ssl::error::stream_truncated);
                 // XXX: this is because of infura
             else orc_adapt(error);
-        }
+        } }, "in ssl shutdown");
 
         co_return response;
     } else orc_assert(false);

@@ -199,7 +199,6 @@ class Factory :
 
 class Middle :
     public openvpn::ClientAPI::OpenVPNClient,
-    public openvpn::TunClientFactory,
     public Link<Buffer>
 {
   private:
@@ -219,13 +218,8 @@ class Middle :
             middle_.Start(options, transport, settings);
         }
 
-        void stop() noexcept override {
-            middle_.Stop(std::string());
-        }
-
-        void set_disconnect() noexcept override {
-            orc_insist(false);
-        }
+        void stop() noexcept override {}
+        void set_disconnect() noexcept override {}
 
         bool tun_send(openvpn::BufferAllocated &buffer) noexcept override {
             if (orc_ignore({ middle_.Forge(buffer); }))
@@ -249,6 +243,36 @@ class Middle :
             return "vpn_gw6()"; }
     };
 
+    class Factory :
+        public openvpn::TunClientFactory
+    {
+      private:
+        Middle &middle_;
+
+      public:
+        Factory(Middle &middle) :
+            middle_(middle)
+        {
+        }
+
+        openvpn::TunClient::Ptr new_tun_client_obj(openvpn_io::io_context &context, openvpn::TunClientParent &parent, openvpn::TransportClient *transport) noexcept override {
+            middle_.parent_ = &parent;
+            return new Tunnel(middle_);
+        }
+    };
+
+  private:
+    const S<Origin> origin_;
+
+    openvpn::ExternalTun::Config config_;
+    openvpn::TunClientParent *parent_ = nullptr;
+    Event ready_;
+
+    const uint32_t local_;
+    uint32_t remote_ = 0;
+
+  private:
+    // XXX: sometimes I wonder if this can be moved into Tunnel, but it seems pointless as Send() needs parent_ below
     void Start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) noexcept {
         parent_->tun_pre_tun_config();
         parent_->tun_pre_route_config();
@@ -264,18 +288,6 @@ class Middle :
         orc_assert_(remote == remote_, "packet to " << Host(remote) << " != " << Host(remote_));
     }
 
-  private:
-    const S<Origin> origin_;
-
-    std::thread thread_;
-
-    openvpn::ExternalTun::Config config_;
-    openvpn::TunClientParent *parent_ = nullptr;
-    Event ready_;
-
-    const uint32_t local_;
-    uint32_t remote_ = 0;
-
   public:
     Middle(BufferDrain &drain, S<Origin> origin, uint32_t local) :
         Link<Buffer>(drain),
@@ -289,15 +301,9 @@ class Middle :
         return new orc::Factory(origin_, config);
     }
 
-
     openvpn::TunClientFactory *new_tun_factory(const openvpn::ExternalTun::Config &config, const openvpn::OptionList &options) noexcept override {
         config_ = config;
-        return this;
-    }
-
-    openvpn::TunClient::Ptr new_tun_client_obj(openvpn_io::io_context &context, openvpn::TunClientParent &parent, openvpn::TransportClient *transport) noexcept override {
-        parent_ = &parent;
-        return new Tunnel(*this);
+        return new Factory(*this);
     }
 
 
@@ -390,11 +396,16 @@ class Middle :
                 orc_assert_(!status.error, status.status << ": " << status.message);
             }
 
-            thread_ = std::thread([this]() {
+            std::thread([this]() {
                 const auto status(connect());
-                orc_insist_(!status.error, " " << status.status << ": " << status.message);
-                orc_insist(false);
-            });
+                if (!status.error)
+                    Stop();
+                else {
+                    std::ostringstream error;
+                    error << status.status << " " << status.message;
+                    Stop(error.str());
+                }
+            }).detach();
         } catch (const std::exception &error) {
             co_return Stop(error.what());
         }
@@ -405,7 +416,7 @@ class Middle :
     }
 
     task<void> Shut() noexcept override {
-        // XXX: this isn't really shutting anything
+        stop();
         co_await Link::Shut();
     }
 
