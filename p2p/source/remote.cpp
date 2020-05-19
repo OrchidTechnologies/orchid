@@ -308,25 +308,37 @@ class RemoteConnection final :
             tcp_abort(pcb_);
     }
 
-    task<size_t> Read(Beam &data) override {
+    task<size_t> Read(Beam &buffer) override {
+        auto data(buffer.data());
+        auto size(buffer.size());
+        orc_insist(size != 0);
+
         for (;; co_await read_, co_await Schedule()) {
             const auto locked(locked_());
             if (!locked->data_.empty()) {
-                const auto &next(locked->data_.front());
+                size_t writ(0);
 
+              next:
+                const auto &next(locked->data_.front());
                 const auto base(next.data());
                 const auto rest(next.size() - locked->offset_);
                 if (rest == 0)
                     co_return 0;
 
-                const auto writ(std::min(data.size(), rest));
-                Copy(data.data(), base + locked->offset_, writ);
+                const auto have(std::min(size, rest));
+                Copy(data, base + locked->offset_, have);
+                writ += have;
 
-                if (rest != writ)
-                    locked->offset_ += writ;
+                if (rest != have)
+                    locked->offset_ += have;
                 else {
                     locked->data_.pop();
                     locked->offset_ = 0;
+                    if (size != have && !locked->data_.empty()) {
+                        data += have;
+                        size -= have;
+                        goto next;
+                    }
                 }
 
                 co_return writ;

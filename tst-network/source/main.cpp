@@ -67,6 +67,7 @@ struct Report {
 typedef std::tuple<Float, size_t> Measurement;
 
 task<Measurement> Measure(Origin &origin) {
+    co_await Sleep(1);
     const auto before(Monotonic());
     const auto test((co_await origin.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
     co_return Measurement{test.size() * 8 / Float(Monotonic() - before), test.size()};
