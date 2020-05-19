@@ -51,7 +51,8 @@ endif
 rsync := rsync -a --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature Headers Modules)
 
 $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist: $(dart) $(temp)
-	rm -rf $(app) $(embed)
+	# XXX: as far as I can tell flutter's build system is just entirely broken :/
+	rm -rf .dart_tool $(output)/flutter
 	$(flutter) assemble \
 	    -dTargetPlatform="$(platform)" \
 	    -dTargetFile="lib/main.dart" \
@@ -64,15 +65,17 @@ $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%pl
 	    -dEnableBitcode="" \
 	    -dDartDefines="" \
 	    -dExtraFrontEndOptions="" \
-	    --output="$(bundle)$(contents)/Frameworks" \
+	    --output="$(output)/flutter" \
 	   "$(mode)_$(assemble)_bundle_flutter_assets"
+	@mkdir -p $(dir $(app)) $(dir $(embed))
 ifeq ($(target),mac)
-	rm -rf $(dir $(embed))$(framework).framework{,$(versions)}/{Headers,Modules}
+	$(rsync) $(output)/flutter/$(framework).framework $(dir $(embed))
 else
-	$(rsync) --filter '- Flutter' $(engine)/Flutter.framework $(dir $(embed))
-	xcrun bitcode_strip -r $(engine)/Flutter.framework/Flutter -o $(embed)/Flutter
-	lipo $(patsubst %,-extract %,$(archs)) $(embed)/Flutter -output $(embed)/Flutter
+	$(rsync) --filter '- $(framework)' $(engine)/$(framework).framework $(dir $(embed))
+	xcrun bitcode_strip -r $(engine)/$(framework).framework/Flutter -o $(embed)/$(framework)
+	lipo $(patsubst %,-extract %,$(archs)) $(embed)/$(framework) -output $(embed)/$(framework)
 endif
+	$(rsync) $(output)/flutter/App.framework $(dir $(app))
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))
 
 signed += $(app)$(versions)$(signature)
@@ -94,7 +97,7 @@ $(assemble)/Pods/Manifest.lock: $(assemble)/Podfile shared/gui/.flutter-plugins
 
 $(output)/XCBuildData/build.db: shared/empty.plist $(assemble)/Pods/Manifest.lock
 	xcodebuild -project $(assemble)/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
-	for framework in $(output)/Release/*/*.framework; do \
+	shopt -s nullglob; for framework in $(output)/Release/*/*.framework; do \
 	    $(rsync) "$${framework}" "$(bundle)$(contents)/Frameworks"; \
 	    framework="$(bundle)$(contents)/Frameworks/$${framework##*/}"; \
 	    $(call codesign,$${framework},$<,$${framework}$(versions)$(signature)); \
