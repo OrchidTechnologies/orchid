@@ -521,7 +521,7 @@ def store_result(result_hash_table, receipt_hash, config, push_txn_hash, verifie
         'config': config,
         'push_txn_hash': push_txn_hash,
         'seller': verifier,
-        'expiration_time' = expiration_time,
+        'expiration_time' : expiration_time,
     }
     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
     result_hash_table.put_item(Item=ddb_item)
