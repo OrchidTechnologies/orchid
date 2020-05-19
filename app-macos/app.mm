@@ -31,6 +31,10 @@
 @end
 
 
+@interface FlutterViewController ()
+- (BOOL) launchEngine;
+@end
+
 @interface MainFlutterWindow : NSWindow
 
 @property(strong,nonatomic) NETunnelProviderManager *providerManager;
@@ -242,6 +246,24 @@
 
     // Flutter plugins use [UIApplication sharedApplication].delegate.window.rootViewController to get the FlutterViewController
     [GeneratedPluginRegistrant registerWithRegistry:flutter];
+
+    [flutter launchEngine];
+
+    // Work-around for something similar to https://github.com/flutter/flutter/issues/39032
+    // This is safe to remove once the fix for that is ported to macOS
+    NSLocale* currentLocale = [NSLocale currentLocale];
+    if (currentLocale.languageCode != nil) {
+      [[FlutterMethodChannel methodChannelWithName:@"flutter/localization" binaryMessenger:flutter.engine.binaryMessenger codec:[FlutterJSONMethodCodec sharedInstance]]
+        invokeMethod:@"setLocale"
+        arguments: @[
+          currentLocale.languageCode,
+          currentLocale.countryCode ? currentLocale.countryCode : @"",
+          currentLocale.scriptCode ? currentLocale.scriptCode : @"",
+          currentLocale.variantCode ? currentLocale.variantCode : @""
+          ]
+        ];
+    }
+    // End work-around
 
     feedback_ = [FlutterMethodChannel methodChannelWithName:@"orchid.com/feedback" binaryMessenger:flutter.engine.binaryMessenger];
 
