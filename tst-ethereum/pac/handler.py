@@ -510,9 +510,10 @@ def claim_receipt(receipt_hash_table, receipt_hash):
         'receipt': receipt_hash,
     }
     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
-    receipt_hash_table.put_item(Item=ddb_item)
+    # fail if already exists, raises ConditionalCheckFailedException
+    receipt_hash_table.put_item(Item=ddb_item,ConditionExpression='attribute_not_exists(receipt)')
 
-def store_result(result_hash_table, receipt_hash, config, psh_txn_hash, verifier):
+def store_result(result_hash_table, receipt_hash, config, push_txn_hash, verifier):
     logging.debug(f'store_result({receipt_hash},...)')
     expiration_time = int(time.time() + 24*3600*7) # one week
     item = {
@@ -612,7 +613,7 @@ def main(event, context):
                 else:
                     response = response_valid_account(push_txn_hash, config, os.environ['VERIFIER'])
 
-                    #claim the receipt  todo: should be atomic, handle failure
+                    #claim the receipt (conditionally atomically, exception fails if already exists)
                     claim_receipt(receipt_hash_table, receipt_hash)
 
                     #store result (idempotency)
