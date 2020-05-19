@@ -168,10 +168,11 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
         secret=secret,
     )
 
+    # todo: pass on gas and app-store overhead?
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
     total_oxt = total_usd * oxt_per_usd
-    escrow_oxt = 3.0
+    escrow_oxt = 6.0 # todo: better alg to determine this?
     if (escrow_oxt >= 0.9*total_oxt):
         escrow_oxt = 0.5*total_oxt
 
@@ -513,11 +514,13 @@ def claim_receipt(receipt_hash_table, receipt_hash):
 
 def store_result(result_hash_table, receipt_hash, config, psh_txn_hash, verifier):
     logging.debug(f'store_result({receipt_hash},...)')
+    expiration_time = int(time.time() + 24*3600*7) # one week
     item = {
         'receipt': receipt_hash,
         'config': config,
         'push_txn_hash': push_txn_hash,
         'seller': verifier,
+        'expiration_time' = expiration_time,
     }
     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
     result_hash_table.put_item(Item=ddb_item)
