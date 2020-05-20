@@ -121,8 +121,6 @@ plugins:
   - serverless-plugin-datadog
   - serverless-pseudo-parameters
   - serverless-python-requirements
-  - serverless-dynamodb-local
-  - serverless-offline
 package:
   exclude:
     - venv/**
