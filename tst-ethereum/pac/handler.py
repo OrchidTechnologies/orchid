@@ -172,14 +172,11 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
     total_oxt = total_usd * oxt_per_usd
-    escrow_oxt = 6.0 # todo: better alg to determine this?
+    escrow_oxt = 12.0 # todo: better alg to determine this?
     if (escrow_oxt >= 0.9*total_oxt):
         escrow_oxt = 0.5*total_oxt
 
-    logging.debug(
-        f"Funding PAC  signer: {signer}, \
-total: ${total_usd}{total_oxt} OXT, \
-escrow: {escrow_oxt} OXT ")
+    logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT")
 
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
@@ -313,28 +310,33 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
     response = random_scan(table, price)
     ret = None
     signer_pubkey = '0xTODO'
+    epoch_time = int(time.time())
     for item in response['Items']:
         if float(price) == float(item['price']):
             signer_pubkey = item['signer']
             config = item['config']
             push_txn_hash = item['push_txn_hash']
+            creation_etime = item['creation_etime']
+            age = epoch_time - creation_etime;
             # check status - make sure pot is ready
             #status = item['status']
             status = get_transaction_status(push_txn_hash)
-            if (status != 'confirmed'):
-                logging.debug(f'Skipping account ({push_txn_hash}) with status: {status}')
+            if ((status != 'confirmed') and (age < 3600)):
+                logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
-            logging.debug(f'Found available account ({push_txn_hash}): {config}')
+            logging.debug(f'Found potential account ({push_txn_hash}) status: {status} age:{age} config: {config}')
             key = {
                 'price': item['price'],
                 'signer': signer_pubkey,
             }
-
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
                 # update succeeded
-                ret = push_txn_hash, config, signer_pubkey
-                break
+                if (status == 'confirmed'):
+                    ret = push_txn_hash, config, signer_pubkey
+                    break
+                else:
+                    logging.debug(f'broken account: {push_txn_hash} status: {status}  age: {age} deleted and skipped')
             else:
                 logging.debug('Account was already deleted!')
     if ret:
