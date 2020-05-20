@@ -284,12 +284,13 @@ def random_scan(table, price):
 
 
 def get_transaction_confirm_count(txhash):
+    logging.debug(f'get_transaction_confirm_count({txhash}) ')
     blocknum  = w3.eth.blockNumber
-    block     = w3.eth.getBlock('latest')
-    blocknum2 = block['number']
+    #block     = w3.eth.getBlock('latest')
+    #blocknum2 = block['number']
     trans = w3.eth.getTransaction(txhash)
     diff  = blocknum - trans['blockNumber']
-    logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum},{blocknum2}) diff({diff}) ')
+    logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum}) diff({diff}) ')
     return diff
 
 
@@ -345,7 +346,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     logging.debug(f'Getting Account with Price:{price}')
     push_txn_hash = config = signer_pubkey = None
     count = 0
-    while ((push_txn_hash == None) and (count < 16)):
+    while ((push_txn_hash == None) and (count < 8)):
         push_txn_hash, config, signer_pubkey = get_account_(price=price)
         count = count + 1
     return push_txn_hash, config, signer_pubkey
