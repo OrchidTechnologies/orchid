@@ -316,7 +316,7 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             signer_pubkey = item['signer']
             config = item['config']
             push_txn_hash = item['push_txn_hash']
-            creation_etime = item['creation_etime']
+            creation_etime = item.get('creation_etime',0)
             age = epoch_time - creation_etime;
             # check status - make sure pot is ready
             #status = item['status']
