@@ -372,7 +372,10 @@ def hash_receipt_body(receipt):
     receipt_data = pkcs_container['content']['encap_content_info']['content']
     logging.debug(f'extracted certificates {len(str(certificates))}B  signer_info {len(str(signer_info))}B  receipt_data {len(str(receipt_data))}B')
 
-    receipt_hash = hashlib.sha256(str(receipt_data).encode('utf-8')).hexdigest()
+    receipt_data_str = str(receipt_data).encode('utf-8')
+    logging.debug(f'receipt_data_str: \n{receipt_data_str}')
+
+    receipt_hash = hashlib.sha256(receipt_data_str).hexdigest()
     logging.debug(f'receipt_hash: {receipt_hash}')
 
     return receipt_hash;
@@ -409,7 +412,7 @@ def response_invalid_bundle(bundle_id):
     return response
 
 def response_invalid_product(product_id):
-    logging.debug('Unknown product_id')
+    logging.debug(f'response_invalid_product(product_id:{product_id})')
     response = {
         "isBase64Encoded": False,
         "statusCode": 400,
@@ -424,7 +427,7 @@ def response_invalid_product(product_id):
     return response
 
 def response_no_account():
-    logging.debug('Failed to find pot!')
+    logging.debug('response_no_account()')
     response = {
         "isBase64Encoded": False,
         "statusCode": 404,
@@ -439,7 +442,7 @@ def response_no_account():
     return response
 
 def response_invalid_receipt(apple_response):
-    logging.debug('Invalid apple receipt')
+    logging.debug('response_invalid_receipt(.)')
     response = {
         "isBase64Encoded": False,
         "statusCode": 402,
@@ -454,6 +457,7 @@ def response_invalid_receipt(apple_response):
     return response
 
 def response_valid_account(push_txn_hash, config, verifier):
+    logging.debug(f'response_valid_account(push_txn_hash:{push_txn_hash})')
     response = {
         "isBase64Encoded": False,
         "statusCode": 200,
@@ -467,6 +471,7 @@ def response_valid_account(push_txn_hash, config, verifier):
     return response
 
 def find_previous_pot(result_hash_table, receipt_hash, verifier, Stage):
+    logging.debug(f'find_previous_pot( receipt_hash:{receipt_hash}, verifier: {verifier}, Stage: {Stage})')
     result = result_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
     if (Stage != 'dev' and result['Count'] > 0):  # we found a match, return it
         item = result['Items'][0]
@@ -487,6 +492,7 @@ def find_previous_pot(result_hash_table, receipt_hash, verifier, Stage):
     return None
 
 def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
+    logging.debug(f'find_previous_receipt_claim( receipt_hash:{receipt_hash})')
     result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
     if (result['Count'] > 0):  # we found a match - reject on duplicate
         response = {
@@ -505,7 +511,7 @@ def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
     return None
 
 def claim_receipt(receipt_hash_table, receipt_hash):
-    logging.debug(f'claim_receipt({receipt_hash})')
+    logging.debug(f'claim_receipt(receipt_hash:{receipt_hash})')
     item = {
         'receipt': receipt_hash,
     }
@@ -514,7 +520,7 @@ def claim_receipt(receipt_hash_table, receipt_hash):
     receipt_hash_table.put_item(Item=ddb_item,ConditionExpression='attribute_not_exists(receipt)')
 
 def store_result(result_hash_table, receipt_hash, config, push_txn_hash, verifier):
-    logging.debug(f'store_result({receipt_hash},...)')
+    logging.debug(f'store_result(receipt_hash:{receipt_hash},...)')
     expiration_time = int(time.time() + 24*3600*7) # one week
     item = {
         'receipt': receipt_hash,
