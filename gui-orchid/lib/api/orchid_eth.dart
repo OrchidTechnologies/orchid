@@ -8,6 +8,8 @@ import 'orchid_budget_api.dart';
 import 'orchid_crypto.dart';
 
 class OrchidEthereum {
+  static OrchidEthereum _shared = OrchidEthereum._init();
+
   //static var providerUrl = 'https://cloudflare-eth.com';
   // TODO: Temporarily using this api-key bound solution with Infura due to
   // TODO: unreliability of Cloudflare.
@@ -21,6 +23,12 @@ class OrchidEthereum {
   // The ABI identifier for the `look` method.
   // Note: The first four bytes of the signature hash (Remix can provide this).
   static var lotteryLookMethodHash = '1554ad5d';
+
+  OrchidEthereum._init();
+
+  factory OrchidEthereum() {
+    return _shared;
+  }
 
   // Get the provider URL allowing override in the advanced config
   static Future<String> get url async {
@@ -50,13 +58,18 @@ class OrchidEthereum {
   static Future<LotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
     print("fetch pot for: $funder, $signer, url = ${await url}");
+
     // construct the abi encoded eth_call
-    var params = '[{'
-        '"to": "$lotteryContractAddress", '
-        '"data": "0x${lotteryLookMethodHash}${abiEncoded(funder)}${abiEncoded(signer)}"'
-        '}, "latest"]';
-    var postBody =
-        '{"jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": ${params}}';
+    var params = [
+      {
+        "to": "$lotteryContractAddress",
+        "data":
+            "0x$lotteryLookMethodHash${abiEncoded(funder)}${abiEncoded(signer)}"
+      },
+      "latest"
+    ];
+    var postBody = jsonEncode(
+        {"jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": params});
 
     // do the post
     var response = await http.post(await url,
@@ -66,9 +79,8 @@ class OrchidEthereum {
       throw Exception("Error status code: ${response.statusCode}");
     }
     var body = json.decode(response.body);
-
     if (body['error'] != null) {
-      throw Exception("Cloudflare fetch error in response: $body");
+      throw Exception("fetch error in response: $body");
     }
 
     String result = body['result'];
@@ -91,6 +103,43 @@ class OrchidEthereum {
 
     return LotteryPot(
         balance: balance, deposit: deposit, unlock: unlock, verifier: verifier);
+  }
+
+  DateTime _lastGasPriceTime;
+  GWEI _lastGasPrice;
+
+  /// Get the current median gas price.
+  /// curl $url --data '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}'
+  /// {"jsonrpc":"2.0","id":0,"result":"0x2cb417800"}
+  Future<GWEI> getGasPrice() async {
+    // Cache for a period of time
+    if (_lastGasPrice != null &&
+        DateTime.now().difference(_lastGasPriceTime) < Duration(minutes: 5)) {
+      print("returning cached gas price");
+      return _lastGasPrice;
+    }
+
+    print("fetching gas price");
+    var postBody = jsonEncode(
+        {"jsonrpc": "2.0", "method": "eth_gasPrice", "params": [], "id": 0});
+    var response = await http.post(await url,
+        headers: {"Content-Type": "application/json"}, body: postBody);
+
+    if (response.statusCode != 200) {
+      throw Exception("Error status code: ${response.statusCode}");
+    }
+    var body = json.decode(response.body);
+    if (body['error'] != null) {
+      throw Exception("fetch error in response: $body");
+    }
+
+    String result = body['result'];
+    if (result.startsWith('0x')) {
+      result = result.substring(2);
+    }
+    _lastGasPrice = GWEI.fromWei(BigInt.parse(result, radix: 16));
+    _lastGasPriceTime = DateTime.now();
+    return _lastGasPrice;
   }
 
   // Pad a 40 character address to 64 characters with no prefix

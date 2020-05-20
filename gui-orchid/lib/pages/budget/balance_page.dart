@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:orchid/api/etherscan_io.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
-import 'package:orchid/api/pricing.dart';
+import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/pages/app_gradients.dart';
 import 'package:orchid/pages/budget/budget_page.dart';
 import 'package:orchid/pages/budget/budget_summary_tile.dart';
