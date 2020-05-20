@@ -623,7 +623,8 @@ def main(event, context):
                     response = response_valid_account(push_txn_hash, config, os.environ['VERIFIER'])
 
                     #claim the receipt (conditionally atomically, exception fails if already exists)
-                    claim_receipt(receipt_hash_table, receipt_hash)
+                    if (Stage != 'dev'):
+                        claim_receipt(receipt_hash_table, receipt_hash)
 
                     #store result (idempotency)
                     store_result(result_hash_table, receipt_hash, config, push_txn_hash, os.environ['VERIFIER'])
