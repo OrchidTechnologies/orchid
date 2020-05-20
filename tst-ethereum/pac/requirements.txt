@@ -27,7 +27,7 @@ google-auth==1.14.0
 google-auth-httplib2==0.0.3
 googleapis-common-protos==1.51.0
 hexbytes==0.2.0
-httplib2==0.17.2
+httplib2==0.18.0
 idna==2.9
 importlib-metadata==1.6.0
 inapppy==2.4.4
