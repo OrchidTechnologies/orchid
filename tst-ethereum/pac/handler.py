@@ -300,7 +300,7 @@ def get_transaction_status(txhash):
             return "confirmed"
         else:
             return "unconfirmed"
-    except w3.TransactionNotFound:
+    except:
         return "unknown"
     return "unknown"
 
