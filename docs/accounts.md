@@ -24,11 +24,11 @@ Under certain market conditions, users need to increase the size of their deposi
 
 If you have received a message in the Orchid app that the deposit is too small, follow these steps:
 
--Open the Ethereum wallet you used to create the Orchid account (i.e. load Metamask or Trust Wallet)
--Load [account.orchid.com](https://account.orchid.com). You should see your funded account.
--Click on "More" in the upper right, then select "Move Funds"
--Ensure that your current deposit is at least 15 OXT
--If you need more OXT, click on the "Add" button to add funds from your Ethereum wallet
+- Open the Ethereum wallet you used to create the Orchid account (i.e. load Metamask or Trust Wallet)
+- Load [account.orchid.com](https://account.orchid.com). You should see your funded account.
+- Click on "More" in the upper right, then select "Move Funds"
+- Ensure that your current deposit is at least 15 OXT
+- If you need more OXT, click on the "Add" button to add funds from your Ethereum wallet
 
 Market conditions are driven by the price of OXT and the [current gas cost](https://ethgasstation.info) on Ethereum. Please [contact us](https://www.orchid.com/contact) for support if you received the "deposit size too small" message and are having difficulty.
 
@@ -42,20 +42,20 @@ Using the current price of OXT and market prices (which includes the gas costs o
 
 Here is an overview of the different ways you can manipulate an Orchid account using our web3 website. In general, each one of these pages helps you make a call to our nanopayment Ethereum smart contract. 
 
-[**Create account**](https://account.orchid.com)
+- [**Create account**](https://account.orchid.com)
 Creates an Orchid account. Requires OXT and ETH. 
 
-[**Add funds**](https://account.orchid.com/#addFunds)
+- [**Add funds**](https://account.orchid.com/#addFunds)
 Adds OXT to your balance and deposit.
 
-[**Withdraw funds**](https://account.orchid.com/#withdrawFunds)
+- [**Withdraw funds**](https://account.orchid.com/#withdrawFunds)
 Withdraws funds from your account to an Ethereum wallet.
 
-[**Move funds**](https://account.orchid.com/#moveFunds)
+- [**Move funds**](https://account.orchid.com/#moveFunds)
 Moves funds from your balance to your deposit. 
 
-[***Unlock Funds**](https://account.orchid.com/#lockFunds)
+- [**Unlock Funds**](https://account.orchid.com/#lockFunds)
 Locks and unlocks your deposit for withdrawal.
 
-[**View Balances**](https://account.orchid.com/#balances)
+- [**View Balances**](https://account.orchid.com/#balances)
 Displays all the information about your account, including the deposit, balance, public signer key and Ethereum wallet address.
