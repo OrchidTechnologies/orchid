@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:badges/badges.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
@@ -18,6 +20,7 @@ import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/util/units.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../app_colors.dart';
 import '../app_text.dart';
@@ -53,6 +56,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   DateTime _lotteryPotLastUpdate;
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
+  bool _showMarketStatsAlert = false;
 
   @override
   void initState() {
@@ -234,6 +238,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildFunding() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         // Balance and Deposit
         Visibility(
@@ -241,12 +246,22 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           child: _buildBalance(),
         ),
 
+        pady(16),
         // Wallet address (funder)
         _buildWalletAddress(),
 
         // Signer key
         pady(widget.readOnly() ? 0 : 24),
         _buildSignerKey(),
+
+        // Market Stats
+        if (widget.mode == HopEditorMode.View) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 16),
+            child: _buildMarketStatsLink(),
+          ),
+        ],
+
         if (widget.readOnly())
           Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 8),
@@ -256,7 +271,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 _buildExportAccountButton(),
               ],
             ),
-          )
+          ),
       ],
     );
   }
@@ -294,12 +309,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           ],
         ),
 
-        pady(16),
         // Show the import key field if the user has selected the option
         Visibility(
           visible: widget.editable() &&
               _selectedKeyItem?.option == KeySelectionDropdown.importKeyOption,
-          child: _buildImportKey(),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: _buildImportKey(),
+          ),
         )
       ],
     );
@@ -399,7 +416,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           child:
               Text(depositText, textAlign: TextAlign.left, style: valueStyle),
         ),
-        pady(16)
       ],
     );
   }
@@ -434,6 +450,106 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             textAlign: TextAlign.left, style: AppText.dialogBody),
       ],
     );
+  }
+
+  Widget _buildMarketStatsLink() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _showMarketStats,
+        child: Row(
+          children: [
+            LinkText(
+              "Market Stats",
+              style: AppText.linkStyle.copyWith(fontSize: 13),
+              onTapped: _showMarketStats,
+            ),
+            padx(8),
+            Badge(
+              showBadge: _showMarketStatsAlert,
+              position: BadgePosition.topRight(top: -6, right: -28),
+              badgeContent: Text("!",
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
+              padding: EdgeInsets.all(8),
+              toAnimate: false,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showMarketStats() async {
+    // TODO: If we keep this refactor with the similar pricing API code.
+    // data
+    Pricing pricing = await OrchidPricingAPI().getPricing();
+    GWEI gasPrice = await OrchidEthereum().getGasPrice();
+    if (_lotteryPot == null || pricing == null || gasPrice == null) {
+      return;
+    }
+    ETH gasCostToRedeem =
+        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toETH();
+    OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
+    OXT maxFaceValue = OXT.min(_lotteryPot.balance, _lotteryPot.deposit / 2.0);
+
+    // formatting
+    var ethPriceText =
+        formatCurrency(1.0 / pricing?.ethToUsdRate, suffix: "USD");
+    var oxtPriceText =
+        formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: "USD");
+    var gasPriceText = formatCurrency(gasPrice.value, suffix: "GWEI");
+    String maxFaceValueText =
+        formatCurrency(maxFaceValue?.value, suffix: "OXT");
+    String costToRedeemText =
+        formatCurrency(oxtCostToRedeem.value, suffix: "OXT");
+    bool ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
+    bool gasPriceHigh = gasPrice.value >= 15.0;
+    bool balanceLimited =
+        _lotteryPot.balance.value < _lotteryPot.deposit.value / 2.0;
+    String limitedByText = balanceLimited
+        ? "Your max ticket value is currently limited by your balance of  "
+            "${formatCurrency(_lotteryPot.balance.value, suffix: 'OXT')}.  "
+            "Consider adding OXT to your account balance."
+        : "Your max ticket value is currently limited by your deposit of "
+            "${formatCurrency(_lotteryPot.deposit.value, suffix: 'OXT')}.  "
+            "Consider adding OXT to your deposit or moving funds from your balance to your deposit.";
+    String limitedByTitleText =
+        balanceLimited ? "Balance too low" : "Deposit size too small";
+
+    return Dialogs.showAppDialog(
+        context: context,
+        title: "Market Stats",
+        body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text("Prices", style: TextStyle(fontWeight: FontWeight.bold)),
+              pady(4),
+              Text("ETH price: $ethPriceText"),
+              Text("OXT price: $oxtPriceText"),
+              Text("Gas price: $gasPriceText",
+                  style: gasPriceHigh ? TextStyle(color: Colors.red) : null),
+              pady(16),
+              Text("Ticket Value",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              pady(4),
+              Text("Max face value: $maxFaceValueText"),
+              Text("Cost to redeem: $costToRedeemText",
+                  style:
+                      ticketUnderwater ? TextStyle(color: Colors.red) : null),
+              pady(16),
+              Text(limitedByTitleText,
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              pady(8),
+              Text(limitedByText,
+                  style: TextStyle(fontStyle: FontStyle.italic)),
+              pady(16),
+              LinkText("View the docs for help on this issue.",
+                  style: AppText.linkStyle.copyWith(fontSize: 15),
+                  url:
+                      'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
+            ]));
   }
 
   void _editCurator() async {
@@ -606,9 +722,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         print("Error fetching lottery pot: $err");
         return;
       }
+      var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
       if (mounted) {
         setState(() {
           _lotteryPot = pot;
+          _showMarketStatsAlert = ticketValue.value <= 0;
         });
       }
       _lotteryPotLastUpdate = DateTime.now();

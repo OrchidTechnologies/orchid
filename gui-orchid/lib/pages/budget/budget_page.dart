@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
-import 'package:orchid/api/pricing.dart';
+import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';

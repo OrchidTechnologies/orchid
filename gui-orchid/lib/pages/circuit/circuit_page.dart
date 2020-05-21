@@ -4,6 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
@@ -27,6 +30,7 @@ import 'hop_editor.dart';
 import 'hop_tile.dart';
 import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
+import 'model/orchid_hop.dart';
 
 class CircuitPage extends StatefulWidget {
   final WrappedSwitchController switchController;
@@ -77,6 +81,8 @@ class CircuitPageState extends State<CircuitPage>
     initAnimations();
   }
 
+  Timer _checkBalancesTimer;
+
   void initStateAsync() async {
     // Hook up to the provided vpn switch
     widget.switchController.onChange = _connectSwitchChanged;
@@ -96,6 +102,29 @@ class CircuitPageState extends State<CircuitPage>
     });
 
     _checkFirstLaunch();
+    _checkBalancesTimer =
+        Timer.periodic(Duration(seconds: 30), _checkOrchidHopAlerts);
+  }
+
+  Map<UniqueHop, bool> _showHopAlert = Map();
+
+  /// Check each Orchid Hop's lottery pot for alert conditions.
+  void _checkOrchidHopAlerts(timer) async {
+    if (_hops == null) {
+      return;
+    }
+    // Check for hops that cannot write tickets.
+    List<StoredEthereumKey> keys = await UserPreferences().getKeys();
+    for (var uniqueHop in _hops) {
+      CircuitHop hop = uniqueHop.hop;
+      if (hop is OrchidHop) {
+        var pot =
+            await OrchidEthereum.getLotteryPot(hop.funder, hop.getSigner(keys));
+        var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
+        _showHopAlert[uniqueHop] = ticketValue.value <= 0;
+      }
+    }
+    setState(() {});
   }
 
   void _checkFirstLaunch() async {
@@ -123,6 +152,7 @@ class CircuitPageState extends State<CircuitPage>
       _connectionStateChanged(OrchidAPI().connectionStatus.value,
           animated: false);
     }
+    _checkOrchidHopAlerts(null); // refresh alert status
   }
 
   void initAnimations() {
@@ -476,6 +506,7 @@ class CircuitPageState extends State<CircuitPage>
     return Padding(
       padding: EdgeInsets.only(bottom: 12),
       child: HopTile(
+        showAlertBadge: _showHopAlert[uniqueHop] ?? false,
         textColor: color,
         color: _hopColorTween.value,
         image: image,
@@ -882,6 +913,7 @@ class CircuitPageState extends State<CircuitPage>
     });
     _bunnyDuckTimer.cancel();
     widget.switchController.onChange = null;
+    _checkBalancesTimer.cancel();
     super.dispose();
   }
 }

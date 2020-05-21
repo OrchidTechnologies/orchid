@@ -54,7 +54,7 @@ Withdraws funds from your account to an Ethereum wallet.
 - [**Move funds**](https://account.orchid.com/#moveFunds)
 Moves funds from your balance to your deposit. 
 
-- [***Unlock Funds**](https://account.orchid.com/#lockFunds)
+- [**Unlock Funds**](https://account.orchid.com/#lockFunds)
 Locks and unlocks your deposit for withdrawal.
 
 - [**View Balances**](https://account.orchid.com/#balances)

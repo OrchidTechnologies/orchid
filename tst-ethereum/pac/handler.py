@@ -172,14 +172,11 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
     total_oxt = total_usd * oxt_per_usd
-    escrow_oxt = 6.0 # todo: better alg to determine this?
+    escrow_oxt = 12.0 # todo: better alg to determine this?
     if (escrow_oxt >= 0.9*total_oxt):
         escrow_oxt = 0.5*total_oxt
 
-    logging.debug(
-        f"Funding PAC  signer: {signer}, \
-total: ${total_usd}{total_oxt} OXT, \
-escrow: {escrow_oxt} OXT ")
+    logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT")
 
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
@@ -284,12 +281,13 @@ def random_scan(table, price):
 
 
 def get_transaction_confirm_count(txhash):
+    logging.debug(f'get_transaction_confirm_count({txhash}) ')
     blocknum  = w3.eth.blockNumber
-    block     = w3.eth.getBlock('latest')
-    blocknum2 = block['number']
+    #block     = w3.eth.getBlock('latest')
+    #blocknum2 = block['number']
     trans = w3.eth.getTransaction(txhash)
     diff  = blocknum - trans['blockNumber']
-    logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum},{blocknum2}) diff({diff}) ')
+    logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum}) diff({diff}) ')
     return diff
 
 
@@ -300,7 +298,7 @@ def get_transaction_status(txhash):
             return "confirmed"
         else:
             return "unconfirmed"
-    except w3.TransactionNotFound:
+    except:
         return "unknown"
     return "unknown"
 
@@ -312,28 +310,33 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
     response = random_scan(table, price)
     ret = None
     signer_pubkey = '0xTODO'
+    epoch_time = int(time.time())
     for item in response['Items']:
         if float(price) == float(item['price']):
             signer_pubkey = item['signer']
             config = item['config']
             push_txn_hash = item['push_txn_hash']
+            creation_etime = item.get('creation_etime',0)
+            age = epoch_time - creation_etime;
             # check status - make sure pot is ready
             #status = item['status']
             status = get_transaction_status(push_txn_hash)
-            if (status != 'confirmed'):
-                logging.debug(f'Skipping account ({push_txn_hash}) with status: {status}')
+            if ((status != 'confirmed') and (age < 3600)):
+                logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
-            logging.debug(f'Found available account ({push_txn_hash}): {config}')
+            logging.debug(f'Found potential account ({push_txn_hash}) status: {status} age:{age} config: {config}')
             key = {
                 'price': item['price'],
                 'signer': signer_pubkey,
             }
-
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
                 # update succeeded
-                ret = push_txn_hash, config, signer_pubkey
-                break
+                if (status == 'confirmed'):
+                    ret = push_txn_hash, config, signer_pubkey
+                    break
+                else:
+                    logging.debug(f'broken account: {push_txn_hash} status: {status}  age: {age} deleted and skipped')
             else:
                 logging.debug('Account was already deleted!')
     if ret:
@@ -345,7 +348,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     logging.debug(f'Getting Account with Price:{price}')
     push_txn_hash = config = signer_pubkey = None
     count = 0
-    while ((push_txn_hash == None) and (count < 16)):
+    while ((push_txn_hash == None) and (count < 8)):
         push_txn_hash, config, signer_pubkey = get_account_(price=price)
         count = count + 1
     return push_txn_hash, config, signer_pubkey
@@ -372,7 +375,10 @@ def hash_receipt_body(receipt):
     receipt_data = pkcs_container['content']['encap_content_info']['content']
     logging.debug(f'extracted certificates {len(str(certificates))}B  signer_info {len(str(signer_info))}B  receipt_data {len(str(receipt_data))}B')
 
-    receipt_hash = hashlib.sha256(str(receipt_data).encode('utf-8')).hexdigest()
+    receipt_data_str = str(receipt_data).encode('utf-8')[50:] # slice the string to remove random header
+    logging.debug(f'receipt_data_str: \n{receipt_data_str}')
+
+    receipt_hash = hashlib.sha256(receipt_data_str).hexdigest()
     logging.debug(f'receipt_hash: {receipt_hash}')
 
     return receipt_hash;
@@ -409,7 +415,7 @@ def response_invalid_bundle(bundle_id):
     return response
 
 def response_invalid_product(product_id):
-    logging.debug('Unknown product_id')
+    logging.debug(f'response_invalid_product(product_id:{product_id})')
     response = {
         "isBase64Encoded": False,
         "statusCode": 400,
@@ -424,7 +430,7 @@ def response_invalid_product(product_id):
     return response
 
 def response_no_account():
-    logging.debug('Failed to find pot!')
+    logging.debug('response_no_account()')
     response = {
         "isBase64Encoded": False,
         "statusCode": 404,
@@ -439,7 +445,7 @@ def response_no_account():
     return response
 
 def response_invalid_receipt(apple_response):
-    logging.debug('Invalid apple receipt')
+    logging.debug('response_invalid_receipt(.)')
     response = {
         "isBase64Encoded": False,
         "statusCode": 402,
@@ -454,6 +460,7 @@ def response_invalid_receipt(apple_response):
     return response
 
 def response_valid_account(push_txn_hash, config, verifier):
+    logging.debug(f'response_valid_account(push_txn_hash:{push_txn_hash})')
     response = {
         "isBase64Encoded": False,
         "statusCode": 200,
@@ -467,6 +474,7 @@ def response_valid_account(push_txn_hash, config, verifier):
     return response
 
 def find_previous_pot(result_hash_table, receipt_hash, verifier, Stage):
+    logging.debug(f'find_previous_pot( receipt_hash:{receipt_hash}, verifier: {verifier}, Stage: {Stage})')
     result = result_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
     if (Stage != 'dev' and result['Count'] > 0):  # we found a match, return it
         item = result['Items'][0]
@@ -487,6 +495,7 @@ def find_previous_pot(result_hash_table, receipt_hash, verifier, Stage):
     return None
 
 def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
+    logging.debug(f'find_previous_receipt_claim( receipt_hash:{receipt_hash})')
     result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
     if (result['Count'] > 0):  # we found a match - reject on duplicate
         response = {
@@ -505,7 +514,7 @@ def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
     return None
 
 def claim_receipt(receipt_hash_table, receipt_hash):
-    logging.debug(f'claim_receipt({receipt_hash})')
+    logging.debug(f'claim_receipt(receipt_hash:{receipt_hash})')
     item = {
         'receipt': receipt_hash,
     }
@@ -514,7 +523,7 @@ def claim_receipt(receipt_hash_table, receipt_hash):
     receipt_hash_table.put_item(Item=ddb_item,ConditionExpression='attribute_not_exists(receipt)')
 
 def store_result(result_hash_table, receipt_hash, config, push_txn_hash, verifier):
-    logging.debug(f'store_result({receipt_hash},...)')
+    logging.debug(f'store_result(receipt_hash:{receipt_hash},...)')
     expiration_time = int(time.time() + 24*3600*7) # one week
     item = {
         'receipt': receipt_hash,
@@ -614,7 +623,8 @@ def main(event, context):
                     response = response_valid_account(push_txn_hash, config, os.environ['VERIFIER'])
 
                     #claim the receipt (conditionally atomically, exception fails if already exists)
-                    claim_receipt(receipt_hash_table, receipt_hash)
+                    if (Stage != 'dev'):
+                        claim_receipt(receipt_hash_table, receipt_hash)
 
                     #store result (idempotency)
                     store_result(result_hash_table, receipt_hash, config, push_txn_hash, os.environ['VERIFIER'])
