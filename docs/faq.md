@@ -18,11 +18,11 @@ In a single-hop circuit configuration, Orchid provides:
 
 * Protection from websites seeing your real IP address and physical location
 
-* Protection from the ISP seeing what websites you are visiting and when
+* Protection from your ISP seeing what websites you are visiting and when
 
 * Access to the open Internet--once a user can connect to Orchid, they are not restricted by ISP level firewalls and can browse the entire Internet freely
 
-A potential problem with using only a single VPN provider is that the provider running the single node circuit knows both your IP address and the content you are accessing. If the provider maintains logs, those logs could be sold to advertisers or otherwise used against you. In the current VPN marketplace, it is hard to know who is maintaining logs and who is not. For Orchid nodes, we have developed a flexible curation system that gives users a way to pick whom to trust. Read about [curated lists here](https://www.orchid.com/faq#technology--how-do-curated-lists-work).
+A potential problem with using only a single VPN provider is that the provider running the single node circuit knows both your IP address and the content you are accessing. If the provider maintains logs, those logs could be sold to advertisers or otherwise used against you. In the current VPN marketplace, it is hard to know who is maintaining logs and who is not. For Orchid nodes, we have developed a flexible curation system that gives users a way to pick whom to trust. 
 
 Another solution is to trust no single provider with enough information to know both who you are and what information you are accessing. To that end, Orchid supports an advanced feature that allows users to configure multi-hop routes by stringing together multiple nodes into a flexible multi-hop circuit. Orchid currently supports several underlying protocols including the native Orchid VPN protocol and OpenVPN, allowing users to mix and match Orchid nodes with traditional VPN nodes.  While the potential is there to protect the user from any one provider knowing enough information to reveal their circuit, this is an advanced feature that is currently "use at your own risk". 
 
@@ -85,19 +85,19 @@ Orchid is a series of decentralized smart contracts and client software that use
 The balance is the collateral for the tickets sent from the user to the provider. Over time, as winning tickets are issued from your Orchid app, the Orchid account balance will drop. The deposit is the Orchid token held in escrow to disincentivize double spending on the network. This amount never depletes and can be withdrawn after a 24hr "unlock" period.
 
 
-# On Technology
+# Technology
 
 ## How does the Orchid token (OXT) work?
 
-OXT is a "pre-mined" cryptocurrency based on the ERC-20 standard that will be used to decentralize trust between buyers and sellers in the Orchid marketplace. It also functions as a tool to promote security and healthy market dynamics, as providers can adjust their OXT stake to remain competitive. At launch we intend there to be a limited supply of one billion (1,000,000,000). We do not intend ever to create any additional OXT.
+OXT is a "pre-mined" cryptocurrency based on the ERC-20 standard that will be used to decentralize trust between buyers and sellers in the Orchid marketplace. It also functions as a tool to promote security and healthy market dynamics, as providers can adjust their OXT stake to remain competitive. Read more about OXT [here](https://www.orchid.com/oxt).
 
 ## How do curated lists work on Orchid?
 
-The Orchid client calls an on-chain ‘curated list’ function which filters the viable nodes on Orchid (that is, nodes that have properly staked) into a custom subset. Initial releases of the official Orchid client will use this feature to prevent certain kinds of attacks from malicious exit nodes (e.g. SSL downgrade attacks) by using a default list consisting of trusted VPN partners. 
+The Orchid client calls an on-chain ‘curated list’ smart contract which filters the viable nodes on Orchid (that is, nodes that have properly staked) into a custom subset. Initial releases of the official Orchid client will use this feature to prevent certain kinds of attacks from malicious exit nodes (e.g. SSL downgrade attacks) by using a default list consisting of trusted VPN partners. 
 
 Overall, the curated lists are a federated reputation solution for determining what VPN providers on Orchid you can trust. The system is fully programmable, exists on-chain and is Turing complete. The list function can take information as an argument, and then use that information to determine, for any given Orchid node, whether you want to connect to that node or not.
 
-Customized Orchid clients can use their own lists, the official Orchid client can select from different lists and eventually we expect well known third parties to emerge as curators. Given that this system is on-chain, an entity such as a DAO could manage a list too. 
+The official Orchid client has a default list and can select from different lists. Eventually we expect well known third parties to emerge as curators. Given that this system is on-chain, an entity such as a DAO could manage a list too. 
 
 The curated list mechanism is a means for the importation of external reputational trust to supplement the economic incentive based trust provided by node staking.
 
@@ -130,4 +130,3 @@ As an alternative to revenue sharing, providers could send recurring payments to
 When a staker decides to repoint their stake to a different provider, there is a lengthy withdrawal delay (currently about 3 months).  So it is important for stakers to choose providers carefully.  Stakers should start with small allocations and slowly increase them based on measured profitability.
 
 Eventually third party websites could provide an interface to help simplify and automate the process of finding, evaluating and staking on Orchid bandwidth providers.
-
