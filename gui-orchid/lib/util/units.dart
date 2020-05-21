@@ -40,10 +40,6 @@ class OXT extends ScalarValue<double> {
     return OXT(value + other.value);
   }
 
-//  static String format(num value, {int digits = 4}) {
-//    return formatCurrency(value, digits: digits, suffix: " OXT");
-//  }
-
   static OXT min(OXT a, OXT b) {
     return OXT(math.min(a.value, b.value));
   }

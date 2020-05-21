@@ -12,6 +12,11 @@ class OrchidHop extends CircuitHop {
   final EthereumAddress funder;
   final StoredEthereumKeyRef keyRef;
 
+  // Helper method to resolve the signer address from the keystore.
+  EthereumAddress getSigner(List<StoredEthereumKey> keys) {
+    return EthereumAddress.from(keyRef.getFrom(keys).keys().address);
+  }
+
   OrchidHop(
       {@required this.curator, @required this.funder, @required this.keyRef})
       : super(HopProtocol.Orchid);

@@ -111,7 +111,15 @@ class OrchidEthereum {
   /// Get the current median gas price.
   /// curl $url --data '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}'
   /// {"jsonrpc":"2.0","id":0,"result":"0x2cb417800"}
+  /// This method is cached for a period of time and safe to call repeatedly.
   Future<GWEI> getGasPrice() async {
+    // Allow override via config for testing
+    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
+    if (overrideValue != null) {
+      return GWEI(overrideValue);
+    }
+
     // Cache for a period of time
     if (_lastGasPrice != null &&
         DateTime.now().difference(_lastGasPriceTime) < Duration(minutes: 5)) {
