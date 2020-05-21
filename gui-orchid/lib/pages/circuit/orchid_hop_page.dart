@@ -514,6 +514,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         : "Your max ticket value is currently limited by your deposit of "
             "${formatCurrency(_lotteryPot.deposit.value, suffix: 'OXT')}.  "
             "Consider adding OXT to your deposit or moving funds from your balance to your deposit.";
+    String limitedByTitleText =
+        balanceLimited ? "Balance too low" : "Deposit size too small";
 
     return Dialogs.showAppDialog(
         context: context,
@@ -532,13 +534,21 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               Text("Ticket Value",
                   style: TextStyle(fontWeight: FontWeight.bold)),
               pady(4),
-              Text("Max Face value: $maxFaceValueText"),
+              Text("Max face value: $maxFaceValueText"),
               Text("Cost to redeem: $costToRedeemText",
                   style:
                       ticketUnderwater ? TextStyle(color: Colors.red) : null),
               pady(16),
+              Text(limitedByTitleText,
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              pady(8),
               Text(limitedByText,
                   style: TextStyle(fontStyle: FontStyle.italic)),
+              pady(16),
+              LinkText("View the docs for help on this issue.",
+                  style: AppText.linkStyle.copyWith(fontSize: 15),
+                  url:
+                      'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
             ]));
   }
 
