@@ -106,7 +106,7 @@ class CircuitPageState extends State<CircuitPage>
         Timer.periodic(Duration(seconds: 30), _checkOrchidHopAlerts);
   }
 
-  Map<UniqueHop, bool> _showHopAlert = Map();
+  static Map<int, bool> _showHopAlert = Map();
 
   /// Check each Orchid Hop's lottery pot for alert conditions.
   void _checkOrchidHopAlerts(timer) async {
@@ -121,7 +121,7 @@ class CircuitPageState extends State<CircuitPage>
         var pot =
             await OrchidEthereum.getLotteryPot(hop.funder, hop.getSigner(keys));
         var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
-        _showHopAlert[uniqueHop] = ticketValue.value <= 0;
+        _showHopAlert[uniqueHop.contentHash] = ticketValue.value <= 0;
       }
     }
     setState(() {});
@@ -506,7 +506,7 @@ class CircuitPageState extends State<CircuitPage>
     return Padding(
       padding: EdgeInsets.only(bottom: 12),
       child: HopTile(
-        showAlertBadge: _showHopAlert[uniqueHop] ?? false,
+        showAlertBadge: _showHopAlert[uniqueHop.contentHash] ?? false,
         textColor: color,
         color: _hopColorTween.value,
         image: image,
