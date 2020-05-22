@@ -19,6 +19,10 @@ meson := darwin
 lflags += -Wl,-dead_strip
 lflags += -Wl,-no_dead_strip_inits_and_terms
 
+# libtool
+qflags += -DPIC
+qflags += -fPIC
+
 signature := /_CodeSignature/CodeResources
 
 path := $(shell xcrun --sdk $(sdk) --show-sdk-path)
@@ -71,5 +75,7 @@ ranlib/$(1) := ranlib
 ar/$(1) := ar
 strip/$(1) := strip
 windres/$(1) := false
+export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_RUSTFLAGS := $$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $$(more/$(1)),-C link-arg=$$(arg)) $(rflags)
+export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword $(cc))
 endef
 $(each)

@@ -11,7 +11,21 @@
 
 pwd/nettle := $(pwd)/nettle
 
-$(output)/%/$(pwd/nettle)/libnettle.a: $(output)/%/$(pwd/nettle)/Makefile
-	$(MAKE) -C $(output)/$*/$(pwd/nettle) libnettle.a
+p_nettle += -I@/$(pwd/gmp)
+l_nettle += -L@/$(pwd/gmp)/.libs
 
-linked += nettle/libnettle.a
+$(call depend,$(pwd/nettle)/Makefile,@/$(pwd/gmp)/.libs/$(pre)gmp.$(lib))
+
+$(output)/%/$(pwd/nettle)/libnettle.a $(output)/%/$(pwd/nettle)/libhogweed.a: $(output)/%/$(pwd/nettle)/Makefile
+	$(MAKE) -C $(output)/$*/$(pwd/nettle) libnettle.a libhogweed.a
+
+linked += $(pwd/nettle)/libnettle.a
+linked += $(pwd/nettle)/libhogweed.a
+
+export NETTLE_STATIC := 1
+
+define _
+# XXX: move to min-nettle and use an extra folder for -I
+export NETTLE_$(subst -,_,$(1)) := -I$(CURDIR)/$(pwd) -I$(CURDIR)/$(output)/$(1)/$(pwd) -I$(CURDIR)/$(output)/$(1)/$(pwd/gmp) -I$(CURDIR)/$(output)/$(1)/$(pwd/nettle) -L$(CURDIR)/$(output)/$(1)/$(pwd/gmp)/.libs -L$(CURDIR)/$(output)/$(1)/$(pwd/nettle) -lnettle -lhogweed
+endef
+$(each)

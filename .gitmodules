@@ -160,3 +160,6 @@
 [submodule "fmt"]
 	path = p2p/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "gmp"]
+	path = p2p/gmp
+	url = https://github.com/livepeer/gmp.git

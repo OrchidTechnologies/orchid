@@ -186,8 +186,11 @@ cflags += -I$(pwd)/SPCDNS/src
 
 
 include $(pwd)/asio.mk
-#include $(pwd)/nettle.mk
-#include $(pwd)/sequoia.mk
+
+# XXX: https://reviews.llvm.org/D48567
+include $(pwd)/gmp.mk
+include $(pwd)/nettle.mk
+include $(pwd)/sequoia.mk
 
 $(call include,rtc/target.mk)
 $(call include,openvpn3.mk)

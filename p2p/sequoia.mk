@@ -11,4 +11,4 @@
 
 linked += $(pwd)/sequoia-openpgp-ffi/$(pre)rust.$(lib)
 cflags += -I$(pwd)/sequoia-openpgp-ffi/opengpg-ffi/include
-$(call depend,$(pwd)/sequoia-openpgp-ffi/$(pre)rust.$(lib),$(patsubst %,@/openssl/include/openssl/%.h,opensslconf opensslv) @/$(pwd)/nettle/libnettle.a)
+$(call depend,$(pwd)/sequoia-openpgp-ffi/$(pre)rust.$(lib),$(patsubst %,@/openssl/include/openssl/%.h,opensslconf opensslv) @/openssl/libssl.a @/$(pwd)/gmp/.libs/$(pre)gmp.$(lib) @/$(pwd)/nettle/libnettle.a @/$(pwd)/nettle/libhogweed.a)
