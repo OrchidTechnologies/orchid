@@ -538,17 +538,21 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               Text("Cost to redeem: $costToRedeemText",
                   style:
                       ticketUnderwater ? TextStyle(color: Colors.red) : null),
-              pady(16),
-              Text(limitedByTitleText,
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              pady(8),
-              Text(limitedByText,
-                  style: TextStyle(fontStyle: FontStyle.italic)),
-              pady(16),
-              LinkText("View the docs for help on this issue.",
-                  style: AppText.linkStyle.copyWith(fontSize: 15),
-                  url:
-                      'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
+
+              // Problem description
+              if (ticketUnderwater) ...[
+                pady(16),
+                Text(limitedByTitleText,
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                pady(8),
+                Text(limitedByText,
+                    style: TextStyle(fontStyle: FontStyle.italic)),
+                pady(16),
+                LinkText("View the docs for help on this issue.",
+                    style: AppText.linkStyle.copyWith(fontSize: 15),
+                    url:
+                        'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
+              ]
             ]));
   }
 
