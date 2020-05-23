@@ -112,9 +112,6 @@
 [submodule "duktape"]
 	path = vpn-shared/duktape
 	url = https://github.com/svaarala/duktape.git
-[submodule "sequoia"]
-	path = p2p/sequoia-openpgp-ffi
-	url = https://gitlab.com/sequoia-pgp/sequoia.git
 [submodule "intx"]
 	path = p2p/intx
 	url = https://github.com/chfast/intx.git
@@ -127,9 +124,6 @@
 [submodule "challenge-bypass-ristretto-ffi"]
 	path = p2p/challenge-bypass-ristretto
 	url = https://github.com/brave-intl/challenge-bypass-ristretto-ffi.git
-[submodule "nettle"]
-	path = p2p/nettle
-	url = https://git.lysator.liu.se/nettle/nettle.git
 [submodule "icu"]
 	path = min-icu4c/icu
 	url = https://github.com/unicode-org/icu.git
@@ -160,6 +154,3 @@
 [submodule "fmt"]
 	path = p2p/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "gmp"]
-	path = p2p/gmp
-	url = https://github.com/livepeer/gmp.git
