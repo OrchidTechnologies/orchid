@@ -154,3 +154,6 @@
 [submodule "fmt"]
 	path = p2p/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "leveldb"]
+	path = tst-network/leveldb
+	url = https://github.com/google/leveldb.git
