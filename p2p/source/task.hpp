@@ -28,8 +28,53 @@
 #include <experimental/coroutine>
 
 #include "error.hpp"
+#include "trace.hpp"
+
+#define ORC_FIBER
 
 namespace orc {
+
+inline constexpr class {} co_optic;
+
+class Fiber {
+  private:
+    Fiber *parent_;
+    std::string name_;
+
+  public:
+    Fiber(Fiber *parent = nullptr) :
+        parent_(parent)
+    {
+    }
+
+    Fiber *Parent() {
+        return parent_;
+    }
+};
+
+template <typename Type_>
+class Ready {
+  private:
+    Type_ value_;
+
+  public:
+    Ready(Type_ value) :
+        value_(std::move(value))
+    {
+    }
+
+    bool await_ready() noexcept {
+        return true;
+    }
+
+    bool await_suspend(std::experimental::coroutine_handle<>) noexcept {
+        return false;
+    }
+
+    auto await_resume() const {
+        return std::move(value_);
+    }
+};
 
 class Final {
   public:
@@ -104,6 +149,10 @@ class Task {
 
         return Awaitable(code_);
     }
+
+    void Set(Fiber *fiber) {
+        code_.promise().fiber_ = fiber;
+    }
 };
 
 class Promise {
@@ -115,11 +164,40 @@ class Promise {
   private:
     std::experimental::coroutine_handle<> code_;
 
+#ifdef ORC_FIBER
+    Fiber *fiber_ = nullptr;
+#endif
+
   public:
     auto initial_suspend() noexcept {
         return std::experimental::suspend_always(); }
     auto final_suspend() noexcept {
         return Final(); }
+
+    template <typename Awaitable_>
+    auto &&await_transform(Awaitable_ &&awaitable) {
+        return std::forward<Awaitable_>(awaitable);
+    }
+
+    auto await_transform(decltype(co_optic)) {
+        // NOLINTNEXTLINE (clang-analyzer-core.CallAndMessage)
+        return Ready<Fiber *>(
+#ifdef ORC_FIBER
+            fiber_
+#else
+            nullptr
+#endif
+        );
+    }
+
+#ifdef ORC_FIBER
+    template <typename Type_>
+    auto &&await_transform(Task<Type_> &&task) {
+        // NOLINTNEXTLINE (clang-analyzer-core.CallAndMessage)
+        task.Set(fiber_);
+        return std::forward<Task<Type_>>(task);
+    }
+#endif
 };
 
 template <typename Value_>

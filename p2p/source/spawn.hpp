@@ -65,6 +65,10 @@ template <typename Type_>
 Type_ Wait(task<Type_> code) {
     // XXX: centralize Schedule?
     return cppcoro::sync_wait([](task<Type_> code) mutable -> cppcoro::task<Type_> {
+#ifdef ORC_FIBER
+        Fiber fiber;
+        code.Set(&fiber);
+#endif
         co_return co_await std::move(code);
     }(std::move(code)));
 }
@@ -95,7 +99,14 @@ template <typename Code_>
 auto Spawn(Code_ code) noexcept -> typename std::enable_if<noexcept(code())>::type {
     [](Code_ code) mutable noexcept -> Detached {
         co_await Schedule();
+#ifdef ORC_FIBER
+        auto task(code());
+        Fiber fiber;
+        task.Set(&fiber);
+        co_await std::move(task);
+#else
         co_await code();
+#endif
     }(std::move(code));
 }
 

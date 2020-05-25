@@ -29,10 +29,28 @@
 
 namespace orc {
 
-// XXX: this should be part of await_transform
+// XXX: consider putting this in await_transform?
+
+template <typename Type_>
+using Maybe = cppcoro::detail::when_all_task<Type_>;
+
 template <typename ...Args_>
-[[nodiscard]] auto Parallel(Args_ &&...args) {
-    return cppcoro::when_all_ready(std::forward<Args_>(args)...);
+[[nodiscard]] auto Parallel(Task<Args_> &&...args) -> Task<std::tuple<Maybe<Args_>...>> {
+#ifdef ORC_FIBER
+    Fiber fiber(co_await co_optic);
+    (args.Set(&fiber), ...);
+#endif
+    co_return co_await cppcoro::when_all_ready(std::forward<Task<Args_>>(args)...);
+}
+
+template <typename Type_>
+[[nodiscard]] auto Parallel(std::vector<Task<Type_>> &&tasks) -> Task<std::vector<Maybe<Type_>>> {
+#ifdef ORC_FIBER
+    Fiber fiber(co_await co_optic);
+    for (auto &task : tasks)
+        task.Set(&fiber);
+#endif
+    co_return co_await cppcoro::when_all_ready(std::forward<std::vector<Task<Type_>>>(tasks));
 }
 
 template <typename Type_, typename Enable_ = std::enable_if_t<!std::is_void_v<decltype(std::declval<Type_>().result())>>>
