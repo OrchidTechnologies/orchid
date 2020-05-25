@@ -46,7 +46,7 @@ task<void> Cashier::UpdateCoin(Origin &origin) { try {
     const auto coin(coin_());
     coin->eth_ = std::move(eth);
     coin->oxt_ = std::move(oxt);
-} orc_stack("updating coin prices") }
+} orc_stack({}, "updating coin prices") }
 
 task<void> Cashier::UpdateGas(Origin &origin) { try {
     auto result(Parse((co_await origin.Fetch("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
@@ -63,7 +63,7 @@ task<void> Cashier::UpdateGas(Origin &origin) { try {
 
     const auto gas(gas_());
     std::swap(gas->prices_, prices);
-} orc_stack("updating gas prices") }
+} orc_stack({}, "updating gas prices") }
 
 task<void> Cashier::Look(const Address &signer, const Address &funder, const std::string &combined) {
     static const auto look(Hash("look(address,address)").Clip<4>().num<uint32_t>());

@@ -102,19 +102,20 @@ class Error final :
         std::terminate(); \
     }
 
-#define orc_stack(text) \
-    catch (orc::Error &error) { \
+#define orc_stack(code, text) \
+    catch (orc::Error &error) { code \
         throw orc_log(std::move(error) << ' ', text); \
-    } catch (const std::exception &error) { \
+    } catch (const std::exception &error) { code \
         throw orc_log(orc::Error() << error.what() << ' ', text); \
     }
 
-#define orc_block(code, text) \
-    do { try code orc_stack(text) } while (false)
+#define orc_block(code, text) do { \
+    try code orc_stack({}, text) \
+} while (false)
 
 #define orc_value(ret, code, text) \
     [&]() -> decltype(code) { try { \
         ret (code); \
-    } orc_stack(text) }()
+    } orc_stack({}, text) }()
 
 #endif//ORCHID_ERROR_HPP
