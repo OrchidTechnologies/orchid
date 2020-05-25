@@ -193,7 +193,7 @@ int Main(int argc, const char *const argv[]) {
             }
 
             const auto now(Timestamp());
-            auto reports(co_await cppcoro::when_all_ready(std::move(tests)));
+            auto reports(co_await Parallel(std::move(tests)));
             auto state(std::make_shared<State>(now));
 
             try {

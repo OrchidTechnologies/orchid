@@ -324,7 +324,7 @@ task<void> Server::Open(Pipe<Buffer> &pipe) {
 
 task<void> Server::Shut() noexcept {
     co_await nest_.Shut();
-    co_await cppcoro::when_all(Bonded::Shut(), Sunken::Shut());
+    *co_await Parallel(Bonded::Shut(), Sunken::Shut());
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {

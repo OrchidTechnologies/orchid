@@ -20,14 +20,13 @@
 /* }}} */
 
 
-#include <cppcoro/when_all.hpp>
-
 #include <boost/multiprecision/cpp_bin_float.hpp>
 
 #include "baton.hpp"
 #include "cashier.hpp"
 #include "duplex.hpp"
 #include "json.hpp"
+#include "parallel.hpp"
 #include "sleep.hpp"
 #include "structured.hpp"
 
@@ -42,7 +41,7 @@ static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"
 static const auto Bound_(Hash("Update(address,address)"));
 
 task<void> Cashier::UpdateCoin(Origin &origin) { try {
-    auto [eth, oxt] = co_await cppcoro::when_all(Price(origin, "ETH", currency_, Ten18), Price(origin, "OXT", currency_, Ten18));
+    auto [eth, oxt] = *co_await Parallel(Price(origin, "ETH", currency_, Ten18), Price(origin, "OXT", currency_, Ten18));
 
     const auto coin(coin_());
     coin->eth_ = std::move(eth);
@@ -200,14 +199,14 @@ void Cashier::Open(S<Origin> origin, Locator locator) {
         inverted.Open();
         station_ = std::move(station);
 
-        co_await cppcoro::when_all(UpdateCoin(*origin), UpdateGas(*origin));
+        *co_await Parallel(UpdateCoin(*origin), UpdateGas(*origin));
     }());
 
     // XXX: this coroutine leaks after Shut
     Spawn([this, origin = std::move(origin)]() noexcept -> task<void> {
         for (;;) {
             co_await Sleep(5 * 60);
-            auto [forex, gas] = co_await cppcoro::when_all_ready(UpdateCoin(*origin), UpdateGas(*origin));
+            auto [forex, gas] = co_await Parallel(UpdateCoin(*origin), UpdateGas(*origin));
             orc_ignore({ std::move(forex).result(); });
             orc_ignore({ std::move(gas).result(); });
         }

@@ -25,10 +25,9 @@
 
 #include <set>
 
-#include <cppcoro/when_all.hpp>
-
 #include "link.hpp"
 #include "locked.hpp"
+#include "parallel.hpp"
 
 namespace orc {
 
@@ -116,7 +115,7 @@ class Bonded {
                 shuts.emplace_back([](U<Bonding> bonding) -> task<void> {
                     co_await bonding->Shut();
                 }(std::move(bonding.second))); }
-        co_await cppcoro::when_all(std::move(shuts));
+        *co_await Parallel(std::move(shuts));
         orc_insist(locked_()->bondings_.empty());
     }
 
