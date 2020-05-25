@@ -471,7 +471,7 @@ err_t Remote::Initialize(netif *interface) {
 }
 
 void Remote::Land(const Buffer &data) {
-    orc_assert(tcpip_inpkt(Chain(data), &interface_, interface_.input) == ERR_OK);
+    orc_ignore({ orc_assert(tcpip_inpkt(Chain(data), &interface_, interface_.input) == ERR_OK); });
 }
 
 void Remote::Stop(const std::string &error) noexcept {
