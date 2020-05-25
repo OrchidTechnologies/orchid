@@ -28,6 +28,7 @@
 #include "channel.hpp"
 #include "peer.hpp"
 #include "pirate.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 

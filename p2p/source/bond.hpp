@@ -28,6 +28,7 @@
 #include "link.hpp"
 #include "locked.hpp"
 #include "parallel.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 

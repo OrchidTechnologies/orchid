@@ -26,7 +26,7 @@
 #include <cppcoro/async_manual_reset_event.hpp>
 #include <cppcoro/single_consumer_event.hpp>
 
-#include "task.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 

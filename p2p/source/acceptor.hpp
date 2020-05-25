@@ -28,7 +28,7 @@
 #include "baton.hpp"
 #include "link.hpp"
 #include "sewer.hpp"
-#include "task.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 

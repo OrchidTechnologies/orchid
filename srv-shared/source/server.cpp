@@ -32,6 +32,7 @@
 #include "local.hpp"
 #include "protocol.hpp"
 #include "server.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 

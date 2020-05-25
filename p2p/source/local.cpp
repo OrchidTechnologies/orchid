@@ -26,6 +26,7 @@
 #include "local.hpp"
 #include "manager.hpp"
 #include "port.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 
