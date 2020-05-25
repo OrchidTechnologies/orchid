@@ -54,7 +54,6 @@
 #include "server.hpp"
 #include "store.hpp"
 #include "task.hpp"
-#include "trace.hpp"
 #include "transport.hpp"
 #include "utility.hpp"
 

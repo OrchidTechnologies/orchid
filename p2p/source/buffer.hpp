@@ -37,7 +37,6 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include "error.hpp"
-#include "trace.hpp"
 
 namespace orc {
 

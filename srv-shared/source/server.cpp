@@ -80,7 +80,7 @@ class Incoming final :
     }
 
     ~Incoming() override {
-_trace();
+orc_trace();
         Close();
     }
 };
@@ -315,7 +315,7 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
 }
 
 Server::~Server() {
-    _trace();
+    orc_trace();
 }
 
 task<void> Server::Open(Pipe<Buffer> &pipe) {

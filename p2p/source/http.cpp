@@ -44,7 +44,6 @@
 #include "http.hpp"
 #include "local.hpp"
 #include "locator.hpp"
-#include "trace.hpp"
 
 namespace orc {
 

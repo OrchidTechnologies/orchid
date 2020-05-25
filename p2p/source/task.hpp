@@ -28,7 +28,6 @@
 #include <experimental/coroutine>
 
 #include "error.hpp"
-#include "trace.hpp"
 
 #define ORC_FIBER
 

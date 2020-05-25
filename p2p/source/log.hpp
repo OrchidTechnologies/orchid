@@ -26,6 +26,8 @@
 #include <cstdarg>
 #include <sstream>
 
+#include <pthread.h>
+
 namespace orc {
 
 extern bool Verbose;
@@ -38,5 +40,12 @@ class Log final :
 };
 
 }
+
+#define orc_log(log, text) \
+    log << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] [" << pthread_self() << "] " << text
+
+#define orc_trace() do { \
+    orc_log(orc::Log() << "\e[31m", " orc_trace(): " << __FUNCTION__ << "\e[0m" << std::endl); \
+} while (false)
 
 #endif//ORCHID_LOG_HPP

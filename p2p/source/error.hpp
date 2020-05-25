@@ -53,9 +53,6 @@ class Error final :
     }
 }; }
 
-#define orc_log(log, text) \
-    log << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text
-
 #define orc_insist_(code, text) do { \
     if ((code)) break; \
     orc_log(orc::Log(), text << std::endl); \
@@ -67,7 +64,7 @@ class Error final :
 
 #define orc_throw(text) do { \
     if (orc::Verbose) \
-        orc_log(orc::Log() << "throw ", text); \
+        orc_log(orc::Log() << "throw ", text << std::endl); \
     throw orc_log(orc::Error(), text); \
 } while (false)
 
@@ -88,7 +85,7 @@ class Error final :
 
 #define orc_catch(code) \
     catch (const std::exception &error) { \
-        orc_log(orc::Log(), "handled error " << error.what()); \
+        orc_log(orc::Log(), "handled error " << error.what() << std::endl); \
     code } catch (...) { code }
 
 #define orc_ignore(code) \

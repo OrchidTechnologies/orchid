@@ -186,7 +186,7 @@ Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remot
 }
 
 Client::~Client() {
-_trace();
+orc_trace();
 }
 
 task<void> Client::Open(const S<Origin> &origin) {

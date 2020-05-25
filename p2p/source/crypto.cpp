@@ -32,7 +32,6 @@
 #include <secp256k1_recovery.h>
 
 #include "crypto.hpp"
-#include "trace.hpp"
 
 namespace orc {
 

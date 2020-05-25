@@ -29,7 +29,6 @@
 
 #include "error.hpp"
 #include "spawn.hpp"
-#include "trace.hpp"
 
 namespace orc {
 

@@ -23,7 +23,6 @@
 #include "log.hpp"
 #include "memory.hpp"
 #include "syscall.hpp"
-#include "trace.hpp"
 
 #ifdef __APPLE__
 

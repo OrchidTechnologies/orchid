@@ -37,7 +37,6 @@
 #include "router.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
-#include "trace.hpp"
 #include "transport.hpp"
 
 #include <boost/filesystem/string_file.hpp>

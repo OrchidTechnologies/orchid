@@ -29,7 +29,6 @@
 #include "log.hpp"
 #include "protect.hpp"
 #include "syscall.hpp"
-#include "trace.hpp"
 
 #ifdef __cplusplus
 extern "C"

@@ -258,7 +258,7 @@ Capture::Capture(const Host &local) :
 }
 
 Capture::~Capture() {
-_trace();
+orc_trace();
 }
 
 

@@ -25,7 +25,6 @@
 #include "json.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
-#include "trace.hpp"
 
 namespace orc {
 

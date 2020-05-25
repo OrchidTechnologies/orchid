@@ -31,7 +31,6 @@
 #include "router.hpp"
 #include "spawn.hpp"
 #include "task.hpp"
-#include "trace.hpp"
 
 namespace orc {
 
