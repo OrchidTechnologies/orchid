@@ -511,10 +511,14 @@ void Remote::Open() {
     netifapi_netif_set_link_up(&interface_);
 }
 
-task<void> Remote::Shut() noexcept {
+task<void> Remote::Shut() noexcept { orc_ahead
+orc_trace();
     co_await nest_.Shut();
+orc_trace();
     co_await Sunken::Shut();
+orc_trace();
     co_await Valve::Shut();
+orc_trace();
 }
 
 class Host Remote::Host() {

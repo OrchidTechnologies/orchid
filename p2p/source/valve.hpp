@@ -66,7 +66,7 @@ inline S<Type_> Break(Args_ &&...args) {
 }
 
 template <typename Type_, typename Code_, typename... Args_>
-auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>())) {
+auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>())) { orc_ahead
     Type_ valve(std::forward<Args_>(args)...);
     std::exception_ptr error;
 

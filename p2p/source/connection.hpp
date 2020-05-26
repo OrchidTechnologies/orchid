@@ -64,8 +64,7 @@ class Connection final :
             orc_adapt(error);
         }
 
-        if (Verbose)
-            Log() << "\e[33mRECV " << writ << " " << beam.subset(0, writ) << "\e[0m" << std::endl;
+        //Log() << "\e[33mRECV " << writ << " " << beam.subset(0, writ) << "\e[0m" << std::endl;
         co_return writ;
     }
 
@@ -88,8 +87,7 @@ class Connection final :
     }
 
     task<void> Send(const Buffer &data) override {
-        if (Verbose)
-            Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
+        //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
         const size_t writ(co_await [&]() -> task<size_t> { try {
             co_return co_await connection_.async_send(Sequence(data), Token());

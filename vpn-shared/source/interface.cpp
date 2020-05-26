@@ -30,28 +30,24 @@
 #include "protect.hpp"
 #include "syscall.hpp"
 
-#ifdef __cplusplus
-extern "C"
-#endif
-decltype(system_bind) hooked_bind __asm__(ORC_SYMBOL "bind");
+namespace orc {
 
-#ifdef __cplusplus
-extern "C"
-#endif
-decltype(system_connect) hooked_connect __asm__(ORC_SYMBOL "connect");
+extern "C" decltype(system_bind) hooked_bind __asm__(ORC_SYMBOL "bind");
+
+extern "C" decltype(system_connect) hooked_connect __asm__(ORC_SYMBOL "connect");
 
 extern "C" int orchid_bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
-    if (orc::Verbose) {
-        orc::Log() << "bind(" << socket << ", " << length << ")" << std::endl;
-        orc::Log() << "Protect(" << socket << ")" << std::endl;
+    if (Verbose) {
+        Log() << "bind(" << socket << ", " << length << ")" << std::endl;
+        Log() << "Protect(" << socket << ")" << std::endl;
     }
 
-    return orc::Protect(socket, &hooked_bind, address, length);
+    return Protect(socket, &hooked_bind, address, length);
 }
 
 extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, socklen_t length) {
-    if (orc::Verbose)
-        orc::Log() << "connect(" << socket << ", " << length << ")" << std::endl;
+    if (Verbose)
+        Log() << "connect(" << socket << ", " << length << ")" << std::endl;
 
     union {
         sockaddr sa;
@@ -80,13 +76,15 @@ extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, soc
         default:
             return false;
     } }()) {
-        if (orc::Verbose)
-            orc::Log() << "Protect(" << socket << ")" << std::endl;
-        return orc::Protect(socket, &hooked_connect, address, length);
+        if (Verbose)
+            Log() << "Protect(" << socket << ")" << std::endl;
+        return Protect(socket, &hooked_connect, address, length);
     }
 
 #ifndef _WIN32
   connect:
 #endif
     return hooked_connect(socket, address, length);
+}
+
 }

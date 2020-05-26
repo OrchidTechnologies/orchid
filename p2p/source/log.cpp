@@ -26,6 +26,8 @@
 
 #include <iostream>
 
+#include <pthread.h>
+
 #if 0
 #elif defined(__APPLE__)
 #include <CoreFoundation/CoreFoundation.h>
@@ -43,12 +45,24 @@ namespace orc {
 
 bool Verbose(false);
 
+Log::Log(Fiber *fiber) noexcept { try {
+    *this << "[T:" << pthread_self() << "] ";
+    if (fiber != nullptr)
+        *this << "[F:" << fiber << "] ";
+} catch (...) {
+} }
+
 Log::~Log() { try {
     auto log(str());
     if (!log.empty() && log[log.size() - 1] == '\n')
         log.resize(log.size() - 1);
+
     boost::replace_all(log, "\r", "");
     boost::replace_all(log, "\n", " || ");
+
+    if (log.find('\e') != std::string::npos)
+        log += "\e[0m";
+
 #if 0
 #elif defined(__APPLE__)
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-type-cstyle-cast)
