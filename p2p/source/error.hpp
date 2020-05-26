@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 
+#include "category.hpp"
 #include "log.hpp"
 
 namespace orc {
@@ -69,6 +70,9 @@ class Error final :
 } while (false)
 
 #define orc_adapt(error) do { \
+    const auto code(error.code()); \
+    if (code.category() == orchid_category()) \
+        std::rethrow_exception(Category::Convert(code.value())); \
     auto what(error.what()); \
     orc_insist(what != nullptr); \
     orc_insist(*what != '\0'); \
