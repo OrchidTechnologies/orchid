@@ -35,20 +35,31 @@ template <typename Type_>
 using Maybe = cppcoro::detail::when_all_task<Type_>;
 
 template <typename ...Args_>
-[[nodiscard]] auto Parallel(Task<Args_> &&...args) -> Task<std::tuple<Maybe<Args_>...>> {
+[[nodiscard]] auto Parallel(Task<Args_> &&...args) -> Task<std::tuple<Maybe<
 #ifdef ORC_FIBER
-    Fiber fiber(co_await co_optic);
-    (args.Set(&fiber), ...);
+    typename cppcoro::awaitable_traits<cppcoro::task<Args_>>::await_result_t
+#else
+    Args_
 #endif
+>...>> {
+#ifdef ORC_FIBER
+    const auto parent(co_await co_optic);
+    co_return co_await cppcoro::when_all_ready([](Task<Args_> &&task, Fiber *parent) -> cppcoro::task<Args_> {
+        Fiber fiber(parent);
+        task.Set(&fiber);
+        co_return co_await std::move(task);
+    }(std::forward<Task<Args_>>(args), parent)...);
+#else
     co_return co_await cppcoro::when_all_ready(std::forward<Task<Args_>>(args)...);
+#endif
 }
 
 template <typename Type_>
 [[nodiscard]] auto Parallel(std::vector<Task<Type_>> &&tasks) -> Task<std::vector<Maybe<Type_>>> {
 #ifdef ORC_FIBER
-    Fiber fiber(co_await co_optic);
-    for (auto &task : tasks)
-        task.Set(&fiber);
+    std::vector<Fiber> fibers(tasks.size(), co_await co_optic);
+    for (size_t i(0); i != tasks.size(); ++i)
+        tasks[i].Set(&fibers[i]);
 #endif
     co_return co_await cppcoro::when_all_ready(std::forward<std::vector<Task<Type_>>>(tasks));
 }

@@ -40,15 +40,22 @@ extern "C" void NSLog(NSString *, ...);
 #include <boost/algorithm/string.hpp>
 
 #include "log.hpp"
+#include "task.hpp"
 
 namespace orc {
 
 bool Verbose(false);
 
+void Log_(std::ostream &out, Fiber *fiber) {
+    if (fiber == nullptr)
+        return;
+    Log_(out, fiber->Parent());
+    out << "[F:" << fiber << "] ";
+}
+
 Log::Log(Fiber *fiber) noexcept { try {
     *this << "[T:" << pthread_self() << "] ";
-    if (fiber != nullptr)
-        *this << "[F:" << fiber << "] ";
+    Log_(*this, fiber);
 } catch (...) {
 } }
 
