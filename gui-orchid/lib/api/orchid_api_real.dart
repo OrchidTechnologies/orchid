@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
-import 'package:orchid/api/pricing.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
+import 'orchid_pricing.dart';
 
 class RealOrchidAPI implements OrchidAPI {
   static final RealOrchidAPI _singleton = RealOrchidAPI._internal();

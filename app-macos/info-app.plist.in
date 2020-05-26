@@ -79,6 +79,16 @@
         </dict>
     </array>
 
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>id</string>
+        <string>ja</string>
+        <string>ko</string>
+        <string>ru</string>
+        <string>zh</string>
+    </array>
+
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
 

@@ -1,6 +1,8 @@
+import 'package:badges/badges.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/pages/common/formatting.dart';
 
 import '../app_text.dart';
 
@@ -20,6 +22,7 @@ class HopTile extends StatelessWidget {
   final Widget trailing;
   final bool dottedBorder;
   final Color borderColor;
+  final bool showAlertBadge;
 
   const HopTile({
     Key key,
@@ -37,6 +40,7 @@ class HopTile extends StatelessWidget {
     this.trailing,
     this.dottedBorder = false,
     this.borderColor,
+    this.showAlertBadge = false,
   }) : super(key: key);
 
   @override
@@ -49,12 +53,10 @@ class HopTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           // Optional top flow divider
-          if (showFlowDividerTop)
-            buildFlowDivider(),
+          if (showFlowDividerTop) buildFlowDivider(),
 
           // Optional top border divider
-          if (showTopDivider)
-            _divider(),
+          if (showTopDivider) _divider(),
 
           // Main tile body and background
           Padding(
@@ -77,12 +79,10 @@ class HopTile extends StatelessWidget {
           ),
 
           // Optional bottom border divider
-          if (showBottomDivider)
-            _divider(),
+          if (showBottomDivider) _divider(),
 
           // Optional bottom flow divider
-          if (showFlowDividerBottom)
-            buildFlowDivider()
+          if (showFlowDividerBottom) buildFlowDivider()
         ],
       ),
     );
@@ -99,10 +99,24 @@ class HopTile extends StatelessWidget {
     return ListTile(
         onTap: onTap,
         key: key,
-        title: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: AppText.listItem.copyWith(color: textColor),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppText.listItem.copyWith(color: textColor),
+            ),
+            if (showAlertBadge) ...[
+              padx(8),
+              Badge(
+                badgeContent: Text("!",
+                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                padding: EdgeInsets.all(8),
+                toAnimate: false,
+              )
+            ]
+          ],
         ),
         leading: image,
         trailing: trailing ??

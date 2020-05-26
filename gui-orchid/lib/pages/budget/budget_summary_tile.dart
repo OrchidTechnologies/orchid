@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/pricing.dart';
+import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/util/units.dart';
 

@@ -33,7 +33,7 @@ custom:
       prod: 'PAC_FUNDER_PRIVKEY'
       dev: 'PAC_FUNDER_PRIVKEY_DEV'
     DEFAULT_GAS:
-      prod: "13"
+      prod: "21"
       dev: "13"
   datadog:
     addLayers: true
@@ -41,6 +41,11 @@ custom:
     apiKey: ${ssm:DATADOG_API_KEY~true}
   enterprise:
     logIngestMode: pull
+  dynamodb:
+    stages:
+      - ${self:provider.stage}
+    start:
+      migrate: true
 provider:
   name: aws
   stage: ${opt:stage,'dev'}

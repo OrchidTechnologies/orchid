@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+import time
 
 from decimal import Decimal
 from handler import fund_PAC, get_product_id_mapping
@@ -55,12 +56,14 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
             nonce=nonce,
         )
         creation_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+        creation_etime = int(time.time())
         item = {
             'signer': signer_pubkey,
             'price': price,
             'config': config,
             'push_txn_hash': push_txn_hash,
             'creation_time': creation_time,
+            'creation_etime': creation_etime,
             'status': 'pending',
         }
         ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support

@@ -54,4 +54,8 @@ class UniqueHop {
   // Create a UniqueHop preserving any key from a previous UniqueHop.
   UniqueHop.from(UniqueHop uniqueHop, {CircuitHop hop})
       : this(key: uniqueHop?.key, hop: hop);
+
+  /// Hash of the hop content.
+  int get contentHash => hop.toJson().toString().hashCode;
 }
+
