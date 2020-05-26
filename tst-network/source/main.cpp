@@ -243,10 +243,12 @@ int Main(int argc, const char *const argv[]) {
 
         body << "T+" << (Timestamp() - state->timestamp_).str() << "s " << Short(state->speed_) << "Mbps\n";
         body << "\n";
-        body << "PureVPN:     $-.----   " << Short(state->purevpn_.speed_) << "Mbps   " << state->purevpn_.host_.String() << "\n";
+        body << " PureVPN:     $-.----   " << Short(state->purevpn_.speed_) << "Mbps   " << state->purevpn_.host_.String() << "\n";
         body << "\n";
-        for (const auto &provider : state->providers_)
-            body << provider.first << ": " << std::string(11 - provider.first.size(), ' ') << provider.second << "\n";
+        for (const auto &provider : state->providers_) {
+            body << "------------+---------+------------+-----------------\n";
+            body << " " << provider.first << ": " << std::string(11 - provider.first.size(), ' ') << provider.second << "\n";
+        }
 
         co_return Respond(request, http::status::ok, "text/html", body());
     });
