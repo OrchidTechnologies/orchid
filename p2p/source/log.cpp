@@ -20,10 +20,6 @@
 /* }}} */
 
 
-#ifdef __MINGW32__
-#define _GNU_SOURCE
-#endif
-
 #include <iostream>
 
 #include <pthread.h>
