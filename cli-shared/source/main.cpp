@@ -20,65 +20,27 @@
 /* }}} */
 
 
-#define OPENVPN_EXTERN extern
-
-#include "log.hpp"
-#define OPENVPN_LOG_STREAM orc::Log()
-#include <openvpn/log/logsimple.hpp>
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#include <cerrno>
 #include <unistd.h>
 
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-
-#if 0
-#elif defined(__APPLE__)
-#include <net/if_utun.h>
-#include <sys/sys_domain.h>
-#include <sys/kern_control.h>
-#elif defined(__linux__)
-#include <linux/if_tun.h>
-#endif
-
-#include <boost/asio/generic/datagram_protocol.hpp>
 #include <boost/filesystem/string_file.hpp>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-#include <asio.hpp>
+#include "baton.hpp"
 #include "capture.hpp"
 #include "error.hpp"
+#include "log.hpp"
 #include "port.hpp"
-#include "protect.hpp"
-#include "sync.hpp"
-#include "syncfile.hpp"
-#include "syscall.hpp"
-#include "task.hpp"
-#include "file.hpp"
 #include "transport.hpp"
-
-#if 0
-#elif defined(__APPLE__)
-#include "family.hpp"
-#elif defined(__linux__)
-#include "packetinfo.hpp"
-#endif
+#include "tunnel.hpp"
 
 namespace orc {
 
 namespace po = boost::program_options;
 
 std::string Group() {
-    // UGH: error: 'current_path' is unavailable: introduced in macOS 10.15
-    //return std::filesystem::current_path();
     return boost::filesystem::current_path().string();
 }
 
@@ -110,88 +72,33 @@ int Main(int argc, const char *const argv[]) {
     Initialize();
 
 
-    auto local(Host_);
-    auto capture(Break<BufferSink<Capture>>(local));
+    const auto local(Host_);
+    const auto capture(Break<BufferSink<Capture>>(local));
 
-#if 0
-#elif defined(__APPLE__)
-    auto &family(capture->Wire<BufferSink<Family>>());
-    auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+    Tunnel(*capture, [&](const std::string &device, const std::string &argument) {
+        orc_assert(system(("ifconfig " + device + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
 
-    auto file(sync->native_handle());
+        if (args.count("capture") != 0)
+            orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " " + argument + " " + device).c_str()) == 0);
+        else {
+            // XXX: having a default route causes connect() to fail with "Network is unreachable" (on macOS)
+            //orc_assert(system(("route -n add -net 0.0.0.0/1 " + argument + " " + device).c_str()) == 0);
+            //orc_assert(system(("route -n add -net 128.0.0.0/1 " + argument + " " + device).c_str()) == 0);
 
-    ctl_info info;
-    memset(&info, 0, sizeof(info));
-    orc_assert(strlcpy(info.ctl_name, UTUN_CONTROL_NAME, sizeof(info.ctl_name)) < sizeof(info.ctl_name));
-    // XXX: is there a way I can do this with boost, to avoid the vararg call?
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
-    orc_syscall(ioctl(file, CTLIOCGINFO, &info));
+            orc_assert(system(("route -n add -net 1/8 " + argument + " " + device).c_str()) == 0);
+            orc_assert(system(("route -n add -net 2/7 " + argument + " " + device).c_str()) == 0);
+            orc_assert(system(("route -n add -net 4/6 " + argument + " " + device).c_str()) == 0);
+            orc_assert(system(("route -n add -net 8/5 " + argument + " " + device).c_str()) == 0);
+            orc_assert(system(("route -n add -net 16/4 " + argument + " " + device).c_str()) == 0);
+            orc_assert(system(("route -n add -net 32/3 " + argument + " " + device).c_str()) == 0);
+            orc_assert(system(("route -n add -net 64/2 " + argument + " " + device).c_str()) == 0);
+            orc_assert(system(("route -n add -net 128/1 " + argument + " " + device).c_str()) == 0);
+        }
 
-    struct sockaddr_ctl address;
-    address.sc_id = info.ctl_id;
-    address.sc_len = sizeof(address);
-    address.sc_family = AF_SYSTEM;
-    address.ss_sysaddr = AF_SYS_CONTROL;
-    address.sc_unit = 0;
+        orc_assert(system(("route -n add 10.7.0.4 " + argument + " " + device).c_str()) == 0);
 
-    do ++address.sc_unit;
-    while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
-
-    auto utun("utun" + std::to_string(address.sc_unit - 1));
-    orc_assert(system(("ifconfig " + utun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
-    if (args.count("capture") != 0)
-        orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " -interface " + utun).c_str()) == 0);
-    else {
-        // XXX: having a default route causes connect() to fail with "Network is unreachable"
-        //orc_assert(system(("route -n add -net 0.0.0.0/1 -interface " + utun).c_str()) == 0);
-        //orc_assert(system(("route -n add -net 128.0.0.0/1 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 1/8 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 2/7 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 4/6 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 8/5 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 16/4 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 32/3 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 64/2 -interface " + utun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 128/1 -interface " + utun).c_str()) == 0);
-    }
-    orc_assert(system(("route -n add 10.7.0.4 -interface " + utun).c_str()) == 0);
-#elif defined(__linux__)
-    auto &family(capture->Wire<BufferSink<PacketInfo>>());
-    // XXX: NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-    auto &sync(family.Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
-
-    auto file(sync->native_handle());
-
-    struct ifreq ifr = {.ifr_flags = IFF_TUN | IFF_NO_PI};
-    // XXX: NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-    orc_assert(ioctl(file, TUNSETIFF, (void*)&ifr) >= 0);
-    // XXX: NOLINTNEXTLINE (modernize-avoid-c-arrays)
-    char dev[IFNAMSIZ];
-    // XXX: correct memory management in this code ASAP after NL
-    // XXX: NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.strcpy,cppcoreguidelines-pro-type-union-access)
-    strcpy(dev, ifr.ifr_name);
-    std::string tun(dev);
-    orc_assert(system(("ifconfig " + tun + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
-    if (args.count("capture") != 0)
-        orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " dev " + tun).c_str()) == 0);
-    else {
-        orc_assert(system(("route -n add -net 0.0.0.0/1 dev " + tun).c_str()) == 0);
-        orc_assert(system(("route -n add -net 128.0.0.0/1 dev " + tun).c_str()) == 0);
-    }
-    orc_assert(system(("route -n add 10.7.0.4 dev " + tun).c_str()) == 0);
-#else
-#error
-#endif
-
-    // XXX: we need CAP_NET_RAW capability for SO_BINDTODEVICE
-#if !defined(__linux__)
-    // XXX: rage against the cage, my friend :(
-    (void) setgid(501);
-    (void) setuid(501);
-#endif
-
-    capture->Start(args["config"].as<std::string>());
-    sync.Open();
+        capture->Start(args["config"].as<std::string>());
+    });
 
     Thread().join();
     return 0;

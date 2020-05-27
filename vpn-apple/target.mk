@@ -21,13 +21,11 @@
 lflags += -framework NetworkExtension
 lflags += -framework SystemConfiguration
 
-cflags += -I$(pwd)
-cflags += -I$(pwd)/extra
+cflags += -I$(pwd)/source
 
-source += $(pwd)/directory.mm
-source += $(pwd)/protect.cpp
-source += $(pwd)/tunnel.mm
+source += $(wildcard $(pwd)/source/*.cpp)
+source += $(wildcard $(pwd)/source/*.mm)
 
-cflags/$(pwd)/tunnel.mm += -Wno-arc-retain-cycles
+cflags/$(pwd)/source/tunnel.mm += -Wno-arc-retain-cycles
 
 $(call include,shared/target.mk)

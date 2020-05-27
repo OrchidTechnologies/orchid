@@ -42,15 +42,17 @@ debug: $(output)/$(default)/orchid$(exe)
 $(call include,vpn/target.mk)
 
 ifeq ($(target),mac)
-cflags += -Iall/vpn-apple
-source += all/vpn-apple/protect.cpp
+cflags += -Iall/vpn-apple/source
+source += all/vpn-apple/source/protect.cpp
+source += all/vpn-apple/source/tunnel.cpp
 endif
 ifeq ($(target),win)
 cflags += -Iall/vpn-windows/tap-windows6/src
 endif
 ifeq ($(target),lnx)
-cflags += -Iall/vpn-linux
-source += all/vpn-linux/protect.cpp
+cflags += -Iall/vpn-linux/source
+source += all/vpn-linux/source/protect.cpp
+source += all/vpn-linux/source/tunnel.cpp
 endif
 
 source += $(wildcard source/*.cpp)
