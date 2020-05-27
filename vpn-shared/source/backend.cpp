@@ -27,7 +27,6 @@
 #include "log.hpp"
 #include "shared.hpp"
 #include "router.hpp"
-#include "trace.hpp"
 
 namespace orc {
 

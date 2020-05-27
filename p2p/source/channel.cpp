@@ -37,7 +37,7 @@ class Actor final :
 
     void Stop(const std::string &error) noexcept override {
         // XXX: how much does this matter?
-_trace();
+orc_trace();
     }
 
   public:
@@ -47,7 +47,7 @@ _trace();
     }
 
     ~Actor() override {
-_trace();
+orc_trace();
         Close();
     }
 };

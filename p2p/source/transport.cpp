@@ -40,7 +40,6 @@
 #include "event.hpp"
 #include "forge.hpp"
 #include "nest.hpp"
-#include "trace.hpp"
 #include "transport.hpp"
 
 namespace orc {

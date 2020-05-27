@@ -51,6 +51,7 @@ dependencies:
   dartjsengine: ^1.0.1
   # This doesn't support MacOS yet
   #flutter_secure_storage: ^3.3.3
+  badges: ^1.1.1
 
 dev_dependencies:
   flutter_test:

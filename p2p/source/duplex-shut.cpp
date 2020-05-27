@@ -22,6 +22,7 @@
 
 #include "baton.hpp"
 #include "duplex.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 

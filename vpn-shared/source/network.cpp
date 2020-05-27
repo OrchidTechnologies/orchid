@@ -20,8 +20,6 @@
 /* }}} */
 
 
-#include <cppcoro/when_all.hpp>
-
 #include <openssl/obj_mac.h>
 
 #include "client.hpp"
@@ -68,7 +66,7 @@ task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const 
         static const Selector<uint128_t, Address, Bytes> good_("good");
         static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
 
-        const auto [good, look] = co_await cppcoro::when_all(
+        const auto [good, look] = *co_await Parallel(
             good_.Call(endpoint, latest, curator, 90000, address, argument),
             look_.Call(endpoint, latest, location_, 90000, address)
         );

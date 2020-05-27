@@ -6,8 +6,20 @@ if test -L "${here}"; then
 fi
 here=${here%/*}
 
-case "$1" in
+case "$*" in
     (--atleast-pkgconfig-version) ;;
     (--version) echo 0.29.2;;
+
+    ("--libs --cflags nettle hogweed")
+        variable=NETTLE_${ENV_ARCH//-/_}
+        echo "${!variable}"
+    ;;
+
+    ("--modversion nettle hogweed")
+        version=$(sed -e '/^AC_INIT(\[nettle\], \[/!d;s///;s/\].*//' "${here}/../p2p/nettle/configure.ac")
+        echo "${version}"
+        echo "${version}"
+    ;;
+
     (*) exit 1; ;;
 esac

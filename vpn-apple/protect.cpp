@@ -32,7 +32,6 @@
 #include <arpa/inet.h>
 
 #include "error.hpp"
-#include "trace.hpp"
 
 namespace orc {
 

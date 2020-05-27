@@ -69,7 +69,7 @@ class Channel final :
     }
 
     ~Channel() override {
-_trace();
+orc_trace();
         peer_->channels_.erase(this);
         channel_->UnregisterObserver();
     }
@@ -108,8 +108,7 @@ _trace();
 
     void OnMessage(const webrtc::DataBuffer &buffer) noexcept override {
         const Subset data(buffer.data.data(), buffer.data.size());
-        if (Verbose)
-            Log() << "WebRTC >>> " << this << " " << data << std::endl;
+        //Log() << "WebRTC >>> " << this << " " << data << std::endl;
         Pump::Land(data);
     }
 
@@ -131,8 +130,7 @@ _trace();
     }
 
     task<void> Send(const Buffer &data) override {
-        if (Verbose)
-            Log() << "WebRTC <<< " << this << " " << data << std::endl;
+        //Log() << "WebRTC <<< " << this << " " << data << std::endl;
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
         co_await Post([&]() {

@@ -23,83 +23,241 @@
 #ifndef ORCHID_TASK_HPP
 #define ORCHID_TASK_HPP
 
-#include <functional>
+#include <variant>
 
-#include <cppcoro/sync_wait.hpp>
-#include <cppcoro/task.hpp>
+#include <experimental/coroutine>
 
-using cppcoro::task;
+#include "error.hpp"
+
+#define ORC_FIBER
 
 namespace orc {
 
-class Pool;
+inline constexpr class {} co_optic;
 
-struct Stacked {
-    Stacked *next_ = nullptr;
-    std::experimental::coroutine_handle<> code_;
-};
-
-class Scheduled :
-    protected Stacked
-{
+class Fiber {
   private:
-    Pool *pool_;
+    Fiber *parent_;
+    std::string name_;
 
   public:
-    Scheduled(Pool *pool) :
-        pool_(pool)
+    Fiber(Fiber *parent = nullptr) :
+        parent_(parent)
+    {
+    }
+
+    Fiber *Parent() {
+        return parent_;
+    }
+};
+
+template <typename Type_>
+class Ready {
+  private:
+    Type_ value_;
+
+  public:
+    Ready(Type_ value) :
+        value_(std::move(value))
     {
     }
 
     bool await_ready() noexcept {
+        return true;
+    }
+
+    bool await_suspend(std::experimental::coroutine_handle<>) noexcept {
         return false;
     }
 
-    void await_suspend(std::experimental::coroutine_handle<> code) noexcept;
+    auto await_resume() const {
+        return std::move(value_);
+    }
+};
+
+class Final {
+  public:
+    bool await_ready() noexcept {
+        return false;
+    }
+
+    template <typename Promise_>
+    auto await_suspend(std::experimental::coroutine_handle<Promise_> code) noexcept {
+        return std::move(std::move(code).promise().code_);
+    }
 
     void await_resume() noexcept {
     }
 };
 
-Scheduled Schedule();
+template <typename Value_>
+class Task {
+  public:
+    class promise_type;
 
-template <typename Type_>
-Type_ Wait(task<Type_> code) {
-    // XXX: centralize Schedule?
-    return cppcoro::sync_wait(std::move(code));
-}
+  private:
+    std::experimental::coroutine_handle<promise_type> code_;
 
-struct Detached {
-    struct promise_type {
-        Detached get_return_object() noexcept {
-            return {};
+    class Awaitable {
+      protected:
+        std::experimental::coroutine_handle<promise_type> code_;
+
+      public:
+        Awaitable(std::experimental::coroutine_handle<promise_type> code) noexcept :
+            code_(std::move(code))
+        {
         }
 
-        std::experimental::suspend_never initial_suspend() noexcept {
-            return {};
+        bool await_ready() noexcept {
+	    return !code_ || code_.done();
         }
 
-        std::experimental::suspend_never final_suspend() noexcept {
-            return {};
-        }
-
-        void return_void() noexcept {
-        }
-
-        [[noreturn]]
-        void unhandled_exception() noexcept {
-            std::terminate();
+        template <typename Promise_>
+        auto await_suspend(std::experimental::coroutine_handle<Promise_> code) noexcept {
+            code_.promise().code_ = std::move(code);
+            return code_;
         }
     };
+
+  public:
+    Task(std::experimental::coroutine_handle<promise_type> code) noexcept :
+        code_(std::move(code))
+    {
+    }
+
+    Task(Task &&task) noexcept :
+        code_(std::move(task.code_))
+    {
+        task.code_ = nullptr;
+    }
+
+    ~Task() {
+        if (code_ != nullptr)
+            code_.destroy();
+    }
+
+    auto operator co_await() const && noexcept {
+        typedef class : public Awaitable {
+          public:
+            using Awaitable::Awaitable;
+
+            auto await_resume() const {
+		return this->code_.promise()();
+            }
+        } Awaitable;
+
+        return Awaitable(code_);
+    }
+
+    void Set(Fiber *fiber) {
+        code_.promise().fiber_ = fiber;
+    }
 };
 
-template <typename Code_>
-auto Spawn(Code_ code) noexcept -> typename std::enable_if<noexcept(code())>::type {
-    [](Code_ code) mutable noexcept -> Detached {
-        co_await Schedule();
-        co_await code();
-    }(std::move(code));
-}
+class Promise {
+    template <typename Value_>
+    friend class Task;
+
+    friend class Final;
+
+  private:
+    std::experimental::coroutine_handle<> code_;
+
+#ifdef ORC_FIBER
+    Fiber *fiber_ = nullptr;
+#endif
+
+  public:
+    auto initial_suspend() noexcept {
+        return std::experimental::suspend_always(); }
+    auto final_suspend() noexcept {
+        return Final(); }
+
+    template <typename Awaitable_>
+    auto &&await_transform(Awaitable_ &&awaitable) {
+        return std::forward<Awaitable_>(awaitable);
+    }
+
+    auto await_transform(decltype(co_optic)) {
+        // NOLINTNEXTLINE (clang-analyzer-core.CallAndMessage)
+        return Ready<Fiber *>(
+#ifdef ORC_FIBER
+            fiber_
+#else
+            nullptr
+#endif
+        );
+    }
+
+#ifdef ORC_FIBER
+    template <typename Type_>
+    auto &&await_transform(Task<Type_> &&task) {
+        // NOLINTNEXTLINE (clang-analyzer-core.CallAndMessage)
+        task.Set(fiber_);
+        return std::forward<Task<Type_>>(task);
+    }
+#endif
+};
+
+template <typename Value_>
+class Task<Value_>::promise_type :
+    public Promise
+{
+  private:
+    typedef std::variant<std::exception_ptr, Value_> Variant_;
+    Variant_ variant_;
+
+  public:
+    auto get_return_object() noexcept {
+        return Task<Value_>(std::experimental::coroutine_handle<promise_type>::from_promise(*this));
+    }
+
+    void unhandled_exception() noexcept {
+        variant_.~Variant_();
+        new (&variant_) Variant_(std::in_place_index_t<0>(), std::current_exception());
+    }
+
+    template <typename Type_, typename = std::enable_if_t<std::is_convertible_v<Type_ &&, Value_>>>
+    void return_value(Type_ &&value) noexcept(std::is_nothrow_constructible_v<Value_, Type_ &&>) {
+        variant_.~Variant_();
+        new (&variant_) Variant_(std::in_place_index_t<1>(), std::forward<Type_>(value));
+    }
+
+    Value_ operator()() {
+        // I would probably use std::get, but that doesn't work on iOS before 12.0
+        if (auto *error = std::get_if<0>(&variant_))
+            std::rethrow_exception(std::move(*error));
+        return std::move(*std::get_if<1>(&variant_));
+    }
+};
+
+template <>
+class Task<void>::promise_type :
+    public Promise
+{
+  private:
+    std::exception_ptr error_;
+
+  public:
+    auto get_return_object() noexcept {
+        return Task<void>(std::experimental::coroutine_handle<promise_type>::from_promise(*this));
+    }
+
+    void unhandled_exception() noexcept {
+        error_ = std::current_exception();
+    }
+
+    void return_void() noexcept {
+    }
+
+    void operator()() {
+        if (error_)
+            std::rethrow_exception(error_);
+    }
+};
+
+template <typename Value_>
+using task = Task<Value_>;
 
 }
 

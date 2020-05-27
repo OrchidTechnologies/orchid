@@ -54,7 +54,6 @@
 #include "server.hpp"
 #include "store.hpp"
 #include "task.hpp"
-#include "trace.hpp"
 #include "transport.hpp"
 #include "utility.hpp"
 
@@ -113,11 +112,9 @@ int Main(int argc, const char *const argv[]) {
         ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in currency / GB")
     ; options.add(group); }
 
-    { po::options_description group("openpvn egress");
+    { po::options_description group("packet egress");
     group.add_options()
-        ("ovpn-file", po::value<std::string>(), "openvpn .ovpn configuration file")
-        ("ovpn-user", po::value<std::string>()->default_value(""), "openvpn client credential (username)")
-        ("ovpn-pass", po::value<std::string>()->default_value(""), "openvpn client credential (password)")
+        ("openvpn3", po::value<std::string>(), "openvpn3 .ovpn configuration file")
     ; options.add(group); }
 
     po::positional_options_description positional;
@@ -281,16 +278,13 @@ int Main(int argc, const char *const argv[]) {
         cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
 
     auto egress([&]() -> S<Egress> {
-        if (args.count("ovpn-file") != 0) {
+        if (args.count("openvpn3") != 0) {
             std::string ovpnfile;
-            boost::filesystem::load_string_file(args["ovpn-file"].as<std::string>(), ovpnfile);
+            boost::filesystem::load_string_file(args["openvpn3"].as<std::string>(), ovpnfile);
 
-            auto username(args["ovpn-user"].as<std::string>());
-            auto password(args["ovpn-pass"].as<std::string>());
-
-            return Wait([origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() mutable -> task<S<Egress>> {
+            return Wait([origin, ovpnfile = std::move(ovpnfile)]() mutable -> task<S<Egress>> {
                 auto egress(Make<BufferSink<Egress>>(0));
-                co_await Connect(*egress, std::move(origin), 0, ovpnfile, username, password);
+                co_await Connect(*egress, std::move(origin), 0, ovpnfile, "", "");
                 co_return egress;
             }());
         } else orc_assert(false);

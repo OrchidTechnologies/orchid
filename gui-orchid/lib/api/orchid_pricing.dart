@@ -24,6 +24,7 @@ class OrchidPricingAPI {
   /// Get a snapshot of current pricing data at the current time.
   /// This method may return null if no pricing data is available and the UI
   /// should handle this as a routine condition by hiding displayed conversions.
+  /// This method is cached for a period of time and safe to call repeatedly.
   Future<Pricing> getPricing() async {
     // Cache for a period of time
     if (_lastPricing != null &&

@@ -28,6 +28,7 @@
 #include "channel.hpp"
 #include "peer.hpp"
 #include "pirate.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 
@@ -104,11 +105,11 @@ task<struct socket *> Peer::Internal() {
 
 
 void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) noexcept {
-    _trace();
+    orc_trace();
 }
 
 void Peer::OnRenegotiationNeeded() noexcept {
-    _trace();
+    orc_trace();
 }
 
 void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {

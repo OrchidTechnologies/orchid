@@ -44,12 +44,11 @@
 #include "http.hpp"
 #include "local.hpp"
 #include "locator.hpp"
-#include "trace.hpp"
 
 namespace orc {
 
 template <typename Stream_>
-task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) {
+task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) { orc_ahead
     orc_block({ (void) co_await http::async_write(stream, req, orc::Token()); },
         "writing http request");
 
@@ -66,7 +65,7 @@ task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) {
 }
 
 template <typename Socket_>
-task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
+task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead
     http::request<http::string_body> req{http::string_to_verb(method), locator.path_, 11};
     req.set(http::field::host, locator.host_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -127,7 +126,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
     } else orc_assert(false);
 }
 
-task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
+task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
     const auto endpoints(co_await Resolve(origin, locator.host_, locator.port_));
     std::exception_ptr error;
     for (const auto &endpoint : endpoints) try {

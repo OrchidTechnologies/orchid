@@ -28,8 +28,8 @@
 #include <cppcoro/single_consumer_event.hpp>
 
 #include "log.hpp"
+#include "spawn.hpp"
 #include "task.hpp"
-#include "trace.hpp"
 #include "valve.hpp"
 
 namespace orc {

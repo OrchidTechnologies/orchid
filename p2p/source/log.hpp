@@ -30,13 +30,33 @@ namespace orc {
 
 extern bool Verbose;
 
+class Fiber;
+
 class Log final :
     public std::ostringstream
 {
   public:
+    Log(Fiber *fiber = nullptr) noexcept;
     ~Log() override;
 };
 
 }
+
+inline constexpr orc::Fiber *orc_fiber = nullptr;
+
+#define orc_head \
+    [[maybe_unused]] Fiber *orc_fiber(nullptr);
+#define orc_ahead \
+    [[maybe_unused]] Fiber *orc_fiber(co_await co_optic);
+
+#define orc_Log() \
+    orc::Log(orc_fiber)
+
+#define orc_log(log, text) \
+    log << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text
+
+#define orc_trace() do { \
+    orc_log(orc_Log() << "\e[31m", "orc_trace(): " << __FUNCTION__ << std::endl); \
+} while (false)
 
 #endif//ORCHID_LOG_HPP

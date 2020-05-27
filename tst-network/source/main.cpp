@@ -37,7 +37,6 @@
 #include "router.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
-#include "trace.hpp"
 #include "transport.hpp"
 
 #include <boost/filesystem/string_file.hpp>
@@ -67,6 +66,7 @@ struct Report {
 typedef std::tuple<Float, size_t> Measurement;
 
 task<Measurement> Measure(Origin &origin) {
+    co_await Sleep(1);
     const auto before(Monotonic());
     const auto test((co_await origin.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
     co_return Measurement{test.size() * 8 / Float(Monotonic() - before), test.size()};
@@ -192,7 +192,7 @@ int Main(int argc, const char *const argv[]) {
             }
 
             const auto now(Timestamp());
-            auto reports(co_await cppcoro::when_all_ready(std::move(tests)));
+            auto reports(co_await Parallel(std::move(tests)));
             auto state(std::make_shared<State>(now));
 
             try {
@@ -243,10 +243,12 @@ int Main(int argc, const char *const argv[]) {
 
         body << "T+" << (Timestamp() - state->timestamp_).str() << "s " << Short(state->speed_) << "Mbps\n";
         body << "\n";
-        body << "PureVPN:     $-.----   " << Short(state->purevpn_.speed_) << "Mbps   " << state->purevpn_.host_.String() << "\n";
+        body << " PureVPN:     $-.----   " << Short(state->purevpn_.speed_) << "Mbps   " << state->purevpn_.host_.String() << "\n";
         body << "\n";
-        for (const auto &provider : state->providers_)
-            body << provider.first << ": " << std::string(11 - provider.first.size(), ' ') << provider.second << "\n";
+        for (const auto &provider : state->providers_) {
+            body << "------------+---------+------------+-----------------\n";
+            body << " " << provider.first << ": " << std::string(11 - provider.first.size(), ' ') << provider.second << "\n";
+        }
 
         co_return Respond(request, http::status::ok, "text/html", body());
     });

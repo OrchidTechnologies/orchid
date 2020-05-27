@@ -10,11 +10,8 @@ import 'orchid_crypto.dart';
 class OrchidEthereum {
   static OrchidEthereum _shared = OrchidEthereum._init();
 
-  //static var providerUrl = 'https://cloudflare-eth.com';
-  // TODO: Temporarily using this api-key bound solution with Infura due to
-  // TODO: unreliability of Cloudflare.
   static var providerUrl =
-      'https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf';
+      'https://eth-mainnet.alchemyapi.io/v2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
 
   // Lottery contract address on main net
   static var lotteryContractAddress =
@@ -111,7 +108,15 @@ class OrchidEthereum {
   /// Get the current median gas price.
   /// curl $url --data '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}'
   /// {"jsonrpc":"2.0","id":0,"result":"0x2cb417800"}
+  /// This method is cached for a period of time and safe to call repeatedly.
   Future<GWEI> getGasPrice() async {
+    // Allow override via config for testing
+    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
+    if (overrideValue != null) {
+      return GWEI(overrideValue);
+    }
+
     // Cache for a period of time
     if (_lastGasPrice != null &&
         DateTime.now().difference(_lastGasPriceTime) < Duration(minutes: 5)) {

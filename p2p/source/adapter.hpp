@@ -59,6 +59,13 @@ class Adapter {
     boost::asio::io_context &context_;
     U<Stream> stream_;
 
+    template <typename Handler_>
+    void Convert(Handler_ &&handler, const std::exception_ptr &error) {
+        boost::asio::post(get_executor(), [handler = std::forward<Handler_>(handler), error = Category::Convert(error)]() mutable {
+            std::move(handler)(error, 0);
+        });
+    }
+
   public:
     Adapter(boost::asio::io_context &context, U<Stream> stream) :
         context_(context),
@@ -78,16 +85,16 @@ class Adapter {
     void async_read_some(const Buffers_ &buffers, Handler_ handler) {
         Spawn([this, buffers, handler = std::move(handler)]() mutable noexcept -> task<void> {
             try {
-                typedef std::pair<size_t, boost::system::error_code> Result;
-                const auto [writ, error] = co_await [&]() -> task<Result> {
+                typedef std::pair<size_t, bool> Result;
+                const auto [writ, eof] = co_await [&]() -> task<Result> {
                     const auto size(boost::beast::buffer_bytes(buffers));
                     if (size == 0)
-                        co_return Result(0, {});
+                        co_return Result(0, false);
 
                     Beam beam(size);
                     const auto writ(co_await stream_->Read(beam));
                     if (writ == 0)
-                        co_return Result(0, asio::error::eof);
+                        co_return Result(0, true);
 
                     auto data(beam.data());
                     // XXX: this is copying way too much data
@@ -97,13 +104,14 @@ class Adapter {
                         data += size;
                     }
 
-                    co_return Result(writ, {});
+                    co_return Result(writ, false);
                 }();
 
-                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), error, writ));
+                boost::asio::post(get_executor(), [handler = std::move(handler), eof = eof, writ = writ]() mutable {
+                    return std::move(handler)(eof ? asio::error::eof : boost::system::error_code(), writ);
+                });
             } catch (...) {
-                // XXX: convert Error
-                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::asio::error::invalid_argument, 0));
+                Convert(std::move(handler), std::current_exception());
             }
         });
     }
@@ -119,10 +127,11 @@ class Adapter {
             try {
                 const Converted data(buffers);
                 co_await stream_->Send(data);
-                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::system::error_code(), data.size()));
+                boost::asio::post(get_executor(), [handler = std::move(handler), writ = data.size()]() mutable {
+                    return std::move(handler)(boost::system::error_code(), writ);
+                });
             } catch (...) {
-                // XXX: convert Error
-                boost::asio::post(get_executor(), boost::asio::detail::bind_handler(BOOST_ASIO_MOVE_CAST(Handler_)(handler), boost::asio::error::invalid_argument, 0));
+                Convert(std::move(handler), std::current_exception());
             }
         });
     }

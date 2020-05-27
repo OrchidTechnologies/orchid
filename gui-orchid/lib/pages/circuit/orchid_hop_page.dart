@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:badges/badges.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,6 +56,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   DateTime _lotteryPotLastUpdate;
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
+  bool _showMarketStatsAlert = false;
 
   @override
   void initState() {
@@ -451,9 +453,31 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildMarketStatsLink() {
-    return LinkText("Market Stats",
-        style: AppText.linkStyle.copyWith(fontSize: 13),
-        onTapped: _showMarketStats);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _showMarketStats,
+        child: Row(
+          children: [
+            LinkText(
+              "Market Stats",
+              style: AppText.linkStyle.copyWith(fontSize: 13),
+              onTapped: _showMarketStats,
+            ),
+            padx(8),
+            Badge(
+              showBadge: _showMarketStatsAlert,
+              position: BadgePosition.topRight(top: -6, right: -28),
+              badgeContent: Text("!",
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
+              padding: EdgeInsets.all(8),
+              toAnimate: false,
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _showMarketStats() async {
@@ -480,6 +504,18 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     String costToRedeemText =
         formatCurrency(oxtCostToRedeem.value, suffix: "OXT");
     bool ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
+    bool gasPriceHigh = gasPrice.value >= 15.0;
+    bool balanceLimited =
+        _lotteryPot.balance.value < _lotteryPot.deposit.value / 2.0;
+    String limitedByText = balanceLimited
+        ? "Your max ticket value is currently limited by your balance of  "
+            "${formatCurrency(_lotteryPot.balance.value, suffix: 'OXT')}.  "
+            "Consider adding OXT to your account balance."
+        : "Your max ticket value is currently limited by your deposit of "
+            "${formatCurrency(_lotteryPot.deposit.value, suffix: 'OXT')}.  "
+            "Consider adding OXT to your deposit or moving funds from your balance to your deposit.";
+    String limitedByTitleText =
+        balanceLimited ? "Balance too low" : "Deposit size too small";
 
     return Dialogs.showAppDialog(
         context: context,
@@ -492,15 +528,31 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               pady(4),
               Text("ETH price: $ethPriceText"),
               Text("OXT price: $oxtPriceText"),
-              Text("Gas price: $gasPriceText"),
+              Text("Gas price: $gasPriceText",
+                  style: gasPriceHigh ? TextStyle(color: Colors.red) : null),
               pady(16),
-              Text("Ticket Value", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("Ticket Value",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               pady(4),
-              Text("Max Face value: $maxFaceValueText"),
+              Text("Max face value: $maxFaceValueText"),
               Text("Cost to redeem: $costToRedeemText",
-                  style: ticketUnderwater
-                      ? TextStyle(color: Colors.red)
-                      : null),
+                  style:
+                      ticketUnderwater ? TextStyle(color: Colors.red) : null),
+
+              // Problem description
+              if (ticketUnderwater) ...[
+                pady(16),
+                Text(limitedByTitleText,
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                pady(8),
+                Text(limitedByText,
+                    style: TextStyle(fontStyle: FontStyle.italic)),
+                pady(16),
+                LinkText("View the docs for help on this issue.",
+                    style: AppText.linkStyle.copyWith(fontSize: 15),
+                    url:
+                        'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
+              ]
             ]));
   }
 
@@ -674,9 +726,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         print("Error fetching lottery pot: $err");
         return;
       }
+      var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
       if (mounted) {
         setState(() {
           _lotteryPot = pot;
+          _showMarketStatsAlert = ticketValue.value <= 0;
         });
       }
       _lotteryPotLastUpdate = DateTime.now();

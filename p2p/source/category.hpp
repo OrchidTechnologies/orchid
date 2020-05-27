@@ -20,15 +20,36 @@
 /* }}} */
 
 
-#ifndef ORCHID_TRACE_HPP
-#define ORCHID_TRACE_HPP
+#ifndef ORCHID_CATEGORY_HPP
+#define ORCHID_CATEGORY_HPP
 
-#include <pthread.h>
+#include <boost/system/error_code.hpp>
 
-#include "log.hpp"
+namespace orc {
 
-#define _trace() do { \
-    orc::Log() << "\e[31m[" << std::hex << pthread_self() << "] _trace(" << __FILE__ << ":" << std::dec << __LINE__ << "): " << __FUNCTION__ << "\e[0m" << std::endl; \
-} while (false)
+class Category :
+    public boost::system::error_category
+{
+  public:
+    const char *name() const noexcept override {
+        return "orchid";
+    }
 
-#endif//ORCHID_TRACE_HPP
+    std::string message(int index) const override;
+
+    static std::exception_ptr Convert(int index) noexcept;
+    static boost::system::error_code Convert(const std::exception_ptr &error) noexcept;
+};
+
+template <typename>
+struct Categories {
+    static constexpr Category category_{};
+};
+
+}
+
+constexpr const boost::system::error_category &orchid_category() noexcept {
+    return orc::Categories<void>::category_;
+}
+
+#endif//ORCHID_CATEGORY_HPP

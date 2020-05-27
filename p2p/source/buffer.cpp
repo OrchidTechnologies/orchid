@@ -23,7 +23,6 @@
 #include <iomanip>
 
 #include "buffer.hpp"
-#include "trace.hpp"
 
 namespace orc {
 
