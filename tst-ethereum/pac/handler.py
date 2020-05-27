@@ -164,17 +164,15 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     wallet = generate_wallet()
     signer = wallet['address']
     secret = wallet['private']
-    config = generate_config(
-        secret=secret,
-    )
+    config = generate_config(secret=secret,)
 
     # todo: pass on gas and app-store overhead?
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
-    total_oxt = total_usd * oxt_per_usd
-    escrow_oxt = 12.0 # todo: better alg to determine this?
-    if (escrow_oxt >= 0.9*total_oxt):
-        escrow_oxt = 0.5*total_oxt
+    escrow_oxt = 15.0 # todo: better alg to determine this?
+    total_oxt = total_usd * oxt_per_usd + escrow_oxt
+    #if (escrow_oxt >= 0.9*total_oxt):
+    #    escrow_oxt = 0.5*total_oxt
 
     logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT")
 
