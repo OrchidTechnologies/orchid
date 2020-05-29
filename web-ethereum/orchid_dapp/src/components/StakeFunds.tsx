@@ -48,7 +48,7 @@ export const StakeFunds: FC = () => {
   async function updateCurrentStake() {
     let api = OrchidAPI.shared();
     if (stakeeAddress === null) {
-      console.log("missing stakee address");
+      //console.log("missing stakee address");
       return;
     }
     let stake = await api.eth.orchidGetStake(stakeeAddress);
@@ -79,7 +79,7 @@ export const StakeFunds: FC = () => {
       const amountWei = oxtToKeiki(addStakeAmount);
 
       // Choose a gas price
-      let medianGasPrice = await api.eth.medianGasPrice();
+      let medianGasPrice = await api.eth.getGasPrice();
       let gasPrice = GasPricingStrategy.chooseGasPrice(
         OrchidContracts.stake_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
       if (!gasPrice) {

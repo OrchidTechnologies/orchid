@@ -7,6 +7,7 @@ import {OverviewDefault} from "./OverviewDefault";
 import {OverviewQuickSetup} from "./OverviewQuickSetup";
 import {TransactionStatus} from "../TransactionProgress";
 import {S} from "../../i18n/S";
+import {LotteryPot} from "../../api/orchid-eth";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -33,7 +34,7 @@ export const Overview: React.FC = () => {
 
   // The result of any recent (in-memory transient) quick setup transaction.
   const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(undefined);
-  // TESTING:
+  // For testing:
   // const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(
   //   TransactionStatus.result("0x1234", S.transactionComplete,
   //     new Signer(new Wallet(), "0x12345", "12345"))

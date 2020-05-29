@@ -67,7 +67,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       const escrowWei = oxtToKeiki(addEscrow);
 
       // Choose a gas price
-      let medianGasPrice = await api.eth.medianGasPrice();
+      let medianGasPrice = await api.eth.getGasPrice();
       let gasPrice = GasPricingStrategy.chooseGasPrice(
         OrchidContracts.add_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
       if (!gasPrice) {

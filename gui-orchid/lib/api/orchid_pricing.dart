@@ -59,7 +59,7 @@ class OrchidPricingAPI {
   Future<OXT> getMaxTicketValue(LotteryPot pot) async {
     Pricing pricing = await getPricing();
     GWEI gasPrice = await OrchidEthereum().getGasPrice();
-    ETH gasCostToRedeem = (gasPrice * gasCostToRedeemTicket).toETH();
+    ETH gasCostToRedeem = (gasPrice * gasCostToRedeemTicket).toEth();
     OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
     OXT maxFaceValue = OXT.min(pot.balance, pot.deposit/ 2.0);
     return maxFaceValue - oxtCostToRedeem;

@@ -2,13 +2,13 @@
 // Orchid Ethereum Contracts Lib
 //
 import {OrchidContracts} from "./orchid-eth-contracts";
-import {Address, Secret} from "./orchid-types";
+import {Address, GWEI, KEIKI, OXT, Secret} from "./orchid-types";
 import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
 import {OrchidAPI, WalletStatus} from "./orchid-api";
 import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
 import "../i18n/i18n_util";
-import {getParam, removeHexPrefix} from "../util/util";
+import {getParam, parseFloatSafe, removeHexPrefix} from "../util/util";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 const ORCHID_SIGNER_KEYS_WALLET = "orchid-signer-keys";
@@ -69,8 +69,8 @@ export type Web3Wallet = any;
 /// A Lottery Pot containing OXT funds against which lottery tickets are issued.
 export class LotteryPot {
   public signer: Signer;
-  public balance: BigInt; // Keiki
-  public escrow: BigInt; // Keiki
+  public balance: KEIKI;
+  public escrow: KEIKI; // TODO: rename deposit
   public unlock: Date | null;
 
   constructor(signer: Signer, balance: BigInt, escrow: BigInt, unlock: Date | null) {
@@ -455,6 +455,12 @@ export class OrchidEthereumAPI {
 
   /// Get the lottery pot balance and escrow amount for the specified address.
   async orchidGetLotteryPot(funder: Wallet, signer: Signer): Promise<LotteryPot> {
+    // Allow overrides
+    let overrideBalanceOXT: number | null = parseFloatSafe(getParam("balance"));
+    let overrideEscrowOXT: number | null = parseFloatSafe(getParam("deposit"));
+    let overrideBalance: BigInt | null = overrideBalanceOXT ? new OXT(overrideBalanceOXT).toKeiki() : null
+    let overrideEscrow: BigInt | null = overrideEscrowOXT ? new OXT(overrideEscrowOXT).toKeiki() : null
+
     //console.log("get lottery pot for signer: ", signer);
     let result = await OrchidContracts.lottery.methods
       .look(funder.address, signer.address)
@@ -463,8 +469,8 @@ export class OrchidEthereumAPI {
       console.log("get lottery pot failed");
       throw new Error("Unable to get lottery pot");
     }
-    const balance: BigInt = result[0];
-    const escrow: BigInt = result[1];
+    const balance: BigInt = overrideBalance || result[0];
+    const escrow: BigInt = overrideEscrow || result[1];
     const unlock: number = Number(result[2]);
     const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
     console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
@@ -483,26 +489,27 @@ export class OrchidEthereumAPI {
   }
 
   // The current median gas price for the past few blocks
-  async medianGasPrice(): Promise<number> {
-    return await web3.eth.getGasPrice()
+  async getGasPrice(): Promise<GWEI> {
+    return GWEI.fromWei(await web3.eth.getGasPrice())
   }
 }
 
 export class GasPricingStrategy {
 
+  // TODO: Have this return GWEI
   /// Choose a gas price taking into account current gas price and the wallet balance.
   /// This strategy uses a multiple of the current median gas price up to a hard limit on
   /// both gas price and fraction of the wallet's remaiing ETH balance.
   // Note: Some of the usage of BigInt in here is convoluted due to the need to import the polyfill.
   static chooseGasPrice(
-    targetGasAmount: number, currentMedianGasPrice: number, currentEthBalance: BigInt): number | undefined {
+    targetGasAmount: number, currentMedianGasPrice: GWEI, currentEthBalance: BigInt): number | undefined {
     let maxPriceGwei = 21.0;
     let minPriceGwei = 2.0;
     let medianMultiplier = 2.0;
     let maxWalletFrac = 0.9;
 
     // Target our multiple of the median price
-    let targetPrice: BigInt = BigInt(currentMedianGasPrice).multiply(medianMultiplier);
+    let targetPrice: BigInt = BigInt(currentMedianGasPrice.value).multiply(medianMultiplier);
 
     // Don't exceed max price
     let maxPrice: BigInt = BigInt(maxPriceGwei).multiply(1e9);
@@ -530,7 +537,7 @@ export class GasPricingStrategy {
     let price = BigInt(targetSpend).divide(targetGasAmount);
 
     console.log(`Gas price calculation, `
-      + `targetGasAmount: ${targetGasAmount}, medianGasPrice: ${currentMedianGasPrice}, ethBalance: ${currentEthBalance}, chose price: ${BigInt(price).divide(1e9)}`
+      + `targetGasAmount: ${targetGasAmount}, medianGasPrice: ${currentMedianGasPrice.value}, ethBalance: ${currentEthBalance}, chose price: ${BigInt(price).divide(1e9)}`
     );
 
     return price.toJSNumber();
@@ -549,16 +556,15 @@ export function keikiToOxtString(keiki: BigInt, decimals: number) {
   return val.toFixedLocalized(decimals);
 }
 
+// @deprecated - use OXT instance methods
 /// Convert keiki to an (approximate) OXT float value
-export function keikiToOxt(keiki: BigInt): number {
+export function keikiToOxt(keiki: KEIKI): number {
   return parseFloat(web3.utils.fromWei(keiki.toString()));
 }
 
-export function oxtToKeiki(oxt: number): BigInt {
+// @deprecated - use OXT instance methods
+export function oxtToKeiki(oxt: number): KEIKI {
   return BigInt(oxt * 1e18);
 }
 
-export function oxtToKeikiString(oxt: number): string {
-  return oxtToKeiki(oxt).toString();
-}
 

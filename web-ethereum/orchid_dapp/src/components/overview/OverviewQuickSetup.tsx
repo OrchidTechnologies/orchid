@@ -90,7 +90,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         console.log("add funds");
 
         // Choose a gas price
-        let medianGasPrice = await api.eth.medianGasPrice();
+        let medianGasPrice = await api.eth.getGasPrice();
         let gasPrice = GasPricingStrategy.chooseGasPrice(
           OrchidContracts.add_funds_total_max_gas, medianGasPrice, _walletCapture.ethBalance);
         if (!gasPrice) {

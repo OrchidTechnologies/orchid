@@ -29,6 +29,7 @@ import {TransactionPanel} from "./TransactionPanel";
 import {OrchidTransactionDetail} from "../api/orchid-tx";
 import {S} from "../i18n/S";
 import {StakeFunds} from "./StakeFunds";
+import {FundsWarningPanel} from "./FundsWarningPanel";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
@@ -90,6 +91,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
                   rootClose={true} trigger="click" placement='bottom'
                   overlay={
                     <Popover id='moreitems-popover'>
+
                       <Popover.Content onClick={()=>document.body.click()}>
                         <ListGroup variant="flush">{
                           Array.from(moreMenuItems.entries()).map(([key,value])=>{
@@ -109,6 +111,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
           </Col>
         </Row>
         {bannerTransactions}
+        <Row><FundsWarningPanel/></Row>
         <Row className="page-content">
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>

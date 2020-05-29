@@ -1,6 +1,5 @@
-
 import {Address} from "./orchid-types";
-import {OrchidEthereumAPI, Signer, Wallet} from "./orchid-eth";
+import {LotteryPot, OrchidEthereumAPI, Signer, Wallet} from "./orchid-eth";
 import {
   EthereumTransaction,
   OrchidTransaction,
@@ -8,10 +7,13 @@ import {
   OrchidTransactionType
 } from "./orchid-tx";
 
+// Override parts of the Orchid Ethereum API with fake data
 export class MockQuickSetup extends OrchidEthereumAPI {
   static MOCK_TX_FAIL = false;
 
-  async orchidAddFunds(funder: Address, signer: Address, amount: BigInt, escrow: BigInt): Promise<string> {
+  async orchidAddFunds(
+    funder: Address, signer: Address, amount: BigInt, escrow: BigInt, gasPrice?: number
+  ): Promise<string> {
     console.log("MOCK: Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
     return new Promise<string>(async function (resolve, reject) {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -28,7 +30,7 @@ export class MockQuickSetup extends OrchidEthereumAPI {
   }
 
   async orchidGetSigners(wallet: Wallet): Promise<Signer []> {
-    // return [new Signer(wallet, "0x231d8129075898402053b3720c89DbD7B0D87C2d", "12345")];
+    //return [Mocks.signer()]
     return [];
   }
 }
@@ -58,7 +60,9 @@ export class MockOrchidTransactionMonitor extends OrchidTransactionMonitor {
   mock_store: OrchidTransaction [] = [];
 
   init(listener: OrchidTransactionMonitorListener) {
-    if (this.listener) { return }
+    if (this.listener) {
+      return
+    }
     super.init(listener);
     this.add(MockTransactions.mockAddFunds());
   }
@@ -73,3 +77,19 @@ export class MockOrchidTransactionMonitor extends OrchidTransactionMonitor {
   }
 
 }
+
+export class Mocks {
+  public static wallet(): Wallet {
+    return new Wallet()
+  }
+
+  public static signer(): Signer {
+    return new Signer(Mocks.wallet(), "0x231d8129075898402053b3720c89DbD7B0D87C2d", "12345");
+  }
+
+  public static lotteryPot(balance: number = 1.0, deposit: number = 1.0): LotteryPot {
+    return new LotteryPot(
+      Mocks.signer(), BigInt(balance * 1e18), BigInt(deposit * 1e18), null)
+  }
+}
+

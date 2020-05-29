@@ -481,17 +481,21 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Future<void> _showMarketStats() async {
-    // TODO: If we keep this refactor with the similar pricing API code.
     // data
     Pricing pricing = await OrchidPricingAPI().getPricing();
     GWEI gasPrice = await OrchidEthereum().getGasPrice();
     if (_lotteryPot == null || pricing == null || gasPrice == null) {
       return;
     }
+
+    // calculation
     ETH gasCostToRedeem =
-        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toETH();
+        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toEth();
     OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
     OXT maxFaceValue = OXT.min(_lotteryPot.balance, _lotteryPot.deposit / 2.0);
+    bool gasPriceHigh = gasPrice.value >= 15.0;
+    bool balanceLimited =
+        _lotteryPot.balance.value < _lotteryPot.deposit.value / 2.0;
 
     // formatting
     var ethPriceText =
@@ -504,9 +508,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     String costToRedeemText =
         formatCurrency(oxtCostToRedeem.value, suffix: "OXT");
     bool ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
-    bool gasPriceHigh = gasPrice.value >= 15.0;
-    bool balanceLimited =
-        _lotteryPot.balance.value < _lotteryPot.deposit.value / 2.0;
     String limitedByText = balanceLimited
         ? "Your max ticket value is currently limited by your balance of  "
             "${formatCurrency(_lotteryPot.balance.value, suffix: 'OXT')}.  "

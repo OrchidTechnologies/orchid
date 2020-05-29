@@ -1,19 +1,12 @@
+import "../i18n/i18n_util"
 import React, {FC} from "react";
 import {Row} from "react-bootstrap";
 import {isEthAddress} from "../api/orchid-eth";
+import {intl} from "../index";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-/*
-export function getURLParams() {
-  let result = new URLParams();
-  let params = new URLSearchParams(document.location.search);
-  result.potAddress = params.get("pot");
-  result.amount = params.get("amount");
-  return result;
-}*/
-
-// Return the relative path of the deployment 
+// Return the relative path of the deployment
 export function basePath(): string {
   let pathComponents = new URL(window.location.href).pathname.split('/');
   pathComponents.pop();
@@ -55,14 +48,17 @@ export function isNumeric(val: any) {
 }
 
 // Return the float value or null if not numeric.
-export function parseFloatSafe(val: string): number | null {
+export function parseFloatSafe(val: string | null): number | null {
+  if (val === null) {
+    return null
+  }
   return isNumeric(val) ? parseFloat(val) : null;
 }
 
 // Return the int value or null if not numeric.
 export function parseIntSafe(val: string): number | null {
   let ivalue = parseInt(val);
-  return (''+ivalue === val) ? ivalue : null;
+  return ('' + ivalue === val) ? ivalue : null;
 }
 
 // Return the BigInt value or null if not numeric.
@@ -134,5 +130,21 @@ export function removeHexPrefix(value: string | undefined): string | undefined {
     return value;
   }
   return value.startsWith('0x') ? value.substr(2) : value;
+}
+
+// TODO: Move into number extension in i18 utils?
+/// Format a currency to default two digits of precision with an optional suffix
+/// and null behavior.
+export function formatCurrency(
+  value: number, suffix: string, digits: number = 2, ifNull: string = "..."): string {
+  if (value == null) {
+    return ifNull;
+  }
+  // TODO: Why can't I call this global interface extension method here as elsewhere?
+  //return value.toFixedLocalized(digits) + (suffix != null ? " $suffix" : "");
+  return intl.formatNumber(value, {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits
+  }) + (suffix != null ? ` ${suffix}` : "");
 }
 
