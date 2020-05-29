@@ -164,17 +164,15 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     wallet = generate_wallet()
     signer = wallet['address']
     secret = wallet['private']
-    config = generate_config(
-        secret=secret,
-    )
+    config = generate_config(secret=secret,)
 
     # todo: pass on gas and app-store overhead?
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
-    total_oxt = total_usd * oxt_per_usd
-    escrow_oxt = 12.0 # todo: better alg to determine this?
-    if (escrow_oxt >= 0.9*total_oxt):
-        escrow_oxt = 0.5*total_oxt
+    escrow_oxt = 15.0 # todo: better alg to determine this?
+    total_oxt = total_usd * oxt_per_usd + escrow_oxt
+    #if (escrow_oxt >= 0.9*total_oxt):
+    #    escrow_oxt = 0.5*total_oxt
 
     logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT")
 
@@ -196,7 +194,7 @@ def process_app_pay_receipt(
     receipt,
     shared_secret=None
 ) -> Tuple[bool, dict]:
-    bundle_id = 'OrchidTechnologies.PAC-Test'
+    bundle_id = os.environ['BUNDLE_ID']
     # if True, automatically query sandbox endpoint
     # if validation fails on production endpoint
     if is_true(os.environ['AUTO_RETRY_WRONG_ENV_REQUEST']):
@@ -400,13 +398,13 @@ def response_error_invalid_dev_param():
     return response
 
 def response_invalid_bundle(bundle_id):
-    logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)')
+    logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match expected {os.environ["BUNDLE_ID"]})')
     response = {
         "isBase64Encoded": False,
         "statusCode": 400,
         "headers": {},
         "body": json.dumps({
-            'message': f'Incorrect bundle_id: {bundle_id} (Does not match OrchidTechnologies.PAC-Test)',
+            'message': f'Incorrect bundle_id: {bundle_id} (Does not match expected {os.environ["BUNDLE_ID"]})',
             'push_txn_hash': None,
             'config': None,
             'seller': None,
@@ -600,7 +598,7 @@ def main(event, context):
         else:
             bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
 
-        if bundle_id != 'OrchidTechnologies.PAC-Test' and is_true(verify_receipt):  # Bad bundle_id and set to verify_receipts
+        if bundle_id != os.environ['BUNDLE_ID'] and is_true(verify_receipt):  # Bad bundle_id and set to verify_receipts
             response = response_invalid_bundle(bundle_id)
         else:  # Good bundle_id or not verifying receipts
             product_id = body.get('product_id', validation_result['receipt']['in_app'][0]['product_id'])

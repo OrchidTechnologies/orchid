@@ -10,11 +10,8 @@ import 'orchid_crypto.dart';
 class OrchidEthereum {
   static OrchidEthereum _shared = OrchidEthereum._init();
 
-  //static var providerUrl = 'https://cloudflare-eth.com';
-  // TODO: Temporarily using this api-key bound solution with Infura due to
-  // TODO: unreliability of Cloudflare.
   static var providerUrl =
-      'https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf';
+      'https://eth-mainnet.alchemyapi.io/v2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
 
   // Lottery contract address on main net
   static var lotteryContractAddress =
