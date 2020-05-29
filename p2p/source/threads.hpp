@@ -30,7 +30,7 @@
 namespace orc {
 
 template <typename Type_>
-class Value {
+class Result {
   private:
     Type_ value_;
 
@@ -46,7 +46,7 @@ class Value {
 };
 
 template <>
-class Value<void> {
+class Result<void> {
   public:
     template <typename Code_>
     void set(Code_ &code) {
@@ -67,13 +67,13 @@ class Invoker :
     Code_ code_;
 
     std::exception_ptr error_;
-    Value<Type_> value_;
+    Result<Type_> result_;
     Event ready_;
 
   protected:
     void OnMessage(rtc::Message *message) override {
         try {
-            value_.set(code_);
+            result_.set(code_);
         } catch (const std::exception &exception) {
             error_ = std::current_exception();
         }
@@ -87,14 +87,14 @@ class Invoker :
     {
     }
 
-    task<Value<Type_>> operator ()(rtc::Thread &thread) {
+    task<Result<Type_>> operator ()(rtc::Thread &thread) {
         // potentially pass value/ready as MessageData
         orc_assert(!ready_);
         thread.Post(RTC_FROM_HERE, this);
         co_await ready_.Wait();
         if (error_)
             std::rethrow_exception(error_);
-        co_return std::move(value_);
+        co_return std::move(result_);
     }
 };
 

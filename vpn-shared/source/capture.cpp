@@ -28,7 +28,6 @@
 #include <openvpn/addr/ipv4.hpp>
 
 #include <dns.h>
-#include <duktape.h>
 
 #include "acceptor.hpp"
 #include "datagram.hpp"
@@ -653,13 +652,18 @@ BufferSunk &Capture::Start() {
     return backup;
 }
 
-static duk_ret_t print(duk_context *ctx) {
-    duk_push_string(ctx, " ");
-    duk_insert(ctx, 0);
-    duk_join(ctx, duk_get_top(ctx) - 1);
-    Log() << duk_safe_to_string(ctx, -1) << std::endl;
-    return 0;
-}
+static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueConst *argv) { try {
+    orc_assert(argc == 1);
+    size_t size;
+    const auto data(JS_ToCStringLen(context, &size, argv[0]));
+    if (data == nullptr)
+        return JS_EXCEPTION;
+    _scope({ JS_FreeCString(context, data); });
+    Log() << std::string(data, size) << std::endl;
+    return JS_UNDEFINED;
+} catch (const std::exception &error) {
+    return JS_ThrowInternalError(context, "%s", error.what());
+} }
 
 static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
@@ -686,10 +690,10 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S
 extern double WinRatio_;
 
 void Capture::Start(const std::string &path) {
-    Heap heap;
-
-    duk_push_c_function(heap, &print, 1);
-    duk_put_global_string(heap, "print");
+    Heap heap; {
+        Value global(heap, JS_GetGlobalObject(heap));
+        JS_SetPropertyStr(heap, global, "print", JS_NewCFunction(heap, &Print, "print", 1));
+    }
 
     heap.eval<void>(R"(
         eth_directory = "0x918101FB64f467414e9a785aF9566ae69C3e22C5";

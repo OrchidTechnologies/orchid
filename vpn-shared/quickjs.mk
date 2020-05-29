@@ -9,15 +9,22 @@
 # }}}
 
 
-pwd/duktape := $(pwd)/duktape
+pwd/quickjs := $(pwd)/quickjs
 
-prep := prep/nondebug
+source += $(pwd/quickjs)/libregexp.c $(filter-out \
+    $(shell grep -lw 'int main' $(pwd/quickjs)/*.c) \
+,$(wildcard $(pwd/quickjs)/*.c))
 
-$(pwd/duktape)/%/duktape.c $(pwd/duktape)/%/duktape.h $(pwd/duktape)/%/duk_config.h: $(pwd/duktape)/Makefile
-	cd $(pwd/duktape) && rm -rf $* && make $*
+cflags/$(pwd/quickjs)/ += -Wno-unused-result
+cflags/$(pwd/quickjs)/ += -Wno-unused-variable
 
-source += $(pwd/duktape)/$(prep)/duktape.c
-header += $(pwd/duktape)/$(prep)/duktape.h
-header += $(pwd/duktape)/$(prep)/duk_config.h
+cflags/$(pwd/quickjs)/ += -DCONFIG_VERSION='""'
+cflags/$(pwd/quickjs)/ += -include $(pwd/quickjs)/../environ.hpp
 
-cflags += -I$(pwd/duktape)/$(prep)
+# XXX: QuickJS doesn't support being run on multiple stacks?!
+cflags/$(pwd/quickjs)/ += -DEMSCRIPTEN
+
+ifeq ($(target),lnx)
+# XXX: for sighandler_t
+cflags/$(pwd/quickjs)/ += -D_GNU_SOURCE
+endif

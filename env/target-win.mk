@@ -67,6 +67,7 @@ $(each)
 
 lflags += -static
 lflags += -pthread
+lflags += -lssp
 
 wflags += -fuse-ld=ld
 lflags += -Wl,--no-insert-timestamp

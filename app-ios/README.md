@@ -69,7 +69,6 @@ brew install python3
 The system python should be fine for python2.
 
 ```bash
-pip install pyyaml
 brew install gettext
 brew install libgpg-error
 pip3 install meson
