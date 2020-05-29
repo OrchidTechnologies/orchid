@@ -7,7 +7,6 @@ import {OverviewDefault} from "./OverviewDefault";
 import {OverviewQuickSetup} from "./OverviewQuickSetup";
 import {TransactionStatus} from "../TransactionProgress";
 import {S} from "../../i18n/S";
-import {LotteryPot} from "../../api/orchid-eth";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
