@@ -299,6 +299,7 @@ class RemoteConnection final :
         pcb_ = tcp_new();
         orc_assert(pcb_ != nullptr);
         tcp_arg(pcb_, this);
+        ip_set_option(pcb_, SOF_KEEPALIVE);
         orc_lwipcall(tcp_bind, (pcb_, &host, 0));
     }
 

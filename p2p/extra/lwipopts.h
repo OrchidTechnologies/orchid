@@ -19,6 +19,7 @@
 
 #define LWIP_SOCKET 1
 #define LWIP_COMPAT_SOCKETS 0
+#define LWIP_TCP_KEEPALIVE 0
 #define LWIP_SOCKET_POLL 0
 
 struct netif *hook_ip4_route_src(const void *src, const void *dest);
@@ -26,6 +27,10 @@ struct netif *hook_ip4_route_src(const void *src, const void *dest);
 
 void sys_check_core_locking(void);
 #define LWIP_ASSERT_CORE_LOCKED  sys_check_core_locking
+
+#define TCP_KEEPIDLE_DEFAULT 12000UL
+#define TCP_KEEPINTVL_DEFAULT 12000UL
+#define TCP_KEEPCNT_DEFAULT 9
 
 #define LWIP_DEBUG 1
 #if 0
