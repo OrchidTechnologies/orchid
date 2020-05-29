@@ -27,7 +27,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   // Add funds state
   const [addAmount, setAddAmount] = useState<number | null>(null);
   const [addEscrow, setAddEscrow] = useState<number | null>(0);
-  const [amountError, setAmountError] = useState(true);
+  const [amountError, setAmountError] = useState(false);
   const [escrowError, setEscrowError] = useState(false);
   const [tx, setTx] = useState(new TransactionStatus());
   const txResult = React.createRef<TransactionProgress>();
@@ -54,7 +54,10 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     console.log("submit add funds: ", walletAddress, addAmount, addEscrow);
     let signerAddress = props.createAccount ? newSignerAddress :
       (api.signer.value ? api.signer.value.address : null);
-    if (walletAddress == null || signerAddress == null || addAmount == null || addEscrow == null) {
+    if (walletAddress == null || signerAddress == null) {
+      return;
+    }
+    if (props.createAccount && (addAmount == null || addEscrow == null)) {
       return;
     }
 
@@ -63,8 +66,8 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       txResult.current.scrollIntoView();
     }
     try {
-      const amountWei = oxtToKeiki(addAmount);
-      const escrowWei = oxtToKeiki(addEscrow);
+      const amountWei = oxtToKeiki(addAmount || 0);
+      const escrowWei = oxtToKeiki(addEscrow || 0 );
 
       // Choose a gas price
       let medianGasPrice: GWEI = await api.eth.getGasPrice();
@@ -139,7 +142,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       <Row className="form-row" noGutters={true}>
         <Col>
           <label>{S.addToBalance}<span
-            className={errorClass(amountError)}> *</span></label>
+            className={errorClass(amountError && props.createAccount)}> *</span></label>
         </Col>
         <Col>
           <input
@@ -147,7 +150,9 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
             onChange={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
               setAddAmount(amount);
-              setAmountError(amount == null || oxtToKeiki(amount) > (walletBalance || 0));
+              if (props.createAccount) {
+                setAmountError(amount == null || oxtToKeiki(amount) > (walletBalance || 0));
+              }
             }}
             type="number"
             placeholder={(0).toFixedLocalized(2)}
@@ -159,8 +164,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       {/*Deposit*/}
       <Row className="form-row" noGutters={true}>
         <Col>
-          <label>{S.addToDeposit}<span
-            className={errorClass(escrowError)}> *</span></label>
+          <label>{S.addToDeposit}<span className={errorClass(escrowError && props.createAccount)}> *</span></label>
         </Col>
         <Col>
           <input
@@ -168,7 +172,9 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
             onInput={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
               setAddEscrow(amount);
-              setEscrowError(amount == null);
+              if (props.createAccount) {
+                setEscrowError(amount == null);
+              }
             }}
             type="number"
             placeholder={(0).toFixedLocalized(2)}
