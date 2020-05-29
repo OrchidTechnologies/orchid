@@ -5,7 +5,7 @@ import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
-import {Address} from "../api/orchid-types";
+import {Address, GWEI} from "../api/orchid-types";
 import {GasPricingStrategy, isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
 import {S} from "../i18n/S";
@@ -67,7 +67,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       const escrowWei = oxtToKeiki(addEscrow);
 
       // Choose a gas price
-      let medianGasPrice = await api.eth.getGasPrice();
+      let medianGasPrice: GWEI = await api.eth.getGasPrice();
       let gasPrice = GasPricingStrategy.chooseGasPrice(
         OrchidContracts.add_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
       if (!gasPrice) {
@@ -85,6 +85,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       api.updateTransactions().then();
     } catch (err) {
       setTx(TransactionStatus.error(`${S.transactionFailed}: ${err}`));
+      throw err
     }
   }
 

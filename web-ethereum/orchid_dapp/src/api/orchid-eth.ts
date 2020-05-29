@@ -509,7 +509,7 @@ export class GasPricingStrategy {
     let maxWalletFrac = 0.9;
 
     // Target our multiple of the median price
-    let targetPrice: BigInt = BigInt(currentMedianGasPrice.value).multiply(medianMultiplier);
+    let targetPrice: BigInt = BigInt(currentMedianGasPrice.toWei()).multiply(medianMultiplier);
 
     // Don't exceed max price
     let maxPrice: BigInt = BigInt(maxPriceGwei).multiply(1e9);

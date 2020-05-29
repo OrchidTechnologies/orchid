@@ -110,8 +110,8 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Divider/>
           </Col>
         </Row>
-        {bannerTransactions}
         <Row><FundsWarningPanel/></Row>
+        {bannerTransactions}
         <Row className="page-content">
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>

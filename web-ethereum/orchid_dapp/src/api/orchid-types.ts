@@ -107,6 +107,9 @@ export class GWEI extends ScalarValue {
   public toEth(): ETH {
     return new ETH(this.value / 1e9);
   }
+  public toWei(): BigInt {
+    return BigInt(this.value * 1e9);
+  }
 
   public static fromWei(wei: number) {
     return new GWEI(wei / 1e9);
