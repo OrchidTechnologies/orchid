@@ -14,4 +14,9 @@ cflags += -D__Userspace_os_Linux
 cflags += -DWEBRTC_POSIX
 cflags += -DWEBRTC_LINUX
 
+# XXX: this is a workaround to call select instead of epoll
+# also a #define in extra/rtc_base/physical_socket_server.h
+# https://bugs.chromium.org/p/webrtc/issues/detail?id=11124
+source += $(pwd)/epoll.cc
+
 include $(pwd)/target-psx.mk
