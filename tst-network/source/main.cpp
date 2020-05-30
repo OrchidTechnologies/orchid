@@ -104,11 +104,16 @@ task<Report> Test(const S<Origin> &origin, std::string name, const Float &price,
     });
 }
 
+struct Stake {
+    uint256_t amount_;
+};
+
 struct State {
     uint256_t timestamp_;
     Float speed_;
     Report purevpn_;
-    std::map<std::string, std::string> providers_;
+    std::map<std::string, std::variant<std::string, Report>> providers_;
+    std::map<Address, Stake> stakes_;
 
     State(uint256_t timestamp) :
         timestamp_(std::move(timestamp))
@@ -118,10 +123,28 @@ struct State {
 
 std::shared_ptr<State> state_;
 
-std::string Short(const Float &value) {
-    std::ostringstream speed;
-    speed << std::fixed << std::setprecision(4) << value;
-    return speed.str();
+template <typename Code_>
+task<bool> Stakes(Endpoint &endpoint, const Address &directory, const Block &block, const uint256_t &storage, const uint256_t &primary, const Code_ &code) {
+    if (primary == 0)
+        co_return true;
+    const auto base(Hash(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
+    const auto [left, right, stakee, amount, delay] = co_await endpoint.Get(block, directory, storage, base + 6, base + 7, base + 4, base + 2, base + 3);
+    orc_assert(amount != 0);
+    if (!co_await Stakes(endpoint, directory, block, storage, left, code))
+        co_return false;
+    if (!code(uint160_t(stakee), amount, delay))
+        co_return false;
+    if (!co_await Stakes(endpoint, directory, block, storage, right, code))
+        co_return false;
+    co_return true;
+}
+
+template <typename Code_>
+task<bool> Stakes(Endpoint &endpoint, const Address &directory, const Code_ &code) {
+    const auto number(co_await endpoint.Latest());
+    const auto block(co_await endpoint.Header(number));
+    const auto [account, root] = co_await endpoint.Get(block, directory, nullptr, 0x3U);
+    co_return co_await Stakes(endpoint, directory, block, account.storage_, root, code);
 }
 
 // NOLINTNEXTLINE (modernize-avoid-c-arrays)
@@ -165,34 +188,16 @@ int Main(int argc, const char *const argv[]) {
     const Secret secret(Bless(args["secret"].as<std::string>()));
     const Address seller(args["seller"].as<std::string>());
 
+    std::string ovpn;
+    boost::filesystem::load_string_file("PureVPN.ovpn", ovpn);
+
     Spawn([&]() noexcept -> task<void> { try {
         const auto price(co_await Price(*origin, "OXT", "USD", Ten18));
 
         Network network(rpc, directory, location);
 
-        std::string ovpn;
-        boost::filesystem::load_string_file("PureVPN.ovpn", ovpn);
-        const auto purevpn(co_await orc_value(co_return co_await, Test(origin, ovpn), "testing PureVPN"));
-
         for (;;) {
-            std::vector<std::string> names;
-            std::vector<task<Report>> tests;
-
-            // NOLINTNEXTLINE (modernize-avoid-c-arrays)
-            for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
-                {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
-                {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
-                {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
-                //{"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
-                {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
-                {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
-            }) {
-                names.emplace_back(name);
-                tests.emplace_back(Test(origin, name, price, network, provider, secret, funder, seller));
-            }
-
             const auto now(Timestamp());
-            auto reports(co_await Parallel(std::move(tests)));
             auto state(std::make_shared<State>(now));
 
             try {
@@ -201,31 +206,57 @@ int Main(int argc, const char *const argv[]) {
                 state->speed_ = 0;
             }
 
-            state->purevpn_ = purevpn;
+            *co_await Parallel([&]() -> task<void> { try {
+                std::map<Address, Stake> stakes;
+                co_await Stakes(endpoint, directory, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) {
+                    std::cout << "DELAY " << stakee << " " << std::dec << delay << " " << std::dec << amount << std::endl;
+                    if (delay < 90*24*60*60)
+                        return true;
+                    auto &stake(stakes[stakee]);
+                    stake.amount_ += amount;
+                    return true;
+                });
 
-            std::cout << std::endl;
-            for (unsigned i(0); i != names.size(); ++i) {
-                const auto name(names[i]);
-                const auto text([&]() -> std::string { try {
-                    const auto report(std::move(reports[i]).result());
-                    std::ostringstream text;
-                    text << std::fixed << std::setprecision(4);
-                    text << "$" << report.cost_ << " " << std::setw(8) << report.speed_ << "Mbps   " << report.host_;
-                    return text.str();
-                } catch (const std::exception &error) {
-                    std::string text(error.what());
-                    boost::replace_all(text, "\r", "");
-                    boost::replace_all(text, "\n", " || ");
-                    return text;
-                } }());
+                state->stakes_ = std::move(stakes);
+            } catch (...) {
+            } }(), [&]() -> task<void> { try {
+                state->purevpn_ = co_await orc_value(co_return co_await, Test(origin, ovpn), "testing PureVPN");
+            } catch (...) {
+                state->purevpn_.speed_ = 0;
+            } }(), [&]() -> task<void> {
+                std::vector<std::string> names;
+                std::vector<task<Report>> tests;
 
-                state->providers_[name] = text;
-                std::cout << "\e[32m[" << name << "] " << std::string(11 - name.size(), ' ') << text << "\e[0m" << std::endl;
-            }
+                // NOLINTNEXTLINE (modernize-avoid-c-arrays)
+                for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
+                    {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
+                    {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
+                    {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
+                    //{"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
+                    {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
+                    {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
+                }) {
+                    names.emplace_back(name);
+                    tests.emplace_back(Test(origin, name, price, network, provider, secret, funder, seller));
+                }
+
+                auto reports(co_await Parallel(std::move(tests)));
+                for (unsigned i(0); i != names.size(); ++i) {
+                    auto &provider(state->providers_[names[i]]);
+                    provider = [&]() { try {
+                        return std::decay_t<decltype(provider)>{std::in_place_index_t<1>(), std::move(reports[i]).result()};
+                    } catch (const std::exception &error) {
+                        std::string text(error.what());
+                        boost::replace_all(text, "\r", "");
+                        boost::replace_all(text, "\n", " || ");
+                        return std::decay_t<decltype(provider)>{std::in_place_index_t<0>(), text};
+                    } }();
+                }
+            }());
 
             std::atomic_store(&state_, state);
         }
-    } orc_catch({}) });
+    } orc_catch({orc_insist(false);}) });
 
     const Store store([&]() {
         std::string store;
@@ -239,18 +270,31 @@ int Main(int argc, const char *const argv[]) {
         const auto state(std::atomic_load(&state_));
         orc_assert(state);
 
-        Markup body("Orchid Status");
+        Markup markup("Orchid Status");
+        std::ostringstream body;
 
-        body << "T+" << (Timestamp() - state->timestamp_).str() << "s " << Short(state->speed_) << "Mbps\n";
+        body << "T+" << std::dec << (Timestamp() - state->timestamp_) << "s " << std::fixed << std::setprecision(4) << state->speed_ << "Mbps\n";
         body << "\n";
-        body << " PureVPN:     $-.----   " << Short(state->purevpn_.speed_) << "Mbps   " << state->purevpn_.host_.String() << "\n";
+        body << " PureVPN:     $-.----   " << std::fixed << std::setprecision(4) << state->purevpn_.speed_ << "Mbps   " << state->purevpn_.host_.String() << "\n";
         body << "\n";
-        for (const auto &provider : state->providers_) {
+        for (const auto &[name, provider] : state->providers_) {
             body << "------------+---------+------------+-----------------\n";
-            body << " " << provider.first << ": " << std::string(11 - provider.first.size(), ' ') << provider.second << "\n";
+            body << " " << name << ": " << std::string(11 - name.size(), ' ');
+            if (const auto error = std::get_if<0>(&provider))
+                body << *error;
+            else if (const auto report = std::get_if<1>(&provider)) {
+                body << std::fixed << std::setprecision(4);
+                body << "$" << report->cost_ << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
+            } else orc_insist(false);
+            body << "\n";
         }
 
-        co_return Respond(request, http::status::ok, "text/html", body());
+        body << "\n";
+        for (const auto &[stakee, stake] : state->stakes_)
+            body << Address(stakee) << " " << std::dec << (Float(stake.amount_) / Ten18) << "\n";
+
+        markup << body.str();
+        co_return Respond(request, http::status::ok, "text/html", markup());
     });
 
     router(http::verb::get, R"(.*)", [&](Request request) -> task<Response> {

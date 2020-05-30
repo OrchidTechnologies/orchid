@@ -43,7 +43,7 @@ struct Account final {
     const uint256_t storage_;
     const uint256_t code_;
 
-    Account(const Block &block, Json::Value &value);
+    Account(const Block &block, const Json::Value &value);
 };
 
 class Endpoint final {
@@ -56,16 +56,16 @@ class Endpoint final {
     const S<Origin> origin_;
     const Locator locator_;
 
-    uint256_t Get(int index, Json::Value &storages, const Region &root, const uint256_t &key) const;
+    uint256_t Get(int index, const Json::Value &storages, const Region &root, const uint256_t &key) const;
 
-    template <int Index_, typename Result_, typename... Args_>
-    void Get(Result_ &result, Json::Value &storages, const Region &root) const {
+    template <int Offset_, int Index_, typename Result_, typename... Args_>
+    void Get(Result_ &result, const Json::Value &storages, const Region &root) const {
     }
 
-    template <int Index_, typename Result_, typename... Args_>
-    void Get(Result_ &result, Json::Value &storages, const Region &root, const uint256_t &key, Args_ &&...args) const {
-        std::get<Index_ + 1>(result) = Get(Index_, storages, root, key);
-        Get<Index_ + 1>(result, storages, root, std::forward<Args_>(args)...);
+    template <int Offset_, int Index_, typename Result_, typename... Args_>
+    void Get(Result_ &result, const Json::Value &storages, const Region &root, const uint256_t &key, Args_ &&...args) const {
+        std::get<Offset_ + Index_>(result) = Get(Index_, storages, root, key);
+        Get<Offset_, Index_ + 1>(result, storages, root, std::forward<Args_>(args)...);
     }
 
   public:
@@ -86,11 +86,21 @@ class Endpoint final {
     task<Address> Resolve(const Argument &number, const std::string &name) const;
 
     template <typename... Args_>
-    task<std::tuple<Account, typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, Args_ &&...args) const {
+    task<std::tuple<Account, typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, std::nullptr_t, Args_ &&...args) const {
         const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
         std::tuple<Account, typename Result_<Args_>::type...> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
-        Get<0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
+        Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
+        co_return result;
+    }
+
+    template <typename... Args_>
+    task<std::tuple<typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, const uint256_t &storage, Args_ &&...args) const {
+        const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        std::tuple<typename Result_<Args_>::type...> result;
+        Number<uint256_t> root(proof["storageHash"].asString());
+        orc_assert(storage == root.num<uint256_t>());
+        Get<0, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
         co_return result;
     }
 

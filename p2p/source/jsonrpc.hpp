@@ -48,7 +48,7 @@ class Nested {
 
   public:
     Nested() :
-        scalar_(false)
+        scalar_(true)
     {
     }
 
@@ -135,13 +135,8 @@ class Nested {
 
 std::ostream &operator <<(std::ostream &out, const Nested &value);
 
-class Explode final :
-    public Nested
-{
-  public:
-    Explode(Window &window);
-    Explode(Window &&window);
-};
+Nested Explode(Window &window);
+Nested Explode(Window &&window);
 
 std::string Implode(Nested nested);
 
@@ -205,6 +200,11 @@ class Argument final {
     template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
     Argument(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
         value_("0x" + value.str(0, std::ios::hex))
+    {
+    }
+
+    Argument(unsigned value) :
+        Argument(uint256_t(value))
     {
     }
 

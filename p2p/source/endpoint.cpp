@@ -28,29 +28,33 @@
 
 namespace orc {
 
-static Explode Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
+static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
     size_t offset(0);
     orc_assert(!proofs.isNull());
     for (auto e(proofs.size()), i(decltype(e)(0)); i != e; ++i) {
         const auto data(Bless(proofs[i].asString()));
         orc_assert(Hash(data) == hash);
 
-        const Explode proof(data);
+        const auto proof(Explode(data));
         switch (proof.size()) {
             case 17: {
                 if (offset == path.size() * 2)
-                    return Window(proof[16].buf());
-                hash = proof[path.nib(offset++)].buf();
+                    return Explode(proof[16].buf());
+                const auto data(proof[path.nib(offset++)].buf());
+                if (data.size() == 0)
+                    return Nested();
+                hash = data;
             } break;
 
             case 2: {
                 const auto leg(proof[0].buf());
                 const auto type(leg.nib(0));
                 for (size_t i((type & 0x1) != 0 ? 1 : 2), e(leg.size() * 2); i != e; ++i)
-                    orc_assert(path.nib(offset++) == leg.nib(i));
+                    if (path.nib(offset++) != leg.nib(i))
+                        return Nested();
                 const Range range(proof[1].buf());
                 if ((type & 0x2) != 0)
-                    return Window(range);
+                    return Explode(range);
                 hash = range;
             } break;
 
@@ -68,7 +72,7 @@ Block::Block(Json::Value &&value) :
 {
 }
 
-Account::Account(const Block &block, Json::Value &value) :
+Account::Account(const Block &block, const Json::Value &value) :
     nonce_(value["nonce"].asString()),
     balance_(value["balance"].asString()),
     storage_(value["storageHash"].asString()),
@@ -82,7 +86,7 @@ Account::Account(const Block &block, Json::Value &value) :
     orc_assert(leaf[3].num() == code_);
 }
 
-uint256_t Endpoint::Get(int index, Json::Value &storages, const Region &root, const uint256_t &key) const {
+uint256_t Endpoint::Get(int index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
     const auto storage(storages[index]);
     orc_assert(uint256_t(storage["key"].asString()) == key);
     const uint256_t value(storage["value"].asString());

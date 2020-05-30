@@ -36,6 +36,8 @@
 #include <boost/mp11/tuple.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
+#include <intx/intx.hpp>
+
 #include "error.hpp"
 
 namespace orc {
@@ -99,6 +101,15 @@ struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_i
         boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value;
         boost::multiprecision::import_bits(value, std::reverse_iterator(data + size), std::reverse_iterator(data), 8, false);
         return value;
+    }
+};
+
+template <unsigned Bits_>
+struct Cast<intx::uint<Bits_>, typename std::enable_if<Bits_ % 8 == 0>::type> {
+    static auto Load(const uint8_t *data, size_t size) {
+        orc_assert(size == Bits_ / 8);
+        // NOLINTNEXTLINE (modernize-avoid-c-arrays,-warnings-as-errors)
+        return intx::be::load<intx::uint<Bits_>>(*reinterpret_cast<const uint8_t (*)[Bits_ / 8]>(data));
     }
 };
 
