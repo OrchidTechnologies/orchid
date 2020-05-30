@@ -61,7 +61,6 @@ namespace orc {
 
 namespace po = boost::program_options;
 
-// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 

@@ -147,7 +147,6 @@ task<void> Egress::Translator::Send(const Buffer &data) {
 
         case openvpn::IPCommon::ICMPv4: {
             auto &icmp(span.cast<openvpn::ICMPv4>());
-            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             const Three source(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(icmp.id));
             const auto translated(Translate(source));
             ForgeIP4(span, &openvpn::IPv4Header::saddr, translated.Host());
@@ -186,7 +185,6 @@ void Egress::Land(const Buffer &data) {
 
         case openvpn::IPCommon::ICMPv4: {
             auto &icmp(span.cast<openvpn::ICMPv4>());
-            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             const Three destination(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(icmp.id));
             if (const auto translation = Find(destination)) {
                 ForgeIP4(span, &openvpn::IPv4Header::daddr, translation->translated_.Host());

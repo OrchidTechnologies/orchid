@@ -56,7 +56,6 @@ class LocalOpening final :
         Spawn([this]() noexcept -> task<void> {
             for (;;) {
                 // XXX: use Beam.subset
-                // NOLINTNEXTLINE (modernize-avoid-c-arrays)
                 char data[2048];
                 asio::ip::udp::endpoint endpoint;
                 size_t writ;

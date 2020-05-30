@@ -38,7 +38,6 @@ void Tunnel(BufferSunk &sunk, const std::function<void (const std::string &, con
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     orc_assert(ioctl(file, TUNSETIFF, (void *) &request) >= 0);
 
-    // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
     code(request.ifr_name, "dev");
     sync.Open();
 }

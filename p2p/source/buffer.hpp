@@ -108,7 +108,6 @@ template <unsigned Bits_>
 struct Cast<intx::uint<Bits_>, typename std::enable_if<Bits_ % 8 == 0>::type> {
     static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == Bits_ / 8);
-        // NOLINTNEXTLINE (modernize-avoid-c-arrays,-warnings-as-errors)
         return intx::be::load<intx::uint<Bits_>>(*reinterpret_cast<const uint8_t (*)[Bits_ / 8]>(data));
     }
 };
@@ -821,7 +820,6 @@ class Window :
   private:
     size_t count_;
     // XXX: I'm just being lazy here. :/
-    // NOLINTNEXTLINE (modernize-avoid-c-arrays)
     std::unique_ptr<Range[]> ranges_;
 
     const Range *range_;

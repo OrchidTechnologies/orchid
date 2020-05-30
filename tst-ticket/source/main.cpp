@@ -30,7 +30,6 @@ namespace orc {
 static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
 static const auto Bound_(Hash("Update(address,address)"));
 
-// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     orc_assert(argc == 2);
     const uint256_t hash(argv[1]);

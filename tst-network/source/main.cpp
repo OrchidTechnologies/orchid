@@ -147,7 +147,6 @@ task<bool> Stakes(Endpoint &endpoint, const Address &directory, const Code_ &cod
     co_return co_await Stakes(endpoint, directory, block, account.storage_, root, code);
 }
 
-// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 
@@ -227,7 +226,6 @@ int Main(int argc, const char *const argv[]) {
                 std::vector<std::string> names;
                 std::vector<task<Report>> tests;
 
-                // NOLINTNEXTLINE (modernize-avoid-c-arrays)
                 for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
                     {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
                     {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},

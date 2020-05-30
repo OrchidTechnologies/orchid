@@ -57,21 +57,16 @@ extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, soc
 
     socklen_t size(sizeof(data));
 #ifdef _WIN32
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
     if (orc_syscall(getsockname(socket, &data.sa, &size), WSAEINVAL) != 0)
         size = 0;
 #else
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
     if (orc_syscall(getsockname(socket, &data.sa, &size), EOPNOTSUPP) != 0)
         goto connect;
 #endif
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
     if (size == 0 || [&]() { switch (data.sa.sa_family) {
         case AF_INET:
-            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             return data.in.sin_port == 0;
         case AF_INET6:
-            // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
             return data.in6.sin6_port == 0;
         default:
             return false;

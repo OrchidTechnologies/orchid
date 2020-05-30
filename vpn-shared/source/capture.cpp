@@ -142,7 +142,6 @@ class Nameless :
     }
 
     void get_DNS_answers(const Span<const uint8_t> &span) {
-        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         dns_decoded_t decoded[DNS_DECODEBUF_4K];
         size_t decodesize = sizeof(decoded);
 

@@ -44,7 +44,6 @@ std::string Group() {
     return boost::filesystem::current_path().string();
 }
 
-// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 

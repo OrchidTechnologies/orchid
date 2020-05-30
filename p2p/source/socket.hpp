@@ -65,13 +65,11 @@ class Host {
     }
 
     Host(const in6_addr &host) :
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         Host(host.s6_addr)
     {
     }
 
     Host(const in_addr &host) :
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         Host(boost::endian::big_to_native(host.s_addr))
     {
     }
@@ -106,7 +104,6 @@ class Host {
     }
 
     bool v4() const {
-        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         return memcmp(data_.data(), static_cast<const void *>((const uint8_t[]) {0,0,0,0, 0,0,0,0, 0,0,0xff,0xff}), 12) == 0;
     }
 
@@ -117,14 +114,12 @@ class Host {
 
     operator in6_addr() const {
         in6_addr address;
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         memcpy(address.s6_addr, data_.data(), 16);
         return address;
     }
 
     operator in_addr() const {
         in_addr address;
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         address.s_addr = boost::endian::native_to_big(operator uint32_t());
         return address;
     }

@@ -37,7 +37,6 @@ checks += cppcoreguidelines-pro-type-cstyle-cast
 #checks += cppcoreguidelines-pro-type-member-init
 #checks += cppcoreguidelines-pro-type-reinterpret-cast
 checks += cppcoreguidelines-pro-type-static-cast-downcast
-checks += cppcoreguidelines-pro-type-union-access
 checks += cppcoreguidelines-pro-type-vararg
 checks += cppcoreguidelines-slicing
 # XXX: it isn't clear to me whether this is overkill or not
@@ -55,7 +54,6 @@ checks += misc-non-copyable-objects
 checks += misc-static-assert
 checks += misc-throw-by-value-catch-by-reference
 checks += misc-unconventional-assign-operator
-checks += modernize-avoid-c-arrays
 checks += modernize-deprecated-headers
 checks += modernize-deprecated-ios-base-aliases
 checks += modernize-make-shared
