@@ -80,6 +80,9 @@ cflags += -fms-extensions
 #cflags += -fms-compatibility
 #cflags += -D__GNUC__
 
+#  warning: 'I64' length modifier is not supported by ISO C
+qflags += -Wno-format-non-iso
+
 mflags += has_function_stpcpy=false
 
 # pragma comment(lib, "...lib")
@@ -89,8 +92,10 @@ cflags += -Wno-unknown-pragmas
 
 cflags += -Wno-unused-const-variable
 
-cflags += -I$(pwd)/win32
-cflags += -Wno-nonportable-include-path
+qflags += -I$(CURDIR)/$(pwd)/win32
+qflags += -Wno-nonportable-include-path
+
+cflags += -I$(pwd)/mingw
 
 msys2 := 
 msys2 += crt-git-7.0.0.5553.e922460c-1

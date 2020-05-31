@@ -51,7 +51,9 @@ cflags/$(pwd/wireshark)/ += -include malloc.h
 cflags/$(pwd/wireshark)/ += -Wno-format
 cflags/$(pwd/wireshark)/ += -Wno-missing-braces
 
+cflags/$(pwd/wireshark)/epan/dissectors/packet-smb2.c += -D_MSC_VER
 cflags/$(pwd/wireshark)/wsutil/getopt_long.c += -DNO_OLDNAMES
+cflags/$(pwd/wireshark)/epan/dissectors/packet-epl-profile-parser.c += -include stdlib.h
 else
 wireshark := $(filter-out \
     %/file_util.c \
@@ -63,6 +65,8 @@ cflags/$(pwd/wireshark)/ += -DHAVE_ARPA_INET_H
 cflags/$(pwd/wireshark)/ += -DHAVE_GRP_H
 cflags/$(pwd/wireshark)/ += -DHAVE_MKSTEMPS
 cflags/$(pwd/wireshark)/ += -DHAVE_PWD_H
+
+cflags/$(pwd/wireshark)/epan/addr_resolv.c += -include netdb.h
 endif
 
 cflags/$(pwd/wireshark)/ += -DHAVE_FCNTL_H
@@ -141,7 +145,7 @@ $(output)/$(pwd)/%.c $(output)/$(pwd)/%_lex.h: $(pwd)/%.l
 $(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: pwd := $(pwd)
 $(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.y
 	@mkdir -p $(dir $(output)/$(pwd)/$*)
-	bison --name-prefix=ascend --output=$(output)/$(pwd)/$*.c --defines=$(output)/$(pwd)/$*.h $<
+	bison --name-prefix=$(notdir $*) --output=$(output)/$(pwd)/$*.c --defines=$(output)/$(pwd)/$*.h $<
 
 $(output)/$(pwd/wireshark)/tools/lemon/lemon: $(pwd/wireshark)/tools/lemon/lemon.c
 	@mkdir -p $(dir $@)
@@ -159,25 +163,21 @@ source += $(output)/$(pwd/wireshark)/epan/radius_dict.c
 source += $(output)/$(pwd/wireshark)/epan/uat_load.c
 source += $(output)/$(pwd/wireshark)/wiretap/k12text.c
 
-source += $(output)/$(pwd/wireshark)/epan/dtd_parse.c
-$(call depend,$(output)/$(pwd/wireshark)/epan/dtd_parse.c.o,$(output)/$(pwd/wireshark)/epan/dtd_grammar.h)
-source += $(output)/$(pwd/wireshark)/epan/dtd_grammar.c
-
-source += $(output)/$(pwd/wireshark)/epan/dfilter/scanner.c
-$(call depend,$(output)/$(pwd/wireshark)/epan/dfilter/scanner.c.o,$(output)/$(pwd/wireshark)/epan/dfilter/grammar.h)
-source += $(output)/$(pwd/wireshark)/epan/dfilter/grammar.c
-$(call depend,$(pwd/wireshark)/epan/dfilter/dfilter.c.o,$(output)/$(pwd/wireshark)/epan/dfilter/scanner_lex.h)
 cflags/$(pwd/wireshark)/epan/dfilter/dfilter.c += -I$(output)/$(pwd/wireshark)/epan/dfilter
 
-source += $(output)/$(pwd/wireshark)/wiretap/ascend_scanner.c
-$(call depend,$(output)/$(pwd/wireshark)/wiretap/ascend_scanner.c.o,$(output)/$(pwd/wireshark)/wiretap/ascend.h)
-source += $(output)/$(pwd/wireshark)/wiretap/ascend.c
-$(call depend,$(output)/$(pwd/wireshark)/wiretap/ascend.c.o,$(output)/$(pwd/wireshark)/wiretap/ascend_scanner_lex.h)
+define parser
+source += $(output)/$(pwd/wireshark)/$(1)$(2).c
+$(call depend,$(output)/$(pwd/wireshark)/$(1)$(2).c.o,$(output)/$(pwd/wireshark)/$(1)$(3).h)
+source += $(output)/$(pwd/wireshark)/$(1)$(3).c
+$(call depend,$(output)/$(pwd/wireshark)/$(1)$(3).c.o,$(output)/$(pwd/wireshark)/$(1)$(2)_lex.h)
+endef
 
-source += $(output)/$(pwd/wireshark)/wiretap/candump_scanner.c
-$(call depend,$(output)/$(pwd/wireshark)/wiretap/candump_scanner.c.o,$(output)/$(pwd/wireshark)/wiretap/candump_parser.h)
-source += $(output)/$(pwd/wireshark)/wiretap/candump_parser.c
-$(call depend,$(output)/$(pwd/wireshark)/wiretap/candump_parser.c.o,$(output)/$(pwd/wireshark)/wiretap/candump_scanner_lex.h)
+$(eval $(call parser,epan/dfilter/,scanner,grammar))
+$(eval $(call parser,epan/dtd_,parse,grammar))
+$(eval $(call parser,epan/protobuf_lang,_scanner,))
+$(eval $(call parser,wiretap/ascend,_scanner,))
+$(eval $(call parser,wiretap/busmaster_,scanner,parser))
+$(eval $(call parser,wiretap/candump_,scanner,parser))
 
 
 # XXX: this is currently shared by libiconv and libgpg-error; it might be sharable by more stuff
@@ -280,4 +280,16 @@ export GNULIB_TOOL := $(GNULIB_SRCDIR)/gnulib-tool
 
 linked += usr/lib/libiconv.a
 header += @/usr/include/iconv.h
+# }}}
+# c-ares {{{
+$(output)/%/$(pwd)/c-ares/ares_build.h: $(output)/%/$(pwd)/c-ares/Makefile
+	touch $@
+$(output)/%/$(pwd)/c-ares/.libs/libcares.a: $(output)/%/$(pwd)/c-ares/ares_build.h
+	$(MAKE) -C $(dir $<)
+
+cflags/$(pwd/wireshark)/ += -I@/$(pwd)/c-ares
+header += @/$(pwd)/c-ares/ares_build.h
+linked += $(pwd)/c-ares/.libs/libcares.a
+cflags/$(pwd/wireshark)/ += -I$(pwd)/c-ares
+cflags += -DCARES_STATICLIB
 # }}}

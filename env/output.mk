@@ -121,13 +121,9 @@ code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)
 
 # XXX: replace cflags with cflags/ once I fix pwd to not begin with ./
 # in this model, cflags would be something controlled only by the user
-dflags = $(if $(filter ./,$(1)),,$(call dflags,$(dir $(patsubst %/,%,$(1)))) $(cflags/$(1)))
-
-flags = $(qflags)
-flags += $(filter -I%,$(call dflags,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<)))))
-flags += $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags))
-flags += $(filter-out -I%,$(call dflags,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<)))))
-flags += $(cflags/./$<)
+flags_ = $(if $(filter ./,$(1)),,$(call flags_,$(dir $(patsubst %/,%,$(1)))) $(cflags/$(1)))
+flags- = $(call flags_,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<))))
+flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(filter -I%,$(cflags/./$<) $(flags-) $(cflags)) $(filter-out -I%,$(cflags) $(flags-) $(cflags/./$<)))
 
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)

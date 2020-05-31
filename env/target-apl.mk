@@ -79,3 +79,5 @@ export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_RUSTFLAGS := $$(forea
 export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword $(cc))
 endef
 $(each)
+
+lflags += -lresolv
