@@ -20,19 +20,15 @@
 /* }}} */
 
 
-#ifndef ORCHID_COINBASE_HPP
-#define ORCHID_COINBASE_HPP
+#ifndef ORCHID_FLOAT_HPP
+#define ORCHID_FLOAT_HPP
 
-#include <string>
-
-#include "float.hpp"
-#include "origin.hpp"
-#include "task.hpp"
+#include <boost/multiprecision/cpp_bin_float.hpp>
 
 namespace orc {
 
-task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust);
+typedef boost::multiprecision::cpp_bin_float_oct Float;
 
 }
 
-#endif//ORCHID_COINBASE_HPP
+#endif//ORCHID_FLOAT_HPP

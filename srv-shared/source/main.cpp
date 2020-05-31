@@ -261,20 +261,24 @@ int Main(int argc, const char *const argv[]) {
         }());
     }
 
+    auto oracle([&]() -> S<Oracle> {
+        auto oracle(Break<Oracle>(args["currency"].as<std::string>()));
+        oracle->Open(origin);
+        return oracle;
+    }());
+
     auto cashier([&]() -> S<Cashier> {
         const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
         if (price == 0)
             return nullptr;
         const Address personal(args["personal"].as<std::string>());
-        return Break<Cashier>(std::move(endpoint),
-            price, args["currency"].as<std::string>(),
-            personal, password,
+        auto cashier(Break<Cashier>(std::move(endpoint), std::move(oracle),
+            price, personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
-        );
-    }());
-
-    if (cashier != nullptr)
+        ));
         cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
+        return cashier;
+    }());
 
     auto egress([&]() -> S<Egress> {
         if (args.count("openvpn3") != 0) {

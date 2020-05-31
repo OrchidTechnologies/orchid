@@ -26,12 +26,12 @@
 #include <map>
 #include <string>
 
-#include "coinbase.hpp"
 #include "endpoint.hpp"
 #include "event.hpp"
 #include "local.hpp"
 #include "locked.hpp"
 #include "locator.hpp"
+#include "oracle.hpp"
 #include "sleep.hpp"
 #include "signed.hpp"
 #include "spawn.hpp"
@@ -61,9 +61,9 @@ class Cashier :
 {
   private:
     const Endpoint endpoint_;
+    const S<Oracle> oracle_;
 
     const Float price_;
-    const std::string currency_;
 
     const Address personal_;
     const std::string password_;
@@ -72,26 +72,12 @@ class Cashier :
     const uint256_t chain_;
     const Address recipient_;
 
-    struct Coin_ {
-        Float eth_ = 0;
-        Float oxt_ = 0;
-    }; Locked<Coin_> coin_;
-
-    typedef std::map<unsigned long, double> Prices;
-
-    struct Gas_ {
-        S<const Prices> prices_;
-    }; Locked<Gas_> gas_;
-
     U<Station> station_;
 
     struct Cache_ {
         std::map<uint128_t, Identity> subscriptions_;
         std::map<Identity, S<Pot>> pots_;
     }; Locked<Cache_> cache_;
-
-    task<void> UpdateCoin(Origin &origin);
-    task<void> UpdateGas(Origin &origin);
 
     task<void> Look(const Address &signer, const Address &funder, const std::string &combined);
 
@@ -100,7 +86,7 @@ class Cashier :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(Endpoint endpoint, S<Oracle> oracle, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
     ~Cashier() override = default;
 
     void Open(S<Origin> origin, Locator locator);

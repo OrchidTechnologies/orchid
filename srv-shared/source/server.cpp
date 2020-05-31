@@ -25,7 +25,6 @@
 
 #include "cashier.hpp"
 #include "channel.hpp"
-#include "coinbase.hpp"
 #include "crypto.hpp"
 #include "datagram.hpp"
 #include "endpoint.hpp"

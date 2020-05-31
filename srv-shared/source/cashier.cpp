@@ -32,38 +32,11 @@
 
 namespace orc {
 
-static const uint256_t Gwei(1000000000);
-static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 //static const Float Two30(1024 * 1024 * 1024);
 
 static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
 static const auto Bound_(Hash("Update(address,address)"));
-
-task<void> Cashier::UpdateCoin(Origin &origin) { try {
-    auto [eth, oxt] = *co_await Parallel(Price(origin, "ETH", currency_, Ten18), Price(origin, "OXT", currency_, Ten18));
-
-    const auto coin(coin_());
-    coin->eth_ = std::move(eth);
-    coin->oxt_ = std::move(oxt);
-} orc_stack({}, "updating coin prices") }
-
-task<void> Cashier::UpdateGas(Origin &origin) { try {
-    auto result(Parse((co_await origin.Fetch("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
-
-    const auto &range(result["gasPriceRange"]);
-    orc_assert(range.isObject());
-
-    S<const Prices> prices([&]() {
-        auto prices(std::make_shared<Prices>());
-        for (const auto &price : range.getMemberNames())
-            prices->emplace(To(price), range[price].asDouble() * 60);
-        return prices;
-    }());
-
-    const auto gas(gas_());
-    std::swap(gas->prices_, prices);
-} orc_stack({}, "updating gas prices") }
 
 task<void> Cashier::Look(const Address &signer, const Address &funder, const std::string &combined) {
     static const auto look(Hash("look(address,address)").Clip<4>().num<uint32_t>());
@@ -172,11 +145,11 @@ void Cashier::Stop(const std::string &error) noexcept {
     Valve::Stop();
 }
 
-Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
+Cashier::Cashier(Endpoint endpoint, S<Oracle> oracle, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
+    oracle_(std::move(oracle)),
 
     price_(price),
-    currency_(std::move(currency)),
 
     personal_(personal),
     password_(std::move(password)),
@@ -198,19 +171,7 @@ void Cashier::Open(S<Origin> origin, Locator locator) {
         auto &inverted(structured.Wire<Inverted>(std::move(duplex)));
         inverted.Open();
         station_ = std::move(station);
-
-        *co_await Parallel(UpdateCoin(*origin), UpdateGas(*origin));
     }());
-
-    // XXX: this coroutine leaks after Shut
-    Spawn([this, origin = std::move(origin)]() noexcept -> task<void> {
-        for (;;) {
-            co_await Sleep(5 * 60);
-            auto [forex, gas] = co_await Parallel(UpdateCoin(*origin), UpdateGas(*origin));
-            orc_ignore({ std::move(forex).result(); });
-            orc_ignore({ std::move(gas).result(); });
-        }
-    });
 }
 
 task<void> Cashier::Shut() noexcept {
@@ -224,27 +185,24 @@ Float Cashier::Bill(size_t size) const {
 }
 
 checked_int256_t Cashier::Convert(const Float &balance) const {
-    const auto oxt(coin_()->oxt_);
+    const auto oxt(oracle_->Fiat().oxt_);
     return checked_int256_t(balance / oxt * Two128);
 }
 
 std::pair<Float, uint256_t> Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const {
-    const auto [oxt, eth] = [&]() {
-        const auto coin(coin_());
-        return std::make_pair(coin->oxt_, coin->eth_);
-    }();
+    const auto fiat(oracle_->Fiat());
 
-    const auto base(Float(amount) * oxt);
+    const auto base(Float(amount) * fiat.oxt_);
     const auto until(start + range);
 
     std::pair<Float, uint256_t> credit(0, 10*Gwei);
 
-    const auto prices(gas_()->prices_);
+    const auto prices(oracle_->Prices());
     for (const auto &[price, time] : *prices) {
         const auto when(now + unsigned(time));
         if (when >= until) continue;
         const auto cost(price * Gwei / 10);
-        const auto profit((start < when ? base * Float(range - (when - start)) / Float(range) : base) - Float(gas * cost) * eth);
+        const auto profit((start < when ? base * Float(range - (when - start)) / Float(range) : base) - Float(gas * cost) * fiat.eth_);
         if (profit > std::get<0>(credit))
             credit = {profit, cost};
     }

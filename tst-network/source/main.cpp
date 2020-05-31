@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "baton.hpp"
-#include "coinbase.hpp"
 #include "client.hpp"
 #include "crypto.hpp"
 #include "dns.hpp"
@@ -33,6 +32,7 @@
 #include "local.hpp"
 #include "markup.hpp"
 #include "network.hpp"
+#include "oracle.hpp"
 #include "remote.hpp"
 #include "router.hpp"
 #include "sleep.hpp"
@@ -87,20 +87,38 @@ task<Report> Test(const S<Origin> &origin, std::string ovpn) {
     });
 }
 
-task<Report> Test(const S<Origin> &origin, std::string name, const Float &price, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
+task<Report> Test(const S<Origin> &origin, std::string name, const Oracle &oracle, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
     std::cout << provider << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
         remote.Open();
+
         const auto [speed, size] = co_await Measure(remote);
         client.Update();
         const auto host(co_await Find(remote));
+
         const auto balance(client.Balance());
         const auto spent(client.Spent());
-        const auto cost(Float(spent - balance) / size * (1024 * 1024 * 1024) * price / Two128);
+
+        const auto fiat(oracle.Fiat());
+        const auto face(Float(client.Face()) * fiat.oxt_);
+
+        const auto price([&]() {
+            double maximum(0);
+            for (const auto &[price, time] : *oracle.Prices())
+                if (maximum == 0)
+                    maximum = time;
+                else if (time != maximum)
+                    return price;
+            orc_assert(false);
+        }() * Gwei / 10);
+
+        const uint256_t gas(100000);
+        const auto efficiency(1 - Float(gas * price) * fiat.eth_ / face);
+        const auto cost(Float(spent - balance) / size * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
         std::cout << name << ": DONE" << std::endl;
-        co_return Report{cost, speed, host};
+        co_return Report{cost * efficiency, speed, host};
     });
 }
 
@@ -178,10 +196,12 @@ int Main(int argc, const char *const argv[]) {
 
     const auto origin(Break<Local>());
     const std::string rpc("https://cloudflare-eth.com:443/");
+
     Endpoint endpoint(origin, Locator::Parse(rpc));
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
+    Network network(rpc, directory, location);
 
     const Address funder(args["funder"].as<std::string>());
     const Secret secret(Bless(args["secret"].as<std::string>()));
@@ -190,71 +210,68 @@ int Main(int argc, const char *const argv[]) {
     std::string ovpn;
     boost::filesystem::load_string_file("PureVPN.ovpn", ovpn);
 
-    Spawn([&]() noexcept -> task<void> { try {
-        const auto price(co_await Price(*origin, "OXT", "USD", Ten18));
+    const auto oracle(Break<Oracle>("USD"));
+    oracle->Open(origin);
 
-        Network network(rpc, directory, location);
+    Spawn([&]() noexcept -> task<void> { for (;;) try {
+        const auto now(Timestamp());
+        auto state(std::make_shared<State>(now));
 
-        for (;;) {
-            const auto now(Timestamp());
-            auto state(std::make_shared<State>(now));
+        try {
+            state->speed_ = std::get<0>(co_await Measure(*origin));
+        } catch (...) {
+            state->speed_ = 0;
+        }
 
-            try {
-                state->speed_ = std::get<0>(co_await Measure(*origin));
-            } catch (...) {
-                state->speed_ = 0;
+        *co_await Parallel([&]() -> task<void> { try {
+            std::map<Address, Stake> stakes;
+            co_await Stakes(endpoint, directory, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) {
+                std::cout << "DELAY " << stakee << " " << std::dec << delay << " " << std::dec << amount << std::endl;
+                if (delay < 90*24*60*60)
+                    return true;
+                auto &stake(stakes[stakee]);
+                stake.amount_ += amount;
+                return true;
+            });
+
+            state->stakes_ = std::move(stakes);
+        } catch (...) {
+        } }(), [&]() -> task<void> { try {
+            state->purevpn_ = co_await orc_value(co_return co_await, Test(origin, ovpn), "testing PureVPN");
+        } catch (...) {
+            state->purevpn_.speed_ = 0;
+        } }(), [&]() -> task<void> {
+            std::vector<std::string> names;
+            std::vector<task<Report>> tests;
+
+            for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
+                {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
+                {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
+                {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
+                //{"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
+                {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
+                {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
+            }) {
+                names.emplace_back(name);
+                tests.emplace_back(Test(origin, name, *oracle, network, provider, secret, funder, seller));
             }
 
-            *co_await Parallel([&]() -> task<void> { try {
-                std::map<Address, Stake> stakes;
-                co_await Stakes(endpoint, directory, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) {
-                    std::cout << "DELAY " << stakee << " " << std::dec << delay << " " << std::dec << amount << std::endl;
-                    if (delay < 90*24*60*60)
-                        return true;
-                    auto &stake(stakes[stakee]);
-                    stake.amount_ += amount;
-                    return true;
-                });
+            auto reports(co_await Parallel(std::move(tests)));
+            for (unsigned i(0); i != names.size(); ++i) {
+                auto &provider(state->providers_[names[i]]);
+                provider = [&]() { try {
+                    return std::decay_t<decltype(provider)>{std::in_place_index_t<1>(), std::move(reports[i]).result()};
+                } catch (const std::exception &error) {
+                    std::string text(error.what());
+                    boost::replace_all(text, "\r", "");
+                    boost::replace_all(text, "\n", " || ");
+                    return std::decay_t<decltype(provider)>{std::in_place_index_t<0>(), text};
+                } }();
+            }
+        }());
 
-                state->stakes_ = std::move(stakes);
-            } catch (...) {
-            } }(), [&]() -> task<void> { try {
-                state->purevpn_ = co_await orc_value(co_return co_await, Test(origin, ovpn), "testing PureVPN");
-            } catch (...) {
-                state->purevpn_.speed_ = 0;
-            } }(), [&]() -> task<void> {
-                std::vector<std::string> names;
-                std::vector<task<Report>> tests;
-
-                for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
-                    {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
-                    {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
-                    {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
-                    //{"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
-                    {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
-                    {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
-                }) {
-                    names.emplace_back(name);
-                    tests.emplace_back(Test(origin, name, price, network, provider, secret, funder, seller));
-                }
-
-                auto reports(co_await Parallel(std::move(tests)));
-                for (unsigned i(0); i != names.size(); ++i) {
-                    auto &provider(state->providers_[names[i]]);
-                    provider = [&]() { try {
-                        return std::decay_t<decltype(provider)>{std::in_place_index_t<1>(), std::move(reports[i]).result()};
-                    } catch (const std::exception &error) {
-                        std::string text(error.what());
-                        boost::replace_all(text, "\r", "");
-                        boost::replace_all(text, "\n", " || ");
-                        return std::decay_t<decltype(provider)>{std::in_place_index_t<0>(), text};
-                    } }();
-                }
-            }());
-
-            std::atomic_store(&state_, state);
-        }
-    } orc_catch({orc_insist(false);}) });
+        std::atomic_store(&state_, state);
+    } orc_catch({ orc_insist(false); }) });
 
     const Store store([&]() {
         std::string store;

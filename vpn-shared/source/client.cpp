@@ -240,4 +240,8 @@ checked_int256_t Client::Balance() {
     return locked->balance_;
 }
 
+uint128_t Client::Face() {
+    return face_;
+}
+
 }

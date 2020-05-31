@@ -20,19 +20,47 @@
 /* }}} */
 
 
-#ifndef ORCHID_COINBASE_HPP
-#define ORCHID_COINBASE_HPP
+#ifndef ORCHID_ORACLE_HPP
+#define ORCHID_ORACLE_HPP
 
 #include <string>
 
 #include "float.hpp"
-#include "origin.hpp"
+#include "locked.hpp"
 #include "task.hpp"
+#include "valve.hpp"
 
 namespace orc {
 
-task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust);
+static const uint256_t Gwei(1000000000);
+
+class Oracle :
+    public Valve
+{
+  private:
+    const std::string currency_;
+
+    struct Fiat_ {
+        Float eth_ = 0;
+        Float oxt_ = 0;
+    }; Locked<Fiat_> fiat_;
+
+    typedef std::map<unsigned long, double> Prices_;
+    Locked<S<const Prices_>> prices_;
+
+    task<void> UpdateCoin(Origin &origin);
+    task<void> UpdateGas(Origin &origin);
+
+  public:
+    Oracle(std::string currency);
+
+    void Open(S<Origin> origin);
+    task<void> Shut() noexcept override;
+
+    Fiat_ Fiat() const;
+    S<const Prices_> Prices() const;
+};
 
 }
 
-#endif//ORCHID_COINBASE_HPP
+#endif//ORCHID_ORACLE_HPP
