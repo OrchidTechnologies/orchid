@@ -312,14 +312,6 @@ int Main(int argc, const char *const argv[]) {
         co_return Respond(request, http::status::ok, "text/html", markup());
     });
 
-    router(http::verb::get, R"(.*)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", "");
-    });
-
-    router(http::verb::unknown, R"(.*)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::method_not_allowed, "text/plain", "");
-    });
-
     router.Run(boost::asio::ip::make_address("0.0.0.0"), 443, store.Key(), store.Chain());
     Thread().join();
     return 0;

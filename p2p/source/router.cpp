@@ -95,6 +95,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                         for (const auto &[verb, path, code] : routes_)
                             if ((verb == http::verb::unknown || verb == request.method()) && std::regex_match(request.target().to_string(), path))
                                 co_return co_await code(std::move(request));
+                        // XXX: maybe return method_not_allowed if path is found but method is not
                         co_return Respond(request, http::status::not_found, "text/plain", "");
                     } catch (const std::exception &error) {
                         co_return Respond(request, http::status::internal_server_error, "text/plain", error.what());
