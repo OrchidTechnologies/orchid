@@ -24,7 +24,7 @@ export const StakeFunds: FC = () => {
   const [stakeeAddress, setStakeeAddress] = useState<Address | null>(null);
   const [stakeeAddressError, setStakeeAddressError] = useState(true);
 
-  const [stakeDelay, setStakeDelay] = useState<number | null>(defaultStakeDelay);
+  const [stakeDelaySeconds, setStakeDelaySeconds] = useState<number | null>(defaultStakeDelay);
   const [stakeDelayError, setStakeDelayError] = useState(false);
 
   const [txRunning, setTxRunning] = useState(false);
@@ -69,8 +69,8 @@ export const StakeFunds: FC = () => {
       return;
     }
     let walletAddress = wallet.address;
-    console.log("submit add funds: ", walletAddress, addStakeAmount, stakeDelay);
-    if (walletAddress == null || addStakeAmount == null || stakeeAddress == null || stakeDelay == null) {
+    console.log("submit add funds: ", walletAddress, addStakeAmount, stakeDelaySeconds);
+    if (walletAddress == null || addStakeAmount == null || stakeeAddress == null || stakeDelaySeconds == null) {
       return;
     }
 
@@ -86,7 +86,7 @@ export const StakeFunds: FC = () => {
         console.log("Add funds: gas price potentially too low.");
       }
 
-      let delayValue = BigInt(stakeDelay * 24 * 3600); // days to seconds
+      let delayValue = BigInt(stakeDelaySeconds); // seconds
       await api.eth.orchidStakeFunds(walletAddress, stakeeAddress, amountWei, delayValue, gasPrice);
       api.updateWallet().then();
       console.log("updating stake");
@@ -105,7 +105,7 @@ export const StakeFunds: FC = () => {
     && !stakeeAddressError
     && !txRunning;
   let stakeDelayDaysStr =
-    stakeDelay != null ? ((stakeDelay / (24 * 3600)).toLocaleString() + " " + S.days) : "";
+    stakeDelaySeconds != null ? ((stakeDelaySeconds / (24 * 3600)).toLocaleString() + " " + S.days) : "";
   return (
     <Container className="form-style">
       <label className="title">{S.stakeFunds}</label>
@@ -189,7 +189,7 @@ export const StakeFunds: FC = () => {
             className="editable"
             onChange={(e) => {
               let delay = parseIntSafe(e.currentTarget.value);
-              setStakeDelay(delay);
+              setStakeDelaySeconds(delay);
               setStakeDelayError(delay == null || delay < 0);
             }}
             type="number"

@@ -3,7 +3,7 @@ import {camelCase} from "../util/util";
 
 export enum Route {
   Overview, Balances, AddFunds, CreateAccount, WithdrawFunds, Transactions,
-  MoveFunds, LockFunds, DebugPanel, StakeFunds
+  MoveFunds, LockFunds, DebugPanel, StakeFundsTest
 }
 
 export const RouteContext = React.createContext({
