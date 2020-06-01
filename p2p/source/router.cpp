@@ -85,16 +85,20 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                         co_await http::async_read(stream, buffer, request, Token());
                     } catch (const boost::system::system_error &error) {
                         const auto code(error.code());
-                        if (code == http::error::end_of_stream)
-                            break;
-                        orc_adapt(error);
+                        if (false);
+                        else if (code == asio::ssl::error::stream_truncated);
+                        else if (code == boost::beast::error::timeout);
+                        else if (code == http::error::end_of_stream);
+                        else if (code == http::error::partial_message);
+                        else orc_adapt(error);
+                        break;
                     }
-                    Log() << request << std::endl;
 
                     const auto response(co_await [&]() -> task<Response> { try {
                         for (const auto &[verb, path, code] : routes_)
                             if ((verb == http::verb::unknown || verb == request.method()) && std::regex_match(request.target().to_string(), path))
                                 co_return co_await code(std::move(request));
+                        Log() << request << std::endl;
                         // XXX: maybe return method_not_allowed if path is found but method is not
                         co_return Respond(request, http::status::not_found, "text/plain", "");
                     } catch (const std::exception &error) {
