@@ -129,7 +129,6 @@ $(output)/$(pwd/v8)/torque: $(wildcard $(pwd)/v8/src/torque/*.cc) $(pwd)/v8/src/
 	clang++ -std=c++14 -pthread -o $@ $^ $(vflags)
 
 tqsrc := $(patsubst %.tq,%-tq-csa.cc,$(torque))
-tqsrc += class-debug-readers-tq.cc
 tqsrc += class-definitions-tq.cc
 tqsrc += class-verifiers-tq.cc
 tqsrc += exported-macros-assembler-tq.cc
