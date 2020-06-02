@@ -129,8 +129,8 @@ struct Stake {
 struct State {
     uint256_t timestamp_;
     Float speed_;
-    Report purevpn_;
-    std::map<std::string, std::variant<std::string, Report>> providers_;
+    std::variant<std::exception_ptr, Report> purevpn_;
+    std::map<std::string, Maybe<Report>> providers_;
     std::map<Address, Stake> stakes_;
 
     State(uint256_t timestamp) :
@@ -236,11 +236,9 @@ int Main(int argc, const char *const argv[]) {
 
             state->stakes_ = std::move(stakes);
         } catch (...) {
-        } }(), [&]() -> task<void> { try {
-            state->purevpn_ = co_await orc_value(co_return co_await, Test(origin, ovpn), "testing PureVPN");
-        } catch (...) {
-            state->purevpn_.speed_ = 0;
         } }(), [&]() -> task<void> {
+            state->purevpn_ = co_await Try(Test(origin, ovpn));
+        }(), [&]() -> task<void> {
             std::vector<std::string> names;
             std::vector<task<Report>> tests;
 
@@ -257,17 +255,8 @@ int Main(int argc, const char *const argv[]) {
             }
 
             auto reports(co_await Parallel(std::move(tests)));
-            for (unsigned i(0); i != names.size(); ++i) {
-                auto &provider(state->providers_[names[i]]);
-                provider = [&]() { try {
-                    return std::decay_t<decltype(provider)>{std::in_place_index_t<1>(), std::move(reports[i]).result()};
-                } catch (const std::exception &error) {
-                    std::string text(error.what());
-                    boost::replace_all(text, "\r", "");
-                    boost::replace_all(text, "\n", " || ");
-                    return std::decay_t<decltype(provider)>{std::in_place_index_t<0>(), text};
-                } }();
-            }
+            for (unsigned i(0); i != names.size(); ++i)
+                state->providers_[names[i]] = std::move(reports[i]);
         }());
 
         std::atomic_store(&state_, state);
@@ -290,14 +279,34 @@ int Main(int argc, const char *const argv[]) {
 
         body << "T+" << std::dec << (Timestamp() - state->timestamp_) << "s " << std::fixed << std::setprecision(4) << state->speed_ << "Mbps\n";
         body << "\n";
-        body << " PureVPN:     $-.----   " << std::fixed << std::setprecision(4) << state->purevpn_.speed_ << "Mbps   " << state->purevpn_.host_.String() << "\n";
+
+        body << " PureVPN:     ";
+        if (const auto error = std::get_if<0>(&state->purevpn_)) try {
+            std::rethrow_exception(*error);
+        } catch (const std::exception &error) {
+            std::string what(error.what());
+            boost::replace_all(what, "\r", "");
+            boost::replace_all(what, "\n", " || ");
+            body << what;
+        } else if (const auto report = std::get_if<1>(&state->purevpn_)) {
+            body << std::fixed << std::setprecision(4);
+            body << "$-.----   " << report->speed_ << "Mbps   " << report->host_.String();
+        } else orc_insist(false);
         body << "\n";
+
+        body << "\n";
+
         for (const auto &[name, provider] : state->providers_) {
             body << "------------+---------+------------+-----------------\n";
             body << " " << name << ": " << std::string(11 - name.size(), ' ');
-            if (const auto error = std::get_if<0>(&provider))
-                body << *error;
-            else if (const auto report = std::get_if<1>(&provider)) {
+            if (const auto error = std::get_if<0>(&provider)) try {
+                std::rethrow_exception(*error);
+            } catch (const std::exception &error) {
+                std::string what(error.what());
+                boost::replace_all(what, "\r", "");
+                boost::replace_all(what, "\n", " || ");
+                body << what;
+            } else if (const auto report = std::get_if<1>(&provider)) {
                 body << std::fixed << std::setprecision(4);
                 body << "$" << report->cost_ << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
             } else orc_insist(false);
