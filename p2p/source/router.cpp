@@ -91,7 +91,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                         else if (code == http::error::end_of_stream);
                         else if (code == http::error::partial_message);
                         else orc_adapt(error);
-                        break;
+                        co_return;
                     }
 
                     const auto response(co_await [&]() -> task<Response> { try {
@@ -110,7 +110,14 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                         break;
                 }
 
-                co_await stream.async_shutdown(Token());
+                try {
+                    co_await stream.async_shutdown(Token());
+                } catch (const boost::system::system_error &error) {
+                    //const auto code(error.code());
+                    if (false);
+                    //else if (code == asio::ssl::error::stream_truncated);
+                    else orc_adapt(error);
+                }
             } orc_catch({}) });
         }
     });
