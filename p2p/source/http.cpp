@@ -130,7 +130,7 @@ task<Response> Fetch(Origin &origin, const std::string &method, const Locator &l
     const auto endpoints(co_await Resolve(origin, locator.host_, locator.port_));
     std::exception_ptr error;
     for (const auto &endpoint : endpoints) try {
-        Adapter adapter(Context(), co_await orc_value(co_return co_await, origin.Connect(endpoint), "connecting to " << endpoint));
+        Adapter adapter(Context(), co_await origin.Connect(endpoint));
         const auto response(co_await orc_value(co_return co_await, Fetch_(adapter, method, locator, headers, data, verify), "connected to " << endpoint));
         // XXX: potentially allow this to be passed in as a custom response validator
         orc_assert_(response.result() != boost::beast::http::status::bad_gateway, response);

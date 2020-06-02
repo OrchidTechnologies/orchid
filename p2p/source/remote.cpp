@@ -348,7 +348,7 @@ class RemoteConnection final :
         }
     }
 
-    task<void> Open(const ip4_addr_t &host, uint16_t port) {
+    task<void> Open(const ip4_addr_t &host, uint16_t port) { orc_block({
         { Core core;
             tcp_recv(pcb_, [](void *arg, tcp_pcb *pcb, pbuf *data, err_t error) noexcept -> err_t {
                 const auto self(static_cast<RemoteConnection *>(arg));
@@ -405,7 +405,7 @@ class RemoteConnection final :
         }
 
         orc_lwipcall(co_await, opened_.Wait());
-    }
+    }, "connecting to " << Host(host) << ":" << port); }
 
     // XXX: provide support for tcp_close and unify with Connection's semantics in Stream via Adapter
 
