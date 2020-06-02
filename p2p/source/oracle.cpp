@@ -33,7 +33,7 @@ namespace orc {
 static const Float Ten18("1000000000000000000");
 
 task<void> Oracle::UpdateCoin(Origin &origin) { try {
-    auto [eth, oxt] = *co_await Parallel(Price(origin, "ETH", currency_, Ten18), Price(origin, "OXT", currency_, Ten18));
+    auto [eth, oxt] = *co_await Parallel(Coinbase(origin, "ETH", currency_, Ten18), Coinbase(origin, "OXT", currency_, Ten18));
 
     const auto fiat(fiat_());
     fiat->eth_ = std::move(eth);
@@ -83,6 +83,18 @@ task<void> Oracle::Shut() noexcept {
 
 auto Oracle::Fiat() const -> Fiat_ {
     return *fiat_();
+}
+
+uint256_t Oracle::Price() const {
+    return [&]() {
+        double maximum(0);
+        for (const auto &[price, time] : *Prices())
+            if (maximum == 0)
+                maximum = time;
+            else if (time != maximum)
+                return price;
+        orc_assert(false);
+    }() * Gwei / 10;
 }
 
 auto Oracle::Prices() const -> S<const Prices_> {

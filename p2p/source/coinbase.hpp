@@ -31,7 +31,7 @@
 
 namespace orc {
 
-task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust);
+task<Float> Coinbase(Origin &origin, const std::string &from, const std::string &to, const Float &adjust);
 
 }
 

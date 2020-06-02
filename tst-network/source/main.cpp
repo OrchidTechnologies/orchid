@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "baton.hpp"
+#include "chart.hpp"
 #include "client.hpp"
 #include "crypto.hpp"
 #include "dns.hpp"
@@ -102,20 +103,12 @@ task<Report> Test(const S<Origin> &origin, std::string name, const Oracle &oracl
         const auto spent(client.Spent());
 
         const auto fiat(oracle.Fiat());
-        const auto face(Float(client.Face()) * fiat.oxt_);
-
-        const auto price([&]() {
-            double maximum(0);
-            for (const auto &[price, time] : *oracle.Prices())
-                if (maximum == 0)
-                    maximum = time;
-                else if (time != maximum)
-                    return price;
-            orc_assert(false);
-        }() * Gwei / 10);
-
+        const auto price(oracle.Price());
         const uint256_t gas(100000);
+
+        const auto face(Float(client.Face()) * fiat.oxt_);
         const auto efficiency(1 - Float(gas * price) * fiat.eth_ / face);
+
         const auto cost(Float(spent - balance) / size * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
         std::cout << name << ": DONE" << std::endl;
         co_return Report{cost * efficiency, speed, host};
@@ -314,8 +307,23 @@ int Main(int argc, const char *const argv[]) {
         }
 
         body << "\n";
+
+        const auto fiat(oracle->Fiat());
+        const auto price(oracle->Price());
+        const uint256_t gas(100000);
+
+        Chart(body, 49, 21, [&](float x) -> float {
+            return x * 30;
+        }, [&](float escrow) -> float{
+            return (1 - Float(gas * price) / Ten18 * (fiat.eth_ / fiat.oxt_) / (escrow / 2)).convert_to<float>();
+        }, [&](std::ostream &out, float x) {
+            out << std::fixed << std::setprecision(0) << std::setw(3) << x * 100 << '%';
+        });
+
+        body << "\n";
+
         for (const auto &[stakee, stake] : state->stakes_)
-            body << Address(stakee) << " " << std::dec << (Float(stake.amount_) / Ten18) << "\n";
+            body << Address(stakee) << " " << std::dec << std::fixed << std::setprecision(3) << (Float(stake.amount_) / Ten18) << "\n";
 
         markup << body.str();
         co_return Respond(request, http::status::ok, "text/html", markup());
