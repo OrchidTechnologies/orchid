@@ -59,6 +59,7 @@ static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 
 struct Report {
+    std::string stakee_;
     Float cost_;
     Float speed_;
     Host host_;
@@ -84,7 +85,7 @@ task<Report> Test(const S<Origin> &origin, std::string ovpn) {
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{0, speed, host};
+        co_return Report{"", 0, speed, host};
     });
 }
 
@@ -111,7 +112,7 @@ task<Report> Test(const S<Origin> &origin, std::string name, const Oracle &oracl
 
         const auto cost(Float(spent - balance) / size * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
         std::cout << name << ": DONE" << std::endl;
-        co_return Report{cost * efficiency, speed, host};
+        co_return Report{provider, cost * efficiency, speed, host};
     });
 }
 
@@ -327,6 +328,32 @@ int Main(int argc, const char *const argv[]) {
 
         markup << body.str();
         co_return Respond(request, http::status::ok, "text/html", markup());
+    });
+
+    router(http::verb::get, R"(/chainlink/0)", [&](Request request) -> task<Response> {
+        const auto state(std::atomic_load(&state_));
+        orc_assert(state);
+
+        std::multimap<Float, uint256_t> providers;
+        uint256_t total(0);
+
+        for (const auto &[name, provider] : state->providers_)
+            if (const auto report = std::get_if<1>(&provider)) {
+                const auto stake(state->stakes_[report->stakee_].amount_);
+                total += stake;
+                providers.emplace(report->cost_, stake);
+            }
+        total /= 2;
+
+        // XXX: I can make this log(N) if N is ever greater than like, 5
+        const auto cost([&]() {
+            for (const auto &[cost, stake] : providers)
+                if (total <= stake)
+                    return cost;
+                else total -= stake;
+            orc_assert(false);
+        }());
+        co_return Respond(request, http::status::ok, "text/plain", cost.str());
     });
 
     router.Run(boost::asio::ip::make_address("0.0.0.0"), 443, store.Key(), store.Chain());
