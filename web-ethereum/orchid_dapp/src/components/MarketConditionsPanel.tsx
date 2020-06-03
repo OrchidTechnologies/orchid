@@ -2,13 +2,12 @@ import React, {useEffect, useState} from "react";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
 import {ETH, GWEI, min, OXT} from "../api/orchid-types";
-import {formatCurrency} from "../util/util";
 import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export const FundsWarningPanel: React.FC = () => {
+export const MarketConditionsPanel: React.FC = () => {
 
   const [open, setOpen] = useState(false);
   const [pot, setPot] = useState<LotteryPot>();
@@ -45,29 +44,14 @@ export const FundsWarningPanel: React.FC = () => {
   let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket)).toEth();
   let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
   let maxFaceValue: OXT = min(OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow).divide(2.0));
-  //let gasPriceHigh = gasPrice.value >= 15.0;
-  let balanceLimited = BigInt(pot.balance).lesser(BigInt(pot.escrow).divide(2.0));
-
-  // formatting
-  //let ethPriceText = formatCurrency(1.0 / pricing.ethToUsdRate, "USD");
-  //let oxtPriceText = formatCurrency(1.0 / pricing.oxtToUsdRate, "USD");
-  //let gasPriceText = formatCurrency(gasPrice.value, "GWEI");
-  //let maxFaceValueText = formatCurrency(maxFaceValue.value, "OXT");
-  //let costToRedeemText = formatCurrency(oxtCostToRedeem.value, "OXT");
   let ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
 
   if (!ticketUnderwater) {
     return <div/>
   }
 
-  let limitedByTitleText: string = balanceLimited ? "Balance too low" : "Deposit size too small";
-  let limitedByText: string = balanceLimited
-    ? "Your max ticket value is currently limited by your balance of  " +
-    `${formatCurrency(OXT.fromKeiki(pot.balance).value, 'OXT')}.  ` +
-    "Consider adding OXT to your account balance."
-    : "Your max ticket value is currently limited by your deposit of " +
-    `${formatCurrency(OXT.fromKeiki(pot.escrow).value, 'OXT')}.  ` +
-    "Consider adding OXT to your deposit or moving funds from your balance to your deposit.";
+  let title = "Abnormal Market Conditions"
+  let text = "Due to market conditions, which take into account Ethereum gas costs, the price of OXT and the price of OXT/ETH, your account will not function. \n"
 
   let alertIcon =
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -106,7 +90,7 @@ export const FundsWarningPanel: React.FC = () => {
           <div style={{fontSize: '16px', width: '5px'}}>{open ? "▾" : "▸"}</div>
         </Col>
         <Col>
-          <span>{alertIcon} {limitedByTitleText}</span>
+          <span>{alertIcon}</span><span style={{paddingLeft: '20px'}}>{title}</span>
         </Col>
         <Col
           style={{
@@ -122,7 +106,7 @@ export const FundsWarningPanel: React.FC = () => {
       <Collapse in={open}>
         <Row style={{marginTop: '12px', marginBottom: '8px'}}>
           <Col>
-            {limitedByText}
+            {text}
           </Col>
         </Row>
       </Collapse>

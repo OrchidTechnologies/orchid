@@ -70,6 +70,10 @@ export class OXT extends ScalarValue {
     return new OXT(this.value + other.value);
   }
 
+  public lessThan(other: OXT): boolean {
+    return this.value < other.value;
+  }
+
   static fromKeiki(keiki: BigInt): OXT {
     // Note: native, not integer division here
     return new OXT(BigInt(keiki) / 1e18);

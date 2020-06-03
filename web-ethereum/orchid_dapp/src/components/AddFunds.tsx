@@ -1,14 +1,21 @@
 import React, {FC, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {Divider, errorClass, parseFloatSafe, Visibility} from "../util/util";
+import {Divider, errorClass, formatCurrency, parseFloatSafe, Visibility} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
-import {Address, GWEI} from "../api/orchid-types";
-import {GasPricingStrategy, isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
+import {Address, GWEI, OXT} from "../api/orchid-types";
+import {
+  GasPricingStrategy,
+  isEthAddress,
+  keikiToOxtString,
+  LotteryPot,
+  oxtToKeiki
+} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
 import {S} from "../i18n/S";
+import {Orchid} from "../api/orchid";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -26,12 +33,13 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
 
   // Add funds state
   const [addAmount, setAddAmount] = useState<number | null>(null);
-  const [addEscrow, setAddEscrow] = useState<number | null>(0);
+  const [addEscrow, setAddEscrow] = useState<number | null>(null);
   const [amountError, setAmountError] = useState(false);
   const [escrowError, setEscrowError] = useState(false);
   const [tx, setTx] = useState(new TransactionStatus());
   const txResult = React.createRef<TransactionProgress>();
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
+  const [pot, setPot] = useState<LotteryPot | null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -39,7 +47,11 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       console.log("add funds got wallet: ", wallet);
       setWalletBalance(wallet.oxtBalance);
     });
+    let potSubscription = api.lotteryPot_wait.subscribe(pot => {
+      setPot(pot)
+    });
     return () => {
+      potSubscription.unsubscribe();
       walletSubscription.unsubscribe();
     };
   }, []);
@@ -97,7 +109,21 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     && !tx.isRunning()
     && (!props.createAccount || !signerKeyError)
     && !amountError
-    && !escrowError;
+    && !escrowError
+    && (addAmount != null || addEscrow != null);
+
+  let addBalanceStr: string | undefined;
+  let addDepositStr: string | undefined;
+  if (pot != null) {
+    let addBalance = Orchid.recommendedBalance.subtract(OXT.fromKeiki(pot.balance));
+    let addDeposit = Orchid.recommendedDeposit.subtract(OXT.fromKeiki(pot.escrow));
+    if (addBalance.value > 0) {
+      addBalanceStr = addBalance.value.toFixedLocalized(2);
+    }
+    if (addDeposit.value > 0) {
+      addDepositStr = addDeposit.value.toFixedLocalized(2);
+    }
+  }
 
   return (
     <Container className="form-style">
@@ -155,7 +181,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
               }
             }}
             type="number"
-            placeholder={(0).toFixedLocalized(2)}
+            placeholder={addBalanceStr || (0).toFixedLocalized(2)}
             defaultValue={props.defaultAddAmount}
           />
         </Col>
@@ -177,7 +203,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
               }
             }}
             type="number"
-            placeholder={(0).toFixedLocalized(2)}
+            placeholder={addDepositStr || (0).toFixedLocalized(2)}
             defaultValue={props.defaultAddEscrow}
           />
         </Col>

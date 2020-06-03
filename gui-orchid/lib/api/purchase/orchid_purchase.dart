@@ -61,12 +61,13 @@ abstract class OrchidPurchaseAPI {
       PACApiConfig prodAPIConfig) async {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
     return PACApiConfig(
-        enabled:
-            jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
-        url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
-        verifyReceipt: jsConfig.evalBoolDefault(
-            'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
-        debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug));
+      enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
+      url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
+      verifyReceipt: jsConfig.evalBoolDefault(
+          'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
+      debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug),
+      serverFail: jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
+    );
   }
 
   /// Daily per-device PAC purchase limit in USD.
@@ -114,11 +115,15 @@ class PACApiConfig {
   /// Enable debug tracing.
   final bool debug;
 
+  /// Simulate PAC server failure redeeming receipt
+  final bool serverFail;
+
   PACApiConfig({
     @required this.enabled,
     @required this.url,
     this.verifyReceipt = true,
     this.debug = false,
+    this.serverFail = false,
   });
 }
 

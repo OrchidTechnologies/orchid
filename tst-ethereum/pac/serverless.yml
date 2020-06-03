@@ -19,7 +19,7 @@ custom:
       dev: "0x5D18Fe86BF42a3b2DdaEbDF7FD8Bc0578EAB71f7"
     DEFAULT_POOL_SIZE:
       prod: "3"
-      dev: "3"
+      dev: "100"
     LOG_LEVEL:
       prod: "WARNING"
       dev: "DEBUG"

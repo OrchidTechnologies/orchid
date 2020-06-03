@@ -81,9 +81,9 @@ contract ContinuousDistributor {
         return amt;
     }
 
-    function num_limits(address a) public view returns (uint128) {
+    function num_limits(address a) public view returns (uint) {
         Linear [] memory limits = limits_[a];
-        return uint128(limits.length);
+        return limits.length;
     }
 
     function get_beg(address a, uint i) public view returns (uint128) {
@@ -129,8 +129,8 @@ contract ContinuousDistributor {
     function distribute(address recipient, uint t) private {
         uint128 amt = compute_owed_(recipient, t);
         if (amt != 0)
-            require(token_.transfer(recipient, amt));
-        sent_[recipient] = amt;
+            require(token_.transferFrom(msg.sender, recipient, amt));
+        sent_[recipient] += amt;
     }
 
     function distribute_all() public {

@@ -29,7 +29,8 @@ import {TransactionPanel} from "./TransactionPanel";
 import {OrchidTransactionDetail} from "../api/orchid-tx";
 import {S} from "../i18n/S";
 import {StakeFunds} from "./StakeFunds";
-import {FundsWarningPanel} from "./FundsWarningPanel";
+import {MarketConditionsPanel} from "./MarketConditionsPanel";
+import {LowFundsPanel} from "./LowFundsPanel";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
@@ -110,7 +111,8 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Divider/>
           </Col>
         </Row>
-        <Row><FundsWarningPanel/></Row>
+        <Row><MarketConditionsPanel/></Row>
+        <Row><LowFundsPanel/></Row>
         {bannerTransactions}
         <Row className="page-content">
           <Col>

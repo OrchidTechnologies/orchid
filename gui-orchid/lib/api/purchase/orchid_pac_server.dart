@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'orchid_pac.dart';
 import 'orchid_purchase.dart';
 
@@ -82,11 +83,17 @@ class OrchidPACServer {
   /// An exception is thrown on any server response that does not contain a valid PAC.
   Future<String> _submitToPACServer(PacTransaction tx) async {
     print("iap: submit to PAC server");
+    var apiConfig = await OrchidPurchaseAPI().apiConfig();
+
+    if (apiConfig.serverFail) {
+      await Future.delayed(Duration(seconds: 3));
+      throw Exception("Testing server failure!");
+    }
+
     if (tx.receipt == null) {
       print("iap: null receipt");
       throw Exception("receipt is null");
     }
-    var apiConfig = await OrchidPurchaseAPI().apiConfig();
 
     Map<String, String> params = {};
 
