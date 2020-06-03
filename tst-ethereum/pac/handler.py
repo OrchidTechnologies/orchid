@@ -170,7 +170,8 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
     escrow_oxt = 15.0 # todo: better alg to determine this?
-    total_oxt = total_usd * oxt_per_usd + escrow_oxt
+    value_usd  = total_usd * 0.7 - 0.5 # 30% store fee, 0.5 setup charge
+    total_oxt = value_usd * oxt_per_usd + escrow_oxt
     #if (escrow_oxt >= 0.9*total_oxt):
     #    escrow_oxt = 0.5*total_oxt
 
