@@ -77,7 +77,7 @@ class Transport :
 
     void Stop(const std::string &error) noexcept override {
         if (!stop_)
-            parent_->transport_error(openvpn::Error::UNDEF, error);
+            parent_->transport_error(openvpn::Error::RELAY_ERROR, error);
     }
 
   public:
@@ -168,19 +168,19 @@ class Factory :
     openvpn::TransportClient::Ptr new_transport_client_obj(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) noexcept override {
         openvpn::RCPtr transport(new BufferSink<Transport>(context, parent));
 
-        Spawn([this, &context, parent, transport]() noexcept -> task<void> { try {
+        Spawn([origin = origin_, config = config_, &context, parent, transport]() noexcept -> task<void> { try {
             asio::dispatch(context, [parent]() {
                 parent->transport_pre_resolve();
                 parent->transport_wait();
             });
 
-            orc_assert(config_.remote_list);
-            const auto remote(config_.remote_list->first_item());
+            orc_assert(config.remote_list);
+            const auto remote(config.remote_list->first_item());
             orc_assert(remote != nullptr);
 
-            const auto endpoints(co_await Resolve(*origin_, remote->server_host, remote->server_port));
+            const auto endpoints(co_await Resolve(*origin, remote->server_host, remote->server_port));
             for (const auto &endpoint : endpoints) {
-                co_await origin_->Associate(*transport, endpoint);
+                co_await origin->Associate(*transport, endpoint);
                 break;
             }
 
@@ -189,7 +189,7 @@ class Factory :
             });
         } catch (const std::exception &error) {
             asio::dispatch(context, [parent, what = error.what()]() {
-                parent->transport_error(openvpn::Error::UNDEF, what);
+                parent->transport_error(openvpn::Error::RELAY_ERROR, what);
             });
         } });
 
@@ -210,19 +210,49 @@ class Middle :
     {
       private:
         Middle &middle_;
+        openvpn::ExternalTun::Config config_;
+        openvpn_io::io_context &context_;
+        openvpn::TunClientParent &parent_;
 
       public:
-        Tunnel(Middle &middle) :
-            middle_(middle)
+        Tunnel(Middle &middle, const openvpn::ExternalTun::Config &config, openvpn_io::io_context &context, openvpn::TunClientParent &parent) :
+            middle_(middle),
+            config_(config),
+            context_(context),
+            parent_(parent)
         {
         }
 
-        void tun_start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) noexcept override {
-            middle_.Start(options, transport, settings);
+        task<void> Send(openvpn::BufferAllocated buffer) {
+            Event done;
+
+            asio::dispatch(context_, [&parent = parent_, buffer = std::move(buffer), &done]() mutable {
+                // XXX: maybe I need to transfer exceptions or something
+                parent.tun_recv(buffer);
+                done();
+            });
+
+            co_await done.Wait();
         }
 
-        void stop() noexcept override {}
-        void set_disconnect() noexcept override {}
+
+        void tun_start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) override {
+            parent_.tun_pre_tun_config();
+            parent_.tun_pre_route_config();
+
+            openvpn::TunProp::configure_builder(&middle_, nullptr, config_.stats.get(), transport.server_endpoint_addr(), config_.tun_prop, options, nullptr, false);
+
+            parent_.tun_connected();
+            middle_.Set(this);
+        }
+
+        void stop() noexcept override {
+            middle_.Set(nullptr);
+        }
+
+        void set_disconnect() noexcept override {
+        }
+
 
         bool tun_send(openvpn::BufferAllocated &buffer) noexcept override {
             if (orc_ignore({ middle_.Forge(buffer); }))
@@ -251,38 +281,32 @@ class Middle :
     {
       private:
         Middle &middle_;
+        openvpn::ExternalTun::Config config_;
 
       public:
-        Factory(Middle &middle) :
-            middle_(middle)
+        Factory(Middle &middle, const openvpn::ExternalTun::Config &config) :
+            middle_(middle),
+            config_(config)
         {
         }
 
         openvpn::TunClient::Ptr new_tun_client_obj(openvpn_io::io_context &context, openvpn::TunClientParent &parent, openvpn::TransportClient *transport) noexcept override {
-            middle_.parent_ = &parent;
-            return new Tunnel(middle_);
+            return new Tunnel(middle_, config_, context, parent);
         }
     };
 
   private:
     const S<Origin> origin_;
+    const uint32_t local_;
 
-    openvpn::ExternalTun::Config config_;
-    openvpn::TunClientParent *parent_ = nullptr;
+    uint32_t remote_ = 0;
+    Tunnel *tunnel_ = nullptr;
+
     Event ready_;
 
-    const uint32_t local_;
-    uint32_t remote_ = 0;
-
-  private:
-    // XXX: sometimes I wonder if this can be moved into Tunnel, but it seems pointless as Send() needs parent_ below
-    void Start(const openvpn::OptionList &options, openvpn::TransportClient &transport, openvpn::CryptoDCSettings &settings) noexcept {
-        parent_->tun_pre_tun_config();
-        parent_->tun_pre_route_config();
-
-        orc_except({ openvpn::TunProp::configure_builder(this, nullptr, config_.stats.get(), transport.server_endpoint_addr(), config_.tun_prop, options, nullptr, false); })
-
-        parent_->tun_connected();
+    void Set(Tunnel *tunnel) {
+        tunnel_ = tunnel;
+        ready_();
     }
 
     void Forge(openvpn::BufferAllocated &buffer) {
@@ -305,8 +329,7 @@ class Middle :
     }
 
     openvpn::TunClientFactory *new_tun_factory(const openvpn::ExternalTun::Config &config, const openvpn::OptionList &options) noexcept override {
-        config_ = config;
-        return new Factory(*this);
+        return new Factory(*this, config);
     }
 
 
@@ -384,7 +407,6 @@ class Middle :
         try {
             openvpn::ClientAPI::Config config;
             config.content = std::move(ovpnfile);
-
             const auto eval(eval_config(config));
             orc_assert_(!eval.error, eval.message);
 
@@ -401,6 +423,7 @@ class Middle :
 
             std::thread([this]() {
                 const auto status(connect());
+                ready_();
                 if (!status.error)
                     Stop();
                 else {
@@ -413,8 +436,6 @@ class Middle :
             co_return Stop(error.what());
         }
 
-        // XXX: put this in the right place
-        ready_();
         co_await ready_.Wait();
     }
 
@@ -439,9 +460,8 @@ class Middle :
         const auto local(ForgeIP4(span, &openvpn::IPv4Header::saddr, remote_));
         orc_assert_(local == local_, "packet from " << Host(local) << " != " << Host(local_));
 
-        orc_assert(parent_ != nullptr);
-        parent_->tun_recv(buffer);
-        co_return;
+        orc_assert(tunnel_ != nullptr);
+        co_await tunnel_->Send(std::move(buffer));
     }
 };
 
