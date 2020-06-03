@@ -34,9 +34,10 @@ template <typename ...Args_>
 #ifdef ORC_FIBER
     const auto parent(co_await co_optic);
     co_return co_await cppcoro::when_all([](Task<Args_> &&task, Fiber *parent) -> cppcoro::task<Maybe<Args_>> {
+        auto maybe(Try(std::move(task)));
         Fiber fiber(parent);
-        task.Set(&fiber);
-        co_return co_await Try(std::move(task));
+        maybe.Set(&fiber);
+        co_return co_await std::move(maybe);
     }(std::forward<Task<Args_>>(args), parent)...);
 #else
     co_return co_await cppcoro::when_all(Try(std::forward<Task<Args_>>(args))...);
@@ -45,16 +46,16 @@ template <typename ...Args_>
 
 template <typename Type_>
 [[nodiscard]] auto Parallel(std::vector<Task<Type_>> &&tasks) -> Task<std::vector<Maybe<Type_>>> {
-#ifdef ORC_FIBER
-    std::vector<Fiber> fibers(tasks.size(), co_await co_optic);
-    for (size_t i(0); i != tasks.size(); ++i)
-        tasks[i].Set(&fibers[i]);
-#endif
-
     std::vector<Task<Maybe<Type_>>> maybes;
     maybes.reserve(tasks.size());
     for (size_t i(0); i != tasks.size(); ++i)
         maybes.emplace_back(Try(std::move(tasks[i])));
+
+#ifdef ORC_FIBER
+    std::vector<Fiber> fibers(maybes.size(), co_await co_optic);
+    for (size_t i(0); i != maybes.size(); ++i)
+        maybes[i].Set(&fibers[i]);
+#endif
 
     co_return co_await cppcoro::when_all(std::move(maybes));
 }
