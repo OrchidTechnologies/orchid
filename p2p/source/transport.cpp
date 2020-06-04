@@ -134,7 +134,7 @@ class Transport :
         } ready_(); });
     }
 
-    task<void> Shut() noexcept {
+    task<void> Shut() noexcept override {
         co_await nest_.Shut();
         co_await ready_.Wait();
         co_await Sunken::Shut();
