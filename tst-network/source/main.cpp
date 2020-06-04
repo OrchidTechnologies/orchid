@@ -276,7 +276,8 @@ int Main(int argc, const char *const argv[]) {
 
         body << " PureVPN:     ";
         if (const auto error = std::get_if<0>(&state->purevpn_)) try {
-            std::rethrow_exception(*error);
+            if (*error != nullptr)
+                std::rethrow_exception(*error);
         } catch (const std::exception &error) {
             std::string what(error.what());
             boost::replace_all(what, "\r", "");
