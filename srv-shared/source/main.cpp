@@ -113,7 +113,7 @@ int Main(int argc, const char *const argv[]) {
 
     { po::options_description group("packet egress");
     group.add_options()
-        ("openvpn3", po::value<std::string>(), "openvpn3 .ovpn configuration file")
+        ("openvpn", po::value<std::string>(), "OpenVPN .ovpn configuration file")
     ; options.add(group); }
 
     po::positional_options_description positional;
@@ -281,9 +281,9 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     auto egress([&]() -> S<Egress> {
-        if (args.count("openvpn3") != 0) {
+        if (args.count("openvpn") != 0) {
             std::string ovpnfile;
-            boost::filesystem::load_string_file(args["openvpn3"].as<std::string>(), ovpnfile);
+            boost::filesystem::load_string_file(args["openvpn"].as<std::string>(), ovpnfile);
 
             return Wait([origin, ovpnfile = std::move(ovpnfile)]() mutable -> task<S<Egress>> {
                 auto egress(Make<BufferSink<Egress>>(0));
