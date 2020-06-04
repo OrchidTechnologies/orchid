@@ -19,6 +19,7 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import '../app_colors.dart';
+import '../app_sizes.dart';
 import '../app_text.dart';
 import 'package:intl/intl.dart';
 
@@ -77,43 +78,51 @@ class _PurchasePageState extends State<PurchasePage> {
           child: Padding(
             padding:
                 const EdgeInsets.only(left: 30, right: 30, top: 16, bottom: 16),
-            child: Column(
-              children: <Widget>[
-                pady(8),
-                _buildInstructions(),
-                pady(16),
-                _buildPurchaseCardView(
-                    pac: OrchidPurchaseAPI.pacTier1,
-                    subtitle: _buildTierDescriptionText(100),
-                    gradBegin: 0,
-                    gradEnd: 2),
-                pady(24),
-                _buildPurchaseCardView(
-                    pac: OrchidPurchaseAPI.pacTier2,
-                    subtitle: _buildTierDescriptionText(200),
-                    gradBegin: -2,
-                    gradEnd: 1),
-                pady(24),
-                _buildPurchaseCardView(
-                  pac: OrchidPurchaseAPI.pacTier3,
-                  subtitle: _buildTierDescriptionText(500),
-                  gradBegin: -1,
-                  gradEnd: -1,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 500),
+                child: Column(
+                  children: <Widget>[
+                    if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                      pady(64),
+                    pady(8),
+                    _buildInstructions(),
+                    pady(16),
+                    _buildPurchaseCardView(
+                        pac: OrchidPurchaseAPI.pacTier1,
+                        subtitle: _buildTierDescriptionText(100),
+                        gradBegin: 0,
+                        gradEnd: 2),
+                    pady(24),
+                    _buildPurchaseCardView(
+                        pac: OrchidPurchaseAPI.pacTier2,
+                        subtitle: _buildTierDescriptionText(200),
+                        gradBegin: -2,
+                        gradEnd: 1),
+                    pady(24),
+                    _buildPurchaseCardView(
+                      pac: OrchidPurchaseAPI.pacTier3,
+                      subtitle: _buildTierDescriptionText(500),
+                      gradBegin: -1,
+                      gradEnd: -1,
+                    ),
+                    pady(32),
+                    _buildInfoPanel(
+                        svgName: "assets/svg/orchid_icon.svg",
+                        title: s.onlyForTheOrchidApp,
+                        body: s.orchidTokensInTheFormOfAccessCreditsAreUnable),
+                    pady(19),
+                    _buildInfoPanel(
+                        svgName: "assets/svg/bandwidth_icon.svg",
+                        title: s.bandwidthValueWillVary,
+                        body:
+                            s.bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill,
+                        linkText: "Learn more",
+                        linkUrl: 'https://www.orchid.com/' // TODO:
+                        )
+                  ],
                 ),
-                pady(32),
-                _buildInfoPanel(
-                    svgName: "assets/svg/orchid_icon.svg",
-                    title: s.onlyForTheOrchidApp,
-                    body: s.orchidTokensInTheFormOfAccessCreditsAreUnable),
-                pady(19),
-                _buildInfoPanel(
-                    svgName: "assets/svg/bandwidth_icon.svg",
-                    title: s.bandwidthValueWillVary,
-                    body: s.bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill,
-                    linkText: "Learn more",
-                    linkUrl: 'https://www.orchid.com/' // TODO:
-                    )
-              ],
+              ),
             ),
           ),
         ),
@@ -357,6 +366,7 @@ class _PurchasePageState extends State<PurchasePage> {
               Expanded(
                 flex: 1,
                 child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Column(children: [
                     Row(children: <Widget>[
                       RichText(
@@ -545,7 +555,8 @@ class _PurchasePageState extends State<PurchasePage> {
   /// Handle a purchase error by clearing any error pac transaction and
   /// showing a dialog.
   void _purchaseError({bool rateLimitExceeded = false}) async {
-    print("iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
+    print(
+        "iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
     var tx = await PacTransaction.shared.get();

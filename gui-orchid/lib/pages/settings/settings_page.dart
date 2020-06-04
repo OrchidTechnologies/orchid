@@ -8,9 +8,9 @@ import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/purchase/purchase_page.dart';
 
 import '../app_colors.dart';
+import '../app_sizes.dart';
 import '../orchid_app.dart';
 
 /// The main settings page.
@@ -47,107 +47,114 @@ class _SettingsPageState extends State<SettingsPage> {
     var screenWidth = MediaQuery.of(context).size.width;
     return TitledPage(
       title: s.settings,
-      child: Column(
-        children: <Widget>[
-          /*
-          PageTile.route(
-              title: "Log",
-              imageName: "assets/images/assignment.png",
-              routeName: '/settings/log',
-              context: context),
-           */
-          // Default curator
-          pady(16),
-          PageTile(
-            title: s.defaultCurator,
-            //imageName: "assets/images/assignment.png",
-            trailing: Container(
-                width: screenWidth * 0.5,
-                child: AppTextField(
-                    controller: _defaultCurator, margin: EdgeInsets.zero)),
+      decoration: BoxDecoration(),
+      child: Padding(
+        padding: EdgeInsets.all(
+            AppSize(context).tallerThan(AppSize.iphone_xs_max) ? 128 : 0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              /*
+              PageTile.route(
+                  title: "Log",
+                  imageName: "assets/images/assignment.png",
+                  routeName: '/settings/log',
+                  context: context),
+               */
+              // Default curator
+              pady(16),
+              PageTile(
+                title: s.defaultCurator,
+                //imageName: "assets/images/assignment.png",
+                trailing: Container(
+                    width: screenWidth * 0.5,
+                    child: AppTextField(
+                        controller: _defaultCurator, margin: EdgeInsets.zero)),
+              ),
+              pady(8),
+
+              // Allow enable vpn with no hops
+              pady(16),
+              Divider(),
+              PageTile(
+                title: s.allowNoHopVPN + "\n(" + s.trafficMonitoringOnly + ")",
+                trailing: Switch(
+                  activeColor: AppColors.purple_3,
+                  value: _allowNoHopVPN,
+                  onChanged: (bool value) {
+                    UserPreferences().setAllowNoHopVPN(value);
+                    setState(() {
+                      _allowNoHopVPN = value;
+                    });
+                  },
+                ),
+              ),
+
+              // Balance query
+              pady(8),
+              Divider(),
+              PageTile(
+                title: s.queryBalances,
+                //imageName: "assets/images/assignment.png",
+                trailing: Switch(
+                  activeColor: AppColors.purple_3,
+                  value: _queryBalances,
+                  onChanged: (bool value) {
+                    UserPreferences().setQueryBalances(value);
+                    setState(() {
+                      _queryBalances = value;
+                    });
+                  },
+                ),
+              ),
+
+              // Status page
+              pady(8),
+              PageTile(
+                title: s.showStatusPage,
+                //imageName: "assets/images/assignment.png",
+                trailing: Switch(
+                  activeColor: AppColors.purple_3,
+                  value: _showStatusTab,
+                  onChanged: (bool value) {
+                    UserPreferences().setShowStatusTab(value);
+                    setState(() {
+                      _showStatusTab = value;
+                    });
+                    OrchidAppTabbed.showStatusTabPref.notifyListeners();
+                  },
+                ),
+              ),
+
+              // Advanced Configuration
+              pady(8),
+              Divider(),
+              PageTile.route(
+                  title: "Advanced Configuration",
+                  routeName: '/settings/configuration',
+                  context: context),
+
+              // Manage Data
+              pady(8),
+              Divider(),
+              PageTile.route(
+                  title: "Configuration Management",
+                  routeName: '/settings/manage_config',
+                  context: context),
+
+              // Reset instructions
+              pady(8),
+              Divider(),
+              PageTile(
+                title: s.showInstructions,
+                trailing: RaisedButton(
+                  child: Text(s.reset),
+                  onPressed: _resetInstructions,
+                ),
+              ),
+            ],
           ),
-          pady(8),
-
-          // Allow enable vpn with no hops
-          pady(16),
-          Divider(),
-          PageTile(
-            title: s.allowNoHopVPN + "\n(" + s.trafficMonitoringOnly + ")",
-            trailing: Switch(
-              activeColor: AppColors.purple_3,
-              value: _allowNoHopVPN,
-              onChanged: (bool value) {
-                UserPreferences().setAllowNoHopVPN(value);
-                setState(() {
-                  _allowNoHopVPN = value;
-                });
-              },
-            ),
-          ),
-
-          // Balance query
-          pady(8),
-          Divider(),
-          PageTile(
-            title: s.queryBalances,
-            //imageName: "assets/images/assignment.png",
-            trailing: Switch(
-              activeColor: AppColors.purple_3,
-              value: _queryBalances,
-              onChanged: (bool value) {
-                UserPreferences().setQueryBalances(value);
-                setState(() {
-                  _queryBalances = value;
-                });
-              },
-            ),
-          ),
-
-          // Status page
-          pady(8),
-          PageTile(
-            title: s.showStatusPage,
-            //imageName: "assets/images/assignment.png",
-            trailing: Switch(
-              activeColor: AppColors.purple_3,
-              value: _showStatusTab,
-              onChanged: (bool value) {
-                UserPreferences().setShowStatusTab(value);
-                setState(() {
-                  _showStatusTab = value;
-                });
-                OrchidAppTabbed.showStatusTabPref.notifyListeners();
-              },
-            ),
-          ),
-
-          // Advanced Configuration
-          pady(8),
-          Divider(),
-          PageTile.route(
-              title: "Advanced Configuration",
-              routeName: '/settings/configuration',
-              context: context),
-
-          // Manage Data
-          pady(8),
-          Divider(),
-          PageTile.route(
-              title: "Configuration Management",
-              routeName: '/settings/manage_config',
-              context: context),
-
-          // Reset instructions
-          pady(8),
-          Divider(),
-          PageTile(
-            title: s.showInstructions,
-            trailing: RaisedButton(
-              child: Text(s.reset),
-              onPressed: _resetInstructions,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -157,7 +164,8 @@ class _SettingsPageState extends State<SettingsPage> {
     Dialogs.showAppDialog(
         context: context,
         title: "Reset",
-        bodyText: "Help instructions will be shown again in appropriate places.");
+        bodyText:
+            "Help instructions will be shown again in appropriate places.");
   }
 
   void _curatorChanged() {

@@ -65,7 +65,7 @@ class LegacyWelcomeDialog {
                   children: <Widget>[
                     RichText(
                         text: TextSpan(
-                            text: screenWidth > AppSizes.iphone_se.width
+                            text: screenWidth > AppSize.iphone_se.width
                                 ? s.addOrchidAccount
                                 : s.addAccount,
                             style: AppText.dialogTitle)),
@@ -84,7 +84,7 @@ class LegacyWelcomeDialog {
                 pady(12),
                 ScanOrPasteOrchidAccount(
                     spacing:
-                        screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
+                        screenWidth < AppSize.iphone_xs_max.width ? 8 : 16,
                     onImportAccount: (ParseOrchidAccountResult result) async {
                       var hop = await OrchidVPNConfig.importAccountAsHop(result);
                       Navigator.of(context).pop(); // TODO: probably not necessary?

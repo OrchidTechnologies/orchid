@@ -34,7 +34,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    var showIcons = screenWidth >= AppSizes.iphone_xs.width;
+    var showIcons = screenWidth >= AppSize.iphone_xs.width;
     bool pasteOnly = Platform.isMacOS;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
