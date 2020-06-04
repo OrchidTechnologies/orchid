@@ -1,5 +1,5 @@
 import "../i18n/i18n_util"
-import React, {FC} from "react";
+import React, {EffectCallback, FC, useEffect, useRef} from "react";
 import {Row} from "react-bootstrap";
 import {isEthAddress} from "../api/orchid-eth";
 import {intl} from "../index";
@@ -25,6 +25,14 @@ export function hashPath(): string | undefined {
 export function getParam(name: string): string | null {
   let params = new URL(window.location.href).searchParams;
   return params.get(name);
+}
+
+export function getBoolParam(name: string, defaultValue: boolean): boolean {
+  let val = getParam(name);
+  if (val == null) {
+    return defaultValue;
+  }
+  return val.toLocaleLowerCase() === "true";
 }
 
 export function getEthAddressParam(name: string, defaultValue: string): string {
@@ -148,3 +156,31 @@ export function formatCurrency(
   }) + (suffix != null ? ` ${suffix}` : "");
 }
 
+/// Return an hsb color ranging from green to yellow to red for values 0.0 to 1.0;
+export function trafficLightShade(value: number) {
+    value = 1.0 - Math.min(1.0, value);
+    return {h: value * 0.3, s: 0.9, b: 0.9}
+}
+
+// https://overreacted.io/making-setinterval-declarative-with-react-hooks/
+export function useInterval(callback: EffectCallback, delay: number) {
+  const savedCallback = useRef<EffectCallback>();
+
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      if (savedCallback.current !== undefined) {
+        savedCallback.current();
+      }
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}

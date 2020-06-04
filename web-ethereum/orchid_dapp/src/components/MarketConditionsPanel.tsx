@@ -7,32 +7,72 @@ import {LotteryPot} from "../api/orchid-eth";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
+export class MarketConditions {
+  public gasCostToRedeem: ETH
+  public oxtCostToRedeem: OXT
+  public maxFaceValue: OXT
+  public ticketUnderwater: boolean
+  public efficiency: number
+
+  constructor(gasCostToRedeem: ETH, oxtCostToRedeem: OXT, maxFaceValue: OXT, ticketUnderwater: boolean, efficiency: number) {
+    this.gasCostToRedeem = gasCostToRedeem;
+    this.oxtCostToRedeem = oxtCostToRedeem;
+    this.maxFaceValue = maxFaceValue;
+    this.ticketUnderwater = ticketUnderwater;
+    this.efficiency = efficiency;
+  }
+
+  static async for(pot: LotteryPot): Promise<MarketConditions> {
+    return this.forBalance(OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow));
+  }
+
+  static async forBalance(balance: OXT, escrow: OXT): Promise<MarketConditions> {
+    console.log("fetch market conditions")
+    let api = OrchidAPI.shared();
+    let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
+    let gasPrice: GWEI = await api.eth.getGasPrice();
+    let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket)).toEth();
+    let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
+    let maxFaceValue: OXT = min(balance, escrow.divide(2.0));
+    let ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
+
+    // value received as a fraction of ticket face value
+    let efficiency = Math.max(0, maxFaceValue.subtract(oxtCostToRedeem).value / maxFaceValue.value);
+
+    return new MarketConditions(gasCostToRedeem, oxtCostToRedeem, maxFaceValue, ticketUnderwater, efficiency);
+  }
+
+}
+
 export const MarketConditionsPanel: React.FC = () => {
 
   const [open, setOpen] = useState(false);
   const [pot, setPot] = useState<LotteryPot>();
-  const [gasPrice, setGasPrice] = useState<GWEI>();
-  const [pricing, setPricing] = useState<Pricing>();
+  const [marketConditions, setMarketConditions] = useState<MarketConditions>();
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let potSubscription = api.lotteryPot_wait.subscribe(pot => {
-      setPot(pot)
-    });
     let fetch = (async () => {
-      setPricing(await OrchidPricingAPI.shared().getPricing())
-      setGasPrice(await api.eth.getGasPrice())
+      if (!pot) {
+        return;
+      }
+      setMarketConditions(await MarketConditions.for(pot));
+    });
+    let potSubscription = api.lotteryPot_wait.subscribe(async pot => {
+      setPot(pot)
+      fetch().then();
     });
     fetch().then();
-    let timer = setInterval(fetch, 15000/*ms*/);
 
+    // todo: is this closing over stale state?  Switch to useInterval.
+    let timer = setInterval(fetch, 15000/*ms*/);
     return () => {
       clearInterval(timer);
       potSubscription.unsubscribe();
     };
   }, []);
 
-  if (pot === undefined || gasPrice === undefined || pricing === undefined) {
+  if (pot === undefined || marketConditions === undefined) {
     return <div/>
   }
 
@@ -41,12 +81,8 @@ export const MarketConditionsPanel: React.FC = () => {
   //let pot = Mocks.lotteryPot(1.0, 20.0)
 
   // calculation
-  let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket)).toEth();
-  let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
-  let maxFaceValue: OXT = min(OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow).divide(2.0));
-  let ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
 
-  if (!ticketUnderwater) {
+  if (!marketConditions.ticketUnderwater) {
     return <div/>
   }
 

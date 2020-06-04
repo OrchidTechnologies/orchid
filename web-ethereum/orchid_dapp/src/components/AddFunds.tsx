@@ -1,6 +1,13 @@
 import React, {FC, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {Divider, errorClass, formatCurrency, parseFloatSafe, Visibility} from "../util/util";
+import {
+  Divider,
+  errorClass,
+  formatCurrency, getBoolParam, getParam,
+  parseFloatSafe,
+  useInterval,
+  Visibility
+} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
@@ -16,6 +23,9 @@ import {
 import {OrchidContracts} from "../api/orchid-eth-contracts";
 import {S} from "../i18n/S";
 import {Orchid} from "../api/orchid";
+import ProgressLine from "./ProgressLine";
+import {MarketConditions} from "./MarketConditionsPanel";
+import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -40,6 +50,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   const txResult = React.createRef<TransactionProgress>();
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
   const [pot, setPot] = useState<LotteryPot | null>(null);
+  const [marketConditions, setMarketConditions] = useState<MarketConditions>();
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -47,14 +58,43 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       console.log("add funds got wallet: ", wallet);
       setWalletBalance(wallet.oxtBalance);
     });
-    let potSubscription = api.lotteryPot_wait.subscribe(pot => {
+    let potSubscription = api.lotteryPot_wait.subscribe(async pot => {
       setPot(pot)
     });
+
+    // prime data sources
+    OrchidPricingAPI.shared().getPricing();
+    api.eth.getGasPrice();
+
     return () => {
       potSubscription.unsubscribe();
       walletSubscription.unsubscribe();
     };
   }, []);
+
+  useInterval(()=>{
+    fetchMarketConditions().then();
+  }, 15000) ;
+
+  useEffect(() => {
+    fetchMarketConditions().then();
+  }, [pot, addAmount, addEscrow]);
+
+  async function fetchMarketConditions() {
+    console.log("fetch market conditions");
+    if (pot == null || addAmount == null || addEscrow == null) {
+      console.log("null market conditions: ", pot, addAmount, addEscrow);
+      setMarketConditions(undefined);
+      return;
+    }
+    console.log("getting market conditions");
+    setMarketConditions(
+      await MarketConditions.forBalance(
+        OXT.fromKeiki(pot.balance).add(new OXT(addAmount)),
+        OXT.fromKeiki(pot.escrow).add(new OXT(addEscrow)))
+    );
+    console.log("got market conditions: ");
+  }
 
   async function submitAddFunds() {
     let api = OrchidAPI.shared();
@@ -124,6 +164,17 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       addDepositStr = addDeposit.value.toFixedLocalized(2);
     }
   }
+
+  let efficiencyPerc: string = "";
+  let efficiencyColor: string = "";
+  if (marketConditions) {
+    let efficiency = marketConditions.efficiency;
+    efficiencyPerc = (efficiency * 100).toFixed()+"%";
+    if (efficiency <= 0.2) { efficiencyColor = "red" }
+    if (efficiency > 0.2 && efficiency <= 0.6) { efficiencyColor = "yellow" }
+    if (efficiency > 0.6) { efficiencyColor = "green" }
+  }
+  let showMarketConditions = getBoolParam("market_meter", false);
 
   return (
     <Container className="form-style">
@@ -208,6 +259,21 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
           />
         </Col>
       </Row>
+
+      {/*Market conditions meter*/}
+      <Visibility visible={marketConditions !== undefined && showMarketConditions}>
+        <Row className="form-row">
+          <Col>
+            <label>Market efficiency</label>
+          </Col>
+          <Col>
+            <ProgressLine label="" visualParts={[ { percentage: efficiencyPerc, color: efficiencyColor } ]} />
+          </Col>
+          <Col style={{flexGrow: 0}}>
+            {efficiencyPerc}
+          </Col>
+        </Row>
+      </Visibility>
 
       <p className="instructions">
         {S.yourDepositSecuresAccessInstruction}
