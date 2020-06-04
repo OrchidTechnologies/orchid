@@ -11,6 +11,7 @@ import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
@@ -196,6 +197,7 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildBody() {
+    var appSize = AppSize(context);
     return NotificationListener(
       onNotification: (notif) {
         _userInteraction();
@@ -207,6 +209,7 @@ class CircuitPageState extends State<CircuitPage>
         },
         child: Container(
           decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+          // hidden until hops loaded
           child: Visibility(
             visible: _hops != null,
             replacement: Container(),
@@ -228,42 +231,52 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildHopList() {
-    return Column(
-      children: <Widget>[
-        Expanded(
-          child: AppReorderableListView(
-              header: Column(
-                children: <Widget>[
-                  AnimatedCrossFade(
-                    duration: Duration(milliseconds: _fadeAnimTime),
-                    crossFadeState: _showEnableVPNInstruction()
-                        ? CrossFadeState.showFirst
-                        : CrossFadeState.showSecond,
-                    firstChild: _buildEnableVPNInstruction(),
-                    secondChild: pady(16),
-                  ),
-                  _buildStartTile(),
-                  _buildStatusTile(),
-                  HopTile.buildFlowDivider(),
-                ],
-              ),
-              children: (_hops ?? []).map((uniqueHop) {
-                return _buildDismissableHopTile(uniqueHop);
-              }).toList(),
-              footer: Column(
-                children: <Widget>[
-                  _buildNewHopTile(),
-                  if (!_hasHops()) _buildFirstHopInstruction(),
-                  HopTile.buildFlowDivider(
-                      padding: EdgeInsets.only(
-                          top: _hasHops() ? 16 : 2, bottom: 10)),
-                  _buildEndTile(),
-                ],
-              ),
-              onReorder: _onReorder),
+//    return Container(color: Colors.green, width: 500, height: 500);
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 500),
+        child: Column(
+          children: <Widget>[
+            Flexible(child: _buildListView()),
+          ],
         ),
-      ],
+      ),
     );
+  }
+
+  AppReorderableListView _buildListView() {
+    // Note: this view needs to be full screen vertical in order to scroll off-edge properly.
+    return AppReorderableListView(
+        header: Column(
+          children: <Widget>[
+            if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
+            AnimatedCrossFade(
+              duration: Duration(milliseconds: _fadeAnimTime),
+              crossFadeState: _showEnableVPNInstruction()
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: _buildEnableVPNInstruction(),
+              secondChild: pady(16),
+            ),
+            _buildStartTile(),
+            _buildStatusTile(),
+            HopTile.buildFlowDivider(),
+          ],
+        ),
+        children: (_hops ?? []).map((uniqueHop) {
+          return _buildDismissableHopTile(uniqueHop);
+        }).toList(),
+        footer: Column(
+          children: <Widget>[
+            _buildNewHopTile(),
+            if (!_hasHops()) _buildFirstHopInstruction(),
+            HopTile.buildFlowDivider(
+                padding: EdgeInsets.only(top: _hasHops() ? 16 : 2, bottom: 10)),
+            _buildEndTile(),
+          ],
+        ),
+        onReorder: _onReorder);
   }
 
   // The starting (top) tile in the hop flow
