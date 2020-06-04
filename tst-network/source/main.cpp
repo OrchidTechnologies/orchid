@@ -324,7 +324,7 @@ int Main(int argc, const char *const argv[]) {
         body << "\n";
 
         for (const auto &[stakee, stake] : state->stakes_)
-            body << Address(stakee) << " " << std::dec << std::fixed << std::setprecision(3) << (Float(stake.amount_) / Ten18) << "\n";
+            body << Address(stakee) << " " << std::dec << std::fixed << std::setprecision(3) << std::setw(10) << (Float(stake.amount_) / Ten18) << "\n";
 
         markup << body.str();
         co_return Respond(request, http::status::ok, "text/html", markup());
