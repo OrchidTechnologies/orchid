@@ -31,6 +31,8 @@ struct wireguard_tunnel;
 
 namespace orc {
 
+class Origin;
+
 class Boring :
     public Link<Buffer>,
     public Sunken<Pump<Buffer>>
@@ -59,6 +61,8 @@ class Boring :
     task<void> Shut() noexcept override;
     task<void> Send(const Buffer &data) override;
 };
+
+task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string file);
 
 }
 

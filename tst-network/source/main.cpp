@@ -94,8 +94,8 @@ task<Report> Test(const S<Origin> &origin, const Socket &endpoint, const Host &a
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         auto &boring(remote.Wire<BufferSink<Boring>>(remote.Host(), address, secret, common));
         co_await origin->Associate(boring, endpoint);
-        remote.Open();
         boring.Open();
+        remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
         co_return Report{"", 0, speed, host};
@@ -267,6 +267,7 @@ int Main(int argc, const char *const argv[]) {
         }());
 
         std::atomic_store(&state_, state);
+        co_await Sleep(1000);
     } orc_catch({ orc_insist(false); }) });
 
     const Store store([&]() {

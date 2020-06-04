@@ -22,12 +22,15 @@
 
 #include <cstdlib>
 
+#include <boost/property_tree/ini_parser.hpp>
+
 extern "C" {
 #include <wireguard_ffi.h>
 }
 
 #include "boring.hpp"
 #include "forge.hpp"
+#include "origin.hpp"
 #include "sleep.hpp"
 
 namespace orc {
@@ -153,6 +156,17 @@ task<void> Boring::Send(const Buffer &data) {
         case WRITE_TO_TUNNEL_IPV6:
             orc_insist(false);
     }
+}
+
+task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string file) {
+    boost::property_tree::ptree tree; {
+        std::istringstream data(file);
+        boost::property_tree::ini_parser::read_ini(data, tree);
+    }
+
+    auto &boring(sunk.Wire<BufferSink<Boring>>(local, tree.get<std::string>("Interface.Address"), tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
+    co_await origin->Associate(boring, Socket(tree.get<std::string>("Peer.Endpoint")));
+    boring.Open();
 }
 
 }

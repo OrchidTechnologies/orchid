@@ -43,6 +43,7 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
+#include "boring.hpp"
 #include "cashier.hpp"
 #include "channel.hpp"
 #include "egress.hpp"
@@ -114,6 +115,7 @@ int Main(int argc, const char *const argv[]) {
     { po::options_description group("packet egress");
     group.add_options()
         ("openvpn", po::value<std::string>(), "OpenVPN .ovpn configuration file")
+        ("wireguard", po::value<std::string>(), "WireGuard .conf configuration file")
     ; options.add(group); }
 
     po::positional_options_description positional;
@@ -281,13 +283,23 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     auto egress([&]() -> S<Egress> {
-        if (args.count("openvpn") != 0) {
-            std::string ovpnfile;
-            boost::filesystem::load_string_file(args["openvpn"].as<std::string>(), ovpnfile);
+        if (false) {
+        } else if (args.count("openvpn") != 0) {
+            std::string file;
+            boost::filesystem::load_string_file(args["openvpn"].as<std::string>(), file);
 
-            return Wait([origin, ovpnfile = std::move(ovpnfile)]() mutable -> task<S<Egress>> {
+            return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
                 auto egress(Make<BufferSink<Egress>>(0));
-                co_await Connect(*egress, std::move(origin), 0, ovpnfile, "", "");
+                co_await Connect(*egress, std::move(origin), 0, file, "", "");
+                co_return egress;
+            }());
+        } else if (args.count("wireguard") != 0) {
+            std::string file;
+            boost::filesystem::load_string_file(args["wireguard"].as<std::string>(), file);
+
+            return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
+                auto egress(Make<BufferSink<Egress>>(0));
+                co_await Guard(*egress, std::move(origin), 0, file);
                 co_return egress;
             }());
         } else orc_assert(false);

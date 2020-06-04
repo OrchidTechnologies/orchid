@@ -427,10 +427,10 @@ class Middle :
         return true; }
 
 
-    task<void> Connect(std::string ovpnfile, std::string username, std::string password) {
+    task<void> Connect(std::string file, std::string username, std::string password) {
         try {
             openvpn::ClientAPI::Config config;
-            config.content = std::move(ovpnfile);
+            config.content = std::move(file);
             const auto eval(eval_config(config));
             orc_assert_(!eval.error, eval.message);
 
@@ -489,9 +489,9 @@ class Middle :
     }
 };
 
-task<void> Connect(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string ovpnfile, std::string username, std::string password) {
+task<void> Connect(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string file, std::string username, std::string password) {
     auto &middle(sunk.Wire<Middle>(std::move(origin), local));
-    co_await middle.Connect(std::move(ovpnfile), std::move(username), std::move(password));
+    co_await middle.Connect(std::move(file), std::move(username), std::move(password));
 }
 
 }
