@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "baton.hpp"
+#include "boring.hpp"
 #include "chart.hpp"
 #include "client.hpp"
 #include "crypto.hpp"
@@ -68,7 +69,7 @@ struct Report {
 typedef std::tuple<Float, size_t> Measurement;
 
 task<Measurement> Measure(Origin &origin) {
-    co_await Sleep(1);
+    co_await Sleep(1000);
     const auto before(Monotonic());
     const auto test((co_await origin.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
     co_return Measurement{test.size() * 8 / Float(Monotonic() - before), test.size()};
@@ -83,6 +84,18 @@ task<Report> Test(const S<Origin> &origin, std::string ovpn) {
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         co_await Connect(remote, origin, remote.Host(), std::move(ovpn), "", "");
         remote.Open();
+        const auto [speed, size] = co_await Measure(remote);
+        const auto host(co_await Find(remote));
+        co_return Report{"", 0, speed, host};
+    });
+}
+
+task<Report> Test(const S<Origin> &origin, const Socket &endpoint, const Host &address, const char *secret, const char *common) {
+    co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
+        auto &boring(remote.Wire<BufferSink<Boring>>(remote.Host(), address, secret, common));
+        co_await origin->Associate(boring, endpoint);
+        remote.Open();
+        boring.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
         co_return Report{"", 0, speed, host};

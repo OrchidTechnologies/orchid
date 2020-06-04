@@ -98,6 +98,11 @@ class Host {
     {
     }
 
+    Host(const char *host) :
+        Host(std::string(host))
+    {
+    }
+
     Host() :
         Host(uint32_t(0))
     {
@@ -198,6 +203,20 @@ class Socket {
     Socket(const rtc::SocketAddress &socket) :
         host_(socket.ipaddr()),
         port_(socket.port())
+    {
+    }
+
+    Socket(const std::string &socket) :
+        Socket([&]() {
+            rtc::SocketAddress address;
+            orc_assert(address.FromString(socket));
+            return address;
+        }())
+    {
+    }
+
+    Socket(const char *socket) :
+        Socket(std::string(socket))
     {
     }
 

@@ -113,7 +113,7 @@ class Cashier :
 
                 // XXX: I should dump these to a disk queue as they are worth "real money"
                 // XXX: that same disk queue should maybe be in charge of the old tickets?
-                co_await Sleep(5);
+                co_await Sleep(5000);
             }
         });
     }

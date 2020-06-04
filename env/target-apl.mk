@@ -81,3 +81,4 @@ endef
 $(each)
 
 lflags += -lresolv
+lflags += -framework Security

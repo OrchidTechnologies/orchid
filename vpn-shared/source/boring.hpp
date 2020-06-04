@@ -20,15 +20,46 @@
 /* }}} */
 
 
-#ifndef ORCHID_SLEEP_HPP
-#define ORCHID_SLEEP_HPP
+#ifndef ORCHID_BORING_HPP
+#define ORCHID_BORING_HPP
 
-#include "task.hpp"
+#include "link.hpp"
+#include "nest.hpp"
+#include "socket.hpp"
+
+struct wireguard_tunnel;
 
 namespace orc {
 
-task<void> Sleep(unsigned milliseconds) noexcept;
+class Boring :
+    public Link<Buffer>,
+    public Sunken<Pump<Buffer>>
+{
+  private:
+    uint32_t local_;
+    uint32_t remote_;
+
+    wireguard_tunnel *const wireguard_;
+
+    volatile bool stop_ = false;
+    Nest nest_;
+    Event done_;
+
+    void Error();
+
+  protected:
+    void Land(const Buffer &data) override;
+    void Stop(const std::string &error) noexcept override;
+
+  public:
+    Boring(BufferDrain &drain, uint32_t local, const Host &remote, const std::string &secret, const std::string &common);
+    ~Boring() override;
+
+    void Open();
+    task<void> Shut() noexcept override;
+    task<void> Send(const Buffer &data) override;
+};
 
 }
 
-#endif//ORCHID_SLEEP_HPP
+#endif//ORCHID_BORING_HPP

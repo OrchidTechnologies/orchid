@@ -637,6 +637,12 @@ class Beam :
         return *this;
     }
 
+    void clear() {
+        destroy();
+        size_ = 0;
+        data_ = nullptr;
+    }
+
     const uint8_t *data() const override {
         return data_;
     }

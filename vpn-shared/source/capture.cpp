@@ -30,6 +30,7 @@
 #include <dns.h>
 
 #include "acceptor.hpp"
+#include "boring.hpp"
 #include "datagram.hpp"
 #include "capture.hpp"
 #include "client.hpp"
@@ -684,6 +685,12 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S
             heap.eval<std::string>(hops + ".username"),
             heap.eval<std::string>(hops + ".password")
         );
+    } else if (protocol == "wireguard") {
+        auto &boring(sunk.Wire<BufferSink<Boring>>(local, heap.eval<std::string>("address"), heap.eval<std::string>("secret"), heap.eval<std::string>("common")));
+        co_await origin->Associate(boring, Socket(heap.eval<std::string>("endpoint")));
+        boring.Open();
+        // XXX: should this co_await anything?!
+        co_return;
     }
 }, "building hop #" << hop); }
 

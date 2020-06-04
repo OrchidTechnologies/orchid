@@ -26,8 +26,8 @@
 
 namespace orc {
 
-task<void> Sleep(unsigned seconds) noexcept {
-    boost::asio::deadline_timer timer(Context(), boost::posix_time::seconds(seconds));
+task<void> Sleep(unsigned milliseconds) noexcept {
+    boost::asio::deadline_timer timer(Context(), boost::posix_time::milliseconds(milliseconds));
     co_await timer.async_wait(Token());
 }
 

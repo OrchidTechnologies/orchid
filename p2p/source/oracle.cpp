@@ -69,7 +69,7 @@ void Oracle::Open(S<Origin> origin) {
     // XXX: this coroutine leaks after Shut
     Spawn([this, origin = std::move(origin)]() noexcept -> task<void> {
         for (;;) {
-            co_await Sleep(5 * 60);
+            co_await Sleep(5 * 60 * 1000);
             auto [forex, gas] = co_await Parallel(UpdateCoin(*origin), UpdateGas(*origin));
             orc_ignore({ std::move(forex).result(); });
             orc_ignore({ std::move(gas).result(); });
