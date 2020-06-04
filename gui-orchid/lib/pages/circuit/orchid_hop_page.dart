@@ -23,6 +23,7 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../app_colors.dart';
+import '../app_sizes.dart';
 import '../app_text.dart';
 import 'budget_page.dart';
 import 'curator_page.dart';
@@ -118,7 +119,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             ? [widget.buildSaveButton(context, _onSave, isValid: isValid)]
             : [],
         child: SafeArea(
-          child: SingleChildScrollView(child: _buildContent()),
+          child: SingleChildScrollView(
+            child: Center(
+              child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 500),
+                  child: _buildContent()),
+            ),
+          ),
         ),
         decoration: BoxDecoration(),
       ),
@@ -187,6 +194,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       padding: const EdgeInsets.only(left: 24, top: 24, bottom: 24, right: 16),
       child: Column(
         children: <Widget>[
+          if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
           _buildSection(
               title: s.credentials, child: _buildFunding(), onDetail: null),
           pady(16),
@@ -301,7 +309,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             Visibility(
               visible: widget.readOnly(),
               child: RoundedRectRaisedButton(
-                  backgroundColor: Colors.grey,
+                  backgroundColor: Colors.deepPurple,
                   textColor: Colors.white,
                   text: s.copy,
                   onPressed: _onCopyButton),
