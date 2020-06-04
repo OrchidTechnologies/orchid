@@ -77,7 +77,7 @@ class _PurchasePageState extends State<PurchasePage> {
         SingleChildScrollView(
           child: Padding(
             padding:
-                const EdgeInsets.only(left: 30, right: 30, top: 16, bottom: 16),
+                const EdgeInsets.only(left: 30, right: 30, top: 0, bottom: 16),
             child: Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: 500),
