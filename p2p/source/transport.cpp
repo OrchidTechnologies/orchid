@@ -50,15 +50,21 @@ void Initialize() {
 
 class Transport :
     public openvpn::TransportClient,
+    public Valve,
     public BufferDrain,
     public Sunken<Pump<Buffer>>
 {
   private:
+    const S<Origin> origin_;
+    const openvpn::ExternalTransport::Config config_;
+
     openvpn_io::io_context &context_;
     openvpn::TransportClientParent *parent_;
+
     asio::executor_work_guard<openvpn_io::io_context::executor_type> work_;
+
+    Event ready_;
     Nest nest_;
-    bool stop_;
 
   protected:
     void Land(const Buffer &data) override {
@@ -69,29 +75,70 @@ class Transport :
         openvpn::BufferAllocated buffer(payload, openvpn::BufferAllocated::ARRAY);
         buffer.set_size(size);
         data.copy(buffer.data(), buffer.size());
-        asio::dispatch(context_, [parent = parent_, buffer = std::move(buffer)]() mutable {
+        asio::dispatch(context_, [this, buffer = std::move(buffer)]() mutable {
             //std::cerr << Subset(buffer.data(), buffer.size()) << std::endl;
-            parent->transport_recv(buffer);
+            if (parent_ == nullptr)
+                return;
+            parent_->transport_recv(buffer);
         });
     }
 
     void Stop(const std::string &error) noexcept override {
-        if (!stop_)
-            parent_->transport_error(openvpn::Error::RELAY_ERROR, error);
+        if (parent_ == nullptr)
+            return;
+        parent_->transport_error(openvpn::Error::RELAY_ERROR, error);
+        Valve::Stop();
     }
 
   public:
-    Transport(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) :
+    Transport(S<Origin> origin, openvpn::ExternalTransport::Config config, openvpn_io::io_context &context, openvpn::TransportClientParent *parent) :
+        origin_(std::move(origin)),
+        config_(std::move(config)),
         context_(context),
         parent_(parent),
-        work_(context_.get_executor()),
-        stop_(false)
+        work_(context_.get_executor())
     {
+    }
+
+    void Open(BufferSunk &sunk) {
+        // XXX: use something more specialized than Event
+        Spawn([this, &sunk]() noexcept -> task<void> { try {
+            asio::dispatch(context_, [this]() {
+                if (parent_ == nullptr)
+                    return;
+                parent_->transport_pre_resolve();
+                parent_->transport_wait();
+            });
+
+            orc_assert(config_.remote_list);
+            const auto remote(config_.remote_list->first_item());
+            orc_assert(remote != nullptr);
+
+            const auto endpoints(co_await Resolve(*origin_, remote->server_host, remote->server_port));
+            for (const auto &endpoint : endpoints) {
+                co_await origin_->Associate(sunk, endpoint);
+                break;
+            }
+
+            asio::dispatch(context_, [this]() noexcept {
+                if (parent_ == nullptr)
+                    return;
+                parent_->transport_connecting();
+            });
+        } catch (const std::exception &error) {
+            asio::dispatch(context_, [this, what = std::string(error.what())]() noexcept {
+                if (parent_ == nullptr)
+                    return;
+                parent_->transport_error(openvpn::Error::RELAY_ERROR, what);
+            });
+        } ready_(); });
     }
 
     task<void> Shut() noexcept {
         co_await nest_.Shut();
+        co_await ready_.Wait();
         co_await Sunken::Shut();
+        co_await Valve::Shut();
     }
 
     void transport_start() noexcept override {
@@ -100,7 +147,8 @@ class Transport :
     }
 
     void stop() noexcept override {
-        stop_ = true;
+        parent_ = nullptr;
+        Valve::Stop();
         Wait(Shut());
         work_.reset();
     }
@@ -147,6 +195,7 @@ class Transport :
         return openvpn::Protocol(openvpn::Protocol::UDPv4); }
 
     void transport_reparent(openvpn::TransportClientParent *parent) noexcept override {
+        orc_insist(parent_ != nullptr);
         parent_ = parent;
     }
 };
@@ -166,33 +215,8 @@ class Factory :
     }
 
     openvpn::TransportClient::Ptr new_transport_client_obj(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) noexcept override {
-        openvpn::RCPtr transport(new BufferSink<Transport>(context, parent));
-
-        Spawn([origin = origin_, config = config_, &context, parent, transport]() noexcept -> task<void> { try {
-            asio::dispatch(context, [parent]() {
-                parent->transport_pre_resolve();
-                parent->transport_wait();
-            });
-
-            orc_assert(config.remote_list);
-            const auto remote(config.remote_list->first_item());
-            orc_assert(remote != nullptr);
-
-            const auto endpoints(co_await Resolve(*origin, remote->server_host, remote->server_port));
-            for (const auto &endpoint : endpoints) {
-                co_await origin->Associate(*transport, endpoint);
-                break;
-            }
-
-            asio::dispatch(context, [parent]() {
-                parent->transport_connecting();
-            });
-        } catch (const std::exception &error) {
-            asio::dispatch(context, [parent, what = error.what()]() {
-                parent->transport_error(openvpn::Error::RELAY_ERROR, what);
-            });
-        } });
-
+        openvpn::RCPtr transport(new BufferSink<Transport>(origin_, config_, context, parent));
+        transport->Open(*transport);
         return transport;
     }
 };
