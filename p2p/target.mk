@@ -171,11 +171,11 @@ cflags += -I$(pwd)/eEVM/3rdparty
 cflags += -I$(pwd)/eEVM/include
 
 
-linked += $(pwd)/challenge-bypass-ristretto/$(pre)rust.$(lib)
+linked += $(pwd)/challenge-bypass-ristretto/librust.a
 cflags += -I$(pwd)/challenge-bypass-ristretto/src
 
 
-linked += $(pwd)/boringtun/$(pre)rust.$(lib)
+linked += $(pwd)/boringtun/librust.a
 cflags += -I$(pwd)/boringtun/src
 
 
