@@ -274,6 +274,5 @@ jobs:
       with:
         name: orchidd-lnx
     - name: verify reproduction
-      # XXX: this check has been turned off while I talk with Rust
-      run: diff -u <(xxd orchidd) <(xxd usr/sbin/orchidd) || true
+      run: diff -u <(xxd orchidd) <(xxd usr/sbin/orchidd)
 
