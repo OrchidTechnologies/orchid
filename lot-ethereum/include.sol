@@ -20,7 +20,7 @@
 /* }}} */
 
 
-pragma solidity 0.5.13;
+pragma solidity ^0;
 
 interface OrchidSeller {
     function ring(bytes calldata shared, address target) external view returns (bytes memory);
