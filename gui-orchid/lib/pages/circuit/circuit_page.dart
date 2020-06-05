@@ -14,6 +14,7 @@ import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
+import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
@@ -513,8 +514,9 @@ class CircuitPageState extends State<CircuitPage>
       case HopProtocol.OpenVPN:
         image = Image.asset("assets/images/security.png", color: color);
         break;
-      default:
-        throw new Exception();
+      case HopProtocol.WireGuard:
+        image = Image.asset("assets/images/security.png", color: color);
+        break;
     }
     return Padding(
       padding: EdgeInsets.only(bottom: 12),
@@ -671,10 +673,12 @@ class CircuitPageState extends State<CircuitPage>
             OrchidHopPage(editableHop: editableHop, mode: HopEditorMode.View);
         break;
       case HopProtocol.OpenVPN:
-        editor = OpenVPNHopPage(
-          editableHop: editableHop,
-          mode: HopEditorMode.Edit,
-        );
+        editor =
+            OpenVPNHopPage(editableHop: editableHop, mode: HopEditorMode.Edit);
+        break;
+      case HopProtocol.WireGuard:
+        editor = WireGuardHopPage(
+            editableHop: editableHop, mode: HopEditorMode.Edit);
         break;
     }
     await _showEditor(editor, animated: animated);

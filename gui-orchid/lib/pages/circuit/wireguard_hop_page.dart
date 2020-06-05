@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/generated/l10n.dart';
-import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/config_text.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
@@ -8,13 +7,12 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import '../app_sizes.dart';
-import '../app_text.dart';
 import 'hop_editor.dart';
-import 'model/openvpn_hop.dart';
+import 'model/wireguard_hop.dart';
 
-/// Create / edit / view an OpenVPN Hop
-class OpenVPNHopPage extends HopEditor<OpenVPNHop> {
-  OpenVPNHopPage(
+/// Create / edit / view an WireGuard Hop
+class WireGuardHopPage extends HopEditor<WireGuardHop> {
+  WireGuardHopPage(
       {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
       : super(
             editableHop: editableHop,
@@ -22,13 +20,11 @@ class OpenVPNHopPage extends HopEditor<OpenVPNHop> {
             onAddFlowComplete: onAddFlowComplete);
 
   @override
-  _OpenVPNHopPageState createState() => _OpenVPNHopPageState();
+  _WireGuardHopPageState createState() => _WireGuardHopPageState();
 }
 
-class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
-  var _userName = TextEditingController();
-  var _userPassword = TextEditingController();
-  var _ovpnConfig = TextEditingController();
+class _WireGuardHopPageState extends State<WireGuardHopPage> {
+  var _config = TextEditingController();
 
   @override
   void initState() {
@@ -37,15 +33,11 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     // Disable rotation until we update the screen design
     ScreenOrientation.portrait();
 
-    OpenVPNHop hop = widget.editableHop.value?.hop;
-    _userName.text = hop?.userName;
-    _userPassword.text = hop?.userPassword;
-    _ovpnConfig.text = hop?.ovpnConfig;
-    setState(() {}); // Setstate to update the hop for any defaulted values.
-
-    _userName.addListener(_updateHop);
-    _userPassword.addListener(_updateHop);
-    _ovpnConfig.addListener(_updateHop);
+    WireGuardHop hop = widget.editableHop.value?.hop;
+    setState(() {
+      _config.text = hop?.config;
+    }); // Setstate to update the hop for any defaulted values.
+    _config.addListener(_updateHop);
   }
 
   @override
@@ -59,7 +51,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     double screenHeight = MediaQuery.of(context).size.height;
     return TapClearsFocus(
       child: TitledPage(
-        title: s.openVPNHop,
+        title: "WireGuard Hop",
         decoration: BoxDecoration(),
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
@@ -75,25 +67,21 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                     children: <Widget>[
                       if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
                         pady(64),
-                      _buildUserName(),
-                      _buildPassword(),
                       pady(16),
-                      // OVPN Config
                       ConfigLabel(text: s.config),
                       ConfigText(
                         height: screenHeight / 2.8,
-                        textController: _ovpnConfig,
-                        hintText: s.pasteYourOVPN,
+                        textController: _config,
+                        hintText: "Paste your WireGuard config file here",
                       ),
 
                       // Instructions
                       Visibility(
                         visible: widget.mode == HopEditorMode.Create,
                         child: InstructionsView(
-                          // TODO: This screen is being told it's in landscape mode in the simulator?
-                          //hideInLandscape: false,
                           title: s.enterYourCredentials,
-                          body: s.enterLoginInformationInstruction + " ",
+                          body:
+                              "Paste the credential information for your WireGuard provider into the field above.",
                         ),
                       ),
                       pady(24)
@@ -108,59 +96,21 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     );
   }
 
-  Column _buildPassword() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        pady(16),
-        Text(s.password + ":",
-            style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-        pady(8),
-        AppTextField(
-            hintText: s.password,
-            margin: EdgeInsets.zero,
-            controller: _userPassword)
-      ],
-    );
-  }
-
-  Column _buildUserName() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        pady(16),
-        Text(s.username + ":",
-            style: AppText.textLabelStyle.copyWith(fontSize: 20)),
-        pady(8),
-        AppTextField(
-            hintText: s.username,
-            margin: EdgeInsets.zero,
-            controller: _userName)
-      ],
-    );
-  }
-
   void _updateHop() {
     if (!widget.editable()) {
       return;
     }
-    widget.editableHop.update(OpenVPNHop(
-        userName: _userName.text,
-        userPassword: _userPassword.text,
-        ovpnConfig: _ovpnConfig.text));
+    widget.editableHop.update(WireGuardHop(config: _config.text));
   }
 
   @override
   void dispose() {
     super.dispose();
     ScreenOrientation.reset();
-    _userName.removeListener(_updateHop);
-    _userPassword.removeListener(_updateHop);
-    _ovpnConfig.removeListener(_updateHop);
+    _config.removeListener(_updateHop);
   }
 
   S get s {
     return S.of(context);
   }
 }
-

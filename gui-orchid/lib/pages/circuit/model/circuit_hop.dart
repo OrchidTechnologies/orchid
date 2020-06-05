@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/generated/l10n.dart';
 
-enum HopProtocol { Orchid, OpenVPN }
+enum HopProtocol { Orchid, OpenVPN, WireGuard }
 
 // A hop element of a circuit
 class CircuitHop {
@@ -23,8 +23,9 @@ class CircuitHop {
       case HopProtocol.OpenVPN:
         return S.of(context).openVPN;
         break;
-      default:
-        return "";
+      case HopProtocol.WireGuard:
+        return "WireGuard";
+        break;
     }
   }
 

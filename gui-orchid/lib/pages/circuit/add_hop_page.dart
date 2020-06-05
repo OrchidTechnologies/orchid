@@ -7,6 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
+import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
@@ -125,6 +126,15 @@ class _AddHopPageState extends State<AddHopPage> {
                         },
                         imageName: "assets/images/security_purple.png"),
 
+                    // WireGuard
+                    _divider(),
+                    _buildHopChoice(
+                        text: "Enter WireGuard Profile",
+                        onTap: () {
+                          _addHopType(HopProtocol.WireGuard);
+                        },
+                        imageName: "assets/images/security_purple.png"),
+
                     _divider(),
                   ],
                 ),
@@ -174,6 +184,13 @@ class _AddHopPageState extends State<AddHopPage> {
         break;
       case HopProtocol.OpenVPN:
         editor = OpenVPNHopPage(
+          editableHop: editableHop,
+          mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
+        );
+        break;
+      case HopProtocol.WireGuard:
+        editor = WireGuardHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,
           onAddFlowComplete: widget.onAddFlowComplete,
