@@ -29,9 +29,8 @@ contract OrchidLocked is OrchidSeller, OrchidVerifier {
 
     uint constant required_ = 1;
 
-    function mark(address signer) internal pure returns (uint) {
+    function find(address signer) internal pure returns (uint) {
         if (signer == address(0xff0fce1d)) return 0;
-        if (signer == address(0)) return 1;
         require(false);
     }
 
@@ -39,7 +38,8 @@ contract OrchidLocked is OrchidSeller, OrchidVerifier {
         bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encodePacked(target, shared))));
 
         require(receipt.length == 65 * required_);
-        bool[] memory signers = new bool[](mark(address(0)));
+
+        uint needed = 0;
 
         for (uint i = 0; i != required_; ++i) {
             uint256 offset = i * 65;
@@ -54,9 +54,9 @@ contract OrchidLocked is OrchidSeller, OrchidVerifier {
                 v := and(mload(add(receipt, add(offset, 65))), 255)
             }
 
-            uint index = mark(ecrecover(message, v, r, s));
-            require(!signers[index]);
-            signers[index] = true;
+            uint signer = find(ecrecover(message, v, r, s));
+            require(signer >= needed);
+            needed = signer + 1;
         }
     }
 
