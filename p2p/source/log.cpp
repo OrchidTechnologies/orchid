@@ -50,7 +50,7 @@ void Log_(std::ostream &out, Fiber *fiber) {
 }
 
 Log::Log(Fiber *fiber) noexcept { try {
-    *this << "[T:" << pthread_self() << "] ";
+    *this << "[T:" << std::hex << pthread_self() << "] ";
     Log_(*this, fiber);
 } catch (...) {
 } }
