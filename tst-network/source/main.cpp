@@ -218,7 +218,7 @@ int Main(int argc, const char *const argv[]) {
     boost::filesystem::load_string_file("PureVPN.ovpn", ovpn);
 
     const auto oracle(Break<Oracle>("USD"));
-    oracle->Open(origin);
+    oracle->Open(origin, oracle);
 
     Spawn([&]() noexcept -> task<void> { for (;;) try {
         const auto now(Timestamp());
