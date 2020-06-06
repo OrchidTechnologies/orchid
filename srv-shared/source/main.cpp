@@ -209,7 +209,6 @@ int Main(int argc, const char *const argv[]) {
 
     Address location(args["location"].as<std::string>());
     std::string password(args["password"].as<std::string>());
-    Address recipient(args.count("recipient") == 0 ? "0x0000000000000000000000000000000000000000" : args["recipient"].as<std::string>());
 
     auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
@@ -273,7 +272,13 @@ int Main(int argc, const char *const argv[]) {
         const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
         if (price == 0)
             return nullptr;
-        const Address personal(args["personal"].as<std::string>());
+
+        orc_assert_(args.count("recipient") != 0, "must specify --recipient unless --price is 0");
+        const Address recipient(args["recipient"].as<std::string>());
+
+        // XXX: this should switch to a different mechanism (using eth_sendTransaction)
+        const Address personal(args.count("personal") == 0 ? "0x0000000000000000000000000000000000000000" : args["personal"].as<std::string>());
+
         auto cashier(Break<Cashier>(std::move(endpoint), std::move(oracle),
             price, personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
@@ -302,7 +307,7 @@ int Main(int argc, const char *const argv[]) {
                 co_await Guard(*egress, std::move(origin), 0, file);
                 co_return egress;
             }());
-        } else orc_assert(false);
+        } else orc_assert_(false, "must provide an egress option");
     }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));

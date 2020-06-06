@@ -18,9 +18,7 @@
 # }}}
 
 
-args := 
-args += --tls ../network.p12
-args += --dh ../dh.pem
+args := --price 0
 
 include env/target.mk
 
