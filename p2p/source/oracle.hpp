@@ -35,7 +35,8 @@ namespace orc {
 static const uint256_t Gwei(1000000000);
 
 class Oracle :
-    public Valve
+    public Valve,
+    public std::enable_shared_from_this<Oracle>
 {
   private:
     const std::string currency_;
@@ -54,7 +55,7 @@ class Oracle :
   public:
     Oracle(std::string currency);
 
-    void Open(S<Origin> origin);
+    void Open(S<Origin> origin, S<Oracle> self);
     task<void> Shut() noexcept override;
 
     Fiat_ Fiat() const;

@@ -61,13 +61,13 @@ Oracle::Oracle(std::string currency) :
 {
 }
 
-void Oracle::Open(S<Origin> origin) {
+void Oracle::Open(S<Origin> origin, S<Oracle> self) {
     Wait([&]() -> task<void> {
         *co_await Parallel(UpdateCoin(*origin), UpdateGas(*origin));
     }());
 
-    // XXX: this coroutine leaks after Shut
-    Spawn([this, origin = std::move(origin)]() noexcept -> task<void> {
+    // XXX: this coroutine leaked after Shut, so I made it leak the whole object
+    Spawn([this, self = std::move(self), origin = std::move(origin)]() noexcept -> task<void> {
         for (;;) {
             co_await Sleep(5 * 60 * 1000);
             auto [forex, gas] = co_await Parallel(UpdateCoin(*origin), UpdateGas(*origin));

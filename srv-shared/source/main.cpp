@@ -265,7 +265,7 @@ int Main(int argc, const char *const argv[]) {
 
     auto oracle([&]() -> S<Oracle> {
         auto oracle(Break<Oracle>(args["currency"].as<std::string>()));
-        oracle->Open(origin);
+        oracle->Open(origin, oracle);
         return oracle;
     }());
 
