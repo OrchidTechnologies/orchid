@@ -59,6 +59,8 @@ namespace orc {
 
 namespace po = boost::program_options;
 
+static const Float Ten8("100000000");
+static const Float Ten12("1000000000000");
 static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 
@@ -150,7 +152,7 @@ struct State {
 std::shared_ptr<State> state_;
 
 template <typename Code_>
-task<bool> Stakes(Endpoint &endpoint, const Address &directory, const Block &block, const uint256_t &storage, const uint256_t &primary, const Code_ &code) {
+task<bool> Stakes(const Endpoint &endpoint, const Address &directory, const Block &block, const uint256_t &storage, const uint256_t &primary, const Code_ &code) {
     if (primary == 0)
         co_return true;
     const auto base(Hash(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
@@ -166,11 +168,37 @@ task<bool> Stakes(Endpoint &endpoint, const Address &directory, const Block &blo
 }
 
 template <typename Code_>
-task<bool> Stakes(Endpoint &endpoint, const Address &directory, const Code_ &code) {
+task<bool> Stakes(const Endpoint &endpoint, const Address &directory, const Code_ &code) {
     const auto number(co_await endpoint.Latest());
     const auto block(co_await endpoint.Header(number));
     const auto [account, root] = co_await endpoint.Get(block, directory, nullptr, 0x3U);
     co_return co_await Stakes(endpoint, directory, block, account.storage_, root, code);
+}
+
+task<Float> Rate(const Endpoint &endpoint, const Block &block, const Address &pair) {
+    namespace mp = boost::multiprecision;
+    typedef mp::number<mp::cpp_int_backend<256, 256, mp::unsigned_magnitude, mp::unchecked, void>> uint112_t;
+    static const Selector<std::tuple<uint112_t, uint112_t, uint32_t>> getReserves_("getReserves");
+    const auto [reserve0after, reserve1after, after] = co_await getReserves_.Call(endpoint, block.number_, pair, 90000);
+#if 0
+    const auto [reserve0before, reserve1before, before] = co_await getReserves_.Call(endpoint, block.number_ - 100, pair, 90000);
+    static const Selector<uint256_t> price0CumulativeLast_("price0CumulativeLast");
+    static const Selector<uint256_t> price1CumulativeLast_("price1CumulativeLast");
+    const auto [price0before, price1before, price0after, price1after] = *co_await Parallel(
+        price0CumulativeLast_.Call(endpoint, block.number_ - 100, pair, 90000),
+        price1CumulativeLast_.Call(endpoint, block.number_ - 100, pair, 90000),
+        price0CumulativeLast_.Call(endpoint, block.number_, pair, 90000),
+        price1CumulativeLast_.Call(endpoint, block.number_, pair, 90000));
+    std::cout << price0before << " " << reserve0before << " | " << price1before << " " << reserve1before << " | " << before << std::endl;
+    std::cout << price0after << " " << reserve0after << " | " << price1after << " " << reserve1after << " | " << after << std::endl;
+    std::cout << block.timestamp_ << std::endl;
+#endif
+    co_return Float(reserve0after) / Float(reserve1after);
+}
+
+task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation) {
+    static const Selector<uint256_t> latestAnswer_("latestAnswer");
+    co_return Float(co_await latestAnswer_.Call(endpoint, "latest", aggregation, 90000)) / Ten8;
 }
 
 int Main(int argc, const char *const argv[]) {
@@ -221,12 +249,29 @@ int Main(int argc, const char *const argv[]) {
     std::string mullvad;
     boost::filesystem::load_string_file("Mullvad.conf", mullvad);
 
-    const auto fiat(Update(5*60*1000, [origin]() -> task<Fiat> {
+    const auto coinbase(Update(60*1000, [origin]() -> task<Fiat> {
         co_return co_await Coinbase(*origin, "USD");
     }));
-    Wait(fiat->Open());
+    Wait(coinbase->Open());
 
-    const auto gauge(Make<Gauge>(5*60*1000, origin));
+    const auto uniswap(Update(60*1000, [endpoint]() -> task<Fiat> {
+        const auto block(co_await endpoint.Header("latest"));
+        const auto [usdc_weth, oxt_weth] = *co_await Parallel(
+            Rate(endpoint, block, "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc"),
+            Rate(endpoint, block, "0x9b533f1ceaa5ceb7e5b8994ef16499e47a66312d"));
+        co_return Fiat{Ten12 * usdc_weth / Ten18, Ten12 * usdc_weth / oxt_weth / Ten18};
+    }));
+    Wait(uniswap->Open());
+
+    const auto chainlink(Update(60*1000, [endpoint]() -> task<Fiat> {
+        const auto [eth_usd, oxt_usd] = *co_await Parallel(
+            Chainlink(endpoint, "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F"),
+            Chainlink(endpoint, "0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA"));
+        co_return Fiat{eth_usd / Ten18, oxt_usd / Ten18};
+    }));
+    Wait(chainlink->Open());
+
+    const auto gauge(Make<Gauge>(60*1000, origin));
     Wait(gauge->Open());
 
     Spawn([&]() noexcept -> task<void> { for (;;) {
@@ -274,7 +319,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(TestOrchid(origin, name, (*fiat)(), gauge, network, provider, secret, funder, seller));
+                tests.emplace_back(TestOrchid(origin, name, (*coinbase)(), gauge, network, provider, secret, funder, seller));
             }
 
             auto reports(co_await Parallel(std::move(tests)));
@@ -302,6 +347,11 @@ int Main(int argc, const char *const argv[]) {
         std::ostringstream body;
 
         body << "T+" << std::dec << (Timestamp() - state->timestamp_) << "s " << std::fixed << std::setprecision(4) << state->speed_ << "Mbps\n";
+        body << "\n";
+
+        { const auto fiat((*coinbase)()); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
+        { const auto fiat((*uniswap)()); body << "Uniswap:   $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
+        { const auto fiat((*chainlink)()); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
         body << "\n";
 
         body << " PureVPN:     ";
@@ -357,7 +407,7 @@ int Main(int argc, const char *const argv[]) {
 
         Chart(body, 49, 21, [&](float x) -> float {
             return x * 30;
-        }, [fiat = (*fiat)(), price = gauge->Price()](float escrow) -> float {
+        }, [fiat = (*coinbase)(), price = gauge->Price()](float escrow) -> float {
             const uint256_t gas(100000);
             return (1 - Float(gas * price) / Ten18 * (fiat.eth_ / fiat.oxt_) / (escrow / 2)).convert_to<float>();
         }, [&](std::ostream &out, float x) {
