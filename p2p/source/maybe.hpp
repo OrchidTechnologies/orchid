@@ -41,15 +41,16 @@ class Maybe :
         new (this) Maybe(std::in_place_index_t<0>(), error);
     }
 
-    void operator =(Type_ &&value) noexcept {
+    Maybe &operator =(Type_ &&value) noexcept {
         this->~Maybe();
         new (this) Maybe(std::in_place_index_t<1>(), std::move(value));
+        return *this;
     }
 
     template <typename Code_, typename std::enable_if_t<std::is_invocable_v<Code_ &&>>>
     void operator()(Code_ &&code) noexcept {
         try {
-            operator =(std::move(code)());
+            operator =(std::forward<Code_>(code)());
         } catch (...) {
             operator ()(std::current_exception());
         }
@@ -88,7 +89,7 @@ class Maybe<void> {
     template <typename Code_, typename std::enable_if_t<std::is_invocable_v<Code_ &&>>>
     void operator()(Code_ &&code) noexcept {
         try {
-            std::move(code)();
+            std::forward<Code_>(code)();
             operator ()();
         } catch (...) {
             operator ()(std::current_exception());

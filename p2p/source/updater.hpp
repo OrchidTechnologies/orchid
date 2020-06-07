@@ -68,14 +68,14 @@ class Updater :
         co_await *ready_;
     }
 
-    Task<void> Shut() noexcept {
+    Task<void> Shut() noexcept override {
         co_await Valve::Shut();
     }
 };
 
 template <typename Code_>
 S<Updater<Code_>> Update(unsigned milliseconds, Code_ &&code) {
-    return Break<Updater<Code_>>(milliseconds, std::move(code));
+    return Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code));
 }
 
 }

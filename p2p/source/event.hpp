@@ -52,9 +52,10 @@ class Transfer :
     public Transfer_<Type_>
 {
   public:
-    void operator =(Type_ &&value) noexcept {
+    Transfer &operator =(Type_ &&value) noexcept {
         this->maybe_ = std::move(value);
         this->ready_.set();
+        return *this;
     }
 
     task<void> operator ()(Task<Type_> &&code) noexcept { try {
