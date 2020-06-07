@@ -83,7 +83,7 @@ task<Host> Find(Origin &origin) {
     co_return Parse((co_await origin.Fetch("GET", {"https", "cydia.saurik.com", "443", "/debug.json"}, {}, {})).ok())["host"].asString();
 }
 
-task<Report> Test(const S<Origin> &origin, std::string ovpn) {
+task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         co_await Connect(remote, origin, remote.Host(), std::move(ovpn), "", "");
         remote.Open();
@@ -93,11 +93,9 @@ task<Report> Test(const S<Origin> &origin, std::string ovpn) {
     });
 }
 
-task<Report> Test(const S<Origin> &origin, const Socket &endpoint, const Host &address, const char *secret, const char *common) {
+task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        auto &boring(remote.Wire<BufferSink<Boring>>(remote.Host(), address, secret, common));
-        co_await origin->Associate(boring, endpoint);
-        boring.Open();
+        co_await Guard(remote, origin, remote.Host(), std::move(config));
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
@@ -105,7 +103,7 @@ task<Report> Test(const S<Origin> &origin, const Socket &endpoint, const Host &a
     });
 }
 
-task<Report> Test(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
+task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
     std::cout << provider << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
@@ -139,6 +137,7 @@ struct State {
     uint256_t timestamp_;
     Float speed_;
     std::variant<std::exception_ptr, Report> purevpn_;
+    std::variant<std::exception_ptr, Report> mullvad_;
     std::map<std::string, Maybe<Report>> providers_;
     std::map<Address, Stake> stakes_;
 
@@ -216,8 +215,11 @@ int Main(int argc, const char *const argv[]) {
     const Secret secret(Bless(args["secret"].as<std::string>()));
     const Address seller(args["seller"].as<std::string>());
 
-    std::string ovpn;
-    boost::filesystem::load_string_file("PureVPN.ovpn", ovpn);
+    std::string purevpn;
+    boost::filesystem::load_string_file("PureVPN.ovpn", purevpn);
+
+    std::string mullvad;
+    boost::filesystem::load_string_file("Mullvad.conf", mullvad);
 
     const auto fiat(Update(5*60*1000, [origin]() -> task<Fiat> {
         co_return co_await Coinbase(*origin, "USD");
@@ -256,7 +258,9 @@ int Main(int argc, const char *const argv[]) {
             state->stakes_ = std::move(stakes);
         } catch (...) {
         } }(), [&]() -> task<void> {
-            state->purevpn_ = co_await Try(Test(origin, ovpn));
+            state->purevpn_ = co_await Try(TestOpenVPN(origin, purevpn));
+        }(), [&]() -> task<void> {
+            state->mullvad_ = co_await Try(TestWireGuard(origin, mullvad));
         }(), [&]() -> task<void> {
             std::vector<std::string> names;
             std::vector<task<Report>> tests;
@@ -270,7 +274,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(Test(origin, name, (*fiat)(), gauge, network, provider, secret, funder, seller));
+                tests.emplace_back(TestOrchid(origin, name, (*fiat)(), gauge, network, provider, secret, funder, seller));
             }
 
             auto reports(co_await Parallel(std::move(tests)));
@@ -315,6 +319,21 @@ int Main(int argc, const char *const argv[]) {
         } else orc_insist(false);
         body << "\n";
 
+        body << "------------+---------+------------+-----------------\n";
+
+        body << " Mullvad:     ";
+        if (const auto error = std::get_if<0>(&state->mullvad_)) try {
+            if (*error != nullptr)
+                std::rethrow_exception(*error);
+        } catch (const std::exception &error) {
+            std::string what(error.what());
+            boost::replace_all(what, "\r", "");
+            boost::replace_all(what, "\n", " || ");
+            body << what;
+        } else if (const auto report = std::get_if<1>(&state->mullvad_)) {
+            body << std::fixed << std::setprecision(4);
+            body << "$-.----   " << report->speed_ << "Mbps   " << report->host_.String();
+        } else orc_insist(false);
         body << "\n";
 
         for (const auto &[name, provider] : state->providers_) {
