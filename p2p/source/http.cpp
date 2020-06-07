@@ -20,30 +20,19 @@
 /* }}} */
 
 
-#include <cppcoro/sync_wait.hpp>
-
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/beast/version.hpp>
 
-#include <boost/asio/connect.hpp>
-#include <boost/asio/ip/tcp.hpp>
-
-#include <boost/asio/ssl/context.hpp>
-#include <boost/asio/ssl/error.hpp>
 #include <boost/asio/ssl/rfc2818_verification.hpp>
-#include <boost/asio/ssl/stream.hpp>
-
-#include <asio/co_spawn.hpp>
-#include <asio/detached.hpp>
 
 #include "adapter.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
-#include "error.hpp"
 #include "http.hpp"
-#include "local.hpp"
 #include "locator.hpp"
+#include "origin.hpp"
 
 namespace orc {
 
@@ -98,7 +87,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
             });
         }
 
-        asio::ssl::stream<Socket_ &> stream{socket, context};
+        boost::beast::ssl_stream<Socket_ &> stream{socket, context};
         orc_assert(SSL_set_tlsext_host_name(stream.native_handle(), locator.host_.c_str()));
         // XXX: beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
 
