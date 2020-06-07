@@ -204,7 +204,7 @@ $(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$
 	cd $(folder) && RUST_BACKTRACE=1 RUSTC_WRAPPER=$(CURDIR)/env/rustc-wrapper PATH=$${PATH}:$(dir $(word 1,$(cc))) \
 	    $(if $(ccrs/$(arch)),$(ccrs/$(arch)),TARGET)_CC='$(cc) $(more/$(arch)) $(qflags)' AR='$(ar/$(arch))' \
 	    PKG_CONFIG_ALLOW_CROSS=1 PKG_CONFIG="$(CURDIR)/env/pkg-config" ENV_ARCH="$(arch)" \
-	    CARGO_HOME='$(CURDIR)/$(output)/cargo' cargo build --verbose --lib --release \
+	    CARGO_HOME='$(CURDIR)/$(output)/cargo' CARGO_INCREMENTAL=0 cargo build --verbose --lib --release \
 	    --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
 	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/lib$(subst -,_,$(notdir $(folder))).a $@
 
