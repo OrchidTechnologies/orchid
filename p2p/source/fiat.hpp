@@ -20,50 +20,18 @@
 /* }}} */
 
 
-#ifndef ORCHID_ORACLE_HPP
-#define ORCHID_ORACLE_HPP
-
-#include <string>
+#ifndef ORCHID_FIAT_HPP
+#define ORCHID_FIAT_HPP
 
 #include "float.hpp"
-#include "locked.hpp"
-#include "task.hpp"
-#include "valve.hpp"
 
 namespace orc {
 
-static const uint256_t Gwei(1000000000);
-
-class Oracle :
-    public Valve,
-    public std::enable_shared_from_this<Oracle>
-{
-  private:
-    const std::string currency_;
-
-    struct Fiat_ {
-        Float eth_ = 0;
-        Float oxt_ = 0;
-    }; Locked<Fiat_> fiat_;
-
-    typedef std::map<unsigned long, double> Prices_;
-    Locked<S<const Prices_>> prices_;
-
-    task<void> UpdateCoin(Origin &origin);
-    task<void> UpdateGas(Origin &origin);
-
-  public:
-    Oracle(std::string currency);
-
-    void Open(S<Origin> origin, S<Oracle> self);
-    task<void> Shut() noexcept override;
-
-    Fiat_ Fiat() const;
-    uint256_t Price() const;
-
-    S<const Prices_> Prices() const;
+struct Fiat {
+    Float eth_ = 0;
+    Float oxt_ = 0;
 };
 
 }
 
-#endif//ORCHID_ORACLE_HPP
+#endif//ORCHID_FIAT_HPP

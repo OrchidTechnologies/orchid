@@ -85,7 +85,7 @@ class Nest :
     task<void> Shut() noexcept override {
         limit_ = 0;
         while (count_ != 0)
-            co_await event_.Wait();
+            co_await *event_;
         Valve::Stop();
         co_await Valve::Shut();
     }

@@ -20,41 +20,34 @@
 /* }}} */
 
 
-#ifndef ORCHID_SHARED_HPP
-#define ORCHID_SHARED_HPP
+#ifndef ORCHID_UPDATED_HPP
+#define ORCHID_UPDATED_HPP
 
-#include <memory>
-#include <utility>
+#include "locked.hpp"
+#include "task.hpp"
 
 namespace orc {
 
 template <typename Type_>
-using U = std::unique_ptr<Type_>;
+class Updated {
+  protected:
+    Locked<Type_> value_;
 
-template <typename Type_>
-using W = std::weak_ptr<Type_>;
-
-#if 0
-template <typename Type_>
-class Shared :
-    public std::shared_ptr<Type_>
-{
   public:
-    using std::shared_ptr<Type_>::shared_ptr;
+    Updated() = default;
+
+    Updated(Type_ &&value) :
+        value_(std::move(value))
+    {
+    }
+
+    Type_ operator()() const {
+        return *value_();
+    }
+
+    virtual Task<void> Open() = 0;
 };
 
-template <typename Type_>
-using S = Shared<Type_>;
-#else
-template <typename Type_>
-using S = std::shared_ptr<Type_>;
-#endif
-
-template <typename Type_, typename... Args_>
-inline S<Type_> Make(Args_ &&...args) {
-    return std::move(std::make_shared<Type_>(std::forward<Args_>(args)...));
 }
 
-}
-
-#endif//ORCHID_SHARED_HPP
+#endif//ORCHID_UPDATED_HPP

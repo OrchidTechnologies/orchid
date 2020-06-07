@@ -376,7 +376,7 @@ class RemoteConnection final :
                 self->sent_.set();
 
                 if (!self->opened_)
-                    self->opened_(std::move(error));
+                    self->opened_ = std::move(error);
                 else try {
                     orc_lwipcall(, error);
                     orc_insist(false);
@@ -399,12 +399,12 @@ class RemoteConnection final :
                 orc_insist(pcb == self->pcb_);
                 orc_insist(error == ERR_OK);
 
-                self->opened_(std::move(error));
+                self->opened_ = std::move(error);
                 return ERR_OK;
             }));
         }
 
-        orc_lwipcall(co_await, opened_.Wait());
+        orc_lwipcall(co_await, *opened_);
     }, "connecting to " << Host(host) << ":" << port); }
 
     // XXX: provide support for tcp_close and unify with Connection's semantics in Stream via Adapter

@@ -33,6 +33,7 @@ namespace orc {
 struct Block {
     const uint256_t number_;
     const uint256_t state_;
+    const uint256_t timestamp_;
 
     Block(Json::Value &&value);
 };
@@ -78,7 +79,7 @@ class Endpoint final {
     task<Json::Value> operator ()(const std::string &method, Argument args) const;
 
     task<uint256_t> Latest() const;
-    task<Block> Header(uint256_t number) const;
+    task<Block> Header(const Argument &number) const;
 
     task<Brick<65>> Sign(const Address &signer, const Buffer &data) const;
     task<Brick<65>> Sign(const Address &signer, const std::string &password, const Buffer &data) const;

@@ -27,14 +27,17 @@
 #include "boring.hpp"
 #include "chart.hpp"
 #include "client.hpp"
+#include "coinbase.hpp"
 #include "crypto.hpp"
 #include "dns.hpp"
+#include "float.hpp"
+#include "fiat.hpp"
+#include "gauge.hpp"
 #include "json.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
 #include "markup.hpp"
 #include "network.hpp"
-#include "oracle.hpp"
 #include "remote.hpp"
 #include "router.hpp"
 #include "sleep.hpp"
@@ -102,7 +105,7 @@ task<Report> Test(const S<Origin> &origin, const Socket &endpoint, const Host &a
     });
 }
 
-task<Report> Test(const S<Origin> &origin, std::string name, const Oracle &oracle, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
+task<Report> Test(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
     std::cout << provider << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
@@ -116,8 +119,7 @@ task<Report> Test(const S<Origin> &origin, std::string name, const Oracle &oracl
         const auto balance(client.Balance());
         const auto spent(client.Spent());
 
-        const auto fiat(oracle.Fiat());
-        const auto price(oracle.Price());
+        const auto price(gauge->Price());
         const uint256_t gas(100000);
 
         const auto face(Float(client.Face()) * fiat.oxt_);
@@ -217,12 +219,22 @@ int Main(int argc, const char *const argv[]) {
     std::string ovpn;
     boost::filesystem::load_string_file("PureVPN.ovpn", ovpn);
 
-    const auto oracle(Break<Oracle>("USD"));
-    oracle->Open(origin, oracle);
+    const auto fiat(Update(5*60*1000, [origin]() -> task<Fiat> {
+        co_return co_await Coinbase(*origin, "USD");
+    }));
+    Wait(fiat->Open());
+
+    const auto gauge(Make<Gauge>(5*60*1000, origin));
+    Wait(gauge->Open());
+
+    Spawn([&]() noexcept -> task<void> { for (;;) {
+        Fiber::Report();
+        co_await Sleep(120000);
+    } });
 
     Spawn([&]() noexcept -> task<void> { for (;;) try {
         const auto now(Timestamp());
-        auto state(std::make_shared<State>(now));
+        auto state(Make<State>(now));
 
         try {
             state->speed_ = std::get<0>(co_await Measure(*origin));
@@ -258,7 +270,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(Test(origin, name, *oracle, network, provider, secret, funder, seller));
+                tests.emplace_back(Test(origin, name, (*fiat)(), gauge, network, provider, secret, funder, seller));
             }
 
             auto reports(co_await Parallel(std::move(tests)));
@@ -324,13 +336,10 @@ int Main(int argc, const char *const argv[]) {
 
         body << "\n";
 
-        const auto fiat(oracle->Fiat());
-        const auto price(oracle->Price());
-        const uint256_t gas(100000);
-
         Chart(body, 49, 21, [&](float x) -> float {
             return x * 30;
-        }, [&](float escrow) -> float{
+        }, [fiat = (*fiat)(), price = gauge->Price()](float escrow) -> float {
+            const uint256_t gas(100000);
             return (1 - Float(gas * price) / Ten18 * (fiat.eth_ / fiat.oxt_) / (escrow / 2)).convert_to<float>();
         }, [&](std::ostream &out, float x) {
             out << std::fixed << std::setprecision(0) << std::setw(3) << x * 100 << '%';

@@ -25,9 +25,9 @@
 
 #include <variant>
 
-#include "task.hpp"
-
 namespace orc {
+
+// XXX: this should not require the variant tag
 
 template <typename Type_>
 class Maybe :
@@ -36,7 +36,26 @@ class Maybe :
   public:
     using std::variant<std::exception_ptr, Type_>::variant;
 
-    Type_ result() && {
+    void operator()(const std::exception_ptr &error) noexcept {
+        this->~Maybe();
+        new (this) Maybe(std::in_place_index_t<0>(), error);
+    }
+
+    void operator =(Type_ &&value) noexcept {
+        this->~Maybe();
+        new (this) Maybe(std::in_place_index_t<1>(), std::move(value));
+    }
+
+    template <typename Code_, typename std::enable_if_t<std::is_invocable_v<Code_ &&>>>
+    void operator()(Code_ &&code) noexcept {
+        try {
+            operator =(std::move(code)());
+        } catch (...) {
+            operator ()(std::current_exception());
+        }
+    }
+
+    Type_ operator *() && {
         if (const auto error = std::get_if<0>(this))
             std::rethrow_exception(*error);
         else if (auto value = std::get_if<1>(this))
@@ -51,30 +70,36 @@ class Maybe<void> {
     std::exception_ptr error_;
 
   public:
-    Maybe(const std::exception_ptr &error) :
+    Maybe() = default;
+
+    Maybe(const std::exception_ptr &error) noexcept :
         error_(error)
     {
     }
 
-    void result() && {
+    void operator()(const std::exception_ptr &error) noexcept {
+        error_ = error;
+    }
+
+    void operator()() noexcept {
+        error_ = nullptr;
+    }
+
+    template <typename Code_, typename std::enable_if_t<std::is_invocable_v<Code_ &&>>>
+    void operator()(Code_ &&code) noexcept {
+        try {
+            std::move(code)();
+            operator ()();
+        } catch (...) {
+            operator ()(std::current_exception());
+        }
+    }
+
+    void operator *() && {
         if (error_ != nullptr)
             std::rethrow_exception(error_);
     }
 };
-
-template <typename Type_, typename = std::enable_if_t<!std::is_void_v<Type_>>>
-Task<Maybe<Type_>> Try(Task<Type_> &&task) noexcept { try {
-    co_return Maybe<Type_>(std::in_place_index_t<1>(), co_await std::move(task));
-} catch (...) {
-    co_return Maybe<Type_>(std::in_place_index_t<0>(), std::current_exception());
-} }
-
-inline Task<Maybe<void>> Try(Task<void> &&task) noexcept { try {
-    co_await std::move(task);
-    co_return Maybe<void>(nullptr);
-} catch (...) {
-    co_return Maybe<void>(std::current_exception());
-} }
 
 }
 

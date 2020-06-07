@@ -30,53 +30,69 @@
 
 namespace orc {
 
-// XXX: replace Wait() with operator co_await
-
 template <typename Type_>
-class Transfer {
-  private:
+class Transfer_ {
+  protected:
     cppcoro::async_manual_reset_event ready_;
-    Type_ value_;
+    Maybe<Type_> maybe_;
 
   public:
-    operator bool() {
+    operator bool() noexcept {
         return ready_.is_set();
     }
 
-    void operator ()(Type_ &&value) noexcept {
-        std::swap(value_, value);
+    void operator ()(const std::exception_ptr &error) noexcept {
+        maybe_(error);
         ready_.set();
     }
+};
 
-    task<Type_> Wait() {
-        co_await ready_;
+template <typename Type_>
+class Transfer :
+    public Transfer_<Type_>
+{
+  public:
+    void operator =(Type_ &&value) noexcept {
+        this->maybe_ = std::move(value);
+        this->ready_.set();
+    }
+
+    task<void> operator ()(Task<Type_> &&code) noexcept { try {
+        operator =(co_await std::move(code));
+    } catch (...) {
+        operator ()(std::current_exception());
+    } }
+
+    task<Type_> operator *() {
+        co_await this->ready_;
         co_await Schedule();
-        co_return std::move(value_);
+        co_return *std::move(this->maybe_);
     }
 };
 
 template <>
-class Transfer<void> {
-  private:
-    cppcoro::async_manual_reset_event ready_;
-
+class Transfer<void> :
+    public Transfer_<void>
+{
   public:
-    explicit Transfer(bool set = false) :
-        ready_(set)
-    {
-    }
-
-    operator bool() {
-        return ready_.is_set();
-    }
+    using Transfer_<void>::operator ();
 
     void operator ()() noexcept {
-        ready_.set();
+        this->maybe_();
+        this->ready_.set();
     }
 
-    task<void> Wait() {
-        co_await ready_;
+    task<void> operator ()(Task<void> &&code) noexcept { try {
+        co_await std::move(code);
+        operator ()();
+    } catch (...) {
+        operator ()(std::current_exception());
+    } }
+
+    task<void> operator *() {
+        co_await this->ready_;
         co_await Schedule();
+        co_return *std::move(this->maybe_);
     }
 };
 

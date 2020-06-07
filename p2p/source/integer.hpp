@@ -20,41 +20,27 @@
 /* }}} */
 
 
-#ifndef ORCHID_SHARED_HPP
-#define ORCHID_SHARED_HPP
+#ifndef ORCHID_INTEGER_HPP
+#define ORCHID_INTEGER_HPP
 
-#include <memory>
-#include <utility>
+#include <string>
+
+#include <boost/multiprecision/cpp_int.hpp>
+
+#include "error.hpp"
 
 namespace orc {
 
-template <typename Type_>
-using U = std::unique_ptr<Type_>;
+using boost::multiprecision::uint128_t;
+using boost::multiprecision::uint256_t;
 
-template <typename Type_>
-using W = std::weak_ptr<Type_>;
-
-#if 0
-template <typename Type_>
-class Shared :
-    public std::shared_ptr<Type_>
-{
-  public:
-    using std::shared_ptr<Type_>::shared_ptr;
-};
-
-template <typename Type_>
-using S = Shared<Type_>;
-#else
-template <typename Type_>
-using S = std::shared_ptr<Type_>;
-#endif
-
-template <typename Type_, typename... Args_>
-inline S<Type_> Make(Args_ &&...args) {
-    return std::move(std::make_shared<Type_>(std::forward<Args_>(args)...));
+inline unsigned long To(const std::string &value) {
+    size_t end;
+    const auto number(stoul(value, &end));
+    orc_assert(end == value.size());
+    return number;
 }
 
 }
 
-#endif//ORCHID_SHARED_HPP
+#endif//ORCHID_INTEGER_HPP

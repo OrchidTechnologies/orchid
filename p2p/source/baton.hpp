@@ -60,7 +60,7 @@ class Baton<void> {
     }
 
     task<void> get() {
-        co_await ready_.Wait();
+        co_await *ready_;
     }
 };
 

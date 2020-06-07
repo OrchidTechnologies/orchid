@@ -46,6 +46,7 @@
 #include "boring.hpp"
 #include "cashier.hpp"
 #include "channel.hpp"
+#include "coinbase.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
@@ -262,12 +263,6 @@ int Main(int argc, const char *const argv[]) {
         }());
     }
 
-    auto oracle([&]() -> S<Oracle> {
-        auto oracle(Break<Oracle>(args["currency"].as<std::string>()));
-        oracle->Open(origin, oracle);
-        return oracle;
-    }());
-
     auto cashier([&]() -> S<Cashier> {
         const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
         if (price == 0)
@@ -279,7 +274,15 @@ int Main(int argc, const char *const argv[]) {
         // XXX: this should switch to a different mechanism (using eth_sendTransaction)
         const Address personal(args.count("personal") == 0 ? "0x0000000000000000000000000000000000000000" : args["personal"].as<std::string>());
 
-        auto cashier(Break<Cashier>(std::move(endpoint), std::move(oracle),
+        auto fiat(Update(5*60*1000, [origin, currency = args["currency"].as<std::string>()]() -> task<Fiat> {
+            co_return co_await Coinbase(*origin, currency);
+        }));
+        Wait(fiat->Open());
+
+        auto gauge(Make<Gauge>(5*60*1000, origin));
+        Wait(gauge->Open());
+
+        auto cashier(Break<Cashier>(std::move(endpoint), std::move(fiat), std::move(gauge),
             price, personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
         ));

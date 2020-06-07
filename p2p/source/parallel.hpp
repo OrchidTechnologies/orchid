@@ -25,7 +25,7 @@
 
 #include <cppcoro/when_all.hpp>
 
-#include "maybe.hpp"
+#include "try.hpp"
 
 namespace orc {
 
@@ -60,36 +60,36 @@ template <typename Type_>
     co_return co_await cppcoro::when_all(std::move(maybes));
 }
 
-template <typename Type_, typename Enable_ = std::enable_if_t<!std::is_void_v<decltype(std::declval<Type_>().result())>>>
-auto operator *(std::vector<Type_> &&readys) noexcept(noexcept(std::declval<Type_>().result())) {
+template <typename Type_, typename Enable_ = std::enable_if_t<!std::is_void_v<decltype(*std::declval<Type_>())>>>
+auto operator *(std::vector<Type_> &&readys) noexcept(noexcept(*std::declval<Type_>())) {
     std::vector<std::decay_t<decltype(*std::declval<Type_>())>> values;
     for (auto &ready : readys)
-        values.emplace_back(std::move(ready).result());
+        values.emplace_back(*std::move(ready));
     return values;
 }
 
-template <typename Type_, typename Enable_ = std::enable_if_t<std::is_void_v<decltype(std::declval<Type_>().result())>>>
-void operator *(std::vector<Type_> &&readys) noexcept(noexcept(std::declval<Type_>().result())) {
+template <typename Type_, typename Enable_ = std::enable_if_t<std::is_void_v<decltype(*std::declval<Type_>())>>>
+void operator *(std::vector<Type_> &&readys) noexcept(noexcept(*std::declval<Type_>())) {
     for (auto &ready : readys)
-        std::move(ready).result();
+        *std::move(ready);
 }
 
 template <typename ...Args_>
 constexpr bool Voided() {
-    return (std::is_void_v<decltype(std::declval<Args_>().result())> && ...);
+    return (std::is_void_v<decltype(*std::declval<Args_>())> && ...);
 }
 
 template <typename ...Args_, typename Enable_ = std::enable_if_t<!Voided<Args_...>()>>
 auto operator *(std::tuple<Args_...> &&readys) {
     return std::apply([](auto && ...ready) {
-        return std::make_tuple(std::move(ready).result()...);
+        return std::make_tuple(*std::move(ready)...);
     }, std::forward<std::tuple<Args_...>>(readys));
 }
 
 template <typename ...Args_, typename Enable_ = std::enable_if_t<Voided<Args_...>()>>
 void operator *(std::tuple<Args_...> &&readys) {
     std::apply([](auto && ...ready) {
-        (std::move(ready).result(), ...);
+        (*std::move(ready), ...);
     }, std::forward<std::tuple<Args_...>>(readys));
 }
 

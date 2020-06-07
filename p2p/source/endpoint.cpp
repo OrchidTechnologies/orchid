@@ -68,7 +68,8 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
 
 Block::Block(Json::Value &&value) :
     number_(value["number"].asString()),
-    state_(value["stateRoot"].asString())
+    state_(value["stateRoot"].asString()),
+    timestamp_(value["timestamp"].asString())
 {
 }
 
@@ -144,7 +145,7 @@ task<uint256_t> Endpoint::Latest() const {
     co_return number;
 }
 
-task<Block> Endpoint::Header(uint256_t number) const {
+task<Block> Endpoint::Header(const Argument &number) const {
     co_return co_await operator ()("eth_getBlockByNumber", {number, false});
 }
 

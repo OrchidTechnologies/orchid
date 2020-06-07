@@ -127,7 +127,7 @@ task<void> Boring::Shut() noexcept {
     stop_ = true;
     co_await nest_.Shut();
     co_await Sunken::Shut();
-    co_await done_.Wait();
+    co_await *done_;
     co_await Link::Shut();
 }
 

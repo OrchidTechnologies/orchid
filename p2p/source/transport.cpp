@@ -136,7 +136,7 @@ class Transport :
 
     task<void> Shut() noexcept override {
         co_await nest_.Shut();
-        co_await ready_.Wait();
+        co_await *ready_;
         co_await Sunken::Shut();
         co_await Valve::Shut();
     }
@@ -256,7 +256,7 @@ class Middle :
                 done();
             });
 
-            co_await done.Wait();
+            co_await *done;
         }
 
 
@@ -460,7 +460,7 @@ class Middle :
             co_return Stop(error.what());
         }
 
-        co_await ready_.Wait();
+        co_await *ready_;
     }
 
     task<void> Shut() noexcept override {

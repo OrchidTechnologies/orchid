@@ -20,41 +20,47 @@
 /* }}} */
 
 
-#ifndef ORCHID_SHARED_HPP
-#define ORCHID_SHARED_HPP
+#ifndef ORCHID_GAUGE_HPP
+#define ORCHID_GAUGE_HPP
 
-#include <memory>
-#include <utility>
+#include <map>
+
+#include "integer.hpp"
+#include "shared.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
-template <typename Type_>
-using U = std::unique_ptr<Type_>;
+class Origin;
 
-template <typename Type_>
-using W = std::weak_ptr<Type_>;
+static const uint256_t Gwei(1000000000);
 
-#if 0
-template <typename Type_>
-class Shared :
-    public std::shared_ptr<Type_>
-{
+class Gauge {
+  private:
+    typedef std::map<unsigned, double> Prices_;
+
+    static task<S<Prices_>> Update_(Origin &origin);
+    S<Updated<S<Prices_>>> prices_;
+
   public:
-    using std::shared_ptr<Type_>::shared_ptr;
+    Gauge(unsigned milliseconds, const S<Origin> &origin) :
+        prices_(Update(milliseconds, [origin]() -> task<S<Prices_>> {
+            co_return co_await Update_(*origin);
+        }))
+    {
+    }
+
+    task<void> Open() {
+        co_return co_await prices_->Open();
+    }
+
+    S<Prices_> Prices() const {
+        return (*prices_)();
+    }
+
+    uint256_t Price() const;
 };
 
-template <typename Type_>
-using S = Shared<Type_>;
-#else
-template <typename Type_>
-using S = std::shared_ptr<Type_>;
-#endif
-
-template <typename Type_, typename... Args_>
-inline S<Type_> Make(Args_ &&...args) {
-    return std::move(std::make_shared<Type_>(std::forward<Args_>(args)...));
 }
 
-}
-
-#endif//ORCHID_SHARED_HPP
+#endif//ORCHID_GAUGE_HPP
