@@ -41,14 +41,14 @@ class Fiber {
     std::string name_;
 
   public:
-    Fiber(Fiber *parent = nullptr) :
-        parent_(parent)
-    {
-    }
+    Fiber(Fiber *parent = nullptr);
+    ~Fiber();
 
     Fiber *Parent() {
         return parent_;
     }
+
+    static void Report();
 };
 
 template <typename Type_>

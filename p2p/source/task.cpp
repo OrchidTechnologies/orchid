@@ -20,8 +20,37 @@
 /* }}} */
 
 
+#include <set>
+
+#include "locked.hpp"
 #include "task.hpp"
 
 namespace orc {
+
+Locked<std::set<Fiber *>> fibers_;
+
+Fiber::Fiber(Fiber *parent) :
+    parent_(parent)
+{
+    fibers_()->emplace(this);
+}
+
+Fiber::~Fiber() {
+    fibers_()->erase(this);
+}
+
+void Fiber::Report() {
+    const auto &fibers(*fibers_());
+    std::cerr << std::endl;
+    std::cerr << "^^^^^^^^^^" << std::endl;
+    for (const auto fiber : fibers) {
+        std::cerr << fiber;
+        if (!fiber->name_.empty())
+            std::cerr << ": " << fiber->name_;
+        std::cerr << std::endl;
+    }
+    std::cerr << "vvvvvvvvvv" << std::endl;
+    std::cerr << std::endl;
+}
 
 }
