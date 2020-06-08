@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -150,7 +151,7 @@ class CircuitPageState extends State<CircuitPage>
 
       // Set the correct animation states for the connection status
       // Note: We cannot properly do this until we know if we have hops!
-      print("init state, setting initial connection state");
+      log("init state, setting initial connection state");
       _connectionStateChanged(OrchidAPI().connectionStatus.value,
           animated: false);
     }
@@ -809,7 +810,7 @@ class CircuitPageState extends State<CircuitPage>
       } else {
         bool ok = await OrchidAPI().requestVPNPermission();
         if (ok) {
-          debugPrint("vpn: user chose to install");
+          log("vpn: user chose to install");
           // Note: It appears that trying to enable the connection too quickly
           // Note: after installing the vpn permission / config fails.
           // Note: Introducing a short artificial delay.

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_pac_server.dart';
 import 'orchid_purchase.dart';
@@ -26,13 +27,13 @@ class IOSOrchidPurchaseAPI
 
   @override
   void initStoreListener() async {
-    print("iap: init store listener");
+    log("iap: init store listener");
     SKPaymentQueueWrapper().setTransactionObserver(this);
 
     // Log all PAC Tx activity for now
     await PacTransaction.shared.ensureInitialized();
     PacTransaction.shared.stream().listen((PacTransaction tx) {
-      print("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
+      log("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
     });
 
     // Note: This is an attempt to mitigate an "unable to connect to iTunes Store"
@@ -43,7 +44,7 @@ class IOSOrchidPurchaseAPI
     // Reset any existing tx after an app restart.
     var pacTx = await PacTransaction.shared.get();
     if (pacTx != null) {
-      print("iap: Found PAC tx in progress after app startup.");
+      log("iap: Found PAC tx in progress after app startup.");
       pacTx.state = PacTransactionState.WaitingForUserAction;
       pacTx.save();
     }
@@ -52,7 +53,7 @@ class IOSOrchidPurchaseAPI
   /// Initiate a PAC purchase. The caller should watch PacTransaction.shared
   /// for progress and results.
   Future<void> purchase(PAC pac) async {
-    print("iap: purchase pac");
+    log("iap: purchase pac");
     if (!await OrchidPurchaseAPI.isWithinPurchaseRateLimit(pac)) {
       throw PACPurchaseExceedsRateLimit();
     }
@@ -67,11 +68,11 @@ class IOSOrchidPurchaseAPI
     }
     var payment = SKPaymentWrapper(productIdentifier: pac.productId);
     try {
-      print("iap: add payment to queue");
+      log("iap: add payment to queue");
       await SKPaymentQueueWrapper().addPayment(payment);
       PacTransaction.pending(pac.productId).save();
     } catch (err) {
-      print("Error adding payment to queue: $err");
+      log("Error adding payment to queue: $err");
       // The exception will be handled by the calling UI. No tx started.
       rethrow;
     }
@@ -81,52 +82,52 @@ class IOSOrchidPurchaseAPI
   @override
   void updatedTransactions(
       {List<SKPaymentTransactionWrapper> transactions}) async {
-    print("iap: received (${transactions.length}) updated transactions");
+    log("iap: received (${transactions.length}) updated transactions");
     for (SKPaymentTransactionWrapper tx in transactions) {
       switch (tx.transactionState) {
         case SKPaymentTransactionStateWrapper.purchasing:
-          print("iap: IAP purchasing state");
+          log("iap: IAP purchasing state");
           break;
 
         case SKPaymentTransactionStateWrapper.restored:
           // Are we getting this on a second purchase attempt that we dropped?
           // Attempting to just handle it as a new purchase for now.
-          print("iap: iap purchase restored?");
+          log("iap: iap purchase restored?");
           _completeIAPTransaction(tx);
           break;
 
         case SKPaymentTransactionStateWrapper.purchased:
-          print("iap: IAP purchased state");
+          log("iap: IAP purchased state");
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
           } catch (err) {
-            print("iap: error finishing purchased tx: $err");
+            log("iap: error finishing purchased tx: $err");
           }
           _completeIAPTransaction(tx);
           break;
 
         case SKPaymentTransactionStateWrapper.failed:
-          print("iap: IAP failed state");
+          log("iap: IAP failed state");
 
-          print("iap: finishing failed tx");
+          log("iap: finishing failed tx");
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
           } catch (err) {
-            print("iap: error finishing cancelled tx: $err");
+            log("iap: error finishing cancelled tx: $err");
           }
 
           if (tx.error?.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
-            print("iap: was cancelled");
+            log("iap: was cancelled");
             PacTransaction.shared.clear();
           } else {
-            print(
+            log(
                 "iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
             PacTransaction.shared.set(PacTransaction.error("iap failed"));
           }
           break;
 
         case SKPaymentTransactionStateWrapper.deferred:
-          print("iap: iap deferred");
+          log("iap: iap deferred");
           break;
       }
     }
@@ -139,7 +140,7 @@ class IOSOrchidPurchaseAPI
 
     // Recover from a re-install with a completed iap pending
     if (pacTx == null) {
-      print(
+      log(
           "iap: Found completed iap purchase with no pending PAC tx. Cleaning.");
       // Note: If this happens we have lost the receipt data in the bundle.
       // Note: For now let's assume the user wanted out and finish the tx.
@@ -152,7 +153,7 @@ class IOSOrchidPurchaseAPI
       pacTx.receipt = await SKReceiptManager.retrieveReceiptData();
       pacTx.save();
     } catch (err) {
-      print("iap: error getting receipt data for comleted iap");
+      log("iap: error getting receipt data for comleted iap");
     }
 
     OrchidPACServer().processPendingPACTransaction();
@@ -164,10 +165,10 @@ class IOSOrchidPurchaseAPI
       OrchidPurchaseAPI.pacTier2.productId,
       OrchidPurchaseAPI.pacTier3.productId
     ];
-    print("iap: product ids requested: $productIds");
+    log("iap: product ids requested: $productIds");
     SkProductResponseWrapper productResponse =
         await SKRequestMaker().startProductRequest(productIds);
-    print(
+    log(
         "iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
   }
 
@@ -182,11 +183,11 @@ class IOSOrchidPurchaseAPI
 
   @override
   void removedTransactions({List<SKPaymentTransactionWrapper> transactions}) {
-    print("removed transactions: $transactions");
+    log("removed transactions: $transactions");
   }
 
   @override
   void restoreCompletedTransactionsFailed({SKError error}) {
-    print("restore failed");
+    log("restore failed");
   }
 }

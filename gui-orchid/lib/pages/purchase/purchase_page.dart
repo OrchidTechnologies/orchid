@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
@@ -431,7 +432,7 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Future<void> _purchase({PAC purchase}) async {
-    print("iap: calling purchase: $purchase");
+    log("iap: calling purchase: $purchase");
 
     // Initiate the in-app purchase
     try {
@@ -440,11 +441,11 @@ class _PurchasePageState extends State<PurchasePage> {
       if (err is SKError) {
         var skerror = err;
         if (skerror.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
-          print("iap: user cancelled");
+          log("iap: user cancelled");
           return null;
         }
       }
-      print("iap: Error in purchase call: $err");
+      log("iap: Error in purchase call: $err");
       _purchaseError(rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
       return null;
     }
@@ -482,7 +483,7 @@ class _PurchasePageState extends State<PurchasePage> {
 
   // Collect a completed PAC transaction and apply it to the hop.
   Future<void> _completeTransaction(PacTransaction tx) async {
-    print("iap: complete transaction");
+    log("iap: complete transaction");
 
     var serverResponse = tx.serverResponse;
     if (serverResponse == null) {
@@ -494,11 +495,11 @@ class _PurchasePageState extends State<PurchasePage> {
       var pacResponseJson = json.decode(serverResponse);
       pacAccountString = pacResponseJson['config'];
       if (pacAccountString == null) {
-        print("iap: error no server response");
+        log("iap: error no server response");
         throw Exception("no config in server response");
       }
     } catch (err) {
-      print("iap: error decoding server response json: $err");
+      log("iap: error decoding server response json: $err");
       throw Exception("invalid server response");
     }
 
@@ -511,7 +512,7 @@ class _PurchasePageState extends State<PurchasePage> {
       PAC pac = OrchidPurchaseAPI.pacForProductId(tx.productId);
       OrchidPurchaseAPI.addPurchaseToRateLimit(pac);
     } catch (err) {
-      print("pac: Unable to find pac for product id!");
+      log("pac: Unable to find pac for product id!");
     }
 
     // Parse the account response and create a hop
@@ -524,7 +525,7 @@ class _PurchasePageState extends State<PurchasePage> {
       parseAccountResult =
           OrchidVPNConfig.parseOrchidAccount(pacAccountString, existingKeys);
     } catch (err) {
-      print("iap: error parsing purchased orchid account: $err");
+      log("iap: error parsing purchased orchid account: $err");
       throw Exception("error in server response");
     }
     if (parseAccountResult != null) {
@@ -536,7 +537,7 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void _showOverlay(String message, {bool requiresUserAction = false}) {
-    print("iap: display message: $message");
+    log("iap: display message: $message");
     setState(() {
       _showOverlayPane = true;
       _overlayStatusMessage = message;
@@ -555,16 +556,16 @@ class _PurchasePageState extends State<PurchasePage> {
   /// Handle a purchase error by clearing any error pac transaction and
   /// showing a dialog.
   void _purchaseError({bool rateLimitExceeded = false}) async {
-    print(
+    log(
         "iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
     var tx = await PacTransaction.shared.get();
     if (tx != null && tx.state == PacTransactionState.Error) {
-      print("iap: clearing error tx");
+      log("iap: clearing error tx");
       await PacTransaction.shared.clear();
     } else {
-      print("iap: purchase error called with incorrect pac tx state");
+      log("iap: purchase error called with incorrect pac tx state");
     }
 
     await Dialogs.showAppDialog(
