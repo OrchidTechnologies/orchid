@@ -328,11 +328,6 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
 
-            balance = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
-            if (balance <= get_min_escrow()):
-                logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} balance: {balance}')
-                continue
-
             logging.debug(f'Found potential account ({push_txn_hash}) status: {status} age:{age} config: {config}')
             key = {
                 'price': item['price'],
@@ -340,12 +335,13 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             }
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
+                balance = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
                 # update succeeded
-                if (status == 'confirmed'):
+                if ( (status == 'confirmed') and (balance > get_min_escrow()) ):
                     ret = push_txn_hash, config, signer_pubkey
                     break
                 else:
-                    logging.debug(f'broken account: {push_txn_hash} status: {status}  age: {age} deleted and skipped')
+                    logging.debug(f'broken account: {push_txn_hash} status: {status}  age: {age} balance: {balance} deleted and skipped')
             else:
                 logging.debug('Account was already deleted!')
     if ret:
