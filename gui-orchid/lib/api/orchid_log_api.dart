@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'orchid_api.dart';
+
+void log(String text) {
+  OrchidAPI().logger().write(text);
+}
+
 /// Logging support, if any, implemented by the channel API.
 abstract class OrchidLogAPI {
 

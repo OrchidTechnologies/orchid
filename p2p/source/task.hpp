@@ -23,11 +23,10 @@
 #ifndef ORCHID_TASK_HPP
 #define ORCHID_TASK_HPP
 
-#include <variant>
-
 #include <experimental/coroutine>
 
 #include "error.hpp"
+#include "maybe.hpp"
 
 #define ORC_FIBER
 
@@ -41,14 +40,14 @@ class Fiber {
     std::string name_;
 
   public:
-    Fiber(Fiber *parent = nullptr) :
-        parent_(parent)
-    {
-    }
+    Fiber(Fiber *parent = nullptr);
+    ~Fiber();
 
     Fiber *Parent() {
         return parent_;
     }
+
+    static void Report();
 };
 
 template <typename Type_>
@@ -94,6 +93,7 @@ template <typename Value_>
 class Task {
   public:
     class promise_type;
+    typedef Value_ Value;
 
   private:
     std::experimental::coroutine_handle<promise_type> code_;
@@ -142,7 +142,7 @@ class Task {
             using Awaitable::Awaitable;
 
             auto await_resume() const {
-		return this->code_.promise()();
+		return *this->code_.promise();
             }
         } Awaitable;
 
@@ -204,8 +204,8 @@ class Task<Value_>::promise_type :
     public Promise
 {
   private:
-    typedef std::variant<std::exception_ptr, Value_> Variant_;
-    Variant_ variant_;
+    typedef Maybe<Value_> Maybe_;
+    Maybe_ maybe_;
 
   public:
     auto get_return_object() noexcept {
@@ -213,21 +213,17 @@ class Task<Value_>::promise_type :
     }
 
     void unhandled_exception() noexcept {
-        variant_.~Variant_();
-        new (&variant_) Variant_(std::in_place_index_t<0>(), std::current_exception());
+        maybe_(std::current_exception());
     }
 
     template <typename Type_, typename = std::enable_if_t<std::is_convertible_v<Type_ &&, Value_>>>
     void return_value(Type_ &&value) noexcept(std::is_nothrow_constructible_v<Value_, Type_ &&>) {
-        variant_.~Variant_();
-        new (&variant_) Variant_(std::in_place_index_t<1>(), std::forward<Type_>(value));
+        maybe_.~Maybe_();
+        new (&maybe_) Maybe_(std::in_place_index_t<1>(), std::forward<Type_>(value));
     }
 
-    Value_ operator()() {
-        // I would probably use std::get, but that doesn't work on iOS before 12.0
-        if (auto *error = std::get_if<0>(&variant_))
-            std::rethrow_exception(std::move(*error));
-        return std::move(*std::get_if<1>(&variant_));
+    Value_ operator *() {
+        return *std::move(maybe_);
     }
 };
 
@@ -236,7 +232,8 @@ class Task<void>::promise_type :
     public Promise
 {
   private:
-    std::exception_ptr error_;
+    typedef Maybe<void> Maybe_;
+    Maybe_ maybe_;
 
   public:
     auto get_return_object() noexcept {
@@ -244,15 +241,15 @@ class Task<void>::promise_type :
     }
 
     void unhandled_exception() noexcept {
-        error_ = std::current_exception();
+        maybe_.~Maybe_();
+        new (&maybe_) Maybe_(std::current_exception());
     }
 
     void return_void() noexcept {
     }
 
-    void operator()() {
-        if (error_)
-            std::rethrow_exception(error_);
+    void operator *() {
+        return *std::move(maybe_);
     }
 };
 

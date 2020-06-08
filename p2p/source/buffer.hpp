@@ -34,11 +34,11 @@
 
 #include <boost/endian/conversion.hpp>
 #include <boost/mp11/tuple.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
 
 #include <intx/intx.hpp>
 
 #include "error.hpp"
+#include "integer.hpp"
 
 namespace orc {
 
@@ -48,16 +48,6 @@ inline void Copy(void *dst, const void *src, size_t len) {
     memcpy(dst, src, len);
     copied_ += len;
 }
-
-inline unsigned long To(const std::string &value) {
-    size_t end;
-    const auto number(stoul(value, &end));
-    orc_assert(end == value.size());
-    return number;
-}
-
-using boost::multiprecision::uint128_t;
-using boost::multiprecision::uint256_t;
 
 class Region;
 class Beam;
@@ -635,6 +625,12 @@ class Beam :
         rhs.size_ = 0;
         rhs.data_ = nullptr;
         return *this;
+    }
+
+    void clear() {
+        destroy();
+        size_ = 0;
+        data_ = nullptr;
     }
 
     const uint8_t *data() const override {

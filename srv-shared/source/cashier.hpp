@@ -28,14 +28,16 @@
 
 #include "endpoint.hpp"
 #include "event.hpp"
+#include "fiat.hpp"
+#include "gauge.hpp"
 #include "local.hpp"
 #include "locked.hpp"
 #include "locator.hpp"
-#include "oracle.hpp"
 #include "sleep.hpp"
 #include "signed.hpp"
 #include "spawn.hpp"
 #include "station.hpp"
+#include "updated.hpp"
 
 namespace orc {
 
@@ -61,7 +63,8 @@ class Cashier :
 {
   private:
     const Endpoint endpoint_;
-    const S<Oracle> oracle_;
+    const S<Updated<Fiat>> fiat_;
+    const S<Gauge> gauge_;
 
     const Float price_;
 
@@ -86,7 +89,7 @@ class Cashier :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Cashier(Endpoint endpoint, S<Oracle> oracle, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(Endpoint endpoint, S<Updated<Fiat>> fiat, S<Gauge> gauge, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
     ~Cashier() override = default;
 
     void Open(S<Origin> origin, Locator locator);
@@ -113,7 +116,7 @@ class Cashier :
 
                 // XXX: I should dump these to a disk queue as they are worth "real money"
                 // XXX: that same disk queue should maybe be in charge of the old tickets?
-                co_await Sleep(5);
+                co_await Sleep(5000);
             }
         });
     }

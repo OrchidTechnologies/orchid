@@ -43,8 +43,10 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
+#include "boring.hpp"
 #include "cashier.hpp"
 #include "channel.hpp"
+#include "coinbase.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "local.hpp"
@@ -113,7 +115,8 @@ int Main(int argc, const char *const argv[]) {
 
     { po::options_description group("packet egress");
     group.add_options()
-        ("openvpn3", po::value<std::string>(), "openvpn3 .ovpn configuration file")
+        ("openvpn", po::value<std::string>(), "OpenVPN .ovpn configuration file")
+        ("wireguard", po::value<std::string>(), "WireGuard .conf configuration file")
     ; options.add(group); }
 
     po::positional_options_description positional;
@@ -207,7 +210,6 @@ int Main(int argc, const char *const argv[]) {
 
     Address location(args["location"].as<std::string>());
     std::string password(args["password"].as<std::string>());
-    Address recipient(args.count("recipient") == 0 ? "0x0000000000000000000000000000000000000000" : args["recipient"].as<std::string>());
 
     auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
@@ -261,18 +263,26 @@ int Main(int argc, const char *const argv[]) {
         }());
     }
 
-    auto oracle([&]() -> S<Oracle> {
-        auto oracle(Break<Oracle>(args["currency"].as<std::string>()));
-        oracle->Open(origin);
-        return oracle;
-    }());
-
     auto cashier([&]() -> S<Cashier> {
         const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
         if (price == 0)
             return nullptr;
-        const Address personal(args["personal"].as<std::string>());
-        auto cashier(Break<Cashier>(std::move(endpoint), std::move(oracle),
+
+        orc_assert_(args.count("recipient") != 0, "must specify --recipient unless --price is 0");
+        const Address recipient(args["recipient"].as<std::string>());
+
+        // XXX: this should switch to a different mechanism (using eth_sendTransaction)
+        const Address personal(args.count("personal") == 0 ? "0x0000000000000000000000000000000000000000" : args["personal"].as<std::string>());
+
+        auto fiat(Update(5*60*1000, [origin, currency = args["currency"].as<std::string>()]() -> task<Fiat> {
+            co_return co_await Coinbase(*origin, currency);
+        }));
+        Wait(fiat->Open());
+
+        auto gauge(Make<Gauge>(5*60*1000, origin));
+        Wait(gauge->Open());
+
+        auto cashier(Break<Cashier>(std::move(endpoint), std::move(fiat), std::move(gauge),
             price, personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
         ));
@@ -281,16 +291,26 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     auto egress([&]() -> S<Egress> {
-        if (args.count("openvpn3") != 0) {
-            std::string ovpnfile;
-            boost::filesystem::load_string_file(args["openvpn3"].as<std::string>(), ovpnfile);
+        if (false) {
+        } else if (args.count("openvpn") != 0) {
+            std::string file;
+            boost::filesystem::load_string_file(args["openvpn"].as<std::string>(), file);
 
-            return Wait([origin, ovpnfile = std::move(ovpnfile)]() mutable -> task<S<Egress>> {
+            return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
                 auto egress(Make<BufferSink<Egress>>(0));
-                co_await Connect(*egress, std::move(origin), 0, ovpnfile, "", "");
+                co_await Connect(*egress, std::move(origin), 0, file, "", "");
                 co_return egress;
             }());
-        } else orc_assert(false);
+        } else if (args.count("wireguard") != 0) {
+            std::string file;
+            boost::filesystem::load_string_file(args["wireguard"].as<std::string>(), file);
+
+            return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
+                auto egress(Make<BufferSink<Egress>>(0));
+                co_await Guard(*egress, std::move(origin), 0, file);
+                co_return egress;
+            }());
+        } else orc_assert_(false, "must provide an egress option");
     }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));

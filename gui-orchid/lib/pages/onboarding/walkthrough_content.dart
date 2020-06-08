@@ -36,13 +36,13 @@ class WalkthroughContent extends StatelessWidget {
     var bodyTextBox =
         WalkthroughBodyTextBox(bodyText: bodyText, bodyRichText: bodyRichText);
 
-    var imageHeight = screenHeight > AppSizes.iphone_se.height ? null : 100.0;
+    var imageHeight = screenHeight > AppSize.iphone_se.height ? null : 100.0;
     var image = imageName != null
         ? Image.asset(imageName, fit: BoxFit.contain, height: imageHeight)
         : Container();
 
     double horizontalPadding =
-        screenHeight > AppSizes.iphone_se.height ? 40.0 : 16.0;
+        screenHeight > AppSize.iphone_se.height ? 40.0 : 16.0;
 
     if (imageLocation == WalkthroughContentImageLocation.Top) {
       return Padding(
@@ -50,7 +50,7 @@ class WalkthroughContent extends StatelessWidget {
           child: Column(
             children: <Widget>[
               // For large screens distribute the space a bit, else fixed margin.
-              screenHeight >= AppSizes.iphone_xs.height
+              screenHeight >= AppSize.iphone_xs.height
                   ? Spacer(flex: 1)
                   : SizedBox(height: 40),
               Image.asset('assets/images/name_logo.png'),

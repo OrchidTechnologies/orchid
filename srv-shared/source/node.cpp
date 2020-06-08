@@ -53,14 +53,6 @@ void Node::Run(const std::string &path, const asio::ip::address &bind, uint16_t 
         co_return Respond(request, http::status::ok, "text/plain", std::move(answer));
     });
 
-    router(http::verb::get, R"(^.*$)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", "");
-    });
-
-    router(http::verb::unknown, R"(^.*$)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::method_not_allowed, "text/plain", "");
-    });
-
     router.Run(bind, port, key, chain, params);
     Thread().join();
 }

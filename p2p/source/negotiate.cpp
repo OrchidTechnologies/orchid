@@ -27,12 +27,12 @@ namespace orc {
 task<void> Peer::Negotiate(webrtc::SessionDescriptionInterface *description) {
     const rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
     peer_->SetLocalDescription(observer, description);
-    co_await observer->Wait();
+    co_await **observer;
 }
 
 task<std::string> Peer::Negotiation(webrtc::SessionDescriptionInterface *description) {
     co_await Negotiate(description);
-    co_await gathered_.Wait();
+    co_await *gathered_;
     std::string sdp;
     peer_->local_description()->ToString(&sdp);
     co_return sdp;
@@ -43,7 +43,7 @@ task<std::string> Peer::Offer() {
         const rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
         webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
         peer_->CreateOffer(observer, options);
-        co_await observer->Wait();
+        co_await **observer;
         co_return observer->description_;
     }());
 }
@@ -54,7 +54,7 @@ task<void> Peer::Negotiate(const char *type, const std::string &sdp) {
     orc_assert_(answer != nullptr, "invalid " << type << ":\n" << sdp);
     rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
     peer_->SetRemoteDescription(observer, answer);
-    co_await observer->Wait();
+    co_await **observer;
 }
 
 task<std::string> Peer::Answer(const std::string &offer) {
@@ -63,7 +63,7 @@ task<std::string> Peer::Answer(const std::string &offer) {
         const rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
         webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
         peer_->CreateAnswer(observer, options);
-        co_await observer->Wait();
+        co_await **observer;
         co_return observer->description_;
     }());
 }

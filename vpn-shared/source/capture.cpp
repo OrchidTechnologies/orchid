@@ -30,6 +30,7 @@
 #include <dns.h>
 
 #include "acceptor.hpp"
+#include "boring.hpp"
 #include "datagram.hpp"
 #include "capture.hpp"
 #include "client.hpp"
@@ -684,7 +685,9 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S
             heap.eval<std::string>(hops + ".username"),
             heap.eval<std::string>(hops + ".password")
         );
-    }
+    } else if (protocol == "wireguard") {
+        co_await Guard(sunk, origin, local, heap.eval<std::string>(hops + ".config"));
+    } else orc_assert_(false, "unknown hop protocol: " << protocol);
 }, "building hop #" << hop); }
 
 extern double WinRatio_;

@@ -91,7 +91,7 @@ class Invoker :
         // potentially pass value/ready as MessageData
         orc_assert(!ready_);
         thread.Post(RTC_FROM_HERE, this);
-        co_await ready_.Wait();
+        co_await *ready_;
         if (error_)
             std::rethrow_exception(error_);
         co_return std::move(result_);

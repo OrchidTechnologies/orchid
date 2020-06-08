@@ -25,13 +25,16 @@
 
 #include <string>
 
+#include "fiat.hpp"
 #include "float.hpp"
 #include "origin.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust);
+task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &from, const Float &adjust);
+
+task<Fiat> Coinbase(Origin &origin, const std::string &to);
 
 }
 

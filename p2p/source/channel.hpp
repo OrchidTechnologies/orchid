@@ -118,7 +118,7 @@ orc_trace();
     }
 
     task<void> Open() noexcept {
-        co_await opened_.Wait();
+        co_await *opened_;
     }
 
     task<void> Shut() noexcept override {

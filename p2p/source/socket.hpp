@@ -26,7 +26,9 @@
 #include <iostream>
 #include <string>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/endian/conversion.hpp>
+
 #include <lwip/ip4_addr.h>
 #include <rtc_base/socket_address.h>
 
@@ -92,9 +94,18 @@ class Host {
     Host(const std::string &host) :
         Host([&]() {
             rtc::IPAddress address;
-            orc_assert(IPFromString(host, &address));
+            // XXX: this isn't correct for IPv6
+            orc_assert_(IPFromString(
+                boost::algorithm::ends_with(host, "/32") ?
+                    host.substr(0, host.size() - 3) :
+            host, &address), host << " is not a Host");
             return address;
         }())
+    {
+    }
+
+    Host(const char *host) :
+        Host(std::string(host))
     {
     }
 
@@ -198,6 +209,20 @@ class Socket {
     Socket(const rtc::SocketAddress &socket) :
         host_(socket.ipaddr()),
         port_(socket.port())
+    {
+    }
+
+    Socket(const std::string &socket) :
+        Socket([&]() {
+            rtc::SocketAddress address;
+            orc_assert_(address.FromString(socket), socket << " is not a Socket");
+            return address;
+        }())
+    {
+    }
+
+    Socket(const char *socket) :
+        Socket(std::string(socket))
     {
     }
 

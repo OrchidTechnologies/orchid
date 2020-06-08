@@ -116,7 +116,7 @@ task<void> Egress::Shut(Translators::iterator indirect) noexcept {
             neutral.shut_();
     }
 
-    co_await neutral.shut_.Wait();
+    co_await *neutral.shut_;
     translator->Stop();
 }
 

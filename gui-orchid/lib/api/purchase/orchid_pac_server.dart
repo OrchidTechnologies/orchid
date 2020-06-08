@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_purchase.dart';
 
@@ -18,10 +19,10 @@ class OrchidPACServer {
   /// Process the current PAC transaction if required. This method can be
   /// called at any time to attempt to move the process to the next state.
   void processPendingPACTransaction() async {
-    print("iap: process pending pac tx");
+    log("iap: process pending pac tx");
     var tx = await PacTransaction.shared.get();
     if (tx == null) {
-      print("iap: pac tx null, return");
+      log("iap: pac tx null, return");
       return;
     }
     switch (tx.state) {
@@ -29,22 +30,22 @@ class OrchidPACServer {
       case PacTransactionState.Error:
       case PacTransactionState.Complete:
         // Nothing to be done.
-        print("iap: nothing to do");
+        log("iap: nothing to do");
         return;
         break;
       case PacTransactionState.WaitingForRetry:
-        print("iap: retry");
+        log("iap: retry");
         tx.retries++;
         continue nextCase;
       nextCase:
       case PacTransactionState.Pending:
       case PacTransactionState.WaitingForUserAction:
-        print("iap: pending or waiting for user: go");
+        log("iap: pending or waiting for user: go");
         break;
     }
 
     // Begin processing the PAC tx
-    print("iap: set pac tx to in-progress");
+    log("iap: set pac tx to in-progress");
     tx.state = PacTransactionState.InProgress;
     await tx.save(); // update the UI
 
@@ -56,12 +57,12 @@ class OrchidPACServer {
       tx.state = PacTransactionState.Complete;
     } catch (err) {
       // Server error
-      print("iap: error in pac submit: $err");
+      log("iap: error in pac submit: $err");
       tx.serverResponse = "$err";
 
       // Schedule retry
       if (tx.retries < 2) {
-        print("iap: scheduling retry");
+        log("iap: scheduling retry");
         // Schedule a retry
         tx.state = PacTransactionState.WaitingForRetry;
         var delay = Duration(seconds: 5); // TODO
@@ -70,7 +71,7 @@ class OrchidPACServer {
         });
       } else {
         // Wait for user action
-        print("iap: waiting for user action");
+        log("iap: waiting for user action");
         tx.state = PacTransactionState.WaitingForUserAction;
       }
     }
@@ -82,7 +83,7 @@ class OrchidPACServer {
   /// Submit an app store receipt to the PAC server and return the full server response.
   /// An exception is thrown on any server response that does not contain a valid PAC.
   Future<String> _submitToPACServer(PacTransaction tx) async {
-    print("iap: submit to PAC server");
+    log("iap: submit to PAC server");
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
 
     if (apiConfig.serverFail) {
@@ -91,7 +92,7 @@ class OrchidPACServer {
     }
 
     if (tx.receipt == null) {
-      print("iap: null receipt");
+      log("iap: null receipt");
       throw Exception("receipt is null");
     }
 
@@ -111,7 +112,7 @@ class OrchidPACServer {
     var postBody = jsonEncode(params);
     // Note: the receipt exceeds the console log line length so keep it last
     // Note: or explicitly truncate it.
-    print("iap: posting to ${apiConfig.url}, json = $postBody");
+    log("iap: posting to ${apiConfig.url}, json = $postBody");
 
     // TESTING
     //await Future.delayed(Duration(seconds: 1), () {});
@@ -123,7 +124,7 @@ class OrchidPACServer {
         body: postBody);
 
     // Validate the response status and content
-    //print("iap: pac server response: ${response.statusCode}, ${response.body}");
+    //log("iap: pac server response: ${response.statusCode}, ${response.body}");
     if (response.statusCode != 200) {
       throw Exception(
           "Error response: code=${response.statusCode} body=${response.body}");

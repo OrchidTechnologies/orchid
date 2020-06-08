@@ -50,7 +50,7 @@ class Valve {
     virtual ~Valve();
 
     virtual task<void> Shut() noexcept {
-        co_await shut_.Wait();
+        co_await *shut_;
     }
 };
 

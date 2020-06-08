@@ -20,29 +20,44 @@
 /* }}} */
 
 
-pragma solidity 0.5.13;
+pragma solidity 0.6.6;
 
 import "../lot-ethereum/include.sol";
 
 contract OrchidLocked is OrchidSeller, OrchidVerifier {
     mapping (bytes => mapping(address => bytes)) receipts_;
 
-    function book(bytes memory shared, address target, bytes memory receipt) public pure {
-        require(receipt.length == 65);
+    uint constant required_ = 1;
 
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
+    function find(address signer) internal pure returns (uint) {
+        if (signer == address(0xff0fce1d)) return 0;
+        require(false);
+    }
 
-        assembly {
-            r := mload(add(receipt, 32))
-            s := mload(add(receipt, 64))
-            v := and(mload(add(receipt, 65)), 255)
+    function book(bytes memory shared, address target, bytes memory receipt) override public pure {
+        bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encodePacked(target, shared))));
+
+        require(receipt.length == 65 * required_);
+
+        uint needed = 0;
+
+        for (uint i = 0; i != required_; ++i) {
+            uint256 offset = i * 65;
+
+            bytes32 r;
+            bytes32 s;
+            uint8 v;
+
+            assembly {
+                r := mload(add(receipt, add(offset, 32)))
+                s := mload(add(receipt, add(offset, 64)))
+                v := and(mload(add(receipt, add(offset, 65))), 255)
+            }
+
+            uint signer = find(ecrecover(message, v, r, s));
+            require(signer >= needed);
+            needed = signer + 1;
         }
-
-        bytes32 message = keccak256(abi.encodePacked(target, shared));
-        address signer = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", message)), v, r, s);
-        require(signer == address(0xff0fce1d));
     }
 
     function list(bytes calldata shared, address target, bytes calldata receipt) external {
@@ -50,7 +65,7 @@ contract OrchidLocked is OrchidSeller, OrchidVerifier {
         receipts_[shared][target] = receipt;
     }
 
-    function ring(bytes calldata shared, address target) external view returns (bytes memory) {
+    function ring(bytes calldata shared, address target) override external view returns (bytes memory) {
         bytes storage receipt = receipts_[shared][target];
         require(receipt.length != 0);
         return receipt;

@@ -22,11 +22,11 @@ class WalkthroughPages extends StatefulWidget {
 
   // For large screens add some additional fixed margin.
   static const AdaptiveHeight BottomControlsPadding =
-      AdaptiveHeight(116.0, 16.0, AppSizes.iphone_xs);
+      AdaptiveHeight(116.0, 16.0, AppSize.iphone_xs);
 
   // For large screens distribute the space a bit, else fixed margin.
   static const AdaptiveHeight TopContentPadding =
-      AdaptiveHeight(Spacer(flex: 1), SizedBox(height: 48), AppSizes.iphone_xs);
+      AdaptiveHeight(Spacer(flex: 1), SizedBox(height: 48), AppSize.iphone_xs);
 
   WalkthroughPages({
     Key key,

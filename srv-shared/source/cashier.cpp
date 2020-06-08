@@ -145,9 +145,10 @@ void Cashier::Stop(const std::string &error) noexcept {
     Valve::Stop();
 }
 
-Cashier::Cashier(Endpoint endpoint, S<Oracle> oracle, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
+Cashier::Cashier(Endpoint endpoint, S<Updated<Fiat>> fiat, S<Gauge> gauge, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
-    oracle_(std::move(oracle)),
+    fiat_(std::move(fiat)),
+    gauge_(std::move(gauge)),
 
     price_(price),
 
@@ -185,19 +186,19 @@ Float Cashier::Bill(size_t size) const {
 }
 
 checked_int256_t Cashier::Convert(const Float &balance) const {
-    const auto oxt(oracle_->Fiat().oxt_);
+    const auto oxt((*fiat_)().oxt_);
     return checked_int256_t(balance / oxt * Two128);
 }
 
 std::pair<Float, uint256_t> Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const {
-    const auto fiat(oracle_->Fiat());
+    const auto fiat((*fiat_)());
 
     const auto base(Float(amount) * fiat.oxt_);
     const auto until(start + range);
 
     std::pair<Float, uint256_t> credit(0, 10*Gwei);
 
-    const auto prices(oracle_->Prices());
+    const auto prices(gauge_->Prices());
     for (const auto &[price, time] : *prices) {
         const auto when(now + unsigned(time));
         if (when >= until) continue;
@@ -233,7 +234,7 @@ task<bool> Cashier::Check(const Address &signer, const Address &funder, const ui
         co_await Look(signer, funder, combined);
     }
 
-    co_await pot->Wait();
+    co_await **pot;
 
     const auto locked(pot->locked_());
     if (amount > locked->amount_)

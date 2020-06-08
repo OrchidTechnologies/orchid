@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
@@ -19,6 +20,7 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import '../app_colors.dart';
+import '../app_sizes.dart';
 import '../app_text.dart';
 import 'package:intl/intl.dart';
 
@@ -76,44 +78,52 @@ class _PurchasePageState extends State<PurchasePage> {
         SingleChildScrollView(
           child: Padding(
             padding:
-                const EdgeInsets.only(left: 30, right: 30, top: 16, bottom: 16),
-            child: Column(
-              children: <Widget>[
-                pady(8),
-                _buildInstructions(),
-                pady(16),
-                _buildPurchaseCardView(
-                    pac: OrchidPurchaseAPI.pacTier1,
-                    subtitle: _buildTierDescriptionText(100),
-                    gradBegin: 0,
-                    gradEnd: 2),
-                pady(24),
-                _buildPurchaseCardView(
-                    pac: OrchidPurchaseAPI.pacTier2,
-                    subtitle: _buildTierDescriptionText(200),
-                    gradBegin: -2,
-                    gradEnd: 1),
-                pady(24),
-                _buildPurchaseCardView(
-                  pac: OrchidPurchaseAPI.pacTier3,
-                  subtitle: _buildTierDescriptionText(500),
-                  gradBegin: -1,
-                  gradEnd: -1,
+                const EdgeInsets.only(left: 30, right: 30, top: 0, bottom: 16),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 500),
+                child: Column(
+                  children: <Widget>[
+                    if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                      pady(64),
+                    pady(8),
+                    _buildInstructions(),
+                    pady(16),
+                    _buildPurchaseCardView(
+                        pac: OrchidPurchaseAPI.pacTier1,
+                        subtitle: _buildTierDescriptionText(100),
+                        gradBegin: 0,
+                        gradEnd: 2),
+                    pady(24),
+                    _buildPurchaseCardView(
+                        pac: OrchidPurchaseAPI.pacTier2,
+                        subtitle: _buildTierDescriptionText(200),
+                        gradBegin: -2,
+                        gradEnd: 1),
+                    pady(24),
+                    _buildPurchaseCardView(
+                      pac: OrchidPurchaseAPI.pacTier3,
+                      subtitle: _buildTierDescriptionText(500),
+                      gradBegin: -1,
+                      gradEnd: -1,
+                    ),
+                    pady(32),
+                    _buildInfoPanel(
+                        svgName: "assets/svg/orchid_icon.svg",
+                        title: s.onlyForTheOrchidApp,
+                        body: s.orchidTokensInTheFormOfAccessCreditsAreUnable),
+                    pady(19),
+                    _buildInfoPanel(
+                        svgName: "assets/svg/bandwidth_icon.svg",
+                        title: s.bandwidthValueWillVary,
+                        body:
+                            s.bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill,
+                        linkText: "Learn more",
+                        linkUrl: 'https://www.orchid.com/' // TODO:
+                        )
+                  ],
                 ),
-                pady(32),
-                _buildInfoPanel(
-                    svgName: "assets/svg/orchid_icon.svg",
-                    title: s.onlyForTheOrchidApp,
-                    body: s.orchidTokensInTheFormOfAccessCreditsAreUnable),
-                pady(19),
-                _buildInfoPanel(
-                    svgName: "assets/svg/bandwidth_icon.svg",
-                    title: s.bandwidthValueWillVary,
-                    body: s.bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill,
-                    linkText: "Learn more",
-                    linkUrl: 'https://www.orchid.com/' // TODO:
-                    )
-              ],
+              ),
             ),
           ),
         ),
@@ -357,6 +367,7 @@ class _PurchasePageState extends State<PurchasePage> {
               Expanded(
                 flex: 1,
                 child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Column(children: [
                     Row(children: <Widget>[
                       RichText(
@@ -421,7 +432,7 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Future<void> _purchase({PAC purchase}) async {
-    print("iap: calling purchase: $purchase");
+    log("iap: calling purchase: $purchase");
 
     // Initiate the in-app purchase
     try {
@@ -430,11 +441,11 @@ class _PurchasePageState extends State<PurchasePage> {
       if (err is SKError) {
         var skerror = err;
         if (skerror.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
-          print("iap: user cancelled");
+          log("iap: user cancelled");
           return null;
         }
       }
-      print("iap: Error in purchase call: $err");
+      log("iap: Error in purchase call: $err");
       _purchaseError(rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
       return null;
     }
@@ -472,7 +483,7 @@ class _PurchasePageState extends State<PurchasePage> {
 
   // Collect a completed PAC transaction and apply it to the hop.
   Future<void> _completeTransaction(PacTransaction tx) async {
-    print("iap: complete transaction");
+    log("iap: complete transaction");
 
     var serverResponse = tx.serverResponse;
     if (serverResponse == null) {
@@ -484,11 +495,11 @@ class _PurchasePageState extends State<PurchasePage> {
       var pacResponseJson = json.decode(serverResponse);
       pacAccountString = pacResponseJson['config'];
       if (pacAccountString == null) {
-        print("iap: error no server response");
+        log("iap: error no server response");
         throw Exception("no config in server response");
       }
     } catch (err) {
-      print("iap: error decoding server response json: $err");
+      log("iap: error decoding server response json: $err");
       throw Exception("invalid server response");
     }
 
@@ -501,7 +512,7 @@ class _PurchasePageState extends State<PurchasePage> {
       PAC pac = OrchidPurchaseAPI.pacForProductId(tx.productId);
       OrchidPurchaseAPI.addPurchaseToRateLimit(pac);
     } catch (err) {
-      print("pac: Unable to find pac for product id!");
+      log("pac: Unable to find pac for product id!");
     }
 
     // Parse the account response and create a hop
@@ -514,7 +525,7 @@ class _PurchasePageState extends State<PurchasePage> {
       parseAccountResult =
           OrchidVPNConfig.parseOrchidAccount(pacAccountString, existingKeys);
     } catch (err) {
-      print("iap: error parsing purchased orchid account: $err");
+      log("iap: error parsing purchased orchid account: $err");
       throw Exception("error in server response");
     }
     if (parseAccountResult != null) {
@@ -526,7 +537,7 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void _showOverlay(String message, {bool requiresUserAction = false}) {
-    print("iap: display message: $message");
+    log("iap: display message: $message");
     setState(() {
       _showOverlayPane = true;
       _overlayStatusMessage = message;
@@ -545,15 +556,16 @@ class _PurchasePageState extends State<PurchasePage> {
   /// Handle a purchase error by clearing any error pac transaction and
   /// showing a dialog.
   void _purchaseError({bool rateLimitExceeded = false}) async {
-    print("iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
+    log(
+        "iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
     var tx = await PacTransaction.shared.get();
     if (tx != null && tx.state == PacTransactionState.Error) {
-      print("iap: clearing error tx");
+      log("iap: clearing error tx");
       await PacTransaction.shared.clear();
     } else {
-      print("iap: purchase error called with incorrect pac tx state");
+      log("iap: purchase error called with incorrect pac tx state");
     }
 
     await Dialogs.showAppDialog(

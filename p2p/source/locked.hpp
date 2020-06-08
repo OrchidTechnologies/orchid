@@ -62,6 +62,11 @@ class Locked {
     Locked() = default;
     Locked(const Locked<Locked_> &lock) = delete;
 
+    Locked(Locked_ &&locked) :
+        locked_(std::move(locked))
+    {
+    }
+
     Lock<Locked_> operator ()() {
         return {mutex_, locked_};
     }

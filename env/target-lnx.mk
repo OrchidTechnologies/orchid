@@ -95,4 +95,6 @@ sysroot += $(output)/sysroot
 
 endif
 
+lflags += -ldl
+
 default := x86_64

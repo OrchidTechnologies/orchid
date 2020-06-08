@@ -32,14 +32,27 @@ template <typename Type_>
 using U = std::unique_ptr<Type_>;
 
 template <typename Type_>
-using S = std::shared_ptr<Type_>;
+using W = std::weak_ptr<Type_>;
+
+#if 0
+template <typename Type_>
+class Shared :
+    public std::shared_ptr<Type_>
+{
+  public:
+    using std::shared_ptr<Type_>::shared_ptr;
+};
 
 template <typename Type_>
-using W = std::weak_ptr<Type_>;
+using S = Shared<Type_>;
+#else
+template <typename Type_>
+using S = std::shared_ptr<Type_>;
+#endif
 
 template <typename Type_, typename... Args_>
 inline S<Type_> Make(Args_ &&...args) {
-    return std::make_shared<Type_>(std::forward<Args_>(args)...);
+    return std::move(std::make_shared<Type_>(std::forward<Args_>(args)...));
 }
 
 }

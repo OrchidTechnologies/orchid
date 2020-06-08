@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
+import 'package:orchid/pages/common/config_text.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/instructions_view.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import '../app_colors.dart';
+import '../app_sizes.dart';
 import '../app_text.dart';
 import 'hop_editor.dart';
 import 'model/openvpn_hop.dart';
@@ -59,6 +60,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     return TapClearsFocus(
       child: TitledPage(
         title: s.openVPNHop,
+        decoration: BoxDecoration(),
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
             : [],
@@ -66,58 +68,38 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: <Widget>[
-                  _buildUserName(),
-                  _buildPassword(),
-                  pady(16),
-                  // OPVN Config
-                  Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(s.config + ":",
-                          style: AppText.textLabelStyle.copyWith(fontSize: 20))),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 8),
-                    child: Container(
-                      height: screenHeight/2.8,
-                      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      child: TextFormField(
-                        autocorrect: false,
-                        autofocus: false,
-                        smartQuotesType: SmartQuotesType.disabled,
-                        smartDashesType: SmartDashesType.disabled,
-                        keyboardType: TextInputType.multiline,
-                        style:
-                        AppText.logStyle.copyWith(color: AppColors.grey_2),
-                        controller: _ovpnConfig,
-                        maxLines: 99999,
-                        decoration: InputDecoration(
-                      hintText: s.pasteYourOVPN,
-                      border: InputBorder.none,
-                      labelStyle: AppText.textLabelStyle,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 700),
+                  child: Column(
+                    children: <Widget>[
+                      if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                        pady(64),
+                      _buildUserName(),
+                      _buildPassword(),
+                      pady(16),
+                      // OVPN Config
+                      ConfigLabel(text: s.config),
+                      ConfigText(
+                        height: screenHeight / 2.8,
+                        textController: _ovpnConfig,
+                        hintText: s.pasteYourOVPN,
+                      ),
+
+                      // Instructions
+                      Visibility(
+                        visible: widget.mode == HopEditorMode.Create,
+                        child: InstructionsView(
+                          // TODO: This screen is being told it's in landscape mode in the simulator?
+                          //hideInLandscape: false,
+                          title: s.enterYourCredentials,
+                          body: s.enterLoginInformationInstruction + " ",
                         ),
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                        border:
-                            Border.all(width: 2.0, color: AppColors.neutral_5),
-                      ),
-                    ),
+                      pady(24)
+                    ],
                   ),
-
-                  // Instructions
-                  Visibility(
-                    visible: widget.mode == HopEditorMode.Create,
-                    child: InstructionsView(
-                      // TODO: This screen is being told it's in landscape mode in the simulator?
-                      //hideInLandscape: false,
-                      title: s.enterYourCredentials,
-                      body: s.enterLoginInformationInstruction + " ",
-                    ),
-                  ),
-                  pady(24)
-                ],
+                ),
               ),
             ),
           ),
@@ -181,3 +163,4 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     return S.of(context);
   }
 }
+

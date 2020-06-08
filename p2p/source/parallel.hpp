@@ -25,75 +25,71 @@
 
 #include <cppcoro/when_all.hpp>
 
-#include "task.hpp"
+#include "try.hpp"
 
 namespace orc {
 
-// XXX: consider putting this in await_transform?
-
-template <typename Type_>
-using Maybe = cppcoro::detail::when_all_task<Type_>;
-
 template <typename ...Args_>
-[[nodiscard]] auto Parallel(Task<Args_> &&...args) -> Task<std::tuple<Maybe<
-#ifdef ORC_FIBER
-    typename cppcoro::awaitable_traits<cppcoro::task<Args_>>::await_result_t
-#else
-    Args_
-#endif
->...>> {
+[[nodiscard]] auto Parallel(Task<Args_> &&...args) -> Task<std::tuple<Maybe<Args_>...>> {
 #ifdef ORC_FIBER
     const auto parent(co_await co_optic);
-    co_return co_await cppcoro::when_all_ready([](Task<Args_> &&task, Fiber *parent) -> cppcoro::task<Args_> {
+    co_return co_await cppcoro::when_all([](Task<Args_> &&task, Fiber *parent) -> cppcoro::task<Maybe<Args_>> {
+        auto maybe(Try(std::move(task)));
         Fiber fiber(parent);
-        task.Set(&fiber);
-        co_return co_await std::move(task);
+        maybe.Set(&fiber);
+        co_return co_await std::move(maybe);
     }(std::forward<Task<Args_>>(args), parent)...);
 #else
-    co_return co_await cppcoro::when_all_ready(std::forward<Task<Args_>>(args)...);
+    co_return co_await cppcoro::when_all(Try(std::forward<Task<Args_>>(args))...);
 #endif
 }
 
 template <typename Type_>
 [[nodiscard]] auto Parallel(std::vector<Task<Type_>> &&tasks) -> Task<std::vector<Maybe<Type_>>> {
-#ifdef ORC_FIBER
-    std::vector<Fiber> fibers(tasks.size(), co_await co_optic);
+    std::vector<Task<Maybe<Type_>>> maybes;
+    maybes.reserve(tasks.size());
     for (size_t i(0); i != tasks.size(); ++i)
-        tasks[i].Set(&fibers[i]);
+        maybes.emplace_back(Try(std::move(tasks[i])));
+
+#ifdef ORC_FIBER
+    std::vector<Fiber> fibers(maybes.size(), co_await co_optic);
+    for (size_t i(0); i != maybes.size(); ++i)
+        maybes[i].Set(&fibers[i]);
 #endif
-    co_return co_await cppcoro::when_all_ready(std::forward<std::vector<Task<Type_>>>(tasks));
+
+    co_return co_await cppcoro::when_all(std::move(maybes));
 }
 
-template <typename Type_, typename Enable_ = std::enable_if_t<!std::is_void_v<decltype(std::declval<Type_>().result())>>>
-auto operator *(std::vector<Type_> &&readys) noexcept(noexcept(std::declval<Type_>().result())) {
+template <typename Type_, typename Enable_ = std::enable_if_t<!std::is_void_v<decltype(*std::declval<Type_>())>>>
+auto operator *(std::vector<Type_> &&readys) noexcept(noexcept(*std::declval<Type_>())) {
     std::vector<std::decay_t<decltype(*std::declval<Type_>())>> values;
     for (auto &ready : readys)
-        values.emplace_back(std::move(ready).result());
+        values.emplace_back(*std::move(ready));
     return values;
 }
 
-template <typename Type_, typename Enable_ = std::enable_if_t<std::is_void_v<decltype(std::declval<Type_>().result())>>>
-void operator *(std::vector<Type_> &&readys) noexcept(noexcept(std::declval<Type_>().result())) {
+template <typename Type_, typename Enable_ = std::enable_if_t<std::is_void_v<decltype(*std::declval<Type_>())>>>
+void operator *(std::vector<Type_> &&readys) noexcept(noexcept(*std::declval<Type_>())) {
     for (auto &ready : readys)
-        std::move(ready).result();
+        *std::move(ready);
 }
 
 template <typename ...Args_>
 constexpr bool Voided() {
-    return (std::is_void_v<decltype(std::declval<Args_>().result())> && ...);
+    return (std::is_void_v<decltype(*std::declval<Args_>())> && ...);
 }
 
 template <typename ...Args_, typename Enable_ = std::enable_if_t<!Voided<Args_...>()>>
 auto operator *(std::tuple<Args_...> &&readys) {
     return std::apply([](auto && ...ready) {
-        return std::make_tuple(std::move(ready).result()...);
+        return std::make_tuple(*std::move(ready)...);
     }, std::forward<std::tuple<Args_...>>(readys));
 }
 
 template <typename ...Args_, typename Enable_ = std::enable_if_t<Voided<Args_...>()>>
 void operator *(std::tuple<Args_...> &&readys) {
     std::apply([](auto && ...ready) {
-        (std::move(ready).result(), ...);
+        (*std::move(ready), ...);
     }, std::forward<std::tuple<Args_...>>(readys));
 }
 
