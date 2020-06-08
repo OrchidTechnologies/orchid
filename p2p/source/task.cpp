@@ -40,7 +40,11 @@ Fiber::~Fiber() {
 }
 
 void Fiber::Report() {
-    const auto &fibers(*fibers_());
+    auto fibers(*fibers_());
+    for (const auto fiber : fibers)
+        if (const auto parent = fiber->Parent())
+            fibers.erase(parent);
+
     std::cerr << std::endl;
     std::cerr << "^^^^^^^^^^" << std::endl;
     for (const auto fiber : fibers) {
