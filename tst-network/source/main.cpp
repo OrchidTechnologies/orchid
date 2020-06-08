@@ -201,6 +201,15 @@ task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation) {
     co_return Float(co_await latestAnswer_.Call(endpoint, "latest", aggregation, 90000)) / Ten8;
 }
 
+task<Float> Kraken(Origin &origin, const std::string &pair) {
+    co_return Float(Parse((co_await origin.Fetch("GET", {"https", "api.kraken.com", "443", "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString());
+}
+
+task<Fiat> Kraken(Origin &origin) {
+    const auto [eth_usd, oxt_eth] = *co_await Parallel(Kraken(origin, "XETHZUSD"), Kraken(origin, "OXTETH"));
+    co_return Fiat{eth_usd / Ten18, eth_usd * oxt_eth / Ten18};
+}
+
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 
@@ -253,6 +262,11 @@ int Main(int argc, const char *const argv[]) {
         co_return co_await Coinbase(*origin, "USD");
     }));
     Wait(coinbase->Open());
+
+    const auto kraken(Update(60*1000, [origin]() -> task<Fiat> {
+        co_return co_await Kraken(*origin);
+    }));
+    Wait(kraken->Open());
 
     const auto uniswap(Update(60*1000, [endpoint]() -> task<Fiat> {
         const auto block(co_await endpoint.Header("latest"));
@@ -350,6 +364,7 @@ int Main(int argc, const char *const argv[]) {
         body << "\n";
 
         { const auto fiat((*coinbase)()); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
+        { const auto fiat((*kraken)()); body << "Kraken:    $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
         { const auto fiat((*uniswap)()); body << "Uniswap:   $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
         { const auto fiat((*chainlink)()); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
         body << "\n";
