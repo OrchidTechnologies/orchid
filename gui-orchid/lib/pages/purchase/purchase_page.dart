@@ -19,6 +19,7 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:orchid/util/units.dart';
 import '../app_colors.dart';
 import '../app_sizes.dart';
 import '../app_text.dart';
@@ -65,7 +66,7 @@ class _PurchasePageState extends State<PurchasePage> {
   Widget build(BuildContext context) {
     return TitledPage(
       decoration: BoxDecoration(color: Colors.transparent),
-      title: s.purchase,
+      title: "Buy credits",
       child: buildPage(context),
       lightTheme: true,
       cancellable: widget.cancellable,
@@ -91,36 +92,33 @@ class _PurchasePageState extends State<PurchasePage> {
                     pady(16),
                     _buildPurchaseCardView(
                         pac: OrchidPurchaseAPI.pacTier1,
-                        subtitle: _buildTierDescriptionText(100),
+                        title: "Try out Orchid",
+                        subtitle: _buildPurchaseDescriptionText(
+                          text: "- Good for browsing and light activity",
+                        ),
                         gradBegin: 0,
                         gradEnd: 2),
                     pady(24),
                     _buildPurchaseCardView(
                         pac: OrchidPurchaseAPI.pacTier2,
-                        subtitle: _buildTierDescriptionText(200),
+                        title: "Average",
+                        subtitle: _buildPurchaseDescriptionText(
+                          text: "- Good for an individual\n"
+                              "- Short to medium term usage",
+                        ),
                         gradBegin: -2,
                         gradEnd: 1),
                     pady(24),
                     _buildPurchaseCardView(
                       pac: OrchidPurchaseAPI.pacTier3,
-                      subtitle: _buildTierDescriptionText(500),
+                      title: "Heavy",
+                      subtitle: _buildPurchaseDescriptionText(
+                        text: "- Good for bandwidth-heavy uses & sharing\n"
+                            "- Longer term usage",
+                      ),
                       gradBegin: -1,
                       gradEnd: -1,
                     ),
-                    pady(32),
-                    _buildInfoPanel(
-                        svgName: "assets/svg/orchid_icon.svg",
-                        title: s.onlyForTheOrchidApp,
-                        body: s.orchidTokensInTheFormOfAccessCreditsAreUnable),
-                    pady(19),
-                    _buildInfoPanel(
-                        svgName: "assets/svg/bandwidth_icon.svg",
-                        title: s.bandwidthValueWillVary,
-                        body:
-                            s.bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill,
-                        linkText: "Learn more",
-                        linkUrl: 'https://www.orchid.com/' // TODO:
-                        )
                   ],
                 ),
               ),
@@ -132,15 +130,16 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
-  TextSpan _buildTierDescriptionText(int gb) {
-    const subtitleStyle =
-        TextStyle(color: Color(0xffF1FFF8), fontSize: 13.0, height: 1.33);
+  TextSpan _buildPurchaseDescriptionText({String text}) {
+    const subtitleStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 12.0,
+      height: 16.0 / 12.0,
+    );
     var subtitleStyleBold = subtitleStyle.copyWith(fontWeight: FontWeight.bold);
     return TextSpan(
       children: [
-        TextSpan(text: s.approximately + "\n", style: subtitleStyle),
-        TextSpan(text: gb.toString() + s.gb, style: subtitleStyleBold),
-        TextSpan(text: " " + s.ofTraffic, style: subtitleStyle)
+        TextSpan(text: text, style: subtitleStyleBold),
       ],
     );
   }
@@ -264,6 +263,12 @@ class _PurchasePageState extends State<PurchasePage> {
         commitAction: _confirmDeleteTransaction);
   }
 
+  var checkRowStyle = const TextStyle(
+      color: Color(0xFF3A3149),
+      fontSize: 15.0,
+      height: 20.0 / 15.0,
+      letterSpacing: -0.24);
+
   Widget _buildInstructions() {
     const titleStyle = TextStyle(
       color: Colors.black,
@@ -272,18 +277,44 @@ class _PurchasePageState extends State<PurchasePage> {
       letterSpacing: 0.3,
       fontFamily: 'SFProText-Semibold',
     );
-    const subtitleStyle = TextStyle(
-        color: AppColors.neutral_3,
-        fontSize: 12.0,
-        fontWeight: FontWeight.normal,
-        height: 1.33);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Text(s.chooseYourAmount, style: titleStyle),
         pady(16),
-        Text(s.payOnlyForWhatYouUseWithVpnCreditsOnly, style: subtitleStyle),
+        Text("One-time purchase", style: titleStyle),
+        pady(16),
+        _buildCheckRow("Spent only when the VPN is active."),
+        pady(8),
+        _buildCheckRow("No subscription, credits don’t expire."),
+        pady(8),
+        _buildCheckRow("Unlimited devices and sharing."),
+        pady(8),
+        _buildCheckRowRich(TextSpan(children: [
+          TextSpan(
+              text: "Bandwidth will fluctuate based on market dynamics.  ",
+              style: checkRowStyle),
+          LinkTextSpan(
+            text: "Learn more.",
+            style: AppText.linkStyle.copyWith(fontSize: 15.0),
+          )
+        ])),
+        pady(12),
+      ],
+    );
+  }
+
+  Row _buildCheckRow(String text) {
+    return _buildCheckRowRich(TextSpan(text: text, style: checkRowStyle));
+  }
+
+  Row _buildCheckRowRich(TextSpan text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("✓"),
+        padx(16),
+        Flexible(child: RichText(text: text, maxLines: 2)),
       ],
     );
   }
@@ -298,9 +329,7 @@ class _PurchasePageState extends State<PurchasePage> {
         color: Colors.white,
         fontSize: 17.0,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.4,
-        fontFamily: 'SFProText-Semibold',
-        height: 22.0 / 17.0);
+        height: 20.0 / 17.0);
     const valueStyle = TextStyle(
         color: Colors.white,
         fontSize: 18.0,
@@ -315,7 +344,7 @@ class _PurchasePageState extends State<PurchasePage> {
         fontFamily: 'SFProText-Regular',
         height: 16.0 / 12.0);
 
-    var usdString = NumberFormat("0.00").format(pac.usdPurchasePrice.value);
+    var usdString = formatCurrency(pac.usdPurchasePrice.value);
     var oxtString = NumberFormat("0.00")
         .format(_pricing?.toOXT(pac.usdPurchasePrice)?.value ?? 0);
 
@@ -336,99 +365,57 @@ class _PurchasePageState extends State<PurchasePage> {
         ),
         child: Padding(
           padding:
-              const EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              // left side usage description
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    if (title != null)
-                      Text(
-                        title,
-                        textAlign: TextAlign.left,
-                        style: titleStyle,
-                      ),
-                    if (title != null) pady(8),
-                    FittedBox(
-                      child: RichText(
-                        text: subtitle,
-                        textAlign: TextAlign.left,
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              padx(4),
-              // right side value display
-              Expanded(
-                flex: 1,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(children: [
-                    Row(children: <Widget>[
-                      RichText(
-                          text: TextSpan(
-                        children: [
-                          TextSpan(
-                              text: "$usdString ",
-                              style: valueStyle.copyWith(
-                                  fontWeight: FontWeight.bold)),
-                          TextSpan(
-                              text: "USD",
-                              style: valueStyle.copyWith(
-                                  fontWeight: FontWeight.normal)),
-                        ],
-                      ))
-                    ]),
-                    pady(2),
-                    Visibility(
-                      visible: _pricing != null,
-                      child:
-                          Text("~ $oxtString OXT", style: valueSubtitleStyle),
+              const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // top row with title and price
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  // left side title usage description
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(title,
+                            textAlign: TextAlign.left, style: titleStyle),
+                      ],
                     ),
-                  ]),
-                ),
+                  ),
+                  padx(4),
+
+                  // right side title value display
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(children: [
+                      Text(
+                          "\$$usdString",
+                          style: valueStyle.copyWith(
+                              fontWeight: FontWeight.bold)),
+                      pady(2),
+                      Visibility(
+                        visible: _pricing != null,
+                        child: Text("~ $oxtString OXT",
+                            style: valueSubtitleStyle),
+                      ),
+                    ]),
+                  ),
+                ],
               ),
+              pady(4),
+
+              // bottom tier description text
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: RichText(text: subtitle, textAlign: TextAlign.left),
+              )
             ],
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildInfoPanel(
-      {String svgName,
-      String title,
-      String body,
-      String linkText,
-      String linkUrl}) {
-    var style = TextStyle(fontSize: 12, height: 1.25);
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SvgPicture.asset(svgName, width: 24, height: 24),
-      padx(19),
-      Expanded(
-          child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            title,
-            style: style.copyWith(fontWeight: FontWeight.bold),
-          ),
-          pady(3),
-          Text(body, style: style),
-          if (linkText != null) pady(10),
-          if (linkText != null)
-            LinkText(linkText,
-                style: AppText.linkStyle
-                    .copyWith(fontSize: 12, fontWeight: FontWeight.normal),
-                url: linkUrl),
-        ],
-      ))
-    ]);
   }
 
   Future<void> _purchase({PAC purchase}) async {
@@ -556,8 +543,7 @@ class _PurchasePageState extends State<PurchasePage> {
   /// Handle a purchase error by clearing any error pac transaction and
   /// showing a dialog.
   void _purchaseError({bool rateLimitExceeded = false}) async {
-    log(
-        "iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
+    log("iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
     var tx = await PacTransaction.shared.get();
