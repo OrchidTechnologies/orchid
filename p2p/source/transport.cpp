@@ -131,7 +131,7 @@ class Transport :
                     return;
                 parent_->transport_error(openvpn::Error::RELAY_ERROR, what);
             });
-        } ready_(); });
+        } ready_(); }, __FUNCTION__);
     }
 
     task<void> Shut() noexcept override {
@@ -157,7 +157,7 @@ class Transport :
         nest_.Hatch([&]() noexcept { return [this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
             //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
             co_await Inner().Send(buffer);
-        }; });
+        }; }, __FUNCTION__);
 
         return true;
     }
@@ -167,7 +167,7 @@ class Transport :
             Subset data(buffer.c_data(), buffer.size());
             //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
             co_await Inner().Send(data);
-        }; });
+        }; }, __FUNCTION__);
 
         return true;
     }

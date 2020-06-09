@@ -91,13 +91,13 @@ class Nest :
     }
 
     template <typename Code_>
-    auto Hatch(Code_ code) noexcept -> typename std::enable_if<noexcept(code()), bool>::type {
+    auto Hatch(Code_ code, const char *name) noexcept -> typename std::enable_if<noexcept(code()), bool>::type {
         Count count(this);
         if (count > limit_)
             return false;
         Spawn([count = std::move(count), code = code()]() mutable noexcept -> task<void> {
             orc_ignore({ co_await code(); });
-        });
+        }, name);
         return true;
     }
 };

@@ -36,16 +36,18 @@ inline constexpr class {} co_optic;
 
 class Fiber {
   private:
+    const char *name_;
     Fiber *parent_;
-    std::string name_;
 
   public:
-    Fiber(Fiber *parent = nullptr);
+    Fiber(const char *name, Fiber *parent = nullptr);
+
     ~Fiber();
 
-    Fiber *Parent() {
-        return parent_;
-    }
+    void Name(const char *name) {
+        name_ = name; }
+    Fiber *Parent() const {
+        return parent_; }
 
     static void Report();
 };

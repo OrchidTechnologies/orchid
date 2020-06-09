@@ -84,7 +84,7 @@ class Bonded {
         if (iterator->second != nullptr)
             Spawn([bonding = std::move(iterator->second)]() noexcept -> task<void> {
                 co_await bonding->Shut();
-            });
+            }, __FUNCTION__);
         locked->bondings_.erase(iterator);
         if (locked->bondings_.empty())
             Stop();

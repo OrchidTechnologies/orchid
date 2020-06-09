@@ -84,7 +84,7 @@ class Inverted final :
                 const auto subset(beam.subset(0, writ));
                 Pump::Land(subset);
             }
-        });
+        }, __FUNCTION__);
     }
 
     task<void> Shut() noexcept override {

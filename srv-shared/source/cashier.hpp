@@ -118,7 +118,7 @@ class Cashier :
                 // XXX: that same disk queue should maybe be in charge of the old tickets?
                 co_await Sleep(5000);
             }
-        });
+        }, __FUNCTION__);
     }
 };
 

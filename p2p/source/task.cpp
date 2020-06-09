@@ -29,7 +29,8 @@ namespace orc {
 
 Locked<std::set<Fiber *>> fibers_;
 
-Fiber::Fiber(Fiber *parent) :
+Fiber::Fiber(const char *name, Fiber *parent) :
+    name_(name),
     parent_(parent)
 {
     fibers_()->emplace(this);
@@ -41,15 +42,19 @@ Fiber::~Fiber() {
 
 void Fiber::Report() {
     auto fibers(*fibers_());
+#if 0
     for (const auto fiber : fibers)
-        if (const auto parent = fiber->Parent())
+        if (const auto parent = fiber->parent_)
             fibers.erase(parent);
+#endif
 
     std::cerr << std::endl;
     std::cerr << "^^^^^^^^^^" << std::endl;
     for (const auto fiber : fibers) {
         std::cerr << fiber;
-        if (!fiber->name_.empty())
+        std::cerr << "/";
+        std::cerr << fiber->parent_;
+        if (fiber->name_ != nullptr)
             std::cerr << ": " << fiber->name_;
         std::cerr << std::endl;
     }

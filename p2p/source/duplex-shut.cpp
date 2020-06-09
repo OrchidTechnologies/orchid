@@ -31,7 +31,7 @@ void Duplex::Shut() noexcept {
         co_await inner_.async_close(boost::beast::websocket::close_code::normal, Token());
     } catch (const asio::system_error &error) {
         orc_except({ orc_adapt(error); })
-    } });
+    } }, __FUNCTION__);
 }
 
 }

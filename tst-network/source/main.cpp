@@ -106,6 +106,8 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
 }
 
 task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
+    (co_await co_optic)->Name(provider.c_str());
+
     std::cout << provider << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
@@ -260,12 +262,12 @@ int Main(int argc, const char *const argv[]) {
 
     const auto coinbase(Update(60*1000, [origin]() -> task<Fiat> {
         co_return co_await Coinbase(*origin, "USD");
-    }));
+    }, "Coinbase"));
     Wait(coinbase->Open());
 
     const auto kraken(Update(60*1000, [origin]() -> task<Fiat> {
         co_return co_await Kraken(*origin);
-    }));
+    }, "Kraken"));
     Wait(kraken->Open());
 
     const auto uniswap(Update(60*1000, [endpoint]() -> task<Fiat> {
@@ -274,7 +276,7 @@ int Main(int argc, const char *const argv[]) {
             Rate(endpoint, block, "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc"),
             Rate(endpoint, block, "0x9b533f1ceaa5ceb7e5b8994ef16499e47a66312d"));
         co_return Fiat{Ten12 * usdc_weth / Ten18, Ten12 * usdc_weth / oxt_weth / Ten18};
-    }));
+    }, "Uniswap"));
     Wait(uniswap->Open());
 
     const auto chainlink(Update(60*1000, [endpoint]() -> task<Fiat> {
@@ -282,7 +284,7 @@ int Main(int argc, const char *const argv[]) {
             Chainlink(endpoint, "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F"),
             Chainlink(endpoint, "0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA"));
         co_return Fiat{eth_usd / Ten18, oxt_usd / Ten18};
-    }));
+    }, "Chainlink"));
     Wait(chainlink->Open());
 
     const auto gauge(Make<Gauge>(60*1000, origin));
@@ -291,7 +293,7 @@ int Main(int argc, const char *const argv[]) {
     Spawn([&]() noexcept -> task<void> { for (;;) {
         Fiber::Report();
         co_await Sleep(120000);
-    } });
+    } }, "Report");
 
     Spawn([&]() noexcept -> task<void> { for (;;) try {
         const auto now(Timestamp());
@@ -317,8 +319,10 @@ int Main(int argc, const char *const argv[]) {
             state->stakes_ = std::move(stakes);
         } catch (...) {
         } }(), [&]() -> task<void> {
+            (co_await co_optic)->Name("PureVPN");
             state->purevpn_ = co_await Try(TestOpenVPN(origin, purevpn));
         }(), [&]() -> task<void> {
+            (co_await co_optic)->Name("Mullvad");
             state->mullvad_ = co_await Try(TestWireGuard(origin, mullvad));
         }(), [&]() -> task<void> {
             std::vector<std::string> names;
@@ -343,7 +347,7 @@ int Main(int argc, const char *const argv[]) {
 
         std::atomic_store(&state_, state);
         co_await Sleep(1000);
-    } orc_catch({ orc_insist(false); }) });
+    } orc_catch({ orc_insist(false); }) }, "Test");
 
     const Store store([&]() {
         std::string store;

@@ -42,7 +42,7 @@ class Retry final :
         if (tube != nullptr)
             Spawn([tube = std::move(tube)]() noexcept -> task<void> {
                 co_await tube->Shut();
-            });
+            }, __FUNCTION__);
     }
 
   protected:
@@ -73,7 +73,7 @@ class Retry final :
                 Close(std::move(tube));
             } else
                 tube_ = std::move(tube);
-        }; });
+        }; }, __FUNCTION__);
     }
 
     task<void> Shut() noexcept override {

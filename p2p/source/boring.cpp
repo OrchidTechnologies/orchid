@@ -52,7 +52,7 @@ void Boring::Land(const Buffer &data) {
             case WRITE_TO_NETWORK: {
                 nest_.Hatch([&]() noexcept { return [this, data = std::move(output), size = result.size]() -> task<void> {
                     co_await Inner().Send(data.subset(0, size));
-                }; });
+                }; }, __FUNCTION__);
                 input.clear();
                 continue;
             } break;
@@ -120,7 +120,7 @@ void Boring::Open() {
         }
 
         done_();
-    });
+    }, __FUNCTION__);
 }
 
 task<void> Boring::Shut() noexcept {

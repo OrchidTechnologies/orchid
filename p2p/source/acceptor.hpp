@@ -84,7 +84,7 @@ class Acceptor :
     void Open() {
         Spawn([this]() noexcept -> task<void> {
             while (co_await Next());
-        });
+        }, __FUNCTION__);
     }
 
     void Open(const Socket &endpoint) {

@@ -46,7 +46,7 @@ class Updater :
     }
 
   public:
-    Updater(unsigned milliseconds, Code_ &&code) :
+    Updater(unsigned milliseconds, Code_ &&code, const char *name) :
         milliseconds_(milliseconds),
         code_(std::move(code))
     {
@@ -61,7 +61,7 @@ class Updater :
             }
 
             Stop();
-        });
+        }, name);
     }
 
     Task<void> Open() override {
@@ -74,8 +74,8 @@ class Updater :
 };
 
 template <typename Code_>
-S<Updater<Code_>> Update(unsigned milliseconds, Code_ &&code) {
-    return Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code));
+S<Updater<Code_>> Update(unsigned milliseconds, Code_ &&code, const char *name) {
+    return Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code), name);
 }
 
 }

@@ -276,7 +276,7 @@ int Main(int argc, const char *const argv[]) {
 
         auto fiat(Update(5*60*1000, [origin, currency = args["currency"].as<std::string>()]() -> task<Fiat> {
             co_return co_await Coinbase(*origin, currency);
-        }));
+        }, "Coinbase"));
         Wait(fiat->Open());
 
         auto gauge(Make<Gauge>(5*60*1000, origin));

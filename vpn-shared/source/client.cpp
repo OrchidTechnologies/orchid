@@ -81,7 +81,7 @@ void Client::Issue(uint256_t amount) {
         { const auto locked(locked_());
             locked->pending_.try_emplace(hash, ticket, signature); }
         co_return co_await Submit(hash, ticket, receipt, signature);
-    }; });
+    }; }, __FUNCTION__);
 }
 
 void Client::Transfer(size_t size) {

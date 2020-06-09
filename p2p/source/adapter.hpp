@@ -113,7 +113,7 @@ class Adapter {
             } catch (...) {
                 Convert(std::move(handler), std::current_exception());
             }
-        });
+        }, __FUNCTION__);
     }
 
     void shutdown(boost::asio::socket_base::shutdown_type type) noexcept {
@@ -133,7 +133,7 @@ class Adapter {
             } catch (...) {
                 Convert(std::move(handler), std::current_exception());
             }
-        });
+        }, __FUNCTION__);
     }
 };
 

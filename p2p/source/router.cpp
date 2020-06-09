@@ -118,9 +118,9 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                     //else if (code == asio::ssl::error::stream_truncated);
                     else orc_adapt(error);
                 }
-            } orc_catch({}) });
+            } orc_catch({}) }, "Router::handle");
         }
-    });
+    }, "Router::accept");
 }
 
 Response Respond(const Request &request, http::status status, const std::string &type, std::string body) {

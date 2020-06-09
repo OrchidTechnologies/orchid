@@ -52,7 +52,7 @@ class Incoming final :
             co_await channel.Open();
             // XXX: this could fail; then what?
             co_await server->Open(bonding);
-        });
+        }, __FUNCTION__);
     }
 
     void Stop(const std::string &error) noexcept override {
@@ -113,7 +113,7 @@ task<void> Server::Send(Pipe &pipe, const Buffer &data, bool force) {
 
 void Server::Send(Pipe &pipe, const Buffer &data) {
     nest_.Hatch([&]() noexcept { return [this, &pipe, data = Beam(data)]() -> task<void> {
-        co_return co_await Send(pipe, data, false); }; });
+        co_return co_await Send(pipe, data, false); }; }, __FUNCTION__);
 }
 
 task<void> Server::Send(const Buffer &data) {
@@ -263,7 +263,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
             funder, recipient,
             receipt, old
         );
-    } orc_catch({}) });
+    } orc_catch({}) }, __FUNCTION__);
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
@@ -285,7 +285,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
             } orc_catch({}) });
 
             co_await Invoice(*this, source, id);
-        }; });
+        }; }, __FUNCTION__);
 
         return true;
     })) Send(Inner(), data);

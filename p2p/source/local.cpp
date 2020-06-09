@@ -73,7 +73,7 @@ class LocalOpening final :
             }
 
             Stop();
-        });
+        }, __FUNCTION__);
     }
 
     void Open(const Socket &endpoint) {

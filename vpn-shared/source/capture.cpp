@@ -232,7 +232,7 @@ void Capture::Land(const Buffer &data) {
     if (internal_) nest_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
         if (co_await internal_->Send(data))
             analyzer_->Analyze(data.span());
-    }; });
+    }; }, __FUNCTION__);
 }
 
 void Capture::Stop(const std::string &error) noexcept {
@@ -246,7 +246,7 @@ void Capture::Land(const Buffer &data, bool analyze) {
         co_await Inner().Send(data);
         if (analyze)
             analyzer_->AnalyzeIncoming(data.span());
-    }; });
+    }; }, __FUNCTION__);
 }
 
 Capture::Capture(const Host &local) :
@@ -327,7 +327,7 @@ class Flow {
 
             output->Shut();
             latch.count_down();
-        });
+        }, __FUNCTION__);
     }
 
   public:
@@ -342,7 +342,7 @@ class Flow {
         Spawn([this]() noexcept -> task<void> {
             co_await latch_;
             co_await plant_->Pull(four_);
-        });
+        }, __FUNCTION__);
 
         Splice(up_.get(), down_.get());
         Splice(down_.get(), up_.get());
@@ -405,7 +405,7 @@ class Split :
                 co_return;
             flow->down_ = std::make_unique<Connection<asio::ip::tcp::socket, false>>(std::move(connection));
             flow->Open();
-        });
+        }, __FUNCTION__);
     }
 
     void Stop(const std::string &error) noexcept override {
@@ -571,7 +571,7 @@ task<bool> Split::Send(const Beam &data) {
                         Forge(span, tcp, socket, local_);
                         capture_->Land(beam, false);
                     }
-                });
+                }, __FUNCTION__);
             }
 
             co_return true;

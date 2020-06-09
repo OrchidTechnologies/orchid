@@ -46,7 +46,7 @@ class Gauge {
     Gauge(unsigned milliseconds, const S<Origin> &origin) :
         prices_(Update(milliseconds, [origin]() -> task<S<Prices_>> {
             co_return co_await Update_(*origin);
-        }))
+        }, "Gauge"))
     {
     }
 

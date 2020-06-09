@@ -62,15 +62,15 @@ class Scheduled :
 Scheduled Schedule();
 
 template <typename Type_>
-Type_ Wait(task<Type_> code) {
+Type_ Wait(task<Type_> code, const char *name = nullptr) {
     // XXX: centralize Schedule?
-    return cppcoro::sync_wait([](task<Type_> code) mutable -> cppcoro::task<Type_> {
+    return cppcoro::sync_wait([](task<Type_> code, const char *name) mutable -> cppcoro::task<Type_> {
 #ifdef ORC_FIBER
-        Fiber fiber;
+        Fiber fiber(name);
         code.Set(&fiber);
 #endif
         co_return co_await std::move(code);
-    }(std::move(code)));
+    }(std::move(code), name));
 }
 
 class Detached {
@@ -96,18 +96,18 @@ class Detached {
 };
 
 template <typename Code_>
-auto Spawn(Code_ code) noexcept -> typename std::enable_if<noexcept(code())>::type {
-    [](Code_ code) mutable noexcept -> Detached {
+auto Spawn(Code_ code, const char *name) noexcept -> typename std::enable_if<noexcept(code())>::type {
+    [](Code_ code, const char *name) mutable noexcept -> Detached {
         co_await Schedule();
 #ifdef ORC_FIBER
         auto task(code());
-        Fiber fiber;
+        Fiber fiber(name);
         task.Set(&fiber);
         co_await std::move(task);
 #else
         co_await code();
 #endif
-    }(std::move(code));
+    }(std::move(code), name);
 }
 
 }

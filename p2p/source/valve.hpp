@@ -61,7 +61,7 @@ inline S<Type_> Break(Args_ &&...args) {
     return std::shared_ptr<Type_>(backup, [valve = std::move(valve)](Type_ *) mutable noexcept {
         Spawn([valve = std::move(valve)]() noexcept -> task<void> {
             co_await valve->Shut();
-        });
+        }, typeid(Type_).name());
     });
 }
 

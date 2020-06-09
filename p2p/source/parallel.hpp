@@ -35,7 +35,7 @@ template <typename ...Args_>
     const auto parent(co_await co_optic);
     co_return co_await cppcoro::when_all([](Task<Args_> &&task, Fiber *parent) -> cppcoro::task<Maybe<Args_>> {
         auto maybe(Try(std::move(task)));
-        Fiber fiber(parent);
+        Fiber fiber(nullptr, parent);
         maybe.Set(&fiber);
         co_return co_await std::move(maybe);
     }(std::forward<Task<Args_>>(args), parent)...);
@@ -52,7 +52,7 @@ template <typename Type_>
         maybes.emplace_back(Try(std::move(tasks[i])));
 
 #ifdef ORC_FIBER
-    std::vector<Fiber> fibers(maybes.size(), co_await co_optic);
+    std::vector<Fiber> fibers(maybes.size(), Fiber(nullptr, co_await co_optic));
     for (size_t i(0); i != maybes.size(); ++i)
         maybes[i].Set(&fibers[i]);
 #endif

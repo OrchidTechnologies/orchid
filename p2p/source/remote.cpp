@@ -456,7 +456,7 @@ class RemoteConnection final :
 void Remote::Send(pbuf *buffer) {
     nest_.Hatch([&]() noexcept { return [this, data = Chain(buffer)]() -> task<void> {
         co_return co_await Inner().Send(data);
-    }; });
+    }; }, __FUNCTION__);
 }
 
 err_t Remote::Output(netif *interface, pbuf *buffer, const ip4_addr_t *destination) {

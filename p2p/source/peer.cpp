@@ -193,7 +193,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
 
                     self->Stop();
                 });
-            });
+            }, __FUNCTION__);
         break;
 
         case webrtc::PeerConnectionInterface::kIceConnectionClosed:
