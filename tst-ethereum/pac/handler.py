@@ -160,6 +160,11 @@ def fund_PAC_(
     return txn_hash
 
 
+
+def get_min_escrow():
+    return 15.0
+
+
 def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     wallet = generate_wallet()
     signer = wallet['address']
@@ -169,7 +174,7 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     # todo: pass on gas and app-store overhead?
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
-    escrow_oxt = 15.0 # todo: better alg to determine this?
+    escrow_oxt = get_min_escrow() # todo: better alg to determine this?
     value_usd  = total_usd * 0.7 - 0.5 # 30% store fee, 0.5 setup charge
     total_oxt = value_usd * oxt_per_usd + escrow_oxt
     #if (escrow_oxt >= 0.9*total_oxt):
@@ -289,7 +294,6 @@ def get_transaction_confirm_count(txhash):
     logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum}) diff({diff}) ')
     return diff
 
-
 def get_transaction_status(txhash):
     try:
         count = get_transaction_confirm_count(txhash)
@@ -323,6 +327,7 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             if ((status != 'confirmed') and (age < 3600)):
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
+
             logging.debug(f'Found potential account ({push_txn_hash}) status: {status} age:{age} config: {config}')
             key = {
                 'price': item['price'],
@@ -330,12 +335,13 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             }
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
+                balance = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
                 # update succeeded
-                if (status == 'confirmed'):
+                if ( (status == 'confirmed') and (balance > get_min_escrow()) ):
                     ret = push_txn_hash, config, signer_pubkey
                     break
                 else:
-                    logging.debug(f'broken account: {push_txn_hash} status: {status}  age: {age} deleted and skipped')
+                    logging.debug(f'broken account: {push_txn_hash} status: {status}  age: {age} balance: {balance} deleted and skipped')
             else:
                 logging.debug('Account was already deleted!')
     if ret:
