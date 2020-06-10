@@ -66,7 +66,7 @@ static const Float Two128(uint256_t(1) << 128);
 
 struct Report {
     std::string stakee_;
-    Float cost_;
+    std::optional<Float> cost_;
     Float speed_;
     Host host_;
 };
@@ -86,22 +86,24 @@ task<Host> Find(Origin &origin) {
 }
 
 task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
+    (co_await co_optic)->Name("OpenVPN");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         co_await Connect(remote, origin, remote.Host(), std::move(ovpn), "", "");
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{"", 0, speed, host};
+        co_return Report{"", std::nullopt, speed, host};
     });
 }
 
 task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
+    (co_await co_optic)->Name("WireGuard");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         co_await Guard(remote, origin, remote.Host(), std::move(config));
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{"", 0, speed, host};
+        co_return Report{"", std::nullopt, speed, host};
     });
 }
 
@@ -140,8 +142,6 @@ struct Stake {
 struct State {
     uint256_t timestamp_;
     Float speed_;
-    std::variant<std::exception_ptr, Report> purevpn_;
-    std::variant<std::exception_ptr, Report> mullvad_;
     std::map<std::string, Maybe<Report>> providers_;
     std::map<Address, Stake> stakes_;
 
@@ -212,21 +212,71 @@ task<Fiat> Kraken(Origin &origin) {
     co_return Fiat{eth_usd / Ten18, eth_usd * oxt_eth / Ten18};
 }
 
+void Print(std::ostream &body, const std::string &name, const Maybe<Report> &maybe) {
+    body << " " << name << ": " << std::string(11 - name.size(), ' ');
+
+    if (const auto error = std::get_if<0>(&maybe)) try {
+        if (*error != nullptr)
+            std::rethrow_exception(*error);
+    } catch (const std::exception &error) {
+        std::string what(error.what());
+        boost::replace_all(what, "\r", "");
+        boost::replace_all(what, "\n", " || ");
+        body << what;
+    } else if (const auto report = std::get_if<1>(&maybe)) {
+        body << std::fixed << std::setprecision(4);
+        body << "$";
+        if (report->cost_)
+            body << *report->cost_;
+        else
+            body << "-.----";
+        body << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
+    } else orc_insist(false);
+
+    body << "\n";
+    body << "------------+---------+------------+-----------------\n";
+}
+
+std::string Load(const std::string &file) {
+    std::string data;
+    boost::filesystem::load_string_file(file, data);
+    return data;
+}
+
 int Main(int argc, const char *const argv[]) {
+    std::vector<std::string> openvpns;
+    std::vector<std::string> wireguards;
+
     po::variables_map args;
 
-    po::options_description options("command-line (only)");
-    options.add_options()
+    po::options_description group("general command line");
+    group.add_options()
         ("help", "produce help message")
+    ;
 
+    po::options_description options;
+
+    { po::options_description group("network endpoint");
+    group.add_options()
+        ("port", po::value<uint16_t>()->default_value(443), "port to advertise on blockchain")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
+    ; options.add(group); }
 
+    { po::options_description group("orchid account");
+    group.add_options()
         ("funder", po::value<std::string>())
         ("secret", po::value<std::string>())
         ("seller", po::value<std::string>()->default_value("0x0000000000000000000000000000000000000000"))
-    ;
+    ; options.add(group); }
+
+    { po::options_description group("protocol testing");
+    group.add_options()
+        ("openvpn", po::value(&openvpns))
+        ("wireguard", po::value(&wireguards))
+    ; options.add(group); }
 
     po::store(po::parse_command_line(argc, argv, po::options_description()
+        .add(group)
         .add(options)
     ), args);
 
@@ -234,6 +284,7 @@ int Main(int argc, const char *const argv[]) {
 
     if (args.count("help") != 0) {
         std::cout << po::options_description()
+            .add(group)
             .add(options)
         << std::endl;
         return 0;
@@ -253,12 +304,6 @@ int Main(int argc, const char *const argv[]) {
     const Address funder(args["funder"].as<std::string>());
     const Secret secret(Bless(args["secret"].as<std::string>()));
     const Address seller(args["seller"].as<std::string>());
-
-    std::string purevpn;
-    boost::filesystem::load_string_file("PureVPN.ovpn", purevpn);
-
-    std::string mullvad;
-    boost::filesystem::load_string_file("Mullvad.conf", mullvad);
 
     const auto coinbase(Update(60*1000, [origin]() -> task<Fiat> {
         co_return co_await Coinbase(*origin, "USD");
@@ -319,14 +364,18 @@ int Main(int argc, const char *const argv[]) {
             state->stakes_ = std::move(stakes);
         } catch (...) {
         } }(), [&]() -> task<void> {
-            (co_await co_optic)->Name("PureVPN");
-            state->purevpn_ = co_await Try(TestOpenVPN(origin, purevpn));
-        }(), [&]() -> task<void> {
-            (co_await co_optic)->Name("Mullvad");
-            state->mullvad_ = co_await Try(TestWireGuard(origin, mullvad));
-        }(), [&]() -> task<void> {
             std::vector<std::string> names;
             std::vector<task<Report>> tests;
+
+            for (const auto &openvpn : openvpns) {
+                names.emplace_back("OpenVPN");
+                tests.emplace_back(TestOpenVPN(origin, Load(openvpn)));
+            }
+
+            for (const auto &wireguard : wireguards) {
+                names.emplace_back("WireGuard");
+                tests.emplace_back(TestWireGuard(origin, Load(wireguard)));
+            }
 
             for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
                 {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
@@ -349,12 +398,6 @@ int Main(int argc, const char *const argv[]) {
         co_await Sleep(1000);
     } orc_catch({ orc_insist(false); }) }, "Test");
 
-    const Store store([&]() {
-        std::string store;
-        boost::filesystem::load_string_file(args["tls"].as<std::string>(), store);
-        return store;
-    }());
-
     Router router;
 
     router(http::verb::get, R"(/)", [&](Request request) -> task<Response> {
@@ -373,54 +416,8 @@ int Main(int argc, const char *const argv[]) {
         { const auto fiat((*chainlink)()); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
         body << "\n";
 
-        body << " PureVPN:     ";
-        if (const auto error = std::get_if<0>(&state->purevpn_)) try {
-            if (*error != nullptr)
-                std::rethrow_exception(*error);
-        } catch (const std::exception &error) {
-            std::string what(error.what());
-            boost::replace_all(what, "\r", "");
-            boost::replace_all(what, "\n", " || ");
-            body << what;
-        } else if (const auto report = std::get_if<1>(&state->purevpn_)) {
-            body << std::fixed << std::setprecision(4);
-            body << "$-.----   " << report->speed_ << "Mbps   " << report->host_.String();
-        } else orc_insist(false);
-        body << "\n";
-
-        body << "------------+---------+------------+-----------------\n";
-
-        body << " Mullvad:     ";
-        if (const auto error = std::get_if<0>(&state->mullvad_)) try {
-            if (*error != nullptr)
-                std::rethrow_exception(*error);
-        } catch (const std::exception &error) {
-            std::string what(error.what());
-            boost::replace_all(what, "\r", "");
-            boost::replace_all(what, "\n", " || ");
-            body << what;
-        } else if (const auto report = std::get_if<1>(&state->mullvad_)) {
-            body << std::fixed << std::setprecision(4);
-            body << "$-.----   " << report->speed_ << "Mbps   " << report->host_.String();
-        } else orc_insist(false);
-        body << "\n";
-
-        for (const auto &[name, provider] : state->providers_) {
-            body << "------------+---------+------------+-----------------\n";
-            body << " " << name << ": " << std::string(11 - name.size(), ' ');
-            if (const auto error = std::get_if<0>(&provider)) try {
-                std::rethrow_exception(*error);
-            } catch (const std::exception &error) {
-                std::string what(error.what());
-                boost::replace_all(what, "\r", "");
-                boost::replace_all(what, "\n", " || ");
-                body << what;
-            } else if (const auto report = std::get_if<1>(&provider)) {
-                body << std::fixed << std::setprecision(4);
-                body << "$" << report->cost_ << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
-            } else orc_insist(false);
-            body << "\n";
-        }
+        for (const auto &[name, provider] : state->providers_)
+            Print(body, name, provider);
 
         body << "\n";
 
@@ -451,9 +448,11 @@ int Main(int argc, const char *const argv[]) {
 
         for (const auto &[name, provider] : state->providers_)
             if (const auto report = std::get_if<1>(&provider)) {
+                if (!report->cost_)
+                    continue;
                 const auto stake(state->stakes_[report->stakee_].amount_);
                 total += stake;
-                providers.emplace(report->cost_, stake);
+                providers.emplace(*report->cost_, stake);
             }
         total /= 2;
 
@@ -468,7 +467,8 @@ int Main(int argc, const char *const argv[]) {
         co_return Respond(request, http::status::ok, "text/plain", cost.str());
     });
 
-    router.Run(boost::asio::ip::make_address("0.0.0.0"), 443, store.Key(), store.Chain());
+    const Store store(Load(args["tls"].as<std::string>()));
+    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Chain());
     Thread().join();
     return 0;
 }
