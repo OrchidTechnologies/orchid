@@ -38,6 +38,11 @@ import 'model/orchid_hop.dart';
 class CircuitPage extends StatefulWidget {
   final WrappedSwitchController switchController;
 
+  // Note: This performs a behavior like the iOSContacts App create flow for the
+  // Note: add hop action, revealing the already pushed hop editor upon completing
+  // Note: the add flow.
+  static var iOSContactsStyleAddHopBehavior = false;
+
   CircuitPage({Key key, this.switchController}) : super(key: key);
 
   @override
@@ -658,10 +663,12 @@ class CircuitPageState extends State<CircuitPage>
     _saveCircuit();
 
     // View the newly created hop:
-    // Note: We would like this to behave like the iOS Contacts add flow,
+    // Note: This performs a behavior like the iOS-Contacts App add flow,
     // Note: revealing the already pushed navigation state upon completing the
-    // Note: add flow.  The non-animated push approximates this.
-    _viewHop(uniqueHop, animated: false);
+    // Note: add flow.  This non-animated push approximates this.
+    if (CircuitPage.iOSContactsStyleAddHopBehavior) {
+      _viewHop(uniqueHop, animated: false);
+    }
   }
 
   // View a hop selected from the circuit list
