@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
@@ -32,6 +33,7 @@ class AddHopPage extends StatefulWidget {
 
 class _AddHopPageState extends State<AddHopPage> {
   bool _showPACs = false;
+  bool _showWireGuard = false;
 
   @override
   void initState() {
@@ -41,6 +43,8 @@ class _AddHopPageState extends State<AddHopPage> {
 
   void initStateAsync() async {
     _showPACs = (await OrchidPurchaseAPI().apiConfig()).enabled;
+    _showWireGuard = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('wireguard', false);
     setState(() {});
   }
 
@@ -64,11 +68,13 @@ class _AddHopPageState extends State<AddHopPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
+                    if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                      pady(64),
                     pady(40),
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
-                      child: Image.asset("assets/images/approach.png", height: 100),
+                      child: Image.asset("assets/images/approach.png",
+                          height: 100),
                     ),
                     pady(24),
                     Text(s.orchidIsUniqueAsItSupportsMultipleVPN,
@@ -82,8 +88,7 @@ class _AddHopPageState extends State<AddHopPage> {
                     pady(24),
 
                     // PAC Purchase
-                    if (_showPACs)
-                      _divider(),
+                    if (_showPACs) _divider(),
                     if (_showPACs)
                       _buildHopChoice(
                           text: s.buyOrchidAccount,
@@ -101,7 +106,8 @@ class _AddHopPageState extends State<AddHopPage> {
                               context: context,
                               builder: (BuildContext context) {
                                 return ScanOrPasteDialog(
-                                    onAddFlowComplete: widget.onAddFlowComplete);
+                                    onAddFlowComplete:
+                                        widget.onAddFlowComplete);
                               });
                         },
                         imageName: "assets/images/scan.png"),
@@ -127,13 +133,15 @@ class _AddHopPageState extends State<AddHopPage> {
                         imageName: "assets/images/security_purple.png"),
 
                     // WireGuard
-                    _divider(),
-                    _buildHopChoice(
-                        text: "Enter WireGuard Profile",
-                        onTap: () {
-                          _addHopType(HopProtocol.WireGuard);
-                        },
-                        imageName: "assets/images/security_purple.png"),
+                    if (_showWireGuard) ...[
+                      _divider(),
+                      _buildHopChoice(
+                          text: "Enter WireGuard Profile",
+                          onTap: () {
+                            _addHopType(HopProtocol.WireGuard);
+                          },
+                          imageName: "assets/images/security_purple.png"),
+                    ],
 
                     _divider(),
                   ],
