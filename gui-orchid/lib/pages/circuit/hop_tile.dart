@@ -48,42 +48,45 @@ class HopTile extends StatelessWidget {
     return SafeArea(
       top: false,
       bottom: false,
-      child: Column(
-        key: key,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          // Optional top flow divider
-          if (showFlowDividerTop) buildFlowDivider(),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 500),
+        child: Column(
+          key: key,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            // Optional top flow divider
+            if (showFlowDividerTop) buildFlowDivider(),
 
-          // Optional top border divider
-          if (showTopDivider) _divider(),
+            // Optional top border divider
+            if (showTopDivider) _divider(),
 
-          // Main tile body and background
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: dottedBorder
-                ? DottedBorder(
-                    color: borderColor ?? textColor,
-                    strokeWidth: 2.0,
-                    dashPattern: [8, 10],
-                    radius: Radius.circular(10),
-                    borderType: BorderType.RRect,
-                    child: _buildListTile())
-                : Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                        color: color,
-                        gradient: gradient),
-                    child: _buildListTile(),
-                  ),
-          ),
+            // Main tile body and background
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: dottedBorder
+                  ? DottedBorder(
+                      color: borderColor ?? textColor,
+                      strokeWidth: 2.0,
+                      dashPattern: [8, 10],
+                      radius: Radius.circular(10),
+                      borderType: BorderType.RRect,
+                      child: _buildListTile())
+                  : Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          color: color,
+                          gradient: gradient),
+                      child: _buildListTile(),
+                    ),
+            ),
 
-          // Optional bottom border divider
-          if (showBottomDivider) _divider(),
+            // Optional bottom border divider
+            if (showBottomDivider) _divider(),
 
-          // Optional bottom flow divider
-          if (showFlowDividerBottom) buildFlowDivider()
-        ],
+            // Optional bottom flow divider
+            if (showFlowDividerBottom) buildFlowDivider()
+          ],
+        ),
       ),
     );
   }
