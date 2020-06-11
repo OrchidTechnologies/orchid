@@ -67,7 +67,7 @@ namespace orc
     {
         printf("[%d] deploy [%i] \n", __LINE__, int(bin.size()) );
    		assert(bin.size() > 2);
-        auto trans_hash = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(address)},{"data",bin}, {"gas","4712388"}, {"gasPrice","100000000000"}}} );
+        auto trans_hash = co_await endpoint("eth_sendTransaction", {Multi{{"from",uint256_t(address)},{"data",bin}, {"gas","4712388"}, {"gasPrice","100000000000"}}} );
         // todo: this currently works on EthereumJS TestRPC v6.0.3, but on a live network you'd need to wait for the transaction to be mined
    		auto result     = co_await endpoint("eth_getTransactionReceipt", {trans_hash.asString()} );
    		string contractAddress = result["contractAddress"].asString();

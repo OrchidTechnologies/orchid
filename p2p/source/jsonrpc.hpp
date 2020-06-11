@@ -265,7 +265,7 @@ class Argument final {
     }
 };
 
-typedef std::map<std::string, Argument> Map;
+typedef std::map<std::string, Argument> Multi;
 
 typedef Beam Bytes;
 typedef Brick<32> Bytes32;

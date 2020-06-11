@@ -99,7 +99,7 @@ int Main(int argc, const char *const argv[]) {
         std::cout << "codehash: " << codehash << std::endl;
         std::cout << "shared: " << shared << std::endl;
 
-        const auto logs(co_await endpoint("eth_getLogs", {Map{
+        const auto logs(co_await endpoint("eth_getLogs", {Multi{
             {"fromBlock", "0x0"},
             {"toBlock", latest},
             {"address", lottery},

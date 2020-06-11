@@ -188,7 +188,7 @@ class Selector final :
     task<Result_> Call(const Endpoint &endpoint, const Argument &number, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        auto data(Bless((co_await endpoint("eth_call", {Map{
+        auto data(Bless((co_await endpoint("eth_call", {Multi{
             {"to", contract},
             {"gas", gas},
             {"data", Tie(*this, builder)},
@@ -202,7 +202,7 @@ class Selector final :
     task<Result_> Call(const Endpoint &endpoint, const Address &from, const Argument &number, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        auto data(Bless((co_await endpoint("eth_call", {Map{
+        auto data(Bless((co_await endpoint("eth_call", {Multi{
             {"from", from},
             {"to", contract},
             {"gas", gas},
@@ -217,7 +217,7 @@ class Selector final :
     task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Map{
+        auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Multi{
             {"from", from},
             {"to", contract},
             {"gas", gas},
@@ -229,7 +229,7 @@ class Selector final :
     task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Map{
+        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Multi{
             {"from", from},
             {"to", contract},
             {"gas", gas},
@@ -241,7 +241,7 @@ class Selector final :
     task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const uint256_t &price, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Map{
+        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Multi{
             {"from", from},
             {"to", contract},
             {"gas", gas},

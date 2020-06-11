@@ -42,7 +42,7 @@ task<void> Cashier::Look(const Address &signer, const Address &funder, const std
     static const auto look(Hash("look(address,address)").Clip<4>().num<uint32_t>());
     Builder builder;
     Coder<Address, Address>::Encode(builder, funder, signer);
-    co_await station_->Send("eth_call", 'C' + combined, {Map{
+    co_await station_->Send("eth_call", 'C' + combined, {Multi{
         {"to", lottery_},
         {"gas", uint256_t(90000)},
         {"data", Tie(look, builder)},
@@ -226,7 +226,7 @@ task<bool> Cashier::Check(const Address &signer, const Address &funder, const ui
     if (subscribe) {
         auto combined(Combine(signer, funder));
 
-        co_await station_->Send("eth_subscribe", 'S' + combined, {"logs", Map{
+        co_await station_->Send("eth_subscribe", 'S' + combined, {"logs", Multi{
             {"address", lottery_},
             {"topics", {{Update_, Bound_}, Number<uint256_t>(funder), Number<uint256_t>(signer)}},
         }});
