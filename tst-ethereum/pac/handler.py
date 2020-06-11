@@ -335,9 +335,9 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             }
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
-                balance = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
+                balance, escrow = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
                 # update succeeded
-                if ( (status == 'confirmed') and (balance > get_min_escrow()) ):
+                if ( (status == 'confirmed') and (escrow > get_min_escrow()) ):
                     ret = push_txn_hash, config, signer_pubkey
                     break
                 else:
@@ -660,7 +660,7 @@ def look(funder: str, signer: str):
     amount, escrow, _, _, _ = lottery_contract.functions.look(w3.toChecksumAddress(funder), w3.toChecksumAddress(signer)).call()
     account_total = amount + escrow
     logging.debug(f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + {escrow} (escrow) = {account_total} (total)')
-    return account_total
+    return amount, escrow
 
 
 def apple(event, context):
