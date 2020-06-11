@@ -23,6 +23,8 @@
 #include <iostream>
 #include <vector>
 
+#include <cppcoro/async_mutex.hpp>
+
 #include <boost/filesystem/string_file.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -49,6 +51,7 @@
 #include "network.hpp"
 #include "remote.hpp"
 #include "router.hpp"
+#include "sequence.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
 #include "transport.hpp"
@@ -137,6 +140,13 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
 
 struct Stake {
     uint256_t amount_;
+    Maybe<std::string> url_;
+
+    Stake(uint256_t amount, Maybe<std::string> url) :
+        amount_(std::move(amount)),
+        url_(std::move(url))
+    {
+    }
 };
 
 struct State {
@@ -154,27 +164,26 @@ struct State {
 std::shared_ptr<State> state_;
 
 template <typename Code_>
-task<bool> Stakes(const Endpoint &endpoint, const Address &directory, const Block &block, const uint256_t &storage, const uint256_t &primary, const Code_ &code) {
+task<void> Stakes(const Endpoint &endpoint, const Address &directory, const Block &block, const uint256_t &storage, const uint256_t &primary, const Code_ &code) {
     if (primary == 0)
-        co_return true;
-    const auto base(Hash(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
-    const auto [left, right, stakee, amount, delay] = co_await endpoint.Get(block, directory, storage, base + 6, base + 7, base + 4, base + 2, base + 3);
+        co_return;
+
+    const auto stake(Hash(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
+    const auto [left, right, stakee, amount, delay] = co_await endpoint.Get(block, directory, storage, stake + 6, stake + 7, stake + 4, stake + 2, stake + 3);
     orc_assert(amount != 0);
-    if (!co_await Stakes(endpoint, directory, block, storage, left, code))
-        co_return false;
-    if (!code(uint160_t(stakee), amount, delay))
-        co_return false;
-    if (!co_await Stakes(endpoint, directory, block, storage, right, code))
-        co_return false;
-    co_return true;
+
+    *co_await Parallel(
+        Stakes(endpoint, directory, block, storage, left, code),
+        Stakes(endpoint, directory, block, storage, right, code),
+        code(uint160_t(stakee), amount, delay));
 }
 
 template <typename Code_>
-task<bool> Stakes(const Endpoint &endpoint, const Address &directory, const Code_ &code) {
+task<void> Stakes(const Endpoint &endpoint, const Address &directory, const Code_ &code) {
     const auto number(co_await endpoint.Latest());
     const auto block(co_await endpoint.Header(number));
     const auto [account, root] = co_await endpoint.Get(block, directory, nullptr, 0x3U);
-    co_return co_await Stakes(endpoint, directory, block, account.storage_, root, code);
+    co_await Stakes(endpoint, directory, block, account.storage_, root, code);
 }
 
 task<Float> Rate(const Endpoint &endpoint, const Block &block, const Address &pair) {
@@ -353,17 +362,30 @@ int Main(int argc, const char *const argv[]) {
         *co_await Parallel([&]() -> task<void> { try {
             (co_await co_optic)->Name("Stakes");
 
-            std::map<Address, Stake> stakes;
-            co_await Stakes(endpoint, directory, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) {
+            cppcoro::async_mutex mutex;
+            std::map<Address, uint256_t> stakes;
+
+            co_await Stakes(endpoint, directory, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) -> task<void> {
                 std::cout << "DELAY " << stakee << " " << std::dec << delay << " " << std::dec << amount << std::endl;
                 if (delay < 90*24*60*60)
-                    return true;
-                auto &stake(stakes[stakee]);
-                stake.amount_ += amount;
-                return true;
+                    co_return;
+                const auto lock(co_await mutex.scoped_lock_async());
+                stakes[stakee] += amount;
             });
 
-            state->stakes_ = std::move(stakes);
+            // XXX: Zip doesn't work if I inline this argument
+            const auto urls(co_await Parallel(Map([&](const auto &stake) {
+                return [&](Address provider) -> Task<std::string> {
+                    static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
+                    const auto &[set, url, tls, gpg] = co_await look_.Call(endpoint, "latest", location, 90000, provider);
+                    orc_assert(set != 0);
+                    co_return url.str();
+                }(stake.first);
+            }, stakes)));
+
+            // XXX: why can't I move things out of this iterator? (note: I did use auto)
+            for (const auto &stake : Zip(urls, stakes))
+                orc_assert(state->stakes_.try_emplace(stake.get<1>().first, stake.get<1>().second, stake.get<0>()).second);
         } catch (...) {
         } }(), [&]() -> task<void> {
             (co_await co_optic)->Name("Tests");
@@ -436,8 +458,24 @@ int Main(int argc, const char *const argv[]) {
 
         body << "\n";
 
-        for (const auto &[stakee, stake] : state->stakes_)
+        for (const auto &[stakee, stake] : state->stakes_) {
             body << Address(stakee) << " " << std::dec << std::fixed << std::setprecision(3) << std::setw(10) << (Float(stake.amount_) / Ten18) << "\n";
+
+            body << "  ";
+
+            if (const auto error = std::get_if<0>(&stake.url_)) try {
+                std::rethrow_exception(*error);
+            } catch (const std::exception &error) {
+                std::string what(error.what());
+                boost::replace_all(what, "\r", "");
+                boost::replace_all(what, "\n", " || ");
+                body << what;
+            } else if (const auto url = std::get_if<1>(&stake.url_)) {
+                body << *url;
+            } else orc_insist(false);
+
+            body << "\n";
+        }
 
         markup << body.str();
         co_return Respond(request, http::status::ok, "text/html", markup());
@@ -454,9 +492,10 @@ int Main(int argc, const char *const argv[]) {
             if (const auto report = std::get_if<1>(&provider)) {
                 if (!report->cost_)
                     continue;
-                const auto stake(state->stakes_[report->stakee_].amount_);
-                total += stake;
-                providers.emplace(*report->cost_, stake);
+                const auto stake(state->stakes_.find(report->stakee_));
+                orc_assert(stake != state->stakes_.end());
+                total += stake->second.amount_;
+                providers.emplace(*report->cost_, stake->second.amount_);
             }
         total /= 2;
 

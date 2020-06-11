@@ -37,6 +37,7 @@ boost += endian
 boost += filesystem
 boost += foreach
 boost += function
+boost += fusion
 boost += integer
 boost += intrusive
 boost += io
