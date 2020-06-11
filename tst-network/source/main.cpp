@@ -107,8 +107,8 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
     });
 }
 
-task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, std::string provider, const Secret &secret, const Address &funder, const Address &seller) {
-    (co_await co_optic)->Name(provider.c_str());
+task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, const char *provider, const Secret &secret, const Address &funder, const Address &seller) {
+    (co_await co_optic)->Name(provider);
 
     std::cout << provider << " " << name << std::endl;
 
@@ -337,7 +337,7 @@ int Main(int argc, const char *const argv[]) {
 
     Spawn([&]() noexcept -> task<void> { for (;;) {
         Fiber::Report();
-        co_await Sleep(120000);
+        co_await Sleep(10000);
     } }, "Report");
 
     Spawn([&]() noexcept -> task<void> { for (;;) try {
@@ -351,6 +351,8 @@ int Main(int argc, const char *const argv[]) {
         }
 
         *co_await Parallel([&]() -> task<void> { try {
+            (co_await co_optic)->Name("Stakes");
+
             std::map<Address, Stake> stakes;
             co_await Stakes(endpoint, directory, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) {
                 std::cout << "DELAY " << stakee << " " << std::dec << delay << " " << std::dec << amount << std::endl;
@@ -364,6 +366,8 @@ int Main(int argc, const char *const argv[]) {
             state->stakes_ = std::move(stakes);
         } catch (...) {
         } }(), [&]() -> task<void> {
+            (co_await co_optic)->Name("Tests");
+
             std::vector<std::string> names;
             std::vector<task<Report>> tests;
 
@@ -396,7 +400,7 @@ int Main(int argc, const char *const argv[]) {
 
         std::atomic_store(&state_, state);
         co_await Sleep(1000);
-    } orc_catch({ orc_insist(false); }) }, "Test");
+    } orc_catch({ orc_insist(false); }) }, "Update");
 
     Router router;
 

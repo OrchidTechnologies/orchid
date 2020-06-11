@@ -42,6 +42,8 @@ class Fiber {
   public:
     Fiber(const char *name, Fiber *parent = nullptr);
 
+    Fiber(const Fiber &fiber) = delete;
+
     ~Fiber();
 
     void Name(const char *name) {

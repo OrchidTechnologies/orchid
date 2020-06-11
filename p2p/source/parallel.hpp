@@ -46,16 +46,19 @@ template <typename ...Args_>
 
 template <typename Type_>
 [[nodiscard]] auto Parallel(std::vector<Task<Type_>> &&tasks) -> Task<std::vector<Maybe<Type_>>> {
-    std::vector<Task<Maybe<Type_>>> maybes;
+    const auto parent(co_await co_optic);
+
+    std::vector<cppcoro::task<Maybe<Type_>>> maybes;
     maybes.reserve(tasks.size());
     for (size_t i(0); i != tasks.size(); ++i)
-        maybes.emplace_back(Try(std::move(tasks[i])));
-
+        maybes.emplace_back([](Task<Type_> &&task, Fiber *parent) -> cppcoro::task<Maybe<Type_>> {
+            auto maybe(Try(std::move(task)));
 #ifdef ORC_FIBER
-    std::vector<Fiber> fibers(maybes.size(), Fiber(nullptr, co_await co_optic));
-    for (size_t i(0); i != maybes.size(); ++i)
-        maybes[i].Set(&fibers[i]);
+            Fiber fiber(nullptr, parent);
+            maybe.Set(&fiber);
 #endif
+            co_return co_await std::move(maybe);
+        }(std::move(tasks[i]), parent));
 
     co_return co_await cppcoro::when_all(std::move(maybes));
 }
