@@ -23,6 +23,15 @@
 #include <iostream>
 #include <vector>
 
+#include <boost/filesystem/string_file.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+
+#include <rtc_base/logging.h>
+
 #include "baton.hpp"
 #include "boring.hpp"
 #include "chart.hpp"
@@ -43,15 +52,6 @@
 #include "sleep.hpp"
 #include "store.hpp"
 #include "transport.hpp"
-
-#include <boost/filesystem/string_file.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
-
-#include <boost/program_options/parsers.hpp>
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/variables_map.hpp>
-
-#include <rtc_base/logging.h>
 
 using boost::multiprecision::uint256_t;
 
