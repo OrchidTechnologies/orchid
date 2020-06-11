@@ -252,7 +252,6 @@ class CircuitPageState extends State<CircuitPage>
     return AppReorderableListView(
         header: Column(
           children: <Widget>[
-            if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
             AnimatedCrossFade(
               duration: Duration(milliseconds: _fadeAnimTime),
               crossFadeState: _showEnableVPNInstruction()
@@ -261,6 +260,7 @@ class CircuitPageState extends State<CircuitPage>
               firstChild: _buildEnableVPNInstruction(),
               secondChild: pady(16),
             ),
+            if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
             _buildStartTile(),
             _buildStatusTile(),
             HopTile.buildFlowDivider(),
