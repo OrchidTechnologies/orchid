@@ -73,6 +73,7 @@ task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const 
 
         orc_assert(good != 0);
         const auto &[set, url, tls, gpg] = look;
+        orc_assert(set != 0);
 
         Window window(tls);
         orc_assert(window.Take() == 0x06);
