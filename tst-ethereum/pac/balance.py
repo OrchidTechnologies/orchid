@@ -4,9 +4,10 @@ import os
 from abis import token_abi
 from datadog_lambda.metric import lambda_metric
 from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
-from web3.auto.infura import w3
+from web3 import Web3
 
 
+w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET']))
 configure_logging()
 
 

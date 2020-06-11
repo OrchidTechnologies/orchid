@@ -18,10 +18,11 @@ from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
 from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
-from web3.auto.infura import w3
+from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
 
+w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET']))
 configure_logging()
 
 

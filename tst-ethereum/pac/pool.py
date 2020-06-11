@@ -8,9 +8,10 @@ import time
 from decimal import Decimal
 from handler import fund_PAC, get_product_id_mapping
 from utils import configure_logging, get_secret
-from web3.auto.infura import w3
+from web3 import Web3
 
 
+w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET']))
 configure_logging()
 
 
