@@ -18,10 +18,11 @@ from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
 from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
-from web3.auto.infura import w3
+from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
 
+w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET']))
 configure_logging()
 
 
@@ -179,10 +180,7 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     value_oxt  = value_usd * oxt_per_usd;
     num_tickets = int(value_oxt / (0.5*escrow_oxt));
     escrow_oxt  = 2.0 * float(value_oxt) / float(num_tickets);
-
     total_oxt = value_oxt + escrow_oxt
-    #if (escrow_oxt >= 0.9*total_oxt):
-    #    escrow_oxt = 0.5*total_oxt
 
     logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT")
 
