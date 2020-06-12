@@ -67,6 +67,8 @@ class Capture :
     const Host local_;
     Nest nest_;
     const U<Analyzer> analyzer_;
+    // XXX: I covered these objects, but this just feels wrong
+    // I think maybe I should make Internals subclass Capture?
     U<Internal> internal_;
 
   protected:

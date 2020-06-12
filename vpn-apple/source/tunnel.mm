@@ -95,7 +95,7 @@ static std::string cfs(NSString *data) {
         int file([value intValue]);
         orc_assert(file != -1);
 
-        auto capture(std::make_unique<BufferSink<Capture>>(local));
+        auto capture(std::make_unique<Covered<BufferSink<Capture>>>(local));
         auto &family(capture->Wire<BufferSink<Family>>());
         auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
 
@@ -107,10 +107,10 @@ static std::string cfs(NSString *data) {
 } ORC_CATCH(handler) }
 
 - (void) stopTunnelWithReason:(NEProviderStopReason)reason completionHandler:(void (^)(void))handler {
-    // XXX: implement
-    orc_insist(false);
-    capture_.reset();
-    handler();
+    Spawn([capture = std::move(capture_), handler]() noexcept -> task<void> {
+        co_await capture->Shut();
+        handler();
+    }, __FUNCTION__);
 }
 
 @end

@@ -607,7 +607,7 @@ task<bool> Split::Send(const Beam &data) {
 }
 
 void Capture::Start(S<Origin> origin) {
-    auto split(std::make_unique<Split>(this, std::move(origin)));
+    auto split(std::make_unique<Covered<Split>>(this, std::move(origin)));
     split->Connect(local_);
     internal_ = std::move(split);
 }
@@ -646,7 +646,7 @@ class Pass :
 };
 
 BufferSunk &Capture::Start() {
-    auto pass(std::make_unique<BufferSink<Pass>>(this));
+    auto pass(std::make_unique<Covered<BufferSink<Pass>>>(this));
     auto &backup(*pass);
     internal_ = std::move(pass);
     return backup;

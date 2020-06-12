@@ -31,7 +31,7 @@ namespace orc {
 
 class Socket;
 
-class Channel final :
+class Channel :
     public Pump<Buffer>,
     public webrtc::DataChannelObserver
 {

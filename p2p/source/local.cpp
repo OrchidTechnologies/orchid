@@ -30,7 +30,7 @@
 
 namespace orc {
 
-class LocalOpening final :
+class LocalOpening :
     public Opening
 {
   private:

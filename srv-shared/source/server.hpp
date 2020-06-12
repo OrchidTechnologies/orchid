@@ -41,6 +41,7 @@ namespace orc {
 class Cashier;
 
 class Server :
+    public Valve,
     public Bonded,
     protected Pipe<Buffer>,
     public BufferDrain,
@@ -97,7 +98,7 @@ class Server :
     ~Server() override;
 
     task<void> Open(Pipe<Buffer> &pipe);
-    task<void> Shut() noexcept;
+    task<void> Shut() noexcept override;
 
     task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
 };

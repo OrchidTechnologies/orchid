@@ -27,7 +27,7 @@
 
 namespace orc {
 
-class Local final :
+class Local :
     public Origin
 {
   private:

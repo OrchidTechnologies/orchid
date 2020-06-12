@@ -48,7 +48,7 @@ class Stream :
 // XXX: the Stream interface doesn't support reading truncated messages correctly
 // we should remove Inverted and provide a better framework for Duplex and UDP :/
 
-class Inverted final :
+class Inverted :
     public Pump<Buffer>
 {
   private:

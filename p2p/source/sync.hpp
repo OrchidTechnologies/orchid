@@ -34,7 +34,7 @@
 namespace orc {
 
 template <typename Sync_>
-class Sync final :
+class Sync :
     public Link<Buffer>
 {
   protected:

@@ -297,7 +297,7 @@ int Main(int argc, const char *const argv[]) {
             boost::filesystem::load_string_file(args["openvpn"].as<std::string>(), file);
 
             return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
-                auto egress(Make<BufferSink<Egress>>(0));
+                auto egress(Break<BufferSink<Egress>>(0));
                 co_await Connect(*egress, std::move(origin), 0, file, "", "");
                 co_return egress;
             }());
@@ -306,7 +306,7 @@ int Main(int argc, const char *const argv[]) {
             boost::filesystem::load_string_file(args["wireguard"].as<std::string>(), file);
 
             return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
-                auto egress(Make<BufferSink<Egress>>(0));
+                auto egress(Break<BufferSink<Egress>>(0));
                 co_await Guard(*egress, std::move(origin), 0, file);
                 co_return egress;
             }());

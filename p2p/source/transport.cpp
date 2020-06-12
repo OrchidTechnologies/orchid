@@ -50,7 +50,7 @@ void Initialize() {
 
 class Transport :
     public openvpn::TransportClient,
-    public Valve,
+    public Covered<Valve>,
     public BufferDrain,
     public Sunken<Pump<Buffer>>
 {

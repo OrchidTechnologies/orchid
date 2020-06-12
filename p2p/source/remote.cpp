@@ -222,7 +222,7 @@ class RemoteAssociation :
     }
 };
 
-class RemoteOpening final :
+class RemoteOpening :
     public Opening,
     public RemoteCommon
 {

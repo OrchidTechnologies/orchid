@@ -59,7 +59,7 @@ class Node final {
         if (auto server = cache.lock())
             return server;
         const auto server(Break<BufferSink<Server>>(origin_, cashier_));
-        egress_->Wire(*server);
+        Egress::Wire(egress_, *server);
         server->self_ = server;
         cache = server;
         return server;

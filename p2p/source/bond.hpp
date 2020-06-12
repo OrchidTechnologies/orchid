@@ -94,7 +94,7 @@ class Bonded {
     BufferSink<Bonding> &Bond() {
         // XXX: this is non-obviously incorrect
         const auto locked(locked_());
-        auto bonding(std::make_unique<BufferSink<Bonding>>(this));
+        auto bonding(std::make_unique<Covered<BufferSink<Bonding>>>(this));
         auto &backup(*bonding);
         locked->bondings_.emplace(&backup, std::move(bonding));
         return backup;

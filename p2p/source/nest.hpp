@@ -35,7 +35,7 @@
 namespace orc {
 
 class Nest :
-    public Valve
+    public Covered<Valve>
 {
   private:
     std::atomic<unsigned> limit_;

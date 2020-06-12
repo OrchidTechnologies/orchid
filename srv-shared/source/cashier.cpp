@@ -167,7 +167,7 @@ void Cashier::Open(S<Origin> origin, Locator locator) {
         auto duplex(std::make_unique<Duplex>(origin));
         co_await duplex->Open(locator);
 
-        auto station(std::make_unique<Sink<Station, Drain<Json::Value>>>(*this));
+        auto station(std::make_unique<Covered<Sink<Station, Drain<Json::Value>>>>(*this));
         auto &structured(station->Wire<BufferSink<Structured>>());
         auto &inverted(structured.Wire<Inverted>(std::move(duplex)));
         inverted.Open();

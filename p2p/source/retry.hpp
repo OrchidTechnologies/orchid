@@ -29,8 +29,10 @@
 
 namespace orc {
 
+// XXX: instead of covered tubes, implement a BreakUnique
+
 template <typename Code_>
-class Retry final :
+class Retry :
     public Link<Buffer>
 {
   private:
@@ -66,7 +68,7 @@ class Retry final :
 
     bool Open() noexcept {
         return nest_.Hatch([&]() noexcept { return [&]() noexcept -> task<void> {
-            auto tube(std::make_unique<BufferSink<Tube>>(*this));
+            auto tube(std::make_unique<Covered<BufferSink<Tube>>>(*this));
             if (orc_ignore({ co_await code_(*tube); })) {
                 if (!tube->Wired())
                     tube->template Wire<Cap>();
