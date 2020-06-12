@@ -75,7 +75,6 @@ class Reference {
     Reference(pbuf *buffer) :
         buffer_(buffer)
     {
-        pbuf_ref(buffer_);
     }
 
     Reference(const Reference &other) = delete;
@@ -98,6 +97,12 @@ class Reference {
     pbuf *operator ->() const {
         return buffer_;
     }
+
+    pbuf *Tear() && {
+        const auto buffer(buffer_);
+        buffer_ = nullptr;
+        return buffer;
+    }
 };
 
 class Chain :
@@ -107,12 +112,14 @@ class Chain :
     Reference buffer_;
 
   public:
+    // XXX: this always copies, but sometimes I could pbuf_ref? ugh
     Chain(const Buffer &data) :
         buffer_(pbuf_alloc(PBUF_RAW, data.size(), PBUF_RAM))
     {
         u16_t offset(0);
         data.each([&](const uint8_t *data, size_t size) {
             orc_lwipcall(pbuf_take_at, (buffer_, data, size, offset));
+            copied_ += size;
             offset += size;
             return true;
         });
@@ -121,10 +128,15 @@ class Chain :
     Chain(pbuf *buffer) :
         buffer_(buffer)
     {
+        pbuf_ref(buffer_);
     }
 
     operator pbuf *() const {
         return buffer_;
+    }
+
+    pbuf *Tear() && {
+        return std::move(buffer_).Tear();
     }
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
@@ -454,7 +466,10 @@ class RemoteConnection final :
 };
 
 void Remote::Send(pbuf *buffer) {
-    nest_.Hatch([&]() noexcept { return [this, data = Chain(buffer)]() -> task<void> {
+    // XXX: this always copies the data, but I should sometimes be able to reference it
+    // to do this, I think I need to check if !PBUF_NEEDS_COPY _recursively_ for queue?
+    nest_.Hatch([&]() noexcept { return [this, data = Beam(Chain(buffer))]() -> task<void> {
+        //Log() << "Remote <<< " << this << " " << data << std::endl;
         co_return co_await Inner().Send(data);
     }; }, __FUNCTION__);
 }
@@ -472,7 +487,8 @@ err_t Remote::Initialize(netif *interface) {
 }
 
 void Remote::Land(const Buffer &data) {
-    orc_ignore({ orc_assert(tcpip_inpkt(Chain(data), &interface_, interface_.input) == ERR_OK); });
+    //Log() << "Remote >>> " << this << " " << data << std::endl;
+    orc_ignore({ orc_assert(tcpip_inpkt(Chain(data).Tear(), &interface_, interface_.input) == ERR_OK); });
 }
 
 void Remote::Stop(const std::string &error) noexcept {
