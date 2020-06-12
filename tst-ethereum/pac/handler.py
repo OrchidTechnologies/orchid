@@ -22,7 +22,7 @@ from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
 
-w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET']))
+w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=300))
 configure_logging()
 
 
