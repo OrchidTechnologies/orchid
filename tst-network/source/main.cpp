@@ -278,6 +278,11 @@ int Main(int argc, const char *const argv[]) {
         ("seller", po::value<std::string>()->default_value("0x0000000000000000000000000000000000000000"))
     ; options.add(group); }
 
+    { po::options_description group("external resources");
+    group.add_options()
+        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
+    ; options.add(group); }
+
     { po::options_description group("protocol testing");
     group.add_options()
         ("openvpn", po::value(&openvpns))
@@ -302,7 +307,7 @@ int Main(int argc, const char *const argv[]) {
     Initialize();
 
     const auto origin(Break<Local>());
-    const std::string rpc("https://cloudflare-eth.com:443/");
+    const std::string rpc(args["rpc"].as<std::string>());
 
     Endpoint endpoint(origin, Locator::Parse(rpc));
 
