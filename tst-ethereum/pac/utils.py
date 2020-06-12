@@ -3,7 +3,10 @@ import logging
 import os
 
 from abis import token_abi
-from web3.auto.infura import w3
+from web3 import Web3
+
+
+w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET']))
 
 
 def configure_logging(level=os.environ.get('LOG_LEVEL', "DEBUG")):

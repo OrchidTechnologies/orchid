@@ -4,12 +4,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/preferences/user_secure_storage.dart';
-import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/purchase_rate.dart';
 import 'package:orchid/util/units.dart';
 import 'android_purchase.dart';
 import 'ios_purchase.dart';
 import 'orchid_pac.dart';
+import '../orchid_log_api.dart';
 
 /// Support in-app purchase of purchased access credits (PACs).
 /// @See the iOS and Android implementations of this class.
@@ -66,7 +66,8 @@ abstract class OrchidPurchaseAPI {
       verifyReceipt: jsConfig.evalBoolDefault(
           'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
       debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug),
-      serverFail: jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
+      serverFail:
+          jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
     );
   }
 
@@ -87,6 +88,9 @@ abstract class OrchidPurchaseAPI {
         'pacs.pacDailyPurchaseLimit', pacDailyPurchaseLimit.value);
     var dailyPurchaseLimit =
         min(overrideDailyPurchaseLimit, pacDailyPurchaseLimit.value);
+
+    log("isWithinPurchaseRateLimit: limit = $dailyPurchaseLimit, "
+        "current = ${history.sum()}, history = ${history.toJson()}");
 
     return history.sum() + pac.usdPurchasePrice.value <= dailyPurchaseLimit;
   }

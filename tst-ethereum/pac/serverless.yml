@@ -35,6 +35,9 @@ custom:
     DEFAULT_GAS:
       prod: "22"
       dev: "22"
+    WEB3_WEBSOCKET:
+      prod: 'WEB3_WEBSOCKET'
+      dev: 'WEB3_WEBSOCKET_DEV'
   datadog:
     addLayers: true
     flushMetricsToLogs: true
@@ -55,7 +58,7 @@ provider:
     VERIFIER: ${self:custom.myEnvironment.VERIFIER.${self:provider.stage}}
     RECEIPT_SANDBOX: 'False'
     AUTO_RETRY_WRONG_ENV_REQUEST: 'True'
-    WEB3_INFURA_PROJECT_ID: ${ssm:WEB3_INFURA_PROJECT_ID~true}
+    WEB3_WEBSOCKET: ${ssm:${self:custom.myEnvironment.WEB3_WEBSOCKET.${self:provider.stage}}~true}
     TABLE_NAME: PAC-${self:provider.stage}
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
     RESULT_TABLE_NAME: PAC-Result-${self:provider.stage}

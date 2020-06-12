@@ -18,10 +18,11 @@ from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
 from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
-from web3.auto.infura import w3
+from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
 
+w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET']))
 configure_logging()
 
 
@@ -335,9 +336,9 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             }
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
-                balance = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
+                balance, escrow = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
                 # update succeeded
-                if ( (status == 'confirmed') and (balance > get_min_escrow()) ):
+                if ( (status == 'confirmed') and (escrow > get_min_escrow()) ):
                     ret = push_txn_hash, config, signer_pubkey
                     break
                 else:
@@ -660,7 +661,7 @@ def look(funder: str, signer: str):
     amount, escrow, _, _, _ = lottery_contract.functions.look(w3.toChecksumAddress(funder), w3.toChecksumAddress(signer)).call()
     account_total = amount + escrow
     logging.debug(f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + {escrow} (escrow) = {account_total} (total)')
-    return account_total
+    return amount, escrow
 
 
 def apple(event, context):

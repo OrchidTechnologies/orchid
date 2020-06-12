@@ -204,7 +204,6 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildBody() {
-    var appSize = AppSize(context);
     return NotificationListener(
       onNotification: (notif) {
         _userInteraction();
@@ -238,16 +237,12 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildHopList() {
-//    return Container(color: Colors.green, width: 500, height: 500);
     return Align(
       alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 500),
-        child: Column(
-          children: <Widget>[
-            Flexible(child: _buildListView()),
-          ],
-        ),
+      child: Column(
+        children: <Widget>[
+          Flexible(child: _buildListView()),
+        ],
       ),
     );
   }
@@ -257,7 +252,6 @@ class CircuitPageState extends State<CircuitPage>
     return AppReorderableListView(
         header: Column(
           children: <Widget>[
-            if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
             AnimatedCrossFade(
               duration: Duration(milliseconds: _fadeAnimTime),
               crossFadeState: _showEnableVPNInstruction()
@@ -266,6 +260,7 @@ class CircuitPageState extends State<CircuitPage>
               firstChild: _buildEnableVPNInstruction(),
               secondChild: pady(16),
             ),
+            if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
             _buildStartTile(),
             _buildStatusTile(),
             HopTile.buildFlowDivider(),
