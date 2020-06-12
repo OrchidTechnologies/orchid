@@ -28,8 +28,6 @@
 #include "error.hpp"
 #include "maybe.hpp"
 
-#define ORC_FIBER
-
 namespace orc {
 
 inline constexpr class {} co_optic;

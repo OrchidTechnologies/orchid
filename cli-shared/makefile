@@ -57,6 +57,8 @@ endif
 
 source += $(wildcard source/*.cpp)
 
+cflags += -DORC_FIBER
+
 include env/output.mk
 
 $(output)/%/orchid: $(patsubst %,$(output)/$$*/%,$(object) $(linked))

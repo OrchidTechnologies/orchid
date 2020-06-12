@@ -54,6 +54,8 @@ cflags += -Ileveldb
 cflags += -Ileveldb/include
 cflags/./leveldb/util/env_posix.cc += -Wno-unused-result
 
+cflags += -DORC_FIBER
+
 include env/output.mk
 
 $(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
