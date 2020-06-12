@@ -79,20 +79,12 @@ int Main(int argc, const char *const argv[]) {
 
         if (args.count("capture") != 0)
             orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " " + argument + " " + device).c_str()) == 0);
-        else {
-            // XXX: having a default route causes connect() to fail with "Network is unreachable" (on macOS)
+        else
+            // XXX: having a 0.0.0.0/* route causes connect() to fail with "Network is unreachable" on macOS
             //orc_assert(system(("route -n add -net 0.0.0.0/1 " + argument + " " + device).c_str()) == 0);
             //orc_assert(system(("route -n add -net 128.0.0.0/1 " + argument + " " + device).c_str()) == 0);
-
-            orc_assert(system(("route -n add -net 1/8 " + argument + " " + device).c_str()) == 0);
-            orc_assert(system(("route -n add -net 2/7 " + argument + " " + device).c_str()) == 0);
-            orc_assert(system(("route -n add -net 4/6 " + argument + " " + device).c_str()) == 0);
-            orc_assert(system(("route -n add -net 8/5 " + argument + " " + device).c_str()) == 0);
-            orc_assert(system(("route -n add -net 16/4 " + argument + " " + device).c_str()) == 0);
-            orc_assert(system(("route -n add -net 32/3 " + argument + " " + device).c_str()) == 0);
-            orc_assert(system(("route -n add -net 64/2 " + argument + " " + device).c_str()) == 0);
-            orc_assert(system(("route -n add -net 128/1 " + argument + " " + device).c_str()) == 0);
-        }
+        for (unsigned i(0); i != 8; ++i)
+            orc_assert(system(("route -n add -net " + std::to_string(1 << i) + "/" + std::to_string(8 - i) + " " + argument + " " + device).c_str()) == 0);
 
         orc_assert(system(("route -n add 10.7.0.4 " + argument + " " + device).c_str()) == 0);
 
