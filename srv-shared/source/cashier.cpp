@@ -135,7 +135,7 @@ void Cashier::Land(Json::Value data) {
             } break;
 
             default:
-                orc_assert(false);
+                orc_insist(false);
         }
     }
 }
