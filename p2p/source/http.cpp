@@ -97,21 +97,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
             orc_adapt(error);
         } }, "in ssl handshake");
 
-        const auto response(co_await Fetch_(stream, req));
-
-        orc_block({ try {
-            co_await stream.async_shutdown(orc::Token());
-        } catch (const asio::system_error &error) {
-            auto code(error.code());
-            if (false);
-            else if (code == asio::error::eof);
-                // XXX: this scenario is untested
-            else if (code == asio::ssl::error::stream_truncated);
-                // XXX: this is because of infura
-            else orc_adapt(error);
-        } }, "in ssl shutdown");
-
-        co_return response;
+        co_return co_await Fetch_(stream, req);
     } else orc_assert(false);
 }
 

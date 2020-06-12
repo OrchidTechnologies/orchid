@@ -113,6 +113,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                 try {
                     co_await stream.async_shutdown(Token());
                 } catch (const boost::system::system_error &error) {
+                    // XXX: SSL_OP_IGNORE_UNEXPECTED_EOF ?
                     //const auto code(error.code());
                     if (false);
                     //else if (code == asio::ssl::error::stream_truncated);
