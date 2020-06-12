@@ -52,8 +52,8 @@ struct Logger :
 } logger_;
 
 
-Peer::Peer(const S<Origin> &origin, Configuration configuration) :
-    origin_(origin),
+Peer::Peer(S<Origin> origin, Configuration configuration) :
+    origin_(std::move(origin)),
     peer_([&]() {
         const auto &threads(Threads::Get());
 

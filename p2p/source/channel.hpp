@@ -42,7 +42,7 @@ class Channel :
     Event opened_;
 
   public:
-    static task<Socket> Wire(BufferSunk &sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
+    static task<Socket> Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
     Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
         Pump<Buffer>(drain),

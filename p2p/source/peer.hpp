@@ -100,7 +100,7 @@ class Peer :
     }
 
   public:
-    Peer(const S<Origin> &origin, Configuration configuration = Configuration());
+    Peer(S<Origin> origin, Configuration configuration = Configuration());
 
     ~Peer() override {
 orc_trace();

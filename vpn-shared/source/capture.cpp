@@ -713,11 +713,11 @@ void Capture::Start(const std::string &path) {
         heap.eval<void>(config);
     }
 
-    S<Origin> origin(Break<Local>());
+    S<Origin> local(Break<Local>());
 
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
-        return Start(std::move(origin));
+        return Start(std::move(local));
 
     WinRatio_ = heap.eval<double>("eth_winratio");
 
@@ -727,12 +727,14 @@ void Capture::Start(const std::string &path) {
     auto &sunk(*remote);
 #else
     S<Remote> remote;
-    const auto host(origin->Host());
+    const auto host(local->Host());
     auto &sunk(Start());
 #endif
 
-    auto code([heap = std::move(heap), hops, origin = std::move(origin), host](BufferSunk &sunk) mutable -> task<void> {
+    auto code([heap = std::move(heap), hops, local = std::move(local), host](BufferSunk &sunk) mutable -> task<void> {
         Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
+
+        auto origin(local);
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<BufferSink<Remote>>());
