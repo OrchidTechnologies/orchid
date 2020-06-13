@@ -30,6 +30,8 @@
 #include "sewer.hpp"
 #include "spawn.hpp"
 
+// XXX: this code isn't used and is wrong
+
 namespace orc {
 
 class Acceptor :
