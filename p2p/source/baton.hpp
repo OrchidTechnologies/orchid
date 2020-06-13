@@ -55,11 +55,11 @@ class Baton<void> {
     Baton(const Baton<void> &) = delete;
     Baton(Baton<void> &&) = delete;
 
-    void set() {
+    void operator ()() {
         ready_();
     }
 
-    task<void> get() {
+    task<void> operator *() {
         co_await *ready_;
     }
 };
@@ -72,13 +72,13 @@ class Baton<void, asio::error_code> :
     asio::error_code error_;
 
   public:
-    void set(const asio::error_code &error) {
+    void operator ()(const asio::error_code &error) {
         error_ = error;
-        Baton<void>::set();
+        Baton<void>::operator ()();
     }
 
-    task<void> get() {
-        co_await Baton<void>::get();
+    task<void> operator *() {
+        co_await Baton<void>::operator *();
         if (error_)
             throw asio::system_error(error_);
     }
@@ -92,13 +92,13 @@ class Baton<void, asio::error_code, Value_> :
     Value_ value_;
 
   public:
-    void set(const asio::error_code &error, Value_ &&value) {
+    void operator ()(const asio::error_code &error, Value_ &&value) {
         value_ = std::move(value);
-        Baton<void, asio::error_code>::set(error);
+        Baton<void, asio::error_code>::operator ()(error);
     }
 
-    task<Value_> get() {
-        co_await Baton<void, asio::error_code>::get();
+    task<Value_> operator *() {
+        co_await Baton<void, asio::error_code>::operator *();
         co_return std::move(value_);
     }
 };
@@ -118,7 +118,7 @@ class Handler {
     }
 
     void operator()(Values_... values) {
-        baton_->set(std::move(values)...);
+        (*baton_)(std::move(values)...);
     }
 };
 
@@ -131,13 +131,13 @@ template <typename Type_, typename... Values_>
 struct async_result<orc::Token, Type_ (Values_...)> {
     async_result() = delete;
 
-    typedef decltype(std::declval<orc::Baton<Type_, Values_...>>().get()) return_type;
+    typedef decltype(*std::declval<orc::Baton<Type_, Values_...>>()) return_type;
 
     template <typename Initiation_, typename... Args_>
     static return_type initiate(Initiation_ initiation, orc::Token &&, Args_... args) {
         orc::Baton<Type_, Values_...> baton;
         std::move(initiation)(orc::Handler<Type_, Values_...>(&baton), std::move(args)...);
-        co_return co_await baton.get();
+        co_return co_await *baton;
     }
 };
 
