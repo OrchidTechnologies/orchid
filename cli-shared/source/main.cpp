@@ -22,7 +22,7 @@
 
 #include <unistd.h>
 
-#include <boost/filesystem/string_file.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>

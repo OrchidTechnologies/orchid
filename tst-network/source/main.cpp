@@ -25,7 +25,6 @@
 
 #include <cppcoro/async_mutex.hpp>
 
-#include <boost/filesystem/string_file.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <boost/program_options/parsers.hpp>
@@ -46,6 +45,7 @@
 #include "gauge.hpp"
 #include "json.hpp"
 #include "jsonrpc.hpp"
+#include "load.hpp"
 #include "local.hpp"
 #include "markup.hpp"
 #include "network.hpp"
@@ -244,12 +244,6 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
 
     body << "\n";
     body << "------------+---------+------------+-----------------\n";
-}
-
-std::string Load(const std::string &file) {
-    std::string data;
-    boost::filesystem::load_string_file(file, data);
-    return data;
 }
 
 int Main(int argc, const char *const argv[]) {

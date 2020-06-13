@@ -23,8 +23,6 @@
 #include <cppcoro/async_latch.hpp>
 #include <cppcoro/async_mutex.hpp>
 
-#include <boost/filesystem/string_file.hpp>
-
 #include <openvpn/addr/ipv4.hpp>
 
 #include <dns.h>
@@ -39,6 +37,7 @@
 #include "directory.hpp"
 #include "forge.hpp"
 #include "heap.hpp"
+#include "load.hpp"
 #include "local.hpp"
 #include "monitor.hpp"
 #include "network.hpp"
@@ -707,11 +706,7 @@ void Capture::Start(const std::string &path) {
         //stun = "stun:stun.l.google.com:19302";
     )");
 
-    {
-        std::string config;
-        boost::filesystem::load_string_file(path, config);
-        heap.eval<void>(config);
-    }
+    heap.eval<void>(Load(path));
 
     S<Origin> local(Break<Local>());
 

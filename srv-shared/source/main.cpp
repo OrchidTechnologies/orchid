@@ -26,8 +26,6 @@
 
 #include <unistd.h>
 
-#include <boost/filesystem/string_file.hpp>
-
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -49,6 +47,7 @@
 #include "coinbase.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
+#include "load.hpp"
 #include "local.hpp"
 #include "node.hpp"
 #include "router.hpp"
@@ -151,15 +150,13 @@ int Main(int argc, const char *const argv[]) {
     ice.emplace_back("stun:" + args["stun"].as<std::string>());
 
 
-    std::string params;
-    if (args.count("dh") == 0)
-        params = Params();
-    else
-        boost::filesystem::load_string_file(args["dh"].as<std::string>(), params);
+    const auto params(args.count("dh") == 0 ? Params() : Load(args["dh"].as<std::string>()));
 
 
     const auto store([&]() -> Store {
-        if (args.count("tls") == 0) {
+        if (args.count("tls") != 0)
+            return Load(args["tls"].as<std::string>());
+        else {
             const auto pem(Certify()->ToPEM());
             auto key(pem.private_key());
             auto chain(pem.certificate());
@@ -169,10 +166,6 @@ int Main(int argc, const char *const argv[]) {
             std::cerr << chain << std::endl;
 
             return Store(std::move(key), std::move(chain));
-        } else {
-            std::string store;
-            boost::filesystem::load_string_file(args["tls"].as<std::string>(), store);
-            return Store(store);
         }
     }());
 
@@ -293,19 +286,13 @@ int Main(int argc, const char *const argv[]) {
     auto egress([&]() -> S<Egress> {
         if (false) {
         } else if (args.count("openvpn") != 0) {
-            std::string file;
-            boost::filesystem::load_string_file(args["openvpn"].as<std::string>(), file);
-
-            return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
+            return Wait([origin, file = Load(args["openvpn"].as<std::string>())]() mutable -> task<S<Egress>> {
                 auto egress(Break<BufferSink<Egress>>(0));
                 co_await Connect(*egress, std::move(origin), 0, file, "", "");
                 co_return egress;
             }());
         } else if (args.count("wireguard") != 0) {
-            std::string file;
-            boost::filesystem::load_string_file(args["wireguard"].as<std::string>(), file);
-
-            return Wait([origin, file = std::move(file)]() mutable -> task<S<Egress>> {
+            return Wait([origin, file = Load(args["wireguard"].as<std::string>())]() mutable -> task<S<Egress>> {
                 auto egress(Break<BufferSink<Egress>>(0));
                 co_await Guard(*egress, std::move(origin), 0, file);
                 co_return egress;
