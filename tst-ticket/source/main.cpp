@@ -87,7 +87,7 @@ int Main(int argc, const char *const argv[]) {
         using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
         static const auto orchid(Hash("Orchid.grab"));
         const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
-        const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
+        const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
         std::cout << "signer: " << signer << std::endl;
 
         const std::string latest("latest");

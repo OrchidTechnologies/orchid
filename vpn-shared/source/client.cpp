@@ -77,7 +77,7 @@ void Client::Issue(uint256_t amount) {
         const uint128_t ratio(WinRatio_ == 0 ? amount / face_ : uint256_t(Float(Two128) * WinRatio_ - 1));
         const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
         const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
-        const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
+        const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
         { const auto locked(locked_());
             locked->pending_.try_emplace(hash, ticket, signature); }
         co_return co_await Submit(hash, ticket, receipt, signature);
