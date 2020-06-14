@@ -176,17 +176,16 @@ webrtc := $(foreach v,$(webrtc),$(if $(findstring /virtual_,$(v)),,$(v)))
 source += $(webrtc)
 
 
+# this is for libsrtp
 cflags += -DOPENSSL
-
-cflags += -DSCTP_SIMPLE_ALLOCATOR
-cflags += -D__FreeBSD_version=0
+# this is for libwebrtc
+cflags += -DHAVE_SCTP
 
 cflags += -DABSL_ALLOCATOR_NOTHROW=0
+cflags += -DDCHECK_ALWAYS_ON
 cflags += -DWEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0
 
 cflags += -DWEBRTC_OPUS_SUPPORT_120MS_PTIME=0
-
-cflags += -DHAVE_SCTP
 
 cflags += -DHAVE_STDINT_H
 cflags += -DHAVE_STDLIB_H
@@ -206,10 +205,9 @@ cflags += -Wno-inconsistent-missing-override
 cflags += -Wno-unused-function
 
 cflags += -D__Userspace__
-cflags += -DSCTP_USE_OPENSSL_SHA1
-cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -DSCTP_PROCESS_LEVEL_LOCKS
-
+cflags += -DSCTP_SIMPLE_ALLOCATOR
+cflags += -DSCTP_USE_OPENSSL_SHA1
 
 include $(pwd)/openssl.mk
 
