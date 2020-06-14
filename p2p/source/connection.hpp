@@ -26,12 +26,27 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/ip/udp.hpp>
 
+#include <lwipopts.h>
+
 #include "baton.hpp"
 #include "dns.hpp"
 #include "link.hpp"
 #include "reader.hpp"
 #include "socket.hpp"
 #include "task.hpp"
+
+#if 0
+#elif defined(__APPLE__)
+#define TCP_KEEPIDLE TCP_KEEPALIVE
+#elif defined(_WIN32)
+#define TCP_KEEPALIVE 3
+#define TCP_MAXRT 5
+#define TCP_KEEPIDLE TCP_KEEPALIVE
+#define TCP_KEEPCNT 16
+#define TCP_KEEPINTVL 17
+#elif defined(__linux__)
+#define TCP_USER_TIMEOUT 18
+#endif
 
 namespace orc {
 
@@ -69,6 +84,33 @@ class Connection final :
     }
 
     task<void> Open(const Socket &endpoint) { orc_ahead orc_block({
+        connection_.open(endpoint.Host().v4() ? Connection_::protocol_type::v4() : Connection_::protocol_type::v6());
+
+        connection_.set_option(asio::socket_base::keep_alive(true));
+
+        // XXX: consider setting keepalive timeout separately for connection than from actual data
+
+        // XXX: we maybe should be using SIO_KEEPALIVE_VALS via WSAIoctl on Win32 instead of TCP_KEEP*
+        // XXX: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/dd877220(v=vs.85)
+        // XXX: https://bugs.python.org/issue34932 https://bugs.python.org/issue32394
+
+        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPIDLE>(TCP_KEEPIDLE_DEFAULT / 1000));
+        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPINTVL>(TCP_KEEPINTVL_DEFAULT / 1000));
+        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPCNT>(TCP_KEEPCNT_DEFAULT));
+
+        const auto timeout(TCP_KEEPIDLE_DEFAULT + TCP_KEEPINTVL_DEFAULT * TCP_KEEPCNT_DEFAULT);
+#if 0
+#elif defined(__APPLE__)
+        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_CONNECTIONTIMEOUT>(timeout / 1000));
+#elif defined(_WIN32)
+        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_MAXRT>(timeout / 1000));
+#elif defined(__linux__)
+        // XXX: consider configuring TCP_SYNCNT
+        // "The retries are staggered at 1s, 3s, 7s, 15s, 31s, 63s marks (the inter-retry time starts at 2s and then doubles each time)."
+        // XXX: this is only on Linux 2.6.37+, so we will get an error that needs to be handled on CentOS 6
+        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_USER_TIMEOUT>(timeout));
+#endif
+
         co_await connection_.async_connect(endpoint, Token());
         connection_.non_blocking(true);
     }, "connecting to " << endpoint); }
