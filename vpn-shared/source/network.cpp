@@ -55,24 +55,25 @@ task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const 
         Beam argument;
         const auto curator(co_await endpoint.Resolve(latest, name));
 
-        static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
-        auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
-        orc_assert(delay >= 90*24*60*60);
+        const auto address(co_await [&]() -> task<Address> {
+            if (provider != Address(0))
+                co_return provider;
 
-        // XXX: this is a stupid hack
-        if (provider != Address(0))
-            address = provider;
+            static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
+            const auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
+            orc_assert(delay >= 90*24*60*60);
+            co_return address;
+        }());
 
         static const Selector<uint128_t, Address, Bytes> good_("good");
         static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
 
         const auto [good, look] = *co_await Parallel(
             good_.Call(endpoint, latest, curator, 90000, address, argument),
-            look_.Call(endpoint, latest, location_, 90000, address)
-        );
+            look_.Call(endpoint, latest, location_, 90000, address));
+        const auto &[set, url, tls, gpg] = look;
 
         orc_assert(good != 0);
-        const auto &[set, url, tls, gpg] = look;
         orc_assert(set != 0);
 
         Window window(tls);
