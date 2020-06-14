@@ -49,7 +49,7 @@ webrtc += $(pwd)/webrtc/api/video/video_timing.cc
 
 webrtc += $(pwd)/webrtc/api/video_codecs/sdp_video_format.cc
 
-webrtc += $(pwd)/webrtc/call/call_config.cc 
+webrtc += $(pwd)/webrtc/call/call_config.cc
 webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
 
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_transport_state.cc
@@ -205,6 +205,7 @@ cflags += -Wno-inconsistent-missing-override
 cflags += -Wno-unused-function
 
 cflags += -D__Userspace__
+cflags += -DSCTP_DEBUG
 cflags += -DSCTP_PROCESS_LEVEL_LOCKS
 cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -DSCTP_USE_OPENSSL_SHA1

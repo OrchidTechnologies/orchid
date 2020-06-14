@@ -9,8 +9,6 @@
 # }}}
 
 
-cflags += -D__Userspace_os_Linux
-
 cflags += -DWEBRTC_POSIX
 cflags += -DWEBRTC_LINUX
 

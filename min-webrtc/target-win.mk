@@ -9,8 +9,6 @@
 # }}}
 
 
-cflags += -D__Userspace_os_Windows
-
 cflags += -DWEBRTC_WIN
 
 cflags += -DMINGW_HAS_SECURE_API
