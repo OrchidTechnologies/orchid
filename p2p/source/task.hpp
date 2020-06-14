@@ -30,7 +30,7 @@
 
 namespace orc {
 
-inline constexpr class {} co_optic;
+inline constexpr class {} orc_optic;
 
 class Fiber {
   private:
@@ -180,7 +180,7 @@ class Promise {
         return std::forward<Awaitable_>(awaitable);
     }
 
-    auto await_transform(decltype(co_optic)) {
+    auto await_transform(decltype(orc_optic)) {
         // NOLINTNEXTLINE (clang-analyzer-core.CallAndMessage)
         return Ready<Fiber *>(
 #ifdef ORC_FIBER

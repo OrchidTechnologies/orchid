@@ -360,9 +360,9 @@ class RemoteConnection final :
         }
     }
 
-    task<void> Open(const ip4_addr_t &host, uint16_t port) { orc_block({
+    task<void> Open(const ip4_addr_t &host, uint16_t port) { orc_ahead orc_block({
         { Core core;
-            tcp_recv(pcb_, [](void *arg, tcp_pcb *pcb, pbuf *data, err_t error) noexcept -> err_t {
+            tcp_recv(pcb_, [](void *arg, tcp_pcb *pcb, pbuf *data, err_t error) noexcept -> err_t { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
                 orc_insist(error == ERR_OK);
@@ -379,7 +379,7 @@ class RemoteConnection final :
                 return ERR_OK;
             });
 
-            tcp_err(pcb_, [](void *arg, err_t error) noexcept {
+            tcp_err(pcb_, [](void *arg, err_t error) noexcept { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(self->pcb_ != nullptr);
                 orc_insist(error != ERR_OK);
@@ -398,7 +398,7 @@ class RemoteConnection final :
             });
 
             // XXX: I feel like I should be verifying that size covered the entire sent packet
-            tcp_sent(pcb_, [](void *arg, tcp_pcb *pcb, u16_t size) noexcept -> err_t {
+            tcp_sent(pcb_, [](void *arg, tcp_pcb *pcb, u16_t size) noexcept -> err_t { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
 
@@ -406,7 +406,7 @@ class RemoteConnection final :
                 return ERR_OK;
             });
 
-            orc_lwipcall(tcp_connect, (pcb_, &host, port, [](void *arg, tcp_pcb *pcb, err_t error) noexcept -> err_t {
+            orc_lwipcall(tcp_connect, (pcb_, &host, port, [](void *arg, tcp_pcb *pcb, err_t error) noexcept -> err_t { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
                 orc_insist(error == ERR_OK);

@@ -68,7 +68,7 @@ class Connection final :
         co_return writ;
     }
 
-    task<void> Open(const Socket &endpoint) { orc_block({
+    task<void> Open(const Socket &endpoint) { orc_ahead orc_block({
         co_await connection_.async_connect(endpoint, Token());
         connection_.non_blocking(true);
     }, "connecting to " << endpoint); }

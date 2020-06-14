@@ -89,7 +89,7 @@ task<Host> Find(Origin &origin) {
 }
 
 task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
-    (co_await co_optic)->Name("OpenVPN");
+    (co_await orc_optic)->Name("OpenVPN");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         co_await Connect(remote, origin, remote.Host(), std::move(ovpn), "", "");
         remote.Open();
@@ -100,7 +100,7 @@ task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
 }
 
 task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
-    (co_await co_optic)->Name("WireGuard");
+    (co_await orc_optic)->Name("WireGuard");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         co_await Guard(remote, origin, remote.Host(), std::move(config));
         remote.Open();
@@ -111,7 +111,7 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
 }
 
 task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, const char *provider, const Secret &secret, const Address &funder, const Address &seller) {
-    (co_await co_optic)->Name(provider);
+    (co_await orc_optic)->Name(provider);
 
     std::cout << provider << " " << name << std::endl;
 
@@ -359,7 +359,7 @@ int Main(int argc, const char *const argv[]) {
         }
 
         *co_await Parallel([&]() -> task<void> { try {
-            (co_await co_optic)->Name("Stakes");
+            (co_await orc_optic)->Name("Stakes");
 
             cppcoro::async_mutex mutex;
             std::map<Address, uint256_t> stakes;
@@ -387,7 +387,7 @@ int Main(int argc, const char *const argv[]) {
                 orc_assert(state->stakes_.try_emplace(stake.get<1>().first, stake.get<1>().second, stake.get<0>()).second);
         } catch (...) {
         } }(), [&]() -> task<void> {
-            (co_await co_optic)->Name("Tests");
+            (co_await orc_optic)->Name("Tests");
 
             std::vector<std::string> names;
             std::vector<task<Report>> tests;

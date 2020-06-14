@@ -42,12 +42,12 @@ class Log final :
 
 }
 
-inline constexpr orc::Fiber *orc_fiber = nullptr;
+inline constexpr orc::Fiber *const orc_fiber = nullptr;
 
 #define orc_head \
-    [[maybe_unused]] Fiber *orc_fiber(nullptr);
+    [[maybe_unused]] Fiber *const orc_fiber(nullptr);
 #define orc_ahead \
-    [[maybe_unused]] Fiber *orc_fiber(co_await co_optic);
+    [[maybe_unused]] Fiber *const orc_fiber(co_await orc_optic);
 
 #define orc_Log() \
     orc::Log(orc_fiber)

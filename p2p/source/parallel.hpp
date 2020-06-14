@@ -32,7 +32,7 @@ namespace orc {
 template <typename ...Args_>
 [[nodiscard]] auto Parallel(Task<Args_> &&...args) -> Task<std::tuple<Maybe<Args_>...>> {
 #ifdef ORC_FIBER
-    const auto parent(co_await co_optic);
+    const auto parent(co_await orc_optic);
     co_return co_await cppcoro::when_all([](Task<Args_> &&task, Fiber *parent) -> cppcoro::task<Maybe<Args_>> {
         auto maybe(Try(std::move(task)));
         Fiber fiber(nullptr, parent);
@@ -46,7 +46,7 @@ template <typename ...Args_>
 
 template <typename Type_>
 [[nodiscard]] auto Parallel(std::vector<Task<Type_>> &&tasks) -> Task<std::vector<Maybe<Type_>>> {
-    const auto parent(co_await co_optic);
+    const auto parent(co_await orc_optic);
 
     std::vector<cppcoro::task<Maybe<Type_>>> maybes;
     maybes.reserve(tasks.size());
