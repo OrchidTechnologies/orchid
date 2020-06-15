@@ -117,15 +117,12 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
         return root;
     }()));
 
-  retry:
     const auto data(Parse((co_await origin_->Fetch("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
     Log() << body << " -> " << data << "" << std::endl;
     orc_assert(data["jsonrpc"] == "2.0");
 
     const auto error(data["error"]);
     if (!error.isNull()) {
-        if (error["message"] == "header not found")
-            goto retry;
         auto text(writer.write(error));
         orc_assert(!text.empty());
         orc_assert(text[text.size() - 1] == '\n');
