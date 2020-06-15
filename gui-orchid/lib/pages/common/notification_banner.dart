@@ -12,8 +12,6 @@ class NotificationBannerFactory {
         return null;
       case AppNotificationType.InternetRequired:
         return _internetRequiredBanner();
-      case AppNotificationType.SyncRequired:
-        return _syncRequiredBanner();
     }
   }
 
@@ -23,17 +21,6 @@ class NotificationBannerFactory {
       titleColor: AppColors.warning_banner1,
       imageName: 'assets/images/error.png',
       trailingActionTitle: 'RETRY',
-      trailingAction: () {},
-    );
-  }
-
-  // TODO:
-  static NotificationBanner _syncRequiredBanner() {
-    return NotificationBanner(
-      title: 'Sync required',
-      titleColor: AppColors.teal_5,
-      imageName: 'assets/images/sync.png',
-      trailingActionTitle: 'SYNC',
       trailingAction: () {},
     );
   }

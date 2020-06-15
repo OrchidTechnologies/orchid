@@ -6,7 +6,7 @@ import 'package:orchid/pages/app_colors.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// The primiary connect and reroute buttons.
-class ConnectButton extends StatefulWidget {
+class LegacyConnectButton extends StatefulWidget {
   final Stream<OrchidConnectionState> connectionStatus;
   final Stream<bool> enabledStatus;
   final VoidCallback onConnectButtonPressed;
@@ -15,7 +15,7 @@ class ConnectButton extends StatefulWidget {
   // Feature flag for reroute button.
   final bool enableRerouteButton = false;
 
-  ConnectButton({
+  LegacyConnectButton({
     @required this.connectionStatus,
     @required this.enabledStatus,
     @required this.onConnectButtonPressed,
@@ -23,10 +23,10 @@ class ConnectButton extends StatefulWidget {
   });
 
   @override
-  ConnectButtonState createState() => ConnectButtonState();
+  LegacyConnectButtonState createState() => LegacyConnectButtonState();
 }
 
-class ConnectButtonState extends State<ConnectButton>
+class LegacyConnectButtonState extends State<LegacyConnectButton>
     with TickerProviderStateMixin {
   OrchidConnectionState connectionState = OrchidConnectionState.Invalid;
   bool enabled = true;

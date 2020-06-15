@@ -3,26 +3,29 @@ import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
-/// A rounded rectangle raised text button.
-class RoundedRectRaisedButton extends StatelessWidget {
+/// A rounded rectangle text button.
+class RoundedRectButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final Color backgroundColor;
   final Color textColor;
   final Icon icon;
+  final double elevation;
 
-  const RoundedRectRaisedButton({
+  const RoundedRectButton({
     Key key,
     @required this.text,
     @required this.onPressed,
     this.backgroundColor,
     this.textColor,
     this.icon,
+    this.elevation,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return RaisedButton(
+      elevation: elevation,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16))),
       child: icon ?? AppText.body(
@@ -36,9 +39,9 @@ class RoundedRectRaisedButton extends StatelessWidget {
   }
 }
 
-/// A round image button with a text subtitle.
-class RoundTitledRaisedButton extends StatelessWidget {
-  const RoundTitledRaisedButton({
+/// A round image button with a separate text subtitle positioned below it.
+class RoundTitledRaisedImageButton extends StatelessWidget {
+  const RoundTitledRaisedImageButton({
     Key key,
     @required this.title,
     @required this.imageName,

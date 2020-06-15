@@ -67,7 +67,6 @@ class RealOrchidAPI implements OrchidAPI {
       NetworkConnectivityType.Unknown);
   final connectionStatus = BehaviorSubject<OrchidConnectionState>.seeded(
       OrchidConnectionState.Invalid);
-  final syncStatus = BehaviorSubject<OrchidSyncStatus>();
   final routeStatus = BehaviorSubject<OrchidRoute>();
   final vpnPermissionStatus = BehaviorSubject<bool>();
   final circuitConfigurationChanged = BehaviorSubject<void>.seeded(null);

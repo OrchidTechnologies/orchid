@@ -86,6 +86,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.open_source);
                   }),
+
               divider(),
               SideDrawerTile(
                   title: s.settings,
@@ -95,6 +96,18 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.settings);
                   }),
+
+              divider(),
+              SideDrawerTile(
+                  title: "Traffic Monitor",
+                  imageName: 'assets/images/swapVert.png',
+                  showDetail: true,
+                  hoffset: 4.0,
+                  onPressed: () {
+                    //Navigator.pop(context);
+                    Navigator.pushNamed(context, AppRoutes.traffic);
+                  }),
+
               /*
               divider(),
               SideDrawerTile(

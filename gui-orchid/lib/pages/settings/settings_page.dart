@@ -115,6 +115,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
 
                 // Status page
+                /*
                 pady(8),
                 PageTile(
                   title: s.showStatusPage,
@@ -131,6 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                 ),
+                 */
 
                 // Advanced Configuration
                 pady(8),

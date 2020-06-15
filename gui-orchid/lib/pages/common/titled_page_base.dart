@@ -75,7 +75,7 @@ class TitledPage extends StatelessWidget {
 
   Widget _buildBackButton(BuildContext context) {
     return IconButton(
-      icon: Icon(cancellable ? Icons.close : Icons.arrow_back,
+      icon: Icon(cancellable ? Icons.close : Icons.arrow_back_ios,
           color: _foregroundColor()),
       onPressed: () {
         _performBackAction(context);

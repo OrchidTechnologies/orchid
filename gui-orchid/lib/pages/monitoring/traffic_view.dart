@@ -7,6 +7,7 @@ import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
+import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
 import '../app_gradients.dart';
@@ -89,6 +90,14 @@ class _TrafficViewState extends State<TrafficView>
 
   @override
   Widget build(BuildContext context) {
+    return TitledPage(
+      title: s.traffic,
+      decoration: BoxDecoration(),
+      child: buildPage(),
+    );
+  }
+
+  Widget buildPage() {
     return Container(
       decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
       child: SafeArea(
@@ -440,7 +449,7 @@ class ClearTrafficActionButton extends StatelessWidget {
     S s = S.of(context);
     Dialogs.showConfirmationDialog(
         context: context,
-        title: s.deleteAllData+"?",
+        title: s.deleteAllData + "?",
         body: s.thisWillDeleteRecorded,
         cancelText: s.cancelButtonTitle,
         actionText: s.okButtonTitle,
@@ -448,5 +457,4 @@ class ClearTrafficActionButton extends StatelessWidget {
           await AnalysisDb().clear();
         });
   }
-
 }

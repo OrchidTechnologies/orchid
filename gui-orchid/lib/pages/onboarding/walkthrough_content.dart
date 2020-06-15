@@ -170,7 +170,7 @@ class WalkthroughNextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         width: 180,
-        child: RoundedRectRaisedButton(
+        child: RoundedRectButton(
           text: 'NEXT',
           onPressed: onNext,
         ));
