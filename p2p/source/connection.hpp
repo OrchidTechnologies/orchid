@@ -50,28 +50,28 @@
 
 namespace orc {
 
-template <typename Connection_, bool Close_>
-class Connection final :
+template <typename Association_>
+class Association :
     public Stream
 {
   protected:
-    Connection_ connection_;
+    Association_ association_;
 
   public:
     template <typename... Args_>
-    Connection(Args_ &&...args) noexcept(noexcept(Connection_(std::forward<Args_>(args)...))) :
-        connection_(std::forward<Args_>(args)...)
+    Association(Args_ &&...args) noexcept(noexcept(Association_(std::forward<Args_>(args)...))) :
+        association_(std::forward<Args_>(args)...)
     {
     }
 
-    Connection_ *operator ->() {
-        return &connection_;
+    Association_ *operator ->() {
+        return &association_;
     }
 
     task<size_t> Read(Beam &beam) override {
         size_t writ;
         try {
-            writ = co_await connection_.async_receive(asio::buffer(beam.data(), beam.size()), Token());
+            writ = co_await association_.async_receive(asio::buffer(beam.data(), beam.size()), Token());
         } catch (const asio::system_error &error) {
             auto code(error.code());
             if (code == asio::error::eof)
@@ -83,10 +83,37 @@ class Connection final :
         co_return writ;
     }
 
-    task<void> Open(const Socket &endpoint) { orc_ahead orc_block({
-        connection_.open(endpoint.Host().v4() ? Connection_::protocol_type::v4() : Connection_::protocol_type::v6());
+    virtual task<void> Open(const Socket &endpoint) { orc_ahead orc_block({
+        co_await association_.async_connect(endpoint, Token());
+        association_.non_blocking(true);
+    }, "connecting to " << endpoint); }
 
-        connection_.set_option(asio::socket_base::keep_alive(true));
+    void Shut() noexcept override {
+        association_.close();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
+
+        const size_t writ(co_await [&]() -> task<size_t> { try {
+            co_return co_await association_.async_send(Sequence(data), Token());
+        } catch (const asio::system_error &error) {
+            orc_adapt(error);
+        } }());
+        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
+    }
+};
+
+class Connection :
+    public Association<asio::ip::tcp::socket>
+{
+  public:
+    using Association::Association;
+
+    task<void> Open(const Socket &endpoint) override {
+        association_.open(endpoint.Host().v4() ? asio::ip::tcp::v4() : asio::ip::tcp::v6());
+
+        association_.set_option(asio::ip::tcp::socket::keep_alive(true));
 
         // XXX: consider setting keepalive timeout separately for connection than from actual data
 
@@ -94,49 +121,35 @@ class Connection final :
         // XXX: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/dd877220(v=vs.85)
         // XXX: https://bugs.python.org/issue34932 https://bugs.python.org/issue32394
 
-        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPIDLE>(TCP_KEEPIDLE_DEFAULT / 1000));
-        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPINTVL>(TCP_KEEPINTVL_DEFAULT / 1000));
-        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPCNT>(TCP_KEEPCNT_DEFAULT));
+        association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPIDLE>(TCP_KEEPIDLE_DEFAULT / 1000));
+        association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPINTVL>(TCP_KEEPINTVL_DEFAULT / 1000));
+        association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPCNT>(TCP_KEEPCNT_DEFAULT));
 
         const auto timeout(TCP_KEEPIDLE_DEFAULT + TCP_KEEPINTVL_DEFAULT * TCP_KEEPCNT_DEFAULT);
 #if 0
 #elif defined(__APPLE__)
-        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_CONNECTIONTIMEOUT>(timeout / 1000));
+        association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_CONNECTIONTIMEOUT>(timeout / 1000));
 #elif defined(_WIN32)
-        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_MAXRT>(timeout / 1000));
+        association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_MAXRT>(timeout / 1000));
 #elif defined(__linux__)
         // XXX: consider configuring TCP_SYNCNT
         // "The retries are staggered at 1s, 3s, 7s, 15s, 31s, 63s marks (the inter-retry time starts at 2s and then doubles each time)."
         // XXX: this is only on Linux 2.6.37+, so we will get an error that needs to be handled on CentOS 6
-        connection_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_USER_TIMEOUT>(timeout));
+        association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_USER_TIMEOUT>(timeout));
 #endif
 
-        co_await connection_.async_connect(endpoint, Token());
-        connection_.non_blocking(true);
-    }, "connecting to " << endpoint); }
+        co_return co_await Association::Open(endpoint);
+    }
 
     void Shut() noexcept override {
-        if (Close_)
-            connection_.close();
-        else try {
-            connection_.shutdown(Connection_::shutdown_send);
+        try {
+            association_.shutdown(asio::ip::tcp::socket::shutdown_send);
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::not_connected)
                 return;
             orc_except({ orc_adapt(error); })
         }
-    }
-
-    task<void> Send(const Buffer &data) override {
-        //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-
-        const size_t writ(co_await [&]() -> task<size_t> { try {
-            co_return co_await connection_.async_send(Sequence(data), Token());
-        } catch (const asio::system_error &error) {
-            orc_adapt(error);
-        } }());
-        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };
 
