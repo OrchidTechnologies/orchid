@@ -38,16 +38,15 @@ def get_usd_per_oxt() -> float:
 def get_product_id_mapping(store: str = 'apple') -> dict:
     mapping = {}
     mapping['apple'] = {
-        'net.orchid.US499': 4.99,
-        'net.orchid.pactier1': 4.99,
-        'net.orchid.pactier2': 9.99,
-        'net.orchid.pactier3': 19.99,
+        'net.orchid.pactier1': 6.99,
+        'net.orchid.pactier2': 29.99,
+        'net.orchid.pactier3': 79.99,
     }
-    mapping['google'] = {
-        'net.orchid.pactier1': 4.99,
-        'net.orchid.pactier2': 9.99,
-        'net.orchid.pactier3': 19.99,
-    }
+#     mapping['google'] = {
+#         'net.orchid.pactier1': 4.99,
+#         'net.orchid.pactier2': 9.99,
+#         'net.orchid.pactier3': 19.99,
+#     }
     return mapping.get(store, {})
 
 
