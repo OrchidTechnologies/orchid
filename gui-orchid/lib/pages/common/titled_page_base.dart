@@ -32,7 +32,7 @@ class TitledPage extends StatelessWidget {
   TitledPage({
     @required this.title,
     @required this.child,
-    this.lightTheme = false,
+    this.lightTheme = true,
     this.actions = const [],
     this.backAction,
     this.cancellable = false,

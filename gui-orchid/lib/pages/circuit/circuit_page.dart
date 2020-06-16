@@ -958,7 +958,7 @@ class CircuitUtils {
     }
     var uniqueHop =
         UniqueHop(hop: hop, key: DateTime.now().millisecondsSinceEpoch);
-    addHopToCircuit(uniqueHop);
+    addHopToCircuit(uniqueHop.hop);
     if (onComplete != null) {
       onComplete(uniqueHop);
     }
@@ -982,9 +982,9 @@ class CircuitUtils {
     _pushNewHopEditorRoute(context, route, onComplete);
   }
 
-  static void addHopToCircuit(UniqueHop hop) async {
+  static void addHopToCircuit(CircuitHop hop) async {
     var circuit = await UserPreferences().getCircuit();
-    circuit.hops.add(hop.hop);
+    circuit.hops.add(hop);
     saveCircuit(circuit);
   }
 

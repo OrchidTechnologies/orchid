@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
+import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import '../app_colors.dart';
 
@@ -16,6 +20,19 @@ class WelcomePanel extends StatefulWidget {
 class _WelcomePanelState extends State<WelcomePanel>
     with TickerProviderStateMixin {
   bool _collapsed = false;
+  bool _pretendToBeAndroid; // for testing
+
+  @override
+  void initState() {
+    super.initState();
+    initStateAsync();
+  }
+
+  void initStateAsync() async {
+    _pretendToBeAndroid = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('isAndroid', false);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +55,17 @@ class _WelcomePanelState extends State<WelcomePanel>
 
   Widget _buildOpenView() {
     S s = S.of(context);
+
+    const iOSText = "Purchase Orchid Credits to connect with Orchid.";
+    const androidText =
+        "Create or link an Orchid account, import an OVPN profile or build a multi-hop connection to get started.";
+    var text = isApple ? iOSText : androidText;
+
     var textColor = AppColors.neutral_1;
     var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
-    var topText = TextSpan(
+    var topTextSpan = TextSpan(
       children: <TextSpan>[
-        TextSpan(
-            text: "Purchase Orchid Credits to connect with Orchid.",
-            style: bodyStyle),
+        TextSpan(text: text, style: bodyStyle),
       ],
     );
 
@@ -55,7 +76,7 @@ class _WelcomePanelState extends State<WelcomePanel>
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             _buildTop(
-              topText: topText,
+              topText: topTextSpan,
               buttonText: "Buy Orchid Credits",
               onPressed: _onBuyCredits,
             ),
@@ -69,22 +90,29 @@ class _WelcomePanelState extends State<WelcomePanel>
 
   Container _buildBottom() {
     S s = S.of(context);
+
+    const iOSTitleText = "Have an Orchid Account or OXT?";
+    const androidTitleText = "Already have an Orchid Account?";
+    var titleText = isApple ? iOSTitleText : androidTitleText;
+
+    const iOSText =
+        "Create or link an Orchid account, import an OVPN profile or build a multi-hop connection.";
+    const androidText = "Scan or paste your existing account below.";
+    var text = isApple ? iOSText : androidText;
+
     var textColor = AppColors.neutral_1;
     var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
     var bodyText = TextSpan(
       children: <TextSpan>[
         TextSpan(
-          text: "Have an Orchid Account or OXT?",
+          text: titleText,
           style: TextStyle(
               color: AppColors.neutral_1,
               fontWeight: FontWeight.bold,
               fontSize: 12,
               height: 16.0 / 12.0),
         ),
-        TextSpan(
-            text:
-                "\n\nCreate or link an Orchid account, import an OVPN profile or build a multi-hop connection.",
-            style: bodyStyle),
+        TextSpan(text: "\n\n" + text, style: bodyStyle),
       ],
     );
 
@@ -93,17 +121,25 @@ class _WelcomePanelState extends State<WelcomePanel>
       child: Padding(
         padding: EdgeInsets.only(top: 8, bottom: 12, left: 22, right: 22),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             pady(16),
             RichText(text: bodyText),
             pady(16),
-            Center(
-                child: _buildButton(
-              text: "Custom Setup",
-              bgColor: Colors.white,
-              textColor: AppColors.teal_3,
-              onPressed: _onDoSetup
-            )),
+            if (isApple)
+              Center(
+                  child: _buildButton(
+                      text: "Custom Setup",
+                      bgColor: Colors.white,
+                      textColor: AppColors.teal_3,
+                      onPressed: _onDoSetup))
+            else
+              ScanOrPasteOrchidAccount(
+                onImportAccount: (ParseOrchidAccountResult result) async {
+                  var hop = await OrchidVPNConfig.importAccountAsHop(result);
+                  CircuitUtils.addHopToCircuit(hop);
+                },
+              ),
             pady(16)
           ],
         ),
@@ -167,14 +203,17 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   Widget _buildClosedView() {
+    var iosText =
+        "Purchase Orchid Credits, link an account or OVPN profile to get started.";
+    var androidText =
+        "Create an Orchid account, link an existing account or import an OVPN profile.";
+    var topText = isApple ? iosText : androidText;
+
     var textColor = AppColors.neutral_1;
     var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
-    var topText = TextSpan(
+    var topTextSpan = TextSpan(
       children: <TextSpan>[
-        TextSpan(
-            text:
-                "Purchase Orchid Credits, link an account or OVPN profile to get started.",
-            style: bodyStyle),
+        TextSpan(text: topText, style: bodyStyle),
       ],
     );
 
@@ -184,7 +223,7 @@ class _WelcomePanelState extends State<WelcomePanel>
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            _buildTop(topText: topText),
+            _buildTop(topText: topTextSpan),
           ],
         ),
       ),
@@ -235,12 +274,15 @@ class _WelcomePanelState extends State<WelcomePanel>
     );
   }
 
+  bool get isApple {
+    return !_pretendToBeAndroid && Platform.isIOS || Platform.isMacOS;
+  }
+
   void _onBuyCredits() {
     CircuitUtils.purchasePAC(context);
   }
 
   void _onDoSetup() {
     CircuitUtils.addHop(context);
-
   }
 }
