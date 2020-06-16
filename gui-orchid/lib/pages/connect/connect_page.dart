@@ -290,10 +290,13 @@ class _ConnectPageState extends State<ConnectPage>
               Icon(Icons.power_settings_new, color: textColor, size: 24),
               padx(4),
               Expanded(
-                child: Text(
-                  text,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: textColor, fontSize: 16),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
                 ),
               )
             ],
