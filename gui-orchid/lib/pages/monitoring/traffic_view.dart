@@ -16,9 +16,12 @@ import 'traffic_empty_view.dart';
 import 'traffic_view_detail.dart';
 
 class TrafficView extends StatefulWidget {
-  final ClearTrafficActionButtonController clearTrafficController;
+  ClearTrafficActionButtonController clearTrafficController =
+      ClearTrafficActionButtonController();
 
-  const TrafficView({Key key, this.clearTrafficController}) : super(key: key);
+  TrafficView({Key key, ClearTrafficActionButtonController clearTrafficController}) : super(key: key) {
+    this.clearTrafficController = clearTrafficController ?? this.clearTrafficController;
+  }
 
   @override
   _TrafficViewState createState() => _TrafficViewState();
@@ -93,6 +96,9 @@ class _TrafficViewState extends State<TrafficView>
     return TitledPage(
       title: s.traffic,
       decoration: BoxDecoration(),
+      actions: [
+        ClearTrafficActionButton(controller: widget.clearTrafficController)
+      ],
       child: buildPage(),
     );
   }
@@ -433,7 +439,10 @@ class ClearTrafficActionButton extends StatelessWidget {
             child: Opacity(
               opacity: enabled ? 1.0 : 0.3,
               child: FlatButton(
-                child: Text(s.clear, style: AppText.actionButtonStyle),
+                color: AppColors.white,
+                child: Text(s.clear,
+                    style: AppText.actionButtonStyle
+                        .copyWith(color: AppColors.purple_3)),
                 onPressed: enabled
                     ? () {
                         _confirmDelete(context);
