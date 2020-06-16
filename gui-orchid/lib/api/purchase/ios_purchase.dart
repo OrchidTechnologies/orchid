@@ -17,7 +17,7 @@ class IOSOrchidPurchaseAPI
   ///    debug: true
   ///  }'
   static PACApiConfig prodAPIConfig = PACApiConfig(
-      enabled: false,
+      enabled: true,
       url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple');
 
   /// Return the API config allowing overrides from configuration.
