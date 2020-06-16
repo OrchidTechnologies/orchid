@@ -6,21 +6,15 @@ import 'orchid_purchase.dart';
 
 /// A purchased access credit with a USD value and product id.
 class PAC {
-  String _productIdBaseName;
-
-  // Return the prefixed product id for the current api config.
-  String get productId {
-    return OrchidPurchaseAPI.productIdPrefix + '.' + _productIdBaseName;
-  }
-
+  String productId;
   USD usdPurchasePrice;
   String displayName;
 
-  PAC(this._productIdBaseName, this.usdPurchasePrice, this.displayName);
+  PAC({this.productId, this.usdPurchasePrice, this.displayName});
 
   @override
   String toString() {
-    return 'PAC{_productIdBaseName: $_productIdBaseName, usdPurchasePrice: $usdPurchasePrice, displayName: $displayName}';
+    return 'PAC{_productId: $productId, usdPurchasePrice: $usdPurchasePrice, displayName: $displayName}';
   }
 }
 

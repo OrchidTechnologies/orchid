@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:orchid/util/units.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_pac_server.dart';
@@ -39,7 +40,7 @@ class IOSOrchidPurchaseAPI
     // Note: This is an attempt to mitigate an "unable to connect to iTunes Store"
     // Note: error observed in TestFlight by starting the connection process earlier.
     // Note: Products are otherwise fetched immediately prior to purchase.
-    await _requestProducts();
+    await requestProducts();
 
     // Reset any existing tx after an app restart.
     var pacTx = await PacTransaction.shared.get();
@@ -60,7 +61,7 @@ class IOSOrchidPurchaseAPI
 
     // Refresh the products list:
     // Note: Doing this on app start does not seem to be sufficient.
-    await _requestProducts();
+    await requestProducts();
 
     // Ensure no other transaction is pending completion.
     if (await PacTransaction.shared.hasValue()) {
@@ -90,8 +91,8 @@ class IOSOrchidPurchaseAPI
           break;
 
         case SKPaymentTransactionStateWrapper.restored:
-          // Are we getting this on a second purchase attempt that we dropped?
-          // Attempting to just handle it as a new purchase for now.
+        // Are we getting this on a second purchase attempt that we dropped?
+        // Attempting to just handle it as a new purchase for now.
           log("iap: iap purchase restored?");
           _completeIAPTransaction(tx);
           break;
@@ -120,8 +121,9 @@ class IOSOrchidPurchaseAPI
             log("iap: was cancelled");
             PacTransaction.shared.clear();
           } else {
-            log(
-                "iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
+            log("iap: IAP Failed, ${tx.toString()} error: type=${tx.error
+                .runtimeType}, code=${tx.error.code}, userInfo=${tx.error
+                .userInfo}, domain=${tx.error.domain}");
             PacTransaction.shared.set(PacTransaction.error("iap failed"));
           }
           break;
@@ -159,17 +161,38 @@ class IOSOrchidPurchaseAPI
     OrchidPACServer().processPendingPACTransaction();
   }
 
-  Future<void> _requestProducts() async {
+  @override
+  Future<Map<String, PAC>> requestProducts() async {
     var productIds = [
-      OrchidPurchaseAPI.pacTier1.productId,
-      OrchidPurchaseAPI.pacTier2.productId,
-      OrchidPurchaseAPI.pacTier3.productId
+      OrchidPurchaseAPI.pacTier1,
+      OrchidPurchaseAPI.pacTier2,
+      OrchidPurchaseAPI.pacTier3
     ];
     log("iap: product ids requested: $productIds");
     SkProductResponseWrapper productResponse =
-        await SKRequestMaker().startProductRequest(productIds);
-    log(
-        "iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
+    await SKRequestMaker().startProductRequest(productIds);
+    log("iap: product response: ${productResponse.products.map((p) => p
+        .productIdentifier)}");
+
+    var findProd = (String id) {
+      return productResponse.products.firstWhere((p) => p.productIdentifier == id);
+    };
+    var pac1 = findProd(OrchidPurchaseAPI.pacTier1);
+    var pac2 = findProd(OrchidPurchaseAPI.pacTier2);
+    var pac3 = findProd(OrchidPurchaseAPI.pacTier3);
+    if (pac1.priceLocale.currencyCode != "USD") {
+      throw Exception("unknown currency product response");
+    }
+    print( "pac1 = ${pac1.productIdentifier}, ${pac1.price}, ${pac1.priceLocale}");
+
+    var toPAC = (SKProductWrapper prod) {
+      return PAC(productId: prod.productIdentifier, usdPurchasePrice: USD(double.parse(prod.price)), displayName: "\$${prod.price} USD" );
+    };
+    return {
+      pac1.productIdentifier: toPAC(pac1),
+      pac2.productIdentifier: toPAC(pac2),
+      pac3.productIdentifier: toPAC(pac3),
+    };
   }
 
   @override

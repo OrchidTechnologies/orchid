@@ -20,7 +20,7 @@ class WelcomePanel extends StatefulWidget {
 class _WelcomePanelState extends State<WelcomePanel>
     with TickerProviderStateMixin {
   bool _collapsed = false;
-  bool _pretendToBeAndroid; // for testing
+  bool _pretendToBeAndroid = false; // for testing
 
   @override
   void initState() {

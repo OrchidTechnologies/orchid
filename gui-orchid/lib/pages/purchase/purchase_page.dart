@@ -47,6 +47,21 @@ class _PurchasePageState extends State<PurchasePage> {
   bool _requiresUserAction = false;
   bool _showHelp = false;
 
+  Map<String, PAC> _pacs = {
+    OrchidPurchaseAPI.pacTier1: PAC(
+        productId: OrchidPurchaseAPI.pacTier1,
+        usdPurchasePrice: null,
+        displayName: ""),
+    OrchidPurchaseAPI.pacTier2: PAC(
+        productId: OrchidPurchaseAPI.pacTier2,
+        usdPurchasePrice: null,
+        displayName: ""),
+    OrchidPurchaseAPI.pacTier3: PAC(
+        productId: OrchidPurchaseAPI.pacTier3,
+        usdPurchasePrice: null,
+        displayName: ""),
+  };
+
   @override
   void initState() {
     ScreenOrientation.portrait();
@@ -60,6 +75,9 @@ class _PurchasePageState extends State<PurchasePage> {
     // Disable price display
     //_pricing = await OrchidAPI().pricing().getPricing();
     //setState(() {});
+
+    _pacs = await OrchidPurchaseAPI().requestProducts();
+    setState(() {});
   }
 
   @override
@@ -91,7 +109,7 @@ class _PurchasePageState extends State<PurchasePage> {
                     _buildInstructions(),
                     pady(16),
                     _buildPurchaseCardView(
-                        pac: OrchidPurchaseAPI.pacTier1,
+                        pac: _pacs[OrchidPurchaseAPI.pacTier1],
                         title: "Try out Orchid",
                         subtitle: _buildPurchaseDescriptionText(
                           text: "- Good for browsing and light activity",
@@ -100,7 +118,7 @@ class _PurchasePageState extends State<PurchasePage> {
                         gradEnd: 2),
                     pady(24),
                     _buildPurchaseCardView(
-                        pac: OrchidPurchaseAPI.pacTier2,
+                        pac: _pacs[OrchidPurchaseAPI.pacTier2],
                         title: "Average",
                         subtitle: _buildPurchaseDescriptionText(
                           text: "- Good for an individual\n"
@@ -110,7 +128,7 @@ class _PurchasePageState extends State<PurchasePage> {
                         gradEnd: 1),
                     pady(24),
                     _buildPurchaseCardView(
-                      pac: OrchidPurchaseAPI.pacTier3,
+                      pac: _pacs[OrchidPurchaseAPI.pacTier3],
                       title: "Heavy",
                       subtitle: _buildPurchaseDescriptionText(
                         text: "- Good for bandwidth-heavy uses & sharing\n"
@@ -344,20 +362,29 @@ class _PurchasePageState extends State<PurchasePage> {
         fontFamily: 'SFProText-Regular',
         height: 16.0 / 12.0);
 
-    var usdString = formatCurrency(pac.usdPurchasePrice.value);
-    var oxtString = NumberFormat("0.00")
-        .format(_pricing?.toOXT(pac.usdPurchasePrice)?.value ?? 0);
+    var usdString = formatCurrency(pac.usdPurchasePrice?.value, ifNull: "...");
+    var oxtString = pac.usdPurchasePrice != null
+        ? NumberFormat("0.00")
+            .format(_pricing?.toOXT(pac.usdPurchasePrice)?.value ?? 0)
+        : "...";
+
+    var enabled = pac.usdPurchasePrice != null;
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
         end: Alignment(0.0, gradEnd),
-        colors: [Color(0xff4e71c2), Color(0xff258993)]);
+        colors: [
+          enabled ? Color(0xff4e71c2) : Colors.grey,
+          enabled ? Color(0xff258993) : Colors.blueGrey
+        ]);
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTap: () {
-        _purchase(purchase: pac);
-      },
+      onTap: enabled
+          ? () {
+              _purchase(purchase: pac);
+            }
+          : null,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.0),
@@ -390,15 +417,14 @@ class _PurchasePageState extends State<PurchasePage> {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Column(children: [
-                      Text(
-                          "\$$usdString",
-                          style: valueStyle.copyWith(
-                              fontWeight: FontWeight.bold)),
+                      Text("\$$usdString",
+                          style:
+                              valueStyle.copyWith(fontWeight: FontWeight.bold)),
                       pady(2),
                       Visibility(
                         visible: _pricing != null,
-                        child: Text("~ $oxtString OXT",
-                            style: valueSubtitleStyle),
+                        child:
+                            Text("~ $oxtString OXT", style: valueSubtitleStyle),
                       ),
                     ]),
                   ),
@@ -496,7 +522,9 @@ class _PurchasePageState extends State<PurchasePage> {
 
     // Record the purchase for rate limiting
     try {
-      PAC pac = OrchidPurchaseAPI.pacForProductId(tx.productId);
+      var productMap = await OrchidPurchaseAPI().requestProducts();
+      //PAC pac = OrchidPurchaseAPI.pacForProductId(tx.productId);
+      PAC pac = productMap[tx.productId];
       OrchidPurchaseAPI.addPurchaseToRateLimit(pac);
     } catch (err) {
       log("pac: Unable to find pac for product id!");
