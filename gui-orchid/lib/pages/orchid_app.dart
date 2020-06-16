@@ -54,6 +54,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
                 backgroundColor: backgroundColor.value,
                 elevation: 0,
                 iconTheme: IconThemeData(color: iconColor.value),
+                brightness: Brightness.light // status bar
               );
             }),
       ),

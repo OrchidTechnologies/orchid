@@ -52,6 +52,7 @@ class TitledPage extends StatelessWidget {
           ),
           titleSpacing: 0,
           backgroundColor: _backgroundColor(),
+          brightness: Brightness.light, // status bar
           elevation: 0.0),
       body: Container(
         child: child,
