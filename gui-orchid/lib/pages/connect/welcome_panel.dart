@@ -61,6 +61,10 @@ class _WelcomePanelState extends State<WelcomePanel>
         "Create or link an Orchid account, import an OVPN profile or build a multi-hop connection to get started.";
     var text = isApple ? iOSText : androidText;
 
+    var iosButtonText = "Buy Orchid Credits";
+    var androidButtonText = "Setup";
+    var buttonText = isApple ? iosButtonText : androidButtonText;
+
     var textColor = AppColors.neutral_1;
     var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
     var topTextSpan = TextSpan(
@@ -77,7 +81,7 @@ class _WelcomePanelState extends State<WelcomePanel>
           children: <Widget>[
             _buildTop(
               topText: topTextSpan,
-              buttonText: "Buy Orchid Credits",
+              buttonText: buttonText,
               onPressed: _onBuyCredits,
             ),
             Container(height: 0.5, color: AppColors.grey_6), // divider
