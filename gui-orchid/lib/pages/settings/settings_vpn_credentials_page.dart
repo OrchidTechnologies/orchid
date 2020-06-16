@@ -95,7 +95,7 @@ class _SettingsVPNCredentialsPage extends State<SettingsVPNCredentialsPage> {
                 child: StreamBuilder<Object>(
                     stream: _vpnCredentialsEntryController.readyToSave.stream,
                     builder: (context, snapshot) {
-                      return RoundedRectRaisedButton(
+                      return RoundedRectButton(
                           text: "SAVE",
                           onPressed:
                               _vpnCredentialsEntryController.readyToSave.value

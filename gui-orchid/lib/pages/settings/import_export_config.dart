@@ -151,7 +151,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
                   child: StreamBuilder<Object>(
                       stream: _actionEnabled.stream,
                       builder: (context, snapshot) {
-                        return RoundedRectRaisedButton(
+                        return RoundedRectButton(
                             text: widget.mode == ImportExportMode.Import
                                 ? "IMPORT"
                                 : "COPY",

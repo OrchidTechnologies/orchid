@@ -35,10 +35,6 @@ class MockOrchidAPI implements OrchidAPI {
     // init connection status
     connectionStatus.add(OrchidConnectionState.NotConnected);
 
-    // fake sync progress
-    syncStatus.add(
-        OrchidSyncStatus(state: OrchidSyncState.InProgress, progress: 0.5));
-
     // fake route updates
     routeStatus.add(_fakeRoute());
     _routeTimer = Timer.periodic(Duration(seconds: 3), (timer) {
@@ -69,9 +65,6 @@ class MockOrchidAPI implements OrchidAPI {
 
   /// Publish the connection status.
   final connectionStatus = BehaviorSubject<OrchidConnectionState>();
-
-  /// Publish the synchronization status.
-  final syncStatus = BehaviorSubject<OrchidSyncStatus>();
 
   /// Publish the network route status.
   final routeStatus = BehaviorSubject<OrchidRoute>();
@@ -179,7 +172,7 @@ class MockOrchidAPI implements OrchidAPI {
       case OrchidConnectionState.Disconnecting:
         if (connect) {
           _setConnectionState(OrchidConnectionState.Connecting);
-          _connectFuture = Future.delayed(Duration(milliseconds: 2500), () {
+          _connectFuture = Future.delayed(Duration(milliseconds: 3000), () {
             _setConnectionState(OrchidConnectionState.Connected);
           });
         } else {

@@ -15,11 +15,13 @@ class AppNotifications {
     var api = OrchidAPI();
 
     // Listen to all notification data sources and pass the changes to the evaluation method.
+    /*
     Rx.combineLatest2(
             api.networkConnectivity, api.syncStatus, _evaluateNotificationSources)
         .listen((AppNotificationType notificationType) {
       notification.add(notificationType);
     });
+     */
   }
 
   factory AppNotifications() {
@@ -33,14 +35,10 @@ class AppNotifications {
 
   /// This method is called upon changes to any source of notification
   AppNotificationType _evaluateNotificationSources(
-      NetworkConnectivityType connectivity, OrchidSyncStatus syncStatus) {
+      NetworkConnectivityType connectivity) {
     // Prioritize connectivity
     if (connectivity == NetworkConnectivityType.NoConnectivity) {
       return AppNotificationType.InternetRequired;
-    }
-
-    if (syncStatus.state == OrchidSyncState.Required) {
-      return AppNotificationType.SyncRequired;
     }
 
     // No notifications
@@ -49,5 +47,5 @@ class AppNotifications {
 }
 
 /// Type of notifications the app may display.
-enum AppNotificationType { None, InternetRequired, SyncRequired }
+enum AppNotificationType { None, InternetRequired }
 

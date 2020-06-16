@@ -92,7 +92,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                 child: StreamBuilder<Object>(
                     stream: _readyToSave.stream,
                     builder: (context, snapshot) {
-                      return RoundedRectRaisedButton(
+                      return RoundedRectButton(
                           text: s.saveButtonTitle,
                           onPressed: _readyToSave.value ? _save : null);
                     }),

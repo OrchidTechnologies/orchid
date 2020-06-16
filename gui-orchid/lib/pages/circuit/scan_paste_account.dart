@@ -13,6 +13,8 @@ import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:flutter/services.dart';
 
+import '../app_colors.dart';
+
 typedef ImportAccountCompletion = void Function(
     ParseOrchidAccountResult result);
 
@@ -55,9 +57,9 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
     return TitleIconButton(
         text: s.paste,
         trailing: showIcons
-            ? Icon(Icons.content_paste, color: Colors.deepPurple)
+            ? Icon(Icons.content_paste, color: AppColors.teal_3)
             : SizedBox(),
-        textColor: Colors.deepPurple,
+        textColor: AppColors.teal_3,
         backgroundColor: Colors.white,
         onPressed: _pasteCode);
   }
@@ -69,7 +71,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
             ? Image.asset("assets/images/scan.png", color: Colors.white)
             : SizedBox(),
         textColor: Colors.white,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.teal_3,
         onPressed: _scanQRCode);
   }
 
@@ -158,7 +160,7 @@ class TitleIconButton extends StatelessWidget {
       onPressed: onPressed,
       shape: RoundedRectangleBorder(
           side: BorderSide(
-              color: Colors.deepPurple, width: 1, style: BorderStyle.solid),
+              color: AppColors.teal_3, width: 1, style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),

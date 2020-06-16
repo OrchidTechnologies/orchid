@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/help/help_feedback_page.dart';
 import 'package:orchid/pages/help/help_page.dart';
-import 'package:orchid/pages/connect/connect_page.dart';
+import 'package:orchid/pages/connect/legacy_connect_page.dart';
 import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/help/privacy_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
@@ -54,7 +54,7 @@ class AppRoutes {
 
   static final Map<String, WidgetBuilder> routes = {
     //home: (context) => CircuitPageStandalone(),
-    connect: (context) => QuickConnectPage(),
+    connect: (context) => LegacyConnectPage(),
     settings: (context) => SettingsPage(),
     settings_wallet: (context) => SettingsLinkWalletPage(),
     settings_vpn: (context) => SettingsVPNCredentialsPage(),

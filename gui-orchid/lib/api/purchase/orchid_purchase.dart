@@ -32,18 +32,10 @@ abstract class OrchidPurchaseAPI {
   // Domain used in product ID prefix, e.g. 'net.orchid'
   static String productIdPrefix = 'net.orchid';
 
-  // PAC product id base name, nominal USD value and display string.
-  static PAC pacTier1 = PAC('pactier1', USD(4.99), "\$4.99 USD");
-  static PAC pacTier2 = PAC('pactier2', USD(9.99), "\$9.99 USD");
-  static PAC pacTier3 = PAC('pactier3', USD(19.99), "\$19.99 USD");
-
-  static PAC pacForProductId(String productId) {
-    return [
-      OrchidPurchaseAPI.pacTier1,
-      OrchidPurchaseAPI.pacTier2,
-      OrchidPurchaseAPI.pacTier3
-    ].firstWhere((p) => p.productId == productId);
-  }
+  // PAC product ids
+  static String pacTier1 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1';
+  static String pacTier2 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2';
+  static String pacTier3 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3';
 
   // The raw value from the iOS API
   static const int SKErrorPaymentCancelled = 2;
@@ -51,6 +43,8 @@ abstract class OrchidPurchaseAPI {
   Future<PACApiConfig> apiConfig();
 
   void initStoreListener();
+
+  Future<Map<String,PAC>> requestProducts();
 
   /// Make the app store purchase. This method will throw
   /// PACPurchaseExceedsRateLimit if the daily purchase rate has been exceeded.

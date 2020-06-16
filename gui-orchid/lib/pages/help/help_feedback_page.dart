@@ -133,7 +133,7 @@ class _HelpFeedbackPageState extends State<HelpFeedbackPage> {
               Container(
                 width: 320,
                 height: 43,
-                child: RoundedRectRaisedButton(
+                child: RoundedRectButton(
                     text: "SEND", onPressed: _readyToSend ? _send : null),
               ),
               SizedBox(height: 41)

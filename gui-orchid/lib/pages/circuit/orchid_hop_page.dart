@@ -308,7 +308,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             // Copy key button
             Visibility(
               visible: widget.readOnly(),
-              child: RoundedRectRaisedButton(
+              child: RoundedRectButton(
                   backgroundColor: Colors.deepPurple,
                   textColor: Colors.white,
                   text: s.copy,

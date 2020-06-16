@@ -25,7 +25,6 @@ class _SettingsPageState extends State<SettingsPage> {
   var _defaultCurator = TextEditingController();
 
   bool _queryBalances = false;
-  bool _showStatusTab = false;
   bool _allowNoHopVPN = false;
   bool _showLogging = false;
 
@@ -41,7 +40,6 @@ class _SettingsPageState extends State<SettingsPage> {
     _queryBalances = await UserPreferences().getQueryBalances();
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
-    _showStatusTab = await UserPreferences().getShowStatusTab();
     _allowNoHopVPN = await UserPreferences().getAllowNoHopVPN();
     setLoggingConfig();
     setState(() {});
@@ -115,6 +113,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
 
                 // Status page
+                /*
                 pady(8),
                 PageTile(
                   title: s.showStatusPage,
@@ -131,6 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                 ),
+                 */
 
                 // Advanced Configuration
                 pady(8),

@@ -1,286 +1,341 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/api/notifications.dart';
+import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';
-import 'package:orchid/pages/connect/connect_button.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
-import 'package:flare_flutter/flare_actor.dart';
-import 'package:rxdart/rxdart.dart';
-import 'connect_world_map.dart';
+import 'package:orchid/pages/connect/welcome_panel.dart';
+
+import '../app_routes.dart';
 
 /// The main page containing the connect button.
-class QuickConnectPage extends StatefulWidget {
-  static bool allowScrolling = false;
+class ConnectPage extends StatefulWidget {
+  final ValueNotifier<Color> appBarColor;
+  final ValueNotifier<Color> iconColor;
 
-  QuickConnectPage({Key key}) : super(key: key);
+  ConnectPage({Key key, @required this.appBarColor, @required this.iconColor})
+      : super(key: key);
 
   @override
-  _QuickConnectPageState createState() => _QuickConnectPageState();
+  _ConnectPageState createState() => _ConnectPageState();
 }
 
-class _QuickConnectPageState
-    extends State<QuickConnectPage> // with SingleTickerProviderStateMixin {
-    with
-        TickerProviderStateMixin //, AutomaticKeepAliveClientMixin // This breaks things unexpectedly.
-{
+class _ConnectPageState extends State<ConnectPage>
+    with TickerProviderStateMixin {
   // Current state reflected by the page, driving color and animation.
   OrchidConnectionState _connectionState = OrchidConnectionState.NotConnected;
 
   // Animation controller for transitioning to the connected state
   AnimationController _connectAnimController;
 
+  //AnimationController _highlightAnimationController;
+
   // Animations driven by the connected state
   Animation<LinearGradient> _backgroundGradient;
-  Animation<LinearGradient> _mapGradient;
-  Animation<double> _animOpacity; // The background Flare animation
+  Animation<Color> _iconColor;
 
-  // This determines whether the intro (slide in) or repeating background animation is shown.
-  bool _showIntroAnimation = true;
+  bool _hasConfiguredHops = false;
 
-  ScrollController _scrollController = ScrollController();
+  bool get _showWelcomePane => !_hasConfiguredHops;
 
   List<StreamSubscription> _rxSubscriptions = List();
 
   @override
   void initState() {
     super.initState();
-    //AppOnboarding().showPageIfNeeded(context);
     _initListeners();
     _initAnimations();
   }
 
   @override
   Widget build(BuildContext context) {
-    return buildPageContainer(context);
-  }
-
-  /// The page background and (if standalone, options bar).
-  /// Note: Some opportunity to factor out widgets below but it wouldn't really
-  /// Note: help much in this context.
-  Widget buildPageContainer(BuildContext context) {
     return Stack(
       children: <Widget>[
         // background gradient
         _buildBackgroundGradient(),
 
-        // Fixed position for the flare animation on scrolling.
-        // The connected state background Flare animation
-        //_buildPositionedConnectedAnimation(),
-
-        // The background map and route visualization
-        _buildPositionedMap(),
-
         // The page content including the button title, button, and route info when connected.
-        _buildScrollablePageContent(),
+        SafeArea(
+          child: _buildPageContent(),
+        ),
 
-        // Options bar with optional notification banner
-        //ConnectOptionsBar(iconColor: _iconColor, connectAnimController: _connectAnimController),
+        // The welcome panel
+        if (_showWelcomePane)
+          SafeArea(
+            child: Container(
+              alignment: Alignment.bottomCenter,
+              child: WelcomePanel(),
+              //child: Container(color: Colors.orange, width: 50, height: 50),
+            ),
+          )
       ],
     );
   }
 
   /// The page content including the button title, button, and route info when connected.
-  Widget _buildScrollablePageContent() {
-    var screenSize = MediaQuery.of(context).size;
-    var statusBarTop = MediaQuery.of(context).padding.top;
-    var buttonImageHeight = 142; // The button image height
+  Widget _buildPageContent() {
+    return Column(
+      children: <Widget>[
+        // Line art background, logo, and connect button
+        Expanded(
+          flex: 10,
+          child: _buildCenterControls(),
+        ),
 
-    // The button widget fits the width allowing for the pulsing animation.
-    var buttonSize = screenSize.width;
+        pady(50),
+        _buildManageProfileButton(),
 
-    // Position for the center of the button
-    var buttonY = screenSize.height * 0.29;
+        pady(20),
+        _buildStatusMessage(context),
 
-    // How much of the button image should remain visible when fully scrolled up.
-    var buttonRemaining = 15;
+        Spacer(flex: 2),
+      ],
+    );
+  }
 
-    // Calculate the screen height based on the desired button position.
-    var scrollHeight = screenSize.height -
-        statusBarTop +
-        buttonY +
-        buttonImageHeight / 2 -
-        buttonRemaining;
-
-    return SingleChildScrollView(
-      physics: QuickConnectPage.allowScrolling
-          ? null
-          : const NeverScrollableScrollPhysics(),
-      controller: _scrollController,
-      child: Container(
-        height: scrollHeight,
-        child: Stack(
-          alignment: Alignment.center,
-          fit: StackFit.expand,
-          children: <Widget>[
-            // The status message
-            Positioned(
-                top: buttonY - buttonImageHeight * 1.05,
-                child: _buildStatusMessage(context)),
-
-            // Scroll the flare anim with the content
-            // The connected state background Flare animation
-            _buildPositionedConnectedAnimation(),
-
-            // The large connect button
-            Positioned(
-              top: buttonY - buttonSize / 2,
-              width: buttonSize,
-              height: buttonSize,
-              child: ConnectButton(
-                connectionStatus: OrchidAPI().connectionStatus,
-                enabledStatus: BehaviorSubject.seeded(true),
-                onConnectButtonPressed: _onConnectButtonPressed,
-                onRerouteButtonPressed: _rerouteButtonPressed,
-              ),
-            ),
-          ],
+  Padding _buildManageProfileButton() {
+    var textColor = Colors.white;
+    var bgColor = AppColors.purple_3;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 300),
+        child: Container(
+          height: 50,
+          width: double.infinity,
+          child: RaisedButton(
+              elevation: 0,
+              color: bgColor,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(24))),
+              onPressed: () {
+                Navigator.pushNamed(context, AppRoutes.circuit);
+              },
+              child: Text(
+                "Manage Profile",
+                style: TextStyle(color: textColor, fontSize: 16),
+              )),
         ),
       ),
     );
   }
 
-  /// Build the map and position it based on scroll position.
-  Widget _buildPositionedMap() {
-    // Size the map size to fit the screen initially.
-    Size screenSize = MediaQuery.of(context).size;
-    var mapHorizontalMargins = 5;
-    var mapStartHeight = (screenSize.width - mapHorizontalMargins * 2) /
-        ConnectWorldMap.worldMapImage.aspectRatio;
-
-    // The map center starting vertical position as fraction of screen height.
-    double mapStartPosition = 0.58;
-    // The map center ending vertical position as fraction of screen height.
-    double mapEndPosition = 0.5;
-    // The zoom at min scroll
-    double mapStartZoom = 1.1;
-    // The zoom at max scroll
-    double mapEndZoom = 2.5;
-
-    // Animated builder that responds to scrolling or connection state transitions
-    return AnimatedBuilder(
-      animation: Listenable.merge([_scrollController, _connectAnimController]),
-      builder: (BuildContext context, Widget child) {
-        double mapWidth = screenSize.width;
-        double mapHeight = max(
-            0,
-            mapStartHeight *
-                mapStartZoom *
-                (1 + (mapEndZoom - 1) * scrollFraction));
-        double mapPosition = mapStartPosition +
-            scrollFraction * (mapEndPosition - mapStartPosition);
-
-        // The interpolated map vertical position.
-        // Note: this should probably subtract the safe area margins.
-        double mapTop = mapPosition * screenSize.height - mapHeight / 2;
-
-        var locations = (OrchidAPI().routeStatus.value ?? OrchidRoute([]))
-            .nodes
-            .map((node) => node.location)
-            .toList();
-        return Positioned(
-          top: mapTop,
-          child: ConnectWorldMap(
-            locations: locations,
-            mapGradient: _mapGradient.value,
-            width: mapWidth,
-            height: mapHeight,
-            showOverlay: _connectionState == OrchidConnectionState.Connected,
+  Widget _buildCenterControls() {
+    return Container(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Line art background
+          OrientationBuilder(
+            builder: (BuildContext context, Orientation orientation) {
+              return SvgPicture.asset(
+                "assets/svg/line_art.svg",
+                width: double.infinity,
+                alignment: orientation == Orientation.landscape
+                    ? Alignment.topCenter
+                    : Alignment.center,
+                fit: orientation == Orientation.landscape
+                    ? BoxFit.fitWidth
+                    : BoxFit.contain,
+              );
+            },
           ),
-        );
-      },
+          // Large logo and connect button
+          Padding(
+            // Logo is asymmetric, shift left a bit
+            padding: const EdgeInsets.only(right: 9.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildLogo(),
+                pady(48),
+//              if (_connectionState == OrchidConnectionState.Connecting ||
+//                  _connectionState == OrchidConnectionState.Disconnecting)
+//                AnimatedBuilder(
+//                    animation: _highlightAnimationController,
+//                    builder: (context, snapshot) {
+//                      return _buildConnectButton();
+//                    })
+//              else
+                Padding(
+                  // Logo is asymmetric, shift right a bit
+                  padding: const EdgeInsets.only(left: 18.0),
+                  child: _buildConnectButton(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  /// Get the fraction of the total scroll extent represented by the current
-  /// scroll offset (0.0 - 1.0).
-  double get scrollFraction {
-    double scrollOffset =
-        _scrollController.hasClients ? _scrollController.offset : 0;
-    double maxScrollExtent = (_scrollController.hasClients
-            ? _scrollController.position.maxScrollExtent
-            : double.infinity) ??
-        double.infinity;
-    double scrollFrac = scrollOffset / maxScrollExtent;
-    return scrollFrac;
+  Widget _buildLogo() {
+    print("build logo, connection state = ${_connectionState}");
+    var image = () {
+      return Image.asset("assets/images/connect_logo.png",
+          width: 207, height: 186); // match glow image size
+    };
+    var glowImage = () {
+      return Image.asset("assets/images/logo_glow.png",
+          width: 207, height: 186);
+    };
+
+    var transitionImage = () {
+      return ShaderMask(
+          shaderCallback: (rect) {
+            return _buildTransitionGradient().createShader(rect);
+          },
+          blendMode: BlendMode.srcATop,
+          child: image());
+    };
+
+    /* Attempt to build the glow image dynamically... Need a way to blend.
+    var glowLogo = ShaderMask(
+      shaderCallback: (rect) {
+        return _buildGlowGradient().createShader(rect);
+      },
+      blendMode: BlendMode.srcATop,
+      child: image,
+    );
+
+    var blurLogo = ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
+      child: image,
+    );
+
+    return Stack(
+      children: [
+        glowLogo,
+        blurLogo,
+      ],
+    );
+     */
+
+    switch (_connectionState) {
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+        return image();
+      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Disconnecting:
+        return transitionImage();
+      case OrchidConnectionState.Connected:
+        return glowImage();
+    }
+    throw Exception();
   }
 
-  AnimatedBuilder _buildBackgroundGradient() {
+  Widget _buildConnectButton() {
+    var textColor = Colors.white;
+    var bgColor = AppColors.purple_3;
+    var gradient;
+    String text;
+    switch (_connectionState) {
+      case OrchidConnectionState.Disconnecting:
+        text = "Disconnecting";
+        gradient = _buildTransitionGradient();
+        break;
+      case OrchidConnectionState.Connecting:
+        text = "Connecting";
+        gradient = _buildTransitionGradient();
+        break;
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
+        text = "Connect";
+        break;
+      case OrchidConnectionState.Connected:
+        textColor = AppColors.purple_3;
+        bgColor = AppColors.teal_5;
+        text = "Disconnect";
+    }
+
+    // Enable the connect button when there is a circuit.
+    // Don't disable it if we are already connected (corner case).
+    bool buttonEnabled = _hasConfiguredHops ||
+        _connectionState == OrchidConnectionState.Connecting ||
+        _connectionState == OrchidConnectionState.Connected;
+    if (!buttonEnabled) {
+      bgColor = AppColors.neutral_4;
+    }
+
+    // Rounded flat button supporting gradient with ink effect that works over it
+    return FlatButton(
+      onPressed: buttonEnabled ? _onConnectButtonPressed : null,
+      textColor: Colors.white,
+      padding: const EdgeInsets.all(0.0),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(24))),
+      child: Ink(
+        decoration: new BoxDecoration(
+          color: bgColor,
+          gradient: gradient,
+          borderRadius: BorderRadius.all(Radius.circular(24.0)),
+        ),
+        child: Container(
+          width: 150,
+          height: 48,
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.power_settings_new, color: textColor, size: 24),
+              padx(4),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Gradient _buildTransitionGradient() {
+    return LinearGradient(
+//        begin: Alignment(0, -1 + _highlightAnimationController.value ?? 0),
+//        end: Alignment(0, 1 + _highlightAnimationController.value ?? 0),
+        begin: Alignment(0.15, -1.0),
+        end: Alignment(0, 1),
+        colors: [AppColors.teal_4, AppColors.purple_3],
+        tileMode: TileMode.clamp);
+  }
+
+  Gradient _buildGlowGradient() {
+    return LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xffE8DDFD), Color(0xffB88DFC), Color(0xff8C61E1)],
+        tileMode: TileMode.clamp);
+  }
+
+//  background: linear-gradient(180deg, #E8DDFD 0%, #B88DFC 56.26%, #8C61E1 100%);
+
+  Widget _buildBackgroundGradient() {
     return AnimatedBuilder(
       animation: _connectAnimController,
       builder: (context, child) => Container(
-          decoration: BoxDecoration(gradient: _backgroundGradient.value)),
+        decoration: BoxDecoration(gradient: _backgroundGradient.value),
+      ),
     );
   }
 
-  /// The connected state background Flare animation
-  Widget _buildPositionedConnectedAnimation() {
-    String connectedAnimation = "assets/flare/Connection_screens.flr";
-    String connectedAnimationIntroName = "connectedIntro";
-    String connectedAnimationLoopName = "connectedLoop";
-    String connectedAnimationName = _showIntroAnimation
-        ? connectedAnimationIntroName
-        : connectedAnimationLoopName;
-
-    // Calculate the animation size and position
-    double connectedAnimationAspectRatio = 360.0 / 340.0; // w/h
-    double connectedAnimationPosition =
-        0.34; // vertical screen height fraction of center
-    Size screenSize = MediaQuery.of(context).size;
-
-    return AnimatedBuilder(
-      animation: Listenable.merge([_connectAnimController, _scrollController]),
-      builder: (context, child) {
-        Size animationSize = Size(
-            screenSize.width,
-            // fixed size on scroll
-            screenSize.width / connectedAnimationAspectRatio
-            // grow with scroll
-            //max(0, screenSize.width / connectedAnimationAspectRatio - _scrollController.offset)
-            );
-        double animationTop = screenSize.height * connectedAnimationPosition -
-            animationSize.height / 2;
-
-        return Visibility(
-          visible: _showConnectedBackground(),
-          child: Positioned(
-            top: animationTop,
-            child: Opacity(
-              // opacity from connected animation only
-              opacity: _animOpacity.value,
-
-              // opacity changes on scroll
-              //opacity: _animOpacity.value *
-              //min(1.0, max(0, 1.0 - scrollFraction * 0.6)),
-
-              child: Container(
-                width: animationSize.width,
-                height: animationSize.height,
-                child: FlareActor(
-                  connectedAnimation,
-                  fit: BoxFit.fitHeight,
-                  animation: connectedAnimationName,
-                  callback: (name) {
-                    if (name == connectedAnimationIntroName) {
-                      setState(() {
-                        _showIntroAnimation = false;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
+  // TODO: This will be driven by the tunnel status messages when available
   Widget _buildStatusMessage(BuildContext context) {
     // Localize
     String message;
@@ -291,8 +346,8 @@ class _QuickConnectPageState
       case OrchidConnectionState.Connecting:
         message = s.orchidConnecting;
         break;
-    case OrchidConnectionState.Invalid:
-    case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
         message = s.pushToConnect;
         break;
       case OrchidConnectionState.Connected:
@@ -323,8 +378,6 @@ class _QuickConnectPageState
         .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
       OrchidAPI().logger().write("VPN Perm status changed: $installed");
       if (!installed) {
-        // TODO: Showing this vertical transition breaks the (completely unrelated) reorderable
-        // TODO: list view in the circuit builder page???
         //var route = AppTransitions.downToUpTransition(
         //OnboardingVPNPermissionPage(allowSkip: false));
         //Navigator.push(context, route);
@@ -343,15 +396,21 @@ class _QuickConnectPageState
       _connectionStateChanged(state);
     }));
 
-    // Monitor sync status
-    _rxSubscriptions
-        .add(OrchidAPI().syncStatus.listen((OrchidSyncStatus value) {
-      _syncStateChanged(value);
-    }));
-
     _rxSubscriptions.add(AppNotifications().notification.listen((_) {
       setState(() {}); // Trigger refresh of the UI
     }));
+
+    // TODO: The circuit really should be observable directly via OrchidAPI
+    _rxSubscriptions
+        .add(OrchidAPI().circuitConfigurationChanged.listen((value) {
+      _updateWelcomePane();
+    }));
+  }
+
+  // TODO: The circuit really should be observable directly via OrchidAPI
+  void _updateWelcomePane() async {
+    _hasConfiguredHops = (await UserPreferences().getCircuit()).hops.isNotEmpty;
+    setState(() {});
   }
 
   /// Called upon a change to Orchid connection state
@@ -364,32 +423,12 @@ class _QuickConnectPageState
       _connectAnimController.forward().then((_) {});
     }
     if (fromConnected && !toConnected) {
-      _connectAnimController.reverse().then((_) {
-        // Reset the animation sequence (intro then loop) for the next connect.
-        setState(() {
-          _showIntroAnimation = true;
-        });
-      });
+      _connectAnimController.reverse().then((_) {});
     }
-
     _connectionState = state;
     if (mounted) {
       setState(() {});
     }
-  }
-
-  /// Called upon a change to Orchid sync state
-  void _syncStateChanged(OrchidSyncStatus value) {
-    setState(() {
-      switch (value.state) {
-        case OrchidSyncState.Complete:
-          //_showSyncProgress = false;
-          break;
-        case OrchidSyncState.Required: // fall through
-        case OrchidSyncState.InProgress:
-        //_showSyncProgress = true;
-      }
-    });
   }
 
   /// True if we show the animated connected background for the given state.
@@ -403,6 +442,7 @@ class _QuickConnectPageState
       case OrchidConnectionState.Disconnecting:
         return true;
     }
+    throw Exception();
   }
 
   /// True if we show the animated connected background for the current state.
@@ -417,36 +457,31 @@ class _QuickConnectPageState
 
     // The background gradient
     var backgroundGradientDisconnected =
-        VerticalLinearGradient(colors: [AppColors.grey_7, AppColors.grey_6]);
+        VerticalLinearGradient(colors: [AppColors.white, AppColors.grey_6]);
     var backgroundGradientConnected = VerticalLinearGradient(
-        colors: [AppColors.purple_2, AppColors.purple_1]);
+        colors: [AppColors.purple_3, AppColors.purple_1]);
     _backgroundGradient = LinearGradientTween(
             begin: backgroundGradientDisconnected,
             end: backgroundGradientConnected)
         .animate(_connectAnimController);
 
-    // The map gradient
-    var mapGradientDisconnected = VerticalLinearGradient(colors: [
-      AppColors.grey_5.withOpacity(0.25),
-      AppColors.grey_4.withOpacity(0.25)
-    ]);
-    var mapGradientConnected = VerticalLinearGradient(
-        colors: [AppColors.purple_5, AppColors.purple_3]);
-    _mapGradient = LinearGradientTween(
-            begin: mapGradientDisconnected, end: mapGradientConnected)
-        .animate(_connectAnimController);
+    // Update the app bar color to match the start of the background gradient
+    _backgroundGradient.addListener(() {
+      widget.appBarColor.value = _backgroundGradient.value.colors[0];
+    });
 
     // Color tween for icons.
-    //_iconColor = ColorTween(begin: AppColors.purple, end: AppColors.white)
-    //.animate(_connectAnimController);
-
-    _animOpacity = Tween(begin: 0.0, end: 1.0) // same as controller for now
+    _iconColor = ColorTween(begin: Color(0xFF3A3149), end: AppColors.white)
         .animate(_connectAnimController);
 
-    // If we're already running cancel the intro animation.
-    if (OrchidAPI().connectionStatus.value == OrchidConnectionState.Connected) {
-      _showIntroAnimation = false;
-    }
+    // Update the app bar icon color to match the background
+    _iconColor.addListener(() {
+      widget.iconColor.value = _iconColor.value;
+    });
+
+//    _highlightAnimationController = AnimationController(
+//        vsync: this, duration: Duration(milliseconds: 4000));
+//    _highlightAnimationController.repeat();
   }
 
   void _onConnectButtonPressed() {
@@ -506,6 +541,8 @@ class _QuickConnectPageState
   @override
   void dispose() {
     super.dispose();
+    _connectAnimController.dispose();
+//    _highlightAnimationController.dispose();
     _rxSubscriptions.forEach((sub) {
       sub.cancel();
     });
@@ -514,5 +551,4 @@ class _QuickConnectPageState
   S get s {
     return S.of(context);
   }
-//@override bool get wantKeepAlive => true;
 }

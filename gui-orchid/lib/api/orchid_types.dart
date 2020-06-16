@@ -8,19 +8,6 @@ enum NetworkConnectivityType { Unknown, Wifi, Mobile, NoConnectivity }
 /// The connection states of the Orchid network client.
 enum OrchidConnectionState { Invalid, NotConnected, Connecting, Connected, Disconnecting }
 
-/// The synchronization states of the Orchid network client.
-enum OrchidSyncState { Required, InProgress, Complete }
-
-/// The current status and progress (if indicated) of synchronization of the Orchid network client.
-@immutable
-class OrchidSyncStatus {
-  final OrchidSyncState state;
-  final double progress;
-
-  // A value from 0.0 - 1.0 indicating sync progress
-  OrchidSyncStatus({@required this.state, @required this.progress});
-}
-
 /// A route through the Orchid network comprising one or more nodes.
 @immutable
 class OrchidRoute {
