@@ -154,7 +154,7 @@ class SaveActionButton extends StatelessWidget {
           s.save,
           style: AppText.actionButtonStyle.copyWith(
               // TODO: We need to get the TitledPage to publish colors on the context (theme)
-              color: isValid ? Colors.white : Colors.white.withOpacity(0.4)),
+              color: isValid ? AppColors.purple_3: AppColors.purple_3.withOpacity(0.4)),
         ),
         onPressed: isValid ? onPressed : null);
   }
