@@ -48,22 +48,22 @@ const char *Params() {
 }
 
 void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params) {
-    boost::asio::ssl::context ssl{boost::asio::ssl::context::tlsv12};
+    asio::ssl::context ssl{asio::ssl::context::tlsv12};
 
     ssl.set_options(
-        boost::asio::ssl::context::default_workarounds |
-        boost::asio::ssl::context::no_sslv2 |
-        boost::asio::ssl::context::single_dh_use |
+        asio::ssl::context::default_workarounds |
+        asio::ssl::context::no_sslv2 |
+        asio::ssl::context::single_dh_use |
     0);
 
-    ssl.use_certificate_chain(boost::asio::buffer(chain.data(), chain.size()));
-    ssl.use_private_key(boost::asio::buffer(key.data(), key.size()), boost::asio::ssl::context::file_format::pem);
-    ssl.use_tmp_dh(boost::asio::buffer(params.data(), params.size()));
+    ssl.use_certificate_chain(asio::buffer(chain.data(), chain.size()));
+    ssl.use_private_key(asio::buffer(key.data(), key.size()), asio::ssl::context::file_format::pem);
+    ssl.use_tmp_dh(asio::buffer(params.data(), params.size()));
 
     Spawn([this, bind, port, ssl = std::move(ssl)]() mutable noexcept -> task<void> {
-        boost::asio::ip::tcp::acceptor acceptor(Context(), boost::asio::ip::tcp::v4());
-        acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-        acceptor.bind(boost::asio::ip::tcp::endpoint(bind, port));
+        asio::ip::tcp::acceptor acceptor(Context(), asio::ip::tcp::v4());
+        acceptor.set_option(asio::socket_base::reuse_address(true));
+        acceptor.bind(asio::ip::tcp::endpoint(bind, port));
         acceptor.listen();
         acceptor.non_blocking(true);
 
@@ -75,7 +75,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                 boost::beast::ssl_stream<boost::beast::tcp_stream> stream(std::move(connection), ssl);
                 boost::beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
-                co_await stream.async_handshake(boost::asio::ssl::stream_base::server, Token());
+                co_await stream.async_handshake(asio::ssl::stream_base::server, Token());
 
                 boost::beast::flat_buffer buffer;
 
