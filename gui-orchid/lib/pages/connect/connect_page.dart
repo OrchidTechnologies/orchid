@@ -262,8 +262,10 @@ class _ConnectPageState extends State<ConnectPage>
                 // Logo
                 if (tall) ...[
                   _buildLogo(),
-                  pady(48),
+                ] else ...[
+                  Container(width: 200, height: 48, child: _buildLogo()),
                 ],
+                pady(48),
 
 //              if (_connectionState == OrchidConnectionState.Connecting ||
 //                  _connectionState == OrchidConnectionState.Disconnecting)
