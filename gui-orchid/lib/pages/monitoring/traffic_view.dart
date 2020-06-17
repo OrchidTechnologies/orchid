@@ -19,8 +19,11 @@ class TrafficView extends StatefulWidget {
   ClearTrafficActionButtonController clearTrafficController =
       ClearTrafficActionButtonController();
 
-  TrafficView({Key key, ClearTrafficActionButtonController clearTrafficController}) : super(key: key) {
-    this.clearTrafficController = clearTrafficController ?? this.clearTrafficController;
+  TrafficView(
+      {Key key, ClearTrafficActionButtonController clearTrafficController})
+      : super(key: key) {
+    this.clearTrafficController =
+        clearTrafficController ?? this.clearTrafficController;
   }
 
   @override
@@ -61,6 +64,11 @@ class _TrafficViewState extends State<TrafficView>
   bool _updatesPaused = false;
   DateTime _lastScroll;
   ValueNotifier<bool> _newContent = ValueNotifier(false);
+
+  // TODO: We used to be able to use PrimaryScrollController.of(context)
+  // TODO: which allowed us to tap in the header to scroll to top.
+  // TODO: Determine what changed and fix this.
+  var _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -164,7 +172,14 @@ class _TrafficViewState extends State<TrafficView>
             separatorBuilder: (BuildContext context, int index) =>
                 Divider(height: 0),
             key: PageStorageKey('traffic list view'),
-            primary: true,
+
+            // TODO: We used to be able to set this to primary, which allowed
+            // TODO: us to tap in the header to scroll to top.  But the primary
+            // TODO: scroll controller now seems to be null here.
+            // TODO: Determine what changed and fix this.
+            //primary: true,
+            controller: _scrollController,
+            //
             physics: _scrollPhysics,
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
@@ -359,23 +374,29 @@ class _TrafficViewState extends State<TrafficView>
       _resultList = _pendingResultList ?? _resultList;
       _pendingResultList = null;
 
-      // Maintain position
-      var scrollController = PrimaryScrollController.of(context);
-      var offset = scrollController.hasClients ? scrollController.offset : 0;
-      scrollController.jumpTo(offset + delta * _renderedRowHeight);
+      // TODO: We used to be able to grab PrimaryScrollController.of(context) here
+      // TODO: which allowed us to tap in the header to scroll to top.  Now null.
+      // TODO: Determine what changed and fix this.
+      //var scrollController = PrimaryScrollController.of(context);
+      var scrollController = _scrollController;
 
-      // Animate in the new data
-      Future.delayed(Duration(milliseconds: 150)).then((_) {
-        try {
-          scrollController
-              .animateTo(0,
-                  duration: Duration(milliseconds: _scrollToTopDurationMs),
-                  curve: Curves.ease)
-              .then((_) {
-            _newContent.value = false;
-          });
-        } catch (err) {}
-      });
+      // Maintain position
+      if (scrollController != null && scrollController.hasClients) {
+        scrollController.jumpTo(scrollController.offset + delta * _renderedRowHeight);
+
+        // Animate in the new data
+        Future.delayed(Duration(milliseconds: 150)).then((_) {
+          try {
+            scrollController
+                .animateTo(0,
+                    duration: Duration(milliseconds: _scrollToTopDurationMs),
+                    curve: Curves.ease)
+                .then((_) {
+              _newContent.value = false;
+            });
+          } catch (err) {}
+        });
+      }
     });
   }
 
