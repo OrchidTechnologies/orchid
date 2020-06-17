@@ -716,7 +716,7 @@ class CircuitPageState extends State<CircuitPage>
   // Note: for a version of the switch that does attempt to track the connection.
   void _connectSwitchChanged(bool toEnabled) async {
     if (toEnabled) {
-      bool allowNoHopVPN = await UserPreferences().getAllowNoHopVPN();
+      bool allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
       if (_hasHops() || allowNoHopVPN) {
         _checkPermissionAndConnect();
       } else {

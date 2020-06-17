@@ -47,13 +47,62 @@ class _ConnectPageState extends State<ConnectPage>
 
   bool get _showWelcomePane => !_hasConfiguredHops;
 
-  List<StreamSubscription> _rxSubscriptions = List();
+  bool _enableConnectWithoutHops = false;
+
+  List<StreamSubscription> _subs = List();
 
   @override
   void initState() {
     super.initState();
+    _initStateAsync();
     _initListeners();
     _initAnimations();
+  }
+
+  void _initStateAsync() async {}
+
+  /// Listen for changes in Orchid network status.
+  void _initListeners() {
+    OrchidAPI().logger().write("Connect Page: Init listeners...");
+
+    // Monitor VPN permission status
+    /*
+    _rxSubscriptions
+        .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
+      OrchidAPI().logger().write("VPN Perm status changed: $installed");
+      if (!installed) {
+        //var route = AppTransitions.downToUpTransition(
+        //OnboardingVPNPermissionPage(allowSkip: false));
+        //Navigator.push(context, route);
+        Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                    OnboardingVPNPermissionPage(allowSkip: false)));
+      }
+    }));
+     */
+
+    // Monitor connection status
+    _subs
+        .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
+      OrchidAPI()
+          .logger()
+          .write("[connect page] Connection status changed: $state");
+      _connectionStateChanged(state);
+    }));
+
+    _subs.add(AppNotifications().notification.listen((_) {
+      setState(() {}); // Trigger refresh of the UI
+    }));
+
+    // TODO: The circuit really should be observable directly via OrchidAPI
+    _subs.add(OrchidAPI().circuitConfigurationChanged.listen((value) {
+      _updateWelcomePane();
+    }));
+
+    _subs.add(UserPreferences().allowNoHopVPN.stream().listen((value) {
+      setState(() {
+        _enableConnectWithoutHops = value;
+      });
+    }));
   }
 
   @override
@@ -265,11 +314,12 @@ class _ConnectPageState extends State<ConnectPage>
         text = "Disconnect";
     }
 
-    // Enable the connect button when there is a circuit.
-    // Don't disable it if we are already connected (corner case).
-    bool buttonEnabled = _hasConfiguredHops ||
-        _connectionState == OrchidConnectionState.Connecting ||
-        _connectionState == OrchidConnectionState.Connected;
+    bool buttonEnabled =
+        // Enabled when there is a circuit (or overridden for traffic monitoring)
+        (_hasConfiguredHops || _enableConnectWithoutHops) ||
+            // Enabled if we are already connected (corner case of changed config while connected).
+            _connectionState == OrchidConnectionState.Connecting ||
+            _connectionState == OrchidConnectionState.Connected;
     if (!buttonEnabled) {
       bgColor = AppColors.neutral_4;
     }
@@ -375,45 +425,6 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  /// Listen for changes in Orchid network status.
-  void _initListeners() {
-    OrchidAPI().logger().write("Connect Page: Init listeners...");
-
-    // Monitor VPN permission status
-    /*
-    _rxSubscriptions
-        .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
-      OrchidAPI().logger().write("VPN Perm status changed: $installed");
-      if (!installed) {
-        //var route = AppTransitions.downToUpTransition(
-        //OnboardingVPNPermissionPage(allowSkip: false));
-        //Navigator.push(context, route);
-        Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                    OnboardingVPNPermissionPage(allowSkip: false)));
-      }
-    }));
-     */
-
-    // Monitor connection status
-    _rxSubscriptions
-        .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
-      OrchidAPI()
-          .logger()
-          .write("[connect page] Connection status changed: $state");
-      _connectionStateChanged(state);
-    }));
-
-    _rxSubscriptions.add(AppNotifications().notification.listen((_) {
-      setState(() {}); // Trigger refresh of the UI
-    }));
-
-    // TODO: The circuit really should be observable directly via OrchidAPI
-    _rxSubscriptions
-        .add(OrchidAPI().circuitConfigurationChanged.listen((value) {
-      _updateWelcomePane();
-    }));
-  }
-
   // TODO: The circuit really should be observable directly via OrchidAPI
   void _updateWelcomePane() async {
     _hasConfiguredHops = (await UserPreferences().getCircuit()).hops.isNotEmpty;
@@ -512,8 +523,7 @@ class _ConnectPageState extends State<ConnectPage>
   void _checkPermissionAndEnableConnection() {
     UserPreferences().setDesiredVPNState(true);
     // Get the most recent status, blocking if needed.
-    _rxSubscriptions
-        .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
+    _subs.add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
       debugPrint("vpn: current perm: $installed");
       if (installed) {
         debugPrint("vpn: already installed");
@@ -550,7 +560,7 @@ class _ConnectPageState extends State<ConnectPage>
     super.dispose();
     _connectAnimController.dispose();
 //    _highlightAnimationController.dispose();
-    _rxSubscriptions.forEach((sub) {
+    _subs.forEach((sub) {
       sub.cancel();
     });
   }
