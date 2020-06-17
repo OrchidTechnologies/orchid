@@ -188,7 +188,6 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Widget _buildLogo() {
-    print("build logo, connection state = ${_connectionState}");
     var image = () {
       return Image.asset("assets/images/connect_logo.png",
           width: 207, height: 186); // match glow image size
