@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/api/notifications.dart';
+import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/api/orchid_api.dart';
@@ -49,17 +53,48 @@ class _ConnectPageState extends State<ConnectPage>
 
   bool _enableConnectWithoutHops = false;
 
+  Timer _checkHopAlertsTimer;
+  bool _showProfileBadge = false;
+
   List<StreamSubscription> _subs = List();
 
   @override
   void initState() {
     super.initState();
-    _initStateAsync();
     _initListeners();
     _initAnimations();
+
+    _checkHopAlertsTimer =
+        Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
+    _checkHopAlerts(null);
   }
 
-  void _initStateAsync() async {}
+  /// Check Orchid Hop's lottery pot for alert conditions and reflect that in the
+  /// manage profile button.
+  /// Note: This should really be merged with the logic from circuit page that does
+  /// Note: the same, however this requires a unique id for hops. Refactor at that time
+  /// Note: by hoisting the logic here and passing the data to circuit page.
+  void _checkHopAlerts(timer) async {
+    print("check hop alerts");
+    var hops = (await UserPreferences().getCircuit()).hops;
+    var keys = await UserPreferences().getKeys();
+    bool showBadge = false;
+    for (var hop in hops) {
+      if (hop is OrchidHop) {
+        var pot =
+            await OrchidEthereum.getLotteryPot(hop.funder, hop.getSigner(keys));
+        var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
+        if (ticketValue.value <= 0) {
+          showBadge = true;
+        }
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _showProfileBadge = showBadge;
+      });
+    }
+  }
 
   /// Listen for changes in Orchid network status.
   void _initListeners() {
@@ -96,6 +131,7 @@ class _ConnectPageState extends State<ConnectPage>
     // TODO: The circuit really should be observable directly via OrchidAPI
     _subs.add(OrchidAPI().circuitConfigurationChanged.listen((value) {
       _updateWelcomePane();
+      _checkHopAlerts(null); // refresh alert status
     }));
 
     _subs.add(UserPreferences().allowNoHopVPN.stream().listen((value) {
@@ -166,12 +202,28 @@ class _ConnectPageState extends State<ConnectPage>
               color: bgColor,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(24))),
-              onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.circuit);
+              onPressed: () async {
+                await Navigator.pushNamed(context, AppRoutes.circuit);
+                _checkHopAlerts(null);
               },
-              child: Text(
-                "Manage Profile",
-                style: TextStyle(color: textColor, fontSize: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Manage Profile",
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
+                  if (_showProfileBadge) ...[
+                    padx(8),
+                    Badge(
+                      elevation: 0,
+                      badgeContent: Text("!",
+                          style: TextStyle(color: Colors.white, fontSize: 12)),
+                      padding: EdgeInsets.all(8),
+                      toAnimate: false,
+                    )
+                  ]
+                ],
               )),
         ),
       ),
@@ -560,6 +612,7 @@ class _ConnectPageState extends State<ConnectPage>
     super.dispose();
     _connectAnimController.dispose();
 //    _highlightAnimationController.dispose();
+    _checkHopAlertsTimer.cancel();
     _subs.forEach((sub) {
       sub.cancel();
     });

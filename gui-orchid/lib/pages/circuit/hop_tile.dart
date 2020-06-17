@@ -113,6 +113,7 @@ class HopTile extends StatelessWidget {
             if (showAlertBadge) ...[
               padx(8),
               Badge(
+                elevation: 0,
                 badgeContent: Text("!",
                     style: TextStyle(color: Colors.white, fontSize: 12)),
                 padding: EdgeInsets.all(8),

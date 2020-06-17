@@ -113,13 +113,14 @@ class CircuitPageState extends State<CircuitPage>
 
     //_checkFirstLaunch();
     _checkBalancesTimer =
-        Timer.periodic(Duration(seconds: 30), _checkOrchidHopAlerts);
+        Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
+    _checkHopAlerts(null);
   }
 
   static Map<int, bool> _showHopAlert = Map();
 
   /// Check each Orchid Hop's lottery pot for alert conditions.
-  void _checkOrchidHopAlerts(timer) async {
+  void _checkHopAlerts(timer) async {
     if (_hops == null) {
       return;
     }
@@ -165,7 +166,7 @@ class CircuitPageState extends State<CircuitPage>
       _connectionStateChanged(OrchidAPI().connectionStatus.value,
           animated: false);
     }
-    _checkOrchidHopAlerts(null); // refresh alert status
+    _checkHopAlerts(null); // refresh alert status
   }
 
   void initAnimations() {
