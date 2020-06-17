@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/common/formatting.dart';
@@ -129,6 +130,7 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Widget _buildCenterControls() {
+    bool tall = AppSize(context).tallerThan(AppSize.iphone_se);
     return Container(
       child: Stack(
         alignment: Alignment.center,
@@ -156,8 +158,12 @@ class _ConnectPageState extends State<ConnectPage>
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildLogo(),
-                pady(48),
+                // Logo
+                if (tall) ...[
+                  _buildLogo(),
+                  pady(48),
+                ],
+
 //              if (_connectionState == OrchidConnectionState.Connecting ||
 //                  _connectionState == OrchidConnectionState.Disconnecting)
 //                AnimatedBuilder(
@@ -166,6 +172,8 @@ class _ConnectPageState extends State<ConnectPage>
 //                      return _buildConnectButton();
 //                    })
 //              else
+
+                // Connect button
                 Padding(
                   // Logo is asymmetric, shift right a bit
                   padding: const EdgeInsets.only(left: 18.0),
