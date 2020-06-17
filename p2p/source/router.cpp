@@ -62,7 +62,11 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
 
     Spawn([this, bind, port, ssl = std::move(ssl)]() mutable noexcept -> task<void> {
         asio::ip::tcp::acceptor acceptor(Context(), asio::ip::tcp::v4());
+#ifdef _WIN32
+        acceptor.set_option(asio::detail::socket_option::boolean<SOL_SOCKET, SO_EXCLUSIVEADDRUSE>(true));
+#else
         acceptor.set_option(asio::socket_base::reuse_address(true));
+#endif
         acceptor.bind(asio::ip::tcp::endpoint(bind, port));
         acceptor.listen();
         acceptor.non_blocking(true);
