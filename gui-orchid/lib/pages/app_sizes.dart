@@ -10,9 +10,15 @@ class AppSize {
   bool tallerThan(Size targetSize) {
     return size.height > targetSize.height;
   }
+  bool shorterThan(Size targetSize) {
+    return !tallerThan(targetSize);
+  }
 
   bool widerThan(Size targetSize) {
     return size.width > targetSize.width;
+  }
+  bool narrowerThan(Size targetSize) {
+    return !widerThan(targetSize);
   }
 
   AppSize(BuildContext context) {

@@ -61,6 +61,7 @@ provider:
     WEB3_WEBSOCKET: ${ssm:${self:custom.myEnvironment.WEB3_WEBSOCKET.${self:provider.stage}}~true}
     TABLE_NAME: PAC-${self:provider.stage}
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
+    RECYCLE_TABLE_NAME: PAC-Recycle-${self:provider.stage}
     RESULT_TABLE_NAME: PAC-Result-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
@@ -93,6 +94,7 @@ provider:
       Resource:
         - "Fn::GetAtt": [ PACTable, Arn ]
         - "Fn::GetAtt": [ ReceiptTable, Arn ]
+        - "Fn::GetAtt": [ RecycleTable, Arn ]
         - "Fn::GetAtt": [ ResultTable, Arn ]
     - Effect: "Allow"
       Action:
@@ -121,6 +123,12 @@ functions:
     handler: balance.main
     events:
       - schedule: cron(5/15 * * * ? *)
+  recycle:
+    handler: recycle.main
+    events:
+      - http:
+          path: recycle
+          method: post
 plugins:
   - serverless-plugin-datadog
   - serverless-pseudo-parameters
@@ -171,3 +179,15 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Delete
+    RecycleTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:provider.environment.RECYCLE_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: signer
+            AttributeType: S
+        KeySchema:
+          - AttributeName: signer
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+      DeletionPolicy: Retain

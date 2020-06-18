@@ -143,13 +143,13 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                 children: <Widget>[
                   Padding(
                       padding: const EdgeInsets.all(0),
-                      child: RoundTitledRaisedButton(
+                      child: RoundTitledRaisedImageButton(
                           title: "Copy",
                           imageName: "assets/images/business.png",
                           onPressed: _onCopyButton)),
                   Padding(
                       padding: const EdgeInsets.only(left: 0, right: 0),
-                      child: RoundTitledRaisedButton(
+                      child: RoundTitledRaisedImageButton(
                           title: "Clear",
                           imageName: "assets/images/business.png",
                           onPressed: _confirmDelete)),

@@ -7,6 +7,7 @@ import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
+import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
 import '../app_gradients.dart';
@@ -15,9 +16,15 @@ import 'traffic_empty_view.dart';
 import 'traffic_view_detail.dart';
 
 class TrafficView extends StatefulWidget {
-  final ClearTrafficActionButtonController clearTrafficController;
+  ClearTrafficActionButtonController clearTrafficController =
+      ClearTrafficActionButtonController();
 
-  const TrafficView({Key key, this.clearTrafficController}) : super(key: key);
+  TrafficView(
+      {Key key, ClearTrafficActionButtonController clearTrafficController})
+      : super(key: key) {
+    this.clearTrafficController =
+        clearTrafficController ?? this.clearTrafficController;
+  }
 
   @override
   _TrafficViewState createState() => _TrafficViewState();
@@ -58,6 +65,11 @@ class _TrafficViewState extends State<TrafficView>
   DateTime _lastScroll;
   ValueNotifier<bool> _newContent = ValueNotifier(false);
 
+  // TODO: We used to be able to use PrimaryScrollController.of(context)
+  // TODO: which allowed us to tap in the header to scroll to top.
+  // TODO: Determine what changed and fix this.
+  var _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +101,17 @@ class _TrafficViewState extends State<TrafficView>
 
   @override
   Widget build(BuildContext context) {
+    return TitledPage(
+      title: s.traffic,
+      decoration: BoxDecoration(),
+      actions: [
+        ClearTrafficActionButton(controller: widget.clearTrafficController)
+      ],
+      child: buildPage(),
+    );
+  }
+
+  Widget buildPage() {
     return Container(
       decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
       child: SafeArea(
@@ -149,7 +172,14 @@ class _TrafficViewState extends State<TrafficView>
             separatorBuilder: (BuildContext context, int index) =>
                 Divider(height: 0),
             key: PageStorageKey('traffic list view'),
-            primary: true,
+
+            // TODO: We used to be able to set this to primary, which allowed
+            // TODO: us to tap in the header to scroll to top.  But the primary
+            // TODO: scroll controller now seems to be null here.
+            // TODO: Determine what changed and fix this.
+            //primary: true,
+            controller: _scrollController,
+            //
             physics: _scrollPhysics,
             itemCount: _resultList?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
@@ -344,23 +374,29 @@ class _TrafficViewState extends State<TrafficView>
       _resultList = _pendingResultList ?? _resultList;
       _pendingResultList = null;
 
-      // Maintain position
-      var scrollController = PrimaryScrollController.of(context);
-      var offset = scrollController.hasClients ? scrollController.offset : 0;
-      scrollController.jumpTo(offset + delta * _renderedRowHeight);
+      // TODO: We used to be able to grab PrimaryScrollController.of(context) here
+      // TODO: which allowed us to tap in the header to scroll to top.  Now null.
+      // TODO: Determine what changed and fix this.
+      //var scrollController = PrimaryScrollController.of(context);
+      var scrollController = _scrollController;
 
-      // Animate in the new data
-      Future.delayed(Duration(milliseconds: 150)).then((_) {
-        try {
-          scrollController
-              .animateTo(0,
-                  duration: Duration(milliseconds: _scrollToTopDurationMs),
-                  curve: Curves.ease)
-              .then((_) {
-            _newContent.value = false;
-          });
-        } catch (err) {}
-      });
+      // Maintain position
+      if (scrollController != null && scrollController.hasClients) {
+        scrollController.jumpTo(scrollController.offset + delta * _renderedRowHeight);
+
+        // Animate in the new data
+        Future.delayed(Duration(milliseconds: 150)).then((_) {
+          try {
+            scrollController
+                .animateTo(0,
+                    duration: Duration(milliseconds: _scrollToTopDurationMs),
+                    curve: Curves.ease)
+                .then((_) {
+              _newContent.value = false;
+            });
+          } catch (err) {}
+        });
+      }
     });
   }
 
@@ -424,7 +460,10 @@ class ClearTrafficActionButton extends StatelessWidget {
             child: Opacity(
               opacity: enabled ? 1.0 : 0.3,
               child: FlatButton(
-                child: Text(s.clear, style: AppText.actionButtonStyle),
+                color: AppColors.white,
+                child: Text(s.clear,
+                    style: AppText.actionButtonStyle
+                        .copyWith(color: AppColors.purple_3)),
                 onPressed: enabled
                     ? () {
                         _confirmDelete(context);
@@ -440,7 +479,7 @@ class ClearTrafficActionButton extends StatelessWidget {
     S s = S.of(context);
     Dialogs.showConfirmationDialog(
         context: context,
-        title: s.deleteAllData+"?",
+        title: s.deleteAllData + "?",
         body: s.thisWillDeleteRecorded,
         cancelText: s.cancelButtonTitle,
         actionText: s.okButtonTitle,
@@ -448,5 +487,4 @@ class ClearTrafficActionButton extends StatelessWidget {
           await AnalysisDb().clear();
         });
   }
-
 }

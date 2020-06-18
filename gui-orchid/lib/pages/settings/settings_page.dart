@@ -25,7 +25,6 @@ class _SettingsPageState extends State<SettingsPage> {
   var _defaultCurator = TextEditingController();
 
   bool _queryBalances = false;
-  bool _showStatusTab = false;
   bool _allowNoHopVPN = false;
   bool _showLogging = false;
 
@@ -41,8 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _queryBalances = await UserPreferences().getQueryBalances();
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
-    _showStatusTab = await UserPreferences().getShowStatusTab();
-    _allowNoHopVPN = await UserPreferences().getAllowNoHopVPN();
+    _allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
     setLoggingConfig();
     setState(() {});
   }
@@ -88,7 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     activeColor: AppColors.purple_3,
                     value: _allowNoHopVPN,
                     onChanged: (bool value) {
-                      UserPreferences().setAllowNoHopVPN(value);
+                      UserPreferences().allowNoHopVPN.set(value);
                       setState(() {
                         _allowNoHopVPN = value;
                       });
@@ -110,24 +108,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       setState(() {
                         _queryBalances = value;
                       });
-                    },
-                  ),
-                ),
-
-                // Status page
-                pady(8),
-                PageTile(
-                  title: s.showStatusPage,
-                  //imageName: "assets/images/assignment.png",
-                  trailing: Switch(
-                    activeColor: AppColors.purple_3,
-                    value: _showStatusTab,
-                    onChanged: (bool value) {
-                      UserPreferences().setShowStatusTab(value);
-                      setState(() {
-                        _showStatusTab = value;
-                      });
-                      OrchidAppTabbed.showStatusTabPref.notifyListeners();
                     },
                   ),
                 ),

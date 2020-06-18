@@ -6,7 +6,7 @@ import 'package:orchid/pages/common/name_value_setting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/connect/connect_page.dart';
+import 'package:orchid/pages/connect/legacy_connect_page.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 //import 'package:orchid/pages/settings/developer_settings.dart';
 
@@ -68,10 +68,10 @@ class _SettingsDevPage extends State<SettingsDevPage> {
             // experimental scrolling
             _buildSwitch(
                 title: "Connect Screen Scrolls",
-                initialValue: QuickConnectPage.allowScrolling,
+                initialValue: LegacyConnectPage.allowScrolling,
                 onChanged: (bool value) {
                   setState(() {
-                    QuickConnectPage.allowScrolling = value;
+                    LegacyConnectPage.allowScrolling = value;
                   });
                 }),
 

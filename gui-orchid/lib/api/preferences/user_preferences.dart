@@ -226,16 +226,17 @@ class UserPreferences {
         UserPreferenceKey.FirstLaunchInstructionsViewed.toString(), value);
   }
 
-  Future<bool> getAllowNoHopVPN() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
-        false;
-  }
-
-  Future<bool> setAllowNoHopVPN(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
-  }
+  ObservablePreference<bool> allowNoHopVPN = ObservablePreference(
+      key: UserPreferenceKey.AllowNoHopVPN,
+      loadValue: (key) async {
+        return (await SharedPreferences.getInstance())
+                .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
+            false;
+      },
+      storeValue: (key, value) async {
+        return (await SharedPreferences.getInstance())
+            .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
+      });
 
   /// Stores the shared, single, outstanding PAC transaction or null if there is none.
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(

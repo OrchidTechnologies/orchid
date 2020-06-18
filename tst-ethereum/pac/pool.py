@@ -1,3 +1,4 @@
+from recycle import recycle_accounts
 import boto3
 import datetime
 import json
@@ -33,6 +34,7 @@ def maintain_pool_wrapper(event=None, context=None):
     for product_id in mapping:
         price = mapping[product_id]
         nonce = maintain_pool(price=price, nonce=nonce)
+    recycle_accounts(nonce=nonce)
 
 
 def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SIZE']), nonce: int = None) -> int:

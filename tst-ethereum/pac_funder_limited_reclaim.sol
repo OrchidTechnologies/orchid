@@ -29,24 +29,20 @@ contract PACFunder {
 
     OrchidLottery internal lottery_;
     address owner_;
-    mapping(bytes32 => bool) claimed_;
-
 
     constructor(OrchidLottery lottery) public {
-        lottery_ = lottery;
-        owner_   = msg.sender;
+      lottery_ = lottery;
+      owner_   = msg.sender;
     }
 
-    function kill(address signer) external { require(msg.sender == owner_); lottery_.kill(signer); }
+    //function kill(address signer) external { require(msg.sender == owner_); lottery_.kill(signer); }
     function push(address signer, uint128 total, uint128 escrow) external { require(msg.sender == owner_); lottery_.push(signer,total,escrow); }
-    function move(address signer, uint128 amount) external { require(msg.sender == owner_); lottery_.move(signer,amount); }
-    function burn(address signer, uint128 escrow) external { require(msg.sender == owner_); lottery_.burn(signer,escrow); }
+    //function move(address signer, uint128 amount) external { require(msg.sender == owner_); lottery_.move(signer,amount); }
+    //function burn(address signer, uint128 escrow) external { require(msg.sender == owner_); lottery_.burn(signer,escrow); }
     function bind(address signer, OrchidVerifier verify, bytes calldata shared) external { require(msg.sender == owner_); lottery_.bind(signer,verify,shared); }
     //function give(address funder, address payable recipient, uint128 amount, bytes calldata receipt) external { }
-    function warn(address signer) external { require(msg.sender == owner_); lottery_.warn(signer); }
-    function lock(address signer) external { require(msg.sender == owner_); lottery_.lock(signer); }
-    function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external { require(msg.sender == owner_); lottery_.pull(signer,target,autolock,amount,escrow); }
-    function yank(address signer, address payable target, bool autolock) external { require(msg.sender == owner_); lottery_.yank(signer,target,autolock); }
+    //function lock(address signer) external { require(msg.sender == owner_); lottery_.lock(signer); }
+    //function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external { require(msg.sender == owner_); lottery_.pull(signer,target,autolock,amount,escrow); }
 
     function bind_push(address signer, OrchidVerifier verify, bytes memory shared, uint128 total, uint128 escrow) private {
       require(msg.sender == owner_);
@@ -54,14 +50,20 @@ contract PACFunder {
       lottery_.push(signer, total, escrow);
     }
 
-    event Fund(bytes32 indexed receipt, address indexed signer, uint128 total, uint128 escrow);
+    function warn(address signer) external {
+      require(msg.sender == owner_);
+      uint128 amount;
+      (amount,,,,,) = lottery_.look(address(this), signer);
+      require(amount == 0);
+      lottery_.warn(signer);
+    }
 
-    function fund(bytes32 receipt, address signer, OrchidVerifier verify, bytes calldata shared, uint128 total, uint128 escrow) external {
-        require(msg.sender == owner_);
-        require(claimed_[receipt] == false);
-        bind_push(signer,verify,shared,total,escrow);
-        claimed_[receipt] = true;
-        emit Fund(receipt,signer,total,escrow);
+
+    function yank(address signer, address payable target, bool autolock) external {
+      require(msg.sender == owner_);
+      uint128 amount;
+      (amount,,,,,) = lottery_.look(address(this), signer);
+      lottery_.yank(signer,target,autolock);
     }
 
 }

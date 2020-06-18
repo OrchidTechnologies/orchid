@@ -19,6 +19,7 @@ import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/onboarding/legacy_welcome_dialog.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
@@ -36,6 +37,7 @@ import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
 
 class CircuitPage extends StatefulWidget {
+  // TODO: Remove if unused
   final WrappedSwitchController switchController;
 
   // Note: This performs a behavior like the iOSContacts App create flow for the
@@ -51,7 +53,8 @@ class CircuitPage extends StatefulWidget {
   }
 }
 
-// TODO: This class has gotten pretty big. Time for some refactoring!
+// TODO: This class contains switch logic for activating the VPN that is not currently
+// TODO: used.  If this remains the case remove it.
 class CircuitPageState extends State<CircuitPage>
     with TickerProviderStateMixin {
   List<StreamSubscription> _rxSubs = List();
@@ -77,8 +80,8 @@ class CircuitPageState extends State<CircuitPage>
   DateTime _lastInteractionTime;
   Timer _bunnyDuckTimer;
 
-  bool vpnSwitchInstructionsViewed = false;
-  bool _dialogInProgress = false;
+  //bool vpnSwitchInstructionsViewed = false;
+  bool _dialogInProgress = false; // ?
 
   @override
   void initState() {
@@ -93,31 +96,31 @@ class CircuitPageState extends State<CircuitPage>
 
   void initStateAsync() async {
     // Hook up to the provided vpn switch
-    widget.switchController.onChange = _connectSwitchChanged;
+    //widget.switchController.onChange = _connectSwitchChanged;
 
     // Set the initial state of the vpn switch based on the user pref.
     // Note: By design the switch on this page does not track or respond to the
     // Note: dynamic connection state but instead reflects the user pref.
-    // Note: See `monitoring_page.dart` or `connect_page` for controls that track the
+    // Note: See `monitoring_page.dart` or `legacy_connect_page` for controls that track the
     // Note: system connection status.
     _switchOn = await UserPreferences().getDesiredVPNState();
 
-    vpnSwitchInstructionsViewed =
-        await UserPreferences().getVPNSwitchInstructionsViewed();
+    //vpnSwitchInstructionsViewed = await UserPreferences().getVPNSwitchInstructionsViewed();
 
     OrchidAPI().circuitConfigurationChanged.listen((_) {
       _updateCircuit();
     });
 
-    _checkFirstLaunch();
+    //_checkFirstLaunch();
     _checkBalancesTimer =
-        Timer.periodic(Duration(seconds: 30), _checkOrchidHopAlerts);
+        Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
+    _checkHopAlerts(null);
   }
 
   static Map<int, bool> _showHopAlert = Map();
 
   /// Check each Orchid Hop's lottery pot for alert conditions.
-  void _checkOrchidHopAlerts(timer) async {
+  void _checkHopAlerts(timer) async {
     if (_hops == null) {
       return;
     }
@@ -132,15 +135,18 @@ class CircuitPageState extends State<CircuitPage>
         _showHopAlert[uniqueHop.contentHash] = ticketValue.value <= 0;
       }
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
+  /*
   void _checkFirstLaunch() async {
     if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
       _showWelcomeDialog();
       UserPreferences().setFirstLaunchInstructionsViewed(true);
     }
-  }
+  }*/
 
   void _updateCircuit() async {
     var circuit = await UserPreferences().getCircuit();
@@ -160,7 +166,7 @@ class CircuitPageState extends State<CircuitPage>
       _connectionStateChanged(OrchidAPI().connectionStatus.value,
           animated: false);
     }
-    _checkOrchidHopAlerts(null); // refresh alert status
+    _checkHopAlerts(null); // refresh alert status
   }
 
   void initAnimations() {
@@ -200,7 +206,12 @@ class CircuitPageState extends State<CircuitPage>
 
   @override
   Widget build(BuildContext context) {
-    return _buildBody();
+    return TitledPage(
+      lightTheme: true,
+      title: "Manage Profile",
+      decoration: BoxDecoration(),
+      child: _buildBody(),
+    );
   }
 
   Widget _buildBody() {
@@ -217,7 +228,8 @@ class CircuitPageState extends State<CircuitPage>
           decoration: BoxDecoration(gradient: AppGradients.basicGradient),
           // hidden until hops loaded
           child: Visibility(
-            visible: _hops != null,
+            //visible: _hops != null,
+            visible: true,
             replacement: Container(),
             child: AnimatedBuilder(
                 animation: Listenable.merge(
@@ -232,8 +244,9 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   bool _showEnableVPNInstruction() {
-    // Note: this instruction follows the switch, not the connected status
-    return !vpnSwitchInstructionsViewed && _hasHops() && !_switchOn;
+    return false;
+    //Note: this instruction follows the switch, not the connected status
+    //return !vpnSwitchInstructionsViewed && _hasHops() && !_switchOn;
   }
 
   Widget _buildHopList() {
@@ -272,7 +285,8 @@ class CircuitPageState extends State<CircuitPage>
         footer: Column(
           children: <Widget>[
             _buildNewHopTile(),
-            if (!_hasHops()) _buildFirstHopInstruction(),
+//            if (!_hasHops()) _buildFirstHopInstruction(),
+            if (!_hasHops()) pady(16),
             HopTile.buildFlowDivider(
                 padding: EdgeInsets.only(top: _hasHops() ? 16 : 2, bottom: 10)),
             _buildEndTile(),
@@ -593,69 +607,21 @@ class CircuitPageState extends State<CircuitPage>
   /// Begin - Add / view hop logic
   ///
 
-  // Show the add hop flow and save the result if completed successfully.
   void _addHop() async {
-    // Create a nested navigation context for the flow. Performing a pop() from
-    // this outer context at any point will properly remove the entire flow
-    // (possibly multiple screens) with one appropriate animation.
-    Navigator addFlow = Navigator(
-      onGenerateRoute: (RouteSettings settings) {
-        var addFlowCompletion = (CircuitHop result) {
-          Navigator.pop(context, result);
-        };
-        var editor = AddHopPage(
-            onAddFlowComplete: addFlowCompletion, showCallouts: _hops.isEmpty);
-        var route = MaterialPageRoute<CircuitHop>(
-            builder: (context) => editor, settings: settings);
-        return route;
-      },
-    );
-    var route = MaterialPageRoute<CircuitHop>(
-        builder: (context) => addFlow, fullscreenDialog: true);
-    _pushEditorRoute(route);
+    CircuitUtils.addHop(context,
+        onComplete: _addHopComplete, showCallouts: _hops.isEmpty);
   }
 
-  // Show the purchase PAC screen directly as a modal, skipping the "add hop"
-  // choice screen. This is used by the welcome dialog.
-  void _addHopFromPACPurchase() async {
-    var addFlowCompletion = (CircuitHop result) {
-      Navigator.pop(context, result);
-    };
-    var route = MaterialPageRoute<CircuitHop>(
-        builder: (BuildContext context) {
-          return PurchasePage(
-            onAddFlowComplete: addFlowCompletion,
-            cancellable: true,
-          );
-        },
-        fullscreenDialog: true);
-    _pushEditorRoute(route);
+  void _addHopFromPACPurchase() {
+    CircuitUtils.purchasePAC(context, onComplete: _addHopComplete);
   }
 
-  // Push the specified hop editor, await the hop result, and save it to the circuit.
-  // Note: The paradigm here of the hop editors returning newly created or edited hops
-  // Note: on the navigation stack decouples them but makes them more dependent on
-  // Note: this update and save logic. We should consider centralizing this logic and
-  // Note: relying on observation with `OrchidAPI.circuitConfigurationChanged` here.
-  // Note: e.g.
-  // Note: void _AddHopExternal(CircuitHop hop) async {
-  // Note:   var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
-  // Note:   circuit.hops.add(hop);
-  // Note:   await UserPreferences().setCircuit(circuit);
-  // Note:   OrchidAPI().updateConfiguration();
-  // Note:   OrchidAPI().circuitConfigurationChanged.add(null);
-  // Note: }
-  void _pushEditorRoute(MaterialPageRoute route) async {
-    var hop = await Navigator.push(context, route);
-    if (hop == null) {
-      return; // user cancelled
-    }
-    var uniqueHop =
-        UniqueHop(hop: hop, key: DateTime.now().millisecondsSinceEpoch);
+  // Local page state updates after hop addition.
+  void _addHopComplete(UniqueHop uniqueHop) {
+    // TODO: needed? Or does the global config change handle it?
     setState(() {
       _hops.add(uniqueHop);
     });
-    _saveCircuit();
 
     // View the newly created hop:
     // Note: This performs a behavior like the iOS-Contacts App add flow,
@@ -663,6 +629,24 @@ class CircuitPageState extends State<CircuitPage>
     // Note: add flow.  This non-animated push approximates this.
     if (CircuitPage.iOSContactsStyleAddHopBehavior) {
       _viewHop(uniqueHop, animated: false);
+    }
+  }
+
+  void _saveCircuit() async {
+    var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
+    CircuitUtils.saveCircuit(circuit);
+    _showConfigurationChangedDialog();
+  }
+
+  void _showConfigurationChangedDialog() async {
+    if (_dialogInProgress) {
+      return;
+    }
+    try {
+      _dialogInProgress = true;
+      await Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+    } finally {
+      _dialogInProgress = false;
     }
   }
 
@@ -733,7 +717,7 @@ class CircuitPageState extends State<CircuitPage>
   // Note: for a version of the switch that does attempt to track the connection.
   void _connectSwitchChanged(bool toEnabled) async {
     if (toEnabled) {
-      bool allowNoHopVPN = await UserPreferences().getAllowNoHopVPN();
+      bool allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
       if (_hasHops() || allowNoHopVPN) {
         _checkPermissionAndConnect();
       } else {
@@ -792,15 +776,16 @@ class CircuitPageState extends State<CircuitPage>
   // Prompt for VPN permissions if needed and then start the VPN.
   // Note: If the UI will no longer be participating in the prompt then
   // Note: we can just do this routinely in the channel api on first launch.
-  // Note: duplicates code in monitoring_page and connect_page.
+  // Note: duplicates code in monitoring_page and legacy_connect_page.
   void _checkPermissionAndConnect() {
     UserPreferences().setDesiredVPNState(true);
-    if (_showEnableVPNInstruction()) {
-      UserPreferences().setVPNSwitchInstructionsViewed(true);
-      setState(() {
-        vpnSwitchInstructionsViewed = true;
-      });
-    }
+    //if (_showEnableVPNInstruction()) {
+    //UserPreferences().setVPNSwitchInstructionsViewed(true);
+    //setState(() {
+    //vpnSwitchInstructionsViewed = true;
+    //});
+    //}
+
     // Get the most recent status, blocking if needed.
     _rxSubs
         .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
@@ -854,29 +839,15 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   // Getter for the switch controller controlled state
-  bool get _switchOn {
-    return widget.switchController?.controlledState?.value ?? false;
-  }
+//  bool get _switchOn {
+//    return widget.switchController?.controlledState?.value ?? false;
+//  }
 
   bool _hasHops() {
     return _hops != null && _hops.length > 0;
   }
 
-  void _saveCircuit() async {
-    var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
-    UserPreferences().setCircuit(circuit);
-    OrchidAPI().updateConfiguration();
-    if (_dialogInProgress) {
-      return;
-    }
-    try {
-      _dialogInProgress = true;
-      await Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
-    } finally {
-      _dialogInProgress = false;
-    }
-  }
-
+  // TODO: No switch in current page impl so this is unused.
   void _showWelcomeDialog() async {
     var pacsEnabled = (await OrchidPurchaseAPI().apiConfig()).enabled;
     if (pacsEnabled) {
@@ -932,8 +903,96 @@ class CircuitPageState extends State<CircuitPage>
       sub.cancel();
     });
     _bunnyDuckTimer.cancel();
-    widget.switchController.onChange = null;
+    //widget.switchController.onChange = null;
     _checkBalancesTimer.cancel();
+    _masterConnectAnimController.dispose();
+    _bunnyDuckAnimController.dispose();
     super.dispose();
   }
+}
+
+typedef HopCompletion = void Function(UniqueHop);
+
+class CircuitUtils {
+  // Show the add hop flow and save the result if completed successfully.
+  static void addHop(BuildContext context,
+      {HopCompletion onComplete, bool showCallouts = false}) async {
+    // Create a nested navigation context for the flow. Performing a pop() from
+    // this outer context at any point will properly remove the entire flow
+    // (possibly multiple screens) with one appropriate animation.
+    Navigator addFlow = Navigator(
+      onGenerateRoute: (RouteSettings settings) {
+        var addFlowCompletion = (CircuitHop result) {
+          Navigator.pop(context, result);
+        };
+        var editor = AddHopPage(
+            onAddFlowComplete: addFlowCompletion, showCallouts: showCallouts);
+        var route = MaterialPageRoute<CircuitHop>(
+            builder: (context) => editor, settings: settings);
+        return route;
+      },
+    );
+    var route = MaterialPageRoute<CircuitHop>(
+        builder: (context) => addFlow, fullscreenDialog: true);
+    _pushNewHopEditorRoute(context, route, onComplete);
+  }
+
+  // Push the specified hop editor to create a new hop, await the result, and
+  // save it to the circuit.
+  // Note: The paradigm here of the hop editors returning newly created or edited hops
+  // Note: on the navigation stack decouples them but makes them more dependent on
+  // Note: this update and save logic. We should consider centralizing this logic and
+  // Note: relying on observation with `OrchidAPI.circuitConfigurationChanged` here.
+  // Note: e.g.
+  // Note: void _AddHopExternal(CircuitHop hop) async {
+  // Note:   var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
+  // Note:   circuit.hops.add(hop);
+  // Note:   await UserPreferences().setCircuit(circuit);
+  // Note:   OrchidAPI().updateConfiguration();
+  // Note:   OrchidAPI().circuitConfigurationChanged.add(null);
+  // Note: }
+  static void _pushNewHopEditorRoute(BuildContext context,
+      MaterialPageRoute route, HopCompletion onComplete) async {
+    var hop = await Navigator.push(context, route);
+    if (hop == null) {
+      return; // user cancelled
+    }
+    var uniqueHop =
+        UniqueHop(hop: hop, key: DateTime.now().millisecondsSinceEpoch);
+    addHopToCircuit(uniqueHop.hop);
+    if (onComplete != null) {
+      onComplete(uniqueHop);
+    }
+  }
+
+  // Show the purchase PAC screen directly as a modal, skipping the "add hop"
+  // choice screen. This is used by the welcome dialog.
+  static void purchasePAC(BuildContext context,
+      {HopCompletion onComplete}) async {
+    var addFlowCompletion = (CircuitHop result) {
+      Navigator.pop(context, result);
+    };
+    var route = MaterialPageRoute<CircuitHop>(
+        builder: (BuildContext context) {
+          return PurchasePage(
+            onAddFlowComplete: addFlowCompletion,
+            cancellable: true,
+          );
+        },
+        fullscreenDialog: true);
+    _pushNewHopEditorRoute(context, route, onComplete);
+  }
+
+  static void addHopToCircuit(CircuitHop hop) async {
+    var circuit = await UserPreferences().getCircuit();
+    circuit.hops.add(hop);
+    saveCircuit(circuit);
+  }
+
+  static void saveCircuit(Circuit circuit) async {
+    UserPreferences().setCircuit(circuit);
+    OrchidAPI().updateConfiguration();
+    OrchidAPI().circuitConfigurationChanged.add(null);
+  }
+
 }
