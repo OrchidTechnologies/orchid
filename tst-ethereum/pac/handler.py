@@ -17,7 +17,7 @@ from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
-from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true, look
+from utils import configure_logging, get_secret, is_true, look
 from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
@@ -74,9 +74,9 @@ def fund_PAC_(
         address=token_addr,
     )
 
-    logging.debug(f"Funder nonce: {nonce}")
+    logging.debug(f'Funder nonce: {nonce}')
 
-    logging.debug(f"Assembling approve transaction:")
+    logging.debug('Assembling approve transaction')
     approve_txn = token_main.functions.approve(
         lottery_addr,
         total,
@@ -91,12 +91,12 @@ def fund_PAC_(
     )
     logging.debug(approve_txn)
 
-    logging.debug(f"Funder signed transaction:")
+    logging.debug('Funder signed transaction')
     approve_txn_signed = w3.eth.account.sign_transaction(
         approve_txn, private_key=funder_privkey)
     logging.debug(approve_txn_signed)
 
-    logging.debug(f"Submitting approve transaction:")
+    logging.debug('Submitting approve transaction')
 
     approve_txn_hash = w3.eth.sendRawTransaction(
         approve_txn_signed.rawTransaction)
@@ -105,7 +105,7 @@ def fund_PAC_(
     nonce = nonce + 1
     logging.debug(f"Funder nonce: {nonce}")
 
-    logging.debug(f"Assembling bind transaction:")
+    logging.debug('Assembling bind transaction')
     bind_txn = lottery_main.functions.bind(
         signer,
         verifier_addr,
@@ -121,18 +121,18 @@ def fund_PAC_(
     )
     logging.debug(bind_txn)
 
-    logging.debug(f"Funder signed transaction:")
+    logging.debug('Funder signed transaction')
     bind_txn_signed = w3.eth.account.sign_transaction(bind_txn, private_key=funder_privkey)
     logging.debug(bind_txn_signed)
 
-    logging.debug(f"Submitting bind transaction:")
+    logging.debug('Submitting bind transaction')
     bind_txn_hash = w3.eth.sendRawTransaction(bind_txn_signed.rawTransaction)
     logging.debug(f"Submitted bind transaction with hash: {bind_txn_hash.hex()}")
 
     nonce = nonce + 1
     logging.debug(f"Funder nonce: {nonce}")
 
-    logging.debug(f"Assembling funding transaction:")
+    logging.debug('Assembling funding transaction')
     funding_txn = lottery_main.functions.push(
         signer,
         total,
@@ -148,17 +148,16 @@ def fund_PAC_(
     )
     logging.debug(funding_txn)
 
-    logging.debug(f"Funder signed transaction:")
+    logging.debug('Funder signed transaction')
     funding_txn_signed = w3.eth.account.sign_transaction(
         funding_txn, private_key=funder_privkey)
     logging.debug(funding_txn_signed)
 
-    logging.debug(f"Submitting funding transaction:")
+    logging.debug('Submitting funding transaction')
     txn_hash: str = w3.eth.sendRawTransaction(
         funding_txn_signed.rawTransaction).hex()
     logging.debug(f"Submitted funding transaction with hash: {txn_hash}")
     return txn_hash
-
 
 
 def get_min_escrow():
@@ -174,11 +173,11 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     # todo: pass on gas and app-store overhead?
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
-    escrow_oxt = get_min_escrow() # todo: better alg to determine this?
-    value_usd  = total_usd * 0.7 - 0.5 # 30% store fee, 0.5 setup charge
-    value_oxt  = value_usd * oxt_per_usd;
-    num_tickets = int(value_oxt / (0.5*escrow_oxt));
-    escrow_oxt  = 2.0 * float(value_oxt) / float(num_tickets);
+    escrow_oxt = get_min_escrow()  # todo: better alg to determine this?
+    value_usd = total_usd * 0.7 - 0.5  # 30% store fee, 0.5 setup charge
+    value_oxt = value_usd * oxt_per_usd
+    num_tickets = int(value_oxt / (0.5*escrow_oxt))
+    escrow_oxt = 2.0 * float(value_oxt) / float(num_tickets)
     total_oxt = value_oxt + escrow_oxt
 
     logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT")
@@ -279,21 +278,22 @@ def random_scan(table, price):
     # generate a random 32 byte address (1 x 32 byte ethereum address)
     rand_key = uuid.uuid4().hex + uuid.uuid4().hex
     ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
-    response0 = table.query(Limit=4,KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
-    response1 = table.query(Limit=4,KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
+    response0 = table.query(Limit=4, KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
+    response1 = table.query(Limit=4, KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
     response0['Items'].extend(response1['Items'])
     return response0
 
 
 def get_transaction_confirm_count(txhash):
     logging.debug(f'get_transaction_confirm_count({txhash}) ')
-    blocknum  = w3.eth.blockNumber
-    #block     = w3.eth.getBlock('latest')
-    #blocknum2 = block['number']
+    blocknum = w3.eth.blockNumber
+    # block = w3.eth.getBlock('latest')
+    # blocknum2 = block['number']
     trans = w3.eth.getTransaction(txhash)
-    diff  = blocknum - trans['blockNumber']
+    diff = blocknum - trans['blockNumber']
     logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum}) diff({diff}) ')
     return diff
+
 
 def get_transaction_status(txhash):
     try:
@@ -302,7 +302,7 @@ def get_transaction_status(txhash):
             return "confirmed"
         else:
             return "unconfirmed"
-    except:
+    except Exception:
         return "unknown"
     return "unknown"
 
@@ -320,10 +320,10 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             signer_pubkey = item['signer']
             config = item['config']
             push_txn_hash = item['push_txn_hash']
-            creation_etime = item.get('creation_etime',0)
-            age = epoch_time - creation_etime;
+            creation_etime = item.get('creation_etime', 0)
+            age = epoch_time - creation_etime
             # check status - make sure pot is ready
-            #status = item['status']
+            # status = item['status']
             status = get_transaction_status(push_txn_hash)
             if ((status != 'confirmed') and (age < 3600)):
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
@@ -338,7 +338,7 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
                 balance, escrow, _ = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
                 # update succeeded
-                if ( (status == 'confirmed') and (escrow > get_min_escrow()) ):
+                if ((status == 'confirmed') and (escrow > get_min_escrow())):
                     ret = push_txn_hash, config, signer_pubkey
                     break
                 else:
@@ -354,40 +354,39 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     logging.debug(f'Getting Account with Price:{price}')
     push_txn_hash = config = signer_pubkey = None
     count = 0
-    while ((push_txn_hash == None) and (count < 8)):
+    while push_txn_hash is None and count < 8:
         push_txn_hash, config, signer_pubkey = get_account_(price=price)
         count = count + 1
     return push_txn_hash, config, signer_pubkey
 
 
-
 def hash_receipt_body(receipt):
 
-    #receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
+    # receipt_hash = hashlib.sha256(receipt.encode('utf-8')).hexdigest()
 
     # Load the contents of the receipt file
     # receipt_file = open('./receipt_data.bin', 'rb').read()
-    logging.debug(f'hashing receipt')
-    #receipt_file = bytearray.fromhex(receipt);
-    #receipt_file = bytes.fromhex(receipt)
-    receipt_file = base64.decodebytes(receipt.encode('utf-8'));
+    logging.debug('hashing receipt')
+    # receipt_file = bytearray.fromhex(receipt);
+    # receipt_file = bytes.fromhex(receipt)
+    receipt_file = base64.decodebytes(receipt.encode('utf-8'))
 
     # Use asn1crypto's cms definitions to parse the PKCS#7 format
     pkcs_container = ContentInfo.load(receipt_file)
 
     # Extract the certificates, signature, and receipt_data
     certificates = pkcs_container['content']['certificates']
-    signer_info  = pkcs_container['content']['signer_infos'][0]
+    signer_info = pkcs_container['content']['signer_infos'][0]
     receipt_data = pkcs_container['content']['encap_content_info']['content']
     logging.debug(f'extracted certificates {len(str(certificates))}B  signer_info {len(str(signer_info))}B  receipt_data {len(str(receipt_data))}B')
 
-    receipt_data_str = str(receipt_data).encode('utf-8')[50:] # slice the string to remove random header
+    receipt_data_str = str(receipt_data).encode('utf-8')[50:]  # slice the string to remove random header
     logging.debug(f'receipt_data_str: \n{receipt_data_str}')
 
     receipt_hash = hashlib.sha256(receipt_data_str).hexdigest()
     logging.debug(f'receipt_hash: {receipt_hash}')
 
-    return receipt_hash;
+    return receipt_hash
 
 
 def response_error_invalid_dev_param():
@@ -405,6 +404,7 @@ def response_error_invalid_dev_param():
     logging.debug(f'dev-only parameter included in request! response: {response}')
     return response
 
+
 def response_invalid_bundle(bundle_id):
     logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match expected {os.environ["BUNDLE_ID"]})')
     response = {
@@ -419,6 +419,7 @@ def response_invalid_bundle(bundle_id):
         })
     }
     return response
+
 
 def response_invalid_product(product_id):
     logging.debug(f'response_invalid_product(product_id:{product_id})')
@@ -435,6 +436,7 @@ def response_invalid_product(product_id):
     }
     return response
 
+
 def response_no_account():
     logging.debug('response_no_account()')
     response = {
@@ -449,6 +451,7 @@ def response_no_account():
         })
     }
     return response
+
 
 def response_invalid_receipt(apple_response):
     logging.debug('response_invalid_receipt(.)')
@@ -465,6 +468,7 @@ def response_invalid_receipt(apple_response):
     }
     return response
 
+
 def response_valid_account(push_txn_hash, config, verifier):
     logging.debug(f'response_valid_account(push_txn_hash:{push_txn_hash})')
     response = {
@@ -478,6 +482,7 @@ def response_valid_account(push_txn_hash, config, verifier):
         })
     }
     return response
+
 
 def find_previous_pot(result_hash_table, receipt_hash, verifier, Stage):
     logging.debug(f'find_previous_pot( receipt_hash:{receipt_hash}, verifier: {verifier}, Stage: {Stage})')
@@ -500,6 +505,7 @@ def find_previous_pot(result_hash_table, receipt_hash, verifier, Stage):
         return response
     return None
 
+
 def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
     logging.debug(f'find_previous_receipt_claim( receipt_hash:{receipt_hash})')
     result = receipt_hash_table.query(ConsistentRead=True, KeyConditionExpression=Key('receipt').eq(receipt_hash))
@@ -519,6 +525,7 @@ def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
         return response
     return None
 
+
 def claim_receipt(receipt_hash_table, receipt_hash):
     logging.debug(f'claim_receipt(receipt_hash:{receipt_hash})')
     item = {
@@ -526,28 +533,29 @@ def claim_receipt(receipt_hash_table, receipt_hash):
     }
     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
     # fail if already exists, raises ConditionalCheckFailedException
-    receipt_hash_table.put_item(Item=ddb_item,ConditionExpression='attribute_not_exists(receipt)')
+    receipt_hash_table.put_item(Item=ddb_item, ConditionExpression='attribute_not_exists(receipt)')
+
 
 def store_result(result_hash_table, receipt_hash, config, push_txn_hash, verifier):
     logging.debug(f'store_result(receipt_hash:{receipt_hash},...)')
-    expiration_time = int(time.time() + 24*3600*7) # one week
+    expiration_time = int(time.time() + 24*3600*7)  # one week
     item = {
         'receipt': receipt_hash,
         'config': config,
         'push_txn_hash': push_txn_hash,
         'seller': verifier,
-        'expiration_time' : expiration_time,
+        'expiration_time': expiration_time,
     }
     ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
     result_hash_table.put_item(Item=ddb_item)
 
 
 def do_evil_monitoring():
-    logging.debug(f'do_evil_monitoring()')
-    #token_name = get_token_name(address=os.environ['TOKEN'])
-    #token_symbol = get_token_symbol(address=os.environ['TOKEN'])
-    #token_decimals = get_token_decimals(address=os.environ['TOKEN'])
-    #pac_tokens = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
+    logging.debug('do_evil_monitoring()')
+    # token_name = get_token_name(address=os.environ['TOKEN'])
+    # token_symbol = get_token_symbol(address=os.environ['TOKEN'])
+    # token_decimals = get_token_decimals(address=os.environ['TOKEN'])
+    # pac_tokens = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
     # lambda_metric(
     #     f"orchid.pac.sale.{token_symbol.lower()}",
     #     pac_tokens,
@@ -558,6 +566,7 @@ def do_evil_monitoring():
     #         f'usd:{total_usd}',
     #     ]
     # )
+
 
 def main(event, context):
     Stage = os.environ['STAGE']
@@ -577,24 +586,24 @@ def main(event, context):
     result_hash_table = dynamodb.Table(os.environ['RESULT_TABLE_NAME'])
     receipt_hash_table = dynamodb.Table(os.environ['RECEIPT_TABLE_NAME'])
 
-    #check for dev params, respond with error in prod
+    # check for dev params, respond with error in prod
     if os.environ['STAGE'] != 'dev':
         if body.get('verify_receipt') or body.get('product_id'):
             return response_error_invalid_dev_param()
 
-    #extract and hash the receipt body payload
+    # extract and hash the receipt body payload
     receipt_hash = hash_receipt_body(receipt)
 
-    #find any matching previous pot result and conditionally return it (idempotency)
+    # find any matching previous pot result and conditionally return it (idempotency)
     response = find_previous_pot(result_hash_table, receipt_hash, os.environ['VERIFIER'], Stage)
-    if (response != None):
+    if response is not None:
         return response
 
-    #find and error return for any previous claim of the receipt (replay prevention) todo: this is not concurrent-safe, claim needs to be atomic
+    # find and error return for any previous claim of the receipt (replay prevention) todo: this is not concurrent-safe, claim needs to be atomic
     verify_receipt = body.get('verify_receipt', 'True')
     if (is_true(verify_receipt)):
         response = find_previous_receipt_claim(receipt_hash_table, receipt_hash)
-        if (response != None):
+        if response is not None:
             return response
 
     apple_response = process_app_pay_receipt(receipt)
@@ -621,21 +630,21 @@ def main(event, context):
             if total_usd <= 0:
                 response = response_invalid_product(product_id)
             else:
-                #find/claim a valid pot
+                # find/claim a valid pot
                 push_txn_hash, config, signer_pubkey = get_account(price=total_usd)
                 if config is None:
                     response = response_no_account()
                 else:
                     response = response_valid_account(push_txn_hash, config, os.environ['VERIFIER'])
 
-                    #claim the receipt (conditionally atomically, exception fails if already exists)
+                    # claim the receipt (conditionally atomically, exception fails if already exists)
                     if (Stage != 'dev'):
                         claim_receipt(receipt_hash_table, receipt_hash)
 
-                    #store result (idempotency)
+                    # store result (idempotency)
                     store_result(result_hash_table, receipt_hash, config, push_txn_hash, os.environ['VERIFIER'])
 
-                    if is_true(os.environ.get('ENABLE_MONITORING', '')): # Jay may not like this
+                    if is_true(os.environ.get('ENABLE_MONITORING', '')):  # Jay may not like this
                         do_evil_monitoring()
 
     else:
