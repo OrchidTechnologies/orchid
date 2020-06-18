@@ -129,6 +129,8 @@ functions:
       - http:
           path: recycle
           method: post
+  reclaim:
+    handler: reclaim.main
 plugins:
   - serverless-plugin-datadog
   - serverless-pseudo-parameters
