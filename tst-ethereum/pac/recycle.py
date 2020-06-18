@@ -1,13 +1,16 @@
 import boto3
-import datetime
 import json
 import logging
 import os
-import time
 
 from decimal import Decimal
-from handler import fund_PAC, get_product_id_mapping
-from utils import configure_logging, get_secret, is_true, look, pull, warn
+from utils import configure_logging
+from utils import get_secret
+from utils import is_true
+from utils import keys
+from utils import look
+from utils import pull
+from utils import warn
 from web3 import Web3
 
 
@@ -91,7 +94,7 @@ def delete_account(signer: str):
 
 
 def account_queued_response():
-    logging.debug(f'Account successfully queued for recycling.')
+    logging.debug('Account successfully queued for recycling.')
     response = {
         "isBase64Encoded": False,
         "statusCode": 201,
@@ -104,7 +107,7 @@ def account_queued_response():
 
 
 def recycle_accounts(nonce: int):
-    logging.debug(f'Recycling Accounts')
+    logging.debug('Recycling Accounts')
     dynamodb = boto3.resource('dynamodb')
     recycle_table = dynamodb.Table(os.environ['RECYCLE_TABLE_NAME'])
     response = recycle_table.scan()
@@ -123,7 +126,7 @@ def recycle_accounts(nonce: int):
             store_account(funder, signer, actual_unlock)
 
         if actual_unlock == 0:
-            logging.debug(f'Account is still locked')
+            logging.debug('Account is still locked')
             warn(signer, nonce)
             nonce += 1
         elif actual_unlock - 1 < latest_block['timestamp']:
@@ -161,8 +164,8 @@ def main(event, context):
     if funder != pac_funder:
         return invalid_funder(funder, pac_funder)
 
-    # TODO: Call keys() to see if the signer is valid for the given funder
-    if signer == '':
+    funder_keys = keys(funder)
+    if signer == '' or signer not in funder_keys:
         return invalid_signer(signer)
 
     amount, escrow, unlock = look(funder, signer)

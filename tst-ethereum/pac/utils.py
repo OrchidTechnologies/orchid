@@ -90,6 +90,19 @@ def look(funder: str, signer: str):
     return amount, escrow, unlock
 
 
+def keys(funder: str):
+    logging.debug(f'keys() funder: {funder}')
+    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    lottery_contract = w3.eth.contract(
+        abi=lottery_abi,
+        address=lottery_addr,
+    )
+    keys = lottery_contract.functions.keys(funder).call()
+
+    logging.debug(f'keys: {keys}')
+    return keys
+
+
 def warn(signer: str, nonce: int):
     logging.debug(f'warn() signer: {signer} nonce: {nonce}')
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
@@ -118,7 +131,7 @@ def warn(signer: str, nonce: int):
     )
     logging.debug(warn_txn_signed)
 
-    logging.debug(f"Submitting warn transaction")
+    logging.debug('Submitting warn transaction')
 
     warn_txn_hash = w3.eth.sendRawTransaction(
         warn_txn_signed.rawTransaction,
@@ -158,9 +171,9 @@ def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float,
     )
     logging.debug(pull_txn_signed)
 
-    logging.debug(f"Submitting pull transaction")
+    logging.debug('Submitting pull transaction')
 
     pull_txn_hash = w3.eth.sendRawTransaction(
         pull_txn_signed.rawTransaction,
     )
-    logging.debug(f"Submitted pull transaction with hash: {pull_txn_hash.hex()}")
+    logging.debug(f'Submitted pull transaction with hash: {pull_txn_hash.hex()}')
