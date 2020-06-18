@@ -1,7 +1,7 @@
 # orchidd: Compiling the Orchid Server
 ## Linux (Ubuntu)
 
-```
+```shell
 sudo apt-get update
 sudo apt-get install \
      bison \
@@ -21,7 +21,7 @@ make -C srv-shared
 ```
 
 ## macOS
-```
+```shell
 /usr/bin/ruby -e \
     "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install meson autoconf automake libtool

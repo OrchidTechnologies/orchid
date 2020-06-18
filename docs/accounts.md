@@ -10,7 +10,7 @@ Orchid Labs hosts a web3 enabled website which provides an easy way to setup and
 
 The OXT held in the Orchid account has a balance and deposit component. The balance is the amount of OXT available to pay for service. The deposit size signals information to the provider.
 
-## The deposit 
+## The deposit
 
 The deposit is required to accept service and is verified by providers. The deposit prevents double spending and in general, the deposit maintains good standing on the network.
 
@@ -34,16 +34,16 @@ Market conditions are driven by the price of OXT and the [current gas cost](http
 
 ## The balance
 
-The balance is the amount of OXT that can be used to pay for service. 
+The balance is the amount of OXT that can be used to pay for service.
 
-Using the current price of OXT and market prices (which includes the gas costs of network operations), we can estimate how many Gigabytes of VPN service you can get for the given balance. Note that as the variables change, the estimated amount of service changes.  
+Using the current price of OXT and market prices (which includes the gas costs of network operations), we can estimate how many Gigabytes of VPN service you can get for the given balance. Note that as the variables change, the estimated amount of service changes.
 
 ## Orchid Account Functionality
 
-Here is an overview of the different ways you can manipulate an Orchid account using our web3 website. In general, each one of these pages helps you make a call to our nanopayment Ethereum smart contract. 
+Here is an overview of the different ways you can manipulate an Orchid account using our web3 website. In general, each one of these pages helps you make a call to our nanopayment Ethereum smart contract.
 
 - [**Create account**](https://account.orchid.com)
-Creates an Orchid account. Requires OXT and ETH. 
+Creates an Orchid account. Requires OXT and ETH.
 
 - [**Add funds**](https://account.orchid.com/#addFunds)
 Adds OXT to your balance and deposit.
@@ -52,7 +52,7 @@ Adds OXT to your balance and deposit.
 Withdraws funds from your account to an Ethereum wallet.
 
 - [**Move funds**](https://account.orchid.com/#moveFunds)
-Moves funds from your balance to your deposit. 
+Moves funds from your balance to your deposit.
 
 - [**Unlock Funds**](https://account.orchid.com/#lockFunds)
 Locks and unlocks your deposit for withdrawal.

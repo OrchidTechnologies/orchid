@@ -1,4 +1,3 @@
-
 # Building for iOS
 
 Orchid for iOS is built from the command line, not from the XCode GUI.  It
@@ -27,7 +26,7 @@ you want to use a different location than the one specified in the local
 locations of `gnulib` and `libiconv` with a temporary change to your personal
 `~/.gitconfig` file:
 
-## From the command line:
+## From the command line
 ```bash
 git config --global url."https://github.com/coreutils/gnulib.git"].insteadOf "git://git.savannah.gnu.org/gnulib.git"
 git config --global url. "https://gitlab.com/pffang/libiconv.git"].insteadOf "https://git.savannah.gnu.org/git/libiconv.git"
@@ -37,22 +36,22 @@ git config --global url. "https://gitlab.com/pffang/libiconv.git"].insteadOf "ht
 stanzas:
 ```config
 [url "https://github.com/coreutils/gnulib.git"]
-	insteadOf = git://git.savannah.gnu.org/gnulib.git
+    insteadOf = git://git.savannah.gnu.org/gnulib.git
 
 [url "https://gitlab.com/pffang/libiconv.git"]
-	insteadOf = https://git.savannah.gnu.org/git/libiconv.git
+    insteadOf = https://git.savannah.gnu.org/git/libiconv.git
 ```
 
 Once you have the submodules downloaded, you'll need to configure the developer
 signing identity that Apple will use. To set up this part of the build, copy
 `local.mk.in` to `local.mk`. Then edit the `local.mk` file. You'll
 need your Apple developer information. Get your Team ID from here:
-https://developer.apple.com/account/#/membership.
+[https://developer.apple.com/account/#/membership](https://developer.apple.com/account/#/membership).
 
 ## Install Prerequisites
 We need to ensure that you have the build tools on your MacOS-based machine to
 complete the build successfully. If you don't have `homebrew` installed,
-please follow the instructions at https://brew.sh:
+please follow the instructions at [https://brew.sh](https://brew.sh):
 
 ```bash
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"

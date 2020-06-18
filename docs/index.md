@@ -1,8 +1,8 @@
-![](img/name_logo.png "Orchid Logo")
-
-# Overview
+# Orchid
+![Orchid Logo](img/name_logo.png "Orchid Logo")
 Welcome to Orchid!
 
+## Overview
 The Orchid network enables a decentralized virtual private network (VPN),
 allowing users to buy bandwidth from a decentralized pool of service providers.
 
@@ -12,5 +12,5 @@ advertising and payment functions. Orchid's users connect to bandwidth sellers
 using a provider directory, and they pay using probabilistic nanopayments so
 Ethereum transaction fees on packets are acceptably low.
 
-# Vision
+## Vision
 Our vision is to enable secure access to the internet for everyone, everywhere.

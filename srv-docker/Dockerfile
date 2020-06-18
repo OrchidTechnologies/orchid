@@ -1,5 +1,5 @@
 FROM ubuntu:eoan
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install git-core
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install git-core && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG GIT_REPOSITORY=https://github.com/OrchidTechnologies/orchid.git
 ARG GIT_COMMIT=master

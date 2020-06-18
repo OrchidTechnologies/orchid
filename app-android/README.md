@@ -1,18 +1,18 @@
-# Orchid Android: Build and Installation 
+# Orchid Android: Build and Installation
 
 
-### Setup
+## Setup
 
 Update Android Studio
 
-#### Check installed Android SDK versions:
+### Check installed Android SDK versions
 
 `Preferences-> System Settings -> Android SDK`
 
 (Compare with your phone Android version: `Phone settings -> About Phone -> About Software`)
 
 
-#### Install Android NDK
+### Install Android NDK
 
 Within Android Studio, navigate to `Preferences -> Appearance & Behavior -> System Settings -> Android SDK`
 
