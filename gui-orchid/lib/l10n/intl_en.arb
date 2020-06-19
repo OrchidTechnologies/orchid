@@ -189,7 +189,7 @@
 	"pasteAccount": "Paste Account",
 	"pasteYourExistingAccountBelowToAddItAsA": "Paste your existing account below to add it as a hop.",
 	"manageProfile": "Manage Profile",
-  "marketStats": "Market Stats",
+	"marketStats": "Market Stats",
 	"balanceTooLow": "Balance too low",
 	"depositSizeTooSmall": "Deposit size too small",
 	"yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "Your max ticket value is currently limited by your balance of",
