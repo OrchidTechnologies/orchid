@@ -8,18 +8,24 @@ import 'intl/messages_all.dart';
 // Made by Localizely
 // **************************************************************************
 
+// ignore_for_file: non_constant_identifier_names, lines_longer_than_80_chars
+
 class S {
   S();
+  
+  static S current;
   
   static const AppLocalizationDelegate delegate =
     AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
-    final String name = (locale.countryCode?.isEmpty ?? false) ? locale.languageCode : locale.toString();
-    final String localeName = Intl.canonicalizedLocale(name);
+    final name = (locale.countryCode?.isEmpty ?? false) ? locale.languageCode : locale.toString();
+    final localeName = Intl.canonicalizedLocale(name); 
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
-      return S();
+      S.current = S();
+      
+      return S.current;
     });
   } 
 
@@ -27,6 +33,7 @@ class S {
     return Localizations.of<S>(context, S);
   }
 
+  /// `New Hop`
   String get newHop {
     return Intl.message(
       'New Hop',
@@ -36,6 +43,7 @@ class S {
     );
   }
 
+  /// `Orchid Hop`
   String get orchidHop {
     return Intl.message(
       'Orchid Hop',
@@ -45,6 +53,7 @@ class S {
     );
   }
 
+  /// `Orchid disabled`
   String get orchidDisabled {
     return Intl.message(
       'Orchid disabled',
@@ -54,6 +63,7 @@ class S {
     );
   }
 
+  /// `Traffic monitoring only`
   String get trafficMonitoringOnly {
     return Intl.message(
       'Traffic monitoring only',
@@ -63,6 +73,7 @@ class S {
     );
   }
 
+  /// `Orchid connecting`
   String get orchidConnecting {
     return Intl.message(
       'Orchid connecting',
@@ -72,6 +83,7 @@ class S {
     );
   }
 
+  /// `Orchid disconnecting`
   String get orchidDisconnecting {
     return Intl.message(
       'Orchid disconnecting',
@@ -81,6 +93,7 @@ class S {
     );
   }
 
+  /// `{num, plural, zero{No hops configured} one{One hop configured} two{Two hops configured} other{{num} hops configured}}`
   String numHopsConfigured(num num) {
     return Intl.plural(
       num,
@@ -94,6 +107,7 @@ class S {
     );
   }
 
+  /// `Delete`
   String get delete {
     return Intl.message(
       'Delete',
@@ -103,6 +117,7 @@ class S {
     );
   }
 
+  /// `Turn Orchid on to activate your hops and protect your traffic`
   String get turnOnToActivate {
     return Intl.message(
       'Turn Orchid on to activate your hops and protect your traffic',
@@ -112,6 +127,7 @@ class S {
     );
   }
 
+  /// `Create your first hop to protect your connection.`
   String get createFirstHop {
     return Intl.message(
       'Create your first hop to protect your connection.',
@@ -121,6 +137,7 @@ class S {
     );
   }
 
+  /// `Orchid`
   String get orchid {
     return Intl.message(
       'Orchid',
@@ -130,6 +147,7 @@ class S {
     );
   }
 
+  /// `OpenVPN`
   String get openVPN {
     return Intl.message(
       'OpenVPN',
@@ -139,6 +157,7 @@ class S {
     );
   }
 
+  /// `Status`
   String get status {
     return Intl.message(
       'Status',
@@ -148,6 +167,7 @@ class S {
     );
   }
 
+  /// `Hops`
   String get hops {
     return Intl.message(
       'Hops',
@@ -157,6 +177,7 @@ class S {
     );
   }
 
+  /// `Traffic`
   String get traffic {
     return Intl.message(
       'Traffic',
@@ -166,6 +187,7 @@ class S {
     );
   }
 
+  /// `To create an Orchid hop you need an Orchid account.  Open`
   String get createInstruction1 {
     return Intl.message(
       'To create an Orchid hop you need an Orchid account.  Open',
@@ -175,6 +197,7 @@ class S {
     );
   }
 
+  /// `in a Web3 browser and follow the steps.  Paste in your Ethereum address below.`
   String get createInstructions2 {
     return Intl.message(
       'in a Web3 browser and follow the steps.  Paste in your Ethereum address below.',
@@ -184,6 +207,7 @@ class S {
     );
   }
 
+  /// `LEARN MORE`
   String get learnMoreButtonTitle {
     return Intl.message(
       'LEARN MORE',
@@ -193,6 +217,7 @@ class S {
     );
   }
 
+  /// `Orchid requires OXT`
   String get orchidRequiresOXT {
     return Intl.message(
       'Orchid requires OXT',
@@ -202,6 +227,7 @@ class S {
     );
   }
 
+  /// `Credentials`
   String get credentials {
     return Intl.message(
       'Credentials',
@@ -211,6 +237,7 @@ class S {
     );
   }
 
+  /// `Curation`
   String get curation {
     return Intl.message(
       'Curation',
@@ -220,6 +247,7 @@ class S {
     );
   }
 
+  /// `Rate Limit`
   String get rateLimit {
     return Intl.message(
       'Rate Limit',
@@ -229,6 +257,7 @@ class S {
     );
   }
 
+  /// `Signer Key`
   String get signerKey {
     return Intl.message(
       'Signer Key',
@@ -238,6 +267,7 @@ class S {
     );
   }
 
+  /// `Copy`
   String get copy {
     return Intl.message(
       'Copy',
@@ -247,6 +277,7 @@ class S {
     );
   }
 
+  /// `Paste`
   String get paste {
     return Intl.message(
       'Paste',
@@ -256,6 +287,7 @@ class S {
     );
   }
 
+  /// `Ethereum Address`
   String get ethereumAddress {
     return Intl.message(
       'Ethereum Address',
@@ -265,6 +297,7 @@ class S {
     );
   }
 
+  /// `OXT`
   String get oxt {
     return Intl.message(
       'OXT',
@@ -274,6 +307,7 @@ class S {
     );
   }
 
+  /// `Amount`
   String get amount {
     return Intl.message(
       'Amount',
@@ -283,6 +317,7 @@ class S {
     );
   }
 
+  /// `Deposit`
   String get deposit {
     return Intl.message(
       'Deposit',
@@ -292,6 +327,7 @@ class S {
     );
   }
 
+  /// `Curator`
   String get curator {
     return Intl.message(
       'Curator',
@@ -301,6 +337,7 @@ class S {
     );
   }
 
+  /// `View or modify your rate limit.`
   String get viewOrModifyRateLimit {
     return Intl.message(
       'View or modify your rate limit.',
@@ -310,6 +347,7 @@ class S {
     );
   }
 
+  /// `Share Orchid Account`
   String get shareOrchidAccount {
     return Intl.message(
       'Share Orchid Account',
@@ -319,6 +357,7 @@ class S {
     );
   }
 
+  /// `My Orchid Account`
   String get myOrchidAccount {
     return Intl.message(
       'My Orchid Account',
@@ -328,6 +367,7 @@ class S {
     );
   }
 
+  /// `Budget`
   String get budget {
     return Intl.message(
       'Budget',
@@ -337,6 +377,7 @@ class S {
     );
   }
 
+  /// `OK`
   String get ok {
     return Intl.message(
       'OK',
@@ -346,6 +387,7 @@ class S {
     );
   }
 
+  /// `SETTINGS`
   String get settingsButtonTitle {
     return Intl.message(
       'SETTINGS',
@@ -355,6 +397,7 @@ class S {
     );
   }
 
+  /// `Confirm this action`
   String get confirmThisAction {
     return Intl.message(
       'Confirm this action',
@@ -364,6 +407,7 @@ class S {
     );
   }
 
+  /// `CANCEL`
   String get cancelButtonTitle {
     return Intl.message(
       'CANCEL',
@@ -373,6 +417,7 @@ class S {
     );
   }
 
+  /// `Changes will take effect when the VPN is restarted.`
   String get changesWillTakeEffectInstruction {
     return Intl.message(
       'Changes will take effect when the VPN is restarted.',
@@ -382,6 +427,7 @@ class S {
     );
   }
 
+  /// `Saved`
   String get saved {
     return Intl.message(
       'Saved',
@@ -391,6 +437,7 @@ class S {
     );
   }
 
+  /// `Configuration saved`
   String get configurationSaved {
     return Intl.message(
       'Configuration saved',
@@ -400,6 +447,7 @@ class S {
     );
   }
 
+  /// `Whoops`
   String get whoops {
     return Intl.message(
       'Whoops',
@@ -409,6 +457,7 @@ class S {
     );
   }
 
+  /// `Configuration failed to save.  Please check syntax and try again.`
   String get configurationFailedInstruction {
     return Intl.message(
       'Configuration failed to save.  Please check syntax and try again.',
@@ -418,6 +467,7 @@ class S {
     );
   }
 
+  /// `Add Hop`
   String get addHop {
     return Intl.message(
       'Add Hop',
@@ -427,6 +477,7 @@ class S {
     );
   }
 
+  /// `Select your hop`
   String get selectYourHop {
     return Intl.message(
       'Select your hop',
@@ -436,6 +487,7 @@ class S {
     );
   }
 
+  /// `I have a QR code`
   String get iHaveAQRCode {
     return Intl.message(
       'I have a QR code',
@@ -445,6 +497,7 @@ class S {
     );
   }
 
+  /// `Purchase an Account (PAC)`
   String get purchasePAC {
     return Intl.message(
       'Purchase an Account (PAC)',
@@ -454,6 +507,7 @@ class S {
     );
   }
 
+  /// `I want to try Orchid`
   String get iWantToTryOrchid {
     return Intl.message(
       'I want to try Orchid',
@@ -463,6 +517,7 @@ class S {
     );
   }
 
+  /// `I have an Orchid Account`
   String get iHaveOrchidAccount {
     return Intl.message(
       'I have an Orchid Account',
@@ -472,6 +527,7 @@ class S {
     );
   }
 
+  /// `I have a VPN subscription`
   String get iHaveAVPNSubscription {
     return Intl.message(
       'I have a VPN subscription',
@@ -481,6 +537,7 @@ class S {
     );
   }
 
+  /// `Orchid requires an Orchid account.  Scan or paste your existing account below to get started.`
   String get orchidRequiresAccountInstruction {
     return Intl.message(
       'Orchid requires an Orchid account.  Scan or paste your existing account below to get started.',
@@ -490,6 +547,7 @@ class S {
     );
   }
 
+  /// `Create Orchid Account`
   String get createOrchidAccount {
     return Intl.message(
       'Create Orchid Account',
@@ -499,6 +557,7 @@ class S {
     );
   }
 
+  /// `You'll need an Ethereum Wallet in order to create an Orchid account.`
   String get youNeedEthereumWallet {
     return Intl.message(
       'You\'ll need an Ethereum Wallet in order to create an Orchid account.',
@@ -508,6 +567,7 @@ class S {
     );
   }
 
+  /// `Load`
   String get loadMsg {
     return Intl.message(
       'Load',
@@ -517,6 +577,7 @@ class S {
     );
   }
 
+  /// `in your wallet's browser to get started.`
   String get inYourWalletBrowserInstruction {
     return Intl.message(
       'in your wallet\'s browser to get started.',
@@ -526,6 +587,7 @@ class S {
     );
   }
 
+  /// `Need more help`
   String get needMoreHelp {
     return Intl.message(
       'Need more help',
@@ -535,6 +597,7 @@ class S {
     );
   }
 
+  /// `Read the guide`
   String get readTheGuide {
     return Intl.message(
       'Read the guide',
@@ -544,6 +607,7 @@ class S {
     );
   }
 
+  /// `Add Orchid Account`
   String get addOrchidAccount {
     return Intl.message(
       'Add Orchid Account',
@@ -553,6 +617,7 @@ class S {
     );
   }
 
+  /// `Add Account`
   String get addAccount {
     return Intl.message(
       'Add Account',
@@ -562,6 +627,7 @@ class S {
     );
   }
 
+  /// `Scan`
   String get scan {
     return Intl.message(
       'Scan',
@@ -571,6 +637,7 @@ class S {
     );
   }
 
+  /// `Invalid QR Code`
   String get invalidQRCode {
     return Intl.message(
       'Invalid QR Code',
@@ -580,6 +647,7 @@ class S {
     );
   }
 
+  /// `The QR code you scanned does not contain a valid account configuration.`
   String get theQRCodeYouScannedDoesNot {
     return Intl.message(
       'The QR code you scanned does not contain a valid account configuration.',
@@ -589,6 +657,7 @@ class S {
     );
   }
 
+  /// `Invalid Code`
   String get invalidCode {
     return Intl.message(
       'Invalid Code',
@@ -598,6 +667,7 @@ class S {
     );
   }
 
+  /// `The code you pasted does not contain a valid account configuration.`
   String get theCodeYouPastedDoesNot {
     return Intl.message(
       'The code you pasted does not contain a valid account configuration.',
@@ -607,6 +677,7 @@ class S {
     );
   }
 
+  /// `OpenVPN Hop`
   String get openVPNHop {
     return Intl.message(
       'OpenVPN Hop',
@@ -616,6 +687,7 @@ class S {
     );
   }
 
+  /// `Username`
   String get username {
     return Intl.message(
       'Username',
@@ -625,6 +697,7 @@ class S {
     );
   }
 
+  /// `Password`
   String get password {
     return Intl.message(
       'Password',
@@ -634,6 +707,7 @@ class S {
     );
   }
 
+  /// `Config`
   String get config {
     return Intl.message(
       'Config',
@@ -643,6 +717,7 @@ class S {
     );
   }
 
+  /// `Paste your OVPN config file here`
   String get pasteYourOVPN {
     return Intl.message(
       'Paste your OVPN config file here',
@@ -652,6 +727,7 @@ class S {
     );
   }
 
+  /// `Enter your credentials`
   String get enterYourCredentials {
     return Intl.message(
       'Enter your credentials',
@@ -661,6 +737,7 @@ class S {
     );
   }
 
+  /// `Enter the login information for your VPN provider above. Then paste the contents of your provider’s OpenVPN config file into the field provided.`
   String get enterLoginInformationInstruction {
     return Intl.message(
       'Enter the login information for your VPN provider above. Then paste the contents of your provider’s OpenVPN config file into the field provided.',
@@ -670,6 +747,7 @@ class S {
     );
   }
 
+  /// `Save`
   String get save {
     return Intl.message(
       'Save',
@@ -679,6 +757,7 @@ class S {
     );
   }
 
+  /// `Help`
   String get help {
     return Intl.message(
       'Help',
@@ -688,6 +767,7 @@ class S {
     );
   }
 
+  /// `Privacy Policy`
   String get privacyPolicy {
     return Intl.message(
       'Privacy Policy',
@@ -697,6 +777,7 @@ class S {
     );
   }
 
+  /// `Open Source Licenses`
   String get openSourceLicenses {
     return Intl.message(
       'Open Source Licenses',
@@ -706,6 +787,7 @@ class S {
     );
   }
 
+  /// `Settings`
   String get settings {
     return Intl.message(
       'Settings',
@@ -715,6 +797,7 @@ class S {
     );
   }
 
+  /// `Advanced`
   String get advanced {
     return Intl.message(
       'Advanced',
@@ -724,6 +807,7 @@ class S {
     );
   }
 
+  /// `Version`
   String get version {
     return Intl.message(
       'Version',
@@ -733,6 +817,7 @@ class S {
     );
   }
 
+  /// `No version`
   String get noVersion {
     return Intl.message(
       'No version',
@@ -742,6 +827,7 @@ class S {
     );
   }
 
+  /// `Setup`
   String get setup {
     return Intl.message(
       'Setup',
@@ -751,6 +837,7 @@ class S {
     );
   }
 
+  /// `Orchid Overview`
   String get orchidOverview {
     return Intl.message(
       'Orchid Overview',
@@ -760,6 +847,7 @@ class S {
     );
   }
 
+  /// `Log`
   String get log {
     return Intl.message(
       'Log',
@@ -769,6 +857,7 @@ class S {
     );
   }
 
+  /// `Default Curator`
   String get defaultCurator {
     return Intl.message(
       'Default Curator',
@@ -778,6 +867,7 @@ class S {
     );
   }
 
+  /// `Allow No Hop VPN`
   String get allowNoHopVPN {
     return Intl.message(
       'Allow No Hop VPN',
@@ -787,6 +877,7 @@ class S {
     );
   }
 
+  /// `Query Balances`
   String get queryBalances {
     return Intl.message(
       'Query Balances',
@@ -796,6 +887,7 @@ class S {
     );
   }
 
+  /// `Show Instructions`
   String get showInstructions {
     return Intl.message(
       'Show Instructions',
@@ -805,6 +897,7 @@ class S {
     );
   }
 
+  /// `Reset`
   String get reset {
     return Intl.message(
       'Reset',
@@ -814,6 +907,7 @@ class S {
     );
   }
 
+  /// `Manage Configuration`
   String get manageConfiguration {
     return Intl.message(
       'Manage Configuration',
@@ -823,6 +917,7 @@ class S {
     );
   }
 
+  /// `Show Status Page`
   String get showStatusPage {
     return Intl.message(
       'Show Status Page',
@@ -832,6 +927,7 @@ class S {
     );
   }
 
+  /// `beta`
   String get beta {
     return Intl.message(
       'beta',
@@ -841,6 +937,7 @@ class S {
     );
   }
 
+  /// `Warning: These features are intended for advanced users only.  Please read all instructions.`
   String get warningThesefeature {
     return Intl.message(
       'Warning: These features are intended for advanced users only.  Please read all instructions.',
@@ -850,6 +947,7 @@ class S {
     );
   }
 
+  /// `Export Hops Configuration`
   String get exportHopsConfiguration {
     return Intl.message(
       'Export Hops Configuration',
@@ -859,6 +957,7 @@ class S {
     );
   }
 
+  /// `Export`
   String get export {
     return Intl.message(
       'Export',
@@ -868,6 +967,7 @@ class S {
     );
   }
 
+  /// `Warning: Exported configuration includes the signer private key secrets for the exported hops.  Revealing private keys exposes you to loss of all funds in the associated Orchid accounts.`
   String get warningExportedConfiguration {
     return Intl.message(
       'Warning: Exported configuration includes the signer private key secrets for the exported hops.  Revealing private keys exposes you to loss of all funds in the associated Orchid accounts.',
@@ -877,6 +977,7 @@ class S {
     );
   }
 
+  /// `Import Hops Configuration`
   String get importHopsConfiguration {
     return Intl.message(
       'Import Hops Configuration',
@@ -886,6 +987,7 @@ class S {
     );
   }
 
+  /// `Import`
   String get import {
     return Intl.message(
       'Import',
@@ -895,6 +997,7 @@ class S {
     );
   }
 
+  /// `Warning: Imported configuration will replace any existing hops that you have created in the app.  Signer keys previously generated or imported on this device will be retained and remain accessible for creating new hops, however all other configuration including OpenVPN hop configuration will be lost.`
   String get warningImportedConfiguration {
     return Intl.message(
       'Warning: Imported configuration will replace any existing hops that you have created in the app.  Signer keys previously generated or imported on this device will be retained and remain accessible for creating new hops, however all other configuration including OpenVPN hop configuration will be lost.',
@@ -904,6 +1007,7 @@ class S {
     );
   }
 
+  /// `Configuration`
   String get configuration {
     return Intl.message(
       'Configuration',
@@ -913,6 +1017,7 @@ class S {
     );
   }
 
+  /// `SAVE`
   String get saveButtonTitle {
     return Intl.message(
       'SAVE',
@@ -922,6 +1027,7 @@ class S {
     );
   }
 
+  /// `Search`
   String get search {
     return Intl.message(
       'Search',
@@ -931,6 +1037,7 @@ class S {
     );
   }
 
+  /// `traffic list view`
   String get trafficListView {
     return Intl.message(
       'traffic list view',
@@ -940,6 +1047,7 @@ class S {
     );
   }
 
+  /// `New Content`
   String get newContent {
     return Intl.message(
       'New Content',
@@ -949,6 +1057,7 @@ class S {
     );
   }
 
+  /// `Clear`
   String get clear {
     return Intl.message(
       'Clear',
@@ -958,6 +1067,7 @@ class S {
     );
   }
 
+  /// `Delete all data`
   String get deleteAllData {
     return Intl.message(
       'Delete all data',
@@ -967,6 +1077,7 @@ class S {
     );
   }
 
+  /// `This will delete all recorded traffic data within the app.`
   String get thisWillDeleteRecorded {
     return Intl.message(
       'This will delete all recorded traffic data within the app.',
@@ -976,6 +1087,7 @@ class S {
     );
   }
 
+  /// `OK`
   String get okButtonTitle {
     return Intl.message(
       'OK',
@@ -985,6 +1097,7 @@ class S {
     );
   }
 
+  /// `Connection Detail`
   String get connectionDetail {
     return Intl.message(
       'Connection Detail',
@@ -994,6 +1107,7 @@ class S {
     );
   }
 
+  /// `Host`
   String get host {
     return Intl.message(
       'Host',
@@ -1003,6 +1117,7 @@ class S {
     );
   }
 
+  /// `Time`
   String get time {
     return Intl.message(
       'Time',
@@ -1012,6 +1127,7 @@ class S {
     );
   }
 
+  /// `Source Port`
   String get sourcePort {
     return Intl.message(
       'Source Port',
@@ -1021,6 +1137,7 @@ class S {
     );
   }
 
+  /// `Destination`
   String get destination {
     return Intl.message(
       'Destination',
@@ -1030,6 +1147,7 @@ class S {
     );
   }
 
+  /// `Destination Port`
   String get destinationPort {
     return Intl.message(
       'Destination Port',
@@ -1039,6 +1157,7 @@ class S {
     );
   }
 
+  /// `Generate new key`
   String get generateNewKey {
     return Intl.message(
       'Generate new key',
@@ -1048,6 +1167,7 @@ class S {
     );
   }
 
+  /// `Import key`
   String get importKey {
     return Intl.message(
       'Import key',
@@ -1057,6 +1177,7 @@ class S {
     );
   }
 
+  /// `Choose key`
   String get chooseKey {
     return Intl.message(
       'Choose key',
@@ -1066,6 +1187,7 @@ class S {
     );
   }
 
+  /// `Welcome to Orchid`
   String get welcomeToOrchid {
     return Intl.message(
       'Welcome to Orchid',
@@ -1075,6 +1197,7 @@ class S {
     );
   }
 
+  /// `This release is Orchid’s advanced VPN client, supporting multi-hop and local traffic analysis.`
   String get thisReleaseVPNInstruction {
     return Intl.message(
       'This release is Orchid’s advanced VPN client, supporting multi-hop and local traffic analysis.',
@@ -1084,6 +1207,7 @@ class S {
     );
   }
 
+  /// `To get started, enable the VPN.`
   String get toGetStartedInstruction {
     return Intl.message(
       'To get started, enable the VPN.',
@@ -1093,6 +1217,7 @@ class S {
     );
   }
 
+  /// `Nothing to display yet. Traffic will appear here when there’s something to show.`
   String get nothingToDisplayYet {
     return Intl.message(
       'Nothing to display yet. Traffic will appear here when there’s something to show.',
@@ -1102,6 +1227,7 @@ class S {
     );
   }
 
+  /// `Disconnecting...`
   String get disconnecting {
     return Intl.message(
       'Disconnecting...',
@@ -1111,6 +1237,7 @@ class S {
     );
   }
 
+  /// `Connecting...`
   String get connecting {
     return Intl.message(
       'Connecting...',
@@ -1120,6 +1247,7 @@ class S {
     );
   }
 
+  /// `Push to connect.`
   String get pushToConnect {
     return Intl.message(
       'Push to connect.',
@@ -1129,6 +1257,7 @@ class S {
     );
   }
 
+  /// `Orchid is running!`
   String get orchidIsRunning {
     return Intl.message(
       'Orchid is running!',
@@ -1138,6 +1267,7 @@ class S {
     );
   }
 
+  /// `Purchase`
   String get purchase {
     return Intl.message(
       'Purchase',
@@ -1147,6 +1277,7 @@ class S {
     );
   }
 
+  /// `PAC Purchase Waiting`
   String get pacPurchaseWaiting {
     return Intl.message(
       'PAC Purchase Waiting',
@@ -1156,6 +1287,7 @@ class S {
     );
   }
 
+  /// `Retry`
   String get retry {
     return Intl.message(
       'Retry',
@@ -1165,6 +1297,7 @@ class S {
     );
   }
 
+  /// `Get help resolving this issue.`
   String get getHelpResolvingIssue {
     return Intl.message(
       'Get help resolving this issue.',
@@ -1174,6 +1307,7 @@ class S {
     );
   }
 
+  /// `Copy Debug Info`
   String get copyDebugInfo {
     return Intl.message(
       'Copy Debug Info',
@@ -1183,6 +1317,7 @@ class S {
     );
   }
 
+  /// `Contact Orchid`
   String get contactOrchid {
     return Intl.message(
       'Contact Orchid',
@@ -1192,6 +1327,7 @@ class S {
     );
   }
 
+  /// `Remove`
   String get remove {
     return Intl.message(
       'Remove',
@@ -1201,6 +1337,7 @@ class S {
     );
   }
 
+  /// `Delete Transaction`
   String get deleteTransaction {
     return Intl.message(
       'Delete Transaction',
@@ -1210,6 +1347,7 @@ class S {
     );
   }
 
+  /// `Clear this in-progress transaction. This will not refund your in-app purchase.  You must contact Orchid to resolve the issue.`
   String get clearThisInProgressTransactionExplain {
     return Intl.message(
       'Clear this in-progress transaction. This will not refund your in-app purchase.  You must contact Orchid to resolve the issue.',
@@ -1219,6 +1357,7 @@ class S {
     );
   }
 
+  /// `Choose your purchase`
   String get chooseYourPurchase {
     return Intl.message(
       'Choose your purchase',
@@ -1228,6 +1367,7 @@ class S {
     );
   }
 
+  /// `Based on your bandwidth usage`
   String get basedOnYourBandwidth {
     return Intl.message(
       'Based on your bandwidth usage',
@@ -1237,6 +1377,7 @@ class S {
     );
   }
 
+  /// `Preparing Purchase`
   String get preparingPurchase {
     return Intl.message(
       'Preparing Purchase',
@@ -1246,6 +1387,7 @@ class S {
     );
   }
 
+  /// `Fetching Purchased PAC`
   String get fetchingPurchasedPAC {
     return Intl.message(
       'Fetching Purchased PAC',
@@ -1255,6 +1397,7 @@ class S {
     );
   }
 
+  /// `Retrying Purchased PAC`
   String get retryingPurchasedPAC {
     return Intl.message(
       'Retrying Purchased PAC',
@@ -1264,6 +1407,7 @@ class S {
     );
   }
 
+  /// `Retry Purchased PAC`
   String get retryPurchasedPAC {
     return Intl.message(
       'Retry Purchased PAC',
@@ -1273,6 +1417,7 @@ class S {
     );
   }
 
+  /// `Set up Account`
   String get setUpAccount {
     return Intl.message(
       'Set up Account',
@@ -1282,6 +1427,7 @@ class S {
     );
   }
 
+  /// `Purchase Error`
   String get purchaseError {
     return Intl.message(
       'Purchase Error',
@@ -1291,6 +1437,7 @@ class S {
     );
   }
 
+  /// `There was an error in purchasing.  Please contact Orchid Support.`
   String get thereWasAnErrorInPurchasingContact {
     return Intl.message(
       'There was an error in purchasing.  Please contact Orchid Support.',
@@ -1300,6 +1447,7 @@ class S {
     );
   }
 
+  /// `Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a "hop".\n\nEach hop needs an active account, choose an option below.`
   String get orchidIsUniqueAsItSupportsMultipleVPN {
     return Intl.message(
       'Orchid is unique as it supports multiple VPN connections at once. Each VPN connection is a "hop".\n\nEach hop needs an active account, choose an option below.',
@@ -1309,6 +1457,7 @@ class S {
     );
   }
 
+  /// `Buy VPN credits`
   String get buyVpnCredits {
     return Intl.message(
       'Buy VPN credits',
@@ -1318,6 +1467,7 @@ class S {
     );
   }
 
+  /// `Import an Orchid account`
   String get importAnOrchidAccount {
     return Intl.message(
       'Import an Orchid account',
@@ -1327,6 +1477,7 @@ class S {
     );
   }
 
+  /// `Create a custom account`
   String get createACustomAccount {
     return Intl.message(
       'Create a custom account',
@@ -1336,6 +1487,7 @@ class S {
     );
   }
 
+  /// `Enter OVPN credentials`
   String get enterOvpnCredentials {
     return Intl.message(
       'Enter OVPN credentials',
@@ -1345,6 +1497,7 @@ class S {
     );
   }
 
+  /// `Need an Account?`
   String get needAnAccount {
     return Intl.message(
       'Need an Account?',
@@ -1354,6 +1507,7 @@ class S {
     );
   }
 
+  /// `Buy prepaid credits to get started. There’s no monthly fee and you only pay for what you use.`
   String get buyPrepaidCreditsToGetStartedTheresNoMonthlyFee {
     return Intl.message(
       'Buy prepaid credits to get started. There’s no monthly fee and you only pay for what you use.',
@@ -1363,6 +1517,7 @@ class S {
     );
   }
 
+  /// `Buy Credits`
   String get buyCredits {
     return Intl.message(
       'Buy Credits',
@@ -1372,6 +1527,7 @@ class S {
     );
   }
 
+  /// `Have an Orchid account or VPN subscription?`
   String get haveAnOrchidAccountOrVpnSubscription {
     return Intl.message(
       'Have an Orchid account or VPN subscription?',
@@ -1381,6 +1537,7 @@ class S {
     );
   }
 
+  /// `Scan your existing account, create a custom account or enter OVPN credentials.`
   String get scanYourExistingAccountCreateACustomAccountOrEnter {
     return Intl.message(
       'Scan your existing account, create a custom account or enter OVPN credentials.',
@@ -1390,6 +1547,7 @@ class S {
     );
   }
 
+  /// `See the options`
   String get seeTheOptions {
     return Intl.message(
       'See the options',
@@ -1399,6 +1557,7 @@ class S {
     );
   }
 
+  /// `Scan or Paste Account`
   String get scanOrPasteAccount {
     return Intl.message(
       'Scan or Paste Account',
@@ -1408,6 +1567,7 @@ class S {
     );
   }
 
+  /// `Choose your amount`
   String get chooseYourAmount {
     return Intl.message(
       'Choose your amount',
@@ -1417,6 +1577,7 @@ class S {
     );
   }
 
+  /// `Pay only for what you use with VPN credits, only spent while the VPN is active. No expiration period, monthly fees or charges.`
   String get payOnlyForWhatYouUseWithVpnCreditsOnly {
     return Intl.message(
       'Pay only for what you use with VPN credits, only spent while the VPN is active. No expiration period, monthly fees or charges.',
@@ -1426,6 +1587,7 @@ class S {
     );
   }
 
+  /// `Approximately`
   String get approximately {
     return Intl.message(
       'Approximately',
@@ -1435,6 +1597,7 @@ class S {
     );
   }
 
+  /// `GB`
   String get gb {
     return Intl.message(
       'GB',
@@ -1444,6 +1607,7 @@ class S {
     );
   }
 
+  /// `of traffic`
   String get ofTraffic {
     return Intl.message(
       'of traffic',
@@ -1453,6 +1617,7 @@ class S {
     );
   }
 
+  /// `Only for the Orchid App`
   String get onlyForTheOrchidApp {
     return Intl.message(
       'Only for the Orchid App',
@@ -1462,6 +1627,7 @@ class S {
     );
   }
 
+  /// `Orchid tokens in the form of access credits are unable to be used or transferred outside of the Orchid App.`
   String get orchidTokensInTheFormOfAccessCreditsAreUnable {
     return Intl.message(
       'Orchid tokens in the form of access credits are unable to be used or transferred outside of the Orchid App.',
@@ -1471,6 +1637,7 @@ class S {
     );
   }
 
+  /// `Bandwidth value will vary`
   String get bandwidthValueWillVary {
     return Intl.message(
       'Bandwidth value will vary',
@@ -1480,6 +1647,7 @@ class S {
     );
   }
 
+  /// `Bandwidth is purchased in a VPN marketplace so price will fluctuate based on market dynamics.`
   String get bandwidthIsPurchasedInAVpnMarketplaceSoPriceWill {
     return Intl.message(
       'Bandwidth is purchased in a VPN marketplace so price will fluctuate based on market dynamics.',
@@ -1489,6 +1657,7 @@ class S {
     );
   }
 
+  /// `Scan or paste your existing account below to add it as a hop.`
   String get scanOrPasteYourExistingAccountBelowToAddIt {
     return Intl.message(
       'Scan or paste your existing account below to add it as a hop.',
@@ -1498,6 +1667,7 @@ class S {
     );
   }
 
+  /// `Link Orchid Account`
   String get linkAnOrchidAccount {
     return Intl.message(
       'Link Orchid Account',
@@ -1507,6 +1677,7 @@ class S {
     );
   }
 
+  /// `Enter OVPN Profile`
   String get enterOvpnProfile {
     return Intl.message(
       'Enter OVPN Profile',
@@ -1516,6 +1687,7 @@ class S {
     );
   }
 
+  /// `Buy Orchid Account`
   String get buyOrchidAccount {
     return Intl.message(
       'Buy Orchid Account',
@@ -1525,6 +1697,7 @@ class S {
     );
   }
 
+  /// `Link your existing Orchid account or enter an OVPN profile.`
   String get linkYourExistingOrchidAccountOrEnterAnOvpnProfile {
     return Intl.message(
       'Link your existing Orchid account or enter an OVPN profile.',
@@ -1534,6 +1707,7 @@ class S {
     );
   }
 
+  /// `We are sorry but this purchase would exceed the daily purchase limit for access credits.  Please try again later.`
   String get weAreSorryButThisPurchaseWouldExceedTheDaily {
     return Intl.message(
       'We are sorry but this purchase would exceed the daily purchase limit for access credits.  Please try again later.',
@@ -1543,6 +1717,7 @@ class S {
     );
   }
 
+  /// `Paste Account`
   String get pasteAccount {
     return Intl.message(
       'Paste Account',
@@ -1552,10 +1727,571 @@ class S {
     );
   }
 
+  /// `Paste your existing account below to add it as a hop.`
   String get pasteYourExistingAccountBelowToAddItAsA {
     return Intl.message(
       'Paste your existing account below to add it as a hop.',
       name: 'pasteYourExistingAccountBelowToAddItAsA',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manage Profile`
+  String get manageProfile {
+    return Intl.message(
+      'Manage Profile',
+      name: 'manageProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Market Stats`
+  String get marketStats {
+    return Intl.message(
+      'Market Stats',
+      name: 'marketStats',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Balance too low`
+  String get balanceTooLow {
+    return Intl.message(
+      'Balance too low',
+      name: 'balanceTooLow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deposit size too small`
+  String get depositSizeTooSmall {
+    return Intl.message(
+      'Deposit size too small',
+      name: 'depositSizeTooSmall',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your max ticket value is currently limited by your balance of`
+  String get yourMaxTicketValueIsCurrentlyLimitedByYourBalance {
+    return Intl.message(
+      'Your max ticket value is currently limited by your balance of',
+      name: 'yourMaxTicketValueIsCurrentlyLimitedByYourBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your max ticket value is currently limited by your deposit of`
+  String get yourMaxTicketValueIsCurrentlyLimitedByYourDeposit {
+    return Intl.message(
+      'Your max ticket value is currently limited by your deposit of',
+      name: 'yourMaxTicketValueIsCurrentlyLimitedByYourDeposit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Consider adding OXT to your account balance.`
+  String get considerAddingOxtToYourAccountBalance {
+    return Intl.message(
+      'Consider adding OXT to your account balance.',
+      name: 'considerAddingOxtToYourAccountBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Consider adding OXT to your deposit or moving funds from your balance to your deposit.`
+  String get considerAddingOxtToYourDepositOrMovingFundsFrom {
+    return Intl.message(
+      'Consider adding OXT to your deposit or moving funds from your balance to your deposit.',
+      name: 'considerAddingOxtToYourDepositOrMovingFundsFrom',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Prices`
+  String get prices {
+    return Intl.message(
+      'Prices',
+      name: 'prices',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `ETH price: $ethPriceText`
+  String get ethPriceEthpricetext {
+    return Intl.message(
+      'ETH price: \$ethPriceText',
+      name: 'ethPriceEthpricetext',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `OXT price: $oxtPriceText`
+  String get oxtPriceOxtpricetext {
+    return Intl.message(
+      'OXT price: \$oxtPriceText',
+      name: 'oxtPriceOxtpricetext',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Gas price: $gasPriceText`
+  String get gasPriceGaspricetext {
+    return Intl.message(
+      'Gas price: \$gasPriceText',
+      name: 'gasPriceGaspricetext',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ticket Value`
+  String get ticketValue {
+    return Intl.message(
+      'Ticket Value',
+      name: 'ticketValue',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Max face value: $maxFaceValueText`
+  String get maxFaceValueMaxfacevaluetext {
+    return Intl.message(
+      'Max face value: \$maxFaceValueText',
+      name: 'maxFaceValueMaxfacevaluetext',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cost to redeem:`
+  String get costToRedeem {
+    return Intl.message(
+      'Cost to redeem:',
+      name: 'costToRedeem',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View the docs for help on this issue.`
+  String get viewTheDocsForHelpOnThisIssue {
+    return Intl.message(
+      'View the docs for help on this issue.',
+      name: 'viewTheDocsForHelpOnThisIssue',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `More`
+  String get more {
+    return Intl.message(
+      'More',
+      name: 'more',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic Monitor`
+  String get trafficMonitor {
+    return Intl.message(
+      'Traffic Monitor',
+      name: 'trafficMonitor',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Try out Orchid`
+  String get tryOutOrchid {
+    return Intl.message(
+      'Try out Orchid',
+      name: 'tryOutOrchid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Good for browsing and light activity`
+  String get goodForBrowsingAndLightActivity {
+    return Intl.message(
+      'Good for browsing and light activity',
+      name: 'goodForBrowsingAndLightActivity',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Average`
+  String get average {
+    return Intl.message(
+      'Average',
+      name: 'average',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Good for an individual`
+  String get goodForAnIndividual {
+    return Intl.message(
+      'Good for an individual',
+      name: 'goodForAnIndividual',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Short to medium term usage`
+  String get shortToMediumTermUsage {
+    return Intl.message(
+      'Short to medium term usage',
+      name: 'shortToMediumTermUsage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Heavy`
+  String get heavy {
+    return Intl.message(
+      'Heavy',
+      name: 'heavy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Good for bandwidth-heavy uses & sharing`
+  String get goodForBandwidthheavyUsesSharing {
+    return Intl.message(
+      'Good for bandwidth-heavy uses & sharing',
+      name: 'goodForBandwidthheavyUsesSharing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Longer term usage`
+  String get longerTermUsage {
+    return Intl.message(
+      'Longer term usage',
+      name: 'longerTermUsage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `One-time purchase`
+  String get onetimePurchase {
+    return Intl.message(
+      'One-time purchase',
+      name: 'onetimePurchase',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Spent only when the VPN is active.`
+  String get spentOnlyWhenTheVpnIsActive {
+    return Intl.message(
+      'Spent only when the VPN is active.',
+      name: 'spentOnlyWhenTheVpnIsActive',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No subscription, credits don’t expire.`
+  String get noSubscriptionCreditsDontExpire {
+    return Intl.message(
+      'No subscription, credits don’t expire.',
+      name: 'noSubscriptionCreditsDontExpire',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unlimited devices and sharing.`
+  String get unlimitedDevicesAndSharing {
+    return Intl.message(
+      'Unlimited devices and sharing.',
+      name: 'unlimitedDevicesAndSharing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Bandwidth will fluctuate based on market dynamics.`
+  String get bandwidthWillFluctuateBasedOnMarketDynamics {
+    return Intl.message(
+      'Bandwidth will fluctuate based on market dynamics.',
+      name: 'bandwidthWillFluctuateBasedOnMarketDynamics',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Learn more.`
+  String get learnMore {
+    return Intl.message(
+      'Learn more.',
+      name: 'learnMore',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter WireGuard Profile`
+  String get enterWireguardProfile {
+    return Intl.message(
+      'Enter WireGuard Profile',
+      name: 'enterWireguardProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Purchase Orchid Credits to connect with Orchid.`
+  String get purchaseOrchidCreditsToConnectWithOrchid {
+    return Intl.message(
+      'Purchase Orchid Credits to connect with Orchid.',
+      name: 'purchaseOrchidCreditsToConnectWithOrchid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create or link an Orchid account, import an OVPN profile or build a multi-hop connection to get started.`
+  String get createOrLinkAnOrchidAccountImportAnOvpnProfile {
+    return Intl.message(
+      'Create or link an Orchid account, import an OVPN profile or build a multi-hop connection to get started.',
+      name: 'createOrLinkAnOrchidAccountImportAnOvpnProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buy Orchid Credits`
+  String get buyOrchidCredits {
+    return Intl.message(
+      'Buy Orchid Credits',
+      name: 'buyOrchidCredits',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Have an Orchid Account or OXT?`
+  String get haveAnOrchidAccountOrOxt {
+    return Intl.message(
+      'Have an Orchid Account or OXT?',
+      name: 'haveAnOrchidAccountOrOxt',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Already have an Orchid Account?`
+  String get alreadyHaveAnOrchidAccount {
+    return Intl.message(
+      'Already have an Orchid Account?',
+      name: 'alreadyHaveAnOrchidAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan or paste your existing account below.`
+  String get scanOrPasteYourExistingAccountBelow {
+    return Intl.message(
+      'Scan or paste your existing account below.',
+      name: 'scanOrPasteYourExistingAccountBelow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Custom Setup`
+  String get customSetup {
+    return Intl.message(
+      'Custom Setup',
+      name: 'customSetup',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New to Orchid?`
+  String get newToOrchid {
+    return Intl.message(
+      'New to Orchid?',
+      name: 'newToOrchid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Purchase Orchid Credits, link an account or OVPN profile to get started.`
+  String get purchaseOrchidCreditsLinkAnAccountOrOvpnProfileTo {
+    return Intl.message(
+      'Purchase Orchid Credits, link an account or OVPN profile to get started.',
+      name: 'purchaseOrchidCreditsLinkAnAccountOrOvpnProfileTo',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create an Orchid account, link an existing account or import an OVPN profile.`
+  String get createAnOrchidAccountLinkAnExistingAccountOrImport {
+    return Intl.message(
+      'Create an Orchid account, link an existing account or import an OVPN profile.',
+      name: 'createAnOrchidAccountLinkAnExistingAccountOrImport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connect`
+  String get connect {
+    return Intl.message(
+      'Connect',
+      name: 'connect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Disconnect`
+  String get disconnect {
+    return Intl.message(
+      'Disconnect',
+      name: 'disconnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `WireGuard Hop`
+  String get wireguardHop {
+    return Intl.message(
+      'WireGuard Hop',
+      name: 'wireguardHop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Paste your WireGuard config file here`
+  String get pasteYourWireguardConfigFileHere {
+    return Intl.message(
+      'Paste your WireGuard config file here',
+      name: 'pasteYourWireguardConfigFileHere',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Paste the credential information for your WireGuard provider into the field above.`
+  String get pasteTheCredentialInformationForYourWireguardProviderIntoThe {
+    return Intl.message(
+      'Paste the credential information for your WireGuard provider into the field above.',
+      name: 'pasteTheCredentialInformationForYourWireguardProviderIntoThe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `WireGuard`
+  String get wireguard {
+    return Intl.message(
+      'WireGuard',
+      name: 'wireguard',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear all log data?`
+  String get clearAllLogData {
+    return Intl.message(
+      'Clear all log data?',
+      name: 'clearAllLogData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This debug log is non-persistent and cleared when quitting the app.`
+  String get thisDebugLogIsNonpersistentAndClearedWhenQuittingThe {
+    return Intl.message(
+      'This debug log is non-persistent and cleared when quitting the app.',
+      name: 'thisDebugLogIsNonpersistentAndClearedWhenQuittingThe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `It may contain secret or personally identifying information.`
+  String get itMayContainSecretOrPersonallyIdentifyingInformation {
+    return Intl.message(
+      'It may contain secret or personally identifying information.',
+      name: 'itMayContainSecretOrPersonallyIdentifyingInformation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Logging enabled`
+  String get loggingEnabled {
+    return Intl.message(
+      'Logging enabled',
+      name: 'loggingEnabled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `CANCEL`
+  String get cancel {
+    return Intl.message(
+      'CANCEL',
+      name: 'cancel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Logging`
+  String get logging {
+    return Intl.message(
+      'Logging',
+      name: 'logging',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading ...`
+  String get loading {
+    return Intl.message(
+      'Loading ...',
+      name: 'loading',
       desc: '',
       args: [],
     );
@@ -1585,7 +2321,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
 
   bool _isSupported(Locale locale) {
     if (locale != null) {
-      for (Locale supportedLocale in supportedLocales) {
+      for (var supportedLocale in supportedLocales) {
         if (supportedLocale.languageCode == locale.languageCode) {
           return true;
         }

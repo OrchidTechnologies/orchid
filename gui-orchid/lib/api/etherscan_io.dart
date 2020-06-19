@@ -84,10 +84,10 @@ class EtherscanIO {
     }
     var body = json.decode(response.body);
 
-    if (body['message'] == "No records found") {
+    if (body['message'] == 'No records found') {
       return List<LotteryPotUpdateEvent>();
     }
-    if (body['message'] != "OK") {
+    if (body['message'] != 'OK') {
       print("Error message: ${body['message']}");
       throw new Error();
     }

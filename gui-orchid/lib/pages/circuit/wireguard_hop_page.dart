@@ -51,7 +51,7 @@ class _WireGuardHopPageState extends State<WireGuardHopPage> {
     double screenHeight = MediaQuery.of(context).size.height;
     return TapClearsFocus(
       child: TitledPage(
-        title: "WireGuard Hop",
+        title: s.wireguardHop,
         decoration: BoxDecoration(),
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
@@ -72,7 +72,7 @@ class _WireGuardHopPageState extends State<WireGuardHopPage> {
                       ConfigText(
                         height: screenHeight / 2.8,
                         textController: _config,
-                        hintText: "Paste your WireGuard config file here",
+                        hintText: s.pasteYourWireguardConfigFileHere,
                       ),
 
                       // Instructions
@@ -81,7 +81,7 @@ class _WireGuardHopPageState extends State<WireGuardHopPage> {
                         child: InstructionsView(
                           title: s.enterYourCredentials,
                           body:
-                              "Paste the credential information for your WireGuard provider into the field above.",
+                              s.pasteTheCredentialInformationForYourWireguardProviderIntoThe,
                         ),
                       ),
                       pady(24)

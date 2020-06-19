@@ -73,7 +73,7 @@ class _AddHopPageState extends State<AddHopPage> {
                     pady(40),
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
-                      child: Image.asset("assets/images/approach.png",
+                      child: Image.asset('assets/images/approach.png',
                           height: 100),
                     ),
                     pady(24),
@@ -95,7 +95,7 @@ class _AddHopPageState extends State<AddHopPage> {
                           onTap: () {
                             _addHopFromPACPurchase();
                           },
-                          svgName: "assets/svg/attach_money.svg"),
+                          svgName: 'assets/svg/attach_money.svg'),
 
                     // Link Account
                     _divider(),
@@ -110,7 +110,7 @@ class _AddHopPageState extends State<AddHopPage> {
                                         widget.onAddFlowComplete);
                               });
                         },
-                        imageName: "assets/images/scan.png"),
+                        imageName: 'assets/images/scan.png'),
 
                     // Custom Account
                     if (!Platform.isIOS && !Platform.isMacOS) ...[
@@ -120,7 +120,7 @@ class _AddHopPageState extends State<AddHopPage> {
                           onTap: () {
                             _addHopType(HopProtocol.Orchid);
                           },
-                          imageName: "assets/images/logo_small_purple.png"),
+                          imageName: 'assets/images/logo_small_purple.png'),
                     ],
 
                     // OVPN Subscription
@@ -130,17 +130,17 @@ class _AddHopPageState extends State<AddHopPage> {
                         onTap: () {
                           _addHopType(HopProtocol.OpenVPN);
                         },
-                        imageName: "assets/images/security_purple.png"),
+                        imageName: 'assets/images/security_purple.png'),
 
                     // WireGuard
                     if (_showWireGuard) ...[
                       _divider(),
                       _buildHopChoice(
-                          text: "Enter WireGuard Profile",
+                          text: s.enterWireguardProfile,
                           onTap: () {
                             _addHopType(HopProtocol.WireGuard);
                           },
-                          imageName: "assets/images/security_purple.png"),
+                          imageName: 'assets/images/security_purple.png'),
                     ],
 
                     _divider(),
@@ -172,7 +172,7 @@ class _AddHopPageState extends State<AddHopPage> {
             style: const TextStyle(
                 color: const Color(0xff3a3149),
                 fontWeight: FontWeight.w400,
-                fontFamily: "SFProText",
+                fontFamily: 'SFProText',
                 fontStyle: FontStyle.normal,
                 fontSize: 18.0)),
         onTap: onTap);

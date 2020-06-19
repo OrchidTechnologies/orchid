@@ -178,5 +178,9 @@
 	"enterOvpnProfile": "Masukkan Profil OVPN",
 	"linkAnOrchidAccount": "Tautkan Akun Anggrek",
 	"buyOrchidAccount": "Beli Akun Anggrek",
-	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Tautkan akun Anggrek Anda yang ada atau masukkan profil OVPN."
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Tautkan akun Anggrek Anda yang ada atau masukkan profil OVPN.",
+	"manageProfile": "Kelola Profil",
+	"pasteAccount": "Rekatkan Akun",
+	"pasteYourExistingAccountBelowToAddItAsA": "Tempel akun Anda yang ada di bawah ini untuk menambahkannya sebagai hop.",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Maaf, pembelian ini akan melebihi batas pembelian harian untuk kredit akses. Silakan coba lagi nanti."
 }

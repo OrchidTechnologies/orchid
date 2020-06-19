@@ -178,5 +178,9 @@
 	"enterOvpnProfile": "Введите профиль OVPN",
 	"linkAnOrchidAccount": "Связать аккаунт Orchid",
 	"buyOrchidAccount": "Купить Орхидея",
-	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Свяжите свою существующую учетную запись Orchid или войдите в профиль OVPN."
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "Свяжите свою существующую учетную запись Orchid или войдите в профиль OVPN.",
+	"manageProfile": "Управление профилем",
+	"pasteAccount": "Вставить аккаунт",
+	"pasteYourExistingAccountBelowToAddItAsA": "Вставьте свой существующий аккаунт ниже, чтобы добавить его в качестве прыжка.",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Мы сожалеем, но эта покупка превысила бы дневной лимит покупок для кредитов доступа Пожалуйста, попробуйте позже."
 }

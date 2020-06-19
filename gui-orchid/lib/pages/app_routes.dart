@@ -14,7 +14,6 @@ import 'package:orchid/pages/settings/keygen_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
 import 'package:orchid/pages/settings/settings_dev_page.dart';
-import 'package:orchid/pages/settings/settings_link_wallet_page.dart';
 import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'package:orchid/pages/settings/settings_vpn_credentials_page.dart';
@@ -56,7 +55,6 @@ class AppRoutes {
     //home: (context) => CircuitPageStandalone(),
     connect: (context) => LegacyConnectPage(),
     settings: (context) => SettingsPage(),
-    settings_wallet: (context) => SettingsLinkWalletPage(),
     settings_vpn: (context) => SettingsVPNCredentialsPage(),
     settings_log: (context) => SettingsLogPage(),
     settings_dev: (context) => SettingsDevPage(),

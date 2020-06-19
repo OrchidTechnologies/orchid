@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 
 class OptionsBar extends StatelessWidget {
   final Color color;
@@ -16,7 +17,7 @@ class OptionsBar extends StatelessWidget {
       icon: Icon(Icons.menu),
       color: color,
       padding: EdgeInsets.all(0),
-      tooltip: 'Settings',
+      tooltip: S.of(context).settings,
       onPressed: menuPressed,
     );
 
@@ -25,7 +26,7 @@ class OptionsBar extends StatelessWidget {
       icon: Icon(Icons.more_vert),
       color: color,
       padding: EdgeInsets.all(0),
-      tooltip: 'More',
+      tooltip: S.of(context).more,
       onPressed: morePressed,
     ));
 

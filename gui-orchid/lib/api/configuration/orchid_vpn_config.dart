@@ -59,7 +59,7 @@ class OrchidVPNConfig {
       // Perform any needed transformations on the individual key/values in the json.
       return resolvedKeysHop.map((String key, dynamic value) {
         // The protocol value is transformed to lowercase.
-        if (key == "protocol") {
+        if (key == 'protocol') {
           value = value.toString().toLowerCase();
         }
         // Escape newlines in string values

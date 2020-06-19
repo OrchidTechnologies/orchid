@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -75,7 +76,6 @@ class _ConnectPageState extends State<ConnectPage>
   /// Note: the same, however this requires a unique id for hops. Refactor at that time
   /// Note: by hoisting the logic here and passing the data to circuit page.
   void _checkHopAlerts(timer) async {
-    print("check hop alerts");
     var hops = (await UserPreferences().getCircuit()).hops;
     var keys = await UserPreferences().getKeys();
     bool showBadge = false;
@@ -98,13 +98,13 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// Listen for changes in Orchid network status.
   void _initListeners() {
-    OrchidAPI().logger().write("Connect Page: Init listeners...");
+    log('Connect Page: Init listeners...');
 
     // Monitor VPN permission status
     /*
     _rxSubscriptions
         .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
-      OrchidAPI().logger().write("VPN Perm status changed: $installed");
+      OrchidAPI().logger().write('VPN Perm status changed: $installed');
       if (!installed) {
         //var route = AppTransitions.downToUpTransition(
         //OnboardingVPNPermissionPage(allowSkip: false));
@@ -118,9 +118,7 @@ class _ConnectPageState extends State<ConnectPage>
     // Monitor connection status
     _subs
         .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
-      OrchidAPI()
-          .logger()
-          .write("[connect page] Connection status changed: $state");
+      log('[connect page] Connection status changed: $state');
       _connectionStateChanged(state);
     }));
 
@@ -210,14 +208,14 @@ class _ConnectPageState extends State<ConnectPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Manage Profile",
+                    s.manageProfile,
                     style: TextStyle(color: textColor, fontSize: 16),
                   ),
                   if (_showProfileBadge) ...[
                     padx(8),
                     Badge(
                       elevation: 0,
-                      badgeContent: Text("!",
+                      badgeContent: Text('!',
                           style: TextStyle(color: Colors.white, fontSize: 12)),
                       padding: EdgeInsets.all(8),
                       toAnimate: false,
@@ -240,7 +238,7 @@ class _ConnectPageState extends State<ConnectPage>
           OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
               return SvgPicture.asset(
-                "assets/svg/line_art.svg",
+                'assets/svg/line_art.svg',
                 width: double.infinity,
                 alignment: orientation == Orientation.landscape
                     ? Alignment.topCenter
@@ -292,11 +290,11 @@ class _ConnectPageState extends State<ConnectPage>
 
   Widget _buildLogo() {
     var image = () {
-      return Image.asset("assets/images/connect_logo.png",
+      return Image.asset('assets/images/connect_logo.png',
           width: 207, height: 186); // match glow image size
     };
     var glowImage = () {
-      return Image.asset("assets/images/logo_glow.png",
+      return Image.asset('assets/images/logo_glow.png',
           width: 207, height: 186);
     };
 
@@ -351,21 +349,21 @@ class _ConnectPageState extends State<ConnectPage>
     String text;
     switch (_connectionState) {
       case OrchidConnectionState.Disconnecting:
-        text = "Disconnecting";
+        text = s.disconnecting;
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.Connecting:
-        text = "Connecting";
+        text = S.of(context).connecting;
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        text = "Connect";
+        text = S.of(context).connect;
         break;
       case OrchidConnectionState.Connected:
         textColor = AppColors.purple_3;
         bgColor = AppColors.teal_5;
-        text = "Disconnect";
+        text = S.of(context).disconnect;
     }
 
     bool buttonEnabled =
@@ -579,15 +577,15 @@ class _ConnectPageState extends State<ConnectPage>
     UserPreferences().setDesiredVPNState(true);
     // Get the most recent status, blocking if needed.
     _subs.add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
-      debugPrint("vpn: current perm: $installed");
+      log('vpn: current perm: $installed');
       if (installed) {
-        debugPrint("vpn: already installed");
+        log('vpn: already installed');
         OrchidAPI().setConnected(true);
         setState(() {});
       } else {
         bool ok = await OrchidAPI().requestVPNPermission();
         if (ok) {
-          debugPrint("vpn: user chose to install");
+          log('vpn: user chose to install');
           // Note: It appears that trying to enable the connection too quickly
           // Note: after installing the vpn permission / config fails.
           // Note: Introducing a short artificial delay.
@@ -595,7 +593,7 @@ class _ConnectPageState extends State<ConnectPage>
             OrchidAPI().setConnected(true);
           });
         } else {
-          debugPrint("vpn: user skipped");
+          log('vpn: user skipped');
         }
       }
     }));

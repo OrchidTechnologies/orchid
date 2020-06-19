@@ -84,7 +84,7 @@ class _PurchasePageState extends State<PurchasePage> {
   Widget build(BuildContext context) {
     return TitledPage(
       decoration: BoxDecoration(color: Colors.transparent),
-      title: "Buy credits",
+      title: s.buyCredits,
       child: buildPage(context),
       lightTheme: true,
       cancellable: widget.cancellable,
@@ -110,29 +110,36 @@ class _PurchasePageState extends State<PurchasePage> {
                     pady(16),
                     _buildPurchaseCardView(
                         pac: _pacs[OrchidPurchaseAPI.pacTier1],
-                        title: "Try out Orchid",
+                        title: s.tryOutOrchid,
                         subtitle: _buildPurchaseDescriptionText(
-                          text: "- Good for browsing and light activity",
+                          text: "- " +
+                              s.goodForBrowsingAndLightActivity,
                         ),
                         gradBegin: 0,
                         gradEnd: 2),
                     pady(24),
                     _buildPurchaseCardView(
                         pac: _pacs[OrchidPurchaseAPI.pacTier2],
-                        title: "Average",
+                        title: s.average,
                         subtitle: _buildPurchaseDescriptionText(
-                          text: "- Good for an individual\n"
-                              "- Short to medium term usage",
+                          text: "- " +
+                              s.goodForAnIndividual +
+                              "\n" +
+                              "- " +
+                              s.shortToMediumTermUsage,
                         ),
                         gradBegin: -2,
                         gradEnd: 1),
                     pady(24),
                     _buildPurchaseCardView(
                       pac: _pacs[OrchidPurchaseAPI.pacTier3],
-                      title: "Heavy",
+                      title: s.heavy,
                       subtitle: _buildPurchaseDescriptionText(
-                        text: "- Good for bandwidth-heavy uses & sharing\n"
-                            "- Longer term usage",
+                        text: "- " +
+                            s.goodForBandwidthheavyUsesSharing +
+                            "\n" +
+                            "- " +
+                            s.longerTermUsage,
                       ),
                       gradBegin: -1,
                       gradEnd: -1,
@@ -241,7 +248,7 @@ class _PurchasePageState extends State<PurchasePage> {
             onPressed: _copyDebugInfo),
         pady(24),
         LinkText(s.contactOrchid,
-            style: AppText.linkStyle, url: "https://orchid.com/help"),
+            style: AppText.linkStyle, url: 'https://orchid.com/help'),
         pady(24),
         FlatButton(
             color: Colors.redAccent,
@@ -300,20 +307,20 @@ class _PurchasePageState extends State<PurchasePage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         pady(16),
-        Text("One-time purchase", style: titleStyle),
+        Text(s.onetimePurchase, style: titleStyle),
         pady(16),
-        _buildCheckRow("Spent only when the VPN is active."),
+        _buildCheckRow(s.spentOnlyWhenTheVpnIsActive),
         pady(8),
-        _buildCheckRow("No subscription, credits don’t expire."),
+        _buildCheckRow(s.noSubscriptionCreditsDontExpire),
         pady(8),
-        _buildCheckRow("Unlimited devices and sharing."),
+        _buildCheckRow(s.unlimitedDevicesAndSharing),
         pady(8),
         _buildCheckRowRich(TextSpan(children: [
           TextSpan(
-              text: "Bandwidth will fluctuate based on market dynamics.  ",
+              text: s.bandwidthWillFluctuateBasedOnMarketDynamics+"  ",
               style: checkRowStyle),
           LinkTextSpan(
-            text: "Learn more.",
+            text: s.learnMore,
             style: AppText.linkStyle.copyWith(fontSize: 15.0),
           )
         ])),
@@ -362,11 +369,11 @@ class _PurchasePageState extends State<PurchasePage> {
         fontFamily: 'SFProText-Regular',
         height: 16.0 / 12.0);
 
-    var usdString = formatCurrency(pac.usdPurchasePrice?.value, ifNull: "...");
+    var usdString = formatCurrency(pac.usdPurchasePrice?.value, ifNull: '...');
     var oxtString = pac.usdPurchasePrice != null
-        ? NumberFormat("0.00")
+        ? NumberFormat('0.00')
             .format(_pricing?.toOXT(pac.usdPurchasePrice)?.value ?? 0)
-        : "...";
+        : '...';
 
     var enabled = pac.usdPurchasePrice != null;
 

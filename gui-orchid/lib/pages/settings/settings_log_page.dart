@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
@@ -19,10 +20,10 @@ class SettingsLogPage extends StatefulWidget {
 class _SettingsLogPage extends State<SettingsLogPage> {
   @override
   Widget build(BuildContext context) {
-    return TitledPage(title: "Logging", child: buildPage(context));
+    return TitledPage(title: s.logging, child: buildPage(context));
   }
 
-  String _logText = "Loading ...";
+  String _logText = "...";
   StreamSubscription<void> _logListener;
   bool _loggingEnabled = false;
 
@@ -55,6 +56,15 @@ class _SettingsLogPage extends State<SettingsLogPage> {
     });
   }
 
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setState(() {
+      _logText = s.loading;
+    });
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -67,8 +77,8 @@ class _SettingsLogPage extends State<SettingsLogPage> {
   @override
   Widget buildPage(BuildContext context) {
     var privacyText =
-        "This debug log is non-persistent and cleared when quitting the app.  "
-        "It may contain secret or personally identifying information.";
+        s.thisDebugLogIsNonpersistentAndClearedWhenQuittingThe+"  "
+        +s.itMayContainSecretOrPersonallyIdentifyingInformation;
 
     return SafeArea(
       child: Center(
@@ -80,8 +90,8 @@ class _SettingsLogPage extends State<SettingsLogPage> {
               color: AppColors.white,
               height: 56,
               child: PageTile(
-                title: "Logging enabled",
-                //imageName: "assets/images/assignment.png",
+                title: s.loggingEnabled,
+                //imageName: 'assets/images/assignment.png',
                 onTap: () {},
                 trailing: Switch(
                   activeColor: AppColors.purple_3,
@@ -144,21 +154,21 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                   Padding(
                       padding: const EdgeInsets.all(0),
                       child: RoundTitledRaisedImageButton(
-                          title: "Copy",
-                          imageName: "assets/images/business.png",
+                          title: s.copy,
+                          imageName: 'assets/images/business.png',
                           onPressed: _onCopyButton)),
                   Padding(
                       padding: const EdgeInsets.only(left: 0, right: 0),
                       child: RoundTitledRaisedImageButton(
-                          title: "Clear",
-                          imageName: "assets/images/business.png",
+                          title: s.clear,
+                          imageName: 'assets/images/business.png',
                           onPressed: _confirmDelete)),
                   /*
                   Padding(
                       padding: const EdgeInsets.all(0),
                       child: RoundTitledRaisedButton(
-                          title: "Save",
-                          imageName: "assets/images/business.png",
+                          title: 'Save',
+                          imageName: 'assets/images/business.png',
                           onPressed: null)),
                    */
                 ],
@@ -184,12 +194,15 @@ class _SettingsLogPage extends State<SettingsLogPage> {
   void _confirmDelete() {
     Dialogs.showConfirmationDialog(
         context: context,
-        //title: "Delete Log Data",
-        body: "Clear all log data?",
-        cancelText: "CANCEL",
-        actionText: "DELETE",
+        body: s.clearAllLogData,
+        cancelText: s.cancel,
+        actionText: s.delete,
         commitAction: () {
           _performDelete();
         });
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

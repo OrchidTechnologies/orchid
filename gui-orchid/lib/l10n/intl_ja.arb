@@ -178,5 +178,9 @@
 	"enterOvpnProfile": "OVPNプロファイルを入力してください",
 	"linkAnOrchidAccount": "オーキッドアカウントをリンクする",
 	"buyOrchidAccount": "オーキッドアカウントを購入",
-	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "既存のOrchidアカウントをリンクするか、またはOVPNプロファイルを入力します。"
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "既存のOrchidアカウントをリンクするか、またはOVPNプロファイルを入力します。",
+	"manageProfile": "プロフィールを管理",
+	"pasteAccount": "アカウントを貼り付け",
+	"pasteYourExistingAccountBelowToAddItAsA": "以下の既存のアカウントを貼り付けて、ホップとして追加します。",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "申し訳ありませんが、この購入はアクセスクレジットの1日の購入制限を超えます。後でもう一度やり直してください。"
 }

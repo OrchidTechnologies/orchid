@@ -178,5 +178,9 @@
 	"enterOvpnProfile": "输入OVPN配置文件",
 	"linkAnOrchidAccount": "关联兰花帐户",
 	"buyOrchidAccount": "购买兰花帐户",
-	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "关联您现有的Orchid帐户或输入OVPN配置文件。"
+	"linkYourExistingOrchidAccountOrEnterAnOvpnProfile": "关联您现有的Orchid帐户或输入OVPN配置文件。",
+	"manageProfile": "管理个人资料",
+	"pasteAccount": "粘贴帐户",
+	"pasteYourExistingAccountBelowToAddItAsA": "将您现有的帐户粘贴到下面，以将其添加为跃点。",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "很抱歉，这次购买将超出访问积分的每日购买限额。请稍后再试。"
 }

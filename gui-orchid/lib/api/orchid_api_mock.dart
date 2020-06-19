@@ -116,8 +116,8 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   Future<bool> setWallet(OrchidWallet wallet) async {
     this._wallet = wallet;
-    logger().write("Saved wallet");
-    return wallet.private.privateKey.startsWith("fail") ? false : true;
+    logger().write('Saved wallet');
+    return wallet.private.privateKey.startsWith('fail') ? false : true;
   }
 
   /// Remove any stored wallet credentials.
@@ -202,7 +202,7 @@ class MockOrchidAPI implements OrchidAPI {
   Future<void> reroute() async {}
 
   void _setConnectionState(OrchidConnectionState state) {
-    logger().write("Connection state: $state");
+    logger().write('Connection state: $state');
     connectionStatus.add(state);
   }
 
