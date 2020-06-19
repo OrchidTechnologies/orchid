@@ -86,7 +86,7 @@ int Main(int argc, const char *const argv[]) {
         for (unsigned i(0); i != 8; ++i) {
             std::ostringstream command;
             command << "route -n add -net " << std::to_string(2 << i) << "/" << std::to_string(8 - i) << " " << argument << " " << device;
-            orc_assert(system(command.str().c_str()) == 0);
+            orc_assert_(system(command.str().c_str()) == 0, "system(" << command.str() << ")");
         }
 
         orc_assert(system(("route -n add 10.7.0.4 " + argument + " " + device).c_str()) == 0);
