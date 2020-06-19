@@ -35,7 +35,8 @@ contract OrchidLocked is OrchidSeller, OrchidVerifier {
     }
 
     function book(bytes memory shared, address target, bytes memory receipt) override public pure {
-        bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encodePacked(target, shared))));
+        uint32 prefix = 0;
+        bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encodePacked(prefix, target, shared))));
 
         require(receipt.length == 65 * required_);
 
