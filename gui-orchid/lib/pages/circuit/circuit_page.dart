@@ -228,16 +228,10 @@ class CircuitPageState extends State<CircuitPage>
           decoration: BoxDecoration(gradient: AppGradients.basicGradient),
           // hidden until hops loaded
           child: Visibility(
-            //visible: _hops != null,
-            visible: true,
-            replacement: Container(),
-            child: AnimatedBuilder(
-                animation: Listenable.merge(
-                    [_connectAnimController, _bunnyDuckAnimation]),
-                builder: (BuildContext context, Widget child) {
-                  return _buildHopList();
-                }),
-          ),
+              //visible: _hops != null,
+              visible: true,
+              replacement: Container(),
+              child: _buildHopList()),
         ),
       ),
     );
@@ -250,17 +244,6 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildHopList() {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Column(
-        children: <Widget>[
-          Flexible(child: _buildListView()),
-        ],
-      ),
-    );
-  }
-
-  AppReorderableListView _buildListView() {
     // Note: this view needs to be full screen vertical in order to scroll off-edge properly.
     return AppReorderableListView(
         header: Column(
@@ -274,7 +257,12 @@ class CircuitPageState extends State<CircuitPage>
               secondChild: pady(16),
             ),
             if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
-            _buildStartTile(),
+            AnimatedBuilder(
+                animation: Listenable.merge(
+                    [_connectAnimController, _bunnyDuckAnimation]),
+                builder: (BuildContext context, Widget child) {
+                  return _buildStartTile();
+                }),
             _buildStatusTile(),
             HopTile.buildFlowDivider(),
           ],
@@ -285,11 +273,15 @@ class CircuitPageState extends State<CircuitPage>
         footer: Column(
           children: <Widget>[
             _buildNewHopTile(),
-//            if (!_hasHops()) _buildFirstHopInstruction(),
+            //if (!_hasHops()) _buildFirstHopInstruction(),
             if (!_hasHops()) pady(16),
             HopTile.buildFlowDivider(
                 padding: EdgeInsets.only(top: _hasHops() ? 16 : 2, bottom: 10)),
-            _buildEndTile(),
+            AnimatedBuilder(
+                animation: _connectAnimController,
+                builder: (BuildContext context, Widget child) {
+                  return _buildEndTile();
+                })
           ],
         ),
         onReorder: _onReorder);
@@ -738,8 +730,8 @@ class CircuitPageState extends State<CircuitPage>
       case OrchidConnectionState.Disconnecting:
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        return false;
       case OrchidConnectionState.Connecting:
+        return false;
       case OrchidConnectionState.Connected:
         return true;
       default:
@@ -994,5 +986,4 @@ class CircuitUtils {
     OrchidAPI().updateConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
-
 }
