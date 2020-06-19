@@ -159,7 +159,7 @@ def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float,
         {
             'chainId': 1,
             'from': funder_pubkey,
-            'gas': 50000,
+            'gas': 150000,
             'gasPrice': w3.toWei(gas_price, 'gwei'),
             'nonce': nonce,
         }
