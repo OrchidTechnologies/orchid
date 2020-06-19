@@ -84,7 +84,7 @@ def look(funder: str, signer: str):
         abi=edited_lottery_abi,
         address=lottery_addr,
     )
-    amount, escrow, unlock, _, _ = lottery_contract.functions.look(w3.toChecksumAddress(funder), w3.toChecksumAddress(signer)).call()
+    amount, escrow, unlock, _, _, _ = lottery_contract.functions.look(w3.toChecksumAddress(funder), w3.toChecksumAddress(signer)).call()
     account_total = amount + escrow
     logging.debug(f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + {escrow} (escrow) = {account_total} (total)')
     return amount, escrow, unlock
