@@ -398,7 +398,7 @@ class _ConnectPageState extends State<ConnectPage>
           borderRadius: BorderRadius.all(Radius.circular(24.0)),
         ),
         child: Container(
-          width: 150,
+          width: 171,
           height: 48,
           padding: const EdgeInsets.all(12.0),
           child: Row(
