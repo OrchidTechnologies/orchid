@@ -510,9 +510,9 @@ class _ConnectPageState extends State<ConnectPage>
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Disconnecting:
         return false;
       case OrchidConnectionState.Connected:
-      case OrchidConnectionState.Disconnecting:
         return true;
     }
     throw Exception();
