@@ -314,6 +314,7 @@ class _PurchasePageState extends State<PurchasePage> {
         _buildCheckRow(s.noSubscriptionCreditsDontExpire),
         pady(8),
         _buildCheckRow(s.unlimitedDevicesAndSharing),
+        /*
         pady(8),
         _buildCheckRowRich(TextSpan(children: [
           TextSpan(
@@ -324,6 +325,7 @@ class _PurchasePageState extends State<PurchasePage> {
             style: AppText.linkStyle.copyWith(fontSize: 15.0),
           )
         ])),
+         */
         pady(12),
       ],
     );
