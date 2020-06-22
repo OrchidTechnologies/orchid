@@ -252,7 +252,7 @@ class _ConnectPageState extends State<ConnectPage>
           // Large logo and connect button
           Padding(
             // Logo is asymmetric, shift left a bit
-            padding: const EdgeInsets.only(right: 9.0),
+            padding: const EdgeInsets.only(right: 21.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -261,7 +261,9 @@ class _ConnectPageState extends State<ConnectPage>
                 if (tall) ...[
                   _buildLogo(),
                 ] else ...[
-                  Container(width: 200, height: 48, child: _buildLogo()),
+                  Container(
+                    padding: EdgeInsets.only(left: 15),
+                      width: 60, height: 48, child: _buildLogo()),
                 ],
                 pady(48),
 
@@ -277,7 +279,7 @@ class _ConnectPageState extends State<ConnectPage>
                 // Connect button
                 Padding(
                   // Logo is asymmetric, shift right a bit
-                  padding: const EdgeInsets.only(left: 18.0),
+                  padding: const EdgeInsets.only(left: 19.0),
                   child: _buildConnectButton(),
                 ),
               ],
@@ -385,7 +387,7 @@ class _ConnectPageState extends State<ConnectPage>
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(24))),
       child: Ink(
-        decoration: new BoxDecoration(
+        decoration: BoxDecoration(
           color: bgColor,
           gradient: gradient,
           borderRadius: BorderRadius.all(Radius.circular(24.0)),

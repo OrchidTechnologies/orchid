@@ -37,7 +37,7 @@ class _WelcomePanelState extends State<WelcomePanel>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(30.0),
+      padding: const EdgeInsets.only(left: 30, right: 30, bottom: 16),
       child: ClipRRect(
         clipBehavior: Clip.antiAlias,
         borderRadius: BorderRadius.circular(20),
