@@ -237,15 +237,18 @@ class _ConnectPageState extends State<ConnectPage>
           // Line art background
           OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
-              return SvgPicture.asset(
-                'assets/svg/line_art.svg',
-                width: double.infinity,
-                alignment: orientation == Orientation.landscape
-                    ? Alignment.topCenter
-                    : Alignment.center,
-                fit: orientation == Orientation.landscape
-                    ? BoxFit.fitWidth
-                    : BoxFit.contain,
+              return Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: SvgPicture.asset(
+                  'assets/svg/line_art.svg',
+                  width: double.infinity,
+                  alignment: orientation == Orientation.landscape
+                      ? Alignment.topCenter
+                      : Alignment.center,
+                  fit: orientation == Orientation.landscape
+                      ? BoxFit.fitWidth
+                      : BoxFit.contain,
+                ),
               );
             },
           ),
