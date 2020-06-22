@@ -61,6 +61,7 @@ class _WelcomePanelState extends State<WelcomePanel>
     var iosButtonText = s.buyOrchidCredits;
     var androidButtonText = s.setup;
     var buttonText = isApple ? iosButtonText : androidButtonText;
+    var buttonAction = isApple ? _onBuyCredits : _onDoSetup;
 
     var textColor = AppColors.neutral_1;
     var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
@@ -79,7 +80,7 @@ class _WelcomePanelState extends State<WelcomePanel>
             _buildTop(
               topText: topTextSpan,
               buttonText: buttonText,
-              onPressed: _onBuyCredits,
+              onPressed: buttonAction,
             ),
             Container(height: 0.5, color: AppColors.grey_6), // divider
             _buildBottom(),
@@ -201,10 +202,8 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   Widget _buildClosedView() {
-    var iosText =
-        s.purchaseOrchidCreditsLinkAnAccountOrOvpnProfileTo;
-    var androidText =
-        s.createAnOrchidAccountLinkAnExistingAccountOrImport;
+    var iosText = s.purchaseOrchidCreditsLinkAnAccountOrOvpnProfileTo;
+    var androidText = s.createAnOrchidAccountLinkAnExistingAccountOrImport;
     var topText = isApple ? iosText : androidText;
 
     var textColor = AppColors.neutral_1;
