@@ -186,8 +186,9 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Padding _buildManageProfileButton() {
-    var textColor = Colors.white;
-    var bgColor = AppColors.purple_3;
+    var textColor = _showConnectedBackground() ? Colors.white : AppColors.purple_3;
+    var bgColor = Colors.transparent;
+    var borderColor = AppColors.purple_3;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: ConstrainedBox(
@@ -199,6 +200,7 @@ class _ConnectPageState extends State<ConnectPage>
               elevation: 0,
               color: bgColor,
               shape: RoundedRectangleBorder(
+                  side: BorderSide(color: borderColor, width: 2),
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               onPressed: () async {
                 await Navigator.pushNamed(context, AppRoutes.circuit);
