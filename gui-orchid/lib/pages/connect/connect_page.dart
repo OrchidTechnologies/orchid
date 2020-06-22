@@ -170,11 +170,11 @@ class _ConnectPageState extends State<ConnectPage>
       children: <Widget>[
         // Line art background, logo, and connect button
         Expanded(
-          flex: 10,
+          flex: 12,
           child: _buildCenterControls(),
         ),
 
-        pady(50),
+        Spacer(flex: 1),
         _buildManageProfileButton(),
 
         pady(20),
@@ -262,8 +262,10 @@ class _ConnectPageState extends State<ConnectPage>
                   _buildLogo(),
                 ] else ...[
                   Container(
-                    padding: EdgeInsets.only(left: 15),
-                      width: 60, height: 48, child: _buildLogo()),
+                      padding: EdgeInsets.only(left: 15),
+                      width: 60,
+                      height: 48,
+                      child: _buildLogo()),
                 ],
                 pady(48),
 
