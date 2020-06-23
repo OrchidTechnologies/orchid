@@ -20,7 +20,7 @@
 
 include env/target.mk
 
-args := 0x41ebc6fa84c4bd2f2f789f341f37414b9738ca03b707f34fe9dcd5649752ec2f
+args := 0x264930d4c83496ebe0ef1615d6d500c1c1f0aee37160b17cf548e7f8cefb0121
 
 .PHONY: all
 all: $(output)/$(default)/ticket$(exe)
