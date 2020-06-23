@@ -49,33 +49,13 @@ def get_product_id_mapping(store: str = 'apple') -> dict:
     return mapping.get(store, {})
 
 
-def fund_PAC_(
-    signer: str,
-    total: float,
-    escrow: float,
-    funder_pubkey: str,
-    funder_privkey: str,
-    nonce: int,
-) -> str:
-    logging.debug(f"Funding PAC  signer: {signer}, total: {total}, escrow: {escrow} ")
-
-    gas_price = int(os.environ['DEFAULT_GAS'])
-    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+def approve(total, funder_pubkey, funder_privkey, gas_price, nonce):
     token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
-    verifier_addr = w3.toChecksumAddress(os.environ['VERIFIER'])
+    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
 
-    lottery_main = w3.eth.contract(
-        abi=lottery_abi,
-        address=lottery_addr,
-    )
-    token_main = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
-    )
+    logging.debug(f"Funder nonce: {nonce}")
+    logging.debug(f"Assembling approve transaction:")
 
-    logging.debug(f'Funder nonce: {nonce}')
-
-    logging.debug('Assembling approve transaction')
     approve_txn = token_main.functions.approve(
         lottery_addr,
         total,
@@ -102,9 +82,38 @@ def fund_PAC_(
     logging.debug(f"Submitted approve transaction with hash: {approve_txn_hash.hex()}")
 
     nonce = nonce + 1
-    logging.debug(f"Funder nonce: {nonce}")
+    return nonce
 
-    logging.debug('Assembling bind transaction')
+
+def fund_PAC_(
+    signer: str,
+    total: float,
+    escrow: float,
+    funder_pubkey: str,
+    funder_privkey: str,
+    nonce: int,
+) -> str:
+    logging.debug(f"Funding PAC  signer: {signer}, total: {total}, escrow: {escrow} ")
+
+    gas_price = int(os.environ['DEFAULT_GAS'])
+    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
+    verifier_addr = w3.toChecksumAddress(os.environ['VERIFIER'])
+
+    lottery_main = w3.eth.contract(
+        abi=lottery_abi,
+        address=lottery_addr,
+    )
+    token_main = w3.eth.contract(
+        abi=token_abi,
+        address=token_addr,
+    )
+
+    nonce = approve(total, funder_pubkey, funder_privkey, gas_price, nonce)
+
+    logging.debug(f"Funder nonce: {nonce}")
+    logging.debug(f"Assembling bind transaction:")
+
     bind_txn = lottery_main.functions.bind(
         signer,
         verifier_addr,
@@ -127,11 +136,8 @@ def fund_PAC_(
     logging.debug('Submitting bind transaction')
     bind_txn_hash = w3.eth.sendRawTransaction(bind_txn_signed.rawTransaction)
     logging.debug(f"Submitted bind transaction with hash: {bind_txn_hash.hex()}")
-
     nonce = nonce + 1
-    logging.debug(f"Funder nonce: {nonce}")
 
-    logging.debug('Assembling funding transaction')
     funding_txn = lottery_main.functions.push(
         signer,
         total,
@@ -162,6 +168,8 @@ def fund_PAC_(
 def get_min_escrow():
     return 15.0
 
+def get_target_NFV(tusd):
+    return 2.228775056 * pow(tusd,0.5) - 4.597556694;
 
 def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     wallet = generate_wallet()
@@ -169,25 +177,34 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
     secret = wallet['private']
     config = generate_config(secret=secret,)
 
-    # todo: pass on gas and app-store overhead?
+    target_NFV = get_target_NFV(total_usd);
+    tot_units = max(int(target_NFV+0.5), 3);
+
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
-    escrow_oxt = get_min_escrow()  # todo: better alg to determine this?
-    value_usd = total_usd * 0.7 - 0.5  # 30% store fee, 0.5 setup charge
-    value_oxt = value_usd * oxt_per_usd
-    num_tickets = int(value_oxt / (0.5*escrow_oxt))
-    escrow_oxt = 2.0 * float(value_oxt) / float(num_tickets)
-    total_oxt = value_oxt + escrow_oxt
+    #escrow_oxt = get_min_escrow()
+    value_usd  = total_usd * 0.7 - 0.5 # 30% store fee, 0.5 setup charge
+    value_oxt  = value_usd * oxt_per_usd;
+    #tot_units  = max(int(value_oxt / (0.5*escrow_oxt)), 3);
+    FV_oxt     = value_oxt / float(tot_units);
 
-    logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT")
+    eth_to_wei = 1000000000000000000;
+    FV_wei     = int(eth_to_wei * FV_oxt);
+    total_wei  = tot_units * FV_wei;
+    escrow_wei = 2 * FV_wei;
+
+    escrow_oxt  = float(escrow_wei) / float(eth_to_wei);
+    total_oxt   = float(total_wei)  / float(eth_to_wei);
+
+    logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT  tot_units: {tot_units}  FV_oxt: {FV_oxt} target_NFV: {target_NFV} ")
 
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
 
     txn_hash = fund_PAC_(
         signer=signer,
-        total=w3.toWei(total_oxt, 'ether'),
-        escrow=w3.toWei(escrow_oxt, 'ether'),
+        total=w3.toWei(total_wei, 'wei'),
+        escrow=w3.toWei(escrow_wei, 'wei'),
         funder_pubkey=funder_pubkey,
         funder_privkey=funder_privkey,
         nonce=nonce,
