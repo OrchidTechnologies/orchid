@@ -4,7 +4,7 @@ import logging
 import os
 import requests
 import sha3
-import time  # noqa: F401
+import time
 import web3.exceptions  # noqa: F401
 import uuid
 import hashlib
@@ -12,7 +12,6 @@ import base64
 
 from abis import lottery_abi, token_abi
 from boto3.dynamodb.conditions import Key
-from datadog_lambda.metric import lambda_metric
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
@@ -550,24 +549,6 @@ def store_result(result_hash_table, receipt_hash, config, push_txn_hash, verifie
     result_hash_table.put_item(Item=ddb_item)
 
 
-def do_evil_monitoring():
-    logging.debug('do_evil_monitoring()')
-    # token_name = get_token_name(address=os.environ['TOKEN'])
-    # token_symbol = get_token_symbol(address=os.environ['TOKEN'])
-    # token_decimals = get_token_decimals(address=os.environ['TOKEN'])
-    # pac_tokens = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
-    # lambda_metric(
-    #     f"orchid.pac.sale.{token_symbol.lower()}",
-    #     pac_tokens,
-    #     tags=[
-    #         f'token_name:{token_name}',
-    #         f'token_symbol:{token_symbol}',
-    #         f'token_decimals:{token_decimals}',
-    #         f'usd:{total_usd}',
-    #     ]
-    # )
-
-
 def main(event, context):
     Stage = os.environ['STAGE']
 
@@ -643,10 +624,6 @@ def main(event, context):
 
                     # store result (idempotency)
                     store_result(result_hash_table, receipt_hash, config, push_txn_hash, os.environ['VERIFIER'])
-
-                    if is_true(os.environ.get('ENABLE_MONITORING', '')):  # Jay may not like this
-                        do_evil_monitoring()
-
     else:
         response = response_invalid_receipt(apple_response)
     logging.debug(f'response: {response}')

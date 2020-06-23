@@ -2,22 +2,13 @@ import logging
 import os
 
 from abis import token_abi
-from datadog_lambda.metric import lambda_metric
+from metrics import metric
 from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
 from web3 import Web3
 
 
 w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
-configure_logging()
-
-
-if len(logging.getLogger().handlers) > 0:
-    # The Lambda environment pre-configures a handler logging to stderr.
-    # If a handler is already configured, `.basicConfig` does not execute.
-    # Thus we set the level directly.
-    logging.getLogger().setLevel(level=os.environ.get('LOG_LEVEL', "DEBUG"))
-else:
-    logging.basicConfig(level=os.environ.get('LOG_LEVEL', "DEBUG"))
+configure_logging(level="DEBUG")
 
 
 def get_oxt_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
@@ -34,17 +25,16 @@ def get_oxt_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
-    if is_true(os.environ.get('ENABLE_MONITORING', '')):
-        lambda_metric(
-            f"orchid.pac.balance.{token_symbol.lower()}",
-            balance,
-            tags=[
-                f'account:{address}',
-                f'token_name:{token_name}',
-                f'token_symbol:{token_symbol}',
-                f'token_decimals:{token_decimals}',
-            ]
-        )
+    metric(
+        metric_name=f"orchid.pac.balance.{token_symbol.lower()}",
+        value=balance,
+        tags=[
+            f'account:{address}',
+            f'token_name:{token_name}',
+            f'token_symbol:{token_symbol}',
+            f'token_decimals:{token_decimals}',
+        ]
+    )
     return balance
 
 
@@ -57,17 +47,16 @@ def get_eth_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
-    if is_true(os.environ.get('ENABLE_MONITORING', '')):
-        lambda_metric(
-            f"orchid.pac.balance.{token_symbol.lower()}",
-            balance,
-            tags=[
-                f'account:{address}',
-                f'token_name:{token_name}',
-                f'token_symbol:{token_symbol}',
-                f'token_decimals:{token_decimals}',
-            ]
-        )
+    metric(
+        metric_name=f"orchid.pac.balance.{token_symbol.lower()}",
+        value=balance,
+        tags=[
+            f'account:{address}',
+            f'token_name:{token_name}',
+            f'token_symbol:{token_symbol}',
+            f'token_decimals:{token_decimals}',
+        ]
+    )
     return balance
 
 
