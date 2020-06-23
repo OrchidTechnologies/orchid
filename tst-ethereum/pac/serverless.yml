@@ -105,31 +105,37 @@ provider:
 functions:
   pac:
     handler: handler.main
+    timeout: 10
     events:
       - http:
           path: submit
           method: post
   apple:
     handler: handler.apple
+    timeout: 10
     events:
       - http:
           path: apple
           method: post
   MaintainPool:
     handler: pool.maintain_pool_wrapper
+    timeout: 300
     events:
       - schedule: cron(0/15 * * * ? *)
   balance:
     handler: balance.main
+    timeout: 300
     events:
       - schedule: cron(5/15 * * * ? *)
   recycle:
     handler: recycle.main
+    timeout: 10
     events:
       - http:
           path: recycle
           method: post
   reclaim:
+    timeout: 300
     handler: reclaim.main
 plugins:
   - serverless-plugin-datadog
