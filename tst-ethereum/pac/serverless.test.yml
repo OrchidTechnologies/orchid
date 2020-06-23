@@ -22,7 +22,7 @@
   response:
     status: 200
     body:
-      seller: "0x5D18Fe86BF42a3b2DdaEbDF7FD8Bc0578EAB71f7"
+      seller: "0xbf9155F9f3369B468b54D1Aa16486794A3c7B64A"
 
 - name: 400 No Verify Apple Bad Product ID
   endpoint:
