@@ -1,0 +1,5 @@
+#!/usr/bin/python
+import os
+r = os.urandom(4)
+print r.encode('hex')
+print [ord(x) for x in r]

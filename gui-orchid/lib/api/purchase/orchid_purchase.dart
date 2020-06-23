@@ -23,7 +23,7 @@ abstract class OrchidPurchaseAPI {
       } else if (Platform.isAndroid) {
         _shared = AndroidOrchidPurchaseAPI();
       } else {
-        throw Exception("no purchase on platform");
+        throw Exception('no purchase on platform');
       }
     }
     return _shared;

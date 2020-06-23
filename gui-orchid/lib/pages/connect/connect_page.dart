@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -75,7 +76,6 @@ class _ConnectPageState extends State<ConnectPage>
   /// Note: the same, however this requires a unique id for hops. Refactor at that time
   /// Note: by hoisting the logic here and passing the data to circuit page.
   void _checkHopAlerts(timer) async {
-    print("check hop alerts");
     var hops = (await UserPreferences().getCircuit()).hops;
     var keys = await UserPreferences().getKeys();
     bool showBadge = false;
@@ -98,13 +98,13 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// Listen for changes in Orchid network status.
   void _initListeners() {
-    OrchidAPI().logger().write("Connect Page: Init listeners...");
+    log('Connect Page: Init listeners...');
 
     // Monitor VPN permission status
     /*
     _rxSubscriptions
         .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
-      OrchidAPI().logger().write("VPN Perm status changed: $installed");
+      OrchidAPI().logger().write('VPN Perm status changed: $installed');
       if (!installed) {
         //var route = AppTransitions.downToUpTransition(
         //OnboardingVPNPermissionPage(allowSkip: false));
@@ -118,9 +118,7 @@ class _ConnectPageState extends State<ConnectPage>
     // Monitor connection status
     _subs
         .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
-      OrchidAPI()
-          .logger()
-          .write("[connect page] Connection status changed: $state");
+      log('[connect page] Connection status changed: $state');
       _connectionStateChanged(state);
     }));
 
@@ -172,11 +170,11 @@ class _ConnectPageState extends State<ConnectPage>
       children: <Widget>[
         // Line art background, logo, and connect button
         Expanded(
-          flex: 10,
+          flex: 12,
           child: _buildCenterControls(),
         ),
 
-        pady(50),
+        Spacer(flex: 1),
         _buildManageProfileButton(),
 
         pady(20),
@@ -188,8 +186,9 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Padding _buildManageProfileButton() {
-    var textColor = Colors.white;
-    var bgColor = AppColors.purple_3;
+    var textColor = _showConnectedBackground() ? Colors.white : AppColors.purple_3;
+    var bgColor = Colors.transparent;
+    var borderColor = AppColors.purple_3;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: ConstrainedBox(
@@ -201,6 +200,7 @@ class _ConnectPageState extends State<ConnectPage>
               elevation: 0,
               color: bgColor,
               shape: RoundedRectangleBorder(
+                  side: BorderSide(color: borderColor, width: 2),
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               onPressed: () async {
                 await Navigator.pushNamed(context, AppRoutes.circuit);
@@ -210,14 +210,14 @@ class _ConnectPageState extends State<ConnectPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Manage Profile",
+                    s.manageProfile,
                     style: TextStyle(color: textColor, fontSize: 16),
                   ),
                   if (_showProfileBadge) ...[
                     padx(8),
                     Badge(
                       elevation: 0,
-                      badgeContent: Text("!",
+                      badgeContent: Text('!',
                           style: TextStyle(color: Colors.white, fontSize: 12)),
                       padding: EdgeInsets.all(8),
                       toAnimate: false,
@@ -239,22 +239,25 @@ class _ConnectPageState extends State<ConnectPage>
           // Line art background
           OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
-              return SvgPicture.asset(
-                "assets/svg/line_art.svg",
-                width: double.infinity,
-                alignment: orientation == Orientation.landscape
-                    ? Alignment.topCenter
-                    : Alignment.center,
-                fit: orientation == Orientation.landscape
-                    ? BoxFit.fitWidth
-                    : BoxFit.contain,
+              return Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: SvgPicture.asset(
+                  'assets/svg/line_art.svg',
+                  width: double.infinity,
+                  alignment: orientation == Orientation.landscape
+                      ? Alignment.topCenter
+                      : Alignment.center,
+                  fit: orientation == Orientation.landscape
+                      ? BoxFit.fitWidth
+                      : BoxFit.contain,
+                ),
               );
             },
           ),
           // Large logo and connect button
           Padding(
             // Logo is asymmetric, shift left a bit
-            padding: const EdgeInsets.only(right: 9.0),
+            padding: const EdgeInsets.only(right: 21.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -263,7 +266,11 @@ class _ConnectPageState extends State<ConnectPage>
                 if (tall) ...[
                   _buildLogo(),
                 ] else ...[
-                  Container(width: 200, height: 48, child: _buildLogo()),
+                  Container(
+                      padding: EdgeInsets.only(left: 15),
+                      width: 60,
+                      height: 48,
+                      child: _buildLogo()),
                 ],
                 pady(48),
 
@@ -279,7 +286,7 @@ class _ConnectPageState extends State<ConnectPage>
                 // Connect button
                 Padding(
                   // Logo is asymmetric, shift right a bit
-                  padding: const EdgeInsets.only(left: 18.0),
+                  padding: const EdgeInsets.only(left: 19.0),
                   child: _buildConnectButton(),
                 ),
               ],
@@ -292,11 +299,11 @@ class _ConnectPageState extends State<ConnectPage>
 
   Widget _buildLogo() {
     var image = () {
-      return Image.asset("assets/images/connect_logo.png",
+      return Image.asset('assets/images/connect_logo.png',
           width: 207, height: 186); // match glow image size
     };
     var glowImage = () {
-      return Image.asset("assets/images/logo_glow.png",
+      return Image.asset('assets/images/logo_glow.png',
           width: 207, height: 186);
     };
 
@@ -351,21 +358,21 @@ class _ConnectPageState extends State<ConnectPage>
     String text;
     switch (_connectionState) {
       case OrchidConnectionState.Disconnecting:
-        text = "Disconnecting";
+        text = s.disconnecting;
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.Connecting:
-        text = "Connecting";
+        text = S.of(context).connecting;
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        text = "Connect";
+        text = S.of(context).connect;
         break;
       case OrchidConnectionState.Connected:
         textColor = AppColors.purple_3;
         bgColor = AppColors.teal_5;
-        text = "Disconnect";
+        text = S.of(context).disconnect;
     }
 
     bool buttonEnabled =
@@ -379,20 +386,21 @@ class _ConnectPageState extends State<ConnectPage>
     }
 
     // Rounded flat button supporting gradient with ink effect that works over it
-    return FlatButton(
+    return RaisedButton(
+      elevation: 0,
       onPressed: buttonEnabled ? _onConnectButtonPressed : null,
       textColor: Colors.white,
       padding: const EdgeInsets.all(0.0),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(24))),
       child: Ink(
-        decoration: new BoxDecoration(
+        decoration: BoxDecoration(
           color: bgColor,
           gradient: gradient,
           borderRadius: BorderRadius.all(Radius.circular(24.0)),
         ),
         child: Container(
-          width: 150,
+          width: 171,
           height: 48,
           padding: const EdgeInsets.all(12.0),
           child: Row(
@@ -509,9 +517,9 @@ class _ConnectPageState extends State<ConnectPage>
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.Disconnecting:
         return false;
       case OrchidConnectionState.Connected:
-      case OrchidConnectionState.Disconnecting:
         return true;
     }
     throw Exception();
@@ -578,15 +586,15 @@ class _ConnectPageState extends State<ConnectPage>
     UserPreferences().setDesiredVPNState(true);
     // Get the most recent status, blocking if needed.
     _subs.add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
-      debugPrint("vpn: current perm: $installed");
+      log('vpn: current perm: $installed');
       if (installed) {
-        debugPrint("vpn: already installed");
+        log('vpn: already installed');
         OrchidAPI().setConnected(true);
         setState(() {});
       } else {
         bool ok = await OrchidAPI().requestVPNPermission();
         if (ok) {
-          debugPrint("vpn: user chose to install");
+          log('vpn: user chose to install');
           // Note: It appears that trying to enable the connection too quickly
           // Note: after installing the vpn permission / config fails.
           // Note: Introducing a short artificial delay.
@@ -594,7 +602,7 @@ class _ConnectPageState extends State<ConnectPage>
             OrchidAPI().setConnected(true);
           });
         } else {
-          debugPrint("vpn: user skipped");
+          log('vpn: user skipped');
         }
       }
     }));

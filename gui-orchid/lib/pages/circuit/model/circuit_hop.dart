@@ -24,7 +24,7 @@ class CircuitHop {
         return S.of(context).openVPN;
         break;
       case HopProtocol.WireGuard:
-        return "WireGuard";
+        return S.of(context).wireguard;
         break;
     }
   }

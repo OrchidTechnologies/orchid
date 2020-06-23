@@ -65,7 +65,7 @@ class IOSOrchidPurchaseAPI
 
     // Ensure no other transaction is pending completion.
     if (await PacTransaction.shared.hasValue()) {
-      throw Exception("PAC transaction already in progress.");
+      throw Exception('PAC transaction already in progress.');
     }
     var payment = SKPaymentWrapper(productIdentifier: pac.productId);
     try {
@@ -178,7 +178,7 @@ class IOSOrchidPurchaseAPI
     var pac2 = findProd(OrchidPurchaseAPI.pacTier2);
     var pac3 = findProd(OrchidPurchaseAPI.pacTier3);
     if (pac1.priceLocale.currencyCode != "USD") {
-      throw Exception("unknown currency product response");
+      throw Exception('unknown currency product response');
     }
     log("pac1 = ${pac1.productIdentifier}, ${pac1.price}, ${pac1.priceLocale}");
     log("pac2 = ${pac2.productIdentifier}, ${pac2.price}, ${pac2.priceLocale}");

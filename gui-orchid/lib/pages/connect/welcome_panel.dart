@@ -37,7 +37,7 @@ class _WelcomePanelState extends State<WelcomePanel>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(30.0),
+      padding: const EdgeInsets.only(left: 30, right: 30, bottom: 16),
       child: ClipRRect(
         clipBehavior: Clip.antiAlias,
         borderRadius: BorderRadius.circular(20),
@@ -54,16 +54,14 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   Widget _buildOpenView() {
-    S s = S.of(context);
-
-    const iOSText = "Purchase Orchid Credits to connect with Orchid.";
-    const androidText =
-        "Create or link an Orchid account, import an OVPN profile or build a multi-hop connection to get started.";
+    var iOSText = s.purchaseOrchidCreditsToConnectWithOrchid;
+    var androidText = s.createOrLinkAnOrchidAccountImportAnOvpnProfile;
     var text = isApple ? iOSText : androidText;
 
-    var iosButtonText = "Buy Orchid Credits";
-    var androidButtonText = "Setup";
+    var iosButtonText = s.buyOrchidCredits;
+    var androidButtonText = s.setup;
     var buttonText = isApple ? iosButtonText : androidButtonText;
+    var buttonAction = isApple ? _onBuyCredits : _onDoSetup;
 
     var textColor = AppColors.neutral_1;
     var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
@@ -82,7 +80,7 @@ class _WelcomePanelState extends State<WelcomePanel>
             _buildTop(
               topText: topTextSpan,
               buttonText: buttonText,
-              onPressed: _onBuyCredits,
+              onPressed: buttonAction,
             ),
             Container(height: 0.5, color: AppColors.grey_6), // divider
             _buildBottom(),
@@ -93,15 +91,12 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   Container _buildBottom() {
-    S s = S.of(context);
-
-    const iOSTitleText = "Have an Orchid Account or OXT?";
-    const androidTitleText = "Already have an Orchid Account?";
+    var iOSTitleText = s.haveAnOrchidAccountOrOxt;
+    var androidTitleText = s.alreadyHaveAnOrchidAccount;
     var titleText = isApple ? iOSTitleText : androidTitleText;
 
-    const iOSText =
-        "Create or link an Orchid account, import an OVPN profile or build a multi-hop connection.";
-    const androidText = "Scan or paste your existing account below.";
+    var iOSText = s.createOrLinkAnOrchidAccountImportAnOvpnProfile;
+    var androidText = s.scanOrPasteYourExistingAccountBelow;
     var text = isApple ? iOSText : androidText;
 
     var textColor = AppColors.neutral_1;
@@ -116,7 +111,7 @@ class _WelcomePanelState extends State<WelcomePanel>
               fontSize: 12,
               height: 16.0 / 12.0),
         ),
-        TextSpan(text: "\n\n" + text, style: bodyStyle),
+        TextSpan(text: '\n\n' + text, style: bodyStyle),
       ],
     );
 
@@ -133,7 +128,7 @@ class _WelcomePanelState extends State<WelcomePanel>
             if (isApple)
               Center(
                   child: _buildButton(
-                      text: "Custom Setup",
+                      text: s.customSetup,
                       bgColor: Colors.white,
                       textColor: AppColors.teal_3,
                       onPressed: _onDoSetup))
@@ -178,7 +173,7 @@ class _WelcomePanelState extends State<WelcomePanel>
                     padx(9),
                     RichText(
                         text: TextSpan(
-                      text: "New to Orchid?",
+                      text: s.newToOrchid,
                       style: TextStyle(
                           color: AppColors.neutral_1,
                           fontWeight: FontWeight.bold,
@@ -207,10 +202,8 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   Widget _buildClosedView() {
-    var iosText =
-        "Purchase Orchid Credits, link an account or OVPN profile to get started.";
-    var androidText =
-        "Create an Orchid account, link an existing account or import an OVPN profile.";
+    var iosText = s.purchaseOrchidCreditsLinkAnAccountOrOvpnProfileTo;
+    var androidText = s.createAnOrchidAccountLinkAnExistingAccountOrImport;
     var topText = isApple ? iosText : androidText;
 
     var textColor = AppColors.neutral_1;
@@ -288,5 +281,9 @@ class _WelcomePanelState extends State<WelcomePanel>
 
   void _onDoSetup() {
     CircuitUtils.addHop(context);
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

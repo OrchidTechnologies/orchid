@@ -98,9 +98,9 @@ void Client::Transfer(size_t size) {
 cppcoro::shared_task<Bytes> Client::Ring(Address recipient) {
     if (seller_ == Address(0))
         co_return Bytes();
-    static const Selector<Bytes, Bytes, Address> ring_("ring");
+    static const Selector<std::tuple<Bytes>, Bytes, Address> ring_("ring");
     static const std::string latest("latest");
-    co_return co_await ring_.Call(endpoint_, latest, seller_, 90000, shared_, recipient);
+    co_return std::get<0>(co_await ring_.Call(endpoint_, latest, seller_, 90000, shared_, recipient));
 }
 
 void Client::Land(Pipe *pipe, const Buffer &data) {
@@ -242,6 +242,11 @@ checked_int256_t Client::Balance() {
 
 uint128_t Client::Face() {
     return face_;
+}
+
+Address Client::Recipient() {
+    const auto locked(locked_());
+    return locked->recipient_;
 }
 
 }

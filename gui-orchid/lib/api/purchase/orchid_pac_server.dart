@@ -88,12 +88,12 @@ class OrchidPACServer {
 
     if (apiConfig.serverFail) {
       await Future.delayed(Duration(seconds: 3));
-      throw Exception("Testing server failure!");
+      throw Exception('Testing server failure!');
     }
 
     if (tx.receipt == null) {
-      log("iap: null receipt");
-      throw Exception("receipt is null");
+      log('iap: null receipt');
+      throw Exception('receipt is null');
     }
 
     Map<String, String> params = {};

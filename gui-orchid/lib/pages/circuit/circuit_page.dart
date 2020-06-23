@@ -162,7 +162,7 @@ class CircuitPageState extends State<CircuitPage>
 
       // Set the correct animation states for the connection status
       // Note: We cannot properly do this until we know if we have hops!
-      log("init state, setting initial connection state");
+      log('init state, setting initial connection state');
       _connectionStateChanged(OrchidAPI().connectionStatus.value,
           animated: false);
     }
@@ -208,7 +208,7 @@ class CircuitPageState extends State<CircuitPage>
   Widget build(BuildContext context) {
     return TitledPage(
       lightTheme: true,
-      title: "Manage Profile",
+      title: S.of(context).manageProfile,
       decoration: BoxDecoration(),
       child: _buildBody(),
     );
@@ -228,16 +228,10 @@ class CircuitPageState extends State<CircuitPage>
           decoration: BoxDecoration(gradient: AppGradients.basicGradient),
           // hidden until hops loaded
           child: Visibility(
-            //visible: _hops != null,
-            visible: true,
-            replacement: Container(),
-            child: AnimatedBuilder(
-                animation: Listenable.merge(
-                    [_connectAnimController, _bunnyDuckAnimation]),
-                builder: (BuildContext context, Widget child) {
-                  return _buildHopList();
-                }),
-          ),
+              //visible: _hops != null,
+              visible: true,
+              replacement: Container(),
+              child: _buildHopList()),
         ),
       ),
     );
@@ -250,17 +244,6 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildHopList() {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Column(
-        children: <Widget>[
-          Flexible(child: _buildListView()),
-        ],
-      ),
-    );
-  }
-
-  AppReorderableListView _buildListView() {
     // Note: this view needs to be full screen vertical in order to scroll off-edge properly.
     return AppReorderableListView(
         header: Column(
@@ -274,7 +257,12 @@ class CircuitPageState extends State<CircuitPage>
               secondChild: pady(16),
             ),
             if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
-            _buildStartTile(),
+            AnimatedBuilder(
+                animation: Listenable.merge(
+                    [_connectAnimController, _bunnyDuckAnimation]),
+                builder: (BuildContext context, Widget child) {
+                  return _buildStartTile();
+                }),
             _buildStatusTile(),
             HopTile.buildFlowDivider(),
           ],
@@ -285,11 +273,15 @@ class CircuitPageState extends State<CircuitPage>
         footer: Column(
           children: <Widget>[
             _buildNewHopTile(),
-//            if (!_hasHops()) _buildFirstHopInstruction(),
+            //if (!_hasHops()) _buildFirstHopInstruction(),
             if (!_hasHops()) pady(16),
             HopTile.buildFlowDivider(
                 padding: EdgeInsets.only(top: _hasHops() ? 16 : 2, bottom: 10)),
-            _buildEndTile(),
+            AnimatedBuilder(
+                animation: _connectAnimController,
+                builder: (BuildContext context, Widget child) {
+                  return _buildEndTile();
+                })
           ],
         ),
         onReorder: _onReorder);
@@ -323,7 +315,7 @@ class CircuitPageState extends State<CircuitPage>
                     transform: Matrix4.identity()
                       ..scale(1.0 - _holeTransformAnim.value,
                           1.0 + _holeTransformAnim.value),
-                    child: Image.asset("assets/images/layer35.png"))),
+                    child: Image.asset('assets/images/layer35.png'))),
           ),
           // logo
           Opacity(
@@ -334,7 +326,7 @@ class CircuitPageState extends State<CircuitPage>
                     alignment: Alignment.bottomCenter,
                     transform: Matrix4.identity()
                       ..scale(1.0, _holeTransformAnim.value),
-                    child: Image.asset("assets/images/logo_purple.png"))),
+                    child: Image.asset('assets/images/logo_purple.png'))),
           ),
 
           // positioned oval clipped bunny
@@ -372,10 +364,10 @@ class CircuitPageState extends State<CircuitPage>
         _buildBackgroundAnimation(),
 
         // island
-        Image.asset("assets/images/island.png"),
+        Image.asset('assets/images/island.png'),
         Opacity(
             opacity: _connectAnimController.value,
-            child: Image.asset("assets/images/vignetteHomeHeroSm.png")),
+            child: Image.asset('assets/images/vignetteHomeHeroSm.png')),
 
         // positioned bunny
         Positioned(
@@ -406,10 +398,10 @@ class CircuitPageState extends State<CircuitPage>
         child: Opacity(
           opacity: _connectAnimController.value,
           child: FlareActor(
-            "assets/flare/Connection_screens.flr",
+            'assets/flare/Connection_screens.flr',
             color: Colors.deepPurple.withOpacity(0.4),
             fit: BoxFit.fitHeight,
-            animation: "connectedLoop",
+            animation: 'connectedLoop',
           ),
         ),
       ),
@@ -432,7 +424,7 @@ class CircuitPageState extends State<CircuitPage>
               Positioned(
                   bottom: -bunnyOffset,
                   left: clipOvalWidth / 2 - bunnyWidth / 2 + 5,
-                  child: Image.asset("assets/images/bunnypeek.png",
+                  child: Image.asset('assets/images/bunnypeek.png',
                       height: bunnyHeight)),
             ],
           )),
@@ -442,7 +434,7 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildNewHopTile() {
     return HopTile(
         title: s.newHop,
-        image: Image.asset("assets/images/addCircleOutline.png"),
+        image: Image.asset('assets/images/addCircleOutline.png'),
         trailing: SizedBox(width: 40),
         // match leading
         textColor: Colors.deepPurple,
@@ -524,13 +516,13 @@ class CircuitPageState extends State<CircuitPage>
     Image image;
     switch (uniqueHop.hop.protocol) {
       case HopProtocol.Orchid:
-        image = Image.asset("assets/images/logo2.png", color: color);
+        image = Image.asset('assets/images/logo2.png', color: color);
         break;
       case HopProtocol.OpenVPN:
-        image = Image.asset("assets/images/security.png", color: color);
+        image = Image.asset('assets/images/security.png', color: color);
         break;
       case HopProtocol.WireGuard:
-        image = Image.asset("assets/images/security.png", color: color);
+        image = Image.asset('assets/images/security.png', color: color);
         break;
     }
     return Padding(
@@ -567,7 +559,7 @@ class CircuitPageState extends State<CircuitPage>
               Padding(
                 // attempt to align the arrow with switch in the header and text vertically
                 padding: const EdgeInsets.only(left: 16, right: 6, bottom: 16),
-                child: Image.asset("assets/images/drawnArrow3.png", height: 48),
+                child: Image.asset('assets/images/drawnArrow3.png', height: 48),
               ),
             ],
           ),
@@ -588,7 +580,7 @@ class CircuitPageState extends State<CircuitPage>
               Padding(
                 // align the arrow with the hop tile leading and text vertically
                 padding: const EdgeInsets.only(left: 19, right: 0, bottom: 24),
-                child: Image.asset("assets/images/drawnArrow2.png", height: 48),
+                child: Image.asset('assets/images/drawnArrow2.png', height: 48),
               ),
               Expanded(
                 child: Padding(
@@ -738,8 +730,8 @@ class CircuitPageState extends State<CircuitPage>
       case OrchidConnectionState.Disconnecting:
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        return false;
       case OrchidConnectionState.Connecting:
+        return false;
       case OrchidConnectionState.Connected:
         return true;
       default:
@@ -797,7 +789,7 @@ class CircuitPageState extends State<CircuitPage>
       } else {
         bool ok = await OrchidAPI().requestVPNPermission();
         if (ok) {
-          log("vpn: user chose to install");
+          log('vpn: user chose to install');
           // Note: It appears that trying to enable the connection too quickly
           // Note: after installing the vpn permission / config fails.
           // Note: Introducing a short artificial delay.
@@ -808,7 +800,7 @@ class CircuitPageState extends State<CircuitPage>
             _switchOn = true;
           });
         } else {
-          debugPrint("vpn: user skipped");
+          debugPrint('vpn: user skipped');
           setState(() {
             _switchOn = false;
           });
@@ -965,7 +957,7 @@ class CircuitUtils {
     }
   }
 
-  // Show the purchase PAC screen directly as a modal, skipping the "add hop"
+  // Show the purchase PAC screen directly as a modal, skipping the 'add hop'
   // choice screen. This is used by the welcome dialog.
   static void purchasePAC(BuildContext context,
       {HopCompletion onComplete}) async {
@@ -994,5 +986,4 @@ class CircuitUtils {
     OrchidAPI().updateConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
-
 }
