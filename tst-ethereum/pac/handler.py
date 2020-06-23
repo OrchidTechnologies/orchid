@@ -108,7 +108,7 @@ def fund_PAC_(
     bind_txn = lottery_main.functions.bind(
         signer,
         verifier_addr,
-        w3.toBytes(b''),
+        '0x',
     ).buildTransaction(
         {
             'chainId': 1,
