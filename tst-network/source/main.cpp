@@ -72,6 +72,7 @@ struct Report {
     std::optional<Float> cost_;
     Float speed_;
     Host host_;
+    Address recipient_;
 };
 
 typedef std::tuple<Float, size_t> Measurement;
@@ -123,6 +124,8 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         client.Update();
         const auto host(co_await Find(remote));
 
+        const auto recipient(client.Recipient());
+
         const auto balance(client.Balance());
         const auto spent(client.Spent());
 
@@ -134,7 +137,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
 
         const auto cost(Float(spent - balance) / size * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
         std::cout << name << ": DONE" << std::endl;
-        co_return Report{provider, cost * efficiency, speed, host};
+        co_return Report{provider, cost * efficiency, speed, host, recipient};
     });
 }
 
@@ -240,6 +243,11 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
         else
             body << "-.----";
         body << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
+        if (report->recipient_ != Address(0)) {
+            std::ostringstream recipient;
+            recipient << report->recipient_;
+            body << "\n" << std::string(13, ' ') << recipient.str().substr(2);
+        }
     } else orc_insist(false);
 
     body << "\n";

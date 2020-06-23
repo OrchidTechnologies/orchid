@@ -110,6 +110,7 @@ class Client :
     uint256_t Spent();
     checked_int256_t Balance();
     uint128_t Face();
+    Address Recipient();
 };
 
 }

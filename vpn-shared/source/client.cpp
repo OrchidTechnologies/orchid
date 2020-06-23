@@ -244,4 +244,9 @@ uint128_t Client::Face() {
     return face_;
 }
 
+Address Client::Recipient() {
+    const auto locked(locked_());
+    return locked->recipient_;
+}
+
 }
