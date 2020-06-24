@@ -304,9 +304,9 @@ def random_scan(table, price):
     return response0
 
 
-def get_transaction_confirm_count(txhash):
+def get_transaction_confirm_count(txhash,blocknum):
     logging.debug(f'get_transaction_confirm_count({txhash}) ')
-    blocknum = w3.eth.blockNumber
+    # blocknum = w3.eth.blockNumber
     # block = w3.eth.getBlock('latest')
     # blocknum2 = block['number']
     trans = w3.eth.getTransaction(txhash)
@@ -315,9 +315,9 @@ def get_transaction_confirm_count(txhash):
     return diff
 
 
-def get_transaction_status(txhash):
+def get_transaction_status(txhash,blocknum):
     try:
-        count = get_transaction_confirm_count(txhash)
+        count = get_transaction_confirm_count(txhash,blocknum)
         if (count >= 12):
             return "confirmed"
         else:
@@ -327,7 +327,7 @@ def get_transaction_status(txhash):
     return "unknown"
 
 
-def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def get_account_(price: float, blocknum: int) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     logging.debug(f'get_account_ price:{price}')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
@@ -344,7 +344,7 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
             age = epoch_time - creation_etime
             # check status - make sure pot is ready
             # status = item['status']
-            status = get_transaction_status(push_txn_hash)
+            status = get_transaction_status(push_txn_hash,blocknum)
             if ((status != 'confirmed') and (age < 3600)):
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
@@ -372,10 +372,11 @@ def get_account_(price: float) -> Tuple[Optional[str], Optional[str], Optional[s
 
 def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     logging.debug(f'Getting Account with Price:{price}')
+    blocknum = w3.eth.blockNumber
     push_txn_hash = config = signer_pubkey = None
     count = 0
     while push_txn_hash is None and count < 8:
-        push_txn_hash, config, signer_pubkey = get_account_(price=price)
+        push_txn_hash, config, signer_pubkey = get_account_(price=price,blocknum=blocknum)
         count = count + 1
     return push_txn_hash, config, signer_pubkey
 
