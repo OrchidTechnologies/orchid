@@ -18,7 +18,7 @@ custom:
       prod: "0xbf9155F9f3369B468b54D1Aa16486794A3c7B64A"
       dev: "0xbf9155F9f3369B468b54D1Aa16486794A3c7B64A"
     DEFAULT_POOL_SIZE:
-      prod: "3"
+      prod: "20"
       dev: "3"
     LOG_LEVEL:
       prod: "WARNING"
