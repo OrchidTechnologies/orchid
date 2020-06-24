@@ -52,6 +52,10 @@ def get_product_id_mapping(store: str = 'apple') -> dict:
 def approve(total, funder_pubkey, funder_privkey, gas_price, nonce):
     token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    token_main = w3.eth.contract(
+        abi=token_abi,
+        address=token_addr,
+    )
 
     logging.debug(f"Funder nonce: {nonce}")
     logging.debug(f"Assembling approve transaction:")
