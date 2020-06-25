@@ -196,8 +196,7 @@ class _ConnectPageState extends State<ConnectPage>
         child: Container(
           height: 50,
           width: double.infinity,
-          child: RaisedButton(
-              elevation: 0,
+          child: FlatButton(
               color: bgColor,
               shape: RoundedRectangleBorder(
                   side: BorderSide(color: borderColor, width: 2),
@@ -386,8 +385,7 @@ class _ConnectPageState extends State<ConnectPage>
     }
 
     // Rounded flat button supporting gradient with ink effect that works over it
-    return RaisedButton(
-      elevation: 0,
+    return FlatButton(
       onPressed: buttonEnabled ? _onConnectButtonPressed : null,
       textColor: Colors.white,
       padding: const EdgeInsets.all(0.0),
