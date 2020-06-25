@@ -177,3 +177,116 @@ def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float,
         pull_txn_signed.rawTransaction,
     )
     logging.debug(f'Submitted pull transaction with hash: {pull_txn_hash.hex()}')
+
+
+def approve(spender: str, amount: float, nonce: int, gas_price: float = float(os.environ['DEFAULT_GAS'])):
+    logging.debug(f'approve() spender: {spender} amount: {amount} gas_price: {gas_price} nonce: {nonce}')
+
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+    funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
+
+    token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
+    token_contract = w3.eth.contract(
+        abi=token_abi,
+        address=token_addr,
+    )
+
+    approve_txn = token_contract.functions.approve(
+        spender,
+        amount,
+    ).buildTransaction(
+        {
+            'chainId': 1,
+            'from': funder_pubkey,
+            'gas': 50000,
+            'gasPrice': w3.toWei(gas_price, 'gwei'),
+            'nonce': nonce,
+        }
+    )
+    logging.debug(f'approve_txn: {approve_txn}')
+
+    approve_txn_signed = w3.eth.account.sign_transaction(
+        approve_txn,
+        private_key=funder_privkey,
+    )
+    logging.debug(f'approve_txn_signed: {approve_txn_signed}')
+
+    approve_txn_hash = w3.eth.sendRawTransaction(approve_txn_signed.rawTransaction)
+    logging.debug(f'Submitted approve transaction with hash: {approve_txn_hash.hex()}')
+    return approve_txn_hash
+
+
+def bind(signer: str, verifier: str, nonce: int, shared: str = '0x', gas_price: float = float(os.environ['DEFAULT_GAS'])):
+    logging.debug(f'bind() signer: {signer} verifier: {verifier} shared: {shared} nonce: {nonce} gas_price: {gas_price}')
+
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+    funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
+
+    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    lottery_contract = w3.eth.contract(
+        abi=lottery_abi,
+        address=lottery_addr,
+    )
+
+    bind_txn = lottery_contract.functions.bind(
+        signer,
+        verifier,
+        shared,
+    ).buildTransaction(
+        {
+            'chainId': 1,
+            'from': funder_pubkey,
+            'gas': 200000,
+            'gasPrice': w3.toWei(gas_price, 'gwei'),
+            'nonce': nonce,
+        }
+    )
+    logging.debug(f'bind_txn: {bind_txn}')
+
+    bind_txn_signed = w3.eth.account.sign_transaction(
+      bind_txn,
+      private_key=funder_privkey,
+    )
+    logging.debug(f'bind_txn_signed: {bind_txn_signed}')
+
+    bind_txn_hash = w3.eth.sendRawTransaction(bind_txn_signed.rawTransaction)
+    logging.debug(f'Submitted bind transaction with hash: {bind_txn_hash.hex()}')
+    return bind_txn_hash
+
+
+def push(signer: str, total: float, escrow: float, nonce: int, gas_price: float = float(os.environ['DEFAULT_GAS'])):
+    logging.debug(f'push() signer: {signer} total: {total} escrow: {escrow} nonce: {nonce} gas_price: {gas_price}')
+
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+    funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
+
+    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    lottery_contract = w3.eth.contract(
+        abi=lottery_abi,
+        address=lottery_addr,
+    )
+
+    push_txn = lottery_contract.functions.push(
+        signer,
+        total,
+        escrow,
+    ).buildTransaction(
+        {
+            'chainId': 1,
+            'from': funder_pubkey,
+            'gas': 200000,
+            'gasPrice': w3.toWei(gas_price, 'gwei'),
+            'nonce': nonce,
+        }
+    )
+    logging.debug(f'push_txn: {push_txn}')
+
+    push_txn_signed = w3.eth.account.sign_transaction(
+      push_txn,
+      private_key=funder_privkey,
+    )
+    logging.debug(f'push_txn_signed: {push_txn_signed}')
+
+    push_txn_hash = w3.eth.sendRawTransaction(push_txn_signed.rawTransaction)
+    logging.debug(f'Submitted push transaction with hash: {push_txn_hash.hex()}')
+    return push_txn_hash

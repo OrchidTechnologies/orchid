@@ -16,7 +16,7 @@ from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
-from utils import configure_logging, get_secret, is_true, look
+from utils import approve, bind, configure_logging, get_secret, is_true, look, push
 from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
@@ -49,46 +49,6 @@ def get_product_id_mapping(store: str = 'apple') -> dict:
     return mapping.get(store, {})
 
 
-def approve(total, funder_pubkey, funder_privkey, gas_price, nonce):
-    token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
-    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
-    token_main = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
-    )
-
-    logging.debug(f"Funder nonce: {nonce}")
-    logging.debug(f"Assembling approve transaction:")
-
-    approve_txn = token_main.functions.approve(
-        lottery_addr,
-        total,
-    ).buildTransaction(
-        {
-            'chainId': 1,
-            'from': funder_pubkey,
-            'gas': 50000,
-            'gasPrice': w3.toWei(gas_price, 'gwei'),
-            'nonce': nonce,
-        }
-    )
-    logging.debug(approve_txn)
-
-    logging.debug('Funder signed transaction')
-    approve_txn_signed = w3.eth.account.sign_transaction(
-        approve_txn, private_key=funder_privkey)
-    logging.debug(approve_txn_signed)
-
-    logging.debug('Submitting approve transaction')
-
-    approve_txn_hash = w3.eth.sendRawTransaction(
-        approve_txn_signed.rawTransaction)
-    logging.debug(f"Submitted approve transaction with hash: {approve_txn_hash.hex()}")
-
-    nonce = nonce + 1
-    return nonce
-
-
 def fund_PAC_(
     signer: str,
     total: float,
@@ -101,72 +61,35 @@ def fund_PAC_(
 
     gas_price = int(os.environ['DEFAULT_GAS'])
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
-    token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
     verifier_addr = w3.toChecksumAddress(os.environ['VERIFIER'])
 
-    lottery_main = w3.eth.contract(
-        abi=lottery_abi,
-        address=lottery_addr,
+    approve(
+      spender=lottery_addr,
+      amount=total,
+      nonce=nonce,
+      gas_price=gas_price,
     )
-    token_main = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
+    nonce += 1
+
+    bind(
+      signer=signer,
+      verifier=verifier_addr,
+      shared='0x',
+      nonce=nonce,
+      gas_price=gas_price,
     )
+    nonce += 1
 
-    nonce = approve(total, funder_pubkey, funder_privkey, gas_price, nonce)
-
-    logging.debug(f"Funder nonce: {nonce}")
-    logging.debug(f"Assembling bind transaction:")
-
-    bind_txn = lottery_main.functions.bind(
-        signer,
-        verifier_addr,
-        '0x',
-    ).buildTransaction(
-        {
-            'chainId': 1,
-            'from': funder_pubkey,
-            'gas': 200000,
-            'gasPrice': w3.toWei(gas_price, 'gwei'),
-            'nonce': nonce,
-        }
+    push_txn_hash = push(
+      signer=signer,
+      total=total,
+      escrow=escrow,
+      nonce=nonce,
+      gas_price=gas_price,
     )
-    logging.debug(bind_txn)
+    nonce += 1
 
-    logging.debug('Funder signed transaction')
-    bind_txn_signed = w3.eth.account.sign_transaction(bind_txn, private_key=funder_privkey)
-    logging.debug(bind_txn_signed)
-
-    logging.debug('Submitting bind transaction')
-    bind_txn_hash = w3.eth.sendRawTransaction(bind_txn_signed.rawTransaction)
-    logging.debug(f"Submitted bind transaction with hash: {bind_txn_hash.hex()}")
-    nonce = nonce + 1
-
-    funding_txn = lottery_main.functions.push(
-        signer,
-        total,
-        escrow
-    ).buildTransaction(
-        {
-            'chainId': 1,
-            'from': funder_pubkey,
-            'gas': 200000,
-            'gasPrice': w3.toWei(gas_price, 'gwei'),
-            'nonce': nonce,
-        }
-    )
-    logging.debug(funding_txn)
-
-    logging.debug('Funder signed transaction')
-    funding_txn_signed = w3.eth.account.sign_transaction(
-        funding_txn, private_key=funder_privkey)
-    logging.debug(funding_txn_signed)
-
-    logging.debug('Submitting funding transaction')
-    txn_hash: str = w3.eth.sendRawTransaction(
-        funding_txn_signed.rawTransaction).hex()
-    logging.debug(f"Submitted funding transaction with hash: {txn_hash}")
-    return txn_hash
+    return push_txn_hash
 
 
 def get_min_escrow():
