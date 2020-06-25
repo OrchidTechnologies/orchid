@@ -268,7 +268,7 @@ def get_account_(price: float, blocknum: int) -> Tuple[Optional[str], Optional[s
             # check status - make sure pot is ready
             # status = item['status']
             status = get_transaction_status(push_txn_hash,blocknum)
-            if ((status != 'confirmed') and (age < 3600)):
+            if ((status != 'confirmed') and (age < 10*60*60)): # 10 hour grace period
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
 
