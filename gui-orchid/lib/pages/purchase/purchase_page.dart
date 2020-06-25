@@ -248,7 +248,7 @@ class _PurchasePageState extends State<PurchasePage> {
             onPressed: _copyDebugInfo),
         pady(24),
         LinkText(s.contactOrchid,
-            style: AppText.linkStyle, url: 'https://orchid.com/help'),
+            style: AppText.linkStyle, url: 'https://orchid.com/contact'),
         pady(24),
         FlatButton(
             color: Colors.redAccent,
@@ -284,7 +284,7 @@ class _PurchasePageState extends State<PurchasePage> {
     Dialogs.showConfirmationDialog(
         context: context,
         title: s.deleteTransaction,
-        body: s.clearThisInProgressTransactionExplain,
+        body: s.clearThisInProgressTransactionExplain + " http://orchid.com/contact",
         commitAction: _confirmDeleteTransaction);
   }
 
