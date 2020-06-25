@@ -292,6 +292,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
 }
 
 void Server::Stop() noexcept {
+    Valve::Stop();
     self_.reset();
 }
 
@@ -309,6 +310,7 @@ Server::Server(S<Origin> origin, S<Cashier> cashier) :
     origin_(std::move(origin)),
     cashier_(std::move(cashier))
 {
+    type_ = typeid(*this).name();
     const auto locked(locked_());
     Commit(locked);
 }
@@ -325,6 +327,7 @@ task<void> Server::Open(Pipe<Buffer> &pipe) {
 task<void> Server::Shut() noexcept {
     co_await nest_.Shut();
     *co_await Parallel(Bonded::Shut(), Sunken::Shut());
+    co_await Valve::Shut();
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {
