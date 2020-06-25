@@ -137,6 +137,7 @@ def warn(signer: str, nonce: int):
         warn_txn_signed.rawTransaction,
     )
     logging.debug(f"Submitted warn transaction with hash: {warn_txn_hash.hex()}")
+    return warn_txn_hash.hex()
 
 
 def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float, nonce: int):
@@ -177,6 +178,7 @@ def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float,
         pull_txn_signed.rawTransaction,
     )
     logging.debug(f'Submitted pull transaction with hash: {pull_txn_hash.hex()}')
+    return pull_txn_hash.hex()
 
 
 def approve(spender: str, amount: float, nonce: int, gas_price: float = float(os.environ['DEFAULT_GAS'])):
@@ -213,7 +215,7 @@ def approve(spender: str, amount: float, nonce: int, gas_price: float = float(os
 
     approve_txn_hash = w3.eth.sendRawTransaction(approve_txn_signed.rawTransaction)
     logging.debug(f'Submitted approve transaction with hash: {approve_txn_hash.hex()}')
-    return approve_txn_hash
+    return approve_txn_hash.hex()
 
 
 def bind(signer: str, verifier: str, nonce: int, shared: str = '0x', gas_price: float = float(os.environ['DEFAULT_GAS'])):
@@ -251,7 +253,7 @@ def bind(signer: str, verifier: str, nonce: int, shared: str = '0x', gas_price: 
 
     bind_txn_hash = w3.eth.sendRawTransaction(bind_txn_signed.rawTransaction)
     logging.debug(f'Submitted bind transaction with hash: {bind_txn_hash.hex()}')
-    return bind_txn_hash
+    return bind_txn_hash.hex()
 
 
 def push(signer: str, total: float, escrow: float, nonce: int, gas_price: float = float(os.environ['DEFAULT_GAS'])):
@@ -289,4 +291,4 @@ def push(signer: str, total: float, escrow: float, nonce: int, gas_price: float 
 
     push_txn_hash = w3.eth.sendRawTransaction(push_txn_signed.rawTransaction)
     logging.debug(f'Submitted push transaction with hash: {push_txn_hash.hex()}')
-    return push_txn_hash
+    return push_txn_hash.hex()
