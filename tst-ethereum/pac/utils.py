@@ -37,8 +37,8 @@ def is_true(value: str) -> bool:
     return value.lower() in ['true', '1', 'yes']
 
 
-def get_token_name(address: str):
-    token_addr = w3.toChecksumAddress(address)
+def get_token_name(address: str=os.environ['TOKEN']):
+    token_addr = address
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=token_addr,
@@ -48,8 +48,8 @@ def get_token_name(address: str):
     return token_name
 
 
-def get_token_symbol(address: str):
-    token_addr = w3.toChecksumAddress(address)
+def get_token_symbol(address: str=os.environ['TOKEN']):
+    token_addr = address
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=token_addr,
@@ -59,8 +59,8 @@ def get_token_symbol(address: str):
     return token_symbol
 
 
-def get_token_decimals(address: str):
-    token_addr = w3.toChecksumAddress(address)
+def get_token_decimals(address: str=os.environ['TOKEN']):
+    token_addr = address
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=token_addr,
@@ -84,7 +84,10 @@ def look(funder: str, signer: str):
         abi=edited_lottery_abi,
         address=lottery_addr,
     )
-    amount, escrow, unlock, _, _, _ = lottery_contract.functions.look(w3.toChecksumAddress(funder), w3.toChecksumAddress(signer)).call()
+    amount, escrow, unlock, _, _, _ = lottery_contract.functions.look(
+        w3.toChecksumAddress(funder),
+        w3.toChecksumAddress(signer),
+    ).call()
     account_total = amount + escrow
     logging.debug(f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + {escrow} (escrow) = {account_total} (total)')
     return amount, escrow, unlock

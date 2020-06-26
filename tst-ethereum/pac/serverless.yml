@@ -71,6 +71,7 @@ provider:
     PAC_FUNDER_PRIVKEY_SECRET: ${self:custom.myEnvironment.PAC_FUNDER_PRIVKEY_SECRET.${self:provider.stage}}
     DEFAULT_GAS: ${self:custom.myEnvironment.DEFAULT_GAS.${self:provider.stage}}
     BUNDLE_ID: 'net.orchid.Orchid'
+    MULTISIG: ${ssm:PAC_MULTISIG~true}
   runtime: python3.8
   region: us-west-2
   iamRoleStatements:
