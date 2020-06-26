@@ -129,7 +129,10 @@ def recycle_accounts(nonce: int):
             warn(signer, nonce)
             nonce += 1
         elif actual_unlock - 1 < latest_block['timestamp']:
-            logging.debug(f'Account ({signer}) is unlocked ({unlock - 1} < {latest_block["timestamp"]}). Initiating pull()')
+            logging.debug(
+              f'Account ({signer}) is unlocked ({unlock - 1} < {latest_block["timestamp"]}). '
+              'Initiating pull()'
+            )
             pull(
                 signer=signer,
                 target=funder,

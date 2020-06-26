@@ -37,7 +37,7 @@ def is_true(value: str) -> bool:
     return value.lower() in ['true', '1', 'yes']
 
 
-def get_token_name(address: str=os.environ['TOKEN']):
+def get_token_name(address: str = os.environ['TOKEN']):
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=address,
@@ -47,7 +47,7 @@ def get_token_name(address: str=os.environ['TOKEN']):
     return token_name
 
 
-def get_token_symbol(address: str=os.environ['TOKEN']):
+def get_token_symbol(address: str = os.environ['TOKEN']):
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=address,
@@ -57,7 +57,7 @@ def get_token_symbol(address: str=os.environ['TOKEN']):
     return token_symbol
 
 
-def get_token_decimals(address: str=os.environ['TOKEN']):
+def get_token_decimals(address: str = os.environ['TOKEN']):
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=address,
@@ -67,7 +67,7 @@ def get_token_decimals(address: str=os.environ['TOKEN']):
     return token_decimals
 
 
-def balanceOf(address: str, token_addr: str=os.environ['TOKEN']) -> float:
+def balanceOf(address: str, token_addr: str = os.environ['TOKEN']) -> float:
     token_contract = w3.eth.contract(
       abi=token_abi,
       address=token_addr,
@@ -102,7 +102,10 @@ def look(funder: str, signer: str):
         w3.toChecksumAddress(signer),
     ).call()
     account_total = amount + escrow
-    logging.debug(f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + {escrow} (escrow) = {account_total} (total)')
+    logging.debug(
+      f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + '
+      f'{escrow} (escrow) = {account_total} (total)'
+    )
     return amount, escrow, unlock
 
 
@@ -157,7 +160,10 @@ def warn(signer: str, nonce: int):
 
 
 def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float, nonce: int):
-    logging.debug(f'pull() signer: {signer} target: {target} autolock: {autolock} amount: {amount} escrow: {escrow} nonce: {nonce}')
+    logging.debug(
+      f'pull() signer: {signer} target: {target} autolock: {autolock} amount: {amount} '
+      f'escrow: {escrow} nonce: {nonce}'
+    )
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     gas_price = int(os.environ['DEFAULT_GAS'])
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
@@ -234,8 +240,17 @@ def approve(spender: str, amount: float, nonce: int, gas_price: float = float(os
     return approve_txn_hash.hex()
 
 
-def bind(signer: str, verifier: str, nonce: int, shared: str = '0x', gas_price: float = float(os.environ['DEFAULT_GAS'])):
-    logging.debug(f'bind() signer: {signer} verifier: {verifier} shared: {shared} nonce: {nonce} gas_price: {gas_price}')
+def bind(
+  signer: str,
+  verifier: str,
+  nonce: int,
+  shared: str = '0x',
+  gas_price: float = float(os.environ['DEFAULT_GAS'])
+  ):
+    logging.debug(
+      f'bind() signer: {signer} verifier: {verifier} shared: {shared} '
+      f'nonce: {nonce} gas_price: {gas_price}'
+    )
 
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])

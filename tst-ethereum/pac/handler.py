@@ -125,7 +125,11 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str, float, float]
     total_oxt = float(total_wei) / float(eth_to_wei)
     balance_oxt = total_oxt - escrow_oxt
 
-    logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT  tot_units: {tot_units}  FV_oxt: {FV_oxt} target_NFV: {target_NFV} ")
+    logging.debug(
+        f'Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, '
+        f'escrow: {escrow_oxt} OXT  tot_units: {tot_units}  FV_oxt: {FV_oxt} '
+        f'target_NFV: {target_NFV}'
+    )
 
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
@@ -281,13 +285,19 @@ def get_account_(price: float, blocknum: int) -> Tuple[Optional[str], Optional[s
             }
             delete_response = table.delete_item(Key=key, ReturnValues='ALL_OLD')
             if (delete_response['Attributes'] is not None and len(delete_response['Attributes']) > 0):
-                balance, escrow, _ = look(funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']), signer=signer_pubkey)
+                balance, escrow, _ = look(
+                  funder=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET']),
+                  signer=signer_pubkey,
+                )
                 # update succeeded
                 if ((status == 'confirmed') and (escrow > get_min_escrow())):
                     ret = push_txn_hash, config, signer_pubkey
                     break
                 else:
-                    logging.debug(f'broken account: {push_txn_hash} status: {status}  age: {age} balance: {balance} deleted and skipped')
+                    logging.debug(
+                      f'broken account: {push_txn_hash} status: {status}  age: {age} '
+                      f'balance: {balance} deleted and skipped'
+                    )
             else:
                 logging.debug('Account was already deleted!')
     if ret:
@@ -301,7 +311,7 @@ def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[st
     push_txn_hash = config = signer_pubkey = None
     count = 0
     while push_txn_hash is None and count < 8:
-        push_txn_hash, config, signer_pubkey = get_account_(price=price,blocknum=blocknum)
+        push_txn_hash, config, signer_pubkey = get_account_(price=price, blocknum=blocknum)
         count = count + 1
     return push_txn_hash, config, signer_pubkey
 
@@ -324,7 +334,10 @@ def hash_receipt_body(receipt):
     certificates = pkcs_container['content']['certificates']
     signer_info = pkcs_container['content']['signer_infos'][0]
     receipt_data = pkcs_container['content']['encap_content_info']['content']
-    logging.debug(f'extracted certificates {len(str(certificates))}B  signer_info {len(str(signer_info))}B  receipt_data {len(str(receipt_data))}B')
+    logging.debug(
+      f'extracted certificates {len(str(certificates))}B signer_info {len(str(signer_info))}B '
+      f'receipt_data {len(str(receipt_data))}B'
+    )
 
     receipt_data_str = str(receipt_data).encode('utf-8')[50:]  # slice the string to remove random header
     logging.debug(f'receipt_data_str: \n{receipt_data_str}')
@@ -527,7 +540,8 @@ def main(event, context):
     if response is not None:
         return response
 
-    # find and error return for any previous claim of the receipt (replay prevention) todo: this is not concurrent-safe, claim needs to be atomic
+    # find and error return for any previous claim of the receipt (replay prevention)
+    # todo: this is not concurrent-safe, claim needs to be atomic
     verify_receipt = body.get('verify_receipt', 'True')
     if (is_true(verify_receipt)):
         response = find_previous_receipt_claim(receipt_hash_table, receipt_hash)
