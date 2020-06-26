@@ -50,7 +50,7 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
     if nonce is None:
         nonce = get_nonce()
     for _ in range(accounts_to_create):
-        push_txn_hash, config, signer_pubkey = fund_PAC(
+        push_txn_hash, config, signer_pubkey, balance_oxt, escrow_oxt = fund_PAC(
             total_usd=price,
             nonce=nonce,
         )
@@ -64,6 +64,8 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
             'creation_time': creation_time,
             'creation_etime': creation_etime,
             'status': 'pending',
+            'balance': balance_oxt,
+            'escrow': escrow_oxt,
         }
         ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
         table.put_item(Item=ddb_item)

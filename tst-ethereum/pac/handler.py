@@ -10,7 +10,6 @@ import uuid
 import hashlib
 import base64
 
-from abis import lottery_abi, token_abi
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
@@ -95,33 +94,36 @@ def fund_PAC_(
 def get_min_escrow():
     return 15.0
 
-def get_target_NFV(tusd):
-    return 2.228775056 * pow(tusd,0.5) - 4.597556694;
 
-def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
+def get_target_NFV(tusd):
+    return 2.228775056 * pow(tusd, 0.5) - 4.597556694
+
+
+def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str, float, float]:
     wallet = generate_wallet()
     signer = wallet['address']
     secret = wallet['private']
-    config = generate_config(secret=secret,)
+    config = generate_config(secret=secret)
 
-    target_NFV = get_target_NFV(total_usd);
-    tot_units = max(int(target_NFV+0.5), 3);
+    target_NFV = get_target_NFV(total_usd)
+    tot_units = max(int(target_NFV+0.5), 3)
 
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
-    #escrow_oxt = get_min_escrow()
-    value_usd  = total_usd * 0.7 - 0.5 # 30% store fee, 0.5 setup charge
-    value_oxt  = value_usd * oxt_per_usd;
-    #tot_units  = max(int(value_oxt / (0.5*escrow_oxt)), 3);
-    FV_oxt     = value_oxt / float(tot_units);
+    # escrow_oxt = get_min_escrow()
+    value_usd = total_usd * 0.7 - 0.5  # 30% store fee, 0.5 setup charge
+    value_oxt = value_usd * oxt_per_usd
+    # tot_units = max(int(value_oxt / (0.5*escrow_oxt)), 3);
+    FV_oxt = value_oxt / float(tot_units)
 
-    eth_to_wei = 1000000000000000000;
-    FV_wei     = int(eth_to_wei * FV_oxt);
-    total_wei  = tot_units * FV_wei;
-    escrow_wei = 2 * FV_wei;
+    eth_to_wei = 1000000000000000000
+    FV_wei = int(eth_to_wei * FV_oxt)
+    total_wei = tot_units * FV_wei
+    escrow_wei = 2 * FV_wei
 
-    escrow_oxt  = float(escrow_wei) / float(eth_to_wei);
-    total_oxt   = float(total_wei)  / float(eth_to_wei);
+    escrow_oxt = float(escrow_wei) / float(eth_to_wei)
+    total_oxt = float(total_wei) / float(eth_to_wei)
+    balance_oxt = total_oxt - escrow_oxt
 
     logging.debug(f"Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, escrow: {escrow_oxt} OXT  tot_units: {tot_units}  FV_oxt: {FV_oxt} target_NFV: {target_NFV} ")
 
@@ -136,7 +138,7 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str]:
         funder_privkey=funder_privkey,
         nonce=nonce,
         )
-    return txn_hash, config, signer
+    return txn_hash, config, signer, balance_oxt, escrow_oxt
 
 
 def process_app_pay_receipt(
@@ -227,7 +229,7 @@ def random_scan(table, price):
     return response0
 
 
-def get_transaction_confirm_count(txhash,blocknum):
+def get_transaction_confirm_count(txhash, blocknum):
     logging.debug(f'get_transaction_confirm_count({txhash}) ')
     # blocknum = w3.eth.blockNumber
     # block = w3.eth.getBlock('latest')
@@ -238,9 +240,9 @@ def get_transaction_confirm_count(txhash,blocknum):
     return diff
 
 
-def get_transaction_status(txhash,blocknum):
+def get_transaction_status(txhash, blocknum):
     try:
-        count = get_transaction_confirm_count(txhash,blocknum)
+        count = get_transaction_confirm_count(txhash, blocknum)
         if (count >= 12):
             return "confirmed"
         else:
@@ -267,8 +269,8 @@ def get_account_(price: float, blocknum: int) -> Tuple[Optional[str], Optional[s
             age = epoch_time - creation_etime
             # check status - make sure pot is ready
             # status = item['status']
-            status = get_transaction_status(push_txn_hash,blocknum)
-            if ((status != 'confirmed') and (age < 10*60*60)): # 10 hour grace period
+            status = get_transaction_status(push_txn_hash, blocknum)
+            if ((status != 'confirmed') and (age < 10*60*60)):  # 10 hour grace period
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
 
