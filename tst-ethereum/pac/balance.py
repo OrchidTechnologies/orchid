@@ -1,7 +1,6 @@
 import logging
 import os
 
-from abis import token_abi
 from metrics import metric
 from utils import balanceOf, configure_logging, get_eth_balance, get_secret, get_token_decimals, get_token_name, get_token_symbol
 
@@ -31,7 +30,7 @@ def get_oxt_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'
     return balance
 
 
-def get_eth_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
+def get_account_eth_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
     token_name = 'Ethereum'
     token_symbol = 'ETH'
     token_decimals = 18
@@ -94,10 +93,10 @@ def main(event, context):
     logging.debug(f'Context: {context}')
 
     get_oxt_balance()
-    get_eth_balance()
+    get_account_eth_balance()
 
     get_oxt_balance(address=os.environ['MULTISIG'])
-    get_eth_balance(address=os.environ['MULTISIG'])
+    get_account_eth_balance(address=os.environ['MULTISIG'])
 
 
 if __name__ == "__main__":
