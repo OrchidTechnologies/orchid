@@ -38,10 +38,9 @@ def is_true(value: str) -> bool:
 
 
 def get_token_name(address: str=os.environ['TOKEN']):
-    token_addr = address
     token_contract = w3.eth.contract(
         abi=token_abi,
-        address=token_addr,
+        address=address,
     )
     token_name = token_contract.functions.name().call()
     logging.debug(f'Token Name: {token_name}')
@@ -49,10 +48,9 @@ def get_token_name(address: str=os.environ['TOKEN']):
 
 
 def get_token_symbol(address: str=os.environ['TOKEN']):
-    token_addr = address
     token_contract = w3.eth.contract(
         abi=token_abi,
-        address=token_addr,
+        address=address,
     )
     token_symbol = token_contract.functions.symbol().call()
     logging.debug(f'Token Symbol: {token_symbol}')
@@ -60,14 +58,29 @@ def get_token_symbol(address: str=os.environ['TOKEN']):
 
 
 def get_token_decimals(address: str=os.environ['TOKEN']):
-    token_addr = address
     token_contract = w3.eth.contract(
         abi=token_abi,
-        address=token_addr,
+        address=address,
     )
     token_decimals = token_contract.functions.decimals().call()
     logging.debug(f'Token Decimals: {token_decimals}')
     return token_decimals
+
+
+def balanceOf(address: str, token_addr: str=os.environ['TOKEN']) -> float:
+    token_contract = w3.eth.contract(
+      abi=token_abi,
+      address=token_addr,
+    )
+    balance = token_contract.functions.balanceOf(address).call()
+    logging.debug(f'balanceOf {address}: {balance}')
+    return balance
+
+
+def get_eth_balance(address: str) -> float:
+    balance = w3.eth.getBalance(address)
+    logging.debug(f'ETH Balance of {address}: {balance}')
+    return balance
 
 
 def look(funder: str, signer: str):

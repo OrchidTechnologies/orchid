@@ -3,25 +3,18 @@ import os
 
 from abis import token_abi
 from metrics import metric
-from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol
-from web3 import Web3
+from utils import balanceOf, configure_logging, get_eth_balance, get_secret, get_token_decimals, get_token_name, get_token_symbol
 
 
-w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
 configure_logging(level="DEBUG")
 
 
 def get_oxt_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
-    token_addr = os.environ['TOKEN']
-    token_contract = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
-    )
     token_name = get_token_name()
     token_symbol = get_token_symbol()
     token_decimals = get_token_decimals()
     DECIMALS = 10 ** token_decimals
-    raw_balance = token_contract.functions.balanceOf(address).call()
+    raw_balance = balanceOf(address)
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
@@ -43,7 +36,7 @@ def get_eth_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'
     token_symbol = 'ETH'
     token_decimals = 18
     DECIMALS = 10 ** token_decimals
-    raw_balance = w3.eth.getBalance(address)
+    raw_balance = get_eth_balance(address)
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
