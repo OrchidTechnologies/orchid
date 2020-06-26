@@ -154,7 +154,7 @@ resources:
         TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
           - AttributeName: price
-            AttributeType: N
+            AttributeType: "N"
           - AttributeName: signer
             AttributeType: S
         KeySchema:
