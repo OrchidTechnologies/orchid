@@ -8,11 +8,9 @@ import time
 
 from decimal import Decimal
 from handler import fund_PAC, get_product_id_mapping
-from utils import configure_logging, get_secret
-from web3 import Web3
+from utils import configure_logging, get_nonce
 
 
-w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
 configure_logging()
 
 
@@ -28,8 +26,7 @@ def call_maintain_pool():
 def maintain_pool_wrapper(event=None, context=None):
     configure_logging(level="DEBUG")
     mapping = get_product_id_mapping()
-    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
-    nonce = w3.eth.getTransactionCount(account=funder_pubkey)
+    nonce = get_nonce()
     logging.debug(f"maintain_pool_wrapper Funder nonce: {nonce}")
     for product_id in mapping:
         price = mapping[product_id]
@@ -51,8 +48,7 @@ def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SI
     logging.debug(f'Actual Pool Size: {actual_pool_size}. Need to create {accounts_to_create} accounts')
     logging.debug(f'Need to create {accounts_to_create} accounts')
     if nonce is None:
-        funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
-        nonce = w3.eth.getTransactionCount(account=funder_pubkey)
+        nonce = get_nonce()
     for _ in range(accounts_to_create):
         push_txn_hash, config, signer_pubkey = fund_PAC(
             total_usd=price,

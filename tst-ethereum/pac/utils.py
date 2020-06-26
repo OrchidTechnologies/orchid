@@ -292,3 +292,20 @@ def push(signer: str, total: float, escrow: float, nonce: int, gas_price: float 
     push_txn_hash = w3.eth.sendRawTransaction(push_txn_signed.rawTransaction)
     logging.debug(f'Submitted push transaction with hash: {push_txn_hash.hex()}')
     return push_txn_hash.hex()
+
+
+def get_nonce() -> int:
+    logging.debug('get_nonce()')
+
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+    nonce = w3.eth.getTransactionCount(account=funder_pubkey)
+    logging.debug(f'nonce: {nonce}')
+    return nonce
+
+
+def get_latest_block():
+    logging.debug('get_latest_block()')
+
+    latest_block = w3.eth.getBlock('latest')
+    logging.debug(f'latest_block: {latest_block}')
+    return latest_block

@@ -5,16 +5,15 @@ import os
 
 from decimal import Decimal
 from utils import configure_logging
+from utils import get_latest_block
 from utils import get_secret
 from utils import is_true
 from utils import keys
 from utils import look
 from utils import pull
 from utils import warn
-from web3 import Web3
 
 
-w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
 configure_logging()
 
 
@@ -118,7 +117,7 @@ def recycle_accounts(nonce: int):
         logging.debug(f'Processing item: Funder: {funder} Signer: {signer} Unlock: {unlock}')
 
         amount, escrow, actual_unlock = look(funder, signer)
-        latest_block = w3.eth.getBlock('latest')
+        latest_block = get_latest_block()
         logging.debug(f'Actual Unlock: {actual_unlock}')
 
         if unlock != actual_unlock:
