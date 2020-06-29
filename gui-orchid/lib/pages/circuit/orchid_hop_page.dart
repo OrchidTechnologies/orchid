@@ -772,15 +772,30 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         title: s.myOrchidAccount + ':',
         body: Container(
           width: 250,
-          height: 250,
-          child: Center(
-            child: QrImage(
-              data: config,
-              version: QrVersions.auto,
-              size: 250.0,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: QrImage(
+                  data: config,
+                  version: QrVersions.auto,
+                  size: 250.0,
+                ),
+              ),
+              _buildCopyButton(config)
+            ],
           ),
         ));
+  }
+
+  Widget _buildCopyButton(String config) {
+    return RoundedRectButton(
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white,
+        text: s.copy,
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: config));
+        });
   }
 
   S get s {

@@ -140,6 +140,7 @@ class TitleIconButton extends StatelessWidget {
   final Widget trailing;
   final Color textColor;
   final Color backgroundColor;
+  final Color borderColor;
   final VoidCallback onPressed;
   final double spacing;
 
@@ -149,6 +150,7 @@ class TitleIconButton extends StatelessWidget {
     @required this.trailing,
     @required this.textColor,
     @required this.backgroundColor,
+    this.borderColor,
     @required this.onPressed,
     this.spacing = 4,
   }) : super(key: key);
@@ -160,7 +162,9 @@ class TitleIconButton extends StatelessWidget {
       onPressed: onPressed,
       shape: RoundedRectangleBorder(
           side: BorderSide(
-              color: AppColors.teal_3, width: 1, style: BorderStyle.solid),
+              color: borderColor ?? backgroundColor,
+              width: 1,
+              style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
