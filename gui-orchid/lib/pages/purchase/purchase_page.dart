@@ -112,8 +112,7 @@ class _PurchasePageState extends State<PurchasePage> {
                         pac: _pacs[OrchidPurchaseAPI.pacTier1],
                         title: s.tryOutOrchid,
                         subtitle: _buildPurchaseDescriptionText(
-                          text: "- " +
-                              s.goodForBrowsingAndLightActivity,
+                          text: "- " + s.goodForBrowsingAndLightActivity,
                         ),
                         gradBegin: 0,
                         gradEnd: 2),
@@ -144,6 +143,8 @@ class _PurchasePageState extends State<PurchasePage> {
                       gradBegin: -1,
                       gradEnd: -1,
                     ),
+                    pady(32),
+                    _buildPreferredProviderText()
                   ],
                 ),
               ),
@@ -284,7 +285,8 @@ class _PurchasePageState extends State<PurchasePage> {
     Dialogs.showConfirmationDialog(
         context: context,
         title: s.deleteTransaction,
-        body: s.clearThisInProgressTransactionExplain + " http://orchid.com/contact",
+        body: s.clearThisInProgressTransactionExplain +
+            " http://orchid.com/contact",
         commitAction: _confirmDeleteTransaction);
   }
 
@@ -329,6 +331,23 @@ class _PurchasePageState extends State<PurchasePage> {
         pady(12),
       ],
     );
+  }
+
+  Widget _buildPreferredProviderText() {
+    const text = "Purchased credit accounts connect exclusively to our";
+    const linkText = "preferred providers";
+    const linkUrl = "https://www.orchid.com/preferredproviders";
+    return RichText(
+        text: TextSpan(
+          style: TextStyle(fontStyle: FontStyle.italic),
+            children: [
+      TextSpan( text: text + " ", style: TextStyle(color: Colors.black, fontSize: 15) ),
+      LinkTextSpan(
+        text: linkText,
+        url: linkUrl,
+        style: AppText.linkStyle.copyWith(fontSize: 15.0, fontStyle: FontStyle.italic),
+      )
+    ]));
   }
 
   Row _buildCheckRow(String text) {
