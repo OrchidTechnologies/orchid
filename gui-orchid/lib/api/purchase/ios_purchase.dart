@@ -138,18 +138,38 @@ class IOSOrchidPurchaseAPI
     // Update the stored PAC tx
     var pacTx = await PacTransaction.shared.get();
 
-    // Recover from a re-install with a completed iap pending
+    // Recover from a re-install after delete with a completed iap pending
+    // Note: If this happens we have lost the receipt data in the bundle.
+    // Note: For now let's assume the user wanted out and finish the tx.
     if (pacTx == null) {
       log("iap: Found completed iap purchase with no pending PAC tx. Cleaning.");
-      // Note: If this happens we have lost the receipt data in the bundle.
-      // Note: For now let's assume the user wanted out and finish the tx.
       await PacTransaction.shared.clear();
       return;
     }
 
     // Attach the receipt
     try {
-      pacTx.receipt = await SKReceiptManager.retrieveReceiptData();
+      var receipt = await SKReceiptManager.retrieveReceiptData();
+
+      // If the receipt is null, try to refresh it.
+      // (This might happen if there was a purchase in flight during an upgrade.)
+      if (receipt == null) {
+        try {
+          await SKRequestMaker().startRefreshReceiptRequest();
+        } catch (err) {
+          log("iap: Error in refresh receipt request");
+        }
+        receipt = await SKReceiptManager.retrieveReceiptData();
+      }
+
+      // If the receipt is still null there's not much we can do.
+      if (receipt == null) {
+        log("iap: Completed purchase but no receipt found! Clearing transaction.");
+        await PacTransaction.shared.clear();
+        return;
+      }
+
+      pacTx.receipt = receipt;
       pacTx.save();
     } catch (err) {
       log("iap: error getting receipt data for comleted iap");
