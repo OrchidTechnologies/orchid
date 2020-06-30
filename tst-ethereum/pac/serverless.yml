@@ -120,7 +120,7 @@ functions:
           method: post
   MaintainPool:
     handler: pool.maintain_pool_wrapper
-    timeout: 300
+    timeout: 900
     events:
       - schedule: cron(0/15 * * * ? *)
   balance:
