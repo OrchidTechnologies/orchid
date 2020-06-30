@@ -70,10 +70,7 @@ def look(funder: str, signer: str):
         abi=edited_lottery_abi,
         address=lottery_addr,
     )
-    amount, escrow, unlock, _, _, _ = lottery_contract.functions.look(
-        w3.toChecksumAddress(funder),
-        w3.toChecksumAddress(signer),
-    ).call()
+    amount, escrow, unlock, _, _, _ = lottery_contract.functions.look(funder, signer).call()
     account_total = amount + escrow
     logging.debug(
       f'Account Total (funder: {funder}, signer: {signer}): {amount} (amount) + '
@@ -84,7 +81,7 @@ def look(funder: str, signer: str):
 
 def keys(funder: str):
     logging.debug(f'keys() funder: {funder}')
-    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    lottery_addr = os.environ['LOTTERY']
     lottery_contract = w3.eth.contract(
         abi=lottery_abi,
         address=lottery_addr,
