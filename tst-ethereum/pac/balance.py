@@ -2,13 +2,13 @@ import logging
 import os
 
 from metrics import metric
-from utils import balanceOf
+from w3 import balanceOf
 from utils import configure_logging
-from utils import get_eth_balance
+from w3 import get_eth_balance
 from utils import get_secret
-from utils import get_token_decimals
-from utils import get_token_name
-from utils import get_token_symbol
+from w3 import get_token_decimals
+from w3 import get_token_name
+from w3 import get_token_symbol
 
 
 configure_logging(level="DEBUG")

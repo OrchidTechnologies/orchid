@@ -123,6 +123,11 @@ functions:
     timeout: 900
     events:
       - schedule: cron(0/15 * * * ? *)
+  UpdateStatus:
+    handler: status.main
+    timeout: 900
+    events:
+      - schedule: cron(10/15 * * * ? *)
   balance:
     handler: balance.main
     timeout: 300

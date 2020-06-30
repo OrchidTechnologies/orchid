@@ -5,8 +5,6 @@ import os
 import requests
 import sha3
 import time
-import web3.exceptions  # noqa: F401
-import uuid
 import hashlib
 import base64
 
@@ -14,8 +12,10 @@ from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
+from status import get_transaction_status
 from typing import Any, Dict, Optional, Tuple
-from utils import approve, bind, configure_logging, get_secret, is_true, look, push
+from w3 import approve, bind, get_block_number, look, push
+from utils import configure_logging, get_secret, is_true, random_scan
 from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
@@ -59,8 +59,8 @@ def fund_PAC_(
     logging.debug(f"Funding PAC  signer: {signer}, total: {total}, escrow: {escrow} ")
 
     gas_price = int(os.environ['DEFAULT_GAS'])
-    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
-    verifier_addr = w3.toChecksumAddress(os.environ['VERIFIER'])
+    lottery_addr = os.environ['LOTTERY']
+    verifier_addr = os.environ['VERIFIER']
 
     approve(
       spender=lottery_addr,
@@ -223,39 +223,6 @@ def product_to_usd(product_id: str) -> float:
     return mapping.get(product_id, -1)
 
 
-def random_scan(table, price):
-    # generate a random 32 byte address (1 x 32 byte ethereum address)
-    rand_key = uuid.uuid4().hex + uuid.uuid4().hex
-    ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
-    response0 = table.query(Limit=4, KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
-    response1 = table.query(Limit=4, KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
-    response0['Items'].extend(response1['Items'])
-    return response0
-
-
-def get_transaction_confirm_count(txhash, blocknum):
-    logging.debug(f'get_transaction_confirm_count({txhash}) ')
-    # blocknum = w3.eth.blockNumber
-    # block = w3.eth.getBlock('latest')
-    # blocknum2 = block['number']
-    trans = w3.eth.getTransaction(txhash)
-    diff = blocknum - trans['blockNumber']
-    logging.debug(f'get_transaction_confirm_count({txhash}): blocknum({blocknum}) diff({diff}) ')
-    return diff
-
-
-def get_transaction_status(txhash, blocknum):
-    try:
-        count = get_transaction_confirm_count(txhash, blocknum)
-        if (count >= 12):
-            return "confirmed"
-        else:
-            return "unconfirmed"
-    except Exception:
-        return "unknown"
-    return "unknown"
-
-
 def get_account_(price: float, blocknum: int) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     logging.debug(f'get_account_ price:{price}')
     dynamodb = boto3.resource('dynamodb')
@@ -307,7 +274,7 @@ def get_account_(price: float, blocknum: int) -> Tuple[Optional[str], Optional[s
 
 def get_account(price: float) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     logging.debug(f'Getting Account with Price:{price}')
-    blocknum = w3.eth.blockNumber
+    blocknum = get_block_number()
     push_txn_hash = config = signer_pubkey = None
     count = 0
     while push_txn_hash is None and count < 8:

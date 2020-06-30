@@ -5,13 +5,13 @@ import os
 
 from decimal import Decimal
 from utils import configure_logging
-from utils import get_latest_block
+from w3 import get_latest_block
 from utils import get_secret
 from utils import is_true
-from utils import keys
-from utils import look
-from utils import pull
-from utils import warn
+from w3 import keys
+from w3 import look
+from w3 import pull
+from w3 import warn
 
 
 configure_logging()

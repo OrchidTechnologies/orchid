@@ -8,7 +8,8 @@ import time
 
 from decimal import Decimal
 from handler import fund_PAC, get_product_id_mapping
-from utils import configure_logging, get_nonce
+from utils import configure_logging
+from w3 import get_nonce
 
 
 configure_logging()
