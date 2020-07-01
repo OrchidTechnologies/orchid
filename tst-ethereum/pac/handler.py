@@ -238,9 +238,12 @@ def get_account_(price: float, blocknum: int) -> Tuple[Optional[str], Optional[s
             push_txn_hash = item['push_txn_hash']
             creation_etime = item.get('creation_etime', 0)
             age = epoch_time - creation_etime
+            old_status = item['status']
             # check status - make sure pot is ready
-            # status = item['status']
             status = get_transaction_status(push_txn_hash, blocknum)
+            if old_status != status:
+                logging.warning(f'DynamoDB status of {old_status} for {push_txn_hash} does not match new status of {status}!')
+
             if ((status != 'confirmed') and (age < 10*60*60)):  # 10 hour grace period
                 logging.debug(f'Skipping account ({push_txn_hash}) with status: {status} age: {age}')
                 continue
