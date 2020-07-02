@@ -38,6 +38,9 @@ custom:
     WEB3_WEBSOCKET:
       prod: 'WEB3_WEBSOCKET'
       dev: 'WEB3_WEBSOCKET_DEV'
+    DOUBLE_CHECK_ACCOUNTS:
+      prod: 'True'
+      dev: 'False'
   datadog:
     addLayers: true
     flushMetricsToLogs: true
@@ -72,6 +75,7 @@ provider:
     DEFAULT_GAS: ${self:custom.myEnvironment.DEFAULT_GAS.${self:provider.stage}}
     BUNDLE_ID: 'net.orchid.Orchid'
     MULTISIG: ${ssm:PAC_MULTISIG~true}
+    DOUBLE_CHECK_ACCOUNTS: ${self:custom.myEnvironment.DOUBLE_CHECK_ACCOUNTS.${self:provider.stage}}
   runtime: python3.8
   region: us-west-2
   iamRoleStatements:
