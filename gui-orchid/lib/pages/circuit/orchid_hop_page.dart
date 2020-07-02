@@ -531,15 +531,18 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             children: [
               Text(s.prices, style: TextStyle(fontWeight: FontWeight.bold)),
               pady(4),
-              Text(s.ethPriceEthpricetext),
-              Text(s.oxtPriceOxtpricetext),
-              Text(s.gasPriceGaspricetext,
+              Text(s.ethPrice + " " + ethPriceText),
+              Text(s.oxtPrice + " " + oxtPriceText),
+              Text(s.gasPrice + " " + gasPriceText,
                   style: gasPriceHigh ? TextStyle(color: Colors.red) : null),
+
               pady(16),
               Text(s.ticketValue,
                   style: TextStyle(fontWeight: FontWeight.bold)),
               pady(4),
-              Text(s.maxFaceValueMaxfacevaluetext),
+
+              Text(s.maxFaceValue + " " + maxFaceValueText),
+
               Text(s.costToRedeem + " " + costToRedeemText,
                   style:
                       ticketUnderwater ? TextStyle(color: Colors.red) : null),

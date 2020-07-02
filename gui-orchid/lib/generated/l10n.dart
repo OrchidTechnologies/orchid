@@ -1827,51 +1827,11 @@ class S {
     );
   }
 
-  /// `ETH price: $ethPriceText`
-  String get ethPriceEthpricetext {
-    return Intl.message(
-      'ETH price: \$ethPriceText',
-      name: 'ethPriceEthpricetext',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `OXT price: $oxtPriceText`
-  String get oxtPriceOxtpricetext {
-    return Intl.message(
-      'OXT price: \$oxtPriceText',
-      name: 'oxtPriceOxtpricetext',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Gas price: $gasPriceText`
-  String get gasPriceGaspricetext {
-    return Intl.message(
-      'Gas price: \$gasPriceText',
-      name: 'gasPriceGaspricetext',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Ticket Value`
   String get ticketValue {
     return Intl.message(
       'Ticket Value',
       name: 'ticketValue',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Max face value: $maxFaceValueText`
-  String get maxFaceValueMaxfacevaluetext {
-    return Intl.message(
-      'Max face value: \$maxFaceValueText',
-      name: 'maxFaceValueMaxfacevaluetext',
       desc: '',
       args: [],
     );
@@ -2292,6 +2252,46 @@ class S {
     return Intl.message(
       'Loading ...',
       name: 'loading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `ETH price:`
+  String get ethPrice {
+    return Intl.message(
+      'ETH price:',
+      name: 'ethPrice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `OXT price:`
+  String get oxtPrice {
+    return Intl.message(
+      'OXT price:',
+      name: 'oxtPrice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Gas price:`
+  String get gasPrice {
+    return Intl.message(
+      'Gas price:',
+      name: 'gasPrice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Max face value:`
+  String get maxFaceValue {
+    return Intl.message(
+      'Max face value:',
+      name: 'maxFaceValue',
       desc: '',
       args: [],
     );

@@ -197,11 +197,7 @@
 	"considerAddingOxtToYourAccountBalance": "Consider adding OXT to your account balance.",
 	"considerAddingOxtToYourDepositOrMovingFundsFrom": "Consider adding OXT to your deposit or moving funds from your balance to your deposit.",
 	"prices": "Prices",
-	"ethPriceEthpricetext": "ETH price: $ethPriceText",
-	"oxtPriceOxtpricetext": "OXT price: $oxtPriceText",
-	"gasPriceGaspricetext": "Gas price: $gasPriceText",
 	"ticketValue": "Ticket Value",
-	"maxFaceValueMaxfacevaluetext": "Max face value: $maxFaceValueText",
 	"costToRedeem": "Cost to redeem:",
 	"viewTheDocsForHelpOnThisIssue": "View the docs for help on this issue.",
 	"more": "More",
@@ -243,5 +239,9 @@
 	"loggingEnabled": "Logging enabled",
 	"cancel": "CANCEL",
 	"logging": "Logging",
-	"loading": "Loading ..."
+	"loading": "Loading ...",
+	"ethPrice": "ETH price:",
+	"oxtPrice": "OXT price:",
+	"gasPrice": "Gas price:",
+	"maxFaceValue": "Max face value:"
 }
