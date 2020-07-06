@@ -66,7 +66,10 @@ def maintain_pool(price: float, pool_size: int, nonce: int = None) -> int:
     confirm_pool_size, actual_pool_size = get_account_counts(price)
     accounts_to_create = max(pool_size - actual_pool_size, 0)
     gas_price = compute_gas_price(confirm_pool_size, actual_pool_size)
-    logging.debug(f'Actual Pool Size: {confirm_pool_size} / {actual_pool_size}. gas_price: {gas_price} Need to create {accounts_to_create} accounts')
+    logging.debug(
+      f'Actual Pool Size: {confirm_pool_size} / {actual_pool_size}. '
+      f'gas_price: {gas_price} Need to create {accounts_to_create} accounts'
+    )
     if nonce is None:
         nonce = get_nonce()
     for _ in range(accounts_to_create):
@@ -85,6 +88,8 @@ def maintain_pool(price: float, pool_size: int, nonce: int = None) -> int:
             'escrow': escrow_oxt,
         }
         ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(os.environ['TABLE_NAME'])
         table.put_item(Item=ddb_item)
         nonce += 3
     return nonce
