@@ -31,8 +31,12 @@ def maintain_pool_wrapper(event=None, context=None):
     logging.debug(f"maintain_pool_wrapper Funder nonce: {nonce}")
     for product_id in mapping:
         price = mapping[product_id]
-        nonce = maintain_pool(price=price, nonce=nonce)
+        pool_size_env = f'{product_id.upper()}_POOL_SIZE'.replace('.', '_')
+        pool_size = os.environ.get(pool_size_env, os.environ['DEFAULT_POOL_SIZE'])
+        logging.debug(f'pool_size_env: {os.environ.get(pool_size_env)} DEFAULT: {os.environ["DEFAULT_POOL_SIZE"]}')
+        nonce = maintain_pool(price=price, pool_size=int(pool_size), nonce=nonce)
     recycle_accounts(nonce=nonce)
+
 
 def get_account_counts(price: float):
     logging.debug(f'get_account_counts(price:{price})')
@@ -48,6 +52,7 @@ def get_account_counts(price: float):
                 confirm_count += 1
     return confirm_count, total_count
 
+
 def compute_gas_price(confirm_count, target_count):
     ratio = float(confirm_count) / float(target_count)
     min_price = 1.0
@@ -55,7 +60,8 @@ def compute_gas_price(confirm_count, target_count):
     gas_price = (1.0-ratio)*min_price + ratio*max_price
     return gas_price
 
-def maintain_pool(price: float, pool_size: int = int(os.environ['DEFAULT_POOL_SIZE']), nonce: int = None) -> int:
+
+def maintain_pool(price: float, pool_size: int, nonce: int = None) -> int:
     logging.debug(f'Maintaining Pool of size:{pool_size} and price:{price}')
     confirm_pool_size, actual_pool_size = get_account_counts(price)
     accounts_to_create = max(pool_size - actual_pool_size, 0)

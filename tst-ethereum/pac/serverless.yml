@@ -20,6 +20,9 @@ custom:
     DEFAULT_POOL_SIZE:
       prod: "50"
       dev: "10"
+    NET_ORCHID_PACTIER1_POOL_SIZE:
+      prod: "500"
+      dev: "10"
     LOG_LEVEL:
       prod: "WARNING"
       dev: "DEBUG"
@@ -67,6 +70,7 @@ provider:
     RECYCLE_TABLE_NAME: PAC-Recycle-${self:provider.stage}
     RESULT_TABLE_NAME: PAC-Result-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
+    NET_ORCHID_PACTIER1_POOL_SIZE: ${self:custom.myEnvironment.NET_ORCHID_PACTIER1_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
     LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
     ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
