@@ -3,11 +3,10 @@ import logging
 import os
 
 from recycle import main as recycle
-from utils import configure_logging, get_secret, keys
-from web3 import Web3
+from utils import configure_logging, get_secret
+from w3 import keys
 
 
-w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
 configure_logging(level="DEBUG")
 
 
