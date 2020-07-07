@@ -9,6 +9,7 @@ from w3 import get_latest_block
 from utils import get_secret
 from utils import is_true
 from w3 import keys
+from w3 import kill
 from w3 import look
 from w3 import pull
 from w3 import warn
@@ -139,6 +140,11 @@ def recycle_accounts(nonce: int):
                 autolock=True,
                 amount=amount,
                 escrow=escrow,
+                nonce=nonce,
+            )
+            nonce += 1
+            kill(
+                signer=signer,
                 nonce=nonce,
             )
             nonce += 1

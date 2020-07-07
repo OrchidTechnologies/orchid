@@ -129,6 +129,43 @@ def warn(signer: str, nonce: int):
     return warn_txn_hash.hex()
 
 
+def kill(signer: str, nonce: int):
+    logging.debug(f'kill() signer: {signer} nonce: {nonce}')
+    lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
+    gas_price = int(os.environ['DEFAULT_GAS'])
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+    funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
+    lottery_contract = w3.eth.contract(
+        abi=lottery_abi,
+        address=lottery_addr,
+    )
+    kill_txn = lottery_contract.functions.kill(
+        signer,
+    ).buildTransaction(
+        {
+            'chainId': 1,
+            'from': funder_pubkey,
+            'gas': 50000,
+            'gasPrice': w3.toWei(gas_price, 'gwei'),
+            'nonce': nonce,
+        }
+    )
+    logging.debug(kill_txn)
+    kill_txn_signed = w3.eth.account.sign_transaction(
+        kill_txn,
+        private_key=funder_privkey,
+    )
+    logging.debug(kill_txn_signed)
+
+    logging.debug('Submitting kill transaction')
+
+    kill_txn_hash = w3.eth.sendRawTransaction(
+        kill_txn_signed.rawTransaction,
+    )
+    logging.debug(f"Submitted warn transaction with hash: {kill_txn_hash.hex()}")
+    return kill_txn_hash.hex()
+
+
 def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float, nonce: int):
     logging.debug(
       f'pull() signer: {signer} target: {target} autolock: {autolock} amount: {amount} '
