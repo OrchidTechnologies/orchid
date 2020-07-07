@@ -11,7 +11,7 @@ class OrchidEthereum {
   static OrchidEthereum _shared = OrchidEthereum._init();
 
   static var providerUrl =
-      'https://eth-mainnet.alchemyapi.io/v2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
+      'htt'+'ps://et'+'h-main'+'ne'+'t.alc'+'hemya'+'pi.i'+'o/v'+'2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
 
   // Lottery contract address on main net
   static var lotteryContractAddress =

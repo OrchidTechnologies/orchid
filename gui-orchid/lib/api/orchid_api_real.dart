@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_eth.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -179,7 +180,7 @@ class RealOrchidAPI implements OrchidAPI {
   /// and publish it to the VPN.
   Future<bool> setConfiguration(String userConfig) async {
     String combinedConfig = await generateCombinedConfig(userConfig);
-    print("combined config = {$combinedConfig}");
+    log("combined config = {$combinedConfig}");
 
     // todo: return a bool from the native side?
     String result = await _platform
@@ -190,9 +191,11 @@ class RealOrchidAPI implements OrchidAPI {
   // Generate the portion of the VPN config managed by the GUI.
   // The desired format is (JavaScript, not JSON) e.g.:
   static Future<String> generateManagedConfig() async {
-    var hopsListConfig = await OrchidVPNConfig.generateHopsConfig();
-    //  Currently the hops list is the only managed config.
-    return hopsListConfig;
+    // Circuit configuration
+    var managedConfig = await OrchidVPNConfig.generateHopsConfig();
+    // Default RPC provider
+    managedConfig += '\nrpc = "${OrchidEthereum.providerUrl}";';
+    return managedConfig;
   }
 
   // Generate the combined user config and generated config
