@@ -143,13 +143,13 @@ functions:
       - schedule: cron(5/15 * * * ? *)
   recycle:
     handler: recycle.main
-    timeout: 10
+    timeout: 300
     events:
       - http:
           path: recycle
           method: post
   reclaim:
-    timeout: 300
+    timeout: 900
     handler: reclaim.main
 plugins:
   - serverless-plugin-datadog
