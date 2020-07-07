@@ -65,7 +65,8 @@ def maintain_pool(price: float, pool_size: int, nonce: int = None) -> int:
     logging.debug(f'Maintaining Pool of size:{pool_size} and price:{price}')
     confirm_pool_size, actual_pool_size = get_account_counts(price)
     accounts_to_create = max(pool_size - actual_pool_size, 0)
-    gas_price = compute_gas_price(confirm_pool_size, actual_pool_size)
+    # gas_price = compute_gas_price(confirm_pool_size, actual_pool_size)
+    gas_price = 'N/A'
     logging.debug(
       f'Actual Pool Size: {confirm_pool_size} / {actual_pool_size}. '
       f'gas_price: {gas_price} Need to create {accounts_to_create} accounts'
