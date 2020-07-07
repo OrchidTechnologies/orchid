@@ -54,7 +54,7 @@ def get_account_counts(price: float):
 
 
 def compute_gas_price(confirm_count, target_count):
-    ratio = float(confirm_count) / float(target_count)
+    ratio = float(confirm_count) / max(float(target_count), 1.0)
     min_price = 1.0
     max_price = 50.0
     gas_price = (1.0-ratio)*min_price + ratio*max_price
@@ -65,8 +65,8 @@ def maintain_pool(price: float, pool_size: int, nonce: int = None) -> int:
     logging.debug(f'Maintaining Pool of size:{pool_size} and price:{price}')
     confirm_pool_size, actual_pool_size = get_account_counts(price)
     accounts_to_create = max(pool_size - actual_pool_size, 0)
-    # gas_price = compute_gas_price(confirm_pool_size, actual_pool_size)
-    gas_price = 'N/A'
+    gas_price = compute_gas_price(confirm_pool_size, pool_size)
+    #gas_price = 'N/A'
     logging.debug(
       f'Actual Pool Size: {confirm_pool_size} / {actual_pool_size}. '
       f'gas_price: {gas_price} Need to create {accounts_to_create} accounts'
