@@ -10,6 +10,10 @@ import 'orchid_purchase.dart';
 class OrchidPACServer {
   static final OrchidPACServer _shared = OrchidPACServer._internal();
 
+  /// PAC Server status URL
+  final String statusUrl =
+      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/status';
+
   factory OrchidPACServer() {
     return _shared;
   }
@@ -136,5 +140,31 @@ class OrchidPACServer {
     }
 
     return response.body;
+  }
+
+  Future<bool> storeOpen() async {
+    log("iap: check PAC server status");
+
+    bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('storeDown', false);
+    if (overrideDown) {
+      log("iap: override server status");
+      return false;
+    }
+
+    // Do the post
+    var response = await http.get(
+      statusUrl,
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+    );
+
+    // Validate the response status and content
+    log("iap: pac server status response: ${response.statusCode}, ${response.body}");
+    if (response.statusCode != 200) {
+      return false;
+    }
+    var responseJson = json.decode(response.body);
+    var disabled = responseJson['disabled'];
+    return disabled != 'True';
   }
 }
