@@ -46,6 +46,7 @@ class _PurchasePageState extends State<PurchasePage> {
   String _overlayStatusMessage;
   bool _requiresUserAction = false;
   bool _showHelp = false;
+  bool _storeOpen;
 
   Map<String, PAC> _pacs = {
     OrchidPurchaseAPI.pacTier1: PAC(
@@ -72,6 +73,9 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void initStateAsync() async {
+    _storeOpen = await OrchidPACServer().storeOpen();
+    setState(() {});
+
     // Disable price display
     //_pricing = await OrchidAPI().pricing().getPricing();
     //setState(() {});
@@ -151,7 +155,8 @@ class _PurchasePageState extends State<PurchasePage> {
             ),
           ),
         ),
-        if (_showOverlayPane) _buildOverlay()
+        if (_showOverlayPane) _buildOverlay(),
+        if (_storeOpen == false && !_showOverlayPane) _buildStoreDown()
       ],
     );
   }
@@ -190,6 +195,46 @@ class _PurchasePageState extends State<PurchasePage> {
                 child: _requiresUserAction
                     ? _buildRequiresUserAction()
                     : _buildProgressOverlay(),
+              ),
+            ))));
+  }
+
+  Widget _buildStoreDown() {
+    Size size = MediaQuery.of(context).size;
+    return Center(
+        child: Container(
+            color: Colors.white24.withOpacity(0.5),
+            width: size.width,
+            height: size.height,
+            child: Center(
+                child: IntrinsicHeight(
+              child: Padding(
+                padding:
+                    EdgeInsets.only(left: 64, right: 64, top: 40, bottom: 40),
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                  padding:
+                      EdgeInsets.only(left: 32, right: 32, top: 40, bottom: 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "The Orchid Store is temporarily unavailable.  "
+                        "Please check back in a few minutes.",
+                        style: TextStyle(color: Colors.black, fontSize: 13.0),
+                      ),
+                      pady(8),
+                      LinkText(
+                        "See orchid.com for help.",
+                        overflow: TextOverflow.visible,
+                        style: AppText.linkStyle.copyWith(fontSize: 13.0),
+                        url: 'https://orchid.com/help',
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ))));
   }
@@ -338,14 +383,16 @@ class _PurchasePageState extends State<PurchasePage> {
     const linkText = "preferred providers";
     const linkUrl = "https://www.orchid.com/preferredproviders";
     return RichText(
-        text: TextSpan(
-          style: TextStyle(fontStyle: FontStyle.italic),
-            children: [
-      TextSpan( text: text + " ", style: TextStyle(color: Colors.black, fontSize: 15) ),
+        text:
+            TextSpan(style: TextStyle(fontStyle: FontStyle.italic), children: [
+      TextSpan(
+          text: text + " ",
+          style: TextStyle(color: Colors.black, fontSize: 15)),
       LinkTextSpan(
         text: linkText,
         url: linkUrl,
-        style: AppText.linkStyle.copyWith(fontSize: 15.0, fontStyle: FontStyle.italic),
+        style: AppText.linkStyle
+            .copyWith(fontSize: 15.0, fontStyle: FontStyle.italic),
       )
     ]));
   }
@@ -396,7 +443,7 @@ class _PurchasePageState extends State<PurchasePage> {
             .format(_pricing?.toOXT(pac.usdPurchasePrice)?.value ?? 0)
         : '...';
 
-    var enabled = pac.usdPurchasePrice != null;
+    var enabled = pac.usdPurchasePrice != null && _storeOpen == true;
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
