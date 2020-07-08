@@ -109,7 +109,7 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str, float, float]
     tot_units = max(int(target_NFV+0.5), 3)
 
     subsidy_usd = 0.0
-    if total_usd = 6.99:
+    if total_usd == 6.99:
         subsidy_usd = 4.0
 
     usd_per_oxt = get_usd_per_oxt()
