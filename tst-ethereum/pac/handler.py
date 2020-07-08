@@ -116,18 +116,23 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str, float, float]
     # tot_units = max(int(value_oxt / (0.5*escrow_oxt)), 3);
     FV_oxt = value_oxt / float(tot_units)
 
+    if total_usd == 6.99:
+        escrow_mult = 2
+    else:
+        escrow_mult = 1
+
     eth_to_wei = 1000000000000000000
     FV_wei = int(eth_to_wei * FV_oxt)
-    total_wei = tot_units * FV_wei
-    escrow_wei = 2 * FV_wei
+    total_wei = tot_units * FV_wei + (2 * FV_wei)
+    escrow_wei = 2 * FV_wei * escrow_mult
 
     escrow_oxt = float(escrow_wei) / float(eth_to_wei)
     total_oxt = float(total_wei) / float(eth_to_wei)
     balance_oxt = total_oxt - escrow_oxt
 
     logging.debug(
-        f'Funding PAC  signer: {signer}, total: ${total_usd}{total_oxt} OXT, '
-        f'escrow: {escrow_oxt} OXT  tot_units: {tot_units}  FV_oxt: {FV_oxt} '
+        f'Funding PAC  signer: {signer}, total_usd: ${total_usd} total_oxt: {total_oxt} OXT, '
+        f'escrow: {escrow_oxt} OXT  escrow_mult: {escrow_mult} tot_units: {tot_units}  FV_oxt: {FV_oxt} '
         f'target_NFV: {target_NFV}'
     )
 
