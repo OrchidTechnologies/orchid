@@ -143,7 +143,7 @@ functions:
       - schedule: cron(5/15 * * * ? *)
   recycle:
     handler: recycle.main
-    timeout: 300
+    timeout: 30
     events:
       - http:
           path: recycle
@@ -151,6 +151,13 @@ functions:
   reclaim:
     timeout: 900
     handler: reclaim.main
+  StoreStatus:
+    handler: storestatus.main
+    timeout: 30
+    events:
+      - http:
+          path: status
+          method: get
 plugins:
   - serverless-plugin-datadog
   - serverless-pseudo-parameters

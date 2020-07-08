@@ -39,3 +39,12 @@
       push_txn_hash: null
       config: null
       seller: null
+
+- name: StoreStatus
+  endpoint:
+    function: StoreStatus
+  response:
+    status: 200
+    body:
+        status: 'Healthy'
+        disabled: false

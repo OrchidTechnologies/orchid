@@ -1,0 +1,3 @@
+from datadog_lambda.wrapper import datadog_lambda_wrapper
+from pool import maintain_pool_wrapper as maintain_pool_wrapper_impl
+maintain_pool_wrapper = datadog_lambda_wrapper(maintain_pool_wrapper_impl)
