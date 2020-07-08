@@ -23,6 +23,9 @@ custom:
     NET_ORCHID_PACTIER1_POOL_SIZE:
       prod: "100"
       dev: "10"
+    NET_ORCHID_FAKETEMPTIER1_POOL_SIZE:
+      prod: "50"
+      dev: "1"
     LOG_LEVEL:
       prod: "WARNING"
       dev: "DEBUG"
@@ -36,8 +39,8 @@ custom:
       prod: 'PAC_FUNDER_PRIVKEY'
       dev: 'PAC_FUNDER_PRIVKEY_DEV'
     DEFAULT_GAS:
-      prod: "78"
-      dev: "44"
+      prod: "30"
+      dev: "30"
     WEB3_WEBSOCKET:
       prod: 'WEB3_WEBSOCKET'
       dev: 'WEB3_WEBSOCKET_DEV'
@@ -71,6 +74,7 @@ provider:
     RESULT_TABLE_NAME: PAC-Result-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
     NET_ORCHID_PACTIER1_POOL_SIZE: ${self:custom.myEnvironment.NET_ORCHID_PACTIER1_POOL_SIZE.${self:provider.stage}}
+    NET_ORCHID_FAKETEMPTIER1_POOL_SIZE: ${self:custom.myEnvironment.NET_ORCHID_PACTIER1_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
     LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
     ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
