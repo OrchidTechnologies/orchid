@@ -143,11 +143,11 @@ def recycle_accounts(nonce: int):
                 nonce=nonce,
             )
             nonce += 1
-            kill(
-                signer=signer,
-                nonce=nonce,
-            )
-            nonce += 1
+            # kill(
+            #     signer=signer,
+            #     nonce=nonce,
+            # )
+            # nonce += 1
             delete_account(signer=signer)
         else:
             logging.debug(f'Account ({signer}) is still in the process of unlocking.')
