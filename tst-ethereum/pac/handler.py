@@ -391,14 +391,14 @@ def response_no_account():
     return response
 
 
-def response_invalid_receipt(apple_response):
+def response_invalid_receipt(msg=None):
     logging.debug('response_invalid_receipt(.)')
     response = {
         "isBase64Encoded": False,
         "statusCode": 402,
         "headers": {},
         "body": json.dumps({
-            "message": f"Validation Failure: {apple_response[1]}",
+            "message": f"Validation Failure: {msg}",
             "push_txn_hash": None,
             "config": None,
             "seller": None,
@@ -539,6 +539,9 @@ def main(event, context):
         if bundle_id != os.environ['BUNDLE_ID'] and is_true(verify_receipt):  # Bad bundle_id and set to verify_receipts
             response = response_invalid_bundle(bundle_id)
         else:  # Good bundle_id or not verifying receipts
+            if len(validation_result['receipt']['in_app']) == 0:
+                return response_invalid_receipt(msg="validation_result['receipt']['in_app'] is empty")
+
             product_id = body.get('product_id', validation_result['receipt']['in_app'][0]['product_id'])
             quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
             if os.environ['STAGE'] == 'dev':
@@ -565,7 +568,7 @@ def main(event, context):
                     # store result (idempotency)
                     store_result(result_hash_table, receipt_hash, config, push_txn_hash, os.environ['VERIFIER'])
     else:
-        response = response_invalid_receipt(apple_response)
+        response = response_invalid_receipt(msg=apple_response[1])
     logging.debug(f'response: {response}')
     return response
 
