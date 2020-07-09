@@ -1,8 +1,10 @@
+from handler import get_min_escrow
 import boto3
 import logging
 import os
 
 from metrics import metric
+from recycle import recycle_account
 from utils import configure_logging
 from utils import get_secret
 from w3 import get_block_number
@@ -10,6 +12,7 @@ from w3 import get_token_name
 from w3 import get_token_symbol
 from w3 import get_token_decimals
 from w3 import get_transaction_confirm_count
+import time
 
 
 configure_logging(level='DEBUG')
@@ -41,6 +44,8 @@ def update_statuses():
         price = item['price']
         push_txn_hash = item['push_txn_hash']
         status = item['status']
+        balance = float(item['balance'])
+        escrow = float(item['escrow'])
         if status != 'confirmed':
             blocknum = get_block_number()
 
@@ -67,29 +72,59 @@ def update_statuses():
                   ConditionExpression="#status = :old_status",
                 )
 
+                funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
+
                 if new_status == 'confirmed':
                     token_name = get_token_name()
                     token_symbol = get_token_symbol()
                     token_decimals = get_token_decimals()
-                    balance = float(item['balance'])
-                    escrow = float(item['escrow'])
                     total = balance + escrow
-                    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
-                    metric(
-                        metric_name='orchid.pac',
-                        value=total,
-                        tags=[
-                            f'funder:{funder_pubkey}',
-                            f'signer:{signer}',
-                            f'price:{price}',
-                            f'balance:{balance}',
-                            f'escrow:{escrow}',
-                            f'lottery_contract:{os.environ["LOTTERY"]}',
-                            f'token_name:{token_name}',
-                            f'token_symbol:{token_symbol}',
-                            f'token_decimals:{token_decimals}',
-                        ],
-                    )
+                    min_escrow = get_min_escrow()
+                    if escrow <= min_escrow:
+                        logging.warning(
+                            f'PAC with funder: {funder_pubkey} signer: {signer} balance: {balance} and '
+                            f'escrow: {escrow} has escrow <= min escrow of {min_escrow}. Deleting.'
+                        )
+                        table.delete_item(
+                            Key={
+                              'price': price,
+                              'signer': signer,
+                            }
+                        )
+                        recycle_account(funder=funder_pubkey, signer=signer)
+                    else:
+                        metric(
+                            metric_name='orchid.pac',
+                            value=total,
+                            tags=[
+                                f'funder:{funder_pubkey}',
+                                f'signer:{signer}',
+                                f'price:{price}',
+                                f'balance:{balance}',
+                                f'escrow:{escrow}',
+                                f'lottery_contract:{os.environ["LOTTERY"]}',
+                                f'token_name:{token_name}',
+                                f'token_symbol:{token_symbol}',
+                                f'token_decimals:{token_decimals}',
+                            ],
+                        )
+                else:
+                    # new_status != 'confirmed'
+                    creation_etime = item.get('creation_etime', 0)
+                    epoch_time = int(time.time())
+                    age = epoch_time - creation_etime
+                    if age >= 10*60*60:  # 10 hours in seconds
+                        logging.warning(
+                            f'PAC with funder: {funder_pubkey} signer: {signer} balance: {balance} and '
+                            f'escrow: {escrow} has status: {new_status} and age: {age} >= 10 hours. Deleting.'
+                        )
+                        table.delete_item(
+                            Key={
+                              'price': price,
+                              'signer': signer,
+                            }
+                        )
+                        recycle_account(funder=funder_pubkey, signer=signer)
             else:
                 logging.debug(f'No need to update {push_txn_hash} with signer:{signer} and price:{price} from {status}')
         else:
