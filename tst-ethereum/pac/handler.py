@@ -339,12 +339,12 @@ def response_error_invalid_dev_param():
             'seller': None,
         })
     }
-    logging.debug(f'dev-only parameter included in request! response: {response}')
+    logging.warning(f'dev-only parameter included in request! response: {response}')
     return response
 
 
 def response_invalid_bundle(bundle_id):
-    logging.debug(f'Incorrect bundle_id: {bundle_id} (Does not match expected {os.environ["BUNDLE_ID"]})')
+    logging.warning(f'Incorrect bundle_id: {bundle_id} (Does not match expected {os.environ["BUNDLE_ID"]})')
     response = {
         "isBase64Encoded": False,
         "statusCode": 400,
@@ -360,7 +360,7 @@ def response_invalid_bundle(bundle_id):
 
 
 def response_invalid_product(product_id):
-    logging.debug(f'response_invalid_product(product_id:{product_id})')
+    logging.warning(f'response_invalid_product(product_id:{product_id})')
     response = {
         "isBase64Encoded": False,
         "statusCode": 400,
@@ -376,7 +376,7 @@ def response_invalid_product(product_id):
 
 
 def response_no_account():
-    logging.debug('response_no_account()')
+    logging.warning('response_no_account()')
     response = {
         "isBase64Encoded": False,
         "statusCode": 404,
@@ -392,7 +392,7 @@ def response_no_account():
 
 
 def response_invalid_receipt(msg=None):
-    logging.debug('response_invalid_receipt(.)')
+    logging.warning(f'response_invalid_receipt() msg: {msg}')
     response = {
         "isBase64Encoded": False,
         "statusCode": 402,
@@ -459,7 +459,7 @@ def find_previous_receipt_claim(receipt_hash_table, receipt_hash):
                 "seller": None,
             })
         }
-        logging.debug(f'duplicate receipt! response: {response}')
+        logging.warning(f'duplicate receipt! response: {response}')
         return response
     return None
 
