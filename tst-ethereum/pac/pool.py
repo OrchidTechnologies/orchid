@@ -33,7 +33,7 @@ def maintain_pool_wrapper(event=None, context=None):
         price = mapping[product_id]
         pool_size_env = f'{product_id.upper()}_POOL_SIZE'.replace('.', '_')
         pool_size = os.environ.get(pool_size_env, os.environ['DEFAULT_POOL_SIZE'])
-        logging.debug(f'pool_size_env: {os.environ.get(pool_size_env)} DEFAULT: {os.environ["DEFAULT_POOL_SIZE"]}')
+        logging.debug(f'pool_size_env: {pool_size_env} {os.environ.get(pool_size_env)} DEFAULT: {os.environ["DEFAULT_POOL_SIZE"]}')
         nonce = maintain_pool(price=price, pool_size=int(pool_size), nonce=nonce)
     recycle_accounts(nonce=nonce)
 
