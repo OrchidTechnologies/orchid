@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/api/orchid_pricing.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_pac_server.dart';
 import 'orchid_purchase.dart';
+import 'package:intl/intl.dart';
 
 class IOSOrchidPurchaseAPI
     implements OrchidPurchaseAPI, SKTransactionObserverWrapper {
@@ -40,7 +41,11 @@ class IOSOrchidPurchaseAPI
     // Note: This is an attempt to mitigate an "unable to connect to iTunes Store"
     // Note: error observed in TestFlight by starting the connection process earlier.
     // Note: Products are otherwise fetched immediately prior to purchase.
-    await requestProducts();
+    try {
+      await requestProducts();
+    } catch (err) {
+      log("iap: error in request products: $err");
+    }
 
     // Reset any existing tx after an app restart.
     var pacTx = await PacTransaction.shared.get();
@@ -197,18 +202,24 @@ class IOSOrchidPurchaseAPI
     var pac1 = findProd(OrchidPurchaseAPI.pacTier1);
     var pac2 = findProd(OrchidPurchaseAPI.pacTier2);
     var pac3 = findProd(OrchidPurchaseAPI.pacTier3);
-    if (pac1.priceLocale.currencyCode != "USD") {
-      throw Exception('unknown currency product response');
-    }
-    log("pac1 = ${pac1.productIdentifier}, ${pac1.price}, ${pac1.priceLocale}");
-    log("pac2 = ${pac2.productIdentifier}, ${pac2.price}, ${pac2.priceLocale}");
-    log("pac3 = ${pac3.productIdentifier}, ${pac3.price}, ${pac3.priceLocale}");
+    log("pac1 = ${pac1.productIdentifier}, ${pac1.price}, ${pac1.priceLocale.currencyCode}, ${pac1.priceLocale.currencySymbol}");
+    log("pac2 = ${pac2.productIdentifier}, ${pac2.price}, ${pac2.priceLocale.currencyCode}, ${pac2.priceLocale.currencySymbol}");
+    log("pac3 = ${pac3.productIdentifier}, ${pac3.price}, ${pac3.priceLocale.currencyCode}, ${pac3.priceLocale.currencySymbol}");
 
     var toPAC = (SKProductWrapper prod) {
+      double localizedPrice = double.parse(prod.price);
+      String currencyCode = prod.priceLocale.currencyCode;
       return PAC(
           productId: prod.productIdentifier,
-          usdPurchasePrice: USD(double.parse(prod.price)),
-          displayName: "\$${prod.price} USD");
+          localPurchasePrice: localizedPrice,
+          localCurrencyCode: currencyCode,
+          localDisplayPrice:
+              NumberFormat.currency(symbol: prod.priceLocale.currencySymbol)
+                  .format(localizedPrice),
+          usdPriceApproximate: StaticExchangeRates.from(
+            price: localizedPrice,
+            currencyCode: currencyCode,
+          ));
     };
     return {
       pac1.productIdentifier: toPAC(pac1),

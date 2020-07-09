@@ -109,10 +109,10 @@ class Months extends ScalarValue<int> {
 /// Format a currency to default two digits of precision with an optional suffix
 /// and null behavior.
 String formatCurrency(num value,
-    {String suffix, int digits = 2, String ifNull = "..."}) {
+    {String suffix, int digits = 2, String ifNull = "...", String locale}) {
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0.0" + "#" * (digits - 1)).format(value) +
+  return NumberFormat("#0.0" + "#" * (digits - 1), locale).format(value) +
       (suffix != null ? " $suffix" : "");
 }

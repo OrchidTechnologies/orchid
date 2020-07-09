@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -51,16 +52,19 @@ class _PurchasePageState extends State<PurchasePage> {
   Map<String, PAC> _pacs = {
     OrchidPurchaseAPI.pacTier1: PAC(
         productId: OrchidPurchaseAPI.pacTier1,
-        usdPurchasePrice: null,
-        displayName: ""),
+        localPurchasePrice: null,
+        localCurrencyCode: "USD",
+        localDisplayPrice: null),
     OrchidPurchaseAPI.pacTier2: PAC(
         productId: OrchidPurchaseAPI.pacTier2,
-        usdPurchasePrice: null,
-        displayName: ""),
+        localPurchasePrice: null,
+        localCurrencyCode: "USD",
+        localDisplayPrice: null),
     OrchidPurchaseAPI.pacTier3: PAC(
         productId: OrchidPurchaseAPI.pacTier3,
-        usdPurchasePrice: null,
-        displayName: ""),
+        localPurchasePrice: null,
+        localCurrencyCode: "USD",
+        localDisplayPrice: null),
   };
 
   @override
@@ -80,7 +84,11 @@ class _PurchasePageState extends State<PurchasePage> {
     //_pricing = await OrchidAPI().pricing().getPricing();
     //setState(() {});
 
-    _pacs = await OrchidPurchaseAPI().requestProducts();
+    try {
+      _pacs = await OrchidPurchaseAPI().requestProducts();
+    } catch (err) {
+      log("iap: error requesting products for purchase page: $err");
+    }
     setState(() {});
   }
 
@@ -97,7 +105,7 @@ class _PurchasePageState extends State<PurchasePage> {
 
   Widget buildPage(BuildContext context) {
     return Stack(
-      children: <Widget>[
+    children: <Widget>[
         SingleChildScrollView(
           child: Padding(
             padding:
@@ -437,13 +445,15 @@ class _PurchasePageState extends State<PurchasePage> {
         fontFamily: 'SFProText-Regular',
         height: 16.0 / 12.0);
 
-    var usdString = formatCurrency(pac.usdPurchasePrice?.value, ifNull: '...');
-    var oxtString = pac.usdPurchasePrice != null
+    /*
+    var usdString = formatCurrency(pac.localPurchasePrice, ifNull: '...');
+    var oxtString = pac.localPurchasePrice != null
         ? NumberFormat('0.00')
-            .format(_pricing?.toOXT(pac.usdPurchasePrice)?.value ?? 0)
+            .format(_pricing?.toOXT(pac.localPurchasePrice ?? 0)
         : '...';
+     */
 
-    var enabled = pac.usdPurchasePrice != null && _storeOpen == true;
+    var enabled = pac.localPurchasePrice != null && _storeOpen == true;
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
@@ -492,15 +502,17 @@ class _PurchasePageState extends State<PurchasePage> {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Column(children: [
-                      Text("\$$usdString",
+                      Text("${pac.localDisplayPrice ?? '...'}",
                           style:
                               valueStyle.copyWith(fontWeight: FontWeight.bold)),
                       pady(2),
+                      /*
                       Visibility(
                         visible: _pricing != null,
                         child:
                             Text("~ $oxtString OXT", style: valueSubtitleStyle),
                       ),
+                       */
                     ]),
                   ),
                 ],

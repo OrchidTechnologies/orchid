@@ -1,20 +1,29 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/units.dart';
 import 'orchid_purchase.dart';
 
-/// A purchased access credit with a USD value and product id.
+/// A purchased access credit with a localized price and product id.
 class PAC {
   String productId;
-  USD usdPurchasePrice;
-  String displayName;
+  double localPurchasePrice;
+  String localCurrencyCode; // e.g. "USD"
+  String localDisplayPrice;
+  USD usdPriceApproximate;
 
-  PAC({this.productId, this.usdPurchasePrice, this.displayName});
+  PAC({
+    @required this.productId,
+    @required this.localPurchasePrice,
+    @required this.localCurrencyCode,
+    @required this.localDisplayPrice,
+    @required this.usdPriceApproximate,
+  });
 
   @override
   String toString() {
-    return 'PAC{_productId: $productId, usdPurchasePrice: $usdPurchasePrice, displayName: $displayName}';
+    return 'PAC{_productId: $productId, localPurchasePrice: $localPurchasePrice, localDisplayName: $localDisplayPrice}, usdPriceApproximate: $usdPriceApproximate';
   }
 }
 
