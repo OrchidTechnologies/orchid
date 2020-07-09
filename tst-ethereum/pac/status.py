@@ -1,8 +1,9 @@
-from handler import get_min_escrow
 import boto3
 import logging
 import os
+import time
 
+from handler import get_min_escrow
 from metrics import metric
 from recycle import recycle_account
 from utils import configure_logging
@@ -12,7 +13,6 @@ from w3 import get_token_name
 from w3 import get_token_symbol
 from w3 import get_token_decimals
 from w3 import get_transaction_confirm_count
-import time
 
 
 configure_logging(level='DEBUG')
