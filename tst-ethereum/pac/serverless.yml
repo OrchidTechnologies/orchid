@@ -24,7 +24,7 @@ custom:
       prod: "100"
       dev: "10"
     NET_ORCHID_FAKETEMPTIER1_POOL_SIZE:
-      prod: "50"
+      prod: "200"
       dev: "1"
     LOG_LEVEL:
       prod: "WARNING"
