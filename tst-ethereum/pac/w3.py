@@ -13,9 +13,9 @@ def refresh_w3(w3=None):
     if not w3 or not w3.isConnected():
         logging.debug('Refreshing Web3 Connection...')
         w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
-        return w3
     if not w3 or not w3.isConnected():
         raise Exception('Unable to establish connection to Web3!')
+    return w3
 
 
 def get_token_name(address: str = os.environ['TOKEN']):
