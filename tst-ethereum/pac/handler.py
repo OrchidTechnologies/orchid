@@ -14,13 +14,11 @@ from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from status import get_transaction_status
 from typing import Any, Dict, Optional, Tuple
-from w3 import approve, bind, get_block_number, look, push
+from w3 import approve, bind, get_block_number, look, push, toChecksumAddress, toWei
 from utils import configure_logging, get_secret, is_true, random_scan
-from web3 import Web3
 from asn1crypto.cms import ContentInfo
 
 
-w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
 configure_logging()
 
 
@@ -141,8 +139,8 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str, float, float]
 
     txn_hash = fund_PAC_(
         signer=signer,
-        total=w3.toWei(total_wei, 'wei'),
-        escrow=w3.toWei(escrow_wei, 'wei'),
+        total=toWei(total_wei, 'wei'),
+        escrow=toWei(escrow_wei, 'wei'),
         funder_pubkey=funder_pubkey,
         funder_privkey=funder_privkey,
         nonce=nonce,
@@ -196,7 +194,7 @@ def generate_wallet() -> Dict[str, str]:
     wallet = {
         'private': priv.to_string().hex(),
         'public': pub.hex(),
-        'address': w3.toChecksumAddress(address),
+        'address': toChecksumAddress(address),
     }
     return wallet
 

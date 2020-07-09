@@ -6,11 +6,21 @@ from utils import configure_logging, get_secret
 from web3 import Web3
 
 
-w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
 configure_logging()
 
 
+def refresh_w3(w3=None):
+    if not w3 or not w3.isConnected():
+        logging.debug('Refreshing Web3 Connection...')
+        w3 = Web3(Web3.WebsocketProvider(os.environ['WEB3_WEBSOCKET'], websocket_timeout=900))
+        return w3
+    if not w3 or not w3.isConnected():
+        raise Exception('Unable to establish connection to Web3!')
+
+
 def get_token_name(address: str = os.environ['TOKEN']):
+    logging.debug(f'get_token_name() address: {address}')
+    w3 = refresh_w3()
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=address,
@@ -21,6 +31,8 @@ def get_token_name(address: str = os.environ['TOKEN']):
 
 
 def get_token_symbol(address: str = os.environ['TOKEN']):
+    logging.debug(f'get_token_symbol() address: {address}')
+    w3 = refresh_w3()
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=address,
@@ -31,6 +43,8 @@ def get_token_symbol(address: str = os.environ['TOKEN']):
 
 
 def get_token_decimals(address: str = os.environ['TOKEN']):
+    logging.debug(f'get_token_decimals() address: {address}')
+    w3 = refresh_w3()
     token_contract = w3.eth.contract(
         abi=token_abi,
         address=address,
@@ -41,6 +55,8 @@ def get_token_decimals(address: str = os.environ['TOKEN']):
 
 
 def balanceOf(address: str, token_addr: str = os.environ['TOKEN']) -> float:
+    logging.debug(f'balanceOf() address: {address} token_addr: {token_addr}')
+    w3 = refresh_w3()
     token_contract = w3.eth.contract(
       abi=token_abi,
       address=token_addr,
@@ -51,12 +67,16 @@ def balanceOf(address: str, token_addr: str = os.environ['TOKEN']) -> float:
 
 
 def get_eth_balance(address: str) -> float:
+    logging.debug(f'get_eth_balance() address: {address}')
+    w3 = refresh_w3()
     balance = w3.eth.getBalance(address)
     logging.debug(f'ETH Balance of {address}: {balance}')
     return balance
 
 
 def look(funder: str, signer: str):
+    logging.debug(f'look() funder: {funder} signer: {signer}')
+    w3 = refresh_w3()
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     edited_lottery_abi = lottery_abi.copy()
     for function in edited_lottery_abi:
@@ -81,6 +101,7 @@ def look(funder: str, signer: str):
 
 def keys(funder: str):
     logging.debug(f'keys() funder: {funder}')
+    w3 = refresh_w3()
     lottery_addr = os.environ['LOTTERY']
     lottery_contract = w3.eth.contract(
         abi=lottery_abi,
@@ -94,6 +115,7 @@ def keys(funder: str):
 
 def warn(signer: str, nonce: int):
     logging.debug(f'warn() signer: {signer} nonce: {nonce}')
+    w3 = refresh_w3()
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     gas_price = int(os.environ['DEFAULT_GAS'])
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
@@ -131,6 +153,7 @@ def warn(signer: str, nonce: int):
 
 def kill(signer: str, nonce: int):
     logging.debug(f'kill() signer: {signer} nonce: {nonce}')
+    w3 = refresh_w3()
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     gas_price = int(os.environ['DEFAULT_GAS'])
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
@@ -171,6 +194,7 @@ def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float,
       f'pull() signer: {signer} target: {target} autolock: {autolock} amount: {amount} '
       f'escrow: {escrow} nonce: {nonce}'
     )
+    w3 = refresh_w3()
     lottery_addr = w3.toChecksumAddress(os.environ['LOTTERY'])
     gas_price = int(os.environ['DEFAULT_GAS'])
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
@@ -212,6 +236,8 @@ def pull(signer: str, target: str, autolock: bool, amount: float, escrow: float,
 
 def approve(spender: str, amount: float, nonce: int, gas_price: float = float(os.environ['DEFAULT_GAS'])):
     logging.debug(f'approve() spender: {spender} amount: {amount} gas_price: {gas_price} nonce: {nonce}')
+
+    w3 = refresh_w3()
 
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
@@ -259,6 +285,8 @@ def bind(
       f'nonce: {nonce} gas_price: {gas_price}'
     )
 
+    w3 = refresh_w3()
+
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
 
@@ -297,6 +325,8 @@ def bind(
 def push(signer: str, total: float, escrow: float, nonce: int, gas_price: float = float(os.environ['DEFAULT_GAS'])):
     logging.debug(f'push() signer: {signer} total: {total} escrow: {escrow} nonce: {nonce} gas_price: {gas_price}')
 
+    w3 = refresh_w3()
+
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
 
@@ -334,6 +364,7 @@ def push(signer: str, total: float, escrow: float, nonce: int, gas_price: float 
 
 def get_nonce() -> int:
     logging.debug('get_nonce()')
+    w3 = refresh_w3()
 
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     nonce = w3.eth.getTransactionCount(account=funder_pubkey)
@@ -343,6 +374,7 @@ def get_nonce() -> int:
 
 def get_latest_block():
     logging.debug('get_latest_block()')
+    w3 = refresh_w3()
 
     latest_block = w3.eth.getBlock('latest')
     logging.debug(f'latest_block: {latest_block}')
@@ -350,7 +382,8 @@ def get_latest_block():
 
 
 def get_transaction_confirm_count(txhash, blocknum):
-    logging.debug(f'get_transaction_confirm_count({txhash}) ')
+    logging.debug(f'get_transaction_confirm_count({txhash})')
+    w3 = refresh_w3()
     # blocknum = w3.eth.blockNumber
     # block = w3.eth.getBlock('latest')
     # blocknum2 = block['number']
@@ -362,6 +395,23 @@ def get_transaction_confirm_count(txhash, blocknum):
 
 def get_block_number():
     logging.debug('get_block_number()')
+    w3 = refresh_w3()
     blockNumber = w3.eth.blockNumber
     logging.debug(f'Block Number: {blockNumber}')
     return blockNumber
+
+
+def toWei(value: float, currency: str):
+    logging.debug(f'toWei() value: {value} currency: {currency}')
+    w3 = refresh_w3()
+    wei = w3.toWei(value, currency)
+    logging.debug(f'wei: {wei}')
+    return wei
+
+
+def toChecksumAddress(address):
+    logging.debug(f'toChecksumAddress() address: {address}')
+    w3 = refresh_w3()
+    checksum = w3.toChecksumAddress(address)
+    logging.debug(f'checksum: {checksum}')
+    return checksum
