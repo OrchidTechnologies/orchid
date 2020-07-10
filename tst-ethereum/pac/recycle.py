@@ -15,7 +15,7 @@ from w3 import pull
 from w3 import warn
 
 
-configure_logging()
+configure_logging(level="DEBUG")
 
 
 def invalid_funder(funder: str, pac_funder: str):
