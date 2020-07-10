@@ -172,6 +172,10 @@ class StoredEthereumKey {
         'imported': imported,
         'private': private.toString()
       };
+
+  String formatSecret() {
+    return "${private.toRadixString(16)}".padLeft(64, '0');
+  }
 }
 
 // A simple referential value by uid.

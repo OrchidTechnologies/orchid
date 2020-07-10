@@ -14,6 +14,9 @@ class OrchidPACServer {
   final String statusUrl =
       'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/status';
 
+  final String recycleUrl =
+      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/recycle';
+
   factory OrchidPACServer() {
     return _shared;
   }
@@ -166,5 +169,27 @@ class OrchidPACServer {
     var responseJson = json.decode(response.body);
     var disabled = responseJson['disabled'];
     return disabled != 'True';
+  }
+
+  Future<void> recycle({String funder, String signer}) async {
+    Map<String, String> params = {
+      'funder': funder,
+      'signer': signer,
+    };
+
+    var postBody = jsonEncode(params);
+    log("iap: recycling json = $postBody");
+
+    // Do the post
+    var response = await http.post(recycleUrl,
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: postBody);
+
+    // Validate the response status and content
+    if (response.statusCode != 200) {
+      log("iap: recycle failed: code=${response.statusCode} body=${response.body}");
+    } else {
+      log("iap: recycle succeeded");
+    }
   }
 }
