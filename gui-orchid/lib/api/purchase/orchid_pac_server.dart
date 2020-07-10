@@ -149,7 +149,7 @@ class OrchidPACServer {
     log("iap: check PAC server status");
 
     bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
-        .evalBoolDefault('storeDown', false);
+        .evalBoolDefault('pacs.storeDown', false);
     if (overrideDown) {
       log("iap: override server status");
       return false;

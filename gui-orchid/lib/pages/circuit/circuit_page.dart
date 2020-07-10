@@ -694,7 +694,7 @@ class CircuitPageState extends State<CircuitPage>
   // Recycle the hop if configured to do so.
   Future _recycleHopIfAllowed(UniqueHop uniqueHop) async {
     bool recycle = (await OrchidVPNConfig.getUserConfigJS())
-        .evalBoolDefault('recycle', false);
+        .evalBoolDefault('pacs.recycle', false);
     if (recycle) {
       CircuitHop hop = uniqueHop.hop;
       if (hop is OrchidHop) {
