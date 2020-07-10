@@ -179,7 +179,7 @@ def main(event, context):
     logging.debug(f'context: {context}')
     logging.debug(f'body: {body}')
     funder = toChecksumAddress(address=body.get('funder', ''))
-    signer = toChecksumAddress(address=body.get('signer', ''))
+    signer = body.get('signer', '')
 
     pac_funder = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
 
