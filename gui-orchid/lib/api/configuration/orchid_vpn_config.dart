@@ -89,7 +89,7 @@ class OrchidVPNConfig {
           var keyRef = StoredEthereumKeyRef.from(value);
           try {
             StoredEthereumKey key = keyRef.getFrom(keys);
-            secret = "${key.private.toRadixString(16)}".padLeft(64, '0');
+            secret = key.formatSecret();
           } catch (err) {
             //print("existing key refs: ");
             //for (var key in keys) {

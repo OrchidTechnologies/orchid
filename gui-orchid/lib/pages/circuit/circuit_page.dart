@@ -3,6 +3,7 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth.dart';
@@ -10,6 +11,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
@@ -680,12 +682,31 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   // Callback for swipe to delete
-  void _deleteHop(UniqueHop uniqueHop) {
+  void _deleteHop(UniqueHop uniqueHop) async {
     var index = _hops.indexOf(uniqueHop);
     setState(() {
       _hops.removeAt(index);
     });
     _saveCircuit();
+    _recycleHopIfAllowed(uniqueHop);
+  }
+
+  // Recycle the hop if configured to do so.
+  Future _recycleHopIfAllowed(UniqueHop uniqueHop) async {
+    bool recycle = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('recycle', false);
+    if (recycle) {
+      CircuitHop hop = uniqueHop.hop;
+      if (hop is OrchidHop) {
+        var keys = await UserPreferences().getKeys();
+        StoredEthereumKey key = hop.keyRef.getFrom(keys);
+        String secret = key.formatSecret();
+        OrchidPACServer().recycle(
+          funder: hop.funder.toString(),
+          signer: secret,
+        );
+      }
+    }
   }
 
   // Callback for drag to reorder
