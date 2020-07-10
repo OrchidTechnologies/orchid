@@ -166,6 +166,7 @@ plugins:
   - serverless-plugin-datadog
   - serverless-pseudo-parameters
   - serverless-python-requirements
+  - serverless-prune-plugin
 package:
   exclude:
     - venv/**
