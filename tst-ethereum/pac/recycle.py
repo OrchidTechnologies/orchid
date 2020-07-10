@@ -38,7 +38,7 @@ def invalid_signer(signer: str):
         "statusCode": 400,
         "headers": {},
         "body": json.dumps({
-            'message': f'Invalid signer: {signer})',
+            'message': f'Invalid signer: {signer}',
         })
     }
     return response
