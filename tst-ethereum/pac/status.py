@@ -3,6 +3,7 @@ import logging
 import os
 import time
 
+from handler import get_product_id_mapping
 from metrics import metric
 from recycle import recycle_account
 from utils import configure_logging
@@ -40,6 +41,12 @@ def update_statuses():
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = table.scan()
     counts = {}
+    mapping = get_product_id_mapping()
+    for status in ('confirmed', 'unconfirmed', 'unknown', 'pending'):
+        counts[status] = {}
+        for tier in mapping:
+            price = mapping[tier]
+            counts[status][price] = 0
     funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     for item in response['Items']:
         signer = item['signer']
