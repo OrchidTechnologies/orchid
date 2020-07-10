@@ -39,18 +39,26 @@ def update_statuses():
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['TABLE_NAME'])
     response = table.scan()
+    counts = {}
+    funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
     for item in response['Items']:
         signer = item['signer']
         price = item['price']
         push_txn_hash = item['push_txn_hash']
         status = item['status']
-        balance = float(item['balance'])
-        escrow = float(item['escrow'])
+        balance = float(item.get('balance', 0))
+        escrow = float(item.get('escrow', 0))
+        blocknum = get_block_number()
+        new_status = get_transaction_status(push_txn_hash, blocknum)
+
+        if new_status in counts:
+            counts[new_status][price] = counts[new_status].get(price, 0) + 1
+        else:
+            counts[new_status] = {
+                price: 1,
+            }
+
         if status != 'confirmed':
-            blocknum = get_block_number()
-
-            new_status = get_transaction_status(push_txn_hash, blocknum)
-
             if status != new_status:
                 logging.debug(
                   f'Changing {push_txn_hash} with signer:{signer} and price:{price} '
@@ -71,8 +79,6 @@ def update_statuses():
                   },
                   ConditionExpression="#status = :old_status",
                 )
-
-                funder_pubkey = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
 
                 if new_status == 'confirmed':
                     token_name = get_token_name()
@@ -129,6 +135,18 @@ def update_statuses():
                 logging.debug(f'No need to update {push_txn_hash} with signer:{signer} and price:{price} from {status}')
         else:
             logging.debug(f'{push_txn_hash} with signer:{signer} and price:{price} already has status:{status}')
+    for status in counts:
+        for price in counts[status]:
+            value = counts[status][price]
+            logging.debug(f'There are {value} ${price} PACs with a status of {status}')
+            metric(
+                metric_name=f'orchid.pac.pool.{status}',
+                value=value,
+                tags=[
+                    f'funder:{funder_pubkey}',
+                    f'price:{price}',
+                ],
+            )
 
 
 def main(event, context):
