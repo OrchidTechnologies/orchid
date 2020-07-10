@@ -8,6 +8,7 @@ from utils import configure_logging
 from w3 import get_latest_block
 from utils import get_secret
 from utils import is_true
+from w3 import toChecksumAddress
 from w3 import keys
 from w3 import look
 from w3 import pull
@@ -177,8 +178,8 @@ def main(event, context):
     logging.debug(f'event: {event}')
     logging.debug(f'context: {context}')
     logging.debug(f'body: {body}')
-    funder = body.get('funder', '')
-    signer = body.get('signer', '')
+    funder = toChecksumAddress(address=body.get('funder', ''))
+    signer = toChecksumAddress(address=body.get('signer', ''))
 
     pac_funder = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
 
