@@ -3,11 +3,11 @@ import logging
 import os
 import time
 
-from handler import get_product_id_mapping
 from metrics import metric
 from recycle import recycle_account
 from utils import configure_logging
 from utils import get_min_escrow
+from utils import get_product_id_mapping
 from utils import get_secret
 from w3 import get_block_number
 from w3 import get_token_name

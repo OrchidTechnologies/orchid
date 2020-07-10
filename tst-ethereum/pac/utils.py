@@ -48,3 +48,18 @@ def random_scan(table, price):
 
 def get_min_escrow():
     return 15.0
+
+
+def get_product_id_mapping(store: str = 'apple') -> dict:
+    mapping = {}
+    mapping['apple'] = {
+        'net.orchid.pactier1': 12.99,
+        'net.orchid.pactier2': 29.99,
+        'net.orchid.pactier3': 79.99,
+    }
+#     mapping['google'] = {
+#         'net.orchid.pactier1': 4.99,
+#         'net.orchid.pactier2': 9.99,
+#         'net.orchid.pactier3': 19.99,
+#     }
+    return mapping.get(store, {})

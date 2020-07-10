@@ -15,7 +15,7 @@ from inapppy import AppStoreValidator, InAppPyValidationError
 from status import get_transaction_status
 from typing import Any, Dict, Optional, Tuple
 from w3 import approve, bind, get_block_number, look, push, toChecksumAddress, toWei
-from utils import configure_logging, get_min_escrow, get_secret, is_true, random_scan
+from utils import configure_logging, get_min_escrow, get_product_id_mapping, get_secret, is_true, random_scan
 from asn1crypto.cms import ContentInfo
 
 
@@ -29,21 +29,6 @@ def get_usd_per_oxt() -> float:
     usd_per_oxt = float(data['data']['amount'])
     logging.debug(f"usd_per_oxt: {usd_per_oxt}")
     return usd_per_oxt
-
-
-def get_product_id_mapping(store: str = 'apple') -> dict:
-    mapping = {}
-    mapping['apple'] = {
-        'net.orchid.pactier1': 12.99,
-        'net.orchid.pactier2': 29.99,
-        'net.orchid.pactier3': 79.99,
-    }
-#     mapping['google'] = {
-#         'net.orchid.pactier1': 4.99,
-#         'net.orchid.pactier2': 9.99,
-#         'net.orchid.pactier3': 19.99,
-#     }
-    return mapping.get(store, {})
 
 
 def fund_PAC_(
