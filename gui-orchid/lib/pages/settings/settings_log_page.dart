@@ -132,7 +132,7 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                       _logText,
                       softWrap: true,
                       textAlign: TextAlign.left,
-                      style: AppText.logStyle,
+                      style: AppText.logStyle.copyWith(fontSize: 10),
                     ),
                   ),
                   decoration: BoxDecoration(
