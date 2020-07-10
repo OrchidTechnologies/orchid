@@ -31,7 +31,7 @@ class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
   }
 
   @override
-  Future<Map<String,PAC>> requestProducts() {
+  Future<Map<String,PAC>> requestProducts({bool refresh = false}) {
     // TODO: implement requestProducts
     throw UnimplementedError();
   }

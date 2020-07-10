@@ -44,7 +44,7 @@ abstract class OrchidPurchaseAPI {
 
   void initStoreListener();
 
-  Future<Map<String,PAC>> requestProducts();
+  Future<Map<String,PAC>> requestProducts({bool refresh = false});
 
   /// Make the app store purchase. This method will throw
   /// PACPurchaseExceedsRateLimit if the daily purchase rate has been exceeded.

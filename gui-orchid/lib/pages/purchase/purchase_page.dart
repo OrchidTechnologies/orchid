@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
@@ -20,11 +17,8 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
-import 'package:orchid/util/units.dart';
-import '../app_colors.dart';
 import '../app_sizes.dart';
 import '../app_text.dart';
-import 'package:intl/intl.dart';
 
 class PurchasePage extends StatefulWidget {
   final AddFlowCompletion onAddFlowComplete;
@@ -40,14 +34,14 @@ class PurchasePage extends StatefulWidget {
 
 class _PurchasePageState extends State<PurchasePage> {
   List<StreamSubscription> _rxSubscriptions = List();
-  Pricing _pricing;
+  //Pricing _pricing;
 
   // Purchase status overlay state
   bool _showOverlayPane = false;
   String _overlayStatusMessage;
   bool _requiresUserAction = false;
   bool _showHelp = false;
-  bool _storeOpen;
+  bool _storeOpen = true;
 
   Map<String, PAC> _pacs = {
     OrchidPurchaseAPI.pacTier1: PAC(
@@ -77,19 +71,16 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void initStateAsync() async {
+    // Show cached products immediately followed by an update.
+    updateProducts(refresh: false);
+    updateProducts(refresh: true);
+
     _storeOpen = await OrchidPACServer().storeOpen();
     setState(() {});
 
     // Disable price display
     //_pricing = await OrchidAPI().pricing().getPricing();
     //setState(() {});
-
-    try {
-      _pacs = await OrchidPurchaseAPI().requestProducts();
-    } catch (err) {
-      log("iap: error requesting products for purchase page: $err");
-    }
-    setState(() {});
   }
 
   @override
@@ -676,6 +667,20 @@ class _PurchasePageState extends State<PurchasePage> {
           ? s.weAreSorryButThisPurchaseWouldExceedTheDaily
           : s.thereWasAnErrorInPurchasingContact,
     );
+  }
+
+  void updateProducts({bool refresh}) async {
+    if (refresh) {
+      log("iap: purchase page refresh products");
+    } else {
+      log("iap: purchase page fetch cached products");
+    }
+    try {
+      _pacs = await OrchidPurchaseAPI().requestProducts(refresh: refresh);
+    } catch (err) {
+      log("iap: error requesting products for purchase page: $err");
+    }
+    setState(() {});
   }
 
   @override

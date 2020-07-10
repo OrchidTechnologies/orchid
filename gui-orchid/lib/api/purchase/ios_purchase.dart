@@ -183,8 +183,15 @@ class IOSOrchidPurchaseAPI
     OrchidPACServer().processPendingPACTransaction();
   }
 
+  static Map<String, PAC> productsCached;
+
   @override
-  Future<Map<String, PAC>> requestProducts() async {
+  Future<Map<String, PAC>> requestProducts({bool refresh = false}) async {
+    if (productsCached != null && !refresh) {
+      log("iap: returning cached products");
+      return productsCached;
+    }
+
     var productIds = [
       OrchidPurchaseAPI.pacTier1,
       OrchidPurchaseAPI.pacTier2,
@@ -221,11 +228,14 @@ class IOSOrchidPurchaseAPI
             currencyCode: currencyCode,
           ));
     };
-    return {
+    var products = {
       pac1.productIdentifier: toPAC(pac1),
       pac2.productIdentifier: toPAC(pac2),
       pac3.productIdentifier: toPAC(pac3),
     };
+    productsCached = products;
+    log("iap: returning products");
+    return products;
   }
 
   @override

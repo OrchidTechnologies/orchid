@@ -18,7 +18,7 @@ class PAC {
     @required this.localPurchasePrice,
     @required this.localCurrencyCode,
     @required this.localDisplayPrice,
-    @required this.usdPriceApproximate,
+    this.usdPriceApproximate,
   });
 
   @override
