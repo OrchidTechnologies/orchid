@@ -15,7 +15,7 @@ from inapppy import AppStoreValidator, InAppPyValidationError
 from status import get_transaction_status
 from typing import Any, Dict, Optional, Tuple
 from w3 import approve, bind, get_block_number, look, push, toChecksumAddress, toWei
-from utils import configure_logging, get_secret, is_true, random_scan
+from utils import configure_logging, get_min_escrow, get_secret, is_true, random_scan
 from asn1crypto.cms import ContentInfo
 
 
@@ -87,10 +87,6 @@ def fund_PAC_(
     nonce += 1
 
     return push_txn_hash
-
-
-def get_min_escrow():
-    return 15.0
 
 
 def get_target_NFV(tusd):

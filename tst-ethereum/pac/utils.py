@@ -44,3 +44,7 @@ def random_scan(table, price):
     response1 = table.query(Limit=4, KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
     response0['Items'].extend(response1['Items'])
     return response0
+
+
+def get_min_escrow():
+    return 15.0
