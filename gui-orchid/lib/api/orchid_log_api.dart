@@ -58,7 +58,10 @@ class MemoryOrchidLogAPI extends OrchidLogAPI {
   }
 
   /// Write the text to the log.
-  void write(String text) async {
+  void write(String textIn) async {
+    String timeStamp = DateTime.now().toIso8601String();
+    String text = timeStamp + ': ' +textIn;
+    
     debugPrint("LOG: $text");
     if (!_enabled) {
       return;
