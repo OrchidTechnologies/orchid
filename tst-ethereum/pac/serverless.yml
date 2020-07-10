@@ -55,6 +55,10 @@ custom:
       - ${self:provider.stage}
     start:
       migrate: true
+  prune:
+    automatic: true
+    number: 3
+    includeLayers: true
 provider:
   name: aws
   stage: ${opt:stage,'dev'}
