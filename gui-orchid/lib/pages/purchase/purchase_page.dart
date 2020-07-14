@@ -451,7 +451,7 @@ class _PurchasePageState extends State<PurchasePage> {
         end: Alignment(0.0, gradEnd),
         colors: [
           enabled ? Color(0xff4e71c2) : Colors.grey,
-          enabled ? Color(0xff258993) : Colors.blueGrey
+          enabled ? Color(0xff258993) : Colors.grey
         ]);
 
     return GestureDetector(
