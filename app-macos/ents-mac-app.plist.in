@@ -30,8 +30,5 @@
 @D@
 @D@ <key>get-task-allow</key>
 @D@ <true/>
-@B@
-@B@ <key>beta-reports-active</key>
-@B@ <true/>
 </dict>
 </plist>

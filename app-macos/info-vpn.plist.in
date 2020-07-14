@@ -45,8 +45,6 @@
 
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.utilities</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
 
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2019 The @NAME@ Authors</string>
@@ -62,8 +60,8 @@
     <key>SBUsesNetwork</key>
     <integer>11</integer>
 
-    <key>MinimumOSVersion</key>
-    <string>11.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.14</string>
 
     <key>CFBundleSupportedPlatforms</key>
     <array>
