@@ -699,12 +699,8 @@ class CircuitPageState extends State<CircuitPage>
       CircuitHop hop = uniqueHop.hop;
       if (hop is OrchidHop) {
         var keys = await UserPreferences().getKeys();
-        StoredEthereumKey key = hop.keyRef.getFrom(keys);
-        String secret = key.formatSecret();
-        OrchidPACServer().recycle(
-          funder: hop.funder.toString(),
-          signer: secret,
-        );
+        EthereumAddress signer = hop.getSigner(keys);
+        OrchidPACServer().recycle(funder: hop.funder, signer: signer);
       }
     }
   }

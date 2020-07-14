@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_crypto.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_purchase.dart';
@@ -171,10 +172,10 @@ class OrchidPACServer {
     return disabled != 'True';
   }
 
-  Future<void> recycle({String funder, String signer}) async {
+  Future<void> recycle({EthereumAddress funder, EthereumAddress signer}) async {
     Map<String, String> params = {
-      'funder': funder,
-      'signer': signer,
+      'funder': funder.toString(),
+      'signer': signer.toString(),
     };
 
     var postBody = jsonEncode(params);
