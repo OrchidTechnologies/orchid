@@ -2,7 +2,7 @@
 // Orchid Ethereum Contracts Lib
 //
 import {OrchidContracts} from "./orchid-eth-contracts";
-import {Address, GWEI, KEIKI, OXT, Secret} from "./orchid-types";
+import {Address, GWEI, Keiki, KEIKI, OXT, Secret} from "./orchid-types";
 import Web3 from "web3";
 import PromiEvent from "web3/promiEvent";
 import {OrchidAPI, WalletStatus} from "./orchid-api";
@@ -21,6 +21,7 @@ declare global {
 export let web3: Web3;
 let web3ProviderListener: any;
 
+// TODO: Use the Wei and Keiki types here
 /// A Funder address containing ETH to perform contract transactions  and possibly
 /// OXT to fund a Lottery Pot.
 export class Wallet {
@@ -167,7 +168,9 @@ export class OrchidEthereumAPI {
       throw err;
     }
     try {
-      wallet.oxtBalance = BigInt(await OrchidContracts.token.methods.balanceOf(accounts[0]).call());
+      let overrideBalanceOXT: number | null = parseFloatSafe(getParam("walletBalanceOxt"));
+      let overrideBalance: BigInt | null = overrideBalanceOXT ? new OXT(overrideBalanceOXT).toKeiki() : null
+      wallet.oxtBalance = overrideBalance || BigInt(await OrchidContracts.token.methods.balanceOf(accounts[0]).call());
     } catch (err) {
       console.log("Error getting oxt balance", err);
       throw err;
@@ -212,15 +215,20 @@ export class OrchidEthereumAPI {
     return new Signer(wallet, signerAccount.address, signerAccount.privateKey);
   }
 
+  // TODO: Use Keiki type here
   /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified lottery pot address.
+  /// If the total exceeds walletBalance the amount value is automatically reduced.
   async orchidAddFunds(
-    funder: Address, signer: Address, amount: BigInt, escrow: BigInt, gasPrice?: number
+    funder: Address, signer: Address, amount: BigInt, escrow: BigInt, walletBalance: KEIKI, gasPrice?: number
   ): Promise<string> {
-    console.log("Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
     //return fakeTx(false);
     const amount_value = BigInt(amount); // Force our polyfill BigInt?
     const escrow_value = BigInt(escrow);
-    const total = amount_value.add(escrow_value);
+
+    // Don't attempt to add more than the wallet balance.
+    // This mitigates the potential for rounding errors in calculated amounts.
+    const total = BigInt.min(amount_value.add(escrow_value), walletBalance);
+    console.log("Add funds  signer: ", signer, " amount: ", (total.minus(escrow_value)), " escrow: ", escrow);
 
     async function doApproveTx() {
       return new Promise<string>(function (resolve, reject) {
@@ -293,12 +301,13 @@ export class OrchidEthereumAPI {
   }
 
   /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified directory address.
+  /// Amount won't exceed walletBalance.
   async orchidStakeFunds(
-    funder: Address, stakee: Address, amount: BigInt, delay: BigInt, gasPrice?: number
+    funder: Address, stakee: Address, amount: BigInt, walletBalance: KEIKI, delay: BigInt, gasPrice?: number
   ): Promise<string> {
-    console.log("Stake funds amount: ", amount);
-    const amount_value = BigInt(amount); // Force our polyfill BigInt?
+    const amount_value = BigInt.min(amount, walletBalance);
     const delay_value = BigInt(delay);
+    console.log("Stake funds amount: ", amount);
 
     async function doApproveTx() {
       return new Promise<string>(function (resolve, reject) {
@@ -398,8 +407,15 @@ export class OrchidEthereumAPI {
     });
   }
 
-  async orchidMoveFundsToEscrow(funder: Address, signer: Address, amount: BigInt): Promise<string> {
+  /// Move `amount` from balance to escrow, not exceeding `potBalance`.
+  async orchidMoveFundsToEscrow(
+    funder: Address, signer: Address, amount: BigInt, potBalance: BigInt
+  ): Promise<string> {
     console.log(`moveFunds amount: ${amount.toString()}`);
+
+    // Don't take more than the pot balance. This check mitigates rounding errors.
+    amount = BigInt.min(amount, potBalance);
+
     return this.evalOrchidTx(
       OrchidContracts.lottery.methods.move(signer, amount.toString()).send({
         from: funder,
@@ -408,11 +424,18 @@ export class OrchidEthereumAPI {
     );
   }
 
-  async orchidWithdrawFunds(funder: Address, signer: Address, targetAddress: Address, amount: BigInt): Promise<string> {
-    console.log(`withdrawFunds to: ${targetAddress} amount: ${amount}`);
+  /// Withdraw `amount` from the lottery pot to the specified eth address, not exceeding `potBalance`.
+  async orchidWithdrawFunds(
+    funder: Address, signer: Address, targetAddress: Address, amount: BigInt, potBalance: BigInt
+  ): Promise<string> {
     // pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external {
     let autolock = true;
     let escrow = BigInt(0);
+
+    // Don't take more than the pot balance. This check mitigates rounding errors.
+    amount = BigInt.min(amount, potBalance);
+    console.log(`withdrawFunds to: ${targetAddress} amount: ${amount}`);
+
     return this.evalOrchidTx(
       OrchidContracts.lottery.methods.pull(signer, targetAddress, autolock, amount.toString(), escrow.toString()).send({
         from: funder,
@@ -552,19 +575,13 @@ export function isEthAddress(str: string): boolean {
 /// number of decimal places.
 export function keikiToOxtString(keiki: BigInt, decimals: number) {
   decimals = Math.round(decimals);
-  let val: number = keikiToOxt(keiki);
+  let val: number = new Keiki(keiki).toOXT().value;
   return val.toFixedLocalized(decimals);
 }
 
 // @deprecated - use OXT instance methods
-/// Convert keiki to an (approximate) OXT float value
-export function keikiToOxt(keiki: KEIKI): number {
-  return parseFloat(web3.utils.fromWei(keiki.toString()));
-}
-
-// @deprecated - use OXT instance methods
 export function oxtToKeiki(oxt: number): KEIKI {
-  return BigInt(oxt * 1e18);
+  return new OXT(oxt).toKeiki();
 }
 
 

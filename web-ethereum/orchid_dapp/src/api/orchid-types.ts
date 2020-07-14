@@ -1,3 +1,4 @@
+
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export type Address = string;
@@ -16,7 +17,7 @@ export function isDefined<T>(a: T | undefined): a is T {
   return a !== undefined;
 }
 
-class ScalarValue {
+class ScalarNumberValue {
   value: number;
 
   constructor(value: number) {
@@ -52,7 +53,15 @@ class ScalarValue {
   // int get hashCode => value.hashCode;
 }
 
-export class OXT extends ScalarValue {
+class ScalarBigIntValue {
+  value: BigInt;
+
+  constructor(value: BigInt) {
+    this.value = value
+  }
+}
+
+export class OXT extends ScalarNumberValue {
 
   public multiply(other: number): OXT {
     return new OXT(this.value * other);
@@ -79,6 +88,10 @@ export class OXT extends ScalarValue {
     return new OXT(BigInt(keiki) / 1e18);
   }
 
+  static fromNumber(num: number): OXT {
+    return new OXT(num);
+  }
+
   public toKeiki(): KEIKI {
     return BigInt(this.value * 1e18);
   }
@@ -88,10 +101,30 @@ export function min(a: OXT, b: OXT): OXT {
   return new OXT(Math.min(a.value, b.value));
 }
 
-export class ETH extends ScalarValue {
+// TODO: Work in progress migrating from the typedef
+export class Keiki extends ScalarBigIntValue {
+
+  public subtract(other: Keiki): Keiki {
+    return new Keiki(BigInt(this.value).minus(other.value));
+  }
+
+  public add(other: Keiki): Keiki {
+    return new Keiki(BigInt(this.value).plus(other.value));
+  }
+
+  static fromOXT(oxt: OXT): KEIKI {
+    return oxt.toKeiki();
+  }
+
+  public toOXT(): OXT {
+    return OXT.fromKeiki(this.value);
+  }
 }
 
-export class GWEI extends ScalarValue {
+export class ETH extends ScalarNumberValue {
+}
+
+export class GWEI extends ScalarNumberValue {
   public multiply(other: number): GWEI {
     return new GWEI(this.value * other);
   }
@@ -111,6 +144,7 @@ export class GWEI extends ScalarValue {
   public toEth(): ETH {
     return new ETH(this.value / 1e9);
   }
+
   public toWei(): BigInt {
     return BigInt(this.value * 1e9);
   }
@@ -120,5 +154,5 @@ export class GWEI extends ScalarValue {
   }
 }
 
-export class USD extends ScalarValue {
+export class USD extends ScalarNumberValue {
 }

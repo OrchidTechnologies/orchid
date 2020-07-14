@@ -98,7 +98,8 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
         }
 
         // Submit the tx
-        let txId = await api.eth.orchidAddFunds(walletAddress, newSigner.address, addAmount, addEscrow, gasPrice);
+        let txId = await api.eth.orchidAddFunds(
+          walletAddress, newSigner.address, addAmount, addEscrow, walletBalance, gasPrice);
         console.log("add funds complete");
         await api.updateSigners();
         let tx = TransactionStatus.result(txId, S.transactionComplete, newSigner);

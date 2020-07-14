@@ -69,8 +69,10 @@ export const StakeFunds: FC = () => {
       return;
     }
     let walletAddress = wallet.address;
+    let walletBalance = wallet.oxtBalance;
     console.log("submit add funds: ", walletAddress, addStakeAmount, stakeDelaySeconds);
-    if (walletAddress == null || addStakeAmount == null || stakeeAddress == null || stakeDelaySeconds == null) {
+    if (walletAddress == null || addStakeAmount == null || stakeeAddress == null
+      || stakeDelaySeconds == null || walletBalance == null) {
       return;
     }
 
@@ -87,7 +89,8 @@ export const StakeFunds: FC = () => {
       }
 
       let delayValue = BigInt(stakeDelaySeconds); // seconds
-      await api.eth.orchidStakeFunds(walletAddress, stakeeAddress, amountWei, delayValue, gasPrice);
+      await api.eth.orchidStakeFunds(
+        walletAddress, stakeeAddress, amountWei, walletBalance, delayValue, gasPrice);
       api.updateWallet().then();
       console.log("updating stake");
       updateCurrentStake().then();

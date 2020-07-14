@@ -16,7 +16,7 @@ export class WithdrawFunds extends Component<any, any> {
   txResult = React.createRef<TransactionProgress>();
 
   state = {
-    potBalance: null as BigInt | null,
+    potBalance: null  as BigInt | null,
     potUnlocked: null as boolean | null,
     withdrawAmount: null as number | null,
     withdrawAll: false,
@@ -44,12 +44,14 @@ export class WithdrawFunds extends Component<any, any> {
     const withdrawAmount = this.state.withdrawAmount;
     const withdrawAll = this.state.withdrawAll;
     const targetAddress = this.state.sendToAddress;
+    const potBalance = this.state.potBalance;
 
     if (wallet === undefined
       || signer === undefined
       || (withdrawAmount == null && !withdrawAll)
       || withdrawAll == null
       || targetAddress == null
+      || potBalance == null
     ) {
       console.log("precondition error in withdraw");
       return;
@@ -68,7 +70,8 @@ export class WithdrawFunds extends Component<any, any> {
           return; // Shouldn't get here.
         }
         const withdrawWei = oxtToKeiki(withdrawAmount);
-        txId = await api.eth.orchidWithdrawFunds(wallet.address, signer.address, targetAddress, withdrawWei);
+        txId = await api.eth.orchidWithdrawFunds(
+          wallet.address, signer.address, targetAddress, withdrawWei, potBalance);
       }
       await api.updateLotteryPot();
       await api.updateWallet();

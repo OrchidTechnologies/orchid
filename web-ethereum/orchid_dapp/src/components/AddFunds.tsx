@@ -3,7 +3,7 @@ import {OrchidAPI} from "../api/orchid-api";
 import {
   Divider,
   errorClass,
-  formatCurrency, getBoolParam, getParam,
+  getBoolParam,
   parseFloatSafe,
   useInterval,
   Visibility
@@ -25,7 +25,7 @@ import {S} from "../i18n/S";
 import {Orchid} from "../api/orchid";
 import ProgressLine from "./ProgressLine";
 import {MarketConditions} from "./MarketConditionsPanel";
-import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
+import {OrchidPricingAPI} from "../api/orchid-pricing";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -106,7 +106,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     console.log("submit add funds: ", walletAddress, addAmount, addEscrow);
     let signerAddress = props.createAccount ? newSignerAddress :
       (api.signer.value ? api.signer.value.address : null);
-    if (walletAddress == null || signerAddress == null) {
+    if (walletAddress == null || signerAddress == null || walletBalance == null) {
       return;
     }
     if (props.createAccount && (addAmount == null || addEscrow == null)) {
@@ -118,8 +118,8 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       txResult.current.scrollIntoView();
     }
     try {
-      const amountWei = oxtToKeiki(addAmount || 0);
-      const escrowWei = oxtToKeiki(addEscrow || 0 );
+      const amountKeiki = oxtToKeiki(addAmount || 0);
+      const escrowKeiki = oxtToKeiki(addEscrow || 0 );
 
       // Choose a gas price
       let medianGasPrice: GWEI = await api.eth.getGasPrice();
@@ -129,7 +129,8 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
         console.log("Add funds: gas price potentially too low.");
       }
 
-      let txId = await api.eth.orchidAddFunds(walletAddress, signerAddress, amountWei, escrowWei, gasPrice);
+      let txId = await api.eth.orchidAddFunds(
+        walletAddress, signerAddress, amountKeiki, escrowKeiki, walletBalance, gasPrice);
       if (props.createAccount) {
         await api.updateSigners();
       } else {
