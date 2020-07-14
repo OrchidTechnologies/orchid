@@ -503,6 +503,7 @@ class CircuitPageState extends State<CircuitPage>
               ),
             )),
       ),
+      confirmDismiss: _confirmDeleteHop,
       onDismissed: (direction) {
         _deleteHop(uniqueHop);
       },
@@ -679,6 +680,19 @@ class CircuitPageState extends State<CircuitPage>
         ? MaterialPageRoute(builder: (context) => editor)
         : NoAnimationMaterialPageRoute(builder: (context) => editor);
     await Navigator.push(context, route);
+  }
+
+  // Callback for swipe to delete
+  Future<bool> _confirmDeleteHop(dismissDirection) async {
+    var result = await Dialogs.showConfirmationDialog(
+      context: context,
+      title: "Confirm Delete",
+      body:
+          "Deleting this hop will remove its configured or purchased account information."
+          "  If you plan to re-use the account later you should first save it using either the 'share hop' option"
+          " or by backing up your entire circuit configuration with the Configuration Management tool in Settings.",
+    );
+    return result;
   }
 
   // Callback for swipe to delete
