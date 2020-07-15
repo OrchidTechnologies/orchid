@@ -18,13 +18,17 @@ class PlainTextBox extends StatelessWidget {
         padding: const EdgeInsets.only(
             left: 8, right: 8, top: 16, bottom: 32),
         child: Container(
-          padding: EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            reverse: false,
-            child: Text(
-              _text,
-              textAlign: TextAlign.left,
-              style: AppText.logStyle,
+          child: Scrollbar(
+            child: SingleChildScrollView(
+              reverse: false,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  _text,
+                  textAlign: TextAlign.left,
+                  style: AppText.logStyle.copyWith(fontSize: 10),
+                ),
+              ),
             ),
           ),
           decoration: BoxDecoration(

@@ -38,12 +38,14 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
   Widget buildPage(BuildContext context) {
     return SafeArea(
       child: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[html(_helpText)],
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[html(_helpText)],
+              ),
             ),
           ),
         ),
