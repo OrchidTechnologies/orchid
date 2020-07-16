@@ -95,13 +95,26 @@ static std::string cfs(NSString *data) {
         int file([value intValue]);
         orc_assert(file != -1);
 
+        // XXX: seriously consider if using Covered here is sane
         auto capture(std::make_unique<Covered<BufferSink<Capture>>>(local));
-        auto &family(capture->Wire<BufferSink<Family>>());
-        auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
+        try {
+            auto &family(capture->Wire<BufferSink<Family>>());
+            auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
 
-        capture->Start(config);
-        sync.Open();
-        capture_ = std::move(capture);
+            capture->Start(config);
+            sync.Open();
+            capture_ = std::move(capture);
+        } catch (const std::exception &error) {
+            orc::Log() << error.what() << std::endl;
+            // XXX: this needs to not happen and the code below needs to be fixed
+            orc_insist(false);
+            std::string what(error.what());
+            Spawn([capture = std::move(capture), handler, what = std::move(what)]() noexcept -> task<void> {
+                co_await capture->Shut();
+                // XXX: this clearly isn't right, but the orc_insist above is short circuiting
+                handler(nil);
+            }, __FUNCTION__);
+        }
         handler(nil);
     } ORC_CATCH(handler) }];
 } ORC_CATCH(handler) }
