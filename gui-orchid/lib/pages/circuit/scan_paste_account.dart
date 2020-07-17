@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/qrcode.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -79,6 +80,10 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
     ParseOrchidAccountResult parseAccountResult;
     try {
       String text = await QRCode.scan();
+      if (text == null) {
+        log("user cancelled scan");
+        return;
+      }
       parseAccountResult = await _parseConfig(context, text);
     } catch (err) {
       print("error parsing scanned orchid account: $err");
