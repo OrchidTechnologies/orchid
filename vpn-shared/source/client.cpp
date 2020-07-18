@@ -33,6 +33,7 @@
 namespace orc {
 
 typedef boost::multiprecision::cpp_bin_float_oct Float;
+static const Float Ten18("1000000000000000000");
 
 //static const uint128_t Gwei(1000000000);
 static const uint256_t Two128(uint256_t(1) << 128);
@@ -175,7 +176,7 @@ Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remot
     funder_(funder),
     seller_(seller),
     face_(face),
-    prepay_(uint256_t(0xb1a2bc2ec500)<<128)
+    prepay_(uint256_t(Ten18*0.10/0.50/1024)<<128)
 {
     Pump::type_ = typeid(*this).name();
 }
