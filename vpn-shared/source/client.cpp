@@ -176,7 +176,7 @@ Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remot
     funder_(funder),
     seller_(seller),
     face_(face),
-    prepay_(uint256_t(Ten18*0.10/0.50/1024)<<128)
+    prepay_(uint256_t(Ten18*0.085/0.20/1024*2)<<128)
 {
     Pump::type_ = typeid(*this).name();
 }
