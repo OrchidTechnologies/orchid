@@ -87,8 +87,8 @@ class Client :
 
     task<void> Submit();
     task<void> Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature);
+    task<void> Submit(uint256_t amount);
 
-    void Issue(uint256_t amount);
     void Transfer(size_t size);
 
     cppcoro::shared_task<Bytes> Ring(Address recipient);

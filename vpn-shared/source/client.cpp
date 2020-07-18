@@ -56,32 +56,26 @@ task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes
     )));
 }
 
-void Client::Issue(uint256_t amount) {
-    nest_.Hatch([&]() noexcept { return [this, amount = std::move(amount)]() -> task<void> {
-        if (amount == 0)
-            // XXX: retry existing packet
-            co_return co_await Submit();
+task<void> Client::Submit(uint256_t amount) {
+    const auto [commit, recipient, ring] = [&]() {
+        const auto locked(locked_());
+        return std::make_tuple(locked->commit_, locked->recipient_, locked->ring_);
+    }();
 
-        const auto [commit, recipient, ring] = [&]() {
-            const auto locked(locked_());
-            return std::make_tuple(locked->commit_, locked->recipient_, locked->ring_);
-        }();
+    const auto receipt(co_await ring);
 
-        const auto receipt(co_await ring);
+    const auto nonce(Random<32>());
 
-        const auto nonce(Random<32>());
+    const auto now(Timestamp());
+    const auto start(now + 60 * 60 * 2);
 
-        const auto now(Timestamp());
-        const auto start(now + 60 * 60 * 2);
-
-        const uint128_t ratio(WinRatio_ == 0 ? amount / face_ : uint256_t(Float(Two128) * WinRatio_ - 1));
-        const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
-        const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
-        const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
-        { const auto locked(locked_());
-            locked->pending_.try_emplace(hash, ticket, signature); }
-        co_return co_await Submit(hash, ticket, receipt, signature);
-    }; }, __FUNCTION__);
+    const uint128_t ratio(WinRatio_ == 0 ? amount / face_ : uint256_t(Float(Two128) * WinRatio_ - 1));
+    const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
+    const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
+    const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
+    { const auto locked(locked_());
+        locked->pending_.try_emplace(hash, ticket, signature); }
+    co_return co_await Submit(hash, ticket, receipt, signature);
 }
 
 void Client::Transfer(size_t size) {
@@ -91,7 +85,7 @@ void Client::Transfer(size_t size) {
         locked->benefit_ -= 1024*256;
     else
         return; }
-    Issue(0);
+    Update();
 }
 
 // XXX: the implications of when this function gets called concern me :(
@@ -121,42 +115,43 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             orc_assert(lottery == lottery_);
             orc_assert(chain == chain_);
 
-            const auto predicted([&, &serial = serial, &balance = balance, &recipient = recipient, &commit = commit]() {
-                const auto locked(locked_());
+            const auto locked(locked_());
 
-                // XXX: implement rollover strategy
-                if (locked->serial_ < serial) {
-                    locked->serial_ = serial;
-                    locked->balance_ = Complement(balance);
-                    locked->commit_ = commit;
+            // XXX: implement rollover strategy
+            if (locked->serial_ < serial) {
+                locked->serial_ = serial;
+                locked->balance_ = Complement(balance);
+                locked->commit_ = commit;
 
-                    if (locked->recipient_ != recipient) {
-                        locked->recipient_ = recipient;
-                        locked->ring_ = Ring(recipient);
-                    }
+                if (locked->recipient_ != recipient) {
+                    locked->recipient_ = recipient;
+                    locked->ring_ = Ring(recipient);
                 }
+            }
 
-                if (!id.zero()) {
-                    auto pending(locked->pending_.find(id));
-                    if (pending != locked->pending_.end()) {
-                        const auto &ticket(pending->second.first);
-                        locked->spent_ += ticket.Value();
-                        locked->pending_.erase(pending);
-                    }
+            if (!id.zero()) {
+                auto pending(locked->pending_.find(id));
+                if (pending != locked->pending_.end()) {
+                    const auto &ticket(pending->second.first);
+                    locked->spent_ += ticket.Value();
+                    locked->pending_.erase(pending);
                 }
+            }
 
-                auto predicted(locked->balance_);
-                for (const auto &pending : locked->pending_) {
-                    const auto &ticket(pending.second.first);
-                    // XXX: subtract predicted transaction fees
-                    predicted += ticket.Value();
-                }
-
-                return predicted;
-            }());
+            auto predicted(locked->balance_);
+            for (const auto &pending : locked->pending_) {
+                const auto &ticket(pending.second.first);
+                // XXX: subtract predicted transaction fees
+                predicted += ticket.Value();
+            }
 
             if (prepay_ > predicted)
-                Issue(uint256_t(prepay_ * 2 - predicted));
+                nest_.Hatch([&]() noexcept { return [this, amount = uint256_t(prepay_ * 2 - predicted)]() -> task<void> {
+                    co_return co_await Submit(amount); }; }, __FUNCTION__);
+            else if (!locked->pending_.empty()) {
+                nest_.Hatch([&]() noexcept { return [this, ring = locked->ring_, pending = *locked->pending_.begin()]() -> task<void> {
+                    co_return co_await Submit(pending.first, pending.second.first, co_await ring, pending.second.second); }; }, __FUNCTION__);
+            }
         } orc_catch({}) });
     } orc_catch({}) return true; })) {
         Transfer(data.size());
@@ -225,7 +220,8 @@ task<void> Client::Send(const Buffer &data) {
 }
 
 void Client::Update() {
-    Issue(0);
+    nest_.Hatch([&]() noexcept { return [this]() -> task<void> {
+        co_return co_await Submit(); }; }, __FUNCTION__);
 }
 
 uint256_t Client::Spent() {
