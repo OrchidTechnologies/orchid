@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <boost/filesystem/operations.hpp>
+
 #include <cppcoro/async_latch.hpp>
 #include <cppcoro/async_mutex.hpp>
 
@@ -34,7 +36,6 @@
 #include "client.hpp"
 #include "connection.hpp"
 #include "database.hpp"
-#include "directory.hpp"
 #include "forge.hpp"
 #include "heap.hpp"
 #include "load.hpp"
@@ -229,7 +230,7 @@ class Nameless :
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
     if (internal_) nest_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
-        if (co_await internal_->Send(data))
+        if (co_await internal_->Send(data) && analyzer_ != nullptr)
             analyzer_->Analyze(data.span());
     }; }, __FUNCTION__);
 }
@@ -243,15 +244,14 @@ void Capture::Land(const Buffer &data, bool analyze) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
     nest_.Hatch([&]() noexcept { return [this, data = Beam(data), analyze]() mutable -> task<void> {
         co_await Inner().Send(data);
-        if (analyze)
+        if (analyze && analyzer_ != nullptr)
             analyzer_->AnalyzeIncoming(data.span());
     }; }, __FUNCTION__);
 }
 
 Capture::Capture(const Host &local) :
     local_(local),
-    nest_(32),
-    analyzer_(std::make_unique<Nameless>(Group() + "/analysis.db"))
+    nest_(32)
 {
 }
 
@@ -702,6 +702,7 @@ void Capture::Start(const std::string &path) {
         eth_location = "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD";
         eth_winratio = 0;
         hops = [];
+        logdb = "analysis.db";
         //stun = "stun:stun.l.google.com:19302";
     )");
 
@@ -714,6 +715,10 @@ void Capture::Start(const std::string &path) {
         return Start(std::move(local));
 
     WinRatio_ = heap.eval<double>("eth_winratio");
+
+    const auto analysis(heap.eval<std::string>("logdb"));
+    if (!analysis.empty())
+        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, boost::filesystem::path(path).parent_path()).string());
 
 #if 0
     auto remote(Break<BufferSink<Remote>>());

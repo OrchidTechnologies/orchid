@@ -40,10 +40,6 @@ namespace orc {
 
 namespace po = boost::program_options;
 
-std::string Group() {
-    return boost::filesystem::current_path().string();
-}
-
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 

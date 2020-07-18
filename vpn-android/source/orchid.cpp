@@ -19,7 +19,6 @@ namespace orc {
 
 static JavaVM *jvm;
 static asio::io_context *executor_;
-std::string files_dir;
 S<BufferSink<Capture>> capture_;
 
 extern "C" JNIEXPORT void JNICALL
@@ -34,7 +33,7 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
     auto local(Host_);
 
     const char* cDir = env->GetStringUTFChars(dir, nullptr);
-    files_dir = std::string(cDir);
+    std::string files_dir = std::string(cDir);
     env->ReleaseStringUTFChars(dir, cDir);
 
     std::string config = files_dir + std::string("/orchid.cfg");
