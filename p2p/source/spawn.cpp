@@ -32,22 +32,26 @@
 
 namespace orc {
 
-// XXX: audit and correct the std::atomic usage in Pool
-// XXX: this should be a priority / deadline scheduler
-
 class Pool {
   private:
-    std::atomic<Stacked *> stack_ = nullptr;
+    std::mutex mutex_;
+    Work *begin_ = nullptr;
+    Work **end_ = &begin_;
+
     cppcoro::detail::lightweight_manual_reset_event ready_;
 
   public:
     void Drain() {
         for (;;) {
-            auto stacked(stack_.load()); do {
-                if (stacked == nullptr)
+            Work *work;
+            { std::unique_lock<std::mutex> lock(mutex_);
+                if (begin_ == nullptr)
                     return;
-            } while (!stack_.compare_exchange_strong(stacked, stacked->next_));
-            stacked->code_.resume();
+                work = begin_;
+                begin_ = work->next_;
+                if (end_ == &work->next_)
+                    end_ = &begin_; }
+            work->code_.resume();
         }
     }
 
@@ -59,20 +63,16 @@ class Pool {
         }
     }
 
-    void Stack(Stacked *stacked) noexcept {
-        orc_insist(stacked->next_ == nullptr);
-
-        auto stack(stack_.load()); do {
-            stacked->next_ = stack;
-        } while (!stack_.compare_exchange_strong(stack, stacked));
-
+    void Push(Work *work) noexcept {
+        { std::unique_lock<std::mutex> lock(mutex_);
+            *end_ = work; end_ = &work->next_; }
         ready_.set();
     }
 };
 
 void Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexcept {
     code_ = code;
-    pool_->Stack(this);
+    pool_->Push(this);
 }
 
 Scheduled Schedule() {
