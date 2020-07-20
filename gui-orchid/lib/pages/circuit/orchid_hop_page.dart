@@ -185,6 +185,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           divider(),
           pady(24),
           _buildFunding(),
+          pady(96),
         ],
       ),
     );

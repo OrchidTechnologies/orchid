@@ -144,6 +144,7 @@ class _AddHopPageState extends State<AddHopPage> {
                     ],
 
                     _divider(),
+                    pady(96),
                   ],
                 ),
               ),
