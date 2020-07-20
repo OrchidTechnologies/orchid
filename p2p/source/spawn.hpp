@@ -32,13 +32,13 @@ namespace orc {
 
 class Pool;
 
-struct Stacked {
-    Stacked *next_ = nullptr;
+struct Work {
+    Work *next_ = nullptr;
     std::experimental::coroutine_handle<> code_;
 };
 
 class Scheduled :
-    protected Stacked
+    protected Work
 {
   private:
     Pool *pool_;
