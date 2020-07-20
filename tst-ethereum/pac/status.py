@@ -66,7 +66,24 @@ def update_statuses():
             }
 
         if status != 'confirmed':
+            creation_etime = item.get('creation_etime', 0)
+            epoch_time = int(time.time())
+            age = epoch_time - creation_etime
+            if new_status != 'confirmed' and age >= 10*60*60:  # 10 hours in seconds
+                logging.warning(
+                    f'PAC with funder: {funder_pubkey} signer: {signer} balance: {balance} and '
+                    f'escrow: {escrow} has status: {new_status} and age: {age} >= 10 hours. Deleting.'
+                )
+                table.delete_item(
+                    Key={
+                      'price': price,
+                      'signer': signer,
+                    }
+                )
+                recycle_account(funder=funder_pubkey, signer=signer)
+                continue
             if status != new_status:
+                # non-confirmed status -> different status, possibly confirmed
                 logging.debug(
                   f'Changing {push_txn_hash} with signer:{signer} and price:{price} '
                   f'from {status} to {new_status}'
@@ -88,12 +105,14 @@ def update_statuses():
                 )
 
                 if new_status == 'confirmed':
+                    # non-confirmed status -> confirmed
                     token_name = get_token_name()
                     token_symbol = get_token_symbol()
                     token_decimals = get_token_decimals()
                     total = balance + escrow
                     min_escrow = get_min_escrow()
                     if escrow <= min_escrow:
+                        # non-confirmed status -> confirmed, bad escrow
                         logging.warning(
                             f'PAC with funder: {funder_pubkey} signer: {signer} balance: {balance} and '
                             f'escrow: {escrow} has escrow <= min escrow of {min_escrow}. Deleting.'
@@ -106,6 +125,7 @@ def update_statuses():
                         )
                         recycle_account(funder=funder_pubkey, signer=signer)
                     else:
+                        # non-confirmed status -> confirmed, good escrow
                         metric(
                             metric_name='orchid.pac',
                             value=total,
@@ -121,26 +141,11 @@ def update_statuses():
                                 f'token_decimals:{token_decimals}',
                             ],
                         )
-                else:
-                    # new_status != 'confirmed'
-                    creation_etime = item.get('creation_etime', 0)
-                    epoch_time = int(time.time())
-                    age = epoch_time - creation_etime
-                    if age >= 10*60*60:  # 10 hours in seconds
-                        logging.warning(
-                            f'PAC with funder: {funder_pubkey} signer: {signer} balance: {balance} and '
-                            f'escrow: {escrow} has status: {new_status} and age: {age} >= 10 hours. Deleting.'
-                        )
-                        table.delete_item(
-                            Key={
-                              'price': price,
-                              'signer': signer,
-                            }
-                        )
-                        recycle_account(funder=funder_pubkey, signer=signer)
             else:
+                # non-confirmed status -> same status, not confirmed
                 logging.debug(f'No need to update {push_txn_hash} with signer:{signer} and price:{price} from {status}')
         else:
+            # Already confirmed
             logging.debug(f'{push_txn_hash} with signer:{signer} and price:{price} already has status:{status}')
     for status in counts:
         for price in counts[status]:
