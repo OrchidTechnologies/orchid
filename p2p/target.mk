@@ -48,6 +48,8 @@ endif
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
+$(call depend,$(pwd)/source/version.cpp.o,$(output)/extra/revision.hpp)
+
 
 cflags += -I$(pwd)/expected/include
 cflags += -I$(pwd)/url/include

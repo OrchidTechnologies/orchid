@@ -55,6 +55,7 @@
 #include "sleep.hpp"
 #include "store.hpp"
 #include "transport.hpp"
+#include "version.hpp"
 
 using boost::multiprecision::uint256_t;
 
@@ -515,6 +516,10 @@ int Main(int argc, const char *const argv[]) {
             orc_assert(false);
         }());
         co_return Respond(request, http::status::ok, "text/plain", cost.str());
+    });
+
+    router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "text/plain", std::string(VersionData, VersionSize));
     });
 
     const Store store(Load(args["tls"].as<std::string>()));

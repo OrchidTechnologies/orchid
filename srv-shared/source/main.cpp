@@ -57,6 +57,7 @@
 #include "task.hpp"
 #include "transport.hpp"
 #include "utility.hpp"
+#include "version.hpp"
 
 namespace orc {
 
@@ -68,6 +69,7 @@ int Main(int argc, const char *const argv[]) {
     po::options_description group("general command line");
     group.add_options()
         ("help", "produce help message")
+        ("version", "dump version (intense)")
     ;
 
     po::options_description options;
@@ -100,7 +102,6 @@ int Main(int argc, const char *const argv[]) {
         ("host", po::value<std::string>(), "external hostname for this server")
         ("bind", po::value<std::string>()->default_value("0.0.0.0"), "ip address for server to bind to")
         ("port", po::value<uint16_t>()->default_value(8443), "port to advertise on blockchain")
-        ("path", po::value<std::string>()->default_value("/"), "path of internal https endpoint")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
         ("network", po::value<std::string>(), "local interface for ICE candidates")
@@ -140,6 +141,11 @@ int Main(int argc, const char *const argv[]) {
             .add(options)
         << std::endl;
 
+        return 0;
+    }
+
+    if (args.count("version") != 0) {
+        std::cout.write(VersionData, VersionSize);
         return 0;
     }
 
@@ -186,9 +192,8 @@ int Main(int argc, const char *const argv[]) {
         host = boost::asio::ip::host_name();
 
     const auto port(args["port"].as<uint16_t>());
-    auto path(args["path"].as<std::string>());
 
-    const Strung url("https://" + host + ":" + std::to_string(port) + path);
+    const Strung url("https://" + host + ":" + std::to_string(port) + "/");
     Bytes gpg;
 
     Builder tls;
@@ -301,7 +306,7 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));
-    node->Run(path, asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
+    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
     return 0;
 }
 

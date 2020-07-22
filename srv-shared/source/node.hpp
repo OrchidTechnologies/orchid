@@ -65,7 +65,7 @@ class Node final {
         return server;
     }
 
-    void Run(const std::string &path, const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params);
+    void Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params);
 };
 
 }
