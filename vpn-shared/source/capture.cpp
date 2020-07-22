@@ -665,7 +665,7 @@ static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueCon
     return JS_ThrowInternalError(context, "%s", error.what());
 } }
 
-static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) { orc_block({
+static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop, const boost::filesystem::path &group) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
@@ -677,7 +677,8 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S
         const Address seller(heap.eval<std::string>(hops + ".seller", "0x0000000000000000000000000000000000000000"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
         const Address provider(heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000"));
-        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder, seller);
+        const std::string justin(heap.eval<std::string>(hops + ".justin", ""));
+        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder, seller, justin.empty() ? nullptr : boost::filesystem::absolute(justin, group).string().c_str());
     } else if (protocol == "openvpn") {
         co_await Connect(sunk, origin, local,
             heap.eval<std::string>(hops + ".ovpnfile"),
@@ -708,6 +709,8 @@ void Capture::Start(const std::string &path) {
 
     heap.eval<void>(Load(path));
 
+    const auto group(boost::filesystem::path(path).parent_path());
+
     S<Origin> local(Break<Local>());
 
     const auto hops(unsigned(heap.eval<double>("hops.length")));
@@ -718,7 +721,7 @@ void Capture::Start(const std::string &path) {
 
     const auto analysis(heap.eval<std::string>("logdb"));
     if (!analysis.empty())
-        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, boost::filesystem::path(path).parent_path()).string());
+        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
 
 #if 0
     auto remote(Break<BufferSink<Remote>>());
@@ -730,19 +733,19 @@ void Capture::Start(const std::string &path) {
     auto &sunk(Start());
 #endif
 
-    auto code([heap = std::move(heap), hops, local = std::move(local), host](BufferSunk &sunk) mutable -> task<void> {
+    auto code([heap = std::move(heap), hops, local = std::move(local), host, group](BufferSunk &sunk) mutable -> task<void> {
         Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
 
         auto origin(local);
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<BufferSink<Remote>>());
-            co_await Single(*remote, heap, network, origin, remote->Host(), i);
+            co_await Single(*remote, heap, network, origin, remote->Host(), i, group);
             remote->Open();
             origin = std::move(remote);
         }
 
-        co_await Single(sunk, heap, network, origin, host, hops - 1);
+        co_await Single(sunk, heap, network, origin, host, hops - 1, group);
     });
 
     auto &retry(sunk.Wire<Retry<decltype(code)>>(std::move(code)));

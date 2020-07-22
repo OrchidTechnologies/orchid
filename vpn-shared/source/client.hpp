@@ -44,6 +44,9 @@
 #include "signed.hpp"
 #include "ticket.hpp"
 
+// XXX: move this somewhere and maybe find a library
+namespace gsl { template <typename T> using owner = T; }
+
 namespace orc {
 
 class Client :
@@ -70,6 +73,8 @@ class Client :
     const uint128_t face_;
     const uint256_t prepay_;
 
+    gsl::owner<FILE *> const justin_;
+
     struct Locked_ {
         uint64_t benefit_ = 0;
         std::map<Bytes32, std::pair<Ticket, Signature>> pending_;
@@ -89,7 +94,7 @@ class Client :
     task<void> Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature);
     task<void> Submit(uint256_t amount);
 
-    void Transfer(size_t size);
+    void Transfer(size_t size, bool send);
 
     cppcoro::shared_task<Bytes> Ring(Address recipient);
 
@@ -98,7 +103,7 @@ class Client :
     void Stop() noexcept override;
 
   public:
-    Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face);
+    Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face, const char *justin);
     ~Client() override;
 
     task<void> Open(const S<Origin> &origin);

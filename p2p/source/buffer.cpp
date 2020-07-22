@@ -108,6 +108,22 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     return out;
 }
 
+Mutable &Mutable::operator =(const Buffer &buffer) {
+    auto here(data());
+    size_t rest(size());
+
+    buffer.each([&](const uint8_t *data, size_t size) {
+        orc_assert(rest >= size);
+        Copy(here, data, size);
+        here += size;
+        rest -= size;
+        return true;
+    });
+
+    orc_assert(rest == 0);
+    return *this;
+}
+
 Beam::Beam(const Buffer &buffer) :
     Beam(buffer.size())
 {

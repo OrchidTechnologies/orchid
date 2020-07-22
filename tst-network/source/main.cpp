@@ -117,7 +117,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
     std::cout << provider << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller));
+        auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller, nullptr));
         remote.Open();
 
         const auto [speed, size] = co_await Measure(remote);

@@ -32,6 +32,19 @@
 
 namespace orc {
 
+static void Justin(FILE *justin, const char *name, uint8_t value, const uint256_t &data, const uint256_t &stamp = Monotonic()) {
+    if (value >= 2)
+        Log() << "JUSTIN " << name << " " << std::dec << data;
+    Brick<16> buffer(Tie(uint64_t(stamp), uint64_t(data)));
+    buffer[0] = value;
+    (void) fwrite(buffer.data(), 1, buffer.size(), justin);
+}
+
+#define Justin(...) \
+    do if (justin_ != nullptr) \
+        Justin(justin_, __VA_ARGS__); \
+    while (false)
+
 typedef boost::multiprecision::cpp_bin_float_oct Float;
 static const Float Ten18("1000000000000000000");
 
@@ -75,12 +88,14 @@ task<void> Client::Submit(uint256_t amount) {
     const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
     const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
     { const auto locked(locked_());
+        Justin("payment", 3, amount >> 128);
         locked->pending_.try_emplace(hash, ticket, signature); }
     co_return co_await Submit(hash, ticket, receipt, signature);
 }
 
-void Client::Transfer(size_t size) {
+void Client::Transfer(size_t size, bool send) {
     { const auto locked(locked_());
+    Justin("benefit", send ? 0 : 1, size);
     locked->benefit_ += size;
     if (locked->benefit_ > 1024*256)
         locked->benefit_ -= 1024*256;
@@ -107,9 +122,14 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
+        uint256_t stamp(0);
+
         Scan(window, [&, &id = id](const Buffer &data) { try {
             const auto [command, window] = Take<uint32_t, Window>(data);
-            if (command != Invoice_)
+            if (command == Stamp_) {
+                std::tie(stamp) = Take<uint256_t>(window);
+                return;
+            } else if (command != Invoice_)
                 return;
 
             const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
@@ -128,14 +148,18 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                     locked->recipient_ = recipient;
                     locked->ring_ = Ring(recipient);
                 }
+
+                Justin("balance", 2, balance >> 128, stamp);
             }
 
             if (!id.zero()) {
                 auto pending(locked->pending_.find(id));
                 if (pending != locked->pending_.end()) {
                     const auto &ticket(pending->second.first);
-                    locked->spent_ += ticket.Value();
+                    const auto spent(ticket.Value());
+                    locked->spent_ += spent;
                     locked->pending_.erase(pending);
+                    Justin("updated", 4, spent >> 128, stamp);
                 }
             }
 
@@ -146,16 +170,21 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                 predicted += ticket.Value();
             }
 
+            if (justin_ != nullptr)
+                Log() << "JUSTIN predict " << std::dec << (predicted >> 128);
+
             if (prepay_ > predicted)
                 nest_.Hatch([&]() noexcept { return [this, amount = uint256_t(prepay_ * 2 - predicted)]() -> task<void> {
                     co_return co_await Submit(amount); }; }, __FUNCTION__);
             else if (!locked->pending_.empty()) {
-                nest_.Hatch([&]() noexcept { return [this, ring = locked->ring_, pending = *locked->pending_.begin()]() -> task<void> {
+                const auto &pending(*locked->pending_.begin());
+                Justin("-retry-", 5, pending.second.first.Value() >> 128);
+                nest_.Hatch([&]() noexcept { return [this, ring = locked->ring_, pending = pending]() -> task<void> {
                     co_return co_await Submit(pending.first, pending.second.first, co_await ring, pending.second.second); }; }, __FUNCTION__);
             }
         } orc_catch({}) });
     } orc_catch({}) return true; })) {
-        Transfer(data.size());
+        Transfer(data.size(), true);
         Pump::Land(data);
     }
 }
@@ -164,7 +193,7 @@ void Client::Stop() noexcept {
     Pump::Stop();
 }
 
-Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face) :
+Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face, const char *justin) :
     Pump(drain),
     local_(Certify()),
     url_(std::move(url)),
@@ -176,13 +205,16 @@ Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remot
     funder_(funder),
     seller_(seller),
     face_(face),
-    prepay_(uint256_t(Ten18*0.085/0.20/1024*2)<<128)
+    prepay_(uint256_t(Ten18*0.085/0.20/1024*2)<<128),
+    justin_(justin == nullptr ? nullptr : fopen(justin, "w"))
 {
     Pump::type_ = typeid(*this).name();
 }
 
 Client::~Client() {
 orc_trace();
+    if (justin_ != nullptr)
+        fclose(justin_);
 }
 
 task<void> Client::Open(const S<Origin> &origin) {
@@ -216,7 +248,7 @@ task<void> Client::Shut() noexcept {
 }
 
 task<void> Client::Send(const Buffer &data) {
-    Transfer(data.size());
+    Transfer(data.size(), false);
     co_return co_await Bonded::Send(data);
 }
 

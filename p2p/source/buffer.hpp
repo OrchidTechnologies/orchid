@@ -243,6 +243,8 @@ class Mutable :
         return *this;
     }
 
+    Mutable &operator =(const Buffer &buffer);
+
     using Region::span;
     Span<uint8_t> span() {
         return {data(), size()};
@@ -406,9 +408,12 @@ class Data :
         operator =(span);
     }
 
-    Data(const Region &region) :
-        Data(region.span())
-    {
+    Data(const Region &region) {
+        operator =(region);
+    }
+
+    Data(const Buffer &buffer) {
+        operator =(buffer);
     }
 
     Data(const std::array<uint8_t, Size_> &data) :
