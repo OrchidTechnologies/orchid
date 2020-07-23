@@ -8,10 +8,12 @@ import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/common/dialogs.dart';
+import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 
 import '../app_colors.dart';
+import '../app_text.dart';
 
 class AccountsPage extends StatefulWidget {
   const AccountsPage({Key key}) : super(key: key);
@@ -21,7 +23,7 @@ class AccountsPage extends StatefulWidget {
 }
 
 class _AccountsPageState extends State<AccountsPage> {
-  List<UniqueHop> _recentlyDeleted;
+  List<UniqueHop> _recentlyDeleted = [];
 
   @override
   void initState() {
@@ -38,7 +40,7 @@ class _AccountsPageState extends State<AccountsPage> {
   Widget build(BuildContext context) {
     return TitledPage(
       decoration: BoxDecoration(color: Colors.transparent),
-      title: "Accounts",
+      title: s.deletedHops,
       child: buildPage(context),
       lightTheme: true,
     );
@@ -47,7 +49,10 @@ class _AccountsPageState extends State<AccountsPage> {
   Widget buildPage(BuildContext context) {
     List<Widget> list = [];
     if (_recentlyDeleted.isNotEmpty) {
-      list.add(titleTile("Recently Deleted"));
+      //list.add(titleTile(s.recentlyDeleted));
+      list.add(pady(16));
+      list.add(_buildInstructions());
+      list.add(pady(32));
       list.addAll((_recentlyDeleted ?? []).map((hop) {
         return _buildInactiveHopTile(hop);
       }).toList());
@@ -55,7 +60,7 @@ class _AccountsPageState extends State<AccountsPage> {
       list.add(Padding(
         padding: const EdgeInsets.only(top: 32),
         child: Text(
-          "No recently deleted hops...",
+          s.noRecentlyDeletedHops,
           textAlign: TextAlign.center,
           style: TextStyle(fontStyle: FontStyle.italic),
         ),
@@ -115,11 +120,10 @@ class _AccountsPageState extends State<AccountsPage> {
   Future<bool> _confirmDeleteHop(dismissDirection) async {
     var result = await Dialogs.showConfirmationDialog(
       context: context,
-      title: "Confirm Delete",
-      body:
-          "Deleting this hop will permanently remove the contained account information."
-          "  If you plan to re-use the account later you should first save it using either the 'share hop' option"
-          " or by backing up your entire circuit configuration with the Configuration Management tool in Settings.",
+      title: s.confirmDelete,
+      body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
+          "  " +
+          s.ifYouPlanToReuseTheAccountLaterYouShould,
     );
     return result;
   }
@@ -149,5 +153,20 @@ class _AccountsPageState extends State<AccountsPage> {
 
   S get s {
     return S.of(context);
+  }
+
+  Widget _buildInstructions() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 32, right: 32),
+      child: Text(
+          "To restore a deleted hop:" +
+              "\n\n" +
+              "1. Click the hop below then click ‘Share Orchid Account’ and hit ‘Copy’." +
+              "\n" +
+              "2. Return to the ‘Manage Profile’ screen, click ‘New Hop’ then ‘Link Orchid Account’ and ‘Paste’." +
+              "\n\n" +
+              "To permanently delete a hop from the list below, swipe left on it.",
+          style: TextStyle(fontStyle: FontStyle.italic)),
+    );
   }
 }
