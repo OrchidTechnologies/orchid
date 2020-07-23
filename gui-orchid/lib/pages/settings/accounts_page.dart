@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
 import 'package:orchid/pages/circuit/hop_editor.dart';
@@ -13,7 +17,6 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 
 import '../app_colors.dart';
-import '../app_text.dart';
 
 class AccountsPage extends StatefulWidget {
   const AccountsPage({Key key}) : super(key: key);
@@ -24,6 +27,7 @@ class AccountsPage extends StatefulWidget {
 
 class _AccountsPageState extends State<AccountsPage> {
   List<UniqueHop> _recentlyDeleted = [];
+  List<OrphanedKeyAccount> _orphanedPacAccounts = [];
 
   @override
   void initState() {
@@ -34,6 +38,7 @@ class _AccountsPageState extends State<AccountsPage> {
   void initStateAsync() async {
     _recentlyDeleted = await _getRecentlyDeletedHops();
     setState(() {});
+    _findOrphanedPACs();
   }
 
   @override
@@ -48,15 +53,7 @@ class _AccountsPageState extends State<AccountsPage> {
 
   Widget buildPage(BuildContext context) {
     List<Widget> list = [];
-    if (_recentlyDeleted.isNotEmpty) {
-      //list.add(titleTile(s.recentlyDeleted));
-      list.add(pady(16));
-      list.add(_buildInstructions());
-      list.add(pady(32));
-      list.addAll((_recentlyDeleted ?? []).map((hop) {
-        return _buildInactiveHopTile(hop);
-      }).toList());
-    } else {
+    if (_recentlyDeleted.isEmpty && _orphanedPacAccounts.isEmpty) {
       list.add(Padding(
         padding: const EdgeInsets.only(top: 32),
         child: Text(
@@ -65,6 +62,23 @@ class _AccountsPageState extends State<AccountsPage> {
           style: TextStyle(fontStyle: FontStyle.italic),
         ),
       ));
+    } else {
+      //list.add(titleTile(s.recentlyDeleted));
+      list.add(pady(16));
+      list.add(_buildInstructions());
+      list.add(pady(32));
+      list.addAll((_recentlyDeleted ?? []).map((hop) {
+        return _buildInactiveHopTile(hop);
+      }).toList());
+      if (_orphanedPacAccounts.isNotEmpty)
+        list.add(Center(
+            child: Padding(
+          padding: const EdgeInsets.only(top: 16.0, bottom: 24),
+          child: Text("Deleted PACs"),
+        )));
+      list.addAll((_orphanedPacAccounts ?? []).map((oa) {
+        return _buildOrphanedAccountHopTile(oa);
+      }).toList());
     }
     return ListView(children: list);
   }
@@ -89,6 +103,30 @@ class _AccountsPageState extends State<AccountsPage> {
       },
       child: _buildHopTile(uniqueHop, activeHop: false),
     );
+  }
+
+  Dismissible _buildOrphanedAccountHopTile(OrphanedKeyAccount account) {
+    OrchidHop hop = OrchidHop(
+        funder: account.funder,
+        curator: account.curator,
+        keyRef: account.keyRef);
+    UniqueHop uniqueHop =
+        UniqueHop(hop: hop, key: account.keyRef.keyUid.hashCode);
+    return Dismissible(
+      key: Key(account.keyRef.toString()),
+      background: CircuitPageState.buildDismissableBackground(context),
+      confirmDismiss: _confirmDeleteHop,
+      onDismissed: (direction) {
+        _deleteOrphanedAcount(account);
+      },
+      child: _buildHopTile(uniqueHop, activeHop: false),
+    );
+  }
+
+  void _deleteOrphanedAcount(OrphanedKeyAccount account) {
+    log("account: delete orphaned account: ${account.keyRef}");
+    UserPreferences().removeKey(account.keyRef);
+    _findOrphanedPACs();
   }
 
   Widget _buildHopTile(UniqueHop uniqueHop, {bool activeHop = true}) {
@@ -139,6 +177,16 @@ class _AccountsPageState extends State<AccountsPage> {
         return h.hop;
       }).toList()),
     );
+
+    // Also remove the keys now
+    bool orphanKeys = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('orphanKeys', false);
+    if (uniqueHop.hop is OrchidHop && !orphanKeys) {
+      var hop = uniqueHop.hop as OrchidHop;
+      UserPreferences().removeKey(hop.keyRef);
+    }
+
+    initStateAsync();
   }
 
   // e.g. recently deleted
@@ -155,6 +203,69 @@ class _AccountsPageState extends State<AccountsPage> {
     return S.of(context);
   }
 
+  void _findOrphanedPACs() async {
+    _orphanedPacAccounts = [];
+
+    // Get the active hop keys
+    var activeHops = (await UserPreferences().getCircuit()).hops;
+    List<OrchidHop> activeOrchidHops =
+        activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
+    List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
+      return h.keyRef;
+    }).toList();
+    List<String> activeKeyUuids = activeKeys.map((e) => e.keyUid).toList();
+    log("account: activeKeyUuids = $activeKeyUuids");
+
+    // Get recently deleted hop list keys
+    List<OrchidHop> deletedOrchidHops = _recentlyDeleted
+        .map((h) => h.hop)
+        .where((h) => h is OrchidHop)
+        .cast<OrchidHop>()
+        .toList();
+    log("account: deleted orchid hops = $deletedOrchidHops");
+    List<StoredEthereumKeyRef> deletedKeys = deletedOrchidHops.map((h) {
+      return h.keyRef;
+    }).toList();
+    log("account: deleted orchid keys = $deletedKeys");
+    List<String> deletedKeyUuids = deletedKeys.map((e) => e.keyUid).toList();
+    log("account: deletedKeyUuids = $deletedKeyUuids");
+
+    // Find the orphans
+    List<StoredEthereumKey> allKeys = await UserPreferences().getKeys();
+    List<StoredEthereumKey> orphanedKeys = allKeys
+        .where((k) =>
+            !activeKeyUuids.contains(k.uid) && !deletedKeyUuids.contains(k.uid))
+        .toList();
+    log("account: orphaned keys = $orphanedKeys");
+
+    var curator = await UserPreferences().getDefaultCurator() ??
+        OrchidHop.appDefaultCurator;
+
+    // Determine which of these were PACs
+    var orchidPacFunder =
+        EthereumAddress.from('0x6dd46c5f9f19ab8790f6249322f58028a3185087');
+    _orphanedPacAccounts = [];
+    for (var key in orphanedKeys) {
+      var signer = EthereumAddress.from(key.keys().address);
+      try {
+        var pot = await OrchidEthereum.getLotteryPot(orchidPacFunder, signer);
+        if (pot.balance.value <= 0) {
+          log("account: zero balance found for keys: [$orchidPacFunder, $signer]");
+          continue;
+        }
+        log("account: found orphaned PAC with non-zero balance: [$orchidPacFunder, $signer]");
+        setState(() {
+          _orphanedPacAccounts
+              .add(OrphanedKeyAccount(orchidPacFunder, key.ref(), curator));
+          log("_orphaned pac accounts len = ${_orphanedPacAccounts.length}");
+        });
+      } catch (err) {
+        log("account: Error checking pot.");
+      }
+    }
+    setState(() {});
+  }
+
   Widget _buildInstructions() {
     return Padding(
       padding: const EdgeInsets.only(left: 32, right: 32),
@@ -169,4 +280,12 @@ class _AccountsPageState extends State<AccountsPage> {
           style: TextStyle(fontStyle: FontStyle.italic)),
     );
   }
+}
+
+class OrphanedKeyAccount {
+  EthereumAddress funder;
+  StoredEthereumKeyRef keyRef;
+  String curator;
+
+  OrphanedKeyAccount(this.funder, this.keyRef, this.curator);
 }

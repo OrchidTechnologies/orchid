@@ -75,7 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 pady(16),
                 Divider(),
                 PageTile(
-                  title: "Accounts",
+                  title: s.deletedHops,
                   onTap: () async {
                     await Navigator.pushNamed(context, '/settings/accounts');
                   },

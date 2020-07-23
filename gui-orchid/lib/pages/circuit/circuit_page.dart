@@ -565,6 +565,7 @@ class CircuitPageState extends State<CircuitPage>
         image = Image.asset('assets/images/security.png', color: color);
         break;
     }
+    var title = uniqueHop.hop.displayName(context);
     return Padding(
       padding: EdgeInsets.only(bottom: 12),
       child: HopTile(
@@ -574,7 +575,7 @@ class CircuitPageState extends State<CircuitPage>
         image: image,
         onTap: onTap,
         key: Key(uniqueHop.key.toString()),
-        title: uniqueHop.hop.displayName(context),
+        title: title,
         showTopDivider: false,
       ),
     );
