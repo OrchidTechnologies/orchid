@@ -10,8 +10,7 @@ import 'orchid_pricing.dart';
 /// Orchid App Channel API
 ///
 abstract class OrchidAPI {
-  // TESTING
-  static bool mockAPI = true;
+  static bool mockAPI = false;
   static OrchidAPI _apiSingleton;
   static OrchidAPI _mockAPISingleton;
 
