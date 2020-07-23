@@ -156,10 +156,7 @@ class CircuitPageState extends State<CircuitPage>
       setState(() {
         var keyBase = DateTime.now().millisecondsSinceEpoch;
         // Wrap the hops with a locally unique id for the UI
-        _hops = mapIndexed(circuit?.hops ?? [], ((index, hop) {
-          var key = keyBase + index;
-          return UniqueHop(key: key, hop: hop);
-        })).toList();
+        _hops = UniqueHop.wrap(circuit.hops, keyBase);
       });
 
       // Set the correct animation states for the connection status
@@ -491,18 +488,7 @@ class CircuitPageState extends State<CircuitPage>
   Dismissible _buildDismissableHopTile(UniqueHop uniqueHop) {
     return Dismissible(
       key: Key(uniqueHop.key.toString()),
-      background: Container(
-        color: Colors.red,
-        child: Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                s.delete,
-                style: TextStyle(color: Colors.white),
-              ),
-            )),
-      ),
+      background: buildDismissableBackground(context),
       confirmDismiss: _confirmDeleteHop,
       onDismissed: (direction) {
         _deleteHop(uniqueHop);
@@ -511,7 +497,38 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
+  static Container buildDismissableBackground(BuildContext context) {
+    return Container(
+      color: Colors.red,
+      child: Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              S.of(context).delete,
+              style: TextStyle(color: Colors.white),
+            ),
+          )),
+    );
+  }
+
   Widget _buildHopTile(UniqueHop uniqueHop) {
+    return buildHopTile(
+      context: context,
+      onTap: () { _viewHop(uniqueHop); },
+      uniqueHop: uniqueHop,
+      bgColor: _hopColorTween.value,
+      showAlertBadge: _showHopAlert[uniqueHop.contentHash] ?? false,
+    );
+  }
+
+  static Widget buildHopTile({
+    @required BuildContext context,
+    @required UniqueHop uniqueHop,
+    VoidCallback onTap,
+    Color bgColor,
+    bool showAlertBadge,
+  }) {
     //bool isFirstHop = uniqueHop.key == _hops.first.key;
     //bool hasMultipleHops = _hops.length > 1;
     //bool isLastHop = uniqueHop.key == _hops.last.key;
@@ -531,13 +548,11 @@ class CircuitPageState extends State<CircuitPage>
     return Padding(
       padding: EdgeInsets.only(bottom: 12),
       child: HopTile(
-        showAlertBadge: _showHopAlert[uniqueHop.contentHash] ?? false,
+        showAlertBadge: showAlertBadge,
         textColor: color,
-        color: _hopColorTween.value,
+        color: bgColor ?? Colors.white,
         image: image,
-        onTap: () {
-          _viewHop(uniqueHop);
-        },
+        onTap: onTap,
         key: Key(uniqueHop.key.toString()),
         title: uniqueHop.hop.displayName(context),
         showTopDivider: false,
@@ -648,22 +663,8 @@ class CircuitPageState extends State<CircuitPage>
   // View a hop selected from the circuit list
   void _viewHop(UniqueHop uniqueHop, {bool animated = true}) async {
     EditableHop editableHop = EditableHop(uniqueHop);
-    var editor;
-    switch (uniqueHop.hop.protocol) {
-      case HopProtocol.Orchid:
-        editor =
-            OrchidHopPage(editableHop: editableHop, mode: HopEditorMode.View);
-        break;
-      case HopProtocol.OpenVPN:
-        editor =
-            OpenVPNHopPage(editableHop: editableHop, mode: HopEditorMode.Edit);
-        break;
-      case HopProtocol.WireGuard:
-        editor = WireGuardHopPage(
-            editableHop: editableHop, mode: HopEditorMode.Edit);
-        break;
-    }
-    await _showEditor(editor, animated: animated);
+    HopEditor editor = editableHop.editor();
+    await editor.show(context, animated: animated);
 
     // TODO: avoid saving if the hop was not edited.
     // Save the hop if it was edited.
@@ -673,13 +674,6 @@ class CircuitPageState extends State<CircuitPage>
       _hops.insert(index, editableHop.value);
     });
     _saveCircuit();
-  }
-
-  Future<void> _showEditor(editor, {bool animated = true}) async {
-    var route = animated
-        ? MaterialPageRoute(builder: (context) => editor)
-        : NoAnimationMaterialPageRoute(builder: (context) => editor);
-    await Navigator.push(context, route);
   }
 
   // Callback for swipe to delete
@@ -698,11 +692,11 @@ class CircuitPageState extends State<CircuitPage>
   // Callback for swipe to delete
   void _deleteHop(UniqueHop uniqueHop) async {
     var index = _hops.indexOf(uniqueHop);
-    setState(() {
-      _hops.removeAt(index);
-    });
+    var removedHop = _hops.removeAt(index);
+    setState(() { });
     _saveCircuit();
     _recycleHopIfAllowed(uniqueHop);
+    UserPreferences().addRecentlyDeletedHop(removedHop.hop);
   }
 
   // Recycle the hop if configured to do so.
@@ -1017,4 +1011,5 @@ class CircuitUtils {
     OrchidAPI().updateConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
+
 }

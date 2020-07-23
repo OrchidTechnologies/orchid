@@ -13,6 +13,7 @@ import 'package:orchid/pages/settings/configuration_page.dart';
 import 'package:orchid/pages/settings/keygen_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
+import 'package:orchid/pages/settings/accounts_page.dart';
 import 'package:orchid/pages/settings/settings_dev_page.dart';
 import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
@@ -49,6 +50,7 @@ class AppRoutes {
   static const String manage_config = "/settings/manage_config";
   static const String circuit = "/circuit";
   static const String traffic = "/traffic";
+  static const String accounts = "/settings/accounts";
   static const String home = "/";
 
   static final Map<String, WidgetBuilder> routes = {
@@ -75,6 +77,7 @@ class AppRoutes {
     keys: (context) => KeysPage(),
     circuit: (context) => CircuitPage(),
     traffic: (context) => TrafficView(),
+    accounts: (context) => AccountsPage(),
     manage_config: (context) => ManageConfigPage()
   };
 }

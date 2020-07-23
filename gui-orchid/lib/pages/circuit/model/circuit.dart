@@ -30,3 +30,18 @@ class Circuit {
 
   Map<String, dynamic> toJson() => {'hops': hops};
 }
+
+class Hops {
+  List<CircuitHop> hops = [];
+
+  Hops(this.hops);
+
+  // Handle the heterogeneous list of hops
+  Hops.fromJson(Map<String, dynamic> json) {
+    var circuit = Circuit.fromJson(json);
+    this.hops = circuit.hops;
+  }
+
+  Map<String, dynamic> toJson() => {'hops': hops};
+
+}

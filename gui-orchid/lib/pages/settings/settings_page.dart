@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/js_config.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
@@ -42,7 +43,14 @@ class _SettingsPageState extends State<SettingsPage> {
         OrchidHop.appDefaultCurator;
     _allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
     setLoggingConfig();
+    setPlatformConfig();
     setState(() {});
+  }
+
+  void setPlatformConfig() async {
+    OrchidPlatform.pretendToBeAndroid =
+        (await OrchidVPNConfig.getUserConfigJS())
+            .evalBoolDefault('isAndroid', false);
   }
 
   void setLoggingConfig() async {
@@ -63,8 +71,19 @@ class _SettingsPageState extends State<SettingsPage> {
           child: SafeArea(
             child: Column(
               children: <Widget>[
-                // Default curator
+                // Accounts
                 pady(16),
+                Divider(),
+                PageTile(
+                  title: "Accounts",
+                  onTap: () async {
+                    await Navigator.pushNamed(context, '/settings/accounts');
+                  },
+                ),
+
+                // Default curator
+                pady(8),
+                Divider(),
                 PageTile(
                   title: s.defaultCurator,
                   //imageName: "assets/images/assignment.png",
@@ -74,10 +93,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           controller: _defaultCurator,
                           margin: EdgeInsets.zero)),
                 ),
-                pady(8),
 
                 // Allow enable vpn with no hops
-                pady(16),
+                pady(8),
                 Divider(),
                 PageTile(
                   title:

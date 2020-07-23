@@ -4,9 +4,11 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
+import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_api.dart';
 import '../orchid_budget_api.dart';
+import '../orchid_log_api.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -91,6 +93,31 @@ class UserPreferences {
       return Circuit([]);
     }
     return Circuit.fromJson(jsonDecode(value));
+  }
+
+  // Add a single hop to the recently deleted list
+  void addRecentlyDeletedHop(CircuitHop hop) async {
+    var hops = await getRecentlyDeleted();
+    hops.hops.add(hop);
+    await setRecentlyDeleted(hops);
+  }
+
+  // Store recently deleted hops
+  Future<bool> setRecentlyDeleted(Hops hops) async {
+    log("saving recently deleted hops: ${hops.hops}");
+    String value = jsonEncode(hops);
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.RecentlyDeletedHops.toString(), value);
+  }
+
+  // Get a list of recently deleted hops.
+  Future<Hops> getRecentlyDeleted() async {
+    String value = (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.RecentlyDeletedHops.toString());
+    if (value == null) {
+      return Hops([]);
+    }
+    return Hops.fromJson(jsonDecode(value));
   }
 
   // Get the user editable configuration file text.
@@ -257,6 +284,7 @@ enum UserPreferenceKey {
   PromptedForVPNPermission,
   Budget,
   Circuit,
+  RecentlyDeletedHops,
   UserConfig,
   Keys,
   DefaultCurator,

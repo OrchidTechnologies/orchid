@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
@@ -272,7 +273,7 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   bool get isApple {
-    return !_pretendToBeAndroid && Platform.isIOS || Platform.isMacOS;
+    return OrchidPlatform.isApple;
   }
 
   void _onBuyCredits() {

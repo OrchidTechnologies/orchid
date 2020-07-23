@@ -1,14 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/util/collections.dart';
 
 enum HopProtocol { Orchid, OpenVPN, WireGuard }
 
 // A hop element of a circuit
 class CircuitHop {
+  String uuid;
   HopProtocol protocol;
 
-  CircuitHop(this.protocol);
+  CircuitHop(this.protocol) {
+  }
 
   CircuitHop.fromJson(Map<String, dynamic> json)
       : this.protocol = stringToProtocol(json['protocol']);
@@ -55,6 +58,14 @@ class UniqueHop {
   // Create a UniqueHop preserving any key from a previous UniqueHop.
   UniqueHop.from(UniqueHop uniqueHop, {CircuitHop hop})
       : this(key: uniqueHop?.key, hop: hop);
+
+  // Wrap the hops with a locally unique id for the UI
+  static List<UniqueHop> wrap(List<CircuitHop> hops, int keyBase) {
+    return mapIndexed(hops ?? [], ((index, hop) {
+      var key = keyBase + index;
+      return UniqueHop(key: key, hop: hop);
+    })).toList();
+  }
 
   /// Hash of the hop content.
   int get contentHash => hop.toJson().toString().hashCode;

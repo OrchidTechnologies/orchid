@@ -36,6 +36,11 @@ import 'package:intl/intl.dart';
 
 /// Create / edit / view an Orchid Hop
 class OrchidHopPage extends HopEditor<OrchidHop> {
+  // The OrchidHopEditor operates in a "settings"-like fashion and allows
+  // editing certain elements of the hop even when in "View" mode.  This flag
+  // disables these features.
+  bool disabled = false;
+
   OrchidHopPage(
       {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
       : super(
@@ -205,7 +210,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           _buildSection(
               title: s.curation,
               child: _buildCuration(),
-              onDetail: _editCurator),
+              onDetail: !widget.disabled ? _editCurator : null),
           pady(36),
           /*
           divider(),

@@ -6,6 +6,7 @@ import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/preferences/user_secure_storage.dart';
 import 'package:orchid/api/purchase/purchase_rate.dart';
 import 'package:orchid/util/units.dart';
+import '../orchid_platform.dart';
 import 'android_purchase.dart';
 import 'ios_purchase.dart';
 import 'orchid_pac.dart';
@@ -18,9 +19,9 @@ abstract class OrchidPurchaseAPI {
 
   factory OrchidPurchaseAPI() {
     if (_shared == null) {
-      if (Platform.isIOS | Platform.isMacOS) {
+      if (OrchidPlatform.isApple) {
         _shared = IOSOrchidPurchaseAPI();
-      } else if (Platform.isAndroid) {
+      } else if (OrchidPlatform.isAndroid) {
         _shared = AndroidOrchidPurchaseAPI();
       } else {
         throw Exception('no purchase on platform');

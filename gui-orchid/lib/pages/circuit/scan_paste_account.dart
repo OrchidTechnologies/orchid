@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/qrcode.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -38,7 +39,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     var showIcons = screenWidth >= AppSize.iphone_xs.width;
-    bool pasteOnly = Platform.isMacOS;
+    bool pasteOnly = OrchidPlatform.isMacOS;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(

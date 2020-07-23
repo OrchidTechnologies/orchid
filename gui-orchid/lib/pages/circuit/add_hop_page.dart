@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
@@ -113,7 +114,7 @@ class _AddHopPageState extends State<AddHopPage> {
                         imageName: 'assets/images/scan.png'),
 
                     // Custom Account
-                    if (!Platform.isIOS && !Platform.isMacOS) ...[
+                    if (!OrchidPlatform.isApple) ...[
                       _divider(),
                       _buildHopChoice(
                           text: s.createACustomAccount,

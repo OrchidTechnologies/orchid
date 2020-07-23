@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -23,7 +24,7 @@ class ScanOrPasteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     S s = S.of(context);
     double screenWidth = MediaQuery.of(context).size.width;
-    bool pasteOnly = Platform.isMacOS;
+    bool pasteOnly = OrchidPlatform.isMacOS;
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
