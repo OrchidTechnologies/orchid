@@ -16,7 +16,7 @@ set -o pipefail
 width=4
 
 describe=$(git describe --tags --match="v*" "$@" 2>/dev/null)
-monotonic=$(git log -1 --pretty=format:%ct)
+monotonic=$(git log -1 --pretty=format:%ct "$@")
 
 commit=$(git rev-parse HEAD)
 decimal=$(echo "obase=10;ibase=16;$(echo "${commit}" | cut -c "1-${width}" | tr '[:lower:]' '[:upper:]')" | bc)
