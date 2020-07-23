@@ -415,3 +415,15 @@ def toChecksumAddress(address):
     checksum = w3.toChecksumAddress(address)
     logging.debug(f'checksum: {checksum}')
     return checksum
+
+
+def allowance(owner: str, spender: str = os.environ['LOTTERY']):
+    logging.debug(f'allowance() owner: {owner} spender: {spender}')
+    w3 = refresh_w3()
+    token_contract = w3.eth.contract(
+        abi=token_abi,
+        address=os.environ['TOKEN'],
+    )
+    spending_allowance = token_contract.functions.allowance(owner, spender).call()
+    logging.debug(f'Spending Allowance of {owner} by {spender}: {spending_allowance}')
+    return spending_allowance
