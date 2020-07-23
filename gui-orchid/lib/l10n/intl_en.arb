@@ -244,7 +244,7 @@
 	"oxtPrice": "OXT price:",
 	"gasPrice": "Gas price:",
 	"maxFaceValue": "Max face value:",
-  "deletedHops": "Deleted Hops",
+	"deletedHops": "Deleted Hops",
 	"recentlyDeleted": "Recently Deleted",
 	"noRecentlyDeletedHops": "No recently deleted hops...",
 	"confirmDelete": "Confirm Delete",
