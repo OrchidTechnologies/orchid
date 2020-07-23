@@ -37,7 +37,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 28
         versionCode orcMonotonic.toInteger() - 946684800
-        versionName orcPackage
+        versionName orcVersion
     }
 
     compileOptions {
