@@ -49,7 +49,7 @@ task<void> Cashier::Look(const Address &signer, const Address &funder, const std
     }, "latest"});
 }
 
-void Cashier::Land(Json::Value data) {
+void Cashier::Land(Json::Value data) { try {
     const auto id(data["id"]);
     if (id.isNull()) {
         const auto method(data["method"].asString());
@@ -138,7 +138,7 @@ void Cashier::Land(Json::Value data) {
                 orc_insist(false);
         }
     }
-}
+} orc_stack({}, "parsing " << data) }
 
 void Cashier::Stop(const std::string &error) noexcept {
     orc_insist_(false, error);
