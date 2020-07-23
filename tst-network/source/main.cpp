@@ -21,6 +21,7 @@
 
 
 #include <iostream>
+#include <regex>
 #include <vector>
 
 #include <cppcoro/async_mutex.hpp>
@@ -74,6 +75,7 @@ struct Report {
     Float speed_;
     Host host_;
     Address recipient_;
+    std::string version_;
 };
 
 typedef std::tuple<Float, size_t> Measurement;
@@ -96,6 +98,20 @@ task<Host> Find(Origin &origin) {
     co_return Parse((co_await origin.Fetch("GET", {"https", "cydia.saurik.com", "443", "/debug.json"}, {}, {})).ok())["host"].asString();
 }
 
+task<std::string> Version(Origin &origin, const std::string &url) { try {
+    orc_assert(!url.empty());
+    orc_assert(url[url.size()-1] == '/');
+
+    auto version((co_await origin.Fetch("GET", Locator::Parse(url + "version.txt"), {}, {})).ok());
+    const auto line(version.find('\n'));
+    if (line != std::string::npos)
+        version = version.substr(0, line);
+
+    static const std::regex re("[0-9a-f]{40}");
+    orc_assert(std::regex_match(version, re));
+    co_return version;
+} orc_catch({ co_return ""; }) }
+
 task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
     (co_await orc_optic)->Name("OpenVPN");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
@@ -103,7 +119,7 @@ task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{"", std::nullopt, speed, host};
+        co_return Report{"", std::nullopt, speed, host, ""};
     });
 }
 
@@ -114,7 +130,7 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{"", std::nullopt, speed, host};
+        co_return Report{"", std::nullopt, speed, host, ""};
     });
 }
 
@@ -131,10 +147,11 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         client.Update();
         const auto host(co_await Find(remote));
 
-        const auto recipient(client.Recipient());
-
         const auto balance(client.Balance());
         const auto spent(client.Spent());
+
+        const auto recipient(client.Recipient());
+        const auto version(co_await Version(*origin, client.URL()));
 
         const auto price(gauge->Price());
         const uint256_t gas(100000);
@@ -144,7 +161,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
 
         const auto cost(Float(spent - balance) / size * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
         std::cout << name << ": DONE" << std::endl;
-        co_return Report{provider, cost * efficiency, speed, host, recipient};
+        co_return Report{provider, cost * efficiency, speed, host, recipient, version};
     });
 }
 
@@ -255,6 +272,8 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
             recipient << report->recipient_;
             body << "\n" << std::string(13, ' ') << recipient.str().substr(2);
         }
+        if (!report->version_.empty())
+            body << "\n" << std::string(13, ' ') << report->version_;
     } else orc_insist(false);
 
     body << "\n";

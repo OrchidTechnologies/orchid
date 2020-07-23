@@ -273,6 +273,10 @@ uint128_t Client::Face() {
     return face_;
 }
 
+const std::string &Client::URL() {
+    return url_;
+}
+
 Address Client::Recipient() {
     const auto locked(locked_());
     return locked->recipient_;
