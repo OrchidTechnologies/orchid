@@ -26,7 +26,7 @@ version=$(echo "${describe}" | sed -e 's@^v@@;s@-.*@@')
 
 revision=$(echo "obase=2;${monotonic} * 2^(4*${width}) + ${decimal}" | BC_LINE_LENGTH=64 bc)
 
-if git status --ignore-submodules=dirty -s | cut -c 1-2 | grep M >/dev/null; then
+if [[ -z "$*" ]] && git status --ignore-submodules=dirty -s | cut -c 1-2 | grep M >/dev/null; then
     package+='.x'
     revision+=1
 else
