@@ -81,8 +81,14 @@ typedef std::tuple<Float, size_t> Measurement;
 task<Measurement> Measure(Origin &origin) {
     co_await Sleep(1000);
     const auto before(Monotonic());
-    const auto test((co_await origin.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
-    co_return Measurement{test.size() * 8 / Float(Monotonic() - before), test.size()};
+
+    size_t size(0);
+    for (unsigned i(0); i != 1; ++i) {
+        const auto test((co_await origin.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
+        size += test.size();
+    }
+
+    co_return Measurement{size * 8 / Float(Monotonic() - before), size};
 }
 
 task<Host> Find(Origin &origin) {
