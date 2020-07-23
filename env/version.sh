@@ -21,8 +21,16 @@ monotonic=$(git log -1 --pretty=format:%ct "$@")
 commit=$(git rev-parse HEAD)
 decimal=$(echo "obase=10;ibase=16;$(echo "${commit}" | cut -c "1-${width}" | tr '[:lower:]' '[:upper:]')" | bc)
 
-package=$(echo "${describe}" | sed -e 's@-\([^-]*\)-\([^-]*\)$@.p\1.\2@;s@^v@@;s@%@~@g')
-version=$(echo "${describe}" | sed -e 's@^v@@;s@-.*@@')
+version=${describe#v}
+if [[ ${version} != *-* ]]; then
+    package=${version}
+else
+    package=${version#*-}
+    version=${version%%-*}
+    version=${version%.*}.$((${version##*.}+1))
+    package=~p${package//-/.}
+    package=${version}${package}
+fi
 
 revision=$(echo "obase=2;${monotonic} * 2^(4*${width}) + ${decimal}" | BC_LINE_LENGTH=64 bc)
 
