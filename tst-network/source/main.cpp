@@ -81,7 +81,6 @@ struct Report {
 typedef std::tuple<Float, size_t> Measurement;
 
 task<Measurement> Measure(Origin &origin) {
-    co_await Sleep(1000);
     const auto before(Monotonic());
 
     size_t size(0);
@@ -128,8 +127,8 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         co_await Guard(remote, origin, remote.Host(), std::move(config));
         remote.Open();
-        const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
+        const auto [speed, size] = co_await Measure(remote);
         co_return Report{"", std::nullopt, speed, host, ""};
     });
 }
@@ -143,10 +142,10 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller, nullptr));
         remote.Open();
 
-        const auto [speed, size] = co_await Measure(remote);
-        client.Update();
         const auto host(co_await Find(remote));
+        const auto [speed, size] = co_await Measure(remote);
 
+        client.Update();
         const auto balance(client.Balance());
         const auto spent(client.Spent());
 
