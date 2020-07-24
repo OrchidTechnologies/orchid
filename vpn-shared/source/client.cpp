@@ -97,10 +97,9 @@ void Client::Transfer(size_t size, bool send) {
     { const auto locked(locked_());
     Justin("benefit", send ? 0 : 1, size);
     locked->benefit_ += size;
-    if (locked->benefit_ > 1024*256)
-        locked->benefit_ -= 1024*256;
-    else
-        return; }
+    if (locked->benefit_ - locked->updated_ < 1024*256)
+        return;
+    locked->updated_ = locked->benefit_; }
     Update();
 }
 
@@ -255,6 +254,11 @@ task<void> Client::Send(const Buffer &data) {
 void Client::Update() {
     nest_.Hatch([&]() noexcept { return [this]() -> task<void> {
         co_return co_await Submit(); }; }, __FUNCTION__);
+}
+
+uint64_t Client::Benefit() {
+    const auto locked(locked_());
+    return locked->benefit_;
 }
 
 uint256_t Client::Spent() {

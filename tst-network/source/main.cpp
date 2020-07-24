@@ -146,8 +146,12 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         const auto [speed, size] = co_await Measure(remote);
 
         client.Update();
-        const auto balance(client.Balance());
-        const auto spent(client.Spent());
+        // XXX: support co_await on Update()
+        co_await Sleep(1000);
+        const Float spent(client.Spent());
+        const Float balance(client.Balance());
+
+        const auto benefit(client.Benefit());
 
         const auto recipient(client.Recipient());
         const auto version(co_await Version(*origin, client.URL()));
@@ -158,9 +162,9 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         const auto face(Float(client.Face()) * fiat.oxt_);
         const auto efficiency(1 - Float(gas * price) * fiat.eth_ / face);
 
-        const auto cost(Float(spent - balance) / size * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
+        const auto cost((spent * efficiency - balance) / benefit * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
         std::cout << name << ": DONE" << std::endl;
-        co_return Report{provider, cost * efficiency, speed, host, recipient, version};
+        co_return Report{provider, cost, speed, host, recipient, version};
     });
 }
 

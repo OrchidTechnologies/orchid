@@ -76,7 +76,9 @@ class Client :
     gsl::owner<FILE *> const justin_;
 
     struct Locked_ {
+        uint64_t updated_ = 0;
         uint64_t benefit_ = 0;
+
         std::map<Bytes32, std::pair<Ticket, Signature>> pending_;
         uint256_t spent_ = 0;
 
@@ -112,6 +114,7 @@ class Client :
     task<void> Send(const Buffer &data) override;
 
     void Update();
+    uint64_t Benefit();
     uint256_t Spent();
     checked_int256_t Balance();
     uint128_t Face();
