@@ -495,7 +495,7 @@ int Main(int argc, const char *const argv[]) {
         body << "\n";
 
         Chart(body, 49, 21, [&](float x) -> float {
-            return x * 30;
+            return x * 100;
         }, [fiat = (*coinbase)(), price = gauge->Price()](float escrow) -> float {
             const uint256_t gas(100000);
             return (1 - Float(gas * price) / Ten18 * (fiat.eth_ / fiat.oxt_) / (escrow / 2)).convert_to<float>();
