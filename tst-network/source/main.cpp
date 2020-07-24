@@ -69,6 +69,10 @@ static const Float Ten12("1000000000000");
 static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 
+struct Global {
+    uint64_t benefit_ = 0;
+}; Locked<Global> global_;
+
 struct Report {
     std::string stakee_;
     std::optional<Float> cost_;
@@ -152,6 +156,13 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         const Float balance(client.Balance());
 
         const auto benefit(client.Benefit());
+        Log() << "BENEFIT " << std::dec << benefit << " " << name;
+        const auto minimum([&]() {
+            const auto global(global_());
+            if (global->benefit_ == 0 || global->benefit_ > benefit)
+                global->benefit_ = benefit;
+            return global->benefit_;
+        }());
 
         const auto recipient(client.Recipient());
         const auto version(co_await Version(*origin, client.URL()));
@@ -162,8 +173,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         const auto face(Float(client.Face()) * fiat.oxt_);
         const auto efficiency(1 - Float(gas * price) * fiat.eth_ / face);
 
-        const auto cost((spent * efficiency - balance) / benefit * (1024 * 1024 * 1024) * fiat.oxt_ / Two128);
-        std::cout << name << ": DONE" << std::endl;
+        const auto cost((spent * efficiency - balance) / benefit * (1024 * 1024 * 1024) * fiat.oxt_ / Two128 * benefit / minimum);
         co_return Report{provider, cost, speed, host, recipient, version};
     });
 }
