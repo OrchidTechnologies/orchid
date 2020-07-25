@@ -146,14 +146,23 @@ class OrchidPACServer {
     return response.body;
   }
 
-  Future<bool> storeOpen() async {
+  Future<PACStoreStatus> storeStatus() async {
     log("iap: check PAC server status");
 
     bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
         .evalBoolDefault('pacs.storeDown', false);
     if (overrideDown) {
       log("iap: override server status");
-      return false;
+      return PACStoreStatus.down;
+    }
+    bool overrideTier1Down = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.tier1Down', false);
+    bool overrideTier2Down = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.tier2Down', false);
+    bool overrideTier3Down = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.tier3Down', false);
+    if (overrideTier1Down || overrideTier2Down || overrideTier3Down) {
+      log("iap: override product status: $overrideTier1Down, $overrideTier2Down, $overrideTier3Down");
     }
 
     // Do the post
@@ -165,11 +174,40 @@ class OrchidPACServer {
     // Validate the response status and content
     log("iap: pac server status response: ${response.statusCode}, ${response.body}");
     if (response.statusCode != 200) {
-      return false;
+      return PACStoreStatus.down;
     }
     var responseJson = json.decode(response.body);
     var disabled = responseJson['disabled'];
-    return disabled != 'True';
+
+    // safely and rigidly parse bool from the server
+    bool Function(Object val, bool defaultValue) parseBool =
+        (val, defaultValue) {
+      if (val == null) {
+        return defaultValue;
+      }
+      String sval = val.toString().toLowerCase();
+      if (sval == "true") {
+        return true;
+      }
+      if (sval == "false") {
+        return false;
+      }
+      return defaultValue;
+    };
+
+    Map<String, bool> productStatus = {};
+    productStatus[OrchidPurchaseAPI.pacTier1] = overrideTier1Down
+        ? false
+        : parseBool(responseJson[OrchidPurchaseAPI.pacTier1], true);
+    productStatus[OrchidPurchaseAPI.pacTier2] = overrideTier2Down
+        ? false
+        : parseBool(responseJson[OrchidPurchaseAPI.pacTier2], true);
+    productStatus[OrchidPurchaseAPI.pacTier3] = overrideTier3Down
+        ? false
+        : parseBool(responseJson[OrchidPurchaseAPI.pacTier3], true);
+    log("iap: product status = $productStatus");
+
+    return PACStoreStatus(open: disabled != 'True', product: productStatus);
   }
 
   Future<void> recycle({EthereumAddress funder, EthereumAddress signer}) async {
@@ -193,4 +231,16 @@ class OrchidPACServer {
       log("iap: recycle succeeded");
     }
   }
+}
+
+class PACStoreStatus {
+  static PACStoreStatus down = PACStoreStatus(open: false);
+
+  // overall store status
+  bool open;
+
+  // product status
+  Map<String, bool> product;
+
+  PACStoreStatus({this.open, this.product = const {}});
 }
