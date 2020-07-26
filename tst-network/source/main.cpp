@@ -491,14 +491,22 @@ int Main(int argc, const char *const argv[]) {
 
         for (const auto &[name, provider] : state->providers_)
             Print(body, name, provider);
+        body << "\n";
 
+        const auto price(gauge->Price());
+        const auto fiat((*coinbase)());
+        const auto overhead(Float(price) * fiat.eth_);
+
+        body << "Cost: ";
+        body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 100000) << " || ";
+        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 85000) << " || ";
+        body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)\n";
         body << "\n";
 
         Chart(body, 49, 21, [&](float x) -> float {
-            return x * 100;
-        }, [fiat = (*coinbase)(), price = gauge->Price()](float escrow) -> float {
-            const uint256_t gas(100000);
-            return (1 - Float(gas * price) / Ten18 * (fiat.eth_ / fiat.oxt_) / (escrow / 2)).convert_to<float>();
+            return x * 75;
+        }, [&](float escrow) -> float {
+            return (1 - overhead * 100000 / (fiat.oxt_ * Ten18) / (escrow / 2)).convert_to<float>();
         }, [&](std::ostream &out, float x) {
             out << std::fixed << std::setprecision(0) << std::setw(3) << x * 100 << '%';
         });
