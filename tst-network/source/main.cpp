@@ -503,10 +503,14 @@ int Main(int argc, const char *const argv[]) {
         body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)\n";
         body << "\n";
 
+        const auto gas(100000);
+        const auto coefficient((overhead * gas) / (fiat.oxt_ * Ten18));
+        const auto bound((coefficient / ((1-0.80) / 2)).convert_to<float>());
+
         Chart(body, 49, 21, [&](float x) -> float {
-            return x * 75;
+            return x * bound;
         }, [&](float escrow) -> float {
-            return (1 - overhead * 100000 / (fiat.oxt_ * Ten18) / (escrow / 2)).convert_to<float>();
+            return (1 - coefficient / (escrow / 2)).convert_to<float>();
         }, [&](std::ostream &out, float x) {
             out << std::fixed << std::setprecision(0) << std::setw(3) << x * 100 << '%';
         });
