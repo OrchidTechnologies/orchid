@@ -88,7 +88,7 @@ task<Measurement> Measure(Origin &origin) {
     const auto before(Monotonic());
 
     size_t size(0);
-    for (unsigned i(0); i != 1; ++i) {
+    for (unsigned i(0); i != 3; ++i) {
         const auto test((co_await origin.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
         size += test.size();
     }
