@@ -176,10 +176,8 @@ class OrchidPACServer {
     if (response.statusCode != 200) {
       return PACStoreStatus.down;
     }
-    var responseJson = json.decode(response.body);
-    var disabled = responseJson['disabled'];
 
-    // safely and rigidly parse bool from the server
+    // Safely and conservatively parse bool from the server
     bool Function(Object val, bool defaultValue) parseBool =
         (val, defaultValue) {
       if (val == null) {
@@ -195,6 +193,9 @@ class OrchidPACServer {
       return defaultValue;
     };
 
+    var responseJson = json.decode(response.body);
+    var disabled = parseBool(responseJson['disabled'], false);
+
     Map<String, bool> productStatus = {};
     productStatus[OrchidPurchaseAPI.pacTier1] = overrideTier1Down
         ? false
@@ -207,7 +208,7 @@ class OrchidPACServer {
         : parseBool(responseJson[OrchidPurchaseAPI.pacTier3], true);
     log("iap: product status = $productStatus");
 
-    return PACStoreStatus(open: disabled != 'True', product: productStatus);
+    return PACStoreStatus(open: !disabled, product: productStatus);
   }
 
   Future<void> recycle({EthereumAddress funder, EthereumAddress signer}) async {
