@@ -711,6 +711,10 @@ void Capture::Start(const std::string &path) {
 
     const auto group(boost::filesystem::path(path).parent_path());
 
+    const auto analysis(heap.eval<std::string>("logdb"));
+    if (!analysis.empty())
+        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
+
     S<Origin> local(Break<Local>());
 
     const auto hops(unsigned(heap.eval<double>("hops.length")));
@@ -718,10 +722,6 @@ void Capture::Start(const std::string &path) {
         return Start(std::move(local));
 
     WinRatio_ = heap.eval<double>("eth_winratio");
-
-    const auto analysis(heap.eval<std::string>("logdb"));
-    if (!analysis.empty())
-        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
 
 #if 0
     auto remote(Break<BufferSink<Remote>>());

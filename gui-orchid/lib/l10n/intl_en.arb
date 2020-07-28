@@ -243,5 +243,12 @@
 	"ethPrice": "ETH price:",
 	"oxtPrice": "OXT price:",
 	"gasPrice": "Gas price:",
-	"maxFaceValue": "Max face value:"
+	"maxFaceValue": "Max face value:",
+	"deletedHops": "Deleted Hops",
+	"recentlyDeleted": "Recently Deleted",
+	"noRecentlyDeletedHops": "No recently deleted hops...",
+	"confirmDelete": "Confirm Delete",
+	"deletingThisHopWillPermanentlyRemoveTheContainedAccountInformation": "Deleting this hop will permanently remove the contained account information.",
+	"deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount": "Deleting this hop will remove its configured or purchased account information.",
+	"ifYouPlanToReuseTheAccountLaterYouShould": "If you plan to re-use the account later you should first save it using either the 'share hop' option or by backing up your entire circuit configuration with the Configuration Management tool in Settings."
 }

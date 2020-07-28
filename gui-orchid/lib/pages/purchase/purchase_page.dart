@@ -41,7 +41,7 @@ class _PurchasePageState extends State<PurchasePage> {
   String _overlayStatusMessage;
   bool _requiresUserAction = false;
   bool _showHelp = false;
-  bool _storeOpen = true;
+  PACStoreStatus _storeStatus;
 
   Map<String, PAC> _pacs = {
     OrchidPurchaseAPI.pacTier1: PAC(
@@ -75,8 +75,10 @@ class _PurchasePageState extends State<PurchasePage> {
     updateProducts(refresh: false);
     updateProducts(refresh: true);
 
-    _storeOpen = await OrchidPACServer().storeOpen();
-    setState(() {});
+    _storeStatus = await OrchidPACServer().storeStatus();
+    if (mounted) {
+      setState(() {});
+    }
 
     // Disable price display
     //_pricing = await OrchidAPI().pricing().getPricing();
@@ -155,7 +157,7 @@ class _PurchasePageState extends State<PurchasePage> {
           ),
         ),
         if (_showOverlayPane) _buildOverlay(),
-        if (_storeOpen == false && !_showOverlayPane) _buildStoreDown()
+        if (!_storeOpen && !_showOverlayPane) _buildStoreDown()
       ],
     );
   }
@@ -444,7 +446,10 @@ class _PurchasePageState extends State<PurchasePage> {
         : '...';
      */
 
-    var enabled = pac.localPurchasePrice != null && _storeOpen == true;
+    var enabled = pac.localPurchasePrice != null
+        && _storeOpen == true
+        && _productForSale(pac)
+    ;
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
@@ -694,5 +699,19 @@ class _PurchasePageState extends State<PurchasePage> {
 
   S get s {
     return S.of(context);
+  }
+
+  bool get _storeOpen {
+    return _storeStatus == null || _storeStatus.open;
+  }
+
+  bool _productForSale(PAC pac) {
+    // default to selling if any ambiguity
+    if (_storeStatus == null) { return true; }
+    var status = _storeStatus.product[pac.productId];
+    if (status == false) {
+      return false;
+    }
+    return true;
   }
 }

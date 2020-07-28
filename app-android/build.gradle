@@ -30,14 +30,14 @@ apply plugin: 'kotlin-android'
 def flutter = files(flutterJar)
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
 
     defaultConfig {
         applicationId "net.orchid.Orchid"
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode orcMonotonic.toInteger() - 946684800
-        versionName orcPackage
+        versionName orcVersion
     }
 
     compileOptions {

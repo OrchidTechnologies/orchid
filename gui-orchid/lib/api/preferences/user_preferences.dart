@@ -178,6 +178,18 @@ class UserPreferences {
     return UserPreferences().setKeys(keys);
   }
 
+  /// Remove a key from the user's keystore.
+  Future<bool> removeKey(StoredEthereumKeyRef keyRef) async {
+    var keys = ((await UserPreferences().getKeys()) ?? []);
+    try {
+      keys.removeWhere((key) => key.uid == keyRef.keyUid);
+    } catch( err) {
+      log("account: error removing key: $keyRef");
+      return false;
+    }
+    return UserPreferences().setKeys(keys);
+  }
+
   /// Add a list of keys to the user's keystore.
   // Note: Minimizes exposure to the full setKeys()
   Future<bool> addKeys(List<StoredEthereumKey> newKeys) async {

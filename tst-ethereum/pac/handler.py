@@ -14,7 +14,7 @@ from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from status import get_transaction_status
 from typing import Any, Dict, Optional, Tuple
-from w3 import approve, bind, get_block_number, look, push, toChecksumAddress, toWei
+from w3 import allowance, approve, bind, get_block_number, look, push, toChecksumAddress, toWei
 from utils import configure_logging, get_min_escrow, get_product_id_mapping, get_secret, is_true, random_scan
 from asn1crypto.cms import ContentInfo
 
@@ -44,6 +44,9 @@ def fund_PAC_(
     gas_price = int(os.environ['DEFAULT_GAS'])
     lottery_addr = os.environ['LOTTERY']
     verifier_addr = os.environ['VERIFIER']
+
+    spending_allowance = allowance(owner=funder_pubkey, spender=lottery_addr)
+    logging.debug(f'Spending Allowance: {spending_allowance} prior to Approve: {total}')
 
     approve(
       spender=lottery_addr,

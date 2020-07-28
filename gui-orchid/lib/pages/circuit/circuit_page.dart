@@ -21,6 +21,7 @@ import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/onboarding/legacy_welcome_dialog.dart';
@@ -280,7 +281,8 @@ class CircuitPageState extends State<CircuitPage>
                 animation: _connectAnimController,
                 builder: (BuildContext context, Widget child) {
                   return _buildEndTile();
-                })
+                }),
+            _buildDeletedHopsLink(),
           ],
         ),
         onReorder: _onReorder);
@@ -443,6 +445,22 @@ class CircuitPageState extends State<CircuitPage>
         onTap: _addHop);
   }
 
+  Widget _buildDeletedHopsLink() {
+    return Container(
+      height: 45,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: LinkText(
+          "View Deleted Hops",
+          style: AppText.linkStyle.copyWith(fontSize: 13, fontStyle: FontStyle.italic),
+          onTapped: () {
+            Navigator.pushNamed(context, '/settings/accounts');
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatusTile() {
     String text = s.orchidDisabled;
     Color color = Colors.redAccent.withOpacity(0.7);
@@ -515,7 +533,9 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildHopTile(UniqueHop uniqueHop) {
     return buildHopTile(
       context: context,
-      onTap: () { _viewHop(uniqueHop); },
+      onTap: () {
+        _viewHop(uniqueHop);
+      },
       uniqueHop: uniqueHop,
       bgColor: _hopColorTween.value,
       showAlertBadge: _showHopAlert[uniqueHop.contentHash] ?? false,
@@ -545,6 +565,7 @@ class CircuitPageState extends State<CircuitPage>
         image = Image.asset('assets/images/security.png', color: color);
         break;
     }
+    var title = uniqueHop.hop.displayName(context);
     return Padding(
       padding: EdgeInsets.only(bottom: 12),
       child: HopTile(
@@ -554,7 +575,7 @@ class CircuitPageState extends State<CircuitPage>
         image: image,
         onTap: onTap,
         key: Key(uniqueHop.key.toString()),
-        title: uniqueHop.hop.displayName(context),
+        title: title,
         showTopDivider: false,
       ),
     );
@@ -680,11 +701,10 @@ class CircuitPageState extends State<CircuitPage>
   Future<bool> _confirmDeleteHop(dismissDirection) async {
     var result = await Dialogs.showConfirmationDialog(
       context: context,
-      title: "Confirm Delete",
-      body:
-          "Deleting this hop will remove its configured or purchased account information."
-          "  If you plan to re-use the account later you should first save it using either the 'share hop' option"
-          " or by backing up your entire circuit configuration with the Configuration Management tool in Settings.",
+      title: s.confirmDelete,
+      body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
+          "  " +
+          s.ifYouPlanToReuseTheAccountLaterYouShould,
     );
     return result;
   }
@@ -693,7 +713,7 @@ class CircuitPageState extends State<CircuitPage>
   void _deleteHop(UniqueHop uniqueHop) async {
     var index = _hops.indexOf(uniqueHop);
     var removedHop = _hops.removeAt(index);
-    setState(() { });
+    setState(() {});
     _saveCircuit();
     _recycleHopIfAllowed(uniqueHop);
     UserPreferences().addRecentlyDeletedHop(removedHop.hop);
@@ -1011,5 +1031,4 @@ class CircuitUtils {
     OrchidAPI().updateConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
-
 }

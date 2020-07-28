@@ -2296,6 +2296,76 @@ class S {
       args: [],
     );
   }
+
+  /// `Deleted Hops`
+  String get deletedHops {
+    return Intl.message(
+      'Deleted Hops',
+      name: 'deletedHops',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Recently Deleted`
+  String get recentlyDeleted {
+    return Intl.message(
+      'Recently Deleted',
+      name: 'recentlyDeleted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No recently deleted hops...`
+  String get noRecentlyDeletedHops {
+    return Intl.message(
+      'No recently deleted hops...',
+      name: 'noRecentlyDeletedHops',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm Delete`
+  String get confirmDelete {
+    return Intl.message(
+      'Confirm Delete',
+      name: 'confirmDelete',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deleting this hop will permanently remove the contained account information.`
+  String get deletingThisHopWillPermanentlyRemoveTheContainedAccountInformation {
+    return Intl.message(
+      'Deleting this hop will permanently remove the contained account information.',
+      name: 'deletingThisHopWillPermanentlyRemoveTheContainedAccountInformation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deleting this hop will remove its configured or purchased account information.`
+  String get deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount {
+    return Intl.message(
+      'Deleting this hop will remove its configured or purchased account information.',
+      name: 'deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If you plan to re-use the account later you should first save it using either the 'share hop' option or by backing up your entire circuit configuration with the Configuration Management tool in Settings.`
+  String get ifYouPlanToReuseTheAccountLaterYouShould {
+    return Intl.message(
+      'If you plan to re-use the account later you should first save it using either the \'share hop\' option or by backing up your entire circuit configuration with the Configuration Management tool in Settings.',
+      name: 'ifYouPlanToReuseTheAccountLaterYouShould',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
