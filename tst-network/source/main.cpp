@@ -168,7 +168,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         const auto version(co_await Version(*origin, client.URL()));
 
         const auto price(gauge->Price());
-        const uint256_t gas(100000);
+        const uint256_t gas(seller == Address(0) ? 84000 /*83267*/ : 103000);
 
         const auto face(Float(client.Face()) * fiat.oxt_);
         const auto efficiency(1 - Float(gas * price) * fiat.eth_ / face);

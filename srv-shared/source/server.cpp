@@ -176,7 +176,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     const auto now(Timestamp());
     orc_assert(until > now);
 
-    const uint256_t gas(100000);
+    const uint256_t gas(receipt.size() == 0 ? 84000 /*83267*/ : 103000);
     const auto [profit, price] = cashier_->Credit(now, start, range, amount, gas);
     if (profit <= 0)
         return;
