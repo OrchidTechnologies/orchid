@@ -93,6 +93,8 @@ checks += readability-static-definition-in-anonymous-namespace
 checks += readability-uniqueptr-delete-release
 # XXX: boost asio reactor::per_descriptor_data reactor_data_
 checks += -clang-analyzer-optin.cplusplus.UninitializedObject
+# XXX: ./vpn/source/client.hpp:78:12: note: Excessive padding in 'struct orc::Client::Locked_' (32 padding bytes, where 0 is optimal). Optimal fields order: spent_, balance_, recipient_, updated_, benefit_, serial_, ring_, pending_, commit_, consider reordering the fields or adding explicit padding members
+checks += -clang-analyzer-optin.performance.Padding
 ifeq ($(target),and)
 # XXX: boost multiprecision on android
 checks += -clang-analyzer-core.UndefinedBinaryOperatorResult
