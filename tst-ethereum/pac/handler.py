@@ -80,9 +80,9 @@ def fund_PAC_(
 def get_target_NFV(tusd):
     #return 2.228775056 * pow(tusd, 0.5) - 4.597556694
     nfv = 1.0
-    if (tusd > 40.0):
+    if (tusd > 75.0):
         nfv = 3.0
-    if (tusd > 80.0):
+    if (tusd > 190.0):
         nfv = 9.0
     return nfv
 
