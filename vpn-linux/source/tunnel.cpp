@@ -22,16 +22,14 @@
 
 #include <linux/if_tun.h>
 
-#include "packetinfo.hpp"
 #include "syncfile.hpp"
 #include "tunnel.hpp"
 
 namespace orc {
 
 void Tunnel(BufferSunk &sunk, const std::function<void (const std::string &, const std::string &)> &code) {
-    auto &family(sunk.Wire<BufferSink<PacketInfo>>());
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
-    auto &sync(family.Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
+    auto &sync(sunk.Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
     auto file(sync->native_handle());
 
     struct ifreq request = {.ifr_flags = IFF_TUN | IFF_NO_PI};
