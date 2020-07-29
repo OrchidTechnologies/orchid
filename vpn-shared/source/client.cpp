@@ -109,7 +109,7 @@ cppcoro::shared_task<Bytes> Client::Ring(Address recipient) {
         co_return Bytes();
     static const Selector<std::tuple<Bytes>, Bytes, Address> ring_("ring");
     static const std::string latest("latest");
-    co_return std::get<0>(co_await ring_.Call(endpoint_, latest, seller_, 90000, shared_, recipient));
+    co_return std::get<0>(co_await ring_.Call(endpoint_, latest, seller_, 90000, hoarded_, recipient));
 }
 
 void Client::Land(Pipe *pipe, const Buffer &data) {
@@ -275,6 +275,10 @@ checked_int256_t Client::Balance() {
 
 uint128_t Client::Face() {
     return face_;
+}
+
+uint256_t Client::Gas() {
+    return seller_ == Address(0) ? 84000 /*83267*/ : 103000;
 }
 
 const std::string &Client::URL() {

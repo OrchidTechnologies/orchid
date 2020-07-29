@@ -24,7 +24,7 @@ pragma solidity 0.6.6;
 
 import "../lot-ethereum/include.sol";
 
-contract OrchidLocked is OrchidSeller, OrchidVerifier {
+contract OrchidLocked is OrchidVerifier {
     mapping (bytes => mapping(address => bytes)) receipts_;
 
     uint constant required_ = 1;

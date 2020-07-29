@@ -68,7 +68,7 @@ class Client :
     const Address funder_;
 
     const Address seller_;
-    const Bytes shared_;
+    const Bytes hoarded_;
 
     const uint128_t face_;
     const uint256_t prepay_;
@@ -118,6 +118,7 @@ class Client :
     uint256_t Spent();
     checked_int256_t Balance();
     uint128_t Face();
+    uint256_t Gas();
     const std::string &URL();
     Address Recipient();
 };

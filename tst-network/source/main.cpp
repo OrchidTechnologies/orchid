@@ -137,13 +137,13 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
     });
 }
 
-task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, const char *provider, const Secret &secret, const Address &funder, const Address &seller) {
+task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, const char *provider, const Secret &secret, const Address &funder) {
     (co_await orc_optic)->Name(provider);
 
     std::cout << provider << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, seller, nullptr));
+        auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, nullptr));
         remote.Open();
 
         const auto host(co_await Find(remote));
@@ -168,7 +168,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         const auto version(co_await Version(*origin, client.URL()));
 
         const auto price(gauge->Price());
-        const uint256_t gas(seller == Address(0) ? 84000 /*83267*/ : 103000);
+        const uint256_t gas(client.Gas());
 
         const auto face(Float(client.Face()) * fiat.oxt_);
         const auto efficiency(1 - Float(gas * price) * fiat.eth_ / face);
@@ -316,7 +316,6 @@ int Main(int argc, const char *const argv[]) {
     group.add_options()
         ("funder", po::value<std::string>())
         ("secret", po::value<std::string>())
-        ("seller", po::value<std::string>()->default_value("0x0000000000000000000000000000000000000000"))
     ; options.add(group); }
 
     { po::options_description group("external resources");
@@ -358,7 +357,6 @@ int Main(int argc, const char *const argv[]) {
 
     const Address funder(args["funder"].as<std::string>());
     const Secret secret(Bless(args["secret"].as<std::string>()));
-    const Address seller(args["seller"].as<std::string>());
 
     const auto coinbase(Update(60*1000, [origin]() -> task<Fiat> {
         co_return co_await Coinbase(*origin, "USD");
@@ -459,7 +457,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(TestOrchid(origin, name, (*coinbase)(), gauge, network, provider, secret, funder, seller));
+                tests.emplace_back(TestOrchid(origin, name, (*coinbase)(), gauge, network, provider, secret, funder));
             }
 
             auto reports(co_await Parallel(std::move(tests)));

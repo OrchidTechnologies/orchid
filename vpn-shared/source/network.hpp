@@ -46,7 +46,7 @@ class Network {
     Network(const std::string &rpc, Address directory, Address location);
 
     // XXX: this should be task<Client &> but cppcoro doesn't seem to support that
-    task<Client *> Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const char *justin);
+    task<Client *> Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const char *justin);
 };
 
 }
