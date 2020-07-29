@@ -762,7 +762,11 @@ task<void> Capture::Shut() noexcept {
     co_await nest_.Shut();
     if (internal_ != nullptr)
         co_await internal_->Shut();
+orc_trace();
+    analyzer_ = nullptr;
+    exit(0);
     co_await Sunken::Shut();
+orc_trace();
     co_await Valve::Shut();
 }
 
