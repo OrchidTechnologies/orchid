@@ -21,7 +21,7 @@ custom:
       prod: "50"
       dev: "10"
     NET_ORCHID_PACTIER1_POOL_SIZE:
-      prod: "200"
+      prod: "100"
       dev: "10"
     LOG_LEVEL:
       prod: "WARNING"
