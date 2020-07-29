@@ -11,6 +11,7 @@ import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/util/hex.dart';
 
 import '../orchid_api.dart';
+import '../orchid_log_api.dart';
 import 'js_config.dart';
 
 // TODO: The parsing in this class should be simplified using the (real) JSConfig parser.
@@ -46,10 +47,17 @@ class OrchidVPNConfig {
       // For Orchid hops using PACs look up the verifier address and add it as
       // a "seller" field for the tunnel.
       if (hop is OrchidHop) {
-        LotteryPot lotteryPot = await OrchidEthereum.getLotteryPot(hop.funder,
-            EthereumAddress.from(hop.keyRef.getFrom(keys).keys().address));
-        if (lotteryPot.verifier != null) {
-          hopJson['seller'] = lotteryPot.verifier.toString();
+        try {
+          LotteryPot lotteryPot = await OrchidEthereum.getLotteryPot(hop.funder,
+              EthereumAddress.from(hop.keyRef
+                  .getFrom(keys)
+                  .keys()
+                  .address));
+          if (lotteryPot.verifier != null) {
+            hopJson['seller'] = lotteryPot.verifier.toString();
+          }
+        } catch(err) {
+          log("Unable to look up seller: $err");
         }
       }
 
@@ -91,11 +99,7 @@ class OrchidVPNConfig {
             StoredEthereumKey key = keyRef.getFrom(keys);
             secret = key.formatSecret();
           } catch (err) {
-            //print("existing key refs: ");
-            //for (var key in keys) {
-            //print("keyref = ${key.uid}");
-            //}
-            throw Exception("resolveKeyReferences invalid key ref: $keyRef");
+            log("resolveKeyReferences invalid key ref: $keyRef");
           }
         } else {
           secret = null;
