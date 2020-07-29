@@ -36,8 +36,8 @@ custom:
       prod: 'PAC_FUNDER_PRIVKEY'
       dev: 'PAC_FUNDER_PRIVKEY_DEV'
     DEFAULT_GAS:
-      prod: "30"
-      dev: "30"
+      prod: "45"
+      dev: "45"
     WEB3_WEBSOCKET:
       prod: 'WEB3_WEBSOCKET'
       dev: 'WEB3_WEBSOCKET_DEV'
