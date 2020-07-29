@@ -78,7 +78,13 @@ def fund_PAC_(
 
 
 def get_target_NFV(tusd):
-    return 2.228775056 * pow(tusd, 0.5) - 4.597556694
+    #return 2.228775056 * pow(tusd, 0.5) - 4.597556694
+    nfv = 1.0
+    if (tusd > 40.0):
+        nfv = 3.0
+    if (tusd > 80.0):
+        nfv = 9.0
+    return nfv
 
 
 def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str, float, float]:
@@ -91,8 +97,6 @@ def fund_PAC(total_usd: float, nonce: int) -> Tuple[str, str, str, float, float]
     tot_units = max(int(target_NFV+0.5), 3)
 
     subsidy_usd = 0.0
-    if total_usd == 6.99:
-        subsidy_usd = 4.0
 
     usd_per_oxt = get_usd_per_oxt()
     oxt_per_usd = 1.0 / usd_per_oxt
