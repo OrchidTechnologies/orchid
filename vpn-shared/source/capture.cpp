@@ -625,7 +625,8 @@ class Pass :
     }
 
     void Stop(const std::string &error) noexcept override {
-        orc_insist_(false, error);
+        orc_insist_(error.empty(), error);
+        Internal::Stop();
     }
 
   public:
@@ -636,6 +637,7 @@ class Pass :
 
     task<void> Shut() noexcept override {
         co_await Sunken::Shut();
+        co_await Internal::Shut();
     }
 
     task<bool> Send(const Beam &beam) override {
