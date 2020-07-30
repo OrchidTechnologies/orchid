@@ -29,7 +29,7 @@
 
 namespace orc {
 
-bool Datagram(const Buffer &data, const std::function<bool (const Socket &, const Socket &, Window)> &code) {
+bool Datagram(const Buffer &data, const std::function<bool (const Socket &, const Socket &, Window)> &code) { orc_block({
     Window window(data);
 
     openvpn::IPv4Header ip4;
@@ -45,13 +45,13 @@ bool Datagram(const Buffer &data, const std::function<bool (const Socket &, cons
 
     openvpn::UDPHeader udp;
     window.Take(&udp);
-    orc_assert_(window.size() == boost::endian::big_to_native(udp.len) - sizeof(udp), "invalid udp packet: " << data);
+    orc_assert(window.size() == boost::endian::big_to_native(udp.len) - sizeof(udp));
 
     Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
     Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
 
     return code(source, destination, std::move(window));
-}
+}, "parsing packet: " << data); }
 
 Beam Datagram(const Socket &source, const Socket &destination, const Buffer &data) {
     struct Header {

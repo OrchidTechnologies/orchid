@@ -266,7 +266,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     } orc_catch({}) }, __FUNCTION__);
 }
 
-void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
+void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) { orc_ignore({
     if (Bill(data, true) && !Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
@@ -289,7 +289,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
 
         return true;
     })) Send(Inner(), data);
-}
+}); }
 
 void Server::Stop() noexcept {
     Valve::Stop();
