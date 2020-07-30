@@ -683,7 +683,7 @@ class EventDispatcher : public Dispatcher {
   LwipSocketServer* ss_;
   int afd_[2];
   bool fSignaled_;
-  CriticalSection crit_;
+  RecursiveCriticalSection crit_;
 };
 
 // Sets the value of a boolean value to false when signaled.

@@ -16,7 +16,7 @@
 #include <set>
 #include <vector>
 
-#include "rtc_base/critical_section.h"
+#include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/net_helpers.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/system/rtc_export.h"
@@ -84,7 +84,7 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   DispatcherSet pending_remove_dispatchers_ RTC_GUARDED_BY(crit_);
   bool processing_dispatchers_ RTC_GUARDED_BY(crit_) = false;
   Signaler* signal_wakeup_;  // Assigned in constructor only
-  CriticalSection crit_;
+  RecursiveCriticalSection crit_;
   bool fWait_;
 };
 
@@ -161,7 +161,7 @@ class LwipSocket : public AsyncSocket, public sigslot::has_slots<> {
   SOCKET s_;
   bool udp_;
   int family_ = 0;
-  CriticalSection crit_;
+  RecursiveCriticalSection crit_;
   int error_ RTC_GUARDED_BY(crit_);
   ConnState state_;
   AsyncResolver* resolver_;
