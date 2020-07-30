@@ -30,6 +30,7 @@
 #include "log.hpp"
 #include "spawn.hpp"
 #include "task.hpp"
+#include "time.hpp"
 #include "valve.hpp"
 
 namespace orc {
@@ -95,8 +96,17 @@ class Nest :
         Count count(this);
         if (count > limit_)
             return false;
-        Spawn([count = std::move(count), code = code()]() mutable noexcept -> task<void> {
+        Spawn([
+#if ORC_TIMEOUT
+            before = Monotonic(),
+#endif
+        count = std::move(count), code = code()]() mutable noexcept -> task<void> {
             orc_ignore({ co_await code(); });
+#if ORC_TIMEOUT
+            const auto duration(Monotonic() - before);
+            if (duration > ORC_TIMEOUT)
+                Log() << std::dec << duration << " us";
+#endif
         }, name);
         return true;
     }
