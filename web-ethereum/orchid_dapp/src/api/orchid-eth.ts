@@ -526,10 +526,10 @@ export class GasPricingStrategy {
   // Note: Some of the usage of BigInt in here is convoluted due to the need to import the polyfill.
   static chooseGasPrice(
     targetGasAmount: number, currentMedianGasPrice: GWEI, currentEthBalance: BigInt): number | undefined {
-    let maxPriceGwei = 21.0;
-    let minPriceGwei = 2.0;
-    let medianMultiplier = 2.0;
-    let maxWalletFrac = 0.9;
+    let maxPriceGwei = 200.0;
+    let minPriceGwei = 5.0;
+    let medianMultiplier = 1.1;
+    let maxWalletFrac = 1.0;
 
     // Target our multiple of the median price
     let targetPrice: BigInt = BigInt(currentMedianGasPrice.toWei()).multiply(medianMultiplier);
