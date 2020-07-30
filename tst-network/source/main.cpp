@@ -55,6 +55,7 @@
 #include "sequence.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
+#include "time.hpp"
 #include "transport.hpp"
 #include "version.hpp"
 

@@ -171,11 +171,4 @@ uint256_t Timestamp() {
     return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
 }
 
-uint256_t Monotonic() {
-    using std::chrono::system_clock;
-    system_clock::time_point point(system_clock::now());
-    system_clock::duration duration(point.time_since_epoch());
-    return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-}
-
 }
