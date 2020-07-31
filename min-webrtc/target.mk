@@ -209,6 +209,7 @@ cflags += -D__Userspace__
 cflags += -DSCTP_DEBUG
 cflags += -DSCTP_PROCESS_LEVEL_LOCKS
 cflags += -DSCTP_SIMPLE_ALLOCATOR
+cflags += -DSCTP_STDINT_INCLUDE='<stdint.h>'
 cflags += -DSCTP_USE_OPENSSL_SHA1
 
 include $(pwd)/openssl.mk
