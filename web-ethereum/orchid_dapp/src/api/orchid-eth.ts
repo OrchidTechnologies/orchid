@@ -126,6 +126,7 @@ export class OrchidEthereumAPI {
         }
 
         // Subscribe to provider account changes
+        /*
         if (providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore) {
           // Note: The provider update callback should only be passed once, but to be safe.
           if (web3ProviderListener) {
@@ -139,7 +140,7 @@ export class OrchidEthereumAPI {
           web3ProviderListener = (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
             providerUpdateCallback && providerUpdateCallback(props);
           });
-        }
+        }*/
 
         try {
           OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
@@ -528,7 +529,7 @@ export class GasPricingStrategy {
     targetGasAmount: number, currentMedianGasPrice: GWEI, currentEthBalance: BigInt): number | undefined {
     let maxPriceGwei = 200.0;
     let minPriceGwei = 5.0;
-    let medianMultiplier = 1.1;
+    let medianMultiplier = 1;
     let maxWalletFrac = 1.0;
 
     // Target our multiple of the median price
