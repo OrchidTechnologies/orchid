@@ -258,6 +258,10 @@ class Task<void>::promise_type :
 template <typename Value_>
 using task = Task<Value_>;
 
+inline task<void> Nop() {
+    co_return;
+}
+
 }
 
 #endif//ORCHID_TASK_HPP

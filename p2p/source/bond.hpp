@@ -65,7 +65,7 @@ class Bonded {
         }
 
         task<void> Send(const Buffer &data) override {
-            co_return co_await Inner().Send(data);
+            return Inner().Send(data);
         }
     };
 
@@ -122,7 +122,8 @@ class Bonded {
 
     task<void> Send(const Buffer &data) {
         if (const auto bonding = Find())
-            co_await bonding->Send(data);
+            return bonding->Send(data);
+        return Nop();
     }
 };
 

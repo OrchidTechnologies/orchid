@@ -109,12 +109,13 @@ bool Server::Bill(const Buffer &data, bool force) {
 
 task<void> Server::Send(Pipe &pipe, const Buffer &data, bool force) {
     if (Bill(data, force))
-        co_return co_await pipe.Send(data);
+        return pipe.Send(data);
+    return Nop();
 }
 
 void Server::Send(Pipe &pipe, const Buffer &data) {
     nest_.Hatch([&]() noexcept { return [this, &pipe, data = Beam(data)]() -> task<void> {
-        co_return co_await Send(pipe, data, false); }; }, __FUNCTION__);
+        return Send(pipe, data, false); }; }, __FUNCTION__);
 }
 
 task<void> Server::Send(const Buffer &data) {

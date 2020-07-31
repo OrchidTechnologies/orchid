@@ -249,7 +249,7 @@ task<void> Client::Shut() noexcept {
 
 task<void> Client::Send(const Buffer &data) {
     Transfer(data.size(), false);
-    co_return co_await Bonded::Send(data);
+    return Bonded::Send(data);
 }
 
 void Client::Update() {
