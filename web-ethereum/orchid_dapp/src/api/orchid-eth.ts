@@ -126,6 +126,7 @@ export class OrchidEthereumAPI {
         }
 
         // Subscribe to provider account changes
+        /*
         if (providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore) {
           // Note: The provider update callback should only be passed once, but to be safe.
           if (web3ProviderListener) {
@@ -139,7 +140,7 @@ export class OrchidEthereumAPI {
           web3ProviderListener = (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
             providerUpdateCallback && providerUpdateCallback(props);
           });
-        }
+        }*/
 
         try {
           OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
@@ -526,13 +527,13 @@ export class GasPricingStrategy {
   // Note: Some of the usage of BigInt in here is convoluted due to the need to import the polyfill.
   static chooseGasPrice(
     targetGasAmount: number, currentMedianGasPrice: GWEI, currentEthBalance: BigInt): number | undefined {
-    let maxPriceGwei = 21.0;
-    let minPriceGwei = 2.0;
-    let medianMultiplier = 2.0;
-    let maxWalletFrac = 0.9;
+    let maxPriceGwei = 200.0;
+    let minPriceGwei = 5.0;
+    let medianMultiplier = 1.2;
+    let maxWalletFrac = 1.0;
 
     // Target our multiple of the median price
-    let targetPrice: BigInt = BigInt(currentMedianGasPrice.toWei()).multiply(medianMultiplier);
+    let targetPrice: BigInt = currentMedianGasPrice.multiply(medianMultiplier).toWei();
 
     // Don't exceed max price
     let maxPrice: BigInt = BigInt(maxPriceGwei).multiply(1e9);

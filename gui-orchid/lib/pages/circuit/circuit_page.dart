@@ -132,10 +132,14 @@ class CircuitPageState extends State<CircuitPage>
     for (var uniqueHop in _hops) {
       CircuitHop hop = uniqueHop.hop;
       if (hop is OrchidHop) {
-        var pot =
-            await OrchidEthereum.getLotteryPot(hop.funder, hop.getSigner(keys));
-        var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
-        _showHopAlert[uniqueHop.contentHash] = ticketValue.value <= 0;
+        try {
+          var pot = await OrchidEthereum.getLotteryPot(
+              hop.funder, hop.getSigner(keys));
+          var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
+          _showHopAlert[uniqueHop.contentHash] = ticketValue.value <= 0;
+        } catch (err) {
+          log("Error checking ticket value: $err");
+        }
       }
     }
     if (mounted) {
@@ -452,7 +456,8 @@ class CircuitPageState extends State<CircuitPage>
         alignment: Alignment.bottomCenter,
         child: LinkText(
           "View Deleted Hops",
-          style: AppText.linkStyle.copyWith(fontSize: 13, fontStyle: FontStyle.italic),
+          style: AppText.linkStyle
+              .copyWith(fontSize: 13, fontStyle: FontStyle.italic),
           onTapped: () {
             Navigator.pushNamed(context, '/settings/accounts');
           },

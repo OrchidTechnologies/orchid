@@ -31,7 +31,7 @@ def main(event, context):
 
     statuses = get_tier_statuses()
 
-    disabled = 'True'
+    disabled = 'False'
     status = 'Healthy'
 
     body = {
