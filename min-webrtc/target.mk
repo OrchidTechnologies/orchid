@@ -128,7 +128,8 @@ cflags/$(pwd/libsrtp)/ += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
 cflags/$(pwd)/webrtc/pc/srtp_session.cc += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
-webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c)
+webrtc += $(filter-out %/sctp_cc_functions.c,$(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c))
+source += $(pwd)/congestion.cc
 cflags += -I$(pwd)/usrsctp
 cflags += -I$(pwd)/usrsctp/usrsctplib
 cflags += -I$(pwd)/sctp-idata/src
