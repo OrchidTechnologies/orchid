@@ -229,7 +229,7 @@ class Nameless :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    if (internal_) nest_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
+    if (internal_) up_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
         if (co_await internal_->Send(data) && analyzer_ != nullptr)
             analyzer_->Analyze(data.span());
     }; }, __FUNCTION__);
@@ -242,7 +242,7 @@ void Capture::Stop(const std::string &error) noexcept {
 
 void Capture::Land(const Buffer &data, bool analyze) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-    nest_.Hatch([&]() noexcept { return [this, data = Beam(data), analyze]() mutable -> task<void> {
+    down_.Hatch([&]() noexcept { return [this, data = Beam(data), analyze]() mutable -> task<void> {
         co_await Inner().Send(data);
         if (analyze && analyzer_ != nullptr)
             analyzer_->AnalyzeIncoming(data.span());
@@ -250,7 +250,8 @@ void Capture::Land(const Buffer &data, bool analyze) {
 }
 
 Capture::Capture(const Host &local) :
-    local_(local)
+    local_(local),
+    up_(32)
 {
 }
 
@@ -758,7 +759,7 @@ void Capture::Start(const std::string &path) {
 }
 
 task<void> Capture::Shut() noexcept {
-    co_await nest_.Shut();
+    co_await Parallel(up_.Shut(), down_.Shut());
     if (internal_ != nullptr)
         co_await internal_->Shut();
 orc_trace();
