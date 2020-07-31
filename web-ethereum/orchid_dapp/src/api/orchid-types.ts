@@ -93,7 +93,7 @@ export class OXT extends ScalarNumberValue {
   }
 
   public toKeiki(): KEIKI {
-    return BigInt(this.value * 1e18);
+    return BigInt(Math.round(this.value) * 1e18);
   }
 }
 
@@ -146,7 +146,7 @@ export class GWEI extends ScalarNumberValue {
   }
 
   public toWei(): BigInt {
-    return BigInt(this.value * 1e9);
+    return BigInt(Math.round(this.value) * 1e9);
   }
 
   public static fromWei(wei: number) {

@@ -61,12 +61,12 @@ double WinRatio_(0);
 
 task<void> Client::Submit() {
     const Header header{Magic_, Zero<32>()};
-    co_await Bonded::Send(Datagram(Port_, Port_, Tie(header)));
+    co_await Send(Datagram(Port_, Port_, Tie(header)));
 }
 
 task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature) {
     const Header header{Magic_, hash};
-    co_await Bonded::Send(Datagram(Port_, Port_, Tie(header,
+    co_await Send(Datagram(Port_, Port_, Tie(header,
         Command(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt))
     )));
 }
@@ -114,6 +114,8 @@ cppcoro::shared_task<Bytes> Client::Ring(Address recipient) {
 }
 
 void Client::Land(Pipe *pipe, const Buffer &data) {
+    Transfer(data.size(), true);
+
     if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
@@ -184,7 +186,6 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             }
         } orc_catch({}) });
     } orc_catch({}) return true; })) {
-        Transfer(data.size(), true);
         Pump::Land(data);
     }
 }

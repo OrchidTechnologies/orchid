@@ -250,8 +250,7 @@ void Capture::Land(const Buffer &data, bool analyze) {
 }
 
 Capture::Capture(const Host &local) :
-    local_(local),
-    nest_(32)
+    local_(local)
 {
 }
 

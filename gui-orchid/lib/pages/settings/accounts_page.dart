@@ -172,18 +172,25 @@ class _AccountsPageState extends State<AccountsPage> {
     setState(() {
       _recentlyDeleted.removeAt(index);
     });
-    UserPreferences().setRecentlyDeleted(
+    await UserPreferences().setRecentlyDeleted(
       Hops(_recentlyDeleted.map((h) {
         return h.hop;
       }).toList()),
     );
 
-    // Also remove the keys now
+    // Deliberately leave orphaned keys for testing.
     bool orphanKeys = (await OrchidVPNConfig.getUserConfigJS())
         .evalBoolDefault('orphanKeys', false);
+
+    // Remove the key if it is no longer used.
     if (uniqueHop.hop is OrchidHop && !orphanKeys) {
       var hop = uniqueHop.hop as OrchidHop;
-      UserPreferences().removeKey(hop.keyRef);
+
+      // Determine if the key no longer referenced
+      List<StoredEthereumKey> orphanedKeys = await getOrphanedKeys();
+      if (orphanedKeys.map((e) => e.ref().keyUid).contains(hop.keyRef.keyUid) ) {
+        await UserPreferences().removeKey(hop.keyRef);
+      }
     }
 
     initStateAsync();
@@ -206,37 +213,7 @@ class _AccountsPageState extends State<AccountsPage> {
   void _findOrphanedPACs() async {
     _orphanedPacAccounts = [];
 
-    // Get the active hop keys
-    var activeHops = (await UserPreferences().getCircuit()).hops;
-    List<OrchidHop> activeOrchidHops =
-        activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
-    List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
-      return h.keyRef;
-    }).toList();
-    List<String> activeKeyUuids = activeKeys.map((e) => e.keyUid).toList();
-    log("account: activeKeyUuids = $activeKeyUuids");
-
-    // Get recently deleted hop list keys
-    List<OrchidHop> deletedOrchidHops = _recentlyDeleted
-        .map((h) => h.hop)
-        .where((h) => h is OrchidHop)
-        .cast<OrchidHop>()
-        .toList();
-    log("account: deleted orchid hops = $deletedOrchidHops");
-    List<StoredEthereumKeyRef> deletedKeys = deletedOrchidHops.map((h) {
-      return h.keyRef;
-    }).toList();
-    log("account: deleted orchid keys = $deletedKeys");
-    List<String> deletedKeyUuids = deletedKeys.map((e) => e.keyUid).toList();
-    log("account: deletedKeyUuids = $deletedKeyUuids");
-
-    // Find the orphans
-    List<StoredEthereumKey> allKeys = await UserPreferences().getKeys();
-    List<StoredEthereumKey> orphanedKeys = allKeys
-        .where((k) =>
-            !activeKeyUuids.contains(k.uid) && !deletedKeyUuids.contains(k.uid))
-        .toList();
-    log("account: orphaned keys = $orphanedKeys");
+    List<StoredEthereumKey> orphanedKeys = await getOrphanedKeys();
 
     var curator = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
@@ -264,6 +241,55 @@ class _AccountsPageState extends State<AccountsPage> {
       }
     }
     setState(() {});
+  }
+
+  Future<List<StoredEthereumKey>> getOrphanedKeys() async {
+    // Get the active hop keys
+    List<String> activeKeyUuids = await getActiveHopKeys();
+
+   // Get recently deleted hop list keys
+    List<String> deletedKeyUuids = getRecentlyDeletedHopKeys();
+
+    // Find the orphans
+    List<StoredEthereumKey> allKeys = await UserPreferences().getKeys();
+    List<StoredEthereumKey> orphanedKeys = allKeys
+        .where((k) =>
+            !activeKeyUuids.contains(k.uid) && !deletedKeyUuids.contains(k.uid))
+        .toList();
+    log("account: orphaned keys = $orphanedKeys");
+    return orphanedKeys;
+  }
+
+  List<String> getRecentlyDeletedHopKeys() {
+    // Get recently deleted hop list keys
+    List<OrchidHop> deletedOrchidHops = _recentlyDeleted
+        .map((h) => h.hop)
+        .where((h) => h is OrchidHop)
+        .cast<OrchidHop>()
+        .toList();
+    log("account: deleted orchid hops = $deletedOrchidHops");
+    List<StoredEthereumKeyRef> deletedKeys = deletedOrchidHops.map((h) {
+      return h.keyRef;
+    }).toList();
+    log("account: deleted orchid keys = $deletedKeys");
+    List<String> deletedKeyUuids = deletedKeys.map((e) => e.keyUid).toList();
+    log("account: deletedKeyUuids = $deletedKeyUuids");
+
+    return deletedKeyUuids;
+  }
+
+  Future<List<String>> getActiveHopKeys() async {
+    // Get the active hop keys
+    var activeHops = (await UserPreferences().getCircuit()).hops;
+    List<OrchidHop> activeOrchidHops =
+        activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
+    List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
+      return h.keyRef;
+    }).toList();
+    List<String> activeKeyUuids = activeKeys.map((e) => e.keyUid).toList();
+    log("account: activeKeyUuids = $activeKeyUuids");
+
+    return activeKeyUuids;
   }
 
   Widget _buildInstructions() {

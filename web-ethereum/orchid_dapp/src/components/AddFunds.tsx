@@ -299,6 +299,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       </SubmitButton>
 
       <TransactionProgress ref={txResult} tx={tx}/>
+      <p/><em>Version 0.9.17</em>
     </Container>
   );
 };
