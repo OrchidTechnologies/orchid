@@ -529,7 +529,7 @@ export class GasPricingStrategy {
     targetGasAmount: number, currentMedianGasPrice: GWEI, currentEthBalance: BigInt): number | undefined {
     let maxPriceGwei = 200.0;
     let minPriceGwei = 5.0;
-    let medianMultiplier = 1;
+    let medianMultiplier = 1.2;
     let maxWalletFrac = 1.0;
 
     // Target our multiple of the median price
