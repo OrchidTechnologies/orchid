@@ -59,6 +59,7 @@ public class OrchidVpnService extends VpnService {
         builder.addRoute("0.0.0.0", 0);
         builder.addDnsServer("1.0.0.1");
         builder.setSession("Orchid");
+        builder.setMtu(1100);
         Log.i(TAG, "builder:" + builder);
         try {
             ParcelFileDescriptor p = builder.establish();

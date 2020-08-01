@@ -79,6 +79,7 @@ static std::string cfs(NSString *data) {
     auto local(Host_);
 
     auto settings([NEPacketTunnelNetworkSettings.alloc initWithTunnelRemoteAddress:@"127.0.0.1"]);
+    settings.MTU = @1100;
 
     settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[[NSString stringWithUTF8String:local.String().c_str()]] subnetMasks:@[@"255.255.255.0"]];
     settings.IPv4Settings.includedRoutes = @[NEIPv4Route.defaultRoute];

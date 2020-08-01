@@ -71,7 +71,7 @@ int Main(int argc, const char *const argv[]) {
     const auto capture(Break<BufferSink<Capture>>(local));
 
     Tunnel(*capture, [&](const std::string &device, const std::string &argument) {
-        orc_assert(system(("ifconfig " + device + " inet " + local.String() + " " + local.String() + " mtu 1500 up").c_str()) == 0);
+        orc_assert(system(("ifconfig " + device + " inet " + local.String() + " " + local.String() + " mtu 1100 up").c_str()) == 0);
 
         if (args.count("capture") != 0)
             orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " " + argument + " " + device).c_str()) == 0);
