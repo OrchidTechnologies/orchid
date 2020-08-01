@@ -20,6 +20,10 @@
 /* }}} */
 
 
+#if ORC_TRACE
+
+#include <mutex>
+
 #include <openvpn/ip/ip4.hpp>
 #include <openvpn/ip/tcp.hpp>
 
@@ -29,7 +33,8 @@
 
 namespace orc {
 
-#if ORC_TRACE
+static std::mutex mutex_;
+
 void Trace(const char *type, bool send, const Buffer &data) { try {
     const auto time(Monotonic());
 
@@ -55,15 +60,17 @@ void Trace(const char *type, bool send, const Buffer &data) { try {
                 (tcp.flags & (1 << 0)) == 0 ? '.' : 'F',
             '\0'};
 
-            Log() << "\e[" << (send ? "35mSEND" : "33mRECV") <<
+            std::unique_lock<std::mutex> lock(mutex_);
+            std::cerr << "\e[" << (send ? "35mSEND" : "33mRECV") <<
                 " " << type << " " << std::dec << time << " [" << flags << "]" <<
                 " " << Socket(boost::endian::big_to_native(ip4.saddr), tcp.source) << " > " << Socket(boost::endian::big_to_native(ip4.daddr), tcp.dest) <<
                 " " << std::dec << std::setfill('0') << std::setw(10) << tcp.seq << ":" << std::setw(10) << tcp.ack_seq <<
                 " " << std::dec << window.size() <<
-            std::endl;
+            "\e[0m" << std::endl;
         break;
     }
 } orc_catch({}) }
-#endif
 
 }
+
+#endif
