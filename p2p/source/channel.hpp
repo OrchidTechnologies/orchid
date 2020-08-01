@@ -109,7 +109,7 @@ orc_trace();
 
     void OnMessage(const webrtc::DataBuffer &buffer) noexcept override {
         const Subset data(buffer.data.data(), buffer.data.size());
-        Trace("WebRTC", false, data);
+        Trace("WebRTC", false, false, data);
         Pump::Land(data);
     }
 
@@ -131,7 +131,7 @@ orc_trace();
     }
 
     task<void> Send(const Buffer &data) override {
-        Trace("WebRTC", true, data);
+        Trace("WebRTC", true, false, data);
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
         co_await Post([&]() {

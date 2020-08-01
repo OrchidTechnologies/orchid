@@ -27,10 +27,10 @@
 
 namespace orc {
 
-#if ORC_TRACE
-void Trace(const char *type, bool send, const Buffer &data);
+#ifdef ORC_TRACE
+void Trace(const char *type, bool send, bool deep, const Buffer &data);
 #else
-inline void Trace(const char *type, bool send, const Buffer &data) {}
+inline void Trace(const char *type, bool send, bool deep, const Buffer &data) {}
 #endif
 
 }

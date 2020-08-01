@@ -20,7 +20,7 @@
 /* }}} */
 
 
-#if ORC_TRACE
+#ifdef ORC_TRACE
 
 #include <mutex>
 
@@ -35,7 +35,7 @@ namespace orc {
 
 static std::mutex mutex_;
 
-void Trace(const char *type, bool send, const Buffer &data) { try {
+void Trace(const char *type, bool send, bool deep, const Buffer &data) { try {
     const auto time(Monotonic());
 
     Window window(data);
@@ -61,15 +61,23 @@ void Trace(const char *type, bool send, const Buffer &data) { try {
             '\0'};
 
             std::unique_lock<std::mutex> lock(mutex_);
-            std::cerr << "\e[" << (send ? "35mSEND" : "33mRECV") <<
+
+            // clang-tidy somehow treats ORC_TRACE as an integer?!?
+            // NOLINTNEXTLINE (readability-implicit-bool-conversion)
+            std::cerr << "\e[" << (send != ORC_TRACE ? "35" : "33") << (deep ? "" : ";1") << "m" << (send ? "SEND" : "RECV") <<
                 " " << type << " " << std::dec << time << " [" << flags << "]" <<
                 " " << Socket(boost::endian::big_to_native(ip4.saddr), tcp.source) << " > " << Socket(boost::endian::big_to_native(ip4.daddr), tcp.dest) <<
-                " " << std::dec << std::setfill('0') << std::setw(10) << tcp.seq << ":" << std::setw(10) << tcp.ack_seq <<
+                " " << std::dec << std::setfill('0') << std::setw(10) << boost::endian::big_to_native(tcp.seq) << ":" << std::setw(10) << boost::endian::big_to_native(tcp.ack_seq) <<
                 " " << std::dec << window.size() <<
             "\e[0m" << std::endl;
         break;
     }
 } orc_catch({}) }
+
+extern "C" void orc_Trace(const char *type, bool send, bool deep, const uint8_t *data, size_t size) {
+    if (size != 0 && data[0] == 0x45)
+        Trace(type, send, deep, Subset(data, size));
+}
 
 }
 
