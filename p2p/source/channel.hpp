@@ -26,6 +26,7 @@
 #include <functional>
 
 #include "peer.hpp"
+#include "trace.hpp"
 
 namespace orc {
 
@@ -108,7 +109,7 @@ orc_trace();
 
     void OnMessage(const webrtc::DataBuffer &buffer) noexcept override {
         const Subset data(buffer.data.data(), buffer.data.size());
-        //Log() << "WebRTC >>> " << this << " " << data << std::endl;
+        Trace("WebRTC", false, data);
         Pump::Land(data);
     }
 
@@ -130,7 +131,7 @@ orc_trace();
     }
 
     task<void> Send(const Buffer &data) override {
-        //Log() << "WebRTC <<< " << this << " " << data << std::endl;
+        Trace("WebRTC", true, data);
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
         co_await Post([&]() {
