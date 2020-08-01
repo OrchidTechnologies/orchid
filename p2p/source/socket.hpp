@@ -166,6 +166,10 @@ class Host {
     bool operator ==(const Host &rhs) const {
         return data_ == rhs.data_;
     }
+
+    bool operator !=(const Host &rhs) const {
+        return data_ != rhs.data_;
+    }
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Host &host) {

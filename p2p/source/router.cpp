@@ -75,7 +75,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
             asio::ip::tcp::socket connection(Context());
             asio::ip::tcp::endpoint endpoint;
             co_await acceptor.async_accept(connection, endpoint, Token());
-            Spawn([this, connection = std::move(connection), &ssl]() mutable noexcept -> task<void> { try {
+            Spawn([this, connection = std::move(connection), endpoint = std::move(endpoint), &ssl]() mutable noexcept -> task<void> { try {
                 boost::beast::ssl_stream<boost::beast::tcp_stream> stream(std::move(connection), ssl);
                 boost::beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
@@ -84,7 +84,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                 boost::beast::flat_buffer buffer;
 
                 for (;;) {
-                    http::request<http::string_body> request;
+                    Request request(endpoint);
                     try {
                         co_await http::async_read(stream, buffer, request, Token());
                     } catch (const boost::system::system_error &error) {

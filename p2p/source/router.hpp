@@ -28,16 +28,29 @@
 #include <regex>
 #include <string>
 
+#include <boost/beast/http/write.hpp>
 #include <boost/beast/version.hpp>
 
 #include "response.hpp"
+#include "socket.hpp"
 #include "task.hpp"
 
 namespace orc {
 
 const char *Params();
 
-typedef http::request<http::string_body> Request;
+struct Request : http::request<http::string_body> {
+    Socket socket_;
+
+    Request(Socket socket) :
+        socket_(std::move(socket))
+    {
+    }
+};
+
+inline std::ostream &operator <<(std::ostream &out, const Request &request) {
+    return out << static_cast<const http::request<http::string_body> &>(request);
+}
 
 class Router {
   private:
