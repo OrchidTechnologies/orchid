@@ -25,16 +25,21 @@
 
 #include <string>
 
-#include "fiat.hpp"
 #include "float.hpp"
-#include "origin.hpp"
+#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &from, const Float &adjust);
+struct Fiat;
+class Origin;
 
+template <typename Type_>
+class Updated;
+
+task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &from, const Float &adjust);
 task<Fiat> Coinbase(Origin &origin, const std::string &to);
+task<S<Updated<Fiat>>> CoinbaseFiat(unsigned milliseconds, S<Origin> origin, std::string currency);
 
 }
 

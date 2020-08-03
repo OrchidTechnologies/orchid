@@ -66,9 +66,7 @@ namespace orc {
 
 namespace po = boost::program_options;
 
-static const Float Ten8("100000000");
 static const Float Ten12("1000000000000");
-static const Float Ten18("1000000000000000000");
 static const Float Two128(uint256_t(1) << 128);
 
 struct Global {
@@ -355,35 +353,23 @@ int Main(int argc, const char *const argv[]) {
     const Address funder(args["funder"].as<std::string>());
     const Secret secret(Bless(args["secret"].as<std::string>()));
 
-    const auto coinbase(Update(60*1000, [origin]() -> task<Fiat> {
-        co_return co_await Coinbase(*origin, "USD");
-    }, "Coinbase"));
-    Wait(coinbase->Open());
+    const auto coinbase(Wait(CoinbaseFiat(60*1000, origin, "USD")));
 
-    const auto kraken(Update(60*1000, [origin]() -> task<Fiat> {
+    const auto kraken(Wait(Update(60*1000, [origin]() -> task<Fiat> {
         co_return co_await Kraken(*origin);
-    }, "Kraken"));
-    Wait(kraken->Open());
+    }, "Kraken")));
 
-    const auto uniswap(Update(60*1000, [endpoint]() -> task<Fiat> {
+    const auto uniswap(Wait(Update(60*1000, [endpoint]() -> task<Fiat> {
         const auto block(co_await endpoint.Header("latest"));
         const auto [usdc_weth, oxt_weth] = *co_await Parallel(
             Rate(endpoint, block, "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc"),
             Rate(endpoint, block, "0x9b533f1ceaa5ceb7e5b8994ef16499e47a66312d"));
         co_return Fiat{Ten12 * usdc_weth / Ten18, Ten12 * usdc_weth / oxt_weth / Ten18};
-    }, "Uniswap"));
-    Wait(uniswap->Open());
+    }, "Uniswap")));
 
-    const auto chainlink(Update(60*1000, [endpoint]() -> task<Fiat> {
-        const auto [eth_usd, oxt_usd] = *co_await Parallel(
-            Chainlink(endpoint, "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F", Ten8),
-            Chainlink(endpoint, "0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA", Ten8));
-        co_return Fiat{eth_usd / Ten18, oxt_usd / Ten18};
-    }, "Chainlink"));
-    Wait(chainlink->Open());
-
+    // XXX: these are duplicated inside of Network (pass them in)
+    const auto chainlink(Wait(ChainlinkFiat(60*1000, endpoint)));
     const auto gauge(Make<Gauge>(60*1000, origin));
-    Wait(gauge->Open());
 
     Spawn([&]() noexcept -> task<void> { for (;;) {
         Fiber::Report();

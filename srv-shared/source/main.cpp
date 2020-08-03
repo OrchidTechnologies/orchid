@@ -282,7 +282,7 @@ int Main(int argc, const char *const argv[]) {
         return cashier;
     }());
 
-    auto market(Make<Market>(5*60*1000, origin, args["currency"].as<std::string>()));
+    auto market(Make<Market>(5*60*1000, origin, Wait(CoinbaseFiat(5*60*1000, origin, args["currency"].as<std::string>()))));
 
     auto egress([&]() -> S<Egress> {
         if (false) {

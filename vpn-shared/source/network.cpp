@@ -25,6 +25,7 @@
 #include "chainlink.hpp"
 #include "client.hpp"
 #include "endpoint.hpp"
+#include "fiat.hpp"
 #include "local.hpp"
 #include "market.hpp"
 #include "network.hpp"
@@ -37,13 +38,12 @@ Network::Network(const std::string &rpc, Address directory, Address location, co
     locator_(Locator::Parse(rpc)),
     directory_(std::move(directory)),
     location_(std::move(location)),
-    market_(Make<Market>(5*60*1000, origin, "USD")),
-    oracle_(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> {
+    market_(Make<Market>(5*60*1000, origin, Wait(ChainlinkFiat(5*60*1000, {origin, locator_})))),
+    oracle_(Wait(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> {
         static const Float Ten5("100000");
         return Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5);
-    }, "Chainlink"))
+    }, "Chainlink")))
 {
-    Wait(oracle_->Open());
     generator_.seed(boost::random::random_device()());
 }
 

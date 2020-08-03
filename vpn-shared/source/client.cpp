@@ -47,9 +47,6 @@ static void Justin(FILE *justin, const char *name, uint8_t value, const uint256_
         Justin(justin_, __VA_ARGS__); \
     while (false)
 
-typedef boost::multiprecision::cpp_bin_float_oct Float;
-static const Float Ten18("1000000000000000000");
-
 //static const uint128_t Gwei(1000000000);
 static const uint256_t Two128(uint256_t(1) << 128);
 

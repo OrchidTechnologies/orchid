@@ -74,8 +74,10 @@ class Updater :
 };
 
 template <typename Code_>
-S<Updater<Code_>> Update(unsigned milliseconds, Code_ &&code, const char *name) {
-    return Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code), name);
+task<S<Updater<Code_>>> Update(unsigned milliseconds, Code_ &&code, const char *name) {
+    auto updater(Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code), name));
+    co_await updater->Open();
+    co_return std::move(updater);
 }
 
 }

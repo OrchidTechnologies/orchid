@@ -21,6 +21,7 @@
 
 
 #include "coinbase.hpp"
+#include "fiat.hpp"
 #include "gauge.hpp"
 #include "market.hpp"
 
@@ -29,14 +30,10 @@ namespace orc {
 static const Float Two128(uint256_t(1) << 128);
 //static const Float Two30(1024 * 1024 * 1024);
 
-Market::Market(unsigned milliseconds, const S<Origin> &origin, std::string currency) :
-    fiat_(Update(milliseconds, [origin, currency = std::move(currency)]() -> task<Fiat> {
-        co_return co_await Coinbase(*origin, currency);
-    }, "Coinbase")),
+Market::Market(unsigned milliseconds, const S<Origin> &origin, S<Updated<Fiat>> fiat) :
+    fiat_(std::move(fiat)),
     gauge_(Make<Gauge>(5*60*1000, origin))
 {
-    Wait(fiat_->Open());
-    Wait(gauge_->Open());
 }
 
 checked_int256_t Market::Convert(const Float &balance) const {

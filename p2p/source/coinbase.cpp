@@ -21,10 +21,12 @@
 
 
 #include "coinbase.hpp"
+#include "fiat.hpp"
 #include "json.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
 #include "parallel.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
@@ -45,9 +47,15 @@ task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &f
 }
 
 task<Fiat> Coinbase(Origin &origin, const std::string &to) { try {
-    static const Float Ten18("1000000000000000000");
     auto [eth, oxt] = *co_await Parallel(Coinbase(origin, to, "ETH", Ten18), Coinbase(origin, to, "OXT", Ten18));
     co_return Fiat{std::move(eth), std::move(oxt)};
 } orc_stack({}, "updating fiat prices") }
+
+
+task<S<Updated<Fiat>>> CoinbaseFiat(unsigned milliseconds, S<Origin> origin, std::string currency) {
+    co_return co_await Update(milliseconds, [origin = std::move(origin), currency = std::move(currency)]() -> task<Fiat> {
+        co_return co_await Coinbase(*origin, currency);
+    }, "Coinbase");
+}
 
 }

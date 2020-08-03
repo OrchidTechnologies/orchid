@@ -39,7 +39,7 @@ class Market {
     const S<Gauge> gauge_;
 
   public:
-    Market(unsigned milliseconds, const S<Origin> &origin, std::string currency);
+    Market(unsigned milliseconds, const S<Origin> &origin, S<Updated<Fiat>> fiat);
 
     checked_int256_t Convert(const Float &balance) const;
     std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const;

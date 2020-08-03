@@ -24,6 +24,7 @@
 #define ORCHID_CHAINLINK_HPP
 
 #include "float.hpp"
+#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -31,7 +32,13 @@ namespace orc {
 class Address;
 class Endpoint;
 
+struct Fiat;
+
+template <typename Type_>
+class Updated;
+
 task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation, const Float &adjust);
+task<S<Updated<Fiat>>> ChainlinkFiat(unsigned milliseconds, Endpoint endpoint);
 
 }
 
