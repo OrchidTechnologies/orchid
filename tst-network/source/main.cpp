@@ -67,7 +67,6 @@ namespace orc {
 namespace po = boost::program_options;
 
 static const Float Ten12("1000000000000");
-static const Float Two128(uint256_t(1) << 128);
 
 struct Global {
     uint64_t benefit_ = 0;

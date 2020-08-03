@@ -28,11 +28,10 @@
 namespace orc {
 
 static const Float Two128(uint256_t(1) << 128);
-//static const Float Two30(1024 * 1024 * 1024);
 
 Market::Market(unsigned milliseconds, const S<Origin> &origin, S<Updated<Fiat>> fiat) :
     fiat_(std::move(fiat)),
-    gauge_(Make<Gauge>(5*60*1000, origin))
+    gauge_(Make<Gauge>(milliseconds, origin))
 {
 }
 
