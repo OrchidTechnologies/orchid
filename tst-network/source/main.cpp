@@ -36,6 +36,7 @@
 
 #include "baton.hpp"
 #include "boring.hpp"
+#include "chainlink.hpp"
 #include "chart.hpp"
 #include "client.hpp"
 #include "coinbase.hpp"
@@ -248,11 +249,6 @@ task<Float> Rate(const Endpoint &endpoint, const Block &block, const Address &pa
     co_return Float(reserve0after) / Float(reserve1after);
 }
 
-task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation) {
-    static const Selector<uint256_t> latestAnswer_("latestAnswer");
-    co_return Float(co_await latestAnswer_.Call(endpoint, "latest", aggregation, 90000)) / Ten8;
-}
-
 task<Float> Kraken(Origin &origin, const std::string &pair) {
     co_return Float(Parse((co_await origin.Fetch("GET", {"https", "api.kraken.com", "443", "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString());
 }
@@ -380,8 +376,8 @@ int Main(int argc, const char *const argv[]) {
 
     const auto chainlink(Update(60*1000, [endpoint]() -> task<Fiat> {
         const auto [eth_usd, oxt_usd] = *co_await Parallel(
-            Chainlink(endpoint, "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F"),
-            Chainlink(endpoint, "0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA"));
+            Chainlink(endpoint, "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F", Ten8),
+            Chainlink(endpoint, "0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA", Ten8));
         co_return Fiat{eth_usd / Ten18, oxt_usd / Ten18};
     }, "Chainlink"));
     Wait(chainlink->Open());

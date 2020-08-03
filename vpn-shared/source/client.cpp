@@ -28,6 +28,7 @@
 #include "client.hpp"
 #include "datagram.hpp"
 #include "locator.hpp"
+#include "market.hpp"
 #include "protocol.hpp"
 #include "time.hpp"
 
@@ -194,20 +195,28 @@ void Client::Stop() noexcept {
     Pump::Stop();
 }
 
-Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, S<Market> market, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face, const char *justin) :
+Client::Client(BufferDrain &drain,
+    std::string url, U<rtc::SSLFingerprint> remote,
+    Endpoint endpoint, S<Market> market, S<Updated<Float>> oracle,
+    const Address &lottery, const uint256_t &chain,
+    const Secret &secret, const Address &funder,
+    const Address &seller, const uint128_t &face,
+    const char *justin
+) :
     Pump(drain),
     local_(Certify()),
     url_(std::move(url)),
     remote_(std::move(remote)),
     endpoint_(std::move(endpoint)),
     market_(std::move(market)),
+    oracle_(std::move(oracle)),
     lottery_(lottery),
     chain_(chain),
     secret_(secret),
     funder_(funder),
     seller_(seller),
     face_(face),
-    prepay_(uint256_t(Ten18*0.085/0.20/1024*2)<<128),
+    prepay_(market_->Convert((*oracle_)()/1024*2)),
     justin_(justin == nullptr ? nullptr : fopen(justin, "w"))
 {
     Pump::type_ = typeid(*this).name();

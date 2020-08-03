@@ -734,9 +734,9 @@ void Capture::Start(const std::string &path) {
     auto &sunk(Start());
 #endif
 
-    auto code([heap = std::move(heap), hops, local = std::move(local), host, group](BufferSunk &sunk) mutable -> task<void> {
-        Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), local);
+    Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), local);
 
+    auto code([heap = std::move(heap), hops, local = std::move(local), network = std::move(network), host, group](BufferSunk &sunk) mutable -> task<void> {
         auto origin(local);
 
         for (unsigned i(0); i != hops - 1; ++i) {

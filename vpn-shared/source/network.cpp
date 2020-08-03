@@ -22,12 +22,14 @@
 
 #include <openssl/obj_mac.h>
 
+#include "chainlink.hpp"
 #include "client.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
 #include "market.hpp"
 #include "network.hpp"
 #include "sleep.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
@@ -35,8 +37,13 @@ Network::Network(const std::string &rpc, Address directory, Address location, co
     locator_(Locator::Parse(rpc)),
     directory_(std::move(directory)),
     location_(std::move(location)),
-    market_(Make<Market>(5*60*1000, origin, "USD"))
+    market_(Make<Market>(5*60*1000, origin, "USD")),
+    oracle_(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> {
+        static const Float Ten5("100000");
+        return Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5);
+    }, "Chainlink"))
 {
+    Wait(oracle_->Open());
     generator_.seed(boost::random::random_device()());
 }
 
@@ -102,7 +109,15 @@ task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const 
     const auto [amount, escrow, unlock, seller, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
     orc_assert(unlock == 0);
 
-    auto &client(sunk.Wire<Client>(std::move(url), std::move(fingerprint), std::move(endpoint), market_, lottery, chain, secret, funder, seller, std::min(amount, escrow / 2), justin));
+    auto &client(sunk.Wire<Client>(
+        std::move(url), std::move(fingerprint),
+        std::move(endpoint), market_, oracle_,
+        lottery, chain,
+        secret, funder,
+        seller, std::min(amount, escrow / 2),
+        justin
+    ));
+
     co_await client.Open(origin);
     co_return &client;
 }

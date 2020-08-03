@@ -42,6 +42,7 @@ class Network {
     const Address location_;
 
     const S<Market> market_;
+    const S<Updated<Float>> oracle_;
 
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
 
