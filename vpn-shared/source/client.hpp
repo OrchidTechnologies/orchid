@@ -87,7 +87,9 @@ class Client :
 
     struct Locked_ {
         uint64_t updated_ = 0;
-        uint64_t benefit_ = 0;
+
+        uint64_t output_ = 0;
+        uint64_t input_ = 0;
 
         std::map<Bytes32, Pending> pending_;
         uint256_t spent_ = 0;

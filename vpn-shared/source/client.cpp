@@ -98,10 +98,11 @@ task<void> Client::Submit(uint256_t amount) {
 void Client::Transfer(size_t size, bool send) {
     { const auto locked(locked_());
     Justin("benefit", send ? 0 : 1, size);
-    locked->benefit_ += size;
-    if (locked->benefit_ - locked->updated_ < 1024*256)
+    (send ? locked->output_ : locked->input_) += size;
+    const auto updated(locked->output_ + locked->input_);
+    if (updated - locked->updated_ < 1024*256)
         return;
-    locked->updated_ = locked->benefit_; }
+    locked->updated_ = updated; }
     Update();
 }
 
@@ -270,7 +271,7 @@ void Client::Update() {
 
 uint64_t Client::Benefit() {
     const auto locked(locked_());
-    return locked->benefit_;
+    return locked->output_ + locked->input_;
 }
 
 uint256_t Client::Spent() {
