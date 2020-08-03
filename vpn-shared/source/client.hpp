@@ -37,6 +37,7 @@
 #include "bond.hpp"
 #include "crypto.hpp"
 #include "endpoint.hpp"
+#include "float.hpp"
 #include "jsonrpc.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
