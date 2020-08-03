@@ -180,11 +180,9 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     orc_assert(until > now);
 
     const uint256_t gas(receipt.size() == 0 ? 84000 /*83267*/ : 103000);
-    const auto [profit, price] = market_->Credit(now, start, range, amount, gas);
-    if (profit <= 0)
+    const auto [expected, price] = market_->Credit(now, start, range, amount, ratio, gas);
+    if (expected <= 0)
         return;
-    static const Float Two128(uint256_t(1) << 128);
-    const auto expected(profit * Float(ratio + 1) / Two128);
 
     using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
     static const auto orchid(Hash("Orchid.grab"));

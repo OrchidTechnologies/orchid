@@ -86,9 +86,11 @@ task<void> Client::Submit(uint256_t amount) {
     const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
     const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
     const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
+    // XXX: this code is backwards and needs to calculate this before the other thing
+    const auto [expected, price] = market_->Credit(now, start, 0, face_, ratio, Gas());
     { const auto locked(locked_());
         Justin("payment", 3, amount >> 128);
-        locked->pending_.try_emplace(hash, Pending{ticket, signature}); }
+        locked->pending_.try_emplace(hash, Pending{ticket, signature, expected}); }
     co_return co_await Submit(hash, ticket, receipt, signature);
 }
 
@@ -123,6 +125,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
+        const auto time(Monotonic());
         uint256_t stamp(0);
 
         Scan(window, [&, &id = id](const Buffer &data) { try {
@@ -156,11 +159,10 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             if (!id.zero()) {
                 auto pending(locked->pending_.find(id));
                 if (pending != locked->pending_.end()) {
-                    const auto &ticket(pending->second.ticket_);
-                    const auto spent(ticket.Value());
-                    locked->spent_ += spent;
+                    const auto value(pending->second.ticket_.Value());
+                    locked->spent_ += pending->second.expected_;
                     locked->pending_.erase(pending);
-                    Justin("updated", 4, spent >> 128, stamp);
+                    Justin("updated", 4, value >> 128, stamp);
                 }
             }
 
@@ -173,6 +175,8 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
 
             if (justin_ != nullptr)
                 Log() << "JUSTIN predict " << std::dec << (predicted >> 128);
+
+            locked->judgement_ = locked->judge_(time, locked->spent_, locked->output_ + locked->input_, (*oracle_)());
 
             if (prepay_ > predicted)
                 nest_.Hatch([&]() noexcept { return [this, amount = uint256_t(prepay_ * 2 - predicted)]() -> task<void> {
@@ -271,16 +275,21 @@ uint64_t Client::Benefit() {
     return locked->output_ + locked->input_;
 }
 
-uint256_t Client::Spent() {
+Float Client::Spent() {
     const auto locked(locked_());
     orc_assert(locked->pending_.empty());
     return locked->spent_;
 }
 
-checked_int256_t Client::Balance() {
+Float Client::Balance() {
     // XXX: return task<int256> and merge Update
     const auto locked(locked_());
-    return locked->balance_;
+    return market_->Convert(locked->balance_);
+}
+
+Float Client::Judgement() {
+    const auto locked(locked_());
+    return locked->judgement_;
 }
 
 uint128_t Client::Face() {

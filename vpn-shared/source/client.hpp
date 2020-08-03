@@ -37,8 +37,8 @@
 #include "bond.hpp"
 #include "crypto.hpp"
 #include "endpoint.hpp"
-#include "float.hpp"
 #include "jsonrpc.hpp"
+#include "judge.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
 #include "origin.hpp"
@@ -84,6 +84,7 @@ class Client :
     struct Pending {
         Ticket ticket_;
         Signature signature_;
+        Float expected_;
     };
 
     struct Locked_ {
@@ -93,7 +94,10 @@ class Client :
         uint64_t input_ = 0;
 
         std::map<Bytes32, Pending> pending_;
-        uint256_t spent_ = 0;
+        Float spent_ = 0;
+
+        Judge judge_;
+        Float judgement_ = 0;
 
         int64_t serial_ = -1;
         checked_int256_t balance_ = 0;
@@ -136,8 +140,9 @@ class Client :
 
     void Update();
     uint64_t Benefit();
-    uint256_t Spent();
-    checked_int256_t Balance();
+    Float Spent();
+    Float Balance();
+    Float Judgement();
     uint128_t Face();
     uint256_t Gas();
     const std::string &URL();

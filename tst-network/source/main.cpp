@@ -137,7 +137,7 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
     });
 }
 
-task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &fiat, const S<Gauge> &gauge, Network &network, const char *provider, const Secret &secret, const Address &funder) {
+task<Report> TestOrchid(const S<Origin> &origin, std::string name, Network &network, const char *provider, const Secret &secret, const Address &funder) {
     (co_await orc_optic)->Name(provider);
 
     std::cout << provider << " " << name << std::endl;
@@ -152,8 +152,8 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
         client.Update();
         // XXX: support co_await on Update()
         co_await Sleep(1000);
-        const Float spent(client.Spent());
-        const Float balance(client.Balance());
+        const auto spent(client.Spent());
+        const auto balance(client.Balance());
 
         const auto benefit(client.Benefit());
         Log() << "BENEFIT " << std::dec << benefit << " " << name;
@@ -166,14 +166,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const Fiat &f
 
         const auto recipient(client.Recipient());
         const auto version(co_await Version(*origin, client.URL()));
-
-        const auto price(gauge->Price());
-        const uint256_t gas(client.Gas());
-
-        const auto face(Float(client.Face()) * fiat.oxt_);
-        const auto efficiency(1 - Float(gas * price) * fiat.eth_ / face);
-
-        const auto cost((spent * efficiency - balance) / benefit * (1024 * 1024 * 1024) * fiat.oxt_ / Two128 * benefit / minimum);
+        const auto cost((spent - balance) / minimum * (1024 * 1024 * 1024));
         co_return Report{provider, cost, speed, host, recipient, version};
     });
 }
@@ -440,7 +433,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(TestOrchid(origin, name, (*coinbase)(), gauge, network, provider, secret, funder));
+                tests.emplace_back(TestOrchid(origin, name, network, provider, secret, funder));
             }
 
             auto reports(co_await Parallel(std::move(tests)));

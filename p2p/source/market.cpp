@@ -36,12 +36,15 @@ Market::Market(unsigned milliseconds, const S<Origin> &origin, S<Updated<Fiat>> 
 {
 }
 
-checked_int256_t Market::Convert(const Float &balance) const {
-    const auto oxt((*fiat_)().oxt_);
-    return checked_int256_t(balance / oxt * Two128);
+Float Market::Convert(const checked_int256_t &balance) const {
+    return Float(balance) / Two128 * (*fiat_)().oxt_;
 }
 
-std::pair<Float, uint256_t> Market::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const {
+checked_int256_t Market::Convert(const Float &balance) const {
+    return checked_int256_t(balance / (*fiat_)().oxt_ * Two128);
+}
+
+std::pair<Float, uint256_t> Market::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint128_t &ratio, const uint256_t &gas) const {
     const auto fiat((*fiat_)());
 
     const auto base(Float(amount) * fiat.oxt_);
@@ -59,6 +62,7 @@ std::pair<Float, uint256_t> Market::Credit(const uint256_t &now, const uint256_t
             credit = {profit, cost};
     }
 
+    credit.first *= Float(ratio + 1) / Two128;
     return credit;
 }
 

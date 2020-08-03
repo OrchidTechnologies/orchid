@@ -20,33 +20,20 @@
 /* }}} */
 
 
-#ifndef ORCHID_MARKET_HPP
-#define ORCHID_MARKET_HPP
+#ifndef ORCHID_JUDGE_HPP
+#define ORCHID_JUDGE_HPP
 
 #include "float.hpp"
-#include "signed.hpp"
-#include "updated.hpp"
 
 namespace orc {
 
-struct Fiat;
-class Gauge;
-class Origin;
-
-class Market {
+class Judge {
   private:
-    const S<Updated<Fiat>> fiat_;
-    const S<Gauge> gauge_;
 
   public:
-    Market(unsigned milliseconds, const S<Origin> &origin, S<Updated<Fiat>> fiat);
-
-    Float Convert(const checked_int256_t &balance) const;
-    checked_int256_t Convert(const Float &balance) const;
-
-    std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint128_t &ratio, const uint256_t &gas) const;
+    Float operator ()(uint64_t time, const Float &cost, uint64_t size, const Float &oracle);
 };
 
 }
 
-#endif//ORCHID_MARKET_HPP
+#endif//ORCHID_JUDGE_HPP
