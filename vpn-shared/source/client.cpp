@@ -91,7 +91,7 @@ task<void> Client::Submit(uint256_t amount) {
     const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
     { const auto locked(locked_());
         Justin("payment", 3, amount >> 128);
-        locked->pending_.try_emplace(hash, ticket, signature); }
+        locked->pending_.try_emplace(hash, Pending{ticket, signature}); }
     co_return co_await Submit(hash, ticket, receipt, signature);
 }
 
@@ -158,7 +158,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
             if (!id.zero()) {
                 auto pending(locked->pending_.find(id));
                 if (pending != locked->pending_.end()) {
-                    const auto &ticket(pending->second.first);
+                    const auto &ticket(pending->second.ticket_);
                     const auto spent(ticket.Value());
                     locked->spent_ += spent;
                     locked->pending_.erase(pending);
@@ -168,7 +168,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
 
             auto predicted(locked->balance_);
             for (const auto &pending : locked->pending_) {
-                const auto &ticket(pending.second.first);
+                const auto &ticket(pending.second.ticket_);
                 // XXX: subtract predicted transaction fees
                 predicted += ticket.Value();
             }
@@ -181,9 +181,9 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                     co_return co_await Submit(amount); }; }, __FUNCTION__);
             else if (!locked->pending_.empty()) {
                 const auto &pending(*locked->pending_.begin());
-                Justin("-retry-", 5, pending.second.first.Value() >> 128);
+                Justin("-retry-", 5, pending.second.ticket_.Value() >> 128);
                 nest_.Hatch([&]() noexcept { return [this, ring = locked->ring_, pending = pending]() -> task<void> {
-                    co_return co_await Submit(pending.first, pending.second.first, co_await ring, pending.second.second); }; }, __FUNCTION__);
+                    co_return co_await Submit(pending.first, pending.second.ticket_, co_await ring, pending.second.signature_); }; }, __FUNCTION__);
             }
         } orc_catch({}) });
     } orc_catch({}) return true; })) {

@@ -80,11 +80,16 @@ class Client :
 
     gsl::owner<FILE *> const justin_;
 
+    struct Pending {
+        Ticket ticket_;
+        Signature signature_;
+    };
+
     struct Locked_ {
         uint64_t updated_ = 0;
         uint64_t benefit_ = 0;
 
-        std::map<Bytes32, std::pair<Ticket, Signature>> pending_;
+        std::map<Bytes32, Pending> pending_;
         uint256_t spent_ = 0;
 
         int64_t serial_ = -1;
