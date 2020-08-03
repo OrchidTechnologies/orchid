@@ -29,6 +29,7 @@
 #include <rtc_base/rtc_certificate.h>
 
 #include "bond.hpp"
+#include "float.hpp"
 #include "jsonrpc.hpp"
 #include "link.hpp"
 #include "locked.hpp"
@@ -39,6 +40,8 @@
 namespace orc {
 
 class Cashier;
+class Market;
+class Origin;
 
 class Server :
     public Valve,
@@ -54,6 +57,7 @@ class Server :
 
     const S<Origin> origin_;
     const S<Cashier> cashier_;
+    const S<Market> market_;
 
     Nest nest_;
 
@@ -94,7 +98,7 @@ class Server :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Server(S<Origin> origin, S<Cashier> cashier);
+    Server(S<Origin> origin, S<Cashier> cashier, S<Market> market);
     ~Server() override;
 
     task<void> Open(Pipe<Buffer> &pipe);

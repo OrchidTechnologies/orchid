@@ -32,9 +32,6 @@
 
 namespace orc {
 
-static const Float Two128(uint256_t(1) << 128);
-//static const Float Two30(1024 * 1024 * 1024);
-
 static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
 static const auto Bound_(Hash("Update(address,address)"));
 
@@ -145,11 +142,8 @@ void Cashier::Stop(const std::string &error) noexcept {
     Valve::Stop();
 }
 
-Cashier::Cashier(Endpoint endpoint, S<Updated<Fiat>> fiat, S<Gauge> gauge, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
+Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
-    fiat_(std::move(fiat)),
-    gauge_(std::move(gauge)),
-
     price_(price),
 
     personal_(personal),
@@ -183,32 +177,6 @@ task<void> Cashier::Shut() noexcept {
 
 Float Cashier::Bill(size_t size) const {
     return price_ * size;
-}
-
-checked_int256_t Cashier::Convert(const Float &balance) const {
-    const auto oxt((*fiat_)().oxt_);
-    return checked_int256_t(balance / oxt * Two128);
-}
-
-std::pair<Float, uint256_t> Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const {
-    const auto fiat((*fiat_)());
-
-    const auto base(Float(amount) * fiat.oxt_);
-    const auto until(start + range);
-
-    std::pair<Float, uint256_t> credit(0, 10*Gwei);
-
-    const auto prices(gauge_->Prices());
-    for (const auto &[price, time] : *prices) {
-        const auto when(now + unsigned(time));
-        if (when >= until) continue;
-        const auto cost(price * Gwei / 10);
-        const auto profit((start < when ? base * Float(range - (when - start)) / Float(range) : base) - Float(gas * cost) * fiat.eth_);
-        if (profit > std::get<0>(credit))
-            credit = {profit, cost};
-    }
-
-    return credit;
 }
 
 task<bool> Cashier::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {

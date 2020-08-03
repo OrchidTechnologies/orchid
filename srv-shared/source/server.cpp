@@ -29,6 +29,7 @@
 #include "datagram.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
+#include "market.hpp"
 #include "protocol.hpp"
 #include "server.hpp"
 #include "spawn.hpp"
@@ -140,7 +141,7 @@ task<void> Server::Invoice(Pipe<Buffer> &pipe, const Socket &destination, const 
     Header header{Magic_, id};
     co_await Send(pipe, Datagram(Port_, destination, Tie(header,
         Command(Stamp_, Monotonic()),
-        Command(Invoice_, serial, Complement(cashier_->Convert(balance)), cashier_->Tuple(), commit)
+        Command(Invoice_, serial, Complement(market_->Convert(balance)), cashier_->Tuple(), commit)
     )), true);
 }
 
@@ -179,7 +180,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     orc_assert(until > now);
 
     const uint256_t gas(receipt.size() == 0 ? 84000 /*83267*/ : 103000);
-    const auto [profit, price] = cashier_->Credit(now, start, range, amount, gas);
+    const auto [profit, price] = market_->Credit(now, start, range, amount, gas);
     if (profit <= 0)
         return;
     static const Float Two128(uint256_t(1) << 128);
@@ -307,10 +308,11 @@ void Server::Stop(const std::string &error) noexcept {
     orc_insist_(error.empty(), error);
 }
 
-Server::Server(S<Origin> origin, S<Cashier> cashier) :
+Server::Server(S<Origin> origin, S<Cashier> cashier, S<Market> market) :
     local_(Certify()),
     origin_(std::move(origin)),
-    cashier_(std::move(cashier))
+    cashier_(std::move(cashier)),
+    market_(std::move(market))
 {
     type_ = typeid(*this).name();
     const auto locked(locked_());

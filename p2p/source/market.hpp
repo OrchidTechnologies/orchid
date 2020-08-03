@@ -20,38 +20,31 @@
 /* }}} */
 
 
-#ifndef ORCHID_NETWORK_HPP
-#define ORCHID_NETWORK_HPP
+#ifndef ORCHID_MARKET_HPP
+#define ORCHID_MARKET_HPP
 
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
-
-#include "jsonrpc.hpp"
-#include "locator.hpp"
-#include "origin.hpp"
+#include "float.hpp"
+#include "signed.hpp"
+#include "updated.hpp"
 
 namespace orc {
 
-class Client;
-class Market;
+struct Fiat;
+class Gauge;
+class Origin;
 
-class Network {
+class Market {
   private:
-    const Locator locator_;
-    const Address directory_;
-    const Address location_;
-
-    const S<Market> market_;
-
-    boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
+    const S<Updated<Fiat>> fiat_;
+    const S<Gauge> gauge_;
 
   public:
-    Network(const std::string &rpc, Address directory, Address location, const S<Origin> &origin);
+    Market(unsigned milliseconds, const S<Origin> &origin, std::string currency);
 
-    // XXX: this should be task<Client &> but cppcoro doesn't seem to support that
-    task<Client *> Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const char *justin);
+    checked_int256_t Convert(const Float &balance) const;
+    std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const;
 };
 
 }
 
-#endif//ORCHID_NETWORK_HPP
+#endif//ORCHID_MARKET_HPP

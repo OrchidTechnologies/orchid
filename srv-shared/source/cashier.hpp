@@ -63,8 +63,6 @@ class Cashier :
 {
   private:
     const Endpoint endpoint_;
-    const S<Updated<Fiat>> fiat_;
-    const S<Gauge> gauge_;
 
     const Float price_;
 
@@ -89,7 +87,7 @@ class Cashier :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Cashier(Endpoint endpoint, S<Updated<Fiat>> fiat, S<Gauge> gauge, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(Endpoint endpoint, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
     ~Cashier() override = default;
 
     void Open(S<Origin> origin, Locator locator);
@@ -100,9 +98,6 @@ class Cashier :
     }
 
     Float Bill(size_t size) const;
-    checked_int256_t Convert(const Float &balance) const;
-
-    std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const;
     task<bool> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt);
 
     template <typename Selector_, typename... Args_>

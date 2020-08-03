@@ -354,7 +354,7 @@ int Main(int argc, const char *const argv[]) {
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
-    Network network(rpc, directory, location);
+    Network network(rpc, directory, location, origin);
 
     const Address funder(args["funder"].as<std::string>());
     const Secret secret(Bless(args["secret"].as<std::string>()));

@@ -25,7 +25,6 @@
 
 #include <vector>
 
-#include "cashier.hpp"
 #include "egress.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
@@ -33,10 +32,14 @@
 
 namespace orc {
 
+class Cashier;
+class Market;
+
 class Node final {
   private:
     const S<Origin> origin_;
     const S<Cashier> cashier_;
+    const S<Market> market_;
     const S<Egress> egress_;
     const std::vector<std::string> ice_;
 
@@ -45,9 +48,10 @@ class Node final {
     }; Locked<Locked_> locked_;
 
   public:
-    Node(S<Origin> origin, S<Cashier> cashier, S<Egress> egress, std::vector<std::string> ice) :
+    Node(S<Origin> origin, S<Cashier> cashier, S<Market> market, S<Egress> egress, std::vector<std::string> ice) :
         origin_(std::move(origin)),
         cashier_(std::move(cashier)),
+        market_(std::move(market)),
         egress_(std::move(egress)),
         ice_(std::move(ice))
     {
@@ -58,7 +62,7 @@ class Node final {
         auto &cache(locked->servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
-        const auto server(Break<BufferSink<Server>>(origin_, cashier_));
+        const auto server(Break<BufferSink<Server>>(origin_, cashier_, market_));
         Egress::Wire(egress_, *server);
         server->self_ = server;
         cache = server;

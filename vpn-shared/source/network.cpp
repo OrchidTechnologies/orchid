@@ -25,15 +25,17 @@
 #include "client.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
+#include "market.hpp"
 #include "network.hpp"
 #include "sleep.hpp"
 
 namespace orc {
 
-Network::Network(const std::string &rpc, Address directory, Address location) :
+Network::Network(const std::string &rpc, Address directory, Address location, const S<Origin> &origin) :
     locator_(Locator::Parse(rpc)),
     directory_(std::move(directory)),
-    location_(std::move(location))
+    location_(std::move(location)),
+    market_(Make<Market>(5*60*1000, origin, "USD"))
 {
     generator_.seed(boost::random::random_device()());
 }
@@ -100,7 +102,7 @@ task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const 
     const auto [amount, escrow, unlock, seller, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
     orc_assert(unlock == 0);
 
-    auto &client(sunk.Wire<Client>(std::move(url), std::move(fingerprint), std::move(endpoint), lottery, chain, secret, funder, seller, std::min(amount, escrow / 2), justin));
+    auto &client(sunk.Wire<Client>(std::move(url), std::move(fingerprint), std::move(endpoint), market_, lottery, chain, secret, funder, seller, std::min(amount, escrow / 2), justin));
     co_await client.Open(origin);
     co_return &client;
 }

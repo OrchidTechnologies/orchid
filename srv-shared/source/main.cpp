@@ -49,6 +49,7 @@
 #include "jsonrpc.hpp"
 #include "load.hpp"
 #include "local.hpp"
+#include "market.hpp"
 #include "node.hpp"
 #include "router.hpp"
 #include "scope.hpp"
@@ -272,21 +273,16 @@ int Main(int argc, const char *const argv[]) {
         // XXX: this should switch to a different mechanism (using eth_sendTransaction)
         const Address personal(args.count("personal") == 0 ? "0x0000000000000000000000000000000000000000" : args["personal"].as<std::string>());
 
-        auto fiat(Update(5*60*1000, [origin, currency = args["currency"].as<std::string>()]() -> task<Fiat> {
-            co_return co_await Coinbase(*origin, currency);
-        }, "Coinbase"));
-        Wait(fiat->Open());
-
-        auto gauge(Make<Gauge>(5*60*1000, origin));
-        Wait(gauge->Open());
-
-        auto cashier(Break<Cashier>(std::move(endpoint), std::move(fiat), std::move(gauge),
+        auto cashier(Break<Cashier>(
+            std::move(endpoint),
             price, personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
         ));
         cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
         return cashier;
     }());
+
+    auto market(Make<Market>(5*60*1000, origin, args["currency"].as<std::string>()));
 
     auto egress([&]() -> S<Egress> {
         if (false) {
@@ -305,7 +301,7 @@ int Main(int argc, const char *const argv[]) {
         } else orc_assert_(false, "must provide an egress option");
     }());
 
-    const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));
+    const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(market), std::move(egress), std::move(ice)));
     node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
     return 0;
 }
