@@ -363,6 +363,13 @@ int Main(int argc, const char *const argv[]) {
     const auto chainlink(Wait(ChainlinkFiat(60*1000, endpoint)));
     const auto gauge(Make<Gauge>(60*1000, origin));
 
+    const auto account(Wait(Update(60*1000, [endpoint, funder, signer = Address(Commonize(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
+        static const Address lottery("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
+        static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
+        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(endpoint, "latest", lottery, uint256_t(90000), funder, signer);
+        co_return std::make_pair(balance, escrow);
+    }, "Account")));
+
     Spawn([&]() noexcept -> task<void> { for (;;) {
         Fiber::Report();
         co_await Sleep(10000);
@@ -453,7 +460,9 @@ int Main(int argc, const char *const argv[]) {
         Markup markup("Orchid Status");
         std::ostringstream body;
 
-        body << "T+" << std::dec << (Timestamp() - state->timestamp_) << "s " << std::fixed << std::setprecision(4) << state->speed_ << "Mbps\n";
+        const auto [balance, escrow] = (*account)();
+        body << "T+" << std::dec << (Timestamp() - state->timestamp_) << "s " << std::fixed << std::setprecision(4) << state->speed_ << "Mbps " <<
+            std::setprecision(1) << (Float(balance) / Ten18) << "/" << (Float(escrow) / Ten18) << "\n";
         body << "\n";
 
         { const auto fiat((*coinbase)()); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
