@@ -80,6 +80,7 @@ class Endpoint final {
 
     task<uint256_t> Latest() const;
     task<Block> Header(const Argument &number) const;
+    task<uint256_t> Balance(const Address &address) const;
 
     task<Brick<65>> Sign(const Address &signer, const Buffer &data) const;
     task<Brick<65>> Sign(const Address &signer, const std::string &password, const Buffer &data) const;

@@ -28,8 +28,7 @@
 
 #include "endpoint.hpp"
 #include "event.hpp"
-#include "fiat.hpp"
-#include "gauge.hpp"
+#include "float.hpp"
 #include "local.hpp"
 #include "locked.hpp"
 #include "locator.hpp"
@@ -68,6 +67,7 @@ class Cashier :
 
     const Address personal_;
     const std::string password_;
+    const S<Updated<uint256_t>> balance_;
 
     const Address lottery_;
     const uint256_t chain_;

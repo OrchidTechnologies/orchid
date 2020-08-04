@@ -46,6 +46,7 @@
 #include "channel.hpp"
 #include "coinbase.hpp"
 #include "egress.hpp"
+#include "fiat.hpp"
 #include "jsonrpc.hpp"
 #include "load.hpp"
 #include "local.hpp"
@@ -270,8 +271,8 @@ int Main(int argc, const char *const argv[]) {
         orc_assert_(args.count("recipient") != 0, "must specify --recipient unless --price is 0");
         const Address recipient(args["recipient"].as<std::string>());
 
-        // XXX: this should switch to a different mechanism (using eth_sendTransaction)
-        const Address personal(args.count("personal") == 0 ? "0x0000000000000000000000000000000000000000" : args["personal"].as<std::string>());
+        orc_assert_(args.count("personal") != 0, "must specify --personal unless --price is 0");
+        const Address personal(args["personal"].as<std::string>());
 
         auto cashier(Break<Cashier>(
             std::move(endpoint),

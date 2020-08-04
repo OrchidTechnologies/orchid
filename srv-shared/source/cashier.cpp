@@ -29,6 +29,7 @@
 #include "parallel.hpp"
 #include "sleep.hpp"
 #include "structured.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
@@ -148,6 +149,9 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal,
 
     personal_(personal),
     password_(std::move(password)),
+
+    balance_(Wait(Update(60*1000, [endpoint, personal]() -> task<uint256_t> {
+        co_return co_await endpoint.Balance(personal); }, "Balance"))),
 
     lottery_(lottery),
     chain_(chain),

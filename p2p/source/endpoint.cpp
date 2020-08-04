@@ -146,6 +146,10 @@ task<Block> Endpoint::Header(const Argument &number) const {
     co_return co_await operator ()("eth_getBlockByNumber", {number, false});
 }
 
+task<uint256_t> Endpoint::Balance(const Address &address) const {
+    co_return uint256_t((co_await operator ()("eth_getBalance", {address, "latest"})).asString());
+}
+
 task<Brick<65>> Endpoint::Sign(const Address &signer, const Buffer &data) const {
     co_return Bless((co_await operator ()("eth_sign", {signer, data})).asString());
 }
