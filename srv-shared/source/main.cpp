@@ -284,22 +284,18 @@ int Main(int argc, const char *const argv[]) {
 
     auto market(Make<Market>(5*60*1000, origin, Wait(CoinbaseFiat(5*60*1000, origin, args["currency"].as<std::string>()))));
 
-    auto egress([&]() -> S<Egress> {
-        if (false) {
-        } else if (args.count("openvpn") != 0) {
-            return Wait([origin, file = Load(args["openvpn"].as<std::string>())]() mutable -> task<S<Egress>> {
-                auto egress(Break<BufferSink<Egress>>(0));
-                co_await Connect(*egress, std::move(origin), 0, file, "", "");
-                co_return egress;
-            }());
-        } else if (args.count("wireguard") != 0) {
-            return Wait([origin, file = Load(args["wireguard"].as<std::string>())]() mutable -> task<S<Egress>> {
-                auto egress(Break<BufferSink<Egress>>(0));
-                co_await Guard(*egress, std::move(origin), 0, file);
-                co_return egress;
-            }());
-        } else orc_assert_(false, "must provide an egress option");
-    }());
+    auto egress([&]() { if (false) {
+    } else if (args.count("openvpn") != 0) {
+        const auto file(Load(args["openvpn"].as<std::string>()));
+        auto egress(Break<BufferSink<Egress>>(0));
+        Wait(Connect(*egress, origin, 0, file, "", ""));
+        return egress;
+    } else if (args.count("wireguard") != 0) {
+        const auto file(Load(args["wireguard"].as<std::string>()));
+        auto egress(Break<BufferSink<Egress>>(0));
+        Wait(Guard(*egress, origin, 0, file));
+        return egress;
+    } else orc_assert_(false, "must provide an egress option"); }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(market), std::move(egress), std::move(ice)));
     node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
