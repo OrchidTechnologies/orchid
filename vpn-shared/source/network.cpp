@@ -30,6 +30,7 @@
 #include "market.hpp"
 #include "network.hpp"
 #include "sleep.hpp"
+#include "uniswap.hpp"
 #include "updater.hpp"
 
 namespace orc {
@@ -38,7 +39,7 @@ Network::Network(const std::string &rpc, Address directory, Address location, co
     locator_(Locator::Parse(rpc)),
     directory_(std::move(directory)),
     location_(std::move(location)),
-    market_(Make<Market>(5*60*1000, origin, Wait(ChainlinkFiat(5*60*1000, {origin, locator_})))),
+    market_(Make<Market>(5*60*1000, origin, Wait(UniswapFiat(5*60*1000, {origin, locator_})))),
     oracle_(Wait(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> {
         static const Float Ten5("100000");
         return Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5);
