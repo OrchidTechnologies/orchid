@@ -5,31 +5,36 @@ import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
 import {formatCurrency} from "../util/util";
 import {Orchid} from "../api/orchid";
+import {AccountRecommendation} from "./MarketConditionsPanel";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const LowFundsPanel: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [pot, setPot] = useState<LotteryPot>();
+  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation|null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
     let potSubscription = api.lotteryPot_wait.subscribe(pot => {
       setPot(pot)
     });
+    (async () => {
+      setAccountRecommendation(await Orchid.minViableAccountComposition());
+    })();
     return () => {
       potSubscription.unsubscribe();
     };
   }, []);
 
-  if (pot === undefined) {
+  if (pot === undefined || accountRecommendation == null) {
     return <div/>
   }
 
   //let pot = Mocks.lotteryPot(1.0, 20.0)
 
-  let balanceLow = OXT.fromKeiki(pot.balance).lessThan(Orchid.recommendedBalance);
-  let depositLow = OXT.fromKeiki(pot.escrow).lessThan(Orchid.recommendedDeposit);
+  let balanceLow = OXT.fromKeiki(pot.balance).lessThan(accountRecommendation.balance);
+  let depositLow = OXT.fromKeiki(pot.escrow).lessThan(accountRecommendation.deposit);
 
   if (!balanceLow && !depositLow) {
     return <div/>
@@ -39,8 +44,8 @@ export const LowFundsPanel: React.FC = () => {
   let balanceStr = formatCurrency(balance.value, 'OXT');
   let deposit = OXT.fromKeiki(pot.escrow);
   let depositStr = formatCurrency(deposit.value, 'OXT');
-  let addBalanceStr = Orchid.recommendedBalance.subtract(balance).value.toFixedLocalized(2);
-  let addDepositStr = Orchid.recommendedDeposit.subtract(deposit).value.toFixedLocalized(2);
+  let addBalanceStr = accountRecommendation.balance.subtract(balance).value.toFixedLocalized(2) + ' OXT';
+  let addDepositStr = accountRecommendation.deposit.subtract(deposit).value.toFixedLocalized(2) + ' OXT';
 
   let title;
   let text;

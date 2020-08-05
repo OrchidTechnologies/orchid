@@ -24,7 +24,7 @@ import {OrchidContracts} from "../api/orchid-eth-contracts";
 import {S} from "../i18n/S";
 import {Orchid} from "../api/orchid";
 import ProgressLine from "./ProgressLine";
-import {MarketConditions} from "./MarketConditionsPanel";
+import {AccountRecommendation, MarketConditions} from "./MarketConditionsPanel";
 import {OrchidPricingAPI} from "../api/orchid-pricing";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
@@ -51,6 +51,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
   const [pot, setPot] = useState<LotteryPot | null>(null);
   const [marketConditions, setMarketConditions] = useState<MarketConditions>();
+  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation|null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -65,6 +66,10 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     // prime data sources
     OrchidPricingAPI.shared().getPricing();
     api.eth.getGasPrice();
+
+    (async () => {
+      setAccountRecommendation(await Orchid.recommendedAccountComposition());
+    })();
 
     return () => {
       potSubscription.unsubscribe();
@@ -155,9 +160,9 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
 
   let addBalanceStr: string | undefined;
   let addDepositStr: string | undefined;
-  if (pot != null) {
-    let addBalance = Orchid.recommendedBalance.subtract(OXT.fromKeiki(pot.balance));
-    let addDeposit = Orchid.recommendedDeposit.subtract(OXT.fromKeiki(pot.escrow));
+  if (pot != null && accountRecommendation != null) {
+    let addBalance = accountRecommendation.balance.subtract(OXT.fromKeiki(pot.balance));
+    let addDeposit = accountRecommendation.deposit.subtract(OXT.fromKeiki(pot.escrow));
     if (addBalance.value > 0) {
       addBalanceStr = addBalance.value.toFixedLocalized(2);
     }

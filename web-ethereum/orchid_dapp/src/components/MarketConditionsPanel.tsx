@@ -1,11 +1,27 @@
 import React, {useEffect, useState} from "react";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
-import {ETH, GWEI, min, OXT} from "../api/orchid-types";
+import {ETH, GWEI, KEIKI, min, OXT, USD} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
-import {LotteryPot} from "../api/orchid-eth";
+import {LotteryPot, OrchidEthereumAPI} from "../api/orchid-eth";
+import {OrchidContracts} from "../api/orchid-eth-contracts";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
+
+/// A recommendation for account composition based on current market rates.
+export class AccountRecommendation {
+  public balance: OXT;
+  public deposit: OXT;
+  public txEth: ETH; // ETH required for the transaction
+  public txUsd: ETH; // USD equivalent of the ETH required for the transaction
+
+  constructor(balance: OXT, deposit: OXT, txEth: ETH, txUsd: USD) {
+    this.balance = balance;
+    this.deposit = deposit;
+    this.txEth = txEth;
+    this.txUsd = txUsd;
+  }
+}
 
 export class MarketConditions {
   public gasCostToRedeem: ETH
@@ -26,13 +42,32 @@ export class MarketConditions {
     return this.forBalance(OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow));
   }
 
+  /// Given a target efficiency and a desired number of face value multiples in the balance
+  /// (assuming two in the deposit) recommend balance, deposit, and required ETH amounts based
+  // on current market conditions.
+  static async recommendation(targetEfficiency: number, balanceFaceValues: number): Promise<AccountRecommendation> {
+    if (targetEfficiency >= 1.0) {
+      throw Error("Invalid efficiency target: cannot equal or exceed 1.0");
+    }
+    targetEfficiency = Math.min(targetEfficiency, 0.99);
+    let {oxtCostToRedeem} = await this.getCostToRedeemTicket();
+    let faceValue: OXT = oxtCostToRedeem.divide(1.0 - targetEfficiency);
+    let deposit = faceValue.multiply(2.0);
+    let balance = faceValue.multiply(balanceFaceValues);
+
+    // Recommend the amount of ETH required for the account creation
+    let api = OrchidAPI.shared();
+    let gasPrice: GWEI = await api.eth.getGasPrice();
+    let txEthRequired: ETH = gasPrice.multiply(OrchidContracts.add_funds_total_max_gas).toEth();
+    let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
+    let txUsdEthEqvuivalent = pricing.ethToUSD(txEthRequired);
+
+    return new AccountRecommendation(balance, deposit, txEthRequired, txUsdEthEqvuivalent);
+  }
+
   static async forBalance(balance: OXT, escrow: OXT): Promise<MarketConditions> {
     console.log("fetch market conditions")
-    let api = OrchidAPI.shared();
-    let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
-    let gasPrice: GWEI = await api.eth.getGasPrice();
-    let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket)).toEth();
-    let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
+    let {gasCostToRedeem, oxtCostToRedeem} = await this.getCostToRedeemTicket();
     let maxFaceValue: OXT = min(balance, escrow.divide(2.0));
     let ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
 
@@ -42,6 +77,14 @@ export class MarketConditions {
     return new MarketConditions(gasCostToRedeem, oxtCostToRedeem, maxFaceValue, ticketUnderwater, efficiency);
   }
 
+  private static async getCostToRedeemTicket() {
+    let api = OrchidAPI.shared();
+    let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
+    let gasPrice: GWEI = await api.eth.getGasPrice();
+    let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket)).toEth();
+    let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
+    return {gasCostToRedeem, oxtCostToRedeem};
+  }
 }
 
 export const MarketConditionsPanel: React.FC = () => {

@@ -14,6 +14,8 @@ import {OrchidAPI} from "../../api/orchid-api";
 import {TransactionProgress, TransactionState, TransactionStatus} from "../TransactionProgress";
 import {OrchidContracts} from "../../api/orchid-eth-contracts";
 import {S} from "../../i18n/S";
+import {Orchid} from "../../api/orchid";
+import {AccountRecommendation} from "../MarketConditionsPanel";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -43,6 +45,7 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
   const txResult = React.createRef<TransactionProgress>();
 
   const [showEthAddressInstructions, setShowEthAddressInstructions] = React.useState(false);
+  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation|null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -50,6 +53,9 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
       console.log("quick setup funds got wallet: ", wallet);
       setWalletBalance(wallet.oxtBalance);
     });
+    (async () => {
+      setAccountRecommendation(await Orchid.recommendedAccountComposition());
+    })();
 
     return () => {
       walletSubscription.unsubscribe();
@@ -115,14 +121,13 @@ export const OverviewQuickSetup: React.FC<OverviewProps & OverviewQuickSetupProp
     }, 300);
   }
 
-  if (walletBalance == null) {
+  if (walletBalance == null || accountRecommendation == null) {
     return <OverviewLoading/>
   }
 
-  // TODO: Incorporate live pricing
   // Determine required deposit and balance minimums
-  const targetDeposit = 15.0 // OXT
-  const targetBalance = 23.0 // OXT
+  const targetBalance = accountRecommendation.balance.value;
+  const targetDeposit = accountRecommendation.deposit.value;
   let sufficientFundsAmount = targetDeposit + targetBalance;
   let sufficientFunds = walletBalance >= oxtToKeiki(sufficientFundsAmount);
   let insufficientFundsText =

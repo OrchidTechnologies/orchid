@@ -26,6 +26,10 @@ export class Pricing {
     return new OXT(this.oxtToUsdRate / this.ethToUsdRate * eth.value);
   }
 
+  ethToUSD(eth: ETH): USD {
+    return new USD(eth.value * this.ethToUsdRate);
+  }
+
   toString(): string {
     return 'Pricing{date: $date, ethToUsdRate: $ethToUsdRate, oxtToUsdRate: $oxtToUsdRate}';
   }
