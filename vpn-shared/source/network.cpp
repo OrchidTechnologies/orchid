@@ -30,6 +30,7 @@
 #include "market.hpp"
 #include "network.hpp"
 #include "sleep.hpp"
+#include "uniswap.hpp"
 #include "updater.hpp"
 
 namespace orc {
@@ -38,11 +39,18 @@ Network::Network(const std::string &rpc, Address directory, Address location, co
     locator_(Locator::Parse(rpc)),
     directory_(std::move(directory)),
     location_(std::move(location)),
-    market_(Make<Market>(5*60*1000, origin, Wait(ChainlinkFiat(5*60*1000, {origin, locator_})))),
-    oracle_(Wait(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> {
+    market_(Make<Market>(5*60*1000, origin, Wait(UniswapFiat(5*60*1000, {origin, locator_})))),
+    oracle_(Wait(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> { try {
         static const Float Ten5("100000");
-        return Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5);
-    }, "Chainlink")))
+        const auto oracle(co_await Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5));
+        // XXX: our Chainlink aggregation can have its answer forged by either Chainlink swapping the oracle set
+        //      or by Orchid modifying the backend from our dashboard that Chainlink pays its oracles to consult
+        co_return oracle > 0.10 ? 0.10 : oracle;
+    } orc_catch({
+        // XXX: our Chainlink aggregation has a remote killswitch in it left by Chainlink, so we need a fallback
+        // XXX: figure out if there is a better way to detect this condition vs. another random JSON/RPC failure
+        co_return 0.06;
+    }) }, "Chainlink")))
 {
     generator_.seed(boost::random::random_device()());
 }

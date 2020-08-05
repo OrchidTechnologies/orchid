@@ -58,6 +58,7 @@
 #include "store.hpp"
 #include "time.hpp"
 #include "transport.hpp"
+#include "uniswap.hpp"
 #include "version.hpp"
 
 using boost::multiprecision::uint256_t;
@@ -65,8 +66,6 @@ using boost::multiprecision::uint256_t;
 namespace orc {
 
 namespace po = boost::program_options;
-
-static const Float Ten12("1000000000000");
 
 struct Global {
     uint64_t benefit_ = 0;
@@ -218,27 +217,6 @@ task<void> Stakes(const Endpoint &endpoint, const Address &directory, const Code
     co_await Stakes(endpoint, directory, block, account.storage_, root, code);
 }
 
-task<Float> Rate(const Endpoint &endpoint, const Block &block, const Address &pair) {
-    namespace mp = boost::multiprecision;
-    typedef mp::number<mp::cpp_int_backend<256, 256, mp::unsigned_magnitude, mp::unchecked, void>> uint112_t;
-    static const Selector<std::tuple<uint112_t, uint112_t, uint32_t>> getReserves_("getReserves");
-    const auto [reserve0after, reserve1after, after] = co_await getReserves_.Call(endpoint, block.number_, pair, 90000);
-#if 0
-    const auto [reserve0before, reserve1before, before] = co_await getReserves_.Call(endpoint, block.number_ - 100, pair, 90000);
-    static const Selector<uint256_t> price0CumulativeLast_("price0CumulativeLast");
-    static const Selector<uint256_t> price1CumulativeLast_("price1CumulativeLast");
-    const auto [price0before, price1before, price0after, price1after] = *co_await Parallel(
-        price0CumulativeLast_.Call(endpoint, block.number_ - 100, pair, 90000),
-        price1CumulativeLast_.Call(endpoint, block.number_ - 100, pair, 90000),
-        price0CumulativeLast_.Call(endpoint, block.number_, pair, 90000),
-        price1CumulativeLast_.Call(endpoint, block.number_, pair, 90000));
-    std::cout << price0before << " " << reserve0before << " | " << price1before << " " << reserve1before << " | " << before << std::endl;
-    std::cout << price0after << " " << reserve0after << " | " << price1after << " " << reserve1after << " | " << after << std::endl;
-    std::cout << block.timestamp_ << std::endl;
-#endif
-    co_return Float(reserve0after) / Float(reserve1after);
-}
-
 task<Float> Kraken(Origin &origin, const std::string &pair) {
     co_return Float(Parse((co_await origin.Fetch("GET", {"https", "api.kraken.com", "443", "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString());
 }
@@ -351,13 +329,7 @@ int Main(int argc, const char *const argv[]) {
         co_return co_await Kraken(*origin);
     }, "Kraken")));
 
-    const auto uniswap(Wait(Update(60*1000, [endpoint]() -> task<Fiat> {
-        const auto block(co_await endpoint.Header("latest"));
-        const auto [usdc_weth, oxt_weth] = *co_await Parallel(
-            Rate(endpoint, block, "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc"),
-            Rate(endpoint, block, "0x9b533f1ceaa5ceb7e5b8994ef16499e47a66312d"));
-        co_return Fiat{Ten12 * usdc_weth / Ten18, Ten12 * usdc_weth / oxt_weth / Ten18};
-    }, "Uniswap")));
+    const auto uniswap(Wait(UniswapFiat(60*1000, endpoint)));
 
     // XXX: these are duplicated inside of Network (pass them in)
     const auto chainlink(Wait(ChainlinkFiat(60*1000, endpoint)));
