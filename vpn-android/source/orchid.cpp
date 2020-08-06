@@ -45,12 +45,12 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
 
     asio::io_context executor;
     auto work(asio::make_work_guard(executor));
+    executor_ = &executor;
 
     capture->Start(config);
     inverted.Open();
     capture_ = std::move(capture);
 
-    executor_ = &executor;
     executor_->run();
 
     // XXX: this does asynchronous Shut on Capture, which might be wrong
