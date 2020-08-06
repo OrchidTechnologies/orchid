@@ -38,6 +38,7 @@ class Boring :
     public Sunken<Pump<Buffer>>
 {
   private:
+    const S<Origin> origin_;
     uint32_t local_;
     uint32_t remote_;
 
@@ -54,7 +55,7 @@ class Boring :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Boring(BufferDrain &drain, uint32_t local, const Host &remote, const std::string &secret, const std::string &common);
+    Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, const Host &remote, const std::string &secret, const std::string &common);
     ~Boring() override;
 
     void Open();

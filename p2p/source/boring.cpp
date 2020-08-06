@@ -80,8 +80,9 @@ void Boring::Stop(const std::string &error) noexcept {
     return Link::Stop(error);
 }
 
-Boring::Boring(BufferDrain &drain, uint32_t local, const Host &remote, const std::string &secret, const std::string &common) :
+Boring::Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, const Host &remote, const std::string &secret, const std::string &common) :
     Link(drain),
+    origin_(origin),
     local_(local),
     remote_(remote),
     wireguard_(new_tunnel(secret.c_str(), common.c_str(), [](const char *message) {
@@ -183,7 +184,7 @@ task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string
         orc_assert_(false, "no IPv4/32 in Interface.Address");
     }());
 
-    auto &boring(sunk.Wire<BufferSink<Boring>>(local, address, tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
+    auto &boring(sunk.Wire<BufferSink<Boring>>(origin, local, address, tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
     co_await origin->Associate(boring, Socket(tree.get<std::string>("Peer.Endpoint")));
     boring.Open();
 }
