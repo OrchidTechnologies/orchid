@@ -94,11 +94,7 @@ class Host {
     Host(const std::string &host) :
         Host([&]() {
             rtc::IPAddress address;
-            // XXX: this isn't correct for IPv6
-            orc_assert_(IPFromString(
-                boost::algorithm::ends_with(host, "/32") ?
-                    host.substr(0, host.size() - 3) :
-            host, &address), host << " is not a Host");
+            orc_assert_(IPFromString(host, &address), host << " is not a Host");
             return address;
         }())
     {

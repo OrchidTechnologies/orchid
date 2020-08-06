@@ -22,6 +22,7 @@
 
 #include <cstdlib>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
 extern "C" {
@@ -164,7 +165,25 @@ task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string
         boost::property_tree::ini_parser::read_ini(data, tree);
     }
 
-    auto &boring(sunk.Wire<BufferSink<Boring>>(local, tree.get<std::string>("Interface.Address"), tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
+    const auto address([&]() {
+        std::vector<std::string> addresses;
+        boost::split(addresses, tree.get<std::string>("Interface.Address"), boost::is_any_of(","));
+        for (const auto &address : addresses) {
+            const auto slash(address.find('/'));
+            orc_assert(slash != std::string::npos);
+            Host host(address.substr(0, slash));
+            if (!host.v4())
+                continue;
+            const auto bits(To(address.substr(slash + 1)));
+            // XXX: you are allowed to pass a subset
+            if (bits != 32)
+                continue;
+            return host;
+        }
+        orc_assert_(false, "no IPv4/32 in Interface.Address");
+    }());
+
+    auto &boring(sunk.Wire<BufferSink<Boring>>(local, address, tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
     co_await origin->Associate(boring, Socket(tree.get<std::string>("Peer.Endpoint")));
     boring.Open();
 }
