@@ -405,7 +405,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
                 {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
                 {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
-                {"0xc654a58330b8659399067c309Be93659FbaCbEA6", "Orchid"},
+                //{"0xc654a58330b8659399067c309Be93659FbaCbEA6", "Orchid"},
                 //{"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
                 {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
