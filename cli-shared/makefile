@@ -61,7 +61,7 @@ cflags += -DORC_FIBER
 
 include env/output.mk
 
-$(output)/%/orchid: $(patsubst %,$(output)/$$*/%,$(object) $(linked))
+$(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@echo [LD] $@
 	@set -o pipefail; $(cxx) $(more/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 | nl
 	@openssl sha256 -r $@
