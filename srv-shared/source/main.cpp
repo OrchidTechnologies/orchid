@@ -24,6 +24,10 @@
 #include <iostream>
 #include <regex>
 
+#ifdef __linux__
+#include <ifaddrs.h>
+#endif
+
 #include <unistd.h>
 
 #include <boost/program_options/parsers.hpp>
@@ -56,8 +60,10 @@
 #include "scope.hpp"
 #include "server.hpp"
 #include "store.hpp"
+#include "syscall.hpp"
 #include "task.hpp"
 #include "transport.hpp"
+#include "tunnel.hpp"
 #include "utility.hpp"
 #include "version.hpp"
 
@@ -117,6 +123,9 @@ int Main(int argc, const char *const argv[]) {
 
     { po::options_description group("packet egress");
     group.add_options()
+#ifdef __linux__
+        ("tunnel", po::value<std::string>(), "/dev/net/tun interface (Linux-only)")
+#endif
         ("openvpn", po::value<std::string>(), "OpenVPN .ovpn configuration file")
         ("wireguard", po::value<std::string>(), "WireGuard .conf configuration file")
     ; options.add(group); }
@@ -286,6 +295,28 @@ int Main(int argc, const char *const argv[]) {
     auto market(Make<Market>(5*60*1000, origin, Wait(CoinbaseFiat(5*60*1000, origin, args["currency"].as<std::string>()))));
 
     auto egress([&]() { if (false) {
+#ifdef __linux__
+    } else if (args.count("tunnel") != 0) {
+        const auto tunnel(args["tunnel"].as<std::string>());
+
+        ifaddrs *addresses;
+        orc_syscall(getifaddrs(&addresses));
+        _scope({ freeifaddrs(addresses); });
+
+        const auto local([&]() -> Socket {
+            for (const auto *address(addresses); address != nullptr; address = address->ifa_next)
+                if (address->ifa_name == tunnel && address->ifa_addr != nullptr) {
+                    orc_assert_((address->ifa_flags & IFF_POINTOPOINT) != 0, "tunnel must be point-to-point");
+                    orc_assert_(address->ifa_dstaddr != nullptr, "tunnel must have destination");
+                    return *address->ifa_dstaddr;
+                }
+            orc_assert_(false, "cannot find interface " << tunnel);
+        }());
+
+        auto egress(Break<BufferSink<Egress>>(local.Host()));
+        Tunnel(*egress, tunnel, [&](const std::string &, const std::string &) {});
+        return egress;
+#endif
     } else if (args.count("openvpn") != 0) {
         const auto file(Load(args["openvpn"].as<std::string>()));
         auto egress(Break<BufferSink<Egress>>(0));

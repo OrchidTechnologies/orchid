@@ -212,6 +212,28 @@ class Socket {
     {
     }
 
+    Socket(const sockaddr_in6 &socket) :
+        Socket(socket.sin6_addr, boost::endian::big_to_native(socket.sin6_port))
+    {
+    }
+
+    Socket(const sockaddr_in &socket) :
+        Socket(socket.sin_addr, boost::endian::big_to_native(socket.sin_port))
+    {
+    }
+
+    Socket(const sockaddr &socket) :
+        Socket([&]() -> Socket { switch (socket.sa_family) {
+            case AF_INET6:
+                return reinterpret_cast<const sockaddr_in6 &>(socket);
+            case AF_INET:
+                return reinterpret_cast<const sockaddr_in &>(socket);
+            default:
+                orc_assert_(false, "unsupported address family #" << socket.sa_family);
+        } }())
+    {
+    }
+
     Socket(const std::string &socket) :
         Socket([&]() {
             rtc::SocketAddress address;

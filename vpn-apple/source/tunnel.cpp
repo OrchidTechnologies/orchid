@@ -24,6 +24,7 @@
 #include <sys/kern_control.h>
 #include <net/if_utun.h>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/generic/datagram_protocol.hpp>
 
 #include "family.hpp"
@@ -33,9 +34,9 @@
 
 namespace orc {
 
-void Tunnel(BufferSunk &sunk, const std::function<void (const std::string &, const std::string &)> &code) {
+void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &, const std::string &)> &code) {
     auto &family(sunk.Wire<BufferSink<Family>>());
-    auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+    auto &sync(family.Wire<SyncConnection<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
     auto file(sync->native_handle());
 
     ctl_info info;
@@ -50,10 +51,16 @@ void Tunnel(BufferSunk &sunk, const std::function<void (const std::string &, con
     address.sc_len = sizeof(address);
     address.sc_family = AF_SYSTEM;
     address.ss_sysaddr = AF_SYS_CONTROL;
-    address.sc_unit = 0;
 
-    do ++address.sc_unit;
-    while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
+    if (!device.empty()) {
+        orc_assert(boost::algorithm::starts_with(device, "utun"));
+        address.sc_unit = To(device.substr(4));
+        orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)));
+    } else {
+        address.sc_unit = 0;
+        do ++address.sc_unit;
+        while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
+    }
 
     code("utun" + std::to_string(address.sc_unit - 1), "-interface");
     sync.Open();
