@@ -33,6 +33,7 @@ extern "C" {
 #include "forge.hpp"
 #include "origin.hpp"
 #include "sleep.hpp"
+#include "trace.hpp"
 
 namespace orc {
 

@@ -47,6 +47,7 @@
 #include "retry.hpp"
 #include "remote.hpp"
 #include "syscall.hpp"
+#include "trace.hpp"
 #include "transport.hpp"
 
 namespace orc {

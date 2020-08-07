@@ -20,8 +20,6 @@
 /* }}} */
 
 
-#ifdef ORC_TRACE
-
 #include <mutex>
 
 #include <openvpn/ip/ip4.hpp>
@@ -30,6 +28,8 @@
 #include "socket.hpp"
 #include "time.hpp"
 #include "trace.hpp"
+
+#ifdef ORC_TRACE
 
 namespace orc {
 
