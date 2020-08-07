@@ -9,6 +9,11 @@ import web3.exceptions
 import time
 import datetime
 import requests
+import math
+import argparse
+
+
+GasPrice = '60'
 
 
 token_abi = [{"inputs": [], "payable": False, "stateMutability": "nonpayable", "type": "constructor"}, {"anonymous": False, "inputs": [{"indexed": True, "internalType": "address", "name": "owner", "type": "address"}, {"indexed": True, "internalType": "address", "name": "spender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"} ], "name": "Approval", "type": "event"}, {"anonymous": False, "inputs": [{"indexed": True, "internalType": "address", "name": "from", "type": "address"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"} ], "name": "Transfer", "type": "event"}, {"constant": True, "inputs": [{"internalType": "address", "name": "owner", "type": "address"}, {"internalType": "address", "name": "spender", "type": "address"} ], "name": "allowance", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"} ], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"} ], "name": "approve", "outputs": [{"internalType": "bool", "name": "", "type": "bool"} ], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [{"internalType": "address", "name": "account", "type": "address"} ], "name": "balanceOf", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"} ], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": True, "inputs": [], "name": "decimals", "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"} ], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "subtractedValue", "type": "uint256"} ], "name": "decreaseAllowance", "outputs": [{"internalType": "bool", "name": "", "type": "bool"} ], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "addedValue", "type": "uint256"} ], "name": "increaseAllowance", "outputs": [{"internalType": "bool", "name": "", "type": "bool"} ], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": True, "inputs": [], "name": "name", "outputs": [{"internalType": "string", "name": "", "type": "string"} ], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": True, "inputs": [], "name": "symbol", "outputs": [{"internalType": "string", "name": "", "type": "string"} ], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": True, "inputs": [], "name": "totalSupply", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"} ], "payable": False, "stateMutability": "view", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "recipient", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"} ], "name": "transfer", "outputs": [{"internalType": "bool", "name": "", "type": "bool"} ], "payable": False, "stateMutability": "nonpayable", "type": "function"}, {"constant": False, "inputs": [{"internalType": "address", "name": "sender", "type": "address"}, {"internalType": "address", "name": "recipient", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"} ], "name": "transferFrom", "outputs": [{"internalType": "bool", "name": "", "type": "bool"} ], "payable": False, "stateMutability": "nonpayable", "type": "function"} ];
@@ -38,82 +43,104 @@ def update(rec, idx, beg, end, amt, amt_sent, funder_pubkey, funder_privkey, non
     #function update(address rec, uint idx, uint beg, uint end, uint128 amt) public {
 
 	txn = distributor_main.functions.update(rec, idx, beg, end, w3.toWei(amt, 'ether'), w3.toWei(amt_sent, 'ether')
-		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 250000, 'gasPrice': w3.toWei('8', 'gwei'), 'nonce':nonce, }
+		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': 250000, 'gasPrice': w3.toWei(GasPrice, 'gwei'), 'nonce':nonce, }
 	)
 
-	print(f"Funder signed transaction:");
+	print("Funder signed transaction:");
 	txn_signed = w3.eth.account.sign_transaction(txn, private_key=funder_privkey)
 	print(txn_signed);
 
-	print(f"Submitting transaction:");
+	print("Submitting transaction:");
 	txn_hash = w3.eth.sendRawTransaction(txn_signed.rawTransaction);
 	print(f"Submitted transaction with hash: {txn_hash.hex()}");
 
 
 def distribute_partial(N, funder_pubkey, funder_privkey, nonce):
 
+	print(f"distribute_partial({N},{funder_pubkey},{funder_privkey},{nonce})");
+
 	gas = 32000 + 40000*N;
 	txn = distributor_main.functions.distribute_partial(N
-		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': gas, 'gasPrice': w3.toWei('1', 'gwei'), 'nonce':nonce, }
+		).buildTransaction({'chainId': 1, 'from': funder_pubkey, 'gas': gas, 'gasPrice': w3.toWei(GasPrice, 'gwei'), 'nonce':nonce, }
 	)
 
-	print(f"Funder signed transaction:");
+	print("Funder signed transaction:");
 	txn_signed = w3.eth.account.sign_transaction(txn, private_key=funder_privkey)
 	print(txn_signed);
 
-	print(f"Submitting transaction:");
+	print("Submitting transaction:");
 	txn_hash = w3.eth.sendRawTransaction(txn_signed.rawTransaction);
 	print(f"Submitted transaction with hash: {txn_hash.hex()}");
+	nonce += 1
+
+	return nonce
 
 
 def date(m,d,y):
 	unixtime = int(time.mktime(datetime.date(y,m,d).timetuple()));
 	return unixtime;
 
-
-def add_employee(addr, M,D,Y, amt_owed, amt_sent, k0,k1,n):
+"""
+def add_employee(k0,k1,addr, M,D,Y, amt_owed, amt_sent, n):
 	update(addr, 0, date( M,D,Y+1),  date( M, D,Y+1),  amt_owed, amt_sent, k0,k1,n+0); # cliff 1 year from start date
 	update(addr, 1, date( M,D,Y+0),  date( M, D,Y+4),  amt_owed, amt_sent, k0,k1,n+1); # 4 year vest
 	update(addr, 2, date(12,31,2019),date(12, 5,2020), amt_owed, amt_sent, k0,k1,n+2); # 1 year trade lockup
+"""
 
-def send_list(k0,k1,n):
+def add_employee(a,n):
+	M = a.M
+	D = a.D
+	Y = a.Y
+	k0 = a.FUNDER_PUBKEY
+	k1 = a.FUNDER_PRIVKEY
+	update(a.addr, 0, date( M,D,Y+1),  date(M,D,Y+1),  a.amt_owed, a.amt_sent, k0,k1,n+0); # cliff 1 year from start date
+	update(a.addr, 1, date( M,D,Y+0),  date(M,D,Y+4),  a.amt_owed, a.amt_sent, k0,k1,n+1); # 4 year vest
+	update(a.addr, 2, date(12,31,2019),date(12, 5,2020), a.amt_owed, a.amt_sent, k0,k1,n+2); # 1 year trade lockup
 
-	add_employee('0x7361c5B033dc7209a81e8e60BF5e19DD66270672', 7,11,2018, 3000000, 570000, k0,k1,n); n+=3; # cliff 1 year from start date
+
+def update_send_list(k0,k1,n):
+
+	print("Updating distribution list.");
+
+	add_employee(k0,k1,'0x7361c5B033dc7209a81e8e60BF5e19DD66270672', 7,11,2018, 1000000, 270000, n); n+=3; # cliff 1 year from start date
 
 	return n;
 
 
-def debug_send(k0,k1,n):
+def debug_send(a,n):
+	rec = a.addr
+	k0 = a.FUNDER_PUBKEY
+	k1 = a.FUNDER_PRIVKEY
 
 	#badrec = '0x4a31c1B033dc7209a82e8e60BF5e19DD662705e8';
 	#owed_wei = distributor_main.functions.calculate(badrec, date(3,5,2020) ).call(); owed = w3.fromWei(owed_wei, 'ether');
 	#print(f"total to {badrec} at 3/5/2020 : {owed}");
 
 
-	rec = '0x7361c5B033dc7209a81e8e60BF5e19DD66270672';
+	#rec = '0x7361c5B033dc7209a81e8e60BF5e19DD66270672';
 
 	num_funcs = distributor_main.functions.num_limits(rec).call();
 	print(f"{rec} has {num_funcs} funcs");
 
 	if (num_funcs > 0):
 		temp = distributor_main.functions.get_beg(rec,0).call();
-		print(f"get_beg({rec},0): {temp} ");
+		#print(f"get_beg({rec},0): {temp} ");
 		temp = distributor_main.functions.get_end(rec,0).call();
-		print(f"get_end({rec},0): {temp} ");
+		#print(f"get_end({rec},0): {temp} ");
 		temp = distributor_main.functions.get_amt(rec,0).call();
-		print(f"get_amt({rec},0): {temp} ");
+		#print(f"get_amt({rec},0): {temp} ");
 
 
 		temp = distributor_main.functions.get_beg(rec,1).call();
-		print(f"get_beg({rec},1): {temp} ");
+		#print(f"get_beg({rec},1): {temp} ");
 		temp = distributor_main.functions.get_end(rec,1).call();
-		print(f"get_end({rec},1): {temp} ");
+		#print(f"get_end({rec},1): {temp} ");
 		temp = distributor_main.functions.get_amt(rec,1).call();
-		print(f"get_amt({rec},1): {temp} ");
+		#print(f"get_amt({rec},1): {temp} ");
 
 
 		owed_wei = distributor_main.functions.calculate_at(rec, date(3,5,2020), 0).call(); owed = w3.fromWei(owed_wei, 'ether');
-		print(f"calculate_at( {rec}, 3/5/2020, 0) : {owed}");
+		print(f"calculate_at( {rec}, 3/5/2020, 0) : {owed}");ValueError: {'code': -32000, 'message': 'transaction underpriced'}
 		owed_wei = distributor_main.functions.calculate_at(rec, date(3,5,2020), 1).call(); owed = w3.fromWei(owed_wei, 'ether');
 		print(f"calculate_at( {rec}, 3/5/2020, 1) : {owed}");
 		owed_wei = distributor_main.functions.calculate_at(rec, date(3,5,2020), 2).call(); owed = w3.fromWei(owed_wei, 'ether');
@@ -142,6 +169,8 @@ def debug_send(k0,k1,n):
 	unixtime = date(3,27,2020)
 	print(f"3/27/2020: {unixtime}");
 
+	return n;
+
 
 def send(funder_pubkey, funder_privkey, N):
 
@@ -155,15 +184,54 @@ def send(funder_pubkey, funder_privkey, N):
 	k1 = funder_privkey;
 	n  = nonce;
 
-	print("Updating distribution list.");
-	#n = send_list(k0,k1,n);
+	#n = update_send_list(k0,k1,n);
+	n = debug_send(k0,k1,n);
 
-	print(f"Sending {N}.");
-	for i in range(int(N/8)):
+	print(f"Sending {N}: ");
+	for i in range(int(math.ceil(N/8.0))):
 		print(".");
-		distribute_partial(8,k0,k1,n);
-		n+=1;
+		n = distribute_partial(8,k0,k1,n);
 
+
+def main():
+	print(".")
+	parser = argparse.ArgumentParser(description='Distribute some OXT.')
+	parser.add_argument('FUNDER_PUBKEY',  help='funder publickey')
+	parser.add_argument('FUNDER_PRIVKEY', help='funder privkey')
+
+
+	subparsers = parser.add_subparsers(help='sub-command help')
+
+	#def add_employee(k0,k1,addr, M,D,Y, amt_owed, amt_sent, n):
+	parser_add_employee = subparsers.add_parser('add_employee', help='add employee')
+	parser_add_employee.add_argument('addr', 	help='address')
+	parser_add_employee.add_argument('M', 	type=int, help='month')
+	parser_add_employee.add_argument('D', 	type=int, help='day')
+	parser_add_employee.add_argument('Y', 	type=int, help='year')
+	parser_add_employee.add_argument('amt_owed', help='amt_owed')
+	parser_add_employee.add_argument('amt_sent', help='amt_sent')
+	parser_add_employee.set_defaults(func=add_employee)
+
+	distribute 			= subparsers.add_parser('distribute', help='distribute')
+
+	parser_debug_send = subparsers.add_parser('debug_send', help='debug_send')
+	parser_debug_send.add_argument('addr', 	help='address')
+	parser_debug_send.set_defaults(func=debug_send)
+
+	#parser.add_argument('COMMAND',  	  nargs=1,help='command to run')
+	args = parser.parse_args()
+
+	funder_pubkey = args.FUNDER_PUBKEY;
+	funder_pubkey2 = '0x25A20D9bd3e69a4c20E636F2679F2a19f595dA25';
+	print(f"pubkey: {funder_pubkey}  {funder_pubkey2}")
+	nonce = w3.eth.getTransactionCount(funder_pubkey);
+
+	args.func(args, nonce)
+	#sys.exit(args.func(args) or 0)
+
+    #sys.exit(args.func(args))
+
+"""
 
 def main():
 
@@ -176,6 +244,7 @@ def main():
 	else :
 		print("usage: distribute.py FUNDER_PUBKEY FUNDER_PRIVKEY N");
 
+"""
 
 if __name__ == "__main__":
     main()
