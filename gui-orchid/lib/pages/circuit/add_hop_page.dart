@@ -44,8 +44,7 @@ class _AddHopPageState extends State<AddHopPage> {
 
   void initStateAsync() async {
     _showPACs = (await OrchidPurchaseAPI().apiConfig()).enabled;
-    _showWireGuard = (await OrchidVPNConfig.getUserConfigJS())
-        .evalBoolDefault('wireguard', false);
+    _showWireGuard = true;
     setState(() {});
   }
 
