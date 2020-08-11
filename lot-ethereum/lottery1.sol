@@ -25,21 +25,12 @@ pragma solidity 0.7.0;
 
 import "./include.sol";
 
-interface IERC20 {
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-}
-
 contract OrchidLottery1 {
 
-    IERC20 internal token_;
-
-    constructor(IERC20 token) {
-        token_ = token;
-    }
-
-    function what() external view returns (IERC20) {
-        return token_;
+    function safe(uint256 value) internal pure returns (uint128) {
+        uint128 result = uint128(value);
+        require(uint256(result) == value);
+        return result;
     }
 
 
@@ -89,31 +80,21 @@ contract OrchidLottery1 {
     }
 
 
-    function push(address signer, uint128 total, uint128 escrow) external {
+    function push(address signer, uint128 transfer, uint128 inject, uint128 destroy) external payable {
         address funder = msg.sender;
-        require(total >= escrow);
         Pot storage pot = find(funder, signer);
-        pot.amount_ += total - escrow;
-        pot.escrow_ += escrow;
-        send(funder, signer, pot);
-        require(token_.transferFrom(funder, address(this), total));
-    }
 
-    function move(address signer, uint128 amount) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
-        require(pot.amount_ >= amount);
-        pot.amount_ -= amount;
-        pot.escrow_ += amount;
-        send(funder, signer, pot);
-    }
+        uint256 amount = pot.amount_;
+        uint256 escrow = pot.escrow_;
 
-    function burn(address signer, uint128 escrow) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
-        if (escrow > pot.escrow_)
-            escrow = pot.escrow_;
-        pot.escrow_ -= escrow;
+        require(transfer <= amount);
+        require(inject <= msg.value);
+        require(destroy <= escrow);
+
+        uint128 temp = safe(escrow - destroy + transfer + inject);
+        pot.amount_ = safe(amount - transfer + msg.value - inject);
+        pot.escrow_ = temp;
+
         send(funder, signer, pot);
     }
 
@@ -167,7 +148,7 @@ contract OrchidLottery1 {
         }
 
         if (amount != 0)
-            require(token_.transfer(recipient, amount));
+            require(recipient.send(amount));
 
         if (verify != OrchidVerifier(0)) {
             bytes32 current; assembly { current := extcodehash(verify) }
@@ -261,7 +242,7 @@ contract OrchidLottery1 {
             pot.unlock_ = 0;
         send(funder, signer, pot);
         if (total != 0)
-            require(token_.transfer(target, total));
+            require(target.send(total));
     }
 
     function yank(address signer, address payable target, bool autolock) external {
@@ -275,6 +256,6 @@ contract OrchidLottery1 {
         if (autolock)
             pot.unlock_ = 0;
         send(funder, signer, pot);
-        require(token_.transfer(target, total));
+        require(target.send(total));
     }
 }
