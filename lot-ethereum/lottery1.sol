@@ -234,18 +234,4 @@ contract OrchidLottery1 {
         if (total != 0)
             require(target.send(total));
     }
-
-    function yank(address signer, address payable target, bool autolock) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
-        if (pot.escrow_ != 0)
-            require(pot.unlock_ - 1 < block.timestamp);
-        uint128 total = pot.amount_ + pot.escrow_;
-        pot.amount_ = 0;
-        pot.escrow_ = 0;
-        if (autolock)
-            pot.unlock_ = 0;
-        emit Update(funder, signer);
-        require(target.send(total));
-    }
 }
