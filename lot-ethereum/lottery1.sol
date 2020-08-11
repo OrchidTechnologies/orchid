@@ -43,8 +43,6 @@ contract OrchidLottery1 {
 
 
     struct Pot {
-        uint256 offset_;
-
         uint128 amount_;
         uint128 escrow_;
 
@@ -63,7 +61,6 @@ contract OrchidLottery1 {
 
 
     struct Lottery {
-        address[] keys_;
         mapping(address => Pot) pots_;
     }
 
@@ -78,39 +75,10 @@ contract OrchidLottery1 {
         address funder = msg.sender;
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
-        require(pot.offset_ != 0);
         if (pot.verify_ != OrchidVerifier(0))
             emit Bound(funder, signer);
-        address key = lottery.keys_[lottery.keys_.length - 1];
-        lottery.pots_[key].offset_ = pot.offset_;
-        lottery.keys_[pot.offset_ - 1] = key;
-        --lottery.keys_.length;
         delete lottery.pots_[signer];
         send(funder, signer, pot);
-    }
-
-
-    function size(address funder) external view returns (uint256) {
-        return lotteries_[funder].keys_.length;
-    }
-
-    function keys(address funder) external view returns (address[] memory) {
-        return lotteries_[funder].keys_;
-    }
-
-    function seek(address funder, uint256 offset) external view returns (address) {
-        return lotteries_[funder].keys_[offset];
-    }
-
-    function page(address funder, uint256 offset, uint256 count) external view returns (address[] memory) {
-        address[] storage all = lotteries_[funder].keys_;
-        require(offset <= all.length);
-        if (count > all.length - offset)
-            count = all.length - offset;
-        address[] memory slice = new address[](count);
-        for (uint256 i = 0; i != count; ++i)
-            slice[i] = all[offset + i];
-        return slice;
     }
 
 
@@ -120,16 +88,10 @@ contract OrchidLottery1 {
     }
 
 
-    event Create(address indexed funder, address indexed signer);
-
     function push(address signer, uint128 total, uint128 escrow) external {
         address funder = msg.sender;
         require(total >= escrow);
         Pot storage pot = find(funder, signer);
-        if (pot.offset_ == 0) {
-            pot.offset_ = lotteries_[funder].keys_.push(signer);
-            emit Create(funder, signer);
-        }
         pot.amount_ += total - escrow;
         pot.escrow_ += escrow;
         send(funder, signer, pot);
