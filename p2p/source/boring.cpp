@@ -107,7 +107,9 @@ void Boring::Open() {
                     break;
 
                 case WRITE_TO_NETWORK:
-                    co_await Inner().Send(output.subset(0, result.size));
+                    nest_.Hatch([&]() noexcept { return [this, data = std::move(output), size = result.size]() -> task<void> {
+                        co_await Inner().Send(data.subset(0, size));
+                    }; }, __FUNCTION__);
                     break;
 
                 case WIREGUARD_ERROR:
