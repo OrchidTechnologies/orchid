@@ -3,6 +3,7 @@
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
 /*
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +21,7 @@
 /* }}} */
 
 
-pragma solidity 0.5.13;
+pragma solidity 0.7.0;
 
 import "./include.sol";
 
@@ -33,7 +34,7 @@ contract OrchidLottery1 {
 
     IERC20 internal token_;
 
-    constructor(IERC20 token) public {
+    constructor(IERC20 token) {
         token_ = token;
     }
 
