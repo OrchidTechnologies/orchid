@@ -119,7 +119,7 @@ contract OrchidLottery1 {
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
 
-    function take(address funder, address signer, address payable recipient, uint128 amount, bytes memory receipt) private {
+    function take(address funder, address signer, address payable recipient, uint128 amount, bytes calldata receipt) private {
         Pot storage pot = find(funder, signer);
 
         uint128 cache = pot.amount_;
@@ -154,15 +154,14 @@ contract OrchidLottery1 {
     }
 
     // the arguments to this function are carefully ordered for stack depth optimization
-    // this function was marked public, instead of external, for lower stack depth usage
     function grab(
         bytes32 reveal, uint256 issued, bytes32 nonce,
         uint8 v, bytes32 r, bytes32 s,
         uint128 amount, uint128 ratio,
         uint256 start, uint128 range,
         address funder, address payable recipient,
-        bytes memory receipt, bytes32[] memory old
-    ) public {
+        bytes calldata receipt, bytes32[] memory old
+    ) external {
         require(uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))) <= ratio);
 
         // this variable is being reused because I do not have even one extra stack slot
