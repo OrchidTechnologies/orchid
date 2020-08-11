@@ -29,7 +29,7 @@ interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
-contract OrchidLottery0 {
+contract OrchidLottery1 {
 
     IERC20 internal token_;
 
