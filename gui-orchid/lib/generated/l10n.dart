@@ -2366,6 +2366,26 @@ class S {
       args: [],
     );
   }
+
+  /// `Enter OpenVPN Config`
+  String get enterOpenvpnConfig {
+    return Intl.message(
+      'Enter OpenVPN Config',
+      name: 'enterOpenvpnConfig',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter WireGuard Config`
+  String get enterWireguardConfig {
+    return Intl.message(
+      'Enter WireGuard Config',
+      name: 'enterWireguardConfig',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

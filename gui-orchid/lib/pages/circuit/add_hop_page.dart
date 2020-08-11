@@ -126,21 +126,21 @@ class _AddHopPageState extends State<AddHopPage> {
                     // OVPN Subscription
                     _divider(),
                     _buildHopChoice(
-                        text: s.enterOvpnProfile,
+                        text: s.enterOpenvpnConfig,
                         onTap: () {
                           _addHopType(HopProtocol.OpenVPN);
                         },
-                        imageName: 'assets/images/security_purple.png'),
+                        svgName: 'assets/svg/openvpn.svg'),
 
                     // WireGuard
                     if (_showWireGuard) ...[
                       _divider(),
                       _buildHopChoice(
-                          text: s.enterWireguardProfile,
+                          text: s.enterWireguardConfig,
                           onTap: () {
                             _addHopType(HopProtocol.WireGuard);
                           },
-                          imageName: 'assets/images/security_purple.png'),
+                          svgName: 'assets/svg/wireguard.svg'),
                     ],
 
                     _divider(),
