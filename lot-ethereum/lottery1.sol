@@ -45,11 +45,7 @@ contract OrchidLottery1 {
         bytes shared_;
     }
 
-    event Update(address indexed funder, address indexed signer, uint128 amount, uint128 escrow, uint256 unlock);
-
-    function send(address funder, address signer, Pot storage pot) private {
-        emit Update(funder, signer, pot.amount_, pot.escrow_, pot.unlock_);
-    }
+    event Update(address indexed funder, address indexed signer);
 
 
     struct Lottery {
@@ -70,7 +66,7 @@ contract OrchidLottery1 {
         if (pot.verify_ != OrchidVerifier(0))
             emit Bound(funder, signer);
         delete lottery.pots_[signer];
-        send(funder, signer, pot);
+        emit Update(funder, signer);
     }
 
 
@@ -95,7 +91,7 @@ contract OrchidLottery1 {
         pot.amount_ = safe(amount - transfer + msg.value - inject);
         pot.escrow_ = temp;
 
-        send(funder, signer, pot);
+        emit Update(funder, signer);
     }
 
     event Bound(address indexed funder, address indexed signer);
@@ -131,12 +127,12 @@ contract OrchidLottery1 {
         if (cache >= amount) {
             cache -= amount;
             pot.amount_ = cache;
-            emit Update(funder, signer, cache, pot.escrow_, pot.unlock_);
+            emit Update(funder, signer);
         } else {
             amount = cache;
             pot.amount_ = 0;
             pot.escrow_ = 0;
-            emit Update(funder, signer, 0, 0, pot.unlock_);
+            emit Update(funder, signer);
         }
 
         OrchidVerifier verify = pot.verify_;
@@ -216,14 +212,14 @@ contract OrchidLottery1 {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         pot.unlock_ = block.timestamp + 1 days;
-        send(funder, signer, pot);
+        emit Update(funder, signer);
     }
 
     function lock(address signer) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         pot.unlock_ = 0;
-        send(funder, signer, pot);
+        emit Update(funder, signer);
     }
 
     function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external {
@@ -240,7 +236,7 @@ contract OrchidLottery1 {
         pot.escrow_ -= escrow;
         if (autolock && pot.escrow_ == 0)
             pot.unlock_ = 0;
-        send(funder, signer, pot);
+        emit Update(funder, signer);
         if (total != 0)
             require(target.send(total));
     }
@@ -255,7 +251,7 @@ contract OrchidLottery1 {
         pot.escrow_ = 0;
         if (autolock)
             pot.unlock_ = 0;
-        send(funder, signer, pot);
+        emit Update(funder, signer);
         require(target.send(total));
     }
 }
