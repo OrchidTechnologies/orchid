@@ -38,7 +38,8 @@ contract OrchidLottery1 {
         uint128 amount_;
         uint128 escrow_;
 
-        uint256 unlock_;
+        uint128 warned_;
+        uint128 unlock_;
 
         OrchidVerifier verify_;
         bytes32 codehash_;
@@ -70,9 +71,9 @@ contract OrchidLottery1 {
     }
 
 
-    function look(address funder, address signer) external view returns (uint128, uint128, uint256, OrchidVerifier, bytes32, bytes memory) {
+    function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, OrchidVerifier, bytes32, bytes memory) {
         Pot storage pot = lotteries_[funder].pots_[signer];
-        return (pot.amount_, pot.escrow_, pot.unlock_, pot.verify_, pot.codehash_, pot.shared_);
+        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.verify_, pot.codehash_, pot.shared_);
     }
 
 
@@ -202,16 +203,18 @@ contract OrchidLottery1 {
     }
 
 
-    function warn(address signer) external {
+    function warn(address signer, uint128 warned) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
-        pot.unlock_ = block.timestamp + 1 days;
+        pot.warned_ = warned;
+        pot.unlock_ = safe(block.timestamp + 1 days);
         emit Update(funder, signer);
     }
 
     function lock(address signer) external {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
+        pot.warned_ = 0;
         pot.unlock_ = 0;
         emit Update(funder, signer);
     }
@@ -223,13 +226,21 @@ contract OrchidLottery1 {
             amount = pot.amount_;
         if (escrow > pot.escrow_)
             escrow = pot.escrow_;
-        if (escrow != 0)
-            require(pot.unlock_ - 1 < block.timestamp);
+
+        if (escrow != 0) {
+            require(pot.warned_ >= escrow);
+            require(uint256(pot.unlock_) - 1 < block.timestamp);
+        }
+
         uint128 total = amount + escrow;
         pot.amount_ -= amount;
         pot.escrow_ -= escrow;
-        if (autolock && pot.escrow_ == 0)
+
+        if (autolock && pot.escrow_ == 0) {
+            pot.warned_ = 0;
             pot.unlock_ = 0;
+        }
+
         emit Update(funder, signer);
         if (total != 0)
             require(target.send(total));
