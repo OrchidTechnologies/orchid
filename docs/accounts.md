@@ -14,9 +14,9 @@ The OXT held in the Orchid account has a balance and deposit component. The bala
 
 The deposit is required to accept service and is verified by providers. The deposit prevents double spending and in general, the deposit maintains good standing on the network.
 
-The size of the deposit determines the face value of the nanopayments. The face value refers to the amount of OXT that a provider claims when they receive a winning off-chain nanopayment. Currently the face value is set to half the deposit. For our recommendation of 15 OXT, that gives a face value of 7.5 OXT, which is enough value for VPN providers to claim given estimated gas fees on Ethereum. Providers need to receive nanopayments with a high enough face value to provide service, given current market conditions.
+The size of the deposit determines the face value of the nanopayments. The face value refers to the amount of OXT that a provider claims when they receive a winning off-chain nanopayment. Currently the face value is set to half the deposit. Providers need to receive nanopayments with a high enough face value to provide service, given current market conditions.
 
-Our recommendation for VPN service on Orchid is at least 15 OXT for the deposit. This is based on our current estimations of historical Ethereum gas costs and the current price of OXT.
+Our recommendation for VPN service on Orchid is given in the DApp at the time of creation to include current market conditions.
 
 ## Deposit size too small
 
@@ -26,9 +26,10 @@ If you have received a message in the Orchid app that the deposit is too small, 
 
 - Open the Ethereum wallet you used to create the Orchid account (i.e. load Metamask or Trust Wallet)
 - Load [account.orchid.com](https://account.orchid.com). You should see your funded account.
+- Click on "Info" in the upper right, scroll to the bottom and find the "Market Stats" section for current minimums and recommendations
 - Click on "More" in the upper right, then select "Move Funds"
-- Ensure that your current deposit is at least 15 OXT
-- If you need more OXT, click on the "Add" button to add funds from your Ethereum wallet
+- Ensure that your current deposit at the recommendation
+- If you need more OXT in the balance as well as the deposit, click on the "Add" button to add funds from your Ethereum wallet
 
 Market conditions are driven by the price of OXT and the [current gas cost](https://ethgasstation.info) on Ethereum. Please [contact us](https://www.orchid.com/contact) for support if you received the "deposit size too small" message and are having difficulty.
 
