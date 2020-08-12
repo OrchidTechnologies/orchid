@@ -49,7 +49,7 @@ webrtc += $(pwd)/webrtc/api/video/video_timing.cc
 
 webrtc += $(pwd)/webrtc/api/video_codecs/sdp_video_format.cc
 
-webrtc += $(pwd)/webrtc/call/call_config.cc 
+webrtc += $(pwd)/webrtc/call/call_config.cc
 webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
 
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_transport_state.cc
@@ -128,7 +128,8 @@ cflags/$(pwd/libsrtp)/ += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
 cflags/$(pwd)/webrtc/pc/srtp_session.cc += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
-webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c)
+webrtc += $(filter-out %/sctp_cc_functions.c,$(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c))
+source += $(pwd)/congestion.cc
 cflags += -I$(pwd)/usrsctp
 cflags += -I$(pwd)/usrsctp/usrsctplib
 cflags += -I$(pwd)/sctp-idata/src
@@ -176,17 +177,16 @@ webrtc := $(foreach v,$(webrtc),$(if $(findstring /virtual_,$(v)),,$(v)))
 source += $(webrtc)
 
 
+# this is for libsrtp
 cflags += -DOPENSSL
-
-cflags += -DSCTP_SIMPLE_ALLOCATOR
-cflags += -D__FreeBSD_version=0
+# this is for libwebrtc
+cflags += -DHAVE_SCTP
 
 cflags += -DABSL_ALLOCATOR_NOTHROW=0
+cflags += -DDCHECK_ALWAYS_ON
 cflags += -DWEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0
 
 cflags += -DWEBRTC_OPUS_SUPPORT_120MS_PTIME=0
-
-cflags += -DHAVE_SCTP
 
 cflags += -DHAVE_STDINT_H
 cflags += -DHAVE_STDLIB_H
@@ -206,10 +206,11 @@ cflags += -Wno-inconsistent-missing-override
 cflags += -Wno-unused-function
 
 cflags += -D__Userspace__
-cflags += -DSCTP_USE_OPENSSL_SHA1
-cflags += -DSCTP_SIMPLE_ALLOCATOR
+cflags += -DSCTP_DEBUG
 cflags += -DSCTP_PROCESS_LEVEL_LOCKS
-
+cflags += -DSCTP_SIMPLE_ALLOCATOR
+cflags += -DSCTP_STDINT_INCLUDE='<stdint.h>'
+cflags += -DSCTP_USE_OPENSSL_SHA1
 
 include $(pwd)/openssl.mk
 

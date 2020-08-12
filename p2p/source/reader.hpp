@@ -25,7 +25,7 @@
 
 #include "buffer.hpp"
 #include "link.hpp"
-#include "task.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 
@@ -48,7 +48,7 @@ class Stream :
 // XXX: the Stream interface doesn't support reading truncated messages correctly
 // we should remove Inverted and provide a better framework for Duplex and UDP :/
 
-class Inverted final :
+class Inverted :
     public Pump<Buffer>
 {
   private:
@@ -84,7 +84,7 @@ class Inverted final :
                 const auto subset(beam.subset(0, writ));
                 Pump::Land(subset);
             }
-        });
+        }, __FUNCTION__);
     }
 
     task<void> Shut() noexcept override {

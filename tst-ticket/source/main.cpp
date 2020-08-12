@@ -30,7 +30,6 @@ namespace orc {
 static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
 static const auto Bound_(Hash("Update(address,address)"));
 
-// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     orc_assert(argc == 2);
     const uint256_t hash(argv[1]);
@@ -43,11 +42,24 @@ int Main(int argc, const char *const argv[]) {
 
         const auto local(Break<Local>());
         Endpoint endpoint(local, {"https", "cloudflare-eth.com", "443", "/"});
-        const auto txn(co_await endpoint("eth_getTransactionByHash", {hash}));
-        orc_assert(Address(txn["to"].asString()) == lottery);
-        const uint256_t number(txn["blockNumber"].asString());
-        std::cout << "number: " << std::dec << number << std::endl;
-        const auto input(Bless(txn["input"].asString()));
+
+        const auto input(co_await [&]() -> task<Beam> {
+#if 0
+            co_return Bless("0x66458bbdd330f03b5966c622edcaa802932935fae4276ff7914479676be56e52773a54da68139e95b80dd8dc0aee4d37e2a9df058f29decc631d6ac6c8b34fc6414f7e91000000000000000000000000000000000000000000000000000000005eeb83d727e30c91220a33fe20d4561e53a2e65611ca002512efa3d9569f929d619263fe000000000000000000000000000000000000000000000000000000000000001b954b3725829049af21c58931aa3236827041c0814f7bcb4c8e4d6eea9d371de17d117839e5f2f45002d21eccfc8be1a58f31e0594385a93b280a85cac55d403500000000000000000000000000000000000000000000000068155a43676e000000000000000000000000000000000000ffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000005eeb9ff7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000091f053f14a814a8229f6473fcbb6f8bc42f43da50000000000000000000000005b2a0ecd5560237ac8418d931a789fcd9fffdc1900000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+#else
+            const auto txn(co_await endpoint("eth_getTransactionByHash", {hash}));
+            orc_assert(Address(txn["to"].asString()) == lottery);
+
+            const uint256_t number(txn["blockNumber"].asString());
+            std::cout << "number: " << std::dec << number << std::endl;
+
+            const auto block(co_await endpoint("eth_getBlockByHash", {txn["blockHash"].asString(), false}));
+            const uint256_t timestamp(block["timestamp"].asString());
+            std::cout << "timestamp: " << timestamp << std::endl;
+
+            co_return Bless(txn["input"].asString());
+#endif
+        }());
 
         static Selector<void,
             Bytes32 /*reveal*/, Bytes32 /*commit*/,
@@ -58,10 +70,6 @@ int Main(int argc, const char *const argv[]) {
             Address /*funder*/, Address /*recipient*/,
             Bytes /*receipt*/, std::vector<Bytes32> /*old*/
         > grab("grab");
-
-        const auto block(co_await endpoint("eth_getBlockByHash", {txn["blockHash"].asString(), false}));
-        const uint256_t timestamp(block["timestamp"].asString());
-        std::cout << "timestamp: " << timestamp << std::endl;
 
         const auto [
             reveal, commit,
@@ -88,7 +96,7 @@ int Main(int argc, const char *const argv[]) {
         using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
         static const auto orchid(Hash("Orchid.grab"));
         const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
-        const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
+        const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
         std::cout << "signer: " << signer << std::endl;
 
         const std::string latest("latest");
@@ -100,7 +108,7 @@ int Main(int argc, const char *const argv[]) {
         std::cout << "codehash: " << codehash << std::endl;
         std::cout << "shared: " << shared << std::endl;
 
-        const auto logs(co_await endpoint("eth_getLogs", {Map{
+        const auto logs(co_await endpoint("eth_getLogs", {Multi{
             {"fromBlock", "0x0"},
             {"toBlock", latest},
             {"address", lottery},

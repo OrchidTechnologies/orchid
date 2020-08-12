@@ -28,6 +28,7 @@
 #include "channel.hpp"
 #include "peer.hpp"
 #include "pirate.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 
@@ -51,8 +52,8 @@ struct Logger :
 } logger_;
 
 
-Peer::Peer(const S<Origin> &origin, Configuration configuration) :
-    origin_(origin),
+Peer::Peer(S<Origin> origin, Configuration configuration) :
+    origin_(std::move(origin)),
     peer_([&]() {
         const auto &threads(Threads::Get());
 
@@ -104,11 +105,11 @@ task<struct socket *> Peer::Internal() {
 
 
 void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) noexcept {
-    _trace();
+    orc_trace();
 }
 
 void Peer::OnRenegotiationNeeded() noexcept {
-    _trace();
+    orc_trace();
 }
 
 void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
@@ -192,7 +193,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
 
                     self->Stop();
                 });
-            });
+            }, __FUNCTION__);
         break;
 
         case webrtc::PeerConnectionInterface::kIceConnectionClosed:

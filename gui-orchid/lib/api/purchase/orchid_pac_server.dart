@@ -1,12 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_crypto.dart';
+import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_purchase.dart';
 
 /// The PAC service exchanges an in-app purchase receipt for an Orchid PAC.
 class OrchidPACServer {
   static final OrchidPACServer _shared = OrchidPACServer._internal();
+
+  /// PAC Server status URL
+  final String statusUrl =
+      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/status';
+
+  final String recycleUrl =
+      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/recycle';
 
   factory OrchidPACServer() {
     return _shared;
@@ -17,10 +27,10 @@ class OrchidPACServer {
   /// Process the current PAC transaction if required. This method can be
   /// called at any time to attempt to move the process to the next state.
   void processPendingPACTransaction() async {
-    print("iap: process pending pac tx");
+    log("iap: process pending pac tx");
     var tx = await PacTransaction.shared.get();
     if (tx == null) {
-      print("iap: pac tx null, return");
+      log("iap: pac tx null, return");
       return;
     }
     switch (tx.state) {
@@ -28,22 +38,22 @@ class OrchidPACServer {
       case PacTransactionState.Error:
       case PacTransactionState.Complete:
         // Nothing to be done.
-        print("iap: nothing to do");
+        log("iap: nothing to do");
         return;
         break;
       case PacTransactionState.WaitingForRetry:
-        print("iap: retry");
+        log("iap: retry");
         tx.retries++;
         continue nextCase;
       nextCase:
       case PacTransactionState.Pending:
       case PacTransactionState.WaitingForUserAction:
-        print("iap: pending or waiting for user: go");
+        log("iap: pending or waiting for user: go");
         break;
     }
 
     // Begin processing the PAC tx
-    print("iap: set pac tx to in-progress");
+    log("iap: set pac tx to in-progress");
     tx.state = PacTransactionState.InProgress;
     await tx.save(); // update the UI
 
@@ -55,12 +65,12 @@ class OrchidPACServer {
       tx.state = PacTransactionState.Complete;
     } catch (err) {
       // Server error
-      print("iap: error in pac submit: $err");
+      log("iap: error in pac submit: $err");
       tx.serverResponse = "$err";
 
       // Schedule retry
       if (tx.retries < 2) {
-        print("iap: scheduling retry");
+        log("iap: scheduling retry");
         // Schedule a retry
         tx.state = PacTransactionState.WaitingForRetry;
         var delay = Duration(seconds: 5); // TODO
@@ -69,7 +79,7 @@ class OrchidPACServer {
         });
       } else {
         // Wait for user action
-        print("iap: waiting for user action");
+        log("iap: waiting for user action");
         tx.state = PacTransactionState.WaitingForUserAction;
       }
     }
@@ -81,12 +91,18 @@ class OrchidPACServer {
   /// Submit an app store receipt to the PAC server and return the full server response.
   /// An exception is thrown on any server response that does not contain a valid PAC.
   Future<String> _submitToPACServer(PacTransaction tx) async {
-    print("iap: submit to PAC server");
-    if (tx.receipt == null) {
-      print("iap: null receipt");
-      throw Exception("receipt is null");
-    }
+    log("iap: submit to PAC server");
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
+
+    if (apiConfig.serverFail) {
+      await Future.delayed(Duration(seconds: 3));
+      throw Exception('Testing server failure!');
+    }
+
+    if (tx.receipt == null) {
+      log('iap: null receipt');
+      throw Exception('receipt is null');
+    }
 
     Map<String, String> params = {};
 
@@ -104,7 +120,7 @@ class OrchidPACServer {
     var postBody = jsonEncode(params);
     // Note: the receipt exceeds the console log line length so keep it last
     // Note: or explicitly truncate it.
-    print("iap: posting to ${apiConfig.url}, json = $postBody");
+    log("iap: posting to ${apiConfig.url}, json = $postBody");
 
     // TESTING
     //await Future.delayed(Duration(seconds: 1), () {});
@@ -116,7 +132,7 @@ class OrchidPACServer {
         body: postBody);
 
     // Validate the response status and content
-    //print("iap: pac server response: ${response.statusCode}, ${response.body}");
+    //log("iap: pac server response: ${response.statusCode}, ${response.body}");
     if (response.statusCode != 200) {
       throw Exception(
           "Error response: code=${response.statusCode} body=${response.body}");
@@ -129,4 +145,103 @@ class OrchidPACServer {
 
     return response.body;
   }
+
+  Future<PACStoreStatus> storeStatus() async {
+    log("iap: check PAC server status");
+
+    bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.storeDown', false);
+    if (overrideDown) {
+      log("iap: override server status");
+      return PACStoreStatus.down;
+    }
+    bool overrideTier1Down = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.tier1Down', false);
+    bool overrideTier2Down = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.tier2Down', false);
+    bool overrideTier3Down = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.tier3Down', false);
+    if (overrideTier1Down || overrideTier2Down || overrideTier3Down) {
+      log("iap: override product status: $overrideTier1Down, $overrideTier2Down, $overrideTier3Down");
+    }
+
+    // Do the post
+    var response = await http.get(
+      statusUrl,
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+    );
+
+    // Validate the response status and content
+    log("iap: pac server status response: ${response.statusCode}, ${response.body}");
+    if (response.statusCode != 200) {
+      return PACStoreStatus.down;
+    }
+
+    // Safely and conservatively parse bool from the server
+    bool Function(Object val, bool defaultValue) parseBool =
+        (val, defaultValue) {
+      if (val == null) {
+        return defaultValue;
+      }
+      String sval = val.toString().toLowerCase();
+      if (sval == "true") {
+        return true;
+      }
+      if (sval == "false") {
+        return false;
+      }
+      return defaultValue;
+    };
+
+    var responseJson = json.decode(response.body);
+    var disabled = parseBool(responseJson['disabled'], false);
+
+    Map<String, bool> productStatus = {};
+    productStatus[OrchidPurchaseAPI.pacTier1] = overrideTier1Down
+        ? false
+        : parseBool(responseJson[OrchidPurchaseAPI.pacTier1], true);
+    productStatus[OrchidPurchaseAPI.pacTier2] = overrideTier2Down
+        ? false
+        : parseBool(responseJson[OrchidPurchaseAPI.pacTier2], true);
+    productStatus[OrchidPurchaseAPI.pacTier3] = overrideTier3Down
+        ? false
+        : parseBool(responseJson[OrchidPurchaseAPI.pacTier3], true);
+    log("iap: product status = $productStatus");
+
+    return PACStoreStatus(open: !disabled, product: productStatus);
+  }
+
+  Future<void> recycle({EthereumAddress funder, EthereumAddress signer}) async {
+    Map<String, String> params = {
+      'funder': funder.toString(),
+      'signer': signer.toString(),
+    };
+
+    var postBody = jsonEncode(params);
+    log("iap: recycling json = $postBody");
+
+    // Do the post
+    var response = await http.post(recycleUrl,
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: postBody);
+
+    // Validate the response status and content
+    if (response.statusCode != 200) {
+      log("iap: recycle failed: code=${response.statusCode} body=${response.body}");
+    } else {
+      log("iap: recycle succeeded");
+    }
+  }
+}
+
+class PACStoreStatus {
+  static PACStoreStatus down = PACStoreStatus(open: false);
+
+  // overall store status
+  bool open;
+
+  // product status
+  Map<String, bool> product;
+
+  PACStoreStatus({this.open, this.product = const {}});
 }

@@ -57,19 +57,17 @@ ranlib/$(1) := $(1)-w64-mingw32-ranlib
 ar/$(1) := $(1)-w64-mingw32-ar
 strip/$(1) := $(1)-w64-mingw32-ar
 windres/$(1) := $(1)-w64-mingw32-windres
-export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(shell realpath $(shell which $(1)-w64-mingw32-gcc))
+export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := true
+# XXX: this should be $(shell realpath $(shell which $(1)-w64-mingw32-gcc))
+# however, I'm blocked on https://github.com/rust-lang/rust/issues/68887
+# XXX: also, Rust does not correctly link on 32-bit Windows due to this :(
+# essentially same issue: https://github.com/rust-lang/rust/issues/12859
 endef
 $(each)
 
-# XXX: Rust does not work on 32-bit Windows :(
-# panic calls _Unwind_Resume instead of _Unwind_Sjlj_Resume
-# https://github.com/rust-lang/rust/issues/12859
-# XXX: just setting panic=abort doesn't work either
-# we need to use cargo xbuild to rebuild libcore
-# rflags/i686 := -C panic=abort
-
 lflags += -static
 lflags += -pthread
+lflags += -lssp
 
 wflags += -fuse-ld=ld
 lflags += -Wl,--no-insert-timestamp
@@ -82,6 +80,9 @@ cflags += -fms-extensions
 #cflags += -fms-compatibility
 #cflags += -D__GNUC__
 
+#  warning: 'I64' length modifier is not supported by ISO C
+qflags += -Wno-format-non-iso
+
 mflags += has_function_stpcpy=false
 
 # pragma comment(lib, "...lib")
@@ -91,8 +92,10 @@ cflags += -Wno-unknown-pragmas
 
 cflags += -Wno-unused-const-variable
 
-cflags += -I$(pwd)/win32
-cflags += -Wno-nonportable-include-path
+qflags += -I$(CURDIR)/$(pwd)/win32
+qflags += -Wno-nonportable-include-path
+
+cflags += -I$(pwd)/mingw
 
 msys2 := 
 msys2 += crt-git-7.0.0.5553.e922460c-1

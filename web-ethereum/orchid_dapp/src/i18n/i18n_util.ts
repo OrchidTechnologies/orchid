@@ -5,6 +5,7 @@ export {}
 declare global {
   interface Number {
     toFixedLocalized(decimals: number): string;
+    //formatCurrency(value: number, suffix: string, digits?: number, ifNull?: string) : string;
   }
 }
 
@@ -12,3 +13,10 @@ declare global {
   return intl.formatNumber(this, {maximumFractionDigits: decimals, minimumFractionDigits: decimals});
 };
 
+/*
+(Number.prototype as any).formatCurrency =
+  function(suffix: string, digits: number = 2, ifNull: string = "...") : string
+{
+  return value.toFixedLocalized(digits) + (suffix != null ? " $suffix" : "");
+};
+*/

@@ -88,3 +88,11 @@ $(eval arch := $(firstword $(temp)))
 $(eval folder := $(subst $(space),/,$(wordlist 2,$(words $(temp)),$(temp))))
 endef
 specific = $(eval $(value preamble))
+
+cflags += -I$(output)/extra
+
+.PHONY: force
+$(output)/extra/revision.hpp: force
+	@mkdir -p $(dir $@)
+	@env/revision.sh $(cc) --version >$@.new
+	@if [[ ! -e $@ ]] || ! diff -q $@ $@.new >/dev/null; then mv -f $@.new $@; else rm -f $@.new; fi

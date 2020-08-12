@@ -1,72 +1,60 @@
 import logging
 import os
 
-from abis import token_abi
-from datadog_lambda.metric import lambda_metric
-from utils import configure_logging, get_secret, get_token_decimals, get_token_name, get_token_symbol, is_true
-from web3.auto.infura import w3
+from metrics import metric
+from w3 import balanceOf
+from utils import configure_logging
+from w3 import get_eth_balance
+from utils import get_secret
+from w3 import get_token_decimals
+from w3 import get_token_name
+from w3 import get_token_symbol
 
 
-configure_logging()
-
-
-if len(logging.getLogger().handlers) > 0:
-    # The Lambda environment pre-configures a handler logging to stderr.
-    # If a handler is already configured, `.basicConfig` does not execute.
-    # Thus we set the level directly.
-    logging.getLogger().setLevel(level=os.environ.get('LOG_LEVEL', "DEBUG"))
-else:
-    logging.basicConfig(level=os.environ.get('LOG_LEVEL', "DEBUG"))
+configure_logging(level="DEBUG")
 
 
 def get_oxt_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
-    token_addr = w3.toChecksumAddress(os.environ['TOKEN'])
-    token_contract = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
-    )
-    token_name = get_token_name(token_addr)
-    token_symbol = get_token_symbol(token_addr)
-    token_decimals = get_token_decimals(token_addr)
+    token_name = get_token_name()
+    token_symbol = get_token_symbol()
+    token_decimals = get_token_decimals()
     DECIMALS = 10 ** token_decimals
-    raw_balance = token_contract.functions.balanceOf(address).call()
+    raw_balance = balanceOf(address)
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
-    if is_true(os.environ.get('ENABLE_MONITORING', '')):
-        lambda_metric(
-            f"orchid.pac.balance.{token_symbol.lower()}",
-            balance,
-            tags=[
-                f'account:{address}',
-                f'token_name:{token_name}',
-                f'token_symbol:{token_symbol}',
-                f'token_decimals:{token_decimals}',
-            ]
-        )
+    metric(
+        metric_name=f"orchid.pac.balance.{token_symbol.lower()}",
+        value=balance,
+        tags=[
+            f'account:{address}',
+            f'token_name:{token_name}',
+            f'token_symbol:{token_symbol}',
+            f'token_decimals:{token_decimals}',
+        ]
+    )
     return balance
 
 
-def get_eth_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
+def get_account_eth_balance(address=get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])) -> float:
     token_name = 'Ethereum'
     token_symbol = 'ETH'
     token_decimals = 18
     DECIMALS = 10 ** token_decimals
-    raw_balance = w3.eth.getBalance(address)
+    raw_balance = get_eth_balance(address)
     balance = raw_balance / DECIMALS
     logging.info(
         f"Balance of {address}: {balance} {token_name} ({token_symbol})")
-    if is_true(os.environ.get('ENABLE_MONITORING', '')):
-        lambda_metric(
-            f"orchid.pac.balance.{token_symbol.lower()}",
-            balance,
-            tags=[
-                f'account:{address}',
-                f'token_name:{token_name}',
-                f'token_symbol:{token_symbol}',
-                f'token_decimals:{token_decimals}',
-            ]
-        )
+    metric(
+        metric_name=f"orchid.pac.balance.{token_symbol.lower()}",
+        value=balance,
+        tags=[
+            f'account:{address}',
+            f'token_name:{token_name}',
+            f'token_symbol:{token_symbol}',
+            f'token_decimals:{token_decimals}',
+        ]
+    )
     return balance
 
 
@@ -111,7 +99,10 @@ def main(event, context):
     logging.debug(f'Context: {context}')
 
     get_oxt_balance()
-    get_eth_balance()
+    get_account_eth_balance()
+
+    get_oxt_balance(address=os.environ['MULTISIG'])
+    get_account_eth_balance(address=os.environ['MULTISIG'])
 
 
 if __name__ == "__main__":

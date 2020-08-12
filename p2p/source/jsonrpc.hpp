@@ -48,7 +48,7 @@ class Nested {
 
   public:
     Nested() :
-        scalar_(false)
+        scalar_(true)
     {
     }
 
@@ -135,13 +135,8 @@ class Nested {
 
 std::ostream &operator <<(std::ostream &out, const Nested &value);
 
-class Explode final :
-    public Nested
-{
-  public:
-    Explode(Window &window);
-    Explode(Window &&window);
-};
+Nested Explode(Window &window);
+Nested Explode(Window &&window);
 
 std::string Implode(Nested nested);
 
@@ -208,6 +203,11 @@ class Argument final {
     {
     }
 
+    Argument(unsigned value) :
+        Argument(uint256_t(value))
+    {
+    }
+
     Argument(nullptr_t) {
     }
 
@@ -265,7 +265,7 @@ class Argument final {
     }
 };
 
-typedef std::map<std::string, Argument> Map;
+typedef std::map<std::string, Argument> Multi;
 
 typedef Beam Bytes;
 typedef Brick<32> Bytes32;
@@ -622,7 +622,6 @@ struct Coder {
 };
 
 uint256_t Timestamp();
-uint256_t Monotonic();
 
 }
 

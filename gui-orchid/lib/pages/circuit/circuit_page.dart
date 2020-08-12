@@ -3,19 +3,26 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
+import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/onboarding/legacy_welcome_dialog.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
@@ -33,7 +40,13 @@ import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
 
 class CircuitPage extends StatefulWidget {
+  // TODO: Remove if unused
   final WrappedSwitchController switchController;
+
+  // Note: This performs a behavior like the iOSContacts App create flow for the
+  // Note: add hop action, revealing the already pushed hop editor upon completing
+  // Note: the add flow.
+  static var iOSContactsStyleAddHopBehavior = false;
 
   CircuitPage({Key key, this.switchController}) : super(key: key);
 
@@ -43,7 +56,8 @@ class CircuitPage extends StatefulWidget {
   }
 }
 
-// TODO: This class has gotten pretty big. Time for some refactoring!
+// TODO: This class contains switch logic for activating the VPN that is not currently
+// TODO: used.  If this remains the case remove it.
 class CircuitPageState extends State<CircuitPage>
     with TickerProviderStateMixin {
   List<StreamSubscription> _rxSubs = List();
@@ -69,8 +83,8 @@ class CircuitPageState extends State<CircuitPage>
   DateTime _lastInteractionTime;
   Timer _bunnyDuckTimer;
 
-  bool vpnSwitchInstructionsViewed = false;
-  bool _dialogInProgress = false;
+  //bool vpnSwitchInstructionsViewed = false;
+  bool _dialogInProgress = false; // ?
 
   @override
   void initState() {
@@ -85,31 +99,31 @@ class CircuitPageState extends State<CircuitPage>
 
   void initStateAsync() async {
     // Hook up to the provided vpn switch
-    widget.switchController.onChange = _connectSwitchChanged;
+    //widget.switchController.onChange = _connectSwitchChanged;
 
     // Set the initial state of the vpn switch based on the user pref.
     // Note: By design the switch on this page does not track or respond to the
     // Note: dynamic connection state but instead reflects the user pref.
-    // Note: See `monitoring_page.dart` or `connect_page` for controls that track the
+    // Note: See `monitoring_page.dart` or `legacy_connect_page` for controls that track the
     // Note: system connection status.
     _switchOn = await UserPreferences().getDesiredVPNState();
 
-    vpnSwitchInstructionsViewed =
-        await UserPreferences().getVPNSwitchInstructionsViewed();
+    //vpnSwitchInstructionsViewed = await UserPreferences().getVPNSwitchInstructionsViewed();
 
     OrchidAPI().circuitConfigurationChanged.listen((_) {
       _updateCircuit();
     });
 
-    _checkFirstLaunch();
+    //_checkFirstLaunch();
     _checkBalancesTimer =
-        Timer.periodic(Duration(seconds: 30), _checkOrchidHopAlerts);
+        Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
+    _checkHopAlerts(null);
   }
 
-  Map<UniqueHop, bool> _showHopAlert = Map();
+  static Map<int, bool> _showHopAlert = Map();
 
   /// Check each Orchid Hop's lottery pot for alert conditions.
-  void _checkOrchidHopAlerts(timer) async {
+  void _checkHopAlerts(timer) async {
     if (_hops == null) {
       return;
     }
@@ -118,21 +132,28 @@ class CircuitPageState extends State<CircuitPage>
     for (var uniqueHop in _hops) {
       CircuitHop hop = uniqueHop.hop;
       if (hop is OrchidHop) {
-        var pot =
-            await OrchidEthereum.getLotteryPot(hop.funder, hop.getSigner(keys));
-        var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
-        _showHopAlert[uniqueHop] = ticketValue.value <= 0;
+        try {
+          var pot = await OrchidEthereum.getLotteryPot(
+              hop.funder, hop.getSigner(keys));
+          var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
+          _showHopAlert[uniqueHop.contentHash] = ticketValue.value <= 0;
+        } catch (err) {
+          log("Error checking ticket value: $err");
+        }
       }
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
+  /*
   void _checkFirstLaunch() async {
     if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
       _showWelcomeDialog();
       UserPreferences().setFirstLaunchInstructionsViewed(true);
     }
-  }
+  }*/
 
   void _updateCircuit() async {
     var circuit = await UserPreferences().getCircuit();
@@ -140,19 +161,16 @@ class CircuitPageState extends State<CircuitPage>
       setState(() {
         var keyBase = DateTime.now().millisecondsSinceEpoch;
         // Wrap the hops with a locally unique id for the UI
-        _hops = mapIndexed(circuit?.hops ?? [], ((index, hop) {
-          var key = keyBase + index;
-          return UniqueHop(key: key, hop: hop);
-        })).toList();
+        _hops = UniqueHop.wrap(circuit.hops, keyBase);
       });
 
       // Set the correct animation states for the connection status
       // Note: We cannot properly do this until we know if we have hops!
-      print("init state, setting initial connection state");
+      log('init state, setting initial connection state');
       _connectionStateChanged(OrchidAPI().connectionStatus.value,
           animated: false);
     }
-    _checkOrchidHopAlerts(null); // refresh alert status
+    _checkHopAlerts(null); // refresh alert status
   }
 
   void initAnimations() {
@@ -192,7 +210,12 @@ class CircuitPageState extends State<CircuitPage>
 
   @override
   Widget build(BuildContext context) {
-    return _buildBody();
+    return TitledPage(
+      lightTheme: true,
+      title: S.of(context).manageProfile,
+      decoration: BoxDecoration(),
+      child: _buildBody(),
+    );
   }
 
   Widget _buildBody() {
@@ -207,63 +230,66 @@ class CircuitPageState extends State<CircuitPage>
         },
         child: Container(
           decoration: BoxDecoration(gradient: AppGradients.basicGradient),
+          // hidden until hops loaded
           child: Visibility(
-            visible: _hops != null,
-            replacement: Container(),
-            child: AnimatedBuilder(
-                animation: Listenable.merge(
-                    [_connectAnimController, _bunnyDuckAnimation]),
-                builder: (BuildContext context, Widget child) {
-                  return _buildHopList();
-                }),
-          ),
+              //visible: _hops != null,
+              visible: true,
+              replacement: Container(),
+              child: _buildHopList()),
         ),
       ),
     );
   }
 
   bool _showEnableVPNInstruction() {
-    // Note: this instruction follows the switch, not the connected status
-    return !vpnSwitchInstructionsViewed && _hasHops() && !_switchOn;
+    return false;
+    //Note: this instruction follows the switch, not the connected status
+    //return !vpnSwitchInstructionsViewed && _hasHops() && !_switchOn;
   }
 
   Widget _buildHopList() {
-    return Column(
-      children: <Widget>[
-        Expanded(
-          child: AppReorderableListView(
-              header: Column(
-                children: <Widget>[
-                  AnimatedCrossFade(
-                    duration: Duration(milliseconds: _fadeAnimTime),
-                    crossFadeState: _showEnableVPNInstruction()
-                        ? CrossFadeState.showFirst
-                        : CrossFadeState.showSecond,
-                    firstChild: _buildEnableVPNInstruction(),
-                    secondChild: pady(16),
-                  ),
-                  _buildStartTile(),
-                  _buildStatusTile(),
-                  HopTile.buildFlowDivider(),
-                ],
-              ),
-              children: (_hops ?? []).map((uniqueHop) {
-                return _buildDismissableHopTile(uniqueHop);
-              }).toList(),
-              footer: Column(
-                children: <Widget>[
-                  _buildNewHopTile(),
-                  if (!_hasHops()) _buildFirstHopInstruction(),
-                  HopTile.buildFlowDivider(
-                      padding: EdgeInsets.only(
-                          top: _hasHops() ? 16 : 2, bottom: 10)),
-                  _buildEndTile(),
-                ],
-              ),
-              onReorder: _onReorder),
+    // Note: this view needs to be full screen vertical in order to scroll off-edge properly.
+    return AppReorderableListView(
+        header: Column(
+          children: <Widget>[
+            AnimatedCrossFade(
+              duration: Duration(milliseconds: _fadeAnimTime),
+              crossFadeState: _showEnableVPNInstruction()
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: _buildEnableVPNInstruction(),
+              secondChild: pady(16),
+            ),
+            if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
+            AnimatedBuilder(
+                animation: Listenable.merge(
+                    [_connectAnimController, _bunnyDuckAnimation]),
+                builder: (BuildContext context, Widget child) {
+                  return _buildStartTile();
+                }),
+            _buildStatusTile(),
+            HopTile.buildFlowDivider(),
+          ],
         ),
-      ],
-    );
+        children: (_hops ?? []).map((uniqueHop) {
+          return _buildDismissableHopTile(uniqueHop);
+        }).toList(),
+        footer: Column(
+          children: <Widget>[
+            _buildNewHopTile(),
+            //if (!_hasHops()) _buildFirstHopInstruction(),
+            if (!_hasHops()) pady(16),
+            HopTile.buildFlowDivider(
+                padding: EdgeInsets.only(top: _hasHops() ? 16 : 2, bottom: 10)),
+            AnimatedBuilder(
+                animation: _connectAnimController,
+                builder: (BuildContext context, Widget child) {
+                  return _buildEndTile();
+                }),
+            _buildDeletedHopsLink(),
+          ],
+        ),
+        onReorder: _onReorder);
   }
 
   // The starting (top) tile in the hop flow
@@ -294,7 +320,7 @@ class CircuitPageState extends State<CircuitPage>
                     transform: Matrix4.identity()
                       ..scale(1.0 - _holeTransformAnim.value,
                           1.0 + _holeTransformAnim.value),
-                    child: Image.asset("assets/images/layer35.png"))),
+                    child: Image.asset('assets/images/layer35.png'))),
           ),
           // logo
           Opacity(
@@ -305,7 +331,7 @@ class CircuitPageState extends State<CircuitPage>
                     alignment: Alignment.bottomCenter,
                     transform: Matrix4.identity()
                       ..scale(1.0, _holeTransformAnim.value),
-                    child: Image.asset("assets/images/logo_purple.png"))),
+                    child: Image.asset('assets/images/logo_purple.png'))),
           ),
 
           // positioned oval clipped bunny
@@ -343,10 +369,10 @@ class CircuitPageState extends State<CircuitPage>
         _buildBackgroundAnimation(),
 
         // island
-        Image.asset("assets/images/island.png"),
+        Image.asset('assets/images/island.png'),
         Opacity(
             opacity: _connectAnimController.value,
-            child: Image.asset("assets/images/vignetteHomeHeroSm.png")),
+            child: Image.asset('assets/images/vignetteHomeHeroSm.png')),
 
         // positioned bunny
         Positioned(
@@ -377,10 +403,10 @@ class CircuitPageState extends State<CircuitPage>
         child: Opacity(
           opacity: _connectAnimController.value,
           child: FlareActor(
-            "assets/flare/Connection_screens.flr",
+            'assets/flare/Connection_screens.flr',
             color: Colors.deepPurple.withOpacity(0.4),
             fit: BoxFit.fitHeight,
-            animation: "connectedLoop",
+            animation: 'connectedLoop',
           ),
         ),
       ),
@@ -403,7 +429,7 @@ class CircuitPageState extends State<CircuitPage>
               Positioned(
                   bottom: -bunnyOffset,
                   left: clipOvalWidth / 2 - bunnyWidth / 2 + 5,
-                  child: Image.asset("assets/images/bunnypeek.png",
+                  child: Image.asset('assets/images/bunnypeek.png',
                       height: bunnyHeight)),
             ],
           )),
@@ -413,7 +439,7 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildNewHopTile() {
     return HopTile(
         title: s.newHop,
-        image: Image.asset("assets/images/addCircleOutline.png"),
+        image: Image.asset('assets/images/addCircleOutline.png'),
         trailing: SizedBox(width: 40),
         // match leading
         textColor: Colors.deepPurple,
@@ -421,6 +447,23 @@ class CircuitPageState extends State<CircuitPage>
         dottedBorder: true,
         showDragHandle: false,
         onTap: _addHop);
+  }
+
+  Widget _buildDeletedHopsLink() {
+    return Container(
+      height: 45,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: LinkText(
+          "View Deleted Hops",
+          style: AppText.linkStyle
+              .copyWith(fontSize: 13, fontStyle: FontStyle.italic),
+          onTapped: () {
+            Navigator.pushNamed(context, '/settings/accounts');
+          },
+        ),
+      ),
+    );
   }
 
   Widget _buildStatusTile() {
@@ -468,18 +511,8 @@ class CircuitPageState extends State<CircuitPage>
   Dismissible _buildDismissableHopTile(UniqueHop uniqueHop) {
     return Dismissible(
       key: Key(uniqueHop.key.toString()),
-      background: Container(
-        color: Colors.red,
-        child: Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                s.delete,
-                style: TextStyle(color: Colors.white),
-              ),
-            )),
-      ),
+      background: buildDismissableBackground(context),
+      confirmDismiss: _confirmDeleteHop,
       onDismissed: (direction) {
         _deleteHop(uniqueHop);
       },
@@ -487,7 +520,40 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
+  static Container buildDismissableBackground(BuildContext context) {
+    return Container(
+      color: Colors.red,
+      child: Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              S.of(context).delete,
+              style: TextStyle(color: Colors.white),
+            ),
+          )),
+    );
+  }
+
   Widget _buildHopTile(UniqueHop uniqueHop) {
+    return buildHopTile(
+      context: context,
+      onTap: () {
+        _viewHop(uniqueHop);
+      },
+      uniqueHop: uniqueHop,
+      bgColor: _hopColorTween.value,
+      showAlertBadge: _showHopAlert[uniqueHop.contentHash] ?? false,
+    );
+  }
+
+  static Widget buildHopTile({
+    @required BuildContext context,
+    @required UniqueHop uniqueHop,
+    VoidCallback onTap,
+    Color bgColor,
+    bool showAlertBadge,
+  }) {
     //bool isFirstHop = uniqueHop.key == _hops.first.key;
     //bool hasMultipleHops = _hops.length > 1;
     //bool isLastHop = uniqueHop.key == _hops.last.key;
@@ -495,26 +561,26 @@ class CircuitPageState extends State<CircuitPage>
     Image image;
     switch (uniqueHop.hop.protocol) {
       case HopProtocol.Orchid:
-        image = Image.asset("assets/images/logo2.png", color: color);
+        image = Image.asset('assets/images/logo2.png', color: color);
         break;
       case HopProtocol.OpenVPN:
-        image = Image.asset("assets/images/security.png", color: color);
+        image = Image.asset('assets/images/security.png', color: color);
         break;
-      default:
-        throw new Exception();
+      case HopProtocol.WireGuard:
+        image = Image.asset('assets/images/security.png', color: color);
+        break;
     }
+    var title = uniqueHop.hop.displayName(context);
     return Padding(
       padding: EdgeInsets.only(bottom: 12),
       child: HopTile(
-        showAlertBadge: _showHopAlert[uniqueHop] ?? false,
+        showAlertBadge: showAlertBadge,
         textColor: color,
-        color: _hopColorTween.value,
+        color: bgColor ?? Colors.white,
         image: image,
-        onTap: () {
-          _viewHop(uniqueHop);
-        },
+        onTap: onTap,
         key: Key(uniqueHop.key.toString()),
-        title: uniqueHop.hop.displayName(context),
+        title: title,
         showTopDivider: false,
       ),
     );
@@ -537,7 +603,7 @@ class CircuitPageState extends State<CircuitPage>
               Padding(
                 // attempt to align the arrow with switch in the header and text vertically
                 padding: const EdgeInsets.only(left: 16, right: 6, bottom: 16),
-                child: Image.asset("assets/images/drawnArrow3.png", height: 48),
+                child: Image.asset('assets/images/drawnArrow3.png', height: 48),
               ),
             ],
           ),
@@ -558,7 +624,7 @@ class CircuitPageState extends State<CircuitPage>
               Padding(
                 // align the arrow with the hop tile leading and text vertically
                 padding: const EdgeInsets.only(left: 19, right: 0, bottom: 24),
-                child: Image.asset("assets/images/drawnArrow2.png", height: 48),
+                child: Image.asset('assets/images/drawnArrow2.png', height: 48),
               ),
               Expanded(
                 child: Padding(
@@ -577,94 +643,54 @@ class CircuitPageState extends State<CircuitPage>
   /// Begin - Add / view hop logic
   ///
 
-  // Show the add hop flow and save the result if completed successfully.
   void _addHop() async {
-    // Create a nested navigation context for the flow. Performing a pop() from
-    // this outer context at any point will properly remove the entire flow
-    // (possibly multiple screens) with one appropriate animation.
-    Navigator addFlow = Navigator(
-      onGenerateRoute: (RouteSettings settings) {
-        var addFlowCompletion = (CircuitHop result) {
-          Navigator.pop(context, result);
-        };
-        var editor = AddHopPage(
-            onAddFlowComplete: addFlowCompletion, showCallouts: _hops.isEmpty);
-        var route = MaterialPageRoute<CircuitHop>(
-            builder: (context) => editor, settings: settings);
-        return route;
-      },
-    );
-    var route = MaterialPageRoute<CircuitHop>(
-        builder: (context) => addFlow, fullscreenDialog: true);
-    _pushEditorRoute(route);
+    CircuitUtils.addHop(context,
+        onComplete: _addHopComplete, showCallouts: _hops.isEmpty);
   }
 
-  // Show the purchase PAC screen directly as a modal, skipping the "add hop"
-  // choice screen. This is used by the welcome dialog.
-  void _addHopFromPACPurchase() async {
-    var addFlowCompletion = (CircuitHop result) {
-      Navigator.pop(context, result);
-    };
-    var route = MaterialPageRoute<CircuitHop>(
-        builder: (BuildContext context) {
-          return PurchasePage(
-            onAddFlowComplete: addFlowCompletion,
-            cancellable: true,
-          );
-        },
-        fullscreenDialog: true);
-    _pushEditorRoute(route);
+  void _addHopFromPACPurchase() {
+    CircuitUtils.purchasePAC(context, onComplete: _addHopComplete);
   }
 
-  // Push the specified hop editor, await the hop result, and save it to the circuit.
-  // Note: The paradigm here of the hop editors returning newly created or edited hops
-  // Note: on the navigation stack decouples them but makes them more dependent on
-  // Note: this update and save logic. We should consider centralizing this logic and
-  // Note: relying on observation with `OrchidAPI.circuitConfigurationChanged` here.
-  // Note: e.g.
-  // Note: void _AddHopExternal(CircuitHop hop) async {
-  // Note:   var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
-  // Note:   circuit.hops.add(hop);
-  // Note:   await UserPreferences().setCircuit(circuit);
-  // Note:   OrchidAPI().updateConfiguration();
-  // Note:   OrchidAPI().circuitConfigurationChanged.add(null);
-  // Note: }
-  void _pushEditorRoute(MaterialPageRoute route) async {
-    var hop = await Navigator.push(context, route);
-    if (hop == null) {
-      return; // user cancelled
-    }
-    var uniqueHop =
-        UniqueHop(hop: hop, key: DateTime.now().millisecondsSinceEpoch);
+  // Local page state updates after hop addition.
+  void _addHopComplete(UniqueHop uniqueHop) {
+    // TODO: needed? Or does the global config change handle it?
     setState(() {
       _hops.add(uniqueHop);
     });
-    _saveCircuit();
 
     // View the newly created hop:
-    // Note: We would like this to behave like the iOS Contacts add flow,
+    // Note: This performs a behavior like the iOS-Contacts App add flow,
     // Note: revealing the already pushed navigation state upon completing the
-    // Note: add flow.  The non-animated push approximates this.
-    _viewHop(uniqueHop, animated: false);
+    // Note: add flow.  This non-animated push approximates this.
+    if (CircuitPage.iOSContactsStyleAddHopBehavior) {
+      _viewHop(uniqueHop, animated: false);
+    }
+  }
+
+  void _saveCircuit() async {
+    var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
+    CircuitUtils.saveCircuit(circuit);
+    _showConfigurationChangedDialog();
+  }
+
+  void _showConfigurationChangedDialog() async {
+    if (_dialogInProgress) {
+      return;
+    }
+    try {
+      _dialogInProgress = true;
+      await Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+    } finally {
+      _dialogInProgress = false;
+    }
   }
 
   // View a hop selected from the circuit list
   void _viewHop(UniqueHop uniqueHop, {bool animated = true}) async {
     EditableHop editableHop = EditableHop(uniqueHop);
-    var editor;
-    switch (uniqueHop.hop.protocol) {
-      case HopProtocol.Orchid:
-        editor =
-            OrchidHopPage(editableHop: editableHop, mode: HopEditorMode.View);
-        break;
-      case HopProtocol.OpenVPN:
-        editor = OpenVPNHopPage(
-          editableHop: editableHop,
-          mode: HopEditorMode.Edit,
-        );
-        break;
-    }
-    await _showEditor(editor, animated: animated);
+    HopEditor editor = editableHop.editor();
+    await editor.show(context, animated: animated);
 
     // TODO: avoid saving if the hop was not edited.
     // Save the hop if it was edited.
@@ -676,20 +702,40 @@ class CircuitPageState extends State<CircuitPage>
     _saveCircuit();
   }
 
-  Future<void> _showEditor(editor, {bool animated = true}) async {
-    var route = animated
-        ? MaterialPageRoute(builder: (context) => editor)
-        : NoAnimationMaterialPageRoute(builder: (context) => editor);
-    await Navigator.push(context, route);
+  // Callback for swipe to delete
+  Future<bool> _confirmDeleteHop(dismissDirection) async {
+    var result = await Dialogs.showConfirmationDialog(
+      context: context,
+      title: s.confirmDelete,
+      body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
+          "  " +
+          s.ifYouPlanToReuseTheAccountLaterYouShould,
+    );
+    return result;
   }
 
   // Callback for swipe to delete
-  void _deleteHop(UniqueHop uniqueHop) {
+  void _deleteHop(UniqueHop uniqueHop) async {
     var index = _hops.indexOf(uniqueHop);
-    setState(() {
-      _hops.removeAt(index);
-    });
+    var removedHop = _hops.removeAt(index);
+    setState(() {});
     _saveCircuit();
+    _recycleHopIfAllowed(uniqueHop);
+    UserPreferences().addRecentlyDeletedHop(removedHop.hop);
+  }
+
+  // Recycle the hop if configured to do so.
+  Future _recycleHopIfAllowed(UniqueHop uniqueHop) async {
+    bool recycle = (await OrchidVPNConfig.getUserConfigJS())
+        .evalBoolDefault('pacs.recycle', false);
+    if (recycle) {
+      CircuitHop hop = uniqueHop.hop;
+      if (hop is OrchidHop) {
+        var keys = await UserPreferences().getKeys();
+        EthereumAddress signer = hop.getSigner(keys);
+        OrchidPACServer().recycle(funder: hop.funder, signer: signer);
+      }
+    }
   }
 
   // Callback for drag to reorder
@@ -713,7 +759,7 @@ class CircuitPageState extends State<CircuitPage>
   // Note: for a version of the switch that does attempt to track the connection.
   void _connectSwitchChanged(bool toEnabled) async {
     if (toEnabled) {
-      bool allowNoHopVPN = await UserPreferences().getAllowNoHopVPN();
+      bool allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
       if (_hasHops() || allowNoHopVPN) {
         _checkPermissionAndConnect();
       } else {
@@ -734,8 +780,8 @@ class CircuitPageState extends State<CircuitPage>
       case OrchidConnectionState.Disconnecting:
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        return false;
       case OrchidConnectionState.Connecting:
+        return false;
       case OrchidConnectionState.Connected:
         return true;
       default:
@@ -772,15 +818,16 @@ class CircuitPageState extends State<CircuitPage>
   // Prompt for VPN permissions if needed and then start the VPN.
   // Note: If the UI will no longer be participating in the prompt then
   // Note: we can just do this routinely in the channel api on first launch.
-  // Note: duplicates code in monitoring_page and connect_page.
+  // Note: duplicates code in monitoring_page and legacy_connect_page.
   void _checkPermissionAndConnect() {
     UserPreferences().setDesiredVPNState(true);
-    if (_showEnableVPNInstruction()) {
-      UserPreferences().setVPNSwitchInstructionsViewed(true);
-      setState(() {
-        vpnSwitchInstructionsViewed = true;
-      });
-    }
+    //if (_showEnableVPNInstruction()) {
+    //UserPreferences().setVPNSwitchInstructionsViewed(true);
+    //setState(() {
+    //vpnSwitchInstructionsViewed = true;
+    //});
+    //}
+
     // Get the most recent status, blocking if needed.
     _rxSubs
         .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
@@ -792,7 +839,7 @@ class CircuitPageState extends State<CircuitPage>
       } else {
         bool ok = await OrchidAPI().requestVPNPermission();
         if (ok) {
-          debugPrint("vpn: user chose to install");
+          log('vpn: user chose to install');
           // Note: It appears that trying to enable the connection too quickly
           // Note: after installing the vpn permission / config fails.
           // Note: Introducing a short artificial delay.
@@ -803,7 +850,7 @@ class CircuitPageState extends State<CircuitPage>
             _switchOn = true;
           });
         } else {
-          debugPrint("vpn: user skipped");
+          debugPrint('vpn: user skipped');
           setState(() {
             _switchOn = false;
           });
@@ -834,29 +881,15 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   // Getter for the switch controller controlled state
-  bool get _switchOn {
-    return widget.switchController?.controlledState?.value ?? false;
-  }
+//  bool get _switchOn {
+//    return widget.switchController?.controlledState?.value ?? false;
+//  }
 
   bool _hasHops() {
     return _hops != null && _hops.length > 0;
   }
 
-  void _saveCircuit() async {
-    var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
-    UserPreferences().setCircuit(circuit);
-    OrchidAPI().updateConfiguration();
-    if (_dialogInProgress) {
-      return;
-    }
-    try {
-      _dialogInProgress = true;
-      await Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
-    } finally {
-      _dialogInProgress = false;
-    }
-  }
-
+  // TODO: No switch in current page impl so this is unused.
   void _showWelcomeDialog() async {
     var pacsEnabled = (await OrchidPurchaseAPI().apiConfig()).enabled;
     if (pacsEnabled) {
@@ -912,8 +945,95 @@ class CircuitPageState extends State<CircuitPage>
       sub.cancel();
     });
     _bunnyDuckTimer.cancel();
-    widget.switchController.onChange = null;
+    //widget.switchController.onChange = null;
     _checkBalancesTimer.cancel();
+    _masterConnectAnimController.dispose();
+    _bunnyDuckAnimController.dispose();
     super.dispose();
+  }
+}
+
+typedef HopCompletion = void Function(UniqueHop);
+
+class CircuitUtils {
+  // Show the add hop flow and save the result if completed successfully.
+  static void addHop(BuildContext context,
+      {HopCompletion onComplete, bool showCallouts = false}) async {
+    // Create a nested navigation context for the flow. Performing a pop() from
+    // this outer context at any point will properly remove the entire flow
+    // (possibly multiple screens) with one appropriate animation.
+    Navigator addFlow = Navigator(
+      onGenerateRoute: (RouteSettings settings) {
+        var addFlowCompletion = (CircuitHop result) {
+          Navigator.pop(context, result);
+        };
+        var editor = AddHopPage(
+            onAddFlowComplete: addFlowCompletion, showCallouts: showCallouts);
+        var route = MaterialPageRoute<CircuitHop>(
+            builder: (context) => editor, settings: settings);
+        return route;
+      },
+    );
+    var route = MaterialPageRoute<CircuitHop>(
+        builder: (context) => addFlow, fullscreenDialog: true);
+    _pushNewHopEditorRoute(context, route, onComplete);
+  }
+
+  // Push the specified hop editor to create a new hop, await the result, and
+  // save it to the circuit.
+  // Note: The paradigm here of the hop editors returning newly created or edited hops
+  // Note: on the navigation stack decouples them but makes them more dependent on
+  // Note: this update and save logic. We should consider centralizing this logic and
+  // Note: relying on observation with `OrchidAPI.circuitConfigurationChanged` here.
+  // Note: e.g.
+  // Note: void _AddHopExternal(CircuitHop hop) async {
+  // Note:   var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
+  // Note:   circuit.hops.add(hop);
+  // Note:   await UserPreferences().setCircuit(circuit);
+  // Note:   OrchidAPI().updateConfiguration();
+  // Note:   OrchidAPI().circuitConfigurationChanged.add(null);
+  // Note: }
+  static void _pushNewHopEditorRoute(BuildContext context,
+      MaterialPageRoute route, HopCompletion onComplete) async {
+    var hop = await Navigator.push(context, route);
+    if (hop == null) {
+      return; // user cancelled
+    }
+    var uniqueHop =
+        UniqueHop(hop: hop, key: DateTime.now().millisecondsSinceEpoch);
+    addHopToCircuit(uniqueHop.hop);
+    if (onComplete != null) {
+      onComplete(uniqueHop);
+    }
+  }
+
+  // Show the purchase PAC screen directly as a modal, skipping the 'add hop'
+  // choice screen. This is used by the welcome dialog.
+  static void purchasePAC(BuildContext context,
+      {HopCompletion onComplete}) async {
+    var addFlowCompletion = (CircuitHop result) {
+      Navigator.pop(context, result);
+    };
+    var route = MaterialPageRoute<CircuitHop>(
+        builder: (BuildContext context) {
+          return PurchasePage(
+            onAddFlowComplete: addFlowCompletion,
+            cancellable: true,
+          );
+        },
+        fullscreenDialog: true);
+    _pushNewHopEditorRoute(context, route, onComplete);
+  }
+
+  static void addHopToCircuit(CircuitHop hop) async {
+    var circuit = await UserPreferences().getCircuit();
+    circuit.hops.add(hop);
+    saveCircuit(circuit);
+  }
+
+  static void saveCircuit(Circuit circuit) async {
+    UserPreferences().setCircuit(circuit);
+    OrchidAPI().updateConfiguration();
+    OrchidAPI().circuitConfigurationChanged.add(null);
   }
 }

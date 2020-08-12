@@ -20,27 +20,42 @@
 /* }}} */
 
 
-#include <cppcoro/when_all.hpp>
-
 #include <openssl/obj_mac.h>
 
+#include "chainlink.hpp"
 #include "client.hpp"
 #include "endpoint.hpp"
+#include "fiat.hpp"
 #include "local.hpp"
+#include "market.hpp"
 #include "network.hpp"
 #include "sleep.hpp"
+#include "uniswap.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
-Network::Network(const std::string &rpc, Address directory, Address location) :
+Network::Network(const std::string &rpc, Address directory, Address location, const S<Origin> &origin) :
     locator_(Locator::Parse(rpc)),
     directory_(std::move(directory)),
-    location_(std::move(location))
+    location_(std::move(location)),
+    market_(Make<Market>(5*60*1000, origin, Wait(UniswapFiat(5*60*1000, {origin, locator_})))),
+    oracle_(Wait(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> { try {
+        static const Float Ten5("100000");
+        const auto oracle(co_await Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5));
+        // XXX: our Chainlink aggregation can have its answer forged by either Chainlink swapping the oracle set
+        //      or by Orchid modifying the backend from our dashboard that Chainlink pays its oracles to consult
+        co_return oracle > 0.10 ? 0.10 : oracle;
+    } orc_catch({
+        // XXX: our Chainlink aggregation has a remote killswitch in it left by Chainlink, so we need a fallback
+        // XXX: figure out if there is a better way to detect this condition vs. another random JSON/RPC failure
+        co_return 0.06;
+    }) }, "Chainlink")))
 {
     generator_.seed(boost::random::random_device()());
 }
 
-task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller) {
+task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const char *justin) {
     Endpoint endpoint(origin, locator_);
 
     // XXX: this adjustment is suboptimal; it seems to help?
@@ -57,24 +72,26 @@ task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const 
         Beam argument;
         const auto curator(co_await endpoint.Resolve(latest, name));
 
-        static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
-        auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
-        orc_assert(delay >= 90*24*60*60);
+        const auto address(co_await [&]() -> task<Address> {
+            if (provider != Address(0))
+                co_return provider;
 
-        // XXX: this is a stupid hack
-        if (provider != Address(0))
-            address = provider;
+            static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
+            const auto [address, delay] = co_await pick_.Call(endpoint, latest, directory_, 90000, generator_());
+            orc_assert(delay >= 90*24*60*60);
+            co_return address;
+        }());
 
         static const Selector<uint128_t, Address, Bytes> good_("good");
         static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
 
-        const auto [good, look] = co_await cppcoro::when_all(
+        const auto [good, look] = *co_await Parallel(
             good_.Call(endpoint, latest, curator, 90000, address, argument),
-            look_.Call(endpoint, latest, location_, 90000, address)
-        );
+            look_.Call(endpoint, latest, location_, 90000, address));
+        const auto &[set, url, tls, gpg] = look;
 
         orc_assert(good != 0);
-        const auto &[set, url, tls, gpg] = look;
+        orc_assert(set != 0);
 
         Window window(tls);
         orc_assert(window.Take() == 0x06);
@@ -97,10 +114,18 @@ task<Client *> Network::Select(BufferSunk &sunk, const S<Origin> &origin, const 
     }();
 
     static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look_("look");
-    const auto [amount, escrow, unlock, verify, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
+    const auto [amount, escrow, unlock, seller, codehash, shared] = co_await look_.Call(endpoint, latest, lottery, 90000, funder, Address(Commonize(secret)));
     orc_assert(unlock == 0);
 
-    auto &client(sunk.Wire<Client>(std::move(url), std::move(fingerprint), std::move(endpoint), lottery, chain, secret, funder, seller, std::min(amount, escrow / 2)));
+    auto &client(sunk.Wire<Client>(
+        std::move(url), std::move(fingerprint),
+        std::move(endpoint), market_, oracle_,
+        lottery, chain,
+        secret, funder,
+        seller, std::min(amount, escrow / 2),
+        justin
+    ));
+
     co_await client.Open(origin);
     co_return &client;
 }

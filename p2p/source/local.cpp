@@ -26,10 +26,11 @@
 #include "local.hpp"
 #include "manager.hpp"
 #include "port.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 
-class LocalOpening final :
+class LocalOpening :
     public Opening
 {
   private:
@@ -55,7 +56,6 @@ class LocalOpening final :
         Spawn([this]() noexcept -> task<void> {
             for (;;) {
                 // XXX: use Beam.subset
-                // NOLINTNEXTLINE (modernize-avoid-c-arrays)
                 char data[2048];
                 asio::ip::udp::endpoint endpoint;
                 size_t writ;
@@ -73,7 +73,7 @@ class LocalOpening final :
             }
 
             Stop();
-        });
+        }, __FUNCTION__);
     }
 
     void Open(const Socket &endpoint) {
@@ -132,9 +132,9 @@ rtc::BasicPacketSocketFactory &Local::Factory() {
 }
 
 task<void> Local::Associate(BufferSunk &sunk, const Socket &endpoint) {
-    auto connection(std::make_unique<Connection<asio::ip::udp::socket, true>>(Context()));
-    co_await connection->Open(endpoint);
-    auto &inverted(sunk.Wire<Inverted>(std::move(connection)));
+    auto association(std::make_unique<Association<asio::ip::udp::socket>>(Context()));
+    co_await association->Open(endpoint);
+    auto &inverted(sunk.Wire<Inverted>(std::move(association)));
     inverted.Open();
 }
 
@@ -145,7 +145,7 @@ task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> &sunk) {
 }
 
 task<U<Stream>> Local::Connect(const Socket &endpoint) {
-    auto connection(std::make_unique<Connection<asio::ip::tcp::socket, false>>(Context()));
+    auto connection(std::make_unique<Connection>(Context()));
     // NOLINTNEXTLINE (clang-analyzer-optin.cplusplus.VirtualCall)
     co_await connection->Open(endpoint);
     co_return connection;

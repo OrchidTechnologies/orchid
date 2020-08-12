@@ -21,15 +21,16 @@
 
 
 #include "coinbase.hpp"
-#include "error.hpp"
+#include "fiat.hpp"
 #include "json.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
-#include "trace.hpp"
+#include "parallel.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
-task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust) {
+task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &from, const Float &adjust) {
     const auto response(co_await origin.Fetch("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {}));
     const auto result(Parse(response.body()));
     if (response.result() == http::status::ok) {
@@ -43,6 +44,18 @@ task<Float> Price(Origin &origin, const std::string &from, const std::string &to
         const auto message(error["message"].asString());
         orc_throw(response.result() << "/" << id << ": " << message);
     }
+}
+
+task<Fiat> Coinbase(Origin &origin, const std::string &to) { try {
+    auto [eth, oxt] = *co_await Parallel(Coinbase(origin, to, "ETH", Ten18), Coinbase(origin, to, "OXT", Ten18));
+    co_return Fiat{std::move(eth), std::move(oxt)};
+} orc_stack({}, "updating fiat prices") }
+
+
+task<S<Updated<Fiat>>> CoinbaseFiat(unsigned milliseconds, S<Origin> origin, std::string currency) {
+    co_return co_await Update(milliseconds, [origin = std::move(origin), currency = std::move(currency)]() -> task<Fiat> {
+        co_return co_await Coinbase(*origin, currency);
+    }, "Coinbase");
 }
 
 }

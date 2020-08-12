@@ -37,23 +37,23 @@ class Actor final :
 
     void Stop(const std::string &error) noexcept override {
         // XXX: how much does this matter?
-_trace();
+orc_trace();
     }
 
   public:
-    Actor(const S<Origin> &origin, Configuration configuration) :
-        Peer(origin, std::move(configuration))
+    Actor(S<Origin> origin, Configuration configuration) :
+        Peer(std::move(origin), std::move(configuration))
     {
     }
 
     ~Actor() override {
-_trace();
+orc_trace();
         Close();
     }
 };
 
-task<Socket> Channel::Wire(BufferSunk &sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
-    const auto client(Make<Actor>(origin, std::move(configuration)));
+task<Socket> Channel::Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
+    const auto client(Make<Actor>(std::move(origin), std::move(configuration)));
     auto &channel(sunk.Wire<Channel>(client));
     const auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);

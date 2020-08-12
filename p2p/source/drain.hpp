@@ -74,8 +74,8 @@ class Sunk {
     }
 
     template <typename Type_, typename... Args_>
-    Type_ &Wire(Args_ &&...args) noexcept(noexcept(Type_(Gave(), std::forward<Args_>(args)...))) {
-        auto inner(std::make_unique<Type_>(Gave(), std::forward<Args_>(args)...));
+    Type_ &Wire(Args_ &&...args) noexcept(noexcept(Covered<Type_>(Gave(), std::forward<Args_>(args)...))) {
+        auto inner(std::make_unique<Covered<Type_>>(Gave(), std::forward<Args_>(args)...));
         auto &backup(*inner);
         orc_insist(!Wired());
         inner_ = std::move(inner);
@@ -84,7 +84,7 @@ class Sunk {
 };
 
 template <typename Base_, typename Drain_, typename Inner_ = typename std::remove_reference<decltype(std::declval<Outer<Base_>>().Inner())>::type>
-class Sink final :
+class Sink :
     public Base_,
     public Sunk<Drain_, Inner_>
 {

@@ -23,12 +23,16 @@
 #ifndef ORCHID_TRACE_HPP
 #define ORCHID_TRACE_HPP
 
-#include <pthread.h>
+#include "buffer.hpp"
 
-#include "log.hpp"
+namespace orc {
 
-#define _trace() do { \
-    orc::Log() << "\e[31m[" << std::hex << pthread_self() << "] _trace(" << __FILE__ << ":" << std::dec << __LINE__ << "): " << __FUNCTION__ << "\e[0m" << std::endl; \
-} while (false)
+#ifdef ORC_TRACE
+void Trace(const char *type, bool send, bool deep, const Buffer &data);
+#else
+inline void Trace(const char *type, bool send, bool deep, const Buffer &data) {}
+#endif
+
+}
 
 #endif//ORCHID_TRACE_HPP

@@ -35,10 +35,6 @@ class MockOrchidAPI implements OrchidAPI {
     // init connection status
     connectionStatus.add(OrchidConnectionState.NotConnected);
 
-    // fake sync progress
-    syncStatus.add(
-        OrchidSyncStatus(state: OrchidSyncState.InProgress, progress: 0.5));
-
     // fake route updates
     routeStatus.add(_fakeRoute());
     _routeTimer = Timer.periodic(Duration(seconds: 3), (timer) {
@@ -69,9 +65,6 @@ class MockOrchidAPI implements OrchidAPI {
 
   /// Publish the connection status.
   final connectionStatus = BehaviorSubject<OrchidConnectionState>();
-
-  /// Publish the synchronization status.
-  final syncStatus = BehaviorSubject<OrchidSyncStatus>();
 
   /// Publish the network route status.
   final routeStatus = BehaviorSubject<OrchidRoute>();
@@ -123,8 +116,8 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   Future<bool> setWallet(OrchidWallet wallet) async {
     this._wallet = wallet;
-    logger().write("Saved wallet");
-    return wallet.private.privateKey.startsWith("fail") ? false : true;
+    logger().write('Saved wallet');
+    return wallet.private.privateKey.startsWith('fail') ? false : true;
   }
 
   /// Remove any stored wallet credentials.
@@ -179,7 +172,7 @@ class MockOrchidAPI implements OrchidAPI {
       case OrchidConnectionState.Disconnecting:
         if (connect) {
           _setConnectionState(OrchidConnectionState.Connecting);
-          _connectFuture = Future.delayed(Duration(milliseconds: 2500), () {
+          _connectFuture = Future.delayed(Duration(milliseconds: 3000), () {
             _setConnectionState(OrchidConnectionState.Connected);
           });
         } else {
@@ -209,7 +202,7 @@ class MockOrchidAPI implements OrchidAPI {
   Future<void> reroute() async {}
 
   void _setConnectionState(OrchidConnectionState state) {
-    logger().write("Connection state: $state");
+    logger().write('Connection state: $state');
     connectionStatus.add(state);
   }
 

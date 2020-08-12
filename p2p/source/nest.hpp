@@ -28,14 +28,15 @@
 #include <cppcoro/single_consumer_event.hpp>
 
 #include "log.hpp"
+#include "spawn.hpp"
 #include "task.hpp"
-#include "trace.hpp"
+#include "time.hpp"
 #include "valve.hpp"
 
 namespace orc {
 
 class Nest :
-    public Valve
+    public Covered<Valve>
 {
   private:
     std::atomic<unsigned> limit_;
@@ -85,19 +86,28 @@ class Nest :
     task<void> Shut() noexcept override {
         limit_ = 0;
         while (count_ != 0)
-            co_await event_.Wait();
+            co_await *event_;
         Valve::Stop();
         co_await Valve::Shut();
     }
 
     template <typename Code_>
-    auto Hatch(Code_ code) noexcept -> typename std::enable_if<noexcept(code()), bool>::type {
+    auto Hatch(Code_ code, const char *name) noexcept -> typename std::enable_if<noexcept(code()), bool>::type {
         Count count(this);
         if (count > limit_)
             return false;
-        Spawn([count = std::move(count), code = code()]() mutable noexcept -> task<void> {
+        Spawn([
+#if ORC_TIMEOUT
+            before = Monotonic(),
+#endif
+        count = std::move(count), code = code()]() mutable noexcept -> task<void> {
             orc_ignore({ co_await code(); });
-        });
+#if ORC_TIMEOUT
+            const auto duration(Monotonic() - before);
+            if (duration > ORC_TIMEOUT)
+                Log() << std::dec << duration << " us";
+#endif
+        }, name);
         return true;
     }
 };

@@ -4,9 +4,11 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
+import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_api.dart';
 import '../orchid_budget_api.dart';
+import '../orchid_log_api.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -93,6 +95,31 @@ class UserPreferences {
     return Circuit.fromJson(jsonDecode(value));
   }
 
+  // Add a single hop to the recently deleted list
+  void addRecentlyDeletedHop(CircuitHop hop) async {
+    var hops = await getRecentlyDeleted();
+    hops.hops.add(hop);
+    await setRecentlyDeleted(hops);
+  }
+
+  // Store recently deleted hops
+  Future<bool> setRecentlyDeleted(Hops hops) async {
+    log("saving recently deleted hops: ${hops.hops}");
+    String value = jsonEncode(hops);
+    return (await SharedPreferences.getInstance())
+        .setString(UserPreferenceKey.RecentlyDeletedHops.toString(), value);
+  }
+
+  // Get a list of recently deleted hops.
+  Future<Hops> getRecentlyDeleted() async {
+    String value = (await SharedPreferences.getInstance())
+        .getString(UserPreferenceKey.RecentlyDeletedHops.toString());
+    if (value == null) {
+      return Hops([]);
+    }
+    return Hops.fromJson(jsonDecode(value));
+  }
+
   // Get the user editable configuration file text.
   Future<String> getUserConfig() async {
     return (await SharedPreferences.getInstance())
@@ -148,6 +175,18 @@ class UserPreferences {
   // Note: Minimizes exposure to the full setKeys()
   Future<bool> addKey(StoredEthereumKey key) async {
     var keys = ((await UserPreferences().getKeys()) ?? []) + [key];
+    return UserPreferences().setKeys(keys);
+  }
+
+  /// Remove a key from the user's keystore.
+  Future<bool> removeKey(StoredEthereumKeyRef keyRef) async {
+    var keys = ((await UserPreferences().getKeys()) ?? []);
+    try {
+      keys.removeWhere((key) => key.uid == keyRef.keyUid);
+    } catch( err) {
+      log("account: error removing key: $keyRef");
+      return false;
+    }
     return UserPreferences().setKeys(keys);
   }
 
@@ -226,16 +265,17 @@ class UserPreferences {
         UserPreferenceKey.FirstLaunchInstructionsViewed.toString(), value);
   }
 
-  Future<bool> getAllowNoHopVPN() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
-        false;
-  }
-
-  Future<bool> setAllowNoHopVPN(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
-  }
+  ObservablePreference<bool> allowNoHopVPN = ObservablePreference(
+      key: UserPreferenceKey.AllowNoHopVPN,
+      loadValue: (key) async {
+        return (await SharedPreferences.getInstance())
+                .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
+            false;
+      },
+      storeValue: (key, value) async {
+        return (await SharedPreferences.getInstance())
+            .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
+      });
 
   /// Stores the shared, single, outstanding PAC transaction or null if there is none.
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
@@ -256,6 +296,7 @@ enum UserPreferenceKey {
   PromptedForVPNPermission,
   Budget,
   Circuit,
+  RecentlyDeletedHops,
   UserConfig,
   Keys,
   DefaultCurator,

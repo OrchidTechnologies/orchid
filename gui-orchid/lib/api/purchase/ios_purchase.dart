@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:orchid/api/orchid_pricing.dart';
+import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_pac_server.dart';
 import 'orchid_purchase.dart';
+import 'package:intl/intl.dart';
 
 class IOSOrchidPurchaseAPI
     implements OrchidPurchaseAPI, SKTransactionObserverWrapper {
@@ -15,7 +18,7 @@ class IOSOrchidPurchaseAPI
   ///    debug: true
   ///  }'
   static PACApiConfig prodAPIConfig = PACApiConfig(
-      enabled: false,
+      enabled: true,
       url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple');
 
   /// Return the API config allowing overrides from configuration.
@@ -26,24 +29,28 @@ class IOSOrchidPurchaseAPI
 
   @override
   void initStoreListener() async {
-    print("iap: init store listener");
+    log("iap: init store listener");
     SKPaymentQueueWrapper().setTransactionObserver(this);
 
     // Log all PAC Tx activity for now
     await PacTransaction.shared.ensureInitialized();
     PacTransaction.shared.stream().listen((PacTransaction tx) {
-      print("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
+      log("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
     });
 
     // Note: This is an attempt to mitigate an "unable to connect to iTunes Store"
     // Note: error observed in TestFlight by starting the connection process earlier.
     // Note: Products are otherwise fetched immediately prior to purchase.
-    await _requestProducts();
+    try {
+      await requestProducts();
+    } catch (err) {
+      log("iap: error in request products: $err");
+    }
 
     // Reset any existing tx after an app restart.
     var pacTx = await PacTransaction.shared.get();
     if (pacTx != null) {
-      print("iap: Found PAC tx in progress after app startup.");
+      log("iap: Found PAC tx in progress after app startup.");
       pacTx.state = PacTransactionState.WaitingForUserAction;
       pacTx.save();
     }
@@ -52,26 +59,26 @@ class IOSOrchidPurchaseAPI
   /// Initiate a PAC purchase. The caller should watch PacTransaction.shared
   /// for progress and results.
   Future<void> purchase(PAC pac) async {
-    print("iap: purchase pac");
+    log("iap: purchase pac");
     if (!await OrchidPurchaseAPI.isWithinPurchaseRateLimit(pac)) {
       throw PACPurchaseExceedsRateLimit();
     }
 
     // Refresh the products list:
     // Note: Doing this on app start does not seem to be sufficient.
-    await _requestProducts();
+    await requestProducts();
 
     // Ensure no other transaction is pending completion.
     if (await PacTransaction.shared.hasValue()) {
-      throw Exception("PAC transaction already in progress.");
+      throw Exception('PAC transaction already in progress.');
     }
     var payment = SKPaymentWrapper(productIdentifier: pac.productId);
     try {
-      print("iap: add payment to queue");
+      log("iap: add payment to queue");
       await SKPaymentQueueWrapper().addPayment(payment);
       PacTransaction.pending(pac.productId).save();
     } catch (err) {
-      print("Error adding payment to queue: $err");
+      log("Error adding payment to queue: $err");
       // The exception will be handled by the calling UI. No tx started.
       rethrow;
     }
@@ -81,52 +88,51 @@ class IOSOrchidPurchaseAPI
   @override
   void updatedTransactions(
       {List<SKPaymentTransactionWrapper> transactions}) async {
-    print("iap: received (${transactions.length}) updated transactions");
+    log("iap: received (${transactions.length}) updated transactions");
     for (SKPaymentTransactionWrapper tx in transactions) {
       switch (tx.transactionState) {
         case SKPaymentTransactionStateWrapper.purchasing:
-          print("iap: IAP purchasing state");
+          log("iap: IAP purchasing state");
           break;
 
         case SKPaymentTransactionStateWrapper.restored:
           // Are we getting this on a second purchase attempt that we dropped?
           // Attempting to just handle it as a new purchase for now.
-          print("iap: iap purchase restored?");
+          log("iap: iap purchase restored?");
           _completeIAPTransaction(tx);
           break;
 
         case SKPaymentTransactionStateWrapper.purchased:
-          print("iap: IAP purchased state");
+          log("iap: IAP purchased state");
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
           } catch (err) {
-            print("iap: error finishing purchased tx: $err");
+            log("iap: error finishing purchased tx: $err");
           }
           _completeIAPTransaction(tx);
           break;
 
         case SKPaymentTransactionStateWrapper.failed:
-          print("iap: IAP failed state");
+          log("iap: IAP failed state");
 
-          print("iap: finishing failed tx");
+          log("iap: finishing failed tx");
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
           } catch (err) {
-            print("iap: error finishing cancelled tx: $err");
+            log("iap: error finishing cancelled tx: $err");
           }
 
           if (tx.error?.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
-            print("iap: was cancelled");
+            log("iap: was cancelled");
             PacTransaction.shared.clear();
           } else {
-            print(
-                "iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
+            log("iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
             PacTransaction.shared.set(PacTransaction.error("iap failed"));
           }
           break;
 
         case SKPaymentTransactionStateWrapper.deferred:
-          print("iap: iap deferred");
+          log("iap: iap deferred");
           break;
       }
     }
@@ -137,38 +143,99 @@ class IOSOrchidPurchaseAPI
     // Update the stored PAC tx
     var pacTx = await PacTransaction.shared.get();
 
-    // Recover from a re-install with a completed iap pending
+    // Recover from a re-install after delete with a completed iap pending
+    // Note: If this happens we have lost the receipt data in the bundle.
+    // Note: For now let's assume the user wanted out and finish the tx.
     if (pacTx == null) {
-      print(
-          "iap: Found completed iap purchase with no pending PAC tx. Cleaning.");
-      // Note: If this happens we have lost the receipt data in the bundle.
-      // Note: For now let's assume the user wanted out and finish the tx.
+      log("iap: Found completed iap purchase with no pending PAC tx. Cleaning.");
       await PacTransaction.shared.clear();
       return;
     }
 
     // Attach the receipt
     try {
-      pacTx.receipt = await SKReceiptManager.retrieveReceiptData();
+      var receipt = await SKReceiptManager.retrieveReceiptData();
+
+      // If the receipt is null, try to refresh it.
+      // (This might happen if there was a purchase in flight during an upgrade.)
+      if (receipt == null) {
+        try {
+          await SKRequestMaker().startRefreshReceiptRequest();
+        } catch (err) {
+          log("iap: Error in refresh receipt request");
+        }
+        receipt = await SKReceiptManager.retrieveReceiptData();
+      }
+
+      // If the receipt is still null there's not much we can do.
+      if (receipt == null) {
+        log("iap: Completed purchase but no receipt found! Clearing transaction.");
+        await PacTransaction.shared.clear();
+        return;
+      }
+
+      pacTx.receipt = receipt;
       pacTx.save();
     } catch (err) {
-      print("iap: error getting receipt data for comleted iap");
+      log("iap: error getting receipt data for comleted iap");
     }
 
     OrchidPACServer().processPendingPACTransaction();
   }
 
-  Future<void> _requestProducts() async {
+  static Map<String, PAC> productsCached;
+
+  @override
+  Future<Map<String, PAC>> requestProducts({bool refresh = false}) async {
+    if (productsCached != null && !refresh) {
+      log("iap: returning cached products");
+      return productsCached;
+    }
+
     var productIds = [
-      OrchidPurchaseAPI.pacTier1.productId,
-      OrchidPurchaseAPI.pacTier2.productId,
-      OrchidPurchaseAPI.pacTier3.productId
+      OrchidPurchaseAPI.pacTier1,
+      OrchidPurchaseAPI.pacTier2,
+      OrchidPurchaseAPI.pacTier3
     ];
-    print("iap: product ids requested: $productIds");
+    log("iap: product ids requested: $productIds");
     SkProductResponseWrapper productResponse =
         await SKRequestMaker().startProductRequest(productIds);
-    print(
-        "iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
+    log("iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
+
+    var findProd = (String id) {
+      return productResponse.products
+          .firstWhere((p) => p.productIdentifier == id);
+    };
+    var pac1 = findProd(OrchidPurchaseAPI.pacTier1);
+    var pac2 = findProd(OrchidPurchaseAPI.pacTier2);
+    var pac3 = findProd(OrchidPurchaseAPI.pacTier3);
+    log("pac1 = ${pac1.productIdentifier}, ${pac1.price}, ${pac1.priceLocale.currencyCode}, ${pac1.priceLocale.currencySymbol}");
+    log("pac2 = ${pac2.productIdentifier}, ${pac2.price}, ${pac2.priceLocale.currencyCode}, ${pac2.priceLocale.currencySymbol}");
+    log("pac3 = ${pac3.productIdentifier}, ${pac3.price}, ${pac3.priceLocale.currencyCode}, ${pac3.priceLocale.currencySymbol}");
+
+    var toPAC = (SKProductWrapper prod) {
+      double localizedPrice = double.parse(prod.price);
+      String currencyCode = prod.priceLocale.currencyCode;
+      return PAC(
+          productId: prod.productIdentifier,
+          localPurchasePrice: localizedPrice,
+          localCurrencyCode: currencyCode,
+          localDisplayPrice:
+              NumberFormat.currency(symbol: prod.priceLocale.currencySymbol)
+                  .format(localizedPrice),
+          usdPriceApproximate: StaticExchangeRates.from(
+            price: localizedPrice,
+            currencyCode: currencyCode,
+          ));
+    };
+    var products = {
+      pac1.productIdentifier: toPAC(pac1),
+      pac2.productIdentifier: toPAC(pac2),
+      pac3.productIdentifier: toPAC(pac3),
+    };
+    productsCached = products;
+    log("iap: returning products");
+    return products;
   }
 
   @override
@@ -182,11 +249,11 @@ class IOSOrchidPurchaseAPI
 
   @override
   void removedTransactions({List<SKPaymentTransactionWrapper> transactions}) {
-    print("removed transactions: $transactions");
+    log("removed transactions: $transactions");
   }
 
   @override
   void restoreCompletedTransactionsFailed({SKError error}) {
-    print("restore failed");
+    log("restore failed");
   }
 }

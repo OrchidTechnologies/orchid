@@ -1,0 +1,18 @@
+/* https://medium.com/@bruno.raljic/animated-multi-part-progress-bar-made-from-scratch-with-reactjs-and-css-9c1d6a4dbef7*/
+
+.progressVisualFull {
+  display: flex;
+  height: 6px;
+  margin: 20px 0;
+}
+
+.progressVisualPart {
+  transition: width 2s;
+}
+
+body {
+  margin: 20px;
+  padding: 20px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+}

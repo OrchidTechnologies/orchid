@@ -20,25 +20,25 @@
 /* }}} */
 
 
+#include <boost/filesystem/operations.hpp>
+
 #include <cppcoro/async_latch.hpp>
 #include <cppcoro/async_mutex.hpp>
-
-#include <boost/filesystem/string_file.hpp>
 
 #include <openvpn/addr/ipv4.hpp>
 
 #include <dns.h>
-#include <duktape.h>
 
 #include "acceptor.hpp"
+#include "boring.hpp"
 #include "datagram.hpp"
 #include "capture.hpp"
 #include "client.hpp"
 #include "connection.hpp"
 #include "database.hpp"
-#include "directory.hpp"
 #include "forge.hpp"
 #include "heap.hpp"
+#include "load.hpp"
 #include "local.hpp"
 #include "monitor.hpp"
 #include "network.hpp"
@@ -47,6 +47,7 @@
 #include "retry.hpp"
 #include "remote.hpp"
 #include "syscall.hpp"
+#include "trace.hpp"
 #include "transport.hpp"
 
 namespace orc {
@@ -143,7 +144,6 @@ class Nameless :
     }
 
     void get_DNS_answers(const Span<const uint8_t> &span) {
-        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         dns_decoded_t decoded[DNS_DECODEBUF_4K];
         size_t decodesize = sizeof(decoded);
 
@@ -230,10 +230,10 @@ class Nameless :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    if (internal_) nest_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
-        if (co_await internal_->Send(data))
+    if (internal_) up_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
+        if (co_await internal_->Send(data) && analyzer_ != nullptr)
             analyzer_->Analyze(data.span());
-    }; });
+    }; }, __FUNCTION__);
 }
 
 void Capture::Stop(const std::string &error) noexcept {
@@ -243,22 +243,21 @@ void Capture::Stop(const std::string &error) noexcept {
 
 void Capture::Land(const Buffer &data, bool analyze) {
     //Log() << "\e[33;1mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
-    nest_.Hatch([&]() noexcept { return [this, data = Beam(data), analyze]() mutable -> task<void> {
+    down_.Hatch([&]() noexcept { return [this, data = Beam(data), analyze]() mutable -> task<void> {
         co_await Inner().Send(data);
-        if (analyze)
+        if (analyze && analyzer_ != nullptr)
             analyzer_->AnalyzeIncoming(data.span());
-    }; });
+    }; }, __FUNCTION__);
 }
 
 Capture::Capture(const Host &local) :
     local_(local),
-    nest_(32),
-    analyzer_(std::make_unique<Nameless>(Group() + "/analysis.db"))
+    up_(32)
 {
 }
 
 Capture::~Capture() {
-_trace();
+orc_trace();
 }
 
 
@@ -328,7 +327,7 @@ class Flow {
 
             output->Shut();
             latch.count_down();
-        });
+        }, __FUNCTION__);
     }
 
   public:
@@ -343,7 +342,7 @@ class Flow {
         Spawn([this]() noexcept -> task<void> {
             co_await latch_;
             co_await plant_->Pull(four_);
-        });
+        }, __FUNCTION__);
 
         Splice(up_.get(), down_.get());
         Splice(down_.get(), up_.get());
@@ -404,9 +403,9 @@ class Split :
             }());
             if (flow == nullptr)
                 co_return;
-            flow->down_ = std::make_unique<Connection<asio::ip::tcp::socket, false>>(std::move(connection));
+            flow->down_ = std::make_unique<Connection>(std::move(connection));
             flow->Open();
-        });
+        }, __FUNCTION__);
     }
 
     void Stop(const std::string &error) noexcept override {
@@ -572,7 +571,7 @@ task<bool> Split::Send(const Beam &data) {
                         Forge(span, tcp, socket, local_);
                         capture_->Land(beam, false);
                     }
-                });
+                }, __FUNCTION__);
             }
 
             co_return true;
@@ -608,7 +607,7 @@ task<bool> Split::Send(const Beam &data) {
 }
 
 void Capture::Start(S<Origin> origin) {
-    auto split(std::make_unique<Split>(this, std::move(origin)));
+    auto split(std::make_unique<Covered<Split>>(this, std::move(origin)));
     split->Connect(local_);
     internal_ = std::move(split);
 }
@@ -627,7 +626,8 @@ class Pass :
     }
 
     void Stop(const std::string &error) noexcept override {
-        orc_insist_(false, error);
+        orc_insist_(error.empty(), error);
+        Internal::Stop();
     }
 
   public:
@@ -638,6 +638,7 @@ class Pass :
 
     task<void> Shut() noexcept override {
         co_await Sunken::Shut();
+        co_await Internal::Shut();
     }
 
     task<bool> Send(const Beam &beam) override {
@@ -647,21 +648,27 @@ class Pass :
 };
 
 BufferSunk &Capture::Start() {
-    auto pass(std::make_unique<BufferSink<Pass>>(this));
+    auto pass(std::make_unique<Covered<BufferSink<Pass>>>(this));
     auto &backup(*pass);
     internal_ = std::move(pass);
     return backup;
 }
 
-static duk_ret_t print(duk_context *ctx) {
-    duk_push_string(ctx, " ");
-    duk_insert(ctx, 0);
-    duk_join(ctx, duk_get_top(ctx) - 1);
-    Log() << duk_safe_to_string(ctx, -1) << std::endl;
-    return 0;
-}
+static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueConst *argv) { try {
+    orc_assert(argc == 1);
+    size_t size;
+    const auto data(JS_ToCStringLen(context, &size, argv[0]));
+    if (data == nullptr)
+        return JS_EXCEPTION;
+    _scope({ JS_FreeCString(context, data); });
+    Log() << std::string(data, size) << std::endl;
+    return JS_UNDEFINED;
+} catch (const std::exception &error) {
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
+    return JS_ThrowInternalError(context, "%s", error.what());
+} }
 
-static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop) { orc_block({
+static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop, const boost::filesystem::path &group) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
@@ -670,47 +677,51 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S
         const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
         const auto secret(orc_value(return, Secret(Bless(heap.eval<std::string>(hops + ".secret"))), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
-        const Address seller(heap.eval<std::string>(hops + ".seller", "0x0000000000000000000000000000000000000000"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
         const Address provider(heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000"));
-        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder, seller);
+        const std::string justin(heap.eval<std::string>(hops + ".justin", ""));
+        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder, justin.empty() ? nullptr : boost::filesystem::absolute(justin, group).string().c_str());
     } else if (protocol == "openvpn") {
         co_await Connect(sunk, origin, local,
             heap.eval<std::string>(hops + ".ovpnfile"),
             heap.eval<std::string>(hops + ".username"),
             heap.eval<std::string>(hops + ".password")
         );
-    }
+    } else if (protocol == "wireguard") {
+        co_await Guard(sunk, origin, local, heap.eval<std::string>(hops + ".config"));
+    } else orc_assert_(false, "unknown hop protocol: " << protocol);
 }, "building hop #" << hop); }
 
 extern double WinRatio_;
 
 void Capture::Start(const std::string &path) {
-    Heap heap;
-
-    duk_push_c_function(heap, &print, 1);
-    duk_put_global_string(heap, "print");
+    Heap heap; {
+        Value global(heap, JS_GetGlobalObject(heap));
+        JS_SetPropertyStr(heap, global, "print", JS_NewCFunction(heap, &Print, "print", 1));
+    }
 
     heap.eval<void>(R"(
         eth_directory = "0x918101FB64f467414e9a785aF9566ae69C3e22C5";
         eth_location = "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD";
         eth_winratio = 0;
-        rpc = "https://mainnet.infura.io/v3/63c2f3be7b02422d821307f1270e5baf";
         hops = [];
+        logdb = "analysis.db";
         //stun = "stun:stun.l.google.com:19302";
     )");
 
-    {
-        std::string config;
-        boost::filesystem::load_string_file(path, config);
-        heap.eval<void>(config);
-    }
+    heap.eval<void>(Load(path));
 
-    S<Origin> origin(Break<Local>());
+    const auto group(boost::filesystem::path(path).parent_path());
+
+    const auto analysis(heap.eval<std::string>("logdb"));
+    if (!analysis.empty())
+        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
+
+    S<Origin> local(Break<Local>());
 
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0)
-        return Start(std::move(origin));
+        return Start(std::move(local));
 
     WinRatio_ = heap.eval<double>("eth_winratio");
 
@@ -720,21 +731,23 @@ void Capture::Start(const std::string &path) {
     auto &sunk(*remote);
 #else
     S<Remote> remote;
-    const auto host(origin->Host());
+    const auto host(local->Host());
     auto &sunk(Start());
 #endif
 
-    auto code([heap = std::move(heap), hops, origin = std::move(origin), host](BufferSunk &sunk) mutable -> task<void> {
-        Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")));
+    Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), local);
+
+    auto code([heap = std::move(heap), hops, local = std::move(local), network = std::move(network), host, group](BufferSunk &sunk) mutable -> task<void> {
+        auto origin(local);
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<BufferSink<Remote>>());
-            co_await Single(*remote, heap, network, origin, remote->Host(), i);
+            co_await Single(*remote, heap, network, origin, remote->Host(), i, group);
             remote->Open();
             origin = std::move(remote);
         }
 
-        co_await Single(sunk, heap, network, origin, host, hops - 1);
+        co_await Single(sunk, heap, network, origin, host, hops - 1, group);
     });
 
     auto &retry(sunk.Wire<Retry<decltype(code)>>(std::move(code)));
@@ -747,10 +760,14 @@ void Capture::Start(const std::string &path) {
 }
 
 task<void> Capture::Shut() noexcept {
-    co_await nest_.Shut();
+    co_await Parallel(up_.Shut(), down_.Shut());
     if (internal_ != nullptr)
         co_await internal_->Shut();
+orc_trace();
+    analyzer_ = nullptr;
+    exit(0);
     co_await Sunken::Shut();
+orc_trace();
     co_await Valve::Shut();
 }
 

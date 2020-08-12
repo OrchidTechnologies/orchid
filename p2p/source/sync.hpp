@@ -23,39 +23,25 @@
 #ifndef ORCHID_SYNC_HPP
 #define ORCHID_SYNC_HPP
 
-#include <asio/ip/tcp.hpp>
-#include <asio/ip/udp.hpp>
-
 #include "baton.hpp"
 #include "link.hpp"
-#include "reader.hpp"
-#include "task.hpp"
 
 namespace orc {
 
-template <typename Sync_>
-class Sync final :
+class Sync :
     public Link<Buffer>
 {
   protected:
-    Sync_ sync_;
+    virtual size_t Read_(Beam &beam) = 0;
+    virtual size_t Send_(const Buffer &data) = 0;
 
   public:
-    template <typename... Args_>
-    Sync(BufferDrain &drain, Args_ &&...args) :
-        Link<Buffer>(drain),
-        sync_(std::forward<Args_>(args)...)
-    {
-    }
-
-    Sync_ *operator ->() {
-        return &sync_;
-    }
+    using Link<Buffer>::Link;
 
     size_t Read(Beam &beam) {
         size_t writ;
         try {
-            writ = sync_.receive(asio::buffer(beam.data(), beam.size()));
+            writ = Read_(beam);
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::eof)
@@ -93,24 +79,85 @@ class Sync final :
         }).detach();
     }
 
-    task<void> Shut() noexcept override {
-        orc_except({ sync_.close(); })
-        co_await Link::Shut();
-    }
-
     task<void> Send(const Buffer &data) override {
         if (Verbose)
             Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
         size_t writ;
         try {
-            writ = sync_.send(Sequence(data));
+            writ = Send_(data);
         } catch (const asio::system_error &error) {
             orc_adapt(error);
         }
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
 
         co_return;
+    }
+};
+
+template <typename Sync_>
+class SyncConnection :
+    public Sync
+{
+  protected:
+    Sync_ sync_;
+
+    size_t Read_(Beam &beam) override {
+        return sync_.receive(asio::buffer(beam.data(), beam.size()));
+    }
+
+    size_t Send_(const Buffer &data) override {
+        return sync_.send(Sequence(data));
+    }
+
+  public:
+    template <typename... Args_>
+    SyncConnection(BufferDrain &drain, Args_ &&...args) :
+        Sync(drain),
+        sync_(std::forward<Args_>(args)...)
+    {
+    }
+
+    Sync_ *operator ->() {
+        return &sync_;
+    }
+
+    task<void> Shut() noexcept override {
+        orc_except({ sync_.close(); })
+        co_await Link::Shut();
+    }
+};
+
+template <typename Sync_>
+class SyncFile :
+    public Sync
+{
+  protected:
+    Sync_ sync_;
+
+    size_t Read_(Beam &beam) override {
+        return sync_.read_some(asio::buffer(beam.data(), beam.size()));
+    }
+
+    size_t Send_(const Buffer &data) override {
+        return sync_.write_some(Sequence(data));
+    }
+
+  public:
+    template <typename... Args_>
+    SyncFile(BufferDrain &drain, Args_ &&...args) :
+        Sync(drain),
+        sync_(std::forward<Args_>(args)...)
+    {
+    }
+
+    Sync_ *operator ->() {
+        return &sync_;
+    }
+
+    task<void> Shut() noexcept override {
+        sync_.close();
+        co_await Link::Shut();
     }
 };
 

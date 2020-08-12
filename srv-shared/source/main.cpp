@@ -24,9 +24,11 @@
 #include <iostream>
 #include <regex>
 
-#include <unistd.h>
+#ifdef __linux__
+#include <ifaddrs.h>
+#endif
 
-#include <boost/filesystem/string_file.hpp>
+#include <unistd.h>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -43,32 +45,39 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
+#include "boring.hpp"
 #include "cashier.hpp"
 #include "channel.hpp"
+#include "coinbase.hpp"
 #include "egress.hpp"
+#include "fiat.hpp"
 #include "jsonrpc.hpp"
+#include "load.hpp"
 #include "local.hpp"
+#include "market.hpp"
 #include "node.hpp"
 #include "router.hpp"
 #include "scope.hpp"
 #include "server.hpp"
 #include "store.hpp"
+#include "syscall.hpp"
 #include "task.hpp"
-#include "trace.hpp"
 #include "transport.hpp"
+#include "tunnel.hpp"
 #include "utility.hpp"
+#include "version.hpp"
 
 namespace orc {
 
 namespace po = boost::program_options;
 
-// NOLINTNEXTLINE (modernize-avoid-c-arrays)
 int Main(int argc, const char *const argv[]) {
     po::variables_map args;
 
     po::options_description group("general command line");
     group.add_options()
         ("help", "produce help message")
+        ("version", "dump version (intense)")
     ;
 
     po::options_description options;
@@ -101,7 +110,6 @@ int Main(int argc, const char *const argv[]) {
         ("host", po::value<std::string>(), "external hostname for this server")
         ("bind", po::value<std::string>()->default_value("0.0.0.0"), "ip address for server to bind to")
         ("port", po::value<uint16_t>()->default_value(8443), "port to advertise on blockchain")
-        ("path", po::value<std::string>()->default_value("/"), "path of internal https endpoint")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
         ("network", po::value<std::string>(), "local interface for ICE candidates")
@@ -113,11 +121,13 @@ int Main(int argc, const char *const argv[]) {
         ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in currency / GB")
     ; options.add(group); }
 
-    { po::options_description group("openpvn egress");
+    { po::options_description group("packet egress");
     group.add_options()
-        ("ovpn-file", po::value<std::string>(), "openvpn .ovpn configuration file")
-        ("ovpn-user", po::value<std::string>()->default_value(""), "openvpn client credential (username)")
-        ("ovpn-pass", po::value<std::string>()->default_value(""), "openvpn client credential (password)")
+#ifdef __linux__
+        ("tunnel", po::value<std::string>(), "/dev/net/tun interface (Linux-only)")
+#endif
+        ("openvpn", po::value<std::string>(), "OpenVPN .ovpn configuration file")
+        ("wireguard", po::value<std::string>(), "WireGuard .conf configuration file")
     ; options.add(group); }
 
     po::positional_options_description positional;
@@ -145,6 +155,11 @@ int Main(int argc, const char *const argv[]) {
         return 0;
     }
 
+    if (args.count("version") != 0) {
+        std::cout.write(VersionData, VersionSize);
+        return 0;
+    }
+
 
     Initialize();
 
@@ -152,15 +167,13 @@ int Main(int argc, const char *const argv[]) {
     ice.emplace_back("stun:" + args["stun"].as<std::string>());
 
 
-    std::string params;
-    if (args.count("dh") == 0)
-        params = Params();
-    else
-        boost::filesystem::load_string_file(args["dh"].as<std::string>(), params);
+    const auto params(args.count("dh") == 0 ? Params() : Load(args["dh"].as<std::string>()));
 
 
     const auto store([&]() -> Store {
-        if (args.count("tls") == 0) {
+        if (args.count("tls") != 0)
+            return Load(args["tls"].as<std::string>());
+        else {
             const auto pem(Certify()->ToPEM());
             auto key(pem.private_key());
             auto chain(pem.certificate());
@@ -170,10 +183,6 @@ int Main(int argc, const char *const argv[]) {
             std::cerr << chain << std::endl;
 
             return Store(std::move(key), std::move(chain));
-        } else {
-            std::string store;
-            boost::filesystem::load_string_file(args["tls"].as<std::string>(), store);
-            return Store(store);
         }
     }());
 
@@ -194,9 +203,8 @@ int Main(int argc, const char *const argv[]) {
         host = boost::asio::ip::host_name();
 
     const auto port(args["port"].as<uint16_t>());
-    auto path(args["path"].as<std::string>());
 
-    const Strung url("https://" + host + ":" + std::to_string(port) + path);
+    const Strung url("https://" + host + ":" + std::to_string(port) + "/");
     Bytes gpg;
 
     Builder tls;
@@ -211,7 +219,6 @@ int Main(int argc, const char *const argv[]) {
 
     Address location(args["location"].as<std::string>());
     std::string password(args["password"].as<std::string>());
-    Address recipient(args.count("recipient") == 0 ? "0x0000000000000000000000000000000000000000" : args["recipient"].as<std::string>());
 
     auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
@@ -269,35 +276,61 @@ int Main(int argc, const char *const argv[]) {
         const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
         if (price == 0)
             return nullptr;
+
+        orc_assert_(args.count("recipient") != 0, "must specify --recipient unless --price is 0");
+        const Address recipient(args["recipient"].as<std::string>());
+
+        orc_assert_(args.count("personal") != 0, "must specify --personal unless --price is 0");
         const Address personal(args["personal"].as<std::string>());
-        return Break<Cashier>(std::move(endpoint),
-            price, args["currency"].as<std::string>(),
-            personal, password,
+
+        auto cashier(Break<Cashier>(
+            std::move(endpoint),
+            price, personal, password,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
-        );
-    }());
-
-    if (cashier != nullptr)
+        ));
         cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
-
-    auto egress([&]() -> S<Egress> {
-        if (args.count("ovpn-file") != 0) {
-            std::string ovpnfile;
-            boost::filesystem::load_string_file(args["ovpn-file"].as<std::string>(), ovpnfile);
-
-            auto username(args["ovpn-user"].as<std::string>());
-            auto password(args["ovpn-pass"].as<std::string>());
-
-            return Wait([origin, ovpnfile = std::move(ovpnfile), username = std::move(username), password = std::move(password)]() mutable -> task<S<Egress>> {
-                auto egress(Make<BufferSink<Egress>>(0));
-                co_await Connect(*egress, std::move(origin), 0, ovpnfile, username, password);
-                co_return egress;
-            }());
-        } else orc_assert(false);
+        return cashier;
     }());
 
-    const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(egress), std::move(ice)));
-    node->Run(path, asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
+    auto market(Make<Market>(5*60*1000, origin, Wait(CoinbaseFiat(5*60*1000, origin, args["currency"].as<std::string>()))));
+
+    auto egress([&]() { if (false) {
+#ifdef __linux__
+    } else if (args.count("tunnel") != 0) {
+        const auto tunnel(args["tunnel"].as<std::string>());
+
+        ifaddrs *addresses;
+        orc_syscall(getifaddrs(&addresses));
+        _scope({ freeifaddrs(addresses); });
+
+        const auto local([&]() -> Socket {
+            for (const auto *address(addresses); address != nullptr; address = address->ifa_next)
+                if (address->ifa_name == tunnel && address->ifa_addr != nullptr) {
+                    orc_assert_((address->ifa_flags & IFF_POINTOPOINT) != 0, "tunnel must be point-to-point");
+                    orc_assert_(address->ifa_dstaddr != nullptr, "tunnel must have destination");
+                    return *address->ifa_dstaddr;
+                }
+            orc_assert_(false, "cannot find interface " << tunnel);
+        }());
+
+        auto egress(Break<BufferSink<Egress>>(local.Host()));
+        Tunnel(*egress, tunnel, [&](const std::string &, const std::string &) {});
+        return egress;
+#endif
+    } else if (args.count("openvpn") != 0) {
+        const auto file(Load(args["openvpn"].as<std::string>()));
+        auto egress(Break<BufferSink<Egress>>(0));
+        Wait(Connect(*egress, origin, 0, file, "", ""));
+        return egress;
+    } else if (args.count("wireguard") != 0) {
+        const auto file(Load(args["wireguard"].as<std::string>()));
+        auto egress(Break<BufferSink<Egress>>(0));
+        Wait(Guard(*egress, origin, 0, file));
+        return egress;
+    } else orc_assert_(false, "must provide an egress option"); }());
+
+    const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(market), std::move(egress), std::move(ice)));
+    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
     return 0;
 }
 

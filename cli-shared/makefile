@@ -42,22 +42,26 @@ debug: $(output)/$(default)/orchid$(exe)
 $(call include,vpn/target.mk)
 
 ifeq ($(target),mac)
-cflags += -Iall/vpn-apple
-source += all/vpn-apple/protect.cpp
+cflags += -Iall/vpn-apple/source
+source += all/vpn-apple/source/protect.cpp
+source += all/vpn-apple/source/tunnel.cpp
 endif
 ifeq ($(target),win)
 cflags += -Iall/vpn-windows/tap-windows6/src
 endif
 ifeq ($(target),lnx)
-cflags += -Iall/vpn-linux
-source += all/vpn-linux/protect.cpp
+cflags += -Iall/vpn-linux/source
+source += all/vpn-linux/source/protect.cpp
+source += all/vpn-linux/source/tunnel.cpp
 endif
 
 source += $(wildcard source/*.cpp)
 
+cflags += -DORC_FIBER
+
 include env/output.mk
 
-$(output)/%/orchid: $(patsubst %,$(output)/$$*/%,$(object) $(linked))
+$(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@echo [LD] $@
 	@set -o pipefail; $(cxx) $(more/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 | nl
 	@openssl sha256 -r $@

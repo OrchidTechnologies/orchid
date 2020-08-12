@@ -18,9 +18,7 @@
 # }}}
 
 
-args := 
-args += --tls ../network.p12
-args += --dh ../dh.pem
+args := --price 0
 
 include env/target.mk
 
@@ -46,6 +44,12 @@ cflags += -I$(pwd)/source
 
 $(call include,p2p/target.mk)
 $(call include,cv8/target.mk)
+
+cflags += -Iall/vpn-shared/source
+ifeq ($(target),lnx)
+cflags += -Iall/vpn-linux/source
+source += all/vpn-linux/source/tunnel.cpp
+endif
 
 include env/output.mk
 

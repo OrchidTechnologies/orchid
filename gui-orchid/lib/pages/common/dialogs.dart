@@ -47,7 +47,7 @@ class Dialogs {
     );
   }
 
-  static void showConfirmationDialog(
+  static Future<bool> showConfirmationDialog(
       {@required BuildContext context,
       String title,
       String body,
@@ -57,7 +57,7 @@ class Dialogs {
       Color actionColor = AppColors.purple_3,
       VoidCallback cancelAction,
       VoidCallback commitAction}) {
-    showDialog(
+    return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         S s = S.of(context);
@@ -79,7 +79,7 @@ class Dialogs {
                 if (cancelAction != null) {
                   cancelAction();
                 }
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
             ),
             FlatButton(
@@ -89,7 +89,8 @@ class Dialogs {
                 if (commitAction != null) {
                   commitAction();
                 }
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(true);
+                return true;
               },
             ),
           ],

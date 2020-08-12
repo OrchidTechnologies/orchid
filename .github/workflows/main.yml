@@ -8,7 +8,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -27,7 +27,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -51,7 +51,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -66,7 +66,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -81,7 +81,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -100,7 +100,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -121,7 +121,7 @@ jobs:
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup-git.sh
     - name: git submodule
@@ -139,7 +139,7 @@ jobs:
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: make Linux server
       run: docker build --build-arg GIT_REPOSITORY=https://github.com/${{ github.repository }}.git --build-arg GIT_COMMIT=${{ github.sha }} --build-arg GIT_SETUP=env/setup-git.sh -t orchidd:latest srv-docker
@@ -159,7 +159,7 @@ jobs:
     - name: install NDK r21
       run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.0.6113669" >/dev/null
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -178,7 +178,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -196,7 +196,7 @@ jobs:
     - name: install mingw-w64
       run: brew install mingw-w64 coreutils
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -221,7 +221,7 @@ jobs:
     - name: install mingw-w64
       run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule
@@ -239,7 +239,7 @@ jobs:
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
     - name: git submodule

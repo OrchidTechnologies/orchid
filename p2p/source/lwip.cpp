@@ -1,35 +1,15 @@
-/* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
-*/
-
-/* GNU Affero General Public License, Version 3 {{{ */
 /*
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
-
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-**/
-/* }}} */
+ *  Copyright 2004 The WebRTC Project Authors. All rights reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
 
 #include "lwip.hpp"
 #include "log.hpp"
-
-#define LWIP_SOCKET_EXTERNAL_HEADERS 1
-#ifdef __MINGW32__
-#define LWIP_SOCKET_EXTERNAL_HEADER_INET_H <winsock2.h>
-#define LWIP_SOCKET_EXTERNAL_HEADER_SOCKETS_H <winsock2.h>
-#else
-#define LWIP_SOCKET_EXTERNAL_HEADER_INET_H <arpa/inet.h>
-#define LWIP_SOCKET_EXTERNAL_HEADER_SOCKETS_H <sys/socket.h>
-#endif
 
 #include <lwip/opt.h>
 #include <lwip/sockets.h>
@@ -65,6 +45,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+
 #include <errno.h>
 
 #include <algorithm>
@@ -77,6 +58,7 @@
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/time_utils.h"
+
 
 #define LAST_SYSTEM_ERROR (errno)
 
@@ -117,6 +99,7 @@ bool LwipSocket::Create(int family, int type) {
   Close();
   s_ = ::lwip_socket(family, type, 0);
   udp_ = (SOCK_DGRAM == type);
+  family_ = family;
   UpdateLastError();
   if (udp_) {
     SetEnabledEvents(DE_READ | DE_WRITE);
@@ -700,7 +683,7 @@ class EventDispatcher : public Dispatcher {
   LwipSocketServer* ss_;
   int afd_[2];
   bool fSignaled_;
-  CriticalSection crit_;
+  RecursiveCriticalSection crit_;
 };
 
 // Sets the value of a boolean value to false when signaled.
@@ -718,7 +701,9 @@ class Signaler : public EventDispatcher {
   bool* pf_;
 };
 
-LwipSocketServer::LwipSocketServer() : fWait_(false) {
+LwipSocketServer::LwipSocketServer()
+    :
+      fWait_(false) {
   signal_wakeup_ = new Signaler(this, &fWait_);
 }
 
@@ -992,4 +977,4 @@ bool LwipSocketServer::WaitSelect(int cmsWait, bool process_io) {
   return true;
 }
 
-}  // namespace rtc
+}  // namespace orc

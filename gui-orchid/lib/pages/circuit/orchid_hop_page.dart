@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -23,6 +24,7 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../app_colors.dart';
+import '../app_sizes.dart';
 import '../app_text.dart';
 import 'budget_page.dart';
 import 'curator_page.dart';
@@ -34,6 +36,11 @@ import 'package:intl/intl.dart';
 
 /// Create / edit / view an Orchid Hop
 class OrchidHopPage extends HopEditor<OrchidHop> {
+  // The OrchidHopEditor operates in a "settings"-like fashion and allows
+  // editing certain elements of the hop even when in "View" mode.  This flag
+  // disables these features.
+  bool disabled = false;
+
   OrchidHopPage(
       {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
       : super(
@@ -118,7 +125,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             ? [widget.buildSaveButton(context, _onSave, isValid: isValid)]
             : [],
         child: SafeArea(
-          child: SingleChildScrollView(child: _buildContent()),
+          child: SingleChildScrollView(
+            child: Center(
+              child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 500),
+                  child: _buildContent()),
+            ),
+          ),
         ),
         decoration: BoxDecoration(),
       ),
@@ -141,11 +154,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
     var richText = TextSpan(
       children: <TextSpan>[
-        TextSpan(text: s.createInstruction1 + " ", style: bodyStyle),
+        TextSpan(text: s.createInstruction1 + ' ', style: bodyStyle),
 
         // Use 'package:flutter_html/rich_text_parser.dart' now or our own?
         LinkTextSpan(
-          text: "account.orchid.com",
+          text: 'account.orchid.com',
           style: AppText.linkStyle.copyWith(fontSize: 15),
           url: 'https://account.orchid.com/',
         ),
@@ -169,7 +182,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         children: <Widget>[
           pady(36),
           InstructionsView(
-            image: Image.asset("assets/images/group12.png"),
+            image: Image.asset('assets/images/group12.png'),
             title: s.orchidRequiresOXT,
           ),
           RichText(text: richText),
@@ -177,6 +190,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           divider(),
           pady(24),
           _buildFunding(),
+          pady(96),
         ],
       ),
     );
@@ -187,6 +201,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       padding: const EdgeInsets.only(left: 24, top: 24, bottom: 24, right: 16),
       child: Column(
         children: <Widget>[
+          if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
           _buildSection(
               title: s.credentials, child: _buildFunding(), onDetail: null),
           pady(16),
@@ -195,7 +210,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           _buildSection(
               title: s.curation,
               child: _buildCuration(),
-              onDetail: _editCurator),
+              onDetail: !widget.disabled ? _editCurator : null),
           pady(36),
           /*
           divider(),
@@ -281,7 +296,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.signerKey + ":",
+        Text(s.signerKey + ':',
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
                 color: _keyRefValid()
@@ -300,8 +315,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             // Copy key button
             Visibility(
               visible: widget.readOnly(),
-              child: RoundedRectRaisedButton(
-                  backgroundColor: Colors.grey,
+              child: RoundedRectButton(
+                  backgroundColor: Colors.deepPurple,
                   textColor: Colors.white,
                   text: s.copy,
                   onPressed: _onCopyButton),
@@ -325,13 +340,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   // Build the import key field
   Widget _buildImportKey() {
     return AppTextField(
-        hintText: "0x...",
+        hintText: '0x...',
         margin: EdgeInsets.zero,
         controller: _importKeyField,
         trailing: FlatButton(
             color: Colors.transparent,
             padding: EdgeInsets.zero,
-            child: Text("Paste", style: AppText.pasteButtonStyle),
+            child: Text(s.paste, style: AppText.pasteButtonStyle),
             onPressed: _pasteImportedKey));
   }
 
@@ -339,7 +354,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.ethereumAddress + ":",
+        Text(s.ethereumAddress + ':',
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
                 color: _funderValid()
@@ -347,7 +362,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                     : AppColors.neutral_3)),
         pady(widget.readOnly() ? 4 : 8),
         AppTextField(
-            hintText: "0x...",
+            hintText: '0x...',
             margin: EdgeInsets.zero,
             controller: _funderField,
             readOnly: widget.readOnly(),
@@ -380,23 +395,23 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         fontSize: 15.0,
         fontWeight: FontWeight.bold,
         letterSpacing: -0.24,
-        fontFamily: "SFProText-Regular",
+        fontFamily: 'SFProText-Regular',
         height: 20.0 / 15.0);
 
     var balanceText = _lotteryPot?.balance != null
-        ? NumberFormat("#0.0###").format(_lotteryPot?.balance?.value) +
+        ? NumberFormat('#0.0###').format(_lotteryPot?.balance?.value) +
             " ${s.oxt}"
         : "...";
     var depositText = _lotteryPot?.deposit != null
-        ? NumberFormat("#0.0###").format(_lotteryPot?.deposit?.value) +
+        ? NumberFormat('#0.0###').format(_lotteryPot?.deposit?.value) +
             " ${s.oxt}"
-        : "...";
+        : '...';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         // Balance
-        Text(s.amount + ":",
+        Text(s.amount + ':',
             style: AppText.textLabelStyle
                 .copyWith(fontSize: 20, color: AppColors.neutral_1)),
         pady(4),
@@ -407,7 +422,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         ),
         pady(16),
         // Deposit
-        Text(s.deposit + ":",
+        Text(s.deposit + ':',
             style: AppText.textLabelStyle
                 .copyWith(fontSize: 20, color: AppColors.neutral_1)),
         pady(4),
@@ -423,13 +438,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   Widget _buildCuration() {
     return Row(
       children: <Widget>[
-        /*
-        Container(
-          width: 75,
-          child: Text("Curator:",
-              style: AppText.textLabelStyle
-                  .copyWith(fontSize: 20, color: AppColors.neutral_1)),
-        ),*/
         Expanded(
             child: AppTextField(
           controller: _curatorField,
@@ -461,7 +469,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         child: Row(
           children: [
             LinkText(
-              "Market Stats",
+              s.marketStats,
               style: AppText.linkStyle.copyWith(fontSize: 13),
               onTapped: _showMarketStats,
             ),
@@ -469,7 +477,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             Badge(
               showBadge: _showMarketStatsAlert,
               position: BadgePosition.topRight(top: -6, right: -28),
-              badgeContent: Text("!",
+              badgeContent: Text('!',
                   style: TextStyle(color: Colors.white, fontSize: 12)),
               padding: EdgeInsets.all(8),
               toAnimate: false,
@@ -481,74 +489,84 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Future<void> _showMarketStats() async {
-    // TODO: If we keep this refactor with the similar pricing API code.
     // data
     Pricing pricing = await OrchidPricingAPI().getPricing();
     GWEI gasPrice = await OrchidEthereum().getGasPrice();
     if (_lotteryPot == null || pricing == null || gasPrice == null) {
       return;
     }
+
+    // calculation
     ETH gasCostToRedeem =
-        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toETH();
+        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toEth();
     OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
     OXT maxFaceValue = OXT.min(_lotteryPot.balance, _lotteryPot.deposit / 2.0);
-
-    // formatting
-    var ethPriceText =
-        formatCurrency(1.0 / pricing?.ethToUsdRate, suffix: "USD");
-    var oxtPriceText =
-        formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: "USD");
-    var gasPriceText = formatCurrency(gasPrice.value, suffix: "GWEI");
-    String maxFaceValueText =
-        formatCurrency(maxFaceValue?.value, suffix: "OXT");
-    String costToRedeemText =
-        formatCurrency(oxtCostToRedeem.value, suffix: "OXT");
-    bool ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
     bool gasPriceHigh = gasPrice.value >= 15.0;
     bool balanceLimited =
         _lotteryPot.balance.value < _lotteryPot.deposit.value / 2.0;
+
+    // formatting
+    var ethPriceText =
+        formatCurrency(1.0 / pricing?.ethToUsdRate, suffix: 'USD');
+    var oxtPriceText =
+        formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: 'USD');
+    var gasPriceText = formatCurrency(gasPrice.value, suffix: 'GWEI');
+    String maxFaceValueText =
+        formatCurrency(maxFaceValue?.value, suffix: 'OXT');
+    String costToRedeemText =
+        formatCurrency(oxtCostToRedeem.value, suffix: 'OXT');
+    bool ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
+
     String limitedByText = balanceLimited
-        ? "Your max ticket value is currently limited by your balance of  "
-            "${formatCurrency(_lotteryPot.balance.value, suffix: 'OXT')}.  "
-            "Consider adding OXT to your account balance."
-        : "Your max ticket value is currently limited by your deposit of "
-            "${formatCurrency(_lotteryPot.deposit.value, suffix: 'OXT')}.  "
-            "Consider adding OXT to your deposit or moving funds from your balance to your deposit.";
+        ? s.yourMaxTicketValueIsCurrentlyLimitedByYourBalance +
+            " ${formatCurrency(_lotteryPot.balance.value, suffix: 'OXT')}.  " +
+            s.considerAddingOxtToYourAccountBalance
+        : s.yourMaxTicketValueIsCurrentlyLimitedByYourDeposit +
+            " ${formatCurrency(_lotteryPot.deposit.value, suffix: 'OXT')}.  " +
+            s.considerAddingOxtToYourDepositOrMovingFundsFrom;
+
     String limitedByTitleText =
-        balanceLimited ? "Balance too low" : "Deposit size too small";
+        balanceLimited ? s.balanceTooLow : s.depositSizeTooSmall;
 
     return Dialogs.showAppDialog(
         context: context,
-        title: "Market Stats",
+        title: s.marketStats,
         body: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text("Prices", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(s.prices, style: TextStyle(fontWeight: FontWeight.bold)),
               pady(4),
-              Text("ETH price: $ethPriceText"),
-              Text("OXT price: $oxtPriceText"),
-              Text("Gas price: $gasPriceText",
+              Text(s.ethPrice + " " + ethPriceText),
+              Text(s.oxtPrice + " " + oxtPriceText),
+              Text(s.gasPrice + " " + gasPriceText,
                   style: gasPriceHigh ? TextStyle(color: Colors.red) : null),
+
               pady(16),
-              Text("Ticket Value",
+              Text(s.ticketValue,
                   style: TextStyle(fontWeight: FontWeight.bold)),
               pady(4),
-              Text("Max face value: $maxFaceValueText"),
-              Text("Cost to redeem: $costToRedeemText",
+
+              Text(s.maxFaceValue + " " + maxFaceValueText),
+
+              Text(s.costToRedeem + " " + costToRedeemText,
                   style:
                       ticketUnderwater ? TextStyle(color: Colors.red) : null),
-              pady(16),
-              Text(limitedByTitleText,
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              pady(8),
-              Text(limitedByText,
-                  style: TextStyle(fontStyle: FontStyle.italic)),
-              pady(16),
-              LinkText("View the docs for help on this issue.",
-                  style: AppText.linkStyle.copyWith(fontSize: 15),
-                  url:
-                      'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
+
+              // Problem description
+              if (ticketUnderwater) ...[
+                pady(16),
+                Text(limitedByTitleText,
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                pady(8),
+                Text(limitedByText,
+                    style: TextStyle(fontStyle: FontStyle.italic)),
+                pady(16),
+                LinkText(s.viewTheDocsForHelpOnThisIssue,
+                    style: AppText.linkStyle.copyWith(fontSize: 15),
+                    url:
+                        'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
+              ]
             ]));
   }
 
@@ -706,7 +724,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       return;
     }
     _balancePollInProgress = true;
-    print("polling balance");
     try {
       // funder and signer from the stored hop
       EthereumAddress funder = _hop()?.funder;
@@ -717,9 +734,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       try {
         pot = await OrchidEthereum.getLotteryPot(funder, signer)
             .timeout(Duration(seconds: 60));
-        print("got pot: $pot");
       } catch (err) {
-        print("Error fetching lottery pot: $err");
+        log('Error fetching lottery pot: $err');
         return;
       }
       var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
@@ -731,7 +747,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       }
       _lotteryPotLastUpdate = DateTime.now();
     } catch (err) {
-      print("Can't fetch balance: $err");
+      log("Can't fetch balance: $err");
 
       // Allow a stale balance for a period of time.
       if (_lotteryPotLastUpdate != null &&
@@ -752,7 +768,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return TitleIconButton(
         text: s.shareOrchidAccount,
         spacing: 24,
-        trailing: Image.asset("assets/images/scan.png", color: Colors.white),
+        trailing: Image.asset('assets/images/scan.png', color: Colors.white),
         textColor: Colors.white,
         backgroundColor: Colors.deepPurple,
         onPressed: _exportAccount);
@@ -762,18 +778,33 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var config = await _hop().accountConfigString();
     Dialogs.showAppDialog(
         context: context,
-        title: s.myOrchidAccount + ":",
+        title: s.myOrchidAccount + ':',
         body: Container(
           width: 250,
-          height: 250,
-          child: Center(
-            child: QrImage(
-              data: config,
-              version: QrVersions.auto,
-              size: 250.0,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: QrImage(
+                  data: config,
+                  version: QrVersions.auto,
+                  size: 250.0,
+                ),
+              ),
+              _buildCopyButton(config)
+            ],
           ),
         ));
+  }
+
+  Widget _buildCopyButton(String config) {
+    return RoundedRectButton(
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white,
+        text: s.copy,
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: config));
+        });
   }
 
   S get s {

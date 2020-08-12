@@ -20,36 +20,24 @@
 /* }}} */
 
 
-#include <cppcoro/sync_wait.hpp>
-
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/beast/version.hpp>
 
-#include <boost/asio/connect.hpp>
-#include <boost/asio/ip/tcp.hpp>
-
-#include <boost/asio/ssl/context.hpp>
-#include <boost/asio/ssl/error.hpp>
 #include <boost/asio/ssl/rfc2818_verification.hpp>
-#include <boost/asio/ssl/stream.hpp>
-
-#include <asio/co_spawn.hpp>
-#include <asio/detached.hpp>
 
 #include "adapter.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
-#include "error.hpp"
 #include "http.hpp"
-#include "local.hpp"
 #include "locator.hpp"
-#include "trace.hpp"
+#include "origin.hpp"
 
 namespace orc {
 
 template <typename Stream_>
-task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) {
+task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) { orc_ahead
     orc_block({ (void) co_await http::async_write(stream, req, orc::Token()); },
         "writing http request");
 
@@ -66,7 +54,7 @@ task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) {
 }
 
 template <typename Socket_>
-task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
+task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead
     http::request<http::string_body> req{http::string_to_verb(method), locator.path_, 11};
     req.set(http::field::host, locator.host_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -99,7 +87,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
             });
         }
 
-        asio::ssl::stream<Socket_ &> stream{socket, context};
+        boost::beast::ssl_stream<Socket_ &> stream{socket, context};
         orc_assert(SSL_set_tlsext_host_name(stream.native_handle(), locator.host_.c_str()));
         // XXX: beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
 
@@ -109,29 +97,15 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
             orc_adapt(error);
         } }, "in ssl handshake");
 
-        const auto response(co_await Fetch_(stream, req));
-
-        orc_block({ try {
-            co_await stream.async_shutdown(orc::Token());
-        } catch (const asio::system_error &error) {
-            auto code(error.code());
-            if (false);
-            else if (code == asio::error::eof);
-                // XXX: this scenario is untested
-            else if (code == asio::ssl::error::stream_truncated);
-                // XXX: this is because of infura
-            else orc_adapt(error);
-        } }, "in ssl shutdown");
-
-        co_return response;
+        co_return co_await Fetch_(stream, req);
     } else orc_assert(false);
 }
 
-task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_block({
+task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
     const auto endpoints(co_await Resolve(origin, locator.host_, locator.port_));
     std::exception_ptr error;
     for (const auto &endpoint : endpoints) try {
-        Adapter adapter(Context(), co_await orc_value(co_return co_await, origin.Connect(endpoint), "connecting to " << endpoint));
+        Adapter adapter(Context(), co_await origin.Connect(endpoint));
         const auto response(co_await orc_value(co_return co_await, Fetch_(adapter, method, locator, headers, data, verify), "connected to " << endpoint));
         // XXX: potentially allow this to be passed in as a custom response validator
         orc_assert_(response.result() != boost::beast::http::status::bad_gateway, response);

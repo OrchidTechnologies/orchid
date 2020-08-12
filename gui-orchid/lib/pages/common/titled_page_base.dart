@@ -32,7 +32,7 @@ class TitledPage extends StatelessWidget {
   TitledPage({
     @required this.title,
     @required this.child,
-    this.lightTheme = false,
+    this.lightTheme = true,
     this.actions = const [],
     this.backAction,
     this.cancellable = false,
@@ -52,6 +52,7 @@ class TitledPage extends StatelessWidget {
           ),
           titleSpacing: 0,
           backgroundColor: _backgroundColor(),
+          brightness: Brightness.light, // status bar
           elevation: 0.0),
       body: Container(
         child: child,
@@ -75,7 +76,7 @@ class TitledPage extends StatelessWidget {
 
   Widget _buildBackButton(BuildContext context) {
     return IconButton(
-      icon: Icon(cancellable ? Icons.close : Icons.arrow_back,
+      icon: Icon(cancellable ? Icons.close : Icons.arrow_back_ios,
           color: _foregroundColor()),
       onPressed: () {
         _performBackAction(context);

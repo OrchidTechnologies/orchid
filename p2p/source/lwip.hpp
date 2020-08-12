@@ -1,35 +1,26 @@
-/* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
-*/
-
-/* GNU Affero General Public License, Version 3 {{{ */
 /*
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Copyright 2004 The WebRTC Project Authors. All rights reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+#ifndef RTC_BASE_LOGICAL_SOCKET_SERVER_H_
+#define RTC_BASE_LOGICAL_SOCKET_SERVER_H_
 
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-**/
-/* }}} */
-
-#ifndef ORCHID_LWIP_HPP
-#define ORCHID_LWIP_HPP
-
+#include <array>
 #include <memory>
 #include <set>
 #include <vector>
 
-#include "rtc_base/critical_section.h"
+#include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/net_helpers.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/system/rtc_export.h"
+#include "rtc_base/thread_annotations.h"
 
 using namespace rtc;
 
@@ -65,7 +56,7 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   ~LwipSocketServer() override;
 
   // SocketFactory:
-  rtc::Socket* CreateSocket(int family, int type) override;
+  Socket* CreateSocket(int family, int type) override;
   AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
   // Internal Factory for Accept (virtual so it can be overwritten in tests).
@@ -80,19 +71,20 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   void Update(Dispatcher* dispatcher);
 
  private:
+  // The number of events to process with one call to "epoll_wait".
+  static constexpr size_t kNumEpollEvents = 128;
+
   typedef std::set<Dispatcher*> DispatcherSet;
 
-  void AddRemovePendingDispatchers();
+  void AddRemovePendingDispatchers() RTC_EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   bool WaitSelect(int cms, bool process_io);
-  static bool InstallSignal(int signum, void (*handler)(int));
-
-  DispatcherSet dispatchers_;
-  DispatcherSet pending_add_dispatchers_;
-  DispatcherSet pending_remove_dispatchers_;
-  bool processing_dispatchers_ = false;
-  Signaler* signal_wakeup_;
-  CriticalSection crit_;
+  DispatcherSet dispatchers_ RTC_GUARDED_BY(crit_);
+  DispatcherSet pending_add_dispatchers_ RTC_GUARDED_BY(crit_);
+  DispatcherSet pending_remove_dispatchers_ RTC_GUARDED_BY(crit_);
+  bool processing_dispatchers_ RTC_GUARDED_BY(crit_) = false;
+  Signaler* signal_wakeup_;  // Assigned in constructor only
+  RecursiveCriticalSection crit_;
   bool fWait_;
 };
 
@@ -163,12 +155,13 @@ class LwipSocket : public AsyncSocket, public sigslot::has_slots<> {
   virtual void EnableEvents(uint8_t events);
   virtual void DisableEvents(uint8_t events);
 
-  static int TranslateOption(Option opt, int* slevel, int* sopt);
+  int TranslateOption(Option opt, int* slevel, int* sopt);
 
   LwipSocketServer* ss_;
   SOCKET s_;
   bool udp_;
-  CriticalSection crit_;
+  int family_ = 0;
+  RecursiveCriticalSection crit_;
   int error_ RTC_GUARDED_BY(crit_);
   ConnState state_;
   AsyncResolver* resolver_;
@@ -200,8 +193,11 @@ class SocketDispatcher : public Dispatcher, public LwipSocket {
   void OnEvent(uint32_t ff, int err) override;
 
   int Close() override;
+
+
+ private:
 };
 
-}
+}  // namespace orc
 
-#endif//ORCHID_LWIP_HPP
+#endif  // RTC_BASE_LOGICAL_SOCKET_SERVER_H_

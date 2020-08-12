@@ -33,7 +33,7 @@ export const Overview: React.FC = () => {
 
   // The result of any recent (in-memory transient) quick setup transaction.
   const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(undefined);
-  // TESTING:
+  // For testing:
   // const [quickSetupResultTx, setQuickSetupResultTx] = useState<TransactionStatus | undefined>(
   //   TransactionStatus.result("0x1234", S.transactionComplete,
   //     new Signer(new Wallet(), "0x12345", "12345"))

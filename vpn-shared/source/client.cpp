@@ -28,11 +28,24 @@
 #include "client.hpp"
 #include "datagram.hpp"
 #include "locator.hpp"
+#include "market.hpp"
 #include "protocol.hpp"
+#include "time.hpp"
 
 namespace orc {
 
-typedef boost::multiprecision::cpp_bin_float_oct Float;
+static void Justin(FILE *justin, const char *name, uint8_t value, const uint256_t &data, const uint256_t &stamp = Monotonic()) {
+    if (value >= 2)
+        Log() << "JUSTIN " << name << " " << std::dec << data;
+    Brick<16> buffer(Tie(uint64_t(stamp), uint64_t(data)));
+    buffer[0] = value;
+    (void) fwrite(buffer.data(), 1, buffer.size(), justin);
+}
+
+#define Justin(...) \
+    do if (justin_ != nullptr) \
+        Justin(justin_, __VA_ARGS__); \
+    while (false)
 
 //static const uint128_t Gwei(1000000000);
 static const uint256_t Two128(uint256_t(1) << 128);
@@ -46,64 +59,64 @@ double WinRatio_(0);
 
 task<void> Client::Submit() {
     const Header header{Magic_, Zero<32>()};
-    co_await Bonded::Send(Datagram(Port_, Port_, Tie(header)));
+    co_await Send(Datagram(Port_, Port_, Tie(header)));
 }
 
 task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature) {
     const Header header{Magic_, hash};
-    co_await Bonded::Send(Datagram(Port_, Port_, Tie(header,
+    co_await Send(Datagram(Port_, Port_, Tie(header,
         Command(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt))
     )));
 }
 
-void Client::Issue(uint256_t amount) {
-    nest_.Hatch([&]() noexcept { return [this, amount = std::move(amount)]() -> task<void> {
-        if (amount == 0)
-            // XXX: retry existing packet
-            co_return co_await Submit();
+task<void> Client::Submit(uint256_t amount) {
+    const auto [commit, recipient, ring] = [&]() {
+        const auto locked(locked_());
+        return std::make_tuple(locked->commit_, locked->recipient_, locked->ring_);
+    }();
 
-        const auto [commit, recipient, ring] = [&]() {
-            const auto locked(locked_());
-            return std::make_tuple(locked->commit_, locked->recipient_, locked->ring_);
-        }();
+    const auto receipt(co_await ring);
 
-        const auto receipt(co_await ring);
+    const auto nonce(Random<32>());
 
-        const auto nonce(Random<32>());
+    const auto now(Timestamp());
+    const auto start(now + 60 * 60 * 2);
 
-        const auto now(Timestamp());
-        const auto start(now + 60 * 60 * 2);
-
-        const uint128_t ratio(WinRatio_ == 0 ? amount / face_ : uint256_t(Float(Two128) * WinRatio_ - 1));
-        const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
-        const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
-        const auto signature(Sign(secret_, Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), hash))));
-        { const auto locked(locked_());
-            locked->pending_.try_emplace(hash, ticket, signature); }
-        co_return co_await Submit(hash, ticket, receipt, signature);
-    }; });
+    const uint128_t ratio(WinRatio_ == 0 ? amount / face_ : uint256_t(Float(Two128) * WinRatio_ - 1));
+    const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
+    const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
+    const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
+    // XXX: this code is backwards and needs to calculate this before the other thing
+    const auto [expected, price] = market_->Credit(now, start, 0, face_, ratio, Gas());
+    { const auto locked(locked_());
+        Justin("payment", 3, amount >> 128);
+        locked->pending_.try_emplace(hash, Pending{ticket, signature, expected}); }
+    co_return co_await Submit(hash, ticket, receipt, signature);
 }
 
-void Client::Transfer(size_t size) {
+void Client::Transfer(size_t size, bool send) {
     { const auto locked(locked_());
-    locked->benefit_ += size;
-    if (locked->benefit_ > 1024*256)
-        locked->benefit_ -= 1024*256;
-    else
-        return; }
-    Issue(0);
+    Justin("benefit", send ? 0 : 1, size);
+    (send ? locked->output_ : locked->input_) += size;
+    const auto updated(locked->output_ + locked->input_);
+    if (updated - locked->updated_ < 1024*256)
+        return;
+    locked->updated_ = updated; }
+    Update();
 }
 
 // XXX: the implications of when this function gets called concern me :(
 cppcoro::shared_task<Bytes> Client::Ring(Address recipient) {
     if (seller_ == Address(0))
         co_return Bytes();
-    static const Selector<Bytes, Bytes, Address> ring_("ring");
+    static const Selector<std::tuple<Bytes>, Bytes, Address> ring_("ring");
     static const std::string latest("latest");
-    co_return co_await ring_.Call(endpoint_, latest, seller_, 90000, shared_, recipient);
+    co_return std::get<0>(co_await ring_.Call(endpoint_, latest, seller_, 90000, hoarded_, recipient));
 }
 
 void Client::Land(Pipe *pipe, const Buffer &data) {
+    Transfer(data.size(), true);
+
     if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
@@ -112,54 +125,70 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
+        const auto time(Monotonic());
+        uint256_t stamp(0);
+
         Scan(window, [&, &id = id](const Buffer &data) { try {
             const auto [command, window] = Take<uint32_t, Window>(data);
-            if (command != Invoice_)
+            if (command == Stamp_) {
+                std::tie(stamp) = Take<uint256_t>(window);
+                return;
+            } else if (command != Invoice_)
                 return;
 
             const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
             orc_assert(lottery == lottery_);
             orc_assert(chain == chain_);
 
-            const auto predicted([&, &serial = serial, &balance = balance, &recipient = recipient, &commit = commit]() {
-                const auto locked(locked_());
+            const auto locked(locked_());
 
-                // XXX: implement rollover strategy
-                if (locked->serial_ < serial) {
-                    locked->serial_ = serial;
-                    locked->balance_ = Complement(balance);
-                    locked->commit_ = commit;
+            // XXX: implement rollover strategy
+            if (locked->serial_ < serial) {
+                locked->serial_ = serial;
+                locked->balance_ = Complement(balance);
+                locked->commit_ = commit;
 
-                    if (locked->recipient_ != recipient) {
-                        locked->recipient_ = recipient;
-                        locked->ring_ = Ring(recipient);
-                    }
+                if (locked->recipient_ != recipient) {
+                    locked->recipient_ = recipient;
+                    locked->ring_ = Ring(recipient);
                 }
 
-                if (!id.zero()) {
-                    auto pending(locked->pending_.find(id));
-                    if (pending != locked->pending_.end()) {
-                        const auto &ticket(pending->second.first);
-                        locked->spent_ += ticket.Value();
-                        locked->pending_.erase(pending);
-                    }
-                }
+                Justin("balance", 2, balance >> 128, stamp);
+            }
 
-                auto predicted(locked->balance_);
-                for (const auto &pending : locked->pending_) {
-                    const auto &ticket(pending.second.first);
-                    // XXX: subtract predicted transaction fees
-                    predicted += ticket.Value();
+            if (!id.zero()) {
+                auto pending(locked->pending_.find(id));
+                if (pending != locked->pending_.end()) {
+                    const auto value(pending->second.ticket_.Value());
+                    locked->spent_ += pending->second.expected_;
+                    locked->pending_.erase(pending);
+                    Justin("updated", 4, value >> 128, stamp);
                 }
+            }
 
-                return predicted;
-            }());
+            auto predicted(locked->balance_);
+            for (const auto &pending : locked->pending_) {
+                const auto &ticket(pending.second.ticket_);
+                // XXX: subtract predicted transaction fees
+                predicted += ticket.Value();
+            }
+
+            if (justin_ != nullptr)
+                Log() << "JUSTIN predict " << std::dec << (predicted >> 128);
+
+            locked->judgement_ = locked->judge_(time, locked->spent_, locked->output_ + locked->input_, (*oracle_)());
 
             if (prepay_ > predicted)
-                Issue(uint256_t(prepay_ * 2 - predicted));
+                nest_.Hatch([&]() noexcept { return [this, amount = uint256_t(prepay_ * 2 - predicted)]() -> task<void> {
+                    co_return co_await Submit(amount); }; }, __FUNCTION__);
+            else if (!locked->pending_.empty()) {
+                const auto &pending(*locked->pending_.begin());
+                Justin("-retry-", 5, pending.second.ticket_.Value() >> 128);
+                nest_.Hatch([&]() noexcept { return [this, ring = locked->ring_, pending = pending]() -> task<void> {
+                    co_return co_await Submit(pending.first, pending.second.ticket_, co_await ring, pending.second.signature_); }; }, __FUNCTION__);
+            }
         } orc_catch({}) });
     } orc_catch({}) return true; })) {
-        Transfer(data.size());
         Pump::Land(data);
     }
 }
@@ -168,25 +197,37 @@ void Client::Stop() noexcept {
     Pump::Stop();
 }
 
-Client::Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face) :
+Client::Client(BufferDrain &drain,
+    std::string url, U<rtc::SSLFingerprint> remote,
+    Endpoint endpoint, S<Market> market, S<Updated<Float>> oracle,
+    const Address &lottery, const uint256_t &chain,
+    const Secret &secret, const Address &funder,
+    const Address &seller, const uint128_t &face,
+    const char *justin
+) :
     Pump(drain),
     local_(Certify()),
     url_(std::move(url)),
     remote_(std::move(remote)),
     endpoint_(std::move(endpoint)),
+    market_(std::move(market)),
+    oracle_(std::move(oracle)),
     lottery_(lottery),
     chain_(chain),
     secret_(secret),
     funder_(funder),
     seller_(seller),
     face_(face),
-    prepay_(uint256_t(0xb1a2bc2ec500)<<128)
+    prepay_(market_->Convert((*oracle_)()/1024*2)),
+    justin_(justin == nullptr ? nullptr : fopen(justin, "w"))
 {
     Pump::type_ = typeid(*this).name();
 }
 
 Client::~Client() {
-_trace();
+orc_trace();
+    if (justin_ != nullptr)
+        fclose(justin_);
 }
 
 task<void> Client::Open(const S<Origin> &origin) {
@@ -220,24 +261,52 @@ task<void> Client::Shut() noexcept {
 }
 
 task<void> Client::Send(const Buffer &data) {
-    Transfer(data.size());
-    co_return co_await Bonded::Send(data);
+    Transfer(data.size(), false);
+    return Bonded::Send(data);
 }
 
 void Client::Update() {
-    Issue(0);
+    nest_.Hatch([&]() noexcept { return [this]() -> task<void> {
+        co_return co_await Submit(); }; }, __FUNCTION__);
 }
 
-uint256_t Client::Spent() {
+uint64_t Client::Benefit() {
+    const auto locked(locked_());
+    return locked->output_ + locked->input_;
+}
+
+Float Client::Spent() {
     const auto locked(locked_());
     orc_assert(locked->pending_.empty());
     return locked->spent_;
 }
 
-checked_int256_t Client::Balance() {
+Float Client::Balance() {
     // XXX: return task<int256> and merge Update
     const auto locked(locked_());
-    return locked->balance_;
+    return market_->Convert(locked->balance_);
+}
+
+Float Client::Judgement() {
+    const auto locked(locked_());
+    return locked->judgement_;
+}
+
+uint128_t Client::Face() {
+    return face_;
+}
+
+uint256_t Client::Gas() {
+    return seller_ == Address(0) ? 84000 /*83267*/ : 103000;
+}
+
+const std::string &Client::URL() {
+    return url_;
+}
+
+Address Client::Recipient() {
+    const auto locked(locked_());
+    return locked->recipient_;
 }
 
 }

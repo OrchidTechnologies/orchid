@@ -30,7 +30,6 @@
 #include "link.hpp"
 #include "origin.hpp"
 #include "threads.hpp"
-#include "trace.hpp"
 
 struct socket;
 
@@ -101,10 +100,10 @@ class Peer :
     }
 
   public:
-    Peer(const S<Origin> &origin, Configuration configuration = Configuration());
+    Peer(S<Origin> origin, Configuration configuration = Configuration());
 
     ~Peer() override {
-_trace();
+orc_trace();
         orc_insist(closed_);
     }
 

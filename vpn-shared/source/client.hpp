@@ -38,13 +38,20 @@
 #include "crypto.hpp"
 #include "endpoint.hpp"
 #include "jsonrpc.hpp"
+#include "judge.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
 #include "origin.hpp"
 #include "signed.hpp"
 #include "ticket.hpp"
+#include "updated.hpp"
+
+// XXX: move this somewhere and maybe find a library
+namespace gsl { template <typename T> using owner = T; }
 
 namespace orc {
+
+class Market;
 
 class Client :
     public Pump<Buffer>,
@@ -57,6 +64,8 @@ class Client :
     const U<rtc::SSLFingerprint> remote_;
 
     const Endpoint endpoint_;
+    const S<Market> market_;
+    const S<Updated<Float>> oracle_;
 
     const Address lottery_;
     const uint256_t chain_;
@@ -65,15 +74,30 @@ class Client :
     const Address funder_;
 
     const Address seller_;
-    const Bytes shared_;
+    const Bytes hoarded_;
 
     const uint128_t face_;
     const uint256_t prepay_;
 
+    gsl::owner<FILE *> const justin_;
+
+    struct Pending {
+        Ticket ticket_;
+        Signature signature_;
+        Float expected_;
+    };
+
     struct Locked_ {
-        uint64_t benefit_ = 0;
-        std::map<Bytes32, std::pair<Ticket, Signature>> pending_;
-        uint256_t spent_ = 0;
+        uint64_t updated_ = 0;
+
+        uint64_t output_ = 0;
+        uint64_t input_ = 0;
+
+        std::map<Bytes32, Pending> pending_;
+        Float spent_ = 0;
+
+        Judge judge_;
+        Float judgement_ = 0;
 
         int64_t serial_ = -1;
         checked_int256_t balance_ = 0;
@@ -87,9 +111,9 @@ class Client :
 
     task<void> Submit();
     task<void> Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature);
+    task<void> Submit(uint256_t amount);
 
-    void Issue(uint256_t amount);
-    void Transfer(size_t size);
+    void Transfer(size_t size, bool send);
 
     cppcoro::shared_task<Bytes> Ring(Address recipient);
 
@@ -98,7 +122,15 @@ class Client :
     void Stop() noexcept override;
 
   public:
-    Client(BufferDrain &drain, std::string url, U<rtc::SSLFingerprint> remote, Endpoint endpoint, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller, const uint128_t &face);
+    Client(BufferDrain &drain,
+        std::string url, U<rtc::SSLFingerprint> remote,
+        Endpoint endpoint, S<Market> market, S<Updated<Float>> oracle,
+        const Address &lottery, const uint256_t &chain,
+        const Secret &secret, const Address &funder,
+        const Address &seller, const uint128_t &face,
+        const char *justin
+    );
+
     ~Client() override;
 
     task<void> Open(const S<Origin> &origin);
@@ -107,8 +139,14 @@ class Client :
     task<void> Send(const Buffer &data) override;
 
     void Update();
-    uint256_t Spent();
-    checked_int256_t Balance();
+    uint64_t Benefit();
+    Float Spent();
+    Float Balance();
+    Float Judgement();
+    uint128_t Face();
+    uint256_t Gas();
+    const std::string &URL();
+    Address Recipient();
 };
 
 }

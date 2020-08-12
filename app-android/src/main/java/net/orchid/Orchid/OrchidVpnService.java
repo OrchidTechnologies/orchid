@@ -11,6 +11,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.VpnService;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
@@ -58,6 +59,7 @@ public class OrchidVpnService extends VpnService {
         builder.addRoute("0.0.0.0", 0);
         builder.addDnsServer("1.0.0.1");
         builder.setSession("Orchid");
+        builder.setMtu(1100);
         Log.i(TAG, "builder:" + builder);
         try {
             ParcelFileDescriptor p = builder.establish();
@@ -117,16 +119,22 @@ public class OrchidVpnService extends VpnService {
         System.exit(0);
     }
 
-    public void startForeground() {
+    private Notification.Builder getBuilder() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+            return new Notification.Builder(this);
         final String NOTIFICATION_CHANNEL_ID = getString(R.string.app);
         NotificationManager mNotificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         mNotificationManager.createNotificationChannel(new NotificationChannel(
                 NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_ID,
                 NotificationManager.IMPORTANCE_DEFAULT));
+        return new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
+    }
+
+    public void startForeground() {
         Intent startIntent = new Intent(this, MainActivity.class);
         startIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, startIntent, 0);
-        Notification.Builder builder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
+        Notification.Builder builder = getBuilder();
         builder.setContentTitle(getText(R.string.app));
         builder.setContentText(getText(R.string.connected));
         builder.setContentIntent(contentIntent);

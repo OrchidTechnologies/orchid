@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/qrcode.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
@@ -100,7 +102,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
 
   Widget buildPage(BuildContext context) {
     bool showQRImportExportButton = widget.mode == ImportExportMode.Export ||
-        (widget.mode == ImportExportMode.Import && !Platform.isMacOS);
+        (widget.mode == ImportExportMode.Import && !OrchidPlatform.isMacOS);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -151,7 +153,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
                   child: StreamBuilder<Object>(
                       stream: _actionEnabled.stream,
                       builder: (context, snapshot) {
-                        return RoundedRectRaisedButton(
+                        return RoundedRectButton(
                             text: widget.mode == ImportExportMode.Import
                                 ? "IMPORT"
                                 : "COPY",
@@ -214,6 +216,10 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
 
   void _importQR() async {
     String text = await QRCode.scan();
+    if (text == null) {
+      log("user cancelled scan");
+      return;
+    }
     if (widget.validator(text)) {
       setState(() {
         _configFileTextController.text = text;

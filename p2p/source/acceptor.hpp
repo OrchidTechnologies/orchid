@@ -28,7 +28,9 @@
 #include "baton.hpp"
 #include "link.hpp"
 #include "sewer.hpp"
-#include "task.hpp"
+#include "spawn.hpp"
+
+// XXX: this code isn't used and is wrong
 
 namespace orc {
 
@@ -84,7 +86,7 @@ class Acceptor :
     void Open() {
         Spawn([this]() noexcept -> task<void> {
             while (co_await Next());
-        });
+        }, __FUNCTION__);
     }
 
     void Open(const Socket &endpoint) {

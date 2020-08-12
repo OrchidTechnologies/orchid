@@ -47,15 +47,15 @@ contract PACFunder {
     function lock(address signer) external { require(msg.sender == owner_); lottery_.lock(signer); }
     function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external { require(msg.sender == owner_); lottery_.pull(signer,target,autolock,amount,escrow); }
     function yank(address signer, address payable target, bool autolock) external { require(msg.sender == owner_); lottery_.yank(signer,target,autolock); }
-    
+
     function bind_push(address signer, OrchidVerifier verify, bytes memory shared, uint128 total, uint128 escrow) private {
-        require(msg.sender == owner_);
-    	lottery_.bind(signer, verify, shared);
-    	lottery_.push(signer, total, escrow);
+      require(msg.sender == owner_);
+      lottery_.bind(signer, verify, shared);
+      lottery_.push(signer, total, escrow);
     }
 
     event Fund(bytes32 indexed receipt, address indexed signer, uint128 total, uint128 escrow);
-    
+
     function fund(bytes32 receipt, address signer, OrchidVerifier verify, bytes calldata shared, uint128 total, uint128 escrow) external {
         require(msg.sender == owner_);
         require(claimed_[receipt] == false);
@@ -63,5 +63,5 @@ contract PACFunder {
         claimed_[receipt] = true;
         emit Fund(receipt,signer,total,escrow);
     }
-    
+
 }

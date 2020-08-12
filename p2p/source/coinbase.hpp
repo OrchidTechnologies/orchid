@@ -25,17 +25,21 @@
 
 #include <string>
 
-#include <boost/multiprecision/cpp_bin_float.hpp>
-
+#include "float.hpp"
+#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
 
+struct Fiat;
 class Origin;
 
-typedef boost::multiprecision::cpp_bin_float_oct Float;
+template <typename Type_>
+class Updated;
 
-task<Float> Price(Origin &origin, const std::string &from, const std::string &to, const Float &adjust);
+task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &from, const Float &adjust);
+task<Fiat> Coinbase(Origin &origin, const std::string &to);
+task<S<Updated<Fiat>>> CoinbaseFiat(unsigned milliseconds, S<Origin> origin, std::string currency);
 
 }
 

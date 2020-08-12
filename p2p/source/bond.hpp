@@ -25,10 +25,10 @@
 
 #include <set>
 
-#include <cppcoro/when_all.hpp>
-
 #include "link.hpp"
 #include "locked.hpp"
+#include "parallel.hpp"
+#include "spawn.hpp"
 
 namespace orc {
 
@@ -65,7 +65,7 @@ class Bonded {
         }
 
         task<void> Send(const Buffer &data) override {
-            co_return co_await Inner().Send(data);
+            return Inner().Send(data);
         }
     };
 
@@ -84,7 +84,7 @@ class Bonded {
         if (iterator->second != nullptr)
             Spawn([bonding = std::move(iterator->second)]() noexcept -> task<void> {
                 co_await bonding->Shut();
-            });
+            }, __FUNCTION__);
         locked->bondings_.erase(iterator);
         if (locked->bondings_.empty())
             Stop();
@@ -94,7 +94,7 @@ class Bonded {
     BufferSink<Bonding> &Bond() {
         // XXX: this is non-obviously incorrect
         const auto locked(locked_());
-        auto bonding(std::make_unique<BufferSink<Bonding>>(this));
+        auto bonding(std::make_unique<Covered<BufferSink<Bonding>>>(this));
         auto &backup(*bonding);
         locked->bondings_.emplace(&backup, std::move(bonding));
         return backup;
@@ -116,13 +116,14 @@ class Bonded {
                 shuts.emplace_back([](U<Bonding> bonding) -> task<void> {
                     co_await bonding->Shut();
                 }(std::move(bonding.second))); }
-        co_await cppcoro::when_all(std::move(shuts));
+        *co_await Parallel(std::move(shuts));
         orc_insist(locked_()->bondings_.empty());
     }
 
     task<void> Send(const Buffer &data) {
         if (const auto bonding = Find())
-            co_await bonding->Send(data);
+            return bonding->Send(data);
+        return Nop();
     }
 };
 

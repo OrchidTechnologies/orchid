@@ -26,7 +26,6 @@
 
 #include "baton.hpp"
 #include "memory.hpp"
-#include "trace.hpp"
 
 namespace orc {
 
@@ -44,7 +43,8 @@ std::thread &Thread() {
     return thread;
 }
 
-    //asio::signal_set signals(Context(), SIGINT, SIGTERM);
-    //signals.async_wait([&](auto, auto) { _trace(); Context().stop(); });
+// XXX: make the server (at least) exit safely on control-C
+// asio::signal_set signals(Context(), SIGINT, SIGTERM);
+// signals.async_wait([&](auto, auto) { orc_trace(); Context().stop(); });
 
 }

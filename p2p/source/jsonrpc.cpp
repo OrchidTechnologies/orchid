@@ -94,32 +94,37 @@ std::ostream &operator <<(std::ostream &out, const Nested &value) {
     return out;
 }
 
-Explode::Explode(Window &window) {
+Nested Explode(Window &window) {
     const auto first(window.Take());
 
+    // XXX: try to remove this local state
+    bool scalar;
+    std::string value;
+    std::vector<Nested> array;
+
     if (first < 0x80) {
-        scalar_ = true;
-        value_ = char(first);
+        scalar = true;
+        value = char(first);
     } else if (first < 0xb8) {
-        scalar_ = true;
-        value_.resize(first - 0x80);
-        window.Take(value_);
+        scalar = true;
+        value.resize(first - 0x80);
+        window.Take(value);
     } else if (first < 0xc0) {
-        scalar_ = true;
+        scalar = true;
         uint32_t length(0);
         const auto size(first - 0xb7);
         orc_assert(size <= sizeof(length));
         window.Take(sizeof(length) - size + reinterpret_cast<uint8_t *>(&length), size);
-        value_.resize(boost::endian::big_to_native(length));
-        window.Take(value_);
+        value.resize(boost::endian::big_to_native(length));
+        window.Take(value);
     } else if (first < 0xf8) {
-        scalar_ = false;
+        scalar = false;
         const auto beam(window.Take(first - 0xc0));
         Window sub(beam);
         while (!sub.done())
-            array_.emplace_back(Explode(sub));
+            array.emplace_back(Explode(sub));
     } else {
-        scalar_ = false;
+        scalar = false;
         uint32_t length(0);
         const auto size(first - 0xf7);
         orc_assert(size <= sizeof(length));
@@ -127,14 +132,16 @@ Explode::Explode(Window &window) {
         const auto beam(window.Take(boost::endian::big_to_native(length)));
         Window sub(beam);
         while (!sub.done())
-            array_.emplace_back(Explode(sub));
+            array.emplace_back(Explode(sub));
     }
+
+    return Nested(scalar, std::move(value), std::move(array));
 }
 
-Explode::Explode(Window &&window) :
-    Explode(window)
-{
+Nested Explode(Window &&window) {
+    auto nested(Explode(window));
     orc_assert(window.done());
+    return nested;
 }
 
 Address::Address(const std::string &address) :
@@ -153,9 +160,8 @@ Address::Address(const Brick<64> &common) :
 {
 }
 
-// XXX: implement checksum protocol
 std::ostream &operator <<(std::ostream &out, const Address &address) {
-    return out << "0x" << address.str(0, std::ios::hex);
+    return out << eevm::to_checksum_address(Number<uint256_t>(address).num<eevm::Address>());
 }
 
 uint256_t Timestamp() {
@@ -163,13 +169,6 @@ uint256_t Timestamp() {
     system_clock::time_point point(system_clock::now());
     system_clock::duration duration(point.time_since_epoch());
     return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-}
-
-uint256_t Monotonic() {
-    using std::chrono::system_clock;
-    system_clock::time_point point(system_clock::now());
-    system_clock::duration duration(point.time_since_epoch());
-    return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 }
 
 }

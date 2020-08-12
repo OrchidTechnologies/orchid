@@ -29,9 +29,9 @@
 #include "jsonrpc.hpp"
 #include "buffer.hpp"
 #include "local.hpp"
+#include "load.hpp"
 
 #include "tests.h"
-#include <boost/filesystem/string_file.hpp>
 
 
 typedef uint8_t byte;
@@ -57,8 +57,7 @@ namespace orc
 
 	std::string load_solcbin_as_string(std::string fn)
 	{
-        string result;
-        boost::filesystem::load_string_file(fn, result);
+        string result(Load(fn));
         if (result.substr(0,2) != string("0x")) result = "0x" + result;
         return result;
 	}
@@ -67,7 +66,7 @@ namespace orc
     {
         printf("[%d] deploy [%i] \n", __LINE__, int(bin.size()) );
    		assert(bin.size() > 2);
-        auto trans_hash = co_await endpoint("eth_sendTransaction", {Map{{"from",uint256_t(address)},{"data",bin}, {"gas","4712388"}, {"gasPrice","100000000000"}}} );
+        auto trans_hash = co_await endpoint("eth_sendTransaction", {Multi{{"from",uint256_t(address)},{"data",bin}, {"gas","4712388"}, {"gasPrice","100000000000"}}} );
         // todo: this currently works on EthereumJS TestRPC v6.0.3, but on a live network you'd need to wait for the transaction to be mined
    		auto result     = co_await endpoint("eth_getTransactionReceipt", {trans_hash.asString()} );
    		string contractAddress = result["contractAddress"].asString();

@@ -20,69 +20,46 @@
 /* }}} */
 
 
-#include <iostream>
-#include <thread>
+#include <set>
 
-#include <cppcoro/detail/lightweight_manual_reset_event.hpp>
-
-#include <rtc_base/thread.h>
-
-#include "error.hpp"
-#include "trace.hpp"
+#include "locked.hpp"
 #include "task.hpp"
 
 namespace orc {
 
-// XXX: audit and correct the std::atomic usage in Pool
-// XXX: this should be a priority / deadline scheduler
+Locked<std::set<Fiber *>> fibers_;
 
-class Pool {
-  private:
-    std::atomic<Stacked *> stack_ = nullptr;
-    cppcoro::detail::lightweight_manual_reset_event ready_;
-
-  public:
-    void Drain() {
-        for (;;) {
-            auto stacked(stack_.load()); do {
-                if (stacked == nullptr)
-                    return;
-            } while (!stack_.compare_exchange_strong(stacked, stacked->next_));
-            stacked->code_.resume();
-        }
-    }
-
-    void Run() {
-        for (;;) {
-            ready_.reset();
-            Drain();
-            ready_.wait();
-        }
-    }
-
-    void Stack(Stacked *stacked) noexcept {
-        orc_insist(stacked->next_ == nullptr);
-
-        auto stack(stack_.load()); do {
-            stacked->next_ = stack;
-        } while (!stack_.compare_exchange_strong(stack, stacked));
-
-        ready_.set();
-    }
-};
-
-void Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexcept {
-    code_ = code;
-    pool_->Stack(this);
+Fiber::Fiber(const char *name, Fiber *parent) :
+    name_(name),
+    parent_(parent)
+{
+    fibers_()->emplace(this);
 }
 
-Scheduled Schedule() {
-    static Pool pool;
-    static std::thread thread([]() {
-        rtc::ThreadManager::Instance()->WrapCurrentThread();
-        pool.Run();
-    });
-    return {&pool};
+Fiber::~Fiber() {
+    fibers_()->erase(this);
+}
+
+void Fiber::Report() {
+    auto fibers(*fibers_());
+#if 0
+    for (const auto fiber : fibers)
+        if (const auto parent = fiber->parent_)
+            fibers.erase(parent);
+#endif
+
+    std::cerr << std::endl;
+    std::cerr << "^^^^^^^^^^" << std::endl;
+    for (const auto fiber : fibers) {
+        std::cerr << fiber;
+        std::cerr << "/";
+        std::cerr << fiber->parent_;
+        if (fiber->name_ != nullptr)
+            std::cerr << ": " << fiber->name_;
+        std::cerr << std::endl;
+    }
+    std::cerr << "vvvvvvvvvv" << std::endl;
+    std::cerr << std::endl;
 }
 
 }

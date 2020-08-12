@@ -66,7 +66,7 @@ class _AddKeyPageState extends State<AddKeyPage> {
                         style: AppText.textLabelStyle.copyWith(fontSize: 18))),
               ),
 
-              RoundedRectRaisedButton(
+              RoundedRectButton(
                   text: " GENERATE ", onPressed: _generateKey),
 
               // Import key
@@ -127,7 +127,7 @@ class _AddKeyPageState extends State<AddKeyPage> {
 
   Widget _buildImportButton() {
     bool isValid = _secret != null;
-    return RoundedRectRaisedButton(
+    return RoundedRectButton(
         text: " IMPORT ", onPressed: isValid ? _importKey : null);
   }
 

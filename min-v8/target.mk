@@ -138,6 +138,8 @@ tqsrc += builtin-definitions-tq.h
 tqsrc += class-definitions-tq-inl.h
 tqsrc += csa-types-tq.h
 tqsrc += enum-verifiers-tq.cc
+tqsrc += exported-class-definitions-tq-inl.h
+tqsrc += exported-class-definitions-tq.h
 tqsrc += factory-tq.cc
 tqsrc += factory-tq.inc
 tqsrc += field-offsets-tq.h
@@ -145,7 +147,7 @@ tqsrc += instance-types-tq.h
 tqsrc += interface-descriptors-tq.inc
 tqsrc += internal-class-definitions-tq-inl.h
 tqsrc += internal-class-definitions-tq.h
-tqsrc += objects-body-descriptors-tq-inl.h
+tqsrc += objects-body-descriptors-tq-inl.inc
 tqsrc += objects-printer-tq.cc
 tqsrc := $(patsubst %,$(output)/$(pwd/v8)/torque-generated/%,$(tqsrc))
 

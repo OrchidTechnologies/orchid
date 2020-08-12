@@ -1,5 +1,4 @@
 #!/bin/bash
 set -e
-brew install meson autoconf automake libtool rpm
-pip install pyyaml
+brew install autoconf automake capnp libtool meson rpm
 env/setup-all.sh

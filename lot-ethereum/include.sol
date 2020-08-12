@@ -20,12 +20,9 @@
 /* }}} */
 
 
-pragma solidity 0.5.13;
-
-interface OrchidSeller {
-    function ring(bytes calldata shared, address target) external view returns (bytes memory);
-}
+pragma solidity >= 0;
 
 interface OrchidVerifier {
     function book(bytes calldata shared, address target, bytes calldata receipt) external pure;
+    function ring(bytes calldata hoarded, address target) external view returns (bytes memory);
 }

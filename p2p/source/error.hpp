@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 
+#include "category.hpp"
 #include "log.hpp"
 
 namespace orc {
@@ -53,12 +54,9 @@ class Error final :
     }
 }; }
 
-#define orc_log(log, text) \
-    log << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text
-
 #define orc_insist_(code, text) do { \
     if ((code)) break; \
-    orc_log(orc::Log(), text << std::endl); \
+    orc_log(orc_Log(), text << std::endl); \
     std::terminate(); \
 } while (false)
 
@@ -67,11 +65,14 @@ class Error final :
 
 #define orc_throw(text) do { \
     if (orc::Verbose) \
-        orc_log(orc::Log() << "throw ", text); \
+        orc_log(orc_Log() << "throw ", text << std::endl); \
     throw orc_log(orc::Error(), text); \
 } while (false)
 
 #define orc_adapt(error) do { \
+    const auto code(error.code()); \
+    if (code.category() == orchid_category()) \
+        std::rethrow_exception(Category::Convert(code.value())); \
     auto what(error.what()); \
     orc_insist(what != nullptr); \
     orc_insist(*what != '\0'); \
@@ -88,7 +89,7 @@ class Error final :
 
 #define orc_catch(code) \
     catch (const std::exception &error) { \
-        orc_log(orc::Log(), "handled error " << error.what()); \
+        orc_log(orc_Log(), "handled error " << error.what() << std::endl); \
     code } catch (...) { code }
 
 #define orc_ignore(code) \
@@ -98,23 +99,37 @@ class Error final :
 
 #define orc_except(code) \
     try code catch (...) { \
-        orc_log(orc::Log(), "orc_except(" #code ")" << std::endl); \
+        orc_log(orc_Log(), "orc_except(" #code ")" << std::endl); \
         std::terminate(); \
     }
 
-#define orc_stack(text) \
-    catch (orc::Error &error) { \
+#define orc_stack(code, text) \
+    catch (orc::Error &error) { code \
         throw orc_log(std::move(error) << ' ', text); \
-    } catch (const std::exception &error) { \
+    } catch (const std::exception &error) { code \
         throw orc_log(orc::Error() << error.what() << ' ', text); \
     }
 
-#define orc_block(code, text) \
-    do { try code orc_stack(text) } while (false)
+#define orc_block(code, text) do { \
+    if (orc::Verbose) \
+        orc_log(orc_Log(), "++ " << text << std::endl); \
+    try code orc_stack({ \
+        if (orc::Verbose) \
+            orc_log(orc_Log(), "-- " << text << std::endl); \
+    }, text) \
+    if (orc::Verbose) \
+        orc_log(orc_Log(), "-- " << text << std::endl); \
+} while (false)
 
-#define orc_value(ret, code, text) \
-    [&]() -> decltype(code) { try { \
-        ret (code); \
-    } orc_stack(text) }()
+#define orc_value(ret, code, text) [&]() -> decltype(code) { \
+    if (orc::Verbose) \
+        orc_log(orc_Log(), "++ " << text << std::endl); \
+    try { ret (code); } orc_stack({ \
+        if (orc::Verbose) \
+            orc_log(orc_Log(), "-- " << text << std::endl); \
+    }, text) \
+    if (orc::Verbose) \
+        orc_log(orc_Log(), "-- " << text << std::endl); \
+}()
 
 #endif//ORCHID_ERROR_HPP

@@ -35,7 +35,6 @@
 namespace orc {
 
 class Egress :
-    public std::enable_shared_from_this<Egress>,
     public Valve,
     public BufferDrain,
     public Sunken<Pump<Buffer>>
@@ -166,8 +165,8 @@ class Egress :
         orc_insist(false);
     }
 
-    void Wire(BufferSunk &sunk) {
-        sunk.Wire<Translator>(shared_from_this());
+    static void Wire(S<Egress> self, BufferSunk &sunk) {
+        sunk.Wire<Translator>(std::move(self));
     }
 
     task<void> Shut() noexcept override {

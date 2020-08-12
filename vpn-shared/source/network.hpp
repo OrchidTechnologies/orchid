@@ -33,6 +33,7 @@
 namespace orc {
 
 class Client;
+class Market;
 
 class Network {
   private:
@@ -40,13 +41,16 @@ class Network {
     const Address directory_;
     const Address location_;
 
+    const S<Market> market_;
+    const S<Updated<Float>> oracle_;
+
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
 
   public:
-    Network(const std::string &rpc, Address directory, Address location);
+    Network(const std::string &rpc, Address directory, Address location, const S<Origin> &origin);
 
     // XXX: this should be task<Client &> but cppcoro doesn't seem to support that
-    task<Client *> Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const Address &seller);
+    task<Client *> Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const char *justin);
 };
 
 }

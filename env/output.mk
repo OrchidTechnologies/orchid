@@ -37,7 +37,6 @@ checks += cppcoreguidelines-pro-type-cstyle-cast
 #checks += cppcoreguidelines-pro-type-member-init
 #checks += cppcoreguidelines-pro-type-reinterpret-cast
 checks += cppcoreguidelines-pro-type-static-cast-downcast
-checks += cppcoreguidelines-pro-type-union-access
 checks += cppcoreguidelines-pro-type-vararg
 checks += cppcoreguidelines-slicing
 # XXX: it isn't clear to me whether this is overkill or not
@@ -55,7 +54,6 @@ checks += misc-non-copyable-objects
 checks += misc-static-assert
 checks += misc-throw-by-value-catch-by-reference
 checks += misc-unconventional-assign-operator
-checks += modernize-avoid-c-arrays
 checks += modernize-deprecated-headers
 checks += modernize-deprecated-ios-base-aliases
 checks += modernize-make-shared
@@ -95,6 +93,8 @@ checks += readability-static-definition-in-anonymous-namespace
 checks += readability-uniqueptr-delete-release
 # XXX: boost asio reactor::per_descriptor_data reactor_data_
 checks += -clang-analyzer-optin.cplusplus.UninitializedObject
+# XXX: ./vpn/source/client.hpp:78:12: note: Excessive padding in 'struct orc::Client::Locked_' (32 padding bytes, where 0 is optimal). Optimal fields order: spent_, balance_, recipient_, updated_, benefit_, serial_, ring_, pending_, commit_, consider reordering the fields or adding explicit padding members
+checks += -clang-analyzer-optin.performance.Padding
 ifeq ($(target),and)
 # XXX: boost multiprecision on android
 checks += -clang-analyzer-core.UndefinedBinaryOperatorResult
@@ -123,13 +123,9 @@ code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)
 
 # XXX: replace cflags with cflags/ once I fix pwd to not begin with ./
 # in this model, cflags would be something controlled only by the user
-dflags = $(if $(filter ./,$(1)),,$(call dflags,$(dir $(patsubst %/,%,$(1)))) $(cflags/$(1)))
-
-flags = $(qflags)
-flags += $(filter -I%,$(call dflags,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<)))))
-flags += $(patsubst -I@/%,-I$(output)/$(arch)/%,$(cflags))
-flags += $(filter-out -I%,$(call dflags,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<)))))
-flags += $(cflags/./$<)
+flags_ = $(if $(filter ./,$(1)),,$(call flags_,$(dir $(patsubst %/,%,$(1)))) $(cflags/$(1)))
+flags- = $(call flags_,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<))))
+flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(filter -I%,$(cflags/./$<) $(flags-) $(cflags)) $(filter-out -I%,$(cflags) $(flags-) $(cflags/./$<)))
 
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)
@@ -204,11 +200,15 @@ endif
 $(output)/%.rustup:
 	rustup target add $*
 
-$(output)/%/$(pre)rust.$(lib): $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
+$(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
 	$(specific)
 	@mkdir -p $(dir $@)
-	cd $(folder) && CARGO_HOME='$(CURDIR)/$(output)/cargo' $(if $(ccrs/$(arch)),$(ccrs/$(arch)),TARGET)_CC='$(cc) $(more/$(arch)) $(qflags)' AR='$(ar/$(arch))' cargo build --verbose --lib --release --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
-	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/$(pre)$(subst -,_,$(notdir $(folder))).$(lib) $@
+	cd $(folder) && RUST_BACKTRACE=1 RUSTC_WRAPPER=$(CURDIR)/env/rustc-wrapper PATH=$${PATH}:$(dir $(word 1,$(cc))) \
+	    $(if $(ccrs/$(arch)),$(ccrs/$(arch)),TARGET)_CC='$(cc) $(more/$(arch)) $(qflags)' AR='$(ar/$(arch))' \
+	    PKG_CONFIG_ALLOW_CROSS=1 PKG_CONFIG="$(CURDIR)/env/pkg-config" ENV_ARCH="$(arch)" \
+	    CARGO_HOME='$(CURDIR)/$(output)/cargo' CARGO_INCREMENTAL=0 cargo build --verbose --lib --release \
+	    --target $(triple/$(arch)) --target-dir $(CURDIR)/$(output)/$(arch)/$(folder)
+	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/lib$(subst -,_,$(notdir $(folder))).a $@
 
 .PHONY: clean
 clean:

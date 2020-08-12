@@ -26,7 +26,9 @@
 #include <iostream>
 #include <string>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/endian/conversion.hpp>
+
 #include <lwip/ip4_addr.h>
 #include <rtc_base/socket_address.h>
 
@@ -65,13 +67,11 @@ class Host {
     }
 
     Host(const in6_addr &host) :
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         Host(host.s6_addr)
     {
     }
 
     Host(const in_addr &host) :
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         Host(boost::endian::big_to_native(host.s_addr))
     {
     }
@@ -94,9 +94,14 @@ class Host {
     Host(const std::string &host) :
         Host([&]() {
             rtc::IPAddress address;
-            orc_assert(IPFromString(host, &address));
+            orc_assert_(IPFromString(host, &address), host << " is not a Host");
             return address;
         }())
+    {
+    }
+
+    Host(const char *host) :
+        Host(std::string(host))
     {
     }
 
@@ -106,7 +111,6 @@ class Host {
     }
 
     bool v4() const {
-        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         return memcmp(data_.data(), static_cast<const void *>((const uint8_t[]) {0,0,0,0, 0,0,0,0, 0,0,0xff,0xff}), 12) == 0;
     }
 
@@ -117,14 +121,12 @@ class Host {
 
     operator in6_addr() const {
         in6_addr address;
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         memcpy(address.s6_addr, data_.data(), 16);
         return address;
     }
 
     operator in_addr() const {
         in_addr address;
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-union-access)
         address.s_addr = boost::endian::native_to_big(operator uint32_t());
         return address;
     }
@@ -159,6 +161,10 @@ class Host {
 
     bool operator ==(const Host &rhs) const {
         return data_ == rhs.data_;
+    }
+
+    bool operator !=(const Host &rhs) const {
+        return data_ != rhs.data_;
     }
 };
 
@@ -203,6 +209,42 @@ class Socket {
     Socket(const rtc::SocketAddress &socket) :
         host_(socket.ipaddr()),
         port_(socket.port())
+    {
+    }
+
+    Socket(const sockaddr_in6 &socket) :
+        Socket(socket.sin6_addr, boost::endian::big_to_native(socket.sin6_port))
+    {
+    }
+
+    Socket(const sockaddr_in &socket) :
+        Socket(socket.sin_addr, boost::endian::big_to_native(socket.sin_port))
+    {
+    }
+
+    Socket(const sockaddr &socket) :
+        Socket([&]() -> Socket { switch (socket.sa_family) {
+            case AF_INET6:
+                return reinterpret_cast<const sockaddr_in6 &>(socket);
+            case AF_INET:
+                return reinterpret_cast<const sockaddr_in &>(socket);
+            default:
+                orc_assert_(false, "unsupported address family #" << socket.sa_family);
+        } }())
+    {
+    }
+
+    Socket(const std::string &socket) :
+        Socket([&]() {
+            rtc::SocketAddress address;
+            orc_assert_(address.FromString(socket), socket << " is not a Socket");
+            return address;
+        }())
+    {
+    }
+
+    Socket(const char *socket) :
+        Socket(std::string(socket))
     {
     }
 

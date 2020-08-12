@@ -55,7 +55,7 @@
     <integer>11</integer>
 
     <key>LSMinimumSystemVersion</key>
-    <string>10.11</string>
+    <string>10.14</string>
 
     <key>CFBundleSupportedPlatforms</key>
     <array>

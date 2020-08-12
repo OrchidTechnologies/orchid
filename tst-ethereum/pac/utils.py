@@ -1,9 +1,11 @@
 import boto3
+import json
 import logging
 import os
+import uuid
 
-from abis import token_abi
-from web3.auto.infura import w3
+from boto3.dynamodb.conditions import Key
+from decimal import Decimal
 
 
 def configure_logging(level=os.environ.get('LOG_LEVEL', "DEBUG")):
@@ -34,34 +36,30 @@ def is_true(value: str) -> bool:
     return value.lower() in ['true', '1', 'yes']
 
 
-def get_token_name(address: str):
-    token_addr = w3.toChecksumAddress(address)
-    token_contract = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
-    )
-    token_name = token_contract.functions.name().call()
-    logging.debug(f'Token Name: {token_name}')
-    return token_name
+def random_scan(table, price):
+    # generate a random 32 byte address (1 x 32 byte ethereum address)
+    rand_key = uuid.uuid4().hex + uuid.uuid4().hex
+    ddb_price = json.loads(json.dumps(price), parse_float=Decimal)  # Work around DynamoDB lack of float support
+    response0 = table.query(Limit=4, KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').gte(rand_key))
+    response1 = table.query(Limit=4, KeyConditionExpression=Key('price').eq(ddb_price) & Key('signer').lte(rand_key))
+    response0['Items'].extend(response1['Items'])
+    return response0
 
 
-def get_token_symbol(address: str):
-    token_addr = w3.toChecksumAddress(address)
-    token_contract = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
-    )
-    token_symbol = token_contract.functions.symbol().call()
-    logging.debug(f'Token Symbol: {token_symbol}')
-    return token_symbol
+def get_min_escrow():
+    return 15.0
 
 
-def get_token_decimals(address: str):
-    token_addr = w3.toChecksumAddress(address)
-    token_contract = w3.eth.contract(
-        abi=token_abi,
-        address=token_addr,
-    )
-    token_decimals = token_contract.functions.decimals().call()
-    logging.debug(f'Token Decimals: {token_decimals}')
-    return token_decimals
+def get_product_id_mapping(store: str = 'apple') -> dict:
+    mapping = {}
+    mapping['apple'] = {
+        'net.orchid.pactier1': 39.99,
+        'net.orchid.pactier2': 79.99,
+        'net.orchid.pactier3': 199.99,
+    }
+#     mapping['google'] = {
+#         'net.orchid.pactier1': 4.99,
+#         'net.orchid.pactier2': 9.99,
+#         'net.orchid.pactier3': 19.99,
+#     }
+    return mapping.get(store, {})

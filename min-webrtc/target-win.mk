@@ -9,8 +9,6 @@
 # }}}
 
 
-cflags += -D__Userspace_os_Windows
-
 cflags += -DWEBRTC_WIN
 
 cflags += -DMINGW_HAS_SECURE_API
@@ -21,6 +19,8 @@ cflags += -DABSL_FORCE_THREAD_IDENTITY_MODE=ABSL_THREAD_IDENTITY_MODE_USE_TLS
 
 # XXX: technically for boost
 lflags += -lmswsock
+# XXX: technically for boringtun
+lflags += -luserenv
 # XXX: technically for glib
 lflags += -lole32
 

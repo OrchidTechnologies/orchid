@@ -23,13 +23,14 @@
 #include "baton.hpp"
 #include "node.hpp"
 #include "router.hpp"
+#include "version.hpp"
 
 namespace orc {
 
-void Node::Run(const std::string &path, const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params) {
+void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params) {
     Router router;
 
-    router(http::verb::post, path, [&](Request request) -> task<Response> {
+    router(http::verb::post, "/", [&](Request request) -> task<Response> {
         const auto offer(request.body());
         // XXX: look up fingerprint
         static int fingerprint_(0);
@@ -53,12 +54,8 @@ void Node::Run(const std::string &path, const asio::ip::address &bind, uint16_t 
         co_return Respond(request, http::status::ok, "text/plain", std::move(answer));
     });
 
-    router(http::verb::get, R"(^.*$)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", "");
-    });
-
-    router(http::verb::unknown, R"(^.*$)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::method_not_allowed, "text/plain", "");
+    router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "text/plain", std::string(VersionData, VersionSize));
     });
 
     router.Run(bind, port, key, chain, params);

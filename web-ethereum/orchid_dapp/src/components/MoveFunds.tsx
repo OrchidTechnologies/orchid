@@ -29,14 +29,18 @@ export class MoveFunds extends Component {
     let api = OrchidAPI.shared();
     let wallet = api.wallet.value;
     let signer = api.signer.value;
-    if (wallet === undefined || signer === undefined || this.state.moveAmount == null) {
+    if (wallet === undefined || signer === undefined
+      || this.state.moveAmount == null
+      || this.state.potBalance == null
+    ) {
       return;
     }
     this.setState({tx: TransactionStatus.running()});
 
     try {
       const moveEscrowWei = oxtToKeiki(this.state.moveAmount);
-      let txId = await api.eth.orchidMoveFundsToEscrow(wallet.address, signer.address, moveEscrowWei);
+      let txId = await api.eth.orchidMoveFundsToEscrow(
+        wallet.address, signer.address, moveEscrowWei, this.state.potBalance);
       await api.updateLotteryPot();
       this.setState({tx: TransactionStatus.result(txId, S.transactionComplete)});
     } catch (err) {

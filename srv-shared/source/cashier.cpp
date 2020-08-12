@@ -20,64 +20,34 @@
 /* }}} */
 
 
-#include <cppcoro/when_all.hpp>
-
 #include <boost/multiprecision/cpp_bin_float.hpp>
 
 #include "baton.hpp"
 #include "cashier.hpp"
 #include "duplex.hpp"
 #include "json.hpp"
+#include "parallel.hpp"
 #include "sleep.hpp"
 #include "structured.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
-static const uint256_t Gwei(1000000000);
-static const Float Ten18("1000000000000000000");
-static const Float Two128(uint256_t(1) << 128);
-//static const Float Two30(1024 * 1024 * 1024);
-
 static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
 static const auto Bound_(Hash("Update(address,address)"));
-
-task<void> Cashier::UpdateCoin(Origin &origin) { try {
-    auto [eth, oxt] = co_await cppcoro::when_all(Price(origin, "ETH", currency_, Ten18), Price(origin, "OXT", currency_, Ten18));
-
-    const auto coin(coin_());
-    coin->eth_ = std::move(eth);
-    coin->oxt_ = std::move(oxt);
-} orc_stack("updating coin prices") }
-
-task<void> Cashier::UpdateGas(Origin &origin) { try {
-    auto result(Parse((co_await origin.Fetch("GET", {"https", "ethgasstation.info", "443", "/json/ethgasAPI.json"}, {}, {})).ok()));
-
-    const auto &range(result["gasPriceRange"]);
-    orc_assert(range.isObject());
-
-    S<const Prices> prices([&]() {
-        auto prices(std::make_shared<Prices>());
-        for (const auto &price : range.getMemberNames())
-            prices->emplace(To(price), range[price].asDouble() * 60);
-        return prices;
-    }());
-
-    const auto gas(gas_());
-    std::swap(gas->prices_, prices);
-} orc_stack("updating gas prices") }
 
 task<void> Cashier::Look(const Address &signer, const Address &funder, const std::string &combined) {
     static const auto look(Hash("look(address,address)").Clip<4>().num<uint32_t>());
     Builder builder;
     Coder<Address, Address>::Encode(builder, funder, signer);
-    co_await station_->Send("eth_call", 'C' + combined, {Map{
+    co_await station_->Send("eth_call", 'C' + combined, {Multi{
         {"to", lottery_},
         {"gas", uint256_t(90000)},
         {"data", Tie(look, builder)},
     }, "latest"});
 }
 
-void Cashier::Land(Json::Value data) {
+void Cashier::Land(Json::Value data) { try {
     const auto id(data["id"]);
     if (id.isNull()) {
         const auto method(data["method"].asString());
@@ -163,24 +133,25 @@ void Cashier::Land(Json::Value data) {
             } break;
 
             default:
-                orc_assert(false);
+                orc_insist(false);
         }
     }
-}
+} orc_stack({}, "parsing " << data) }
 
 void Cashier::Stop(const std::string &error) noexcept {
     orc_insist_(false, error);
     Valve::Stop();
 }
 
-Cashier::Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
+Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
     endpoint_(std::move(endpoint)),
-
     price_(price),
-    currency_(std::move(currency)),
 
     personal_(personal),
     password_(std::move(password)),
+
+    balance_(Wait(Update(60*1000, [endpoint = endpoint_, personal]() -> task<uint256_t> {
+        co_return co_await endpoint.Balance(personal); }, "Balance"))),
 
     lottery_(lottery),
     chain_(chain),
@@ -194,24 +165,12 @@ void Cashier::Open(S<Origin> origin, Locator locator) {
         auto duplex(std::make_unique<Duplex>(origin));
         co_await duplex->Open(locator);
 
-        auto station(std::make_unique<Sink<Station, Drain<Json::Value>>>(*this));
+        auto station(std::make_unique<Covered<Sink<Station, Drain<Json::Value>>>>(*this));
         auto &structured(station->Wire<BufferSink<Structured>>());
         auto &inverted(structured.Wire<Inverted>(std::move(duplex)));
         inverted.Open();
         station_ = std::move(station);
-
-        co_await cppcoro::when_all(UpdateCoin(*origin), UpdateGas(*origin));
     }());
-
-    // XXX: this coroutine leaks after Shut
-    Spawn([this, origin = std::move(origin)]() noexcept -> task<void> {
-        for (;;) {
-            co_await Sleep(5 * 60);
-            auto [forex, gas] = co_await cppcoro::when_all_ready(UpdateCoin(*origin), UpdateGas(*origin));
-            orc_ignore({ std::move(forex).result(); });
-            orc_ignore({ std::move(gas).result(); });
-        }
-    });
 }
 
 task<void> Cashier::Shut() noexcept {
@@ -222,35 +181,6 @@ task<void> Cashier::Shut() noexcept {
 
 Float Cashier::Bill(size_t size) const {
     return price_ * size;
-}
-
-checked_int256_t Cashier::Convert(const Float &balance) const {
-    const auto oxt(coin_()->oxt_);
-    return checked_int256_t(balance / oxt * Two128);
-}
-
-std::pair<Float, uint256_t> Cashier::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const {
-    const auto [oxt, eth] = [&]() {
-        const auto coin(coin_());
-        return std::make_pair(coin->oxt_, coin->eth_);
-    }();
-
-    const auto base(Float(amount) * oxt);
-    const auto until(start + range);
-
-    std::pair<Float, uint256_t> credit(0, 10*Gwei);
-
-    const auto prices(gas_()->prices_);
-    for (const auto &[price, time] : *prices) {
-        const auto when(now + unsigned(time));
-        if (when >= until) continue;
-        const auto cost(price * Gwei / 10);
-        const auto profit((start < when ? base * Float(range - (when - start)) / Float(range) : base) - Float(gas * cost) * eth);
-        if (profit > std::get<0>(credit))
-            credit = {profit, cost};
-    }
-
-    return credit;
 }
 
 task<bool> Cashier::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {
@@ -268,7 +198,7 @@ task<bool> Cashier::Check(const Address &signer, const Address &funder, const ui
     if (subscribe) {
         auto combined(Combine(signer, funder));
 
-        co_await station_->Send("eth_subscribe", 'S' + combined, {"logs", Map{
+        co_await station_->Send("eth_subscribe", 'S' + combined, {"logs", Multi{
             {"address", lottery_},
             {"topics", {{Update_, Bound_}, Number<uint256_t>(funder), Number<uint256_t>(signer)}},
         }});
@@ -276,7 +206,7 @@ task<bool> Cashier::Check(const Address &signer, const Address &funder, const ui
         co_await Look(signer, funder, combined);
     }
 
-    co_await pot->Wait();
+    co_await **pot;
 
     const auto locked(pot->locked_());
     if (amount > locked->amount_)

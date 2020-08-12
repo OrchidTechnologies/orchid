@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -23,7 +24,7 @@ class ScanOrPasteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     S s = S.of(context);
     double screenWidth = MediaQuery.of(context).size.width;
-    bool pasteOnly = Platform.isMacOS;
+    bool pasteOnly = OrchidPlatform.isMacOS;
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -59,10 +60,9 @@ class ScanOrPasteDialog extends StatelessWidget {
               FittedBox(
                 child: ScanOrPasteOrchidAccount(
                     spacing:
-                        screenWidth < AppSizes.iphone_xs_max.width ? 8 : 16,
+                        screenWidth < AppSize.iphone_xs_max.width ? 8 : 16,
                     onImportAccount: (ParseOrchidAccountResult result) async {
-                      var hop =
-                          await OrchidVPNConfig.importAccountAsHop(result);
+                      var hop = await OrchidVPNConfig.importAccountAsHop(result);
                       Navigator.of(context).pop();
                       onAddFlowComplete(hop);
                     }),

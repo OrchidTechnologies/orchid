@@ -48,6 +48,8 @@ endif
 source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/source
 
+$(call depend,$(pwd)/source/version.cpp.o,$(output)/extra/revision.hpp)
+
 
 cflags += -I$(pwd)/expected/include
 cflags += -I$(pwd)/url/include
@@ -171,11 +173,11 @@ cflags += -I$(pwd)/eEVM/3rdparty
 cflags += -I$(pwd)/eEVM/include
 
 
-linked += $(pwd)/challenge-bypass-ristretto/$(pre)rust.$(lib)
+linked += $(pwd)/challenge-bypass-ristretto/librust.a
 cflags += -I$(pwd)/challenge-bypass-ristretto/src
 
 
-linked += $(pwd)/boringtun/$(pre)rust.$(lib)
+linked += $(pwd)/boringtun/librust.a
 cflags += -I$(pwd)/boringtun/src
 
 
@@ -186,8 +188,6 @@ cflags += -I$(pwd)/SPCDNS/src
 
 
 include $(pwd)/asio.mk
-#include $(pwd)/nettle.mk
-#include $(pwd)/sequoia.mk
 
 $(call include,rtc/target.mk)
 $(call include,openvpn3.mk)

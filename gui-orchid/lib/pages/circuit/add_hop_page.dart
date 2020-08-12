@@ -4,12 +4,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
+import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
+import '../app_sizes.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
 import 'openvpn_hop_page.dart';
@@ -30,6 +34,7 @@ class AddHopPage extends StatefulWidget {
 
 class _AddHopPageState extends State<AddHopPage> {
   bool _showPACs = false;
+  bool _showWireGuard = false;
 
   @override
   void initState() {
@@ -39,6 +44,7 @@ class _AddHopPageState extends State<AddHopPage> {
 
   void initStateAsync() async {
     _showPACs = (await OrchidPurchaseAPI().apiConfig()).enabled;
+    _showWireGuard = true;
     setState(() {});
   }
 
@@ -56,72 +62,92 @@ class _AddHopPageState extends State<AddHopPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28.0),
           child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                pady(40),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Image.asset("assets/images/approach.png", height: 100),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 500),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                      pady(64),
+                    pady(40),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Image.asset('assets/images/approach.png',
+                          height: 100),
+                    ),
+                    pady(24),
+                    Text(s.orchidIsUniqueAsItSupportsMultipleVPN,
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.normal,
+                            height: 1.12,
+                            letterSpacing: -0.24,
+                            color: Color(0xff504960))),
+                    pady(24),
+
+                    // PAC Purchase
+                    if (_showPACs) _divider(),
+                    if (_showPACs)
+                      _buildHopChoice(
+                          text: s.buyOrchidAccount,
+                          onTap: () {
+                            _addHopFromPACPurchase();
+                          },
+                          svgName: 'assets/svg/attach_money.svg'),
+
+                    // Link Account
+                    _divider(),
+                    _buildHopChoice(
+                        text: s.linkAnOrchidAccount,
+                        onTap: () {
+                          return showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return ScanOrPasteDialog(
+                                    onAddFlowComplete:
+                                        widget.onAddFlowComplete);
+                              });
+                        },
+                        imageName: 'assets/images/scan.png'),
+
+                    // Custom Account
+                    if (!OrchidPlatform.isApple) ...[
+                      _divider(),
+                      _buildHopChoice(
+                          text: s.createACustomAccount,
+                          onTap: () {
+                            _addHopType(HopProtocol.Orchid);
+                          },
+                          imageName: 'assets/images/logo_small_purple.png'),
+                    ],
+
+                    // OVPN Subscription
+                    _divider(),
+                    _buildHopChoice(
+                        text: s.enterOpenvpnConfig,
+                        onTap: () {
+                          _addHopType(HopProtocol.OpenVPN);
+                        },
+                        svgName: 'assets/svg/openvpn.svg'),
+
+                    // WireGuard
+                    if (_showWireGuard) ...[
+                      _divider(),
+                      _buildHopChoice(
+                          text: s.enterWireguardConfig,
+                          onTap: () {
+                            _addHopType(HopProtocol.WireGuard);
+                          },
+                          svgName: 'assets/svg/wireguard.svg'),
+                    ],
+
+                    _divider(),
+                    pady(96),
+                  ],
                 ),
-                pady(24),
-                Text(s.orchidIsUniqueAsItSupportsMultipleVPN,
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.normal,
-                        height: 1.12,
-                        letterSpacing: -0.24,
-                        color: Color(0xff504960))),
-                pady(24),
-
-                // PAC Purchase
-                if (_showPACs)
-                  _divider(),
-                if (_showPACs)
-                  _buildHopChoice(
-                      text: s.buyOrchidAccount,
-                      onTap: () {
-                        _addHopFromPACPurchase();
-                      },
-                      svgName: "assets/svg/attach_money.svg"),
-
-                // Link Account
-                _divider(),
-                _buildHopChoice(
-                    text: s.linkAnOrchidAccount,
-                    onTap: () {
-                      return showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return ScanOrPasteDialog(
-                                onAddFlowComplete: widget.onAddFlowComplete);
-                          });
-                    },
-                    imageName: "assets/images/scan.png"),
-
-                // Custom Account
-                if (!Platform.isIOS && !Platform.isMacOS) ...[
-                  _divider(),
-                  _buildHopChoice(
-                      text: s.createACustomAccount,
-                      onTap: () {
-                        _addHopType(HopProtocol.Orchid);
-                      },
-                      imageName: "assets/images/logo_small_purple.png"),
-                ],
-
-                // OVPN Subscription
-                _divider(),
-                _buildHopChoice(
-                    text: s.enterOvpnProfile,
-                    onTap: () {
-                      _addHopType(HopProtocol.OpenVPN);
-                    },
-                    imageName: "assets/images/security_purple.png"),
-
-                _divider(),
-              ],
+              ),
             ),
           ),
         ),
@@ -147,7 +173,7 @@ class _AddHopPageState extends State<AddHopPage> {
             style: const TextStyle(
                 color: const Color(0xff3a3149),
                 fontWeight: FontWeight.w400,
-                fontFamily: "SFProText",
+                fontFamily: 'SFProText',
                 fontStyle: FontStyle.normal,
                 fontSize: 18.0)),
         onTap: onTap);
@@ -167,6 +193,13 @@ class _AddHopPageState extends State<AddHopPage> {
         break;
       case HopProtocol.OpenVPN:
         editor = OpenVPNHopPage(
+          editableHop: editableHop,
+          mode: HopEditorMode.Create,
+          onAddFlowComplete: widget.onAddFlowComplete,
+        );
+        break;
+      case HopProtocol.WireGuard:
+        editor = WireGuardHopPage(
           editableHop: editableHop,
           mode: HopEditorMode.Create,
           onAddFlowComplete: widget.onAddFlowComplete,

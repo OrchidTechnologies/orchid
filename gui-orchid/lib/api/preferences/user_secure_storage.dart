@@ -6,6 +6,8 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 
 import 'package:orchid/api/purchase/purchase_rate.dart';
 
+import '../orchid_log_api.dart';
+
 // TODO: Stand-in until we have support for MacOS
 class NonSecureStorage {
   Future<String> read({String key}) async {
@@ -27,7 +29,7 @@ class UserSecureStorage {
   }
 
   UserSecureStorage._internal() {
-    print("constructed secure storage API");
+    log("constructed secure storage API");
   }
 
   Future<PurchaseRateHistory> getPurchaseRateHistory() async {
@@ -37,20 +39,20 @@ class UserSecureStorage {
     var str = await storage.read(
         key: UserSecureStorageKey.PACPurchaseRateHistory.toString());
     if (str == null) {
-      print("pac: No pac history, defaulting.");
+      log("iap: No pac history, defaulting.");
     } else {
       try {
         return PurchaseRateHistory.fromJson(jsonDecode(str));
       } catch (err) {
-        print("pac: Error reading history, defaulting: $err");
+        log("iap: Error reading history, defaulting: $err");
       }
     }
     return PurchaseRateHistory([]);
   }
 
   Future<void> setPurchaseRateHistory(PurchaseRateHistory history) async {
-    print(
-        "pac: saving rate history, ${history.purchases.length} items totalling: ${history.sum()}");
+    log(
+        "iap: saving rate history, ${history.purchases.length} items totalling: ${history.sum()}");
     // TODO: Stand-in until we have support for MacOS
     // final storage = FlutterSecureStorage();
     final storage = NonSecureStorage();
@@ -60,7 +62,7 @@ class UserSecureStorage {
           key: UserSecureStorageKey.PACPurchaseRateHistory.toString(),
           value: json);
     } catch (err) {
-      print("pac: Error saving history: $err");
+      log("iap: Error saving history: $err");
     }
   }
 }

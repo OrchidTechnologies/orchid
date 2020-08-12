@@ -1,19 +1,12 @@
-import React, {FC} from "react";
+import "../i18n/i18n_util"
+import React, {EffectCallback, FC, useEffect, useRef} from "react";
 import {Row} from "react-bootstrap";
 import {isEthAddress} from "../api/orchid-eth";
+import {intl} from "../index";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-/*
-export function getURLParams() {
-  let result = new URLParams();
-  let params = new URLSearchParams(document.location.search);
-  result.potAddress = params.get("pot");
-  result.amount = params.get("amount");
-  return result;
-}*/
-
-// Return the relative path of the deployment 
+// Return the relative path of the deployment
 export function basePath(): string {
   let pathComponents = new URL(window.location.href).pathname.split('/');
   pathComponents.pop();
@@ -32,6 +25,14 @@ export function hashPath(): string | undefined {
 export function getParam(name: string): string | null {
   let params = new URL(window.location.href).searchParams;
   return params.get(name);
+}
+
+export function getBoolParam(name: string, defaultValue: boolean): boolean {
+  let val = getParam(name);
+  if (val == null) {
+    return defaultValue;
+  }
+  return val.toLocaleLowerCase() === "true";
 }
 
 export function getEthAddressParam(name: string, defaultValue: string): string {
@@ -55,14 +56,17 @@ export function isNumeric(val: any) {
 }
 
 // Return the float value or null if not numeric.
-export function parseFloatSafe(val: string): number | null {
+export function parseFloatSafe(val: string | null): number | null {
+  if (val === null) {
+    return null
+  }
   return isNumeric(val) ? parseFloat(val) : null;
 }
 
 // Return the int value or null if not numeric.
 export function parseIntSafe(val: string): number | null {
   let ivalue = parseInt(val);
-  return (''+ivalue === val) ? ivalue : null;
+  return ('' + ivalue === val) ? ivalue : null;
 }
 
 // Return the BigInt value or null if not numeric.
@@ -136,3 +140,47 @@ export function removeHexPrefix(value: string | undefined): string | undefined {
   return value.startsWith('0x') ? value.substr(2) : value;
 }
 
+// TODO: Move into number extension in i18 utils?
+/// Format a currency to default two digits of precision with an optional suffix
+/// and null behavior.
+export function formatCurrency(
+  value: number, suffix: string, digits: number = 2, ifNull: string = "..."): string {
+  if (value == null) {
+    return ifNull;
+  }
+  // TODO: Why can't I call this global interface extension method here as elsewhere?
+  //return value.toFixedLocalized(digits) + (suffix != null ? " $suffix" : "");
+  return intl.formatNumber(value, {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits
+  }) + (suffix != null ? ` ${suffix}` : "");
+}
+
+/// Return an hsb color ranging from green to yellow to red for values 0.0 to 1.0;
+export function trafficLightShade(value: number) {
+    value = 1.0 - Math.min(1.0, value);
+    return {h: value * 0.3, s: 0.9, b: 0.9}
+}
+
+// https://overreacted.io/making-setinterval-declarative-with-react-hooks/
+export function useInterval(callback: EffectCallback, delay: number) {
+  const savedCallback = useRef<EffectCallback>();
+
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      if (savedCallback.current !== undefined) {
+        savedCallback.current();
+      }
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}

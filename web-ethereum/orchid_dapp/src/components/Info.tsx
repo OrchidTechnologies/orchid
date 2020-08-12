@@ -1,13 +1,15 @@
-import React, {Component} from 'react';
+import React, {Component, useState} from 'react';
 import {OrchidAPI} from "../api/orchid-api";
 import {keikiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
-import {errorClass, Visibility} from "../util/util";
+import {errorClass, formatCurrency, Visibility} from "../util/util";
 import './Info.css'
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {Subscription} from "rxjs";
 import {AccountQRCode} from "./AccountQRCode";
 import {S} from "../i18n/S";
+import {Orchid} from "../api/orchid";
+import {AccountRecommendation} from "./MarketConditionsPanel";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -22,6 +24,10 @@ export class Info extends Component<any, any> {
     oxtBalanceError: true,
     potBalance: "",
     potEscrow: "",
+    accountRecommendationBalanceMin: null,
+    accountRecommendationBalance: null,
+    accountRecommendationDepositMin: null,
+    accountRecommendationDeposit: null,
   };
   subscriptions: Subscription [] = [];
   walletAddressInput = React.createRef<HTMLInputElement>();
@@ -56,8 +62,18 @@ export class Info extends Component<any, any> {
           potEscrow: keikiToOxtString(pot.escrow, 4)
         });
       }));
-  }
 
+    (async () => {
+      let minViableAccountRecommendation = await Orchid.minViableAccountComposition();
+      let accountRecommendation = await Orchid.recommendedAccountComposition();
+      this.setState({
+        accountRecommendationBalanceMin: minViableAccountRecommendation.balance.value.toFixedLocalized(2),
+        accountRecommendationDepositMin: minViableAccountRecommendation.deposit.value.toFixedLocalized(2),
+        accountRecommendationBalance: accountRecommendation.balance.value.toFixedLocalized(2),
+        accountRecommendationDeposit: accountRecommendation.deposit.value.toFixedLocalized(2)
+      });
+    })();
+  }
 
   componentWillUnmount(): void {
     this.subscriptions.forEach(sub => {
@@ -141,17 +157,51 @@ export class Info extends Component<any, any> {
         <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.lotteryPot}</label>
         <div className="form-row col-1-1">
           <div className="form-row col-1-2">
-            <label className="form-row-label">{S.balance}</label>
+            <label className="form-row-label">{"My Balance"}</label>
             <input className="form-row-field"
                    value={this.state.potBalance}
                    type="text" readOnly/>
           </div>
           <div className="form-row col-1-2">
-            <label className="form-row-label">{S.deposit}</label>
+            <label className="form-row-label">{"My Deposit"}</label>
             <input className="form-row-field"
                    value={this.state.potEscrow}
                    type="text" readOnly/>
           </div>
+        </div>
+
+        {/* market stats */}
+        <label style={{fontWeight: "bold", marginTop: "16px"}}>{"Market Stats"}</label>
+        <div className="form-row col-1-1">
+          <div className="form-row col-1-2">
+            <label className="form-row-label">{"Min Viable Balance"}</label>
+            <input className="form-row-field"
+                   value={this.state.accountRecommendationBalanceMin || "..."}
+                   type="text" readOnly/>
+          </div>
+          <div className="form-row col-1-2">
+            <label className="form-row-label">{"Min Viable Deposit"}</label>
+            <input className="form-row-field"
+                   value={this.state.accountRecommendationDepositMin || "..."}
+                   type="text" readOnly/>
+          </div>
+        </div>
+        <div className="form-row col-1-1">
+          <div className="form-row col-1-2">
+            <label className="form-row-label">{"Recommended Balance"}</label>
+            <input className="form-row-field"
+                   value={this.state.accountRecommendationBalance || "..."}
+                   type="text" readOnly/>
+          </div>
+          <div className="form-row col-1-2">
+            <label className="form-row-label">{"Recommended Deposit"}</label>
+            <input className="form-row-field"
+                   value={this.state.accountRecommendationDeposit || "..."}
+                   type="text" readOnly/>
+          </div>
+          <label className="form-row-label" style={{fontStyle: "italic"}}>
+            Recommendation based on: <b>{Orchid.recommendationEfficiency * 100}% efficiency</b> and <b>{Orchid.recommendationBalanceFaceValues.toFixedLocalized(1)} Face Value</b> balance.
+          </label>
         </div>
 
         {/*pot lock status*/}

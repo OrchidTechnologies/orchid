@@ -20,11 +20,9 @@
 /* }}} */
 
 
-#ifdef __MINGW32__
-#define _GNU_SOURCE
-#endif
-
 #include <iostream>
+
+#include <pthread.h>
 
 #if 0
 #elif defined(__APPLE__)
@@ -38,17 +36,36 @@ extern "C" void NSLog(NSString *, ...);
 #include <boost/algorithm/string.hpp>
 
 #include "log.hpp"
+#include "task.hpp"
 
 namespace orc {
 
 bool Verbose(false);
 
+void Log_(std::ostream &out, Fiber *fiber) {
+    if (fiber == nullptr)
+        return;
+    Log_(out, fiber->Parent());
+    out << "[F:" << fiber << "] ";
+}
+
+Log::Log(Fiber *fiber) noexcept { try {
+    *this << "[T:" << std::hex << pthread_self() << "] ";
+    Log_(*this, fiber);
+} catch (...) {
+} }
+
 Log::~Log() { try {
     auto log(str());
     if (!log.empty() && log[log.size() - 1] == '\n')
         log.resize(log.size() - 1);
+
     boost::replace_all(log, "\r", "");
     boost::replace_all(log, "\n", " || ");
+
+    if (log.find('\e') != std::string::npos)
+        log += "\e[0m";
+
 #if 0
 #elif defined(__APPLE__)
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-type-cstyle-cast)

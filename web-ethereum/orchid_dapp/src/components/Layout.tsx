@@ -29,6 +29,8 @@ import {TransactionPanel} from "./TransactionPanel";
 import {OrchidTransactionDetail} from "../api/orchid-tx";
 import {S} from "../i18n/S";
 import {StakeFunds} from "./StakeFunds";
+import {MarketConditionsPanel} from "./MarketConditionsPanel";
+import {LowFundsPanel} from "./LowFundsPanel";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
@@ -90,6 +92,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
                   rootClose={true} trigger="click" placement='bottom'
                   overlay={
                     <Popover id='moreitems-popover'>
+
                       <Popover.Content onClick={()=>document.body.click()}>
                         <ListGroup variant="flush">{
                           Array.from(moreMenuItems.entries()).map(([key,value])=>{
@@ -108,6 +111,8 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Divider/>
           </Col>
         </Row>
+        <Row><MarketConditionsPanel/></Row>
+        <Row><LowFundsPanel/></Row>
         {bannerTransactions}
         <Row className="page-content">
           <Col>
@@ -115,7 +120,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Visibility visible={route === Route.Balances}><Info/></Visibility>
             <Visibility visible={route === Route.AddFunds || route === Route.CreateAccount}>
               <AddFunds createAccount={route === Route.CreateAccount || isNewUser}/></Visibility>
-            <Visibility visible={route === Route.StakeFunds}><StakeFunds/></Visibility>
+            <Visibility visible={route === Route.StakeFundsTest}><StakeFunds/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
             <Visibility visible={route === Route.Transactions}><Transactions/></Visibility>
             <Visibility visible={route === Route.MoveFunds}><MoveFunds/></Visibility>

@@ -45,29 +45,41 @@ class Valve {
         shut_();
     }
 
+    virtual void Cover() = 0;
+
   public:
     Valve();
     virtual ~Valve();
 
     virtual task<void> Shut() noexcept {
-        co_await shut_.Wait();
+        co_await *shut_;
     }
+};
+
+template <typename Valve_>
+class Covered :
+    public Valve_
+{
+  protected:
+    void Cover() override {}
+  public:
+    using Valve_::Valve_;
 };
 
 template <typename Type_, typename... Args_>
 inline S<Type_> Break(Args_ &&...args) {
-    auto valve(std::make_shared<Type_>(std::forward<Args_>(args)...));
+    auto valve(std::make_shared<Covered<Type_>>(std::forward<Args_>(args)...));
     const auto backup(valve.get());
     return std::shared_ptr<Type_>(backup, [valve = std::move(valve)](Type_ *) mutable noexcept {
         Spawn([valve = std::move(valve)]() noexcept -> task<void> {
             co_await valve->Shut();
-        });
+        }, typeid(Type_).name());
     });
 }
 
 template <typename Type_, typename Code_, typename... Args_>
-auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>())) {
-    Type_ valve(std::forward<Args_>(args)...);
+auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>())) { orc_ahead
+    Covered<Type_> valve(std::forward<Args_>(args)...);
     std::exception_ptr error;
 
     // the reason this works is that Shut() is noexcept

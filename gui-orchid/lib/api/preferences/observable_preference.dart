@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../orchid_log_api.dart';
+
 class ObservablePreference<T> {
   UserPreferenceKey key;
   bool _initialized = false;
@@ -36,7 +38,7 @@ class ObservablePreference<T> {
   }
 
   Future<void> clear() async {
-    print("iap: clearing pac tx");
+    log("iap: clearing pac tx");
     return set(null);
   }
 

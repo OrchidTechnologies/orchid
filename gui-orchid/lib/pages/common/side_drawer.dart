@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/common/tap_copy_text.dart';
@@ -21,7 +22,7 @@ class _SideDrawerState extends State<SideDrawer> {
   void initState() {
     super.initState();
     OrchidAPI().versionString().then((value) {
-      debugPrint("got version: $value");
+      log("got version: $value");
       setState(() {
         _version = value;
       });
@@ -86,6 +87,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.open_source);
                   }),
+
               divider(),
               SideDrawerTile(
                   title: s.settings,
@@ -95,6 +97,18 @@ class _SideDrawerState extends State<SideDrawer> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.settings);
                   }),
+
+              divider(),
+              SideDrawerTile(
+                  title: S.of(context).trafficMonitor,
+                  imageName: 'assets/images/swapVert.png',
+                  showDetail: true,
+                  hoffset: 4.0,
+                  onPressed: () {
+                    //Navigator.pop(context);
+                    Navigator.pushNamed(context, AppRoutes.traffic);
+                  }),
+
               /*
               divider(),
               SideDrawerTile(

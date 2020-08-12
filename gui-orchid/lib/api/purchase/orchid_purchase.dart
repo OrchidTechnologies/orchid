@@ -4,12 +4,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/preferences/user_secure_storage.dart';
-import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/purchase_rate.dart';
 import 'package:orchid/util/units.dart';
+import '../orchid_platform.dart';
 import 'android_purchase.dart';
 import 'ios_purchase.dart';
 import 'orchid_pac.dart';
+import '../orchid_log_api.dart';
 
 /// Support in-app purchase of purchased access credits (PACs).
 /// @See the iOS and Android implementations of this class.
@@ -18,12 +19,12 @@ abstract class OrchidPurchaseAPI {
 
   factory OrchidPurchaseAPI() {
     if (_shared == null) {
-      if (Platform.isIOS | Platform.isMacOS) {
+      if (OrchidPlatform.isApple) {
         _shared = IOSOrchidPurchaseAPI();
-      } else if (Platform.isAndroid) {
+      } else if (OrchidPlatform.isAndroid) {
         _shared = AndroidOrchidPurchaseAPI();
       } else {
-        throw Exception("no purchase on platform");
+        throw Exception('no purchase on platform');
       }
     }
     return _shared;
@@ -32,18 +33,10 @@ abstract class OrchidPurchaseAPI {
   // Domain used in product ID prefix, e.g. 'net.orchid'
   static String productIdPrefix = 'net.orchid';
 
-  // PAC product id base name, nominal USD value and display string.
-  static PAC pacTier1 = PAC('pactier1', USD(4.99), "\$4.99 USD");
-  static PAC pacTier2 = PAC('pactier2', USD(9.99), "\$9.99 USD");
-  static PAC pacTier3 = PAC('pactier3', USD(19.99), "\$19.99 USD");
-
-  static PAC pacForProductId(String productId) {
-    return [
-      OrchidPurchaseAPI.pacTier1,
-      OrchidPurchaseAPI.pacTier2,
-      OrchidPurchaseAPI.pacTier3
-    ].firstWhere((p) => p.productId == productId);
-  }
+  // PAC product ids
+  static String pacTier1 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1';
+  static String pacTier2 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2';
+  static String pacTier3 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3';
 
   // The raw value from the iOS API
   static const int SKErrorPaymentCancelled = 2;
@@ -51,6 +44,8 @@ abstract class OrchidPurchaseAPI {
   Future<PACApiConfig> apiConfig();
 
   void initStoreListener();
+
+  Future<Map<String,PAC>> requestProducts({bool refresh = false});
 
   /// Make the app store purchase. This method will throw
   /// PACPurchaseExceedsRateLimit if the daily purchase rate has been exceeded.
@@ -61,12 +56,14 @@ abstract class OrchidPurchaseAPI {
       PACApiConfig prodAPIConfig) async {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
     return PACApiConfig(
-        enabled:
-            jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
-        url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
-        verifyReceipt: jsConfig.evalBoolDefault(
-            'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
-        debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug));
+      enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
+      url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
+      verifyReceipt: jsConfig.evalBoolDefault(
+          'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
+      debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug),
+      serverFail:
+          jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
+    );
   }
 
   /// Daily per-device PAC purchase limit in USD.
@@ -87,7 +84,10 @@ abstract class OrchidPurchaseAPI {
     var dailyPurchaseLimit =
         min(overrideDailyPurchaseLimit, pacDailyPurchaseLimit.value);
 
-    return history.sum() + pac.usdPurchasePrice.value <= dailyPurchaseLimit;
+    log("isWithinPurchaseRateLimit: limit = $dailyPurchaseLimit, "
+        "current = ${history.sum()}, history = ${history.toJson()}");
+
+    return history.sum() + pac.usdPriceApproximate.value <= dailyPurchaseLimit;
   }
 
   /// Record a purchase in the PAC purchase rate limit history.
@@ -114,11 +114,15 @@ class PACApiConfig {
   /// Enable debug tracing.
   final bool debug;
 
+  /// Simulate PAC server failure redeeming receipt
+  final bool serverFail;
+
   PACApiConfig({
     @required this.enabled,
     @required this.url,
     this.verifyReceipt = true,
     this.debug = false,
+    this.serverFail = false,
   });
 }
 

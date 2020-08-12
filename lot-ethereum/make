@@ -1,3 +1,3 @@
 #!/bin/bash
 set -e
-solc --evm-version istanbul --bin --optimize --overwrite --allow-paths . "$@" -o build lottery.sol
+exec docker run -v "${PWD%/*}":/mnt ethereum/solc:0.5.13 -o /mnt/"${PWD##*/}"/build --bin /mnt/"${PWD##*/}"/lottery.sol --optimize --overwrite --evm-version istanbul

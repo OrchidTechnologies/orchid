@@ -24,6 +24,7 @@ class ScalarValue<T extends num> {
 class OXT extends ScalarValue<double> {
   const OXT(double value) : super(value);
 
+  // TODO: Figure out how to move these operator overloads to the base class
   OXT operator *(double other) {
     return OXT(value * other);
   }
@@ -56,6 +57,7 @@ class ETH extends ScalarValue<double> {
     return ETH(wei / BigInt.from(1e18));
   }
 
+  // TODO: Figure out how to move these operator overloads to the base class
   ETH operator *(double other) {
     return ETH(value * other);
   }
@@ -73,10 +75,11 @@ class ETH extends ScalarValue<double> {
 class GWEI extends ScalarValue<double> {
   const GWEI(double value) : super(value);
 
-  ETH toETH() {
+  ETH toEth() {
     return ETH(value / 1e9);
   }
 
+  // TODO: Figure out how to move these operator overloads to the base class
   GWEI operator *(num other) {
     return GWEI(value * other);
   }
@@ -106,10 +109,10 @@ class Months extends ScalarValue<int> {
 /// Format a currency to default two digits of precision with an optional suffix
 /// and null behavior.
 String formatCurrency(num value,
-    {String suffix, int digits = 2, String ifNull = "..."}) {
+    {String suffix, int digits = 2, String ifNull = "...", String locale}) {
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0.0" + "#" * (digits - 1)).format(value) +
+  return NumberFormat("#0.0" + "#" * (digits - 1), locale).format(value) +
       (suffix != null ? " $suffix" : "");
 }

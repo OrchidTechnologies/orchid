@@ -26,15 +26,17 @@
 #include <map>
 #include <string>
 
-#include "coinbase.hpp"
 #include "endpoint.hpp"
 #include "event.hpp"
+#include "float.hpp"
 #include "local.hpp"
 #include "locked.hpp"
 #include "locator.hpp"
 #include "sleep.hpp"
 #include "signed.hpp"
+#include "spawn.hpp"
 #include "station.hpp"
+#include "updated.hpp"
 
 namespace orc {
 
@@ -62,25 +64,14 @@ class Cashier :
     const Endpoint endpoint_;
 
     const Float price_;
-    const std::string currency_;
 
     const Address personal_;
     const std::string password_;
+    const S<Updated<uint256_t>> balance_;
 
     const Address lottery_;
     const uint256_t chain_;
     const Address recipient_;
-
-    struct Coin_ {
-        Float eth_ = 0;
-        Float oxt_ = 0;
-    }; Locked<Coin_> coin_;
-
-    typedef std::map<unsigned long, double> Prices;
-
-    struct Gas_ {
-        S<const Prices> prices_;
-    }; Locked<Gas_> gas_;
 
     U<Station> station_;
 
@@ -89,9 +80,6 @@ class Cashier :
         std::map<Identity, S<Pot>> pots_;
     }; Locked<Cache_> cache_;
 
-    task<void> UpdateCoin(Origin &origin);
-    task<void> UpdateGas(Origin &origin);
-
     task<void> Look(const Address &signer, const Address &funder, const std::string &combined);
 
   protected:
@@ -99,7 +87,7 @@ class Cashier :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Cashier(Endpoint endpoint, const Float &price, std::string currency, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(Endpoint endpoint, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
     ~Cashier() override = default;
 
     void Open(S<Origin> origin, Locator locator);
@@ -110,9 +98,6 @@ class Cashier :
     }
 
     Float Bill(size_t size) const;
-    checked_int256_t Convert(const Float &balance) const;
-
-    std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint256_t &gas) const;
     task<bool> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt);
 
     template <typename Selector_, typename... Args_>
@@ -126,9 +111,9 @@ class Cashier :
 
                 // XXX: I should dump these to a disk queue as they are worth "real money"
                 // XXX: that same disk queue should maybe be in charge of the old tickets?
-                co_await Sleep(5);
+                co_await Sleep(5000);
             }
-        });
+        }, __FUNCTION__);
     }
 };
 

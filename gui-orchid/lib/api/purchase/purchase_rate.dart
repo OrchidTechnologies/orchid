@@ -9,7 +9,7 @@ class Purchase {
 
   Purchase(PAC pac) {
     this.date = DateTime.now();
-    this.usdAmount = pac.usdPurchasePrice.value;
+    this.usdAmount = pac.usdPriceApproximate.value;
   }
 
   Purchase.fromJson(Map<String, dynamic> json) {

@@ -25,13 +25,15 @@
 
 #include "cashier.hpp"
 #include "channel.hpp"
-#include "coinbase.hpp"
 #include "crypto.hpp"
 #include "datagram.hpp"
 #include "endpoint.hpp"
 #include "local.hpp"
+#include "market.hpp"
 #include "protocol.hpp"
 #include "server.hpp"
+#include "spawn.hpp"
+#include "time.hpp"
 
 namespace orc {
 
@@ -52,7 +54,7 @@ class Incoming final :
             co_await channel.Open();
             // XXX: this could fail; then what?
             co_await server->Open(bonding);
-        });
+        }, __FUNCTION__);
     }
 
     void Stop(const std::string &error) noexcept override {
@@ -79,7 +81,7 @@ class Incoming final :
     }
 
     ~Incoming() override {
-_trace();
+orc_trace();
         Close();
     }
 };
@@ -108,12 +110,13 @@ bool Server::Bill(const Buffer &data, bool force) {
 
 task<void> Server::Send(Pipe &pipe, const Buffer &data, bool force) {
     if (Bill(data, force))
-        co_return co_await pipe.Send(data);
+        return pipe.Send(data);
+    return Nop();
 }
 
 void Server::Send(Pipe &pipe, const Buffer &data) {
     nest_.Hatch([&]() noexcept { return [this, &pipe, data = Beam(data)]() -> task<void> {
-        co_return co_await Send(pipe, data, false); }; });
+        return Send(pipe, data, false); }; }, __FUNCTION__);
 }
 
 task<void> Server::Send(const Buffer &data) {
@@ -138,7 +141,7 @@ task<void> Server::Invoice(Pipe<Buffer> &pipe, const Socket &destination, const 
     Header header{Magic_, id};
     co_await Send(pipe, Datagram(Port_, destination, Tie(header,
         Command(Stamp_, Monotonic()),
-        Command(Invoice_, serial, Complement(cashier_->Convert(balance)), cashier_->Tuple(), commit)
+        Command(Invoice_, serial, Complement(market_->Convert(balance)), cashier_->Tuple(), commit)
     )), true);
 }
 
@@ -176,17 +179,15 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     const auto now(Timestamp());
     orc_assert(until > now);
 
-    const uint256_t gas(100000);
-    const auto [profit, price] = cashier_->Credit(now, start, range, amount, gas);
-    if (profit <= 0)
+    const uint256_t gas(receipt.size() == 0 ? 84000 /*83267*/ : 103000);
+    const auto [expected, price] = market_->Credit(now, start, range, amount, ratio, gas);
+    if (expected <= 0)
         return;
-    static const Float Two128(uint256_t(1) << 128);
-    const auto expected(profit * Float(ratio + 1) / Two128);
 
     using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
     static const auto orchid(Hash("Orchid.grab"));
     const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
-    const Address signer(Recover(Hash(Tie(Strung<std::string>("\x19""Ethereum Signed Message:\n32"), ticket)), v, r, s));
+    const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
 
     const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
         const auto locked(locked_());
@@ -263,10 +264,10 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
             funder, recipient,
             receipt, old
         );
-    } orc_catch({}) });
+    } orc_catch({}) }, __FUNCTION__);
 }
 
-void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
+void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) { orc_ignore({
     if (Bill(data, true) && !Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
@@ -285,13 +286,14 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) {
             } orc_catch({}) });
 
             co_await Invoice(*this, source, id);
-        }; });
+        }; }, __FUNCTION__);
 
         return true;
     })) Send(Inner(), data);
-}
+}); }
 
 void Server::Stop() noexcept {
+    Valve::Stop();
     self_.reset();
 }
 
@@ -304,17 +306,19 @@ void Server::Stop(const std::string &error) noexcept {
     orc_insist_(error.empty(), error);
 }
 
-Server::Server(S<Origin> origin, S<Cashier> cashier) :
+Server::Server(S<Origin> origin, S<Cashier> cashier, S<Market> market) :
     local_(Certify()),
     origin_(std::move(origin)),
-    cashier_(std::move(cashier))
+    cashier_(std::move(cashier)),
+    market_(std::move(market))
 {
+    type_ = typeid(*this).name();
     const auto locked(locked_());
     Commit(locked);
 }
 
 Server::~Server() {
-    _trace();
+    orc_trace();
 }
 
 task<void> Server::Open(Pipe<Buffer> &pipe) {
@@ -324,7 +328,8 @@ task<void> Server::Open(Pipe<Buffer> &pipe) {
 
 task<void> Server::Shut() noexcept {
     co_await nest_.Shut();
-    co_await cppcoro::when_all(Bonded::Shut(), Sunken::Shut());
+    *co_await Parallel(Bonded::Shut(), Sunken::Shut());
+    co_await Valve::Shut();
 }
 
 task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {

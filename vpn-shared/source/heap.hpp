@@ -23,101 +23,119 @@
 #ifndef ORCHID_HEAP_HPP
 #define ORCHID_HEAP_HPP
 
-#include <duktape.h>
+#include <memory>
+#include <string>
+
+#include <quickjs.h>
+
+#include "scope.hpp"
 
 namespace orc {
 
+template <typename Type_>
+struct Free;
+
+template <>
+struct Free<JSRuntime> {
+void operator ()(JSRuntime *value) {
+    JS_FreeRuntime(value);
+} };
+
+template <>
+struct Free<JSContext> {
+void operator ()(JSContext *value) {
+    JS_FreeContext(value);
+} };
+
+class Value {
+  private:
+    JSContext *context_;
+    JSValue value_;
+
+  public:
+    Value(JSContext *context, JSValue value);
+
+    ~Value() {
+        JS_FreeValue(context_, value_);
+    }
+
+    operator JSValueConst() const {
+        return value_;
+    }
+
+    operator JSValue() {
+        return value_;
+    }
+
+    template <typename Type_>
+    Type_ to();
+};
+
 class Heap {
   private:
-    duk_context *duk_;
+    std::unique_ptr<JSRuntime, Free<JSRuntime>> runtime_;
+    std::unique_ptr<JSContext, Free<JSContext>> context_;
 
   public:
     Heap() :
-        duk_(duk_create_heap_default())
+        runtime_(JS_NewRuntime()),
+        context_(JS_NewContext(runtime_.get()))
     {
     }
 
-    Heap(Heap &&heap) noexcept :
-        duk_(heap.duk_)
-    {
-        heap.duk_ = nullptr;
-    }
-
-    ~Heap() {
-        if (duk_ != nullptr)
-            duk_destroy_heap(duk_);
-    }
-
-    operator duk_context *() {
-        return duk_;
+    operator JSContext *() {
+        return context_.get();
     }
 
     template <typename Type_>
-    Type_ pop();
-
-    template <typename Type_>
-    Type_ pop(const Type_ &other);
-
-    template <typename Type_>
-    Type_ eval(const std::string &code) {
-        duk_eval_string(duk_, code.c_str());
-        return pop<Type_>();
+    auto eval(const std::string &code, const std::function<Type_ ()> &fail) {
+        Value value(context_.get(), JS_Eval(context_.get(), code.data(), code.size(), "", JS_EVAL_TYPE_GLOBAL));
+        return JS_IsUndefined(value) ? fail() : value.to<Type_>();
     }
 
     template <typename Type_>
-    Type_ eval(const std::string &code, const Type_ &other) {
-        duk_eval_string(duk_, code.c_str());
-        return pop<Type_>(other);
+    auto eval(const std::string &code, const Type_ &fail) {
+        return eval<Type_>(code, [&]() { return fail; });
+    }
+
+    template <typename Type_>
+    auto eval(const std::string &code) {
+        return eval<Type_>(code, [&]() -> Type_ { orc_assert(false); });
     }
 };
 
 template <>
-inline void Heap::pop<void>() {
-    duk_pop(duk_);
+inline void Value::to<void>() {
 }
 
 template <>
-inline duk_bool_t Heap::pop<duk_bool_t>() {
-    const auto value(duk_get_boolean(duk_, -1));
-    duk_pop(duk_);
+inline bool Value::to<bool>() {
+    const auto value(JS_ToBool(context_, value_));
+    orc_assert(value != -1);
+    return value != 0;
+}
+
+template <>
+inline double Value::to<double>() {
+    double value;
+    orc_assert(JS_ToFloat64(context_, &value, value_) == 0);
     return value;
 }
 
 template <>
-inline duk_double_t Heap::pop<duk_double_t>() {
-    const auto value(duk_get_number(duk_, -1));
-    duk_pop(duk_);
-    return value;
+inline std::string Value::to<std::string>() {
+    size_t size;
+    const auto data(JS_ToCStringLen(context_, &size, value_));
+    orc_assert_(data != nullptr, Value(context_, JS_GetException(context_)).to<std::string>());
+    _scope({ JS_FreeCString(context_, data); });
+    return std::string(data, size);
 }
 
-template <>
-inline std::string Heap::pop<std::string>() {
-    const auto string(duk_get_string(duk_, -1));
-    orc_assert(string != nullptr);
-    const std::string value(string);
-    duk_pop(duk_);
-    return value;
-}
-
-template <>
-inline duk_bool_t Heap::pop<duk_bool_t>(const duk_bool_t &other) {
-    const auto value(duk_get_boolean_default(duk_, -1, other));
-    duk_pop(duk_);
-    return value;
-}
-
-template <>
-inline duk_double_t Heap::pop<duk_double_t>(const duk_double_t &other) {
-    const auto value(duk_get_number_default(duk_, -1, other));
-    duk_pop(duk_);
-    return value;
-}
-
-template <>
-inline std::string Heap::pop<std::string>(const std::string &other) {
-    const std::string value(duk_get_string_default(duk_, -1, other.c_str()));
-    duk_pop(duk_);
-    return value;
+inline Value::Value(JSContext *context, JSValue value) :
+    context_(context),
+    value_(value)
+{
+    orc_assert_(!JS_IsException(value), Value(context, JS_GetException(context)).to<std::string>());
 }
 
 }

@@ -79,4 +79,3 @@ const App: FC<{ walletStatus: WalletStatus }> = (props) => {
   return el;
 };
 
-

@@ -34,10 +34,11 @@
 
 #include <boost/endian/conversion.hpp>
 #include <boost/mp11/tuple.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
+
+#include <intx/intx.hpp>
 
 #include "error.hpp"
-#include "trace.hpp"
+#include "integer.hpp"
 
 namespace orc {
 
@@ -47,16 +48,6 @@ inline void Copy(void *dst, const void *src, size_t len) {
     memcpy(dst, src, len);
     copied_ += len;
 }
-
-inline unsigned long To(const std::string &value) {
-    size_t end;
-    const auto number(stoul(value, &end));
-    orc_assert(end == value.size());
-    return number;
-}
-
-using boost::multiprecision::uint128_t;
-using boost::multiprecision::uint256_t;
 
 class Region;
 class Beam;
@@ -100,6 +91,14 @@ struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_i
         boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value;
         boost::multiprecision::import_bits(value, std::reverse_iterator(data + size), std::reverse_iterator(data), 8, false);
         return value;
+    }
+};
+
+template <unsigned Bits_>
+struct Cast<intx::uint<Bits_>, typename std::enable_if<Bits_ % 8 == 0>::type> {
+    static auto Load(const uint8_t *data, size_t size) {
+        orc_assert(size == Bits_ / 8);
+        return intx::be::load<intx::uint<Bits_>>(*reinterpret_cast<const uint8_t (*)[Bits_ / 8]>(data));
     }
 };
 
@@ -243,6 +242,8 @@ class Mutable :
         operator =(region.span());
         return *this;
     }
+
+    Mutable &operator =(const Buffer &buffer);
 
     using Region::span;
     Span<uint8_t> span() {
@@ -407,9 +408,12 @@ class Data :
         operator =(span);
     }
 
-    Data(const Region &region) :
-        Data(region.span())
-    {
+    Data(const Region &region) {
+        operator =(region);
+    }
+
+    Data(const Buffer &buffer) {
+        operator =(buffer);
     }
 
     Data(const std::array<uint8_t, Size_> &data) :
@@ -628,6 +632,12 @@ class Beam :
         return *this;
     }
 
+    void clear() {
+        destroy();
+        size_ = 0;
+        data_ = nullptr;
+    }
+
     const uint8_t *data() const override {
         return data_;
     }
@@ -702,6 +712,11 @@ class Nothing final :
 
 inline bool Each(const Buffer &buffer, const std::function<bool (const uint8_t *, size_t)> &code) {
     return buffer.each(code);
+}
+
+template <size_t Size_>
+inline bool Each(const char (&data)[Size_], const std::function<bool (const uint8_t *, size_t)> &code) {
+    return Subset(data, Size_ - 1).each(code);
 }
 
 template <typename Type_>
@@ -811,7 +826,6 @@ class Window :
   private:
     size_t count_;
     // XXX: I'm just being lazy here. :/
-    // NOLINTNEXTLINE (modernize-avoid-c-arrays)
     std::unique_ptr<Range[]> ranges_;
 
     const Range *range_;

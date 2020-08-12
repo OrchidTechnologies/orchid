@@ -24,7 +24,7 @@
 
 namespace orc {
 
-const Socket Port_(0, 5482);
+const Socket Port_(0u, 5482);
 
 void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code) {
     Window window(data);

@@ -47,6 +47,14 @@ install: $(bundle)$(contents)$(signature)
 test: install
 	/Applications/Orchid.app/Contents/MacOS/Orchid
 
+.PHONY: validate
+validate: $(output)/$(name).pkg
+	xcrun altool --validate-app -f $< -t osx -u "$(aluser)" -p $(alpass)
+
+.PHONY: upload
+upload: $(output)/$(name).pkg
+	xcrun altool --upload-app -f $< -t osx -u "$(aluser)" -p $(alpass)
+
 $(call include,vpn/target.mk)
 
 cflags += -I.
@@ -168,3 +176,9 @@ endif
 $(output)/$(name).zip: $(bundle)$(contents)$(signature)
 	@rm -f $@
 	cd $(output)/Payload; zip -rXy $(zflags) ../$(name).zip $(name).app
+
+$(output)/$(name)-unsigned.pkg: $(bundle)$(contents)$(signature)
+	xcrun productbuild --component $(output)/Payload/$(name).app /Applications/ $(output)/$(name)-unsigned.pkg
+
+$(output)/$(name).pkg: $(output)/$(name)-unsigned.pkg
+	xcrun productsign --sign $(installer) $(output)/$(name)-unsigned.pkg $(output)/$(name).pkg

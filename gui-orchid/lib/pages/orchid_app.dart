@@ -1,36 +1,74 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
-import 'package:orchid/pages/common/wrapped_switch.dart';
-import 'package:orchid/pages/connect/connect_page.dart';
-import 'circuit/circuit_page.dart';
-import 'monitoring/traffic_view.dart';
+import 'connect/connect_page.dart';
 
 // Provide the MaterialApp wrapper and localization context.
 class OrchidApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-        title: 'Orchid',
-        // No localization
-        localizationsDelegates: [
-          S.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
-        supportedLocales: S.delegate.supportedLocales,
-        theme: ThemeData(
-          primarySwatch: Colors.deepPurple,
-        ),
-        home: OrchidAppTabbed(),
-        debugShowCheckedModeBanner: false,
-        routes: AppRoutes.routes);
+      title: 'Orchid',
+      // No localization
+      localizationsDelegates: [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: S.delegate.supportedLocales,
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple,
+      ),
+      home: OrchidAppNoTabs(),
+      debugShowCheckedModeBanner: false,
+      routes: AppRoutes.routes,
+    );
   }
 }
 
+class OrchidAppNoTabs extends StatefulWidget {
+  @override
+  _OrchidAppNoTabsState createState() => _OrchidAppNoTabsState();
+}
+
+class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
+  ValueNotifier<Color> backgroundColor = ValueNotifier(Colors.white);
+  ValueNotifier<Color> iconColor = ValueNotifier(Color(0xFF3A3149));
+
+  @override
+  Widget build(BuildContext context) {
+    Locale locale = Localizations.localeOf(context);
+    log("locale = $locale");
+    var preferredSize = Size.fromHeight(kToolbarHeight);
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: preferredSize,
+        child: AnimatedBuilder(
+            animation: Listenable.merge([backgroundColor, iconColor]),
+            builder: (context, snapshot) {
+              return AppBar(
+                backgroundColor: backgroundColor.value,
+                elevation: 0,
+                iconTheme: IconThemeData(color: iconColor.value),
+                brightness: Brightness.light // status bar
+              );
+            }),
+      ),
+      body: ConnectPage(
+        appBarColor: backgroundColor,
+        iconColor: iconColor,
+      ),
+      backgroundColor: Colors.white,
+      drawer: SideDrawer(),
+    );
+  }
+}
+
+/*
 /// A bottom navigation tabbed layout of the app
 class OrchidAppTabbed extends StatefulWidget {
   static var showStatusTabPref = ChangeNotifier();
@@ -59,7 +97,7 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
     super.initState();
 
     _tabs = [
-      QuickConnectPage(key: PageStorageKey("1")),
+      LegacyConnectPage(key: PageStorageKey("1")),
       CircuitPage(
           key: PageStorageKey("2"), switchController: _vpnSwitchController),
       TrafficView(
@@ -80,7 +118,7 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
-    print("locale = $locale");
+    log("locale = $locale");
     return Scaffold(
       appBar: AppBar(
         title: _pageTitle,
@@ -170,3 +208,4 @@ class _OrchidAppTabbedState extends State<OrchidAppTabbed>
     return S.of(context);
   }
 }
+ */

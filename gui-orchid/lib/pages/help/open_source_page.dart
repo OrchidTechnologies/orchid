@@ -11,17 +11,17 @@ class OpenSourcePage extends StatefulWidget {
 }
 
 class _OpenSourcePageState extends State<OpenSourcePage> {
-  String _licenseText = "";
+  String _licenseText = "...";
 
   @override
   void initState() {
     super.initState();
+    initStateAsync();
+  }
 
-    OrchidDocs.openSourceLicenses().then((text) {
-      setState(() {
-        _licenseText = text;
-      });
-    });
+  void initStateAsync() async {
+    _licenseText = await OrchidDocs.openSourceLicenses();
+    setState(() { });
   }
 
   @override

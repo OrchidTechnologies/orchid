@@ -29,5 +29,11 @@ class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
   Future<void> purchase(PAC pac) {
     // TODO: implement purchase
   }
+
+  @override
+  Future<Map<String,PAC>> requestProducts({bool refresh = false}) {
+    // TODO: implement requestProducts
+    throw UnimplementedError();
+  }
 }
 

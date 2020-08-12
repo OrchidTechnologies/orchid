@@ -23,7 +23,6 @@
 #include "log.hpp"
 #include "memory.hpp"
 #include "syscall.hpp"
-#include "trace.hpp"
 
 #ifdef __APPLE__
 
@@ -36,9 +35,10 @@ namespace orc {
 
 static int file_(-1);
 
+// XXX: there are a number of arrays in this file; are they correct?
+
 class Out {
   private:
-    // NOLINTNEXTLINE (modernize-avoid-c-arrays)
     char data_[128];
     char *next_;
 
@@ -65,7 +65,6 @@ class Out {
     }
 
     Out &operator <<(size_t value) {
-        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         char buffer[32];
         char *end(buffer + sizeof(buffer));
         *--end = '\0';
@@ -92,7 +91,6 @@ class Out {
 
     Out &operator <<(void *pointer) {
         uintptr_t value(reinterpret_cast<uintptr_t>(pointer));
-        // NOLINTNEXTLINE (modernize-avoid-c-arrays)
         char buffer[32];
         char *end(buffer + sizeof(buffer));
         *--end = '\0';

@@ -26,12 +26,13 @@
 #include <functional>
 
 #include "peer.hpp"
+#include "trace.hpp"
 
 namespace orc {
 
 class Socket;
 
-class Channel final :
+class Channel :
     public Pump<Buffer>,
     public webrtc::DataChannelObserver
 {
@@ -42,7 +43,7 @@ class Channel final :
     Event opened_;
 
   public:
-    static task<Socket> Wire(BufferSunk &sunk, const S<Origin> &origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
+    static task<Socket> Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
     Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
         Pump<Buffer>(drain),
@@ -69,7 +70,7 @@ class Channel final :
     }
 
     ~Channel() override {
-_trace();
+orc_trace();
         peer_->channels_.erase(this);
         channel_->UnregisterObserver();
     }
@@ -108,8 +109,7 @@ _trace();
 
     void OnMessage(const webrtc::DataBuffer &buffer) noexcept override {
         const Subset data(buffer.data.data(), buffer.data.size());
-        if (Verbose)
-            Log() << "WebRTC >>> " << this << " " << data << std::endl;
+        Trace("WebRTC", false, false, data);
         Pump::Land(data);
     }
 
@@ -119,7 +119,7 @@ _trace();
     }
 
     task<void> Open() noexcept {
-        co_await opened_.Wait();
+        co_await *opened_;
     }
 
     task<void> Shut() noexcept override {
@@ -131,8 +131,7 @@ _trace();
     }
 
     task<void> Send(const Buffer &data) override {
-        if (Verbose)
-            Log() << "WebRTC <<< " << this << " " << data << std::endl;
+        Trace("WebRTC", true, false, data);
         rtc::CopyOnWriteBuffer buffer(data.size());
         data.copy(buffer.data(), buffer.size());
         co_await Post([&]() {

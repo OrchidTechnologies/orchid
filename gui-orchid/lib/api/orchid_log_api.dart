@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'orchid_api.dart';
+
+void log(String text) {
+  OrchidAPI().logger().write(text);
+}
+
 /// Logging support, if any, implemented by the channel API.
 abstract class OrchidLogAPI {
 
@@ -52,7 +58,10 @@ class MemoryOrchidLogAPI extends OrchidLogAPI {
   }
 
   /// Write the text to the log.
-  void write(String text) async {
+  void write(String textIn) async {
+    String timeStamp = DateTime.now().toIso8601String();
+    String text = timeStamp + ': ' +textIn;
+    
     debugPrint("LOG: $text");
     if (!_enabled) {
       return;

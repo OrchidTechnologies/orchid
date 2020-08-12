@@ -75,7 +75,6 @@ class Reference {
     Reference(pbuf *buffer) :
         buffer_(buffer)
     {
-        pbuf_ref(buffer_);
     }
 
     Reference(const Reference &other) = delete;
@@ -98,6 +97,12 @@ class Reference {
     pbuf *operator ->() const {
         return buffer_;
     }
+
+    pbuf *Tear() && {
+        const auto buffer(buffer_);
+        buffer_ = nullptr;
+        return buffer;
+    }
 };
 
 class Chain :
@@ -107,12 +112,14 @@ class Chain :
     Reference buffer_;
 
   public:
+    // XXX: this always copies, but sometimes I could pbuf_ref? ugh
     Chain(const Buffer &data) :
         buffer_(pbuf_alloc(PBUF_RAW, data.size(), PBUF_RAM))
     {
         u16_t offset(0);
         data.each([&](const uint8_t *data, size_t size) {
             orc_lwipcall(pbuf_take_at, (buffer_, data, size, offset));
+            copied_ += size;
             offset += size;
             return true;
         });
@@ -121,10 +128,15 @@ class Chain :
     Chain(pbuf *buffer) :
         buffer_(buffer)
     {
+        pbuf_ref(buffer_);
     }
 
     operator pbuf *() const {
         return buffer_;
+    }
+
+    pbuf *Tear() && {
+        return std::move(buffer_).Tear();
     }
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
@@ -222,7 +234,7 @@ class RemoteAssociation :
     }
 };
 
-class RemoteOpening final :
+class RemoteOpening :
     public Opening,
     public RemoteCommon
 {
@@ -299,6 +311,7 @@ class RemoteConnection final :
         pcb_ = tcp_new();
         orc_assert(pcb_ != nullptr);
         tcp_arg(pcb_, this);
+        ip_set_option(pcb_, SOF_KEEPALIVE);
         orc_lwipcall(tcp_bind, (pcb_, &host, 0));
     }
 
@@ -308,25 +321,37 @@ class RemoteConnection final :
             tcp_abort(pcb_);
     }
 
-    task<size_t> Read(Beam &data) override {
+    task<size_t> Read(Beam &buffer) override {
+        auto data(buffer.data());
+        auto size(buffer.size());
+        orc_insist(size != 0);
+
         for (;; co_await read_, co_await Schedule()) {
             const auto locked(locked_());
             if (!locked->data_.empty()) {
-                const auto &next(locked->data_.front());
+                size_t writ(0);
 
+              next:
+                const auto &next(locked->data_.front());
                 const auto base(next.data());
                 const auto rest(next.size() - locked->offset_);
                 if (rest == 0)
                     co_return 0;
 
-                const auto writ(std::min(data.size(), rest));
-                Copy(data.data(), base + locked->offset_, writ);
+                const auto have(std::min(size, rest));
+                Copy(data, base + locked->offset_, have);
+                writ += have;
 
-                if (rest != writ)
-                    locked->offset_ += writ;
+                if (rest != have)
+                    locked->offset_ += have;
                 else {
                     locked->data_.pop();
                     locked->offset_ = 0;
+                    if (size != have && !locked->data_.empty()) {
+                        data += have;
+                        size -= have;
+                        goto next;
+                    }
                 }
 
                 co_return writ;
@@ -335,9 +360,9 @@ class RemoteConnection final :
         }
     }
 
-    task<void> Open(const ip4_addr_t &host, uint16_t port) {
+    task<void> Open(const ip4_addr_t &host, uint16_t port) { orc_ahead orc_block({
         { Core core;
-            tcp_recv(pcb_, [](void *arg, tcp_pcb *pcb, pbuf *data, err_t error) noexcept -> err_t {
+            tcp_recv(pcb_, [](void *arg, tcp_pcb *pcb, pbuf *data, err_t error) noexcept -> err_t { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
                 orc_insist(error == ERR_OK);
@@ -354,7 +379,7 @@ class RemoteConnection final :
                 return ERR_OK;
             });
 
-            tcp_err(pcb_, [](void *arg, err_t error) noexcept {
+            tcp_err(pcb_, [](void *arg, err_t error) noexcept { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(self->pcb_ != nullptr);
                 orc_insist(error != ERR_OK);
@@ -363,7 +388,7 @@ class RemoteConnection final :
                 self->sent_.set();
 
                 if (!self->opened_)
-                    self->opened_(std::move(error));
+                    self->opened_ = std::move(error);
                 else try {
                     orc_lwipcall(, error);
                     orc_insist(false);
@@ -373,7 +398,7 @@ class RemoteConnection final :
             });
 
             // XXX: I feel like I should be verifying that size covered the entire sent packet
-            tcp_sent(pcb_, [](void *arg, tcp_pcb *pcb, u16_t size) noexcept -> err_t {
+            tcp_sent(pcb_, [](void *arg, tcp_pcb *pcb, u16_t size) noexcept -> err_t { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
 
@@ -381,18 +406,18 @@ class RemoteConnection final :
                 return ERR_OK;
             });
 
-            orc_lwipcall(tcp_connect, (pcb_, &host, port, [](void *arg, tcp_pcb *pcb, err_t error) noexcept -> err_t {
+            orc_lwipcall(tcp_connect, (pcb_, &host, port, [](void *arg, tcp_pcb *pcb, err_t error) noexcept -> err_t { orc_head
                 const auto self(static_cast<RemoteConnection *>(arg));
                 orc_insist(pcb == self->pcb_);
                 orc_insist(error == ERR_OK);
 
-                self->opened_(std::move(error));
+                self->opened_ = std::move(error);
                 return ERR_OK;
             }));
         }
 
-        orc_lwipcall(co_await, opened_.Wait());
-    }
+        orc_lwipcall(co_await, *opened_);
+    }, "connecting to " << Host(host) << ":" << port); }
 
     // XXX: provide support for tcp_close and unify with Connection's semantics in Stream via Adapter
 
@@ -441,9 +466,12 @@ class RemoteConnection final :
 };
 
 void Remote::Send(pbuf *buffer) {
-    nest_.Hatch([&]() noexcept { return [this, data = Chain(buffer)]() -> task<void> {
+    // XXX: this always copies the data, but I should sometimes be able to reference it
+    // to do this, I think I need to check if !PBUF_NEEDS_COPY _recursively_ for queue?
+    nest_.Hatch([&]() noexcept { return [this, data = Beam(Chain(buffer))]() -> task<void> {
+        //Log() << "Remote <<< " << this << " " << data << std::endl;
         co_return co_await Inner().Send(data);
-    }; });
+    }; }, __FUNCTION__);
 }
 
 err_t Remote::Output(netif *interface, pbuf *buffer, const ip4_addr_t *destination) {
@@ -459,7 +487,8 @@ err_t Remote::Initialize(netif *interface) {
 }
 
 void Remote::Land(const Buffer &data) {
-    orc_assert(tcpip_inpkt(Chain(data), &interface_, interface_.input) == ERR_OK);
+    //Log() << "Remote >>> " << this << " " << data << std::endl;
+    orc_ignore({ orc_assert(tcpip_inpkt(Chain(data).Tear(), &interface_, interface_.input) == ERR_OK); });
 }
 
 void Remote::Stop(const std::string &error) noexcept {
@@ -499,10 +528,14 @@ void Remote::Open() {
     netifapi_netif_set_link_up(&interface_);
 }
 
-task<void> Remote::Shut() noexcept {
+task<void> Remote::Shut() noexcept { orc_ahead
+orc_trace();
     co_await nest_.Shut();
+orc_trace();
     co_await Sunken::Shut();
+orc_trace();
     co_await Valve::Shut();
+orc_trace();
 }
 
 class Host Remote::Host() {

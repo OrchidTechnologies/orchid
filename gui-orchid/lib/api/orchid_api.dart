@@ -33,10 +33,6 @@ abstract class OrchidAPI {
   /// Publish the connection status.
   final BehaviorSubject<OrchidConnectionState> connectionStatus;
 
-  // TODO: Remove
-  /// Publish the synchronization status.
-  final BehaviorSubject<OrchidSyncStatus> syncStatus;
-
   /// Publish the network route status.
   final BehaviorSubject<OrchidRoute> routeStatus;
 
