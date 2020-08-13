@@ -223,7 +223,7 @@ class Selector final :
         co_return std::move(result);
     }, "calling " << Name()); }
 
-    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
+    task<Bytes32> Send(const Endpoint &endpoint, const Address &from, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("eth_sendTransaction", {Multi{
@@ -231,11 +231,11 @@ class Selector final :
             {"to", contract},
             {"gas", gas},
             {"data", Tie(*this, builder)},
-        }})).asString()).template num<uint256_t>());
+        }})).asString()));
         co_return std::move(transaction);
     }, "sending " << Name()); }
 
-    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
+    task<Bytes32> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Multi{
@@ -243,11 +243,11 @@ class Selector final :
             {"to", contract},
             {"gas", gas},
             {"data", Tie(*this, builder)},
-        }, password})).asString()).template num<uint256_t>());
+        }, password})).asString()));
         co_return std::move(transaction);
     }, "sending " << Name()); }
 
-    task<uint256_t> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const uint256_t &price, const Args_ &...args) const { orc_block({
+    task<Bytes32> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const uint256_t &price, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Multi{
@@ -256,7 +256,7 @@ class Selector final :
             {"gas", gas},
             {"gasPrice", price},
             {"data", Tie(*this, builder)},
-        }, password})).asString()).template num<uint256_t>());
+        }, password})).asString()));
         co_return std::move(transaction);
     }, "sending " << Name()); }
 };
