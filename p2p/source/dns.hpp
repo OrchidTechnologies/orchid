@@ -31,17 +31,6 @@
 #include "shared.hpp"
 #include "task.hpp"
 
-namespace orc {
-
-class Origin;
-
-typedef asio::ip::tcp::endpoint Result;
-typedef std::vector<Result> Results;
-
-task<Results> Resolve(Origin &origin, const std::string &host, const std::string &port);
-
-}
-
 namespace boost {
 namespace asio {
 namespace ip {

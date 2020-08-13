@@ -43,6 +43,14 @@ class Locator final {
         path_(std::move(path))
     {
     }
+
+    auto Tuple() const {
+        return std::tie(scheme_, host_, port_, path_);
+    }
+
+    bool operator <(const Locator &rhs) const {
+        return Tuple() < rhs.Tuple();
+    }
 };
 
 std::ostream &operator <<(std::ostream &out, const Locator &locator);

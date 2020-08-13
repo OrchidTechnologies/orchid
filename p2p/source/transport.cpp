@@ -114,7 +114,7 @@ class Transport :
             const auto remote(config_.remote_list->first_item());
             orc_assert(remote != nullptr);
 
-            const auto endpoints(co_await Resolve(*origin_, remote->server_host, remote->server_port));
+            const auto endpoints(co_await origin_->Resolve(remote->server_host, remote->server_port));
             for (const auto &endpoint : endpoints) {
                 co_await origin_->Associate(sunk, endpoint);
                 break;

@@ -23,6 +23,9 @@
 #ifndef ORCHID_ORIGIN_HPP
 #define ORCHID_ORIGIN_HPP
 
+#include <cppcoro/async_mutex.hpp>
+
+#include "dns.hpp"
 #include "http.hpp"
 #include "link.hpp"
 #include "reader.hpp"
@@ -48,6 +51,9 @@ class Origin :
   private:
     const U<rtc::NetworkManager> manager_;
 
+    cppcoro::async_mutex mutex_;
+    std::map<Locator, Response> cache_;
+
   public:
     Origin(U<rtc::NetworkManager> manager);
     ~Origin() override;
@@ -63,6 +69,8 @@ class Origin :
     virtual task<U<Stream>> Connect(const Socket &endpoint) = 0;
 
     task<Response> Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
+
+    task<std::vector<asio::ip::tcp::endpoint>> Resolve(const std::string &host, const std::string &port);
 };
 
 }

@@ -34,13 +34,13 @@
 
 namespace orc {
 
-task<Results> Resolve(Origin &origin, const std::string &host, const std::string &port) { orc_block({
+task<std::vector<asio::ip::tcp::endpoint>> Origin::Resolve(const std::string &host, const std::string &port) { orc_block({
     if (host == "localhost")
-        co_return co_await Resolve(origin, "127.0.0.1", port);
+        co_return co_await Resolve("127.0.0.1", port);
 
     asio::ip::tcp::resolver resolver(orc::Context());
 
-    Results results;
+    std::vector<asio::ip::tcp::endpoint> results;
 
     static const std::regex re("[0-9.]+");
     if (std::regex_match(host, re)) {
@@ -48,7 +48,7 @@ task<Results> Resolve(Origin &origin, const std::string &host, const std::string
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
-        const auto result(Parse((co_await origin.Fetch("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
+        const auto result(Parse((co_await Fetch("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
             {"accept", "application/dns-json"}
         }, {})).ok()));
 

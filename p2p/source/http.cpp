@@ -29,7 +29,6 @@
 
 #include "adapter.hpp"
 #include "baton.hpp"
-#include "dns.hpp"
 #include "http.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
@@ -102,7 +101,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
 }
 
 task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
-    const auto endpoints(co_await Resolve(origin, locator.host_, locator.port_));
+    const auto endpoints(co_await origin.Resolve(locator.host_, locator.port_));
     std::exception_ptr error;
     for (const auto &endpoint : endpoints) try {
         Adapter adapter(Context(), co_await origin.Connect(endpoint));

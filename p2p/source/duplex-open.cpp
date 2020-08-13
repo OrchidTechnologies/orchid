@@ -27,7 +27,7 @@
 namespace orc {
 
 task<boost::asio::ip::tcp::endpoint> Duplex::Open(const Locator &locator) { orc_block({
-    const auto endpoints(co_await Resolve(*origin_, locator.host_, locator.port_));
+    const auto endpoints(co_await origin_->Resolve(locator.host_, locator.port_));
     auto &lowest(boost::beast::get_lowest_layer(inner_));
     const auto endpoint(co_await orc_value(co_return co_await, lowest.async_connect(endpoints, Token()),
         "connecting to" << endpoints));
