@@ -73,6 +73,17 @@ Block::Block(Json::Value &&value) :
 {
 }
 
+Receipt::Receipt(Json::Value &&value) :
+    contract_([&]() -> Address {
+        const auto contract(value["contractAddress"]);
+        if (contract.isNull())
+            return Address();
+        return contract.asString();
+    }()),
+    gas_(value["gasUsed"].asString())
+{
+}
+
 Account::Account(const Block &block, const Json::Value &value) :
     nonce_(value["nonce"].asString()),
     balance_(value["balance"].asString()),
@@ -148,6 +159,12 @@ task<Block> Endpoint::Header(const Argument &number) const {
 
 task<uint256_t> Endpoint::Balance(const Address &address) const {
     co_return uint256_t((co_await operator ()("eth_getBalance", {address, "latest"})).asString());
+}
+
+task<Receipt> Endpoint::Receipt(const Bytes32 &transaction) const {
+    auto receipt(co_await operator ()("eth_getTransactionReceipt", {transaction}));
+    orc_assert(!receipt.isNull());
+    co_return std::move(receipt);
 }
 
 task<Brick<65>> Endpoint::Sign(const Address &signer, const Buffer &data) const {
