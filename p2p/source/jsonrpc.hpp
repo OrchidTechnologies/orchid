@@ -520,6 +520,9 @@ struct Tupled;
 
 template <size_t Index_>
 struct Tupled<Index_> final {
+    static void Name(std::ostringstream &signature) {
+    }
+
     template <typename Tuple_>
     static void Head(Window &window, Tuple_ &tuple) {
     }
@@ -543,6 +546,13 @@ struct Tupled<Index_> final {
 
 template <size_t Index_, typename Next_, typename... Rest_>
 struct Tupled<Index_, Next_, Rest_...> final {
+    static void Name(std::ostringstream &signature) {
+        if (Index_ != 0)
+            signature << ",";
+        Coded<Next_>::Name(signature);
+        Tupled<Index_ + 1, Rest_...>::Name(signature);
+    }
+
     template <typename Tuple_>
     static void Head(Window &window, Tuple_ &tuple) {
         if (!Coded<Next_>::dynamic_)
@@ -591,6 +601,12 @@ template <typename... Args_>
 struct Coded<std::tuple<Args_...>, void> {
     static const bool dynamic_ = true;
 
+    static void Name(std::ostringstream &signature) {
+        signature << "(";
+        Tupled<0, Args_...>::Name(signature);
+        signature << ")";
+    }
+
     static std::tuple<Args_...> Decode(Window &window) {
         std::tuple<Args_...> value;
         Tupled<0, Args_...>::Head(window, value);
@@ -603,6 +619,10 @@ struct Coded<std::tuple<Args_...>, void> {
         Tupled<0, Args_...>::Size(offset, data);
         Tupled<0, Args_...>::Head(builder, data, offset);
         Tupled<0, Args_...>::Tail(builder, data);
+    }
+
+    static void Size(size_t &offset, const std::tuple<Args_...> &value) {
+        Tupled<0, Args_...>::Size(offset, value);
     }
 };
 
