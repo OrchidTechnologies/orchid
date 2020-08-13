@@ -124,6 +124,12 @@ class Endpoint final {
             std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
         co_return result;
     }
+
+    task<Bytes32> Send(const Argument &arg) const {
+        co_return Bless((co_await operator ()("eth_sendTransaction",
+            arg
+        )).asString());
+    }
 };
 
 template <typename Result_, typename... Args_>
@@ -272,6 +278,20 @@ class Selector final :
         }, password})).asString()));
         co_return std::move(transaction);
     }, "sending " << Name()); }
+};
+
+template <typename... Args_>
+class Constructor final {
+  public:
+    task<Bytes32> Send(const Endpoint &endpoint, const Address &from, const uint256_t &gas, const Buffer &data, const Args_ &...args) const { orc_block({
+        Builder builder;
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
+        co_return co_await endpoint.Send({Multi{
+            {"from", from},
+            {"gas", gas},
+            {"data", Tie(data, builder)},
+        }});
+    }, "constructing"); }
 };
 
 }
