@@ -51,6 +51,7 @@
 #include "local.hpp"
 #include "markup.hpp"
 #include "network.hpp"
+#include "pile.hpp"
 #include "remote.hpp"
 #include "router.hpp"
 #include "sequence.hpp"
@@ -500,29 +501,17 @@ int Main(int argc, const char *const argv[]) {
         const auto state(std::atomic_load(&state_));
         orc_assert(state);
 
-        std::multimap<Float, uint256_t> providers;
-        uint256_t total(0);
-
+        Pile<Float, uint256_t> costs;
         for (const auto &[name, provider] : state->providers_)
             if (const auto report = std::get_if<1>(&provider)) {
                 if (!report->cost_)
                     continue;
                 const auto stake(state->stakes_.find(report->stakee_));
                 orc_assert(stake != state->stakes_.end());
-                total += stake->second.amount_;
-                providers.emplace(*report->cost_, stake->second.amount_);
+                costs(*report->cost_, stake->second.amount_);
             }
-        total /= 2;
 
-        // XXX: I can make this log(N) if N is ever greater than like, 5
-        const auto cost([&]() {
-            for (const auto &[cost, stake] : providers)
-                if (total <= stake)
-                    return cost;
-                else total -= stake;
-            orc_assert(false);
-        }());
-        co_return Respond(request, http::status::ok, "text/plain", cost.str());
+        co_return Respond(request, http::status::ok, "text/plain", costs.med().str());
     });
 
     router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
