@@ -2,6 +2,7 @@ import 'package:badges/badges.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/pages/common/formatting.dart';
 
 import '../app_text.dart';
@@ -11,6 +12,7 @@ class HopTile extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
   final Image image;
+  final String svgName;
   final Color textColor;
   final Color color;
   final Gradient gradient;
@@ -29,6 +31,7 @@ class HopTile extends StatelessWidget {
     this.title,
     this.onTap,
     this.image,
+    this.svgName,
     this.textColor,
     this.color,
     this.gradient,
@@ -122,7 +125,9 @@ class HopTile extends StatelessWidget {
             ]
           ],
         ),
-        leading: image,
+        leading: svgName != null
+            ? SvgPicture.asset(svgName, width: 24, height: 24, color: Colors.white)
+            : image,
         trailing: trailing ??
             Row(
               mainAxisSize: MainAxisSize.min,

@@ -559,16 +559,17 @@ class CircuitPageState extends State<CircuitPage>
     //bool isLastHop = uniqueHop.key == _hops.last.key;
     Color color = Colors.white;
     Image image;
+    String svgName;
     switch (uniqueHop.hop.protocol) {
       case HopProtocol.Orchid:
         image = Image.asset('assets/images/logo2.png', color: color);
         break;
       case HopProtocol.OpenVPN:
-        image = Image.asset('assets/images/security.png', color: color);
-        break;
-      case HopProtocol.WireGuard:
-        image = Image.asset('assets/images/security.png', color: color);
-        break;
+        svgName = 'assets/svg/openvpn.svg';
+    break;
+    case HopProtocol.WireGuard:
+        svgName = 'assets/svg/wireguard.svg';
+    break;
     }
     var title = uniqueHop.hop.displayName(context);
     return Padding(
@@ -578,6 +579,7 @@ class CircuitPageState extends State<CircuitPage>
         textColor: color,
         color: bgColor ?? Colors.white,
         image: image,
+        svgName: svgName,
         onTap: onTap,
         key: Key(uniqueHop.key.toString()),
         title: title,

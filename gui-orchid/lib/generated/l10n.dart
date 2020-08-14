@@ -2017,10 +2017,10 @@ class S {
     );
   }
 
-  /// `Enter WireGuard Profile`
+  /// `Enter WireGuard®️ Profile`
   String get enterWireguardProfile {
     return Intl.message(
-      'Enter WireGuard Profile',
+      'Enter WireGuard®️ Profile',
       name: 'enterWireguardProfile',
       desc: '',
       args: [],
@@ -2147,40 +2147,40 @@ class S {
     );
   }
 
-  /// `WireGuard Hop`
+  /// `WireGuard®️ Hop`
   String get wireguardHop {
     return Intl.message(
-      'WireGuard Hop',
+      'WireGuard®️ Hop',
       name: 'wireguardHop',
       desc: '',
       args: [],
     );
   }
 
-  /// `Paste your WireGuard config file here`
+  /// `Paste your WireGuard®️ config file here`
   String get pasteYourWireguardConfigFileHere {
     return Intl.message(
-      'Paste your WireGuard config file here',
+      'Paste your WireGuard®️ config file here',
       name: 'pasteYourWireguardConfigFileHere',
       desc: '',
       args: [],
     );
   }
 
-  /// `Paste the credential information for your WireGuard provider into the field above.`
+  /// `Paste the credential information for your WireGuard®️ provider into the field above.`
   String get pasteTheCredentialInformationForYourWireguardProviderIntoThe {
     return Intl.message(
-      'Paste the credential information for your WireGuard provider into the field above.',
+      'Paste the credential information for your WireGuard®️ provider into the field above.',
       name: 'pasteTheCredentialInformationForYourWireguardProviderIntoThe',
       desc: '',
       args: [],
     );
   }
 
-  /// `WireGuard`
+  /// `WireGuard®️`
   String get wireguard {
     return Intl.message(
-      'WireGuard',
+      'WireGuard®️',
       name: 'wireguard',
       desc: '',
       args: [],
@@ -2377,10 +2377,10 @@ class S {
     );
   }
 
-  /// `Enter WireGuard Config`
+  /// `Enter WireGuard®️ Config`
   String get enterWireguardConfig {
     return Intl.message(
-      'Enter WireGuard Config',
+      'Enter WireGuard®️ Config',
       name: 'enterWireguardConfig',
       desc: '',
       args: [],
