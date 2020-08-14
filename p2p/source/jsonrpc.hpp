@@ -23,11 +23,7 @@
 #ifndef ORCHID_JSONRPC_HPP
 #define ORCHID_JSONRPC_HPP
 
-#include <string>
-
-#include <json/json.h>
-
-#include "buffer.hpp"
+#include "json.hpp"
 #include "task.hpp"
 
 namespace orc {
@@ -141,7 +137,7 @@ Nested Explode(Window &&window);
 std::string Implode(Nested nested);
 
 class Address :
-    public uint160_t
+    private uint160_t
 {
   public:
     // XXX: clang-tidy should really exempt this particular situation
@@ -158,23 +154,35 @@ class Address :
 
     Address(const Brick<64> &common);
 
+    const uint160_t &num() const {
+        return static_cast<const uint160_t &>(*this);
+    }
+
     bool operator <(const Address &rhs) const {
-        return static_cast<const uint160_t &>(*this) < static_cast<const uint160_t &>(rhs);
+        return num() < rhs.num();
     }
 
     bool operator ==(const Address &rhs) const {
-        return static_cast<const uint160_t &>(*this) == static_cast<const uint160_t &>(rhs);
+        return num() == rhs.num();
+    }
+
+    bool operator !=(const Address &rhs) const {
+        return num() != rhs.num();
+    }
+
+    auto buf() const {
+        return Number<uint160_t>(num());
+    }
+
+    operator Argument() const {
+        return buf();
     }
 };
 
 std::ostream &operator <<(std::ostream &out, const Address &address);
 
-inline bool operator !=(const Address &lhs, const Address &rhs) {
-    return static_cast<const uint160_t &>(lhs) != static_cast<const uint160_t &>(rhs);
-}
-
 inline bool Each(const Address &address, const std::function<bool (const uint8_t *, size_t)> &code) {
-    return Number<uint160_t>(address).each(code);
+    return address.buf().each(code);
 }
 
 template <size_t Index_, typename... Taking_>
@@ -186,86 +194,6 @@ static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     std::get<Index_>(tuple) = value.num<uint160_t>();
     return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
-
-class Argument final {
-  private:
-    mutable Json::Value value_;
-
-  public:
-    Argument(Json::Value value) :
-        value_(std::move(value))
-    {
-    }
-
-    template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
-    Argument(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
-        value_("0x" + value.str(0, std::ios::hex))
-    {
-    }
-
-    Argument(unsigned value) :
-        Argument(uint256_t(value))
-    {
-    }
-
-    Argument(nullptr_t) {
-    }
-
-    Argument(bool value) :
-        value_(value)
-    {
-    }
-
-    Argument(const char *value) :
-        value_(value)
-    {
-    }
-
-    Argument(const std::string &value) :
-        value_(value)
-    {
-    }
-
-    Argument(const Buffer &buffer) :
-        value_(buffer.hex())
-    {
-    }
-
-    Argument(const Address &address) :
-        Argument(Number<uint160_t>(address))
-    {
-    }
-
-    Argument(std::initializer_list<Argument> args) :
-        value_(Json::arrayValue)
-    {
-        int index(0);
-        for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[index++] = std::move(arg->value_);
-    }
-
-    template <typename Type_>
-    Argument(const std::vector<Type_> &args) :
-        value_(Json::arrayValue)
-    {
-        int index(0);
-        for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[index] = Argument(arg->value_);
-    }
-
-    Argument(std::map<std::string, Argument> args) :
-        value_(Json::objectValue)
-    {
-        for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[arg->first] = std::move(arg->second);
-    }
-
-    operator Json::Value &&() && {
-        return std::move(value_);
-    }
-};
-
-typedef std::map<std::string, Argument> Multi;
 
 typedef Beam Bytes;
 typedef Brick<32> Bytes32;
@@ -365,10 +293,10 @@ struct Coded<Address, void> {
     }
 
     static void Encode(Builder &builder, const Address &value) {
-        return Coded<uint160_t>::Encode(builder, value);
+        return Coded<uint160_t>::Encode(builder, value.num());
     }
 
-    static void Size(size_t &offset, const uint160_t &value) {
+    static void Size(size_t &offset, const Address &value) {
         offset += 32;
     }
 };

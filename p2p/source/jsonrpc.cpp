@@ -161,7 +161,7 @@ Address::Address(const Brick<64> &common) :
 }
 
 std::ostream &operator <<(std::ostream &out, const Address &address) {
-    return out << eevm::to_checksum_address(Number<uint256_t>(address).num<eevm::Address>());
+    return out << eevm::to_checksum_address(Number<uint256_t>(address.num()).num<eevm::Address>());
 }
 
 uint256_t Timestamp() {

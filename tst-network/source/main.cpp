@@ -497,7 +497,7 @@ int Main(int argc, const char *const argv[]) {
         co_return Respond(request, http::status::ok, "text/html", markup());
     });
 
-    router(http::verb::get, R"(/chainlink/0)", [&](Request request) -> task<Response> {
+    const auto oracle([&]() {
         const auto state(std::atomic_load(&state_));
         orc_assert(state);
 
@@ -511,7 +511,18 @@ int Main(int argc, const char *const argv[]) {
                 costs(*report->cost_, stake->second.amount_);
             }
 
-        co_return Respond(request, http::status::ok, "text/plain", costs.med().str());
+        return costs.med();
+    });
+
+    router(http::verb::get, R"(/chainlink/0)", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "text/plain", oracle().str());
+    });
+
+    router(http::verb::post, R"(/chainlink/1)", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "application/json", Unparse(Multi{
+            {"jobRunID", Parse(request.body())["id"].asString()},
+            {"data", Multi{{"price", oracle().str()}}},
+        }));
     });
 
     router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {

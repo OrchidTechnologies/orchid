@@ -25,15 +25,96 @@
 
 #include <json/json.h>
 
+#include "buffer.hpp"
 #include "error.hpp"
 
 namespace orc {
+
+class Argument final {
+  private:
+    mutable Json::Value value_;
+
+  public:
+    Argument(Json::Value value) :
+        value_(std::move(value))
+    {
+    }
+
+    template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+    Argument(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
+        value_("0x" + value.str(0, std::ios::hex))
+    {
+    }
+
+    Argument(unsigned value) :
+        Argument(uint256_t(value))
+    {
+    }
+
+    Argument(nullptr_t) {
+    }
+
+    Argument(bool value) :
+        value_(value)
+    {
+    }
+
+    Argument(const char *value) :
+        value_(value)
+    {
+    }
+
+    Argument(const std::string &value) :
+        value_(value)
+    {
+    }
+
+    Argument(const Buffer &buffer) :
+        value_(buffer.hex())
+    {
+    }
+
+    Argument(std::initializer_list<Argument> args) :
+        value_(Json::arrayValue)
+    {
+        int index(0);
+        for (auto arg(args.begin()); arg != args.end(); ++arg)
+            value_[index++] = std::move(arg->value_);
+    }
+
+    template <typename Type_>
+    Argument(const std::vector<Type_> &args) :
+        value_(Json::arrayValue)
+    {
+        int index(0);
+        for (auto arg(args.begin()); arg != args.end(); ++arg)
+            value_[index] = Argument(arg->value_);
+    }
+
+    Argument(std::map<std::string, Argument> args) :
+        value_(Json::objectValue)
+    {
+        for (auto arg(args.begin()); arg != args.end(); ++arg)
+            value_[arg->first] = std::move(arg->second);
+    }
+
+    operator Json::Value &&() && {
+        return std::move(value_);
+    }
+};
+
+typedef std::map<std::string, Argument> Multi;
 
 inline Json::Value Parse(const std::string &data) {
     Json::Value result;
     Json::Reader reader;
     orc_assert(reader.parse(data, result, false));
     return result;
+}
+
+inline std::string Unparse(Argument &&data) {
+    Json::FastWriter writer;
+    return writer.write(std::move(data));
 }
 
 }
