@@ -216,7 +216,7 @@
 	"unlimitedDevicesAndSharing": "Unlimited devices and sharing.",
 	"bandwidthWillFluctuateBasedOnMarketDynamics": "Bandwidth will fluctuate based on market dynamics.",
 	"learnMore": "Learn more.",
-	"enterWireguardProfile": "Enter WireGuard Profile",
+	"enterWireguardProfile": "Enter WireGuard®️ Profile",
 	"purchaseOrchidCreditsToConnectWithOrchid": "Purchase Orchid Credits to connect with Orchid.",
 	"createOrLinkAnOrchidAccountImportAnOvpnProfile": "Create or link an Orchid account, import an OVPN profile or build a multi-hop connection to get started.",
 	"buyOrchidCredits": "Buy Orchid Credits",
@@ -229,10 +229,10 @@
 	"createAnOrchidAccountLinkAnExistingAccountOrImport": "Create an Orchid account, link an existing account or import an OVPN profile.",
 	"connect": "Connect",
 	"disconnect": "Disconnect",
-	"wireguardHop": "WireGuard Hop",
-	"pasteYourWireguardConfigFileHere": "Paste your WireGuard config file here",
-	"pasteTheCredentialInformationForYourWireguardProviderIntoThe": "Paste the credential information for your WireGuard provider into the field above.",
-	"wireguard": "WireGuard",
+	"wireguardHop": "WireGuard®️ Hop",
+	"pasteYourWireguardConfigFileHere": "Paste your WireGuard®️ config file here",
+	"pasteTheCredentialInformationForYourWireguardProviderIntoThe": "Paste the credential information for your WireGuard®️ provider into the field above.",
+	"wireguard": "WireGuard®️",
 	"clearAllLogData": "Clear all log data?",
 	"thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "This debug log is non-persistent and cleared when quitting the app.",
 	"itMayContainSecretOrPersonallyIdentifyingInformation": "It may contain secret or personally identifying information.",
@@ -252,5 +252,5 @@
 	"deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount": "Deleting this hop will remove its configured or purchased account information.",
 	"ifYouPlanToReuseTheAccountLaterYouShould": "If you plan to re-use the account later you should first save it using either the 'share hop' option or by backing up your entire circuit configuration with the Configuration Management tool in Settings.",
   "enterOpenvpnConfig": "Enter OpenVPN Config",
-	"enterWireguardConfig": "Enter WireGuard Config"
+	"enterWireguardConfig": "Enter WireGuard®️ Config"
 }

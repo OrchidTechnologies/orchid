@@ -44,8 +44,8 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   // Add funds state
   const [addAmount, setAddAmount] = useState<number | null>(null);
   const [addEscrow, setAddEscrow] = useState<number | null>(null);
-  const [amountError, setAmountError] = useState(false);
-  const [escrowError, setEscrowError] = useState(false);
+  const [amountError, setAmountError] = useState(props.createAccount);
+  const [escrowError, setEscrowError] = useState(props.createAccount);
   const [tx, setTx] = useState(new TransactionStatus());
   const txResult = React.createRef<TransactionProgress>();
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
@@ -150,6 +150,17 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     }
   }
 
+  function validate(addAmount: number | null, addEscrow: number | null) {
+    let totalSpend: BigInt  = BigInt(oxtToKeiki(addAmount || 0)).add(oxtToKeiki(addEscrow || 0))
+    let overSpend = totalSpend > (walletBalance || 0);
+    let escrowEmpty = addEscrow == null || addEscrow === 0;
+    let amountEmpty = addAmount == null || addAmount === 0;
+    let missingRequiredAmount = (props.createAccount || escrowEmpty) && amountEmpty;
+    setAmountError(missingRequiredAmount || overSpend);
+    let missingRequiredEscrow = (props.createAccount || amountEmpty) && escrowEmpty;
+    setEscrowError(missingRequiredEscrow || overSpend);
+  }
+
   let submitEnabled =
     OrchidAPI.shared().wallet.value !== null
     && !tx.isRunning()
@@ -225,7 +236,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       <Row className="form-row" noGutters={true}>
         <Col>
           <label>{S.addToBalance}<span
-            className={errorClass(amountError && props.createAccount)}> *</span></label>
+            className={errorClass(amountError)}> *</span></label>
         </Col>
         <Col>
           <input
@@ -233,9 +244,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
             onChange={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
               setAddAmount(amount);
-              if (props.createAccount) {
-                setAmountError(amount == null || oxtToKeiki(amount) > (walletBalance || 0));
-              }
+              validate(amount, addEscrow);
             }}
             type="number"
             placeholder={addBalanceStr || (0).toFixedLocalized(2)}
@@ -247,17 +256,15 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       {/*Deposit*/}
       <Row className="form-row" noGutters={true}>
         <Col>
-          <label>{S.addToDeposit}<span className={errorClass(escrowError && props.createAccount)}> *</span></label>
+          <label>{S.addToDeposit}<span className={errorClass(escrowError)}> *</span></label>
         </Col>
         <Col>
           <input
             className="editable"
             onInput={(e) => {
-              let amount = parseFloatSafe(e.currentTarget.value);
-              setAddEscrow(amount);
-              if (props.createAccount) {
-                setEscrowError(amount == null);
-              }
+              let escrow = parseFloatSafe(e.currentTarget.value);
+              setAddEscrow(escrow);
+              validate(addAmount, escrow);
             }}
             type="number"
             placeholder={addDepositStr || (0).toFixedLocalized(2)}
