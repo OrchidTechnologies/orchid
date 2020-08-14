@@ -453,12 +453,12 @@ int Main(int argc, const char *const argv[]) {
         const auto overhead(Float(price) * fiat.eth_);
 
         body << "Cost: ";
-        body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 100000) << " || ";
-        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 85000) << " || ";
+        body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 83328) << " || ";
+        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 69967) << " || ";
         body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)\n";
         body << "\n";
 
-        const auto gas(100000);
+        const auto gas(84000);
         const auto coefficient((overhead * gas) / (fiat.oxt_ * Ten18));
 
         const auto bound((coefficient / ((1-0.80) / 2)).convert_to<float>());
