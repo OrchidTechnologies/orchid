@@ -200,7 +200,7 @@ task<bool> Cashier::Check(const Address &signer, const Address &funder, const ui
 
         co_await station_->Send("eth_subscribe", 'S' + combined, {"logs", Multi{
             {"address", lottery_},
-            {"topics", {{Update_, Bound_}, Number<uint256_t>(funder), Number<uint256_t>(signer)}},
+            {"topics", {{Update_, Bound_}, Number<uint256_t>(funder.num()), Number<uint256_t>(signer.num())}},
         }});
 
         co_await Look(signer, funder, combined);
