@@ -81,11 +81,15 @@ class _ConnectPageState extends State<ConnectPage>
     bool showBadge = false;
     for (var hop in hops) {
       if (hop is OrchidHop) {
-        var pot =
-            await OrchidEthereum.getLotteryPot(hop.funder, hop.getSigner(keys));
-        var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
-        if (ticketValue.value <= 0) {
-          showBadge = true;
+        try {
+          var pot = await OrchidEthereum.getLotteryPot(
+              hop.funder, hop.getSigner(keys));
+          var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
+          if (ticketValue.value <= 0) {
+            showBadge = true;
+          }
+        } catch (err) {
+          log("Error fetching lottery pot: err");
         }
       }
     }
@@ -186,7 +190,8 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Padding _buildManageProfileButton() {
-    var textColor = _showConnectedBackground() ? Colors.white : AppColors.purple_3;
+    var textColor =
+        _showConnectedBackground() ? Colors.white : AppColors.purple_3;
     var bgColor = Colors.transparent;
     var borderColor = AppColors.purple_3;
     return Padding(

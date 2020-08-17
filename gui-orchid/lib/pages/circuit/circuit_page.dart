@@ -287,6 +287,7 @@ class CircuitPageState extends State<CircuitPage>
                   return _buildEndTile();
                 }),
             _buildDeletedHopsLink(),
+            pady(32)
           ],
         ),
         onReorder: _onReorder);
