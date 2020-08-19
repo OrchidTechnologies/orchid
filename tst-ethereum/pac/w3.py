@@ -2,6 +2,7 @@ import logging
 import os
 
 from abis import lottery_abi, token_abi
+from eth_account.messages import encode_defunct
 from utils import configure_logging, get_secret
 from web3 import Web3
 
@@ -427,3 +428,12 @@ def allowance(owner: str, spender: str = os.environ['LOTTERY']):
     spending_allowance = token_contract.functions.allowance(owner, spender).call()
     logging.debug(f'Spending Allowance of {owner} by {spender}: {spending_allowance}')
     return spending_allowance
+
+
+def verifyMessage(message_text: str, signed_message: str):
+    logging.debug(f'verifyMessage() message_text: {message_text} signed_message: {signed_message}')
+    w3 = refresh_w3()
+    message = encode_defunct(text=message_text)
+    verified = w3.eth.account.recover_message(message, signature=signed_message)
+    logging.debug(f'Verified: {verified}')
+    return verified
