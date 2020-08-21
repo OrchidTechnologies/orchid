@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
-import {ETH, GWEI, KEIKI, min, OXT, USD} from "../api/orchid-types";
+import {ETH, GWEI, min, OXT, USD} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
-import {LotteryPot, OrchidEthereumAPI} from "../api/orchid-eth";
+import {LotteryPot} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill

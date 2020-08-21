@@ -125,22 +125,17 @@ export class OrchidEthereumAPI {
           resolve(WalletStatus.WrongNetwork);
         }
 
-        // Subscribe to provider account changes
-        /*
-        if (providerUpdateCallback && web3.currentProvider && (web3.currentProvider as any).publicConfigStore) {
-          // Note: The provider update callback should only be passed once, but to be safe.
-          if (web3ProviderListener) {
-            try {
-              web3ProviderListener.unsubscribe();
-              console.log("existing provider listener successfully unsubscribed");
-            } catch (err) {
-              console.log("failed to unsubscribe existing provider listener");
-            }
-          }
-          web3ProviderListener = (web3.currentProvider as any).publicConfigStore.on('update', (props: any) => {
+        if (providerUpdateCallback) {
+          console.log("registering account listener");
+          window.ethereum.on('accountsChanged', function (props: any) {
+            console.log("web3 accounts changed")
             providerUpdateCallback && providerUpdateCallback(props);
-          });
-        }*/
+          })
+          window.ethereum.on('networkChanged', function (props: any) {
+            console.log("web3 network changed")
+            providerUpdateCallback && providerUpdateCallback(props);
+          })
+        }
 
         try {
           OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
