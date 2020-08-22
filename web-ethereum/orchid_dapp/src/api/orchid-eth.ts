@@ -125,16 +125,20 @@ export class OrchidEthereumAPI {
           resolve(WalletStatus.WrongNetwork);
         }
 
-        if (providerUpdateCallback) {
-          console.log("registering account listener");
-          window.ethereum.on('accountsChanged', function (props: any) {
-            console.log("web3 accounts changed")
-            providerUpdateCallback && providerUpdateCallback(props);
-          })
-          window.ethereum.on('networkChanged', function (props: any) {
-            console.log("web3 network changed")
-            providerUpdateCallback && providerUpdateCallback(props);
-          })
+        try {
+          if (providerUpdateCallback) {
+            console.log("registering account listener");
+            window.ethereum.on('accountsChanged', function (props: any) {
+              console.log("web3 accounts changed")
+              providerUpdateCallback && providerUpdateCallback(props);
+            })
+            window.ethereum.on('networkChanged', function (props: any) {
+              console.log("web3 network changed")
+              providerUpdateCallback && providerUpdateCallback(props);
+            })
+          }
+        } catch (err) {
+          console.log("error registering listener: ", err)
         }
 
         try {
