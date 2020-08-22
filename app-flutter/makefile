@@ -18,6 +18,8 @@
 # }}}
 
 
+include ../env/common.mk
+
 .PHONY: all
 all: ios
 
