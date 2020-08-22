@@ -18,6 +18,9 @@
 # }}}
 
 
+forks := 
+include shared/gui/target.mk
+
 flutter := $(CURDIR)/flutter/bin/flutter --suppress-analytics --verbose
 
 precache := --macos
@@ -28,7 +31,7 @@ flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(c
 	cd flutter && bin/flutter precache $(precache)
 	cd flutter && bin/flutter update-packages
 
-shared/gui/%flutter-plugins %packages $(generated): shared/gui/pubspec.yaml shared/gui/pubspec.lock flutter/packages/flutter/pubspec.lock
+shared/gui/%flutter-plugins %packages $(generated): shared/gui/pubspec.yaml shared/gui/pubspec.lock flutter/packages/flutter/pubspec.lock $(forks)
 	mkdir -p shared/gui/android shared/gui/ios shared/gui/macos
 	cd shared/gui && $(flutter) pub get
 	@touch shared/gui/.packages

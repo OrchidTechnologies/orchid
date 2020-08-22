@@ -43,11 +43,7 @@ dependencies:
   url_launcher: ^5.4.1
   web3dart: ^1.2.1
   in_app_purchase:
-    # We forked this to add the MacOS support.  I have a PR in the works.
-    git:
-      url: https://github.com/patniemeyer/plugins.git
-      path: packages/in_app_purchase
-      ref: support_macos
+    path: in_app_purchase
   dartjsengine: ^1.0.1
   # This doesn't support MacOS yet
   #flutter_secure_storage: ^3.3.3

@@ -205,11 +205,9 @@ packages:
   in_app_purchase:
     dependency: "direct main"
     description:
-      path: "packages/in_app_purchase"
-      ref: support_macos
-      resolved-ref: "9591ea2cf313ccbc121a1df77ab6425a06c6f7d6"
-      url: "https://github.com/patniemeyer/plugins.git"
-    source: git
+      path: in_app_purchase
+      relative: true
+    source: path
     version: "0.3.2+2"
   intl:
     dependency: transitive

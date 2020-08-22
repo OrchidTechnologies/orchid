@@ -2,6 +2,7 @@
 /.dart_tool
 /.flutter-plugins
 /.flutter-plugins-dependencies
+/in_app_purchase
 /ios/Flutter
 /ios/Runner
 /ios/.symlinks

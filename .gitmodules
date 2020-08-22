@@ -160,3 +160,6 @@
 [submodule "c-ares"]
 	path = min-wireshark/c-ares
 	url = https://github.com/c-ares/c-ares.git
+[submodule "plugins"]
+	path = gui-orchid/plugins
+	url = https://github.com/flutter/plugins.git

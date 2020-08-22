@@ -18,19 +18,12 @@
 # }}}
 
 
-.PHONY: all
-all: ios
-
-include shared/target-all.mk
-
-.PHONY: ios
-ios: $(forks)
-	flutter/bin/flutter build ios
-
-.PHONY: test
-test: $(forks)
-	flutter/bin/flutter run
-
-.PHONY: run
-run:
-	while [[ 1 ]]; do make test; done
+shared/gui/in_app_purchase/pubspec.yaml: shared/gui/plugins/packages/in_app_purchase/pubspec.yaml shared/gui/target.mk
+	rsync -a --delete $(dir $<) $(dir $@)
+	rsync -a --delete $(dir $@){ios,macos}/
+	sed -ie 's@Flutter/Flutter@FlutterMacOS/FlutterMacOS@g' $(dir $@)macos/Classes/*.[hm]
+	sed -ie 's/Platform\.isIOS/Platform.isIOS || Platform.isMacOS/g' $(dir $@)lib/src/in_app_purchase/in_app_purchase_connection.dart
+	sed -ie "s/'Flutter'/'FlutterMacOS'/g; s/:ios, '[^']*'/:osx, '10.11'/g; s/, 'VALID_ARCHS' => '[^']*'//g" $(dir $@)macos/*.podspec
+	sed -ie 'x;/./{G;};x;/^ *ios:/h;/^$$/{x;s/ios:/macos:/g;}' $(dir $@)pubspec.yaml
+	@touch $@
+forks += shared/gui/in_app_purchase/pubspec.yaml
