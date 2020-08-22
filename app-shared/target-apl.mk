@@ -66,7 +66,7 @@ $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%pl
 	    -dDartDefines="" \
 	    -dExtraFrontEndOptions="" \
 	    --output="$(output)/flutter" \
-	   "$(mode)_$(assemble)_bundle_flutter_assets"
+	    $(mode)_$(assemble)_bundle_flutter_assets
 	@mkdir -p $(dir $(app)) $(dir $(embed))
 ifeq ($(target),mac)
 	$(rsync) $(output)/flutter/$(framework).framework $(dir $(embed))
