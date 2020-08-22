@@ -94,5 +94,9 @@ cflags += -I$(output)/extra
 .PHONY: force
 $(output)/extra/revision.hpp: force
 	@mkdir -p $(dir $@)
+ifeq ($(filter nodiff,$(debug)),)
 	@env/revision.sh $(cc) --version >$@.new
+else
+	@echo >$@.new
+endif
 	@if [[ ! -e $@ ]] || ! diff -q $@ $@.new >/dev/null; then mv -f $@.new $@; else rm -f $@.new; fi
