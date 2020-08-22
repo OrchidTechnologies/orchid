@@ -24,7 +24,9 @@
 #define ORCHID_ORIGIN_HPP
 
 #include <cppcoro/async_mutex.hpp>
+#include <cppcoro/shared_task.hpp>
 
+#include "cache.hpp"
 #include "dns.hpp"
 #include "http.hpp"
 #include "link.hpp"
@@ -51,8 +53,8 @@ class Origin :
   private:
     const U<rtc::NetworkManager> manager_;
 
-    cppcoro::async_mutex mutex_;
-    std::map<Locator, Response> cache_;
+    static cppcoro::shared_task<std::string> Resolve_(Origin &origin, const std::string &host);
+    Cache<cppcoro::shared_task<std::string>, Origin &, std::string, &Resolve_> cache_;
 
   public:
     Origin(U<rtc::NetworkManager> manager);

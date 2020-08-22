@@ -31,7 +31,8 @@
 namespace orc {
 
 Origin::Origin(U<rtc::NetworkManager> manager) :
-    manager_(std::move(manager))
+    manager_(std::move(manager)),
+    cache_(*this)
 {
     type_ = typeid(*this).name();
 }
@@ -52,21 +53,7 @@ U<cricket::PortAllocator> Origin::Allocator() {
 // XXX: for Local::Fetch, this should use NSURLSession on __APPLE__
 
 task<Response> Origin::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
-    if (method == "GET") {
-        const auto lock(co_await mutex_.scoped_lock_async());
-        const auto entry(cache_.find(locator));
-        if (entry != cache_.end())
-            co_return entry->second;
-    }
-
-    auto response(co_await orc::Fetch(*this, method, locator, headers, data, verify));
-
-    if (method == "GET") {
-        const auto lock(co_await mutex_.scoped_lock_async());
-        cache_[locator] = response;
-    }
-
-    co_return std::move(response);
+    co_return co_await orc::Fetch(*this, method, locator, headers, data, verify);
 }
 
 }
