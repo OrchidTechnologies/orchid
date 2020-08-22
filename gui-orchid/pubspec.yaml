@@ -31,7 +31,7 @@ dependencies:
   flutter_html: ^0.11.1
   flutter_localizations:
     sdk: flutter
-  flutter_svg: ^0.17.4
+  flutter_svg: ^0.18.0
   font_awesome_flutter: ^8.5.0
   http: ^0.12.0+3
   pointycastle: ^1.0.2
