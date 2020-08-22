@@ -1,15 +1,14 @@
-import React, {Component, useState} from 'react';
+import React, {Component} from 'react';
 import {OrchidAPI} from "../api/orchid-api";
 import {keikiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
-import {errorClass, formatCurrency, Visibility} from "../util/util";
+import {errorClass, Visibility} from "../util/util";
 import './Info.css'
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {Subscription} from "rxjs";
 import {AccountQRCode} from "./AccountQRCode";
 import {S} from "../i18n/S";
 import {Orchid} from "../api/orchid";
-import {AccountRecommendation} from "./MarketConditionsPanel";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 

@@ -3,7 +3,6 @@ import {OrchidAPI} from "../api/orchid-api";
 import {
   Divider,
   errorClass,
-  getBoolParam,
   parseFloatSafe,
   useInterval,
   Visibility
@@ -51,7 +50,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
   const [pot, setPot] = useState<LotteryPot | null>(null);
   const [marketConditions, setMarketConditions] = useState<MarketConditions>();
-  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation|null>(null);
+  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -77,9 +76,9 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     };
   }, []);
 
-  useInterval(()=>{
+  useInterval(() => {
     fetchMarketConditions().then();
-  }, 15000) ;
+  }, 15000);
 
   useEffect(() => {
     fetchMarketConditions().then();
@@ -87,16 +86,17 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
 
   async function fetchMarketConditions() {
     console.log("fetch market conditions");
-    if (pot == null || addAmount == null || addEscrow == null) {
+    if (pot == null) {
       console.log("null market conditions: ", pot, addAmount, addEscrow);
       setMarketConditions(undefined);
       return;
     }
     console.log("getting market conditions");
+    // Market conditions for prospective pot composition
     setMarketConditions(
       await MarketConditions.forBalance(
-        OXT.fromKeiki(pot.balance).add(new OXT(addAmount)),
-        OXT.fromKeiki(pot.escrow).add(new OXT(addEscrow)))
+        OXT.fromKeiki(pot.balance).add(new OXT(addAmount || 0)),
+        OXT.fromKeiki(pot.escrow).add(new OXT(addEscrow || 0)))
     );
     console.log("got market conditions: ");
   }
@@ -124,7 +124,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     }
     try {
       const amountKeiki = oxtToKeiki(addAmount || 0);
-      const escrowKeiki = oxtToKeiki(addEscrow || 0 );
+      const escrowKeiki = oxtToKeiki(addEscrow || 0);
 
       // Choose a gas price
       let medianGasPrice: GWEI = await api.eth.getGasPrice();
@@ -151,7 +151,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   }
 
   function validate(addAmount: number | null, addEscrow: number | null) {
-    let totalSpend: BigInt  = BigInt(oxtToKeiki(addAmount || 0)).add(oxtToKeiki(addEscrow || 0))
+    let totalSpend: BigInt = BigInt(oxtToKeiki(addAmount || 0)).add(oxtToKeiki(addEscrow || 0))
     let overSpend = totalSpend > (walletBalance || 0);
     let escrowEmpty = addEscrow == null || addEscrow === 0;
     let amountEmpty = addAmount == null || addAmount === 0;
@@ -186,12 +186,27 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   let efficiencyColor: string = "";
   if (marketConditions) {
     let efficiency = marketConditions.efficiency;
-    efficiencyPerc = (efficiency * 100).toFixed()+"%";
-    if (efficiency <= 0.2) { efficiencyColor = "red" }
-    if (efficiency > 0.2 && efficiency <= 0.6) { efficiencyColor = "yellow" }
-    if (efficiency > 0.6) { efficiencyColor = "green" }
+    efficiencyPerc = (efficiency * 100).toFixed() + "%";
+    if (efficiency <= 0.2) {
+      efficiencyColor = "red"
+    }
+    if (efficiency > 0.2 && efficiency <= 0.6) {
+      efficiencyColor = "#FFD147"
+    }
+    if (efficiency > 0.6) {
+      efficiencyColor = "green"
+    }
   }
-  let showMarketConditions = getBoolParam("market_meter", false);
+
+  let limitedByBalance = marketConditions == null ? false : marketConditions.limitedByBalance;
+  let limitedByString = limitedByBalance ? "balance": "deposit";
+  let efficiencyText: string =
+    (addAmount == null && addEscrow == null) ?
+      "The current efficiency of your account as determined by your balance, deposit, and current market conditions is " + efficiencyPerc +
+      " and is currently limited by your " + limitedByString
+      :
+      "The efficiency of your account after this transaction, as determined by your balance, deposit, and current market conditions will be " + efficiencyPerc +
+      " and will be limited by your " + limitedByString;
 
   return (
     <Container className="form-style">
@@ -274,13 +289,14 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       </Row>
 
       {/*Market conditions meter*/}
-      <Visibility visible={marketConditions !== undefined && showMarketConditions}>
+      <Visibility visible={marketConditions !== undefined}>
         <Row className="form-row">
           <Col>
             <label>Market efficiency</label>
           </Col>
           <Col>
-            <ProgressLine label="" visualParts={[ { percentage: efficiencyPerc, color: efficiencyColor } ]} />
+            <ProgressLine label=""
+                          visualParts={[{percentage: efficiencyPerc, color: efficiencyColor}]}/>
           </Col>
           <Col style={{flexGrow: 0}}>
             {efficiencyPerc}
@@ -290,7 +306,9 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
 
       <p className="instructions">
         {S.yourDepositSecuresAccessInstruction}
+        {efficiencyText}
       </p>
+      <br/>
       <Divider noGutters={true}/>
 
       {/*Total*/}

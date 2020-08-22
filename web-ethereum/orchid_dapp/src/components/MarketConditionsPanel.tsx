@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
-import {ETH, GWEI, KEIKI, min, OXT, USD} from "../api/orchid-types";
+import {ETH, GWEI, min, OXT, USD} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
-import {LotteryPot, OrchidEthereumAPI} from "../api/orchid-eth";
+import {LotteryPot} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
@@ -29,13 +29,15 @@ export class MarketConditions {
   public maxFaceValue: OXT
   public ticketUnderwater: boolean
   public efficiency: number
+  public limitedByBalance: boolean
 
-  constructor(gasCostToRedeem: ETH, oxtCostToRedeem: OXT, maxFaceValue: OXT, ticketUnderwater: boolean, efficiency: number) {
+  constructor(gasCostToRedeem: ETH, oxtCostToRedeem: OXT, maxFaceValue: OXT, ticketUnderwater: boolean, efficiency: number, limitedByBalance: boolean) {
     this.gasCostToRedeem = gasCostToRedeem;
     this.oxtCostToRedeem = oxtCostToRedeem;
     this.maxFaceValue = maxFaceValue;
     this.ticketUnderwater = ticketUnderwater;
     this.efficiency = efficiency;
+    this.limitedByBalance = limitedByBalance;
   }
 
   static async for(pot: LotteryPot): Promise<MarketConditions> {
@@ -68,13 +70,14 @@ export class MarketConditions {
   static async forBalance(balance: OXT, escrow: OXT): Promise<MarketConditions> {
     console.log("fetch market conditions")
     let {gasCostToRedeem, oxtCostToRedeem} = await this.getCostToRedeemTicket();
+    let limitedByBalance = balance.value <= escrow.divide(2.0).value;
     let maxFaceValue: OXT = min(balance, escrow.divide(2.0));
     let ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
 
     // value received as a fraction of ticket face value
     let efficiency = Math.max(0, maxFaceValue.subtract(oxtCostToRedeem).value / maxFaceValue.value);
 
-    return new MarketConditions(gasCostToRedeem, oxtCostToRedeem, maxFaceValue, ticketUnderwater, efficiency);
+    return new MarketConditions(gasCostToRedeem, oxtCostToRedeem, maxFaceValue, ticketUnderwater, efficiency, limitedByBalance);
   }
 
   private static async getCostToRedeemTicket() {

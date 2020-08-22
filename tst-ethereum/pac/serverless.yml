@@ -162,6 +162,13 @@ functions:
       - http:
           path: status
           method: get
+  Verify:
+    handler: verify.main
+    timeout: 30
+    events:
+      - http:
+          path: verify
+          method: post
 plugins:
   - serverless-plugin-datadog
   - serverless-pseudo-parameters
