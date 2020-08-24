@@ -47,6 +47,42 @@ const char *Params() {
     ;
 }
 
+template <typename Stream_>
+task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
+    boost::beast::flat_buffer buffer;
+
+    for (;;) {
+        Request request(socket);
+        try {
+            co_await http::async_read(stream, buffer, request, Token());
+        } catch (const boost::system::system_error &error) {
+            const auto code(error.code());
+            if (false);
+            else if (code == asio::ssl::error::stream_truncated);
+            else if (code == boost::beast::error::timeout);
+            else if (code == http::error::end_of_stream);
+            else if (code == http::error::partial_message);
+            else orc_adapt(error);
+            co_return;
+        }
+
+        const auto response(co_await [&]() -> task<Response> { try {
+            for (const auto &[verb, path, code] : routes_)
+                if ((verb == http::verb::unknown || verb == request.method()) && std::regex_match(request.target().to_string(), path))
+                    co_return co_await code(std::move(request));
+            Log() << request << std::endl;
+            // XXX: maybe return method_not_allowed if path is found but method is not
+            co_return Respond(request, http::status::not_found, "text/plain", "");
+        } catch (const std::exception &error) {
+            co_return Respond(request, http::status::internal_server_error, "text/plain", error.what());
+        } }());
+
+        co_await http::async_write(stream, response, Token());
+        if (!response.keep_alive())
+            break;
+    }
+}
+
 void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params) {
     asio::ssl::context ssl{asio::ssl::context::tlsv12};
 
@@ -62,12 +98,14 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
 
     Spawn([this, bind, port, ssl = std::move(ssl)]() mutable noexcept -> task<void> {
         asio::ip::tcp::acceptor acceptor(Context(), asio::ip::tcp::v4());
+
 #ifdef _WIN32
         acceptor.set_option(asio::detail::socket_option::boolean<SOL_SOCKET, SO_EXCLUSIVEADDRUSE>(true));
 #else
         acceptor.set_option(asio::socket_base::reuse_address(true));
 #endif
         acceptor.bind(asio::ip::tcp::endpoint(bind, port));
+
         acceptor.listen();
         acceptor.non_blocking(true);
 
@@ -80,39 +118,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                 boost::beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
                 co_await stream.async_handshake(asio::ssl::stream_base::server, Token());
-
-                boost::beast::flat_buffer buffer;
-
-                for (;;) {
-                    Request request(endpoint);
-                    try {
-                        co_await http::async_read(stream, buffer, request, Token());
-                    } catch (const boost::system::system_error &error) {
-                        const auto code(error.code());
-                        if (false);
-                        else if (code == asio::ssl::error::stream_truncated);
-                        else if (code == boost::beast::error::timeout);
-                        else if (code == http::error::end_of_stream);
-                        else if (code == http::error::partial_message);
-                        else orc_adapt(error);
-                        co_return;
-                    }
-
-                    const auto response(co_await [&]() -> task<Response> { try {
-                        for (const auto &[verb, path, code] : routes_)
-                            if ((verb == http::verb::unknown || verb == request.method()) && std::regex_match(request.target().to_string(), path))
-                                co_return co_await code(std::move(request));
-                        Log() << request << std::endl;
-                        // XXX: maybe return method_not_allowed if path is found but method is not
-                        co_return Respond(request, http::status::not_found, "text/plain", "");
-                    } catch (const std::exception &error) {
-                        co_return Respond(request, http::status::internal_server_error, "text/plain", error.what());
-                    } }());
-
-                    co_await http::async_write(stream, response, Token());
-                    if (!response.keep_alive())
-                        break;
-                }
+                co_await Handle(stream, endpoint);
 
                 try {
                     co_await stream.async_shutdown(Token());
@@ -124,6 +130,24 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                     else orc_adapt(error);
                 }
             } orc_catch({}) }, "Router::handle");
+        }
+    }, "Router::accept");
+}
+
+void Router::Run(const std::string &path) {
+    Spawn([this, path]() noexcept -> task<void> {
+        unlink(path.c_str());
+        asio::local::stream_protocol::acceptor acceptor(Context(), path);
+
+        acceptor.listen();
+        acceptor.non_blocking(true);
+
+        for (;;) {
+            asio::local::stream_protocol::socket connection(Context());
+            co_await acceptor.async_accept(connection, Token());
+            Spawn([this, connection = std::move(connection)]() mutable noexcept -> task<void> {
+                co_await Handle(connection, Socket());
+            }, "Router::handle");
         }
     }, "Router::accept");
 }
