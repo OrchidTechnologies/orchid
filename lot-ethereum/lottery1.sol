@@ -163,6 +163,7 @@ contract OrchidLottery1 {
         address funder, address payable recipient,
         bytes calldata receipt, bytes32[] memory old
     ) external {
+        require(start + range > block.timestamp);
         require(uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))) <= ratio);
 
         // this variable is being reused because I do not have even one extra stack slot
@@ -175,10 +176,8 @@ contract OrchidLottery1 {
 
             {
                 Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
-                uint256 until = start + range;
-                require(until > block.timestamp);
                 require(track.until_ == 0);
-                track.until_ = until;
+                track.until_ = start + range;
             }
 
             for (uint256 i = 0; i != old.length; ++i) {
