@@ -254,6 +254,9 @@ Capture::Capture(const Host &local) :
     local_(local),
     up_(32)
 {
+    router_(http::verb::get, "/status.txt", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "text/plain", "dunno");
+    });
 }
 
 Capture::~Capture() {
@@ -706,6 +709,7 @@ void Capture::Start(const std::string &path) {
         eth_winratio = 0;
         hops = [];
         logdb = "analysis.db";
+        control = "";
         //stun = "stun:stun.l.google.com:19302";
     )");
 
@@ -716,6 +720,10 @@ void Capture::Start(const std::string &path) {
     const auto analysis(heap.eval<std::string>("logdb"));
     if (!analysis.empty())
         analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
+
+    const auto control(heap.eval<std::string>("control"));
+    if (!control.empty())
+        router_.Run(boost::filesystem::absolute(control, group).string());
 
     S<Origin> local(Break<Local>());
 

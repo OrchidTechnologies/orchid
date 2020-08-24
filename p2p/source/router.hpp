@@ -56,8 +56,12 @@ class Router {
   private:
     std::list<std::tuple<http::verb, std::regex, std::function<task<Response> (Request)>>> routes_;
 
+    template <typename Stream_>
+    task<void> Handle(Stream_ &stream, const Socket &socket);
+
   public:
     void Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params = Params());
+    void Run(const std::string &path);
 
     void operator()(http::verb verb, const std::string &path, std::function<task<Response> (Request)> code) {
         routes_.emplace_back(verb, path, std::move(code));

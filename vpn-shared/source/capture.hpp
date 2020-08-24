@@ -27,6 +27,7 @@
 
 #include "link.hpp"
 #include "nest.hpp"
+#include "router.hpp"
 #include "socket.hpp"
 
 namespace orc {
@@ -73,6 +74,9 @@ class Capture :
     // XXX: I covered these objects, but this just feels wrong
     // I think maybe I should make Internals subclass Capture?
     U<Internal> internal_;
+
+    // XXX: so this won't even manage its own memory correctly
+    Router router_;
 
   protected:
     void Land(const Buffer &data) override;
