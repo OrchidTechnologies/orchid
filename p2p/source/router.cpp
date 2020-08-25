@@ -134,6 +134,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
     }, "Router::accept");
 }
 
+#ifndef _WIN32
 void Router::Run(const std::string &path) {
     Spawn([this, path]() noexcept -> task<void> {
         unlink(path.c_str());
@@ -151,6 +152,7 @@ void Router::Run(const std::string &path) {
         }
     }, "Router::accept");
 }
+#endif
 
 Response Respond(const Request &request, http::status status, const std::string &type, std::string body) {
     auto const size(body.size());

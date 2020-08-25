@@ -717,9 +717,11 @@ void Capture::Start(const std::string &path) {
 
     const auto group(boost::filesystem::path(path).parent_path());
 
+#ifndef _WIN32
     const auto control(heap.eval<std::string>("control"));
     if (!control.empty())
         router_.Run(boost::filesystem::absolute(control, group).string());
+#endif
 
     const auto analysis(heap.eval<std::string>("logdb"));
     if (!analysis.empty())
