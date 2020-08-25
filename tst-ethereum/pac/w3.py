@@ -437,3 +437,13 @@ def verifyMessage(message_text: str, signed_message: str):
     verified = w3.eth.account.recover_message(message, signature=signed_message)
     logging.debug(f'Verified: {verified}')
     return verified
+
+
+def signMessage(message_text: str):
+    logging.debug(f'signMessage() message_text: {message_text}')
+    w3 = refresh_w3()
+    funder_privkey = get_secret(key=os.environ['PAC_FUNDER_PRIVKEY_SECRET'])
+    message = encode_defunct(text=message_text)
+    signed_message = w3.eth.account.sign_message(message, private_key=funder_privkey)
+    logging.debug(f'Signed Message: {signed_message}')
+    return signed_message.signature
