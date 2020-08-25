@@ -717,13 +717,13 @@ void Capture::Start(const std::string &path) {
 
     const auto group(boost::filesystem::path(path).parent_path());
 
-    const auto analysis(heap.eval<std::string>("logdb"));
-    if (!analysis.empty())
-        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
-
     const auto control(heap.eval<std::string>("control"));
     if (!control.empty())
         router_.Run(boost::filesystem::absolute(control, group).string());
+
+    const auto analysis(heap.eval<std::string>("logdb"));
+    if (!analysis.empty())
+        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
 
     S<Origin> local(Break<Local>());
 
