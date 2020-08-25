@@ -30,8 +30,8 @@
 namespace orc {
 
 class Address;
+struct Block;
 class Endpoint;
-
 struct Fiat;
 
 template <typename Type_>
