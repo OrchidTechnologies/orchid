@@ -26,6 +26,7 @@
 #include <map>
 
 #include "link.hpp"
+#include "locked.hpp"
 #include "nest.hpp"
 #include "router.hpp"
 #include "socket.hpp"
@@ -77,6 +78,10 @@ class Capture :
 
     // XXX: so this won't even manage its own memory correctly
     Router router_;
+
+    struct Locked_ {
+        bool connected_;
+    }; Locked<Locked_> locked_;
 
   protected:
     void Land(const Buffer &data) override;
