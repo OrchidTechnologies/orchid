@@ -8,7 +8,7 @@ import '../orchid_log_api.dart';
 
 class OrchidStatus {
   static OrchidStatus _shared = OrchidStatus._init();
-  static String socketName = '/orchid.sock';
+  static String socketName = 'orchid.sock';
 
   /// The app-level tunnel connected state
   /// See also OrchidAPI connectionStatus for the system VPN state.
