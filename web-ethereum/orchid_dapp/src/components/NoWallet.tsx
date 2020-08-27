@@ -4,8 +4,6 @@ import './NoWallet.css';
 import bugs from '../assets/bugs.png';
 import metamask from '../assets/wallet-logos/metamask.png';
 import coinbasewallet from '../assets/wallet-logos/coinbasewallet.svg';
-import trustwallet from '../assets/wallet-logos/trustwallet.svg';
-import breadwallet from '../assets/wallet-logos/bread-wallet.png';
 import {SubmitButton} from "./SubmitButton";
 import {WalletStatus} from "../api/orchid-api";
 import {copyTextToClipboard} from "../util/util";
@@ -47,8 +45,6 @@ export const NoWallet: FC<{ walletStatus: WalletStatus }> = (props) => {
         </div>
         <div className="NoWallet-images">
           <a className="metamask" href="https://metamask.io/"><img src={metamask} alt="metamask" /></a>
-          <a className="trustwallet" href="https://trustwallet.com/"><img src={trustwallet} alt="Trust Wallet" /></a>
-          <a className="breadwallet" href="https://brd.com/"><img src={breadwallet} alt="bread" /></a>
           <a className="coinbasewallet" href="https://wallet.coinbase.com/"><img src={coinbasewallet} alt="coinbase Wallet" /></a>
         </div>
 
