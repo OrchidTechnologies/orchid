@@ -80,7 +80,7 @@ class Capture :
     Router router_;
 
     struct Locked_ {
-        bool connected_;
+        bool connected_ = false;
     }; Locked<Locked_> locked_;
 
   protected:

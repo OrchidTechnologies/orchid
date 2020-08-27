@@ -2386,6 +2386,26 @@ class S {
       args: [],
     );
   }
+
+  /// `Starting...`
+  String get starting {
+    return Intl.message(
+      'Starting...',
+      name: 'starting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Orchid is starting.`
+  String get orchidIsStarting {
+    return Intl.message(
+      'Orchid is starting.',
+      name: 'orchidIsStarting',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

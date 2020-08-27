@@ -190,7 +190,8 @@ class _LegacyConnectPageState
             mapGradient: _mapGradient.value,
             width: mapWidth,
             height: mapHeight,
-            showOverlay: _connectionState == OrchidConnectionState.Connected,
+            showOverlay:
+                _connectionState == OrchidConnectionState.OrchidConnected,
           ),
         );
       },
@@ -289,14 +290,16 @@ class _LegacyConnectPageState
         message = s.orchidDisconnecting;
         break;
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnected:
         message = s.orchidConnecting;
         break;
-    case OrchidConnectionState.Invalid:
-    case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.Invalid:
+      case OrchidConnectionState.NotConnected:
         message = s.pushToConnect;
         break;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
         message = s.orchidIsRunning;
+        break;
     }
 
     Color color =
@@ -378,8 +381,9 @@ class _LegacyConnectPageState
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnected:
         return false;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
       case OrchidConnectionState.Disconnecting:
         return true;
     }
@@ -424,7 +428,7 @@ class _LegacyConnectPageState
         .animate(_connectAnimController);
 
     // If we're already running cancel the intro animation.
-    if (OrchidAPI().connectionStatus.value == OrchidConnectionState.Connected) {
+    if (OrchidAPI().connectionStatus.value == OrchidConnectionState.OrchidConnected) {
       _showIntroAnimation = false;
     }
   }
@@ -440,7 +444,8 @@ class _LegacyConnectPageState
         _checkPermissionAndEnableConnection();
         break;
       case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
+      case OrchidConnectionState.VPNConnected:
         _disableConnection();
         break;
     }

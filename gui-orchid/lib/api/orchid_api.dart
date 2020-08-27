@@ -30,7 +30,11 @@ abstract class OrchidAPI {
   /// Publish the physical layer level network connectivity type.
   final BehaviorSubject<NetworkConnectivityType> networkConnectivity;
 
-  /// Publish the connection status.
+  /// Publish the system VPN connection status.
+  /// See also OrchidStatus for the app-level tunnel status.
+  final BehaviorSubject<OrchidVPNConnectionState> vpnConnectionStatus;
+
+  /// Publish the orchid network connection status.
   final BehaviorSubject<OrchidConnectionState> connectionStatus;
 
   /// Publish the network route status.
@@ -109,6 +113,15 @@ abstract class OrchidAPI {
 
   /// Publish the latest configuration to the VPN.
   Future<bool> updateConfiguration();
+
+  void dispose() {
+    vpnConnectionStatus.close();
+    networkConnectivity.close();
+    circuitConfigurationChanged.close();
+    connectionStatus.close();
+    routeStatus.close();
+    vpnPermissionStatus.close();
+  }
 }
 
 

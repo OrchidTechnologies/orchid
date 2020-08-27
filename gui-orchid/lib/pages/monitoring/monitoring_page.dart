@@ -61,7 +61,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
       case OrchidConnectionState.NotConnected:
         break;
       case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
+      case OrchidConnectionState.VPNConnected:
       case OrchidConnectionState.Disconnecting:
         switchOn = true;
     }
@@ -92,7 +93,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
         }
         break;
       case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
+      case OrchidConnectionState.VPNConnected:
         if (desiredEnabled == false) {
           _disableConnection();
         }

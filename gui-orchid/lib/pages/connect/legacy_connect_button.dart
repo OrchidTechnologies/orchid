@@ -71,8 +71,9 @@ class LegacyConnectButtonState extends State<LegacyConnectButton>
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNConnected:
         return false;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
         return true;
     }
   }
@@ -85,9 +86,10 @@ class LegacyConnectButtonState extends State<LegacyConnectButton>
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNConnected:
         image = 'connect_button_enabled.png';
         break;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
         image = 'connect_button_connected.png';
     }
 
@@ -132,7 +134,7 @@ class LegacyConnectButtonState extends State<LegacyConnectButton>
       alignment: Alignment.center,
       children: <Widget>[
         Visibility(
-          visible: connectionState == OrchidConnectionState.Connected,
+          visible: connectionState == OrchidConnectionState.OrchidConnected,
           child: Stack(
             alignment: Alignment.center,
             children: <Widget>[
