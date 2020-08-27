@@ -5,8 +5,24 @@ import 'package:orchid/util/location.dart';
 /// Physical layer level network connectivity type.
 enum NetworkConnectivityType { Unknown, Wifi, Mobile, NoConnectivity }
 
-/// The connection states of the Orchid network client.
-enum OrchidConnectionState { Invalid, NotConnected, Connecting, Connected, Disconnecting }
+/// The connection states of the system VPN
+enum OrchidVPNConnectionState {
+  Invalid,
+  NotConnected,
+  Connecting,
+  Connected,
+  Disconnecting
+}
+
+/// The connection states of the Orchid network (a superset of the vpn connection state)
+enum OrchidConnectionState {
+  Invalid,
+  NotConnected,
+  Connecting,
+  VPNConnected,
+  OrchidConnected,
+  Disconnecting
+}
 
 /// A route through the Orchid network comprising one or more nodes.
 @immutable
@@ -86,4 +102,3 @@ class VPNConfig {
 
   VPNConfig({this.private, this.public});
 }
-

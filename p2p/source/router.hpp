@@ -61,7 +61,10 @@ class Router {
 
   public:
     void Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params = Params());
+
+#ifndef _WIN32
     void Run(const std::string &path);
+#endif
 
     void operator()(http::verb verb, const std::string &path, std::function<task<Response> (Request)> code) {
         routes_.emplace_back(verb, path, std::move(code));

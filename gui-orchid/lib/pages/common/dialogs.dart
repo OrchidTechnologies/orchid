@@ -110,7 +110,8 @@ class Dialogs {
         warn = false;
         break;
       case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
+      case OrchidConnectionState.VPNConnected:
         warn = true;
     }
     if (warnOnly && !warn) {

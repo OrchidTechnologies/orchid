@@ -8,6 +8,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
+import 'monitoring/orchid_status.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
 import 'orchid_pricing.dart';
@@ -16,33 +17,82 @@ class RealOrchidAPI implements OrchidAPI {
   static final RealOrchidAPI _singleton = RealOrchidAPI._internal();
   static const _platform = const MethodChannel("orchid.com/feedback");
 
+  /// Transient, in-memory log implementation.
+  OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
+
   factory RealOrchidAPI() {
     return _singleton;
   }
 
+  final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
+      NetworkConnectivityType.Unknown);
+
+  final vpnConnectionStatus = BehaviorSubject<OrchidVPNConnectionState>.seeded(
+      OrchidVPNConnectionState.Invalid);
+
+  final BehaviorSubject<OrchidConnectionState> connectionStatus =
+      BehaviorSubject<OrchidConnectionState>.seeded(
+          OrchidConnectionState.Invalid);
+
+  final routeStatus = BehaviorSubject<OrchidRoute>();
+
+  final vpnPermissionStatus = BehaviorSubject<bool>();
+
+  final circuitConfigurationChanged = BehaviorSubject<void>.seeded(null);
+
   RealOrchidAPI._internal() {
+    // Update the overall orchid connection state when the vpn or orchid tunnel
+    // connection state changes.
+    Rx.combineLatest2(vpnConnectionStatus, OrchidStatus().connected,
+        (OrchidVPNConnectionState vpnState, bool orchidConnected) {
+      log("status: combine status: $vpnState, $orchidConnected");
+      switch (vpnState) {
+        case OrchidVPNConnectionState.Invalid:
+          return OrchidConnectionState.Invalid;
+          break;
+        case OrchidVPNConnectionState.NotConnected:
+          return OrchidConnectionState.NotConnected;
+          break;
+        case OrchidVPNConnectionState.Connecting:
+          return OrchidConnectionState.Connecting;
+          break;
+        case OrchidVPNConnectionState.Connected:
+          // This differentiates the vpn and orchid layer connections
+          return (orchidConnected
+              ? OrchidConnectionState.OrchidConnected
+              : OrchidConnectionState.VPNConnected);
+          break;
+        case OrchidVPNConnectionState.Disconnecting:
+          return OrchidConnectionState.Disconnecting;
+          break;
+      }
+    }).listen((OrchidConnectionState state) {
+      connectionStatus.add(state);
+    });
+
+    // Respond to native channel callbacks
     _platform.setMethodCallHandler((MethodCall call) async {
-      //print("Method call handler: $call");
+      //log("status: Method call handler: $call");
       switch (call.method) {
         case 'connectionStatus':
           switch (call.arguments) {
             case 'Invalid':
-              connectionStatus.add(OrchidConnectionState.Invalid);
+              vpnConnectionStatus.add(OrchidVPNConnectionState.Invalid);
               break;
             case 'Disconnected':
-              connectionStatus.add(OrchidConnectionState.NotConnected);
+              vpnConnectionStatus.add(OrchidVPNConnectionState.NotConnected);
               break;
             case 'Connecting':
-              connectionStatus.add(OrchidConnectionState.Connecting);
+              vpnConnectionStatus.add(OrchidVPNConnectionState.Connecting);
               break;
             case 'Connected':
-              connectionStatus.add(OrchidConnectionState.Connected);
+              vpnConnectionStatus.add(OrchidVPNConnectionState.Connected);
               break;
             case 'Disconnecting':
-              connectionStatus.add(OrchidConnectionState.Disconnecting);
+              vpnConnectionStatus.add(OrchidVPNConnectionState.Disconnecting);
               break;
             case 'Reasserting':
-              connectionStatus.add(OrchidConnectionState.Connecting);
+              vpnConnectionStatus.add(OrchidVPNConnectionState.Connecting);
               break;
           }
           break;
@@ -63,17 +113,6 @@ class RealOrchidAPI implements OrchidAPI {
       }
     });
   }
-
-  final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
-      NetworkConnectivityType.Unknown);
-  final connectionStatus = BehaviorSubject<OrchidConnectionState>.seeded(
-      OrchidConnectionState.Invalid);
-  final routeStatus = BehaviorSubject<OrchidRoute>();
-  final vpnPermissionStatus = BehaviorSubject<bool>();
-  final circuitConfigurationChanged = BehaviorSubject<void>.seeded(null);
-
-  /// Transient, in-memory log implementation.
-  OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
 
   /// The Flutter application uses this method to indicate to the native channel code
   /// that the UI has finished launching and all listeners have been established.
@@ -188,13 +227,19 @@ class RealOrchidAPI implements OrchidAPI {
     return result == "true";
   }
 
-  // Generate the portion of the VPN config managed by the GUI.
+  // Generate the portion of the VPN config managed by the GUI.  Managed config
+  // precedes user config in the tunnel, supporting overrides.
   // The desired format is (JavaScript, not JSON) e.g.:
   static Future<String> generateManagedConfig() async {
     // Circuit configuration
     var managedConfig = await OrchidVPNConfig.generateHopsConfig();
-    // Default RPC provider
+
+    // Inject the default RPC provider
     managedConfig += '\nrpc = "${OrchidEthereum.providerUrl}";';
+
+    // Inject the status socket name
+    managedConfig += '\ncontrol = "${OrchidStatus.socketName}";';
+
     return managedConfig;
   }
 
@@ -217,5 +262,14 @@ class RealOrchidAPI implements OrchidAPI {
   /// Publish the latest configuration to the VPN.
   Future<bool> updateConfiguration() async {
     return setConfiguration(await UserPreferences().getUserConfig());
+  }
+
+  void dispose() {
+    vpnConnectionStatus.close();
+    networkConnectivity.close();
+    circuitConfigurationChanged.close();
+    connectionStatus.close();
+    routeStatus.close();
+    vpnPermissionStatus.close();
   }
 }

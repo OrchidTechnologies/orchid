@@ -254,8 +254,8 @@ Capture::Capture(const Host &local) :
     local_(local),
     up_(32)
 {
-    router_(http::verb::get, "/status.txt", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", "dunno");
+    router_(http::verb::get, "/connected", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "application/json", locked_()->connected_ ? "true" : "false");
     });
 }
 
@@ -717,13 +717,15 @@ void Capture::Start(const std::string &path) {
 
     const auto group(boost::filesystem::path(path).parent_path());
 
-    const auto analysis(heap.eval<std::string>("logdb"));
-    if (!analysis.empty())
-        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
-
+#ifndef _WIN32
     const auto control(heap.eval<std::string>("control"));
     if (!control.empty())
         router_.Run(boost::filesystem::absolute(control, group).string());
+#endif
+
+    const auto analysis(heap.eval<std::string>("logdb"));
+    if (!analysis.empty())
+        analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
 
     S<Origin> local(Break<Local>());
 
@@ -745,7 +747,9 @@ void Capture::Start(const std::string &path) {
 
     Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), local);
 
-    auto code([heap = std::move(heap), hops, local = std::move(local), network = std::move(network), host, group](BufferSunk &sunk) mutable -> task<void> {
+    auto code([this, heap = std::move(heap), hops, local = std::move(local), network = std::move(network), host, group](BufferSunk &sunk) mutable -> task<void> {
+        locked_()->connected_ = false;
+
         auto origin(local);
 
         for (unsigned i(0); i != hops - 1; ++i) {
@@ -756,6 +760,7 @@ void Capture::Start(const std::string &path) {
         }
 
         co_await Single(sunk, heap, network, origin, host, hops - 1, group);
+        locked_()->connected_ = true;
     });
 
     auto &retry(sunk.Wire<Retry<decltype(code)>>(std::move(code)));

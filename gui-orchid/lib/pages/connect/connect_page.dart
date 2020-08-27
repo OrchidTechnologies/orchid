@@ -348,8 +348,9 @@ class _ConnectPageState extends State<ConnectPage>
         return image();
       case OrchidConnectionState.Connecting:
       case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNConnected:
         return transitionImage();
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
         return glowImage();
     }
     throw Exception();
@@ -366,17 +367,21 @@ class _ConnectPageState extends State<ConnectPage>
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.Connecting:
-        text = S.of(context).connecting;
+        text = s.connecting;
+        gradient = _buildTransitionGradient();
+        break;
+      case OrchidConnectionState.VPNConnected:
+        text = s.starting;
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
-        text = S.of(context).connect;
+        text = s.connect;
         break;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
         textColor = AppColors.purple_3;
         bgColor = AppColors.teal_5;
-        text = S.of(context).disconnect;
+        text = s.disconnect;
     }
 
     bool buttonEnabled =
@@ -384,7 +389,9 @@ class _ConnectPageState extends State<ConnectPage>
         (_hasConfiguredHops || _enableConnectWithoutHops) ||
             // Enabled if we are already connected (corner case of changed config while connected).
             _connectionState == OrchidConnectionState.Connecting ||
-            _connectionState == OrchidConnectionState.Connected;
+            _connectionState == OrchidConnectionState.VPNConnected ||
+            _connectionState == OrchidConnectionState.OrchidConnected;
+
     if (!buttonEnabled) {
       bgColor = AppColors.neutral_4;
     }
@@ -472,7 +479,10 @@ class _ConnectPageState extends State<ConnectPage>
       case OrchidConnectionState.NotConnected:
         message = s.pushToConnect;
         break;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.VPNConnected:
+        message = s.orchidIsStarting;
+        break;
+      case OrchidConnectionState.OrchidConnected:
         message = s.orchidIsRunning;
     }
 
@@ -520,9 +530,10 @@ class _ConnectPageState extends State<ConnectPage>
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnected:
       case OrchidConnectionState.Disconnecting:
         return false;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
         return true;
     }
     throw Exception();
@@ -578,7 +589,8 @@ class _ConnectPageState extends State<ConnectPage>
         _checkPermissionAndEnableConnection();
         break;
       case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
+      case OrchidConnectionState.VPNConnected:
         _disableConnection();
         break;
     }

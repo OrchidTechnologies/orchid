@@ -6187,3 +6187,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+=================================================================================
+
+Source code by: Robert Ancell
+https://github.com/canonical/snapd.dart/blob/master/lib/src/http_unix_client.dart
+Part of the pub.dev snapd package:
+https://pub.dev/packages/snapd
+License: GPL 3.0
+
+=================================================================================

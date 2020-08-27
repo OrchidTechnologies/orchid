@@ -486,6 +486,10 @@ class CircuitPageState extends State<CircuitPage>
       text = s.orchidConnecting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
+    if (status == OrchidConnectionState.VPNConnected) {
+      text = s.starting;
+      color = Colors.yellowAccent.withOpacity(0.7);
+    }
     if (status == OrchidConnectionState.Disconnecting) {
       text = s.orchidDisconnecting;
       color = Colors.yellowAccent.withOpacity(0.7);
@@ -784,8 +788,9 @@ class CircuitPageState extends State<CircuitPage>
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.NotConnected:
       case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnected:
         return false;
-      case OrchidConnectionState.Connected:
+      case OrchidConnectionState.OrchidConnected:
         return true;
       default:
         throw Exception();
