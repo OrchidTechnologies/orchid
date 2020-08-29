@@ -30,6 +30,27 @@ def get_usd_per_oxt() -> float:
     logging.debug(f"usd_per_oxt: {usd_per_oxt}")
     return usd_per_oxt
 
+def get_usd_per_eth() -> float:
+    r = requests.get(url="https://api.coinbase.com/v2/prices/ETH-USD/spot")
+    data = r.json()
+    logging.debug(data)
+    usd_per_eth = float(data['data']['amount'])
+    logging.debug(f"usd_per_eth: {usd_per_eth}")
+    return usd_per_eth
+
+def get_pac_recycle_value_usd(total_oxt: float) -> float:
+    usd_per_oxt     = get_usd_per_oxt()
+    usd_value       = total_oxt * usd_per_oxt
+    gas_price       = int(os.environ['DEFAULT_GAS']) #todo: grab current dynamic price when dynamic pricing is enabled
+    rec_gas_cost    = 250*1000 # todo: tighter estimate here
+    gas_cost_gwei   = rec_gas_cost*gas_price
+    gas_cost_eth    = float(gas_cost_gwei) / float(1000*1000*1000)
+    usd_per_eth     = get_usd_per_eth()
+    gas_cost_usd    = gas_cost_eth * usd_per_eth
+    rec_value_usd   = usd_value - gas_cost_usd
+    logging.debug(f"get_pac_recycle_value_usd: {rec_value_usd} = {total_oxt}*{usd_per_oxt} - {gas_cost_eth}*{usd_per_eth}" )
+    return rec_value_usd
+
 
 def fund_PAC_(
     signer: str,
