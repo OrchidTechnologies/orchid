@@ -108,6 +108,46 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     return out;
 }
 
+std::ostream &operator <<(std::ostream &out, const View &view) {
+    out.write(view.data(), view.size());
+    return out;
+}
+
+std::optional<Range<>> Find(const View &data, const View &value) {
+    if (const auto start = static_cast<const char *>(memmem(data.data(), data.size(), value.data(), value.size())))
+        return std::optional<Range<>>(std::in_place, start - data.data(), value.size());
+    return {};
+}
+
+std::tuple<View, View> Split(const View &value, const Range<> &range) {
+    const auto data(value.data());
+    const auto size(value.size());
+    orc_assert(range.data() <= size);
+    orc_assert(range.size() <= size - range.data());
+    const auto right(range.data() + range.size());
+    return {View(data, range.data()), View(data + right, size - right)};
+}
+
+cppcoro::generator<View> Split(const View &value, const View &delimeter) {
+    for (auto data(value.data()), stop(data + value.size());; ) {
+        // XXX: this clang-tidy check should not trigger on ?:
+        // NOLINTNEXTLINE (readability-implicit-bool-conversion)
+        const auto next(static_cast<const char *>(memmem(data, stop - data, delimeter.data(), delimeter.size())) ?: stop);
+        co_yield View(data, next - data);
+        if (next == stop)
+            break;
+        data = next + delimeter.size();
+    }
+}
+
+void Split(const View &value, const View &delimeter, const std::function<void (View, View)> &code) {
+    const auto data(value.data());
+    const auto before(static_cast<const char *>(memmem(data, value.size(), delimeter.data(), delimeter.size())));
+    orc_assert(before != nullptr);
+    const auto after(before + delimeter.size());
+    code(View(data, before - data), View(after, data + value.size() - after));
+}
+
 Mutable &Mutable::operator =(const Buffer &buffer) {
     auto here(data());
     size_t rest(size());

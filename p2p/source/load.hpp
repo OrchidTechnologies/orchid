@@ -35,6 +35,10 @@ inline std::string Load(const std::string &file) {
     return data;
 }
 
+inline void Save(const std::string &file, const std::string &data) {
+    boost::filesystem::save_string_file(file, data);
+}
+
 }
 
 #endif//ORCHID_LOAD_HPP

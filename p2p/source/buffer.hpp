@@ -30,6 +30,8 @@
 #include <list>
 #include <string>
 
+#include <cppcoro/generator.hpp>
+
 #include <asio.hpp>
 
 #include <boost/endian/conversion.hpp>
@@ -48,6 +50,30 @@ inline void Copy(void *dst, const void *src, size_t len) {
     memcpy(dst, src, len);
     copied_ += len;
 }
+
+template <typename Type_ = size_t>
+class Range {
+  protected:
+    Type_ data_;
+    size_t size_;
+
+  public:
+    Range() = default;
+
+    Range(Type_ data, size_t size) :
+        data_(data),
+        size_(size)
+    {
+    }
+
+    Type_ data() const {
+        return data_;
+    }
+
+    size_t size() const {
+        return size_;
+    }
+};
 
 class Region;
 class Beam;
@@ -103,64 +129,76 @@ struct Cast<intx::uint<Bits_>, typename std::enable_if<Bits_ % 8 == 0>::type> {
 };
 
 template <typename Type_ = uint8_t>
-class Span {
-  protected:
-    Type_ *data_;
-    size_t size_;
-
+class Span :
+    public Range<Type_ *>
+{
   public:
     Span() = default;
 
-    Span(const Span &span) :
-        data_(span.data()),
-        size_(span.size())
-    {
-    }
-
     Span(Type_ *data, size_t size) :
-        data_(data),
-        size_(size)
+        Range<Type_ *>(data, size)
     {
     }
 
-    Type_ *data() const {
-        return data_;
+    Span(const Span &span) :
+        Span(span.data(), span.size())
+    {
     }
 
-    size_t size() const {
-        return size_;
+    template <size_t Size_>
+    Span(Type_ (&data)[Size_]) :
+        Span(data, Size_)
+    {
     }
 
-    operator Span<const Type_>() const {
-        return {data_, size_};
+    Span(std::initializer_list<Type_> list) :
+        Span(list.begin(), list.size())
+    {
+    }
+
+    Span(const std::basic_string<std::remove_const_t<Type_>> &data) :
+        Span(data.data(), data.size())
+    {
     }
 
     template <typename Cast_>
     Cast_ &cast(size_t offset = 0) {
         static_assert(sizeof(Type_) == 1);
-        orc_assert_(size() >= offset + sizeof(Cast_), "orc_assert(" << size() << " {size()} >= " << offset << " {offset} + " << sizeof(Cast_) << " {sizeof(" << typeid(Cast_).name() << ")})");
-        return *reinterpret_cast<Cast_ *>(data() + offset);
+        orc_assert_(this->size() >= offset + sizeof(Cast_), "orc_assert(" << this->size() << " {size()} >= " << offset << " {offset} + " << sizeof(Cast_) << " {sizeof(" << typeid(Cast_).name() << ")})");
+        return *reinterpret_cast<Cast_ *>(this->data() + offset);
     }
 
     template <typename Cast_>
     Cast_ &take() {
         static_assert(sizeof(Type_) == 1);
-        orc_assert(size_ >= sizeof(Type_));
-        const auto value(reinterpret_cast<Cast_ *>(data()));
-        data_ += sizeof(Type_);
-        size_ -= sizeof(Type_);
+        orc_assert(this->size_ >= sizeof(Type_));
+        const auto value(reinterpret_cast<Cast_ *>(this->data_));
+        this->data_ += sizeof(Type_);
+        this->size_ -= sizeof(Type_);
         return *value;
     }
 
-    Span operator +(size_t offset) {
-        orc_assert(size_ >= offset);
-        return Span(data_ + offset, size_ - offset);
+    operator Span<const Type_>() const {
+        return {this->data_, this->size_};
+    }
+
+    operator std::basic_string_view<std::remove_const_t<Type_>>() const {
+        return {this->data_, this->size_};
+    }
+
+    explicit operator std::basic_string<std::remove_const_t<Type_>>() const {
+        return {this->data_, this->size_};
+    }
+
+    Span operator +(size_t offset) const {
+        orc_assert(this->size_ >= offset);
+        return Span(this->data_ + offset, this->size_ - offset);
     }
 
     Span &operator +=(size_t offset) {
-        orc_assert(size_ >= offset);
-        data_ += offset;
-        size_ -= offset;
+        orc_assert(this->size_ >= offset);
+        this->data_ += offset;
+        this->size_ -= offset;
         return *this;
     }
 
@@ -169,19 +207,40 @@ class Span {
     }
 
     uint8_t operator [](size_t index) const {
-        return data_[index];
+        return this->data_[index];
     }
 
     void load(size_t offset, const Buffer &data) {
-        orc_assert(offset <= size_);
+        orc_assert(offset <= this->size_);
         data.each([&](const uint8_t *data, size_t size) {
-            orc_assert(size_ - offset >= size);
-            Copy(data_ + offset, data, size);
+            orc_assert(this->size_ - offset >= size);
+            Copy(this->data_ + offset, data, size);
             offset += size;
             return true;
         });
     }
 };
+
+template <typename Type_>
+inline bool operator ==(const Span<Type_> &lhs, const Span<Type_> &rhs) {
+    const auto size(lhs.size());
+    return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
+}
+
+typedef Span<const char> View;
+
+inline View operator ""_v(const char *data, size_t size) {
+    return {data, size};
+}
+
+std::ostream &operator <<(std::ostream &out, const View &view);
+
+std::optional<Range<>> Find(const View &data, const View &value);
+std::tuple<View, View> Split(const View &value, const Range<> &range);
+
+cppcoro::generator<View> Split(const View &value, const View &delimeter);
+
+void Split(const View &value, const View &delimeter, const std::function<void (View, View)> &code);
 
 class Region :
     public Buffer
@@ -251,32 +310,32 @@ class Mutable :
     }
 };
 
-class Range final :
+class Segment final :
     public Span<const uint8_t>
 {
   public:
     using Span<const uint8_t>::Span;
 
-    Range() = default;
+    Segment() = default;
 
-    Range(const Region &region) :
+    Segment(const Region &region) :
         Span(region.data(), region.size())
     {
     }
 
-    Range(const char *data, size_t size) :
+    Segment(const char *data, size_t size) :
         Span(reinterpret_cast<const uint8_t *>(data), size)
     {
     }
 
-    Range &operator =(const Region &region) {
-        data_ = region.data();
-        size_ = region.size();
+    Segment &operator =(const Region &region) {
+        this->data_ = region.data();
+        this->size_ = region.size();
         return *this;
     }
 
     operator asio::const_buffer() const {
-        return asio::const_buffer(data(), size());
+        return {this->data_, this->size_};
     }
 };
 
@@ -284,21 +343,21 @@ class Subset final :
     public Region
 {
   private:
-    const Range range_;
+    const Segment segment_;
 
   public:
-    Subset(const Range &range) :
-        range_(range)
+    Subset(const Segment &segment) :
+        segment_(segment)
     {
     }
 
     Subset(const uint8_t *data, size_t size) :
-        range_(data, size)
+        segment_(data, size)
     {
     }
 
     Subset(const char *data, size_t size) :
-        range_(data, size)
+        segment_(data, size)
     {
     }
 
@@ -325,11 +384,11 @@ class Subset final :
     }
 
     const uint8_t *data() const override {
-        return range_.data();
+        return segment_.data();
     }
 
     size_t size() const override {
-        return range_.size();
+        return segment_.size();
     }
 
     Subset subset(size_t offset, size_t length) const {
@@ -445,6 +504,11 @@ class Data :
 };
 
 template <size_t Size_>
+inline bool operator ==(const Data<Size_> &lhs, const Data<Size_> &rhs) {
+    return memcmp(lhs.data(), rhs.data(), Size_) == 0;
+}
+
+template <size_t Size_>
 class Brick final :
     public Data<Size_>
 {
@@ -483,11 +547,6 @@ class Brick final :
         return value;
     }
 };
-
-template <size_t Size_>
-inline bool operator ==(const Data<Size_> &lhs, const Data<Size_> &rhs) {
-    return memcmp(lhs.data(), rhs.data(), Size_) == 0;
-}
 
 template <size_t Size_>
 Brick<Size_> Zero() {
@@ -675,7 +734,7 @@ inline bool operator ==(const Region &lhs, const Data<Size_> &rhs) {
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
 
-inline bool operator ==(const Region &lhs, const Range &rhs) {
+inline bool operator ==(const Region &lhs, const Segment &rhs) {
     const auto size(lhs.size());
     return size == rhs.size() && memcmp(lhs.data(), rhs.data(), size) == 0;
 }
@@ -764,11 +823,11 @@ class Sequence final :
     public Buffer
 {
   private:
-    std::vector<Range> ranges_;
+    std::vector<Segment> segments_;
 
   public:
     Sequence(const Buffer &buffer) :
-        ranges_([&]() {
+        segments_([&]() {
             size_t count(0);
             buffer.each([&](const uint8_t *data, size_t size) {
                 ++count;
@@ -777,29 +836,29 @@ class Sequence final :
             return count;
         }())
     {
-        auto i(ranges_.begin());
+        auto i(segments_.begin());
         buffer.each([&](const uint8_t *data, size_t size) {
-            *(i++) = Range(data, size);
+            *(i++) = Segment(data, size);
             return true;
         });
     }
 
     Sequence(Sequence &&sequence) noexcept :
-        ranges_(std::move(sequence.ranges_))
+        segments_(std::move(sequence.segments_))
     {
     }
 
     Sequence(const Sequence &sequence) :
-        ranges_(sequence.ranges_)
+        segments_(sequence.segments_)
     {
     }
 
     auto begin() const {
-        return ranges_.begin();
+        return segments_.begin();
     }
 
     auto end() const {
-        return ranges_.end();
+        return segments_.end();
     }
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
@@ -826,15 +885,15 @@ class Window :
   private:
     size_t count_;
     // XXX: I'm just being lazy here. :/
-    std::unique_ptr<Range[]> ranges_;
+    std::unique_ptr<Segment[]> segments_;
 
-    const Range *range_;
+    const Segment *segment_;
     size_t offset_;
 
   public:
     Window() :
         count_(0),
-        range_(nullptr),
+        segment_(nullptr),
         offset_(0)
     {
     }
@@ -849,25 +908,25 @@ class Window :
             return count;
         }()),
 
-        ranges_(new Range[count_]),
+        segments_(new Segment[count_]),
 
-        range_(ranges_.get()),
+        segment_(segments_.get()),
         offset_(0)
     {
-        auto i(ranges_.get());
+        auto i(segments_.get());
         buffer.each([&](const uint8_t *data, size_t size) {
-            *(i++) = Range(data, size);
+            *(i++) = Segment(data, size);
             return true;
         });
     }
 
-    Window(const Range &range) :
+    Window(const Segment &segment) :
         count_(1),
-        ranges_(new Range[count_]),
-        range_(ranges_.get()),
+        segments_(new Segment[count_]),
+        segment_(segments_.get()),
         offset_(0)
     {
-        ranges_.get()[0] = range;
+        segments_.get()[0] = segment;
     }
 
     Window(const Window &window) :
@@ -881,8 +940,8 @@ class Window :
     Window &operator =(Window &&rhs) = default;
 
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
-        auto here(range_);
-        const auto rest(ranges_.get() + count_ - here);
+        auto here(segment_);
+        const auto rest(segments_.get() + count_ - here);
         if (rest == 0)
             return true;
 
@@ -908,11 +967,11 @@ class Window :
 
     template <typename Code_>
     void Take(size_t need, Code_ &&code) {
-        for (auto rest(ranges_.get() + count_ - range_); need != 0; offset_ = 0, ++range_, --rest) {
+        for (auto rest(segments_.get() + count_ - segment_); need != 0; offset_ = 0, ++segment_, --rest) {
             orc_assert(rest != 0);
 
-            const auto data(range_->data());
-            auto size(std::min(need, range_->size() - offset_));
+            const auto data(segment_->data());
+            auto size(std::min(need, segment_->size() - offset_));
             while (size != 0) {
                 const auto writ(code(data + offset_, size));
                 orc_insist(writ <= size);

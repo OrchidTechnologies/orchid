@@ -23,6 +23,7 @@
 #ifndef ORCHID_INTEGER_HPP
 #define ORCHID_INTEGER_HPP
 
+#include <charconv>
 #include <string>
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -34,10 +35,14 @@ namespace orc {
 using boost::multiprecision::uint128_t;
 using boost::multiprecision::uint256_t;
 
-inline unsigned long To(const std::string &value) {
-    size_t end;
-    const auto number(stoul(value, &end));
-    orc_assert(end == value.size());
+inline bool operator ==(const std::from_chars_result &lhs, const std::from_chars_result &rhs) {
+    return lhs.ptr == rhs.ptr && lhs.ec == rhs.ec;
+}
+
+inline unsigned long To(const std::string_view &value) {
+    const auto end(value.data() + value.size());
+    unsigned long number;
+    orc_assert((std::from_chars(value.data(), end, number) == std::from_chars_result{end, std::errc()}));
     return number;
 }
 

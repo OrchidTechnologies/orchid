@@ -352,7 +352,7 @@ class Flow {
     }
 };
 
-class Split :
+class Transform :
     public Internal,
     public Acceptor,
     public Plant,
@@ -416,7 +416,7 @@ class Split :
     }
 
   public:
-    Split(Capture *capture, S<Origin> origin) :
+    Transform(Capture *capture, S<Origin> origin) :
         capture_(capture),
         origin_(std::move(origin))
     {
@@ -488,22 +488,22 @@ class Split :
     }
 };
 
-void Split::Connect(const Host &local) {
+void Transform::Connect(const Host &local) {
     Acceptor::Open({local, 0});
     local_ = Local();
     // XXX: this is sickening
     remote_ = asio::ip::address_v4(local_.Host().operator uint32_t() + 1);
 }
 
-task<void> Split::Shut() noexcept {
+task<void> Transform::Shut() noexcept {
     orc_insist(false);
 }
 
-void Split::Land(const Buffer &data) {
+void Transform::Land(const Buffer &data) {
     return capture_->Land(data, true);
 }
 
-task<bool> Split::Send(const Beam &data) {
+task<bool> Transform::Send(const Beam &data) {
     Beam beam(data);
     auto span(beam.span());
     Subset subset(span);
@@ -610,9 +610,9 @@ task<bool> Split::Send(const Beam &data) {
 }
 
 void Capture::Start(S<Origin> origin) {
-    auto split(std::make_unique<Covered<Split>>(this, std::move(origin)));
-    split->Connect(local_);
-    internal_ = std::move(split);
+    auto transform(std::make_unique<Covered<Transform>>(this, std::move(origin)));
+    transform->Connect(local_);
+    internal_ = std::move(transform);
 }
 
 class Pass :

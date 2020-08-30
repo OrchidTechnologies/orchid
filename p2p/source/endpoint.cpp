@@ -52,10 +52,10 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
                 for (size_t i((type & 0x1) != 0 ? 1 : 2), e(leg.size() * 2); i != e; ++i)
                     if (path.nib(offset++) != leg.nib(i))
                         return Nested();
-                const Range range(proof[1].buf());
+                const Segment segment(proof[1].buf());
                 if ((type & 0x2) != 0)
-                    return Explode(range);
-                hash = range;
+                    return Explode(segment);
+                hash = segment;
             } break;
 
             default:
