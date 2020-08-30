@@ -202,6 +202,7 @@ cflags += -DPACKAGE_STRING='""'
 cflags += -DPACKAGE_VERSION='"1.4.2"'
 
 cflags += -Wno-deprecated-declarations
+cflags += -Wno-implicit-int-float-conversion
 cflags += -Wno-inconsistent-missing-override
 cflags += -Wno-unused-function
 

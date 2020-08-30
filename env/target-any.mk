@@ -57,6 +57,9 @@ rflags += --remap-path-prefix=$(CURDIR)=.
 
 cflags += -Wall
 cflags += -Werror
+cflags += -Wno-unknown-warning-option
+
+cflags += -Wno-deprecated-volatile
 
 cflags += -fmessage-length=0
 cflags += -ferror-limit=0

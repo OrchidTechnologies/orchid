@@ -61,7 +61,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
     for (auto &[name, value] : headers)
         req.set(name, value);
 
-    req.set(http::field::content_length, data.size());
+    req.set(http::field::content_length, std::to_string(data.size()));
     req.body() = data;
 
     if (false) {

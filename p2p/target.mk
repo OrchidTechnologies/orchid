@@ -172,6 +172,8 @@ source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c
 cflags += -I$(pwd)/eEVM/3rdparty
 cflags += -I$(pwd)/eEVM/include
 
+cflags += -Wno-tautological-overlap-compare
+
 
 linked += $(pwd)/challenge-bypass-ristretto/librust.a
 cflags += -I$(pwd)/challenge-bypass-ristretto/src
