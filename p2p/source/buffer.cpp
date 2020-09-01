@@ -61,6 +61,13 @@ bool Buffer::done() const {
     });
 }
 
+std::vector<uint8_t> Buffer::vec() const {
+    std::vector<uint8_t> value;
+    value.resize(size());
+    copy(&value[0], value.size());
+    return value;
+}
+
 std::string Buffer::str() const {
     std::string value;
     value.resize(size());

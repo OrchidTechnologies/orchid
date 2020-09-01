@@ -29,6 +29,7 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <vector>
 
 #include <cppcoro/generator.hpp>
 
@@ -92,6 +93,8 @@ class Buffer {
     void copy(char *data, size_t size) const {
         copy(reinterpret_cast<uint8_t *>(data), size);
     }
+
+    std::vector<uint8_t> vec() const;
 
     std::string str() const;
     std::string hex() const;
@@ -374,6 +377,11 @@ class Subset final :
     }
 
     Subset(const std::string &data) :
+        Subset(data.data(), data.size())
+    {
+    }
+
+    Subset(const std::vector<uint8_t> &data) :
         Subset(data.data(), data.size())
     {
     }
