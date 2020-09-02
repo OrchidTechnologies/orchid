@@ -322,7 +322,7 @@ class Flow {
             Beam beam(2048);
             for (;;) {
                 size_t writ;
-                if (orc_ignore({ writ = co_await input->Read(beam); }) || writ == 0)
+                if (orc_ignore({ writ = co_await input->Read(asio::buffer(beam.data(), beam.size())); }) || writ == 0)
                     break;
                 if (orc_ignore({ co_await output->Send(beam.subset(0, writ)); }))
                     break;
@@ -678,7 +678,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S
     } else if (protocol == "orchid") {
         const Address lottery(heap.eval<std::string>(hops + ".lottery", "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"));
         const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
-        const auto secret(orc_value(return, Secret(Bless(heap.eval<std::string>(hops + ".secret"))), "parsing .secret"));
+        const auto secret(orc_value(return, Bless<Secret>(heap.eval<std::string>(hops + ".secret")), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
         const Address provider(heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000"));

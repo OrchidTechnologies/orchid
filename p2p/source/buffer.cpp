@@ -120,6 +120,13 @@ std::ostream &operator <<(std::ostream &out, const View &view) {
     return out;
 }
 
+#ifdef _WIN32
+const char *memmem(const char *haystack, size_t haystacklen, const char *needle, size_t needlelen) {
+    const auto value(std::search(haystack, haystack + haystacklen, needle, needle + needlelen));
+    return value == haystack + haystacklen ? nullptr : value;
+}
+#endif
+
 std::optional<Range<>> Find(const View &data, const View &value) {
     if (const auto start = static_cast<const char *>(memmem(data.data(), data.size(), value.data(), value.size())))
         return std::optional<Range<>>(std::in_place, start - data.data(), value.size());
@@ -187,26 +194,23 @@ static uint8_t Bless(char value) {
     orc_assert_(false, "'" << value << "' is not hex");
 }
 
-Beam Bless(const std::string &data) {
-    size_t size(data.size());
+void Bless(const std::string &value, Mutable &region) {
+    size_t size(value.size());
     orc_assert_((size & 1) == 0, "odd-length hex data");
     size >>= 1;
 
-    if (size == 0)
-        return Beam();
-
     size_t offset;
-    if (data[0] != '0' || data[1] != 'x') {
+    if (value[0] != '0' || value[1] != 'x') {
         offset = 0;
     } else {
         offset = 2;
         --size;
     }
 
-    Beam beam(size);
+    region.size(size);
+    auto data(region.data());
     for (size_t i(0); i != size; ++i)
-        beam[i] = (Bless(data[offset + i * 2]) << 4) + Bless(data[offset + i * 2 + 1]);
-    return beam;
+        data[i] = (Bless(value[offset + i * 2]) << 4) + Bless(value[offset + i * 2 + 1]);
 }
 
 bool operator ==(const Region &lhs, const Buffer &rhs) {

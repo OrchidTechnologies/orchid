@@ -25,7 +25,9 @@
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
-#include <ethash/keccak.hpp>
+extern "C" {
+#include <sha3.h>
+}
 
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
@@ -45,11 +47,18 @@ void Random(uint8_t *data, size_t size) {
 }
 
 Brick<32> Hash(const Buffer &data) {
-    Beam beam(data);
-    const auto hash(ethash_keccak256(beam.data(), beam.size()));
-    Brick<sizeof(hash)> value;
-    memcpy(value.data(), hash.bytes, sizeof(hash));
-    return value;
+    sha3_context context;
+    sha3_Init256(&context);
+    sha3_SetFlags(&context, SHA3_FLAGS_KECCAK);
+
+    data.each([&](const uint8_t *data, size_t size) {
+        sha3_Update(&context, data, size);
+        return true;
+    });
+
+    Brick<32> hash;
+    memcpy(hash.data(), sha3_Finalize(&context), 32);
+    return hash;
 }
 
 Brick<32> Hash(const std::string &data) {

@@ -42,7 +42,7 @@ void Boring::Error() {
 }
 
 void Boring::Land(const Buffer &data) {
-    Beam input(data);
+    Flat input(data);
 
     for (;;) {
         Beam output(65536);

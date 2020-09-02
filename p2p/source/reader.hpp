@@ -29,10 +29,31 @@
 
 namespace orc {
 
+struct Mutables {
+  private:
+    const asio::mutable_buffer *const data_;
+    const size_t size_;
+
+  public:
+    Mutables(const asio::mutable_buffer &data) :
+        data_(&data),
+        size_(1)
+    {
+    }
+
+    auto begin() const {
+        return data_;
+    }
+
+    auto end() const {
+        return data_ + size_;
+    }
+};
+
 class Reader {
   public:
     virtual ~Reader() = default;
-    virtual task<size_t> Read(Beam &beam) = 0;
+    virtual task<size_t> Read(const Mutables &buffers) = 0;
 };
 
 class Stream :
@@ -68,7 +89,7 @@ class Inverted :
             for (;;) {
                 size_t writ;
                 try {
-                    writ = co_await stream_->Read(beam);
+                    writ = co_await stream_->Read(asio::buffer(beam.data(), beam.size()));
                 } catch (const Error &error) {
                     const auto &what(error.what_);
                     orc_insist(!what.empty());

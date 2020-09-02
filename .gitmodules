@@ -1,9 +1,6 @@
 [submodule "flutter"]
 	path = app-shared/flutter
 	url = https://github.com/flutter/flutter.git
-[submodule "ethash"]
-	path = p2p/ethash
-	url = https://github.com/chfast/ethash.git
 [submodule "boost"]
 	path = p2p/boost
 	url = https://github.com/boostorg/boost.git
@@ -163,3 +160,6 @@
 [submodule "plugins"]
 	path = gui-orchid/plugins
 	url = https://github.com/flutter/plugins.git
+[submodule "SHA3IUF"]
+	path = p2p/SHA3IUF
+	url = https://github.com/brainhub/SHA3IUF.git

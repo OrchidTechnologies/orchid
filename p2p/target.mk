@@ -106,8 +106,8 @@ source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include
 
 
-source += $(wildcard $(pwd)/ethash/lib/keccak/*.c)
-cflags += -I$(pwd)/ethash/include
+source += $(pwd)/SHA3IUF/sha3.c
+cflags += -I$(pwd)/SHA3IUF
 
 
 source += $(filter-out \

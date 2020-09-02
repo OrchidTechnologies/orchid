@@ -25,6 +25,7 @@
 
 #include "baton.hpp"
 #include "link.hpp"
+#include "reader.hpp"
 
 namespace orc {
 
@@ -32,16 +33,16 @@ class Sync :
     public Link<Buffer>
 {
   protected:
-    virtual size_t Read_(Beam &beam) = 0;
+    virtual size_t Read_(const Mutables &buffers) = 0;
     virtual size_t Send_(const Buffer &data) = 0;
 
   public:
     using Link<Buffer>::Link;
 
-    size_t Read(Beam &beam) {
+    size_t Read(const Mutables &buffers) {
         size_t writ;
         try {
-            writ = Read_(beam);
+            writ = Read_(buffers);
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::eof)
@@ -49,8 +50,6 @@ class Sync :
             orc_adapt(error);
         }
 
-        if (Verbose)
-            Log() << "\e[33mRECV " << writ << " " << beam.subset(0, writ) << "\e[0m" << std::endl;
         return writ;
     }
 
@@ -60,7 +59,7 @@ class Sync :
             for (;;) {
                 size_t writ;
                 try {
-                    writ = Read(beam);
+                    writ = Read(asio::buffer(beam.data(), beam.size()));
                 } catch (const Error &error) {
                     const auto &what(error.what_);
                     orc_insist(!what.empty());
@@ -80,9 +79,6 @@ class Sync :
     }
 
     task<void> Send(const Buffer &data) override {
-        if (Verbose)
-            Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-
         size_t writ;
         try {
             writ = Send_(data);
@@ -102,8 +98,8 @@ class SyncConnection :
   protected:
     Sync_ sync_;
 
-    size_t Read_(Beam &beam) override {
-        return sync_.receive(asio::buffer(beam.data(), beam.size()));
+    size_t Read_(const Mutables &buffers) override {
+        return sync_.receive(buffers);
     }
 
     size_t Send_(const Buffer &data) override {
@@ -135,8 +131,8 @@ class SyncFile :
   protected:
     Sync_ sync_;
 
-    size_t Read_(Beam &beam) override {
-        return sync_.read_some(asio::buffer(beam.data(), beam.size()));
+    size_t Read_(const Mutables &buffers) override {
+        return sync_.read_some(buffers);
     }
 
     size_t Send_(const Buffer &data) override {

@@ -51,10 +51,10 @@ class File final :
         return &file_;
     }
 
-    task<size_t> Read(Beam &beam) override {
+    task<size_t> Read(const Mutables &buffers) override {
         size_t writ;
         try {
-            writ = co_await file_.async_read_some(asio::buffer(beam.data(), beam.size()), Token());
+            writ = co_await file_.async_read_some(buffers, Token());
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::eof)
@@ -62,8 +62,6 @@ class File final :
             orc_adapt(error);
         }
 
-        if (Verbose)
-            Log() << "\e[33mRECV " << writ << " " << beam.subset(0, writ) << "\e[0m" << std::endl;
         co_return writ;
     }
 
@@ -72,9 +70,6 @@ class File final :
     }
 
     task<void> Send(const Buffer &data) override {
-        if (Verbose)
-            Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-
         const auto writ(co_await file_.async_write_some(Sequence(data), Token()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }

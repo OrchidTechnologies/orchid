@@ -108,7 +108,7 @@ orc_trace();
     }
 
     void OnMessage(const webrtc::DataBuffer &buffer) noexcept override {
-        const Subset data(buffer.data.data(), buffer.data.size());
+        const Strung data(buffer.data);
         Trace("WebRTC", false, false, data);
         Pump::Land(data);
     }

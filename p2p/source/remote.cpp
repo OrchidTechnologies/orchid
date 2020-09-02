@@ -321,9 +321,12 @@ class RemoteConnection final :
             tcp_abort(pcb_);
     }
 
-    task<size_t> Read(Beam &buffer) override {
-        auto data(buffer.data());
-        auto size(buffer.size());
+    task<size_t> Read(const Mutables &buffers) override {
+        // XXX: support multiple buffers
+        const auto buffer(buffers.begin());
+        orc_insist(buffer != buffers.end());
+        auto data(static_cast<uint8_t *>(buffer->data()));
+        auto size(buffer->size());
         orc_insist(size != 0);
 
         for (;; co_await read_, co_await Schedule()) {

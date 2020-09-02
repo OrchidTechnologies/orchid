@@ -68,10 +68,10 @@ class Association :
         return &association_;
     }
 
-    task<size_t> Read(Beam &beam) override {
+    task<size_t> Read(const Mutables &buffers) override {
         size_t writ;
         try {
-            writ = co_await association_.async_receive(asio::buffer(beam.data(), beam.size()), Token());
+            writ = co_await association_.async_receive(buffers, Token());
         } catch (const asio::system_error &error) {
             auto code(error.code());
             if (code == asio::error::eof)

@@ -322,7 +322,7 @@ int Main(int argc, const char *const argv[]) {
     Network network(rpc, directory, location, origin);
 
     const Address funder(args["funder"].as<std::string>());
-    const Secret secret(Bless(args["secret"].as<std::string>()));
+    const auto secret(Bless<Secret>(args["secret"].as<std::string>()));
 
     const auto coinbase(Wait(CoinbaseFiat(60*1000, origin, "USD")));
 

@@ -90,20 +90,7 @@ class Adapter {
                     const auto size(boost::beast::buffer_bytes(buffers));
                     if (size == 0)
                         co_return Result(0, false);
-
-                    Beam beam(size);
-                    const auto writ(co_await stream_->Read(beam));
-                    if (writ == 0)
-                        co_return Result(0, true);
-
-                    auto data(beam.data());
-                    // XXX: this is copying way too much data
-                    for (const auto &range : boost::beast::buffers_range_ref(buffers)) {
-                        const auto size(range.size());
-                        Copy(range.data(), data, size);
-                        data += size;
-                    }
-
+                    const auto writ(co_await stream_->Read(buffers));
                     co_return Result(writ, false);
                 }();
 

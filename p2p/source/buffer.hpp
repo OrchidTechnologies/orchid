@@ -294,6 +294,11 @@ class Mutable :
     using Region::data;
     virtual uint8_t *data() = 0;
 
+    using Region::size;
+    virtual void size(size_t value) {
+        orc_assert(value == size());
+    }
+
     Mutable &operator =(const Span<const uint8_t> &span) {
         orc_insist(span.size() == size());
         Copy(data(), span.data(), size());
@@ -312,6 +317,8 @@ class Mutable :
         return {data(), size()};
     }
 };
+
+void Bless(const std::string &value, Mutable &region);
 
 class Segment final :
     public Span<const uint8_t>
@@ -488,6 +495,10 @@ class Data :
     {
     }
 
+    Data(const Bounded<Size_> &region) {
+        memcpy(data_.data(), region.data(), Size_);
+    }
+
     const uint8_t *data() const override {
         return data_.data();
     }
@@ -496,6 +507,7 @@ class Data :
         return data_.data();
     }
 
+    using Mutable::size;
     size_t size() const override {
         return Size_;
     }
@@ -602,6 +614,7 @@ class Number<Type_, true> final :
         return reinterpret_cast<uint8_t *>(&value_);
     }
 
+    using Mutable::size;
     size_t size() const override {
         return sizeof(Type_);
     }
@@ -634,7 +647,58 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     }
 };
 
-class Beam :
+class Flat final :
+    public Region
+{
+  private:
+    bool copy_;
+    size_t size_;
+    const uint8_t *data_;
+
+  protected:
+    void destroy() {
+        if (copy_)
+            delete [] data_;
+    }
+
+  public:
+    Flat(const Buffer &buffer) {
+        data_ = nullptr;
+        if ((copy_ = !buffer.each([&](const uint8_t *data, size_t size) {
+            if (data_ != nullptr)
+                return false;
+            size_ = size;
+            data_ = data;
+            return true;
+        }))) {
+            size_ = buffer.size();
+            // NOLINTNEXTLINE (cppcoreguidelines-owning-memory)
+            const auto data(new uint8_t[size_]);
+            data_ = data;
+            buffer.copy(data, size_);
+        }
+    }
+
+    ~Flat() {
+        destroy();
+    }
+
+    const uint8_t *data() const override {
+        return data_;
+    }
+
+    size_t size() const override {
+        return size_;
+    }
+
+    void clear() {
+        destroy();
+        size_ = 0;
+        data_ = nullptr;
+    }
+};
+
+class Beam final :
     public Mutable
 {
   private:
@@ -717,6 +781,15 @@ class Beam :
         return size_;
     }
 
+    void size(size_t value) override {
+        if (size_ == 0)
+            // NOLINTNEXTLINE (cppcoreguidelines-owning-memory)
+            data_ = new uint8_t[value];
+        else
+            orc_assert(size_ >= value);
+        size_ = value;
+    }
+
     Subset subset(size_t offset, size_t length) const {
         orc_insist(offset <= size());
         orc_insist(size() - offset >= length);
@@ -728,7 +801,12 @@ class Beam :
     }
 };
 
-Beam Bless(const std::string &data);
+template <typename Type_ = Beam>
+Type_ Bless(const std::string &value) {
+    Type_ data;
+    Bless(value, data);
+    return data;
+}
 
 template <typename Data_>
 inline bool operator ==(const Region &lhs, const std::string &rhs) {
@@ -994,7 +1072,7 @@ class Window :
 
     void Take(uint8_t *here, size_t size) {
         Take(size, [&](const uint8_t *data, size_t size) {
-            Copy(here, data, size);
+            memcpy(here, data, size);
             here += size;
             return size;
         });
@@ -1002,6 +1080,7 @@ class Window :
 
     void Take(std::string &data) {
         Take(reinterpret_cast<uint8_t *>(data.data()), data.size());
+        copied_ += data.size();
     }
 
     uint8_t Take() {
@@ -1020,10 +1099,12 @@ class Window :
         Take(value.data(), value.size());
     }
 
+    // XXX: consider returning a buffer
     Beam Take(size_t size) {
         orc_assert(have(size));
         Beam beam(size);
         Take(beam.data(), beam.size());
+        copied_ += size;
         return beam;
     }
 

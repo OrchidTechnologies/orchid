@@ -25,10 +25,10 @@
 
 namespace orc {
 
-task<size_t> Duplex::Read(Beam &beam) {
+task<size_t> Duplex::Read(const Mutables &buffers) {
     size_t writ;
     try {
-        boost::beast::buffers_adaptor buffer(asio::buffer(beam.data(), beam.size()));
+        boost::beast::buffers_adaptor buffer(buffers);
         writ = co_await inner_.async_read(buffer, Token());
     } catch (const asio::system_error &error) {
         auto code(error.code());

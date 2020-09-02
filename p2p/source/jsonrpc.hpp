@@ -527,36 +527,38 @@ struct Tupled<Index_, Next_, Rest_...> final {
 
 template <typename... Args_>
 struct Coded<std::tuple<Args_...>, void> {
+    typedef Tupled<0, std::decay_t<Args_>...> Tupled_;
+
     static const bool dynamic_ = true;
 
     static void Name(std::ostringstream &signature) {
         signature << "(";
-        Tupled<0, Args_...>::Name(signature);
+        Tupled_::Name(signature);
         signature << ")";
     }
 
     static std::tuple<Args_...> Decode(Window &window) {
         std::tuple<Args_...> value;
-        Tupled<0, Args_...>::Head(window, value);
-        Tupled<0, Args_...>::Tail(window, value);
+        Tupled_::Head(window, value);
+        Tupled_::Tail(window, value);
         return value;
     }
 
     static void Encode(Builder &builder, const std::tuple<Args_...> &data) {
         size_t offset(0);
-        Tupled<0, Args_...>::Size(offset, data);
-        Tupled<0, Args_...>::Head(builder, data, offset);
-        Tupled<0, Args_...>::Tail(builder, data);
+        Tupled_::Size(offset, data);
+        Tupled_::Head(builder, data, offset);
+        Tupled_::Tail(builder, data);
     }
 
     static void Size(size_t &offset, const std::tuple<Args_...> &value) {
-        Tupled<0, Args_...>::Size(offset, value);
+        Tupled_::Size(offset, value);
     }
 };
 
 template <typename... Args_>
 struct Coder {
-    typedef std::tuple<Args_...> Tuple;
+    typedef std::tuple<const Args_ &...> Tuple;
 
     static void Encode(Builder &builder, const Args_ &...args) {
         return Coded<Tuple>::Encode(builder, Tuple(args...));

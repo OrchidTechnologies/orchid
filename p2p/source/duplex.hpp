@@ -48,7 +48,7 @@ class Duplex final :
         return &inner_;
     }
 
-    task<size_t> Read(Beam &beam) override;
+    task<size_t> Read(const Mutables &buffers) override;
 
     task<boost::asio::ip::tcp::endpoint> Open(const Locator &locator);
 
