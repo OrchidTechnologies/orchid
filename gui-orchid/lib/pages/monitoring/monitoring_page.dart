@@ -58,12 +58,12 @@ class _MonitoringPageState extends State<MonitoringPage> {
     bool switchOn = false;
     switch (currentValue) {
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         break;
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.OrchidConnected:
       case OrchidConnectionState.VPNConnected:
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         switchOn = true;
     }
     return Switch(
@@ -83,16 +83,16 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   void _switchChanged(OrchidConnectionState currentConnectionState, bool desiredEnabled) {
     switch (currentConnectionState) {
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         // TODO: We should reject the switch change in this case.
         break;
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         if (desiredEnabled == true) {
           _checkPermissionAndEnableConnection();
         }
         break;
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.OrchidConnected:
       case OrchidConnectionState.VPNConnected:
         if (desiredEnabled == false) {

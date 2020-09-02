@@ -41,7 +41,7 @@ class OrchidStatus {
       // log("status: checking /connected: client = $client");
       var response = await client.get("/connected");
       bool newConnectionStatus = (response.body ?? "").toLowerCase() == "true";
-      log("status: newConnectionStatus = $newConnectionStatus");
+      //log("status: newConnectionStatus = $newConnectionStatus");
       if (newConnectionStatus != connected.value) {
         log("status: tunnel connection status: $newConnectionStatus");
         connected.add(newConnectionStatus);

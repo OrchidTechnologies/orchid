@@ -17,11 +17,11 @@ enum OrchidVPNConnectionState {
 /// The connection states of the Orchid network (a superset of the vpn connection state)
 enum OrchidConnectionState {
   Invalid,
-  NotConnected,
-  Connecting,
+  VPNNotConnected,
+  VPNConnecting,
   VPNConnected,
   OrchidConnected,
-  Disconnecting
+  VPNDisconnecting
 }
 
 /// A route through the Orchid network comprising one or more nodes.
