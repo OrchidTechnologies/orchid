@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:orchid/api/monitoring/http_unix_client.dart';
+import 'package:orchid/api/orchid_types.dart';
 
 import 'package:rxdart/rxdart.dart';
 import '../orchid_api.dart';
@@ -34,10 +35,10 @@ class OrchidStatus {
   }
 
   void _update(_) async {
-    String socketPath = (await OrchidAPI().groupContainerPath()) + socketName;
+    String socketPath = (await OrchidAPI().groupContainerPath()) + '/' + socketName;
     var client = HttpUnixClient(socketPath);
     try {
-      //log("status: checking /connected: client = $client");
+      // log("status: checking /connected: client = $client");
       var response = await client.get("/connected");
       bool newConnectionStatus = (response.body ?? "").toLowerCase() == "true";
       log("status: newConnectionStatus = $newConnectionStatus");
@@ -47,11 +48,16 @@ class OrchidStatus {
       }
       client.close();
     } catch (err) {
+      // Log connect attempt errors if we believe the tunnel is alive.
+      if (OrchidAPI().vpnConnectionStatus.value == OrchidVPNConnectionState.Connected) {
+        log("status: vpn connected but error checking tunnel status: $err");
+      }
+
       // If we can't connect to the socket presume we are not connected.
-      //log("status: Error checking status: $err");
       if (connected.value) {
         connected.add(false);
       }
+
       if (client != null) {
         try {
           client.close();
