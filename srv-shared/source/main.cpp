@@ -56,6 +56,7 @@
 #include "local.hpp"
 #include "market.hpp"
 #include "node.hpp"
+#include "remote.hpp"
 #include "router.hpp"
 #include "scope.hpp"
 #include "server.hpp"
@@ -328,6 +329,13 @@ int Main(int argc, const char *const argv[]) {
         Wait(Guard(*egress, origin, 0, file));
         return egress;
     } else orc_assert_(false, "must provide an egress option"); }());
+
+    Wait([&]() -> task<void> {
+        auto remote(Break<BufferSink<Remote>>());
+        Egress::Wire(egress, *remote);
+        remote->Open();
+        co_await remote->Resolve("one.one.one.one", "443");
+    }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(market), std::move(egress), std::move(ice)));
     node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
