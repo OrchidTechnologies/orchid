@@ -36,6 +36,14 @@ test: $(output)/$(default)/orchid$(exe)
 debug: $(output)/$(default)/orchid$(exe)
 	lldb -o 'run $(args)' $<
 
+.PHONY: record
+record: $(output)/$(default)/orchid$(exe)
+	perf record -g $< $(args)
+
+.PHONY: report
+report: $(output)/$(default)/orchid$(exe)
+	perf report --sort=cpu
+
 $(call include,vpn/target.mk)
 
 source += $(wildcard source/*.cpp)
