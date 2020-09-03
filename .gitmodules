@@ -77,7 +77,7 @@
 	path = vpn-windows/tap-windows6
 	url = https://github.com/OpenVPN/tap-windows6
 [submodule "sqlite"]
-	path = vpn-shared/sqlite
+	path = p2p/sqlite
 	url = https://github.com/mackyle/sqlite.git
 [submodule "SPCDNS"]
 	path = p2p/SPCDNS

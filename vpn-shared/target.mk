@@ -30,7 +30,6 @@ cflags/$(pwd)/libmaxminddb/ += -DUNICODE
 cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 
 $(call include,quickjs.mk)
-$(call include,sqlite.mk)
 
 $(call include,tor.mk)
 $(call include,libevent.mk)
