@@ -313,6 +313,7 @@ Server::Server(S<Origin> origin, S<Cashier> cashier, S<Market> market) :
     market_(std::move(market))
 {
     type_ = typeid(*this).name();
+
     const auto locked(locked_());
     Commit(locked);
 }

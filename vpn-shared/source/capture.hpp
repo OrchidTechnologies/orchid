@@ -43,10 +43,16 @@ class Analyzer {
     virtual void AnalyzeIncoming(Span<const uint8_t> span) = 0;
 };
 
+// XXX: Transform is also a Valve, which is just wrong, right?
+// this sort of doesn't matter as if Transform is Shut we fail
 class Internal :
     public Valve
 {
   public:
+    Internal() {
+        type_ = typeid(*this).name();
+    }
+
     ~Internal() override;
 
     virtual task<bool> Send(const Beam &beam) = 0;

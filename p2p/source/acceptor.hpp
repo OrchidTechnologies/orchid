@@ -51,6 +51,7 @@ class Acceptor :
     Acceptor(Args_ &&...args) :
         acceptor_(Context(), std::forward<Args_>(args)...)
     {
+        type_ = typeid(*this).name();
     }
 
     asio::ip::tcp::acceptor *operator ->() {

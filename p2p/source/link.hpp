@@ -60,6 +60,7 @@ class Faucet :
     Faucet(Basin_ &basin) :
         basin_(basin)
     {
+        type_ = typeid(*this).name();
     }
 };
 
@@ -77,6 +78,7 @@ class Pump :
     Pump(Drain<Value_> &drain) :
         Faucet<Drain<Value_>>(drain)
     {
+        Faucet<Drain<Value_>>::type_ = typeid(*this).name();
     }
 };
 

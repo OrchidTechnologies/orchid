@@ -221,7 +221,7 @@ Client::Client(BufferDrain &drain,
     prepay_(market_->Convert((*oracle_)()/1024*2)),
     justin_(justin == nullptr ? nullptr : fopen(justin, "w"))
 {
-    Pump::type_ = typeid(*this).name();
+    type_ = typeid(*this).name();
 }
 
 Client::~Client() {

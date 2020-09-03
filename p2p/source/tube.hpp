@@ -61,6 +61,10 @@ class Stopper :
     }
 
   public:
+    Stopper() {
+        type_ = typeid(*this).name();
+    }
+
     task<void> Shut() noexcept override {
         co_await Sunken::Shut();
         co_await Valve::Shut();
@@ -74,6 +78,7 @@ class Cap :
     Cap(Drain<const Buffer &> &drain) :
         Pump(drain)
     {
+        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {

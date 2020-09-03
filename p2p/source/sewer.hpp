@@ -48,6 +48,7 @@ class Opening :
     Opening(BufferSewer &drain) :
         drain_(drain)
     {
+        type_ = typeid(*this).name();
     }
 
     virtual Socket Local() const = 0;

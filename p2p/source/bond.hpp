@@ -57,6 +57,7 @@ class Bonded {
         Bonding(Bonded *bonded) :
             bonded_(bonded)
         {
+            type_ = typeid(*this).name();
         }
 
         task<void> Shut() noexcept override {

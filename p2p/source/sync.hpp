@@ -112,6 +112,7 @@ class SyncConnection :
         Sync(drain),
         sync_(std::forward<Args_>(args)...)
     {
+        type_ = typeid(*this).name();
     }
 
     Sync_ *operator ->() {
@@ -145,6 +146,7 @@ class SyncFile :
         Sync(drain),
         sync_(std::forward<Args_>(args)...)
     {
+        type_ = typeid(*this).name();
     }
 
     Sync_ *operator ->() {

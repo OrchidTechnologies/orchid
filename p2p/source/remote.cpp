@@ -505,6 +505,8 @@ Remote::Remote(const class Host &host) :
     Origin(std::make_unique<Assistant>(host)),
     host_(host)
 {
+    type_ = typeid(*this).name();
+
     static bool setup(false);
     if (!setup) {
         tcpip_init(nullptr, nullptr);
@@ -523,7 +525,6 @@ static uint8_t quad_(3);
 Remote::Remote() :
     Remote({10,7,0,++quad_})
 {
-    type_ = typeid(*this).name();
 }
 
 void Remote::Open() {

@@ -50,6 +50,8 @@ class Updater :
         milliseconds_(milliseconds),
         code_(std::move(code))
     {
+        type_ = typeid(*this).name();
+
         Spawn([this]() noexcept -> Task<void> {
             co_await ready_([this]() -> task<void> {
                 co_await Update();

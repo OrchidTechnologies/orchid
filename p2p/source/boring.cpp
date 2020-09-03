@@ -90,6 +90,7 @@ Boring::Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, cons
         Log() << "WireGuard: " << message << std::endl;
     }, ALL))
 {
+    type_ = typeid(*this).name();
 }
 
 Boring::~Boring() {

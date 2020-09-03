@@ -254,6 +254,8 @@ Capture::Capture(const Host &local) :
     local_(local),
     up_(32)
 {
+    type_ = typeid(*this).name();
+
     router_(http::verb::get, "/connected", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, "application/json", locked_()->connected_ ? "true" : "false");
     });

@@ -51,6 +51,7 @@ class Channel :
         channel_(channel)
     {
         type_ = typeid(*this).name();
+
         channel_->RegisterObserver(this);
         peer_->channels_.insert(this);
     }

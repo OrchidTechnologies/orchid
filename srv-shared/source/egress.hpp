@@ -131,6 +131,7 @@ class Egress :
             egress_(std::move(egress)),
             indirect_(egress_->Open(this, &neutral_))
         {
+            type_ = typeid(*this).name();
         }
 
         task<void> Shut() noexcept override {
@@ -159,6 +160,7 @@ class Egress :
     Egress(uint32_t local) :
         local_(local)
     {
+        type_ = typeid(*this).name();
     }
 
     ~Egress() override {
