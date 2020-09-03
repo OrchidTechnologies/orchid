@@ -30,7 +30,7 @@ class _LegacyConnectPageState
         TickerProviderStateMixin //, AutomaticKeepAliveClientMixin // This breaks things unexpectedly.
 {
   // Current state reflected by the page, driving color and animation.
-  OrchidConnectionState _connectionState = OrchidConnectionState.NotConnected;
+  OrchidConnectionState _connectionState = OrchidConnectionState.VPNNotConnected;
 
   // Animation controller for transitioning to the connected state
   AnimationController _connectAnimController;
@@ -286,15 +286,15 @@ class _LegacyConnectPageState
     // Localize
     String message;
     switch (_connectionState) {
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         message = s.orchidDisconnecting;
         break;
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.VPNConnected:
         message = s.orchidConnecting;
         break;
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         message = s.pushToConnect;
         break;
       case OrchidConnectionState.OrchidConnected:
@@ -379,12 +379,12 @@ class _LegacyConnectPageState
   bool _showConnectedBackgroundFor(OrchidConnectionState state) {
     switch (state) {
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNNotConnected:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.VPNConnected:
         return false;
       case OrchidConnectionState.OrchidConnected:
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         return true;
     }
   }
@@ -436,14 +436,14 @@ class _LegacyConnectPageState
   void _onConnectButtonPressed() {
     // Toggle the current connection state
     switch (_connectionState) {
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         // Do nothing while we are trying to disconnect
         break;
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         _checkPermissionAndEnableConnection();
         break;
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.OrchidConnected:
       case OrchidConnectionState.VPNConnected:
         _disableConnection();

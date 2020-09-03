@@ -105,11 +105,11 @@ class Dialogs {
     var warn;
     switch (OrchidAPI().connectionStatus.value) {
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNNotConnected:
+      case OrchidConnectionState.VPNDisconnecting:
         warn = false;
         break;
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.OrchidConnected:
       case OrchidConnectionState.VPNConnected:
         warn = true;

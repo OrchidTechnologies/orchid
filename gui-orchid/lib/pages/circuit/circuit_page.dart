@@ -482,15 +482,15 @@ class CircuitPageState extends State<CircuitPage>
     }
 
     var status = OrchidAPI().connectionStatus.value;
-    if (status == OrchidConnectionState.Connecting) {
-      text = s.orchidConnecting;
-      color = Colors.yellowAccent.withOpacity(0.7);
-    }
-    if (status == OrchidConnectionState.VPNConnected) {
+    if (status == OrchidConnectionState.VPNConnecting) {
       text = s.starting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
-    if (status == OrchidConnectionState.Disconnecting) {
+    if (status == OrchidConnectionState.VPNConnected) {
+      text = s.orchidConnecting;
+      color = Colors.yellowAccent.withOpacity(0.7);
+    }
+    if (status == OrchidConnectionState.VPNDisconnecting) {
       text = s.orchidDisconnecting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
@@ -784,10 +784,10 @@ class CircuitPageState extends State<CircuitPage>
   bool _connected() {
     var state = OrchidAPI().connectionStatus.value;
     switch (state) {
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNNotConnected:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.VPNConnected:
         return false;
       case OrchidConnectionState.OrchidConnected:

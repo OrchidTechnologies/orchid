@@ -51,10 +51,10 @@ class RealOrchidAPI implements OrchidAPI {
           return OrchidConnectionState.Invalid;
           break;
         case OrchidVPNConnectionState.NotConnected:
-          return OrchidConnectionState.NotConnected;
+          return OrchidConnectionState.VPNNotConnected;
           break;
         case OrchidVPNConnectionState.Connecting:
-          return OrchidConnectionState.Connecting;
+          return OrchidConnectionState.VPNConnecting;
           break;
         case OrchidVPNConnectionState.Connected:
           // This differentiates the vpn and orchid layer connections
@@ -63,7 +63,7 @@ class RealOrchidAPI implements OrchidAPI {
               : OrchidConnectionState.VPNConnected);
           break;
         case OrchidVPNConnectionState.Disconnecting:
-          return OrchidConnectionState.Disconnecting;
+          return OrchidConnectionState.VPNDisconnecting;
           break;
       }
     }).listen((OrchidConnectionState state) {

@@ -68,17 +68,17 @@ class MockOrchidAPI implements OrchidAPI {
           connectionStatus.add(OrchidConnectionState.Invalid);
           break;
         case OrchidVPNConnectionState.NotConnected:
-          connectionStatus.add(OrchidConnectionState.NotConnected);
+          connectionStatus.add(OrchidConnectionState.VPNNotConnected);
           break;
         case OrchidVPNConnectionState.Connecting:
-          connectionStatus.add(OrchidConnectionState.Connecting);
+          connectionStatus.add(OrchidConnectionState.VPNConnecting);
           break;
         case OrchidVPNConnectionState.Connected:
           // mock api maps vpn connected to orchid connected
           connectionStatus.add(OrchidConnectionState.OrchidConnected);
           break;
         case OrchidVPNConnectionState.Disconnecting:
-          connectionStatus.add(OrchidConnectionState.Disconnecting);
+          connectionStatus.add(OrchidConnectionState.VPNDisconnecting);
           break;
       }
     });

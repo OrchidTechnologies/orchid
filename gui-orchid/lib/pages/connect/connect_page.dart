@@ -37,7 +37,7 @@ class ConnectPage extends StatefulWidget {
 class _ConnectPageState extends State<ConnectPage>
     with TickerProviderStateMixin {
   // Current state reflected by the page, driving color and animation.
-  OrchidConnectionState _connectionState = OrchidConnectionState.NotConnected;
+  OrchidConnectionState _connectionState = OrchidConnectionState.VPNNotConnected;
 
   // Animation controller for transitioning to the connected state
   AnimationController _connectAnimController;
@@ -344,10 +344,10 @@ class _ConnectPageState extends State<ConnectPage>
 
     switch (_connectionState) {
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         return image();
-      case OrchidConnectionState.Connecting:
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNConnecting:
+      case OrchidConnectionState.VPNDisconnecting:
       case OrchidConnectionState.VPNConnected:
         return transitionImage();
       case OrchidConnectionState.OrchidConnected:
@@ -362,20 +362,20 @@ class _ConnectPageState extends State<ConnectPage>
     var gradient;
     String text;
     switch (_connectionState) {
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         text = s.disconnecting;
         gradient = _buildTransitionGradient();
         break;
-      case OrchidConnectionState.Connecting:
-        text = s.connecting;
+      case OrchidConnectionState.VPNConnecting:
+        text = s.starting; // vpn is starting
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.VPNConnected:
-        text = s.starting;
+        text = s.connecting; // orchid is connecting
         gradient = _buildTransitionGradient();
         break;
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         text = s.connect;
         break;
       case OrchidConnectionState.OrchidConnected:
@@ -388,7 +388,7 @@ class _ConnectPageState extends State<ConnectPage>
         // Enabled when there is a circuit (or overridden for traffic monitoring)
         (_hasConfiguredHops || _enableConnectWithoutHops) ||
             // Enabled if we are already connected (corner case of changed config while connected).
-            _connectionState == OrchidConnectionState.Connecting ||
+            _connectionState == OrchidConnectionState.VPNConnecting ||
             _connectionState == OrchidConnectionState.VPNConnected ||
             _connectionState == OrchidConnectionState.OrchidConnected;
 
@@ -469,14 +469,14 @@ class _ConnectPageState extends State<ConnectPage>
     // Localize
     String message;
     switch (_connectionState) {
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         message = s.orchidDisconnecting;
         break;
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnecting:
         message = s.orchidConnecting;
         break;
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         message = s.pushToConnect;
         break;
       case OrchidConnectionState.VPNConnected:
@@ -528,10 +528,10 @@ class _ConnectPageState extends State<ConnectPage>
   bool _showConnectedBackgroundFor(OrchidConnectionState state) {
     switch (state) {
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNNotConnected:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.VPNConnected:
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         return false;
       case OrchidConnectionState.OrchidConnected:
         return true;
@@ -581,14 +581,14 @@ class _ConnectPageState extends State<ConnectPage>
   void _onConnectButtonPressed() {
     // Toggle the current connection state
     switch (_connectionState) {
-      case OrchidConnectionState.Disconnecting:
+      case OrchidConnectionState.VPNDisconnecting:
         // Do nothing while we are trying to disconnect
         break;
       case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.NotConnected:
+      case OrchidConnectionState.VPNNotConnected:
         _checkPermissionAndEnableConnection();
         break;
-      case OrchidConnectionState.Connecting:
+      case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.OrchidConnected:
       case OrchidConnectionState.VPNConnected:
         _disableConnection();

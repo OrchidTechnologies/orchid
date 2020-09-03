@@ -49,7 +49,7 @@ def get_pac_recycle_value_usd(total_oxt: float) -> float:
     gas_cost_usd    = gas_cost_eth * usd_per_eth
     rec_value_usd   = usd_value - gas_cost_usd
     logging.debug(f"get_pac_recycle_value_usd: {rec_value_usd} = {total_oxt}*{usd_per_oxt} - {gas_cost_eth}*{usd_per_eth}" )
-    return rec_value_usd
+    return max(rec_value_usd, 0.0)
 
 
 def fund_PAC_(

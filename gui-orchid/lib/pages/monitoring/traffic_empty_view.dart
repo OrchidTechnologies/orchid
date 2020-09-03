@@ -24,13 +24,13 @@ class TrafficEmptyView extends StatelessWidget {
                           bool connected;
                           switch (state) {
                             case OrchidConnectionState.Invalid:
-                            case OrchidConnectionState.NotConnected:
+                            case OrchidConnectionState.VPNNotConnected:
                               connected = false;
                               break;
-                            case OrchidConnectionState.Connecting:
+                            case OrchidConnectionState.VPNConnecting:
                             case OrchidConnectionState.VPNConnected:
                             case OrchidConnectionState.OrchidConnected:
-                            case OrchidConnectionState.Disconnecting:
+                            case OrchidConnectionState.VPNDisconnecting:
                               connected = true;
                               break;
                           }
