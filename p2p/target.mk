@@ -122,7 +122,7 @@ ifeq ($(target),win)
 source += $(pwd)/libutp/libutp_inet_ntop.cpp
 cflags += -DWIN32
 else
-cflags += -DPOSIX
+cflags += -DPOSIX=5
 endif
 
 
