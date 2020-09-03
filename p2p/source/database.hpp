@@ -88,11 +88,6 @@ class Statement {
     orc_bind(text, const std::string_view, value.data(), value.size(), SQLITE_TRANSIENT)
 
   public:
-    Statement() :
-        statement_(nullptr)
-    {
-    }
-
     Statement(Database &database, const char *code) :
         database_(database)
     {
