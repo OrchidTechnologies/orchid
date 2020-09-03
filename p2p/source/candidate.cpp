@@ -31,7 +31,7 @@ namespace orc {
 task<cricket::Candidate> Peer::Candidate() {
     const auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
         return peer_->GetSctpTransport();
-    }));
+    }, RTC_FROM_HERE));
 
     orc_assert(sctp != nullptr);
 
@@ -45,7 +45,7 @@ task<cricket::Candidate> Peer::Candidate() {
         const auto connection(internal->selected_connection());
         orc_assert(connection != nullptr);
         return connection->remote_candidate();
-    }, origin_->Thread());
+    }, RTC_FROM_HERE, origin_->Thread());
 }
 
 std::string Strip(const std::string &sdp) {

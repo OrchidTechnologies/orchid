@@ -137,7 +137,7 @@ orc_trace();
         co_await Post([&]() {
             if (channel_->buffered_amount() == 0)
                 channel_->Send(webrtc::DataBuffer(buffer, true));
-        });
+        }, RTC_FROM_HERE);
     }
 };
 

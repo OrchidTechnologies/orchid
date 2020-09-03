@@ -95,7 +95,7 @@ template struct Pirate<Internal_, &cricket::SctpTransport::sock_>;
 task<struct socket *> Peer::Internal() {
     auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
         return peer_->GetSctpTransport();
-    }));
+    }, RTC_FROM_HERE));
 
     orc_assert(sctp != nullptr);
 
@@ -192,7 +192,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
                     }
 
                     self->Stop();
-                });
+                }, RTC_FROM_HERE);
             }, __FUNCTION__);
         break;
 
