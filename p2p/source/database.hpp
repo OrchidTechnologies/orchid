@@ -25,6 +25,7 @@
 
 #include <sqlite3.h>
 
+#include "buffer.hpp"
 #include "shared.hpp"
 
 #define orc_sqlstep(expr) ({ \
@@ -57,7 +58,7 @@ class Database {
     }
 };
 
-template <typename Results_, typename... Args_>
+template <auto Results_, typename... Args_>
 class Statement {
   private:
     Database &database_;
@@ -81,11 +82,22 @@ class Statement {
     orc_bind(null, nullptr_t)
 
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    orc_bind(blob, const std::vector<uint8_t> &, value.data(), value.size(), SQLITE_TRANSIENT)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    orc_bind(blob, const Region &, value.data(), value.size(), SQLITE_TRANSIENT)
+
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const std::string &, value.c_str(), value.size(), SQLITE_TRANSIENT)
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
-    orc_bind(text, const std::string_view, value.data(), value.size(), SQLITE_TRANSIENT)
+    orc_bind(text, const std::string_view &, value.data(), value.size(), SQLITE_TRANSIENT)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    orc_bind(text, const View &, value.data(), value.size(), SQLITE_TRANSIENT)
+
+    // XXX: maybe this is supposed to be size() * 2?
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    orc_bind(text16, const std::u16string &, value.data(), value.size(), SQLITE_TRANSIENT)
 
   public:
     Statement(Database &database, const char *code) :
@@ -106,7 +118,7 @@ class Statement {
         return statement_;
     }
 
-    Results_ operator ()(const Args_ &...args) {
+    auto operator ()(const Args_ &...args) {
         orc_sqlcall(sqlite3_reset(statement_));
         orc_sqlcall(sqlite3_clear_bindings(statement_));
         Bind<1>(args...);
@@ -114,48 +126,141 @@ class Statement {
     }
 };
 
-class None {
-  public:
-    None(Database &database_, sqlite3_stmt *statement) {
-        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
-    }
-};
 
-class Last final {
+template <typename Type_>
+struct Column;
+
+template <>
+struct Column<double> {
+static double Get(sqlite3_stmt *statement, int column) {
+    return sqlite3_column_double(statement, column);
+} };
+
+template <>
+struct Column<int> {
+static int Get(sqlite3_stmt *statement, int column) {
+    return sqlite3_column_int(statement, column);
+} };
+
+template <>
+struct Column<int64_t> {
+static int64_t Get(sqlite3_stmt *statement, int column) {
+    return sqlite3_column_int64(statement, column);
+} };
+
+template <>
+struct Column<Beam> {
+static Beam Get(sqlite3_stmt *statement, int column) {
+    return Beam(sqlite3_column_blob(statement, column), sqlite3_column_bytes(statement, column));
+} };
+
+template <>
+struct Column<std::vector<uint8_t>> {
+static std::vector<uint8_t> Get(sqlite3_stmt *statement, int column) {
+    const auto data(static_cast<const uint8_t *>(sqlite3_column_blob(statement, column)));
+    return std::vector<uint8_t>(data, data + sqlite3_column_bytes(statement, column));
+} };
+
+template <>
+struct Column<std::string> {
+static std::string Get(sqlite3_stmt *statement, int column) {
+    return std::string(reinterpret_cast<const char *>(sqlite3_column_text(statement, column)), sqlite3_column_bytes(statement, column));
+} };
+
+template <>
+struct Column<std::u16string> {
+static std::u16string Get(sqlite3_stmt *statement, int column) {
+    return std::u16string(static_cast<const char16_t *>(sqlite3_column_text16(statement, column)), sqlite3_column_bytes16(statement, column) / sizeof(char16_t));
+} };
+
+template <typename... Columns_, size_t... Indices_>
+inline std::tuple<Columns_...> Row(sqlite3_stmt *statement, std::index_sequence<Indices_...>) {
+    return std::make_tuple<Columns_...>(Column<Columns_>::Get(statement, Indices_)...);
+}
+
+
+inline bool Step(Database &database_, sqlite3_stmt *statement) {
+    switch (orc_sqlstep(sqlite3_step(statement))) {
+        case SQLITE_DONE:
+            return false;
+        case SQLITE_ROW:
+            return true;
+        default:
+            orc_assert(false);
+    }
+}
+
+template <typename... Columns_>
+class Cursor_ final {
   private:
-    sqlite3_int64 value_;
+    Database &database_;
+    sqlite3_stmt *statement_;
 
   public:
-    Last(Database &database_, sqlite3_stmt *statement) {
-        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
-        value_ = sqlite3_last_insert_rowid(database_);
+    Cursor_(Database &database) :
+        database_(database),
+        statement_(nullptr)
+    {
     }
 
-    operator sqlite3_int64() const {
-        return value_;
+    Cursor_(Database &database, sqlite3_stmt *statement) :
+        database_(database),
+        statement_(statement)
+    {
+        operator ++();
     }
-};
 
-class Skip final {
-  public:
-    Skip(Database &database_, sqlite3_stmt *statement) {
-        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_ROW);
-        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
+    Cursor_ &begin() {
+        return *this;
+    }
+
+    Cursor_ end() {
+        return database_;
+    }
+
+    Cursor_ &operator ++() {
+        orc_assert(statement_ != nullptr);
+        if (!Step(database_, statement_))
+            statement_ = nullptr;
+        return *this;
+    }
+
+    auto operator *() {
+        return Row<Columns_...>(statement_, std::index_sequence_for<Columns_...>());
+    }
+
+    bool operator !=(const Cursor_ &rhs) noexcept {
+        orc_insist(&database_ == &rhs.database_);
+        return statement_ != rhs.statement_;
     }
 };
 
 template <typename... Columns_>
-class One final :
-    public std::tuple<Columns_...>
-{
-  public:
-    One(Database &database_, sqlite3_stmt *statement) {
-        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_ROW);
-        // XXX: implement this abstraction correctly
-        std::get<0>(*this) = sqlite3_column_int64(statement, 0);
-        orc_assert(orc_sqlstep(sqlite3_step(statement)) == SQLITE_DONE);
-    }
-};
+inline Cursor_<Columns_...> Cursor(Database &database, sqlite3_stmt *statement) {
+    return Cursor_<Columns_...>(database, statement);
+}
+
+template <typename... Columns_>
+inline std::tuple<Columns_...> One(Database &database_, sqlite3_stmt *statement) {
+    orc_assert(Step(database_, statement));
+    auto row(Row<Columns_...>(statement, std::index_sequence_for<Columns_...>()));
+    orc_assert(!Step(database_, statement));
+    return row;
+}
+
+inline void None(Database &database_, sqlite3_stmt *statement) {
+    orc_assert(!Step(database_, statement));
+}
+
+inline sqlite3_int64 Last(Database &database_, sqlite3_stmt *statement) {
+    orc_assert(!Step(database_, statement));
+    return sqlite3_last_insert_rowid(database_);
+}
+
+inline void Skip(Database &database_, sqlite3_stmt *statement) {
+    orc_assert(Step(database_, statement));
+    orc_assert(!Step(database_, statement));
+}
 
 }
 
