@@ -8,4 +8,6 @@
 /*.provisionprofile
 bundle.js
 .idea
+perf.data
+perf.data.old
 site/
