@@ -112,7 +112,7 @@ int Main(int argc, const char *const argv[]) {
             {"fromBlock", "0x0"},
             {"toBlock", latest},
             {"address", lottery},
-            {"topics", {{Update_, Bound_}, Number<uint256_t>(funder), Number<uint256_t>(signer)}},
+            {"topics", {{Update_, Bound_}, Number<uint256_t>(funder.num()), Number<uint256_t>(signer.num())}},
         }}));
 
         for (const auto log : logs) {
