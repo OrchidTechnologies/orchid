@@ -105,6 +105,11 @@ class Argument final {
 
 typedef std::map<std::string, Argument> Multi;
 
+inline std::string Unparse(Argument &&data) {
+    Json::FastWriter writer;
+    return writer.write(std::move(data));
+}
+
 inline Json::Value Parse(const std::string &data) {
     Json::Value result;
     Json::Reader reader;
@@ -112,9 +117,32 @@ inline Json::Value Parse(const std::string &data) {
     return result;
 }
 
-inline std::string Unparse(Argument &&data) {
-    Json::FastWriter writer;
-    return writer.write(std::move(data));
+template <typename Type_>
+struct Element;
+
+#define orc_element(name) \
+template <> \
+struct Element<decltype(std::declval<Json::Value>().as ## name())> { \
+static auto Get(const Json::Value &value, unsigned index) { \
+    return value[index].as ## name(); \
+} };
+
+orc_element(Bool)
+orc_element(Double)
+orc_element(Float)
+orc_element(Int)
+orc_element(String)
+orc_element(UInt)
+
+template <typename... Elements_, size_t... Indices_>
+std::tuple<Elements_...> Parse(const std::string &data, std::index_sequence<Indices_...>) {
+    const auto array(Parse(data));
+    return std::make_tuple<Elements_...>(Element<Elements_>::Get(array, Indices_)...);
+}
+
+template <typename... Elements_>
+std::tuple<Elements_...> Parse(const std::string &data) {
+    return Parse<Elements_...>(data, std::index_sequence_for<Elements_...>());
 }
 
 }
