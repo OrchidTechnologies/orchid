@@ -21,6 +21,7 @@ v8sub := codegen compiler/backend debug deoptimizer diagnostics execution
 v8src := $(patsubst %,$(pwd)/v8/src/%,$(shell cd $(pwd)/v8/src && find . \
     $(foreach sub,$(v8sub),-path "./$(sub)" -prune -o) \
     -path "./d8" -prune -o \
+    -path "./heap/base/asm" -prune -o \
     -path "./heap/cppgc/asm" -prune -o \
     -path "./torque" -prune -o \
     -path "./third_party" -prune -o \
@@ -40,16 +41,20 @@ v8src := $(patsubst %,$(pwd)/v8/src/%,$(shell cd $(pwd)/v8/src && find . \
     \
     ! -path "./base/ubsan.cc" \
     ! -path "./extensions/vtunedomain-support-extension.cc" \
+    ! -path "./heap/cppgc/caged-heap.cc" \
+    ! -path "./heap/conservative-stack-visitor.cc" \
     ! -path "./libplatform/tracing/trace-event-listener.cc" \
 -name "*.cc" -print))
 
 v8src += $(foreach temp,$(wildcard $(pwd)/v8/third_party/inspector_protocol/crdtp/*.cc),$(if $(findstring test,$(temp)),,$(temp)))
 
 v8src += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/*.cc))
+v8src := $(filter-out %/deoptimizer-cfi-empty.cc,$(v8src))
 v8src := $(filter-out %/unwinding-info-win64.cc,$(v8src))
 
 v8src += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/x64/*.cc))
 v8src += $(wildcard $(pwd)/v8/src/compiler/backend/x64/*.cc)
+v8src += $(wildcard $(pwd)/v8/src/heap/base/asm/x64/*.cc)
 v8src += $(wildcard $(pwd)/v8/src/heap/cppgc/asm/x64/*.cc)
 
 include $(pwd)/target-$(target).mk
@@ -187,6 +192,7 @@ cflags += -I$(pwd)/extra
 
 ifeq ($(target),win)
 cflags/$(pwd)/v8/ += -Wno-format
+cflags/$(pwd)/v8/ += -Wno-ignored-attributes
 endif
 
 # XXX: macro-assembler-x64.cc checks TARGET_ARCH_* without including this :/

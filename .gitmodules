@@ -119,7 +119,7 @@
 	path = p2p/curl
 	url = https://github.com/curl/curl.git
 [submodule "challenge-bypass-ristretto-ffi"]
-	path = p2p/challenge-bypass-ristretto
+	path = p2p/challenge-bypass-ristretto-ffi
 	url = https://github.com/brave-intl/challenge-bypass-ristretto-ffi.git
 [submodule "icu"]
 	path = min-icu4c/icu

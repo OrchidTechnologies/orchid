@@ -28,6 +28,8 @@
 #define OPENVPN_LOG_INFO openvpn::ClientAPI::LogInfo
 #include <openvpn/log/logthread.hpp>
 
+#include <openvpn/init/initprocess.hpp>
+
 #include <openvpn/transport/client/extern/config.hpp>
 
 #include <openvpn/tun/client/tunbase.hpp>
@@ -45,7 +47,9 @@
 namespace orc {
 
 void Initialize() {
-    openvpn::ClientAPI::OpenVPNClient::init_process();
+    // XXX: leak this on purpose as this API is annoying
+    new openvpn::InitProcess::Init();
+    // NOLINTNEXTLINE (clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
 class Transport :

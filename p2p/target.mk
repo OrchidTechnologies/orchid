@@ -155,9 +155,6 @@ cflags += -DECMULT_GEN_PREC_BITS=4
 
 
 cflags += -I$(pwd)/intx/include
-source += $(pwd)/intx/lib/intx/div.cpp
-
-
 cflags += -I$(pwd)/fmt/include
 
 source += $(pwd)/eEVM/src/processor.cpp
@@ -175,8 +172,8 @@ cflags += -I$(pwd)/eEVM/include
 cflags += -Wno-tautological-overlap-compare
 
 
-linked += $(pwd)/challenge-bypass-ristretto/librust.a
-cflags += -I$(pwd)/challenge-bypass-ristretto/src
+linked += $(pwd)/challenge-bypass-ristretto-ffi/librust.a
+cflags += -I$(pwd)/challenge-bypass-ristretto-ffi/src
 
 
 linked += $(pwd)/boringtun/librust.a
