@@ -126,14 +126,10 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
         orc_assert(magic == Magic_);
 
         const auto time(Monotonic());
-        uint256_t stamp(0);
 
         Scan(window, [&, &id = id](const Buffer &data) { try {
             const auto [command, window] = Take<uint32_t, Window>(data);
-            if (command == Stamp_) {
-                std::tie(stamp) = Take<uint256_t>(window);
-                return;
-            } else if (command != Invoice_)
+            if (command != Invoice_)
                 return;
 
             const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
@@ -153,7 +149,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                     locked->ring_ = Ring(recipient);
                 }
 
-                Justin("balance", 2, balance >> 128, stamp);
+                Justin("balance", 2, balance >> 128, time);
             }
 
             if (!id.zero()) {
@@ -162,7 +158,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                     const auto value(pending->second.ticket_.Value());
                     locked->spent_ += pending->second.expected_;
                     locked->pending_.erase(pending);
-                    Justin("updated", 4, value >> 128, stamp);
+                    Justin("updated", 4, value >> 128, time);
                 }
             }
 
@@ -183,7 +179,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
                     co_return co_await Submit(amount); }; }, __FUNCTION__);
             else if (!locked->pending_.empty()) {
                 const auto &pending(*locked->pending_.begin());
-                Justin("-retry-", 5, pending.second.ticket_.Value() >> 128);
+                Justin("-retry-", 5, pending.second.ticket_.Value() >> 128, time);
                 nest_.Hatch([&]() noexcept { return [this, ring = locked->ring_, pending = pending]() -> task<void> {
                     co_return co_await Submit(pending.first, pending.second.ticket_, co_await ring, pending.second.signature_); }; }, __FUNCTION__);
             }
