@@ -53,9 +53,9 @@ task<Fiat> Coinbase(Origin &origin, const std::string &to) { try {
 
 
 task<S<Updated<Fiat>>> CoinbaseFiat(unsigned milliseconds, S<Origin> origin, std::string currency) {
-    co_return co_await Update(milliseconds, [origin = std::move(origin), currency = std::move(currency)]() -> task<Fiat> {
+    co_return co_await Opened(Update(milliseconds, [origin = std::move(origin), currency = std::move(currency)]() -> task<Fiat> {
         co_return co_await Coinbase(*origin, currency);
-    }, "Coinbase");
+    }, "Coinbase"));
 }
 
 }

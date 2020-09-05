@@ -75,10 +75,14 @@ class Updater :
 };
 
 template <typename Code_>
-task<S<Updater<Code_>>> Update(unsigned milliseconds, Code_ &&code, const char *name) {
-    auto updater(Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code), name));
-    co_await updater->Open();
-    co_return std::move(updater);
+auto Update(unsigned milliseconds, Code_ &&code, const char *name) {
+    return Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code), name);
+}
+
+template <typename Type_>
+task<Type_> Opened(Type_ &&valve) {
+    co_await valve->Open();
+    co_return std::forward<Type_>(valve);
 }
 
 }

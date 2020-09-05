@@ -152,8 +152,8 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal,
     personal_(personal),
     password_(std::move(password)),
 
-    balance_(Wait(Update(60*1000, [endpoint = endpoint_, personal]() -> task<uint256_t> {
-        co_return co_await endpoint.Balance(personal); }, "Balance"))),
+    balance_(Update(60*1000, [endpoint = endpoint_, personal]() -> task<uint256_t> {
+        co_return co_await endpoint.Balance(personal); }, "Balance")),
 
     lottery_(lottery),
     chain_(chain),
@@ -163,6 +163,8 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal,
 
 void Cashier::Open(S<Origin> origin, Locator locator) {
     Wait([&]() -> task<void> {
+        co_await balance_->Open();
+
         auto duplex(std::make_unique<Duplex>(origin));
         co_await duplex->Open(locator);
 
