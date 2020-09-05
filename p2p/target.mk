@@ -174,6 +174,7 @@ cflags += -Wno-tautological-overlap-compare
 
 linked += $(pwd)/challenge-bypass-ristretto-ffi/librust.a
 cflags += -I$(pwd)/challenge-bypass-ristretto-ffi/src
+source += $(pwd)/challenge-bypass-ristretto-ffi/src/wrapper.cpp
 
 
 linked += $(pwd)/boringtun/librust.a
