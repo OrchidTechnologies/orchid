@@ -42,9 +42,8 @@ class Station :
 
   public:
     Station(Drain<Json::Value> &drain) :
-        Faucet<Drain<Json::Value>>(drain)
+        Faucet<Drain<Json::Value>>(typeid(*this).name(), drain)
     {
-        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {

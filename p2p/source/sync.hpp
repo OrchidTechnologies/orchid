@@ -109,10 +109,9 @@ class SyncConnection :
   public:
     template <typename... Args_>
     SyncConnection(BufferDrain &drain, Args_ &&...args) :
-        Sync(drain),
+        Sync(typeid(*this).name(), drain),
         sync_(std::forward<Args_>(args)...)
     {
-        type_ = typeid(*this).name();
     }
 
     Sync_ *operator ->() {
@@ -143,10 +142,9 @@ class SyncFile :
   public:
     template <typename... Args_>
     SyncFile(BufferDrain &drain, Args_ &&...args) :
-        Sync(drain),
+        Sync(typeid(*this).name(), drain),
         sync_(std::forward<Args_>(args)...)
     {
-        type_ = typeid(*this).name();
     }
 
     Sync_ *operator ->() {

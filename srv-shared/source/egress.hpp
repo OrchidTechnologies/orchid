@@ -127,11 +127,10 @@ class Egress :
 
       public:
         Translator(BufferDrain &drain, S<Egress> egress) :
-            Link(drain),
+            Link(typeid(*this).name(), drain),
             egress_(std::move(egress)),
             indirect_(egress_->Open(this, &neutral_))
         {
-            type_ = typeid(*this).name();
         }
 
         task<void> Shut() noexcept override {
@@ -158,9 +157,9 @@ class Egress :
 
   public:
     Egress(uint32_t local) :
+        Valve(typeid(*this).name()),
         local_(local)
     {
-        type_ = typeid(*this).name();
     }
 
     ~Egress() override {

@@ -201,7 +201,7 @@ Client::Client(BufferDrain &drain,
     const Address &seller, const uint128_t &face,
     const char *justin
 ) :
-    Pump(drain),
+    Pump(typeid(*this).name(), drain),
     local_(Certify()),
     url_(std::move(url)),
     remote_(std::move(remote)),
@@ -217,7 +217,6 @@ Client::Client(BufferDrain &drain,
     prepay_(market_->Convert((*oracle_)()/1024*2)),
     justin_(justin == nullptr ? nullptr : fopen(justin, "w"))
 {
-    type_ = typeid(*this).name();
 }
 
 Client::~Client() {

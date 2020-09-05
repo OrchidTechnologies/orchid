@@ -35,7 +35,7 @@
 
 namespace orc {
 
-class Nest :
+class Nest final :
     public Covered<Valve>
 {
   private:
@@ -78,9 +78,9 @@ class Nest :
 
   public:
     Nest(unsigned limit = -1) :
+        Covered(typeid(*this).name()),
         limit_(limit)
     {
-        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {

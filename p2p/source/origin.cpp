@@ -30,11 +30,11 @@
 
 namespace orc {
 
-Origin::Origin(U<rtc::NetworkManager> manager) :
+Origin::Origin(const char *type, U<rtc::NetworkManager> manager) :
+    Valve(type),
     manager_(std::move(manager)),
     cache_(*this)
 {
-    type_ = typeid(*this).name();
 }
 
 Origin::~Origin() = default;

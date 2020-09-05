@@ -45,10 +45,10 @@ class Opening :
 
   public:
     template <typename... Args_>
-    Opening(BufferSewer &drain) :
+    Opening(const char *type, BufferSewer &drain) :
+        Valve(type),
         drain_(drain)
     {
-        type_ = typeid(*this).name();
     }
 
     virtual Socket Local() const = 0;

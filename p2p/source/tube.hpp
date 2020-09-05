@@ -33,9 +33,8 @@ class Tube :
 {
   public:
     Tube(BufferDrain &drain) :
-        Link<Buffer>(drain)
+        Link<Buffer>(typeid(*this).name(), drain)
     {
-        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {
@@ -61,8 +60,9 @@ class Stopper :
     }
 
   public:
-    Stopper() {
-        type_ = typeid(*this).name();
+    Stopper() :
+        Valve(typeid(*this).name())
+    {
     }
 
     task<void> Shut() noexcept override {
@@ -76,9 +76,8 @@ class Cap :
 {
   public:
     Cap(Drain<const Buffer &> &drain) :
-        Pump(drain)
+        Pump(typeid(*this).name(), drain)
     {
-        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {

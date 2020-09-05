@@ -46,12 +46,10 @@ class Channel :
     static task<Socket> Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
     Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
-        Pump<Buffer>(drain),
+        Pump<Buffer>(typeid(*this).name(), drain),
         peer_(peer),
         channel_(channel)
     {
-        type_ = typeid(*this).name();
-
         channel_->RegisterObserver(this);
         peer_->channels_.insert(this);
     }

@@ -58,9 +58,8 @@ class Family :
 
   public:
     Family(BufferDrain &drain) :
-        Link<Buffer>(drain)
+        Link<Buffer>(typeid(*this).name(), drain)
     {
-        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {

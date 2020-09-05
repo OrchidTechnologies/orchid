@@ -75,7 +75,9 @@ class Track {
     }
 };
 
-Valve::Valve() {
+Valve::Valve(const char *type) :
+    type_(type)
+{
     if (tracking_)
         Track()->insert(this);
 }

@@ -49,9 +49,9 @@ class Acceptor :
   public:
     template <typename... Args_>
     Acceptor(Args_ &&...args) :
+        Valve(typeid(*this).name()),
         acceptor_(Context(), std::forward<Args_>(args)...)
     {
-        type_ = typeid(*this).name();
     }
 
     asio::ip::tcp::acceptor *operator ->() {

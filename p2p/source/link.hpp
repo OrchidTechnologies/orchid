@@ -57,10 +57,10 @@ class Faucet :
     }
 
   public:
-    Faucet(Basin_ &basin) :
+    Faucet(const char *type, Basin_ &basin) :
+        Valve(type),
         basin_(basin)
     {
-        type_ = typeid(*this).name();
     }
 };
 
@@ -75,10 +75,9 @@ class Pump :
     }
 
   public:
-    Pump(Drain<Value_> &drain) :
-        Faucet<Drain<Value_>>(drain)
+    Pump(const char *type, Drain<Value_> &drain) :
+        Faucet<Drain<Value_>>(type, drain)
     {
-        Faucet<Drain<Value_>>::type_ = typeid(*this).name();
     }
 };
 
@@ -97,8 +96,8 @@ class Link :
     }
 
   public:
-    Link(Drain<const Buffer &> &drain) :
-        Pump<Type_>(drain)
+    Link(const char *type, Drain<const Buffer &> &drain) :
+        Pump<Type_>(type, drain)
     {
     }
 };

@@ -77,10 +77,9 @@ class Inverted :
 
   public:
     Inverted(BufferDrain &drain, U<Stream> stream) :
-        Pump<Buffer>(drain),
+        Pump<Buffer>(typeid(*this).name(), drain),
         stream_(std::move(stream))
     {
-        type_ = typeid(*this).name();
     }
 
     void Open() noexcept {

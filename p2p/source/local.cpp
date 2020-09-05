@@ -39,7 +39,7 @@ class LocalOpening :
   public:
     template <typename... Args_>
     LocalOpening(BufferSewer &drain, Args_ &&...args) :
-        Opening(drain),
+        Opening(typeid(*this).name(), drain),
         connection_(Context(), std::forward<Args_>(args)...)
     {
     }
@@ -95,9 +95,8 @@ class LocalOpening :
 };
 
 Local::Local(U<rtc::NetworkManager> manager) :
-    Origin(std::move(manager))
+    Origin(typeid(*this).name(), std::move(manager))
 {
-    type_ = typeid(*this).name();
 }
 
 Local::Local(const class Host &host) :

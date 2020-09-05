@@ -210,7 +210,7 @@ class RemoteAssociation :
 
   public:
     RemoteAssociation(BufferDrain &drain, const ip4_addr_t &host) :
-        Pump(drain),
+        Pump(typeid(*this).name(), drain),
         RemoteCommon(host)
     {
     }
@@ -245,7 +245,7 @@ class RemoteOpening :
 
   public:
     RemoteOpening(BufferSewer &drain, const ip4_addr_t &host) :
-        Opening(drain),
+        Opening(typeid(*this).name(), drain),
         RemoteCommon(host)
     {
     }
@@ -502,11 +502,9 @@ void Remote::Stop(const std::string &error) noexcept {
 }
 
 Remote::Remote(const class Host &host) :
-    Origin(std::make_unique<Assistant>(host)),
+    Origin(typeid(*this).name(), std::make_unique<Assistant>(host)),
     host_(host)
 {
-    type_ = typeid(*this).name();
-
     static bool setup(false);
     if (!setup) {
         tcpip_init(nullptr, nullptr);

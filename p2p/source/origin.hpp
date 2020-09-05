@@ -57,7 +57,7 @@ class Origin :
     Cache<cppcoro::shared_task<std::string>, Origin &, std::string, &Resolve_> cache_;
 
   public:
-    Origin(U<rtc::NetworkManager> manager);
+    Origin(const char *type, U<rtc::NetworkManager> manager);
     ~Origin() override;
 
     virtual Host Host() = 0;

@@ -44,9 +44,8 @@ class Structured :
 
   public:
     Structured(Drain<Json::Value> &drain) :
-        Pump<Json::Value, Json::Value>(drain)
+        Pump<Json::Value, Json::Value>(typeid(*this).name(), drain)
     {
-        type_ = typeid(*this).name();
     }
 
     task<void> Shut() noexcept override {

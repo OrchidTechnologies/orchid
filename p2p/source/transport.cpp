@@ -96,6 +96,7 @@ class Transport :
 
   public:
     Transport(S<Origin> origin, openvpn::ExternalTransport::Config config, openvpn_io::io_context &context, openvpn::TransportClientParent *parent) :
+        Covered(typeid(*this).name()),
         origin_(std::move(origin)),
         config_(std::move(config)),
         context_(context),
@@ -345,11 +346,10 @@ class Middle :
 
   public:
     Middle(BufferDrain &drain, S<Origin> origin, uint32_t local) :
-        Link<Buffer>(drain),
+        Link<Buffer>(typeid(*this).name(), drain),
         origin_(std::move(origin)),
         local_(local)
     {
-        type_ = typeid(*this).name();
     }
 
     openvpn::TransportClientFactory *new_transport_factory(const openvpn::ExternalTransport::Config &config) noexcept override {

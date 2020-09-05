@@ -307,13 +307,12 @@ void Server::Stop(const std::string &error) noexcept {
 }
 
 Server::Server(S<Origin> origin, S<Cashier> cashier, S<Market> market) :
+    Valve(typeid(*this).name()),
     local_(Certify()),
     origin_(std::move(origin)),
     cashier_(std::move(cashier)),
     market_(std::move(market))
 {
-    type_ = typeid(*this).name();
-
     const auto locked(locked_());
     Commit(locked);
 }

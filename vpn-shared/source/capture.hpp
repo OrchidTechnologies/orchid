@@ -49,8 +49,9 @@ class Internal :
     public Valve
 {
   public:
-    Internal() {
-        type_ = typeid(*this).name();
+    Internal(const char *type) :
+        Valve(type)
+    {
     }
 
     ~Internal() override;

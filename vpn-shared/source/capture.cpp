@@ -251,11 +251,10 @@ void Capture::Land(const Buffer &data, bool analyze) {
 }
 
 Capture::Capture(const Host &local) :
+    Valve(typeid(*this).name()),
     local_(local),
     up_(32)
 {
-    type_ = typeid(*this).name();
-
     router_(http::verb::get, "/connected", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, "application/json", locked_()->connected_ ? "true" : "false");
     });
@@ -419,6 +418,7 @@ class Transform :
 
   public:
     Transform(Capture *capture, S<Origin> origin) :
+        Internal(typeid(*this).name()),
         capture_(capture),
         origin_(std::move(origin))
     {
@@ -637,6 +637,7 @@ class Pass :
 
   public:
     Pass(Capture *capture) :
+        Internal(typeid(*this).name()),
         capture_(capture)
     {
     }

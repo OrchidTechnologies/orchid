@@ -109,10 +109,6 @@ class Sink :
   public:
     using Base_::Base_;
 
-    Sink() {
-        this->type_ = typeid(*this).name();
-    }
-
     ~Sink() override {
         if (Verbose)
             Log() << "~BufferSink<" << typeid(Base_).name() << ">()" << std::endl;

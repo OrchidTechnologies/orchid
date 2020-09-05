@@ -82,7 +82,7 @@ void Boring::Stop(const std::string &error) noexcept {
 }
 
 Boring::Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, const Host &remote, const std::string &secret, const std::string &common) :
-    Link(drain),
+    Link(typeid(*this).name(), drain),
     origin_(origin),
     local_(local),
     remote_(remote),
@@ -90,7 +90,6 @@ Boring::Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, cons
         Log() << "WireGuard: " << message << std::endl;
     }, ALL))
 {
-    type_ = typeid(*this).name();
 }
 
 Boring::~Boring() {

@@ -34,9 +34,9 @@ class Valve {
   public:
     static uint64_t Unique_;
     const uint64_t unique_ = ++Unique_;
-    const char *type_ = typeid(Valve).name();
 
   private:
+    const char *type_;
     Event shut_;
 
   protected:
@@ -48,7 +48,7 @@ class Valve {
     virtual void Cover() = 0;
 
   public:
-    Valve();
+    Valve(const char *type);
     virtual ~Valve();
 
     virtual task<void> Shut() noexcept {

@@ -60,10 +60,9 @@ class Retry :
 
   public:
     Retry(BufferDrain &drain, Code_ code) :
-        Link<Buffer>(drain),
+        Link<Buffer>(typeid(*this).name(), drain),
         code_(std::move(code))
     {
-        type_ = typeid(*this).name();
     }
 
     bool Open() noexcept {

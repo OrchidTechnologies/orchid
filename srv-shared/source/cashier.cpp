@@ -144,6 +144,8 @@ void Cashier::Stop(const std::string &error) noexcept {
 }
 
 Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient) :
+    Valve(typeid(*this).name()),
+
     endpoint_(std::move(endpoint)),
     price_(price),
 
@@ -157,7 +159,6 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal,
     chain_(chain),
     recipient_(recipient)
 {
-    type_ = typeid(*this).name();
 }
 
 void Cashier::Open(S<Origin> origin, Locator locator) {

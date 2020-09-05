@@ -55,9 +55,9 @@ class Bonded {
 
       public:
         Bonding(Bonded *bonded) :
+            Valve(typeid(*this).name()),
             bonded_(bonded)
         {
-            type_ = typeid(*this).name();
         }
 
         task<void> Shut() noexcept override {
