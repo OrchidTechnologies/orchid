@@ -1,59 +1,60 @@
 .PHONY: all
 
-all: all-cli-lnx
-all: all-cli-mac
+all: cli-lnx
+all: cli-mac
 
-all: all-tst-win
+all: app-ios
+all: app-and
+all: app-mac
 
-all: all-app-ios
-all: all-app-sim
-all: all-app-and
-
-all: all-srv-and
-all: all-srv-lnx
-all: all-srv-mac
-all: all-srv-win
+all: srv-lnx
+all: srv-mac
+all: srv-win
 
 .PHONY: tst-ethereum
 tst-ethereum:
 	$(MAKE) -C tst-ethereum test
 
-.PHONY: all-cli-lnx
-all-cli-lnx:
+.PHONY: cli-lnx
+cli-lnx:
 	$(MAKE) -C cli-shared target=lnx
 
-.PHONY: all-cli-mac
-all-cli-mac:
+.PHONY: cli-mac
+cli-mac:
 	$(MAKE) -C cli-shared target=mac
 
-.PHONY: all-tst-win
-all-tst-win:
+.PHONY: tst-win
+tst-win:
 	$(MAKE) -C tst-network target=win
 
-.PHONY: all-srv-and
-all-srv-and:
+.PHONY: srv-and
+srv-and:
 	$(MAKE) -C srv-shared target=and
 
-.PHONY: all-srv-lnx
-all-srv-lnx:
+.PHONY: srv-lnx
+srv-lnx:
 	$(MAKE) -C srv-shared target=lnx
 
-.PHONY: all-srv-mac
-all-srv-mac:
+.PHONY: srv-mac
+srv-mac:
 	$(MAKE) -C srv-shared target=mac
 
-.PHONY: all-srv-win
-all-srv-win:
+.PHONY: srv-win
+srv-win:
 	$(MAKE) -C srv-shared target=win
 
-.PHONY: all-app-ios
-all-app-ios:
+.PHONY: app-ios
+app-ios:
 	$(MAKE) -C app-ios target=ios
 
-.PHONY: all-app-sim
-all-app-sim:
+.PHONY: app-sim
+app-sim:
 	$(MAKE) -C app-ios target=sim
 
-.PHONY: all-app-and
-all-app-and:
+.PHONY: app-and
+app-and:
 	$(MAKE) -C app-android target=and
+
+.PHONY: app-mac
+app-mac:
+	$(MAKE) -C app-macos target=mac
