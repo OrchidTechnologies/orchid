@@ -19,7 +19,7 @@
 
 
 ifeq ($(filter ldid,$(debug)),)
-codesign = xattr -cr $(1) && codesign -vfs $(identity) --entitlements $(2) $(1)
+codesign = xattr -cr $(1) && $(if $(keychain),security unlock-keychain -p $(word 2,$(keychain)) $(word 1,$(keychain)).keychain &&) codesign -vfs $(identity) --entitlements $(2) $(1)
 else
 ifneq ($(identity),)
 # XXX: the ldid in homebrew doesn't actually work :(
