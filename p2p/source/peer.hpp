@@ -103,7 +103,6 @@ class Peer :
     Peer(S<Origin> origin, Configuration configuration = Configuration());
 
     ~Peer() override {
-orc_trace();
         orc_insist(closed_);
     }
 

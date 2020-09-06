@@ -81,7 +81,6 @@ class Incoming final :
     }
 
     ~Incoming() override {
-orc_trace();
         Close();
     }
 };
@@ -315,10 +314,6 @@ Server::Server(S<Origin> origin, S<Cashier> cashier, S<Market> market) :
 {
     const auto locked(locked_());
     Commit(locked);
-}
-
-Server::~Server() {
-    orc_trace();
 }
 
 task<void> Server::Open(Pipe<Buffer> &pipe) {

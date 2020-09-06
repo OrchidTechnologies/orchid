@@ -69,7 +69,6 @@ class Channel :
     }
 
     ~Channel() override {
-orc_trace();
         peer_->channels_.erase(this);
         channel_->UnregisterObserver();
     }

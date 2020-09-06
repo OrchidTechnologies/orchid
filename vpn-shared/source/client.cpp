@@ -220,7 +220,6 @@ Client::Client(BufferDrain &drain,
 }
 
 Client::~Client() {
-orc_trace();
     if (justin_ != nullptr)
         fclose(justin_);
 }
@@ -241,7 +240,7 @@ task<void> Client::Open(const S<Origin> &origin) {
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
         const auto answer((co_await origin->Fetch("POST", Locator::Parse(url_), {}, offer, verify)).ok());
-        if (true || Verbose) {
+        if (Verbose) {
             Log() << "Offer: " << offer << std::endl;
             Log() << "Answer: " << answer << std::endl;
         }

@@ -99,7 +99,6 @@ class Server :
 
   public:
     Server(S<Origin> origin, S<Cashier> cashier, S<Market> market);
-    ~Server() override;
 
     task<void> Open(Pipe<Buffer> &pipe);
     task<void> Shut() noexcept override;

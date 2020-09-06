@@ -47,7 +47,6 @@ orc_trace();
     }
 
     ~Actor() override {
-orc_trace();
         Close();
     }
 };
