@@ -7,6 +7,14 @@ head=$(git rev-parse HEAD)
 upstream=$(git rev-parse @{u} 2>/dev/null || echo "${head}")
 merge=$(git merge-base --octopus "${upstream}" "${head}")
 
+if [[ "$1" != -- ]]; then
+    list=true
+else
+    list=false
+    merge=${head}
+    shift
+fi
+
 echo "${head}"
 echo "${merge}"
 echo
@@ -15,7 +23,9 @@ echo
 rustc --version
 echo
 
-git ls-files --others --exclude-standard | { grep -E '\.([ch]|[ch]pp|mk)$' || true; } | {
+if "${list}"; then
+    git ls-files --others --exclude-standard | { grep -E '\.([ch]|[ch]pp|mk)$' || true; }
+fi | {
     echo=false
     git diff --exit-code --irreversible-delete --ignore-submodules=dirty "${head}" -- || echo=true
 
