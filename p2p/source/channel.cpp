@@ -62,6 +62,95 @@ task<Socket> Channel::Wire(BufferSunk &sunk, S<Origin> origin, Configuration con
     co_return Socket(socket.ipaddr().ipv4_address(), socket.port());
 }
 
+Channel::Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
+    Pump<Buffer>(typeid(*this).name(), drain),
+    peer_(peer),
+    channel_(channel)
+{
+    channel_->RegisterObserver(this);
+    peer_->channels_.insert(this);
+}
+
+Channel::Channel(BufferDrain &drain, const S<Peer> &peer, int id, const std::string &label, const std::string &protocol) :
+    Channel(drain, peer, [&]() {
+        webrtc::DataChannelInit init;
+        init.ordered = false;
+        init.protocol = protocol;
+        if (id != -1) {
+            init.negotiated = true;
+            init.id = id;
+        }
+        return (*peer)->CreateDataChannel(label, &init);
+    }())
+{
+}
+
+Channel::~Channel() {
+    peer_->channels_.erase(this);
+    channel_->UnregisterObserver();
+}
+
+void Channel::OnStateChange() noexcept {
+    switch (channel_->state()) {
+        case webrtc::DataChannelInterface::kConnecting:
+            if (Verbose)
+                Log() << "OnStateChange(kConnecting)" << std::endl;
+            break;
+        case webrtc::DataChannelInterface::kOpen:
+            if (Verbose)
+                Log() << "OnStateChange(kOpen)" << std::endl;
+            opened_();
+            break;
+        case webrtc::DataChannelInterface::kClosing:
+            if (Verbose)
+                Log() << "OnStateChange(kClosing)" << std::endl;
+            break;
+        case webrtc::DataChannelInterface::kClosed:
+            if (Verbose)
+                Log() << "OnStateChange(kClosed)" << std::endl;
+            Stop();
+            break;
+    }
+}
+
+void Channel::OnBufferedAmountChange(uint64_t previous) noexcept {
+    //auto current(channel_->buffered_amount());
+    //Log() << "channel: " << current << " (" << previous << ")" << std::endl;
+}
+
+void Channel::OnMessage(const webrtc::DataBuffer &buffer) noexcept {
+    const Strung data(buffer.data);
+    Trace("WebRTC", false, false, data);
+    Pump::Land(data);
+}
+
+void Channel::Stop(const std::string &error) noexcept {
+    opened_();
+    return Pump::Stop(error);
+}
+
+task<void> Channel::Open() noexcept {
+    co_await *opened_;
+}
+
+task<void> Channel::Shut() noexcept {
+    channel_->Close();
+    // XXX: this should be checking if Peer has a data_transport
+    if (channel_->id() == -1)
+        Stop();
+    co_await Pump::Shut();
+}
+
+task<void> Channel::Send(const Buffer &data) {
+    Trace("WebRTC", true, false, data);
+    rtc::CopyOnWriteBuffer buffer(data.size());
+    data.copy(buffer.data(), buffer.size());
+    co_await Post([&]() {
+        if (channel_->buffered_amount() == 0)
+            channel_->Send(webrtc::DataBuffer(buffer, true));
+    }, RTC_FROM_HERE);
+}
+
 task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice) {
     Configuration configuration;
     configuration.ice_ = std::move(ice);
