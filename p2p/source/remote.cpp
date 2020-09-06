@@ -548,7 +548,7 @@ rtc::Thread &Remote::Thread() {
     static std::unique_ptr<rtc::Thread> thread;
     if (thread == nullptr) {
         thread = std::make_unique<rtc::Thread>(std::make_unique<LwipSocketServer>());
-        thread->SetName("Orchid WebRTC Remote", nullptr);
+        thread->SetName("orchid:remote", nullptr);
         thread->Start();
     }
 

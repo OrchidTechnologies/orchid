@@ -117,7 +117,7 @@ class Host Local::Host() {
 rtc::Thread &Local::Thread() {
     static const std::unique_ptr<rtc::Thread> thread([&]() {
         auto thread(rtc::Thread::CreateWithSocketServer());
-        thread->SetName("Orchid WebRTC Local", nullptr);
+        thread->SetName("orchid:local", nullptr);
         thread->Start();
         return thread;
     }());
