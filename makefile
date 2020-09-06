@@ -1,3 +1,6 @@
+include env/common.mk
+-include local.mk
+
 .PHONY: all
 
 all: cli-lnx
@@ -58,3 +61,8 @@ app-and:
 .PHONY: app-mac
 app-mac:
 	$(MAKE) -C app-macos target=mac
+
+
+.PHONY: github
+github: app-and cli-lnx cli-mac srv-lnx srv-mac srv-win
+	./github.sh $(github)
