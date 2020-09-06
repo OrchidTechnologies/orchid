@@ -22,7 +22,10 @@
 
 #include <regex>
 
+#include <pc/sctp_data_channel.h>
+
 #include "channel.hpp"
+#include "pirate.hpp"
 #include "tube.hpp"
 
 namespace orc {
@@ -141,13 +144,36 @@ task<void> Channel::Shut() noexcept {
     co_await Pump::Shut();
 }
 
+struct Buffered_ { typedef uint64_t (webrtc::SctpDataChannel::*type); };
+template struct Pirate<Buffered_, &webrtc::SctpDataChannel::buffered_amount_>;
+
+struct Send_ { typedef bool (webrtc::SctpDataChannel::*type)(const webrtc::DataBuffer &, bool); };
+template struct Pirate<Send_, &webrtc::SctpDataChannel::SendDataMessage>;
+
 task<void> Channel::Send(const Buffer &data) {
     Trace("WebRTC", true, false, data);
-    rtc::CopyOnWriteBuffer buffer(data.size());
-    data.copy(buffer.data(), buffer.size());
+
+    const auto size(data.size());
+    rtc::CopyOnWriteBuffer buffer(size);
+    data.copy(buffer.data(), size);
+
     co_await Post([&]() {
+        webrtc::DataBuffer data(std::move(buffer), true);
+#if 0
         if (channel_->buffered_amount() == 0)
-            channel_->Send(webrtc::DataBuffer(buffer, true));
+            channel_->Send(data);
+#else
+        const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
+#if 0
+        sctp->Send(data);
+#else
+        if (sctp->state() != webrtc::DataChannelInterface::kOpen)
+            return;
+        sctp->*Loot<Buffered_>::pointer += size;
+        if (!(sctp->*Loot<Send_>::pointer)(data, false))
+            sctp->*Loot<Buffered_>::pointer -= size;
+#endif
+#endif
     }, RTC_FROM_HERE);
 }
 
