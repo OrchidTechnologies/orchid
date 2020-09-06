@@ -32,6 +32,10 @@ all: $(output)/Orchid.apk
 install: $(output)/Orchid.apk
 	adb install -d -r $<
 
+.PHONY: upload
+upload: $(output)/Orchid.apk
+	env/upload-apk.py net.orchid.Orchid $<
+
 $(call include,vpn/target.mk)
 
 include env/output.mk
