@@ -37,7 +37,7 @@ debug: $(binary)
 
 .PHONY: record
 record: $(output)/$(default)/orchidd$(exe)
-	perf record -g $< $(args)
+	perf record --call-graph dwarf $< $(args)
 
 .PHONY: report
 report:

@@ -43,7 +43,7 @@ struct Logger :
     public rtc::LogSink
 {
     Logger() {
-        rtc::LogMessage::AddLogToStream(this, rtc::LS_INFO);
+        rtc::LogMessage::AddLogToStream(this, rtc::LS_WARNING);
     }
 
     void OnLogMessage(const std::string &message) override {
@@ -105,7 +105,6 @@ task<struct socket *> Peer::Internal() {
 
 
 void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) noexcept {
-    orc_trace();
 }
 
 void Peer::OnRenegotiationNeeded() noexcept {

@@ -31,11 +31,11 @@ const Threads &Threads::Get() {
 
 Threads::Threads() {
     signals_ = rtc::Thread::Create();
-    signals_->SetName("Orchid WebRTC Signals", nullptr);
+    signals_->SetName("orchid:signal", nullptr);
     signals_->Start();
 
     working_ = rtc::Thread::Create();
-    working_->SetName("Orchid WebRTC Workers", nullptr);
+    working_->SetName("orchid:worker", nullptr);
     working_->Start();
 }
 

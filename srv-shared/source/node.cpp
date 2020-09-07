@@ -43,13 +43,15 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
         const auto server(Find(fingerprint));
         auto answer(co_await server->Respond(offer, ice_));
 
-        Log() << std::endl;
-        Log() << "^^^^^^^^^^^^^^^^" << std::endl;
-        Log() << offer << std::endl;
-        Log() << "================" << std::endl;
-        Log() << answer << std::endl;
-        Log() << "vvvvvvvvvvvvvvvv" << std::endl;
-        Log() << std::endl;
+        if (Verbose) {
+            Log() << std::endl;
+            Log() << "^^^^^^^^^^^^^^^^" << std::endl;
+            Log() << offer << std::endl;
+            Log() << "================" << std::endl;
+            Log() << answer << std::endl;
+            Log() << "vvvvvvvvvvvvvvvv" << std::endl;
+            Log() << std::endl;
+        }
 
         co_return Respond(request, http::status::ok, "text/plain", std::move(answer));
     });

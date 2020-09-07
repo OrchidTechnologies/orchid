@@ -531,13 +531,9 @@ void Remote::Open() {
 }
 
 task<void> Remote::Shut() noexcept { orc_ahead
-orc_trace();
     co_await nest_.Shut();
-orc_trace();
     co_await Sunken::Shut();
-orc_trace();
     co_await Valve::Shut();
-orc_trace();
 }
 
 class Host Remote::Host() {
@@ -548,7 +544,7 @@ rtc::Thread &Remote::Thread() {
     static std::unique_ptr<rtc::Thread> thread;
     if (thread == nullptr) {
         thread = std::make_unique<rtc::Thread>(std::make_unique<LwipSocketServer>());
-        thread->SetName("Orchid WebRTC Remote", nullptr);
+        thread->SetName("orchid:remote", nullptr);
         thread->Start();
     }
 
