@@ -38,7 +38,7 @@ debug: $(output)/$(default)/orchid$(exe)
 
 .PHONY: record
 record: $(output)/$(default)/orchid$(exe)
-	perf record -g $< $(args)
+	perf record --call-graph dwarf $< $(args)
 
 .PHONY: report
 report: $(output)/$(default)/orchid$(exe)
