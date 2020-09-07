@@ -26,7 +26,7 @@ namespace orc {
 
 task<void> Peer::Negotiate(webrtc::SessionDescriptionInterface *description) {
     const rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
-    peer_->SetLocalDescription(observer, description);
+    co_await Post([&]() { peer_->SetLocalDescription(observer, description); }, RTC_FROM_HERE);
     co_await **observer;
 }
 
@@ -34,7 +34,7 @@ task<std::string> Peer::Negotiation(webrtc::SessionDescriptionInterface *descrip
     co_await Negotiate(description);
     co_await *gathered_;
     std::string sdp;
-    peer_->local_description()->ToString(&sdp);
+    co_await Post([&]() { peer_->local_description()->ToString(&sdp); }, RTC_FROM_HERE);
     co_return sdp;
 }
 
@@ -42,7 +42,7 @@ task<std::string> Peer::Offer() {
     co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
         const rtc::scoped_refptr<CreateObserver> observer(new rtc::RefCountedObject<CreateObserver>());
         webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-        peer_->CreateOffer(observer, options);
+        co_await Post([&]() { peer_->CreateOffer(observer, options); }, RTC_FROM_HERE);
         co_await **observer;
         co_return observer->description_;
     }());
@@ -53,7 +53,7 @@ task<void> Peer::Negotiate(const char *type, const std::string &sdp) {
     const auto answer(webrtc::CreateSessionDescription(type, sdp, &error));
     orc_assert_(answer != nullptr, "invalid " << type << ":\n" << sdp);
     rtc::scoped_refptr<SetObserver> observer(new rtc::RefCountedObject<SetObserver>());
-    peer_->SetRemoteDescription(observer, answer);
+    co_await Post([&]() { peer_->SetRemoteDescription(observer, answer); }, RTC_FROM_HERE);
     co_await **observer;
 }
 
@@ -62,7 +62,7 @@ task<std::string> Peer::Answer(const std::string &offer) {
     co_return co_await Negotiation(co_await [&]() -> task<webrtc::SessionDescriptionInterface *> {
         const rtc::scoped_refptr<orc::CreateObserver> observer(new rtc::RefCountedObject<orc::CreateObserver>());
         webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-        peer_->CreateAnswer(observer, options);
+        co_await Post([&]() { peer_->CreateAnswer(observer, options); }, RTC_FROM_HERE);
         co_await **observer;
         co_return observer->description_;
     }());
