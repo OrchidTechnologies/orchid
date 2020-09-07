@@ -158,19 +158,18 @@ task<void> Channel::Send(const Buffer &data) {
     data.copy(buffer.data(), size);
 
     co_await Post([&]() {
-        webrtc::DataBuffer data(std::move(buffer), true);
 #if 0
         if (channel_->buffered_amount() == 0)
-            channel_->Send(data);
+            channel_->Send({buffer, true});
 #else
         const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
 #if 0
-        sctp->Send(data);
+        sctp->Send({buffer, true});
 #else
         if (sctp->state() != webrtc::DataChannelInterface::kOpen)
             return;
         sctp->*Loot<Buffered_>::pointer += size;
-        if (!(sctp->*Loot<Send_>::pointer)(data, false))
+        if (!(sctp->*Loot<Send_>::pointer)({buffer, true}, false))
             sctp->*Loot<Buffered_>::pointer -= size;
 #endif
 #endif

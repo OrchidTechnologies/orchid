@@ -48,11 +48,11 @@ class Channel :
     Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel);
     Channel(BufferDrain &drain, const S<Peer> &peer, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string());
 
-    ~Channel();
+    ~Channel() override;
 
-    void OnStateChange() noexcept;
-    void OnBufferedAmountChange(uint64_t previous) noexcept;
-    void OnMessage(const webrtc::DataBuffer &buffer) noexcept;
+    void OnStateChange() noexcept override;
+    void OnBufferedAmountChange(uint64_t previous) noexcept override;
+    void OnMessage(const webrtc::DataBuffer &buffer) noexcept override;
 
     void Stop(const std::string &error = std::string()) noexcept;
 
