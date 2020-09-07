@@ -138,6 +138,7 @@ cflags += -I$(pwd)/sctp-idata/src
 webrtc := $(filter-out %_noop.cc,$(webrtc))
 
 webrtc := $(filter-out %_android.cc,$(webrtc))
+webrtc := $(filter-out %_linux.cc,$(webrtc))
 webrtc := $(filter-out %_mips.c,$(webrtc))
 webrtc := $(filter-out %_mips.cc,$(webrtc))
 webrtc := $(filter-out %_neon.c,$(webrtc))

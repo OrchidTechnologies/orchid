@@ -12,4 +12,6 @@
 cflags += -DWEBRTC_POSIX
 cflags += -DWEBRTC_LINUX
 
+source += $(pwd)/webrtc/system_wrappers/source/cpu_features_linux.cc
+
 include $(pwd)/target-psx.mk
