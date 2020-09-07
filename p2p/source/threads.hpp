@@ -83,6 +83,7 @@ class Invoker :
 
   public:
     Invoker(Code_ code) :
+        rtc::MessageHandler(false),
         code_(std::move(code))
     {
     }
