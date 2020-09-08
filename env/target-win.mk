@@ -44,7 +44,20 @@ endef
 $(each)
 
 more := -D_WIN32_WINNT=0x0601
+
+ifeq ($(filter crossndk,$(debug))$(uname-o),Cygwin)
+
+cc := clang$(suffix) $(more)
+cxx := clang++$(suffix) $(more)
+
+ifeq ($(tidy)$(filter notidy,$(debug)),)
+debug += notidy
+endif
+
+else
 include $(pwd)/target-ndk.mk
+endif
+
 include $(pwd)/target-cxx.mk
 
 source += $(pwd)/libcxx/src/support/win32/locale_win32.cpp
@@ -105,11 +118,16 @@ msys2 += headers-git-7.0.0.5553.e922460c-1
 msys2 += winpthreads-git-7.0.0.5544.15da3ce2-1
 
 define _
+temp := $(output)/$(1)/mingw$(bits/$(1))/mingw
+$$(temp):
+	@mkdir -p $$(dir $$@)
+	ln -s $(1)-w64-mingw32 $$@
+sysroot += $$(temp)
+
 $(output)/$(1)/%.msys2:
 	@mkdir -p $$(dir $$@)
 	curl http://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.xz | tar -C $(output)/$(1) -Jxvf-
 	@touch $$@
-
 sysroot += $(patsubst %,$(output)/$(1)/%.msys2,$(msys2))
 endef
 $(each)

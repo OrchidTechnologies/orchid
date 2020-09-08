@@ -25,10 +25,10 @@ qflags += -fPIC
 
 signature := /_CodeSignature/CodeResources
 
-path := $(shell xcrun --sdk $(sdk) --show-sdk-path)
 toolchain := $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain
 
-more += -isysroot $(path)
+isysroot :=  $(shell xcrun --sdk $(sdk) --show-sdk-path)
+more += -isysroot $(isysroot)
 ifneq ($(sdk),macosx)
 more += -idirafter $(shell xcrun --sdk macosx --show-sdk-path)/usr/include
 endif

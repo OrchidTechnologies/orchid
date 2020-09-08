@@ -79,7 +79,7 @@ $(output)/%.swift.o: $$(specific) $$(folder).swift $$(code) $(swifts)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	swift -frontend -sdk $(path) -c -o $@ -primary-file $< $(filter-out $<,$(swifts)) -module-name $(name) -Fmacos/Flutter/ephemeral/.symlinks/flutter/darwin-x64 $(foreach pod,$(wildcard $(output)/Release/*/*.framework),-F$(dir $(pod)))
+	swift -frontend -sdk $(isysroot) -c -o $@ -primary-file $< $(filter-out $<,$(swifts)) -module-name $(name) -Fmacos/Flutter/ephemeral/.symlinks/flutter/darwin-x64 $(foreach pod,$(wildcard $(output)/Release/*/*.framework),-F$(dir $(pod)))
 	@touch $@
 
 define _

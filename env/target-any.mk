@@ -10,6 +10,7 @@
 
 
 export PATH := $(CURDIR)/$(pwd)/path:$(PATH)
+path = $(1)
 
 .PHONY:
 all:
