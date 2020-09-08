@@ -18,9 +18,9 @@ int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const s
     if (address->sa_family == AF_INET) {
         const struct sockaddr_in *s = reinterpret_cast<const struct sockaddr_in *>(address);
         is_local = (Host(s->sin_addr) == Host_);
+        if (!is_local && !vpn_protect(socket))
+            return -1;
     }
-    if (!is_local && !vpn_protect(socket))
-        return -1;
     return attach(socket, address, length);
 }
 };
