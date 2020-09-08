@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 for sol in *.sol; do
-    solc --bin --optimize --overwrite --allow-paths . "$@" -o build "${sol}"
+    env/solc.sh 0.5.13 build "${sol}" --optimize
 done

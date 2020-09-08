@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
-docker run -v "${PWD%/*}":/mnt ethereum/solc:0.5.13 -o /mnt/"${PWD##*/}"/build --bin /mnt/"${PWD##*/}"/lottery.sol --overwrite --evm-version istanbul
-docker run -v "${PWD%/*}":/mnt ethereum/solc:0.7.0 -o /mnt/"${PWD##*/}"/build --bin /mnt/"${PWD##*/}"/lottery1.sol --optimize --overwrite --evm-version istanbul
+env/solc.sh 0.5.13 build lottery.sol --evm-version istanbul
+env/solc.sh 0.7.0 build lottery1.sol --evm-version istanbul --optimize

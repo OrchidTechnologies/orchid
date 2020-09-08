@@ -22,7 +22,7 @@
 
 pragma solidity 0.5.13;
 
-import "directory.sol";
+import "./directory.sol";
 
 
 contract TestOrchidDirectory is OrchidDirectory

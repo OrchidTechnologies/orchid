@@ -1,3 +1,3 @@
 #!/bin/bash
 set -e
-solc --abi --bin --optimize --overwrite --allow-paths . -o build token.sol
+env/solc.sh 0.5.12 build token.sol --optimize --abi
