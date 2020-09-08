@@ -1,6 +1,2 @@
 #!/bin/bash
-root=$(dirname "$0")
-if [[ ${root} != /* ]]; then
-    root=${PWD}/${root}
-fi
-remixd -s "${root}" --remix-ide https://remix.ethereum.org
+remixd -s ./ --remix-ide https://remix.ethereum.org
