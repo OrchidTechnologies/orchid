@@ -167,8 +167,9 @@ contract OrchidLottery1 {
         require(uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))) <= ratio);
 
         // this variable is being reused because I do not have even one extra stack slot
-        bytes32 ticket; assembly { ticket := chainid() }
-        ticket = keccak256(abi.encode(keccak256(abi.encode(reveal)), issued, nonce, address(this), ticket, amount, ratio, start, range, funder, recipient, receipt));
+        bytes32 ticket; assembly { ticket := chainid() } ticket = keccak256(abi.encode(
+            keccak256(abi.encode(keccak256(abi.encode(reveal)), nonce, recipient, receipt)),
+            issued, address(this), ticket, amount, ratio, start, range, funder));
         address signer = ecrecover(ticket, v, r, s);
 
         {
