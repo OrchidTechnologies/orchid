@@ -110,7 +110,7 @@ class Connection :
   public:
     using Association::Association;
 
-    task<void> Open(const Socket &endpoint) override {
+    task<void> Open(const Socket &endpoint) override { try {
         association_.open(endpoint.Host().v4() ? asio::ip::tcp::v4() : asio::ip::tcp::v6());
 
         association_.set_option(asio::ip::tcp::socket::keep_alive(true));
@@ -139,7 +139,9 @@ class Connection :
 #endif
 
         co_return co_await Association::Open(endpoint);
-    }
+    } catch (const asio::system_error &error) {
+        orc_adapt(error);
+    } }
 
     void Shut() noexcept override {
         try {

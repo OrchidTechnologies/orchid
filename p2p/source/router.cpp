@@ -55,7 +55,7 @@ task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
         Request request(socket);
         try {
             co_await http::async_read(stream, buffer, request, Token());
-        } catch (const boost::system::system_error &error) {
+        } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (false);
             else if (code == asio::ssl::error::stream_truncated);
@@ -122,7 +122,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
 
                 try {
                     co_await stream.async_shutdown(Token());
-                } catch (const boost::system::system_error &error) {
+                } catch (const asio::system_error &error) {
                     // XXX: SSL_OP_IGNORE_UNEXPECTED_EOF ?
                     //const auto code(error.code());
                     if (false);
