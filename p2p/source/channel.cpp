@@ -22,7 +22,9 @@
 
 #include <regex>
 
+#include <pc/data_channel_controller.h>
 #include <pc/sctp_data_channel.h>
+#include <pc/sctp_data_channel_transport.h>
 
 #include "channel.hpp"
 #include "pirate.hpp"
@@ -144,11 +146,30 @@ task<void> Channel::Shut() noexcept {
     co_await Pump::Shut();
 }
 
-struct Buffered_ { typedef uint64_t (webrtc::SctpDataChannel::*type); };
-template struct Pirate<Buffered_, &webrtc::SctpDataChannel::buffered_amount_>;
+template <typename Type_, Type_ Pointer_>
+struct P {
+    constexpr Type_ value() {
+        return Pointer_;
+    }
+};
 
-struct Send_ { typedef bool (webrtc::SctpDataChannel::*type)(const webrtc::DataBuffer &, bool); };
-template struct Pirate<Send_, &webrtc::SctpDataChannel::SendDataMessage>;
+struct SctpDataChannel$buffered_amount_ { typedef uint64_t (webrtc::SctpDataChannel::*type); };
+template struct Pirate<SctpDataChannel$buffered_amount_, &webrtc::SctpDataChannel::buffered_amount_>;
+
+struct SctpDataChannel$SendDataMessage { typedef bool (webrtc::SctpDataChannel::*type)(const webrtc::DataBuffer &, bool); };
+template struct Pirate<SctpDataChannel$SendDataMessage, &webrtc::SctpDataChannel::SendDataMessage>;
+
+struct SctpDataChannel$provider_ { typedef webrtc::SctpDataChannelProviderInterface *const (webrtc::SctpDataChannel::*type); };
+template struct Pirate<SctpDataChannel$provider_, &webrtc::SctpDataChannel::provider_>;
+
+struct DataChannelController$DataChannelSendData { typedef bool (webrtc::DataChannelController::*type)(const cricket::SendDataParams &, const rtc::CopyOnWriteBuffer &, cricket::SendDataResult *); };
+template struct Pirate<DataChannelController$DataChannelSendData, &webrtc::DataChannelController::DataChannelSendData>;
+
+struct DataChannelController$network_thread { typedef rtc::Thread *(webrtc::DataChannelController::*type)() const; };
+template struct Pirate<DataChannelController$network_thread, &webrtc::DataChannelController::network_thread>;
+
+struct SctpDataChannelTransport$sctp_transport_ { typedef cricket::SctpTransportInternal *const (webrtc::SctpDataChannelTransport::*type); };
+template struct Pirate<SctpDataChannelTransport$sctp_transport_, &webrtc::SctpDataChannelTransport::sctp_transport_>;
 
 task<void> Channel::Send(const Buffer &data) {
     Trace("WebRTC", true, false, data);
@@ -157,6 +178,7 @@ task<void> Channel::Send(const Buffer &data) {
     rtc::CopyOnWriteBuffer buffer(size);
     data.copy(buffer.data(), size);
 
+#if 0
     co_await Post([&]() {
 #if 0
         if (channel_->buffered_amount() == 0)
@@ -168,12 +190,70 @@ task<void> Channel::Send(const Buffer &data) {
 #else
         if (sctp->state() != webrtc::DataChannelInterface::kOpen)
             return;
-        sctp->*Loot<Buffered_>::pointer += size;
-        if (!(sctp->*Loot<Send_>::pointer)({buffer, true}, false))
-            sctp->*Loot<Buffered_>::pointer -= size;
+#if 0
+        sctp->*Loot<SctpDataChannel$buffered_amount_>::pointer += size;
+        if (!(sctp->*Loot<SctpDataChannel$SendDataMessage>::pointer)({buffer, true}, false))
+            sctp->*Loot<SctpDataChannel$buffered_amount_>::pointer -= size;
+#else
+        const auto provider(sctp->*Loot<SctpDataChannel$provider_>::pointer);
+
+#if 0
+        cricket::SendDataParams params{
+            .sid = sctp->id(),
+            .type = cricket::DMT_BINARY,
+            .ordered = false,
+            .reliable = false,
+            .max_rtx_count = 0,
+            .max_rtx_ms = 0,
+        };
+
+        cricket::SendDataResult result;
+#if 0
+        provider->SendData(params, buffer, &result);
+#else
+        const auto controller(static_cast<webrtc::DataChannelController *>(provider));
+        (controller->*Loot<DataChannelController$DataChannelSendData>::pointer)(params, buffer, &result);
+#endif
+#endif
+#endif
 #endif
 #endif
     }, RTC_FROM_HERE);
+#else
+    const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
+    const auto provider(sctp->*Loot<SctpDataChannel$provider_>::pointer);
+    const auto controller(static_cast<webrtc::DataChannelController *>(provider));
+
+    co_await Post([&]() {
+        const auto interface(controller->data_channel_transport());
+
+#if 0
+        static const webrtc::SendDataParams params([]() {
+            webrtc::SendDataParams params;
+            params.type = webrtc::DataMessageType::kBinary;
+            params.ordered = false;
+            params.max_rtx_count = 0;
+            return params;
+        }());
+
+        interface->SendData(sctp->id(), params, buffer);
+#else
+        const auto transport(static_cast<webrtc::SctpDataChannelTransport *>(interface));
+
+        cricket::SendDataParams params{
+            .sid = sctp->id(),
+            .type = cricket::DMT_BINARY,
+            .ordered = false,
+            .reliable = false,
+            .max_rtx_count = 0,
+            .max_rtx_ms = 0,
+        };
+
+        cricket::SendDataResult result;
+        (transport->*Loot<SctpDataChannelTransport$sctp_transport_>::pointer)->SendData(params, buffer, &result);
+#endif
+    }, RTC_FROM_HERE, *(controller->*Loot<DataChannelController$network_thread>::pointer)());
+#endif
 }
 
 task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice) {
