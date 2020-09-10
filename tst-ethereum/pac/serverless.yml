@@ -44,6 +44,9 @@ custom:
     DOUBLE_CHECK_ACCOUNTS:
       prod: 'True'
       dev: 'False'
+    RECYCLE_KEY:
+      prod: 'PAC_RECYCLE_KEY_PROD'
+      dev: 'PAC_RECYCLE_KEY_DEV'
   datadog:
     addLayers: true
     flushMetricsToLogs: true
@@ -84,6 +87,7 @@ provider:
     BUNDLE_ID: 'net.orchid.Orchid'
     MULTISIG: ${ssm:PAC_MULTISIG~true}
     DOUBLE_CHECK_ACCOUNTS: ${self:custom.myEnvironment.DOUBLE_CHECK_ACCOUNTS.${self:provider.stage}}
+    RECYCLE_KEY: ${self:custom.myEnvironment.RECYCLE_KEY.${self:provider.stage}}
   runtime: python3.8
   region: us-west-2
   iamRoleStatements:
@@ -95,6 +99,7 @@ provider:
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:provider.environment.PAC_FUNDER_PRIVKEY_SECRET}"
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_ID"
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_SECRET"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:provider.environment.RECYCLE_KEY}"
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
