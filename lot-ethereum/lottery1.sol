@@ -77,12 +77,24 @@ contract OrchidLottery1 {
     }
 
 
-    function push(address signer, uint128 transfer, uint128 destroy) external payable {
+    function push(address signer, uint128 recover, uint128 transfer, uint128 destroy) external payable {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
 
         uint256 escrow = pot.escrow_;
         uint256 amount = pot.amount_ + msg.value;
+
+        if (recover != 0) {
+            uint128 warned = pot.warned_;
+            require(pot.unlock_ - 1 < block.timestamp);
+            require(recover <= warned);
+            amount += recover;
+            escrow -= recover;
+            warned -= recover;
+            if (warned == 0)
+                pot.unlock_ = 0;
+            pot.warned_ = warned;
+        }
 
         require(transfer <= amount);
         amount -= transfer;
