@@ -70,7 +70,7 @@ contract OrchidLottery1 {
     }
 
 
-    function push(address signer, uint256 recover, uint256 transfer) external payable {
+    function move(address signer, uint256 recover, uint256 transfer, uint256 retrieve) external payable {
         Pot storage pot = find(msg.sender, signer);
 
         uint256 escrow = pot.escrow_;
@@ -92,10 +92,18 @@ contract OrchidLottery1 {
         amount -= transfer;
         escrow += transfer;
 
+        if (retrieve != 0) {
+            require(retrieve <= amount);
+            amount -= retrieve;
+        }
+
         pot.escrow_ = uint128(escrow);
         pot.amount_ = uint128(amount);
 
         emit Update(msg.sender, signer);
+
+        if (retrieve != 0)
+            require(msg.sender.send(retrieve));
     }
 
     event Bound(address indexed funder, address indexed signer);
@@ -220,33 +228,5 @@ contract OrchidLottery1 {
         pot.warned_ = 0;
         pot.unlock_ = 0;
         emit Update(funder, signer);
-    }
-
-    function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
-        if (amount > pot.amount_)
-            amount = pot.amount_;
-        if (escrow > pot.escrow_)
-            escrow = pot.escrow_;
-
-        if (escrow != 0) {
-            require(pot.warned_ >= escrow);
-            pot.warned_ -= escrow;
-            require(uint256(pot.unlock_) - 1 < block.timestamp);
-        }
-
-        uint128 total = amount + escrow;
-        pot.amount_ -= amount;
-        pot.escrow_ -= escrow;
-
-        if (autolock && pot.escrow_ == 0) {
-            pot.warned_ = 0;
-            pot.unlock_ = 0;
-        }
-
-        emit Update(funder, signer);
-        if (total != 0)
-            require(target.send(total));
     }
 }
