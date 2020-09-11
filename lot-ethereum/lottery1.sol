@@ -196,18 +196,16 @@ contract OrchidLottery1 {
 
 
     function warn(address signer, uint128 warned) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
+        Pot storage pot = find(msg.sender, signer);
         pot.warned_ = warned;
         pot.unlock_ = uint128(block.timestamp + 1 days);
-        emit Update(funder, signer);
+        emit Update(msg.sender, signer);
     }
 
     function lock(address signer) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
+        Pot storage pot = find(msg.sender, signer);
         pot.warned_ = 0;
         pot.unlock_ = 0;
-        emit Update(funder, signer);
+        emit Update(msg.sender, signer);
     }
 }
