@@ -81,8 +81,8 @@ contract OrchidLottery1 {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
 
-        uint256 amount = pot.amount_ + msg.value;
         uint256 escrow = pot.escrow_;
+        uint256 amount = pot.amount_ + msg.value;
 
         require(transfer <= amount);
         amount -= transfer;
@@ -91,9 +91,9 @@ contract OrchidLottery1 {
         require(destroy <= escrow);
         escrow -= destroy;
 
-        uint128 temp = safe(escrow);
-        pot.amount_ = safe(amount);
-        pot.escrow_ = temp;
+        uint128 temp = safe(amount);
+        pot.escrow_ = safe(escrow);
+        pot.amount_ = temp;
 
         emit Update(funder, signer);
     }
