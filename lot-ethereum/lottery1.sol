@@ -163,16 +163,17 @@ contract OrchidLottery1 {
 
         Pot storage pot = find(funder, signer);
 
-        uint128 cache = pot.amount_;
+        {
+            uint128 cache = pot.amount_;
+            if (cache >= amount) {
+                cache -= amount;
+                pot.amount_ = cache;
+            } else {
+                amount = cache;
+                pot.amount_ = 0;
+                pot.escrow_ = 0;
+            }
 
-        if (cache >= amount) {
-            cache -= amount;
-            pot.amount_ = cache;
-            emit Update(funder, signer);
-        } else {
-            amount = cache;
-            pot.amount_ = 0;
-            pot.escrow_ = 0;
             emit Update(funder, signer);
         }
 
