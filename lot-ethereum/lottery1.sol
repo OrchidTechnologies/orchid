@@ -197,15 +197,15 @@ contract OrchidLottery1 {
 
     function warn(address signer, uint128 warned) external {
         Pot storage pot = find(msg.sender, signer);
-        pot.warned_ = warned;
-        pot.unlock_ = uint128(block.timestamp + 1 days);
-        emit Update(msg.sender, signer);
-    }
 
-    function lock(address signer) external {
-        Pot storage pot = find(msg.sender, signer);
-        pot.warned_ = 0;
-        pot.unlock_ = 0;
+        if (warned == 0) {
+            pot.warned_ = 0;
+            pot.unlock_ = 0;
+        } else {
+            pot.warned_ = warned;
+            pot.unlock_ = uint128(block.timestamp + 1 days);
+        }
+
         emit Update(msg.sender, signer);
     }
 }
