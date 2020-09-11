@@ -53,16 +53,6 @@ contract OrchidLottery1 {
         return lotteries_[funder].pots_[signer];
     }
 
-    function kill(address signer) external {
-        address funder = msg.sender;
-        Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.pots_[signer];
-        if (pot.verify_ != OrchidVerifier(0))
-            emit Bound(funder, signer);
-        delete lottery.pots_[signer];
-        emit Update(funder, signer);
-    }
-
 
     function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, OrchidVerifier, bytes32, bytes memory) {
         Pot storage pot = lotteries_[funder].pots_[signer];
