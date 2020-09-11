@@ -232,6 +232,7 @@ contract OrchidLottery1 {
 
         if (escrow != 0) {
             require(pot.warned_ >= escrow);
+            pot.warned_ -= escrow;
             require(uint256(pot.unlock_) - 1 < block.timestamp);
         }
 
