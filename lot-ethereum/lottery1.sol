@@ -33,10 +33,6 @@ contract OrchidLottery1 {
 
         uint128 warned_;
         uint128 unlock_;
-
-        OrchidVerifier verify_;
-        bytes32 codehash_;
-        bytes shared_;
     }
 
     event Update(address indexed funder, address indexed signer);
@@ -44,6 +40,11 @@ contract OrchidLottery1 {
 
     struct Lottery {
         mapping(address => Pot) pots_;
+
+        uint256 bound_;
+        OrchidVerifier verify_;
+        bytes32 codehash_;
+        bytes shared_;
     }
 
     mapping(address => Lottery) internal lotteries_;
@@ -55,8 +56,9 @@ contract OrchidLottery1 {
 
 
     function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, OrchidVerifier, bytes32, bytes memory) {
-        Pot storage pot = lotteries_[funder].pots_[signer];
-        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.verify_, pot.codehash_, pot.shared_);
+        Lottery storage lottery = lotteries_[funder];
+        Pot storage pot = lottery.pots_[signer];
+        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, lottery.verify_, lottery.codehash_, lottery.shared_);
     }
 
 
@@ -96,21 +98,20 @@ contract OrchidLottery1 {
             require(msg.sender.send(retrieve));
     }
 
-    event Bound(address indexed funder, address indexed signer);
+    event Bound(address indexed funder);
 
-    function bind(address signer, OrchidVerifier verify, bytes calldata shared) external {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
-        require(pot.escrow_ == 0);
+    function bind(OrchidVerifier verify, bytes calldata shared) external {
+        Lottery storage lottery = lotteries_[msg.sender];
 
         bytes32 codehash;
         assembly { codehash := extcodehash(verify) }
 
-        pot.verify_ = verify;
-        pot.codehash_ = codehash;
-        pot.shared_ = shared;
+        lottery.bound_ = block.timestamp + 1 days;
+        lottery.verify_ = verify;
+        lottery.codehash_ = codehash;
+        lottery.shared_ = shared;
 
-        emit Bound(funder, signer);
+        emit Bound(msg.sender);
     }
 
 
@@ -161,7 +162,8 @@ contract OrchidLottery1 {
                 amount = limit;
         }
 
-        Pot storage pot = find(funder, signer);
+        Lottery storage lottery = lotteries_[funder];
+        Pot storage pot = lottery.pots_[signer];
 
         {
             uint128 cache = pot.amount_;
@@ -177,12 +179,13 @@ contract OrchidLottery1 {
             emit Update(funder, signer);
         }
 
-        OrchidVerifier verify = pot.verify_;
+        OrchidVerifier verify;
         bytes32 codehash;
         bytes memory shared;
-        if (verify != OrchidVerifier(0)) {
-            codehash = pot.codehash_;
-            shared = pot.shared_;
+        if (block.timestamp > lottery.bound_ - 1) {
+            verify = lottery.verify_;
+            codehash = lottery.codehash_;
+            shared = lottery.shared_;
         }
 
         require(recipient.send(amount));
