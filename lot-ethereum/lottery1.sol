@@ -121,46 +121,12 @@ contract OrchidLottery1 {
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
 
-    function take(address funder, address signer, address payable recipient, uint128 amount, bytes calldata receipt) private {
-        Pot storage pot = find(funder, signer);
-
-        uint128 cache = pot.amount_;
-
-        if (cache >= amount) {
-            cache -= amount;
-            pot.amount_ = cache;
-            emit Update(funder, signer);
-        } else {
-            amount = cache;
-            pot.amount_ = 0;
-            pot.escrow_ = 0;
-            emit Update(funder, signer);
-        }
-
-        OrchidVerifier verify = pot.verify_;
-        bytes32 codehash;
-        bytes memory shared;
-        if (verify != OrchidVerifier(0)) {
-            codehash = pot.codehash_;
-            shared = pot.shared_;
-        }
-
-        if (amount != 0)
-            require(recipient.send(amount));
-
-        if (verify != OrchidVerifier(0)) {
-            bytes32 current; assembly { current := extcodehash(verify) }
-            if (codehash == current)
-                verify.book(shared, recipient, receipt);
-        }
-    }
-
     // the arguments to this function are carefully ordered for stack depth optimization
     function grab(
         bytes32 reveal, uint256 issued, bytes32 nonce,
         uint8 v, bytes32 r, bytes32 s,
-        uint128 amount, uint128 ratio,
         uint256 start, uint128 range,
+        uint128 amount, uint128 ratio,
         address funder, address payable recipient,
         bytes calldata receipt, bytes32[] memory old
     ) external {
@@ -195,12 +161,37 @@ contract OrchidLottery1 {
                 amount = limit;
         }
 
-        take(funder, signer, recipient, amount, receipt);
-    }
+        Pot storage pot = find(funder, signer);
 
-    function give(address funder, address payable recipient, uint128 amount, bytes calldata receipt) external {
-        address signer = msg.sender;
-        take(funder, signer, recipient, amount, receipt);
+        uint128 cache = pot.amount_;
+
+        if (cache >= amount) {
+            cache -= amount;
+            pot.amount_ = cache;
+            emit Update(funder, signer);
+        } else {
+            amount = cache;
+            pot.amount_ = 0;
+            pot.escrow_ = 0;
+            emit Update(funder, signer);
+        }
+
+        OrchidVerifier verify = pot.verify_;
+        bytes32 codehash;
+        bytes memory shared;
+        if (verify != OrchidVerifier(0)) {
+            codehash = pot.codehash_;
+            shared = pot.shared_;
+        }
+
+        if (amount != 0)
+            require(recipient.send(amount));
+
+        if (verify != OrchidVerifier(0)) {
+            bytes32 current; assembly { current := extcodehash(verify) }
+            if (codehash == current)
+                verify.book(shared, recipient, receipt);
+        }
     }
 
 
