@@ -78,8 +78,7 @@ contract OrchidLottery1 {
 
 
     function push(address signer, uint128 recover, uint128 transfer, uint128 destroy) external payable {
-        address funder = msg.sender;
-        Pot storage pot = find(funder, signer);
+        Pot storage pot = find(msg.sender, signer);
 
         uint256 escrow = pot.escrow_;
         uint256 amount = pot.amount_ + msg.value;
@@ -107,7 +106,7 @@ contract OrchidLottery1 {
         pot.escrow_ = safe(escrow);
         pot.amount_ = temp;
 
-        emit Update(funder, signer);
+        emit Update(msg.sender, signer);
     }
 
     event Bound(address indexed funder, address indexed signer);
