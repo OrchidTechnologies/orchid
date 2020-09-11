@@ -80,9 +80,11 @@ contract OrchidLottery1 {
             pot.warned_ = uint128(warned);
         }
 
-        require(transfer <= amount);
-        amount -= transfer;
-        escrow += transfer;
+        if (transfer != 0) {
+            require(transfer <= amount);
+            amount -= transfer;
+            escrow += transfer;
+        }
 
         if (retrieve != 0) {
             require(retrieve <= amount);
