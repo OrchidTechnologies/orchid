@@ -27,13 +27,6 @@ import "./include.sol";
 
 contract OrchidLottery1 {
 
-    function safe(uint256 value) internal pure returns (uint128) {
-        uint128 result = uint128(value);
-        require(uint256(result) == value);
-        return result;
-    }
-
-
     struct Pot {
         uint128 amount_;
         uint128 escrow_;
@@ -99,9 +92,8 @@ contract OrchidLottery1 {
         amount -= transfer;
         escrow += transfer;
 
-        uint128 temp = safe(amount);
-        pot.escrow_ = safe(escrow);
-        pot.amount_ = temp;
+        pot.escrow_ = uint128(escrow);
+        pot.amount_ = uint128(amount);
 
         emit Update(msg.sender, signer);
     }
@@ -218,7 +210,7 @@ contract OrchidLottery1 {
         address funder = msg.sender;
         Pot storage pot = find(funder, signer);
         pot.warned_ = warned;
-        pot.unlock_ = safe(block.timestamp + 1 days);
+        pot.unlock_ = uint128(block.timestamp + 1 days);
         emit Update(funder, signer);
     }
 
