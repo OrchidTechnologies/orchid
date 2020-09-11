@@ -185,8 +185,7 @@ contract OrchidLottery1 {
             shared = pot.shared_;
         }
 
-        if (amount != 0)
-            require(recipient.send(amount));
+        require(recipient.send(amount));
 
         if (verify != OrchidVerifier(0)) {
             bytes32 current; assembly { current := extcodehash(verify) }
