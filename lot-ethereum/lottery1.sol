@@ -131,7 +131,7 @@ contract OrchidLottery1 {
         uint256 start, uint128 range,
         uint128 amount, uint128 ratio,
         address funder, address payable recipient,
-        bytes calldata receipt, bytes32[] memory old
+        bytes calldata receipt
     ) external {
         require(start + range > block.timestamp);
         require(uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))) <= ratio);
@@ -144,18 +144,9 @@ contract OrchidLottery1 {
 
         {
             mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-
-            {
-                Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
-                require(track.until_ == 0);
-                track.until_ = start + range;
-            }
-
-            for (uint256 i = 0; i != old.length; ++i) {
-                Track storage track = tracks[old[i]];
-                if (track.until_ <= block.timestamp)
-                    delete track.until_;
-            }
+            Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
+            require(track.until_ == 0);
+            track.until_ = start + range;
         }
 
         if (start < block.timestamp) {
@@ -196,6 +187,16 @@ contract OrchidLottery1 {
             bytes32 current; assembly { current := extcodehash(verify) }
             if (codehash == current)
                 verify.book(shared, recipient, receipt);
+        }
+    }
+
+    function back(address payable recipient, bytes32[] calldata old) external {
+        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
+
+        for (uint256 i = 0; i != old.length; ++i) {
+            Track storage track = tracks[old[i]];
+            if (track.until_ <= block.timestamp)
+                delete track.until_;
         }
     }
 
