@@ -84,7 +84,7 @@ task<void> Client::Submit(uint256_t amount) {
 
     const uint128_t ratio(WinRatio_ == 0 ? amount / face_ : uint256_t(Float(Two128) * WinRatio_ - 1));
     const Ticket ticket{commit, now, nonce, face_, ratio, start, 0, funder_, recipient};
-    const auto hash(Hash(ticket.Encode(lottery_, chain_, receipt)));
+    const auto hash(ticket.Encode0(lottery_, chain_, receipt));
     const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
     // XXX: this code is backwards and needs to calculate this before the other thing
     const auto [expected, price] = market_->Credit(now, start, 0, face_, ratio, Gas());
