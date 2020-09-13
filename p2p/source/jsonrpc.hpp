@@ -432,12 +432,23 @@ struct Coded<std::vector<Type_>, void> {
 
     static void Encode(Builder &builder, const std::vector<Type_> &values) {
         Coded<uint256_t>::Encode(builder, values.size());
+
+        if (Coded<Type_>::dynamic_) {
+            size_t offset(values.size() * 32);
+            for (const auto &value : values) {
+                Coded<uint256_t>::Encode(builder, offset);
+                Coded<Type_>::Size(offset, value);
+            }
+        }
+
         for (const auto &value : values)
             Coded<Type_>::Encode(builder, value);
     }
 
     static void Size(size_t &offset, const std::vector<Type_> &values) {
         offset += 32;
+        if (Coded<Type_>::dynamic_)
+            offset += values.size() * 32;
         for (const auto &value : values)
             Coded<Type_>::Size(offset, value);
     }
