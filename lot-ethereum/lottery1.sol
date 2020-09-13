@@ -126,7 +126,8 @@ contract OrchidLottery1 {
 
     // the arguments to this function are carefully ordered for stack depth optimization
     function grab(
-        bytes32 reveal, uint256 issued, bytes32 nonce,
+        bytes32 reveal, bytes32 salt,
+        uint256 issued, bytes32 nonce,
         uint8 v, bytes32 r, bytes32 s,
         uint256 start, uint128 range,
         uint128 amount, uint128 ratio,
@@ -138,8 +139,8 @@ contract OrchidLottery1 {
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 ticket; assembly { ticket := chainid() } ticket = keccak256(abi.encode(
-            keccak256(abi.encode(keccak256(abi.encode(reveal)), nonce, recipient, receipt)),
-            issued, address(this), ticket, amount, ratio, start, range, funder));
+            keccak256(abi.encode(keccak256(abi.encode(reveal)), salt, recipient, receipt)),
+            issued, nonce, address(this), ticket, amount, ratio, start, range, funder));
         address signer = ecrecover(ticket, v, r, s);
 
         {
