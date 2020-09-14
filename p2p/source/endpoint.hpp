@@ -193,6 +193,13 @@ class Selector final :
         return name_;
     }
 
+    Builder operator ()(const Args_ &...args) {
+        Builder builder;
+        builder += *this;
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
+        return builder;
+    }
+
     auto Decode(const Buffer &buffer) {
         auto [tag, window] = Take<Number<uint32_t>, Window>(buffer);
         orc_assert(tag == *this);
