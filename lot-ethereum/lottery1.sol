@@ -151,7 +151,6 @@ contract OrchidLottery1 {
         if (ratio < uint128(uint256(keccak256(abi.encodePacked(ticket.reveal, ticket.issued, ticket.nonce)))))
             return 0;
 
-        // this variable is being reused because I do not have even one extra stack slot
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             keccak256(abi.encodePacked(keccak256(abi.encodePacked(ticket.reveal)), ticket.salt, recipient)),
             ticket.issued, ticket.nonce, address(this), digest, amount, ratio, ticket.start, range, funder));
