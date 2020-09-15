@@ -40,27 +40,29 @@ contract OrchidLottery1 {
 
     event Update(address indexed funder, address indexed signer);
 
+    struct Binding {
+        OrchidVerifier verify_;
+        bytes32 codehash_;
+    }
 
     struct Lottery {
         mapping(address => Pot) pots_;
 
         uint256 bound_;
-        OrchidVerifier verify_;
-        bytes32 codehash_;
+        Binding before_;
+        Binding after_;
     }
 
     mapping(address => Lottery) private lotteries_;
-
 
     function find(address funder, address signer) private view returns (Pot storage) {
         return lotteries_[funder].pots_[signer];
     }
 
-
-    function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, bytes memory, OrchidVerifier, bytes32) {
+    function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
-        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.shared_, lottery.verify_, lottery.codehash_);
+        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.shared_, lottery.bound_, lottery.before_, lottery.after_);
     }
 
 
@@ -113,13 +115,15 @@ contract OrchidLottery1 {
 
     function bind(OrchidVerifier verify) external {
         Lottery storage lottery = lotteries_[msg.sender];
+        require(lottery.bound_ < block.timestamp);
 
         bytes32 codehash;
         assembly { codehash := extcodehash(verify) }
 
         lottery.bound_ = block.timestamp + 1 days;
-        lottery.verify_ = verify;
-        lottery.codehash_ = codehash;
+        lottery.before_ = lottery.after_;
+        lottery.after_.verify_ = verify;
+        lottery.after_.codehash_ = codehash;
 
         emit Bound(msg.sender);
     }
@@ -195,11 +199,13 @@ contract OrchidLottery1 {
         emit Update(funder, signer);
     }
 
-        if (block.timestamp > lottery.bound_ - 1) {
-            OrchidVerifier verify = lottery.verify_;
+        uint256 bound = lottery.bound_;
+        if (bound != 0) {
+            Binding storage binding = block.timestamp < bound ? lottery.before_ : lottery.after_;
+            OrchidVerifier verify = binding.verify_;
             if (verify != OrchidVerifier(0)) {
                 bytes32 codehash; assembly { codehash := extcodehash(verify) }
-                if (codehash == lottery.codehash_)
+                if (codehash == binding.codehash_)
                     verify.book(pot.shared_, recipient, ticket.receipt);
             }
         }
