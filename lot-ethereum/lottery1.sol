@@ -177,22 +177,16 @@ contract OrchidLottery1 {
         emit Update(funder, signer);
     }
 
-        OrchidVerifier verify;
-        bytes32 codehash;
-        bytes memory shared;
         if (block.timestamp > lottery.bound_ - 1) {
-            verify = lottery.verify_;
-            codehash = lottery.codehash_;
-            shared = lottery.shared_;
+            OrchidVerifier verify = lottery.verify_;
+            if (verify != OrchidVerifier(0)) {
+                bytes32 codehash; assembly { codehash := extcodehash(verify) }
+                if (codehash == lottery.codehash_)
+                    verify.book(lottery.shared_, recipient, receipt);
+            }
         }
 
         require(recipient.send(amount));
-
-        if (verify != OrchidVerifier(0)) {
-            bytes32 current; assembly { current := extcodehash(verify) }
-            if (codehash == current)
-                verify.book(shared, recipient, receipt);
-        }
     }
 
     function back(address payable recipient, bytes32[] calldata old) external {
