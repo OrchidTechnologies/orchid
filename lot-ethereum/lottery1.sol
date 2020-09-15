@@ -140,14 +140,14 @@ contract OrchidLottery1 {
             return;
 
         // this variable is being reused because I do not have even one extra stack slot
-        bytes32 ticket; assembly { ticket := chainid() } ticket = keccak256(abi.encode(
+        bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             keccak256(abi.encode(keccak256(abi.encode(reveal)), salt, recipient)),
-            issued, nonce, address(this), ticket, amount, ratio, start, range, funder));
-        address signer = ecrecover(ticket, v, r, s);
+            issued, nonce, address(this), digest, amount, ratio, start, range, funder));
+        address signer = ecrecover(digest, v, r, s);
 
     {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-        Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
+        Track storage track = tracks[keccak256(abi.encode(signer, digest))];
         if (track.until_ != 0)
             return;
         track.until_ = start + range;
