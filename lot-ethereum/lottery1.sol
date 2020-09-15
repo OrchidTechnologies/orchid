@@ -134,8 +134,10 @@ contract OrchidLottery1 {
         address funder, bytes calldata receipt,
         address payable recipient
     ) external {
-        require(start + range > block.timestamp);
-        require(uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))) <= ratio);
+        if (start + range <= block.timestamp)
+            return;
+        if (ratio < uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))))
+            return;
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 ticket; assembly { ticket := chainid() } ticket = keccak256(abi.encode(
@@ -146,7 +148,8 @@ contract OrchidLottery1 {
     {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
-        require(track.until_ == 0);
+        if (track.until_ != 0)
+            return;
         track.until_ = start + range;
     }
 
