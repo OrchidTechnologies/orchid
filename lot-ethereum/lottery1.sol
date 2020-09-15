@@ -149,6 +149,15 @@ contract OrchidLottery1 {
 
     mapping(address => mapping(bytes32 => Track)) private tracks_;
 
+    function save(bytes32[] calldata digests) external {
+        mapping(bytes32 => Track) storage tracks = tracks_[msg.sender];
+        for (uint256 i = digests.length; i != 0; ) {
+            Track storage track = tracks[digests[--i]];
+            if (track.until_ == 0)
+                track.until_ = 1;
+        }
+    }
+
     struct Ticket {
         bytes32 reveal; bytes32 salt;
         uint256 issued; bytes32 nonce;
