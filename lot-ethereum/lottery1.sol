@@ -192,8 +192,8 @@ contract OrchidLottery1 {
     function back(address payable recipient, bytes32[] calldata old) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
-        for (uint256 i = 0; i != old.length; ++i) {
-            Track storage track = tracks[old[i]];
+        for (uint256 i = old.length; i != 0; ) {
+            Track storage track = tracks[old[--i]];
             if (track.until_ <= block.timestamp)
                 delete track.until_;
         }
