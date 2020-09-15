@@ -136,7 +136,7 @@ contract OrchidLottery1 {
     function grab(
         address payable recipient,
         Ticket calldata ticket
-    ) internal {
+    ) internal returns (uint128) {
         address signer;
 
         uint128 amount = ticket.amount;
@@ -146,9 +146,9 @@ contract OrchidLottery1 {
         uint128 ratio = ticket.ratio;
 
         if (ticket.start + range <= block.timestamp)
-            return;
+            return 0;
         if (ratio < uint128(uint256(keccak256(abi.encode(ticket.reveal, ticket.issued, ticket.nonce)))))
-            return;
+            return 0;
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
@@ -160,7 +160,7 @@ contract OrchidLottery1 {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         Track storage track = tracks[keccak256(abi.encode(signer, digest))];
         if (track.until_ != 0)
-            return;
+            return 0;
         track.until_ = ticket.start + range;
     }
 
@@ -198,12 +198,14 @@ contract OrchidLottery1 {
             }
         }
 
-        require(recipient.send(amount));
+        return amount;
     }
 
     function grab(address payable recipient, Ticket[] calldata tickets, bytes32[] calldata old) external {
+        uint128 amount = 0;
         for (uint256 i = tickets.length; i != 0; )
-            grab(recipient, tickets[--i]);
+            amount += grab(recipient, tickets[--i]);
+        require(recipient.send(amount));
 
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
