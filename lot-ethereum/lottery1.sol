@@ -134,6 +134,7 @@ contract OrchidLottery1 {
     }
 
     function grab(
+        mapping(bytes32 => Track) storage tracks,
         address payable recipient,
         Ticket calldata ticket
     ) internal returns (uint128) {
@@ -157,7 +158,6 @@ contract OrchidLottery1 {
         signer = ecrecover(digest, ticket.v, ticket.r, ticket.s);
 
     {
-        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         Track storage track = tracks[keccak256(abi.encode(signer, digest))];
         if (track.until_ != 0)
             return 0;
@@ -202,12 +202,12 @@ contract OrchidLottery1 {
     }
 
     function grab(address payable recipient, Ticket[] calldata tickets, bytes32[] calldata old) external {
+        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
+
         uint128 amount = 0;
         for (uint256 i = tickets.length; i != 0; )
-            amount += grab(recipient, tickets[--i]);
+            amount += grab(tracks, recipient, tickets[--i]);
         require(recipient.send(amount));
-
-        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
         for (uint256 i = old.length; i != 0; ) {
             Track storage track = tracks[old[--i]];
