@@ -204,9 +204,14 @@ contract OrchidLottery1 {
     function grab(address payable recipient, Ticket[] calldata tickets, bytes32[] calldata old) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
+        uint256 segment; assembly { segment := mload(0x40) }
+
         uint128 amount = 0;
-        for (uint256 i = tickets.length; i != 0; )
+        for (uint256 i = tickets.length; i != 0; ) {
             amount += grab(tracks, recipient, tickets[--i]);
+            assembly { mstore(0x40, segment) }
+        }
+
         require(recipient.send(amount));
 
         for (uint256 i = old.length; i != 0; ) {
