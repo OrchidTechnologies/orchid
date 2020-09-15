@@ -34,6 +34,8 @@ contract OrchidLottery1 {
 
         uint128 warned_;
         uint128 unlock_;
+
+        bytes shared_;
     }
 
     event Update(address indexed funder, address indexed signer);
@@ -45,7 +47,6 @@ contract OrchidLottery1 {
         uint256 bound_;
         OrchidVerifier verify_;
         bytes32 codehash_;
-        bytes shared_;
     }
 
     mapping(address => Lottery) private lotteries_;
@@ -56,10 +57,10 @@ contract OrchidLottery1 {
     }
 
 
-    function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, OrchidVerifier, bytes32, bytes memory) {
+    function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, bytes memory, OrchidVerifier, bytes32) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
-        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, lottery.verify_, lottery.codehash_, lottery.shared_);
+        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.shared_, lottery.verify_, lottery.codehash_);
     }
 
 
@@ -101,9 +102,16 @@ contract OrchidLottery1 {
             require(msg.sender.send(retrieve));
     }
 
+    function name(address signer, bytes calldata shared) external {
+        Pot storage pot = find(msg.sender, signer);
+        require(pot.escrow_ == 0);
+        pot.shared_ = shared;
+        emit Update(msg.sender, signer);
+    }
+
     event Bound(address indexed funder);
 
-    function bind(OrchidVerifier verify, bytes calldata shared) external {
+    function bind(OrchidVerifier verify) external {
         Lottery storage lottery = lotteries_[msg.sender];
 
         bytes32 codehash;
@@ -112,7 +120,6 @@ contract OrchidLottery1 {
         lottery.bound_ = block.timestamp + 1 days;
         lottery.verify_ = verify;
         lottery.codehash_ = codehash;
-        lottery.shared_ = shared;
 
         emit Bound(msg.sender);
     }
@@ -171,9 +178,9 @@ contract OrchidLottery1 {
     }
 
         Lottery storage lottery = lotteries_[funder];
+        Pot storage pot = lottery.pots_[signer];
 
     {
-        Pot storage pot = lottery.pots_[signer];
         uint128 cache = pot.amount_;
 
         if (cache >= amount) {
@@ -193,7 +200,7 @@ contract OrchidLottery1 {
             if (verify != OrchidVerifier(0)) {
                 bytes32 codehash; assembly { codehash := extcodehash(verify) }
                 if (codehash == lottery.codehash_)
-                    verify.book(lottery.shared_, recipient, ticket.receipt);
+                    verify.book(pot.shared_, recipient, ticket.receipt);
             }
         }
 
