@@ -48,7 +48,7 @@ contract OrchidLottery1 {
         bytes shared_;
     }
 
-    mapping(address => Lottery) internal lotteries_;
+    mapping(address => Lottery) private lotteries_;
 
 
     function find(address funder, address signer) private view returns (Pot storage) {
@@ -122,7 +122,7 @@ contract OrchidLottery1 {
         uint256 until_;
     }
 
-    mapping(address => mapping(bytes32 => Track)) internal tracks_;
+    mapping(address => mapping(bytes32 => Track)) private tracks_;
 
     struct Ticket {
         bytes32 reveal; bytes32 salt;
@@ -137,7 +137,7 @@ contract OrchidLottery1 {
         mapping(bytes32 => Track) storage tracks,
         address payable recipient,
         Ticket calldata ticket
-    ) internal returns (uint128) {
+    ) private returns (uint128) {
         address signer;
 
         uint128 amount = ticket.amount;
