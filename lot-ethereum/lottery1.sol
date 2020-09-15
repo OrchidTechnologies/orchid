@@ -148,12 +148,12 @@ contract OrchidLottery1 {
 
         if (ticket.start + range <= block.timestamp)
             return 0;
-        if (ratio < uint128(uint256(keccak256(abi.encode(ticket.reveal, ticket.issued, ticket.nonce)))))
+        if (ratio < uint128(uint256(keccak256(abi.encodePacked(ticket.reveal, ticket.issued, ticket.nonce)))))
             return 0;
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
-            keccak256(abi.encode(keccak256(abi.encode(ticket.reveal)), ticket.salt, recipient)),
+            keccak256(abi.encodePacked(keccak256(abi.encodePacked(ticket.reveal)), ticket.salt, recipient)),
             ticket.issued, ticket.nonce, address(this), digest, amount, ratio, ticket.start, range, funder));
         signer = ecrecover(digest, ticket.v, ticket.r, ticket.s);
 
