@@ -143,12 +143,12 @@ contract OrchidLottery1 {
             issued, nonce, address(this), ticket, amount, ratio, start, range, funder));
         address signer = ecrecover(ticket, v, r, s);
 
-        {
-            mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-            Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
-            require(track.until_ == 0);
-            track.until_ = start + range;
-        }
+    {
+        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
+        Track storage track = tracks[keccak256(abi.encode(signer, ticket))];
+        require(track.until_ == 0);
+        track.until_ = start + range;
+    }
 
         if (start < block.timestamp) {
             uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
@@ -159,19 +159,19 @@ contract OrchidLottery1 {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
 
-        {
-            uint128 cache = pot.amount_;
-            if (cache >= amount) {
-                cache -= amount;
-                pot.amount_ = cache;
-            } else {
-                amount = cache;
-                pot.amount_ = 0;
-                pot.escrow_ = 0;
-            }
-
-            emit Update(funder, signer);
+    {
+        uint128 cache = pot.amount_;
+        if (cache >= amount) {
+            cache -= amount;
+            pot.amount_ = cache;
+        } else {
+            amount = cache;
+            pot.amount_ = 0;
+            pot.escrow_ = 0;
         }
+
+        emit Update(funder, signer);
+    }
 
         OrchidVerifier verify;
         bytes32 codehash;
