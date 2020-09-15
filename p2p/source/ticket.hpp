@@ -67,12 +67,12 @@ struct Ticket {
 
     Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Bytes32 &salt) const {
         return Hash(Coder<
-            Bytes32, uint256_t, Bytes32, Address, uint256_t,
-            uint128_t, uint128_t, uint256_t, uint128_t, Address
+            Bytes32, Address, uint256_t, uint256_t, Bytes32,
+            uint256_t, uint128_t, uint128_t, uint128_t, Address
         >::Encode(
-            Hash(Coder<Bytes32, Bytes32, Address>::Encode(commit_, salt, recipient_)),
-            issued_, nonce_, lottery, chain,
-            amount_, ratio_, start_, range_, funder_
+            Hash(Tie(commit_, salt, recipient_)),
+            lottery, chain, issued_, nonce_,
+            start_, range_, amount_, ratio_, funder_
         ));
     }
 

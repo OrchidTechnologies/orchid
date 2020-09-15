@@ -20,60 +20,11 @@
 /* }}} */
 
 
-#include <cstdio>
-#include <future>
-#include <string>
-#include <map>
-
-#include "crypto.hpp"
-#include "jsonrpc.hpp"
-#include "buffer.hpp"
-#include "local.hpp"
-#include "load.hpp"
-
-#include "tests.h"
-
-
-typedef uint8_t byte;
-
+#if 0
 
 const float PullFraction = 0.1; // rand fraction of nodes to withdraw
 const int   NumNodes = 64;
 const int   nsamples = 1000;
-
-namespace orc
-{
-
-	using boost::multiprecision::cpp_int_backend;
-	using boost::multiprecision::unsigned_magnitude;
-	using boost::multiprecision::unchecked;
-
-	typedef boost::multiprecision::number<cpp_int_backend<160, 160, unsigned_magnitude, unchecked, void>> uint160_t;
-
-	using std::string;
-	using std::vector;
-	using std::map;
-
-
-	std::string load_solcbin_as_string(std::string fn)
-	{
-        string result(Load(fn));
-        if (result.substr(0,2) != string("0x")) result = "0x" + result;
-        return result;
-	}
-
-    inline task<string> deploy(Endpoint& endpoint, const string& address, const string& bin)
-    {
-        printf("[%d] deploy [%i] \n", __LINE__, int(bin.size()) );
-   		assert(bin.size() > 2);
-        auto trans_hash = co_await endpoint("eth_sendTransaction", {Multi{{"from",uint256_t(address)},{"data",bin}, {"gas","4712388"}, {"gasPrice","100000000000"}}} );
-        // todo: this currently works on EthereumJS TestRPC v6.0.3, but on a live network you'd need to wait for the transaction to be mined
-   		auto result     = co_await endpoint("eth_getTransactionReceipt", {trans_hash.asString()} );
-   		string contractAddress = result["contractAddress"].asString();
-        co_return contractAddress;
-    }
-    
-    //const uint128_t one_eth = 1000000000000000000;
 
     task<int> fund_medallion(Endpoint& endpoint, Address token_address, Address OrchidToken_addr, Address directory_addr, Address server_addr, uint128_t& ntokens, Address dst_addr = 0)
     {
@@ -269,16 +220,4 @@ namespace orc
         
     }
 
-
-
-    int test_dir()
-    {
-        std::cout << "test_dir()" << std::endl;
-        auto t = test_directory();
-        sync_wait(t);        
-        std::cout << "test_dir(): done" << std::endl;
-        return 0;
-    }
-
-}
-
+#endif

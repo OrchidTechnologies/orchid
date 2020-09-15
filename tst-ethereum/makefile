@@ -18,6 +18,8 @@
 # }}}
 
 
+args := 
+
 include env/target.mk
 
 .PHONY: all
@@ -25,7 +27,7 @@ all: $(output)/$(default)/orchid$(exe)
 
 .PHONY: test
 test: $(output)/$(default)/orchid$(exe)
-	$<
+	$< $(args)
 
 source += $(wildcard source/*.cpp)
 cflags += -Isource
