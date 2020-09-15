@@ -227,7 +227,7 @@ contract OrchidLottery1 {
         return amount;
     }
 
-    function grab(address payable recipient, Ticket[] calldata tickets, bytes32[] calldata old) external {
+    function grab(address payable recipient, Ticket[] calldata tickets, bytes32[] calldata digests) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
         uint256 segment; assembly { segment := mload(0x40) }
@@ -240,8 +240,8 @@ contract OrchidLottery1 {
 
         require(recipient.send(amount));
 
-        for (uint256 i = old.length; i != 0; ) {
-            Track storage track = tracks[old[--i]];
+        for (uint256 i = digests.length; i != 0; ) {
+            Track storage track = tracks[digests[--i]];
             if (track.until_ <= block.timestamp)
                 delete track.until_;
         }
