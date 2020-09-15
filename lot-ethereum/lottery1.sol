@@ -104,6 +104,20 @@ contract OrchidLottery1 {
             require(msg.sender.send(retrieve));
     }
 
+    function warn(address signer, uint128 warned) external {
+        Pot storage pot = find(msg.sender, signer);
+
+        if (warned == 0) {
+            pot.warned_ = 0;
+            pot.unlock_ = 0;
+        } else {
+            pot.warned_ = warned;
+            pot.unlock_ = uint128(block.timestamp + 1 days);
+        }
+
+        emit Update(msg.sender, signer);
+    }
+
     function name(address signer, bytes calldata shared) external {
         Pot storage pot = find(msg.sender, signer);
         require(pot.escrow_ == 0);
@@ -236,20 +250,5 @@ contract OrchidLottery1 {
     function grab(address payable recipient, Ticket calldata ticket) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         require(recipient.send(grab(tracks, recipient, ticket)));
-    }
-
-
-    function warn(address signer, uint128 warned) external {
-        Pot storage pot = find(msg.sender, signer);
-
-        if (warned == 0) {
-            pot.warned_ = 0;
-            pot.unlock_ = 0;
-        } else {
-            pot.warned_ = warned;
-            pot.unlock_ = uint128(block.timestamp + 1 days);
-        }
-
-        emit Update(msg.sender, signer);
     }
 }
