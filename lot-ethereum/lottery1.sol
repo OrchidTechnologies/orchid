@@ -22,6 +22,7 @@
 
 
 pragma solidity 0.7.1;
+pragma experimental ABIEncoderV2;
 
 import "./include.sol";
 
@@ -123,41 +124,52 @@ contract OrchidLottery1 {
 
     mapping(address => mapping(bytes32 => Track)) internal tracks_;
 
+    struct Ticket {
+        bytes32 reveal; bytes32 salt;
+        uint256 issued; bytes32 nonce;
+        uint256 start; uint128 range;
+        uint128 amount; uint128 ratio;
+        address funder; bytes receipt;
+        uint8 v; bytes32 r; bytes32 s;
+    }
 
-    // the arguments to this function are carefully ordered for stack depth optimization
     function grab(
-        bytes32 reveal, bytes32 salt,
-        uint256 issued, bytes32 nonce,
-        uint8 v, bytes32 r, bytes32 s,
-        uint256 start, uint128 range,
-        uint128 amount, uint128 ratio,
-        address funder, bytes calldata receipt,
-        address payable recipient
-    ) external {
-        if (start + range <= block.timestamp)
+        address payable recipient,
+        Ticket calldata ticket
+    ) internal {
+        address signer;
+
+        uint128 amount = ticket.amount;
+        address funder = ticket.funder;
+    {
+        uint128 range = ticket.range;
+        uint128 ratio = ticket.ratio;
+
+        if (ticket.start + range <= block.timestamp)
             return;
-        if (ratio < uint128(uint256(keccak256(abi.encode(reveal, issued, nonce)))))
+        if (ratio < uint128(uint256(keccak256(abi.encode(ticket.reveal, ticket.issued, ticket.nonce)))))
             return;
 
         // this variable is being reused because I do not have even one extra stack slot
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
-            keccak256(abi.encode(keccak256(abi.encode(reveal)), salt, recipient)),
-            issued, nonce, address(this), digest, amount, ratio, start, range, funder));
-        address signer = ecrecover(digest, v, r, s);
+            keccak256(abi.encode(keccak256(abi.encode(ticket.reveal)), ticket.salt, recipient)),
+            ticket.issued, ticket.nonce, address(this), digest, amount, ratio, ticket.start, range, funder));
+        signer = ecrecover(digest, ticket.v, ticket.r, ticket.s);
 
     {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         Track storage track = tracks[keccak256(abi.encode(signer, digest))];
         if (track.until_ != 0)
             return;
-        track.until_ = start + range;
+        track.until_ = ticket.start + range;
     }
 
-        if (start < block.timestamp) {
-            uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
+        if (ticket.start < block.timestamp) {
+            uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - ticket.start)) / range);
             if (amount > limit)
                 amount = limit;
         }
+    }
 
         Lottery storage lottery = lotteries_[funder];
 
@@ -182,14 +194,17 @@ contract OrchidLottery1 {
             if (verify != OrchidVerifier(0)) {
                 bytes32 codehash; assembly { codehash := extcodehash(verify) }
                 if (codehash == lottery.codehash_)
-                    verify.book(lottery.shared_, recipient, receipt);
+                    verify.book(lottery.shared_, recipient, ticket.receipt);
             }
         }
 
         require(recipient.send(amount));
     }
 
-    function back(address payable recipient, bytes32[] calldata old) external {
+    function grab(address payable recipient, Ticket[] calldata tickets, bytes32[] calldata old) external {
+        for (uint256 i = tickets.length; i != 0; )
+            grab(recipient, tickets[--i]);
+
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
         for (uint256 i = old.length; i != 0; ) {
