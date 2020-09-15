@@ -160,10 +160,11 @@ contract OrchidLottery1 {
         }
 
         Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.pots_[signer];
 
     {
+        Pot storage pot = lottery.pots_[signer];
         uint128 cache = pot.amount_;
+
         if (cache >= amount) {
             cache -= amount;
             pot.amount_ = cache;
