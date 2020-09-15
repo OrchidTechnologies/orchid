@@ -157,7 +157,7 @@ contract OrchidLottery1 {
         signer = ecrecover(digest, ticket.v, ticket.r, ticket.s);
 
     {
-        Track storage track = tracks[keccak256(abi.encode(signer, digest))];
+        Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
             return 0;
         track.until_ = ticket.start + range;
