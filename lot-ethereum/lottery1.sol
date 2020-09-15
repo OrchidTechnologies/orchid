@@ -247,6 +247,14 @@ contract OrchidLottery1 {
         }
     }
 
+    function grab(address payable recipient, Ticket calldata ticket, bytes32 digest) external {
+        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
+        require(recipient.send(grab(tracks, recipient, ticket)));
+        Track storage track = tracks[digest];
+        if (track.until_ <= block.timestamp)
+            delete track.until_;
+    }
+
     function grab(address payable recipient, Ticket calldata ticket) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         require(recipient.send(grab(tracks, recipient, ticket)));
