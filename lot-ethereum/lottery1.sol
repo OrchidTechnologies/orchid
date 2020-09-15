@@ -220,6 +220,11 @@ contract OrchidLottery1 {
         }
     }
 
+    function grab(address payable recipient, Ticket calldata ticket) external {
+        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
+        require(recipient.send(grab(tracks, recipient, ticket)));
+    }
+
 
     function warn(address signer, uint128 warned) external {
         Pot storage pot = find(msg.sender, signer);
