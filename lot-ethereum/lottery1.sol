@@ -131,13 +131,21 @@ contract OrchidLottery1 {
         Lottery storage lottery = lotteries_[msg.sender];
         require(lottery.bound_ < block.timestamp);
 
-        bytes32 codehash;
-        assembly { codehash := extcodehash(verify) }
+        if (verify == OrchidVerifier(0)) {
+            delete lottery.bound_;
+            delete lottery.before_;
+            delete lottery.after_;
+        } else {
+            lottery.bound_ = block.timestamp + 1 days;
 
-        lottery.bound_ = block.timestamp + 1 days;
-        lottery.before_ = lottery.after_;
-        lottery.after_.verify_ = verify;
-        lottery.after_.codehash_ = codehash;
+            lottery.before_ = lottery.after_;
+
+            bytes32 codehash;
+            assembly { codehash := extcodehash(verify) }
+            lottery.after_.verify_ = verify;
+            lottery.after_.codehash_ = codehash;
+        }
+
 
         emit Bound(msg.sender);
     }
