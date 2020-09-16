@@ -455,7 +455,7 @@ int Main(int argc, const char *const argv[]) {
 
         body << "Cost: ";
         body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 83328) << " || ";
-        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 69967) << " || ";
+        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 70605) << " || ";
         body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)\n";
         body << "\n";
 
