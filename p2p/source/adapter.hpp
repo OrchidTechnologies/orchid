@@ -91,7 +91,7 @@ class Adapter {
                     if (size == 0)
                         co_return Result(0, false);
                     const auto writ(co_await stream_->Read(buffers));
-                    co_return Result(writ, false);
+                    co_return Result(writ, writ == 0);
                 }();
 
                 boost::asio::post(get_executor(), [handler = std::move(handler), eof = eof, writ = writ]() mutable {
