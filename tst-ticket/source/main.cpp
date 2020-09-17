@@ -93,9 +93,7 @@ int Main(int argc, const char *const argv[]) {
 
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
 
-        using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
-        static const auto orchid(Hash("Orchid.grab"));
-        const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
+        const auto ticket(Ticket{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode0(lottery, chain, receipt));
         const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
         std::cout << "signer: " << signer << std::endl;
 

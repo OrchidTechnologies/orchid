@@ -39,6 +39,7 @@ struct Block {
 };
 
 struct Receipt final {
+    const bool status_;
     const Address contract_;
     const uint256_t gas_;
 
@@ -85,10 +86,11 @@ class Endpoint final {
 
     task<Json::Value> operator ()(const std::string &method, Argument args) const;
 
+    task<uint256_t> Chain() const;
     task<uint256_t> Latest() const;
     task<Block> Header(const Argument &number) const;
     task<uint256_t> Balance(const Address &address) const;
-    task<Receipt> Receipt(const Bytes32 &transaction) const;
+    task<std::optional<Receipt>> operator ()(const Bytes32 &transaction) const;
 
     task<Brick<65>> Sign(const Address &signer, const Buffer &data) const;
     task<Brick<65>> Sign(const Address &signer, const std::string &password, const Buffer &data) const;
@@ -190,6 +192,13 @@ class Selector final :
 
     const std::string &Name() const {
         return name_;
+    }
+
+    Builder operator ()(const Args_ &...args) {
+        Builder builder;
+        builder += *this;
+        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
+        return builder;
     }
 
     auto Decode(const Buffer &buffer) {

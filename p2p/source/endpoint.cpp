@@ -74,6 +74,10 @@ Block::Block(Json::Value &&value) :
 }
 
 Receipt::Receipt(Json::Value &&value) :
+    status_([&]() {
+        const uint256_t status(value["status"].asString());
+        return status != 0;
+    }()),
     contract_([&]() -> Address {
         const auto contract(value["contractAddress"]);
         if (contract.isNull())
@@ -148,6 +152,11 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     co_return data["result"];
 }
 
+task<uint256_t> Endpoint::Chain() const {
+    const auto chain(uint256_t((co_await operator()("eth_chainId", {})).asString()));
+    co_return chain;
+}
+
 task<uint256_t> Endpoint::Latest() const {
     const auto number(uint256_t((co_await operator ()("eth_blockNumber", {})).asString()));
     orc_assert_(number != 0, "ethereum server has not synchronized any blocks");
@@ -162,10 +171,11 @@ task<uint256_t> Endpoint::Balance(const Address &address) const {
     co_return uint256_t((co_await operator ()("eth_getBalance", {address, "latest"})).asString());
 }
 
-task<Receipt> Endpoint::Receipt(const Bytes32 &transaction) const {
+task<std::optional<Receipt>> Endpoint::operator ()(const Bytes32 &transaction) const {
     auto receipt(co_await operator ()("eth_getTransactionReceipt", {transaction}));
-    orc_assert(!receipt.isNull());
-    co_return std::move(receipt);
+    if (receipt.isNull())
+        co_return std::optional<Receipt>();
+    co_return std::optional<Receipt>(std::in_place, std::move(receipt));
 }
 
 task<Brick<65>> Endpoint::Sign(const Address &signer, const Buffer &data) const {

@@ -31,6 +31,19 @@ def invalid_funder(funder: str, pac_funder: str):
     return response
 
 
+def incorrect_password():
+    logging.debug('Incorrect password!')
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 400,
+        "headers": {},
+        "body": json.dumps({
+            'message': 'Incorrect password!',
+        })
+    }
+    return response
+
+
 def invalid_signer(signer: str):
     logging.debug(f'Invalid signer. Got: {signer}')
     response = {
@@ -180,6 +193,10 @@ def main(event, context):
     logging.debug(f'body: {body}')
     funder = toChecksumAddress(address=body.get('funder', ''))
     signer = toChecksumAddress(address=body.get('signer', ''))
+    password = body.get('password', '')
+
+    if password != get_secret(key=os.environ['RECYCLE_KEY']):
+        return incorrect_password()
 
     pac_funder = get_secret(key=os.environ['PAC_FUNDER_PUBKEY_SECRET'])
 

@@ -23,6 +23,7 @@
 #ifndef ORCHID_TICKET_HPP
 #define ORCHID_TICKET_HPP
 
+#include "crypto.hpp"
 #include "jsonrpc.hpp"
 
 namespace orc {
@@ -42,10 +43,10 @@ struct Ticket {
         return (ratio_ + uint256_t(1)) * amount_;
     }
 
-    Builder Encode(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
+    Bytes32 Encode0(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
         static const auto orchid_(Hash("Orchid.grab"));
 
-        return Coder<
+        return Hash(Coder<
             Bytes32, Bytes32,
             uint256_t, Bytes32,
             Address, uint256_t,
@@ -61,7 +62,18 @@ struct Ticket {
             start_, range_,
             funder_, recipient_,
             receipt
-        );
+        ));
+    }
+
+    Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Bytes32 &salt) const {
+        return Hash(Coder<
+            Bytes32, Address, uint256_t, uint256_t, Bytes32,
+            uint256_t, uint128_t, uint128_t, uint128_t, Address
+        >::Encode(
+            Hash(Tie(commit_, salt, recipient_)),
+            lottery, chain, issued_, nonce_,
+            start_, range_, amount_, ratio_, funder_
+        ));
     }
 
     auto Knot(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {

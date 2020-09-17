@@ -33,6 +33,7 @@
 #include "protocol.hpp"
 #include "server.hpp"
 #include "spawn.hpp"
+#include "ticket.hpp"
 #include "time.hpp"
 
 namespace orc {
@@ -183,9 +184,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     if (expected <= 0)
         return;
 
-    using Ticket = Coder<Bytes32, Bytes32, uint256_t, Bytes32, Address, uint256_t, uint128_t, uint128_t, uint256_t, uint128_t, Address, Address, Bytes>;
-    static const auto orchid(Hash("Orchid.grab"));
-    const auto ticket(Hash(Ticket::Encode(orchid, commit, issued, nonce, lottery, chain, amount, ratio, start, range, funder, recipient, receipt)));
+    const auto ticket(Ticket{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode0(lottery, chain, receipt));
     const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
 
     const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {

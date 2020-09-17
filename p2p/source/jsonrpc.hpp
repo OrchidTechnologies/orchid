@@ -432,12 +432,23 @@ struct Coded<std::vector<Type_>, void> {
 
     static void Encode(Builder &builder, const std::vector<Type_> &values) {
         Coded<uint256_t>::Encode(builder, values.size());
+
+        if (Coded<Type_>::dynamic_) {
+            size_t offset(values.size() * 32);
+            for (const auto &value : values) {
+                Coded<uint256_t>::Encode(builder, offset);
+                Coded<Type_>::Size(offset, value);
+            }
+        }
+
         for (const auto &value : values)
             Coded<Type_>::Encode(builder, value);
     }
 
     static void Size(size_t &offset, const std::vector<Type_> &values) {
         offset += 32;
+        if (Coded<Type_>::dynamic_)
+            offset += values.size() * 32;
         for (const auto &value : values)
             Coded<Type_>::Size(offset, value);
     }
@@ -468,7 +479,11 @@ struct Tupled<Index_> final {
     }
 
     template <typename Tuple_>
-    static void Size(size_t &offset, Tuple_ &tuple) {
+    static void Head(size_t &offset, Tuple_ &tuple) {
+    }
+
+    template <typename Tuple_>
+    static void Tail(size_t &offset, Tuple_ &tuple) {
     }
 };
 
@@ -516,12 +531,19 @@ struct Tupled<Index_, Next_, Rest_...> final {
     }
 
     template <typename Tuple_>
-    static void Size(size_t &offset, Tuple_ &tuple) {
+    static void Head(size_t &offset, Tuple_ &tuple) {
         if (!Coded<Next_>::dynamic_)
             Coded<Next_>::Size(offset, std::get<Index_>(tuple));
         else
             offset += 32;
-        Tupled<Index_ + 1, Rest_...>::Size(offset, tuple);
+        Tupled<Index_ + 1, Rest_...>::Head(offset, tuple);
+    }
+
+    template <typename Tuple_>
+    static void Tail(size_t &offset, Tuple_ &tuple) {
+        if (Coded<Next_>::dynamic_)
+            Coded<Next_>::Size(offset, std::get<Index_>(tuple));
+        Tupled<Index_ + 1, Rest_...>::Tail(offset, tuple);
     }
 };
 
@@ -546,13 +568,14 @@ struct Coded<std::tuple<Args_...>, void> {
 
     static void Encode(Builder &builder, const std::tuple<Args_...> &data) {
         size_t offset(0);
-        Tupled_::Size(offset, data);
+        Tupled_::Head(offset, data);
         Tupled_::Head(builder, data, offset);
         Tupled_::Tail(builder, data);
     }
 
     static void Size(size_t &offset, const std::tuple<Args_...> &value) {
-        Tupled_::Size(offset, value);
+        Tupled_::Head(offset, value);
+        Tupled_::Tail(offset, value);
     }
 };
 

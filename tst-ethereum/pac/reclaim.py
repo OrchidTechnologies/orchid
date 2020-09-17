@@ -19,6 +19,7 @@ def main(event, context):
     body = {
         'debug': 'True',
         'funder': pac_funder,
+        'password': get_secret(key=os.environ['RECYCLE_KEY'])
     }
     for signer in signers:
         logging.debug(f'Processing Signer: {signer}')

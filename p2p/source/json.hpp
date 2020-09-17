@@ -47,7 +47,7 @@ class Argument final {
     }
 
     Argument(unsigned value) :
-        Argument(uint256_t(value))
+        value_(value)
     {
     }
 
