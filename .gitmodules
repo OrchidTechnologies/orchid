@@ -163,3 +163,6 @@
 [submodule "SHA3IUF"]
 	path = p2p/SHA3IUF
 	url = https://github.com/brainhub/SHA3IUF.git
+[submodule "cpp-jwt"]
+	path = p2p/cpp-jwt
+	url = https://github.com/arun11299/cpp-jwt.git
