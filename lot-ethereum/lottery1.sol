@@ -55,10 +55,6 @@ contract OrchidLottery1 {
 
     mapping(address => Lottery) private lotteries_;
 
-    function find(address funder, address signer) private view returns (Pot storage) {
-        return lotteries_[funder].pots_[signer];
-    }
-
     function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer];
@@ -67,7 +63,7 @@ contract OrchidLottery1 {
 
 
     function move(address signer, uint256 recover, uint256 transfer, uint256 retrieve) external payable {
-        Pot storage pot = find(msg.sender, signer);
+        Pot storage pot = lotteries_[msg.sender].pots_[signer];
 
         uint256 escrow = pot.escrow_;
         uint256 amount = pot.amount_ + msg.value;
@@ -105,7 +101,7 @@ contract OrchidLottery1 {
     }
 
     function warn(address signer, uint128 warned) external {
-        Pot storage pot = find(msg.sender, signer);
+        Pot storage pot = lotteries_[msg.sender].pots_[signer];
 
         if (warned == 0) {
             pot.warned_ = 0;
@@ -119,7 +115,7 @@ contract OrchidLottery1 {
     }
 
     function name(address signer, bytes calldata shared) external {
-        Pot storage pot = find(msg.sender, signer);
+        Pot storage pot = lotteries_[msg.sender].pots_[signer];
         require(pot.escrow_ == 0);
         pot.shared_ = shared;
         emit Update(msg.sender, signer);
