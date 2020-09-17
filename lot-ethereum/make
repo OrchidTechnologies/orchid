@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 env/solc.sh 0.5.13 build lottery.sol --evm-version istanbul
-env/solc.sh 0.7.1 build lottery1.sol --evm-version istanbul --optimize --optimize-runs 9001
+env/solc.sh 0.7.1 build lottery1.sol --evm-version istanbul --optimize --optimize-runs 10000
