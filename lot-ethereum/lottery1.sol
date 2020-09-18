@@ -234,46 +234,44 @@ contract OrchidLottery1 {
         bytes32 reveal; bytes32 salt;
         uint256 issued; bytes32 nonce;
         uint256 amount_ratio;
-
-        uint256 start;
-        uint256 range_v_funder;
+        uint256 start_range_v_funder;
         bytes receipt;
-
         bytes32 r; bytes32 s;
     }
 
     function grab(
-        mapping(bytes32 => Track) storage tracks,
-        address payable recipient ORC_PRM(),
+        mapping(bytes32 => Track) storage tracks
+        ORC_PRM(), address payable recipient,
         Ticket calldata ticket
     ) private returns (uint128) {
         address signer;
 
-        address funder = address(ticket.range_v_funder);
+        address funder = address(ticket.start_range_v_funder);
+        uint64 start = uint64(ticket.start_range_v_funder >> 192);
         uint128 amount = uint128(ticket.amount_ratio >> 128);
     {
         uint128 ratio = uint128(ticket.amount_ratio);
-        uint64 range = uint64(ticket.range_v_funder >> 192);
+        uint64 range = uint24(ticket.start_range_v_funder >> 168);
 
-        if (ticket.start + range <= block.timestamp)
+        if (start + range <= block.timestamp)
             return 0;
         if (ratio < uint128(uint256(keccak256(abi.encodePacked(ticket.reveal, ticket.issued, ticket.nonce)))))
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             keccak256(abi.encodePacked(keccak256(abi.encodePacked(ticket.reveal)), ticket.salt, recipient)),
-            this, digest ORC_ARG, ticket.issued, ticket.nonce, ticket.start, range, amount, ratio, funder));
-        signer = ecrecover(digest, uint8(ticket.range_v_funder >> 160), ticket.r, ticket.s);
+            this, digest ORC_ARG, ticket.issued, ticket.nonce, start, range, amount, ratio, funder));
+        signer = ecrecover(digest, uint8(ticket.start_range_v_funder >> 160), ticket.r, ticket.s);
 
     {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
             return 0;
-        track.until_ = ticket.start + range;
+        track.until_ = start + range;
     }
 
-        if (ticket.start < block.timestamp) {
-            uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - ticket.start)) / range);
+        if (start < block.timestamp) {
+            uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
             if (amount > limit)
                 amount = limit;
         }
@@ -318,7 +316,7 @@ contract OrchidLottery1 {
 
         uint128 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += grab(tracks, recipient ORC_ARG, tickets[--i]);
+            amount += grab(tracks ORC_ARG, recipient, tickets[--i]);
             assembly { mstore(0x40, segment) }
         }
 
@@ -333,7 +331,7 @@ contract OrchidLottery1 {
 
     function grab(address payable recipient ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-        require(ORC_SND(recipient, grab(tracks, recipient ORC_ARG, ticket)));
+        require(ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket)));
         Track storage track = tracks[digest];
         if (track.until_ <= block.timestamp)
             delete track.until_;
@@ -341,6 +339,6 @@ contract OrchidLottery1 {
 
     function grab(address payable recipient ORC_PRM(), Ticket calldata ticket) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-        require(ORC_SND(recipient, grab(tracks, recipient ORC_ARG, ticket)));
+        require(ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket)));
     }
 }
