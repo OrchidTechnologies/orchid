@@ -9,6 +9,8 @@ import {Subscription} from "rxjs";
 import {AccountQRCode} from "./AccountQRCode";
 import {S} from "../i18n/S";
 import {Orchid} from "../api/orchid";
+import {MarketConditions} from "./MarketConditionsPanel";
+import {EfficiencyMeter} from "./EfficiencyMeter";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -27,6 +29,7 @@ export class Info extends Component<any, any> {
     accountRecommendationBalance: null,
     accountRecommendationDepositMin: null,
     accountRecommendationDeposit: null,
+    marketConditions: null
   };
   subscriptions: Subscription [] = [];
   walletAddressInput = React.createRef<HTMLInputElement>();
@@ -58,7 +61,10 @@ export class Info extends Component<any, any> {
       api.lotteryPot_wait.subscribe(pot => {
         this.setState({
           potBalance: keikiToOxtString(pot.balance, 4),
-          potEscrow: keikiToOxtString(pot.escrow, 4)
+          potEscrow: keikiToOxtString(pot.escrow, 4),
+        });
+        MarketConditions.for(pot).then(marketConditions => {
+          this.setState({ marketConditions: marketConditions });
         });
       }));
 
@@ -102,7 +108,7 @@ export class Info extends Component<any, any> {
         <label className="title">{S.info}</label>
 
         {/*wallet address*/}
-        <label style={{fontWeight: "bold"}}>{S.walletAddress}</label>
+        <label style={{fontWeight: "bold"}}>{S.funderWalletAddress}</label>
         <Row noGutters={true}>
           <Col style={{flexGrow: 10}}>
             <input type="text"
@@ -153,55 +159,23 @@ export class Info extends Component<any, any> {
         </Visibility>
 
         {/*pot balance and escrow*/}
-        <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.lotteryPot}</label>
+        <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.orchidAccount}</label>
         <div className="form-row col-1-1">
           <div className="form-row col-1-2">
-            <label className="form-row-label">{"My Balance"}</label>
+            <label className="form-row-label">{S.balance}</label>
             <input className="form-row-field"
                    value={this.state.potBalance}
                    type="text" readOnly/>
           </div>
           <div className="form-row col-1-2">
-            <label className="form-row-label">{"My Deposit"}</label>
+            <label className="form-row-label">{S.deposit}</label>
             <input className="form-row-field"
                    value={this.state.potEscrow}
                    type="text" readOnly/>
           </div>
         </div>
 
-        {/* market stats */}
-        <label style={{fontWeight: "bold", marginTop: "16px"}}>{"Market Stats"}</label>
-        <div className="form-row col-1-1">
-          <div className="form-row col-1-2">
-            <label className="form-row-label">{"Min Viable Balance"}</label>
-            <input className="form-row-field"
-                   value={this.state.accountRecommendationBalanceMin || "..."}
-                   type="text" readOnly/>
-          </div>
-          <div className="form-row col-1-2">
-            <label className="form-row-label">{"Min Viable Deposit"}</label>
-            <input className="form-row-field"
-                   value={this.state.accountRecommendationDepositMin || "..."}
-                   type="text" readOnly/>
-          </div>
-        </div>
-        <div className="form-row col-1-1">
-          <div className="form-row col-1-2">
-            <label className="form-row-label">{"Recommended Balance"}</label>
-            <input className="form-row-field"
-                   value={this.state.accountRecommendationBalance || "..."}
-                   type="text" readOnly/>
-          </div>
-          <div className="form-row col-1-2">
-            <label className="form-row-label">{"Recommended Deposit"}</label>
-            <input className="form-row-field"
-                   value={this.state.accountRecommendationDeposit || "..."}
-                   type="text" readOnly/>
-          </div>
-          <label className="form-row-label" style={{fontStyle: "italic"}}>
-            Recommendation based on: <b>{Orchid.recommendationEfficiency * 100}% efficiency</b> and <b>{Orchid.recommendationBalanceFaceValues.toFixedLocalized(1)} Face Value</b> balance.
-          </label>
-        </div>
+        <EfficiencyMeter marketConditions={this.state.marketConditions}/>
 
         {/*pot lock status*/}
         <div style={{marginTop: "16px"}}/>
