@@ -35,14 +35,14 @@ interface IERC20 {
 }
 
 #define ORC_ARG , token
-#define ORC_POT(s) tokens_[token][s]
+#define ORC_ARR [token]
 #define ORC_PRM(x) , IERC20 x token
 #define ORC_SND(r, a) token.transfer(r, a)
 
 contract OrchidLottery1Token {
 #else
 #define ORC_ARG
-#define ORC_POT(s) pots_[s]
+#define ORC_ARR
 #define ORC_PRM(x)
 #define ORC_SND(r, a) r.send(a)
 
@@ -69,7 +69,7 @@ contract OrchidLottery1 {
 
     struct Lottery {
 #if ORC_ERC
-        mapping(IERC20 => mapping(address => Pot)) tokens_;
+        mapping(address => mapping(IERC20 => Pot)) pots_;
 #else
         mapping(address => Pot) pots_;
 #endif
@@ -83,7 +83,7 @@ contract OrchidLottery1 {
 
     function look(address funder, address signer ORC_PRM()) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
         Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.ORC_POT(signer);
+        Pot storage pot = lottery.pots_[signer]ORC_ARR;
         return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.shared_, lottery.bound_, lottery.before_, lottery.after_);
     }
 
@@ -115,7 +115,7 @@ contract OrchidLottery1 {
         uint256 amount = msg.value;
 #endif
 
-        Pot storage pot = lotteries_[funder].ORC_POT(signer);
+        Pot storage pot = lotteries_[funder].pots_[signer]ORC_ARR;
 
         uint256 escrow = pot.escrow_;
         amount += pot.amount_;
@@ -170,7 +170,7 @@ contract OrchidLottery1 {
     }
 
     function warn(address signer ORC_PRM(), uint128 warned) external {
-        Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
+        Pot storage pot = lotteries_[msg.sender].pots_[signer]ORC_ARR;
 
         if (warned == 0) {
             pot.warned_ = 0;
@@ -185,7 +185,7 @@ contract OrchidLottery1 {
 
 
     function name(address signer ORC_PRM(), bytes calldata shared) external {
-        Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
+        Pot storage pot = lotteries_[msg.sender].pots_[signer]ORC_ARR;
         require(pot.escrow_ == 0);
         pot.shared_ = shared;
         emit Update(msg.sender, signer ORC_ARG);
@@ -280,7 +280,7 @@ contract OrchidLottery1 {
     }
 
         Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.ORC_POT(signer);
+        Pot storage pot = lottery.pots_[signer]ORC_ARR;
 
     {
         uint128 cache = pot.amount_;
