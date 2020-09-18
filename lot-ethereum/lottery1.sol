@@ -26,7 +26,26 @@ pragma experimental ABIEncoderV2;
 
 import "./include.sol";
 
+#if ORC_ERC
+interface IERC20 {
+    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+}
+
+#define ORC_ARG , token
+#define ORC_POT(s) tokens_[token][s]
+#define ORC_PRM , IERC20 token
+#define ORC_SND(r, a) token.transfer(r, a)
+
+contract OrchidLottery1Token {
+#else
+#define ORC_ARG
+#define ORC_POT(s) pots_[s]
+#define ORC_PRM
+#define ORC_SND(r, a) r.send(a)
+
 contract OrchidLottery1 {
+#endif
 
     struct Pot {
         uint128 amount_;
@@ -38,7 +57,11 @@ contract OrchidLottery1 {
         bytes shared_;
     }
 
-    event Update(address indexed funder, address indexed signer);
+    event Update(address indexed funder, address indexed signer
+#if ORC_ERC
+        , IERC20 indexed token
+#endif
+    );
 
     struct Binding {
         OrchidVerifier verify_;
@@ -46,7 +69,11 @@ contract OrchidLottery1 {
     }
 
     struct Lottery {
+#if ORC_ERC
+        mapping(IERC20 => mapping(address => Pot)) tokens_;
+#else
         mapping(address => Pot) pots_;
+#endif
 
         uint256 bound_;
         Binding before_;
@@ -55,18 +82,44 @@ contract OrchidLottery1 {
 
     mapping(address => Lottery) private lotteries_;
 
-    function look(address funder, address signer) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
+    function look(address funder, address signer ORC_PRM) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
         Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.pots_[signer];
+        Pot storage pot = lottery.ORC_POT(signer);
         return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.shared_, lottery.bound_, lottery.before_, lottery.after_);
     }
 
 
+#if ORC_ERC
+    bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256,uint256,uint256)"));
+
+    function slct(bytes memory data) private pure returns (bytes4 value) {
+        assembly { value := mload(add(data, 32)) }
+    }
+
+    function move(address signer, IERC20 token, uint256 amount, uint256 recover, uint256 transfer, uint256 retrieve) external {
+        require(token.transferFrom(msg.sender, address(this), amount));
+        move_(msg.sender, signer, token, amount, recover, transfer, retrieve);
+    }
+
+    function onTokenTransfer(address funder, uint256 amount, bytes calldata data) external returns (bool) {
+        require(slct(bytes(data[:4])) == Move_);
+        address signer; uint256 recover; uint256 transfer; uint256 retrieve;
+        (signer, recover, transfer, retrieve) = abi.decode(data[4:], (address, uint256, uint256, uint256));
+        move_(funder, signer, IERC20(msg.sender), amount, recover, transfer, retrieve);
+        return true;
+    }
+
+    function move_(address funder, address signer, IERC20 token, uint256 amount, uint256 recover, uint256 transfer, uint256 retrieve) private {
+#else
     function move(address signer, uint256 recover, uint256 transfer, uint256 retrieve) external payable {
-        Pot storage pot = lotteries_[msg.sender].pots_[signer];
+        address payable funder = msg.sender;
+        uint256 amount = msg.value;
+#endif
+
+        Pot storage pot = lotteries_[funder].ORC_POT(signer);
 
         uint256 escrow = pot.escrow_;
-        uint256 amount = pot.amount_ + msg.value;
+        amount += pot.amount_;
 
         if (recover != 0) {
             uint256 warned = pot.warned_;
@@ -94,14 +147,19 @@ contract OrchidLottery1 {
         pot.escrow_ = uint128(escrow);
         pot.amount_ = uint128(amount);
 
-        emit Update(msg.sender, signer);
+        emit Update(funder, signer ORC_ARG);
 
         if (retrieve != 0)
-            require(msg.sender.send(retrieve));
+#if ORC_ERC
+            require(token.transfer(funder, retrieve));
+#else
+            require(funder.send(retrieve));
+#endif
     }
 
-    function warn(address signer, uint128 warned) external {
-        Pot storage pot = lotteries_[msg.sender].pots_[signer];
+
+    function warn(address signer ORC_PRM, uint128 warned) external {
+        Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
 
         if (warned == 0) {
             pot.warned_ = 0;
@@ -111,14 +169,14 @@ contract OrchidLottery1 {
             pot.unlock_ = uint128(block.timestamp + 1 days);
         }
 
-        emit Update(msg.sender, signer);
+        emit Update(msg.sender, signer ORC_ARG);
     }
 
-    function name(address signer, bytes calldata shared) external {
-        Pot storage pot = lotteries_[msg.sender].pots_[signer];
+    function name(address signer ORC_PRM, bytes calldata shared) external {
+        Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
         require(pot.escrow_ == 0);
         pot.shared_ = shared;
-        emit Update(msg.sender, signer);
+        emit Update(msg.sender, signer ORC_ARG);
     }
 
     event Bound(address indexed funder);
@@ -173,7 +231,7 @@ contract OrchidLottery1 {
 
     function grab(
         mapping(bytes32 => Track) storage tracks,
-        address payable recipient,
+        address payable recipient ORC_PRM,
         Ticket calldata ticket
     ) private returns (uint128) {
         address signer;
@@ -191,7 +249,7 @@ contract OrchidLottery1 {
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             keccak256(abi.encodePacked(keccak256(abi.encodePacked(ticket.reveal)), ticket.salt, recipient)),
-            this, digest, ticket.issued, ticket.nonce, ticket.start, range, amount, ratio, funder));
+            this, digest ORC_ARG, ticket.issued, ticket.nonce, ticket.start, range, amount, ratio, funder));
         signer = ecrecover(digest, ticket.v, ticket.r, ticket.s);
 
     {
@@ -209,7 +267,7 @@ contract OrchidLottery1 {
     }
 
         Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.pots_[signer];
+        Pot storage pot = lottery.ORC_POT(signer);
 
     {
         uint128 cache = pot.amount_;
@@ -223,7 +281,7 @@ contract OrchidLottery1 {
             pot.escrow_ = 0;
         }
 
-        emit Update(funder, signer);
+        emit Update(funder, signer ORC_ARG);
     }
 
         uint256 bound = lottery.bound_;
@@ -240,18 +298,18 @@ contract OrchidLottery1 {
         return amount;
     }
 
-    function grab(address payable recipient, Ticket[] calldata tickets, bytes32[] calldata digests) external {
+    function grab(address payable recipient ORC_PRM, Ticket[] calldata tickets, bytes32[] calldata digests) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
         uint256 segment; assembly { segment := mload(0x40) }
 
         uint128 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += grab(tracks, recipient, tickets[--i]);
+            amount += grab(tracks, recipient ORC_ARG, tickets[--i]);
             assembly { mstore(0x40, segment) }
         }
 
-        require(recipient.send(amount));
+        require(ORC_SND(recipient, amount));
 
         for (uint256 i = digests.length; i != 0; ) {
             Track storage track = tracks[digests[--i]];
@@ -260,16 +318,16 @@ contract OrchidLottery1 {
         }
     }
 
-    function grab(address payable recipient, Ticket calldata ticket, bytes32 digest) external {
+    function grab(address payable recipient ORC_PRM, Ticket calldata ticket, bytes32 digest) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-        require(recipient.send(grab(tracks, recipient, ticket)));
+        require(ORC_SND(recipient, grab(tracks, recipient ORC_ARG, ticket)));
         Track storage track = tracks[digest];
         if (track.until_ <= block.timestamp)
             delete track.until_;
     }
 
-    function grab(address payable recipient, Ticket calldata ticket) external {
+    function grab(address payable recipient ORC_PRM, Ticket calldata ticket) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-        require(recipient.send(grab(tracks, recipient, ticket)));
+        require(ORC_SND(recipient, grab(tracks, recipient ORC_ARG, ticket)));
     }
 }
