@@ -169,7 +169,6 @@ contract OrchidLottery1 {
 #endif
     }
 
-
     function warn(address signer ORC_PRM(), uint128 warned) external {
         Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
 
@@ -183,6 +182,7 @@ contract OrchidLottery1 {
 
         emit Update(msg.sender, signer ORC_ARG);
     }
+
 
     function name(address signer ORC_PRM(), bytes calldata shared) external {
         Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
