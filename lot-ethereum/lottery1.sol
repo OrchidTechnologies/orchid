@@ -90,28 +90,28 @@ contract OrchidLottery1 {
 
 
 #if ORC_ERC
-    bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256,uint256,uint256)"));
+    bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
 
     function slct(bytes memory data) private pure returns (bytes4 value) {
         assembly { value := mload(add(data, 32)) }
     }
 
-    function move(address signer, IERC20 token, uint256 amount, uint256 recover, uint256 transfer, uint256 retrieve) external {
+    function move(address signer, IERC20 token, uint256 amount, uint256 adjust_retrieve) external {
         require(token.transferFrom(msg.sender, address(this), amount));
-        move_(msg.sender, signer, token, amount, recover, transfer, retrieve);
+        move_(msg.sender, signer, token, amount, adjust_retrieve);
     }
 
     function onTokenTransfer(address funder, uint256 amount, bytes calldata data) external returns (bool) {
         require(slct(bytes(data[:4])) == Move_);
-        address signer; uint256 recover; uint256 transfer; uint256 retrieve;
-        (signer, recover, transfer, retrieve) = abi.decode(data[4:], (address, uint256, uint256, uint256));
-        move_(funder, signer, IERC20(msg.sender), amount, recover, transfer, retrieve);
+        address signer; uint256 adjust_retrieve;
+        (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
+        move_(funder, signer, IERC20(msg.sender), amount, adjust_retrieve);
         return true;
     }
 
-    function move_(address funder, address signer, IERC20 token, uint256 amount, uint256 recover, uint256 transfer, uint256 retrieve) private {
+    function move_(address funder, address signer, IERC20 token, uint256 amount, uint256 adjust_retrieve) private {
 #else
-    function move(address signer, uint256 recover, uint256 transfer, uint256 retrieve) external payable {
+    function move(address signer, uint256 adjust_retrieve) external payable {
         address payable funder = msg.sender;
         uint256 amount = msg.value;
 #endif
@@ -121,7 +121,11 @@ contract OrchidLottery1 {
         uint256 escrow = pot.escrow_;
         amount += pot.amount_;
 
-        if (recover != 0) {
+    {
+        int256 adjust = int256(adjust_retrieve) >> 128;
+
+        if (adjust < 0) {
+            uint256 recover = uint256(-adjust);
             uint256 warned = pot.warned_;
             require(pot.unlock_ - 1 < block.timestamp);
             require(recover <= warned);
@@ -131,13 +135,15 @@ contract OrchidLottery1 {
             if (warned == 0)
                 pot.unlock_ = 0;
             pot.warned_ = uint128(warned);
-        }
-
-        if (transfer != 0) {
+        } else if (adjust != 0) {
+            uint256 transfer = uint256(adjust);
             require(transfer <= amount);
             amount -= transfer;
             escrow += transfer;
         }
+    }
+
+        uint256 retrieve = uint128(adjust_retrieve);
 
         if (retrieve != 0) {
             require(retrieve <= amount);
@@ -223,10 +229,13 @@ contract OrchidLottery1 {
     struct Ticket {
         bytes32 reveal; bytes32 salt;
         uint256 issued; bytes32 nonce;
-        uint256 start; uint128 range;
-        uint128 amount; uint128 ratio;
-        address funder; bytes receipt;
-        uint8 v; bytes32 r; bytes32 s;
+        uint256 amount_ratio;
+
+        uint256 start;
+        uint256 range_v_funder;
+        bytes receipt;
+
+        bytes32 r; bytes32 s;
     }
 
     function grab(
@@ -236,11 +245,11 @@ contract OrchidLottery1 {
     ) private returns (uint128) {
         address signer;
 
-        uint128 amount = ticket.amount;
-        address funder = ticket.funder;
+        address funder = address(ticket.range_v_funder);
+        uint128 amount = uint128(ticket.amount_ratio >> 128);
     {
-        uint128 range = ticket.range;
-        uint128 ratio = ticket.ratio;
+        uint128 ratio = uint128(ticket.amount_ratio);
+        uint64 range = uint64(ticket.range_v_funder >> 192);
 
         if (ticket.start + range <= block.timestamp)
             return 0;
@@ -250,7 +259,7 @@ contract OrchidLottery1 {
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             keccak256(abi.encodePacked(keccak256(abi.encodePacked(ticket.reveal)), ticket.salt, recipient)),
             this, digest ORC_ARG, ticket.issued, ticket.nonce, ticket.start, range, amount, ratio, funder));
-        signer = ecrecover(digest, ticket.v, ticket.r, ticket.s);
+        signer = ecrecover(digest, uint8(ticket.range_v_funder >> 160), ticket.r, ticket.s);
 
     {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
