@@ -34,14 +34,14 @@ interface IERC20 {
 
 #define ORC_ARG , token
 #define ORC_POT(s) tokens_[token][s]
-#define ORC_PRM , IERC20 token
+#define ORC_PRM(x) , IERC20 x token
 #define ORC_SND(r, a) token.transfer(r, a)
 
 contract OrchidLottery1Token {
 #else
 #define ORC_ARG
 #define ORC_POT(s) pots_[s]
-#define ORC_PRM
+#define ORC_PRM(x)
 #define ORC_SND(r, a) r.send(a)
 
 contract OrchidLottery1 {
@@ -57,11 +57,7 @@ contract OrchidLottery1 {
         bytes shared_;
     }
 
-    event Update(address indexed funder, address indexed signer
-#if ORC_ERC
-        , IERC20 indexed token
-#endif
-    );
+    event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
 
     struct Binding {
         OrchidVerifier verify_;
@@ -82,7 +78,7 @@ contract OrchidLottery1 {
 
     mapping(address => Lottery) private lotteries_;
 
-    function look(address funder, address signer ORC_PRM) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
+    function look(address funder, address signer ORC_PRM()) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.ORC_POT(signer);
         return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.shared_, lottery.bound_, lottery.before_, lottery.after_);
@@ -164,7 +160,7 @@ contract OrchidLottery1 {
     }
 
 
-    function warn(address signer ORC_PRM, uint128 warned) external {
+    function warn(address signer ORC_PRM(), uint128 warned) external {
         Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
 
         if (warned == 0) {
@@ -178,7 +174,7 @@ contract OrchidLottery1 {
         emit Update(msg.sender, signer ORC_ARG);
     }
 
-    function name(address signer ORC_PRM, bytes calldata shared) external {
+    function name(address signer ORC_PRM(), bytes calldata shared) external {
         Pot storage pot = lotteries_[msg.sender].ORC_POT(signer);
         require(pot.escrow_ == 0);
         pot.shared_ = shared;
@@ -240,7 +236,7 @@ contract OrchidLottery1 {
 
     function grab(
         mapping(bytes32 => Track) storage tracks,
-        address payable recipient ORC_PRM,
+        address payable recipient ORC_PRM(),
         Ticket calldata ticket
     ) private returns (uint128) {
         address signer;
@@ -307,7 +303,7 @@ contract OrchidLottery1 {
         return amount;
     }
 
-    function grab(address payable recipient ORC_PRM, Ticket[] calldata tickets, bytes32[] calldata digests) external {
+    function grab(address payable recipient ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
         uint256 segment; assembly { segment := mload(0x40) }
@@ -327,7 +323,7 @@ contract OrchidLottery1 {
         }
     }
 
-    function grab(address payable recipient ORC_PRM, Ticket calldata ticket, bytes32 digest) external {
+    function grab(address payable recipient ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         require(ORC_SND(recipient, grab(tracks, recipient ORC_ARG, ticket)));
         Track storage track = tracks[digest];
@@ -335,7 +331,7 @@ contract OrchidLottery1 {
             delete track.until_;
     }
 
-    function grab(address payable recipient ORC_PRM, Ticket calldata ticket) external {
+    function grab(address payable recipient ORC_PRM(), Ticket calldata ticket) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         require(ORC_SND(recipient, grab(tracks, recipient ORC_ARG, ticket)));
     }
