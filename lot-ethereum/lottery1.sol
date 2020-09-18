@@ -26,6 +26,8 @@ pragma experimental ABIEncoderV2;
 
 import "./include.sol";
 
+#define ORC_SHA(a, ...) keccak256(abi.encodePacked(a,## __VA_ARGS__))
+
 #if ORC_ERC
 interface IERC20 {
     function transfer(address recipient, uint256 amount) external returns (bool);
@@ -255,13 +257,12 @@ contract OrchidLottery1 {
 
         if (start + range <= block.timestamp)
             return 0;
-        if (ratio < uint128(uint256(keccak256(abi.encodePacked(ticket.reveal, ticket.issued, ticket.nonce)))))
+        if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued, ticket.nonce))))
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
-            keccak256(abi.encodePacked(keccak256(abi.encodePacked(ticket.reveal)), ticket.salt, recipient)),
-            ticket.issued, ticket.nonce, ticket.amount_ratio, ticket.start_range_funder_v & uint256(~0xff)
-            ORC_ARG, this, digest));
+            ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, recipient), ticket.issued, ticket.nonce,
+            ticket.amount_ratio, ticket.start_range_funder_v & uint256(~0xff) ORC_ARG, this, digest));
         signer = ecrecover(digest, uint8(ticket.start_range_funder_v), ticket.r, ticket.s);
 
     {
