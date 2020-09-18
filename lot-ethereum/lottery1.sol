@@ -333,14 +333,13 @@ contract OrchidLottery1 {
 
     function grab(address payable recipient ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
-        require(ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket)));
-        Track storage track = tracks[digest];
-        if (track.until_ <= block.timestamp)
-            delete track.until_;
-    }
 
-    function grab(address payable recipient ORC_PRM(), Ticket calldata ticket) external {
-        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
         require(ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket)));
+
+        if (digest != 0) {
+            Track storage track = tracks[digest];
+            if (track.until_ <= block.timestamp)
+                delete track.until_;
+        }
     }
 }
