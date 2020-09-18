@@ -57,6 +57,7 @@ contract OrchidLottery1 {
         bytes shared_;
     }
 
+    event Create(address indexed funder, address indexed signer ORC_PRM(indexed));
     event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
 
     struct Binding {
@@ -117,6 +118,8 @@ contract OrchidLottery1 {
         uint256 escrow = pot.escrow_;
         amount += pot.amount_;
 
+        bool create;
+
     {
         int256 adjust = int256(adjust_retrieve) >> 128;
 
@@ -132,6 +135,8 @@ contract OrchidLottery1 {
                 pot.unlock_ = 0;
             pot.warned_ = uint128(warned);
         } else if (adjust != 0) {
+            if (escrow == 0)
+                create = true;
             uint256 transfer = uint256(adjust);
             require(transfer <= amount);
             amount -= transfer;
@@ -149,7 +154,10 @@ contract OrchidLottery1 {
         pot.escrow_ = uint128(escrow);
         pot.amount_ = uint128(amount);
 
-        emit Update(funder, signer ORC_ARG);
+        if (create)
+            emit Create(funder, signer ORC_ARG);
+        else
+            emit Update(funder, signer ORC_ARG);
 
         if (retrieve != 0)
 #if ORC_ERC
