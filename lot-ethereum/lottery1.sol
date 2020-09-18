@@ -234,7 +234,7 @@ contract OrchidLottery1 {
         bytes32 reveal; bytes32 salt;
         uint256 issued; bytes32 nonce;
         uint256 amount_ratio;
-        uint256 start_range_v_funder;
+        uint256 start_range_funder_v;
         bytes receipt;
         bytes32 r; bytes32 s;
     }
@@ -246,12 +246,12 @@ contract OrchidLottery1 {
     ) private returns (uint128) {
         address signer;
 
-        address funder = address(ticket.start_range_v_funder);
-        uint64 start = uint64(ticket.start_range_v_funder >> 192);
+        address funder = address(ticket.start_range_funder_v >> 8);
+        uint64 start = uint64(ticket.start_range_funder_v >> 192);
         uint128 amount = uint128(ticket.amount_ratio >> 128);
     {
         uint128 ratio = uint128(ticket.amount_ratio);
-        uint64 range = uint24(ticket.start_range_v_funder >> 168);
+        uint64 range = uint24(ticket.start_range_funder_v >> 168);
 
         if (start + range <= block.timestamp)
             return 0;
@@ -260,8 +260,9 @@ contract OrchidLottery1 {
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             keccak256(abi.encodePacked(keccak256(abi.encodePacked(ticket.reveal)), ticket.salt, recipient)),
-            this, digest ORC_ARG, ticket.issued, ticket.nonce, start, range, amount, ratio, funder));
-        signer = ecrecover(digest, uint8(ticket.start_range_v_funder >> 160), ticket.r, ticket.s);
+            ticket.issued, ticket.nonce, ticket.amount_ratio, ticket.start_range_funder_v & uint256(~0xff)
+            ORC_ARG, this, digest));
+        signer = ecrecover(digest, uint8(ticket.start_range_funder_v), ticket.r, ticket.s);
 
     {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
