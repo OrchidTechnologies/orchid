@@ -211,6 +211,7 @@ task<void> Channel::Send(const Buffer &data) {
 #if 0
         provider->SendData(params, buffer, &result);
 #else
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
         const auto controller(static_cast<webrtc::DataChannelController *>(provider));
         (controller->*Loot<DataChannelController$DataChannelSendData>::pointer)(params, buffer, &result);
 #endif
@@ -222,6 +223,7 @@ task<void> Channel::Send(const Buffer &data) {
 #else
     const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
     const auto provider(sctp->*Loot<SctpDataChannel$provider_>::pointer);
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
     const auto controller(static_cast<webrtc::DataChannelController *>(provider));
 
     co_await Post([&]() {
@@ -238,6 +240,7 @@ task<void> Channel::Send(const Buffer &data) {
 
         interface->SendData(sctp->id(), params, buffer);
 #else
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
         const auto transport(static_cast<webrtc::SctpDataChannelTransport *>(interface));
 
         cricket::SendDataParams params{
