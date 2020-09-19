@@ -344,6 +344,12 @@ contract OrchidLottery1 {
         address payable recipient = address(destination); \
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
+    #define ORC_DST(amount) \
+        if (destination >> 160 == 0) \
+            ORC_SND(recipient, amount) \
+        else \
+            lotteries_[recipient].pots_[recipient]ORC_ARR.amount_ += amount;
+
     function grab(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
         ORC_GRB
 
@@ -355,7 +361,7 @@ contract OrchidLottery1 {
             assembly { mstore(0x40, segment) }
         }
 
-        ORC_SND(recipient, amount)
+        ORC_DST(amount)
 
         for (uint256 i = digests.length; i != 0; )
             ORC_DEL(digests[--i])
@@ -364,7 +370,7 @@ contract OrchidLottery1 {
     function grab(uint256 destination ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
         ORC_GRB
 
-        ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket))
+        ORC_DST(grab(tracks ORC_ARG, recipient, ticket))
 
         if (digest != 0)
             ORC_DEL(digest)
