@@ -100,11 +100,15 @@ contract OrchidLottery1 {
         move_(msg.sender, signer, token, amount, adjust_retrieve);
     }
 
-    function onTokenTransfer(address funder, uint256 amount, bytes calldata data) external returns (bool) {
+    function tokenFallback(address funder, uint256 amount, bytes calldata data) public {
         require(slct(bytes(data[:4])) == Move_);
         address signer; uint256 adjust_retrieve;
         (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
         move_(funder, signer, IERC20(msg.sender), amount, adjust_retrieve);
+    }
+
+    function onTokenTransfer(address funder, uint256 amount, bytes calldata data) external returns (bool) {
+        tokenFallback(funder, amount, data);
         return true;
     }
 
