@@ -33,10 +33,6 @@ Threads::Threads() {
     signals_ = rtc::Thread::Create();
     signals_->SetName("orchid:signal", nullptr);
     signals_->Start();
-
-    working_ = rtc::Thread::Create();
-    working_->SetName("orchid:worker", nullptr);
-    working_->Start();
 }
 
 }
