@@ -254,6 +254,13 @@ contract OrchidLottery1 {
         }
     }
 
+    #define ORC_DEL(d) { \
+        Track storage track = tracks[d]; \
+        if (track.until_ <= block.timestamp) \
+            delete track.until_; \
+    }
+
+
     struct Ticket {
         bytes32 reveal; bytes32 salt;
         uint256 issued; bytes32 nonce;
@@ -346,11 +353,8 @@ contract OrchidLottery1 {
 
         ORC_SND(recipient, amount)
 
-        for (uint256 i = digests.length; i != 0; ) {
-            Track storage track = tracks[digests[--i]];
-            if (track.until_ <= block.timestamp)
-                delete track.until_;
-        }
+        for (uint256 i = digests.length; i != 0; )
+            ORC_DEL(digests[--i])
     }
 
     function grab(address payable recipient ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
@@ -358,10 +362,7 @@ contract OrchidLottery1 {
 
         ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket))
 
-        if (digest != 0) {
-            Track storage track = tracks[digest];
-            if (track.until_ <= block.timestamp)
-                delete track.until_;
-        }
+        if (digest != 0)
+            ORC_DEL(digest)
     }
 }
