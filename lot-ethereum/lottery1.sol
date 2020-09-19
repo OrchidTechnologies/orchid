@@ -266,8 +266,8 @@ contract OrchidLottery1 {
         uint256 issued; bytes32 nonce;
         uint256 amount_ratio;
         uint256 start_range_funder_v;
-        bytes receipt;
         bytes32 r; bytes32 s;
+        bytes receipt;
     }
 
     function grab(
