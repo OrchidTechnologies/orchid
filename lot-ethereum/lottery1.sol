@@ -37,14 +37,21 @@ interface IERC20 {
 #define ORC_ARG , token
 #define ORC_ARR [token]
 #define ORC_PRM(x) , IERC20 x token
-#define ORC_SND(r, a) token.transfer(r, a)
+
+#define ORC_SND(r, a) { \
+    require(token.transfer(r, a)); \
+}
 
 contract OrchidLottery1Token {
 #else
 #define ORC_ARG
 #define ORC_ARR
 #define ORC_PRM(x)
-#define ORC_SND(r, a) r.send(a)
+
+#define ORC_SND(r, a) { \
+    (bool _s,) = r.call{value: a}(""); \
+    require(_s); \
+}
 
 contract OrchidLottery1 {
 #endif
@@ -181,11 +188,7 @@ contract OrchidLottery1 {
             emit Update(funder, signer ORC_ARG);
 
         if (retrieve != 0)
-#if ORC_ERC
-            require(token.transfer(funder, retrieve));
-#else
-            require(funder.send(retrieve));
-#endif
+            ORC_SND(funder, retrieve)
     }
 
     function warn(address signer ORC_PRM(), uint128 warned) external {
@@ -341,7 +344,7 @@ contract OrchidLottery1 {
             assembly { mstore(0x40, segment) }
         }
 
-        require(ORC_SND(recipient, amount));
+        ORC_SND(recipient, amount)
 
         for (uint256 i = digests.length; i != 0; ) {
             Track storage track = tracks[digests[--i]];
@@ -353,7 +356,7 @@ contract OrchidLottery1 {
     function grab(address payable recipient ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
-        require(ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket)));
+        ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket))
 
         if (digest != 0) {
             Track storage track = tracks[digest];
