@@ -28,8 +28,6 @@
 
 namespace orc {
 
-static const Float Ten8("100000000");
-
 task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation, const Float &adjust) {
     static const Selector<uint256_t> latestAnswer_("latestAnswer");
     co_return Float(co_await latestAnswer_.Call(endpoint, "latest", aggregation, 90000)) / adjust;

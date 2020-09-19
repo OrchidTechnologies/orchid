@@ -37,6 +37,8 @@ struct Fiat;
 template <typename Type_>
 class Updated;
 
+static const Float Ten8("100000000");
+
 task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation, const Float &adjust);
 task<S<Updated<Fiat>>> ChainlinkFiat(unsigned milliseconds, Endpoint endpoint);
 
