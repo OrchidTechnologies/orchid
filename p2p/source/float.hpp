@@ -28,6 +28,8 @@
 namespace orc {
 
 typedef boost::multiprecision::cpp_bin_float_oct Float;
+
+static const Float Ten9("1000000000");
 static const Float Ten18("1000000000000000000");
 
 }
