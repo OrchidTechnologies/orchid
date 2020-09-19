@@ -455,8 +455,20 @@ int Main(int argc, const char *const argv[]) {
 
         body << "Cost: ";
         body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 83328) << " || ";
-        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 70605) << " || ";
-        body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)\n";
+        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 67663) << " || ";
+        body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)";
+        body << "\n";
+
+        body << "      ";
+        body << "1k= $" << std::fixed << std::setprecision(2) << (overhead * 1000) << " || ";
+        body << "rf= $" << std::fixed << std::setprecision(2) << (overhead * 58949);
+        body << "\n";
+
+        body << "\n";
+
+        body << price << std::endl;
+        body << "\n";
+
         body << "\n";
 
         const auto gas(84000);
