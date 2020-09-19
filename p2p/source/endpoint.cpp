@@ -77,23 +77,23 @@ Receipt::Receipt(Json::Value &&value) :
             return Address();
         return contract.asString();
     }()),
-    gas_(value["gasUsed"].asString())
+    gas_(To(value["gasUsed"].asString()))
 {
 }
 
 Transaction::Transaction(Json::Value &&value) :
     hash_(Bless(value["hash"].asString())),
     from_(value["from"].asString()),
-    gas_(value["gas"].asString()),
+    gas_(To(value["gas"].asString())),
     price_(value["gasPrice"].asString())
 {
 }
 
 Block::Block(Json::Value &&value) :
-    number_(value["number"].asString()),
+    number_(To(value["number"].asString())),
     state_(value["stateRoot"].asString()),
-    timestamp_(value["timestamp"].asString()),
-    limit_(value["gasLimit"].asString()),
+    timestamp_(To(value["timestamp"].asString())),
+    limit_(To(value["gasLimit"].asString())),
     miner_(value["miner"].asString()),
     transactions_([&]() {
         std::vector<Transaction> transactions;
@@ -173,8 +173,8 @@ task<uint256_t> Endpoint::Chain() const {
     co_return chain;
 }
 
-task<uint256_t> Endpoint::Latest() const {
-    const auto number(uint256_t((co_await operator ()("eth_blockNumber", {})).asString()));
+task<uint64_t> Endpoint::Latest() const {
+    const auto number(To((co_await operator ()("eth_blockNumber", {})).asString()));
     orc_assert_(number != 0, "ethereum server has not synchronized any blocks");
     co_return number;
 }

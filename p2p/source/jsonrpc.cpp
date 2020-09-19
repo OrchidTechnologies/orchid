@@ -164,7 +164,7 @@ std::ostream &operator <<(std::ostream &out, const Address &address) {
     return out << eevm::to_checksum_address(Number<uint256_t>(address.num()).num<eevm::Address>());
 }
 
-uint256_t Timestamp() {
+uint64_t Timestamp() {
     using std::chrono::system_clock;
     system_clock::time_point point(system_clock::now());
     system_clock::duration duration(point.time_since_epoch());

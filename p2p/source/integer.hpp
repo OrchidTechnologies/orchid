@@ -40,9 +40,17 @@ inline bool operator ==(const std::from_chars_result &lhs, const std::from_chars
 }
 
 inline unsigned long To(const std::string_view &value) {
-    const auto end(value.data() + value.size());
+    auto start(value.data());
+    const auto size(value.size());
+    const auto end(start + size);
+    const auto base([&]() -> int {
+        if (size < 2 || start[0] != '0' || start[1] != 'x')
+            return 10;
+        start += 2;
+        return 16;
+    }());
     unsigned long number;
-    orc_assert((std::from_chars(value.data(), end, number) == std::from_chars_result{end, std::errc()}));
+    orc_assert_((std::from_chars(start, end, number, base) == std::from_chars_result{end, std::errc()}), value << " is not a number");
     return number;
 }
 

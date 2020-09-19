@@ -594,7 +594,7 @@ struct Coder {
     }
 };
 
-uint256_t Timestamp();
+uint64_t Timestamp();
 
 }
 

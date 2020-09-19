@@ -33,7 +33,7 @@ namespace orc {
 struct Receipt final {
     const bool status_;
     const Address contract_;
-    const uint256_t gas_;
+    const uint64_t gas_;
 
     Receipt(Json::Value &&value);
 };
@@ -41,17 +41,17 @@ struct Receipt final {
 struct Transaction {
     const Bytes32 hash_;
     const Address from_;
-    const uint256_t gas_;
+    const uint64_t gas_;
     const uint256_t price_;
 
     Transaction(Json::Value &&value);
 };
 
 struct Block {
-    const uint256_t number_;
+    const uint64_t number_;
     const uint256_t state_;
-    const uint256_t timestamp_;
-    const uint256_t limit_;
+    const uint64_t timestamp_;
+    const uint64_t limit_;
     const Address miner_;
     const std::vector<Transaction> transactions_;
 
@@ -99,7 +99,7 @@ class Endpoint final {
     task<Json::Value> operator ()(const std::string &method, Argument args) const;
 
     task<uint256_t> Chain() const;
-    task<uint256_t> Latest() const;
+    task<uint64_t> Latest() const;
     task<Block> Header(const Argument &number) const;
     task<uint256_t> Balance(const Address &address) const;
     task<std::optional<Receipt>> operator ()(const Bytes32 &transaction) const;

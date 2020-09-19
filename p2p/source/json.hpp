@@ -51,6 +51,22 @@ class Argument final {
     {
     }
 
+    Argument(uint64_t value) :
+        value_([&]() {
+            std::string data;
+            data.resize(18);
+            const auto start(data.data());
+            const auto end(start + data.size());
+            start[0] = '0';
+            start[1] = 'x';
+            const auto result(std::to_chars(start + 2, end, value, 16));
+            orc_assert(result.ec == std::errc());
+            data.resize(result.ptr - start);
+            return data;
+        }())
+    {
+    }
+
     Argument(nullptr_t) {
     }
 
