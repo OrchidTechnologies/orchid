@@ -97,10 +97,6 @@ contract OrchidLottery1 {
 #if ORC_ERC
     bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
 
-    function slct(bytes memory data) private pure returns (bytes4 value) {
-        assembly { value := mload(add(data, 32)) }
-    }
-
     function move(address signer, IERC20 token, uint256 amount, uint256 adjust_retrieve) external {
         require(token.transferFrom(msg.sender, address(this), amount));
         move_(msg.sender, signer, token, amount, adjust_retrieve);
@@ -112,7 +108,9 @@ contract OrchidLottery1 {
             Pot storage pot = lotteries_[funder].pots_[funder]ORC_ARR;
             pot.amount_ = safe(pot.amount_ + amount);
         } else {
-            require(slct(bytes(data[:4])) == Move_);
+            // XXX: this should be calldataload(data.offset), maybe with an add or a shr in there
+            bytes memory copy = data; bytes4 selector; assembly { selector := mload(add(copy, 32)) }
+            require(selector == Move_);
             address signer; uint256 adjust_retrieve;
             (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
             move_(funder, signer, IERC20(msg.sender), amount, adjust_retrieve);
