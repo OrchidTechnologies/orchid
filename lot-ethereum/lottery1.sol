@@ -88,6 +88,12 @@ contract OrchidLottery1 {
     }
 
 
+    function safe(uint256 value) private pure returns (uint128) {
+        uint128 result = uint128(value);
+        require(uint256(result) == value);
+        return result;
+    }
+
 #if ORC_ERC
     bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
 
@@ -101,10 +107,16 @@ contract OrchidLottery1 {
     }
 
     function tokenFallback(address funder, uint256 amount, bytes calldata data) public {
-        require(slct(bytes(data[:4])) == Move_);
-        address signer; uint256 adjust_retrieve;
-        (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
-        move_(funder, signer, IERC20(msg.sender), amount, adjust_retrieve);
+        if (data.length == 0) {
+            IERC20 token = IERC20(msg.sender);
+            Pot storage pot = lotteries_[funder].pots_[funder]ORC_ARR;
+            pot.amount_ = safe(pot.amount_ + amount);
+        } else {
+            require(slct(bytes(data[:4])) == Move_);
+            address signer; uint256 adjust_retrieve;
+            (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
+            move_(funder, signer, IERC20(msg.sender), amount, adjust_retrieve);
+        }
     }
 
     function onTokenTransfer(address funder, uint256 amount, bytes calldata data) external returns (bool) {
@@ -114,6 +126,11 @@ contract OrchidLottery1 {
 
     function move_(address funder, address signer, IERC20 token, uint256 amount, uint256 adjust_retrieve) private {
 #else
+    receive() external payable {
+        Pot storage pot = lotteries_[msg.sender].pots_[msg.sender]ORC_ARR;
+        pot.amount_ = safe(pot.amount_ + msg.value);
+    }
+
     function move(address signer, uint256 adjust_retrieve) external payable {
         address payable funder = msg.sender;
         uint256 amount = msg.value;
