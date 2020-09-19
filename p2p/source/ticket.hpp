@@ -65,14 +65,17 @@ struct Ticket {
         ));
     }
 
-    Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Bytes32 &salt) const {
+    template <typename ...Args_>
+    Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Args_ &...args, const Bytes32 &salt) const {
         return Hash(Coder<
-            Bytes32, Address, uint256_t, uint256_t, Bytes32,
-            uint256_t, uint128_t, uint128_t, uint128_t, Address
+            Bytes32, uint256_t, Bytes32,
+            uint256_t, uint256_t,
+            Args_..., Address, uint256_t
         >::Encode(
-            Hash(Tie(commit_, salt, recipient_)),
-            lottery, chain, issued_, nonce_,
-            start_, range_, amount_, ratio_, funder_
+            Hash(Tie(commit_, salt, recipient_)), issued_, nonce_,
+            uint256_t(amount_) << 128 | ratio_,
+            uint256_t(start_) << 192 | uint256_t(range_) << 168 | uint256_t(funder_.num()) << 8,
+            args..., lottery, chain
         ));
     }
 
