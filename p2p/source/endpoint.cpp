@@ -66,13 +66,6 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
     orc_assert(false);
 }
 
-Block::Block(Json::Value &&value) :
-    number_(value["number"].asString()),
-    state_(value["stateRoot"].asString()),
-    timestamp_(value["timestamp"].asString())
-{
-}
-
 Receipt::Receipt(Json::Value &&value) :
     status_([&]() {
         const uint256_t status(value["status"].asString());
@@ -85,6 +78,29 @@ Receipt::Receipt(Json::Value &&value) :
         return contract.asString();
     }()),
     gas_(value["gasUsed"].asString())
+{
+}
+
+Transaction::Transaction(Json::Value &&value) :
+    hash_(Bless(value["hash"].asString())),
+    from_(value["from"].asString()),
+    gas_(value["gas"].asString()),
+    price_(value["gasPrice"].asString())
+{
+}
+
+Block::Block(Json::Value &&value) :
+    number_(value["number"].asString()),
+    state_(value["stateRoot"].asString()),
+    timestamp_(value["timestamp"].asString()),
+    limit_(value["gasLimit"].asString()),
+    miner_(value["miner"].asString()),
+    transactions_([&]() {
+        std::vector<Transaction> transactions;
+        for (auto &transaction : value["transactions"])
+            transactions.emplace_back(std::move(transaction));
+        return transactions;
+    }())
 {
 }
 

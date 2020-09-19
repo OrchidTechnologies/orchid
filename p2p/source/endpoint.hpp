@@ -30,20 +30,32 @@
 
 namespace orc {
 
-struct Block {
-    const uint256_t number_;
-    const uint256_t state_;
-    const uint256_t timestamp_;
-
-    Block(Json::Value &&value);
-};
-
 struct Receipt final {
     const bool status_;
     const Address contract_;
     const uint256_t gas_;
 
     Receipt(Json::Value &&value);
+};
+
+struct Transaction {
+    const Bytes32 hash_;
+    const Address from_;
+    const uint256_t gas_;
+    const uint256_t price_;
+
+    Transaction(Json::Value &&value);
+};
+
+struct Block {
+    const uint256_t number_;
+    const uint256_t state_;
+    const uint256_t timestamp_;
+    const uint256_t limit_;
+    const Address miner_;
+    const std::vector<Transaction> transactions_;
+
+    Block(Json::Value &&value);
 };
 
 struct Account final {
