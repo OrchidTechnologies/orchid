@@ -340,8 +340,12 @@ contract OrchidLottery1 {
         return amount;
     }
 
-    function grab(address payable recipient ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
+    #define ORC_GRB \
+        address payable recipient = address(destination); \
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
+
+    function grab(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
+        ORC_GRB
 
         uint256 segment; assembly { segment := mload(0x40) }
 
@@ -357,8 +361,8 @@ contract OrchidLottery1 {
             ORC_DEL(digests[--i])
     }
 
-    function grab(address payable recipient ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
-        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
+    function grab(uint256 destination ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
+        ORC_GRB
 
         ORC_SND(recipient, grab(tracks ORC_ARG, recipient, ticket))
 
