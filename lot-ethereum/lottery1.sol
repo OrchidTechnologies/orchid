@@ -272,7 +272,7 @@ contract OrchidLottery1 {
 
     function grab(
         mapping(bytes32 => Track) storage tracks
-        ORC_PRM(), address payable recipient,
+        ORC_PRM(), uint256 destination,
         Ticket calldata ticket
     ) private returns (uint128) {
         address signer;
@@ -290,7 +290,7 @@ contract OrchidLottery1 {
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
-            ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, recipient), ticket.issued_nonce,
+            ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, destination), ticket.issued_nonce,
             ticket.amount_ratio, ticket.start_range_funder_v & uint256(~0xff) ORC_ARG, this, digest));
         signer = ecrecover(digest, uint8(ticket.start_range_funder_v), ticket.r, ticket.s);
 
@@ -333,7 +333,7 @@ contract OrchidLottery1 {
             if (verify != OrchidVerifier(0)) {
                 bytes32 codehash; assembly { codehash := extcodehash(verify) }
                 if (codehash == binding.codehash_)
-                    verify.book(pot.shared_, recipient, ticket.receipt);
+                    verify.book(pot.shared_, address(destination), ticket.receipt);
             }
         }
 
@@ -357,7 +357,7 @@ contract OrchidLottery1 {
 
         uint128 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += grab(tracks ORC_ARG, recipient, tickets[--i]);
+            amount += grab(tracks ORC_ARG, destination, tickets[--i]);
             assembly { mstore(0x40, segment) }
         }
 
@@ -370,7 +370,7 @@ contract OrchidLottery1 {
     function grab(uint256 destination ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
         ORC_GRB
 
-        ORC_DST(grab(tracks ORC_ARG, recipient, ticket))
+        ORC_DST(grab(tracks ORC_ARG, destination, ticket))
 
         if (digest != 0)
             ORC_DEL(digest)

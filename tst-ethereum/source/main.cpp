@@ -199,6 +199,8 @@ struct Tester {
             Log() << std::dec << balance << " " << escrow << " | " << warned << " " << unlock << std::endl;
         });
 
+        const bool direct(true);
+
         const auto pay([&]() {
             const Bytes receipt;
 
@@ -217,7 +219,7 @@ struct Tester {
             const auto nonce(Nonzero<32>());
 
             const Ticket ticket{commit, issued, nonce, face, ratio, start, range, funder, recipient};
-            const auto signature(Sign(secret, ticket.Encode1<Args_...>(lottery, chain_, args..., salt)));
+            const auto signature(Sign(secret, ticket.Encode1<Args_...>(lottery, chain_, args..., salt, direct)));
             if (Zeros(signature.operator Brick<65>()))
                 goto sign;
 
@@ -251,7 +253,7 @@ struct Tester {
             payments.emplace_back(pay());
 
         const auto where([&]() -> uint256_t {
-            return uint256_t(1) << 160 | recipient.num();
+            return uint256_t(direct ? 1 : 0) << 160 | recipient.num();
         });
 
         co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(where(), args..., payments, digests)));
