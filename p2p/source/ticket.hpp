@@ -68,11 +68,12 @@ struct Ticket {
     template <typename ...Args_>
     Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Args_ &...args, const Bytes32 &salt) const {
         return Hash(Coder<
-            Bytes32, uint256_t, Bytes32,
+            Bytes32, uint256_t,
             uint256_t, uint256_t,
             Args_..., Address, uint256_t
         >::Encode(
-            Hash(Tie(commit_, salt, recipient_)), issued_, nonce_,
+            Hash(Tie(commit_, salt, recipient_)),
+            issued_ << 192 | nonce_.num<uint256_t>() >> 64,
             uint256_t(amount_) << 128 | ratio_,
             uint256_t(start_) << 192 | uint256_t(range_) << 168 | uint256_t(funder_.num()) << 8,
             args..., lottery, chain

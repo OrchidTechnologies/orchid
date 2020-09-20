@@ -160,7 +160,7 @@ struct Tester {
 
         typedef std::tuple<
             Bytes32 /*reveal*/, Bytes32 /*salt*/,
-            uint256_t /*issued*/, Bytes32 /*nonce*/,
+            uint256_t /*issued_nonce*/,
             uint256_t /*amount ratio*/,
             uint256_t /*start range funder v*/,
             Bytes32 /*r*/, Bytes32 /*s*/,
@@ -223,7 +223,7 @@ struct Tester {
 
             return Payment(
                 reveal, salt,
-                issued, nonce,
+                issued << 192 | nonce.num<uint256_t>() >> 64,
                 uint256_t(face) << 128 | ratio,
                 uint256_t(start) << 192 | uint256_t(range) << 168 | uint256_t(funder.num()) << 8 | signature.v_,
                 signature.r_, signature.s_,

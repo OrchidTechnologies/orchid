@@ -263,7 +263,7 @@ contract OrchidLottery1 {
 
     struct Ticket {
         bytes32 reveal; bytes32 salt;
-        uint256 issued; bytes32 nonce;
+        uint256 issued_nonce;
         uint256 amount_ratio;
         uint256 start_range_funder_v;
         bytes32 r; bytes32 s;
@@ -286,11 +286,11 @@ contract OrchidLottery1 {
 
         if (start + range <= block.timestamp)
             return 0;
-        if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued, ticket.nonce))))
+        if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
-            ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, recipient), ticket.issued, ticket.nonce,
+            ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, recipient), ticket.issued_nonce,
             ticket.amount_ratio, ticket.start_range_funder_v & uint256(~0xff) ORC_ARG, this, digest));
         signer = ecrecover(digest, uint8(ticket.start_range_funder_v), ticket.r, ticket.s);
 
