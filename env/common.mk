@@ -23,6 +23,7 @@ empty :=
 space := $(empty) #
 comma := ,
 percent := %
+paren := (
 
 pwd := .
 pwds := 

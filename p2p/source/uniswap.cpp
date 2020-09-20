@@ -52,7 +52,7 @@ task<Float> Uniswap(const Endpoint &endpoint, const Block &block, const Address 
 }
 
 task<S<Updated<Fiat>>> UniswapFiat(unsigned milliseconds, Endpoint endpoint) {
-    co_return co_await Opened(Update(60*1000, [endpoint]() -> task<Fiat> {
+    co_return co_await Opened(Updating(60*1000, [endpoint]() -> task<Fiat> {
         const auto block(co_await endpoint.Header("latest"));
         const auto [usdc_weth, oxt_weth] = *co_await Parallel(
             Uniswap(endpoint, block, "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc"),

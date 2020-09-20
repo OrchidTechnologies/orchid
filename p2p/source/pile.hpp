@@ -63,11 +63,20 @@ class Pile {
 
     const Value_ &max() const {
         orc_assert(!weights_.empty());
-        return (weights_.end() - 1)->first;
+        auto end(weights_.end());
+        return (--end)->first;
     }
 
     const Value_ &med() const {
         return val(weight_ / 2);
+    }
+
+    auto begin() const {
+        return weights_.begin();
+    }
+
+    auto end() const {
+        return weights_.end();
     }
 };
 

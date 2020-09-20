@@ -9,11 +9,12 @@
 # }}}
 
 
-source += $(wildcard $(pwd)/libz/*.c)
-archive += $(pwd)/libz
-linked += $(pwd)/libz.a
-cflags/$(pwd)/libz/ += -Wno-unused-variable
-qflags += -DCHROMIUM_ZLIB_NO_CHROMECONF
-cflags += -I$(pwd)/libz
-cflags += -I$(pwd)/extra
-cflags += -I$(pwd)
+libpixman := 
+libpixman += libpixman-1.a
+libpixman := $(patsubst %,$(pwd)/pixman/pixman/.libs/%,$(libpixman))
+
+$(subst @,%,$(patsubst %,$(output)/@/%,$(libpixman))) \
+: $(output)/%/$(pwd)/pixman/Makefile $(sysroot)
+	$(MAKE) -C $(dir $<)
+
+linked += $(libpixman)

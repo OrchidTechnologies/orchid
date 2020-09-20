@@ -152,7 +152,7 @@
 	path = p2p/fmt
 	url = https://github.com/fmtlib/fmt.git
 [submodule "leveldb"]
-	path = tst-network/leveldb
+	path = tst-explore/leveldb
 	url = https://github.com/google/leveldb.git
 [submodule "c-ares"]
 	path = min-wireshark/c-ares
@@ -166,3 +166,12 @@
 [submodule "cpp-jwt"]
 	path = p2p/cpp-jwt
 	url = https://github.com/arun11299/cpp-jwt.git
+[submodule "cairo"]
+	path = min-cairo/cairo
+	url = https://github.com/freedesktop/cairo.git
+[submodule "libpng"]
+	path = min-cairo/libpng
+	url = git://git.code.sf.net/p/libpng/code
+[submodule "pixman"]
+	path = min-cairo/pixman
+	url = https://gitlab.freedesktop.org/pixman/pixman.git

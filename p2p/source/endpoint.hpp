@@ -99,6 +99,7 @@ class Endpoint final {
     task<Json::Value> operator ()(const std::string &method, Argument args) const;
 
     task<uint256_t> Chain() const;
+    task<uint256_t> Price() const;
     task<uint64_t> Latest() const;
     task<Block> Header(const Argument &number) const;
     task<uint256_t> Balance(const Address &address) const;

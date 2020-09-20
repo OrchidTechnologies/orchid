@@ -326,7 +326,7 @@ int Main(int argc, const char *const argv[]) {
 
     const auto coinbase(Wait(CoinbaseFiat(60*1000, origin, "USD")));
 
-    const auto kraken(Wait(Opened(Update(60*1000, [origin]() -> task<Fiat> {
+    const auto kraken(Wait(Opened(Updating(60*1000, [origin]() -> task<Fiat> {
         co_return co_await Kraken(*origin);
     }, "Kraken"))));
 
@@ -336,7 +336,7 @@ int Main(int argc, const char *const argv[]) {
     const auto chainlink(Wait(ChainlinkFiat(60*1000, endpoint)));
     const auto gauge(Make<Gauge>(60*1000, origin));
 
-    const auto account(Wait(Opened(Update(60*1000, [endpoint, funder, signer = Address(Commonize(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
+    const auto account(Wait(Opened(Updating(60*1000, [endpoint, funder, signer = Address(Commonize(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
         static const Address lottery("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
         const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(endpoint, "latest", lottery, uint256_t(90000), funder, signer);

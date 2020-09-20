@@ -44,10 +44,14 @@ class Gauge {
 
   public:
     Gauge(unsigned milliseconds, const S<Origin> &origin) :
-        prices_(Wait(Opened(Update(milliseconds, [origin]() -> task<S<Prices_>> {
+        prices_(Wait(Opened(Updating(milliseconds, [origin]() -> task<S<Prices_>> {
             co_return co_await Update_(*origin);
         }, "Gauge"))))
     {
+    }
+
+    task<void> Update() {
+        co_await prices_->Update();
     }
 
     task<void> Open() {

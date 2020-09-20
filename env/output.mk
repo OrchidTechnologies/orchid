@@ -230,6 +230,6 @@ $(output)/%/$(1).a: $(patsubst %,$(output)/$$(percent)/%,$(filter $(1)/%,$(objec
 	@rm -f $$@
 	@echo [AR] $$@
 	@$$(ar/$$*) -rs $$@ $$^
-object := $(filter-out $(1)/%.o,$(object)) $(1).a
+object := $(filter-out $(1)/%.o,$(object))
 endef
 $(foreach archive,$(archive),$(eval $(call _,$(archive))))

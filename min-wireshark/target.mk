@@ -10,7 +10,9 @@
 
 
 pwd/wireshark := $(pwd)/wireshark
+
 archive += $(pwd/wireshark)
+linked += $(pwd/wireshark).a
 
 wireshark := 
 cflags/$(pwd/wireshark)/ := 

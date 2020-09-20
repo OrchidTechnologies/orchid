@@ -45,6 +45,7 @@ class Updated {
         return *value_();
     }
 
+    virtual task<void> Update() = 0;
     virtual Task<void> Open() = 0;
 };
 

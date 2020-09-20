@@ -4,7 +4,7 @@ src=$1
 shift
 cd "${src}"
 if [[ -e ./autogen.sh ]]; then
-    ./autogen.sh
+    NOCONFIGURE=1 ./autogen.sh
 else
     autoreconf -i
 fi

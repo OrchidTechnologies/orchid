@@ -36,17 +36,26 @@ test: $(output)/$(default)/orchid$(exe)
 debug: $(output)/$(default)/orchid$(exe)
 	lldb -o 'run $(args)' $<
 
-.PHONY: record
-record: $(output)/$(default)/orchid$(exe)
-	perf record --call-graph dwarf $< $(args)
-
-.PHONY: report
-report: $(output)/$(default)/orchid$(exe)
-	perf report --sort=cpu
-
-$(call include,vpn/target.mk)
+$(call include,cro/target.mk)
+$(call include,p2p/target.mk)
 
 source += $(wildcard source/*.cpp)
+
+$(call depend,$(pwd)/source/main.o,@/$(pwd)/cro/cairo/src/cairo-features.h)
+
+source += $(filter-out \
+    %/db_bench.cc \
+    %/leveldbutil.cc \
+    %_test.cc \
+    %/testutil.cc \
+    %/env_$(if $(filter win,$(target)),posix,windows).cc \
+,$(wildcard $(patsubst %,leveldb/%/*.cc,db table util)))
+
+cflags += -DLEVELDB_PLATFORM_POSIX
+cflags += -DLEVELDB_IS_BIG_ENDIAN=0
+cflags += -Ileveldb
+cflags += -Ileveldb/include
+cflags/./leveldb/util/env_posix.cc += -Wno-unused-result
 
 cflags += -DORC_FIBER
 

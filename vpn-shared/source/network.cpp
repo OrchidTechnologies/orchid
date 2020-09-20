@@ -40,7 +40,7 @@ Network::Network(const std::string &rpc, Address directory, Address location, co
     directory_(std::move(directory)),
     location_(std::move(location)),
     market_(Make<Market>(5*60*1000, origin, Wait(UniswapFiat(5*60*1000, {origin, locator_})))),
-    oracle_(Wait(Opened(Update(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> { try {
+    oracle_(Wait(Opened(Updating(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> { try {
         static const Float Ten5("100000");
         const auto oracle(co_await Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5));
         // XXX: our Chainlink aggregation can have its answer forged by either Chainlink swapping the oracle set

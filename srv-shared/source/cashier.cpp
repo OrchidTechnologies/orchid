@@ -152,7 +152,7 @@ Cashier::Cashier(Endpoint endpoint, const Float &price, const Address &personal,
     personal_(personal),
     password_(std::move(password)),
 
-    balance_(Update(60*1000, [endpoint = endpoint_, personal]() -> task<uint256_t> {
+    balance_(Updating(60*1000, [endpoint = endpoint_, personal]() -> task<uint256_t> {
         co_return co_await endpoint.Balance(personal); }, "Balance")),
 
     lottery_(lottery),

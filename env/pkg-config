@@ -6,9 +6,23 @@ if test -L "${here}"; then
 fi
 here=${here%/*}
 
-case "$*" in
-    (--atleast-pkgconfig-version) ;;
-    (--version) echo 0.29.2;;
+args=()
+for arg in "$@"; do case "${arg}" in
+    (--print-errors);;
+    (--short-errors);;
+    (*) args+=("${arg}")
+esac; done
+
+echo "${args[*]}" >>/tmp/pkg-config.log
+
+case "${args[*]}" in
+    ("--atleast-pkgconfig-version "*) ;;
+    ("--version") echo 0.29.2;;
+
+    ("--exists libpng") ;;
+    ("--libs libpng") echo "-lpng16 -lz";;
+
+    ("--exists pixman-1 >= 0.36.0") ;;
 
     ("--libs --cflags nettle hogweed")
         variable=NETTLE_${ENV_ARCH//-/_}

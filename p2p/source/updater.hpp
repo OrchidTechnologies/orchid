@@ -40,11 +40,6 @@ class Updater :
 
     Event ready_;
 
-    task<void> Update() {
-        auto value(co_await code_());
-        std::swap(*this->value_(), value);
-    }
-
   public:
     Updater(unsigned milliseconds, Code_ &&code, const char *name) :
         Valve(typeid(*this).name()),
@@ -65,6 +60,11 @@ class Updater :
         }, name);
     }
 
+    task<void> Update() override {
+        auto value(co_await code_());
+        std::swap(*this->value_(), value);
+    }
+
     Task<void> Open() override {
         co_await *ready_;
     }
@@ -75,7 +75,7 @@ class Updater :
 };
 
 template <typename Code_>
-auto Update(unsigned milliseconds, Code_ &&code, const char *name) {
+auto Updating(unsigned milliseconds, Code_ &&code, const char *name) {
     return Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code), name);
 }
 

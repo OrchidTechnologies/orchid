@@ -34,7 +34,7 @@ task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation, cons
 }
 
 task<S<Updated<Fiat>>> ChainlinkFiat(unsigned milliseconds, Endpoint endpoint) {
-    co_return co_await Opened(Update(milliseconds, [endpoint = std::move(endpoint)]() -> task<Fiat> {
+    co_return co_await Opened(Updating(milliseconds, [endpoint = std::move(endpoint)]() -> task<Fiat> {
         const auto [eth_usd, oxt_usd] = *co_await Parallel(
             Chainlink(endpoint, "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F", Ten8),
             Chainlink(endpoint, "0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA", Ten8));

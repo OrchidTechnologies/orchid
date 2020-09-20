@@ -173,6 +173,10 @@ task<uint256_t> Endpoint::Chain() const {
     co_return chain;
 }
 
+task<uint256_t> Endpoint::Price() const {
+    co_return uint256_t((co_await operator()("eth_gasPrice", {})).asString());
+}
+
 task<uint64_t> Endpoint::Latest() const {
     const auto number(To((co_await operator ()("eth_blockNumber", {})).asString()));
     orc_assert_(number != 0, "ethereum server has not synchronized any blocks");
@@ -180,7 +184,7 @@ task<uint64_t> Endpoint::Latest() const {
 }
 
 task<Block> Endpoint::Header(const Argument &number) const {
-    co_return co_await operator ()("eth_getBlockByNumber", {number, false});
+    co_return co_await operator ()("eth_getBlockByNumber", {number, true});
 }
 
 task<uint256_t> Endpoint::Balance(const Address &address) const {
