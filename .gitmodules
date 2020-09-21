@@ -175,3 +175,6 @@
 [submodule "pixman"]
 	path = min-cairo/pixman
 	url = https://gitlab.freedesktop.org/pixman/pixman.git
+[submodule "chains"]
+	path = p2p/chains
+	url = https://github.com/ethereum-lists/chains.git
