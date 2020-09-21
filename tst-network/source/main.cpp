@@ -461,6 +461,7 @@ int Main(int argc, const char *const argv[]) {
 
         body << "      ";
         body << "1k= $" << std::fixed << std::setprecision(2) << (overhead * 1000) << " || ";
+        body << "$1= " << std::fixed << uint64_t(1 / overhead) << " || ";
         body << "rf= $" << std::fixed << std::setprecision(2) << (overhead * 58949);
         body << "\n";
 
