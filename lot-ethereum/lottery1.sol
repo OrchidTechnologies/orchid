@@ -39,7 +39,9 @@ interface IERC20 {
 #define ORC_PRM(x) , IERC20 x token
 
 #define ORC_SND(r, a) { \
-    require(token.transfer(r, a)); \
+    (bool _s, bytes memory _d) = address(token).call( \
+        abi.encodeWithSignature("transfer(address,uint256)", r, a)); \
+    require(_s && (_d.length == 0 || abi.decode(_d, (bool)))); \
 }
 
 contract OrchidLottery1Token {
@@ -395,7 +397,7 @@ contract OrchidLottery1 {
             ORC_DEL(digests[--i])
     }
 
-    function grab(uint256 destination ORC_PRM(), Ticket calldata ticket, bytes32 digest, bytes calldata receipt) external {
+    function grab(uint256 destination ORC_PRM(), bytes32 digest, Ticket calldata ticket, bytes calldata receipt) external {
         ORC_GRB
 
         ORC_DST(grab(tracks, destination ORC_ARG, receipt, ticket))
