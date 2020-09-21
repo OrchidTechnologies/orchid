@@ -31,10 +31,32 @@ pragma solidity 0.5.12;
 import "../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "../openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract OrchidToken is ERC20, ERC20Detailed {
+#if ORC_677
+contract ERC677 is ERC20 {
+    function transferAndCall(address recipient, uint amount, bytes calldata data) external returns (bool success);
+    event Transfer(address indexed sender, address indexed recipient, uint amount, bytes data);
+}
+
+contract ERC677Receiver {
+    function onTokenTransfer(address sender, uint amount, bytes calldata data) external;
+}
+
+contract OrchidToken677 is ERC677, ERC20Detailed {
+#else
+contract OrchidToken677 is ERC20, ERC20Detailed {
+#endif
     constructor()
         ERC20Detailed("Orchid", "OXT", 18)
     public {
         _mint(msg.sender, 10**9 * 10**uint256(decimals()));
     }
+
+#if ORC_677
+    function transferAndCall(address recipient, uint amount, bytes calldata data) external returns (bool success) {
+        super.transfer(recipient, amount);
+        emit Transfer(msg.sender, recipient, amount, data);
+        ERC677Receiver(recipient).onTokenTransfer(msg.sender, amount, data);
+        return true;
+    }
+#endif
 }

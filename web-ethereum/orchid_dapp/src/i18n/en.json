@@ -80,7 +80,7 @@
   "noteIfOverdraftOccurs": "Note: If an overdraft occurs on your Orchid balance, your deposit will be lost.",
   "withdrawOXT": "Withdraw OXT",
 
-  "walletAddress": "Wallet Address",
+  "funderWalletAddress": "Funder wallet address",
 
   "copy": "Copy",
   "signerAddress": "Signer Address",
@@ -136,6 +136,7 @@
   "delay": "Delay",
   "delayDays": "Delay Days",
   "delaySeconds": "Delay Seconds",
-  "days": "Days"
+  "days": "Days",
 
+  "orchidAccount": "Orchid Account"
 }

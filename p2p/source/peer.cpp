@@ -39,10 +39,12 @@ struct SetupSSL {
     ~SetupSSL() { rtc::CleanupSSL(); }
 } setup_;
 
+#ifndef _WIN32
 struct Logger :
     public rtc::LogSink
 {
     Logger() {
+        // XXX: on Win32 this uses an uninitialized mutex during load
         rtc::LogMessage::AddLogToStream(this, rtc::LS_WARNING);
     }
 
@@ -50,6 +52,7 @@ struct Logger :
         Log() << message << std::endl;
     }
 } logger_;
+#endif
 
 
 Peer::Peer(S<Origin> origin, Configuration configuration) :

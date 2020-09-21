@@ -22,9 +22,9 @@ import {
 import {OrchidContracts} from "../api/orchid-eth-contracts";
 import {S} from "../i18n/S";
 import {Orchid} from "../api/orchid";
-import ProgressLine from "./ProgressLine";
 import {AccountRecommendation, MarketConditions} from "./MarketConditionsPanel";
 import {OrchidPricingAPI} from "../api/orchid-pricing";
+import {EfficiencyMeter} from "./EfficiencyMeter";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -49,7 +49,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
   const txResult = React.createRef<TransactionProgress>();
   const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
   const [pot, setPot] = useState<LotteryPot | null>(null);
-  const [marketConditions, setMarketConditions] = useState<MarketConditions>();
+  const [marketConditions, setMarketConditions] = useState<MarketConditions | null>(null);
   const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     console.log("fetch market conditions");
     if (pot == null) {
       console.log("null market conditions: ", pot, addAmount, addEscrow);
-      setMarketConditions(undefined);
+      setMarketConditions(null);
       return;
     }
     console.log("getting market conditions");
@@ -182,24 +182,9 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     }
   }
 
-  let efficiencyPerc: string = "";
-  let efficiencyColor: string = "";
-  if (marketConditions) {
-    let efficiency = marketConditions.efficiency;
-    efficiencyPerc = (efficiency * 100).toFixed() + "%";
-    if (efficiency <= 0.2) {
-      efficiencyColor = "red"
-    }
-    if (efficiency > 0.2 && efficiency <= 0.6) {
-      efficiencyColor = "#FFD147"
-    }
-    if (efficiency > 0.6) {
-      efficiencyColor = "green"
-    }
-  }
-
   let limitedByBalance = marketConditions == null ? false : marketConditions.limitedByBalance;
-  let limitedByString = limitedByBalance ? "balance": "deposit";
+  let limitedByString = limitedByBalance ? "balance" : "deposit";
+  let efficiencyPerc = marketConditions == null ? "" : marketConditions.efficiencyPerc();
   let efficiencyText: string =
     (addAmount == null && addEscrow == null) ?
       "The current efficiency of your account as determined by your balance, deposit, and current market conditions is " + efficiencyPerc +
@@ -289,20 +274,7 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
       </Row>
 
       {/*Market conditions meter*/}
-      <Visibility visible={marketConditions !== undefined}>
-        <Row className="form-row">
-          <Col>
-            <label>Market efficiency</label>
-          </Col>
-          <Col>
-            <ProgressLine label=""
-                          visualParts={[{percentage: efficiencyPerc, color: efficiencyColor}]}/>
-          </Col>
-          <Col style={{flexGrow: 0}}>
-            {efficiencyPerc}
-          </Col>
-        </Row>
-      </Visibility>
+      <EfficiencyMeter marketConditions={marketConditions}/>
 
       <p className="instructions">
         {S.yourDepositSecuresAccessInstruction}
@@ -333,5 +305,4 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     </Container>
   );
 };
-
 

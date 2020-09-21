@@ -1,3 +1,6 @@
 #!/bin/bash
 set -e
-env/solc.sh 0.5.12 build token.sol --optimize --abi
+cpp -C -P -DORC_677=0 token.sol >token-20.sol
+env/solc.sh 0.5.12 build token-20.sol --optimize --abi
+cpp -C -P -DORC_677=1 token.sol >token-677.sol
+env/solc.sh 0.5.12 build token-677.sol --optimize --abi

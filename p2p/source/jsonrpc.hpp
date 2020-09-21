@@ -551,7 +551,7 @@ template <typename... Args_>
 struct Coded<std::tuple<Args_...>, void> {
     typedef Tupled<0, std::decay_t<Args_>...> Tupled_;
 
-    static const bool dynamic_ = true;
+    static const bool dynamic_ = (... || Coded<std::decay_t<Args_>>::dynamic_);
 
     static void Name(std::ostringstream &signature) {
         signature << "(";

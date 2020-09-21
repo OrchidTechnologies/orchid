@@ -28,6 +28,7 @@
 #include "float.hpp"
 #include "load.hpp"
 #include "local.hpp"
+#include "signed.hpp"
 #include "sleep.hpp"
 #include "ticket.hpp"
 
@@ -61,8 +62,6 @@ struct Tester {
     const Address customer_;
     const Address provider_;
 
-    uint256_t audited_ = 0;
-
     task<Receipt> Receipt(const Bytes32 &transaction) {
         for (;;) {
             if (auto maybe{co_await endpoint_(transaction)}) {
@@ -75,21 +74,15 @@ struct Tester {
 
     task<bool> Audit(const std::string &name, const Bytes32 &transaction) {
         const auto receipt(co_await Receipt(transaction));
-        audited_ += receipt.gas_;
         Log() << (receipt.status_ ? '+' : '-') << transaction << " " << name << ": " << std::dec << receipt.gas_ << std::endl;
         co_return receipt.status_;
     }
 
-    void Audit() {
-        Log() << "TOTAL: " << std::dec << audited_ << std::endl;
-        audited_ = 0;
-    }
-
-    task<void> Test0(const Address &token) {
+    task<void> Test0(const Secret &secret, const Address &signer, const Address &token, const Address &lottery, const Bytes &receipt) {
+        Log() << "==========" << std::endl;
         Log() << "lottery0" << std::endl;
 
         static Selector<bool, Address, uint256_t> approve("approve");
-        static Selector<bool, Address, uint256_t> transfer("transfer");
 
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
         static Selector<void, Address, uint128_t, uint128_t> push("push");
@@ -104,21 +97,13 @@ struct Tester {
             Bytes /*receipt*/, std::vector<Bytes32> /*old*/
         > grab("grab");
 
-        const auto secret(Random<32>());
-        const Address signer(Commonize(secret));
-
-        const auto lottery((co_await Receipt(co_await Constructor<Address>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery0.bin")), token))).contract_);
-
         const auto show([&]() -> task<void> {
             const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(endpoint_, "latest", lottery, 90000, customer_, signer);
             Log() << std::dec << balance << " " << escrow << " | " << unlock << std::endl;
         });
 
-        co_await Audit("transfer", co_await transfer.Send(endpoint_, customer_, token, minimum_, provider_, 10));
-        Audit();
-
-        co_await Audit("approve", co_await approve.Send(endpoint_, customer_, token, minimum_, lottery, 10));
-        co_await Audit("push", co_await push.Send(endpoint_, customer_, lottery, maximum_, signer, 10, 4));
+        co_await Audit("approve", co_await endpoint_.Send(customer_, token, minimum_, approve(lottery, 10)));
+        co_await Audit("push", co_await endpoint_.Send(customer_, lottery, maximum_, push(signer, 10, 4)));
 
         co_await show();
 
@@ -129,7 +114,6 @@ struct Tester {
 
         const auto funder(customer_);
         const auto recipient(provider_);
-        const Bytes receipt;
 
         const uint128_t face(2);
         const uint128_t ratio(Float(Two128) - 1);
@@ -142,110 +126,214 @@ struct Tester {
         const auto hash(ticket.Encode0(lottery, chain_, receipt));
         const auto signature(Sign(secret, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
 
-        co_await Audit("grab", co_await grab.Send(endpoint_, provider_, lottery, minimum_, reveal, commit, issued, nonce, signature.v_, signature.r_, signature.s_, face, ratio, start, range, funder, recipient, receipt, {}));
+        co_await Audit("grab", co_await endpoint_.Send(provider_, lottery, minimum_, grab(reveal, commit, issued, nonce, signature.v_, signature.r_, signature.s_, face, ratio, start, range, funder, recipient, receipt, {})));
 
         co_await show();
-        Audit();
 
-        co_await Audit("approve", co_await approve.Send(endpoint_, customer_, token, minimum_, lottery, 10));
-        co_await Audit("push", co_await push.Send(endpoint_, customer_, lottery, minimum_, signer, 10, 0));
+        co_await Audit("approve", co_await endpoint_.Send(customer_, token, minimum_, approve(lottery, 10)));
+        co_await Audit("push", co_await endpoint_.Send(customer_, lottery, minimum_, push(signer, 10, 0)));
 
         co_await show();
-        Audit();
-
-        Log() << "==========" << std::endl;
     }
 
-    task<void> Test1() {
-        Log() << "lottery1" << std::endl;
+    template <typename Code_, typename ...Args_>
+    task<void> Test1(const std::string &kind, const Address &lottery, const Bytes &receipt, Code_ &&move, Args_ ...args) {
+        Log() << "==========" << std::endl;
+        Log() << "lottery1 (" << kind << ")" << std::endl;
 
-        static Selector<void, Address, std::vector<Bytes>> run("run");
-
-        static Selector<void, Address, std::vector<Bytes32>> back("back");
-        static Selector<std::tuple<uint128_t, uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
-        static Selector<void, Address, uint256_t, uint256_t, uint256_t> move("move");
-        static Selector<void, Address, uint128_t> warn("warn");
+        static Selector<std::tuple<uint128_t, uint128_t, uint128_t, uint256_t, Bytes, uint256_t, std::tuple<Address, Bytes32>, std::tuple<Address, Bytes32>>, Address, Address, Args_...> look("look");
+        static Selector<void, std::vector<Bytes32>> save("save");
+        static Selector<void, Address, Args_..., uint128_t> warn("warn");
 
         typedef std::tuple<
             Bytes32 /*reveal*/, Bytes32 /*salt*/,
-            uint256_t /*issued*/, Bytes32 /*nonce*/,
-            uint256_t /*start*/, uint128_t /*range*/,
-            uint128_t /*amount*/, uint128_t /*ratio*/,
-            Address /*funder*/, Bytes /*receipt*/,
-            uint8_t /*v*/, Bytes32 /*r*/, Bytes32 /*s*/
+            uint256_t /*issued_nonce*/,
+            uint256_t /*amount ratio*/,
+            uint256_t /*packed*/,
+            Bytes32 /*r*/, Bytes32 /*s*/
         > Payment;
 
         static Selector<void,
-            Address /*recipient*/,
+            uint256_t /*recipient*/,
+            Args_... /*token*/,
+            Bytes32 /*digest*/,
+            Payment /*ticket*/,
+            Bytes /*receipt*/
+        > grab1("grab");
+
+        static Selector<void,
             std::vector<Payment> /*tickets*/,
+            uint256_t /*recipient*/,
+            Args_... /*token*/,
+            Bytes /*receipt*/,
             std::vector<Bytes32>
-        > grab("grab");
+        > grabN("grab");
 
         //const auto batch((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidBatch.bin"))))).contract_);
 
-#if 0
-        //const Address lottery("0x3675d91e95e8Edb6022fb4B3BB86fBf7eb1Ad8f2");
-        const Address lottery("0x0AD1Bf8051B37A7c2b13e31780437Ca05e55bBE3");
-#else
-        const auto lottery((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1.bin"))))).contract_);
-        Log() << lottery << std::endl;
-#endif
-
+      secret:
         const auto secret(Random<32>());
         const Address signer(Commonize(secret));
+        if (Zeros(signer.buf()))
+            goto secret;
+
+        const auto funder(customer_);
+        const auto recipient(provider_);
 
         const auto show([&]() -> task<void> {
-            const auto [balance, escrow, warned, unlock, verify, codehash, shared] = co_await look.Call(endpoint_, "latest", lottery, 90000, customer_, signer);
+            const auto [balance, escrow, warned, unlock, shared, bound, before, after] = co_await look.Call(endpoint_, "latest", lottery, 90000, customer_, signer, args...);
             Log() << std::dec << balance << " " << escrow << " | " << warned << " " << unlock << std::endl;
         });
 
-        co_await Audit("move", co_await move.Send(endpoint_, customer_, lottery, minimum_, 10, signer, 0, 4, 0));
+        const bool direct(false);
 
-        {
-            const auto funder(customer_);
-            const auto recipient(provider_);
-            const Bytes receipt;
-
+        const auto pay([&]() {
             const auto reveal(Nonzero<32>());
             const auto commit(Hash(Coder<Bytes32>::Encode(reveal)));
 
             const uint128_t face(2);
             const uint128_t ratio(Float(Two128) - 1);
 
-            const auto issued(Timestamp());
-            const auto start(issued - 60);
-            const uint128_t range(60 * 60 * 24);
+            const auto issued(Timestamp() - 60);
+            const auto start(issued + 20);
+            const uint128_t range(60 * 60 * 16);
 
           sign:
             const auto salt(Nonzero<32>());
             const auto nonce(Nonzero<32>());
 
             const Ticket ticket{commit, issued, nonce, face, ratio, start, range, funder, recipient};
-            const auto signature(Sign(secret, ticket.Encode1(lottery, chain_, salt)));
+            const auto signature(Sign(secret, ticket.Encode1<Args_...>(lottery, chain_, args..., salt, direct)));
             if (Zeros(signature.operator Brick<65>()))
                 goto sign;
 
-#if 0
-            co_await Audit("run", co_await run.Send(endpoint_, provider_, batch, minimum_, lottery, {Beam(grab(reveal, salt, issued, nonce, signature.v_, signature.r_, signature.s_, start, range, face, ratio, funder, receipt, recipient))}));
+            return Payment(
+                reveal, salt,
+                issued << 192 | nonce.num<uint256_t>() >> 64,
+                uint256_t(face) << 128 | ratio,
+                ticket.Packed1() | 0 << 24 | receipt.size() << 8 | signature.v_,
+                signature.r_, signature.s_
+            );
+        });
+
+        std::vector<Bytes32> digests;
+        for (unsigned i(0); i != 7; ++i)
+            digests.emplace_back(Nonzero<32>());
+        co_await Audit("save", co_await endpoint_.Send(recipient, lottery, maximum_, save(digests)));
+
+        const auto digest0(digests.back());
+        digests.pop_back();
+        const auto digest1(digests.back());
+        digests.pop_back();
+
+        co_await move(provider_, lottery, 1, provider_, 1, 0);
+        co_await move(customer_, lottery, 20, signer, 4, 0);
+        co_await show();
+
+        std::vector<Payment> payments;
+        payments.reserve(5);
+        for (unsigned i(0); i != 5; ++i)
+            payments.emplace_back(pay());
+
+        const auto where([&]() -> uint256_t {
+            return uint256_t(direct ? 1 : 0) << 160 | recipient.num();
+        });
+
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(payments, where(), args..., receipt, digests)));
+        co_await show();
+
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., receipt, {digest1})));
+        co_await show();
+
+        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., digest0, pay(), receipt)));
+        co_await show();
+
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., receipt, {})));
+        co_await show();
+
+        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., Zero<32>(), pay(), receipt)));
+        co_await show();
+
+        co_await move(customer_, lottery, 10, signer, 0, 0);
+        co_await show();
+        co_await Audit("warn", co_await endpoint_.Send(customer_, lottery, minimum_, warn(signer, args..., 4)));
+        co_await show();
+        co_await move(customer_, lottery, 0, signer, -4, 21);
+        co_await show();
+    }
+
+    auto Combine(const checked_int256_t &adjust, const uint256_t &retrieve) {
+        return Complement(adjust) << 128 | retrieve;
+    }
+
+    task<void> Test() {
+        const auto lottery1eth((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1.bin"))))).contract_);
+        const auto lottery1tok((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1Token.bin"))))).contract_);
+
+#if 1
+        const auto verifier((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidPassword.bin"))))).contract_);
+        const Bytes receipt("password");
+
+        static Selector<void, Address> bind1("bind");
+        co_await Audit("bind", co_await endpoint_.Send(customer_, lottery1eth, minimum_, bind1(verifier)));
+        co_await Audit("bind", co_await endpoint_.Send(customer_, lottery1tok, minimum_, bind1(verifier)));
 #else
-            Payment payment(reveal, salt, issued, nonce, start, range, face, ratio, funder, receipt, signature.v_, signature.r_, signature.s_);
-            co_await Audit("grab", co_await grab.Send(endpoint_, provider_, lottery, minimum_, recipient, {payment}, {}));
+        const Bytes receipt;
 #endif
-        }
 
-        Audit();
+#if 1
+        static Selector<bool, Address, uint256_t> approve("approve");
+        static Selector<uint256_t, Address> balanceOf("balanceOf");
+        static Selector<bool, Address, uint256_t> transfer("transfer");
 
-        co_await show();
-        co_await Audit("move", co_await move.Send(endpoint_, customer_, lottery, minimum_, 10, signer, 0, 0, 0));
-        co_await show();
-        co_await Audit("warn", co_await warn.Send(endpoint_, customer_, lottery, minimum_, signer, 4));
-        co_await show();
-        co_await Audit("move", co_await move.Send(endpoint_, customer_, lottery, minimum_, 0, signer, 4, 0, 19));
-        co_await show();
+        const auto token((co_await endpoint_(co_await Constructor<>().Send(endpoint_, customer_, maximum_, Bless(Load("../tok-ethereum/build/OrchidToken677.bin")))))->contract_);
 
-        Audit();
+        co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(provider_, 10)));
+        co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(lottery1tok, 10)));
 
-        Log() << "==========" << std::endl;
+#if 1
+      secret:
+        const auto secret(Random<32>());
+        const Address signer(Commonize(secret));
+        if (Zeros(signer.buf()))
+            goto secret;
+
+        const auto lottery0((co_await Receipt(co_await Constructor<Address>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery0.bin")), token))).contract_);
+#if 1
+        static Selector<void, Address, Address, Bytes> bind0("bind");
+        co_await Audit("bind", co_await endpoint_.Send(customer_, lottery0, maximum_, bind0(signer, verifier, {})));
+#endif
+        co_await Test0(secret, signer, token, lottery0, receipt);
+#endif
+
+#if 1
+        co_await Test1("erc20", lottery1tok, receipt, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+            static Selector<void, Address, Address, uint256_t, uint256_t> move("move");
+            if (value != 0)
+                co_await Audit("approve", co_await endpoint_.Send(sender, token, minimum_, approve(lottery, value)));
+            co_await Audit("move", co_await endpoint_.Send(sender, lottery, minimum_, move(signer, token, value, Combine(adjust, retrieve))));
+        }, token);
+#endif
+
+#if 1
+        Log() << std::dec << co_await balanceOf.Call(endpoint_, "latest", token, 90000, lottery1tok) << std::endl;
+        co_await Test1("erc677", lottery1tok, receipt, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+            Log() << std::dec << co_await balanceOf.Call(endpoint_, "latest", token, 90000, lottery1tok) << std::endl;
+            static Selector<void, Address, uint256_t, Bytes> transferAndCall("transferAndCall");
+            static Selector<void, Address, uint256_t> move("move");
+            co_await Audit("move", co_await endpoint_.Send(sender, token, minimum_, transferAndCall(lottery, value, Beam(move(signer, Combine(adjust, retrieve))))));
+            Log() << std::dec << co_await balanceOf.Call(endpoint_, "latest", token, 90000, lottery1tok) << std::endl;
+        }, token);
+        Log() << std::dec << co_await balanceOf.Call(endpoint_, "latest", token, 90000, lottery1tok) << std::endl;
+#endif
+#endif
+
+#if 1
+        co_await Test1("ether", lottery1eth, receipt, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+            static Selector<void, Address, uint256_t> move("move");
+            co_await Audit("move", co_await endpoint_.Send(sender, lottery, minimum_, value, move(signer, Combine(adjust, retrieve))));
+        });
+#endif
     }
 };
 
@@ -296,11 +384,7 @@ task<int> Main(int argc, const char *const argv[]) {
 
     orc_assert(accounts.size() >= 3);
     Tester tester{endpoint, chain, accounts[0], accounts[1], accounts[2]};
-
-    const auto token((co_await endpoint(co_await Constructor<>().Send(endpoint, accounts[1], maximum_, Bless(Load("../tok-ethereum/build/OrchidToken.bin")))))->contract_);
-    co_await tester.Test0(token);
-
-    co_await tester.Test1();
+    co_await tester.Test();
 
     co_return 0;
 }
