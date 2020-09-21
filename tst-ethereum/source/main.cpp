@@ -78,13 +78,12 @@ struct Tester {
         co_return receipt.status_;
     }
 
-    task<void> Test0(const Address &token) {
+    task<void> Test0(const Secret &secret, const Address &signer, const Address &token, const Address &lottery) {
         Log() << "==========" << std::endl;
         Log() << "lottery0" << std::endl;
 
         static Selector<bool, Address, uint256_t> approve("approve");
 
-        static Selector<void, Address, Address, Bytes> bind("bind");
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
         static Selector<void, Address, uint128_t, uint128_t> push("push");
 
@@ -98,20 +97,10 @@ struct Tester {
             Bytes /*receipt*/, std::vector<Bytes32> /*old*/
         > grab("grab");
 
-      secret:
-        const auto secret(Random<32>());
-        const Address signer(Commonize(secret));
-        if (Zeros(signer.buf()))
-            goto secret;
-
-        const auto lottery((co_await Receipt(co_await Constructor<Address>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery0.bin")), token))).contract_);
-
         const auto show([&]() -> task<void> {
             const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(endpoint_, "latest", lottery, 90000, customer_, signer);
             Log() << std::dec << balance << " " << escrow << " | " << unlock << std::endl;
         });
-
-        //co_await Audit("bind", co_await endpoint_.Send(customer_, lottery, maximum_, bind(signer, lottery, {})));
 
         co_await Audit("approve", co_await endpoint_.Send(customer_, token, minimum_, approve(lottery, 10)));
         co_await Audit("push", co_await endpoint_.Send(customer_, lottery, maximum_, push(signer, 10, 4)));
@@ -153,7 +142,6 @@ struct Tester {
         Log() << "==========" << std::endl;
         Log() << "lottery1 (" << kind << ")" << std::endl;
 
-        static Selector<void, Address> bind("bind");
         static Selector<std::tuple<uint128_t, uint128_t, uint128_t, uint256_t, Bytes, uint256_t, std::tuple<Address, Bytes32>, std::tuple<Address, Bytes32>>, Address, Address, Args_...> look("look");
         static Selector<void, std::vector<Bytes32>> save("save");
         static Selector<void, Address, Args_..., uint128_t> warn("warn");
@@ -184,8 +172,6 @@ struct Tester {
 
         //const auto batch((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidBatch.bin"))))).contract_);
 
-        //co_await Audit("bind", co_await endpoint_.Send(customer_, lottery, minimum_, bind(1)));
-
       secret:
         const auto secret(Random<32>());
         const Address signer(Commonize(secret));
@@ -202,9 +188,10 @@ struct Tester {
 
         const bool direct(true);
 
-        const auto pay([&]() {
-            const Bytes receipt;
+        const Bytes receipt("password");
+        Log() << Hash(receipt) << std::endl;
 
+        const auto pay([&]() {
             const auto reveal(Nonzero<32>());
             const auto commit(Hash(Coder<Bytes32>::Encode(reveal)));
 
@@ -228,7 +215,7 @@ struct Tester {
                 reveal, salt,
                 issued << 192 | nonce.num<uint256_t>() >> 64,
                 uint256_t(face) << 128 | ratio,
-                ticket.Packed1() | signature.v_,
+                ticket.Packed1() | 0 << 24 | 8 << 8 | signature.v_,
                 signature.r_, signature.s_
             );
         });
@@ -256,19 +243,19 @@ struct Tester {
             return uint256_t(direct ? 1 : 0) << 160 | recipient.num();
         });
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(payments, where(), args..., {}, digests)));
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(payments, where(), args..., receipt, digests)));
         co_await show();
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., {}, {digest1})));
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., receipt, {digest1})));
         co_await show();
 
-        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), digest0, {})));
+        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), digest0, receipt)));
         co_await show();
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., {}, {})));
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., receipt, {})));
         co_await show();
 
-        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), Number<uint256_t>(uint256_t(0)), {})));
+        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), Number<uint256_t>(uint256_t(0)), receipt)));
         co_await show();
 
         co_await move(customer_, lottery, 10, signer, 0, 0);
@@ -287,6 +274,8 @@ struct Tester {
         const auto lottery1eth((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1.bin"))))).contract_);
         const auto lottery1tok((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1Token.bin"))))).contract_);
 
+        const auto verifier((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidPassword.bin"))))).contract_);
+
 #if 1
         static Selector<bool, Address, uint256_t> approve("approve");
         static Selector<bool, Address, uint256_t> transfer("transfer");
@@ -297,7 +286,18 @@ struct Tester {
         co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(lottery1tok, 10)));
 
 #if 1
-        co_await Test0(token);
+      secret:
+        const auto secret(Random<32>());
+        const Address signer(Commonize(secret));
+        if (Zeros(signer.buf()))
+            goto secret;
+
+        const auto lottery0((co_await Receipt(co_await Constructor<Address>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery0.bin")), token))).contract_);
+
+        static Selector<void, Address, Address, Bytes> bind0("bind");
+        co_await Audit("bind", co_await endpoint_.Send(customer_, lottery0, maximum_, bind0(signer, verifier, {})));
+
+        co_await Test0(secret, signer, token, lottery0);
 #endif
 
 #if 1
@@ -319,6 +319,9 @@ struct Tester {
 #endif
 
 #if 1
+        static Selector<void, Address> bind1("bind");
+        co_await Audit("bind", co_await endpoint_.Send(customer_, lottery1eth, minimum_, bind1(verifier)));
+
         co_await Test1("ether", lottery1eth, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
             static Selector<void, Address, uint256_t> move("move");
             co_await Audit("move", co_await endpoint_.Send(sender, lottery, minimum_, value, move(signer, Combine(adjust, retrieve))));
