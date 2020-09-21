@@ -162,22 +162,23 @@ struct Tester {
             Bytes32 /*reveal*/, Bytes32 /*salt*/,
             uint256_t /*issued_nonce*/,
             uint256_t /*amount ratio*/,
-            uint256_t /*start range funder v*/,
-            Bytes32 /*r*/, Bytes32 /*s*/,
-            Bytes /*receipt*/
+            uint256_t /*packed*/,
+            Bytes32 /*r*/, Bytes32 /*s*/
         > Payment;
 
         static Selector<void,
             uint256_t /*recipient*/,
             Args_... /*token*/,
             Payment /*ticket*/,
-            Bytes32 /*digest*/
+            Bytes32 /*digest*/,
+            Bytes /*receipt*/
         > grab1("grab");
 
         static Selector<void,
+            std::vector<Payment> /*tickets*/,
             uint256_t /*recipient*/,
             Args_... /*token*/,
-            std::vector<Payment> /*tickets*/,
+            Bytes /*receipt*/,
             std::vector<Bytes32>
         > grabN("grab");
 
@@ -210,9 +211,9 @@ struct Tester {
             const uint128_t face(2);
             const uint128_t ratio(Float(Two128) - 1);
 
-            const auto issued(Timestamp());
-            const auto start(issued - 60);
-            const uint128_t range(60 * 60 * 24);
+            const auto issued(Timestamp() - 60);
+            const auto start(issued + 20);
+            const uint128_t range(60 * 60 * 16);
 
           sign:
             const auto salt(Nonzero<32>());
@@ -227,9 +228,8 @@ struct Tester {
                 reveal, salt,
                 issued << 192 | nonce.num<uint256_t>() >> 64,
                 uint256_t(face) << 128 | ratio,
-                uint256_t(start) << 192 | uint256_t(range) << 168 | uint256_t(funder.num()) << 8 | signature.v_,
-                signature.r_, signature.s_,
-                receipt
+                ticket.Packed1() | signature.v_,
+                signature.r_, signature.s_
             );
         });
 
@@ -256,19 +256,19 @@ struct Tester {
             return uint256_t(direct ? 1 : 0) << 160 | recipient.num();
         });
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(where(), args..., payments, digests)));
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(payments, where(), args..., {}, digests)));
         co_await show();
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(where(), args..., {pay()}, {digest1})));
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., {}, {digest1})));
         co_await show();
 
-        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), digest0)));
+        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), digest0, {})));
         co_await show();
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(where(), args..., {pay()}, {})));
+        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN({pay()}, where(), args..., {}, {})));
         co_await show();
 
-        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), Number<uint256_t>(uint256_t(0)))));
+        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), Number<uint256_t>(uint256_t(0)), {})));
         co_await show();
 
         co_await move(customer_, lottery, 10, signer, 0, 0);
