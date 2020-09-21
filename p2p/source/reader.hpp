@@ -89,9 +89,10 @@ class Inverted :
                 size_t writ;
                 try {
                     writ = co_await stream_->Read(asio::buffer(beam.data(), beam.size()));
-                } catch (const Error &error) {
-                    const auto &what(error.what_);
-                    orc_insist(!what.empty());
+                } catch (const std::exception &error) {
+                    const auto what(error.what());
+                    orc_insist(what != nullptr);
+                    orc_insist(*what != '\0');
                     Pump::Stop(what);
                     break;
                 }

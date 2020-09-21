@@ -31,6 +31,8 @@ export class MarketConditions {
   public efficiency: number
   public limitedByBalance: boolean
 
+  public efficiencyPerc(): string { return (this.efficiency * 100).toFixed() + "%"; }
+
   constructor(gasCostToRedeem: ETH, oxtCostToRedeem: OXT, maxFaceValue: OXT, ticketUnderwater: boolean, efficiency: number, limitedByBalance: boolean) {
     this.gasCostToRedeem = gasCostToRedeem;
     this.oxtCostToRedeem = oxtCostToRedeem;

@@ -187,6 +187,9 @@ source += $(pwd)/SPCDNS/src/output.c
 cflags += -I$(pwd)/SPCDNS/src
 
 
+cflags += -I$(pwd)/cpp-jwt/include
+
+
 include $(pwd)/asio.mk
 
 $(call include,rtc/target.mk)

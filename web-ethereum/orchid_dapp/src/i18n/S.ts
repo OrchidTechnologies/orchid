@@ -134,8 +134,8 @@ export class S {
     defaultMessage: 'Note: If an overdraft occurs on your Orchid balance, your deposit will be lost.'}); }
   static get withdrawOXT() { return intl.formatMessage({id: 'withdrawOXT',
     defaultMessage: 'Withdraw OXT'}); }
-  static get walletAddress() { return intl.formatMessage({id: 'walletAddress',
-    defaultMessage: 'Wallet Address'}); }
+  static get funderWalletAddress() { return intl.formatMessage({id: 'funderWalletAddress',
+    defaultMessage: 'Funder wallet address'}); }
   static get copy() { return intl.formatMessage({id: 'copy',
     defaultMessage: 'Copy'}); }
   static get signerAddress() { return intl.formatMessage({id: 'signerAddress',
@@ -213,4 +213,6 @@ export class S {
     defaultMessage: 'Delay Seconds'}); }
   static get days() { return intl.formatMessage({id: 'days',
     defaultMessage: 'Days'}); }
+  static get orchidAccount() { return intl.formatMessage({id: 'orchidAccount',
+    defaultMessage: 'Orchid Account'}); }
 }
