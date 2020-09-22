@@ -241,10 +241,9 @@ contract OrchidLottery1 {
 
 
     /*struct Packed {
-        uint24 start;
+        uint64 start;
         uint24 range;
         address funder;
-        uint24+16 receipt;
         uint8 v;
     }*/
 
@@ -263,21 +262,22 @@ contract OrchidLottery1 {
     ) private returns (uint128) {
         uint128 amount = uint128(ticket.amount_ratio >> 128);
         address signer;
-        address funder = address(ticket.packed >> 48);
+        address funder = address(ticket.packed >> 8);
 
     {
-        uint256 start = (ticket.issued_nonce >> 192) + (ticket.packed >> 232);
+        uint256 start = ticket.packed >> 192;
+        uint256 range = uint24(ticket.packed >> 168);
+{
         uint128 ratio = uint128(ticket.amount_ratio);
-        uint256 range = uint24(ticket.packed >> 208);
 
         if (start + range <= block.timestamp)
             return 0;
         if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
             return 0;
-
+}
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, destination), ticket.issued_nonce,
-            ticket.amount_ratio, ticket.packed & ~uint256(uint48(-1)) ORC_ARG, this, digest));
+            ticket.amount_ratio, ticket.packed & ~uint256(uint8(-1)) ORC_ARG, this, digest));
         signer = ecrecover(digest, uint8(ticket.packed), ticket.r, ticket.s);
 
     {

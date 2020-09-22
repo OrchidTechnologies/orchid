@@ -209,7 +209,7 @@ struct Tester {
                 reveal, salt,
                 uint256_t(issued) << 192 | nonce.num<uint256_t>() >> 64,
                 uint256_t(face) << 128 | ratio,
-                ticket.Packed1() | 0 << 24 | signature.v_,
+                ticket.Packed1() | signature.v_,
                 signature.r_, signature.s_
             );
         });

@@ -66,11 +66,8 @@ struct Ticket {
     }
 
     uint256_t Packed1() const {
-        orc_assert(start_ >= issued_);
-        orc_assert(start_ - issued_ < 2<<16);
-        orc_assert(range_ < 2<<16);
-
-        return uint256_t(start_ - issued_) << 232 | uint256_t(range_) << 208 | uint256_t(funder_.num()) << 48;
+        orc_assert(range_ < 2<<24);
+        return uint256_t(start_) << 192 | uint256_t(range_) << 168 | uint256_t(funder_.num()) << 8;
     }
 
     template <typename ...Args_>
