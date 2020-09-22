@@ -24,8 +24,7 @@
 pragma solidity 0.7.1;
 pragma experimental ABIEncoderV2;
 
-import "./include.sol";
-
+#define ORC_DAY (block.timestamp + 1 days)
 #define ORC_SHA(a, ...) keccak256(abi.encodePacked(a,## __VA_ARGS__))
 
 #if ORC_ERC
@@ -64,17 +63,10 @@ contract OrchidLottery1 {
 
         uint128 warned_;
         uint128 unlock_;
-
-        bytes shared_;
     }
 
     event Create(address indexed funder, address indexed signer ORC_PRM(indexed));
     event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
-
-    struct Binding {
-        OrchidVerifier verify_;
-        bytes32 codehash_;
-    }
 
     struct Lottery {
 #if ORC_ERC
@@ -84,16 +76,15 @@ contract OrchidLottery1 {
 #endif
 
         uint256 bound_;
-        Binding before_;
-        Binding after_;
+        mapping(address => uint256) players_;
     }
 
     mapping(address => Lottery) private lotteries_;
 
-    function look(address funder, address signer ORC_PRM()) external view returns (uint128, uint128, uint128, uint256, bytes memory, uint256, Binding memory, Binding memory) {
+    function look(address funder, address signer ORC_PRM()) external view returns (uint128, uint128, uint128, uint256, uint256) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
-        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, pot.shared_, lottery.bound_, lottery.before_, lottery.after_);
+        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, lottery.bound_);
     }
 
 
@@ -201,41 +192,27 @@ contract OrchidLottery1 {
             pot.unlock_ = 0;
         } else {
             pot.warned_ = warned;
-            pot.unlock_ = uint128(block.timestamp + 1 days);
+            pot.unlock_ = uint128(ORC_DAY);
         }
 
         emit Update(msg.sender, signer ORC_ARG);
     }
 
-
-    function name(address signer ORC_PRM(), bytes calldata shared) external {
-        Pot storage pot = lotteries_[msg.sender].pots_[signer]ORC_ARR;
-        require(pot.escrow_ == 0);
-        pot.shared_ = shared;
-        emit Update(msg.sender, signer ORC_ARG);
-    }
 
     event Bound(address indexed funder);
 
-    function bind(OrchidVerifier verify) external {
+    function bind(bool allow, address[] calldata recipients) external {
         Lottery storage lottery = lotteries_[msg.sender];
-        require(lottery.bound_ < block.timestamp);
 
-        if (verify == OrchidVerifier(0)) {
-            delete lottery.bound_;
-            delete lottery.before_;
-            delete lottery.after_;
-        } else {
-            lottery.bound_ = block.timestamp + 1 days;
-
-            lottery.before_ = lottery.after_;
-
-            bytes32 codehash;
-            assembly { codehash := extcodehash(verify) }
-            lottery.after_.verify_ = verify;
-            lottery.after_.codehash_ = codehash;
+        uint i = recipients.length;
+        if (i == 0)
+            lottery.bound_ = allow ? 0 : ORC_DAY;
+        else {
+            uint256 value = allow ? uint256(-1) :
+                lottery.bound_ < block.timestamp ? 0 : ORC_DAY;
+            do lottery.players_[recipients[--i]] = value;
+            while (i != 0);
         }
-
 
         emit Bound(msg.sender);
     }
@@ -282,7 +259,6 @@ contract OrchidLottery1 {
     function grab(
         mapping(bytes32 => Track) storage tracks,
         uint256 destination ORC_PRM(),
-        bytes calldata receipt,
         Ticket calldata ticket
     ) private returns (uint128) {
         uint128 amount = uint128(ticket.amount_ratio >> 128);
@@ -318,15 +294,12 @@ contract OrchidLottery1 {
         }
     }
 
-        Pot storage pot;
-        OrchidVerifier verify;
-    {
-        Binding storage binding;
-    {
         Lottery storage lottery = lotteries_[funder];
-        pot = lottery.pots_[signer]ORC_ARR;
+        if (lottery.bound_ - 1 < block.timestamp)
+            require(block.timestamp < lottery.players_[address(destination)]);
 
     {
+        Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint128 cache = pot.amount_;
 
         if (cache >= amount) {
@@ -337,28 +310,9 @@ contract OrchidLottery1 {
             pot.amount_ = 0;
             pot.escrow_ = 0;
         }
+    }
 
         emit Update(funder, signer ORC_ARG);
-    }
-
-    {
-        uint256 bound = lottery.bound_;
-        if (bound == 0)
-            return amount;
-        binding = block.timestamp < bound ? lottery.before_ : lottery.after_;
-    }
-    }
-        verify = binding.verify_;
-        if (verify == OrchidVerifier(0))
-            return amount;
-    {
-        bytes32 codehash; assembly { codehash := extcodehash(verify) }
-        if (codehash != binding.codehash_)
-            return amount;
-    }
-    }
-
-        verify.book(pot.shared_, address(destination), receipt);
         return amount;
     }
 
@@ -372,22 +326,14 @@ contract OrchidLottery1 {
         else \
             lotteries_[recipient].pots_[recipient]ORC_ARR.amount_ += amount;
 
-    function grab(Ticket[] calldata tickets, uint256 destination ORC_PRM(), bytes calldata receipt, bytes32[] calldata digests) external {
+    function grab(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
         ORC_GRB
 
         uint256 segment; assembly { segment := mload(0x40) }
 
         uint128 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            Ticket calldata ticket = tickets[--i];
-
-            bytes calldata slice;
-            if (receipt.length != 0) {
-                uint24 begin = uint24(ticket.packed >> 24);
-                slice = receipt[begin : begin + uint16(ticket.packed >> 8)];
-            }
-
-            amount += grab(tracks, destination ORC_ARG, slice, ticket);
+            amount += grab(tracks, destination ORC_ARG, tickets[--i]);
             assembly { mstore(0x40, segment) }
         }
 
@@ -397,10 +343,10 @@ contract OrchidLottery1 {
             ORC_DEL(digests[--i])
     }
 
-    function grab(uint256 destination ORC_PRM(), bytes32 digest, Ticket calldata ticket, bytes calldata receipt) external {
+    function grab(uint256 destination ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
         ORC_GRB
 
-        ORC_DST(grab(tracks, destination ORC_ARG, receipt, ticket))
+        ORC_DST(grab(tracks, destination ORC_ARG, ticket))
 
         if (digest != 0)
             ORC_DEL(digest)
