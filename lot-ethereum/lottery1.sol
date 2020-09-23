@@ -66,9 +66,7 @@ interface IERC20 {
 
 contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     struct Pot {
-        uint128 amount_;
-        uint128 escrow_;
-
+        uint256 escrow_amount_;
         uint128 warned_;
         uint128 unlock_;
     }
@@ -89,18 +87,12 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     mapping(address => Lottery) private lotteries_;
 
-    function look(address funder, address signer ORC_PRM()) external view returns (uint128, uint128, uint128, uint256, uint256) {
+    function look(address funder, address signer ORC_PRM()) external view returns (uint256, uint128, uint128, uint256) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
-        return (pot.amount_, pot.escrow_, pot.warned_, pot.unlock_, lottery.bound_);
+        return (pot.escrow_amount_, pot.warned_, pot.unlock_, lottery.bound_);
     }
 
-
-    function safe(uint256 value) private pure returns (uint128) {
-        uint128 result = uint128(value);
-        require(uint256(result) == value);
-        return result;
-    }
 
 #if defined(ORC_SYM)
     bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
@@ -121,7 +113,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 #endif
         if (data.length == 0) {
             Pot storage pot = lotteries_[funder].pots_[funder]ORC_ARR;
-            pot.amount_ = safe(pot.amount_ + amount);
+            pot.escrow_amount_ += amount;
         } else {
             // XXX: this should be calldataload(data.offset), maybe with an add or a shr in there
             bytes memory copy = data; bytes4 selector; assembly { selector := mload(add(copy, 32)) }
@@ -141,7 +133,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 #else
     receive() external payable {
         Pot storage pot = lotteries_[msg.sender].pots_[msg.sender]ORC_ARR;
-        pot.amount_ = safe(pot.amount_ + msg.value);
+        pot.escrow_amount_ += msg.value;
     }
 
     function move(address signer, uint256 adjust_retrieve) external payable {
@@ -151,8 +143,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         Pot storage pot = lotteries_[funder].pots_[signer]ORC_ARR;
 
-        uint256 escrow = pot.escrow_;
-        amount += pot.amount_;
+        uint256 escrow = pot.escrow_amount_;
+        amount += uint128(escrow);
+        escrow = escrow >> 128;
 
         bool create;
 
@@ -187,8 +180,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             amount -= retrieve;
         }
 
-        pot.escrow_ = uint128(escrow);
-        pot.amount_ = uint128(amount);
+        pot.escrow_amount_ = escrow << 128 | amount;
 
         if (create)
             emit Create(funder, signer ORC_ARG);
@@ -309,14 +301,13 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             require(block.timestamp < lottery.players_[address(destination)]);
     {
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
-        uint256 cache = pot.amount_;
+        uint256 cache = pot.escrow_amount_;
 
-        if (cache >= amount)
-            pot.amount_ = uint128(cache - amount);
+        if (uint128(cache) >= amount)
+            pot.escrow_amount_ = cache - amount;
         else {
-            amount = cache;
-            pot.amount_ = 0;
-            pot.escrow_ = 0;
+            amount = uint128(cache);
+            pot.escrow_amount_ = 0;
         }
     }}
         emit Update(funder, signer ORC_ARG);
@@ -332,7 +323,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (destination >> 160 == 0) \
             ORC_SND(recipient, amount) \
         else \
-            lotteries_[recipient].pots_[recipient]ORC_ARR.amount_ += uint128(amount);
+            lotteries_[recipient].pots_[recipient]ORC_ARR.escrow_amount_ += amount;
 
     function grab(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
         ORC_GRB

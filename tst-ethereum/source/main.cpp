@@ -145,7 +145,7 @@ struct Tester {
         Log() << "==========" << std::endl;
         Log() << "lottery1 (" << kind << ")" << std::endl;
 
-        static Selector<std::tuple<uint128_t, uint128_t, uint128_t, uint256_t, uint256_t>, Address, Address, Args_...> look("look");
+        static Selector<std::tuple<uint256_t, uint128_t, uint128_t, uint256_t>, Address, Address, Args_...> look("look");
         static Selector<void, std::vector<Bytes32>> save("save");
         static Selector<void, Address, Args_..., uint128_t> warn("warn");
 
@@ -183,7 +183,9 @@ struct Tester {
         const auto recipient(provider_);
 
         const auto show([&]() -> task<void> {
-            const auto [balance, escrow, warned, unlock, bound] = co_await look.Call(endpoint_, "latest", lottery, 90000, customer_, signer, args...);
+            const auto [escrow_balance, warned, unlock, bound] = co_await look.Call(endpoint_, "latest", lottery, 90000, customer_, signer, args...);
+            const auto balance((uint128_t(escrow_balance)));
+            const auto escrow(uint128_t(escrow_balance >> 128));
             Log() << std::dec << balance << " " << escrow << " | " << warned << " " << unlock << std::endl;
         });
 
