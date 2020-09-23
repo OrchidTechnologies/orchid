@@ -106,7 +106,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
 
     function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
-        require(ORC_TOK.transferFrom(msg.sender, address(this), amount));
+        (bool _s, bytes memory _d) = address(ORC_TOK).call(
+            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), amount));
+        require(_s && abi.decode(_d, (bool)));
+
         move_(msg.sender, signer ORC_ARG, amount, adjust_retrieve);
     }
 
