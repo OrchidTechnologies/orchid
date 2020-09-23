@@ -138,52 +138,49 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         address payable funder = msg.sender;
         uint256 amount = msg.value;
 #endif
-
         Pot storage pot = lotteries_[funder].pots_[signer]ORC_ARR;
 
         uint256 escrow = pot.escrow_amount_;
         amount += uint128(escrow);
         escrow = escrow >> 128;
-
+    {
         bool create;
 
-    {
         int256 adjust = int256(adjust_retrieve) >> 128;
-
         if (adjust < 0) {
-            uint256 recover = uint256(-adjust);
             uint256 warned = pot.unlock_warned_;
             uint256 unlock = warned >> 128;
             warned = uint128(warned);
-            require(unlock - 1 < block.timestamp);
-            require(recover <= warned);
+
+            uint256 recover = uint256(-adjust);
             amount += recover;
             escrow -= recover;
-            warned -= recover;
-            pot.unlock_warned_ = ORC_WRN(unlock, warned);
+
+            require(recover <= warned);
+            require(unlock - 1 < block.timestamp);
+            pot.unlock_warned_ = ORC_WRN(unlock, warned - recover);
         } else if (adjust != 0) {
             if (escrow == 0)
                 create = true;
+
             uint256 transfer = uint256(adjust);
             require(transfer <= amount);
             amount -= transfer;
             escrow += transfer;
         }
+
+        if (create)
+            emit Create(funder, signer ORC_ARG);
+        else
+            emit Update(funder, signer ORC_ARG);
     }
-
         uint256 retrieve = uint128(adjust_retrieve);
-
         if (retrieve != 0) {
             require(retrieve <= amount);
             amount -= retrieve;
         }
 
         pot.escrow_amount_ = escrow << 128 | amount;
-
-        if (create)
-            emit Create(funder, signer ORC_ARG);
-        else
-            emit Update(funder, signer ORC_ARG);
 
         if (retrieve != 0)
             ORC_SND(funder, retrieve)
