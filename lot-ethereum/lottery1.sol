@@ -274,15 +274,15 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         mapping(bytes32 => Track) storage tracks,
         uint256 destination ORC_PRM(),
         Ticket calldata ticket
-    ) private returns (uint128) {
+    ) private returns (uint256) {
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, destination), ticket.issued_nonce,
             ticket.amount_ratio, ticket.packed & ~uint256(uint8(-1)) ORC_ARG, this, digest));
         address signer = ecrecover(digest, uint8(ticket.packed), ticket.r, ticket.s);
 
-        uint128 amount = uint128(ticket.amount_ratio >> 128);
+        uint256 amount = uint128(ticket.amount_ratio >> 128);
     {{
-        uint128 ratio = uint128(ticket.amount_ratio);
+        uint256 ratio = uint128(ticket.amount_ratio);
         if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
             return 0;
     }
@@ -294,7 +294,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (start + range <= block.timestamp)
             return 0;
         if (start < block.timestamp) {
-            uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
+            uint256 limit = amount * (range - (block.timestamp - start)) / range;
             if (amount > limit)
                 amount = limit;
         }
@@ -309,11 +309,11 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             require(block.timestamp < lottery.players_[address(destination)]);
     {
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
-        uint128 cache = pot.amount_;
+        uint256 cache = pot.amount_;
 
         if (cache >= amount) {
             cache -= amount;
-            pot.amount_ = cache;
+            pot.amount_ = uint128(cache);
         } else {
             amount = cache;
             pot.amount_ = 0;
@@ -333,14 +333,14 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (destination >> 160 == 0) \
             ORC_SND(recipient, amount) \
         else \
-            lotteries_[recipient].pots_[recipient]ORC_ARR.amount_ += amount;
+            lotteries_[recipient].pots_[recipient]ORC_ARR.amount_ += uint128(amount);
 
     function grab(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
         ORC_GRB
 
         uint256 segment; assembly { segment := mload(0x40) }
 
-        uint128 amount = 0;
+        uint256 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
             amount += grab(tracks, destination ORC_ARG, tickets[--i]);
             assembly { mstore(0x40, segment) }
