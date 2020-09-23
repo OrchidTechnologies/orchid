@@ -47,10 +47,7 @@ pragma experimental ABIEncoderV2;
 #endif
 
 #if defined(ORC_SYM)
-interface IERC20 {
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-}
+interface IERC20 {}
 
 #define ORC_SND(r, a) { \
     (bool _s, bytes memory _d) = address(ORC_TOK).call( \
