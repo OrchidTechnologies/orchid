@@ -260,44 +260,38 @@ contract OrchidLottery1 {
         uint256 destination ORC_PRM(),
         Ticket calldata ticket
     ) private returns (uint128) {
-        uint128 amount = uint128(ticket.amount_ratio >> 128);
-        address signer;
-        address funder = address(ticket.packed >> 8);
-
-    {
-        uint256 start = ticket.packed >> 192;
-        uint256 range = uint24(ticket.packed >> 168);
-{
-        uint128 ratio = uint128(ticket.amount_ratio);
-
-        if (start + range <= block.timestamp)
-            return 0;
-        if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
-            return 0;
-}
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, destination), ticket.issued_nonce,
             ticket.amount_ratio, ticket.packed & ~uint256(uint8(-1)) ORC_ARG, this, digest));
-        signer = ecrecover(digest, uint8(ticket.packed), ticket.r, ticket.s);
+        address signer = ecrecover(digest, uint8(ticket.packed), ticket.r, ticket.s);
 
-    {
-        Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
-        if (track.until_ != 0)
+        uint128 amount = uint128(ticket.amount_ratio >> 128);
+    {{
+        uint128 ratio = uint128(ticket.amount_ratio);
+        if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
             return 0;
-        track.until_ = start + range;
     }
+        address funder = address(ticket.packed >> 8);
+    {
+        uint256 start = ticket.packed >> 192;
+        uint256 range = uint24(ticket.packed >> 168);
 
+        if (start + range <= block.timestamp)
+            return 0;
         if (start < block.timestamp) {
             uint128 limit = uint128(uint256(amount) * (range - (block.timestamp - start)) / range);
             if (amount > limit)
                 amount = limit;
         }
-    }
 
+        Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
+        if (track.until_ != 0)
+            return 0;
+        track.until_ = start + range;
+    }{
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
             require(block.timestamp < lottery.players_[address(destination)]);
-
     {
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint128 cache = pot.amount_;
@@ -310,9 +304,9 @@ contract OrchidLottery1 {
             pot.amount_ = 0;
             pot.escrow_ = 0;
         }
-    }
-
+    }}
         emit Update(funder, signer ORC_ARG);
+    }
         return amount;
     }
 
