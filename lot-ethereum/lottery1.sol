@@ -255,35 +255,33 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         uint256 destination ORC_PRM(),
         Ticket calldata ticket
     ) private returns (uint256) {
+        uint256 start = ticket.packed >> 192;
+        uint256 range = uint24(ticket.packed >> 168);
+        if (start + range <= block.timestamp)
+            return 0;
+
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, destination), ticket.issued_nonce,
             ticket.amount_ratio, ticket.packed & ~uint256(uint8(-1)) ORC_ARG, this, digest));
         address signer = ecrecover(digest, uint8(ticket.packed), ticket.r, ticket.s);
 
-        uint256 amount = uint128(ticket.amount_ratio >> 128);
-    {
-        uint256 ratio = uint128(ticket.amount_ratio);
-        if (ratio < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
+        if (uint128(ticket.amount_ratio) < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
             return 0;
-    }
-        address funder = address(ticket.packed >> 8);
-    {
-        uint256 start = ticket.packed >> 192;
-        uint256 range = uint24(ticket.packed >> 168);
 
-        if (start + range <= block.timestamp)
-            return 0;
+        uint256 amount = uint128(ticket.amount_ratio >> 128);
         if (start < block.timestamp) {
             uint256 limit = amount * (range - (block.timestamp - start)) / range;
             if (amount > limit)
                 amount = limit;
         }
-
+    {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
             return 0;
         track.until_ = start + range;
-    }{
+    }
+        address funder = address(ticket.packed >> 8);
+    {
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
             require(block.timestamp < lottery.players_[address(destination)]);
