@@ -311,10 +311,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint256 cache = pot.amount_;
 
-        if (cache >= amount) {
-            cache -= amount;
-            pot.amount_ = uint128(cache);
-        } else {
+        if (cache >= amount)
+            pot.amount_ = uint128(cache - amount);
+        else {
             amount = cache;
             pot.amount_ = 0;
             pot.escrow_ = 0;
