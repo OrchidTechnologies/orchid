@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <boost/algorithm/string.hpp>
+
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -35,6 +37,8 @@
 namespace orc {
 
 namespace po = boost::program_options;
+
+static const Address OXT("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1");
 
 static const Float Two128(uint256_t(1) << 128);
 
@@ -265,8 +269,8 @@ struct Tester {
     }
 
     task<void> Test() {
-        const auto lottery1eth((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1.bin"))))).contract_);
-        const auto lottery1tok((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1Token.bin"))))).contract_);
+        const auto lottery1eth((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1eth.bin"))))).contract_);
+        const auto lottery1tok((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1tok.bin"))))).contract_);
 
 #if 1
         static Selector<void, bool, std::vector<Address>> bind1("bind");
@@ -281,8 +285,11 @@ struct Tester {
 
         const auto token((co_await endpoint_(co_await Constructor<>().Send(endpoint_, customer_, maximum_, Bless(Load("../tok-ethereum/build/OrchidToken677.bin")))))->contract_);
 
+        const auto lottery1oxt((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(boost::replace_all_copy(Load("../lot-ethereum/build/OrchidLottery1oxt.bin"), OXT.buf().hex().substr(2), token.buf().hex().substr(2)))))).contract_);
+
         co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(provider_, 10)));
         co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(lottery1tok, 10)));
+        co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(lottery1oxt, 10)));
 
 #if 1
       secret:
@@ -310,6 +317,15 @@ struct Tester {
                 co_await Audit("approve", co_await endpoint_.Send(sender, token, minimum_, approve(lottery, value)));
             co_await Audit("move", co_await endpoint_.Send(sender, lottery, minimum_, move(signer, token, value, Combine(adjust, retrieve))));
         }, token);
+#endif
+
+#if 1
+        co_await Test1("oxt", lottery1oxt, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+            static Selector<void, Address, uint256_t, uint256_t> move("move");
+            if (value != 0)
+                co_await Audit("approve", co_await endpoint_.Send(sender, token, minimum_, approve(lottery, value)));
+            co_await Audit("move", co_await endpoint_.Send(sender, lottery, minimum_, move(signer, value, Combine(adjust, retrieve))));
+        });
 #endif
 
 #if 1

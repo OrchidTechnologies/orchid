@@ -24,39 +24,47 @@
 pragma solidity 0.7.1;
 pragma experimental ABIEncoderV2;
 
+#define ORC_CAT(a, b) a ## b
 #define ORC_DAY (block.timestamp + 1 days)
 #define ORC_SHA(a, ...) keccak256(abi.encodePacked(a,## __VA_ARGS__))
 
-#if ORC_ERC
+#if defined(ORC_SYM) && !defined(ORC_ERC)
+#define ORC_ARG , token
+#define ORC_ARR [token]
+#define ORC_PRM(x) , IERC20 x token
+#define ORC_SUF(n, s) n ## tok
+#define ORC_TOK token
+#else
+#define ORC_ARG
+#define ORC_ARR
+#define ORC_PRM(x)
+#if defined(ORC_SYM)
+#define ORC_SUF(n, s) ORC_CAT(n, s)
+#else
+#define ORC_SUF(n, s) n ## eth
+#endif
+#define ORC_TOK IERC20(ORC_ERC)
+#endif
+
+#if defined(ORC_SYM)
 interface IERC20 {
     function transfer(address recipient, uint256 amount) external returns (bool);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
-#define ORC_ARG , token
-#define ORC_ARR [token]
-#define ORC_PRM(x) , IERC20 x token
-
 #define ORC_SND(r, a) { \
-    (bool _s, bytes memory _d) = address(token).call( \
+    (bool _s, bytes memory _d) = address(ORC_TOK).call( \
         abi.encodeWithSignature("transfer(address,uint256)", r, a)); \
     require(_s && (_d.length == 0 || abi.decode(_d, (bool)))); \
 }
-
-contract OrchidLottery1Token {
 #else
-#define ORC_ARG
-#define ORC_ARR
-#define ORC_PRM(x)
-
 #define ORC_SND(r, a) { \
     (bool _s,) = r.call{value: a}(""); \
     require(_s); \
 }
-
-contract OrchidLottery1 {
 #endif
 
+contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     struct Pot {
         uint128 amount_;
         uint128 escrow_;
@@ -69,7 +77,7 @@ contract OrchidLottery1 {
     event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
 
     struct Lottery {
-#if ORC_ERC
+#if defined(ORC_SYM) && !defined(ORC_ERC)
         mapping(address => mapping(IERC20 => Pot)) pots_;
 #else
         mapping(address => Pot) pots_;
@@ -94,17 +102,21 @@ contract OrchidLottery1 {
         return result;
     }
 
-#if ORC_ERC
+#if defined(ORC_SYM)
     bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
 
-    function move(address signer, IERC20 token, uint256 amount, uint256 adjust_retrieve) external {
-        require(token.transferFrom(msg.sender, address(this), amount));
-        move_(msg.sender, signer, token, amount, adjust_retrieve);
+    function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
+        require(ORC_TOK.transferFrom(msg.sender, address(this), amount));
+        move_(msg.sender, signer ORC_ARG, amount, adjust_retrieve);
     }
 
     function tokenFallback(address funder, uint256 amount, bytes calldata data) public {
+#if defined(ORC_ERC)
+        require(IERC20(msg.sender) == IERC20(ORC_ERC));
+#else
+        IERC20 token = IERC20(msg.sender);
+#endif
         if (data.length == 0) {
-            IERC20 token = IERC20(msg.sender);
             Pot storage pot = lotteries_[funder].pots_[funder]ORC_ARR;
             pot.amount_ = safe(pot.amount_ + amount);
         } else {
@@ -113,7 +125,7 @@ contract OrchidLottery1 {
             require(selector == Move_);
             address signer; uint256 adjust_retrieve;
             (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
-            move_(funder, signer, IERC20(msg.sender), amount, adjust_retrieve);
+            move_(funder, signer ORC_ARG, amount, adjust_retrieve);
         }
     }
 
@@ -122,7 +134,7 @@ contract OrchidLottery1 {
         return true;
     }
 
-    function move_(address funder, address signer, IERC20 token, uint256 amount, uint256 adjust_retrieve) private {
+    function move_(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
 #else
     receive() external payable {
         Pot storage pot = lotteries_[msg.sender].pots_[msg.sender]ORC_ARR;
