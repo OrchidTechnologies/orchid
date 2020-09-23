@@ -153,6 +153,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             warned = uint128(warned);
 
             uint256 recover = uint256(-adjust);
+            require(recover <= escrow);
             amount += recover;
             escrow -= recover;
 
