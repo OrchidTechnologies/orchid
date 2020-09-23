@@ -67,9 +67,10 @@ interface IERC20 {
 contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     struct Pot {
         uint256 escrow_amount_;
-        uint128 warned_;
-        uint128 unlock_;
+        uint256 unlock_warned_;
     }
+
+    #define ORC_WRN(u, w) (w == 0 ? 0 : u << 128 | w)
 
     event Create(address indexed funder, address indexed signer ORC_PRM(indexed));
     event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
@@ -87,10 +88,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     mapping(address => Lottery) private lotteries_;
 
-    function look(address funder, address signer ORC_PRM()) external view returns (uint256, uint128, uint128, uint256) {
+    function look(address funder, address signer ORC_PRM()) external view returns (uint256, uint256, uint256) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
-        return (pot.escrow_amount_, pot.warned_, pot.unlock_, lottery.bound_);
+        return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_);
     }
 
 
@@ -154,15 +155,15 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         if (adjust < 0) {
             uint256 recover = uint256(-adjust);
-            uint256 warned = pot.warned_;
-            require(pot.unlock_ - 1 < block.timestamp);
+            uint256 warned = pot.unlock_warned_;
+            uint256 unlock = warned >> 128;
+            warned = uint128(warned);
+            require(unlock - 1 < block.timestamp);
             require(recover <= warned);
             amount += recover;
             escrow -= recover;
             warned -= recover;
-            if (warned == 0)
-                pot.unlock_ = 0;
-            pot.warned_ = uint128(warned);
+            pot.unlock_warned_ = ORC_WRN(unlock, warned);
         } else if (adjust != 0) {
             if (escrow == 0)
                 create = true;
@@ -193,15 +194,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     function warn(address signer ORC_PRM(), uint128 warned) external {
         Pot storage pot = lotteries_[msg.sender].pots_[signer]ORC_ARR;
-
-        if (warned == 0) {
-            pot.warned_ = 0;
-            pot.unlock_ = 0;
-        } else {
-            pot.warned_ = warned;
-            pot.unlock_ = uint128(ORC_DAY);
-        }
-
+        pot.unlock_warned_ = ORC_WRN(ORC_DAY, warned);
         emit Update(msg.sender, signer ORC_ARG);
     }
 
