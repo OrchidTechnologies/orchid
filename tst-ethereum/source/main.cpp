@@ -162,14 +162,14 @@ struct Tester {
             Args_... /*token*/,
             Payment /*ticket*/,
             Bytes32 /*digest*/
-        > grab1("grab");
+        > claim1("claim");
 
         static Selector<void,
             uint256_t /*recipient*/,
             Args_... /*token*/,
             std::vector<Payment> /*tickets*/,
             std::vector<Bytes32>
-        > grabN("grab");
+        > claimN("claim");
 
         //const auto batch((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidBatch.bin"))))).contract_);
 
@@ -246,19 +246,22 @@ struct Tester {
             return uint256_t(direct ? 1 : 0) << 160 | recipient.num();
         });
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(where(), args..., payments, digests)));
+        co_await Audit("claimN", co_await endpoint_.Send(provider_, lottery, maximum_, claimN(where(), args..., {}, {})));
         co_await show();
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(where(), args..., {pay()}, {digest1})));
+        co_await Audit("claimN", co_await endpoint_.Send(provider_, lottery, maximum_, claimN(where(), args..., payments, digests)));
         co_await show();
 
-        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), digest0)));
+        co_await Audit("claimN", co_await endpoint_.Send(provider_, lottery, maximum_, claimN(where(), args..., {pay()}, {digest1})));
         co_await show();
 
-        co_await Audit("grabN", co_await endpoint_.Send(provider_, lottery, maximum_, grabN(where(), args..., {pay()}, {})));
+        co_await Audit("claim1", co_await endpoint_.Send(provider_, lottery, minimum_, claim1(where(), args..., pay(), digest0)));
         co_await show();
 
-        co_await Audit("grab1", co_await endpoint_.Send(provider_, lottery, minimum_, grab1(where(), args..., pay(), Zero<32>())));
+        co_await Audit("claimN", co_await endpoint_.Send(provider_, lottery, maximum_, claimN(where(), args..., {pay()}, {})));
+        co_await show();
+
+        co_await Audit("claim1", co_await endpoint_.Send(provider_, lottery, minimum_, claim1(where(), args..., pay(), Zero<32>())));
         co_await show();
 
         co_await move(customer_, lottery, 10, signer, 0, 0);
