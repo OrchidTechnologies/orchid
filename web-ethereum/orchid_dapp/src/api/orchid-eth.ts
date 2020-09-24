@@ -4,7 +4,7 @@
 import {OrchidContracts} from "./orchid-eth-contracts";
 import {Address, GWEI, Keiki, KEIKI, OXT, Secret} from "./orchid-types";
 import Web3 from "web3";
-import PromiEvent from "web3/promiEvent";
+import {PromiEvent} from "web3-core";
 import {OrchidAPI, WalletStatus} from "./orchid-api";
 import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
 import "../i18n/i18n_util";
@@ -19,7 +19,6 @@ declare global {
   }
 }
 export let web3: Web3;
-let web3ProviderListener: any;
 
 // TODO: Use the Wei and Keiki types here
 /// A Funder address containing ETH to perform contract transactions  and possibly
@@ -240,14 +239,14 @@ export class OrchidEthereumAPI {
           gas: OrchidContracts.token_approval_max_gas,
           gasPrice: gasPrice
         })
-          .on("transactionHash", (hash) => {
+          .on("transactionHash", (hash: any) => {
             console.log("Approval hash: ", hash);
             resolve(hash);
           })
-          .on('confirmation', (confirmationNumber, receipt) => {
+          .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
           })
-          .on('error', (err) => {
+          .on('error', (err: any) => {
             console.log("Approval error: ", JSON.stringify(err));
             // If there is an error in the approval assume Funding will fail.
             reject(err['message']);
@@ -266,12 +265,12 @@ export class OrchidEthereumAPI {
           gas: OrchidContracts.lottery_push_max_gas,
           gasPrice: gasPrice
         })
-          .on("transactionHash", (hash) => {
+          .on("transactionHash", (hash: any) => {
             console.log("Fund hash: ", hash);
             OrchidAPI.shared().transactionMonitor.add(
               new OrchidTransaction(new Date(), OrchidTransactionType.AddFunds, [approvalHash, hash]));
           })
-          .on('confirmation', (confirmationNumber, receipt) => {
+          .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
             if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
@@ -281,7 +280,7 @@ export class OrchidEthereumAPI {
               console.log("waiting for more confirmations...");
             }
           })
-          .on('error', (err) => {
+          .on('error', (err: any) => {
             console.log("Fund error: ", JSON.stringify(err));
             reject(err['message']);
           });
@@ -319,14 +318,14 @@ export class OrchidEthereumAPI {
           gas: OrchidContracts.token_approval_max_gas,
           gasPrice: gasPrice
         })
-          .on("transactionHash", (hash) => {
+          .on("transactionHash", (hash: any) => {
             console.log("Approval hash: ", hash);
             resolve(hash);
           })
-          .on('confirmation', (confirmationNumber, receipt) => {
+          .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Approval confirmation ", confirmationNumber, JSON.stringify(receipt));
           })
-          .on('error', (err) => {
+          .on('error', (err: any) => {
             console.log("Approval error: ", JSON.stringify(err));
             // If there is an error in the approval assume Funding will fail.
             reject(err['message']);
@@ -343,12 +342,12 @@ export class OrchidEthereumAPI {
           gas: OrchidContracts.directory_push_max_gas,
           gasPrice: gasPrice
         })
-          .on("transactionHash", (hash) => {
+          .on("transactionHash", (hash: any) => {
             console.log("Stake hash: ", hash);
             OrchidAPI.shared().transactionMonitor.add(
               new OrchidTransaction(new Date(), OrchidTransactionType.StakeFunds, [approvalHash, hash]));
           })
-          .on('confirmation', (confirmationNumber, receipt) => {
+          .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Stake confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
             if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
@@ -358,7 +357,7 @@ export class OrchidEthereumAPI {
               console.log("waiting for more confirmations...");
             }
           })
-          .on('error', (err) => {
+          .on('error', (err: any) => {
             console.log("Stake error: ", JSON.stringify(err));
             reject(err['message']);
           });
@@ -513,7 +512,7 @@ export class OrchidEthereumAPI {
 
   // The current median gas price for the past few blocks
   async getGasPrice(): Promise<GWEI> {
-    return GWEI.fromWei(await web3.eth.getGasPrice())
+    return GWEI.fromWeiString(await web3.eth.getGasPrice())
   }
 }
 

@@ -1,5 +1,5 @@
 import {web3} from "./orchid-eth";
-import {TransactionReceipt} from "web3/types";
+import {TransactionReceipt} from "web3-core";
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 const ORCHID_ETH_TX_KEY = "orchid-eth-tx";

@@ -152,6 +152,9 @@ export class GWEI extends ScalarNumberValue {
   public static fromWei(wei: number) {
     return new GWEI(wei / 1e9);
   }
+  public static fromWeiString(wei: string) {
+    return new GWEI(BigInt(wei) / 1e9);
+  }
 }
 
 export class USD extends ScalarNumberValue {

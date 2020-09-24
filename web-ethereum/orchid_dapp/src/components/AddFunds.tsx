@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useCallback, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {
   Divider,
@@ -76,15 +76,8 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
     };
   }, []);
 
-  useInterval(() => {
-    fetchMarketConditions().then();
-  }, 15000);
-
-  useEffect(() => {
-    fetchMarketConditions().then();
-  }, [pot, addAmount, addEscrow]);
-
-  async function fetchMarketConditions() {
+  // This is wrapped in useCallback to allow it to be used from both useInterval and useEffect below.
+  const fetchMarketConditions = useCallback(async ()=>{
     console.log("fetch market conditions");
     if (pot == null) {
       console.log("null market conditions: ", pot, addAmount, addEscrow);
@@ -99,7 +92,15 @@ export const AddFunds: FC<AddFundsProps> = (props) => {
         OXT.fromKeiki(pot.escrow).add(new OXT(addEscrow || 0)))
     );
     console.log("got market conditions: ");
-  }
+  }, [addAmount, addEscrow, pot]);
+
+  useInterval(() => {
+    fetchMarketConditions().then();
+  }, 15000);
+
+  useEffect(() => {
+    fetchMarketConditions().then();
+  }, [pot, addAmount, addEscrow, fetchMarketConditions]);
 
   async function submitAddFunds() {
     let api = OrchidAPI.shared();

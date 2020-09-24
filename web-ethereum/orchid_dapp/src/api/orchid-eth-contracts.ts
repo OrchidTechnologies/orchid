@@ -1,6 +1,7 @@
 import {Address} from "./orchid-types";
-import Contract from "web3/eth/contract";
+import { Contract } from "web3-eth-contract";
 import {getEthAddressParam} from "../util/util";
+import {AbiItem} from "web3-utils";
 
 export class OrchidContracts {
 
@@ -43,7 +44,7 @@ export class OrchidContracts {
 
   static stake_funds_total_max_gas: number = OrchidContracts.add_funds_total_max_gas;
 
-  static token_abi = [
+  static token_abi: AbiItem [] = [
     {
       "inputs": [],
       "payable": false,
@@ -344,7 +345,7 @@ export class OrchidContracts {
     }
   ];
 
-  static lottery_abi = [
+  static lottery_abi: AbiItem [] = [
     {
       "inputs": [{"internalType": "contract IERC20", "name": "token", "type": "address"}],
       "payable": false,
@@ -678,7 +679,7 @@ export class OrchidContracts {
     }
   ];
 
-  static directory_abi = [
+  static directory_abi: AbiItem [] = [
     {
       "inputs": [
         {
