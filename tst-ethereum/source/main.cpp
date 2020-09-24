@@ -140,8 +140,8 @@ struct Tester {
         co_await show();
     }
 
-    template <typename Code_, typename ...Args_>
-    task<void> Test1(const std::string &kind, const Address &lottery, Code_ &&move, Args_ ...args) {
+    template <typename Gift_, typename Move_, typename ...Args_>
+    task<void> Test1(const std::string &kind, const Address &lottery, Gift_ &&gift, Move_ &&move, Args_ ...args) {
         Log() << "==========" << std::endl;
         Log() << "lottery1 (" << kind << ")" << std::endl;
 
@@ -233,7 +233,8 @@ struct Tester {
         digests.pop_back();
 
         co_await move(provider_, lottery, 1, provider_, 1, 0);
-        co_await move(customer_, lottery, 20, signer, 4, 0);
+        co_await move(customer_, lottery, 10, signer, 4, 0);
+        co_await gift(provider_, lottery, 10, customer_, signer);
         co_await show();
 
         std::vector<Payment> payments;
@@ -276,7 +277,7 @@ struct Tester {
         const auto lottery1eth((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1eth.bin"))))).contract_);
         const auto lottery1tok((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery1tok.bin"))))).contract_);
 
-#if 1
+#if 0
         static Selector<void, bool, std::vector<Address>> bind1("bind");
         co_await Audit("bind", co_await endpoint_.Send(customer_, lottery1eth, minimum_, bind1(false, {})));
         co_await Audit("bind", co_await endpoint_.Send(customer_, lottery1eth, minimum_, bind1(true, {provider_})));
@@ -286,12 +287,13 @@ struct Tester {
         static Selector<bool, Address, uint256_t> approve("approve");
         static Selector<uint256_t, Address> balanceOf("balanceOf");
         static Selector<bool, Address, uint256_t> transfer("transfer");
+        static Selector<void, Address, uint256_t, Bytes> transferAndCall("transferAndCall");
 
         const auto token((co_await endpoint_(co_await Constructor<>().Send(endpoint_, customer_, maximum_, Bless(Load("../tok-ethereum/build/OrchidToken677.bin")))))->contract_);
 
         const auto lottery1oxt((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(boost::replace_all_copy(Load("../lot-ethereum/build/OrchidLottery1oxt.bin"), OXT.buf().hex().substr(2), token.buf().hex().substr(2)))))).contract_);
 
-        co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(provider_, 10)));
+        co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(provider_, 50)));
         co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(lottery1tok, 10)));
         co_await Audit("transfer", co_await endpoint_.Send(customer_, token, minimum_, transfer(lottery1oxt, 10)));
 
@@ -303,7 +305,7 @@ struct Tester {
             goto secret;
 
         const auto lottery0((co_await Receipt(co_await Constructor<Address>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidLottery0.bin")), token))).contract_);
-#if 1
+#if 0
         const auto verifier((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(Load("../lot-ethereum/build/OrchidPassword.bin"))))).contract_);
         static Selector<void, Address, Address, Bytes> bind0("bind");
         co_await Audit("bind", co_await endpoint_.Send(customer_, lottery0, maximum_, bind0(signer, verifier, {})));
@@ -315,7 +317,11 @@ struct Tester {
 #endif
 
 #if 1
-        co_await Test1("erc20", lottery1tok, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+        co_await Test1("erc20", lottery1tok, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &funder, const Address &signer) -> task<void> {
+            static Selector<void, Address, Address, Address, uint256_t> gift("gift");
+            co_await Audit("approve", co_await endpoint_.Send(sender, token, minimum_, approve(lottery, value)));
+            co_await Audit("gift", co_await endpoint_.Send(sender, lottery, minimum_, gift(funder, signer, token, value)));
+        }, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
             static Selector<void, Address, Address, uint256_t, uint256_t> move("move");
             if (value != 0)
                 co_await Audit("approve", co_await endpoint_.Send(sender, token, minimum_, approve(lottery, value)));
@@ -324,7 +330,11 @@ struct Tester {
 #endif
 
 #if 1
-        co_await Test1("oxt", lottery1oxt, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+        co_await Test1("oxt", lottery1oxt, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &funder, const Address &signer) -> task<void> {
+            static Selector<void, Address, Address, uint256_t> gift("gift");
+            co_await Audit("approve", co_await endpoint_.Send(sender, token, minimum_, approve(lottery, value)));
+            co_await Audit("gift", co_await endpoint_.Send(sender, lottery, minimum_, gift(funder, signer, value)));
+        }, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
             static Selector<void, Address, uint256_t, uint256_t> move("move");
             if (value != 0)
                 co_await Audit("approve", co_await endpoint_.Send(sender, token, minimum_, approve(lottery, value)));
@@ -334,9 +344,11 @@ struct Tester {
 
 #if 1
         Log() << std::dec << co_await balanceOf.Call(endpoint_, "latest", token, 90000, lottery1tok) << std::endl;
-        co_await Test1("erc677", lottery1tok, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+        co_await Test1("erc677", lottery1tok, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &funder, const Address &signer) -> task<void> {
+            static Selector<void, Address, Address> gift("gift");
+            co_await Audit("gift", co_await endpoint_.Send(sender, token, minimum_, transferAndCall(lottery, value, Beam(gift(funder, signer)))));
+        }, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
             Log() << std::dec << co_await balanceOf.Call(endpoint_, "latest", token, 90000, lottery1tok) << std::endl;
-            static Selector<void, Address, uint256_t, Bytes> transferAndCall("transferAndCall");
             static Selector<void, Address, uint256_t> move("move");
             co_await Audit("move", co_await endpoint_.Send(sender, token, minimum_, transferAndCall(lottery, value, Beam(move(signer, Combine(adjust, retrieve))))));
             Log() << std::dec << co_await balanceOf.Call(endpoint_, "latest", token, 90000, lottery1tok) << std::endl;
@@ -346,7 +358,10 @@ struct Tester {
 #endif
 
 #if 1
-        co_await Test1("ether", lottery1eth, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
+        co_await Test1("ether", lottery1eth, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &funder, const Address &signer) -> task<void> {
+            static Selector<void, Address, Address> gift("gift");
+            co_await Audit("gift", co_await endpoint_.Send(sender, lottery, minimum_, value, gift(funder, signer)));
+        }, [&](const Address &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
             static Selector<void, Address, uint256_t> move("move");
             co_await Audit("move", co_await endpoint_.Send(sender, lottery, minimum_, value, move(signer, Combine(adjust, retrieve))));
         });

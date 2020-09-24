@@ -91,54 +91,81 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_);
     }
 
+    #define ORC_POT(f, s) \
+        lotteries_[f].pots_[s]ORC_ARR
 
-#if defined(ORC_SYM)
-    bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
-
-    function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
-        (bool _s, bytes memory _d) = address(ORC_TOK).call(
-            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), amount));
-        require(_s && abi.decode(_d, (bool)));
-
-        move_(msg.sender, signer ORC_ARG, amount, adjust_retrieve);
+    #define ORC_GFT(f, s, a) { \
+        Pot storage pot = ORC_POT(f, s); \
+        uint256 cache = pot.escrow_amount_; \
+        require(uint128(cache) + a >> 128 == 0); \
+        pot.escrow_amount_ = cache + a; \
     }
 
-    function tokenFallback(address funder, uint256 amount, bytes calldata data) public {
+
+#if defined(ORC_SYM)
+    #define ORC_FRM(a) { \
+        (bool _s, bytes memory _d) = address(ORC_TOK).call( \
+            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), a)); \
+        require(_s && abi.decode(_d, (bool))); \
+    }
+
+    function gift(address funder, address signer ORC_PRM(), uint256 amount) external {
+        ORC_FRM(amount)
+        ORC_GFT(funder, signer, amount)
+    }
+
+    function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
+        ORC_FRM(amount)
+        move(msg.sender, signer ORC_ARG, amount, adjust_retrieve);
+    }
+
+    bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
+    bytes4 constant private Gift_ = bytes4(keccak256("gift(address,address)"));
+
+    function tokenFallback(address sender, uint256 amount, bytes calldata data) public {
 #if defined(ORC_ERC)
         require(IERC20(msg.sender) == IERC20(ORC_ERC));
 #else
         IERC20 token = IERC20(msg.sender);
 #endif
-        if (data.length == 0) {
-            Pot storage pot = lotteries_[funder].pots_[funder]ORC_ARR;
-            pot.escrow_amount_ += amount;
-        } else {
+        if (data.length == 0)
+            ORC_POT(sender, sender).escrow_amount_ += amount;
+        else {
             // XXX: this should be calldataload(data.offset), maybe with an add or a shr in there
             bytes memory copy = data; bytes4 selector; assembly { selector := mload(add(copy, 32)) }
-            require(selector == Move_);
-            address signer; uint256 adjust_retrieve;
-            (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
-            move_(funder, signer ORC_ARG, amount, adjust_retrieve);
+            if (false) {
+            } else if (selector == Move_) {
+                address signer; uint256 adjust_retrieve;
+                (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
+                move(sender, signer ORC_ARG, amount, adjust_retrieve);
+            } else if (selector == Gift_) {
+                address funder; address signer;
+                (funder, signer) = abi.decode(data[4:], (address, address));
+                ORC_GFT(funder, signer, amount)
+            } else require(false);
         }
     }
 
-    function onTokenTransfer(address funder, uint256 amount, bytes calldata data) external returns (bool) {
-        tokenFallback(funder, amount, data);
+    function onTokenTransfer(address sender, uint256 amount, bytes calldata data) external returns (bool) {
+        tokenFallback(sender, amount, data);
         return true;
     }
 
-    function move_(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
+    function move(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
 #else
     receive() external payable {
-        Pot storage pot = lotteries_[msg.sender].pots_[msg.sender]ORC_ARR;
-        pot.escrow_amount_ += msg.value;
+        ORC_POT(msg.sender, msg.sender).escrow_amount_ += msg.value;
+    }
+
+    function gift(address funder, address signer) external payable {
+        ORC_GFT(funder, signer, msg.value)
     }
 
     function move(address signer, uint256 adjust_retrieve) external payable {
         address payable funder = msg.sender;
         uint256 amount = msg.value;
 #endif
-        Pot storage pot = lotteries_[funder].pots_[signer]ORC_ARR;
+        Pot storage pot = ORC_POT(funder, signer);
 
         uint256 escrow = pot.escrow_amount_;
         amount += uint128(escrow);
@@ -188,7 +215,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
     function warn(address signer ORC_PRM(), uint128 warned) external {
-        Pot storage pot = lotteries_[msg.sender].pots_[signer]ORC_ARR;
+        Pot storage pot = ORC_POT(msg.sender, signer);
         pot.unlock_warned_ = ORC_WRN(ORC_DAY, warned);
         emit Update(msg.sender, signer ORC_ARG);
     }
@@ -308,7 +335,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (destination >> 160 == 0) \
             ORC_SND(recipient, amount) \
         else \
-            lotteries_[recipient].pots_[recipient]ORC_ARR.escrow_amount_ += amount;
+            ORC_GFT(recipient, recipient, amount)
 
     function grab(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
         ORC_GRB
