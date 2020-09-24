@@ -80,7 +80,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 #endif
 
         uint256 bound_;
-        mapping(address => uint256) players_;
+        mapping(address => uint256) recipients_;
     }
 
     mapping(address => Lottery) private lotteries_;
@@ -205,7 +205,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         else {
             uint256 value = allow ? uint256(-1) :
                 lottery.bound_ < block.timestamp ? 0 : ORC_DAY;
-            do lottery.players_[recipients[--i]] = value;
+            do lottery.recipients_[recipients[--i]] = value;
             while (i != 0);
         }
 
@@ -284,7 +284,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     {
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
-            require(block.timestamp < lottery.players_[address(destination)]);
+            require(block.timestamp < lottery.recipients_[address(destination)]);
 
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint256 cache = pot.escrow_amount_;
