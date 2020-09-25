@@ -112,7 +112,7 @@ class Endpoint final {
 
     template <typename... Args_>
     task<std::tuple<Account, typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, std::nullptr_t, Args_ &&...args) const {
-        const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.number_}));
         std::tuple<Account, typename Result_<Args_>::type...> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
         Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
@@ -121,7 +121,7 @@ class Endpoint final {
 
     template <typename... Args_>
     task<std::tuple<typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, const uint256_t &storage, Args_ &&...args) const {
-        const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.number_}));
         std::tuple<typename Result_<Args_>::type...> result;
         Number<uint256_t> root(proof["storageHash"].asString());
         orc_assert(storage == root.num<uint256_t>());
