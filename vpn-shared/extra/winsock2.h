@@ -28,7 +28,8 @@
 #undef bind
 #undef connect
 
-#define ORC_SYMBOL "__imp_"
+#define ORC_IMPORT __declspec(dllimport)
+#define ORC_SYMBOL ""
 
 #ifdef __cplusplus
 extern "C"

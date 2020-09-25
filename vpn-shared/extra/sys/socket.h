@@ -28,6 +28,8 @@
 #undef bind
 #undef connect
 
+#define ORC_IMPORT
+
 #ifdef __linux__
 #define ORC_SYMBOL ""
 #else

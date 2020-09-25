@@ -31,9 +31,8 @@
 
 namespace orc {
 
-extern "C" decltype(system_bind) hooked_bind __asm__(ORC_SYMBOL "bind");
-
-extern "C" decltype(system_connect) hooked_connect __asm__(ORC_SYMBOL "connect");
+ORC_IMPORT decltype(system_bind) hooked_bind __asm__(ORC_SYMBOL "bind");
+ORC_IMPORT decltype(system_connect) hooked_connect __asm__(ORC_SYMBOL "connect");
 
 extern "C" int orchid_bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
     return Protect(socket, &hooked_bind, address, length);
