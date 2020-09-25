@@ -518,7 +518,7 @@ int Main(int argc, const char *const argv[]) {
         Pile<Float, uint256_t> costs;
         for (const auto &[name, provider] : state->providers_)
             if (const auto report = std::get_if<1>(&provider)) {
-                if (!report->cost_)
+                if (!report->cost_ || *report->cost_ == 0)
                     continue;
                 const auto stake(state->stakes_.find(report->stakee_));
                 orc_assert(stake != state->stakes_.end());
