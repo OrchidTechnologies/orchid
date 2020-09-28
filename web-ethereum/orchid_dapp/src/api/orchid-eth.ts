@@ -272,7 +272,7 @@ export class OrchidEthereumAPI {
           .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
-            if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
+            if (confirmationNumber >= EthereumTransaction.requiredConfirmations()) {
               const hash = receipt['transactionHash'];
               resolve(hash);
             } else {
@@ -349,7 +349,7 @@ export class OrchidEthereumAPI {
           .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Stake confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
-            if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
+            if (confirmationNumber >= EthereumTransaction.requiredConfirmations()) {
               const hash = receipt['transactionHash'];
               resolve(hash);
             } else {
