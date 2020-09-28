@@ -25,6 +25,13 @@ export class OrchidContracts {
     return getEthAddressParam('directory_addr', this.directory_addr_final);
   }
 
+  /// Indicates that one or more of the contract addresses have been overridden
+  static contracts_overridden(): boolean {
+    return this.token_addr() !== this.token_addr_final
+      || this.lottery_addr() !== this.lottery_addr_final
+      || this.directory_addr() !== this.directory_addr_final
+  }
+
   static lottery_push_method_hash: string =
     '0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc'; // This is topic[0] of the push event.
 

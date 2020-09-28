@@ -37,13 +37,19 @@ export function getBoolParam(name: string, defaultValue: boolean): boolean {
 
 export function getEthAddressParam(name: string, defaultValue: string): string {
   let addr = getParam(name);
+
+  if (addr == null) {
+    return defaultValue;
+  }
+
   // Some servers won't let you put a big hex string in the url
-  if (addr != null && !addr.startsWith("0x")) {
+  if (!addr.startsWith("0x")) {
     addr = "0x" + addr;
   }
-  if (addr != null && isEthAddress(addr)) {
+  if (isEthAddress(addr)) {
     return addr;
   } else {
+    console.log("Error: Invalid ETH address: ", addr)
     return defaultValue;
   }
 }

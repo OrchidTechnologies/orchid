@@ -118,9 +118,8 @@ export class OrchidEthereumAPI {
           return;
         }
 
-        let networkNumber = await web3.eth.net.getId();
-        console.log("network number: ", networkNumber);
-        if (networkNumber !== 1) {
+        // Check for the main network
+        if (!OrchidContracts.contracts_overridden() && await web3.eth.net.getId() !== 1) {
           resolve(WalletStatus.WrongNetwork);
         }
 
