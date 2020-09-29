@@ -182,8 +182,14 @@ task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string
         orc_assert_(false, "no IPv4 in Interface.Address");
     }());
 
+    const auto endpoint(tree.get<std::string>("Peer.Endpoint"));
+    const auto colon(endpoint.find(':'));
+    orc_assert(colon != std::string::npos);
+    const auto endpoints(co_await origin->Resolve(endpoint.substr(0, colon), endpoint.substr(colon + 1)));
+    orc_assert(!endpoints.empty());
+
     auto &boring(sunk.Wire<BufferSink<Boring>>(origin, local, address, tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
-    co_await origin->Associate(boring, Socket(tree.get<std::string>("Peer.Endpoint")));
+    co_await origin->Associate(boring, endpoints[0]);
     boring.Open();
 }
 
