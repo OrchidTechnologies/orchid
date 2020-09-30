@@ -80,6 +80,7 @@ Channel::Channel(BufferDrain &drain, const S<Peer> &peer, int id, const std::str
     Channel(drain, peer, [&]() {
         webrtc::DataChannelInit init;
         init.ordered = false;
+        init.maxRetransmits = 0;
         init.protocol = protocol;
         if (id != -1) {
             init.negotiated = true;
@@ -197,14 +198,13 @@ task<void> Channel::Send(const Buffer &data) {
 #else
         const auto provider(sctp->*Loot<SctpDataChannel$provider_>::pointer);
 
-#if 0
         cricket::SendDataParams params{
             .sid = sctp->id(),
             .type = cricket::DMT_BINARY,
             .ordered = false,
             .reliable = false,
             .max_rtx_count = 0,
-            .max_rtx_ms = 0,
+            .max_rtx_ms = -1,
         };
 
         cricket::SendDataResult result;
@@ -214,7 +214,6 @@ task<void> Channel::Send(const Buffer &data) {
         // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
         const auto controller(static_cast<webrtc::DataChannelController *>(provider));
         (controller->*Loot<DataChannelController$DataChannelSendData>::pointer)(params, buffer, &result);
-#endif
 #endif
 #endif
 #endif
@@ -249,7 +248,7 @@ task<void> Channel::Send(const Buffer &data) {
             .ordered = false,
             .reliable = false,
             .max_rtx_count = 0,
-            .max_rtx_ms = 0,
+            .max_rtx_ms = -1,
         };
 
         cricket::SendDataResult result;
