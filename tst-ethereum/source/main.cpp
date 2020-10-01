@@ -292,7 +292,10 @@ struct Tester {
         static Selector<bool, Address, uint256_t> transfer("transfer");
         static Selector<void, Address, uint256_t, Bytes> transferAndCall("transferAndCall");
 
+      token:
         const auto token((co_await endpoint_(co_await Constructor<>().Send(endpoint_, customer_, maximum_, Bless(Load("../tok-ethereum/build/OrchidToken677.bin")))))->contract_);
+        if (Zeros(token.buf()))
+            goto token;
 
         const auto lottery1oxt((co_await Receipt(co_await Constructor<>().Send(endpoint_, deployer_, maximum_, Bless(boost::replace_all_copy(Load("../lot-ethereum/build/OrchidLottery1oxt.bin"), OXT.buf().hex().substr(2), token.buf().hex().substr(2)))))).contract_);
 
