@@ -34,7 +34,7 @@ import {LowFundsPanel} from "./LowFundsPanel";
 
 export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
-  const [route, setRoute] = useState<Route>(pathToRoute(hashPath()) || Route.CreateAccount);
+  const [route, setRoute] = useState<Route>(pathToRoute(hashPath()) ?? Route.None);
   const [navEnabledState, setNavEnabledState] = useState(true);
   const [isNewUser, setIsNewUser] = useState(true);
   const [orchidTransactions, setOrchidTransactions] = useState<OrchidTransactionDetail[]>([]);
@@ -51,11 +51,9 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
     let api = OrchidAPI.shared();
     let newUserSub = api.newUser_wait.subscribe(isNew => {
       setIsNewUser(isNew);
-      if (!isNew) {
-        setRoute(Route.AddFunds)
+      if (route === Route.None) {
+        setRoute(isNew ? Route.CreateAccount : Route.AddFunds)
       }
-      // Disable general nav for new user with no accounts.
-      //setNavEnabledState(!isNew);
     });
     let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
       setOrchidTransactions(txs);
