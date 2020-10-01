@@ -71,6 +71,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     event Create(address indexed funder, address indexed signer ORC_PRM(indexed));
     event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
+    event Delete(address indexed funder, address indexed signer ORC_PRM(indexed));
 
     struct Lottery {
 #if defined(ORC_SYM) && !defined(ORC_ERC)
@@ -308,7 +309,6 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         track.until_ = start + range;
     }
         address funder = address(ticket.packed >> 8);
-    {
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
             require(block.timestamp < lottery.recipients_[address(destination)]);
@@ -316,15 +316,15 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint256 cache = pot.escrow_amount_;
 
-        if (uint128(cache) >= amount)
+        if (uint128(cache) >= amount) {
+            emit Update(funder, signer ORC_ARG);
             pot.escrow_amount_ = cache - amount;
-        else {
-            amount = uint128(cache);
+            return amount;
+        } else {
+            emit Delete(funder, signer ORC_ARG);
             pot.escrow_amount_ = 0;
+            return uint128(cache);
         }
-    }
-        emit Update(funder, signer ORC_ARG);
-        return amount;
     }
 
     #define ORC_GRB \
