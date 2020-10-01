@@ -15,7 +15,7 @@ export const ProgressLine = (
   }, [visualParts]);
 
   return (
-    <>
+    <div>
       <div className="progressLabel">{label}</div>
       <div className="progressVisualFull" style={{ backgroundColor }}>
         {visualParts.map((item, index) => {
@@ -29,7 +29,7 @@ export const ProgressLine = (
           );
         })}
       </div>
-    </>
+    </div>
   );
 };
 

@@ -67,9 +67,3 @@
   text-decoration: underline;
   font-size: 15px;
 }
-
-.address-input,
-.address-input::placeholder {
-  /* form style beats us in precedence */
-  text-align: left !important;
-}

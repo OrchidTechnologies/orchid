@@ -1,0 +1,52 @@
+
+.total-row.nomargin {
+  margin-top: 0;
+}
+
+.total-row label {
+  height: 22px;
+  font-size: 17px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.29;
+  letter-spacing: -0.41px;
+  color: #5f45ba;
+}
+
+.divider {
+  margin-bottom: 16px;
+  margin-top: 8px;
+}
+
+.modal-content {
+  border-radius: 13px;
+  padding: 16px;
+}
+
+.submit-button button {
+  margin-top: 8px;
+  margin-bottom: 24px;
+  height: 36px;
+  width: 215px;
+}
+
+.save-your-key {
+  margin-bottom: 16px;
+}
+
+.save-your-key .title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #5f45ba;
+}
+
+.save-your-key .body {
+  font-size: 14px;
+  font-weight: 400;
+  color: #5f45ba;
+}
+
+.funder-panel .warn {
+  color: #BE092A;
+}

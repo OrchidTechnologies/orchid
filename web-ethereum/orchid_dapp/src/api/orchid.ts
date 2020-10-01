@@ -2,7 +2,7 @@ import {AccountRecommendation, MarketConditions} from "../components/MarketCondi
 
 export class Orchid {
   static recommendationEfficiency: number = 0.5; // 50%
-  static recommendationBalanceFaceValues: number = 3.0;
+  static recommendationBalanceFaceValues: number = 1.0;
 
   static recommendedAccountComposition(): Promise<AccountRecommendation> {
     return MarketConditions.recommendation(this.recommendationEfficiency, this.recommendationBalanceFaceValues);

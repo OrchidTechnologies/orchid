@@ -5,6 +5,8 @@ import {Route, RouteContext} from "../Route";
 import './Overview.css';
 import coinbase from '../../assets/coinbase.jpg';
 import {OverviewProps} from "./Overview";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 // Note: This file duplicates some functionality of the default for future flexibility.

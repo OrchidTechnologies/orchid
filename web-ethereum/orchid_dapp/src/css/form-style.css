@@ -16,7 +16,7 @@
 
 .form-style label {
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-weight: normal;
   font-size: 15px;
   font-stretch: normal;
@@ -54,8 +54,7 @@
   min-width: 50px;
 }
 
-.form-style .title,
-.title {
+.form-style .title {
   margin-bottom: 16px;
   font-size: 17px;
   font-weight: 600;
@@ -64,6 +63,10 @@
   line-height: 1.29;
   letter-spacing: -0.41px;
   color: #3a3149;
+}
+
+.form-style .title.subheading {
+  color: #766D86;
 }
 
 .form-style input[type="text"],

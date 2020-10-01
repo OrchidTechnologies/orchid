@@ -96,12 +96,14 @@ export function camelCase(str: string): string {
   })
 }
 
-export const Divider: FC<{ noGutters?: boolean }> = (props) => {
+export const Divider: FC<{ noGutters?: boolean, marginTop?: number, marginBottom?: number }> = (props) => {
   return <Row
-    className={props.noGutters ? "no-gutters" : ""}
+    className={"divider " + (props.noGutters ? "no-gutters" : "")}
     style={{
       height: '1px',
       backgroundColor: 'lightGrey',
+      marginTop: props.marginTop,
+      marginBottom: props.marginBottom,
     }}/>
 };
 

@@ -6,7 +6,7 @@ import {
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
-import {Address} from "../api/orchid-types";
+import {EthAddress} from "../api/orchid-types";
 import {Col, Container, Row} from "react-bootstrap";
 import {S} from "../i18n/S";
 
@@ -20,7 +20,7 @@ export class WithdrawFunds extends Component<any, any> {
     potUnlocked: null as boolean | null,
     withdrawAmount: null as number | null,
     withdrawAll: false,
-    sendToAddress: null as Address | null,
+    sendToAddress: null as EthAddress | null,
     amountError: true,
     addressError: true,
     tx: new TransactionStatus()
