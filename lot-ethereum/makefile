@@ -45,7 +45,7 @@ all += build/OrchidLottery1tok.bin
 
 build/OrchidLottery1oxt.bin: lottery1.sol
 	@mkdir -p $(dir $@)
-	cpp -C -P lottery1.sol >lottery1-oxt.sol -DORC_SYM=oxt -DORC_ERC=0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1
+	cpp -C -P lottery1.sol >lottery1-oxt.sol -DORC_SYM=oxt -DORC_ERC=0x4575f41308EC1483f3d399aa9a2826d74Da13Deb
 	env/solc.sh 0.7.1 build lottery1-oxt.sol --evm-version istanbul --optimize --optimize-runs 10000
 all += build/OrchidLottery1oxt.bin
 
