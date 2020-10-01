@@ -3,7 +3,7 @@ import {OrchidAPI} from "../api/orchid-api";
 import {errorClass, parseFloatSafe, parseIntSafe} from "../util/util";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
-import './AddFunds2.css'
+import './AddFunds.css'
 import {EthAddress} from "../api/orchid-types";
 import {GasPricingStrategy, isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";

@@ -4,7 +4,7 @@ import {Divider, errorClass, parseFloatSafe, useInterval, Visibility} from "../u
 import {TransactionProgress, TransactionStatus} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Modal, Row} from "react-bootstrap";
-import './AddFunds2.css'
+import './AddFunds.css'
 import {EthAddress, ETH, GWEI, max, OXT, USD} from "../api/orchid-types";
 import {
   GasPricingStrategy, isEthAddress, keikiToOxtString, LotteryPot, oxtToKeiki, Signer,
@@ -19,14 +19,15 @@ import {colorForEfficiency, EfficiencyMeter} from "./EfficiencyMeter";
 import {EfficiencySlider} from "./EfficiencySlider";
 import antsImage from '../assets/ants.svg'
 import {AccountQRCode} from "./AccountQRCode";
+import {Subscription} from "rxjs";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-interface AddFunds2Props {
+interface AddFundsProps {
   createAccount: boolean
 }
 
-export const AddFunds2: FC<AddFunds2Props> = (props) => {
+export const AddFunds: FC<AddFundsProps> = (props) => {
 
   // Create account state
   const [newSignerAddress, setNewSignerAddress] = useState<EthAddress | null>(null);
@@ -66,15 +67,8 @@ export const AddFunds2: FC<AddFunds2Props> = (props) => {
       console.log("add funds got wallet: ", wallet);
       setWallet(wallet)
     });
-    let potSubscription = api.lotteryPot_wait.subscribe(async pot => {
-      setPot(pot)
-    });
 
-    // prime data sources
-    OrchidPricingAPI.shared().getPricing().then();
-    api.eth.getGasPrice().then();
-
-    // Default to recommended
+    // Default to recommended efficiency for create
     if (props.createAccount) {
       (async () => {
         setAccountRecommendation(await Orchid.recommendedAccountComposition());
@@ -82,8 +76,20 @@ export const AddFunds2: FC<AddFunds2Props> = (props) => {
       })();
     }
 
+    // Subscribe to current account info for add
+    let potSubscription: Subscription | null = null
+    if (!props.createAccount) {
+      potSubscription = api.lotteryPot_wait.subscribe(async pot => {
+        setPot(pot)
+      })
+    }
+
+    // Prime other data sources
+    OrchidPricingAPI.shared().getPricing().then();
+    api.eth.getGasPrice().then();
+
     return () => {
-      potSubscription.unsubscribe();
+      potSubscription?.unsubscribe();
       walletSubscription.unsubscribe();
     };
   }, [props.createAccount]);
@@ -91,7 +97,7 @@ export const AddFunds2: FC<AddFunds2Props> = (props) => {
   // Update market conditions for the current account (if any)
   // (This is wrapped in useCallback to allow it to be used from both useInterval and useEffect below.)
   const fetchMarketConditions = useCallback(async () => {
-    //console.log("fetch market conditions");
+    console.log("fetch market conditions");
     if (pot == null) {
       setPotMarketConditions(null);
       return;
@@ -102,6 +108,7 @@ export const AddFunds2: FC<AddFunds2Props> = (props) => {
     setPotMarketConditions(mc);
 
     if (efficiencySliderValue == null) {
+      console.log("setting efficiency slider")
       setEfficiencySliderValue(mc?.efficiency * 100 ?? 0)
     }
   }, [pot, efficiencySliderValue]);

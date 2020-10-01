@@ -4,7 +4,7 @@ import {
   Nav, Navbar, OverlayTrigger, Popover, Row
 } from "react-bootstrap";
 import {Transactions} from "./Transactions";
-import {AddFunds2} from "./AddFunds2";
+import {AddFunds} from "./AddFunds";
 import {WithdrawFunds} from "./WithdrawFunds";
 import {Info} from "./Info";
 import {DebugPanel} from "./DebugPanel";
@@ -119,7 +119,10 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>
             <Visibility visible={route === Route.Balances}><Info/></Visibility>
             <Visibility visible={route === Route.AddFunds || route === Route.CreateAccount}>
-              <AddFunds2 createAccount={route === Route.CreateAccount || isNewUser}/></Visibility>
+              <AddFunds
+                // Recreate this component's state for the add and create usages
+                key={(route === Route.CreateAccount || isNewUser).toString()}
+                createAccount={route === Route.CreateAccount || isNewUser}/></Visibility>
             <Visibility visible={route === Route.StakeFundsTest}><StakeFunds/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
             <Visibility visible={route === Route.Transactions}><Transactions/></Visibility>
