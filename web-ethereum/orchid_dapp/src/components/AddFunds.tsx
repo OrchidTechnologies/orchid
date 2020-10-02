@@ -23,11 +23,17 @@ import {Subscription} from "rxjs";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-interface AddFundsProps {
-  createAccount: boolean
+export const CreateAccount: FC = (props) => {
+  return <AddOrCreate createAccount={true}/>
+}
+export const AddFunds: FC = (props) => {
+  return <AddOrCreate createAccount={false}/>
 }
 
-export const AddFunds: FC<AddFundsProps> = (props) => {
+interface AddOrCreateProps {
+  createAccount: boolean
+}
+const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
   // Create account state
   const [newSignerAddress, setNewSignerAddress] = useState<EthAddress | null>(null);

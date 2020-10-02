@@ -9,6 +9,7 @@ import {SubmitButton} from "./SubmitButton";
 import {EthAddress} from "../api/orchid-types";
 import {Col, Container, Row} from "react-bootstrap";
 import {S} from "../i18n/S";
+import {Subscription} from "rxjs";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -16,7 +17,7 @@ export class WithdrawFunds extends Component<any, any> {
   txResult = React.createRef<TransactionProgress>();
 
   state = {
-    potBalance: null  as BigInt | null,
+    potBalance: null as BigInt | null,
     potUnlocked: null as boolean | null,
     withdrawAmount: null as number | null,
     withdrawAll: false,
@@ -26,15 +27,23 @@ export class WithdrawFunds extends Component<any, any> {
     tx: new TransactionStatus()
   };
   amountInput = React.createRef<HTMLInputElement>();
+  subscriptions: Subscription [] = [];
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
-    api.lotteryPot_wait.subscribe(pot => {
-      this.setState({
-        potBalance: pot.balance,
-        potUnlocked: pot.isUnlocked()
-      })
-    });
+    this.subscriptions.push(
+      api.lotteryPot_wait.subscribe(pot => {
+        this.setState({
+          potBalance: pot.balance,
+          potUnlocked: pot.isUnlocked()
+        })
+      }));
+  }
+
+  componentWillUnmount(): void {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe()
+    })
   }
 
   async submitWithdrawFunds() {
@@ -114,7 +123,8 @@ export class WithdrawFunds extends Component<any, any> {
 
         <Row className="form-row">
           <Col>
-            <label>{S.withdraw}<span className={errorClass(this.state.amountError)}> *</span></label>
+            <label>{S.withdraw}<span
+              className={errorClass(this.state.amountError)}> *</span></label>
           </Col>
           <Col>
             <input

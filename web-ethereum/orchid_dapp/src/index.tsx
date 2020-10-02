@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from 'react'
 import {render} from 'react-dom'
-import {OrchidAPI, WalletStatus} from "./api/orchid-api";
+import {OrchidAPI, WalletState, WalletStatus} from "./api/orchid-api";
 
 import 'bootstrap/dist/css/bootstrap.css'
 import './index.css'
@@ -17,6 +17,7 @@ import messages_id from './i18n/id.json';
 import messages_ja from './i18n/ja.json';
 import messages_ko from './i18n/ko.json';
 import {getParam, testLocalization_} from "./util/util";
+import {Route, setURL} from "./components/Route";
 
 //const messages: Record<string, Record<string, any>> = {
 const messages: any = {
@@ -55,25 +56,28 @@ const App: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let walletStatusSub = api.walletStatus.subscribe(walletStatus => {
-      console.log("wallet status: ", WalletStatus[walletStatus]);
-      setWalletStatus(walletStatus);
+    let walletStatusSub = api.walletStatus.subscribe(newWalletStatus => {
+      console.log("wallet status: ", WalletState[newWalletStatus.state]);
+      if (newWalletStatus.account !== walletStatus.account) {
+        setURL(Route.None)
+      }
+      setWalletStatus(newWalletStatus);
     });
     return () => {
       walletStatusSub.unsubscribe();
     };
-  }, []);
+  }, [walletStatus.account]);
 
   let el: any;
-  switch (walletStatus) {
-    case WalletStatus.NoWallet:
-    case WalletStatus.Error:
-    case WalletStatus.WrongNetwork:
+  switch (walletStatus.state) {
+    case WalletState.NoWallet:
+    case WalletState.Error:
+    case WalletState.WrongNetwork:
       el = <NoWallet walletStatus={walletStatus}/>;
       break;
-    case WalletStatus.NotConnected:
-    case WalletStatus.Connected:
-      el = <Layout walletStatus={walletStatus}/>;
+    case WalletState.NotConnected:
+    case WalletState.Connected:
+      el = <Layout key={walletStatus.account} walletStatus={walletStatus}/>;
       break;
   }
   return el;
