@@ -294,7 +294,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (uint128(ticket.amount_ratio) < uint128(uint256(ORC_SHA(ticket.random))))
             return 0;
 
-        uint256 amount = uint128(ticket.amount_ratio >> 128);
+        uint256 amount = ticket.amount_ratio >> 128;
     {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
