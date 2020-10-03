@@ -279,8 +279,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     function claim(
         mapping(bytes32 => Track) storage tracks,
-        uint256 destination ORC_PRM(),
+        uint256 destination,
         Ticket calldata ticket
+        ORC_PRM()
     ) private returns (uint256) {
         uint256 expire = ticket.packed >> 192;
         if (expire <= block.timestamp)
@@ -330,14 +331,14 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         else \
             ORC_GFT(recipient, recipient, amount)
 
-    function claim(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
+    function claim(bytes32[] calldata digests, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
         ORC_GRB
 
         uint256 segment; assembly { segment := mload(0x40) }
 
         uint256 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += claim(tracks, destination ORC_ARG, tickets[--i]);
+            amount += claim(tracks, destination, tickets[--i] ORC_ARG);
             assembly { mstore(0x40, segment) }
         }
 
@@ -347,10 +348,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             ORC_DEL(digests[--i])
     }
 
-    function claim(uint256 destination ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
+    function claim(bytes32 digest, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
         ORC_GRB
 
-        ORC_DST(claim(tracks, destination ORC_ARG, ticket))
+        ORC_DST(claim(tracks, destination, ticket ORC_ARG))
 
         if (digest != 0)
             ORC_DEL(digest)
