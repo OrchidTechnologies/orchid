@@ -264,8 +264,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
 
     /*struct Packed {
-        uint64 start;
-        uint24 range;
+        uint64 expire;
         address funder;
         uint8 v;
     }*/
@@ -283,9 +282,8 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         uint256 destination ORC_PRM(),
         Ticket calldata ticket
     ) private returns (uint256) {
-        uint256 start = ticket.packed >> 192;
-        uint256 range = uint24(ticket.packed >> 168);
-        if (start + range <= block.timestamp)
+        uint256 expire = ticket.packed >> 192;
+        if (expire <= block.timestamp)
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
@@ -297,16 +295,11 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             return 0;
 
         uint256 amount = uint128(ticket.amount_ratio >> 128);
-        if (start < block.timestamp) {
-            uint256 limit = amount * (range - (block.timestamp - start)) / range;
-            if (amount > limit)
-                amount = limit;
-        }
     {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
             return 0;
-        track.until_ = start + range;
+        track.until_ = expire;
     }
         address funder = address(ticket.packed >> 8);
         Lottery storage lottery = lotteries_[funder];
