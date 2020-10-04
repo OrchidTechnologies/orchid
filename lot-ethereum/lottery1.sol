@@ -247,12 +247,14 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     mapping(address => mapping(bytes32 => Track)) private tracks_;
 
-    function save(bytes32[] calldata refunds) external {
+    function save(uint256 count, bytes32 seed) external {
         mapping(bytes32 => Track) storage tracks = tracks_[msg.sender];
-        for (uint256 i = refunds.length; i != 0; ) {
-            Track storage track = tracks[refunds[--i]];
-            if (track.until_ == 0)
-                track.until_ = 1;
+        seed = ORC_SHA(seed, msg.sender);
+        for (;;) {
+            tracks[seed].until_ = 1;
+            if (count-- == 0)
+                break;
+            seed = ORC_SHA(seed);
         }
     }
 
