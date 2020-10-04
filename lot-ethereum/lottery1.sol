@@ -292,8 +292,8 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = ORC_SHA(
-            ORC_SHA(ORC_SHA(uint128(ticket.random)), uint32(ticket.packed >> 161), destination), ticket.random >> 128,
-            ticket.values, ticket.packed & ~uint256(1) ORC_ARG, this, digest));
+            ORC_SHA(ORC_SHA(uint128(ticket.random)), uint32(ticket.packed >> 161), destination),
+            ticket.random >> 128, ticket.values, ticket.packed & ~uint256(1) ORC_ARG, this, digest);
         address signer = ecrecover(digest, uint8((ticket.packed & 1) + 27), ticket.r, ticket.s);
 
         if ((ticket.values >> 128) < uint128(uint256(ORC_SHA(ticket.random))))
