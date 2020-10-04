@@ -323,7 +323,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         }
     }
 
-    #define ORC_GRB \
+    #define ORC_CLM \
         address payable recipient = address(destination); \
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
@@ -334,7 +334,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             ORC_GFT(recipient, recipient, amount)
 
     function claimN(bytes32[] calldata refunds, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
-        ORC_GRB
+        ORC_CLM
 
         uint256 segment; assembly { segment := mload(0x40) }
 
@@ -350,7 +350,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
     function claim1(bytes32 refund, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
-        ORC_GRB
+        ORC_CLM
 
         uint256 amount = claim(tracks, destination, ticket ORC_ARG);
         ORC_DST(amount)
