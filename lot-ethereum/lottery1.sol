@@ -343,7 +343,6 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             amount += claim(tracks, destination, tickets[--i] ORC_ARG);
             assembly { mstore(0x40, segment) }
         }
-
         ORC_DST(amount)
 
         for (uint256 i = refunds.length; i != 0; )
@@ -353,7 +352,8 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     function claim1(bytes32 refund, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
         ORC_GRB
 
-        ORC_DST(claim(tracks, destination, ticket ORC_ARG))
+        uint256 amount = claim(tracks, destination, ticket ORC_ARG);
+        ORC_DST(amount)
 
         if (refund != 0)
             ORC_DEL(refund)
