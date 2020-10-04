@@ -274,7 +274,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     struct Ticket {
         uint256 random;
-        uint256 amount_ratio;
+        uint256 values;
         uint256 packed;
         bytes32 r; bytes32 s;
     }
@@ -291,13 +291,12 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
             ORC_SHA(ORC_SHA(uint128(ticket.random)), uint32(ticket.packed >> 161), destination), ticket.random >> 128,
-            ticket.amount_ratio, ticket.packed & ~uint256(1) ORC_ARG, this, digest));
+            ticket.values, ticket.packed & ~uint256(1) ORC_ARG, this, digest));
         address signer = ecrecover(digest, uint8((ticket.packed & 1) + 27), ticket.r, ticket.s);
 
-        if (uint128(ticket.amount_ratio) < uint128(uint256(ORC_SHA(ticket.random))))
+        if ((ticket.values >> 128) < uint128(uint256(ORC_SHA(ticket.random))))
             return 0;
-
-        uint256 amount = ticket.amount_ratio >> 128;
+        uint256 amount = uint128(ticket.values);
     {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
