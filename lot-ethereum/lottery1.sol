@@ -247,13 +247,13 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         uint256 until_;
     }
 
-    mapping(address => mapping(bytes32 => Track)) private tracks_;
+    mapping(bytes32 => Track) private tracks_;
 
     function save(uint256 count, bytes32 seed) external {
-        mapping(bytes32 => Track) storage tracks = tracks_[msg.sender];
+        uint256 until = uint256(1) << 160 | uint256(msg.sender);
         seed = ORC_SHA(seed, msg.sender);
         for (;;) {
-            tracks[seed].until_ = 1;
+            tracks_[seed].until_ = until;
             if (count-- == 0)
                 break;
             seed = ORC_SHA(seed);
@@ -261,9 +261,11 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
     #define ORC_DEL(d) { \
-        Track storage track = tracks[d]; \
-        if (track.until_ <= block.timestamp) \
-            delete track.until_; \
+        Track storage track = tracks_[d]; \
+        uint256 until = track.until_; \
+        if (until >> 160 <= block.timestamp) \
+            if (address(until) == msg.sender) \
+                delete track.until_; \
     }
 
 
@@ -282,7 +284,6 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
     function claim(
-        mapping(bytes32 => Track) storage tracks,
         uint256 destination,
         Ticket calldata ticket
         ORC_PRM()
@@ -306,10 +307,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             if (lottery.recipients_[address(destination)] <= block.timestamp)
                 return 0;
     {
-        Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
+        Track storage track = tracks_[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
             return 0;
-        track.until_ = expire;
+        track.until_ = expire << 160 | uint256(msg.sender);
     }
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint256 cache = pot.escrow_amount_;
@@ -327,7 +328,6 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     #define ORC_CLM \
         address payable recipient = address(destination); \
-        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
     #define ORC_DST \
         if (amount == 0) {} \
@@ -343,7 +343,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         uint256 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += claim(tracks, destination, tickets[--i] ORC_ARG);
+            amount += claim(destination, tickets[--i] ORC_ARG);
             assembly { mstore(0x40, segment) }
         }
         ORC_DST
@@ -355,7 +355,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     function claim1(bytes32 refund, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
         ORC_CLM
 
-        uint256 amount = claim(tracks, destination, ticket ORC_ARG);
+        uint256 amount = claim(destination, ticket ORC_ARG);
         ORC_DST
 
         if (refund != 0)
