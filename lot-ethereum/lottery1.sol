@@ -297,17 +297,18 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if ((ticket.values >> 128) < uint128(uint256(ORC_SHA(ticket.random))))
             return 0;
         uint256 amount = uint128(ticket.values);
+
+        address funder = address(ticket.packed >> 1);
+        Lottery storage lottery = lotteries_[funder];
+        if (lottery.bound_ - 1 < block.timestamp)
+            if (lottery.recipients_[address(destination)] <= block.timestamp)
+                return 0;
     {
         Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
         if (track.until_ != 0)
             return 0;
         track.until_ = expire;
     }
-        address funder = address(ticket.packed >> 1);
-        Lottery storage lottery = lotteries_[funder];
-        if (lottery.bound_ - 1 < block.timestamp)
-            require(block.timestamp < lottery.recipients_[address(destination)]);
-
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint256 cache = pot.escrow_amount_;
 
