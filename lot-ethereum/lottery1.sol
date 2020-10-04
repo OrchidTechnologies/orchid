@@ -26,7 +26,7 @@ pragma experimental ABIEncoderV2;
 
 #define ORC_CAT(a, b) a ## b
 #define ORC_DAY (block.timestamp + 1 days)
-#define ORC_SHA(a, ...) keccak256(abi.encodePacked(a,## __VA_ARGS__))
+#define ORC_SHA(a, ...) keccak256(abi.encode(a,## __VA_ARGS__))
 
 #if defined(ORC_SYM) && !defined(ORC_ERC)
 #define ORC_ARG , token
@@ -291,7 +291,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (expire <= block.timestamp)
             return 0;
 
-        bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
+        bytes32 digest; assembly { digest := chainid() } digest = ORC_SHA(
             ORC_SHA(ORC_SHA(uint128(ticket.random)), uint32(ticket.packed >> 161), destination), ticket.random >> 128,
             ticket.values, ticket.packed & ~uint256(1) ORC_ARG, this, digest));
         address signer = ecrecover(digest, uint8((ticket.packed & 1) + 27), ticket.r, ticket.s);
