@@ -329,8 +329,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         address payable recipient = address(destination); \
         mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
-    #define ORC_DST(amount) \
-        if (destination >> 160 == 0) \
+    #define ORC_DST \
+        if (amount == 0) {} \
+        else if (destination >> 160 == 0) \
             ORC_SND(recipient, amount) \
         else \
             ORC_ADD(recipient, recipient, amount)
@@ -345,7 +346,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             amount += claim(tracks, destination, tickets[--i] ORC_ARG);
             assembly { mstore(0x40, segment) }
         }
-        ORC_DST(amount)
+        ORC_DST
 
         for (uint256 i = refunds.length; i != 0; )
             ORC_DEL(refunds[--i])
@@ -355,7 +356,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         ORC_CLM
 
         uint256 amount = claim(tracks, destination, ticket ORC_ARG);
-        ORC_DST(amount)
+        ORC_DST
 
         if (refund != 0)
             ORC_DEL(refund)
