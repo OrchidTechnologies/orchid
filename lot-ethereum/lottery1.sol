@@ -95,7 +95,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     #define ORC_POT(f, s) \
         lotteries_[f].pots_[s]ORC_ARR
 
-    #define ORC_GFT(f, s, a) { \
+    #define ORC_ADD(f, s, a) { \
         Pot storage pot = ORC_POT(f, s); \
         uint256 cache = pot.escrow_amount_; \
         require(uint128(cache) + a >> 128 == 0); \
@@ -112,7 +112,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     function gift(address funder, address signer ORC_PRM(), uint256 amount) external {
         ORC_FRM(amount)
-        ORC_GFT(funder, signer, amount)
+        ORC_ADD(funder, signer, amount)
     }
 
     function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
@@ -130,7 +130,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         IERC20 token = IERC20(msg.sender);
 #endif
         if (data.length == 0)
-            ORC_POT(sender, sender).escrow_amount_ += amount;
+            ORC_ADD(sender, sender, amount)
         else {
             // XXX: this should be calldataload(data.offset), maybe with an add or a shr in there
             bytes memory copy = data; bytes4 selector; assembly { selector := mload(add(copy, 32)) }
@@ -142,7 +142,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             } else if (selector == Gift_) {
                 address funder; address signer;
                 (funder, signer) = abi.decode(data[4:], (address, address));
-                ORC_GFT(funder, signer, amount)
+                ORC_ADD(funder, signer, amount)
             } else require(false);
         }
     }
@@ -155,11 +155,11 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     function move(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
 #else
     receive() external payable {
-        ORC_POT(msg.sender, msg.sender).escrow_amount_ += msg.value;
+        ORC_ADD(msg.sender, msg.sender, msg.value)
     }
 
     function gift(address funder, address signer) external payable {
-        ORC_GFT(funder, signer, msg.value)
+        ORC_ADD(funder, signer, msg.value)
     }
 
     function move(address signer, uint256 adjust_retrieve) external payable {
@@ -209,6 +209,8 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             amount -= retrieve;
         }
 
+        require(amount < 1 << 128);
+        require(escrow < 1 << 128);
         pot.escrow_amount_ = escrow << 128 | amount;
 
         if (retrieve != 0)
@@ -331,7 +333,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (destination >> 160 == 0) \
             ORC_SND(recipient, amount) \
         else \
-            ORC_GFT(recipient, recipient, amount)
+            ORC_ADD(recipient, recipient, amount)
 
     function claimN(bytes32[] calldata refunds, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
         ORC_CLM
