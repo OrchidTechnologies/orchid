@@ -247,10 +247,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     mapping(address => mapping(bytes32 => Track)) private tracks_;
 
-    function save(bytes32[] calldata digests) external {
+    function save(bytes32[] calldata refunds) external {
         mapping(bytes32 => Track) storage tracks = tracks_[msg.sender];
-        for (uint256 i = digests.length; i != 0; ) {
-            Track storage track = tracks[digests[--i]];
+        for (uint256 i = refunds.length; i != 0; ) {
+            Track storage track = tracks[refunds[--i]];
             if (track.until_ == 0)
                 track.until_ = 1;
         }
@@ -331,7 +331,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         else \
             ORC_GFT(recipient, recipient, amount)
 
-    function claimN(bytes32[] calldata digests, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
+    function claimN(bytes32[] calldata refunds, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
         ORC_GRB
 
         uint256 segment; assembly { segment := mload(0x40) }
@@ -344,16 +344,16 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         ORC_DST(amount)
 
-        for (uint256 i = digests.length; i != 0; )
-            ORC_DEL(digests[--i])
+        for (uint256 i = refunds.length; i != 0; )
+            ORC_DEL(refunds[--i])
     }
 
-    function claim1(bytes32 digest, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
+    function claim1(bytes32 refund, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
         ORC_GRB
 
         ORC_DST(claim(tracks, destination, ticket ORC_ARG))
 
-        if (digest != 0)
-            ORC_DEL(digest)
+        if (refund != 0)
+            ORC_DEL(refund)
     }
 }
