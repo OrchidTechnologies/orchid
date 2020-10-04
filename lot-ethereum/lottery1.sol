@@ -86,10 +86,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     mapping(address => Lottery) private lotteries_;
 
-    function look(address funder, address signer ORC_PRM()) external view returns (uint256, uint256, uint256) {
+    function read(address funder, address signer, address recipient ORC_PRM()) external view returns (uint256, uint256, uint256) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
-        return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_);
+        return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_ << 128 | lottery.recipients_[recipient]);
     }
 
     #define ORC_POT(f, s) \
