@@ -82,7 +82,7 @@ struct Ticket {
             uint256_t,
             Args_..., Address, uint256_t
         >::Encode(
-            Hash(Coder<Bytes32, uint256_t>::Encode(commit_, uint256_t(salt) << 192 | uint256_t(direct ? 1 : 0) << 160 | recipient_.num())),
+            Hash(Coder<Bytes32, uint32_t>::Encode(commit_, salt)),
             uint128_t(nonce_.num<uint256_t>()),
             Packed1(),
             Packed2(),

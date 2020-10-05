@@ -206,7 +206,7 @@ struct Tester {
 
         const auto payment([&]() {
             const auto reveal(Nonzero<16>().num<uint128_t>());
-            const auto commit(Hash(Coder<uint128_t>::Encode(reveal)));
+            const auto commit(Hash(Coder<uint128_t, uint256_t>::Encode(reveal, where())));
 
             const uint128_t face(1);
             const uint128_t ratio(Float(Two128) - 1);
