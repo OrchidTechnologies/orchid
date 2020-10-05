@@ -29,6 +29,28 @@
 
 #include "log.hpp"
 
+#ifdef _WIN32
+#define timeradd(a, b, result) \
+    do { \
+        (result)->tv_sec = (a)->tv_sec + (b)->tv_sec; \
+        (result)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
+        if ((result)->tv_usec >= 1000000L) { \
+            ++(result)->tv_sec; \
+            (result)->tv_usec -= 1000000L; \
+        } \
+    } while (0)
+
+#define timersub(a, b, result) \
+    do { \
+        (result)->tv_sec = (a)->tv_sec - (b)->tv_sec; \
+        (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
+        if ((result)->tv_usec < 0) { \
+            --(result)->tv_sec; \
+            (result)->tv_usec += 1000000L; \
+        } \
+    } while (0)
+#endif
+
 namespace orc {
 
 class Bench {
@@ -48,7 +70,7 @@ class Bench {
         gettimeofday(&end, NULL);
         timeval diff;
         timersub(&end, &start_, &diff);
-        Log() << "Bench(\"" << name_ << "\") = " << diff.tv_sec << "." << std::setfill('0') << std::setw(6) << diff.tv_usec << std::endl;
+        Log() << std::dec << "Bench(\"" << name_ << "\") = " << diff.tv_sec << "." << std::setfill('0') << std::setw(6) << diff.tv_usec << std::endl;
     }
 };
 
