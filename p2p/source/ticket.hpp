@@ -66,24 +66,27 @@ struct Ticket {
     }
 
     uint256_t Packed1() const {
-        orc_assert(range_ < 2<<24);
-        return uint256_t(start_) << 192 | uint256_t(range_) << 168 | uint256_t(funder_.num()) << 8;
-    }
+        return issued_ << 192 | uint256_t(ratio_ >> 64) << 128 | amount_; }
+    uint256_t Packed2() const {
+        return uint256_t(start_ + range_) << 193 | uint256_t(funder_.num()) << 33; }
 
     template <typename ...Args_>
-    Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Args_ &...args, const Bytes32 &salt, bool direct) const {
+    Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Args_ &...args, const uint32_t &salt, bool direct) const {
         auto flags(Zero<12>());
         flags[11] = direct ? 1 : 0;
 
         return Hash(Coder<
-            Bytes32, uint256_t,
-            uint256_t, uint256_t,
+            Bytes32,
+            uint256_t,
+            uint256_t,
+            uint256_t,
             Args_..., Address, uint256_t
         >::Encode(
-            Hash(Tie(commit_, salt, flags, recipient_)),
-            issued_ << 192 | nonce_.num<uint256_t>() >> 64,
-            uint256_t(amount_) << 128 | ratio_,
-            Packed1(), args..., lottery, chain
+            Hash(Coder<Bytes32, uint256_t>::Encode(commit_, uint256_t(salt) << 192 | uint256_t(direct ? 1 : 0) << 160 | recipient_.num())),
+            uint128_t(nonce_.num<uint256_t>()),
+            Packed1(),
+            Packed2(),
+            args..., lottery, chain
         ));
     }
 
