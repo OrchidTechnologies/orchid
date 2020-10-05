@@ -245,7 +245,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     /*struct Track {
         uint32 zero;
-        uint64 until;
+        uint64 expire;
         address owner;
     }*/
 

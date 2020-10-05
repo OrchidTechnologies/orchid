@@ -283,20 +283,20 @@ struct Tester {
             for (unsigned d(0); d != (p+1)*2+1; ++d) {
                 std::ostringstream name;
                 name << "claimN(" << std::hex << std::uppercase << p << "," << d << ")";
-                const auto positive(21000+1835 +(3000+800+20000+800+7984)*p+(p==0?0:12+7400+4437) +(512+800+5000+265)*d+(d==0?0:12));
+                const auto positive(21000+1835 +(3000+800+20000+800+8005)*p+(p==0?0:12+7400+4437) +(512+800+5000+265)*d+(d==0?0:12));
                 auto negative(15000*d);
                 if (negative > positive / 2) negative = positive / 2;
                 co_await Audit(name.str(), co_await endpoint_.Send(provider_, lottery, maximum_, claimN(refunds(d), where(), payments(p), args...)), positive - negative);
                 co_await check(-p);
             }
 
-        co_await Audit("claim1(1,0)", co_await endpoint_.Send(provider_, indirect, minimum_, claim1(Zero<32>(), where(), payment(), args...)), 66319);
+        co_await Audit("claim1(1,0)", co_await endpoint_.Send(provider_, indirect, minimum_, claim1(Zero<32>(), where(), payment(), args...)), 66340);
         co_await check(-1);
 
-        co_await Audit("claim1(1,0)", co_await endpoint_.Send(provider_, lottery, minimum_, claim1(Zero<32>(), where(), payment(), args...)), 66319);
+        co_await Audit("claim1(1,0)", co_await endpoint_.Send(provider_, lottery, minimum_, claim1(Zero<32>(), where(), payment(), args...)), 66340);
         co_await check(-1);
 
-        co_await Audit("claim1(1,1)", co_await endpoint_.Send(provider_, lottery, minimum_, claim1(refund(), where(), payment(), args...)), 57646);
+        co_await Audit("claim1(1,1)", co_await endpoint_.Send(provider_, lottery, minimum_, claim1(refund(), where(), payment(), args...)), 57667);
         co_await check(-1);
 
         co_await move(customer_, lottery, 10, signer, 0, 0);
