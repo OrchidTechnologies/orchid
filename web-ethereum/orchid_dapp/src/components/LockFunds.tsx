@@ -5,6 +5,7 @@ import {OrchidAPI} from "../api/orchid-api";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {Container} from "react-bootstrap";
 import {S} from "../i18n/S";
+import {Subscription} from "rxjs";
 
 export class LockFunds extends Component {
 
@@ -12,14 +13,22 @@ export class LockFunds extends Component {
     pot: null as LotteryPot | null,
     tx: new TransactionStatus()
   };
+  subscriptions: Subscription [] = [];
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
+    this.subscriptions.push(
     api.lotteryPot_wait.subscribe((pot: LotteryPot) => {
       this.setState({
         pot: pot
       });
-    });
+    }));
+  }
+
+  componentWillUnmount(): void {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe()
+    })
   }
 
   private async lockOrUnlock()

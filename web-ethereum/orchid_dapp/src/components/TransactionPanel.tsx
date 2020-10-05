@@ -93,7 +93,9 @@ export const TransactionPanel: React.FC<{
               fontStyle: 'italic', fontSize: '14px', textOverflow: "ellipsis",
               whiteSpace: 'nowrap',
             }}>
-            <a style={{color: "lightblue"}} href={tx.getLink()}>{S.viewOnBlockchain}</a>
+            <a style={{color: "lightblue"}}
+               target="_blank" rel="noopener noreferrer"
+               href={tx.getLink()}>{S.viewOnBlockchain}</a>
           </Col>
         </Row>
         {status}

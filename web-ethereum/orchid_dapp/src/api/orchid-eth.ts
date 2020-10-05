@@ -106,7 +106,7 @@ export class OrchidEthereumAPI {
           try {
             await window.ethereum.enable();
           } catch (error) {
-            resolve(WalletStatus.NotConnected);
+            resolve(WalletStatus.notConnected);
             console.log("User denied account access...");
           }
         } else if (web3) {
@@ -114,13 +114,13 @@ export class OrchidEthereumAPI {
           web3 = new Web3(web3.currentProvider);
         } else {
           console.log('Non-Ethereum browser.');
-          resolve(WalletStatus.NoWallet);
+          resolve(WalletStatus.noWallet);
           return;
         }
 
         // Check for the main network
         if (!OrchidContracts.contracts_overridden() && await web3.eth.net.getId() !== 1) {
-          resolve(WalletStatus.WrongNetwork);
+          resolve(WalletStatus.wrongNetwork);
         }
 
         try {
@@ -145,11 +145,12 @@ export class OrchidEthereumAPI {
           OrchidContracts.directory = new web3.eth.Contract(OrchidContracts.directory_abi, OrchidContracts.directory_addr());
         } catch (err) {
           console.log("Error constructing contracts");
-          resolve(WalletStatus.Error);
+          resolve(WalletStatus.error);
         }
 
         (window as any).web3 = web3; // replace any injected version
-        resolve(WalletStatus.Connected);
+        const accounts = await web3.eth.getAccounts();
+        resolve(WalletStatus.connected(accounts[0]));
       })();
     });
   }

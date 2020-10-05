@@ -5,7 +5,7 @@ import bugs from '../assets/bugs.png';
 import metamask from '../assets/wallet-logos/metamask.png';
 import coinbasewallet from '../assets/wallet-logos/coinbasewallet.svg';
 import {SubmitButton} from "./SubmitButton";
-import {WalletStatus} from "../api/orchid-api";
+import {WalletState, WalletStatus} from "../api/orchid-api";
 import {copyTextToClipboard} from "../util/util";
 import {S} from "../i18n/S";
 
@@ -23,7 +23,7 @@ export const NoWallet: FC<{ walletStatus: WalletStatus }> = (props) => {
     }, 1000);
   }
 
-  let wrongNetwork = props.walletStatus === WalletStatus.WrongNetwork;
+  let wrongNetwork = props.walletStatus.state === WalletState.WrongNetwork;
 
   if (wrongNetwork) {
     return (
