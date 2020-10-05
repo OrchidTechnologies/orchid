@@ -270,16 +270,16 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
 
     /*struct Ticket {
-        uint128 nonce;
         uint128 reveal;
+        uint128 nonce;
 
         uint64 issued;
         uint64 ratio;
         uint128 amount;
 
         uint63 expire;
-        uint32 salt;
         address funder;
+        uint32 salt;
         uint1 v;
 
         bytes32 r;
@@ -304,15 +304,15 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = ORC_SHA(
-            ORC_SHA(ORC_SHA(uint128(ticket.packed0)), uint32(ticket.packed2 >> 161), destination),
-            ticket.packed0 >> 128, ticket.packed1, ticket.packed2 & ~uint256(1) ORC_ARG, this, digest);
+            ORC_SHA(ORC_SHA(ticket.packed0 >> 128), uint32(ticket.packed2 >> 1), destination),
+            uint128(ticket.packed0), ticket.packed1, ticket.packed2 & ~uint256(0x1ffffffff) ORC_ARG, this, digest);
         address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
         if (uint64(ticket.packed1 >> 128) < uint64(uint256(ORC_SHA(ticket.packed0, ticket.packed1 >> 192))))
             return 0;
         uint256 amount = uint128(ticket.packed1);
 
-        address funder = address(ticket.packed2 >> 1);
+        address funder = address(ticket.packed2 >> 33);
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
             if (lottery.recipients_[address(destination)] <= block.timestamp)
