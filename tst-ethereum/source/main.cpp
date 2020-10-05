@@ -201,7 +201,7 @@ struct Tester {
         const bool direct(false);
 
         const auto where([&]() -> uint256_t {
-            return uint256_t(direct ? 1 : 0) << 160 | recipient.num();
+            return uint256_t(direct ? 1 : 0) << 255 | recipient.num();
         });
 
         const auto payment([&]() {

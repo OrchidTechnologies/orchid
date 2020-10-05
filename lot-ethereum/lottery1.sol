@@ -340,12 +340,19 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         }
     }
 
+
+    /*struct Destination {
+        uint1 direct;
+        uint95 pepper;
+        address recipient;
+    }*/
+
     #define ORC_CLM \
         address payable recipient = address(destination);
 
     #define ORC_DST \
         if (amount == 0) {} \
-        else if (destination >> 160 == 0) \
+        else if (destination >> 255 == 0) \
             ORC_SND(recipient, amount) \
         else \
             ORC_ADD(recipient, recipient, amount)
