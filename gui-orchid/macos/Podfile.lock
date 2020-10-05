@@ -47,7 +47,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   FlutterMacOS: 15bea8a44d2fa024068daa0140371c020b4b6ff9
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
-  in_app_purchase: cf75767be1d3e34da6b51369ecafcc3e89a05842
+  in_app_purchase: 2f8c1b5fb9138954a295fce2a313575b0646991d
   shared_preferences: 9fec34d1bd906196a4da48fcf6c3ad521cc00b8d
   shared_preferences_macos: 5e5c2839894accb56b7d23328905b757f2bafaf6
   sqflite: 6c1f07e1d4399d619ea619fea9171251dd24d058
