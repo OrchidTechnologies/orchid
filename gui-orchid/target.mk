@@ -25,5 +25,9 @@ shared/gui/in_app_purchase/pubspec.yaml: shared/gui/plugins/packages/in_app_purc
 	sed -ie 's/Platform\.isIOS/Platform.isIOS || Platform.isMacOS/g' $(dir $@)lib/src/in_app_purchase/in_app_purchase_connection.dart
 	sed -ie "s/'Flutter'/'FlutterMacOS'/g; s/:ios, '[^']*'/:osx, '10.11'/g; s/, 'VALID_ARCHS' => '[^']*'//g" $(dir $@)macos/*.podspec
 	sed -ie 'x;/./{G;};x;/^ *ios:/h;/^$$/{x;s/ios:/macos:/g;}' $(dir $@)pubspec.yaml
+	#git apply --directory=$(dir $@)ios ../app-shared/iap-ios-macos.patch
+	#git apply --directory=$(dir $@)macos ../app-shared/iap-ios-macos.patch
+	cd in_app_purchase/ios && git apply --verbose ../../../app-shared/iap-ios-macos.patch
+	cd in_app_purchase/macos && git apply --verbose ../../../app-shared/iap-ios-macos.patch
 	@touch $@
 forks += shared/gui/in_app_purchase/pubspec.yaml
