@@ -256,12 +256,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     mapping(bytes32 => Track) private tracks_;
 
     function save(uint256 count, bytes32 seed) external {
-        seed = ORC_SHA(seed, msg.sender);
-        for (;;) {
+        for (seed = ORC_SHA(seed, msg.sender);; seed = ORC_SHA(seed)) {
             tracks_[seed].packed = uint256(msg.sender);
             if (count-- == 0)
                 break;
-            seed = ORC_SHA(seed);
         }
     }
 
