@@ -244,8 +244,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
 
     /*struct Track {
-        uint32 zero;
-        uint64 expire;
+        uint96 expire;
         address owner;
     }*/
 
@@ -302,7 +301,8 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         Ticket calldata ticket
         ORC_PRM()
     ) private returns (uint256) {
-        uint256 expire = ticket.packed2 >> 193;
+        uint256 issued = (ticket.packed1 >> 192);
+        uint256 expire = issued + (ticket.packed2 >> 193);
         if (expire <= block.timestamp)
             return 0;
 
@@ -311,7 +311,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             uint128(ticket.packed0), ticket.packed1, ticket.packed2 & ~uint256(0x1ffffffff) ORC_ARG, this, digest);
         address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
-        if (uint64(ticket.packed1 >> 128) < uint64(uint256(ORC_SHA(ticket.packed0, ticket.packed1 >> 192))))
+        if (uint64(ticket.packed1 >> 128) < uint64(uint256(ORC_SHA(ticket.packed0, issued))))
             return 0;
         uint256 amount = uint128(ticket.packed1);
 

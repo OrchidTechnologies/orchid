@@ -66,9 +66,9 @@ struct Ticket {
     }
 
     uint256_t Packed1() const {
-        return issued_ << 192 | uint256_t(ratio_ >> 64) << 128 | amount_; }
+        return (start_ + range_ - issued_) << 192 | uint256_t(ratio_ >> 64) << 128 | amount_; }
     uint256_t Packed2() const {
-        return uint256_t(start_ + range_) << 193 | uint256_t(funder_.num()) << 33; }
+        return issued_ << 193 | uint256_t(funder_.num()) << 33; }
 
     template <typename ...Args_>
     Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Args_ &...args, const uint32_t &salt, bool direct) const {
