@@ -269,18 +269,28 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
 
-    /*struct Packed {
+    /*struct Ticket {
+        uint128 nonce;
+        uint128 reveal;
+
+        uint128 ratio;
+        uint128 amount;
+
         uint63 expire;
         uint32 salt;
         address funder;
         uint1 v;
+
+        bytes32 r;
+        bytes32 s;
     }*/
 
     struct Ticket {
-        uint256 random;
-        uint256 values;
-        uint256 packed;
-        bytes32 r; bytes32 s;
+        uint256 packed0;
+        uint256 packed1;
+        uint256 packed2;
+        bytes32 r;
+        bytes32 s;
     }
 
     function claim(
@@ -288,20 +298,20 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         Ticket calldata ticket
         ORC_PRM()
     ) private returns (uint256) {
-        uint256 expire = ticket.packed >> 193;
+        uint256 expire = ticket.packed2 >> 193;
         if (expire <= block.timestamp)
             return 0;
 
         bytes32 digest; assembly { digest := chainid() } digest = ORC_SHA(
-            ORC_SHA(ORC_SHA(uint128(ticket.random)), uint32(ticket.packed >> 161), destination),
-            ticket.random >> 128, ticket.values, ticket.packed & ~uint256(1) ORC_ARG, this, digest);
-        address signer = ecrecover(digest, uint8((ticket.packed & 1) + 27), ticket.r, ticket.s);
+            ORC_SHA(ORC_SHA(uint128(ticket.packed0)), uint32(ticket.packed2 >> 161), destination),
+            ticket.packed0 >> 128, ticket.packed1, ticket.packed2 & ~uint256(1) ORC_ARG, this, digest);
+        address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
-        if ((ticket.values >> 128) < uint128(uint256(ORC_SHA(ticket.random))))
+        if ((ticket.packed1 >> 128) < uint128(uint256(ORC_SHA(ticket.packed0))))
             return 0;
-        uint256 amount = uint128(ticket.values);
+        uint256 amount = uint128(ticket.packed1);
 
-        address funder = address(ticket.packed >> 1);
+        address funder = address(ticket.packed2 >> 1);
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
             if (lottery.recipients_[address(destination)] <= block.timestamp)
