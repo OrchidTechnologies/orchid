@@ -243,17 +243,23 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
 
+    /*struct Track {
+        uint32 zero;
+        uint64 until;
+        address owner;
+    }*/
+
     struct Track {
-        uint256 until_;
+        uint256 packed;
     }
 
     mapping(bytes32 => Track) private tracks_;
 
     function save(uint256 count, bytes32 seed) external {
-        uint256 until = uint256(1) << 160 | uint256(msg.sender);
+        uint256 packed = uint256(1) << 160 | uint256(msg.sender);
         seed = ORC_SHA(seed, msg.sender);
         for (;;) {
-            tracks_[seed].until_ = until;
+            tracks_[seed].packed = packed;
             if (count-- == 0)
                 break;
             seed = ORC_SHA(seed);
@@ -262,10 +268,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     #define ORC_DEL(d) { \
         Track storage track = tracks_[d]; \
-        uint256 until = track.until_; \
-        if (until >> 160 <= block.timestamp) \
-            if (address(until) == msg.sender) \
-                delete track.until_; \
+        uint256 packed = track.packed; \
+        if (packed >> 160 <= block.timestamp) \
+            if (address(packed) == msg.sender) \
+                delete track.packed; \
     }
 
 
@@ -319,9 +325,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
                 return 0;
     {
         Track storage track = tracks_[bytes32(uint256(signer)) ^ digest];
-        if (track.until_ != 0)
+        if (track.packed != 0)
             return 0;
-        track.until_ = expire << 160 | uint256(msg.sender);
+        track.packed = expire << 160 | uint256(msg.sender);
     }
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint256 cache = pot.escrow_amount_;
