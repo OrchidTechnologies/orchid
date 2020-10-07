@@ -20,9 +20,12 @@ export const LowFundsPanel: React.FC = () => {
     let potSubscription = api.lotteryPot_wait.subscribe(pot => {
       setPot(pot)
     });
-    (async () => {
+
+    // TODO: This needs to be cancellable somehow
+    /*let setDefaultPromise: Promise<void> = */(async () => {
       setAccountRecommendation(await Orchid.minViableAccountComposition());
     })();
+
     return () => {
       potSubscription.unsubscribe();
     };

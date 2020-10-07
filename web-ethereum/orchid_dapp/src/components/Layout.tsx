@@ -74,7 +74,8 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
-  let navEnabled = navEnabledState && props.walletStatus.state === WalletState.Connected;
+  //let navEnabled = navEnabledState && props.walletStatus.state === WalletState.Connected;
+  let navEnabled = true;
   return (
     <RouteContext.Provider value={{
       route: route,
