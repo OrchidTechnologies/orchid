@@ -82,6 +82,8 @@ export class OrchidAPI {
   debugLog = "";
   debugLogChanged = new BehaviorSubject(true);
 
+  updateBalancesTimer: NodeJS.Timeout | null = null
+
   async init(listenForProviderChanges: boolean = true): Promise<WalletStatus> {
     if (OrchidAPI.isMobileDevice()) {
       this.captureLogs();
@@ -99,7 +101,11 @@ export class OrchidAPI {
       await this.updateSigners();
       this.updateTransactions().then();
     }
-    this.walletStatus.next(status);
+
+    // Poll wallet and lottery pot periodically
+    if (this.updateBalancesTimer == null) {
+      this.updateBalancesTimer = setInterval(() => this.updateBalances(), 10000/*ms*/);
+    }
 
     // Init the transaction monitor
     this.transactionMonitor.init(transactions => {
@@ -155,6 +161,12 @@ export class OrchidAPI {
   async updateLotteryPot() {
     console.log("Update lottery pot refreshing signer data: ", this.signer.value);
     this.signer.next(this.signer.value); // Set the signer again to trigger a refresh
+  }
+
+  async updateBalances() {
+    console.log("update balances")
+    await this.updateWallet();
+    await this.updateLotteryPot();
   }
 
   async updateTransactions() {
