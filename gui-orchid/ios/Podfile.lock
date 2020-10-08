@@ -68,7 +68,7 @@ SPEC CHECKSUMS:
   barcode_scan: 33f586d02270046fc6559135038b34b5754eaa4f
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
-  in_app_purchase: ccb2f18b9eb7c3d04f7d3d994a1c2c88a59a573d
+  in_app_purchase: 3e2155afa9d03d4fa32d9e62d567885080ce97d6
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   shared_preferences: 430726339841afefe5142b9c1f50cb6bd7793e01
   shared_preferences_macos: f3f29b71ccbb56bf40c9dd6396c9acf15e214087
