@@ -21,12 +21,12 @@
 /* }}} */
 
 
-pragma solidity 0.7.1;
+pragma solidity 0.7.2;
 pragma experimental ABIEncoderV2;
 
 #define ORC_CAT(a, b) a ## b
 #define ORC_DAY (block.timestamp + 1 days)
-#define ORC_SHA(a, ...) keccak256(abi.encodePacked(a,## __VA_ARGS__))
+#define ORC_SHA(a, ...) keccak256(abi.encode(a,## __VA_ARGS__))
 
 #if defined(ORC_SYM) && !defined(ORC_ERC)
 #define ORC_ARG , token
@@ -71,6 +71,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     event Create(address indexed funder, address indexed signer ORC_PRM(indexed));
     event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
+    event Delete(address indexed funder, address indexed signer ORC_PRM(indexed));
 
     struct Lottery {
 #if defined(ORC_SYM) && !defined(ORC_ERC)
@@ -85,16 +86,16 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     mapping(address => Lottery) private lotteries_;
 
-    function look(address funder, address signer ORC_PRM()) external view returns (uint256, uint256, uint256) {
+    function read(address funder, address signer, address recipient ORC_PRM()) external view returns (uint256, uint256, uint256) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
-        return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_);
+        return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_ << 128 | lottery.recipients_[recipient]);
     }
 
     #define ORC_POT(f, s) \
         lotteries_[f].pots_[s]ORC_ARR
 
-    #define ORC_GFT(f, s, a) { \
+    #define ORC_ADD(f, s, a) { \
         Pot storage pot = ORC_POT(f, s); \
         uint256 cache = pot.escrow_amount_; \
         require(uint128(cache) + a >> 128 == 0); \
@@ -111,7 +112,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     function gift(address funder, address signer ORC_PRM(), uint256 amount) external {
         ORC_FRM(amount)
-        ORC_GFT(funder, signer, amount)
+        ORC_ADD(funder, signer, amount)
     }
 
     function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
@@ -129,7 +130,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         IERC20 token = IERC20(msg.sender);
 #endif
         if (data.length == 0)
-            ORC_POT(sender, sender).escrow_amount_ += amount;
+            ORC_ADD(sender, sender, amount)
         else {
             // XXX: this should be calldataload(data.offset), maybe with an add or a shr in there
             bytes memory copy = data; bytes4 selector; assembly { selector := mload(add(copy, 32)) }
@@ -141,7 +142,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             } else if (selector == Gift_) {
                 address funder; address signer;
                 (funder, signer) = abi.decode(data[4:], (address, address));
-                ORC_GFT(funder, signer, amount)
+                ORC_ADD(funder, signer, amount)
             } else require(false);
         }
     }
@@ -154,11 +155,11 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     function move(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
 #else
     receive() external payable {
-        ORC_POT(msg.sender, msg.sender).escrow_amount_ += msg.value;
+        ORC_ADD(msg.sender, msg.sender, msg.value)
     }
 
     function gift(address funder, address signer) external payable {
-        ORC_GFT(funder, signer, msg.value)
+        ORC_ADD(funder, signer, msg.value)
     }
 
     function move(address signer, uint256 adjust_retrieve) external payable {
@@ -208,6 +209,8 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             amount -= retrieve;
         }
 
+        require(amount < 1 << 128);
+        require(escrow < 1 << 128);
         pot.escrow_amount_ = escrow << 128 | amount;
 
         if (retrieve != 0)
@@ -240,126 +243,143 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
 
+    /*struct Track {
+        uint96 expire;
+        address owner;
+    }*/
+
     struct Track {
-        uint256 until_;
+        uint256 packed;
     }
 
-    mapping(address => mapping(bytes32 => Track)) private tracks_;
+    mapping(bytes32 => Track) private tracks_;
 
-    function save(bytes32[] calldata digests) external {
-        mapping(bytes32 => Track) storage tracks = tracks_[msg.sender];
-        for (uint256 i = digests.length; i != 0; ) {
-            Track storage track = tracks[digests[--i]];
-            if (track.until_ == 0)
-                track.until_ = 1;
+    function save(uint256 count, bytes32 seed) external {
+        for (seed = ORC_SHA(seed, msg.sender);; seed = ORC_SHA(seed)) {
+            tracks_[seed].packed = uint256(msg.sender);
+            if (count-- == 0)
+                break;
         }
     }
 
     #define ORC_DEL(d) { \
-        Track storage track = tracks[d]; \
-        if (track.until_ <= block.timestamp) \
-            delete track.until_; \
+        Track storage track = tracks_[d]; \
+        uint256 packed = track.packed; \
+        if (packed >> 160 <= block.timestamp) \
+            if (address(packed) == msg.sender) \
+                delete track.packed; \
     }
 
 
-    /*struct Packed {
-        uint64 start;
-        uint24 range;
+    /*struct Ticket {
+        uint128 reveal;
+        uint128 nonce;
+
+        uint64 issued;
+        uint64 ratio;
+        uint128 amount;
+
+        uint63 expire;
         address funder;
-        uint8 v;
+        uint32 salt;
+        uint1 v;
+
+        bytes32 r;
+        bytes32 s;
     }*/
 
     struct Ticket {
-        bytes32 reveal; bytes32 salt;
-        uint256 issued_nonce;
-        uint256 amount_ratio;
-        uint256 packed;
-        bytes32 r; bytes32 s;
+        uint256 packed0;
+        uint256 packed1;
+        uint256 packed2;
+        bytes32 r;
+        bytes32 s;
     }
 
     function claim(
-        mapping(bytes32 => Track) storage tracks,
-        uint256 destination ORC_PRM(),
+        uint256 destination,
         Ticket calldata ticket
+        ORC_PRM()
     ) private returns (uint256) {
-        uint256 start = ticket.packed >> 192;
-        uint256 range = uint24(ticket.packed >> 168);
-        if (start + range <= block.timestamp)
+        uint256 issued = (ticket.packed1 >> 192);
+        uint256 expire = issued + (ticket.packed2 >> 193);
+        if (expire <= block.timestamp)
             return 0;
 
-        bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encode(
-            ORC_SHA(ORC_SHA(ticket.reveal), ticket.salt, destination), ticket.issued_nonce,
-            ticket.amount_ratio, ticket.packed & ~uint256(uint8(-1)) ORC_ARG, this, digest));
-        address signer = ecrecover(digest, uint8(ticket.packed), ticket.r, ticket.s);
+        bytes32 digest; assembly { digest := chainid() } digest = ORC_SHA(
+            ORC_SHA(ORC_SHA(ticket.packed0 >> 128, destination), uint32(ticket.packed2 >> 1)),
+            uint128(ticket.packed0), ticket.packed1, ticket.packed2 & ~uint256(0x1ffffffff) ORC_ARG, this, digest);
+        address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
-        if (uint128(ticket.amount_ratio) < uint128(uint256(ORC_SHA(ticket.reveal, ticket.issued_nonce))))
+        if (uint64(ticket.packed1 >> 128) < uint64(uint256(ORC_SHA(ticket.packed0, issued))))
             return 0;
+        uint256 amount = uint128(ticket.packed1);
 
-        uint256 amount = uint128(ticket.amount_ratio >> 128);
-        if (start < block.timestamp) {
-            uint256 limit = amount * (range - (block.timestamp - start)) / range;
-            if (amount > limit)
-                amount = limit;
-        }
-    {
-        Track storage track = tracks[bytes32(uint256(signer)) ^ digest];
-        if (track.until_ != 0)
-            return 0;
-        track.until_ = start + range;
-    }
-        address funder = address(ticket.packed >> 8);
-    {
+        address funder = address(ticket.packed2 >> 33);
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
-            require(block.timestamp < lottery.recipients_[address(destination)]);
-
+            if (lottery.recipients_[address(destination)] <= block.timestamp)
+                return 0;
+    {
+        Track storage track = tracks_[bytes32(uint256(signer)) ^ digest];
+        if (track.packed != 0)
+            return 0;
+        track.packed = expire << 160 | uint256(msg.sender);
+    }
         Pot storage pot = lottery.pots_[signer]ORC_ARR;
         uint256 cache = pot.escrow_amount_;
 
-        if (uint128(cache) >= amount)
+        if (uint128(cache) >= amount) {
+            emit Update(funder, signer ORC_ARG);
             pot.escrow_amount_ = cache - amount;
-        else {
-            amount = uint128(cache);
+            return amount;
+        } else {
+            emit Delete(funder, signer ORC_ARG);
             pot.escrow_amount_ = 0;
+            return uint128(cache);
         }
     }
-        emit Update(funder, signer ORC_ARG);
-        return amount;
-    }
 
-    #define ORC_GRB \
-        address payable recipient = address(destination); \
-        mapping(bytes32 => Track) storage tracks = tracks_[recipient];
 
-    #define ORC_DST(amount) \
-        if (destination >> 160 == 0) \
+    /*struct Destination {
+        uint1 direct;
+        uint95 pepper;
+        address recipient;
+    }*/
+
+    #define ORC_CLM \
+        address payable recipient = address(destination);
+
+    #define ORC_DST \
+        if (amount == 0) {} \
+        else if (destination >> 255 == 0) \
             ORC_SND(recipient, amount) \
         else \
-            ORC_GFT(recipient, recipient, amount)
+            ORC_ADD(recipient, recipient, amount)
 
-    function claim(uint256 destination ORC_PRM(), Ticket[] calldata tickets, bytes32[] calldata digests) external {
-        ORC_GRB
+    function claimN(bytes32[] calldata refunds, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
+        ORC_CLM
 
         uint256 segment; assembly { segment := mload(0x40) }
 
         uint256 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += claim(tracks, destination ORC_ARG, tickets[--i]);
+            amount += claim(destination, tickets[--i] ORC_ARG);
             assembly { mstore(0x40, segment) }
         }
+        ORC_DST
 
-        ORC_DST(amount)
-
-        for (uint256 i = digests.length; i != 0; )
-            ORC_DEL(digests[--i])
+        for (uint256 i = refunds.length; i != 0; )
+            ORC_DEL(refunds[--i])
     }
 
-    function claim(uint256 destination ORC_PRM(), Ticket calldata ticket, bytes32 digest) external {
-        ORC_GRB
+    function claim1(bytes32 refund, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
+        ORC_CLM
 
-        ORC_DST(claim(tracks, destination ORC_ARG, ticket))
+        uint256 amount = claim(destination, ticket ORC_ARG);
+        ORC_DST
 
-        if (digest != 0)
-            ORC_DEL(digest)
+        if (refund != 0)
+            ORC_DEL(refund)
     }
 }

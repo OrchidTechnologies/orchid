@@ -1,0 +1,43 @@
+#
+# This patch is a workaround allowing Flutter to clear pending transactions that are not provided with a transaction
+# identifier.  e.g. https://github.com/flutter/flutter/issues/63644#issuecomment-692789658
+# The longer term fix for this is TBD.
+#
+diff a/Classes/InAppPurchasePlugin.m b/Classes/InAppPurchasePlugin.m
+index 156ce0c3..3ed9b106 100644
+--- a/Classes/InAppPurchasePlugin.m
++++ b/Classes/InAppPurchasePlugin.m
+@@ -197,19 +197,21 @@
+ }
+ 
+ - (void)finishTransaction:(FlutterMethodCall *)call result:(FlutterResult)result {
+-  if (![call.arguments isKindOfClass:[NSString class]]) {
++
++  if (call.arguments != nil && ![call.arguments isKindOfClass:[NSString class]]) {
+     result([FlutterError errorWithCode:@"storekit_invalid_argument"
+-                               message:@"Argument type of finishTransaction is not a string."
++                               message:@"Argument type of finishTransaction is not a string or nil."
+                                details:call.arguments]);
+     return;
+   }
++
+   NSString *transactionIdentifier = call.arguments;
+ 
+   NSArray<SKPaymentTransaction *> *pendingTransactions =
+       [self.paymentQueueHandler getUnfinishedTransactions];
+ 
+   for (SKPaymentTransaction *transaction in pendingTransactions) {
+-    if ([transaction.transactionIdentifier isEqualToString:transactionIdentifier]) {
++    if (call.arguments == nil || [transaction.transactionIdentifier isEqualToString:transactionIdentifier]) {
+       @try {
+         [self.paymentQueueHandler finishTransaction:transaction];
+       } @catch (NSException *e) {
+@@ -287,6 +289,8 @@
+   for (SKPaymentTransaction *transaction in transactions) {
+     [maps addObject:[FIAObjectTranslator getMapFromSKPaymentTransaction:transaction]];
+   }
++  NSLog(@"handleTransactionsUpdated: %@", transactions[0]);
++  NSLog(@"calling updatedTransactions with: %@", maps);
+   [self.callbackChannel invokeMethod:@"updatedTransactions" arguments:maps];
+ }
+ 

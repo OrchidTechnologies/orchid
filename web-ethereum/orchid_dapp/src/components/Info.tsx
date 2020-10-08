@@ -10,7 +10,8 @@ import {AccountQRCode} from "./AccountQRCode";
 import {S} from "../i18n/S";
 import {Orchid} from "../api/orchid";
 import {MarketConditions} from "./MarketConditionsPanel";
-import {EfficiencyMeter} from "./EfficiencyMeter";
+import {EfficiencyMeterRow} from "./EfficiencyMeter";
+import {Spacer} from "./Spacer";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -64,7 +65,7 @@ export class Info extends Component<any, any> {
           potEscrow: keikiToOxtString(pot.escrow, 4),
         });
         MarketConditions.for(pot).then(marketConditions => {
-          this.setState({ marketConditions: marketConditions });
+          this.setState({marketConditions: marketConditions});
         });
       }));
 
@@ -122,22 +123,22 @@ export class Info extends Component<any, any> {
         </Row>
 
         {/*wallet balance*/}
-        <div className="form-row col-1-1">
-          <div className="form-row col-1-2">
+        <Row>
+          <Col>
             <label className="form-row-label">ETH</label>
             <span className={errorClass(this.state.ethBalanceError)}> * </span>
             <input className="form-row-field" type="text"
                    value={this.state.ethBalance}
                    readOnly/>
-          </div>
-          <div className="form-row col-1-2">
+          </Col>
+          <Col>
             <label className="form-row-label">OXT</label>
             <span className={errorClass(this.state.oxtBalanceError)}> * </span>
             <input className="form-row-field" type="text"
                    value={this.state.oxtBalance}
                    readOnly/>
-          </div>
-        </div>
+          </Col>
+        </Row>
 
         {/*signer address*/}
         <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.signerAddress}</label>
@@ -160,22 +161,23 @@ export class Info extends Component<any, any> {
 
         {/*pot balance and escrow*/}
         <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.orchidAccount}</label>
-        <div className="form-row col-1-1">
-          <div className="form-row col-1-2">
+        <Row>
+          <Col>
             <label className="form-row-label">{S.balance}</label>
             <input className="form-row-field"
                    value={this.state.potBalance}
                    type="text" readOnly/>
-          </div>
-          <div className="form-row col-1-2">
+          </Col>
+          <Col>
             <label className="form-row-label">{S.deposit}</label>
             <input className="form-row-field"
                    value={this.state.potEscrow}
                    type="text" readOnly/>
-          </div>
-        </div>
+          </Col>
+        </Row>
 
-        <EfficiencyMeter marketConditions={this.state.marketConditions}/>
+        <Spacer height={12}/>
+        <EfficiencyMeterRow marketConditions={this.state.marketConditions} label={"Market Efficiency"}/>
 
         {/*pot lock status*/}
         <div style={{marginTop: "16px"}}/>

@@ -75,6 +75,7 @@ html, body {
 .disabled {
   color: #cccccc;
   pointer-events: none;
+  opacity: 0.5;
 }
 
 .disabled-faded {
@@ -86,4 +87,25 @@ html, body {
   margin-right: 10px;
 }
 
+/* OXT label formatting */
+.oxt-1-pad,
+.oxt-1 {
+  font-size: 17px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.29;
+  letter-spacing: -0.41px;
+  text-align: right;
+  color: #3a3149;
+}
 
+.oxt-1-pad {
+  margin-right: 16px;
+}
+
+.address-input,
+.address-input::placeholder {
+  /* form style beats us in precedence */
+  text-align: left !important;
+}

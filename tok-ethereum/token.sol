@@ -43,7 +43,7 @@ contract ERC677Receiver {
 
 contract OrchidToken677 is ERC677, ERC20Detailed {
 #else
-contract OrchidToken677 is ERC20, ERC20Detailed {
+contract OrchidToken20 is ERC20, ERC20Detailed {
 #endif
     constructor()
         ERC20Detailed("Orchid", "OXT", 18)

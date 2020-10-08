@@ -93,6 +93,10 @@ class IOSOrchidPurchaseAPI
       switch (tx.transactionState) {
         case SKPaymentTransactionStateWrapper.purchasing:
           log("iap: IAP purchasing state");
+          if (PacTransaction.shared.get() == null) {
+            log("iap: Unexpected purchasing state, recreating pending tx.");
+            PacTransaction.pending(tx.payment.productIdentifier).save();
+          }
           break;
 
         case SKPaymentTransactionStateWrapper.restored:
@@ -127,7 +131,7 @@ class IOSOrchidPurchaseAPI
             PacTransaction.shared.clear();
           } else {
             log("iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
-            PacTransaction.shared.set(PacTransaction.error("iap failed"));
+            PacTransaction.error("iap failed").save();
           }
           break;
 

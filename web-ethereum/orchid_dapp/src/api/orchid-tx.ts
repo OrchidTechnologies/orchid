@@ -1,6 +1,8 @@
 import {web3} from "./orchid-eth";
 import {TransactionReceipt} from "web3-core";
 import {OrchidContracts} from "./orchid-eth-contracts";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 const ORCHID_ETH_TX_KEY = "orchid-eth-tx";
@@ -12,7 +14,7 @@ export enum EthereumTransactionStatus {
 export class EthereumTransaction {
 
   static requiredConfirmations(): number {
-    return OrchidContracts.contracts_overridden() ? 1 : 2
+      return OrchidContracts.contracts_overridden() ? 1 : 2
   };
 
   hash: string;

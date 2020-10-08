@@ -21,16 +21,16 @@
 /* }}} */
 
 
-pragma solidity 0.7.2;
-
-import "./include.sol";
-
-contract OrchidPassword is OrchidVerifier {
-    function book(bytes memory, address, bytes memory receipt) override public pure {
-        require(keccak256(receipt) == 0xb68fe43f0d1a0d7aef123722670be50268e15365401c442f8806ef83b612976b);
+object "OrchidRecipient" {
+    code {
+        datacopy(0, dataoffset("code"), datasize("code"))
+        return(0, datasize("code"))
     }
 
-    function ring(bytes calldata, address) override external pure returns (bytes memory) {
-        return "";
+    object "code" {
+        code {
+            calldatacopy(0, 0, calldatasize())
+            pop(call(gas(), 0x4575f41308EC1483f3d399aa9a2826d74Da13Deb, 0, 0, calldatasize(), 0, 0))
+        }
     }
 }

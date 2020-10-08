@@ -5,6 +5,7 @@ import {filter, flatMap, map, shareReplay} from "rxjs/operators";
 import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
 import {OrchidTransactionDetail, OrchidTransactionMonitor} from "./orchid-tx";
+// import {MockOrchidTransactionMonitor} from "./orchid-eth-mock";
 
 /// The high level API for observation of a user's Ethereum wallet and lottery pot state.
 export class OrchidAPI {
@@ -25,12 +26,12 @@ export class OrchidAPI {
   eth = new OrchidEthereumAPI();
 
   // The Orchid transaction monitor
-  // transactionMonitor = new MockOrchidTransactionMonitor();
+  //transactionMonitor = new MockOrchidTransactionMonitor();
   transactionMonitor = new OrchidTransactionMonitor();
 
   // Wallet connection or error status.  Wallet.Error may indicate the lack of a valid web3
   // environment or the failure of core contract calls.
-  walletStatus = new BehaviorSubject<WalletStatus>(WalletStatus.NotConnected);
+  walletStatus = new BehaviorSubject<WalletStatus>(WalletStatus.notConnected);
 
   // The current wallet
   wallet = new BehaviorSubject<Wallet | undefined>(undefined);
@@ -62,7 +63,7 @@ export class OrchidAPI {
         return this.eth.orchidGetLotteryPot(signer.wallet, signer);
       } catch (err) {
         console.log("lotteryPot: Error getting lottery pot data for signer: ", signer);
-        this.walletStatus.next(WalletStatus.Error);
+        this.walletStatus.next(WalletStatus.error);
         throw err;
       }
     }), shareReplay(1)
@@ -81,6 +82,8 @@ export class OrchidAPI {
   debugLog = "";
   debugLogChanged = new BehaviorSubject(true);
 
+  updateBalancesTimer: NodeJS.Timeout | null = null
+
   async init(listenForProviderChanges: boolean = true): Promise<WalletStatus> {
     if (OrchidAPI.isMobileDevice()) {
       this.captureLogs();
@@ -93,12 +96,16 @@ export class OrchidAPI {
       } : undefined;
 
     let status = await this.eth.orchidInitEthereum(propsUpdate);
-    if (status === WalletStatus.Connected) {
+    if (status.state === WalletState.Connected) {
       await this.updateWallet();
       await this.updateSigners();
-      this.updateTransactions();
+      this.updateTransactions().then();
     }
-    this.walletStatus.next(status);
+
+    // Poll wallet and lottery pot periodically
+    if (this.updateBalancesTimer == null) {
+      this.updateBalancesTimer = setInterval(() => this.updateBalances(), 10000/*ms*/);
+    }
 
     // Init the transaction monitor
     this.transactionMonitor.init(transactions => {
@@ -136,7 +143,7 @@ export class OrchidAPI {
       }
     } catch (err) {
       console.log("Error updating signers: ", err);
-      this.walletStatus.next(WalletStatus.Error);
+      this.walletStatus.next(WalletStatus.error);
       this.signer.next(undefined);
     }
   }
@@ -146,7 +153,7 @@ export class OrchidAPI {
       this.wallet.next(await this.eth.orchidGetWallet());
     } catch (err) {
       console.log("Error updating wallet: ", err);
-      this.walletStatus.next(WalletStatus.Error);
+      this.walletStatus.next(WalletStatus.error);
     }
   }
 
@@ -154,6 +161,12 @@ export class OrchidAPI {
   async updateLotteryPot() {
     console.log("Update lottery pot refreshing signer data: ", this.signer.value);
     this.signer.next(this.signer.value); // Set the signer again to trigger a refresh
+  }
+
+  async updateBalances() {
+    console.log("update balances")
+    await this.updateWallet();
+    await this.updateLotteryPot();
   }
 
   async updateTransactions() {
@@ -200,7 +213,23 @@ export class OrchidAPI {
   };
 }
 
-export enum WalletStatus {
+export enum WalletState {
   NoWallet, NotConnected, Connected, Error, WrongNetwork
+}
+
+export class WalletStatus {
+  state: WalletState;
+  account: string | undefined
+
+  static noWallet = new WalletStatus(WalletState.NoWallet)
+  static notConnected = new WalletStatus(WalletState.NotConnected)
+  static error = new WalletStatus(WalletState.Error)
+  static wrongNetwork = new WalletStatus(WalletState.WrongNetwork)
+  static connected(account: string) { return new WalletStatus(WalletState.Connected, account) }
+
+  constructor(state: WalletState, account?: string) {
+    this.state = state;
+    this.account = account;
+  }
 }
 
