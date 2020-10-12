@@ -62,7 +62,13 @@ export class MarketConditions {
 
     // Recommend the amount of ETH required for the account creation
     let api = OrchidAPI.shared();
-    let gasPrice: GWEI = await api.eth.getGasPrice();
+    let gasPrice: GWEI
+    try {
+      gasPrice = await api.eth.getGasPrice();
+    }catch(err) {
+      console.log("market conditions: error fetching gas price");
+      throw Error("gas price unavailable")
+    }
     let txEthRequired: ETH = gasPrice.multiply(OrchidContracts.add_funds_total_max_gas).toEth();
     let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
     let txUsdEthEqvuivalent = pricing.ethToUSD(txEthRequired);

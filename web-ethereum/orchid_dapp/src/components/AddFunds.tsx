@@ -1,6 +1,13 @@
 import React, {FC, useCallback, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
-import {Divider, errorClass, parseFloatSafe, useInterval, Visibility} from "../util/util";
+import {
+  CancellablePromise,
+  Divider,
+  errorClass, makeCancelable,
+  parseFloatSafe,
+  useInterval,
+  Visibility
+} from "../util/util";
 import {TransactionProgress, TransactionStatus} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Modal, Row} from "react-bootstrap";
@@ -33,6 +40,7 @@ export const AddFunds: FC = (props) => {
 interface AddOrCreateProps {
   createAccount: boolean
 }
+
 const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
   // Create account state
@@ -70,15 +78,25 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   useEffect(() => {
     let api = OrchidAPI.shared();
     let walletSubscription = api.wallet_wait.subscribe(wallet => {
-      console.log("add funds got wallet: ", wallet);
+      //console.log("addfunds: add funds got wallet: ", wallet);
       setWallet(wallet)
     });
 
     // Default to recommended efficiency for create
+    let getRecommendedPromise: CancellablePromise<AccountRecommendation> | null
     if (props.createAccount) {
       (async () => {
-        setAccountRecommendation(await Orchid.recommendedAccountComposition());
-        setEfficiencySliderValue(Orchid.recommendationEfficiency * 100)
+        try {
+          getRecommendedPromise = makeCancelable(Orchid.recommendedAccountComposition());
+          setAccountRecommendation(await getRecommendedPromise.promise);
+          setEfficiencySliderValue(Orchid.recommendationEfficiency * 100)
+        } catch (err) {
+          if (err.isCanceled) {
+            console.log("addfunds: fetch recommended account cancelled")
+          } else {
+            console.log("addfunds: unable to fetch recommended account composition")
+          }
+        }
       })();
     }
 
@@ -91,10 +109,16 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     }
 
     // Prime other data sources
-    OrchidPricingAPI.shared().getPricing().then();
-    api.eth.getGasPrice().then();
+    try {
+      OrchidPricingAPI.shared().getPricing().then().catch(e => {
+      });
+      api.eth.getGasPrice().then().catch(e => { });
+    } catch (err) {
+      console.log("addfunds: error priming data sources")
+    }
 
     return () => {
+      getRecommendedPromise?.cancel();
       potSubscription?.unsubscribe();
       walletSubscription.unsubscribe();
     };
@@ -103,30 +127,33 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   // Update market conditions for the current account (if any)
   // (This is wrapped in useCallback to allow it to be used from both useInterval and useEffect below.)
   const fetchMarketConditions = useCallback(async () => {
-    console.log("fetch market conditions");
+    //console.log("addfunds: fetch market conditions");
     if (pot == null) {
       setPotMarketConditions(null);
       return;
     }
+    // TODO: This needs to be cancellable
     // Market conditions for prospective pot composition
     const mc = await MarketConditions.forBalance(
       OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow));
     setPotMarketConditions(mc);
 
     if (efficiencySliderValue == null) {
-      console.log("setting efficiency slider")
+      //console.log("addfunds: setting efficiency slider")
       setEfficiencySliderValue(mc?.efficiency * 100 ?? 0)
     }
   }, [pot, efficiencySliderValue]);
 
   // Fetch market conditions when the pot changes
   useEffect(() => {
-    fetchMarketConditions().then();
+    fetchMarketConditions().then().catch(e => {
+    });
   }, [fetchMarketConditions, pot])
 
   // Fetch market conditions periodically
   useInterval(() => {
-    fetchMarketConditions().then();
+    fetchMarketConditions().then().catch(e => {
+    });
   }, 15000);
 
   // TODO: throttle this
@@ -135,9 +162,15 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   useEffect(() => {
     const minEfficiencyChange = 3.0; // perc
     (async () => {
-      let recommendation = await MarketConditions.recommendation(
-        (efficiencySliderValue ?? (Orchid.recommendationEfficiency * 100.0)) / 100.0,
-        Orchid.recommendationBalanceFaceValues)
+      let recommendation: AccountRecommendation
+      try {
+        recommendation = await MarketConditions.recommendation(
+          (efficiencySliderValue ?? (Orchid.recommendationEfficiency * 100.0)) / 100.0,
+          Orchid.recommendationBalanceFaceValues)
+      } catch (err) {
+        console.log("addfunds: unable to fetch market conditions")
+        return;
+      }
 
       // If we don't have an account just set the recommended values
       if (pot == null || efficiencySliderValue == null || potMarketConditions == null) {
@@ -268,7 +301,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       let gasPrice = GasPricingStrategy.chooseGasPrice(
         OrchidContracts.add_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
       if (!gasPrice) {
-        console.log("Add funds: gas price potentially too low.");
+        console.log("addfunds: gas price potentially too low.");
       }
 
       let txId = await api.eth.orchidAddFunds(
@@ -280,8 +313,9 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
         await api.updateLotteryPot();
       }
       setTx(TransactionStatus.result(txId, S.transactionComplete));
-      api.updateWallet().then();
-      api.updateTransactions().then();
+      api.updateWallet().then().catch(e => {
+      });
+      api.updateTransactions()
     } catch (err) {
       setTx(TransactionStatus.error(`${S.transactionFailed}: ${err}`));
       throw err

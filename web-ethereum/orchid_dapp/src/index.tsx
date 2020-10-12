@@ -42,15 +42,6 @@ export const intl = createIntl({
   messages: messages[language]
 }, cache);
 
-OrchidAPI.shared().init().then((walletStatus) => {
-  render(
-    <IntlProvider locale={language} messages={messages[language]}>
-      <App walletStatus={walletStatus}/>
-    </IntlProvider>,
-    document.getElementById('root')
-  );
-});
-
 const App: FC<{ walletStatus: WalletStatus }> = (props) => {
   const [walletStatus, setWalletStatus] = useState(props.walletStatus);
 
@@ -68,6 +59,7 @@ const App: FC<{ walletStatus: WalletStatus }> = (props) => {
     };
   }, [walletStatus.account]);
 
+  /*
   let el: any;
   switch (walletStatus.state) {
     case WalletState.NoWallet:
@@ -81,5 +73,16 @@ const App: FC<{ walletStatus: WalletStatus }> = (props) => {
       break;
   }
   return el;
+  */
+
+  return <Layout key={walletStatus.account} walletStatus={walletStatus}/>;
 };
 
+render(
+  <IntlProvider locale={language} messages={messages[language]}>
+    <App walletStatus={WalletStatus.noWallet}/>
+  </IntlProvider>,
+  document.getElementById('root')
+);
+
+OrchidAPI.shared().init().then((walletStatus) => { });

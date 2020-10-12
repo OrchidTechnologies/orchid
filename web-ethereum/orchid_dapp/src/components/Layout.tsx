@@ -51,8 +51,10 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
     let api = OrchidAPI.shared();
     // new user defaults
     let newUserSub = api.newUser_wait.subscribe(isNew => {
+      console.log("user is new: ", isNew)
       setIsNewUser(isNew);
-      if (route === Route.None) {
+      // When the user status changes update the default route
+      if (route === Route.None || route ===Route.CreateAccount || route === Route.AddFunds) {
         let defaultRoute = isNew ? Route.CreateAccount : Route.AddFunds
         console.log("setting default route: ", defaultRoute)
         setURL(defaultRoute);
@@ -124,7 +126,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>
             <Visibility visible={route === Route.Balances}><Info/></Visibility>
-            <Visibility visible={route === Route.CreateAccount}><CreateAccount/></Visibility>
+            <Visibility visible={route === Route.CreateAccount || route === Route.None}><CreateAccount/></Visibility>
             <Visibility visible={route === Route.AddFunds}><AddFunds/></Visibility>
             <Visibility visible={route === Route.StakeFundsTest}><StakeFunds/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
