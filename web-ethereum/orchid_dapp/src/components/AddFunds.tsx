@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useState} from "react";
+import React, {FC, useCallback, useContext, useEffect, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {
   CancellablePromise,
@@ -27,6 +27,7 @@ import {EfficiencySlider} from "./EfficiencySlider";
 import antsImage from '../assets/ants.svg'
 import {AccountQRCode} from "./AccountQRCode";
 import {Subscription} from "rxjs";
+import {Route, RouteContext} from "./Route";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -73,6 +74,8 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   const [showSignerAddressInstructions, setShowSignerAddressInstructions] = useState(false);
   const [generatedSigner, setGeneratedSigner] = useState<Signer | null>(null);
   const [generatingSigner, setGeneratingSigner] = useState(false);
+
+  let {setRoute} = useContext(RouteContext);
 
   // Initialization
   useEffect(() => {
@@ -288,6 +291,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       return;
     }
 
+    setRoute(Route.CreateAccount); // Keep the user on this page until further navigation
     setTx(TransactionStatus.running());
     if (txResult.current != null) {
       txResult.current.scrollIntoView();
@@ -315,7 +319,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       setTx(TransactionStatus.result(txId, S.transactionComplete));
       api.updateWallet().then().catch(e => {
       });
-      api.updateTransactions()
+      api.updateTransactions().then();
     } catch (err) {
       setTx(TransactionStatus.error(`${S.transactionFailed}: ${err}`));
       throw err

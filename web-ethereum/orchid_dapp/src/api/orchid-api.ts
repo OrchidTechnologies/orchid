@@ -166,13 +166,12 @@ export class OrchidAPI {
 
   /// Update selected lottery pot balances
   async updateLotteryPot() {
-    // if (this.walletStatus.value.state !== WalletState.Connected) { return }
-    console.log("Update lottery pot refreshing signer data: ", this.signer.value);
+    //console.log("Update lottery pot refreshing signer data: ", this.signer.value);
     this.signer.next(this.signer.value); // Set the signer again to trigger a refresh
   }
 
   async updateBalances() {
-    console.log("update balances")
+    //console.log("update balances")
     await this.updateWallet();
     await this.updateLotteryPot();
   }

@@ -40,7 +40,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
   const [orchidTransactions, setOrchidTransactions] = useState<OrchidTransactionDetail[]>([]);
 
   const moreMenuItems = new Map<Route, string>([
-    [Route.Balances, S.info],
+    [Route.Info, S.info],
     [Route.Transactions, S.transactions],
     [Route.MoveFunds, S.moveFunds],
     [Route.LockFunds, S.lockUnlockFunds],
@@ -53,13 +53,6 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
     let newUserSub = api.newUser_wait.subscribe(isNew => {
       console.log("user is new: ", isNew)
       setIsNewUser(isNew);
-      // When the user status changes update the default route
-      if (route === Route.None || route ===Route.CreateAccount || route === Route.AddFunds) {
-        let defaultRoute = isNew ? Route.CreateAccount : Route.AddFunds
-        console.log("setting default route: ", defaultRoute)
-        setURL(defaultRoute);
-        setRoute(defaultRoute);
-      }
     });
     let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
       setOrchidTransactions(txs);
@@ -93,7 +86,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Header/>
             <Divider/>
             <Navbar className={navEnabled ? "" : "disabled-faded"}>
-              <NavButton route={Route.Balances} icon={homeIcon} iconSelected={homeIconSelected}>{S.overview}</NavButton>
+              <NavButton route={Route.Info} icon={homeIcon} iconSelected={homeIconSelected}>{S.overview}</NavButton>
               <NavButton route={isNewUser ? Route.CreateAccount : Route.AddFunds} icon={addIcon} iconSelected={addIconSelected}>{S.add}</NavButton>
               <NavButton route={Route.WithdrawFunds} icon={withdrawIcon} iconSelected={withdrawIconSelected}>{S.withdraw}</NavButton>
                 <OverlayTrigger
@@ -125,8 +118,8 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
         <Row className="page-content">
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>
-            <Visibility visible={route === Route.Balances}><Info/></Visibility>
-            <Visibility visible={route === Route.CreateAccount || route === Route.None}><CreateAccount/></Visibility>
+            <Visibility visible={route === Route.Info || (route === Route.None && !isNewUser)}><Info/></Visibility>
+            <Visibility visible={route === Route.CreateAccount || (route === Route.None && isNewUser)}><CreateAccount/></Visibility>
             <Visibility visible={route === Route.AddFunds}><AddFunds/></Visibility>
             <Visibility visible={route === Route.StakeFundsTest}><StakeFunds/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>

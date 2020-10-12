@@ -2,7 +2,7 @@ import React from "react";
 import {camelCase} from "../util/util";
 
 export enum Route {
-  None, Overview, Balances, AddFunds, CreateAccount, WithdrawFunds, Transactions,
+  None, Overview, Info, AddFunds, CreateAccount, WithdrawFunds, Transactions,
   MoveFunds, LockFunds, DebugPanel, StakeFundsTest
 }
 
