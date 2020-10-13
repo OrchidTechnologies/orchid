@@ -110,7 +110,6 @@ export class OrchidEthereumAPI {
             if (window.ethereum.on) {
               // This is the recommended way to trigger the account connection
               // https://eips.ethereum.org/EIPS/eip-1102 (request accounts)
-              // https://eips.ethereum.org/EIPS/eip-1193 (emitting events)
               console.log("init eth connection");
               await window.ethereum.request({method: 'eth_requestAccounts'})
             } else {
@@ -139,7 +138,7 @@ export class OrchidEthereumAPI {
         try {
           if (providerUpdateCallback) {
             console.log("registering account listener");
-            // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1193.md (supported events)
+            // https://eips.ethereum.org/EIPS/eip-1193 (supported events)
             // https://nodejs.org/api/events.html (event emitter API)
             window.ethereum.on('accountsChanged', function (props: any) {
               console.log("web3 accounts changed")
