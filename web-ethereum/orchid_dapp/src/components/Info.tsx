@@ -69,15 +69,20 @@ export class Info extends Component<any, any> {
         });
       }));
 
+    // TODO: Deal with cancellation here
     (async () => {
-      let minViableAccountRecommendation = await Orchid.minViableAccountComposition();
-      let accountRecommendation = await Orchid.recommendedAccountComposition();
-      this.setState({
-        accountRecommendationBalanceMin: minViableAccountRecommendation.balance.value.toFixedLocalized(2),
-        accountRecommendationDepositMin: minViableAccountRecommendation.deposit.value.toFixedLocalized(2),
-        accountRecommendationBalance: accountRecommendation.balance.value.toFixedLocalized(2),
-        accountRecommendationDeposit: accountRecommendation.deposit.value.toFixedLocalized(2)
-      });
+      try {
+        let minViableAccountRecommendation = await Orchid.minViableAccountComposition();
+        let accountRecommendation = await Orchid.recommendedAccountComposition();
+        this.setState({
+          accountRecommendationBalanceMin: minViableAccountRecommendation.balance.value.toFixedLocalized(2),
+          accountRecommendationDepositMin: minViableAccountRecommendation.deposit.value.toFixedLocalized(2),
+          accountRecommendationBalance: accountRecommendation.balance.value.toFixedLocalized(2),
+          accountRecommendationDeposit: accountRecommendation.deposit.value.toFixedLocalized(2)
+        });
+      } catch (err) {
+        console.log("unable to fetch min viable account info")
+      }
     })();
   }
 
@@ -177,7 +182,8 @@ export class Info extends Component<any, any> {
         </Row>
 
         <Spacer height={12}/>
-        <EfficiencyMeterRow marketConditions={this.state.marketConditions} label={"Market Efficiency"}/>
+        <EfficiencyMeterRow marketConditions={this.state.marketConditions}
+                            label={"Market Efficiency"}/>
 
         {/*pot lock status*/}
         <div style={{marginTop: "16px"}}/>

@@ -30,7 +30,7 @@ export const Header: React.FC = () => {
     };
   }, []);
 
-  let show = !newUser && !(oxtBalance == null);
+  let showAccountSelector = !newUser && !(oxtBalance == null);
   return (
     <Container>
       <Row noGutters={true} style={{marginBottom: '14px'}}>
@@ -42,9 +42,22 @@ export const Header: React.FC = () => {
         </Col>
 
         {/*Account / Balance*/}
-        <Visibility visible={show}>
-          <AccountSelector signers={signers || []} oxtBalance={oxtBalance || ""}/>
-        </Visibility>
+        {
+          showAccountSelector ?
+            <AccountSelector signers={signers || []} oxtBalance={oxtBalance || ""}/>
+            : <div/>
+            /*
+            <button
+              onClick={(_) => {
+                OrchidAPI.shared().init().then((
+                  walletStatus) => {
+                  OrchidAPI.shared().walletStatus.next(walletStatus)
+                });
+              }}>
+              {<span>{"Connect Wallet"}</span>}
+            </button>
+            */
+        }
       </Row>
     </Container>
   );
@@ -61,33 +74,36 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
           <Popover.Content onClick={() => document.body.click()}>
             <ListGroup variant="flush">
               {
-              props.signers.map((signer: Signer) => {
-                let len = signer.address.length;
-                let address = signer.address.substring(0,4)+"..."+signer.address.substring(len-5, len);
-                return <ListGroupItem
-                  onClick={() => {
-                    let api = OrchidAPI.shared();
-                    let wallet = api.wallet.value;
-                    if (!wallet) { return; }
-                    console.log("Account selector chose signer: ", signer.address);
-                    api.signer.next(new Signer(wallet, signer.address))
-                  }}
-                  key={signer.address}>
-                  <span style={{fontWeight: 'bold'}}>{S.account}: </span><span style={{fontFamily: 'Monospace'}}>{address}</span>
-                </ListGroupItem>
-              })
-            }
-            <ListGroupItem
-              onClick={() => {
-                setRoute(Route.CreateAccount);
-              }}
-              key={"new-item"}
+                props.signers.map((signer: Signer) => {
+                  let len = signer.address.length;
+                  let address = signer.address.substring(0, 4) + "..." + signer.address.substring(len - 5, len);
+                  return <ListGroupItem
+                    onClick={() => {
+                      let api = OrchidAPI.shared();
+                      let wallet = api.wallet.value;
+                      if (!wallet) {
+                        return;
+                      }
+                      console.log("Account selector chose signer: ", signer.address);
+                      api.signer.next(new Signer(wallet, signer.address))
+                    }}
+                    key={signer.address}>
+                    <span style={{fontWeight: 'bold'}}>{S.account}: </span><span
+                    style={{fontFamily: 'Monospace'}}>{address}</span>
+                  </ListGroupItem>
+                })
+              }
+              <ListGroupItem
+                onClick={() => {
+                  setRoute(Route.CreateAccount);
+                }}
+                key={"new-item"}
                 style={{
                   fontWeight: 'bold',
                   backgroundColor: 'transparent'
                 }}>
-              <span>{S.createNewAccount}</span>
-            </ListGroupItem>
+                <span>{S.createNewAccount}</span>
+              </ListGroupItem>
             </ListGroup>
           </Popover.Content>
         </Popover>

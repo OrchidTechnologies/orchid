@@ -100,11 +100,23 @@ export class OrchidEthereumAPI {
   orchidInitEthereum(providerUpdateCallback?: (props: any) => void): Promise<WalletStatus> {
     return new Promise(function (resolve, reject) {
       (async () => {
+        console.log("eth: orchidInitEthereum")
         if (window.ethereum) {
           window.ethereum.autoRefreshOnNetworkChange = false;
           web3 = new Web3(window.ethereum);
           try {
-            await window.ethereum.enable();
+            // TODO: We should first detect if we are already connected using:
+            // TODO: ethereum.on('accountsChanged', ...); which fires on page load.
+            if (window.ethereum.on) {
+              // This is the recommended way to trigger the account connection
+              // https://eips.ethereum.org/EIPS/eip-1102 (request accounts)
+              console.log("init eth connection");
+              await window.ethereum.request({method: 'eth_requestAccounts'})
+            } else {
+              // This is the legacy enable method.
+              console.log("legacy init eth connection");
+              await window.ethereum.enable();
+            }
           } catch (error) {
             resolve(WalletStatus.notConnected);
             console.log("User denied account access...");
@@ -126,13 +138,15 @@ export class OrchidEthereumAPI {
         try {
           if (providerUpdateCallback) {
             console.log("registering account listener");
+            // https://eips.ethereum.org/EIPS/eip-1193 (supported events)
+            // https://nodejs.org/api/events.html (event emitter API)
             window.ethereum.on('accountsChanged', function (props: any) {
               console.log("web3 accounts changed")
-              providerUpdateCallback && providerUpdateCallback(props);
+              providerUpdateCallback(props);
             })
             window.ethereum.on('networkChanged', function (props: any) {
               console.log("web3 network changed")
-              providerUpdateCallback && providerUpdateCallback(props);
+              providerUpdateCallback(props);
             })
           }
         } catch (err) {
@@ -495,7 +509,7 @@ export class OrchidEthereumAPI {
     const escrow: BigInt = overrideEscrow || result[1];
     const unlock: number = Number(result[2]);
     const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
-    console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
+    //console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
     return new LotteryPot(signer, balance, escrow, unlockDate);
   }
 
