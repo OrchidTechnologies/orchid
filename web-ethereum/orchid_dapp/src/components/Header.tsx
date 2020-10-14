@@ -2,35 +2,48 @@ import React, {useContext, useEffect, useState} from "react";
 import logo from '../assets/name-logo.svg'
 import tokenLogo from '../assets/orchid-token-purple.svg'
 import {
-  Col, Container, ListGroup, ListGroupItem, OverlayTrigger, Popover, Row
+  Col,
+  Container,
+  ListGroup,
+  ListGroupItem,
+  OverlayTrigger,
+  Popover,
+  Row
 } from "react-bootstrap";
 import './Header.css';
 import {OrchidAPI} from "../api/orchid-api";
-import {Signer, keikiToOxtString} from "../api/orchid-eth";
-import {Visibility} from "../util/util";
+import {keikiToOxtString, Signer} from "../api/orchid-eth";
 import {Route, RouteContext} from "./Route";
 import {S} from "../i18n/S";
+import {Subscription} from "rxjs";
+import {WalletProviderState, WalletProviderStatus} from "../api/orchid-eth-web3";
+import {SubmitButton} from "./SubmitButton";
 
 export const Header: React.FC = () => {
   const [oxtBalance, setOxtBalance] = useState<string | null>(null);
   const [newUser, setNewUser] = useState<boolean | undefined>(undefined);
   const [signers, setSigners] = useState<Signer[] | undefined>(undefined);
+  const [walletStatus, setWalletStatus] = useState<WalletProviderStatus | undefined>(undefined);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
+    let subscriptions: Subscription [] = [];
     let api = OrchidAPI.shared();
-    let newSub = api.newUser_wait.subscribe(setNewUser);
-    let signersSub = api.signersAvailable_wait.subscribe(setSigners);
-    let lotSub = api.lotteryPot_wait.subscribe(pot => {
+    subscriptions.push(api.newUser_wait.subscribe(setNewUser));
+    subscriptions.push(api.signersAvailable_wait.subscribe(setSigners));
+    subscriptions.push(api.lotteryPot_wait.subscribe(pot => {
       setOxtBalance(keikiToOxtString(pot.balance, 2));
-    });
+    }));
+    subscriptions.push(api.eth.provider.walletStatus.subscribe(setWalletStatus));
     return () => {
-      lotSub.unsubscribe();
-      signersSub.unsubscribe();
-      newSub.unsubscribe();
+      subscriptions.forEach(sub => {
+        sub.unsubscribe()
+      })
     };
   }, []);
 
   let showAccountSelector = !newUser && !(oxtBalance == null);
+  let showConnectButton = !showAccountSelector && walletStatus?.state === WalletProviderState.NotConnected
   return (
     <Container>
       <Row noGutters={true} style={{marginBottom: '14px'}}>
@@ -44,19 +57,21 @@ export const Header: React.FC = () => {
         {/*Account / Balance*/}
         {
           showAccountSelector ?
-            <AccountSelector signers={signers || []} oxtBalance={oxtBalance || ""}/>
-            : <div/>
-            /*
-            <button
-              onClick={(_) => {
-                OrchidAPI.shared().init().then((
-                  walletStatus) => {
-                  OrchidAPI.shared().walletStatus.next(walletStatus)
-                });
-              }}>
-              {<span>{"Connect Wallet"}</span>}
-            </button>
-            */
+            <AccountSelector signers={signers || []} oxtBalance={oxtBalance || ""}/> : null
+        }
+        {
+          showConnectButton ?
+            <div className={"submit-button"}>
+              <button
+                disabled={connecting}
+                onClick={(_) => {
+                  setConnecting(true);
+                  OrchidAPI.shared().eth.provider.connect().then();
+                }}>
+                <span>{"Connect Wallet"}</span>
+              </button>
+            </div>
+            : null
         }
       </Row>
     </Container>

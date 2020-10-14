@@ -1,6 +1,6 @@
-import {web3} from "./orchid-eth";
 import {TransactionReceipt} from "web3-core";
 import {OrchidContracts} from "./orchid-eth-contracts";
+import {OrchidAPI} from "./orchid-api";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
@@ -128,7 +128,7 @@ export class OrchidTransactionMonitor {
   timer: NodeJS.Timeout | undefined;
   lastUpdate: Date | undefined;
 
-  init(listener: OrchidTransactionMonitorListener) {
+  initIfNeeded(listener: OrchidTransactionMonitorListener) {
     this.listener = listener;
     if (!this.timer) {
       this.timer = setInterval(() => this.interval(), 1000);
@@ -189,6 +189,7 @@ export class OrchidTransactionMonitor {
   }
 
   private async getDetail(orcTx: OrchidTransaction): Promise<OrchidTransactionDetail> {
+    let web3 = OrchidAPI.shared().eth.web3;
     let ethTxs = orcTx.transactionHashes.map(async function (hash) {
       let receipt: TransactionReceipt = await web3.eth.getTransactionReceipt(hash);
       if (receipt) {

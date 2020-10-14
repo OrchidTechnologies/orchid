@@ -16,7 +16,6 @@ export const LowFundsPanel: React.FC = () => {
   const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
 
   useEffect(() => {
-    console.log("low funds panel init")
     let api = OrchidAPI.shared();
     let potSubscription = api.lotteryPot_wait.subscribe(pot => {
       setPot(pot)
@@ -29,15 +28,14 @@ export const LowFundsPanel: React.FC = () => {
         setAccountRecommendation(await getRecommendation.promise);
       } catch (err) {
         if (err.isCanceled) {
-          console.log("recommendation cancelled")
+          //console.log("recommendation cancelled")
         } else {
-          console.log("unable to fetch min viable account info", err)
+          //console.log("unable to fetch min viable account info", err)
         }
       }
     })();
 
     return () => {
-      console.log("low funds panel destroy")
       getRecommendation.cancel()
       potSubscription.unsubscribe();
     };

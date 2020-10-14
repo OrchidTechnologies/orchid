@@ -28,7 +28,7 @@ export function pathToRoute(path: string | undefined): Route | undefined {
 }
 
 export function routeToPath(route: Route): string {
-  return "#" + camelCase(Route[route]);
+  return route === Route.None ? ' ' : "#" + camelCase(Route[route]);
 }
 
 export function setURL(route: Route) {

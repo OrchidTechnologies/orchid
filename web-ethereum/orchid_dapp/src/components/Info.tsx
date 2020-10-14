@@ -48,14 +48,24 @@ export class Info extends Component<any, any> {
       }));
 
     this.subscriptions.push(
-      api.wallet_wait.subscribe(wallet => {
-        this.setState({
-          walletAddress: wallet.address,
-          ethBalance: keikiToOxtString(wallet.ethBalance, 4),
-          ethBalanceError: wallet.ethBalance <= BigInt(0),
-          oxtBalance: keikiToOxtString(wallet.oxtBalance, 4),
-          oxtBalanceError: wallet.oxtBalance <= BigInt(0),
-        });
+      api.wallet.subscribe(wallet => {
+        if (!wallet) {
+          this.setState({
+            walletAddress: "",
+            ethBalance: "",
+            ethBalanceError: false,
+            oxtBalance: "",
+            oxtBalanceError: false
+          });
+        } else {
+          this.setState({
+            walletAddress: wallet.address,
+            ethBalance: keikiToOxtString(wallet.ethBalance, 4),
+            ethBalanceError: wallet.ethBalance <= BigInt(0),
+            oxtBalance: keikiToOxtString(wallet.oxtBalance, 4),
+            oxtBalanceError: wallet.oxtBalance <= BigInt(0),
+          });
+        }
       }));
 
     this.subscriptions.push(

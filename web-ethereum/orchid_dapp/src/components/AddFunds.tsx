@@ -28,6 +28,7 @@ import antsImage from '../assets/ants.svg'
 import {AccountQRCode} from "./AccountQRCode";
 import {Subscription} from "rxjs";
 import {Route, RouteContext} from "./Route";
+import {WalletProviderState} from "../api/orchid-eth-web3";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -80,9 +81,9 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   // Initialization
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let walletSubscription = api.wallet_wait.subscribe(wallet => {
+    let walletSubscription = api.wallet.subscribe(wallet => {
       //console.log("addfunds: add funds got wallet: ", wallet);
-      setWallet(wallet)
+      setWallet(wallet ?? null)
     });
 
     // Default to recommended efficiency for create
@@ -95,7 +96,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           setEfficiencySliderValue(Orchid.recommendationEfficiency * 100)
         } catch (err) {
           if (err.isCanceled) {
-            console.log("addfunds: fetch recommended account cancelled")
+            //console.log("addfunds: fetch recommended account cancelled")
           } else {
             console.log("addfunds: unable to fetch recommended account composition")
           }
@@ -115,7 +116,8 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     try {
       OrchidPricingAPI.shared().getPricing().then().catch(e => {
       });
-      api.eth.getGasPrice().then().catch(e => { });
+      api.eth.getGasPrice().then().catch(e => {
+      });
     } catch (err) {
       console.log("addfunds: error priming data sources")
     }
@@ -389,6 +391,9 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   const warnETH = ETH.fromWei(wallet?.ethBalance ?? BigInt(0))
     .lessThan(accountRecommendation?.txEth ?? ETH.zero)
 
+  let walletConnected = OrchidAPI.shared().eth.provider.walletStatus.value.state === WalletProviderState.Connected
+  let generateSignerEnabled = !generatingSigner && walletConnected
+
   return (
     <Container className="form-style">
       <label className="title">{props.createAccount ? S.createNewAccount : S.addFunds}</label>
@@ -400,7 +405,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           signerKeyChange={signerKeyInputChanged}
           showSignerAddressInstructions={() => setShowSignerAddressInstructions(true)}
           generatedSigner={generatedSigner}
-          generatingSigner={generatingSigner}
+          enabled={generateSignerEnabled}
           generateSigner={generateSigner}
         />
         :
@@ -422,6 +427,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
         The suggested minimum efficiency is <b>50%</b>.</label>
 
       <EfficiencySlider
+        enabled={walletConnected}
         faded={(efficiencySliderValue ?? 0) < (potMarketConditions?.efficiency ?? 0.0) * 100.0}
         value={efficiencySliderValue}
         // minValue={currentMarketConditions?.efficiency == null ? undefined : currentMarketConditions.efficiency * 100.0}
@@ -651,7 +657,7 @@ function NewAccountPanel(props: {
   signerKeyChange: (e: any) => void,
   showSignerAddressInstructions: () => void,
   generateSigner: () => void,
-  generatingSigner: boolean,
+  enabled: boolean,
   generatedSigner: Signer | null,
 }) {
   // const [editing, setEditing] = useState(false);
@@ -686,7 +692,7 @@ function NewAccountPanel(props: {
       <Col style={{flexGrow: 2}}>
         <SubmitButton
           onClick={props.generateSigner}
-          enabled={props.generatedSigner == null && !props.generatingSigner}>
+          enabled={props.generatedSigner == null && props.enabled}>
           {"Generate Signer"}
         </SubmitButton>
       </Col>
@@ -705,6 +711,7 @@ function NewAccountPanel(props: {
           and link this account now, or copy & paste the account keys somewhere safe.
         </p>
       </div>
+
       {/*account QR Code*/}
       <AccountQRCode data={props.generatedSigner?.toConfigString() ?? "invalid signer"}/>
     </Visibility>
