@@ -63,7 +63,8 @@ const App: FC = () => {
     // Note: this is ok, just creates unnecessary unsub/re-sub and duplicate log messages.
     [walletStatus.account]);
 
-  return <Layout key={walletStatus.account}/>;
+  // Key on any change in chain, network, or account to clear UI state.
+  return <Layout key={walletStatus.chainId+":"+walletStatus.networkId+":"+walletStatus.account}/>;
 };
 
 OrchidAPI.shared().init().then(() => {

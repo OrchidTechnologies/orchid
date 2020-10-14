@@ -12,12 +12,12 @@ const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const LowFundsPanel: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [pot, setPot] = useState<LotteryPot>();
+  const [pot, setPot] = useState<LotteryPot|null>();
   const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let potSubscription = api.lotteryPot_wait.subscribe(pot => {
+    let potSubscription = api.lotteryPot.subscribe(pot => {
       setPot(pot)
     });
 
@@ -41,7 +41,7 @@ export const LowFundsPanel: React.FC = () => {
     };
   }, []);
 
-  if (pot === undefined || accountRecommendation == null) {
+  if (!pot || accountRecommendation == null) {
     return <div/>
   }
 

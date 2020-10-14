@@ -93,12 +93,19 @@ export class OrchidWeb3API {
   /// Check for the main network
   /// We expect this to be called at least once on page load (eip-1193)
   async chainOrNetworkChanged() {
-    if (
-      !OrchidContracts.contracts_overridden()
-      && this.web3 && await this.web3.eth.net.getId() !== 1) {
-      console.log("wrong chaing or network");
-      this.walletStatus.next(WalletProviderStatus.wrongNetworkOrChain);
+    console.log("web3 provider chain or network changed")
+    let networkId = this.web3 && await this.web3.eth.net.getId();
+    let chainId = this.web3 && await this.web3.eth.getChainId();
+    if (networkId === this.walletStatus.value.networkId
+      && chainId === this.walletStatus.value.chainId) {
+      console.log("ignoring duplicate")
+      return; // ignore duplicate
     }
+    this.walletStatus.next(WalletProviderStatus.connected(
+      this.walletStatus.value.account ?? "",
+      chainId ?? undefined,
+      networkId ?? undefined
+    ));
   }
 
   /// Prompt account connection UI on the provider
@@ -147,6 +154,8 @@ export enum WalletProviderState {
 export class WalletProviderStatus {
   state: WalletProviderState;
   account: string | undefined
+  chainId: number | undefined
+  networkId: number | undefined
 
   static unknown = new WalletProviderStatus(WalletProviderState.Unknown)
   static noWalletProvider = new WalletProviderStatus(WalletProviderState.NoWalletProvider)
@@ -154,13 +163,15 @@ export class WalletProviderStatus {
   static error = new WalletProviderStatus(WalletProviderState.Error)
   static wrongNetworkOrChain = new WalletProviderStatus(WalletProviderState.WrongNetworkOrChain)
 
-  static connected(account: string) {
-    return new WalletProviderStatus(WalletProviderState.Connected, account)
+  static connected(account: string, chainId?: number, networkId?: number) {
+    return new WalletProviderStatus(WalletProviderState.Connected, account, chainId, networkId)
   }
 
-  constructor(state: WalletProviderState, account?: string) {
+  constructor(state: WalletProviderState, account?: string, chainId?: number, networkId?: number) {
     this.state = state;
     this.account = account;
+    this.chainId = chainId
+    this.networkId = networkId
   }
 }
 

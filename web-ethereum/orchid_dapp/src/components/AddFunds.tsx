@@ -107,7 +107,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     // Subscribe to current account info for add
     let potSubscription: Subscription | null = null
     if (!props.createAccount) {
-      potSubscription = api.lotteryPot_wait.subscribe(async pot => {
+      potSubscription = api.lotteryPot.subscribe(async pot => {
         setPot(pot)
       })
     }

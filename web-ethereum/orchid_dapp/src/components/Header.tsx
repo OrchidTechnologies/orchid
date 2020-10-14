@@ -31,8 +31,12 @@ export const Header: React.FC = () => {
     let api = OrchidAPI.shared();
     subscriptions.push(api.newUser_wait.subscribe(setNewUser));
     subscriptions.push(api.signersAvailable_wait.subscribe(setSigners));
-    subscriptions.push(api.lotteryPot_wait.subscribe(pot => {
-      setOxtBalance(keikiToOxtString(pot.balance, 2));
+    subscriptions.push(api.lotteryPot.subscribe(pot => {
+      if (pot) {
+        setOxtBalance(keikiToOxtString(pot.balance, 2));
+      } else {
+        setOxtBalance(null);
+      }
     }));
     subscriptions.push(api.eth.provider.walletStatus.subscribe(setWalletStatus));
     return () => {

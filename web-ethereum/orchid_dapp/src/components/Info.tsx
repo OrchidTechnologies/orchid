@@ -69,14 +69,22 @@ export class Info extends Component<any, any> {
       }));
 
     this.subscriptions.push(
-      api.lotteryPot_wait.subscribe(pot => {
-        this.setState({
-          potBalance: keikiToOxtString(pot.balance, 4),
-          potEscrow: keikiToOxtString(pot.escrow, 4),
-        });
-        MarketConditions.for(pot).then(marketConditions => {
-          this.setState({marketConditions: marketConditions});
-        });
+      api.lotteryPot.subscribe(pot => {
+        if (!pot) {
+          this.setState({
+            potBalance: "",
+            potEscrow: "",
+            marketConditions: null
+          });
+        } else {
+          this.setState({
+            potBalance: keikiToOxtString(pot.balance, 4),
+            potEscrow: keikiToOxtString(pot.escrow, 4),
+          });
+          MarketConditions.for(pot).then(marketConditions => {
+            this.setState({marketConditions: marketConditions});
+          });
+        }
       }));
 
     // TODO: Deal with cancellation here
