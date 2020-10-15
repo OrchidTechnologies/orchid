@@ -1,7 +1,61 @@
 name: CI
 on: [push]
-
 jobs:
+
+
+  build-ios-app:
+    runs-on: macos-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make iOS .ipa
+      run: debug=ldid make -j3 -C app-ios precache='--no-android'
+
+
+  build-and-app:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: rm -rf /opt
+      run: sudo rm -rf /opt
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Android .apk
+      run: make -j3 -C app-android precache='--no-ios'
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-apk
+        path: app-android/out-and/Orchid.apk
+        #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
+
+
+
+  build-mac-app:
+    runs-on: macos-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make macOS .app
+      run: debug=ldid make -j3 -C app-macos precache='--no-android --no-ios --macos'
+
 
   build-mac-cli:
     runs-on: macos-latest
@@ -18,8 +72,8 @@ jobs:
       run: make -j3 -C cli-shared
     - uses: actions/upload-artifact@v1
       with:
-        name: orchid-mac
-        path: cli-shared/out-mac/x86_64/orchid
+        name: orchidcd-mac
+        path: cli-shared/out-mac/x86_64/orchidcd
 
 
   build-mac-srv:
@@ -46,8 +100,77 @@ jobs:
       run: git status
 
 
-  build-mac-app:
+
+  build-win-app:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: install mingw-w64
+      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: setup plugins
+      run: debug=crossndk make -j3 -C app-windows shared/gui/.flutter-plugins
+    - name: make Windows app
+      run: make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-win
+        path: app-windows/out-win/package
+
+
+  build-win-tst:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: install mingw-w64
+      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Windows test
+      run: make -j3 -C tst-network target=win
+
+
+  build-win-srv:
     runs-on: macos-latest
+
+    steps:
+
+    - name: install mingw-w64
+      run: brew install mingw-w64 coreutils
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Windows server
+      run: make -j3 -C srv-shared target=win
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidd-w64
+        path: srv-shared/out-win/x86_64/orchidd.exe
+
+    - name: git status
+      run: git status
+
+
+
+  build-lnx-app:
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -57,23 +180,14 @@ jobs:
     - name: git submodule
       run: env/submodule.sh --jobs 3
 
-    - name: make macOS .app
-      run: debug=ldid make -j3 -C app-macos
-
-
-  build-ios-app:
-    runs-on: macos-latest
-
-    steps:
-
-    - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
-
-    - name: make iOS .ipa
-      run: debug=ldid make -j3 -C app-ios
+    - name: setup plugins
+      run: debug=crossndk make -j3 -C app-linux shared/gui/.flutter-plugins
+    - name: make Linux app
+      run: debug=crossndk make -j3 -C app-linux precache='--no-android --no-ios --linux'
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchid-lnx
+        path: app-linux/out-lnx/package
 
 
   build-lnx-cli:
@@ -91,8 +205,8 @@ jobs:
       run: debug=crossndk make -j3 -C cli-shared
     - uses: actions/upload-artifact@v1
       with:
-        name: orchid-lnx
-        path: cli-shared/out-lnx/x86_64/orchid
+        name: orchidcd-lnx
+        path: cli-shared/out-lnx/x86_64/orchidcd
 
 
   build-lnx-srv:
@@ -188,73 +302,7 @@ jobs:
       run: make -j3 -C srv-shared
 
 
-  build-win-srv:
-    runs-on: macos-latest
-
-    steps:
-
-    - name: install mingw-w64
-      run: brew install mingw-w64 coreutils
-
-    - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
-
-    - name: make Windows server
-      run: make -j3 -C srv-shared target=win
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidd-w64
-        path: srv-shared/out-win/x86_64/orchidd.exe
-
-    - name: git status
-      run: git status
-
-
-  build-win-tst:
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: install mingw-w64
-      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
-
-    - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
-
-    - name: make Windows test
-      run: make -j3 -C tst-network target=win
-
-
-  build-and-apk:
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: rm -rf /opt
-      run: sudo rm -rf /opt
-
-    - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
-
-    - name: make Android .apk
-      run: make -j3 -C app-android precache=--no-ios
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchid-apk
-        path: app-android/out-and/Orchid.apk
-        #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
-
-
-  build-srv-all:
+  build-lnx-all:
     needs: [build-lnx-mac, build-lnx-bld]
     runs-on: ubuntu-latest
 
@@ -275,4 +323,6 @@ jobs:
         name: orchidd-lnx
     - name: verify reproduction
       run: diff -u <(xxd orchidd) <(xxd usr/sbin/orchidd)
+
+
 

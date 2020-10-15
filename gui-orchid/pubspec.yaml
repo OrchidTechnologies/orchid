@@ -13,42 +13,42 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  badges: 1.1.3
+  # XXX: use https://pub.dev/packages/firebase_ml_vision
+  # this library has been *discontinued*
   barcode_scan:
     git:
       url: git://github.com/apptreesoftware/flutter_barcode_reader.git
       ref: 39ecc57bc0eef7b0465c891d900d2fb1f34a2390
-  cupertino_icons: ^0.1.2
-  dotted_border: ^1.0.4
-  email_validator: ^1.0.3
-  flare_flutter:
-    git:
-      url: git://github.com/2d-inc/Flare-Flutter.git
-      ref: dev
-      path: flare_flutter
+  cupertino_icons: 1.0.0
+  dartjsengine: 1.0.1
+  dotted_border: 1.0.6
+  email_validator: 1.0.6
+  flare_flutter: 2.0.6
   flutter:
     sdk: flutter
-  flutter_cupertino_localizations: ^1.0.1
-  flutter_html: ^0.11.1
+  flutter_cupertino_localizations: 1.0.1
+  # XXX: our code is incompatible with 1.0.2
+  flutter_html: 0.11.1
   flutter_localizations:
     sdk: flutter
-  flutter_svg: ^0.18.0
-  font_awesome_flutter: ^8.5.0
-  http: ^0.12.0+3
-  pointycastle: ^1.0.2
-  provider: ^4.0.1
-  qr_flutter: ^3.1.0
-  rxdart: ^0.23.0
-  shared_preferences: ^0.5.6
-  sqflite: ^1.2.0
-  url_launcher: ^5.4.1
-  web3dart: ^1.2.1
+  # XXX: this doesn't support MacOS
+  #flutter_secure_storage: 3.3.5
+  flutter_svg: 0.18.1
+  font_awesome_flutter: 8.10.0
+  http: 0.12.2
   in_app_purchase:
     path: in_app_purchase
-  dartjsengine: ^1.0.1
-  # This doesn't support MacOS yet
-  #flutter_secure_storage: ^3.3.3
-  badges: ^1.1.1
-  uuid: 2.0.4
+  pointycastle: 1.0.2
+  provider: 4.3.2+2
+  qr_flutter: 3.2.0
+  rxdart: 0.24.1
+  shared_preferences: 0.5.12
+  sqflite: 1.3.1+1
+  url_launcher: 5.7.2
+  uuid: 2.2.2
+  web3dart: 1.2.3
+# STOP ADDING ENTRIES TO THE END OF THIS ***ALPHABATIZED*** LIST
 
 dev_dependencies:
   flutter_test:

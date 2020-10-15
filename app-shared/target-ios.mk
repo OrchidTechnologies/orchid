@@ -18,6 +18,10 @@
 # }}}
 
 
-generated := ios/Runner/GeneratedPluginRegistrant%m
+assemble := ios
+platform := ios
 
-include shared/target-apl.mk
+generated := $(pwd)/gui/ios/Runner/GeneratedPluginRegistrant%m
+
+framework := Flutter
+include $(pwd)/target-apl.mk

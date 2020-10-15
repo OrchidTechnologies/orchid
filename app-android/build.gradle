@@ -65,16 +65,10 @@ android {
     }
 }
 
-def root = rootProject.projectDir.toPath()
-
-def plugins = new Properties()
-def file = new File(root.toFile(), '.flutter-plugins')
-if (file.exists()) {
-    file.withReader('UTF-8') { reader -> plugins.load(reader) }
-}
-
-plugins.each { name, _ ->
-    def plugin = project.rootProject.findProject(":$name")
+import groovy.json.JsonSlurper
+def plugins = new JsonSlurper().parseText(new File("shared/gui/.flutter-plugins-dependencies").text)
+plugins.plugins.android.each { dependency ->
+    def plugin = project.rootProject.findProject(":${dependency.name}")
 
     project.dependencies {
         implementation plugin

@@ -26,10 +26,6 @@ cflags += '-DORCHID_NAME="$(name)"'
 
 bundle := $(output)/Payload/$(name).app
 
-assemble := ios
-platform := ios
-framework := Flutter
-
 signed := 
 
 .PHONY: all
@@ -50,13 +46,6 @@ validate: $(output)/$(name).ipa
 upload: $(output)/$(name).ipa
 	xcrun altool --upload-app -f $< -t ios -u "$(aluser)" -p $(alpass)
 
-ifeq ($(target),sim)
-cflags += -Wno-deprecated-declarations
-lflags += -framework NetworkExtension
-else
-$(call include,vpn/target.mk)
-endif
-
 cflags += -I.
 
 frameworks := 
@@ -65,10 +54,19 @@ frameworks += SafariServices
 frameworks += UIKit
 frameworks += StoreKit
 
+ifeq ($(target),sim)
+cflags += -Wno-deprecated-declarations
+lflags += -framework NetworkExtension
+else
+$(call include,vpn/target.mk)
+endif
+
+$(call include,shared/target-ios.mk)
+
 local := 
 local += app.mm.o
 
-local += ios/Runner/GeneratedPluginRegistrant.m.o
+local += $(subst %,.,$(generated)).o
 $(call depend,ios/Runner/GeneratedPluginRegistrant.m.o,ios/Pods/Manifest.lock)
 
 include env/output.mk
@@ -82,15 +80,13 @@ $(each)
 cflags += -Fflutter/bin/cache/artifacts/engine/ios
 lflags += -Fflutter/bin/cache/artifacts/engine/ios
 
-include shared/target-ios.mk
-
 
 
 ifneq ($(target),sim)
 $(bundle)/PlugIns/$(name).VPN.appex/$(name).VPN: $(patsubst %,$(output)/$(default)/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cxx) $(more/$(default)) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework UIKit -framework JavaScriptCore
+	@$(cxx) $(more/$(default)) $(wflags) -fobjc-link-runtime -fapplication-extension -e _NSExtensionMain -o $@ $^ $(lflags) -framework UIKit -framework JavaScriptCore
 	@openssl sha256 -r $@
 
 $(bundle)/PlugIns/$(name).VPN.appex/Info.plist: info-vpn.plist.in
@@ -159,12 +155,6 @@ $(bundle)$(signature): $(output)/ents-$(target)-app.plist $(signed)
 	@rm -rf $(dir $@)
 	$(call codesign,$(bundle),$<,$@)
 
-ifeq ($(filter nocompress,$(debug)),)
-zflags := -9
-else
-zflags := -0
-endif
-
 $(output)/$(name).ipa: $(bundle)$(signature)
 	@rm -f $@
-	cd $(output); zip -rXy $(zflags) $(name).ipa Payload
+	cd $(output) && zip -rXy $(zflags) $(name).ipa Payload

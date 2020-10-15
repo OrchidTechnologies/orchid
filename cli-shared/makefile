@@ -25,18 +25,18 @@ include env/target.mk
 version := 0.9
 
 .PHONY: all
-all: $(output)/$(default)/orchid$(exe)
+all: $(output)/$(default)/orchidcd$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/orchid$(exe)
+test: $(output)/$(default)/orchidcd$(exe)
 	sudo $< $(args)
 
 .PHONY: leak
-leak: $(output)/$(default)/orchid$(exe)
+leak: $(output)/$(default)/orchidcd$(exe)
 	sudo bash -c 'MallocStackLogging=1 $< $(args)'
 
 .PHONY: debug
-debug: $(output)/$(default)/orchid$(exe)
+debug: $(output)/$(default)/orchidcd$(exe)
 	sudo lldb -o 'b malloc_error_break' -o 'run $(args)' $<
 
 $(call include,vpn/target.mk)
@@ -61,7 +61,7 @@ cflags += -DORC_FIBER
 
 include env/output.mk
 
-$(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
+$(output)/%/orchidcd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@echo [LD] $@
 	@set -o pipefail; $(cxx) $(more/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 | nl
 	@openssl sha256 -r $@
