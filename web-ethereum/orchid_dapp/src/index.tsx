@@ -18,6 +18,7 @@ import messages_ko from './i18n/ko.json';
 import {getParam, testLocalization_} from "./util/util";
 import {Route, setURL} from "./components/Route";
 import {WalletProviderState, WalletProviderStatus} from "./api/orchid-eth-web3";
+import {start} from "repl";
 
 //const messages: Record<string, Record<string, any>> = {
 const messages: any = {
@@ -46,31 +47,35 @@ const App: FC = () => {
   const [walletStatus, setWalletStatus] = useState(WalletProviderStatus.unknown);
 
   useEffect(() => {
-    let api = OrchidAPI.shared();
-    let walletStatusSub = api.eth.provider.walletStatus.subscribe(newWalletStatus => {
-      console.log("new wallet status: ", WalletProviderState[newWalletStatus.state], newWalletStatus.account);
-      if (!newWalletStatus.account || newWalletStatus.account !== walletStatus.account) {
-        setURL(Route.None)
-      }
-      setWalletStatus(newWalletStatus);
-    });
-    return () => {
-      walletStatusSub.unsubscribe();
-    };
-  },
+      let api = OrchidAPI.shared();
+      let walletStatusSub = api.eth.provider.walletStatus.subscribe(newWalletStatus => {
+        console.log("new wallet status: ", WalletProviderState[newWalletStatus.state], newWalletStatus.account);
+        if (!newWalletStatus.account || newWalletStatus.account !== walletStatus.account) {
+          setURL(Route.None)
+        }
+        setWalletStatus(newWalletStatus);
+      });
+      return () => {
+        walletStatusSub.unsubscribe();
+      };
+    },
     // Note: The dependency on the old account value here means that this will be recreated on each change.
     // Note: this is ok, just creates unnecessary unsub/re-sub and duplicate log messages.
     [walletStatus.account]);
 
   // Key on any change in chain, network, or account to clear UI state.
-  return <Layout key={walletStatus.chainId+":"+walletStatus.networkId+":"+walletStatus.account}/>;
+  return <Layout
+    key={walletStatus.chainId + ":" + walletStatus.networkId + ":" + walletStatus.account}/>;
+};
+const Placeholder: FC = () => {
+  return <div>Loading...</div>
 };
 
-OrchidAPI.shared().init().then(() => {
-  console.log("startup complete: render");
+OrchidAPI.shared().init((startupComplete) => {
+  console.log("startup complete: ", startupComplete);
   render(
     <IntlProvider locale={language} messages={messages[language]}>
-      <App/>
+      {startupComplete ? <App/> : <Placeholder/>}
     </IntlProvider>,
     document.getElementById('root')
   );

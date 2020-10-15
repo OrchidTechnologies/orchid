@@ -82,46 +82,46 @@ export class OrchidAPI {
   updateBalancesTimer: NodeJS.Timeout | null = null
 
   // Init the high level Orchid API and fetch initial state from the contract
-  async init(): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      if (OrchidAPI.isMobileDevice()) {
-        this.captureLogs();
-      }
+  async init(callback: (startupComplete: boolean) => void) {
+    if (OrchidAPI.isMobileDevice()) {
+      this.captureLogs();
+    }
 
-      // Monitor the wallet provider
-      this.eth.provider.walletStatus.subscribe((status) => {
-        switch (status.state) {
-          case WalletProviderState.Unknown:
-            break;
-          case WalletProviderState.NoWalletProvider:
-          case WalletProviderState.NotConnected:
-          case WalletProviderState.Error:
-          case WalletProviderState.WrongNetworkOrChain:
-            console.log("api: startup complete (no provider or not connected)")
-            // Refresh everything to clear any account data.
-            this.onProviderAccountChange(status);
-            // Show the UI
-            resolve();
-            break;
-          case WalletProviderState.Connected:
-            // Refresh to get the new account data.
-            this.onProviderAccountChange(status);
-            break;
-        }
-      });
-
-      // Signal startup complete after the new user status is updated (or an error pushes a null status update).
-      // (Wait for the first update after the default replay value.)
-      let count = 0;
-      this.newUser.pipe(take(2)).subscribe((newUser) => {
-        console.log("api: newUser = ", newUser)
-        if (count++ > 0) {
-          console.log("api: startup complete (new user result)")
+    // Monitor the wallet provider
+    this.eth.provider.walletStatus.subscribe((status) => {
+      switch (status.state) {
+        case WalletProviderState.Unknown:
+          break;
+        case WalletProviderState.NoWalletProvider:
+        case WalletProviderState.NotConnected:
+        case WalletProviderState.Error:
+        case WalletProviderState.WrongNetworkOrChain:
+          console.log("api: startup complete (no provider or not connected)")
+          // Refresh everything to clear any account data.
+          this.onProviderAccountChange(status);
           // Show the UI
-          resolve();
-        }
-      });
+          callback(true);
+          break;
+        case WalletProviderState.Connected:
+          // Refresh to get the new account data.
+          this.onProviderAccountChange(status);
+          break;
+      }
     });
+
+    // Signal startup complete after the new user status is updated (or an error pushes a null status update).
+    // (Wait for the first update after the default replay value.)
+    let count = 0;
+    this.newUser.pipe(take(2)).subscribe((newUser) => {
+      console.log("api: newUser = ", newUser)
+      if (count++ > 0) {
+        console.log("api: startup complete (new user result)")
+        // Show the UI
+        callback(true);
+      }
+    });
+
+    callback(false);
   }
 
   // Initialization to be performed after the provider is connected
