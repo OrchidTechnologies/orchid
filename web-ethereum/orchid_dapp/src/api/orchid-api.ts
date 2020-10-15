@@ -82,7 +82,7 @@ export class OrchidAPI {
   updateBalancesTimer: NodeJS.Timeout | null = null
 
   // Init the high level Orchid API and fetch initial state from the contract
-  async init(callback: (startupComplete: boolean) => void) {
+  init(callback: (startupComplete: boolean) => void) {
     if (OrchidAPI.isMobileDevice()) {
       this.captureLogs();
     }

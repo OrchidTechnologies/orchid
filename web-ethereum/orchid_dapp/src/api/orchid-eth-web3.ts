@@ -13,6 +13,52 @@ declare global {
   }
 }
 
+export enum WalletProviderState {
+  // Status not yet determined
+  Unknown,
+
+  // No injected ethereum provider
+  NoWalletProvider,
+
+  // Ethererum provider injected but no accounts yet offered
+  NotConnected,
+
+  // Ethereum provider injected and accounts available
+  Connected,
+
+  // There was an error when attempting to ask the ethereum provider for accounts
+  Error,
+
+  // The ethereum provider is on the wrong network or chain
+  WrongNetworkOrChain
+}
+
+// The web3 provider status
+export class WalletProviderStatus {
+  state: WalletProviderState;
+  account: string | undefined
+  chainId: number | undefined
+  networkId: number | undefined
+
+  static unknown = new WalletProviderStatus(WalletProviderState.Unknown)
+  static noWalletProvider = new WalletProviderStatus(WalletProviderState.NoWalletProvider)
+  static notConnected = new WalletProviderStatus(WalletProviderState.NotConnected)
+  static error = new WalletProviderStatus(WalletProviderState.Error)
+  static wrongNetworkOrChain = new WalletProviderStatus(WalletProviderState.WrongNetworkOrChain)
+
+  static connected(account: string, chainId?: number, networkId?: number) {
+    return new WalletProviderStatus(WalletProviderState.Connected, account, chainId, networkId)
+  }
+
+  constructor(state: WalletProviderState, account?: string, chainId?: number, networkId?: number) {
+    this.state = state;
+    this.account = account;
+    this.chainId = chainId
+    this.networkId = networkId
+  }
+}
+
+
 /// Discovery and initialization of the web3 provider.
 /// Relevant standards:
 /// https://eips.ethereum.org/EIPS/eip-1193 (supported events)
@@ -130,49 +176,3 @@ export class OrchidWeb3API {
     }
   }
 }
-
-export enum WalletProviderState {
-  // Status not yet determined
-  Unknown,
-
-  // No injected ethereum provider
-  NoWalletProvider,
-
-  // Ethererum provider injected but no accounts yet offered
-  NotConnected,
-
-  // Ethereum provider injected and accounts available
-  Connected,
-
-  // There was an error when attempting to ask the ethereum provider for accounts
-  Error,
-
-  // The ethereum provider is on the wrong network or chain
-  WrongNetworkOrChain
-}
-
-// The web3 provider status
-export class WalletProviderStatus {
-  state: WalletProviderState;
-  account: string | undefined
-  chainId: number | undefined
-  networkId: number | undefined
-
-  static unknown = new WalletProviderStatus(WalletProviderState.Unknown)
-  static noWalletProvider = new WalletProviderStatus(WalletProviderState.NoWalletProvider)
-  static notConnected = new WalletProviderStatus(WalletProviderState.NotConnected)
-  static error = new WalletProviderStatus(WalletProviderState.Error)
-  static wrongNetworkOrChain = new WalletProviderStatus(WalletProviderState.WrongNetworkOrChain)
-
-  static connected(account: string, chainId?: number, networkId?: number) {
-    return new WalletProviderStatus(WalletProviderState.Connected, account, chainId, networkId)
-  }
-
-  constructor(state: WalletProviderState, account?: string, chainId?: number, networkId?: number) {
-    this.state = state;
-    this.account = account;
-    this.chainId = chainId
-    this.networkId = networkId
-  }
-}
-
