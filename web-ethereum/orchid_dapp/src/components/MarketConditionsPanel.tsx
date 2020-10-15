@@ -102,7 +102,7 @@ export class MarketConditions {
 export const MarketConditionsPanel: React.FC = () => {
 
   const [open, setOpen] = useState(false);
-  const [pot, setPot] = useState<LotteryPot>();
+  const [pot, setPot] = useState<LotteryPot|null>();
   const [marketConditions, setMarketConditions] = useState<MarketConditions>();
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export const MarketConditionsPanel: React.FC = () => {
       }
       setMarketConditions(await MarketConditions.for(pot));
     });
-    let potSubscription = api.lotteryPot_wait.subscribe(async pot => {
+    let potSubscription = api.lotteryPot.subscribe(async pot => {
       setPot(pot)
       fetch().then();
     });
@@ -127,7 +127,7 @@ export const MarketConditionsPanel: React.FC = () => {
     };
   }, [pot]);
 
-  if (pot === undefined || marketConditions === undefined) {
+  if (!pot || marketConditions === undefined) {
     return <div/>
   }
 

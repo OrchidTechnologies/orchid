@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from 'react'
 import {render} from 'react-dom'
-import {OrchidAPI, WalletState, WalletStatus} from "./api/orchid-api";
+import {OrchidAPI} from "./api/orchid-api";
 
 import 'bootstrap/dist/css/bootstrap.css'
 import './index.css'
@@ -8,7 +8,6 @@ import './css/app-style.css'
 import './css/form-style.css'
 import './css/button-style.css'
 import {Layout} from "./components/Layout"
-import {NoWallet} from "./components/NoWallet";
 import {createIntl, createIntlCache, IntlProvider} from "react-intl";
 import messages_en from './i18n/en.json';
 import messages_zh from './i18n/zh.json';
@@ -18,6 +17,7 @@ import messages_ja from './i18n/ja.json';
 import messages_ko from './i18n/ko.json';
 import {getParam, testLocalization_} from "./util/util";
 import {Route, setURL} from "./components/Route";
+import {WalletProviderState, WalletProviderStatus} from "./api/orchid-eth-web3";
 
 //const messages: Record<string, Record<string, any>> = {
 const messages: any = {
@@ -42,47 +42,38 @@ export const intl = createIntl({
   messages: messages[language]
 }, cache);
 
-const App: FC<{ walletStatus: WalletStatus }> = (props) => {
-  const [walletStatus, setWalletStatus] = useState(props.walletStatus);
+const App: FC = () => {
+  const [walletStatus, setWalletStatus] = useState(WalletProviderStatus.unknown);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let walletStatusSub = api.walletStatus.subscribe(newWalletStatus => {
-      console.log("wallet status: ", WalletState[newWalletStatus.state]);
-      if (newWalletStatus.account !== walletStatus.account) {
+    let walletStatusSub = api.eth.provider.walletStatus.subscribe(newWalletStatus => {
+      console.log("new wallet status: ", WalletProviderState[newWalletStatus.state], newWalletStatus.account);
+      if (!newWalletStatus.account || newWalletStatus.account !== walletStatus.account) {
         setURL(Route.None)
       }
       setWalletStatus(newWalletStatus);
     });
     return () => {
+      console.log("app: tear down useeffect")
       walletStatusSub.unsubscribe();
     };
-  }, [walletStatus.account]);
+  },
+    // Note: The dependency on the old account value here means that this will be recreated on each change.
+    // Note: this is ok, just creates unnecessary unsub/re-sub and duplicate log messages.
+    [walletStatus.account]);
 
-  /*
-  let el: any;
-  switch (walletStatus.state) {
-    case WalletState.NoWallet:
-    case WalletState.Error:
-    case WalletState.WrongNetwork:
-      el = <NoWallet walletStatus={walletStatus}/>;
-      break;
-    case WalletState.NotConnected:
-    case WalletState.Connected:
-      el = <Layout key={walletStatus.account} walletStatus={walletStatus}/>;
-      break;
-  }
-  return el;
-  */
-
-  return <Layout key={walletStatus.account} walletStatus={walletStatus}/>;
+  // Key on any change in chain, network, or account to clear UI state.
+  return <Layout key={walletStatus.chainId+":"+walletStatus.networkId+":"+walletStatus.account}/>;
 };
 
-render(
-  <IntlProvider locale={language} messages={messages[language]}>
-    <App walletStatus={WalletStatus.noWallet}/>
-  </IntlProvider>,
-  document.getElementById('root')
-);
+OrchidAPI.shared().init().then(() => {
+  render(
+    <IntlProvider locale={language} messages={messages[language]}>
+      <App/>
+    </IntlProvider>,
+    document.getElementById('root')
+  );
+});
 
-OrchidAPI.shared().init().then((walletStatus) => { });
+

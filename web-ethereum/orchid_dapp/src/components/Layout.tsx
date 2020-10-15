@@ -22,7 +22,7 @@ import addIconSelected from '../assets/add.svg'
 import withdrawIcon from '../assets/withdraw-outlined.svg'
 import withdrawIconSelected from '../assets/withdraw.svg'
 import {Divider, hashPath, Visibility} from "../util/util";
-import {OrchidAPI, WalletState, WalletStatus} from "../api/orchid-api";
+import {OrchidAPI} from "../api/orchid-api";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 import {Overview} from "./overview/Overview";
 import {TransactionPanel} from "./TransactionPanel";
@@ -32,7 +32,7 @@ import {StakeFunds} from "./StakeFunds";
 import {MarketConditionsPanel} from "./MarketConditionsPanel";
 import {LowFundsPanel} from "./LowFundsPanel";
 
-export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
+export const Layout: FC = () => {
 
   const [route, setRoute] = useState<Route>(pathToRoute(hashPath()) ?? Route.None);
   const [navEnabledState, /*setNavEnabledState*/] = useState(true);
@@ -69,7 +69,6 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
-  //let navEnabled = navEnabledState && props.walletStatus.state === WalletState.Connected;
   let navEnabled = true;
   return (
     <RouteContext.Provider value={{
