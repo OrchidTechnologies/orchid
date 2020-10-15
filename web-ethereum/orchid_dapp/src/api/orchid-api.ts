@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import {LotteryPot, OrchidEthereumAPI, Signer, Wallet} from "./orchid-eth";
 import {BehaviorSubject, Observable, of} from "rxjs";
-import {filter, flatMap, map, shareReplay} from "rxjs/operators";
+import {filter, flatMap, map, shareReplay, take} from "rxjs/operators";
 import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
 import {OrchidTransactionDetail, OrchidTransactionMonitor} from "./orchid-tx";
@@ -35,26 +35,25 @@ export class OrchidAPI {
   wallet_wait: Observable<Wallet> = this.wallet.pipe(filter(isDefined), shareReplay(1));
 
   // The list of available signer accounts
-  signersAvailable = new BehaviorSubject<Signer [] | undefined>(undefined);
-  signersAvailable_wait: Observable<Signer []> = this.signersAvailable.pipe(filter(isDefined), shareReplay(1));
+  signersAvailable = new BehaviorSubject<Signer [] | null>(null);
 
   // True if the user does not yet have an Orchid account for the current wallet account.
-  // This observable blocks until signers list can be fetched from the lottery contract.
-  newUser_wait: Observable<boolean> = this.signersAvailable_wait.pipe(
-    map((signers: Signer []) => {
-      return signers.length === 0
+  // This defaults to true (new user) until an account is resolved.
+  newUser: Observable<boolean> = this.signersAvailable.pipe(
+    map((signers: Signer [] | null) => {
+      return !signers ? true : signers.length === 0;
     }), shareReplay(1)
   );
 
   // The currently selected signer account
-  signer = new BehaviorSubject<Signer | undefined>(undefined);
-  signer_wait: Observable<Signer> = this.signer.pipe(filter(isDefined), shareReplay(1));
+  signer = new BehaviorSubject<Signer | null>(null);
+  signer_wait: Observable<Signer> = this.signer.pipe(filter(isNotNull), shareReplay(1));
 
   // The Lottery pot associated with the currently selected signer account.
   lotteryPot: Observable<LotteryPot | null> = this.signer.pipe(
     // flatMap here resolves the promises
-    flatMap((signer: Signer | undefined) => {
-      if (signer === undefined) {
+    flatMap((signer: Signer | null) => {
+      if (signer === null) {
         return of(null); // flatMap requires observables, even for null
       }
       try {
@@ -83,26 +82,45 @@ export class OrchidAPI {
   updateBalancesTimer: NodeJS.Timeout | null = null
 
   // Init the high level Orchid API and fetch initial state from the contract
-  async init() {
-    if (OrchidAPI.isMobileDevice()) {
-      this.captureLogs();
-    }
+  async init(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      if (OrchidAPI.isMobileDevice()) {
+        this.captureLogs();
+      }
 
-    /*
-    // Wait for the provider to connect before completing initialization
-    this.eth.provider.walletStatus.pipe(
-      filter(status => {
-        return status.state === WalletProviderState.Connected
-      }),
-      take(1)
-    ).subscribe(() => {
-      this.onProviderConnected();
-    });
-     */
+      // Monitor the wallet provider
+      this.eth.provider.walletStatus.subscribe((status) => {
+        switch (status.state) {
+          case WalletProviderState.Unknown:
+            break;
+          case WalletProviderState.NoWalletProvider:
+          case WalletProviderState.NotConnected:
+          case WalletProviderState.Error:
+          case WalletProviderState.WrongNetworkOrChain:
+            console.log("api: startup complete (no provider or not connected)")
+            // Refresh everything to clear any account data.
+            this.onProviderAccountChange(status);
+            // Show the UI
+            resolve();
+            break;
+          case WalletProviderState.Connected:
+            // Refresh to get the new account data.
+            this.onProviderAccountChange(status);
+            break;
+        }
+      });
 
-    this.eth.provider.walletStatus.subscribe((status) => {
-      // On any change to the wallet (account or chain) refresh everything.
-      this.onProviderAccountChange(status);
+      // Signal startup complete after the new user status is updated (or an error pushes a null status update).
+      // (Wait for the first update after the default replay value.)
+      let count = 0;
+      this.newUser.pipe(take(2)).subscribe((newUser) => {
+        console.log("api: newUser = ", newUser)
+        if (count++ > 0) {
+          console.log("api: startup complete (new user result)")
+          // Show the UI
+          resolve();
+        }
+      });
     });
   }
 
@@ -110,7 +128,7 @@ export class OrchidAPI {
   private async onProviderAccountChange(status: WalletProviderStatus) {
     console.log("api: on provider account change: ", status.account);
     this.wallet.next(undefined);
-    this.signer.next(undefined);
+    this.signer.next(null);
     await this.updateWallet();
     await this.updateSigners();
     this.updateTransactions().then();
@@ -127,7 +145,7 @@ export class OrchidAPI {
     this.transactionMonitor.initIfNeeded(transactions => {
       // TODO: Update the wallet / signers here if a transaction changed status
       if (transactions.length > 0) {
-        console.log("txs: ", transactions.toString());
+        console.log("api: txs: ", transactions.toString());
       }
       this.orchid_transactions.next(transactions);
     });
@@ -136,17 +154,17 @@ export class OrchidAPI {
   async updateSigners() {
     let wallet = this.wallet.value;
     if (wallet === undefined) {
+      // this.signersAvailable.next(null);
+      // this.signer.next(null);
       return;
     }
     try {
-      //console.log("get signers");
       let signers = await this.eth.orchidGetSigners(wallet);
-      //console.log("got signers");
       this.signersAvailable.next(signers);
 
       // no signers available
       if (signers.length === 0) {
-        this.signer.next(undefined);
+        this.signer.next(null);
         return;
       }
 
@@ -156,9 +174,9 @@ export class OrchidAPI {
         this.signer.next(signers[0]);
       }
     } catch (err) {
-      console.log("Error updating signers: ", err);
-      //this.walletStatus.next(WalletProviderStatus.error);
-      this.signer.next(undefined);
+      console.log("api: Error updating signers: ", err);
+      this.signersAvailable.next(null);
+      this.signer.next(null);
     }
   }
 
@@ -167,19 +185,17 @@ export class OrchidAPI {
     try {
       this.wallet.next(await this.eth.orchidGetWallet());
     } catch (err) {
-      console.log("Error updating wallet: ");
-      //this.walletStatus.next(WalletProviderStatus.error);
+      console.log("api: Error updating wallet: ");
     }
   }
 
   /// Update selected lottery pot balances
   async updateLotteryPot() {
-    //console.log("Update lottery pot refreshing signer data: ", this.signer.value);
+    //console.log("api: Update lottery pot refreshing signer data: ", this.signer.value);
     this.signer.next(this.signer.value); // Set the signer again to trigger a refresh
   }
 
   async updateBalances() {
-    //console.log("update balances")
     await this.updateWallet();
     await this.updateLotteryPot();
   }
@@ -189,7 +205,6 @@ export class OrchidAPI {
     let funder = this.wallet.value;
     let signer = this.signer.value;
     if (!funder || !signer) {
-      //console.log("can't update transactions, missing funder or signer");
       return;
     }
     let events: LotteryPotUpdateEvent[] = await io.getEvents(funder.address, signer.address);

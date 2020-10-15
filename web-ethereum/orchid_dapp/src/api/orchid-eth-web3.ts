@@ -42,7 +42,6 @@ export class OrchidWeb3API {
 
     // Listen for connection status
     this.registerListeners();
-    this.walletStatus.next(WalletProviderStatus.notConnected)
 
     // Init contracts
     try {
@@ -69,10 +68,10 @@ export class OrchidWeb3API {
         this.accountsChanged(accounts)
       })
       window.ethereum.on('chainChanged', (props: any) => {
-        this.chainOrNetworkChanged();
+        this.chainOrNetworkChanged().then();
       })
       window.ethereum.on('networkChanged', (props: any) => {
-        this.chainOrNetworkChanged();
+        this.chainOrNetworkChanged().then();
       })
     } catch (err) {
       console.log("error registering listener: ", err)
@@ -94,18 +93,20 @@ export class OrchidWeb3API {
   /// We expect this to be called at least once on page load (eip-1193)
   async chainOrNetworkChanged() {
     console.log("web3 provider chain or network changed")
-    let networkId = this.web3 && await this.web3.eth.net.getId();
-    let chainId = this.web3 && await this.web3.eth.getChainId();
-    if (networkId === this.walletStatus.value.networkId
-      && chainId === this.walletStatus.value.chainId) {
-      console.log("ignoring duplicate")
-      return; // ignore duplicate
+    if (this.walletStatus.value.state === WalletProviderState.Connected) {
+      let networkId = this.web3 && await this.web3.eth.net.getId();
+      let chainId = this.web3 && await this.web3.eth.getChainId();
+      if (networkId === this.walletStatus.value.networkId
+        && chainId === this.walletStatus.value.chainId) {
+        console.log("ignoring duplicate")
+        return; // ignore duplicate
+      }
+      this.walletStatus.next(WalletProviderStatus.connected(
+        this.walletStatus.value.account ?? "",
+        chainId ?? undefined,
+        networkId ?? undefined
+      ));
     }
-    this.walletStatus.next(WalletProviderStatus.connected(
-      this.walletStatus.value.account ?? "",
-      chainId ?? undefined,
-      networkId ?? undefined
-    ));
   }
 
   /// Prompt account connection UI on the provider

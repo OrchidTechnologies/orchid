@@ -50,7 +50,7 @@ export const Layout: FC = () => {
   useEffect(() => {
     let api = OrchidAPI.shared();
     // new user defaults
-    let newUserSub = api.newUser_wait.subscribe(isNew => {
+    let newUserSub = api.newUser.subscribe(isNew => {
       console.log("user is new: ", isNew)
       setIsNewUser(isNew);
     });

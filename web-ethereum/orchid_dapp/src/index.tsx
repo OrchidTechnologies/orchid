@@ -55,7 +55,6 @@ const App: FC = () => {
       setWalletStatus(newWalletStatus);
     });
     return () => {
-      console.log("app: tear down useeffect")
       walletStatusSub.unsubscribe();
     };
   },
@@ -68,6 +67,7 @@ const App: FC = () => {
 };
 
 OrchidAPI.shared().init().then(() => {
+  console.log("startup complete: render");
   render(
     <IntlProvider locale={language} messages={messages[language]}>
       <App/>

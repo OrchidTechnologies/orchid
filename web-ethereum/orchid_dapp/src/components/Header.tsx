@@ -17,20 +17,19 @@ import {Route, RouteContext} from "./Route";
 import {S} from "../i18n/S";
 import {Subscription} from "rxjs";
 import {WalletProviderState, WalletProviderStatus} from "../api/orchid-eth-web3";
-import {SubmitButton} from "./SubmitButton";
 
 export const Header: React.FC = () => {
   const [oxtBalance, setOxtBalance] = useState<string | null>(null);
   const [newUser, setNewUser] = useState<boolean | undefined>(undefined);
-  const [signers, setSigners] = useState<Signer[] | undefined>(undefined);
+  const [signers, setSigners] = useState<Signer[] | null>(null);
   const [walletStatus, setWalletStatus] = useState<WalletProviderStatus | undefined>(undefined);
   const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     let subscriptions: Subscription [] = [];
     let api = OrchidAPI.shared();
-    subscriptions.push(api.newUser_wait.subscribe(setNewUser));
-    subscriptions.push(api.signersAvailable_wait.subscribe(setSigners));
+    subscriptions.push(api.newUser.subscribe(setNewUser));
+    subscriptions.push(api.signersAvailable.subscribe(setSigners));
     subscriptions.push(api.lotteryPot.subscribe(pot => {
       if (pot) {
         setOxtBalance(keikiToOxtString(pot.balance, 2));
@@ -47,6 +46,7 @@ export const Header: React.FC = () => {
   }, []);
 
   let showAccountSelector = !newUser && !(oxtBalance == null);
+  //if (walletStatus) { console.log("header: wallet connection status: ", WalletProviderState[walletStatus.state], walletStatus.account); }
   let showConnectButton = !showAccountSelector && walletStatus?.state === WalletProviderState.NotConnected
   return (
     <Container>
