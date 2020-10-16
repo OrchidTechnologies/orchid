@@ -116,12 +116,9 @@ export class OrchidWeb3API {
       try {
         await this.connect();
         await this.chainOrNetworkChanged();
-        window.ethereum.send('eth_accounts').then((response: any) => {
-          this.accountsChanged(response.result);
-        });
-      } catch (err) {
-        console.log("web3: error, defaulting accounts: ", err);
         await this.accountsChanged([]);
+      } catch (err) {
+        console.log("web3: error: ", err);
       }
       return;
     }
