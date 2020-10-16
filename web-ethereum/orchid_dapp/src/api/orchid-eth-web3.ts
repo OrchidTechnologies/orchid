@@ -39,11 +39,14 @@ export class WalletProviderStatus {
 
   static unknown = new WalletProviderStatus(WalletProviderState.Unknown)
   static noWalletProvider = new WalletProviderStatus(WalletProviderState.NoWalletProvider)
-  static notConnected = new WalletProviderStatus(WalletProviderState.NotConnected)
   static error = new WalletProviderStatus(WalletProviderState.Error)
 
   static connected(account: string, chainId?: number, networkId?: number) {
     return new WalletProviderStatus(WalletProviderState.Connected, account, chainId, networkId)
+  }
+
+  static notConnected(chainId?: number, networkId?: number) {
+    return new WalletProviderStatus(WalletProviderState.NotConnected, undefined, chainId, networkId)
   }
 
   constructor(state: WalletProviderState, account?: string, chainId?: number, networkId?: number) {
@@ -89,7 +92,7 @@ export class OrchidWeb3API {
     }
 
     // Listen for connection status
-    this.registerListeners();
+    this.registerListeners().then();
 
     // Init contracts
     try {
@@ -104,18 +107,30 @@ export class OrchidWeb3API {
     (window as any).web3 = this.web3; // replace any injected version
   }
 
-  registerListeners() {
+  async registerListeners() {
+    console.log("web3: register listeners");
 
     if (!window.ethereum.on) {
-      // We could try to fall back to the old provider APIs here.
+      // Fall back to the old provider APIs here.
       console.log("No EIP-1193 event emitter available");
+      try {
+        await this.connect();
+        await this.chainOrNetworkChanged();
+        window.ethereum.send('eth_accounts').then((response: any) => {
+          this.accountsChanged(response.result);
+        });
+      } catch (err) {
+        console.log("web3: error, defaulting accounts: ", err);
+        await this.accountsChanged([]);
+      }
       return;
     }
 
     // EIP-1193 listeners
     try {
-      console.log("registering account listener");
+      console.log("registering eip-1193 listeners");
       window.ethereum.on('accountsChanged', (accounts: Array<string>) => {
+        console.log("web3: listener accounts changed")
         this.accountsChanged(accounts)
       })
       window.ethereum.on('chainChanged', (props: any) => {
@@ -131,9 +146,11 @@ export class OrchidWeb3API {
     // EIP-1193 accounts fetch
     window.ethereum.send('eth_accounts')
       .then((response: any) => {
+        console.log("web3: request eth_accounts result: ", response)
         this.accountsChanged(response.result)
       })
       .catch((err: any) => {
+        console.log("web3: request eth_accounts err: ", err)
         if (err.code === 4100) { // EIP 1193 unauthorized error
           console.log('Error 4100.')
           this.accountsChanged([]);
@@ -155,17 +172,26 @@ export class OrchidWeb3API {
   }
 
   /// Handle web3 provider account changes.
-  /// We expect this to be called at least once on page load (eip-1193)
-  accountsChanged(accounts: Array<string>) {
-    console.log("web3 provider accounts changed: ", accounts)
+  async accountsChanged(accountsIn: Array<string>) {
+    console.log("web3 provider accounts changed: ", accountsIn)
+    let accounts: Array<string> = accountsIn;
+    if (accounts.length === 0) {
+      try {
+        // Attempt to re-fetch the accounts.
+        accounts = (this.web3 && await this.web3.eth.getAccounts()) ?? [];
+        console.log("web3 re-fetched accounts: ", accounts)
+      } catch (err) {
+        console.log("web3: error attempting to fetch accounts");
+      }
+    }
+    let state = accounts.length > 0 ? WalletProviderState.Connected : WalletProviderState.NotConnected;
+    let account = accounts.length > 0 ? accounts[0] : undefined
     this.walletStatus.next(
-      accounts.length > 0 ?
-        WalletProviderStatus.connected(accounts[0],
-          this.walletStatus.value.chainId,
-          this.walletStatus.value.networkId
-        )
-        : WalletProviderStatus.notConnected
-    )
+      new WalletProviderStatus(
+        state, account,
+        this.walletStatus.value.chainId,
+        this.walletStatus.value.networkId
+      ));
   }
 
   /// Check for the main network

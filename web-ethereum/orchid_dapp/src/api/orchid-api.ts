@@ -95,15 +95,15 @@ export class OrchidAPI {
         case WalletProviderState.NoWalletProvider:
         case WalletProviderState.NotConnected:
         case WalletProviderState.Error:
-          console.log("api: startup complete (no provider or not connected)")
+          console.log("api: startup complete (no provider or error): ", WalletProviderState[status.state]);
           // Refresh everything to clear any account data.
-          this.onProviderAccountChange(status);
+          this.onProviderAccountChange(status).then();
           // Show the UI
           callback(true);
           break;
         case WalletProviderState.Connected:
           // Refresh to get the new account data.
-          this.onProviderAccountChange(status);
+          this.onProviderAccountChange(status).then();
           break;
       }
     });
