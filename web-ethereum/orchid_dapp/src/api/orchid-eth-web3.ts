@@ -28,9 +28,6 @@ export enum WalletProviderState {
 
   // There was an error when attempting to ask the ethereum provider for accounts
   Error,
-
-  // The ethereum provider is on the wrong network or chain
-  WrongNetworkOrChain
 }
 
 // The web3 provider status
@@ -44,7 +41,6 @@ export class WalletProviderStatus {
   static noWalletProvider = new WalletProviderStatus(WalletProviderState.NoWalletProvider)
   static notConnected = new WalletProviderStatus(WalletProviderState.NotConnected)
   static error = new WalletProviderStatus(WalletProviderState.Error)
-  static wrongNetworkOrChain = new WalletProviderStatus(WalletProviderState.WrongNetworkOrChain)
 
   static connected(account: string, chainId?: number, networkId?: number) {
     return new WalletProviderStatus(WalletProviderState.Connected, account, chainId, networkId)
@@ -56,12 +52,18 @@ export class WalletProviderStatus {
     this.chainId = chainId
     this.networkId = networkId
   }
+
+  isMainNet(): boolean {
+    // TODO: we need a table here
+    return this.chainId === 1;
+  }
 }
 
 
 /// Discovery and initialization of the web3 provider.
 /// Relevant standards:
-/// https://eips.ethereum.org/EIPS/eip-1193 (supported events)
+/// https://eips.ethereum.org/EIPS/eip-1193 (eth provider events)
+/// https://eips.ethereum.org/EIPS/eip-1102 (account authorization)
 /// https://nodejs.org/api/events.html (event emitter API)
 export class OrchidWeb3API {
   web3: Web3 | null = null;
@@ -103,11 +105,14 @@ export class OrchidWeb3API {
   }
 
   registerListeners() {
+
     if (!window.ethereum.on) {
       // We could try to fall back to the old provider APIs here.
       console.log("No EIP-1193 event emitter available");
       return;
     }
+
+    // EIP-1193 listeners
     try {
       console.log("registering account listener");
       window.ethereum.on('accountsChanged', (accounts: Array<string>) => {
@@ -122,6 +127,31 @@ export class OrchidWeb3API {
     } catch (err) {
       console.log("error registering listener: ", err)
     }
+
+    // EIP-1193 accounts fetch
+    window.ethereum.send('eth_accounts')
+      .then((response: any) => {
+        this.accountsChanged(response.result)
+      })
+      .catch((err: any) => {
+        if (err.code === 4100) { // EIP 1193 unauthorized error
+          console.log('Error 4100.')
+          this.accountsChanged([]);
+        } else {
+          console.error('web3: eth_accounts: ', err);
+          this.walletStatus.next(WalletProviderStatus.error);
+        }
+      })
+
+    // EIP-1193 chain fetch
+    window.ethereum.send('eth_chainId')
+      .then(() => {
+        this.chainOrNetworkChanged().then();
+      })
+      .catch((err: any) => {
+        console.error('web3: eth_chainId', err);
+        this.walletStatus.next(WalletProviderStatus.error);
+      });
   }
 
   /// Handle web3 provider account changes.
@@ -130,7 +160,10 @@ export class OrchidWeb3API {
     console.log("web3 provider accounts changed: ", accounts)
     this.walletStatus.next(
       accounts.length > 0 ?
-        WalletProviderStatus.connected(accounts[0])
+        WalletProviderStatus.connected(accounts[0],
+          this.walletStatus.value.chainId,
+          this.walletStatus.value.networkId
+        )
         : WalletProviderStatus.notConnected
     )
   }
@@ -138,24 +171,25 @@ export class OrchidWeb3API {
   /// Check for the main network
   /// We expect this to be called at least once on page load (eip-1193)
   async chainOrNetworkChanged() {
-    console.log("web3 provider chain or network changed")
-    if (this.walletStatus.value.state === WalletProviderState.Connected) {
-      let networkId = this.web3 && await this.web3.eth.net.getId();
-      let chainId = this.web3 && await this.web3.eth.getChainId();
-      if (networkId === this.walletStatus.value.networkId
-        && chainId === this.walletStatus.value.chainId) {
-        console.log("ignoring duplicate")
-        return; // ignore duplicate
-      }
-      this.walletStatus.next(WalletProviderStatus.connected(
-        this.walletStatus.value.account ?? "",
+    let networkId = this.web3 && await this.web3.eth.net.getId();
+    let chainId = this.web3 && await this.web3.eth.getChainId();
+    console.log("web3 provider chain or network changed: ", chainId, networkId)
+    if (networkId === this.walletStatus.value.networkId
+      && chainId === this.walletStatus.value.chainId) {
+      console.log("ignoring duplicate")
+      return; // ignore duplicate
+    }
+    this.walletStatus.next(
+      new WalletProviderStatus(
+        this.walletStatus.value.state,
+        this.walletStatus.value.account,
         chainId ?? undefined,
         networkId ?? undefined
       ));
-    }
   }
 
   /// Prompt account connection UI on the provider
+  /// EIP-1102 user authorization / connection
   async connect() {
     try {
       // TODO: We should first detect if we are already connected using:

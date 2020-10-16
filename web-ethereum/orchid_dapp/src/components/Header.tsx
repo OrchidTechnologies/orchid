@@ -77,6 +77,12 @@ export const Header: React.FC = () => {
             </div>
             : null
         }
+        {
+          !(walletStatus?.isMainNet()) ?
+            <div style={{width: 200, fontStyle: 'italic', fontSize: 14, textAlign: 'right'}}>
+            Please connect to<br/>Ethereum Main Net</div> : null
+        }
+
       </Row>
     </Container>
   );

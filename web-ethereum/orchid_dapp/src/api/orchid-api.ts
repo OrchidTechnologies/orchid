@@ -95,7 +95,6 @@ export class OrchidAPI {
         case WalletProviderState.NoWalletProvider:
         case WalletProviderState.NotConnected:
         case WalletProviderState.Error:
-        case WalletProviderState.WrongNetworkOrChain:
           console.log("api: startup complete (no provider or not connected)")
           // Refresh everything to clear any account data.
           this.onProviderAccountChange(status);
@@ -152,10 +151,11 @@ export class OrchidAPI {
   }
 
   async updateSigners() {
+    console.log("api: update signers");
     let wallet = this.wallet.value;
     if (wallet === undefined) {
-      // this.signersAvailable.next(null);
-      // this.signer.next(null);
+      this.signersAvailable.next(null);
+      this.signer.next(null);
       return;
     }
     try {

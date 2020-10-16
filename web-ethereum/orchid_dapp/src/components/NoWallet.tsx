@@ -23,8 +23,7 @@ export const NoWallet: FC<{ walletStatus: WalletProviderStatus }> = (props) => {
     }, 1000);
   }
 
-  let wrongNetwork = props.walletStatus.state === WalletProviderState.WrongNetworkOrChain;
-
+  let wrongNetwork = !props.walletStatus.isMainNet()
   if (wrongNetwork) {
     return (
       <Container className="WrongNetwork" style={{textAlign: 'center'}}>

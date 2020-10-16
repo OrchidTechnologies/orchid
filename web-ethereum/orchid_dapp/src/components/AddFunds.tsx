@@ -391,7 +391,11 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   const warnETH = ETH.fromWei(wallet?.ethBalance ?? BigInt(0))
     .lessThan(accountRecommendation?.txEth ?? ETH.zero)
 
-  let walletConnected = OrchidAPI.shared().eth.provider.walletStatus.value.state === WalletProviderState.Connected
+  let provider = OrchidAPI.shared().eth.provider;
+  let walletConnected =
+    provider.walletStatus.value.state === WalletProviderState.Connected
+    && provider.walletStatus.value.isMainNet()
+
   let generateSignerEnabled = !generatingSigner && walletConnected
 
   return (
