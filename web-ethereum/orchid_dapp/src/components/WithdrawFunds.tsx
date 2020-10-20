@@ -55,8 +55,8 @@ export class WithdrawFunds extends Component<any, any> {
     const targetAddress = this.state.sendToAddress;
     const potBalance = this.state.potBalance;
 
-    if (wallet === undefined
-      || signer === undefined
+    if (!wallet
+      || !signer
       || (withdrawAmount == null && !withdrawAll)
       || withdrawAll == null
       || targetAddress == null

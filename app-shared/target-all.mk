@@ -19,22 +19,35 @@
 
 
 forks := 
-include shared/gui/target.mk
+include $(pwd)/gui/target.mk
 
 flutter := $(CURDIR)/flutter/bin/flutter --suppress-analytics --verbose
 
-precache := --macos
+# -a is needed as flutter (incorrectly) only installs files for windows *target* on windows *host*
+# https://github.com/flutter/flutter/issues/58379
+precache := --linux --macos --windows -a
 
 flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(call head,flutter)
 	cd flutter && git clean -fxd
+	cd flutter && bin/flutter config --enable-linux-desktop
 	cd flutter && bin/flutter config --enable-macos-desktop
+	cd flutter && bin/flutter config --enable-windows-desktop
 	cd flutter && bin/flutter precache $(precache)
 	cd flutter && bin/flutter update-packages
 
-shared/gui/%flutter-plugins %packages $(generated): shared/gui/pubspec.yaml shared/gui/pubspec.lock flutter/packages/flutter/pubspec.lock $(forks)
-	mkdir -p shared/gui/android shared/gui/ios shared/gui/macos
+dart := 
+dart += shared/gui/.dart_tool/package_config.json
+dart += shared/gui/.flutter-plugins
+dart += .packages
+
+# XXX: use $(dart) to generate the first three of these
+shared/gui/.dart_tool/package_config%json shared/gui/%flutter-plugins %packages $(generated): shared/gui/pubspec.yaml shared/gui/pubspec.lock flutter/packages/flutter/pubspec.lock $(forks)
+	@mkdir -p shared/gui/{android,ios,linux,macos,windows}
+	@rm -f shared/gui/.flutter-plugins
 	cd shared/gui && $(flutter) pub get
 	@touch shared/gui/.packages
+
+dart += $(shell find lib/ -name '*.dart')
 
 ifeq ($(filter noaot,$(debug)),)
 mode := release
@@ -47,7 +60,3 @@ precompiled :=
 endif
 
 engine := flutter/bin/cache/artifacts/engine/$(platform)$(engine)
-
-dart := $(shell find lib/ -name '*.dart')
-dart += shared/gui/.flutter-plugins
-dart += .packages

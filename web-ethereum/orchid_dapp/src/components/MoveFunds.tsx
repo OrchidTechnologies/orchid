@@ -38,7 +38,7 @@ export class MoveFunds extends Component {
     let api = OrchidAPI.shared();
     let wallet = api.wallet.value;
     let signer = api.signer.value;
-    if (wallet === undefined || signer === undefined
+    if (!wallet || !signer
       || this.state.moveAmount == null
       || this.state.potBalance == null
     ) {

@@ -33,7 +33,7 @@ export const StakeFunds: FC = () => {
   useEffect(() => {
     let api = OrchidAPI.shared();
     let walletSubscription = api.wallet_wait.subscribe(wallet => {
-      console.log("add funds got wallet: ", wallet);
+      //console.log("add funds got wallet: ", wallet);
       setWalletBalance(wallet.oxtBalance);
     });
     return () => {

@@ -3,7 +3,7 @@ import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OXT} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
-import {formatCurrency} from "../util/util";
+import {CancellablePromise, formatCurrency, makeCancelable} from "../util/util";
 import {Orchid} from "../api/orchid";
 import {AccountRecommendation} from "./MarketConditionsPanel";
 
@@ -12,26 +12,36 @@ const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const LowFundsPanel: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [pot, setPot] = useState<LotteryPot>();
-  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation|null>(null);
+  const [pot, setPot] = useState<LotteryPot|null>();
+  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let potSubscription = api.lotteryPot_wait.subscribe(pot => {
+    let potSubscription = api.lotteryPot.subscribe(pot => {
       setPot(pot)
     });
 
-    // TODO: This needs to be cancellable somehow
-    /*let setDefaultPromise: Promise<void> = */(async () => {
-      setAccountRecommendation(await Orchid.minViableAccountComposition());
+    let getRecommendation: CancellablePromise<AccountRecommendation> =
+      makeCancelable(Orchid.minViableAccountComposition());
+    (async () => {
+      try {
+        setAccountRecommendation(await getRecommendation.promise);
+      } catch (err) {
+        if (err.isCanceled) {
+          //console.log("recommendation cancelled")
+        } else {
+          //console.log("unable to fetch min viable account info", err)
+        }
+      }
     })();
 
     return () => {
+      getRecommendation.cancel()
       potSubscription.unsubscribe();
     };
   }, []);
 
-  if (pot === undefined || accountRecommendation == null) {
+  if (!pot || accountRecommendation == null) {
     return <div/>
   }
 
@@ -55,15 +65,15 @@ export const LowFundsPanel: React.FC = () => {
   let text;
 
   if (balanceLow) {
-    title="Balance too low";
+    title = "Balance too low";
     text = `Your balance of ${balanceStr} is too low. Add at least ${addBalanceStr} to your balance for the Orchid app to function.`;
   }
   if (depositLow) {
-    title="Deposit too low";
+    title = "Deposit too low";
     text = `Your deposit of ${depositStr} is too low. Add at least ${addDepositStr} to your deposit for the Orchid app to function.`;
   }
   if (depositLow && balanceLow) {
-    title="Balance & deposit too low";
+    title = "Balance & deposit too low";
     text = `Your deposit and balance are too low.  ` +
       `Add at least ${addDepositStr} to your deposit and ${addBalanceStr} to your balance for the Orchid app to function.`;
   }

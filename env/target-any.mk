@@ -70,11 +70,19 @@ beta := false
 
 usr := /usr/local
 
+include $(pwd)/checks.mk
+
 include ../default.mk
 -include ../local.mk
 
 ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s
+endif
+
+ifeq ($(filter nocompress,$(debug)),)
+zflags := -9
+else
+zflags := -0
 endif
 
 objc := false

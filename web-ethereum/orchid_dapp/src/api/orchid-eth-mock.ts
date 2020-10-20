@@ -59,11 +59,11 @@ export class MockTransactions {
 export class MockOrchidTransactionMonitor extends OrchidTransactionMonitor {
   mock_store: OrchidTransaction [] = [];
 
-  init(listener: OrchidTransactionMonitorListener) {
+  initIfNeeded(listener: OrchidTransactionMonitorListener) {
     if (this.listener) {
       return
     }
-    super.init(listener);
+    super.initIfNeeded(listener);
     this.add(MockTransactions.mockAddFunds());
   }
 

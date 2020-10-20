@@ -37,10 +37,7 @@ export class LockFunds extends Component {
     const wallet = api.wallet.value;
     const signer = api.signer.value;
 
-    if (this.state.pot == null
-      || wallet === undefined
-      || signer === undefined
-    ) {
+    if (!this.state.pot || !wallet || !signer ) {
       return;
     }
     this.setState({tx: TransactionStatus.running()});

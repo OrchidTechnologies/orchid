@@ -49,10 +49,10 @@ SPEC CHECKSUMS:
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   in_app_purchase: 2f8c1b5fb9138954a295fce2a313575b0646991d
   shared_preferences: 9fec34d1bd906196a4da48fcf6c3ad521cc00b8d
-  shared_preferences_macos: 5e5c2839894accb56b7d23328905b757f2bafaf6
+  shared_preferences_macos: 480ce071d0666e37cef23fe6c702293a3d21799e
   sqflite: 6c1f07e1d4399d619ea619fea9171251dd24d058
   url_launcher: af78307ef9bafff91273b34f1c6c0c86a0004fd7
-  url_launcher_macos: 76867a28e24e0b6b98bfd65f157b64108e6d477a
+  url_launcher_macos: 45af3d61de06997666568a7149c1be98b41c95d4
 
 PODFILE CHECKSUM: aa314289921658992803542eb5e574a88ac56569
 

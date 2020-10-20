@@ -48,36 +48,59 @@ export class Info extends Component<any, any> {
       }));
 
     this.subscriptions.push(
-      api.wallet_wait.subscribe(wallet => {
-        this.setState({
-          walletAddress: wallet.address,
-          ethBalance: keikiToOxtString(wallet.ethBalance, 4),
-          ethBalanceError: wallet.ethBalance <= BigInt(0),
-          oxtBalance: keikiToOxtString(wallet.oxtBalance, 4),
-          oxtBalanceError: wallet.oxtBalance <= BigInt(0),
-        });
+      api.wallet.subscribe(wallet => {
+        if (!wallet) {
+          this.setState({
+            walletAddress: "",
+            ethBalance: "",
+            ethBalanceError: false,
+            oxtBalance: "",
+            oxtBalanceError: false
+          });
+        } else {
+          this.setState({
+            walletAddress: wallet.address,
+            ethBalance: keikiToOxtString(wallet.ethBalance, 4),
+            ethBalanceError: wallet.ethBalance <= BigInt(0),
+            oxtBalance: keikiToOxtString(wallet.oxtBalance, 4),
+            oxtBalanceError: wallet.oxtBalance <= BigInt(0),
+          });
+        }
       }));
 
     this.subscriptions.push(
-      api.lotteryPot_wait.subscribe(pot => {
-        this.setState({
-          potBalance: keikiToOxtString(pot.balance, 4),
-          potEscrow: keikiToOxtString(pot.escrow, 4),
-        });
-        MarketConditions.for(pot).then(marketConditions => {
-          this.setState({marketConditions: marketConditions});
-        });
+      api.lotteryPot.subscribe(pot => {
+        if (!pot) {
+          this.setState({
+            potBalance: "",
+            potEscrow: "",
+            marketConditions: null
+          });
+        } else {
+          this.setState({
+            potBalance: keikiToOxtString(pot.balance, 4),
+            potEscrow: keikiToOxtString(pot.escrow, 4),
+          });
+          MarketConditions.for(pot).then(marketConditions => {
+            this.setState({marketConditions: marketConditions});
+          });
+        }
       }));
 
+    // TODO: Deal with cancellation here
     (async () => {
-      let minViableAccountRecommendation = await Orchid.minViableAccountComposition();
-      let accountRecommendation = await Orchid.recommendedAccountComposition();
-      this.setState({
-        accountRecommendationBalanceMin: minViableAccountRecommendation.balance.value.toFixedLocalized(2),
-        accountRecommendationDepositMin: minViableAccountRecommendation.deposit.value.toFixedLocalized(2),
-        accountRecommendationBalance: accountRecommendation.balance.value.toFixedLocalized(2),
-        accountRecommendationDeposit: accountRecommendation.deposit.value.toFixedLocalized(2)
-      });
+      try {
+        let minViableAccountRecommendation = await Orchid.minViableAccountComposition();
+        let accountRecommendation = await Orchid.recommendedAccountComposition();
+        this.setState({
+          accountRecommendationBalanceMin: minViableAccountRecommendation.balance.value.toFixedLocalized(2),
+          accountRecommendationDepositMin: minViableAccountRecommendation.deposit.value.toFixedLocalized(2),
+          accountRecommendationBalance: accountRecommendation.balance.value.toFixedLocalized(2),
+          accountRecommendationDeposit: accountRecommendation.deposit.value.toFixedLocalized(2)
+        });
+      } catch (err) {
+        console.log("unable to fetch min viable account info")
+      }
     })();
   }
 
@@ -177,7 +200,8 @@ export class Info extends Component<any, any> {
         </Row>
 
         <Spacer height={12}/>
-        <EfficiencyMeterRow marketConditions={this.state.marketConditions} label={"Market Efficiency"}/>
+        <EfficiencyMeterRow marketConditions={this.state.marketConditions}
+                            label={"Market Efficiency"}/>
 
         {/*pot lock status*/}
         <div style={{marginTop: "16px"}}/>

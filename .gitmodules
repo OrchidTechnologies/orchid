@@ -92,13 +92,13 @@
 	path = min-wireshark/libgcrypt
 	url = https://github.com/gpg/libgcrypt.git
 [submodule "glib"]
-	path = min-wireshark/glib
+	path = min-glib/glib
 	url = https://github.com/GNOME/glib.git
 [submodule "libiconv"]
-	path = min-wireshark/libiconv
+	path = min-glib/libiconv
 	url = https://git.savannah.gnu.org/git/libiconv.git
 [submodule "gnulib"]
-	path = min-wireshark/gnulib
+	path = min-glib/gnulib
 	url = https://git.savannah.gnu.org/git/gnulib.git
 [submodule "libcxxabi"]
 	path = env/libcxxabi
@@ -178,3 +178,6 @@
 [submodule "chains"]
 	path = p2p/chains
 	url = https://github.com/ethereum-lists/chains.git
+[submodule "engine"]
+	path = app-shared/engine
+	url = https://github.com/flutter/engine.git

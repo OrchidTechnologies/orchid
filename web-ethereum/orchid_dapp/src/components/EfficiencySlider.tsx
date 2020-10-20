@@ -8,13 +8,15 @@ import './EfficiencySlider.css'
 export function EfficiencySlider(props: {
   value: number | null, minValue?: number,
   onChange: (changeEvent: any) => void,
-  faded?: boolean
+  faded?: boolean,
+  enabled?: boolean
 }) {
   const value = Math.round(props.value ?? 0);
   const disabledClass = (value === null) ? " disabled" : "";
   const fadedClass = (props.faded === true) ? " faded" : "";
   return <div className={"efficiency-slider" + disabledClass + fadedClass}>
     <RangeSlider
+      disabled={!(props.enabled ?? true)}
       size={"lg"}
       min={0} max={100}
       step={1}

@@ -476,7 +476,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             padx(8),
             Badge(
               showBadge: _showMarketStatsAlert,
-              position: BadgePosition.topRight(top: -6, right: -28),
+              position: BadgePosition.topEnd(top: -6, end: -28),
               badgeContent: Text('!',
                   style: TextStyle(color: Colors.white, fontSize: 12)),
               padding: EdgeInsets.all(8),

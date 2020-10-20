@@ -9,33 +9,51 @@ PODS:
   - in_app_purchase (0.0.1):
     - Flutter
   - MTBBarcodeScanner (5.0.11)
+  - path_provider_linux (0.0.1):
+    - Flutter
+  - path_provider_windows (0.0.1):
+    - Flutter
   - shared_preferences (0.0.1):
+    - Flutter
+  - shared_preferences_linux (0.0.1):
     - Flutter
   - shared_preferences_macos (0.0.1):
     - Flutter
   - shared_preferences_web (0.0.1):
+    - Flutter
+  - shared_preferences_windows (0.0.1):
     - Flutter
   - sqflite (0.0.1):
     - Flutter
     - FMDB (~> 2.7.2)
   - url_launcher (0.0.1):
     - Flutter
+  - url_launcher_linux (0.0.1):
+    - Flutter
   - url_launcher_macos (0.0.1):
     - Flutter
   - url_launcher_web (0.0.1):
+    - Flutter
+  - url_launcher_windows (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - barcode_scan (from `.symlinks/plugins/barcode_scan/ios`)
   - Flutter (from `Flutter`)
   - in_app_purchase (from `.symlinks/plugins/in_app_purchase/ios`)
+  - path_provider_linux (from `.symlinks/plugins/path_provider_linux/ios`)
+  - path_provider_windows (from `.symlinks/plugins/path_provider_windows/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
+  - shared_preferences_linux (from `.symlinks/plugins/shared_preferences_linux/ios`)
   - shared_preferences_macos (from `.symlinks/plugins/shared_preferences_macos/ios`)
   - shared_preferences_web (from `.symlinks/plugins/shared_preferences_web/ios`)
+  - shared_preferences_windows (from `.symlinks/plugins/shared_preferences_windows/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
+  - url_launcher_linux (from `.symlinks/plugins/url_launcher_linux/ios`)
   - url_launcher_macos (from `.symlinks/plugins/url_launcher_macos/ios`)
   - url_launcher_web (from `.symlinks/plugins/url_launcher_web/ios`)
+  - url_launcher_windows (from `.symlinks/plugins/url_launcher_windows/ios`)
 
 SPEC REPOS:
   trunk:
@@ -49,20 +67,32 @@ EXTERNAL SOURCES:
     :path: Flutter
   in_app_purchase:
     :path: ".symlinks/plugins/in_app_purchase/ios"
+  path_provider_linux:
+    :path: ".symlinks/plugins/path_provider_linux/ios"
+  path_provider_windows:
+    :path: ".symlinks/plugins/path_provider_windows/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
+  shared_preferences_linux:
+    :path: ".symlinks/plugins/shared_preferences_linux/ios"
   shared_preferences_macos:
     :path: ".symlinks/plugins/shared_preferences_macos/ios"
   shared_preferences_web:
     :path: ".symlinks/plugins/shared_preferences_web/ios"
+  shared_preferences_windows:
+    :path: ".symlinks/plugins/shared_preferences_windows/ios"
   sqflite:
     :path: ".symlinks/plugins/sqflite/ios"
   url_launcher:
     :path: ".symlinks/plugins/url_launcher/ios"
+  url_launcher_linux:
+    :path: ".symlinks/plugins/url_launcher_linux/ios"
   url_launcher_macos:
     :path: ".symlinks/plugins/url_launcher_macos/ios"
   url_launcher_web:
     :path: ".symlinks/plugins/url_launcher_web/ios"
+  url_launcher_windows:
+    :path: ".symlinks/plugins/url_launcher_windows/ios"
 
 SPEC CHECKSUMS:
   barcode_scan: 33f586d02270046fc6559135038b34b5754eaa4f
@@ -70,13 +100,19 @@ SPEC CHECKSUMS:
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   in_app_purchase: 3e2155afa9d03d4fa32d9e62d567885080ce97d6
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
-  shared_preferences: 430726339841afefe5142b9c1f50cb6bd7793e01
+  path_provider_linux: 4d630dc393e1f20364f3e3b4a2ff41d9674a84e4
+  path_provider_windows: a2b81600c677ac1959367280991971cb9a1edb3b
+  shared_preferences: af6bfa751691cdc24be3045c43ec037377ada40d
+  shared_preferences_linux: afefbfe8d921e207f01ede8b60373d9e3b566b78
   shared_preferences_macos: f3f29b71ccbb56bf40c9dd6396c9acf15e214087
   shared_preferences_web: 141cce0c3ed1a1c5bf2a0e44f52d31eeb66e5ea9
+  shared_preferences_windows: 36b76d6f54e76ead957e60b49e2f124b4cd3e6ae
   sqflite: 4001a31ff81d210346b500c55b17f4d6c7589dd0
-  url_launcher: a1c0cc845906122c4784c542523d8cacbded5626
+  url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
+  url_launcher_linux: ac237cb7a8058736e4aae38bdbcc748a4b394cc0
   url_launcher_macos: fd7894421cd39320dce5f292fc99ea9270b2a313
   url_launcher_web: e5527357f037c87560776e36436bf2b0288b965c
+  url_launcher_windows: 683d7c283894db8d1914d3ab2223b20cc1ad95d5
 
 PODFILE CHECKSUM: 4ee3a4ae35d06be75a22045e470fceb108c0bcc3
 

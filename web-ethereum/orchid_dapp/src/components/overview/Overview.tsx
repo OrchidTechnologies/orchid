@@ -41,7 +41,7 @@ export const Overview: React.FC = () => {
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let newSubscription = api.newUser_wait.subscribe(setNewUser);
+    let newSubscription = api.newUser.subscribe(setNewUser);
     let lotSubscription = api.lotteryPot.subscribe(pot => {
       if (pot == null) {
         setPotFunded(false);

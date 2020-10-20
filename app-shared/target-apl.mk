@@ -18,6 +18,8 @@
 # }}}
 
 
+include shared/target-all.mk
+
 ifeq ($(filter ldid,$(debug)),)
 codesign = xattr -cr $(1) && $(if $(keychain),security unlock-keychain -p $(word 2,$(keychain)) $(word 1,$(keychain)).keychain &&) codesign -vfs $(identity) --entitlements $(2) $(1)
 else
@@ -30,8 +32,6 @@ endif
 endif
 
 codesign += && touch $(3)
-
-include shared/target-all.mk
 
 cflags += -Fflutter/bin/cache/artifacts/engine/$(platform)
 lflags += -Fflutter/bin/cache/artifacts/engine/$(platform)
@@ -52,7 +52,7 @@ rsync := rsync -a --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature 
 
 $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist: $(dart) $(temp)
 	# XXX: as far as I can tell flutter's build system is just entirely broken :/
-	rm -rf .dart_tool $(output)/flutter
+	rm -rf .dart_tool/flutter_build $(output)/flutter
 	$(flutter) assemble \
 	    -dTargetPlatform="$(platform)" \
 	    -dTargetFile="lib/main.dart" \
@@ -96,6 +96,7 @@ $(assemble)/Pods/Manifest.lock: $(assemble)/Podfile shared/gui/.flutter-plugins
 	touch $@
 
 $(output)/XCBuildData/build.db: shared/empty.plist $(assemble)/Pods/Manifest.lock
+	@mkdir -p "$(bundle)$(contents)"
 	xcodebuild -project $(assemble)/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
 	shopt -s nullglob; for framework in $(output)/Release/*/*.framework; do \
 	    $(rsync) "$${framework}" "$(bundle)$(contents)/Frameworks"; \

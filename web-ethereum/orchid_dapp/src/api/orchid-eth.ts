@@ -5,10 +5,11 @@ import {OrchidContracts} from "./orchid-eth-contracts";
 import {EthAddress, ETH, GWEI, Keiki, KEIKI, OXT, Secret} from "./orchid-types";
 import Web3 from "web3";
 import {PromiEvent} from "web3-core";
-import {OrchidAPI, WalletStatus} from "./orchid-api";
+import {OrchidAPI} from "./orchid-api";
 import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
 import "../i18n/i18n_util";
 import {getParam, parseFloatSafe, removeHexPrefix} from "../util/util";
+import {OrchidWeb3API} from "./orchid-eth-web3";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 const ORCHID_SIGNER_KEYS_WALLET = "orchid-signer-keys";
@@ -18,8 +19,6 @@ declare global {
     ethereum: any
   }
 }
-export let web3: Web3;
-
 // TODO: Use the Wei and Keiki types here
 /// A Funder address containing ETH to perform contract transactions  and possibly
 /// OXT to fund a Lottery Pot.
@@ -96,72 +95,25 @@ export class LotteryPot {
 
 export class OrchidEthereumAPI {
 
-  /// Init the Web3 environment and the Orchid contracts
-  orchidInitEthereum(providerUpdateCallback?: (props: any) => void): Promise<WalletStatus> {
-    return new Promise(function (resolve, reject) {
-      (async () => {
-        if (window.ethereum) {
-          window.ethereum.autoRefreshOnNetworkChange = false;
-          web3 = new Web3(window.ethereum);
-          try {
-            await window.ethereum.enable();
-          } catch (error) {
-            resolve(WalletStatus.notConnected);
-            console.log("User denied account access...");
-          }
-        } else if (web3) {
-          console.log("Legacy dapp browser.");
-          web3 = new Web3(web3.currentProvider);
-        } else {
-          console.log('Non-Ethereum browser.');
-          resolve(WalletStatus.noWallet);
-          return;
-        }
+  provider: OrchidWeb3API = new OrchidWeb3API()
 
-        // Check for the main network
-        if (!OrchidContracts.contracts_overridden() && await web3.eth.net.getId() !== 1) {
-          resolve(WalletStatus.wrongNetwork);
-        }
-
-        try {
-          if (providerUpdateCallback) {
-            console.log("registering account listener");
-            window.ethereum.on('accountsChanged', function (props: any) {
-              console.log("web3 accounts changed")
-              providerUpdateCallback && providerUpdateCallback(props);
-            })
-            window.ethereum.on('networkChanged', function (props: any) {
-              console.log("web3 network changed")
-              providerUpdateCallback && providerUpdateCallback(props);
-            })
-          }
-        } catch (err) {
-          console.log("error registering listener: ", err)
-        }
-
-        try {
-          OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
-          OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
-          OrchidContracts.directory = new web3.eth.Contract(OrchidContracts.directory_abi, OrchidContracts.directory_addr());
-        } catch (err) {
-          console.log("Error constructing contracts");
-          resolve(WalletStatus.error);
-        }
-
-        (window as any).web3 = web3; // replace any injected version
-        const accounts = await web3.eth.getAccounts();
-        resolve(WalletStatus.connected(accounts[0]));
-      })();
-    });
+  get web3(): Web3 {
+    if (this.provider.web3) {
+      return this.provider.web3
+    }
+    throw Error("Provider web3 unavailable.");
   }
 
   /// Get the user's ETH wallet balance and Keiki token balance (1e18 per OXT).
   async orchidGetWallet(): Promise<Wallet> {
-    const accounts = await web3.eth.getAccounts();
+    const accounts = await this.web3.eth.getAccounts();
+    if (accounts.length === 0) {
+      throw Error("no accounts");
+    }
     const wallet = new Wallet();
     wallet.address = accounts[0];
     try {
-      wallet.ethBalance = BigInt(await web3.eth.getBalance(accounts[0]));
+      wallet.ethBalance = BigInt(await this.web3.eth.getBalance(accounts[0]));
     } catch (err) {
       console.log("Error getting eth balance", err);
       throw err;
@@ -201,14 +153,14 @@ export class OrchidEthereumAPI {
 
   /// Get the Orchid signer keys wallet in local storage.
   orchidGetSignerKeys(): Web3Wallet {
-    let keys = web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
+    let keys = this.web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
     return keys;
   }
 
   /// Create a new signer keypair and save it in the Orchid signer keys wallet in local storage.
   orchidCreateSigner(wallet: Wallet): Signer {
     let signersWallet = this.orchidGetSignerKeys();
-    let signerAccount = web3.eth.accounts.create();
+    let signerAccount = this.web3.eth.accounts.create();
     signersWallet.add(signerAccount);
     signersWallet.save("", ORCHID_SIGNER_KEYS_WALLET);
     return new Signer(wallet, signerAccount.address, signerAccount.privateKey);
@@ -495,7 +447,7 @@ export class OrchidEthereumAPI {
     const escrow: BigInt = overrideEscrow || result[1];
     const unlock: number = Number(result[2]);
     const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
-    console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
+    //console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
     return new LotteryPot(signer, balance, escrow, unlockDate);
   }
 
@@ -512,7 +464,7 @@ export class OrchidEthereumAPI {
 
   // The current median gas price for the past few blocks
   async getGasPrice(): Promise<GWEI> {
-    return GWEI.fromWeiString(await web3.eth.getGasPrice())
+    return GWEI.fromWeiString(await this.web3.eth.getGasPrice())
   }
 }
 
@@ -566,8 +518,9 @@ export class GasPricingStrategy {
   }
 }
 
+// TODO:
 export function isEthAddress(str: string): boolean {
-  return web3.utils.isAddress(str);
+  return Web3.utils.isAddress(str)
 }
 
 /// Convert a keiki value to an OXT String rounded to the specified

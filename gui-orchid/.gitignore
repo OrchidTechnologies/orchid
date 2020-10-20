@@ -7,9 +7,12 @@
 /ios/Runner
 /ios/.symlinks
 /ios/Pods
+/linux/flutter
 /macos/Flutter
 /macos/Pods
 /.packages
+/windows/flutter/*
+!/windows/flutter/CMakeLists.txt
 
 # XXX: investigate
 all_strings.txt
