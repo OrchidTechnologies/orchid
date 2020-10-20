@@ -1,4 +1,4 @@
-import {Address} from "./orchid-types";
+import {EthAddress} from "./orchid-types";
 import { Contract } from "web3-eth-contract";
 import {getEthAddressParam} from "../util/util";
 import {AbiItem} from "web3-utils";
@@ -10,19 +10,26 @@ export class OrchidContracts {
   static directory: Contract;
 
   // TODO: We can get the token address from the lottery contract with `what()` now.
-  static token_addr_final: Address = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb'; // OXT Main net
-  static token_addr(): Address {
+  static token_addr_final: EthAddress = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb'; // OXT Main net
+  static token_addr(): EthAddress {
     return getEthAddressParam('token_addr', this.token_addr_final);
   }
 
-  static lottery_addr_final: Address = '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1'; // Main net with OXT
-  static lottery_addr(): Address {
+  static lottery_addr_final: EthAddress = '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1'; // Main net with OXT
+  static lottery_addr(): EthAddress {
     return getEthAddressParam('lottery_addr', this.lottery_addr_final);
   }
 
-  static directory_addr_final: Address = '0x918101FB64f467414e9a785aF9566ae69C3e22C5'; // OXT Directory on main net
-  static directory_addr(): Address {
+  static directory_addr_final: EthAddress = '0x918101FB64f467414e9a785aF9566ae69C3e22C5'; // OXT Directory on main net
+  static directory_addr(): EthAddress {
     return getEthAddressParam('directory_addr', this.directory_addr_final);
+  }
+
+  /// Indicates that one or more of the contract addresses have been overridden
+  static contracts_overridden(): boolean {
+    return this.token_addr() !== this.token_addr_final
+      || this.lottery_addr() !== this.lottery_addr_final
+      || this.directory_addr() !== this.directory_addr_final
   }
 
   static lottery_push_method_hash: string =

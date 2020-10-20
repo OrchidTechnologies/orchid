@@ -5,11 +5,11 @@ import bugs from '../assets/bugs.png';
 import metamask from '../assets/wallet-logos/metamask.png';
 import coinbasewallet from '../assets/wallet-logos/coinbasewallet.svg';
 import {SubmitButton} from "./SubmitButton";
-import {WalletStatus} from "../api/orchid-api";
 import {copyTextToClipboard} from "../util/util";
 import {S} from "../i18n/S";
+import {WalletProviderState, WalletProviderStatus} from "../api/orchid-eth-web3";
 
-export const NoWallet: FC<{ walletStatus: WalletStatus }> = (props) => {
+export const NoWallet: FC<{ walletStatus: WalletProviderStatus }> = (props) => {
   const [buttonCopiedState, setButtonCopiedState] = useState(false);
 
   function copyUrl() {
@@ -23,8 +23,7 @@ export const NoWallet: FC<{ walletStatus: WalletStatus }> = (props) => {
     }, 1000);
   }
 
-  let wrongNetwork = props.walletStatus === WalletStatus.WrongNetwork;
-
+  let wrongNetwork = !props.walletStatus.isMainNet()
   if (wrongNetwork) {
     return (
       <Container className="WrongNetwork" style={{textAlign: 'center'}}>

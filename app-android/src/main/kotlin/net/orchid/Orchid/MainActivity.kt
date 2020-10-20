@@ -8,8 +8,11 @@ import android.util.Log
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
+import io.flutter.view.FlutterMain
+
 import android.content.Intent;
 import android.net.VpnService;
+
 import java.io.*
 
 const val VPN_SERVICE_REQUEST = 1
@@ -18,6 +21,7 @@ class MainActivity(): FlutterActivity() {
     lateinit var feedback: MethodChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        FlutterMain.startInitialization(this)
         super.onCreate(savedInstanceState)
         GeneratedPluginRegistrant.registerWith(this)
         

@@ -7,6 +7,7 @@ import beaver from '../../assets/beaver1.svg';
 import {OverviewProps} from "./Overview";
 import {S} from "../../i18n/S";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const OverviewDefault: React.FC<OverviewProps> = (props) => {

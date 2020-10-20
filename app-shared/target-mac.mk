@@ -18,6 +18,10 @@
 # }}}
 
 
-generated := macos/Flutter/GeneratedPluginRegistrant%swift
+assemble := macos
+platform := darwin-x64
 
-include shared/target-apl.mk
+generated := $(pwd)/gui/macos/Flutter/GeneratedPluginRegistrant%swift
+
+framework := FlutterMacOS
+include $(pwd)/target-apl.mk

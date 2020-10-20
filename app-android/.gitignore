@@ -1,5 +1,4 @@
 /build
-/.dart_tool
 /flutter_*.log
 /.gradle
 /out-*

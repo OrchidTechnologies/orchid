@@ -1,4 +1,4 @@
-import {Address} from "./orchid-types";
+import {EthAddress} from "./orchid-types";
 import {OrchidContracts} from "./orchid-eth-contracts";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
@@ -6,7 +6,7 @@ const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 export class EtherscanIO {
   apiKey: string = "73BIQR3R1ER56V53PSSAPNUTQUFVHCVVVH";
   api_url: string = 'https://api.etherscan.io/api';
-  lotteryContractAddress: Address = OrchidContracts.lottery_addr();
+  lotteryContractAddress: EthAddress = OrchidContracts.lottery_addr();
   lotteryFundMethodHash: string = OrchidContracts.lottery_push_method_hash;
   startBlock: number = 872000;
 
@@ -62,7 +62,7 @@ export class EtherscanIO {
     ]
     }
   */
-  async getEvents(funder: Address, signer: Address): Promise<LotteryPotUpdateEvent[]> {
+  async getEvents(funder: EthAddress, signer: EthAddress): Promise<LotteryPotUpdateEvent[]> {
     let url = new URL(this.api_url);
     let params: { [index: string]: string } = {
       'module': 'logs',
@@ -139,7 +139,7 @@ export class EtherscanIO {
   }
 
   // Pad a 40 character address to 64 characters
-  static pad64Chars(address: Address) {
+  static pad64Chars(address: EthAddress) {
     if (address.startsWith("0x")) {
       address = address.substring(2);
     }

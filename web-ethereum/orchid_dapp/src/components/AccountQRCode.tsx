@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import {Button} from "react-bootstrap";
 import {copyTextToClipboard} from "../util/util";
 import {S} from "../i18n/S";
+import './AccountQRCode.css'
 
 const QRCode = require('qrcode.react');
 
@@ -19,19 +20,19 @@ export const AccountQRCode: React.FC<{
 
   return (
     <div>
-      <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.accountQRCode}</label>
       <div style={{
         display: "block",
         position: "relative",
         height: 150,
         textAlign: "center",
         marginTop: "16px",
-        marginBottom: "0px"
       }}>
-        <QRCode size={150} includeMargin={true} value={props.data || ""}/>
+        <div className={'qrcode'}>
+          <QRCode size={150} includeMargin={true} value={props.data || ""}/>
+        </div>
         <div style={{
           position: "absolute",
-          width: "100%",
+          width: '100%',
           height: 80,
           top: 35,
           left: 0,
@@ -45,14 +46,23 @@ export const AccountQRCode: React.FC<{
         >{S.revealQR}
         </div>
       </div>
-      <Button style={{
-        display: "block",
-        position: "relative",
-        marginTop: "16px",
-        marginLeft: "auto", marginRight: "auto"
-      }} variant="light" onClick={() => {
+
+      <Button
+        className={'link-button-style'}
+        style={{
+          textDecoration: 'none',
+          display: "block",
+          position: "relative",
+          marginTop: "8px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          backgroundColor: 'transparent',
+          borderStyle: 'none',
+          padding: 0,
+        }} variant="light" onClick={() => {
         copyCode();
-      }}>{S.copyCode}</Button>
+      }}>{"Copy"}</Button>
+
     </div>
   );
 };

@@ -172,23 +172,28 @@ task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string
     const auto address([&]() {
         std::vector<std::string> addresses;
         boost::split(addresses, tree.get<std::string>("Interface.Address"), boost::is_any_of(","));
-        for (const auto &address : addresses) {
+        for (auto &address : addresses) {
+            while (!address.empty() && address[0] == ' ')
+                address = address.substr(1);
+            while (!address.empty() && address[address.size() - 1] == ' ')
+                address = address.substr(0, address.size() - 1);
             const auto slash(address.find('/'));
             orc_assert(slash != std::string::npos);
             Host host(address.substr(0, slash));
-            if (!host.v4())
-                continue;
-            const auto bits(To(address.substr(slash + 1)));
-            // XXX: you are allowed to pass a subset
-            if (bits != 32)
-                continue;
-            return host;
+            if (host.v4())
+                return host;
         }
-        orc_assert_(false, "no IPv4/32 in Interface.Address");
+        orc_assert_(false, "no IPv4 in Interface.Address");
     }());
 
+    const auto endpoint(tree.get<std::string>("Peer.Endpoint"));
+    const auto colon(endpoint.find(':'));
+    orc_assert(colon != std::string::npos);
+    const auto endpoints(co_await origin->Resolve(endpoint.substr(0, colon), endpoint.substr(colon + 1)));
+    orc_assert(!endpoints.empty());
+
     auto &boring(sunk.Wire<BufferSink<Boring>>(origin, local, address, tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
-    co_await origin->Associate(boring, Socket(tree.get<std::string>("Peer.Endpoint")));
+    co_await origin->Associate(boring, endpoints[0]);
     boring.Open();
 }
 

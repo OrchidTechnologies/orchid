@@ -3,31 +3,45 @@ import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OXT} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
-import {formatCurrency} from "../util/util";
+import {CancellablePromise, formatCurrency, makeCancelable} from "../util/util";
 import {Orchid} from "../api/orchid";
 import {AccountRecommendation} from "./MarketConditionsPanel";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const LowFundsPanel: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [pot, setPot] = useState<LotteryPot>();
-  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation|null>(null);
+  const [pot, setPot] = useState<LotteryPot|null>();
+  const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let potSubscription = api.lotteryPot_wait.subscribe(pot => {
+    let potSubscription = api.lotteryPot.subscribe(pot => {
       setPot(pot)
     });
+
+    let getRecommendation: CancellablePromise<AccountRecommendation> =
+      makeCancelable(Orchid.minViableAccountComposition());
     (async () => {
-      setAccountRecommendation(await Orchid.minViableAccountComposition());
+      try {
+        setAccountRecommendation(await getRecommendation.promise);
+      } catch (err) {
+        if (err.isCanceled) {
+          //console.log("recommendation cancelled")
+        } else {
+          //console.log("unable to fetch min viable account info", err)
+        }
+      }
     })();
+
     return () => {
+      getRecommendation.cancel()
       potSubscription.unsubscribe();
     };
   }, []);
 
-  if (pot === undefined || accountRecommendation == null) {
+  if (!pot || accountRecommendation == null) {
     return <div/>
   }
 
@@ -51,15 +65,15 @@ export const LowFundsPanel: React.FC = () => {
   let text;
 
   if (balanceLow) {
-    title="Balance too low";
+    title = "Balance too low";
     text = `Your balance of ${balanceStr} is too low. Add at least ${addBalanceStr} to your balance for the Orchid app to function.`;
   }
   if (depositLow) {
-    title="Deposit too low";
+    title = "Deposit too low";
     text = `Your deposit of ${depositStr} is too low. Add at least ${addDepositStr} to your deposit for the Orchid app to function.`;
   }
   if (depositLow && balanceLow) {
-    title="Balance & deposit too low";
+    title = "Balance & deposit too low";
     text = `Your deposit and balance are too low.  ` +
       `Add at least ${addDepositStr} to your deposit and ${addBalanceStr} to your balance for the Orchid app to function.`;
   }
@@ -68,7 +82,7 @@ export const LowFundsPanel: React.FC = () => {
     <svg width="21" height="21" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
       <mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="1" y="1" width="18"
             height="18">
-        <path fill-rule="evenodd" clip-rule="evenodd"
+        <path fillRule="evenodd" clipRule="evenodd"
               d="M10 1.66669C5.40002 1.66669 1.66669 5.40002 1.66669 10C1.66669 14.6 5.40002 18.3334 10 18.3334C14.6 18.3334 18.3334 14.6 18.3334 10C18.3334 5.40002 14.6 1.66669 10 1.66669ZM10 10.8334C9.54169 10.8334 9.16669 10.4584 9.16669 10V6.66669C9.16669 6.20835 9.54169 5.83335 10 5.83335C10.4584 5.83335 10.8334 6.20835 10.8334 6.66669V10C10.8334 10.4584 10.4584 10.8334 10 10.8334ZM9.16669 12.5V14.1667H10.8334V12.5H9.16669Z"
               fill="white"/>
       </mask>

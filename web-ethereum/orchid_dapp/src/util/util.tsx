@@ -37,13 +37,19 @@ export function getBoolParam(name: string, defaultValue: boolean): boolean {
 
 export function getEthAddressParam(name: string, defaultValue: string): string {
   let addr = getParam(name);
+
+  if (addr == null) {
+    return defaultValue;
+  }
+
   // Some servers won't let you put a big hex string in the url
-  if (addr != null && !addr.startsWith("0x")) {
+  if (!addr.startsWith("0x")) {
     addr = "0x" + addr;
   }
-  if (addr != null && isEthAddress(addr)) {
+  if (isEthAddress(addr)) {
     return addr;
   } else {
+    console.log("Error: Invalid ETH address: ", addr)
     return defaultValue;
   }
 }
@@ -90,12 +96,14 @@ export function camelCase(str: string): string {
   })
 }
 
-export const Divider: FC<{ noGutters?: boolean }> = (props) => {
+export const Divider: FC<{ noGutters?: boolean, marginTop?: number, marginBottom?: number }> = (props) => {
   return <Row
-    className={props.noGutters ? "no-gutters" : ""}
+    className={"divider " + (props.noGutters ? "no-gutters" : "")}
     style={{
       height: '1px',
       backgroundColor: 'lightGrey',
+      marginTop: props.marginTop,
+      marginBottom: props.marginBottom,
     }}/>
 };
 
@@ -183,4 +191,27 @@ export function useInterval(callback: EffectCallback, delay: number) {
       return () => clearInterval(id);
     }
   }, [delay]);
+}
+
+export interface CancellablePromise<T> {
+  promise: Promise<T>
+  cancel(): void
+}
+
+export function makeCancelable<T>(promise: Promise<T>): CancellablePromise<T> {
+  let hasCanceled_ = false;
+
+  const wrappedPromise = new Promise<T>((resolve, reject) => {
+    promise.then(
+      val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
+      error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
+    );
+  });
+
+  return {
+    promise: wrappedPromise,
+    cancel() {
+      hasCanceled_ = true;
+    },
+  } as CancellablePromise<T>;
 }

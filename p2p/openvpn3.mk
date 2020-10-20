@@ -20,7 +20,17 @@ cflags += -DUSE_OPENSSL
 cflags += -DOPENVPN_FORCE_TUN_NULL
 cflags += -DUSE_TUN_BUILDER
 
+ifeq (,)
+ifeq ($(target),ios)
+source += $(pwd)/ovpncli.mm
+else
+source += $(pwd)/openvpn3/client/ovpncli.cpp
+endif
+else
 source += $(wildcard $(pwd)/openvpn3/client/*.cpp)
+cflags/$(pwd)/openvpn3/ += -ObjC++
+endif
+
 cflags += -I$(pwd)/openvpn3
 cflags += -I$(pwd)/openvpn3/client
 
@@ -33,7 +43,3 @@ cflags/$(pwd)/openvpn3/ += -Wno-deprecated-enum-enum-conversion
 cflags/$(pwd)/openvpn3/ += -Wno-unused-private-field
 cflags/$(pwd)/openvpn3/ += -Wno-unused-variable
 cflags/$(pwd)/openvpn3/ += -Wno-vexing-parse
-
-ifeq ($(target),ios)
-cflags/$(pwd)/openvpn3/ += -ObjC++
-endif

@@ -182,13 +182,6 @@ $(eval $(call parser,wiretap/busmaster_,scanner,parser))
 $(eval $(call parser,wiretap/candump_,scanner,parser))
 
 
-# XXX: this is currently shared by libiconv and libgpg-error; it might be sharable by more stuff
-define _
-$(output)/$(1)/usr/include/%.h $(output)/$(1)/usr/lib/lib%.a: $(output)/$(1)/$(pwd)/lib%/Makefile $(sysroot)
-	$(MAKE) -C $$(dir $$<) install
-endef
-$(each)
-
 # libgcrypt {{{
 w_libgcrypt := 
 w_libgcrypt += --disable-doc
@@ -235,54 +228,16 @@ endif
 
 linked += usr/lib/libgpg-error.a
 header += @/usr/include/gpg-error.h
+
+define _
+$(output)/$(1)/usr/include/%.h $(output)/$(1)/usr/lib/lib%.a: $(output)/$(1)/$(pwd)/lib%/Makefile $(sysroot)
+	$(MAKE) -C $$(dir $$<) install
+endef
+$(each)
 # }}}
-# glib {{{
-w_glib := 
-w_glib += -Dlibmount=false
-w_glib += -Diconv=gnu
 
-m_glib := 
+$(call include,glib/target.mk)
 
-m_glib += sed -i -e ' \
-    s@-Werror=format=2@-Werror=format@g; \
-' build.ninja;
-
-m_glib += sed -i -e ' \
-    s@^G_BEGIN_DECLS$$@\#define G_INTL_STATIC_COMPILATION 1'$$'\\\n''G_BEGIN_DECLS@; \
-' glib/glibconfig.h;
-
-glib := 
-glib += gmodule/libgmodule-2.0.a
-glib += glib/libglib-2.0.a
-ifneq ($(target),lnx)
-glib += subprojects/proxy-libintl/libintl.a
-endif
-temp := $(patsubst %,$(pwd)/glib/%,$(glib))
-
-$(call depend,$(pwd)/glib/build.ninja,@/usr/include/iconv.h @/usr/lib/libiconv.a)
-$(call depend,$(pwd)/glib/glib/glibconfig.h,@/$(pwd)/glib/build.ninja)
-
-$(subst @,%,$(patsubst %,$(output)/@/%,$(temp))): $(output)/%/$(pwd)/glib/build.ninja
-	cd $(dir $<) && ninja $(glib) && touch $(glib)
-
-linked += $(temp)
-
-header += @/$(pwd)/glib/build.ninja
-cflags += -I@/$(pwd)/glib/glib
-
-cflags += -I$(pwd)/glib
-cflags += -I$(pwd)/glib/glib
-cflags += -I$(pwd)/glib/gmodule
-# }}}
-# libiconv {{{
-w_libiconv := LDFLAGS="$(wflags)"
-
-export GNULIB_SRCDIR := $(CURDIR)/$(pwd)/gnulib
-export GNULIB_TOOL := $(GNULIB_SRCDIR)/gnulib-tool
-
-linked += usr/lib/libiconv.a
-header += @/usr/include/iconv.h
-# }}}
 # c-ares {{{
 $(output)/%/$(pwd)/c-ares/ares_build.h: $(output)/%/$(pwd)/c-ares/Makefile
 	touch $@

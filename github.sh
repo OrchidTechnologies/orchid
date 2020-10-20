@@ -11,7 +11,7 @@ make -j5 app-and cli-{lnx,mac} srv-{lnx,mac,win}
 tag=$(git describe --tags --match="v*" --exact-match)
 ver=${tag#v}
 
-ish=$(git rev-parse "${tag}")
+ish=$(git rev-parse "${tag}^{commit}")
 
 rel=$(curl -su "${usr}" --data-raw '{
     "tag_name": "'"${tag}"'",

@@ -4,7 +4,7 @@ import {errorClass, parseFloatSafe, parseIntSafe} from "../util/util";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
-import {Address} from "../api/orchid-types";
+import {EthAddress} from "../api/orchid-types";
 import {GasPricingStrategy, isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
 import {S} from "../i18n/S";
@@ -21,7 +21,7 @@ export const StakeFunds: FC = () => {
   const [addStakeAmount, setAddStakeAmount] = useState<number | null>(null);
   const [addStakeAmountError, setAddStakeAmountError] = useState(true);
 
-  const [stakeeAddress, setStakeeAddress] = useState<Address | null>(null);
+  const [stakeeAddress, setStakeeAddress] = useState<EthAddress | null>(null);
   const [stakeeAddressError, setStakeeAddressError] = useState(true);
 
   const [stakeDelaySeconds, setStakeDelaySeconds] = useState<number | null>(defaultStakeDelay);
@@ -33,7 +33,7 @@ export const StakeFunds: FC = () => {
   useEffect(() => {
     let api = OrchidAPI.shared();
     let walletSubscription = api.wallet_wait.subscribe(wallet => {
-      console.log("add funds got wallet: ", wallet);
+      //console.log("add funds got wallet: ", wallet);
       setWalletBalance(wallet.oxtBalance);
     });
     return () => {

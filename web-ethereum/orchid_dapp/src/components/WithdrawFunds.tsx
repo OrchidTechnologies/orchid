@@ -6,9 +6,10 @@ import {
 import {errorClass, parseFloatSafe} from "../util/util";
 import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
-import {Address} from "../api/orchid-types";
+import {EthAddress} from "../api/orchid-types";
 import {Col, Container, Row} from "react-bootstrap";
 import {S} from "../i18n/S";
+import {Subscription} from "rxjs";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -16,25 +17,33 @@ export class WithdrawFunds extends Component<any, any> {
   txResult = React.createRef<TransactionProgress>();
 
   state = {
-    potBalance: null  as BigInt | null,
+    potBalance: null as BigInt | null,
     potUnlocked: null as boolean | null,
     withdrawAmount: null as number | null,
     withdrawAll: false,
-    sendToAddress: null as Address | null,
+    sendToAddress: null as EthAddress | null,
     amountError: true,
     addressError: true,
     tx: new TransactionStatus()
   };
   amountInput = React.createRef<HTMLInputElement>();
+  subscriptions: Subscription [] = [];
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
-    api.lotteryPot_wait.subscribe(pot => {
-      this.setState({
-        potBalance: pot.balance,
-        potUnlocked: pot.isUnlocked()
-      })
-    });
+    this.subscriptions.push(
+      api.lotteryPot_wait.subscribe(pot => {
+        this.setState({
+          potBalance: pot.balance,
+          potUnlocked: pot.isUnlocked()
+        })
+      }));
+  }
+
+  componentWillUnmount(): void {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe()
+    })
   }
 
   async submitWithdrawFunds() {
@@ -46,8 +55,8 @@ export class WithdrawFunds extends Component<any, any> {
     const targetAddress = this.state.sendToAddress;
     const potBalance = this.state.potBalance;
 
-    if (wallet === undefined
-      || signer === undefined
+    if (!wallet
+      || !signer
       || (withdrawAmount == null && !withdrawAll)
       || withdrawAll == null
       || targetAddress == null
@@ -114,7 +123,8 @@ export class WithdrawFunds extends Component<any, any> {
 
         <Row className="form-row">
           <Col>
-            <label>{S.withdraw}<span className={errorClass(this.state.amountError)}> *</span></label>
+            <label>{S.withdraw}<span
+              className={errorClass(this.state.amountError)}> *</span></label>
           </Col>
           <Col>
             <input

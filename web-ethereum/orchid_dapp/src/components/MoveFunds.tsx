@@ -6,6 +6,7 @@ import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Container} from "react-bootstrap";
 import {S} from "../i18n/S";
+import {Subscription} from "rxjs";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -17,19 +18,27 @@ export class MoveFunds extends Component {
     potBalance: null as BigInt | null,
     tx: new TransactionStatus()
   };
+  subscriptions: Subscription [] = [];
 
   componentDidMount(): void {
     let api = OrchidAPI.shared();
-    api.lotteryPot_wait.subscribe(pot => {
-      this.setState({potBalance: pot.balance});
-    });
+    this.subscriptions.push(
+      api.lotteryPot_wait.subscribe(pot => {
+        this.setState({potBalance: pot.balance});
+      }));
+  }
+
+  componentWillUnmount(): void {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe()
+    })
   }
 
   async submitMoveFunds() {
     let api = OrchidAPI.shared();
     let wallet = api.wallet.value;
     let signer = api.signer.value;
-    if (wallet === undefined || signer === undefined
+    if (!wallet || !signer
       || this.state.moveAmount == null
       || this.state.potBalance == null
     ) {

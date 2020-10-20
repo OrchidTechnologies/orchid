@@ -1,7 +1,7 @@
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export type Address = string;
+export type EthAddress = string;
 export type Secret = string;
 export type TransactionId = string;
 
@@ -56,12 +56,13 @@ class ScalarNumberValue {
 class ScalarBigIntValue {
   value: BigInt;
 
-  constructor(value: BigInt) {
+  public constructor(value: BigInt) {
     this.value = value
   }
 }
 
 export class OXT extends ScalarNumberValue {
+  static zero: OXT = OXT.fromNumber(0);
 
   public multiply(other: number): OXT {
     return new OXT(this.value * other);
@@ -83,6 +84,7 @@ export class OXT extends ScalarNumberValue {
     return this.value < other.value;
   }
 
+  // TODO: update to KEIKI
   static fromKeiki(keiki: BigInt): OXT {
     // Note: native, not integer division here
     return new OXT(BigInt(keiki) / 1e18);
@@ -99,6 +101,9 @@ export class OXT extends ScalarNumberValue {
 
 export function min(a: OXT, b: OXT): OXT {
   return new OXT(Math.min(a.value, b.value));
+}
+export function max(a: OXT, b: OXT): OXT {
+  return new OXT(Math.max(a.value, b.value));
 }
 
 // TODO: Work in progress migrating from the typedef
@@ -122,6 +127,14 @@ export class Keiki extends ScalarBigIntValue {
 }
 
 export class ETH extends ScalarNumberValue {
+  static zero: ETH = new ETH(0);
+
+  public static fromWei(wei: BigInt) {
+    return new ETH(BigInt(wei) / 1e18);
+  }
+  public lessThan(other: ETH): boolean {
+    return this.value < other.value;
+  }
 }
 
 export class GWEI extends ScalarNumberValue {
@@ -158,4 +171,7 @@ export class GWEI extends ScalarNumberValue {
 }
 
 export class USD extends ScalarNumberValue {
+  public lessThan(other: USD): boolean {
+    return this.value < other.value;
+  }
 }

@@ -2,13 +2,14 @@
 // Orchid Ethereum Contracts Lib
 //
 import {OrchidContracts} from "./orchid-eth-contracts";
-import {Address, GWEI, Keiki, KEIKI, OXT, Secret} from "./orchid-types";
+import {EthAddress, ETH, GWEI, Keiki, KEIKI, OXT, Secret} from "./orchid-types";
 import Web3 from "web3";
 import {PromiEvent} from "web3-core";
-import {OrchidAPI, WalletStatus} from "./orchid-api";
+import {OrchidAPI} from "./orchid-api";
 import {EthereumTransaction, OrchidTransaction, OrchidTransactionType} from "./orchid-tx";
 import "../i18n/i18n_util";
 import {getParam, parseFloatSafe, removeHexPrefix} from "../util/util";
+import {OrchidWeb3API} from "./orchid-eth-web3";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 const ORCHID_SIGNER_KEYS_WALLET = "orchid-signer-keys";
@@ -18,13 +19,11 @@ declare global {
     ethereum: any
   }
 }
-export let web3: Web3;
-
 // TODO: Use the Wei and Keiki types here
 /// A Funder address containing ETH to perform contract transactions  and possibly
 /// OXT to fund a Lottery Pot.
 export class Wallet {
-  public address: Address;
+  public address: EthAddress;
   public ethBalance: BigInt; // Wei
   public oxtBalance: BigInt; // Keiki (1e18 per OXT)
 
@@ -41,11 +40,11 @@ export class Signer {
   // The wallet with which this signer is associated.
   public wallet: Wallet;
   // The signer public address.
-  public address: Address;
+  public address: EthAddress;
   // The signer private key, if available.
   public secret: Secret | undefined;
 
-  constructor(wallet: Wallet, address: Address, secret?: Secret) {
+  constructor(wallet: Wallet, address: EthAddress, secret?: Secret) {
     this.wallet = wallet;
     this.address = address;
     this.secret = removeHexPrefix(secret);
@@ -96,72 +95,25 @@ export class LotteryPot {
 
 export class OrchidEthereumAPI {
 
-  /// Init the Web3 environment and the Orchid contracts
-  orchidInitEthereum(providerUpdateCallback?: (props: any) => void): Promise<WalletStatus> {
-    return new Promise(function (resolve, reject) {
-      (async () => {
-        if (window.ethereum) {
-          window.ethereum.autoRefreshOnNetworkChange = false;
-          web3 = new Web3(window.ethereum);
-          try {
-            await window.ethereum.enable();
-          } catch (error) {
-            resolve(WalletStatus.NotConnected);
-            console.log("User denied account access...");
-          }
-        } else if (web3) {
-          console.log("Legacy dapp browser.");
-          web3 = new Web3(web3.currentProvider);
-        } else {
-          console.log('Non-Ethereum browser.');
-          resolve(WalletStatus.NoWallet);
-          return;
-        }
+  provider: OrchidWeb3API = new OrchidWeb3API()
 
-        let networkNumber = await web3.eth.net.getId();
-        console.log("network number: ", networkNumber);
-        if (networkNumber !== 1) {
-          resolve(WalletStatus.WrongNetwork);
-        }
-
-        try {
-          if (providerUpdateCallback) {
-            console.log("registering account listener");
-            window.ethereum.on('accountsChanged', function (props: any) {
-              console.log("web3 accounts changed")
-              providerUpdateCallback && providerUpdateCallback(props);
-            })
-            window.ethereum.on('networkChanged', function (props: any) {
-              console.log("web3 network changed")
-              providerUpdateCallback && providerUpdateCallback(props);
-            })
-          }
-        } catch (err) {
-          console.log("error registering listener: ", err)
-        }
-
-        try {
-          OrchidContracts.token = new web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
-          OrchidContracts.lottery = new web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
-          OrchidContracts.directory = new web3.eth.Contract(OrchidContracts.directory_abi, OrchidContracts.directory_addr());
-        } catch (err) {
-          console.log("Error constructing contracts");
-          resolve(WalletStatus.Error);
-        }
-
-        (window as any).web3 = web3; // replace any injected version
-        resolve(WalletStatus.Connected);
-      })();
-    });
+  get web3(): Web3 {
+    if (this.provider.web3) {
+      return this.provider.web3
+    }
+    throw Error("Provider web3 unavailable.");
   }
 
   /// Get the user's ETH wallet balance and Keiki token balance (1e18 per OXT).
   async orchidGetWallet(): Promise<Wallet> {
-    const accounts = await web3.eth.getAccounts();
+    const accounts = await this.web3.eth.getAccounts();
+    if (accounts.length === 0) {
+      throw Error("no accounts");
+    }
     const wallet = new Wallet();
     wallet.address = accounts[0];
     try {
-      wallet.ethBalance = BigInt(await web3.eth.getBalance(accounts[0]));
+      wallet.ethBalance = BigInt(await this.web3.eth.getBalance(accounts[0]));
     } catch (err) {
       console.log("Error getting eth balance", err);
       throw err;
@@ -192,7 +144,7 @@ export class OrchidEthereumAPI {
 
     // Add the signer keys for any signers created in this wallet.
     let signerKeys = this.orchidGetSignerKeys() as EthereumKey [];
-    return signerAddresses.map((address: Address) => {
+    return signerAddresses.map((address: EthAddress) => {
       let found = Array.from(signerKeys).find(key => key.address === address);
       let secret = found === undefined ? undefined : found.privateKey;
       return new Signer(wallet, address, secret);
@@ -201,14 +153,14 @@ export class OrchidEthereumAPI {
 
   /// Get the Orchid signer keys wallet in local storage.
   orchidGetSignerKeys(): Web3Wallet {
-    let keys = web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
+    let keys = this.web3.eth.accounts.wallet.load("", ORCHID_SIGNER_KEYS_WALLET);
     return keys;
   }
 
   /// Create a new signer keypair and save it in the Orchid signer keys wallet in local storage.
   orchidCreateSigner(wallet: Wallet): Signer {
     let signersWallet = this.orchidGetSignerKeys();
-    let signerAccount = web3.eth.accounts.create();
+    let signerAccount = this.web3.eth.accounts.create();
     signersWallet.add(signerAccount);
     signersWallet.save("", ORCHID_SIGNER_KEYS_WALLET);
     return new Signer(wallet, signerAccount.address, signerAccount.privateKey);
@@ -218,7 +170,7 @@ export class OrchidEthereumAPI {
   /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified lottery pot address.
   /// If the total exceeds walletBalance the amount value is automatically reduced.
   async orchidAddFunds(
-    funder: Address, signer: Address, amount: BigInt, escrow: BigInt, walletBalance: KEIKI, gasPrice?: number
+    funder: EthAddress, signer: EthAddress, amount: BigInt, escrow: BigInt, walletBalance: KEIKI, gasPrice?: number
   ): Promise<string> {
     //return fakeTx(false);
     const amount_value = BigInt(amount); // Force our polyfill BigInt?
@@ -273,7 +225,7 @@ export class OrchidEthereumAPI {
           .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
-            if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
+            if (confirmationNumber >= EthereumTransaction.requiredConfirmations()) {
               const hash = receipt['transactionHash'];
               resolve(hash);
             } else {
@@ -302,7 +254,7 @@ export class OrchidEthereumAPI {
   /// Transfer the amount in Keiki (1e18 per OXT) from the user to the specified directory address.
   /// Amount won't exceed walletBalance.
   async orchidStakeFunds(
-    funder: Address, stakee: Address, amount: BigInt, walletBalance: KEIKI, delay: BigInt, gasPrice?: number
+    funder: EthAddress, stakee: EthAddress, amount: BigInt, walletBalance: KEIKI, delay: BigInt, gasPrice?: number
   ): Promise<string> {
     const amount_value = BigInt.min(amount, walletBalance);
     const delay_value = BigInt(delay);
@@ -350,7 +302,7 @@ export class OrchidEthereumAPI {
           .on('confirmation', (confirmationNumber: any, receipt: any) => {
             console.log("Stake confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
-            if (confirmationNumber >= EthereumTransaction.requiredConfirmations) {
+            if (confirmationNumber >= EthereumTransaction.requiredConfirmations()) {
               const hash = receipt['transactionHash'];
               resolve(hash);
             } else {
@@ -376,7 +328,7 @@ export class OrchidEthereumAPI {
     return doFundTx(approvalHash);
   }
 
-  async orchidGetStake(stakee: Address): Promise<BigInt> {
+  async orchidGetStake(stakee: EthAddress): Promise<BigInt> {
     console.log("orchid get stake");
     let stake = await OrchidContracts.directory.methods.heft(stakee).call();
     return stake || BigInt(0);
@@ -408,7 +360,7 @@ export class OrchidEthereumAPI {
 
   /// Move `amount` from balance to escrow, not exceeding `potBalance`.
   async orchidMoveFundsToEscrow(
-    funder: Address, signer: Address, amount: BigInt, potBalance: BigInt
+    funder: EthAddress, signer: EthAddress, amount: BigInt, potBalance: BigInt
   ): Promise<string> {
     console.log(`moveFunds amount: ${amount.toString()}`);
 
@@ -425,7 +377,7 @@ export class OrchidEthereumAPI {
 
   /// Withdraw `amount` from the lottery pot to the specified eth address, not exceeding `potBalance`.
   async orchidWithdrawFunds(
-    funder: Address, signer: Address, targetAddress: Address, amount: BigInt, potBalance: BigInt
+    funder: EthAddress, signer: EthAddress, targetAddress: EthAddress, amount: BigInt, potBalance: BigInt
   ): Promise<string> {
     // pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external {
     let autolock = true;
@@ -444,7 +396,7 @@ export class OrchidEthereumAPI {
   }
 
   /// Pull all funds and escrow, subject to lock time.
-  async orchidWithdrawFundsAndEscrow(funder: Address, signer: Address, targetAddress: Address): Promise<string> {
+  async orchidWithdrawFundsAndEscrow(funder: EthAddress, signer: EthAddress, targetAddress: EthAddress): Promise<string> {
     console.log("withdrawFundsAndEscrow");
     let autolock = true;
     return this.evalOrchidTx(
@@ -456,7 +408,7 @@ export class OrchidEthereumAPI {
   }
 
   /// Clear the unlock / warn time period.
-  async orchidLock(funder: Address, signer: Address): Promise<string> {
+  async orchidLock(funder: EthAddress, signer: EthAddress): Promise<string> {
     return this.evalOrchidTx(
       OrchidContracts.lottery.methods.lock(signer).send({
         from: funder,
@@ -466,7 +418,7 @@ export class OrchidEthereumAPI {
   }
 
   /// Start the unlock / warn time period (one day in the future).
-  async orchidUnlock(funder: Address, signer: Address): Promise<string> {
+  async orchidUnlock(funder: EthAddress, signer: EthAddress): Promise<string> {
     return this.evalOrchidTx(
       OrchidContracts.lottery.methods.warn(signer).send({
         from: funder,
@@ -495,7 +447,7 @@ export class OrchidEthereumAPI {
     const escrow: BigInt = overrideEscrow || result[1];
     const unlock: number = Number(result[2]);
     const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
-    console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
+    //console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
     return new LotteryPot(signer, balance, escrow, unlockDate);
   }
 
@@ -512,7 +464,7 @@ export class OrchidEthereumAPI {
 
   // The current median gas price for the past few blocks
   async getGasPrice(): Promise<GWEI> {
-    return GWEI.fromWeiString(await web3.eth.getGasPrice())
+    return GWEI.fromWeiString(await this.web3.eth.getGasPrice())
   }
 }
 
@@ -566,15 +518,28 @@ export class GasPricingStrategy {
   }
 }
 
+// TODO:
 export function isEthAddress(str: string): boolean {
-  return web3.utils.isAddress(str);
+  return Web3.utils.isAddress(str)
 }
 
 /// Convert a keiki value to an OXT String rounded to the specified
 /// number of decimal places.
-export function keikiToOxtString(keiki: BigInt, decimals: number) {
+export function keikiToOxtString(keiki: BigInt | null, decimals: number = 2, ifNull: string = "...") {
+  if (keiki === null) {
+    return ifNull
+  }
   decimals = Math.round(decimals);
   let val: number = new Keiki(keiki).toOXT().value;
+  return val.toFixedLocalized(decimals);
+}
+
+export function weiToETHString(wei: BigInt | null, decimals: number = 2, ifNull: string = "...") {
+  if (wei === null) {
+    return ifNull
+  }
+  decimals = Math.round(decimals);
+  let val: number = ETH.fromWei(wei).value;
   return val.toFixedLocalized(decimals);
 }
 

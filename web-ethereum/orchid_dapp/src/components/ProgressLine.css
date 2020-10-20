@@ -2,8 +2,8 @@
 
 .progressVisualFull {
   display: flex;
-  height: 6px;
-  margin: 20px 0;
+  height: 8px;
+  margin: 0;
 }
 
 .progressVisualPart {

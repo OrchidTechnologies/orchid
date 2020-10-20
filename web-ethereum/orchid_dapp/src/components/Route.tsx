@@ -2,13 +2,14 @@ import React from "react";
 import {camelCase} from "../util/util";
 
 export enum Route {
-  Overview, Balances, AddFunds, CreateAccount, WithdrawFunds, Transactions,
+  None, Overview, Info, AddFunds, CreateAccount, WithdrawFunds, Transactions,
   MoveFunds, LockFunds, DebugPanel, StakeFundsTest
 }
 
 export const RouteContext = React.createContext({
   route: Route.Overview,
-  setNavEnabled: (_: boolean) => { },
+  setNavEnabled: (_: boolean) => {
+  },
   setRoute: (_: Route) => {
   }
 });
@@ -25,8 +26,9 @@ export function pathToRoute(path: string | undefined): Route | undefined {
   }
   return undefined;
 }
+
 export function routeToPath(route: Route): string {
-  return "#"+camelCase(Route[route]);
+  return route === Route.None ? ' ' : "#" + camelCase(Route[route]);
 }
 
 export function setURL(route: Route) {

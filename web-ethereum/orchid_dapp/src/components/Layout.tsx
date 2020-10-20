@@ -4,7 +4,7 @@ import {
   Nav, Navbar, OverlayTrigger, Popover, Row
 } from "react-bootstrap";
 import {Transactions} from "./Transactions";
-import {AddFunds} from "./AddFunds";
+import {AddFunds, CreateAccount} from "./AddFunds";
 import {WithdrawFunds} from "./WithdrawFunds";
 import {Info} from "./Info";
 import {DebugPanel} from "./DebugPanel";
@@ -22,7 +22,7 @@ import addIconSelected from '../assets/add.svg'
 import withdrawIcon from '../assets/withdraw-outlined.svg'
 import withdrawIconSelected from '../assets/withdraw.svg'
 import {Divider, hashPath, Visibility} from "../util/util";
-import {OrchidAPI, WalletStatus} from "../api/orchid-api";
+import {OrchidAPI} from "../api/orchid-api";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
 import {Overview} from "./overview/Overview";
 import {TransactionPanel} from "./TransactionPanel";
@@ -32,15 +32,15 @@ import {StakeFunds} from "./StakeFunds";
 import {MarketConditionsPanel} from "./MarketConditionsPanel";
 import {LowFundsPanel} from "./LowFundsPanel";
 
-export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
+export const Layout: FC = () => {
 
-  const [route, setRoute] = useState(pathToRoute(hashPath()) || Route.Overview);
-  const [navEnabledState, setNavEnabledState] = useState(true);
+  const [route, setRoute] = useState<Route>(pathToRoute(hashPath()) ?? Route.None);
+  const [navEnabledState, /*setNavEnabledState*/] = useState(true);
   const [isNewUser, setIsNewUser] = useState(true);
   const [orchidTransactions, setOrchidTransactions] = useState<OrchidTransactionDetail[]>([]);
 
   const moreMenuItems = new Map<Route, string>([
-    [Route.Balances, S.info],
+    [Route.Info, S.info],
     [Route.Transactions, S.transactions],
     [Route.MoveFunds, S.moveFunds],
     [Route.LockFunds, S.lockUnlockFunds],
@@ -49,10 +49,10 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let newUserSub = api.newUser_wait.subscribe(isNew => {
-      // Disable general nav for new user with no accounts.
+    // new user defaults
+    let newUserSub = api.newUser.subscribe(isNew => {
+      console.log("user is new: ", isNew)
       setIsNewUser(isNew);
-      setNavEnabledState(!isNew);
     });
     let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
       setOrchidTransactions(txs);
@@ -61,7 +61,7 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
       newUserSub.unsubscribe();
       orchidTransactionsSub.unsubscribe();
     };
-  }, []);
+  }, [route]);
 
   let bannerTransactions = orchidTransactions.map(orcTx => {
     return (<Row key={orcTx.hash}><TransactionPanel tx={orcTx}/></Row>);
@@ -69,13 +69,13 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
 
   // @formatter:off
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
-  let navEnabled = navEnabledState && props.walletStatus === WalletStatus.Connected;
+  let navEnabled = true;
   return (
     <RouteContext.Provider value={{
       route: route,
       setNavEnabled: (enabled: boolean) => {
         console.log("set nav enabled: ", enabled);
-        setNavEnabledState(enabled)
+        //setNavEnabledState(enabled)
       },
       setRoute: (route:Route)=>{ setURL(route); setRoute(route); }
     }}>
@@ -85,8 +85,8 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
             <Header/>
             <Divider/>
             <Navbar className={navEnabled ? "" : "disabled-faded"}>
-              <NavButton route={Route.Overview} icon={homeIcon} iconSelected={homeIconSelected}>{S.overview}</NavButton>
-              <NavButton route={Route.AddFunds} icon={addIcon} iconSelected={addIconSelected}>{S.add}</NavButton>
+              <NavButton route={Route.Info} icon={homeIcon} iconSelected={homeIconSelected}>{S.overview}</NavButton>
+              <NavButton route={isNewUser ? Route.CreateAccount : Route.AddFunds} icon={addIcon} iconSelected={addIconSelected}>{S.add}</NavButton>
               <NavButton route={Route.WithdrawFunds} icon={withdrawIcon} iconSelected={withdrawIconSelected}>{S.withdraw}</NavButton>
                 <OverlayTrigger
                   rootClose={true} trigger="click" placement='bottom'
@@ -117,9 +117,9 @@ export const Layout: FC<{ walletStatus: WalletStatus }> = (props) => {
         <Row className="page-content">
           <Col>
             <Visibility visible={route === Route.Overview}><Overview/></Visibility>
-            <Visibility visible={route === Route.Balances}><Info/></Visibility>
-            <Visibility visible={route === Route.AddFunds || route === Route.CreateAccount}>
-              <AddFunds createAccount={route === Route.CreateAccount || isNewUser}/></Visibility>
+            <Visibility visible={route === Route.Info || (route === Route.None && !isNewUser)}><Info/></Visibility>
+            <Visibility visible={route === Route.CreateAccount || (route === Route.None && isNewUser)}><CreateAccount/></Visibility>
+            <Visibility visible={route === Route.AddFunds}><AddFunds/></Visibility>
             <Visibility visible={route === Route.StakeFundsTest}><StakeFunds/></Visibility>
             <Visibility visible={route === Route.WithdrawFunds}><WithdrawFunds/></Visibility>
             <Visibility visible={route === Route.Transactions}><Transactions/></Visibility>

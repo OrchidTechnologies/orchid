@@ -2,35 +2,52 @@ import React, {useContext, useEffect, useState} from "react";
 import logo from '../assets/name-logo.svg'
 import tokenLogo from '../assets/orchid-token-purple.svg'
 import {
-  Col, Container, ListGroup, ListGroupItem, OverlayTrigger, Popover, Row
+  Col,
+  Container,
+  ListGroup,
+  ListGroupItem,
+  OverlayTrigger,
+  Popover,
+  Row
 } from "react-bootstrap";
 import './Header.css';
 import {OrchidAPI} from "../api/orchid-api";
-import {Signer, keikiToOxtString} from "../api/orchid-eth";
-import {Visibility} from "../util/util";
+import {keikiToOxtString, Signer} from "../api/orchid-eth";
 import {Route, RouteContext} from "./Route";
 import {S} from "../i18n/S";
+import {Subscription} from "rxjs";
+import {WalletProviderState, WalletProviderStatus} from "../api/orchid-eth-web3";
 
 export const Header: React.FC = () => {
   const [oxtBalance, setOxtBalance] = useState<string | null>(null);
   const [newUser, setNewUser] = useState<boolean | undefined>(undefined);
-  const [signers, setSigners] = useState<Signer[] | undefined>(undefined);
+  const [signers, setSigners] = useState<Signer[] | null>(null);
+  const [walletStatus, setWalletStatus] = useState<WalletProviderStatus | undefined>(undefined);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
+    let subscriptions: Subscription [] = [];
     let api = OrchidAPI.shared();
-    let newSub = api.newUser_wait.subscribe(setNewUser);
-    let signersSub = api.signersAvailable_wait.subscribe(setSigners);
-    let lotSub = api.lotteryPot_wait.subscribe(pot => {
-      setOxtBalance(keikiToOxtString(pot.balance, 2));
-    });
+    subscriptions.push(api.newUser.subscribe(setNewUser));
+    subscriptions.push(api.signersAvailable.subscribe(setSigners));
+    subscriptions.push(api.lotteryPot.subscribe(pot => {
+      if (pot) {
+        setOxtBalance(keikiToOxtString(pot.balance, 2));
+      } else {
+        setOxtBalance(null);
+      }
+    }));
+    subscriptions.push(api.eth.provider.walletStatus.subscribe(setWalletStatus));
     return () => {
-      lotSub.unsubscribe();
-      signersSub.unsubscribe();
-      newSub.unsubscribe();
+      subscriptions.forEach(sub => {
+        sub.unsubscribe()
+      })
     };
   }, []);
 
-  let show = !newUser && !(oxtBalance == null);
+  let showAccountSelector = !newUser && !(oxtBalance == null);
+  //if (walletStatus) { console.log("header: wallet connection status: ", WalletProviderState[walletStatus.state], walletStatus.account); }
+  let showConnectButton = !showAccountSelector && walletStatus?.state === WalletProviderState.NotConnected
   return (
     <Container>
       <Row noGutters={true} style={{marginBottom: '14px'}}>
@@ -42,9 +59,30 @@ export const Header: React.FC = () => {
         </Col>
 
         {/*Account / Balance*/}
-        <Visibility visible={show}>
-          <AccountSelector signers={signers || []} oxtBalance={oxtBalance || ""}/>
-        </Visibility>
+        {
+          showAccountSelector ?
+            <AccountSelector signers={signers || []} oxtBalance={oxtBalance || ""}/> : null
+        }
+        {
+          showConnectButton ?
+            <div className={"submit-button"}>
+              <button
+                disabled={connecting}
+                onClick={(_) => {
+                  setConnecting(true);
+                  OrchidAPI.shared().eth.provider.connect().then();
+                }}>
+                <span>{"Connect Wallet"}</span>
+              </button>
+            </div>
+            : null
+        }
+        {
+          !(walletStatus?.isMainNet()) ?
+            <div style={{width: 200, fontStyle: 'italic', fontSize: 14, textAlign: 'right'}}>
+            Please connect to<br/>Ethereum Main Net</div> : null
+        }
+
       </Row>
     </Container>
   );
@@ -61,33 +99,36 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
           <Popover.Content onClick={() => document.body.click()}>
             <ListGroup variant="flush">
               {
-              props.signers.map((signer: Signer) => {
-                let len = signer.address.length;
-                let address = signer.address.substring(0,4)+"..."+signer.address.substring(len-5, len);
-                return <ListGroupItem
-                  onClick={() => {
-                    let api = OrchidAPI.shared();
-                    let wallet = api.wallet.value;
-                    if (!wallet) { return; }
-                    console.log("Account selector chose signer: ", signer.address);
-                    api.signer.next(new Signer(wallet, signer.address))
-                  }}
-                  key={signer.address}>
-                  <span style={{fontWeight: 'bold'}}>{S.account}: </span><span style={{fontFamily: 'Monospace'}}>{address}</span>
-                </ListGroupItem>
-              })
-            }
-            <ListGroupItem
-              onClick={() => {
-                setRoute(Route.CreateAccount);
-              }}
-              key={"new-item"}
+                props.signers.map((signer: Signer) => {
+                  let len = signer.address.length;
+                  let address = signer.address.substring(0, 4) + "..." + signer.address.substring(len - 5, len);
+                  return <ListGroupItem
+                    onClick={() => {
+                      let api = OrchidAPI.shared();
+                      let wallet = api.wallet.value;
+                      if (!wallet) {
+                        return;
+                      }
+                      console.log("Account selector chose signer: ", signer.address);
+                      api.signer.next(new Signer(wallet, signer.address))
+                    }}
+                    key={signer.address}>
+                    <span style={{fontWeight: 'bold'}}>{S.account}: </span><span
+                    style={{fontFamily: 'Monospace'}}>{address}</span>
+                  </ListGroupItem>
+                })
+              }
+              <ListGroupItem
+                onClick={() => {
+                  setRoute(Route.CreateAccount);
+                }}
+                key={"new-item"}
                 style={{
                   fontWeight: 'bold',
                   backgroundColor: 'transparent'
                 }}>
-              <span>{S.createNewAccount}</span>
-            </ListGroupItem>
+                <span>{S.createNewAccount}</span>
+              </ListGroupItem>
             </ListGroup>
           </Popover.Content>
         </Popover>

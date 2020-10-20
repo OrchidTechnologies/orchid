@@ -26,10 +26,6 @@ cflags += '-DORCHID_NAME="$(name)"'
 
 bundle := $(output)/Payload/$(name).app
 
-assemble := macos
-platform := darwin-x64
-framework := FlutterMacOS
-
 signed := 
 
 .PHONY: all
@@ -55,8 +51,6 @@ validate: $(output)/$(name).pkg
 upload: $(output)/$(name).pkg
 	xcrun altool --upload-app -f $< -t osx -u "$(aluser)" -p $(alpass)
 
-$(call include,vpn/target.mk)
-
 cflags += -I.
 
 frameworks := 
@@ -65,7 +59,10 @@ frameworks += AppKit
 frameworks += SafariServices
 frameworks += StoreKit
 
-swifts := $(wildcard *.swift) macos/Flutter/GeneratedPluginRegistrant.swift
+$(call include,vpn/target.mk)
+$(call include,shared/target-mac.mk)
+
+swifts := $(wildcard $(pwd)/*.swift) $(subst %,.,$(generated))
 
 local := 
 local += app.mm.o
@@ -79,7 +76,7 @@ $(output)/%.swift.o: $$(specific) $$(folder).swift $$(code) $(swifts)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	swift -frontend -sdk $(isysroot) -c -o $@ -primary-file $< $(filter-out $<,$(swifts)) -module-name $(name) -Fmacos/Flutter/ephemeral/.symlinks/flutter/darwin-x64 $(foreach pod,$(wildcard $(output)/Release/*/*.framework),-F$(dir $(pod)))
+	swift -frontend -sdk $(isysroot) -c -o $@ -primary-file $< $(filter-out ./$<,$(swifts)) -module-name $(name) -Fmacos/Flutter/ephemeral/.symlinks/flutter/darwin-x64 $(foreach pod,$(wildcard $(output)/Release/*/*.framework),-F$(dir $(pod)))
 	@touch $@
 
 define _
@@ -87,14 +84,12 @@ define _
 endef
 $(each)
 
-include shared/target-mac.mk
-
 
 
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/MacOS/$(name).VPN: $(patsubst %,$(output)/$(default)/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cxx) $(more/$(default)) $(wflags) -o $@ $^ $(lflags) -e _NSExtensionMain -framework JavaScriptCore
+	@$(cxx) $(more/$(default)) $(wflags) -fobjc-link-runtime -fapplication-extension -e _NSExtensionMain -o $@ $^ $(lflags) -framework JavaScriptCore
 	@openssl sha256 -r $@
 
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/Info.plist: info-vpn.plist.in
@@ -167,15 +162,9 @@ $(bundle)$(contents)$(signature): $(output)/ents-$(target)-app.plist $(signed)
 	@rm -rf $(dir $@)
 	$(call codesign,$(bundle),$<,$@)
 
-ifeq ($(filter nocompress,$(debug)),)
-zflags := -9
-else
-zflags := -0
-endif
-
 $(output)/$(name).zip: $(bundle)$(contents)$(signature)
 	@rm -f $@
-	cd $(output)/Payload; zip -rXy $(zflags) ../$(name).zip $(name).app
+	cd $(output)/Payload && zip -rXy $(zflags) ../$(name).zip $(name).app
 
 $(output)/$(name)-unsigned.pkg: $(bundle)$(contents)$(signature)
 	xcrun productbuild --component $(output)/Payload/$(name).app /Applications/ $(output)/$(name)-unsigned.pkg

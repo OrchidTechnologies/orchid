@@ -1,4 +1,4 @@
-import {Address, KEIKI} from "./orchid-types";
+import {EthAddress, KEIKI} from "./orchid-types";
 import {LotteryPot, OrchidEthereumAPI, Signer, Wallet} from "./orchid-eth";
 import {
   EthereumTransaction,
@@ -12,7 +12,7 @@ export class MockQuickSetup extends OrchidEthereumAPI {
   static MOCK_TX_FAIL = false;
 
   async orchidAddFunds(
-    funder: Address, signer: Address, amount: BigInt, escrow: BigInt, walletBalance: KEIKI, gasPrice?: number
+    funder: EthAddress, signer: EthAddress, amount: BigInt, escrow: BigInt, walletBalance: KEIKI, gasPrice?: number
   ): Promise<string> {
     console.log("MOCK: Add funds  signer: ", signer, " amount: ", amount, " escrow: ", escrow);
     return new Promise<string>(async function (resolve, reject) {
@@ -59,11 +59,11 @@ export class MockTransactions {
 export class MockOrchidTransactionMonitor extends OrchidTransactionMonitor {
   mock_store: OrchidTransaction [] = [];
 
-  init(listener: OrchidTransactionMonitorListener) {
+  initIfNeeded(listener: OrchidTransactionMonitorListener) {
     if (this.listener) {
       return
     }
-    super.init(listener);
+    super.initIfNeeded(listener);
     this.add(MockTransactions.mockAddFunds());
   }
 

@@ -85,8 +85,12 @@ export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword
 endef
 $(each)
 
-$(output)/sysroot: env/sysroot.sh
-	env/sysroot.sh $@
+ifeq ($(distro),)
+distro := centos6
+endif
+
+$(output)/sysroot: env/sys-$(word 1,$(distro)).sh env/setup-sys.sh
+	$< $@ $(wordlist 2,$(words $(distro)),$(distro))
 
 .PHONY: sysroot
 sysroot: $(output)/sysroot
