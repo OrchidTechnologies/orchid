@@ -117,7 +117,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
         ORC_FRM(amount)
-        move(msg.sender, signer ORC_ARG, amount, adjust_retrieve);
+        move_(msg.sender, signer ORC_ARG, amount, adjust_retrieve);
     }
 
     bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
@@ -138,7 +138,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             } else if (selector == Move_) {
                 address signer; uint256 adjust_retrieve;
                 (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
-                move(sender, signer ORC_ARG, amount, adjust_retrieve);
+                move_(sender, signer ORC_ARG, amount, adjust_retrieve);
             } else if (selector == Gift_) {
                 address funder; address signer;
                 (funder, signer) = abi.decode(data[4:], (address, address));
@@ -152,7 +152,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         return true;
     }
 
-    function move(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
+    function move_(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
 #else
     receive() external payable {
         ORC_ADD(msg.sender, msg.sender, msg.value)
@@ -296,7 +296,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         bytes32 s;
     }
 
-    function claim(
+    function claim_(
         uint256 destination,
         Ticket calldata ticket
         ORC_PRM()
@@ -369,7 +369,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         uint256 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += claim(destination, tickets[--i] ORC_ARG);
+            amount += claim_(destination, tickets[--i] ORC_ARG);
             assembly { mstore(0x40, segment) }
         }
         ORC_DST
@@ -381,7 +381,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (refund != 0)
             ORC_DEL(refund)
 
-        uint256 amount = claim(destination, ticket ORC_ARG);
+        uint256 amount = claim_(destination, ticket ORC_ARG);
         ORC_DST
     }
 }
