@@ -348,7 +348,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }*/
 
     #define ORC_CLM \
-        address payable recipient = address(destination);
+        address payable recipient = address(destination); \
+        if (recipient == address(0)) \
+            destination |= uint256(recipient = msg.sender);
 
     #define ORC_DST \
         if (amount == 0) {} \
