@@ -181,3 +181,6 @@
 [submodule "engine"]
 	path = app-shared/engine
 	url = https://github.com/flutter/engine.git
+[submodule "vpn-libraries"]
+	path = min-krypton/vpn-libraries
+	url = https://github.com/google/vpn-libraries.git
