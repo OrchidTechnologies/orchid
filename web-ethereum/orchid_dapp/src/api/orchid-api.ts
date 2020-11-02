@@ -6,6 +6,8 @@ import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
 import {OrchidTransactionDetail, OrchidTransactionMonitor} from "./orchid-tx";
 import {WalletProviderState, WalletProviderStatus} from "./orchid-eth-web3";
+import {getBoolParam, isDebug} from "../util/util";
+import {findDOMNode} from "react-dom";
 // import {MockOrchidTransactionMonitor} from "./orchid-eth-mock";
 
 /// The high level API for observation of a user's wallet and Orchid account state.
@@ -82,10 +84,12 @@ export class OrchidAPI {
   updateBalancesTimer: NodeJS.Timeout | null = null
 
   // Init the high level Orchid API and fetch initial state from the contract
-  init(callback: (startupComplete: boolean) => void) {
-    if (OrchidAPI.isMobileDevice()) {
+  init(startupCompleteCallback: (startupComplete: boolean) => void) {
+    if (OrchidAPI.isMobileDevice() || isDebug()) {
       this.captureLogs();
     }
+
+    startupCompleteCallback(false);
 
     // Monitor the wallet provider
     this.eth.provider.walletStatus.subscribe((status) => {
@@ -99,7 +103,7 @@ export class OrchidAPI {
           // Refresh everything to clear any account data.
           this.onProviderAccountChange(status).then();
           // Show the UI
-          callback(true);
+          startupCompleteCallback(true);
           break;
         case WalletProviderState.Connected:
           // Refresh to get the new account data.
@@ -116,22 +120,33 @@ export class OrchidAPI {
       if (count++ > 0) {
         console.log("api: startup complete (new user result)")
         // Show the UI
-        callback(true);
+        startupCompleteCallback(true);
       }
     });
-
-    callback(false);
   }
 
   // Initialization to be performed after the provider is connected
   private async onProviderAccountChange(status: WalletProviderStatus) {
-    console.log("api: on provider account change: ", status.account);
-    this.wallet.next(undefined);
-    this.signer.next(null);
-    await this.updateWallet();
-    await this.updateSigners();
-    this.updateTransactions().then();
-    this.initPollingIfNeeded();
+    await this.clear();
+    if (status.state === WalletProviderState.Connected) {
+      await this.updateWallet();
+      await this.updateSigners();
+      this.updateTransactions().then();
+      this.initPollingIfNeeded();
+    }
+  }
+
+  async clear() {
+    //console.log("api: clear wallet")
+    if (this.wallet.value) {
+      this.wallet.next(undefined);
+    }
+    if (this.signersAvailable.value) {
+      this.signersAvailable.next(null)
+    }
+    if (this.signer.value) {
+      this.signer.next(null);
+    }
   }
 
   initPollingIfNeeded() {
@@ -181,11 +196,11 @@ export class OrchidAPI {
   }
 
   async updateWallet() {
-    // if (this.walletStatus.value.state !== WalletState.Connected) { return }
+    //if (this.eth.provider.walletStatus.value.state !== WalletProviderState.Connected) { return }
     try {
       this.wallet.next(await this.eth.orchidGetWallet());
     } catch (err) {
-      console.log("api: Error updating wallet: ");
+      console.log("api: Error updating wallet: ", err);
     }
   }
 
@@ -221,8 +236,16 @@ export class OrchidAPI {
       //         return JSON.stringify(arg)
       //     }
       // });
-      api.debugLog += "<span>Log: " + args.join(" ") + "</span><br/>";
-      api.debugLogChanged.next(true);
+      const logLine = "<span>Log: " + args.join(" ") + "</span><br/>"
+      api.debugLog += logLine
+      api.debugLogChanged.next(true)
+
+      if (isDebug()) {
+        let div = document.getElementById('debugLog')
+        if (div) {
+          div.innerHTML += logLine;
+        }
+      }
     };
     // Capture errors
     window.onerror = function (message, source, lineno, colno, error) {
@@ -236,6 +259,13 @@ export class OrchidAPI {
     window.onload = function () {
       console.log("Loaded.");
     };
+
+    if (isDebug()) {
+      let div = document.getElementById('debugLog')
+      if (div) {
+        div.innerHTML += '<br/><b>Debug Log</b><br/>'
+      }
+    }
   }
 
   private static isMobileDevice() {

@@ -50,3 +50,37 @@
 .funder-panel .warn {
   color: #BE092A;
 }
+
+.size-picker-button {
+  font-size: 56px;
+  font-weight: 700;
+  text-align: center;
+  color: #5F45BA;
+  border: none;
+  background-color: inherit;
+  cursor: pointer;
+  display: inline-block;
+
+  /* make the button label text not selectable */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+}
+
+/* Turn off the selected outline. */
+.size-picker-button:focus {
+  outline: 0;
+}
+
+.size-picker-button:hover {
+  background-color: #5F45BA;
+  color: white;
+}
+
+.size-picker-label {
+  font-size: 38px;
+  font-weight: 700;
+  text-align: center;
+  color: black
+}
