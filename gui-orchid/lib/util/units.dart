@@ -45,8 +45,8 @@ class OXT extends ScalarValue<double> {
     return OXT(math.min(a.value, b.value));
   }
 
-  static OXT fromWei(BigInt oxtWei) {
-    return OXT(oxtWei / BigInt.from(1e18));
+  static OXT fromKeiki(BigInt keiki) {
+    return OXT(keiki / BigInt.from(1e18));
   }
 }
 
