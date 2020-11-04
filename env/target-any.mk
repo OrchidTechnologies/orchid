@@ -61,6 +61,7 @@ cflags += -Werror
 cflags += -Wno-unknown-warning-option
 
 cflags += -Wno-deprecated-volatile
+cflags += -Wno-range-loop-analysis
 
 cflags += -fmessage-length=0
 cflags += -ferror-limit=0
