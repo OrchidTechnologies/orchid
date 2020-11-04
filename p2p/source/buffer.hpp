@@ -542,7 +542,7 @@ class Brick final :
     Brick() = default;
 
     Brick(const std::string &data) :
-        Brick(data.data(), data.size())
+        Brick(Span(data.data(), data.size()))
     {
     }
 
@@ -857,6 +857,10 @@ class Nothing final :
 
 inline bool Each(const Buffer &buffer, const std::function<bool (const uint8_t *, size_t)> &code) {
     return buffer.each(code);
+}
+
+inline bool Each(const std::string &data, const std::function<bool (const uint8_t *, size_t)> &code) {
+    return Subset(data).each(code);
 }
 
 template <size_t Size_>

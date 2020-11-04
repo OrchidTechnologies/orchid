@@ -27,10 +27,12 @@
 #include "jsonrpc.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
+#include "parallel.hpp"
 
 namespace orc {
 
 struct Receipt final {
+    const uint64_t height_;
     const bool status_;
     const Address contract_;
     const uint64_t gas_;
@@ -39,23 +41,31 @@ struct Receipt final {
 };
 
 struct Transaction {
+    const uint256_t nonce_;
+    const uint256_t bid_;
+    const uint64_t gas_;
+    const std::optional<Address> target_;
+    const uint256_t amount_;
+};
+
+struct Record final :
+    public Transaction
+{
     const Bytes32 hash_;
     const Address from_;
-    const uint64_t gas_;
-    const uint256_t price_;
 
-    Transaction(Json::Value &&value);
+    Record(const uint256_t &chain, const Json::Value &value);
 };
 
 struct Block {
-    const uint64_t number_;
+    const uint64_t height_;
     const uint256_t state_;
     const uint64_t timestamp_;
     const uint64_t limit_;
     const Address miner_;
-    const std::vector<Transaction> transactions_;
+    const std::vector<Record> records_;
 
-    Block(Json::Value &&value);
+    Block(const uint256_t &chain, Json::Value &&value);
 };
 
 struct Account final {
@@ -64,7 +74,13 @@ struct Account final {
     const uint256_t storage_;
     const uint256_t code_;
 
+    Account(const uint256_t &nonce, const uint256_t &balance);
     Account(const Block &block, const Json::Value &value);
+};
+
+struct Flags {
+    bool insecure_ = false;
+    bool verbose_ = false;
 };
 
 class Endpoint final {
@@ -76,93 +92,94 @@ class Endpoint final {
 
     const S<Origin> origin_;
     const Locator locator_;
+    const Flags flags_;
 
-    uint256_t Get(int index, const Json::Value &storages, const Region &root, const uint256_t &key) const;
+    template <size_t Offset_, int Index_, typename Result_, typename Hypothesis_, size_t ...Indices_>
+    void Get(Result_ &result, Hypothesis_ &hypothesis, std::index_sequence<Indices_...>) const {
+        ((std::get<Offset_ + Indices_>(result) = uint256_t(std::get<Index_ + Indices_>(hypothesis).asString())), ...);
+    }
 
-    template <int Offset_, int Index_, typename Result_, typename... Args_>
+    uint256_t Get(unsigned index, const Json::Value &storages, const Region &root, const uint256_t &key) const;
+
+    template <size_t Offset_, size_t Index_, typename Result_, typename... Args_>
     void Get(Result_ &result, const Json::Value &storages, const Region &root) const {
     }
 
-    template <int Offset_, int Index_, typename Result_, typename... Args_>
+    template <size_t Offset_, size_t Index_, typename Result_, typename... Args_>
     void Get(Result_ &result, const Json::Value &storages, const Region &root, const uint256_t &key, Args_ &&...args) const {
         std::get<Offset_ + Index_>(result) = Get(Index_, storages, root, key);
         Get<Offset_, Index_ + 1>(result, storages, root, std::forward<Args_>(args)...);
     }
 
   public:
-    Endpoint(S<Origin> origin, Locator locator) :
+    Endpoint(S<Origin> origin, Locator locator, Flags flags = Flags()) :
         origin_(std::move(origin)),
-        locator_(std::move(locator))
+        locator_(std::move(locator)),
+        flags_(flags)
     {
     }
 
     task<Json::Value> operator ()(const std::string &method, Argument args) const;
 
     task<uint256_t> Chain() const;
-    task<uint256_t> Price() const;
-    task<uint64_t> Latest() const;
-    task<Block> Header(const Argument &number) const;
+    task<uint256_t> Bid() const;
+    task<uint64_t> Height() const;
+
+    task<Block> Header(const Argument &height) const;
     task<uint256_t> Balance(const Address &address) const;
-    task<std::optional<Receipt>> operator ()(const Bytes32 &transaction) const;
+    task<std::optional<Receipt>> operator [](const Bytes32 &transaction) const;
 
-    task<Brick<65>> Sign(const Address &signer, const Buffer &data) const;
-    task<Brick<65>> Sign(const Address &signer, const std::string &password, const Buffer &data) const;
-
-    task<Address> Resolve(const Argument &number, const std::string &name) const;
+    task<Address> Resolve(const Argument &height, const std::string &name) const;
 
     template <typename... Args_>
     task<std::tuple<Account, typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, std::nullptr_t, Args_ &&...args) const {
-        const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.number_}));
-        std::tuple<Account, typename Result_<Args_>::type...> result(Account(block, proof));
-        Number<uint256_t> root(proof["storageHash"].asString());
-        Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
-        co_return result;
+        if (flags_.insecure_) {
+            const auto hypothesis(*co_await Parallel(
+                operator ()("eth_getTransactionCount", {contract, block.height_}),
+                operator ()("eth_getBalance", {contract, block.height_}),
+                operator ()("eth_getStorageAt", {contract, uint256_t(args), block.height_})...));
+            std::tuple<Account, typename Result_<Args_>::type...> result(Account(uint256_t(std::get<0>(hypothesis).asString()), uint256_t(std::get<1>(hypothesis).asString())));
+            Get<1, 2>(result, hypothesis, std::index_sequence_for<Args_...>());
+            co_return result;
+        } else {
+            const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.height_}));
+            std::tuple<Account, typename Result_<Args_>::type...> result(Account(block, proof));
+            Number<uint256_t> root(proof["storageHash"].asString());
+            Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
+            co_return result;
+        }
     }
 
     template <typename... Args_>
     task<std::tuple<typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, const uint256_t &storage, Args_ &&...args) const {
-        const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.number_}));
-        std::tuple<typename Result_<Args_>::type...> result;
-        Number<uint256_t> root(proof["storageHash"].asString());
-        orc_assert(storage == root.num<uint256_t>());
-        Get<0, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
-        co_return result;
+        if (flags_.insecure_) {
+            const auto hypothesis(*co_await Parallel(
+                operator ()("eth_getStorageAt", {contract, uint256_t(args), block.height_})...));
+            std::tuple<typename Result_<Args_>::type...> result;
+            Get<0, 0>(result, hypothesis, std::index_sequence_for<Args_...>());
+            co_return result;
+        } else {
+            const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.height_}));
+            std::tuple<typename Result_<Args_>::type...> result;
+            Number<uint256_t> root(proof["storageHash"].asString());
+            orc_assert(storage == root.num<uint256_t>());
+            Get<0, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
+            co_return result;
+        }
     }
 
-    template <typename... Args_>
     task<std::tuple<Account, std::vector<uint256_t>>> Get(const Block &block, const Address &contract, const std::vector<uint256_t> &args) const {
-        const auto proof(co_await operator ()("eth_getProof", {contract, {std::forward<Args_>(args)...}, block.number_}));
+        const auto proof(co_await operator ()("eth_getProof", {contract, args, block.height_}));
         std::tuple<Account, std::vector<uint256_t>> result(Account(block, proof));
         Number<uint256_t> root(proof["storageHash"].asString());
         auto storages(proof["storageProof"]);
-        for (unsigned i(0); i != args.size(); ++i)
+        for (size_t i(0); i != args.size(); ++i)
             std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
         co_return result;
     }
 
-    task<Bytes32> Send(const Address &from, const Address &contract, const uint256_t &gas, const Buffer &data) const {
-        co_return Bless((co_await operator ()("eth_sendTransaction", {Multi{
-            {"from", from},
-            {"to", contract},
-            {"gas", gas},
-            {"data", data},
-        }})).asString());
-    }
-
-    task<Bytes32> Send(const Address &from, const Address &contract, const uint256_t &gas, const uint256_t &value, const Buffer &data) const {
-        co_return Bless((co_await operator ()("eth_sendTransaction", {Multi{
-            {"from", from},
-            {"to", contract},
-            {"gas", gas},
-            {"value", value},
-            {"data", data},
-        }})).asString());
-    }
-
-    task<Bytes32> Send(const Argument &arg) const {
-        co_return Bless((co_await operator ()("eth_sendTransaction",
-            arg
-        )).asString());
+    task<Bytes32> Send(const std::string &method, Argument args) const {
+        co_return Bless((co_await operator ()(method, std::move(args))).asString());
     }
 };
 
@@ -241,73 +258,63 @@ class Selector final :
         return result;
     }
 
-    task<Result_> Call(const Endpoint &endpoint, const Argument &number, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
+    task<Result_> Call(const Endpoint &endpoint, const Argument &height, const Address &target, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Multi{
-            {"to", contract},
+            {"to", target},
             {"gas", gas},
             {"data", Tie(*this, builder)},
-        }, number})).asString()));
+        }, height})).asString()));
         Window window(data);
         auto result(Coded<Result_>::Decode(window));
         window.Stop();
         co_return std::move(result);
     }, "calling " << Name()); }
 
-    task<Result_> Call(const Endpoint &endpoint, const Address &from, const Argument &number, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
+    task<Result_> Call(const Endpoint &endpoint, const Address &from, const Argument &height, const Address &target, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
         auto data(Bless((co_await endpoint("eth_call", {Multi{
             {"from", from},
-            {"to", contract},
+            {"to", target},
             {"gas", gas},
             {"data", Tie(*this, builder)},
-        }, number})).asString()));
+        }, height})).asString()));
         Window window(data);
         auto result(Coded<Result_>::Decode(window));
         window.Stop();
         co_return std::move(result);
     }, "calling " << Name()); }
-
-    task<Bytes32> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const Args_ &...args) const { orc_block({
-        Builder builder;
-        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Multi{
-            {"from", from},
-            {"to", contract},
-            {"gas", gas},
-            {"data", Tie(*this, builder)},
-        }, password})).asString()));
-        co_return std::move(transaction);
-    }, "sending " << Name()); }
-
-    task<Bytes32> Send(const Endpoint &endpoint, const Address &from, const std::string &password, const Address &contract, const uint256_t &gas, const uint256_t &price, const Args_ &...args) const { orc_block({
-        Builder builder;
-        Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        auto transaction(Bless((co_await endpoint("personal_sendTransaction", {Multi{
-            {"from", from},
-            {"to", contract},
-            {"gas", gas},
-            {"gasPrice", price},
-            {"data", Tie(*this, builder)},
-        }, password})).asString()));
-        co_return std::move(transaction);
-    }, "sending " << Name()); }
 };
 
 template <typename... Args_>
-class Constructor final {
+class Contract final :
+    public Region
+{
+  private:
+    Beam data_;
+
   public:
-    task<Bytes32> Send(const Endpoint &endpoint, const Address &from, const uint256_t &gas, const Buffer &data, const Args_ &...args) const { orc_block({
+    Contract(Beam data) :
+        data_(std::move(data))
+    {
+    }
+
+    const uint8_t *data() const override {
+        return data_.data();
+    }
+
+    size_t size() const override {
+        return data_.size();
+    }
+
+    Builder operator ()(const Args_ &...args) const {
         Builder builder;
+        builder += *this;
         Coder<Args_...>::Encode(builder, std::forward<const Args_>(args)...);
-        co_return co_await endpoint.Send({Multi{
-            {"from", from},
-            {"gas", gas},
-            {"data", Tie(data, builder)},
-        }});
-    }, "constructing"); }
+        return builder;
+    }
 };
 
 }

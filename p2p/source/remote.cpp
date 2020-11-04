@@ -105,7 +105,7 @@ class Reference {
     }
 };
 
-class Chain :
+class Buffers :
     public Buffer
 {
   private:
@@ -113,7 +113,7 @@ class Chain :
 
   public:
     // XXX: this always copies, but sometimes I could pbuf_ref? ugh
-    Chain(const Buffer &data) :
+    Buffers(const Buffer &data) :
         buffer_(pbuf_alloc(PBUF_RAW, data.size(), PBUF_RAM))
     {
         u16_t offset(0);
@@ -125,7 +125,7 @@ class Chain :
         });
     }
 
-    Chain(pbuf *buffer) :
+    Buffers(pbuf *buffer) :
         buffer_(buffer)
     {
         pbuf_ref(buffer_);
@@ -188,7 +188,7 @@ class RemoteCommon {
 
     void Open(const Core &core) {
         udp_recv(pcb_, [](void *arg, udp_pcb *pcb, pbuf *data, const ip4_addr_t *host, u16_t port) noexcept {
-            static_cast<RemoteCommon *>(arg)->Land(Chain(data), Socket(*host, port));
+            static_cast<RemoteCommon *>(arg)->Land(Buffers(data), Socket(*host, port));
             pbuf_free(data);
         }, this);
     }
@@ -229,7 +229,7 @@ class RemoteAssociation :
 
     task<void> Send(const Buffer &data) override {
         Core core;
-        orc_lwipcall(udp_send, (pcb_, Chain(data)));
+        orc_lwipcall(udp_send, (pcb_, Buffers(data)));
         co_return;
     }
 };
@@ -268,7 +268,7 @@ class RemoteOpening :
     task<void> Send(const Buffer &data, const Socket &socket) override {
         ip4_addr_t address(socket.Host());
         Core core;
-        orc_lwipcall(udp_sendto, (pcb_, Chain(data), &address, socket.Port()));
+        orc_lwipcall(udp_sendto, (pcb_, Buffers(data), &address, socket.Port()));
         co_return;
     }
 };
@@ -373,9 +373,9 @@ class RemoteConnection final :
                 if (data == nullptr)
                     self->Stop(nullptr);
                 else {
-                    const Chain chain(data);
-                    self->Land(chain);
-                    tcp_recved(pcb, chain.size());
+                    const Buffers buffers(data);
+                    self->Land(buffers);
+                    tcp_recved(pcb, buffers.size());
                     pbuf_free(data);
                 }
 
@@ -471,7 +471,7 @@ class RemoteConnection final :
 void Remote::Send(pbuf *buffer) {
     // XXX: this always copies the data, but I should sometimes be able to reference it
     // to do this, I think I need to check if !PBUF_NEEDS_COPY _recursively_ for queue?
-    nest_.Hatch([&]() noexcept { return [this, data = Beam(Chain(buffer))]() -> task<void> {
+    nest_.Hatch([&]() noexcept { return [this, data = Beam(Buffers(buffer))]() -> task<void> {
         //Log() << "Remote <<< " << this << " " << data << std::endl;
         co_return co_await Inner().Send(data);
     }; }, __FUNCTION__);
@@ -491,7 +491,7 @@ err_t Remote::Initialize(netif *interface) {
 
 void Remote::Land(const Buffer &data) {
     //Log() << "Remote >>> " << this << " " << data << std::endl;
-    orc_ignore({ orc_assert(tcpip_inpkt(Chain(data).Tear(), &interface_, interface_.input) == ERR_OK); });
+    orc_ignore({ orc_assert(tcpip_inpkt(Buffers(data).Tear(), &interface_, interface_.input) == ERR_OK); });
 }
 
 void Remote::Stop(const std::string &error) noexcept {

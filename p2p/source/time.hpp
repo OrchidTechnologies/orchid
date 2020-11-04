@@ -26,6 +26,7 @@
 namespace orc {
 
 uint64_t Monotonic();
+uint64_t Timestamp();
 
 }
 
