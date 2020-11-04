@@ -464,7 +464,12 @@ export class OrchidEthereumAPI {
 
   // The current median gas price for the past few blocks
   async getGasPrice(): Promise<GWEI> {
-    return GWEI.fromWeiString(await this.web3.eth.getGasPrice())
+    try {
+      return GWEI.fromWeiString(await this.web3.eth.getGasPrice())
+    } catch (err) {
+      console.log("WARNING: defaulting gas price in disconnected state.  Testing only!")
+      return new GWEI(50);
+    }
   }
 }
 

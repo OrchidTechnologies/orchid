@@ -35,7 +35,11 @@ export function getBoolParam(name: string, defaultValue: boolean): boolean {
   return val.toLocaleLowerCase() === "true";
 }
 
-export function getEthAddressParam(name: string, defaultValue: string): string {
+export function isDebug(): boolean {
+  return getBoolParam("debug", false);
+}
+
+  export function getEthAddressParam(name: string, defaultValue: string): string {
   let addr = getParam(name);
 
   if (addr == null) {

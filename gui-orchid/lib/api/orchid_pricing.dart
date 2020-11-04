@@ -6,6 +6,7 @@ import 'package:orchid/util/units.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'orchid_api.dart';
 import 'orchid_log_api.dart';
 
 /// Exchange rates
@@ -114,7 +115,7 @@ class StaticExchangeRates {
       log("iap: conversion rate not found for: $currencyCode");
       return USD(price); // default to 1.0
     }
-    return USD(price/rate);
+    return USD(price / rate);
   }
 
   // dollars * rate = localized price
@@ -166,4 +167,72 @@ class StaticExchangeRates {
     "VND": 21.32,
     "ZAR": 15.74,
   };
+}
+
+class MarketConditions {
+  ETH gasCostToRedeem;
+  OXT oxtCostToRedeem;
+  OXT maxFaceValue;
+  bool ticketUnderwater;
+  double efficiency;
+  bool limitedByBalance;
+
+  MarketConditions(
+      this.gasCostToRedeem,
+      this.oxtCostToRedeem,
+      this.maxFaceValue,
+      this.ticketUnderwater,
+      this.efficiency,
+      this.limitedByBalance);
+
+  String efficiencyPerc() {
+    return (this.efficiency * 100).toStringAsFixed(2) + "%";
+  }
+
+static Future<MarketConditions> forPot(LotteryPot pot) async {
+    return forBalance(pot.balance, pot.deposit);
+  }
+
+  static Future<MarketConditions> forBalance(OXT balance, OXT escrow) async {
+    log("fetch market conditions");
+    var costToRedeem = await getCostToRedeemTicket();
+    var limitedByBalance = balance.value <= (escrow / 2.0).value;
+    OXT maxFaceValue = maxTicketFaceValue(balance, escrow);
+    var ticketUnderwater =
+        costToRedeem.oxtCostToRedeem.value >= maxFaceValue.value;
+
+    // value received as a fraction of ticket face value
+    var efficiency = max(
+        0,
+        (maxFaceValue - costToRedeem.oxtCostToRedeem).value /
+            maxFaceValue.value);
+
+    return new MarketConditions(
+        costToRedeem.gasCostToRedeem,
+        costToRedeem.oxtCostToRedeem,
+        maxFaceValue,
+        ticketUnderwater,
+        efficiency,
+        limitedByBalance);
+  }
+
+  static getCostToRedeemTicket() async {
+    Pricing pricing = await OrchidPricingAPI().getPricing();
+    GWEI gasPrice = await OrchidEthereum().getGasPrice();
+    ETH gasCostToRedeem =
+        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toEth();
+    OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
+    return CostToRedeem(gasCostToRedeem, oxtCostToRedeem);
+  }
+
+  static OXT maxTicketFaceValue(OXT balance, OXT deposit) {
+    return OXT.min(balance, deposit / 2.0);
+  }
+}
+
+class CostToRedeem {
+  ETH gasCostToRedeem;
+  OXT oxtCostToRedeem;
+
+  CostToRedeem(this.gasCostToRedeem, this.oxtCostToRedeem);
 }

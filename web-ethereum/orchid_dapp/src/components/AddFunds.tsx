@@ -3,7 +3,7 @@ import {OrchidAPI} from "../api/orchid-api";
 import {
   CancellablePromise,
   Divider,
-  errorClass, makeCancelable,
+  errorClass, formatCurrency, makeCancelable,
   parseFloatSafe,
   useInterval,
   Visibility
@@ -29,6 +29,7 @@ import {AccountQRCode} from "./AccountQRCode";
 import {Subscription} from "rxjs";
 import {Route, RouteContext} from "./Route";
 import {WalletProviderState} from "../api/orchid-eth-web3";
+import {OrchidLottery} from "../api/orchid-lottery";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -70,11 +71,14 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   const [escrowError, setEscrowError] = useState(props.createAccount);
   const [tx, setTx] = useState(new TransactionStatus());
   const txResult = React.createRef<TransactionProgress>();
+
   const [efficiencySliderValue, setEfficiencySliderValue] = useState<number | null>(null);
   const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
   const [showSignerAddressInstructions, setShowSignerAddressInstructions] = useState(false);
   const [generatedSigner, setGeneratedSigner] = useState<Signer | null>(null);
   const [generatingSigner, setGeneratingSigner] = useState(false);
+
+  const [sizePickerValue, setSizePickerValue] = useState<number | null>(null);
 
   let {setRoute} = useContext(RouteContext);
 
@@ -143,11 +147,19 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow));
     setPotMarketConditions(mc);
 
+    // Default the efficiency picker for the user's current account
     if (efficiencySliderValue == null) {
       //console.log("addfunds: setting efficiency slider")
       setEfficiencySliderValue(mc?.efficiency * 100 ?? 0)
     }
-  }, [pot, efficiencySliderValue]);
+
+    // Default the size ratio picker for the user's current account if reasonable
+    if (sizePickerValue == null) {
+      const current = currentPotRatio()
+      setSizePickerValue(current <= OrchidLottery.maxPrecomputedEFRatio ? current : 1)
+    }
+
+  }, [pot, efficiencySliderValue, sizePickerValue]);
 
   // Fetch market conditions when the pot changes
   useEffect(() => {
@@ -157,34 +169,39 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
   // Fetch market conditions periodically
   useInterval(() => {
-    fetchMarketConditions().then().catch(e => {
-    });
+    fetchMarketConditions().then().catch(e => { });
   }, 15000);
 
   // TODO: throttle this
-  // Handle values from the efficiency slider.
-  // slider value, pot info => account recommendation
+  // Manage the account composition recommendation, updating it on user changes to the efficiency
+  // and size pickers.  The user's current balance and deposit put a floor on the recommendation.
+  //   (desired efficiency, desired size ratio) => nominal recommendation
+  //   recommendation = max(nominal recommendation, user pot values)
   useEffect(() => {
     const minEfficiencyChange = 3.0; // perc
     (async () => {
+      // Get the account recommendation for the efficiency and size picker values
       let recommendation: AccountRecommendation
       try {
-        recommendation = await MarketConditions.recommendation(
+        recommendation = await MarketConditions.getAccountRecommendation(
           (efficiencySliderValue ?? (Orchid.recommendationEfficiency * 100.0)) / 100.0,
-          Orchid.recommendationBalanceFaceValues)
+          sizePickerValue ?? Orchid.recommendationBalanceFaceValues
+        )
       } catch (err) {
-        console.log("addfunds: unable to fetch market conditions")
+        console.log("addfunds: unable to fetch market conditions: ", err)
         return;
       }
 
-      // If we don't have an account just set the recommended values
-      if (pot == null || efficiencySliderValue == null || potMarketConditions == null) {
+      // If we don't have an account yet just go with the recommended values
+      if (pot == null || efficiencySliderValue == null || sizePickerValue == null || potMarketConditions == null) {
         setAccountRecommendation(recommendation);
         return;
       }
 
-      // We have an account so reflect the balances.
-      const minChange = Math.abs(efficiencySliderValue - potMarketConditions.efficiency * 100) < minEfficiencyChange;
+      // We have an account so take into account current balances in the recommendation.
+      const minChange =
+        Math.abs(efficiencySliderValue - potMarketConditions.efficiency * 100) < minEfficiencyChange
+        && sizePickerValue === currentPotRatio();
       if (minChange) {
         // We are within the min efficiency change just put the original values back.
         setAccountRecommendation(
@@ -202,7 +219,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
         );
       }
     })();
-  }, [efficiencySliderValue, pot, potMarketConditions])
+  }, [efficiencySliderValue, sizePickerValue, pot, potMarketConditions])
 
   // Handle user entered values.
   // user entered values, account recommendation => slider value
@@ -353,9 +370,33 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     setSignerKeyError(false)
   }
 
+  // return the current user balance/escrow ratio or zero if undefined
+  function currentPotRatio(): number {
+    if (!pot?.balance || !pot.escrow || pot.escrow === BigInt(0)) {
+      return 0
+    }
+    // escrow is two face values
+    return Math.floor(BigInt(pot.balance).divide(BigInt(pot.escrow).divide(2)));
+  }
+
   ///
   /// Render
   ///
+
+  // Begin: logging (can be removed)
+  /*
+  let expectedTicketValue = accountRecommendation?.expectedTicketValue
+  let expectedTickets = accountRecommendation?.expectedTickets
+  let efRatio = Math.floor((accountRecommendation?.balance.value ?? 1) / (accountRecommendation?.maxFaceValue.value ?? 1));
+  console.log(
+    "size picker value = ", sizePickerValue,
+    ", balance = ", accountRecommendation?.balance.value,
+    ", deposit = ", accountRecommendation?.deposit.value,
+    ", ratio = ", efRatio,
+    ", expectedTickets = ", expectedTickets,
+    ", expectedTicketValue = ", expectedTicketValue?.value)
+  // End: logging
+   */
 
   let totalSpend = (addBalance ?? 0) + (addDeposit ?? 0)
   let submitEnabled =
@@ -371,7 +412,8 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   ;
 
   function formatOxt(oxt: OXT | null): string | null {
-    return oxt?.value.toFixedLocalized(2).replaceAll(',', '') ?? null
+    //return oxt?.value.toFixedLocalized(2).replaceAll(',', '') ?? null
+    return oxt?.value.toFixedLocalized(2).replace(/,/g, '') ?? null
   }
 
   let newBalanceStr = formatOxt(userEnteredBalance)
@@ -386,7 +428,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     (totalOXTRequired === null || totalOXTRequired.value === 0) ? 0
       : (accountRecommendation?.txEth.value ?? null)
 
-  const warnOXT = OXT.fromKeiki(wallet?.oxtBalance ?? BigInt(0))
+  const warnOXT = OXT.fromKeikiOrDefault(wallet?.oxtBalance, OXT.zero)
     .lessThan(totalOXTRequired ?? OXT.zero)
   const warnETH = ETH.fromWei(wallet?.ethBalance ?? BigInt(0))
     .lessThan(accountRecommendation?.txEth ?? ETH.zero)
@@ -423,12 +465,12 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       <FunderWalletPanel wallet={wallet} warnOXT={warnOXT} warnETH={warnETH}/>
       <Divider noGutters={true} marginTop={16}/>
 
-      {/*efficiency slider*/}
-      <label className="title subheading">{"Efficiency after funds added"}</label>
-      <label style={{fontSize: 16, marginBottom: 24}}>Efficiency is determined by balance, deposit
-        and current market
-        conditions.
-        The suggested minimum efficiency is <b>50%</b>.</label>
+      {/*efficiency picker*/}
+      <label className="title subheading">{"Pick your efficiency"}</label>
+      <label style={{fontSize: 16, marginBottom: 32}}>
+        Efficiency is determined by balance, deposit, and current market conditions.
+        The suggested minimum efficiency is <b>50%</b>.
+      </label>
 
       <EfficiencySlider
         enabled={walletConnected}
@@ -442,9 +484,63 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           setEfficiencySliderValue(Math.min(parseFloat(changeEvent.target.value), maxEfficiency));
         }}/>
 
+      {/*deposit field*/}
+      <Row className="form-row" noGutters={true}>
+        <Col>
+          <label>{"New Deposit"}<span className={errorClass(escrowError)}> *</span></label>
+        </Col>
+        <Col>
+          <input
+            className="editable"
+            onChange={(e) => {
+              let deposit = parseFloatSafe(e.currentTarget.value);
+              setUserEnteredDeposit(deposit == null ? OXT.zero : OXT.fromNumber(deposit));
+              // When the user enters one value adopt the corresponding pot value
+              if (!userEnteredBalance && accountRecommendation?.balance) {
+                setUserEnteredBalance(accountRecommendation?.balance)
+              }
+            }}
+            type="number"
+            value={editingDeposit ? undefined : newDepositStr || (0).toFixedLocalized(2)}
+            onFocus={(e) => setEditingDeposit(true)}
+            onBlur={(e) => setEditingDeposit(false)}
+          />
+        </Col>
+      </Row>
+
+      {/*deposit instructions*/}
+      <p className="instructions">
+        {S.yourDepositSecuresAccessInstruction}&nbsp;{/*efficiencyText*/}
+      </p>
+
       <Divider noGutters={true} marginTop={16}/>
 
-      {/*New Balance*/}
+      <label className="title subheading">{"Pick your size"}</label>
+      <label style={{fontSize: 16, marginBottom: 0}}>
+        {/*Based on current market stats and selected account ratio of {sizePickerValue ?? "..."}, */}
+        {/*we estimate with 80%+ probability you will receive OXT value greater than:*/}
+        Account size is the ratio of your account balance to half of your deposit size.
+      </label>
+
+      {/*size picker*/}
+      <SizePicker
+        value={sizePickerValue ?? 0}
+        label={
+          // formatOxt(accountRecommendation?.expectedTicketValue ?? null) ?? "..."
+          sizePickerValue?.toString() ?? "..."
+        }
+        min={1}
+        max={OrchidLottery.maxPrecomputedEFRatio}
+        sizeChanged={setSizePickerValue}
+      />
+
+      <p className="instructions" style={{marginBottom: 16}}>
+        This ratio limits the number of payments that can be made with the account and
+        affects its longevity, subject to both the random nature of the payment system
+        and market conditions.
+      </p>
+
+      {/*balance field*/}
       <Row className="form-row" noGutters={true}>
         <Col>
           <label>{"New Balance"}<span
@@ -469,34 +565,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           />
         </Col>
       </Row>
-      {/*New Deposit*/}
-      <Row className="form-row" noGutters={true}>
-        <Col>
-          <label>{"New Deposit"}<span className={errorClass(escrowError)}> *</span></label>
-        </Col>
-        <Col>
-          <input
-            className="editable"
-            onChange={(e) => {
-              let deposit = parseFloatSafe(e.currentTarget.value);
-              setUserEnteredDeposit(deposit == null ? OXT.zero : OXT.fromNumber(deposit));
-              // When the user enters one value adopt the corresponding pot value
-              if (!userEnteredBalance && accountRecommendation?.balance) {
-                setUserEnteredBalance(accountRecommendation?.balance)
-              }
-            }}
-            type="number"
-            value={editingDeposit ? undefined : newDepositStr || (0).toFixedLocalized(2)}
-            onFocus={(e) => setEditingDeposit(true)}
-            onBlur={(e) => setEditingDeposit(false)}
-          />
-        </Col>
-      </Row>
 
-      {/*Instructions*/}
-      <p className="instructions">
-        {S.yourDepositSecuresAccessInstruction}&nbsp;{/*efficiencyText*/}
-      </p>
       <Divider noGutters={true} marginTop={16}/>
 
       {/*Totals*/}
@@ -720,5 +789,41 @@ function NewAccountPanel(props: {
       <AccountQRCode data={props.generatedSigner?.toConfigString() ?? "invalid signer"}/>
     </Visibility>
   </>
+}
+
+function SizePicker(props: {
+  value: number, min: number, max: number,
+  label: string,
+  sizeChanged: (size: number) => void
+}) {
+  return <Row
+    style={{alignItems: "baseline", lineHeight: 1.2, marginBottom: 16, textAlign: "center"}}>
+    <Col>
+      <button
+        className="size-picker-button"
+        onClick={() => {
+          if (props.value > props.min) {
+            props.sizeChanged(props.value - 1);
+          }
+        }}
+      >-
+      </button>
+    </Col>
+    <Col className="size-picker-label">{
+      // props.value >= props.min && props.value <= props.max ? props.label : "..."
+      props.label
+    }</Col>
+    <Col>
+      <button
+        className="size-picker-button"
+        onClick={() => {
+          if (props.value < props.max) {
+            props.sizeChanged(props.value + 1);
+          }
+        }}
+      >+
+      </button>
+    </Col>
+  </Row>;
 }
 

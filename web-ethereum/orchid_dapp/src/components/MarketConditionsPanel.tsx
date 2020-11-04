@@ -5,6 +5,7 @@ import {ETH, GWEI, min, OXT, USD} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
+import {OrchidLottery} from "../api/orchid-lottery";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
@@ -13,8 +14,26 @@ const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 export class AccountRecommendation {
   public balance: OXT;
   public deposit: OXT;
-  public txEth: ETH; // ETH required for the transaction
-  public txUsd: ETH; // USD equivalent of the ETH required for the transaction
+  public txEth: ETH; // ETH required for the funding transaction
+  public txUsd: ETH; // USD equivalent of the ETH required for the funding transaction
+
+  // The max face value of a ticket that can be written with this account composition.
+  get maxFaceValue(): OXT {
+    return OrchidLottery.maxTicketFaceValue(this.balance, this.deposit);
+  }
+
+  // The expected number of tickets that can be written with this account composition at the
+  // default ticket win rate and default survival probabilty target. Returns null if the value
+  // cannot be determined.
+  get expectedTickets(): number | null {
+    return OrchidLottery.expectedTickets(this.balance, this.deposit);
+  }
+
+  // The expected cumulative value of tickets that can be written with this account composition
+  // at the expected ticket count.
+  get expectedTicketValue(): OXT | null {
+    return OrchidLottery.expectedTicketValue(this.balance, this.deposit);
+  }
 
   constructor(balance: OXT, deposit: OXT, txEth: ETH, txUsd: USD) {
     this.balance = balance;
@@ -24,6 +43,7 @@ export class AccountRecommendation {
   }
 }
 
+
 export class MarketConditions {
   public gasCostToRedeem: ETH
   public oxtCostToRedeem: OXT
@@ -32,7 +52,9 @@ export class MarketConditions {
   public efficiency: number
   public limitedByBalance: boolean
 
-  public efficiencyPerc(): string { return (this.efficiency * 100).toFixed() + "%"; }
+  public efficiencyPerc(): string {
+    return (this.efficiency * 100).toFixed() + "%";
+  }
 
   constructor(gasCostToRedeem: ETH, oxtCostToRedeem: OXT, maxFaceValue: OXT, ticketUnderwater: boolean, efficiency: number, limitedByBalance: boolean) {
     this.gasCostToRedeem = gasCostToRedeem;
@@ -50,7 +72,7 @@ export class MarketConditions {
   /// Given a target efficiency and a desired number of face value multiples in the balance
   /// (assuming two in the deposit) recommend balance, deposit, and required ETH amounts based
   // on current market conditions.
-  static async recommendation(targetEfficiency: number, balanceFaceValues: number): Promise<AccountRecommendation> {
+  static async getAccountRecommendation(targetEfficiency: number, balanceFaceValues: number): Promise<AccountRecommendation> {
     if (targetEfficiency >= 1.0) {
       throw Error("Invalid efficiency target: cannot equal or exceed 1.0");
     }
@@ -65,7 +87,7 @@ export class MarketConditions {
     let gasPrice: GWEI
     try {
       gasPrice = await api.eth.getGasPrice();
-    }catch(err) {
+    } catch (err) {
       console.log("market conditions: error fetching gas price");
       throw Error("gas price unavailable")
     }
@@ -80,7 +102,7 @@ export class MarketConditions {
     //console.log("fetch market conditions")
     let {gasCostToRedeem, oxtCostToRedeem} = await this.getCostToRedeemTicket();
     let limitedByBalance = balance.value <= escrow.divide(2.0).value;
-    let maxFaceValue: OXT = min(balance, escrow.divide(2.0));
+    let maxFaceValue: OXT = OrchidLottery.maxTicketFaceValue(balance, escrow);
     let ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
 
     // value received as a fraction of ticket face value
@@ -102,7 +124,7 @@ export class MarketConditions {
 export const MarketConditionsPanel: React.FC = () => {
 
   const [open, setOpen] = useState(false);
-  const [pot, setPot] = useState<LotteryPot|null>();
+  const [pot, setPot] = useState<LotteryPot | null>();
   const [marketConditions, setMarketConditions] = useState<MarketConditions>();
 
   useEffect(() => {

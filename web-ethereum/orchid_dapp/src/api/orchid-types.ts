@@ -90,6 +90,10 @@ export class OXT extends ScalarNumberValue {
     return new OXT(BigInt(keiki) / 1e18);
   }
 
+  static fromKeikiOrDefault(keiki: BigInt | undefined, defaultValue: OXT): OXT {
+    return keiki ? this.fromKeiki(keiki) : defaultValue
+  }
+
   static fromNumber(num: number): OXT {
     return new OXT(num);
   }

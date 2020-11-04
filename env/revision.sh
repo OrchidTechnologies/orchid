@@ -19,7 +19,13 @@ echo "${head}"
 echo "${merge}"
 echo
 
-"$@" | head -n 1
+if [[ $# -eq 0 ]]; then
+    echo; echo
+else
+    "$@" --version | head -n 1
+    "$@" -Wl,-v 2>/dev/null | head -n 1 || true
+fi
+
 rustc --version
 echo
 

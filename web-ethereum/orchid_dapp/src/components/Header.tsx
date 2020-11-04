@@ -47,7 +47,9 @@ export const Header: React.FC = () => {
 
   let showAccountSelector = !newUser && !(oxtBalance == null);
   //if (walletStatus) { console.log("header: wallet connection status: ", WalletProviderState[walletStatus.state], walletStatus.account); }
-  let showConnectButton = !showAccountSelector && walletStatus?.state === WalletProviderState.NotConnected
+  let showConnectButton = !showAccountSelector
+    //&& (walletStatus?.state === WalletProviderState.NoWalletProvider || walletStatus?.state === WalletProviderState.NotConnected)
+    && (walletStatus?.state === WalletProviderState.NoWalletProvider)
   return (
     <Container>
       <Row noGutters={true} style={{marginBottom: '14px'}}>
@@ -65,20 +67,16 @@ export const Header: React.FC = () => {
         }
         {
           showConnectButton ?
-            <div className={"submit-button"}>
-              <button
-                disabled={connecting}
-                onClick={(_) => {
-                  setConnecting(true);
-                  OrchidAPI.shared().eth.provider.connect().then();
-                }}>
-                <span>{"Connect Wallet"}</span>
-              </button>
-            </div>
+            <ConnectButton disabled={connecting} onClick={() => {
+              setConnecting(true);
+              OrchidAPI.shared().eth.provider.connect(true).finally( ()=>{
+                  setConnecting(false);
+              });
+            }}/>
             : null
         }
         {
-          !(walletStatus?.isMainNet()) ?
+          (walletStatus?.state === WalletProviderState.Connected && !walletStatus?.isMainNet()) ?
             <div style={{width: 200, fontStyle: 'italic', fontSize: 14, textAlign: 'right'}}>
             Please connect to<br/>Ethereum Main Net</div> : null
         }
@@ -129,6 +127,18 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
                 }}>
                 <span>{S.createNewAccount}</span>
               </ListGroupItem>
+              <ListGroupItem
+                onClick={() => {
+                  // disconnect
+                  OrchidAPI.shared().eth.provider.disconnect()
+                }}
+                key={"disconnect-item"}
+                style={{
+                  fontWeight: 'bold',
+                  backgroundColor: 'transparent'
+                }}>
+                <span>{"Disconnect"}</span>
+              </ListGroupItem>
             </ListGroup>
           </Popover.Content>
         </Popover>
@@ -162,3 +172,13 @@ function AccountBalance(props: { oxtBalance: string }) {
     </Row>
   );
 }
+function ConnectButton(props: { disabled: boolean, onClick: () => void }) {
+  return <div className={"submit-button"}>
+    <button
+      disabled={props.disabled}
+      onClick={props.onClick}>
+      <span>{"Connect Wallet"}</span>
+    </button>
+  </div>;
+}
+

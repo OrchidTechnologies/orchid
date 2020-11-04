@@ -88,8 +88,8 @@ class OrchidEthereum {
 
     // Parse the results
     var buff = HexStringBuffer(result);
-    OXT balance = OXT.fromWei(buff.take(64)); // uint128 padded
-    OXT deposit = OXT.fromWei(buff.take(64)); // uint128 padded
+    OXT balance = OXT.fromKeiki(buff.take(64)); // uint128 padded
+    OXT deposit = OXT.fromKeiki(buff.take(64)); // uint128 padded
     BigInt unlock = buff.take(64); // uint256
 
     // The verifier only has a non-zero value for PACs.

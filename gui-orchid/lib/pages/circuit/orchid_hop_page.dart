@@ -22,6 +22,8 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../app_colors.dart';
 import '../app_sizes.dart';
@@ -60,6 +62,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   KeySelectionItem _selectedKeyItem;
   bool _showBalance = false;
   LotteryPot _lotteryPot; // initially null
+  MarketConditions _marketConditions;
   DateTime _lotteryPotLastUpdate;
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
@@ -189,7 +192,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           pady(24),
           divider(),
           pady(24),
-          _buildFunding(),
+          _buildAccountDetails(),
           pady(96),
         ],
       ),
@@ -203,7 +206,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         children: <Widget>[
           if (AppSize(context).tallerThan(AppSize.iphone_xs_max)) pady(64),
           _buildSection(
-              title: s.credentials, child: _buildFunding(), onDetail: null),
+              title: "Account", child: _buildAccountDetails(), onDetail: null),
           pady(16),
           divider(),
           pady(24),
@@ -251,42 +254,53 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Widget _buildFunding() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        // Balance and Deposit
-        Visibility(
-          visible: _showBalance,
-          child: _buildBalance(),
-        ),
+  Widget _buildAccountDetails() {
+    return Row(
+      // mainAxisAlignment: MainAxisAlignment.start,
+      // crossAxisAlignment: CrossAxisAlignment.stretch,
+      // mainAxisSize: MainAxisSize.max,
+      children: [
+        Flexible(
+          child: Column(
+            // mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            // mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+              // Balance and Deposit
+              Visibility(
+                visible: _showBalance,
+                child: _buildAccountBalanceAndChart(),
+              ),
 
-        pady(16),
-        // Wallet address (funder)
-        _buildWalletAddress(),
+              pady(16),
+              // Wallet address (funder)
+              _buildWalletAddress(),
 
-        // Signer key
-        pady(widget.readOnly() ? 0 : 24),
-        _buildSignerKey(),
+              // Signer key
+              pady(widget.readOnly() ? 0 : 24),
+              _buildSignerKey(),
 
-        // Market Stats
-        if (widget.mode == HopEditorMode.View) ...[
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 16),
-            child: _buildMarketStatsLink(),
-          ),
-        ],
-
-        if (widget.readOnly())
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _buildExportAccountButton(),
+              // Market Stats
+              if (widget.mode == HopEditorMode.View) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 16),
+                  child: _buildMarketStatsLink(),
+                ),
               ],
-            ),
+
+              if (widget.readOnly())
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      _buildExportAccountButton(),
+                    ],
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }
@@ -388,7 +402,67 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     _importKeyField.text = data.text;
   }
 
-  Column _buildBalance() {
+  Widget _buildAccountBalanceAndChart() {
+    return Row(
+      children: [
+        Flexible(child: _buildAccountBalance()),
+        Expanded(
+          child: _buildAccountChart(),
+        )
+      ],
+    );
+  }
+
+  Widget _buildAccountChart() {
+    if (_marketConditions == null || _lotteryPot == null) {
+      return Container();
+    }
+
+    int availableMaxFaceValues =
+        (_lotteryPot.balance.value / _marketConditions.maxFaceValue.value)
+            .floor();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        CircularPercentIndicator(
+          progressColor: Colors.deepPurple,
+          lineWidth: 10,
+          radius: 70,
+          percent: _marketConditions.efficiency,
+        ),
+        pady(2),
+        Text("Efficiency: " + _marketConditions.efficiencyPerc()),
+        pady(16),
+        Padding(
+          padding: const EdgeInsets.only(left: 8, right: 8),
+          child: Row(
+              children: List.generate(
+            availableMaxFaceValues,
+            (i) => Flexible(
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 8),
+                height: 10,
+                color: Colors.deepPurple,
+              ),
+            ),
+          ).toList()),
+        ),
+        /*
+        LinearPercentIndicator(
+          alignment: MainAxisAlignment.center,
+          progressColor: Colors.deepPurple,
+          lineHeight: 10,
+          width: 80,
+          percent: 0.75,
+        ),
+         */
+        pady(8),
+        Text("Min Tickets available: ${availableMaxFaceValues}"),
+      ],
+    );
+  }
+
+  Widget _buildAccountBalance() {
     const color = Color(0xff3a3149);
     const valueStyle = TextStyle(
         color: color,
@@ -489,9 +563,16 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Future<void> _showMarketStats() async {
-    // data
+    if (_lotteryPot == null) {
+      return;
+    }
+
+    var marketConditions = await MarketConditions.forPot(_lotteryPot);
     Pricing pricing = await OrchidPricingAPI().getPricing();
     GWEI gasPrice = await OrchidEthereum().getGasPrice();
+    bool gasPriceHigh = gasPrice.value >= 50.0; // TODO
+    /*
+    // data
     if (_lotteryPot == null || pricing == null || gasPrice == null) {
       return;
     }
@@ -501,9 +582,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toEth();
     OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
     OXT maxFaceValue = OXT.min(_lotteryPot.balance, _lotteryPot.deposit / 2.0);
-    bool gasPriceHigh = gasPrice.value >= 15.0;
     bool balanceLimited =
         _lotteryPot.balance.value < _lotteryPot.deposit.value / 2.0;
+     */
 
     // formatting
     var ethPriceText =
@@ -512,12 +593,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: 'USD');
     var gasPriceText = formatCurrency(gasPrice.value, suffix: 'GWEI');
     String maxFaceValueText =
-        formatCurrency(maxFaceValue?.value, suffix: 'OXT');
+        formatCurrency(marketConditions.maxFaceValue?.value, suffix: 'OXT');
     String costToRedeemText =
-        formatCurrency(oxtCostToRedeem.value, suffix: 'OXT');
-    bool ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
+        formatCurrency(marketConditions.oxtCostToRedeem.value, suffix: 'OXT');
+    bool ticketUnderwater = marketConditions.oxtCostToRedeem.value >=
+        marketConditions.maxFaceValue.value;
 
-    String limitedByText = balanceLimited
+    String limitedByText = marketConditions.limitedByBalance
         ? s.yourMaxTicketValueIsCurrentlyLimitedByYourBalance +
             " ${formatCurrency(_lotteryPot.balance.value, suffix: 'OXT')}.  " +
             s.considerAddingOxtToYourAccountBalance
@@ -525,8 +607,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             " ${formatCurrency(_lotteryPot.deposit.value, suffix: 'OXT')}.  " +
             s.considerAddingOxtToYourDepositOrMovingFundsFrom;
 
-    String limitedByTitleText =
-        balanceLimited ? s.balanceTooLow : s.depositSizeTooSmall;
+    String limitedByTitleText = marketConditions.limitedByBalance
+        ? s.balanceTooLow
+        : s.depositSizeTooSmall;
 
     return Dialogs.showAppDialog(
         context: context,
@@ -731,6 +814,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       EthereumAddress signer = EthereumAddress.from(signerKey.keys().address);
       // Fetch the pot balance
       LotteryPot pot;
+      MarketConditions marketConditions;
       try {
         pot = await OrchidEthereum.getLotteryPot(funder, signer)
             .timeout(Duration(seconds: 60));
@@ -738,10 +822,17 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         log('Error fetching lottery pot: $err');
         return;
       }
+      try {
+        marketConditions = await MarketConditions.forPot(pot);
+      } catch (err) {
+        log('Error fetching market conditions: $err');
+        return;
+      }
       var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
       if (mounted) {
         setState(() {
           _lotteryPot = pot;
+          _marketConditions = marketConditions;
           _showMarketStatsAlert = ticketValue.value <= 0;
         });
       }
