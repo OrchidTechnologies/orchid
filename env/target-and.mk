@@ -42,7 +42,7 @@ host/x86_64 := x86_64-linux-android
 triple/x86_64 := x86_64-linux-android
 meson/x86_64 := x86_64
 
-include $(pwd)/target-gnu.mk
+include $(pwd)/target-elf.mk
 
 aver := 21
 
@@ -89,12 +89,6 @@ $(each)
 
 endif
 
-# XXX: the 32-bit linker is gold
-# XXX: the 64-bit linker is just ld
-#lflags += -Wl,--icf=all
-
 lflags += -lm -llog
-lflags += -Wl,--no-undefined
-qflags += -fPIC
 
 default := arm64-v8a

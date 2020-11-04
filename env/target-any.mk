@@ -107,7 +107,7 @@ cflags += -I$(output)/extra
 $(output)/extra/revision.hpp: force
 	@mkdir -p $(dir $@)
 ifeq ($(filter nodiff,$(debug)),)
-	@env/revision.sh $(if $(filter nolist,$(debug)),--) $(cc) | xxd -i >$@.new
+	@env/revision.sh $(if $(filter nolist,$(debug)),--) $(cc) $(more/$(default)) $(wflags) | xxd -i >$@.new
 else
 	@echo >$@.new
 endif
