@@ -18,6 +18,8 @@
 # }}}
 
 
+include env/common.mk
+
 .PHONY: all
 all:
 
@@ -51,7 +53,7 @@ all += build/OrchidLottery1oxt.bin
 
 build/OrchidRecipient.bin: recipient.yul
 	@mkdir -p $(dir $@)
-	set -o pipefail; env/solc.sh 0.7.2 - recipient.yul --strict-assembly | tee /dev/stderr | sed -e '/^Binary/{x;N;p};d' | tr -d $$'\n' >$@
+	env/solc.sh 0.7.2 - recipient.yul --strict-assembly | tee /dev/stderr | sed -e '/^Binary/{x;N;p};d' | tr -d $$'\n' >$@
 all += build/OrchidRecipient.bin
 
 all: $(all)
