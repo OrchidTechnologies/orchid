@@ -42,7 +42,7 @@ Network::Network(const std::string &rpc, Address directory, Address location, co
     market_(Make<Market>(5*60*1000, origin, Wait(UniswapFiat(5*60*1000, {origin, locator_})))),
     oracle_(Wait(Opened(Updating(5*60*1000, [endpoint = Endpoint(origin, locator_)]() -> task<Float> { try {
         static const Float Ten5("100000");
-        const auto oracle(co_await Chainlink(endpoint, "0xa6781b4a1eCFB388905e88807c7441e56D887745", Ten5));
+        const auto oracle(co_await Chainlink(endpoint, "0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0", Ten5));
         orc_assert(oracle != 0);
         // XXX: our Chainlink aggregation can have its answer forged by either Chainlink swapping the oracle set
         //      or by Orchid modifying the backend from our dashboard that Chainlink pays its oracles to consult
