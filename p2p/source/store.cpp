@@ -41,9 +41,9 @@ std::string Stringify(bssl::UniquePtr<BIO> bio) {
     return {data, size};
 }
 
-Store::Store(std::string key, std::string chain) :
+Store::Store(std::string key, std::string certificates) :
     key_(std::move(key)),
-    chain_(std::move(chain))
+    certificates_(std::move(certificates))
 {
 }
 
@@ -83,14 +83,14 @@ Store::Store(const std::string &store) {
         return bio;
     }());
 
-    chain_ = Stringify([&]() {
+    certificates_ = Stringify([&]() {
         bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
         orc_assert(PEM_write_bio_X509(bio.get(), x509.get()));
         return bio;
     }());
 
     for (auto e(stack != nullptr ? sk_X509_num(stack.get()) : 0), i(decltype(e)(0)); i != e; i++)
-        chain_ += Stringify([&]() {
+        certificates_ += Stringify([&]() {
             bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
             orc_assert(PEM_write_bio_X509(bio.get(), sk_X509_value(stack.get(), i)));
             return bio;

@@ -34,16 +34,16 @@ task<Float> Uniswap(const Endpoint &endpoint, const Block &block, const Address 
     namespace mp = boost::multiprecision;
     typedef mp::number<mp::cpp_int_backend<256, 256, mp::unsigned_magnitude, mp::unchecked, void>> uint112_t;
     static const Selector<std::tuple<uint112_t, uint112_t, uint32_t>> getReserves_("getReserves");
-    const auto [reserve0after, reserve1after, after] = co_await getReserves_.Call(endpoint, block.number_, pair, 90000);
+    const auto [reserve0after, reserve1after, after] = co_await getReserves_.Call(endpoint, block.height_, pair, 90000);
 #if 0
-    const auto [reserve0before, reserve1before, before] = co_await getReserves_.Call(endpoint, block.number_ - 100, pair, 90000);
+    const auto [reserve0before, reserve1before, before] = co_await getReserves_.Call(endpoint, block.height_ - 100, pair, 90000);
     static const Selector<uint256_t> price0CumulativeLast_("price0CumulativeLast");
     static const Selector<uint256_t> price1CumulativeLast_("price1CumulativeLast");
     const auto [price0before, price1before, price0after, price1after] = *co_await Parallel(
-        price0CumulativeLast_.Call(endpoint, block.number_ - 100, pair, 90000),
-        price1CumulativeLast_.Call(endpoint, block.number_ - 100, pair, 90000),
-        price0CumulativeLast_.Call(endpoint, block.number_, pair, 90000),
-        price1CumulativeLast_.Call(endpoint, block.number_, pair, 90000));
+        price0CumulativeLast_.Call(endpoint, block.height_ - 100, pair, 90000),
+        price1CumulativeLast_.Call(endpoint, block.height_ - 100, pair, 90000),
+        price0CumulativeLast_.Call(endpoint, block.height_, pair, 90000),
+        price1CumulativeLast_.Call(endpoint, block.height_, pair, 90000));
     std::cout << price0before << " " << reserve0before << " | " << price1before << " " << reserve1before << " | " << before << std::endl;
     std::cout << price0after << " " << reserve0after << " | " << price1after << " " << reserve1after << " | " << after << std::endl;
     std::cout << block.timestamp_ << std::endl;

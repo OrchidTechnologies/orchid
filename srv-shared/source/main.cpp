@@ -92,8 +92,8 @@ int Main(int argc, const char *const argv[]) {
 
     { po::options_description group("user eth addresses");
     group.add_options()
-        ("personal", po::value<std::string>(), "address to use for making transactions")
-        ("password", po::value<std::string>()->default_value(""), "password to unlock personal account")
+        ("executor", po::value<std::string>(), "address to use for making transactions")
+        ("password", po::value<std::string>()->default_value(""), "password to unlock executor account")
         ("recipient", po::value<std::string>(), "deposit address for client payments")
         ("provider", po::value<std::string>(), "provider address in stake directory")
     ; options.add(group); }
@@ -177,22 +177,22 @@ int Main(int argc, const char *const argv[]) {
         else {
             const auto pem(Certify()->ToPEM());
             auto key(pem.private_key());
-            auto chain(pem.certificate());
+            auto certificate(pem.certificate());
 
             // XXX: generate .p12 file (for Nathan)
             std::cerr << key << std::endl;
-            std::cerr << chain << std::endl;
+            std::cerr << certificate << std::endl;
 
-            return Store(std::move(key), std::move(chain));
+            return Store(std::move(key), std::move(certificate));
         }
     }());
 
 
     // XXX: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
-    //U<rtc::OpenSSLIdentity> identity(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(store.Key(), store.Chain()));
+    //U<rtc::OpenSSLIdentity> identity(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(store.Key(), store.Certificates()));
 
-    rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(store.Key(), store.Chain())));
+    rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(store.Key(), store.Certificates())));
     U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateFromCertificate(*certificate));
 
 
@@ -261,14 +261,14 @@ int Main(int argc, const char *const argv[]) {
     Endpoint endpoint(origin, rpc);
 
     if (args.count("provider") != 0) {
-        const Address provider(args["provider"].as<std::string>());
+        const PasswordExecutor provider(endpoint, args["provider"].as<std::string>(), password);
 
         Wait([&]() -> task<void> {
-            const auto latest(co_await endpoint.Latest());
+            const auto height(co_await endpoint.Height());
             static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look("look");
-            if (Slice<1, 4>(co_await look.Call(endpoint, latest, location, 90000, provider)) != std::tie(url, tls, gpg)) {
+            if (Slice<1, 4>(co_await look.Call(endpoint, height, location, 90000, provider)) != std::tie(url, tls, gpg)) {
                 static const Selector<void, Bytes, Bytes, Bytes> move("move");
-                co_await move.Send(endpoint, provider, password, location, 3000000, Beam(url), Beam(tls), {});
+                co_await provider.Send(location, 0, move(Beam(url), Beam(tls), {}));
             }
         }());
     }
@@ -278,15 +278,12 @@ int Main(int argc, const char *const argv[]) {
         if (price == 0)
             return nullptr;
 
-        orc_assert_(args.count("recipient") != 0, "must specify --recipient unless --price is 0");
-        const Address recipient(args["recipient"].as<std::string>());
-
-        orc_assert_(args.count("personal") != 0, "must specify --personal unless --price is 0");
-        const Address personal(args["personal"].as<std::string>());
+        orc_assert_(args.count("executor") != 0, "must specify --executor unless --price is 0");
+        const PasswordExecutor executor(endpoint, args["executor"].as<std::string>(), password);
+        const auto recipient(args.count("recipient") == 0 ? Address(executor) : Address(args["recipient"].as<std::string>()));
 
         auto cashier(Break<Cashier>(
-            std::move(endpoint),
-            price, personal, password,
+            std::move(endpoint), price, executor,
             Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
         ));
         cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
@@ -338,7 +335,7 @@ int Main(int argc, const char *const argv[]) {
     }());
 
     const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(market), std::move(egress), std::move(ice)));
-    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Chain(), params);
+    node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Certificates(), params);
     return 0;
 }
 

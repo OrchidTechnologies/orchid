@@ -82,8 +82,9 @@ lflags += -static
 lflags += -pthread
 lflags += -lssp
 
-wflags += -fuse-ld=ld
+include $(pwd)/target-lld.mk
 lflags += -Wl,--no-insert-timestamp
+lflags += -Wl,-Xlink=-force:multiple
 
 #cflags += -DNOMINMAX
 cflags += -DWIN32_LEAN_AND_MEAN=

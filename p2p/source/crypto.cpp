@@ -80,8 +80,6 @@ Signature::Signature(const Brick<64> &data, int v) {
         v_ = v_ ^ 1;
         s_ = Number<uint256_t>(n_ - s);
     }
-
-    v_ += 27;
 }
 
 Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
@@ -132,7 +130,7 @@ Common Recover(const Brick<32> &data, const Signature &signature) {
 
     secp256k1_ecdsa_recoverable_signature internal;
     const auto [combined] = Take<Brick<64>>(Tie(signature.r_, signature.s_));
-    orc_assert(secp256k1_ecdsa_recoverable_signature_parse_compact(context, &internal, combined.data(), signature.v_ - 27) != 0);
+    orc_assert(secp256k1_ecdsa_recoverable_signature_parse_compact(context, &internal, combined.data(), signature.v_) != 0);
 
     secp256k1_pubkey common;
     orc_assert(secp256k1_ecdsa_recover(context, &common, &internal, data.data()) != 0);

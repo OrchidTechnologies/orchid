@@ -28,14 +28,8 @@ host/aarch64 := aarch64-linux-gnu
 triple/aarch64 := aarch64-unknown-linux-gnu
 meson/aarch64 := aarch64
 
-include $(pwd)/target-gnu.mk
-
-lflags += -fuse-ld=gold
-lflags += -Wl,--icf=all
-lflags += -Wl,-z,relro
+include $(pwd)/target-elf.mk
 lflags += -Wl,--hash-style=gnu
-lflags += -pthread
-qflags += -fPIC
 
 ifeq ($(filter crossndk,$(debug))$(uname-s),Linux)
 
@@ -100,5 +94,6 @@ sysroot += $(output)/sysroot
 endif
 
 lflags += -ldl
+lflags += -pthread
 
 default := x86_64

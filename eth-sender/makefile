@@ -23,10 +23,10 @@ args :=
 include env/target.mk
 
 .PHONY: all
-all: $(output)/$(default)/orc-sender$(exe)
+all: $(output)/$(default)/cj$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/orc-sender$(exe)
+test: $(output)/$(default)/cj$(exe)
 	$< $(args)
 
 source += $(wildcard source/*.cpp)
@@ -35,7 +35,7 @@ cflags += -Isource
 $(call include,p2p/target.mk)
 include env/output.mk
 
-$(output)/%/orc-sender$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
+$(output)/%/cj$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@$(cxx) $(more/$*) $(wflags) -o $@ $^ $(lflags)
