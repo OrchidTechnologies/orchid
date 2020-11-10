@@ -197,7 +197,7 @@ static Future<MarketConditions> forPot(LotteryPot pot) async {
     log("fetch market conditions");
     var costToRedeem = await getCostToRedeemTicket();
     var limitedByBalance = balance.value <= (escrow / 2.0).value;
-    OXT maxFaceValue = maxTicketFaceValue(balance, escrow);
+    OXT maxFaceValue = LotteryPot.maxTicketFaceValueFor(balance, escrow);
     var ticketUnderwater =
         costToRedeem.oxtCostToRedeem.value >= maxFaceValue.value;
 
@@ -225,9 +225,6 @@ static Future<MarketConditions> forPot(LotteryPot pot) async {
     return CostToRedeem(gasCostToRedeem, oxtCostToRedeem);
   }
 
-  static OXT maxTicketFaceValue(OXT balance, OXT deposit) {
-    return OXT.min(balance, deposit / 2.0);
-  }
 }
 
 class CostToRedeem {

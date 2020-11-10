@@ -9,6 +9,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
+import 'package:orchid/api/orchid_tx.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
@@ -63,6 +64,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   bool _showBalance = false;
   LotteryPot _lotteryPot; // initially null
   MarketConditions _marketConditions;
+  List<OrchidUpdateTransaction> _transactions;
   DateTime _lotteryPotLastUpdate;
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
@@ -100,15 +102,15 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       _importKeyField.addListener(_textFieldChanged);
     }
 
-    // init balance polling
+    // init balance and account details polling
     if (widget.readOnly() && await UserPreferences().getQueryBalances()) {
       setState(() {
         _showBalance = true;
       });
       _balanceTimer = Timer.periodic(Duration(seconds: 10), (_) {
-        _pollBalance();
+        _pollBalanceAndAccountDetails();
       });
-      _pollBalance(); // kick one off immediately
+      _pollBalanceAndAccountDetails(); // kick one off immediately
     }
   }
 
@@ -294,15 +296,55 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      _buildExportAccountButton(),
+                      _buildShareAccountButton(),
                     ],
                   ),
                 ),
+
+              if (widget.readOnly() && _transactions != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: divider(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _buildTransactionList(),
+                )
+              ]
             ],
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildTransactionList() {
+    const String bullet = "• ";
+    var txRows = _transactions.map((utx) {
+      return Row(
+        children: [
+          Text(bullet, style: TextStyle(fontSize: 20)),
+          Container(
+            width: 40,
+              child: Text(utx.tx.type.toString().split('.')[1] + ':')),
+          padx(16),
+          Container(
+            width: 150,
+            child: Text(
+              "Balance: "+
+                formatCurrency(utx.update.endBalance.value, suffix: 'OXT')),
+          ),
+          padx(8),
+          Flexible(child: Text(utx.tx.transactionHash.substring(0,8)+'...'))
+        ],
+      );
+    }).toList();
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text("Transactions", style: AppText.textLabelStyle),
+      pady(8),
+      ...txRows,
+    ]);
   }
 
   // Build the signer key entry dropdown selector
@@ -414,13 +456,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildAccountChart() {
-    if (_marketConditions == null || _lotteryPot == null) {
+    if (_marketConditions == null ||
+        _lotteryPot == null ||
+        _transactions == null) {
       return Container();
     }
 
-    int availableMaxFaceValues =
-        (_lotteryPot.balance.value / _marketConditions.maxFaceValue.value)
-            .floor();
+    var chartModel = AccountBalanceChartModel(_lotteryPot, _transactions);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -433,32 +475,37 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         pady(2),
         Text("Efficiency: " + _marketConditions.efficiencyPerc()),
         pady(16),
-        Padding(
-          padding: const EdgeInsets.only(left: 8, right: 8),
-          child: Row(
-              children: List.generate(
-            availableMaxFaceValues,
-            (i) => Flexible(
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 8),
-                height: 10,
-                color: Colors.deepPurple,
-              ),
-            ),
-          ).toList()),
-        ),
-        /*
-        LinearPercentIndicator(
-          alignment: MainAxisAlignment.center,
-          progressColor: Colors.deepPurple,
-          lineHeight: 10,
-          width: 80,
-          percent: 0.75,
-        ),
-         */
+        // Show the tickets available / used line
+        _buildTicketsAvailableLineChart(chartModel),
         pady(8),
-        Text("Min Tickets available: ${availableMaxFaceValues}"),
+        Text("Min Tickets available: ${chartModel.availableTicketsCurrentMax}"),
       ],
+    );
+  }
+
+  // Build the tickets available horizontal line chart
+  // This consists of "dashed" segments indicating the number of tickets available
+  // at the last high-water mark with a subset colored to indicate currently available.
+  Padding _buildTicketsAvailableLineChart(AccountBalanceChartModel chartModel) {
+    var totalCount = chartModel.availableTicketsHighWatermarkMax;
+    var currentCount = chartModel.availableTicketsCurrentMax;
+
+    double margin = totalCount < 10 ? 8 : 2;
+    var colorFor =
+        (int i) => i < currentCount ? Colors.deepPurple : Colors.grey;
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8),
+      child: Row(
+          children: List.generate(
+        totalCount,
+        (i) => Flexible(
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: margin),
+            height: 10,
+            color: colorFor(i),
+          ),
+        ),
+      ).toList()),
     );
   }
 
@@ -802,7 +849,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     _balanceTimer?.cancel();
   }
 
-  void _pollBalance() async {
+  void _pollBalanceAndAccountDetails() async {
     if (_balancePollInProgress) {
       return;
     }
@@ -812,9 +859,15 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       EthereumAddress funder = _hop()?.funder;
       StoredEthereumKey signerKey = await _hop()?.keyRef?.get();
       EthereumAddress signer = EthereumAddress.from(signerKey.keys().address);
-      // Fetch the pot balance
+
+      // TESTING
+      funder = EthereumAddress.from("0x27fb8edcf854602704fe8438243d0959219db126");
+      signer = EthereumAddress.from("0x932b1456abf113f744e68cf253eed6496d786aab");
+
+    // Fetch the pot balance
       LotteryPot pot;
       MarketConditions marketConditions;
+      List<OrchidUpdateTransaction> transactions;
       try {
         pot = await OrchidEthereum.getLotteryPot(funder, signer)
             .timeout(Duration(seconds: 60));
@@ -829,11 +882,19 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         return;
       }
       var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
+      try {
+        transactions = await OrchidEthereum()
+            .getUpdateTransactions(funder: funder, signer: signer);
+      } catch (err) {
+        log('Error fetching account update transactions: $err');
+        return;
+      }
       if (mounted) {
         setState(() {
           _lotteryPot = pot;
           _marketConditions = marketConditions;
           _showMarketStatsAlert = ticketValue.value <= 0;
+          _transactions = transactions;
         });
       }
       _lotteryPotLastUpdate = DateTime.now();
@@ -855,7 +916,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }
   }
 
-  Widget _buildExportAccountButton() {
+  Widget _buildShareAccountButton() {
     return TitleIconButton(
         text: s.shareOrchidAccount,
         spacing: 24,
@@ -900,5 +961,47 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   S get s {
     return S.of(context);
+  }
+}
+
+/*
+// TESTING
+class FakeAccountBalanceChartModel extends AccountBalanceChartModel {
+  FakeAccountBalanceChartModel(LotteryPot pot, List<OrchidUpdateTransaction> transactions) : super(pot, transactions);
+
+  @override int get availableTicketsCurrentMax {
+    return 7;
+  }
+  @override int get availableTicketsHighWatermarkMax {
+    return 10;
+  }
+}*/
+
+class AccountBalanceChartModel {
+  LotteryPot pot;
+  List<OrchidUpdateTransaction> transactions;
+
+  AccountBalanceChartModel(this.pot, this.transactions);
+
+  // The number of tickets that could be written using the max possible face value
+  int get availableTicketsCurrentMax {
+    return (pot.balance.value / pot.maxTicketFaceValue.value).floor();
+  }
+
+  // The last balance resulting from user actions other than a payment
+  // i.e. the last time the user toppped up or made a withdrawal.
+  OXT get lastBalanceHighWatermark {
+    var balanceAdjustments =
+        this.transactions.where((utx) => !utx.tx.isPayment).toList();
+    return balanceAdjustments.isNotEmpty
+        ? balanceAdjustments.last.update.endBalance
+        : pot.balance;
+  }
+
+  // The number of tickets that could be written using the max possible face value
+  // at the time of the last high-water mark
+  int get availableTicketsHighWatermarkMax {
+    return (lastBalanceHighWatermark.value / pot.maxTicketFaceValue.value)
+        .floor();
   }
 }

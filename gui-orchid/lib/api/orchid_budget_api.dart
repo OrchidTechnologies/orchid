@@ -28,6 +28,14 @@ class LotteryPot {
     this.unlock,
     this.verifier,
   });
+
+  OXT get maxTicketFaceValue {
+    return maxTicketFaceValueFor(balance, deposit);
+  }
+
+  static OXT maxTicketFaceValueFor(OXT balance, OXT deposit) {
+    return OXT.min(balance, deposit / 2.0);
+  }
 }
 
 // TODO: Placeholder budget api
