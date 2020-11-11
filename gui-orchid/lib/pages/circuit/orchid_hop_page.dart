@@ -325,17 +325,16 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         children: [
           Text(bullet, style: TextStyle(fontSize: 20)),
           Container(
-            width: 40,
+              width: 40,
               child: Text(utx.tx.type.toString().split('.')[1] + ':')),
           padx(16),
           Container(
             width: 150,
-            child: Text(
-              "Balance: "+
+            child: Text("Balance: " +
                 formatCurrency(utx.update.endBalance.value, suffix: 'OXT')),
           ),
           padx(8),
-          Flexible(child: Text(utx.tx.transactionHash.substring(0,8)+'...'))
+          Flexible(child: Text(utx.tx.transactionHash.substring(0, 8) + '...'))
         ],
       );
     }).toList();
@@ -861,10 +860,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       EthereumAddress signer = EthereumAddress.from(signerKey.keys().address);
 
       // TESTING
-      funder = EthereumAddress.from("0x27fb8edcf854602704fe8438243d0959219db126");
-      signer = EthereumAddress.from("0x932b1456abf113f744e68cf253eed6496d786aab");
+      //funder = EthereumAddress.from("0x27fb8edcf854602704fe8438243d0959219db126");
+      //signer = EthereumAddress.from("0x932b1456abf113f744e68cf253eed6496d786aab");
 
-    // Fetch the pot balance
+      // Fetch the pot balance
       LotteryPot pot;
       MarketConditions marketConditions;
       List<OrchidUpdateTransaction> transactions;
