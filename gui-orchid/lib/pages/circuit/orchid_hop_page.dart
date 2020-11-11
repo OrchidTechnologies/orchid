@@ -984,7 +984,9 @@ class AccountBalanceChartModel {
 
   // The number of tickets that could be written using the max possible face value
   int get availableTicketsCurrentMax {
-    return (pot.balance.value / pot.maxTicketFaceValue.value).floor();
+    return pot.maxTicketFaceValue.value == 0
+        ? 0
+        : (pot.balance.value / pot.maxTicketFaceValue.value).floor();
   }
 
   // The last balance resulting from user actions other than a payment
@@ -1000,7 +1002,9 @@ class AccountBalanceChartModel {
   // The number of tickets that could be written using the max possible face value
   // at the time of the last high-water mark
   int get availableTicketsHighWatermarkMax {
-    return (lastBalanceHighWatermark.value / pot.maxTicketFaceValue.value)
-        .floor();
+    return pot.maxTicketFaceValue.value == 0
+        ? 0
+        : (lastBalanceHighWatermark.value / pot.maxTicketFaceValue.value)
+            .floor();
   }
 }

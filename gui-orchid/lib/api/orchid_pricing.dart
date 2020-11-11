@@ -189,7 +189,7 @@ class MarketConditions {
     return (this.efficiency * 100).toStringAsFixed(2) + "%";
   }
 
-static Future<MarketConditions> forPot(LotteryPot pot) async {
+  static Future<MarketConditions> forPot(LotteryPot pot) async {
     return forBalance(pot.balance, pot.deposit);
   }
 
@@ -202,10 +202,13 @@ static Future<MarketConditions> forPot(LotteryPot pot) async {
         costToRedeem.oxtCostToRedeem.value >= maxFaceValue.value;
 
     // value received as a fraction of ticket face value
-    var efficiency = max(
-        0,
-        (maxFaceValue - costToRedeem.oxtCostToRedeem).value /
-            maxFaceValue.value);
+    double efficiency = maxFaceValue.value == 0
+        ? 0
+        : max(
+                0,
+                (maxFaceValue - costToRedeem.oxtCostToRedeem).value /
+                    maxFaceValue.value)
+            .toDouble();
 
     return new MarketConditions(
         costToRedeem.gasCostToRedeem,
@@ -224,7 +227,6 @@ static Future<MarketConditions> forPot(LotteryPot pot) async {
     OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
     return CostToRedeem(gasCostToRedeem, oxtCostToRedeem);
   }
-
 }
 
 class CostToRedeem {
