@@ -1,4 +1,9 @@
 site_name: Orchid
 theme:
   name: readthedocs
+pages:
 
+Home: index.md
+Using the Orchid App: using-orchid.md
+Orchid Accounts: accounts.md
+FAQ: faq.md

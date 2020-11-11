@@ -1,6 +1,4 @@
-# How to Use Orchid
-
-## Home Screen
+# Home Screen
 
 Orchid’s home screen is a representation of your device’s Internet connection. The switch in the upper right corner turns Orchid on/off and the middle section allows you to add and delete ‘hops’ which are VPN connections. On the bottom, there are two tabs. One is for Hops, which is the home screen, and the Traffic tab is a network protocol analyzer that allows you to see information about your phone's network connections.
 
@@ -14,17 +12,17 @@ Each hop to an Orchid node requires an Orchid account to pay for service. Read m
 
 For more information about Orchid in general, read the About Orchid section. For information on what kinds of protections Orchid provides, read the Security and Privacy section.
 
-## Hops
+# Hops
 
 Orchid ‘hops’ are vpn connections to the Internet. Examples include a connection to an Orchid node or an OpenVPN connection to a VPN server. You can add and delete hops from the homescreen. Each hop will need a form of authentication to make the server connection. 
 
 Add a hop by clicking on the Add Hop button from the home screen and then selecting a way to add the hop. To add an Orchid hop, select "I have a QR code" if you generated a QR code from your Orchid account or select “I have an Orchid account” to manually input your Ethereum wallet address and generate a signing key that you can put into the app. To add an OpenVPN hop, select “I have an existing VPN subscription” and input the credentials.
 
-### OpenVPN hops
+## OpenVPN hops
 
 Orchid supports OpenVPN. If you have an existing VPN provider, you can add a hop using OpenVPN credentials. To add an OpenVPN hop, click Add Hop -> I have an existing VPN subscription. Then enter your username, password and paste in the configuration for your OpenVPN connection.
 
-### Orchid hops
+## Orchid hops
 
 Orchid has its own VPN wireline protocol, the Orchid protocol. The traffic to and from Orchid nodes uses the Orchid protocol. The traffic looks like webRTC traffic, which is advantageous for security and includes tiny nanopyments that flow with the traffic.
 
@@ -32,7 +30,7 @@ Each Orchid node also has a curator — this is the curated list that is associa
 
 The main component of the Orchid node is going to be the Orchid account associated with it. Each hop requires a valid Orchid account to continue to pay for VPN service.
 
-### Linking  an Orchid Account
+## Linking  an Orchid Account
 
 To add an Orchid account, open the app and select "New Hop" on the homescreen and then "Link Orchid Account" from the add hop screen. Scan or copy/paste the code into the app.
 
@@ -45,27 +43,27 @@ From the main screen, turn the toggle in the upper right to turn Orchid on.
 ## Hop Configuration
 A configuration specifying all details needed to connect to a single Orchid hop. It begins with `account = ...`
 
-### Export
+## Export
 To export a hop configuration, you must first add and configure a 'New Hop' within the Orchid iOS or Android application. Once this is complete, select the hop from the main screen. Scroll down and click the purple 'Share Orchid Account' button. This will display a prominant QR code representation of the Hop Configuration that you can scan and import from a different device. Running the QR code through any decoder will reveal the raw configuration contained within.
 
-### Import
+## Import
 From the main screen within the Orchid iOS or Android application, select `New Hop -> I have a QR code`. You can then click the purple `Scan` button to quickly scan and import a Hop Configuration QR code. Alternatively, if you have the raw Hop Configuration, copy it to your device's clipboard and click the `Paste` button.
 
 
-## Complete Configuration (Hops Configuration)
+# Complete Configuration (Hops Configuration)
 A configuration made up of the hop configurations for all hops setup within the application.  It begins with `hops = ...`
 
-### Export
+## Export
 From within the Orchid iOS or Android application, open the hamburger menu (`☰`) in the top left corner. Next, go to `Settings -> Manage Configuration (beta) -> Export`. This will display the raw complete configuration (hops configuration). You can copy it to your device's clipboard using the purple `Copy` button at the bottom. Alternatively, you can produce a QR Code representation by clicking the QR Code button immediately to the left of the `Copy` button.
 
-### Import
+## Import
 From within the Orchid iOS or Android application, open the hamburger menu (`☰`) in the top left corner. Next, go to `Settings -> Manage Configuration (beta) -> Import`. You can either paste the raw configuration into the text field or click on the QR Code button at the bottom to scan a QR Code representation of the configuration. After doing so, click the `Import` button to save. Note that this will overwrite all existing configured hops within the application.
 
 # Gathering Logs
 
 When debugging client-side issues, you might be requested to share logs. These logs provide advanced details about what the Orchid client is doing behind the scenes to provide you with a private browsing experience. This page is designed to help you collect and share the logs.
 
-# Android Prerequisites
+## Android Prerequisites
 Start by turning on developer and debugging mode on the phone by going to `Settings -> About Phone -> About Software` and tapping on the build number repeatedly until it prompts you to enable developer mode. Then go to `Settings -> Developer Settings -> Turn on USB Debugging`. Finally, you can run the following command on your computer with your phone connected via USB to view the logs.
 
 ## Android and iOS Prerequisites
