@@ -191,10 +191,7 @@ cflags += -I$(pwd/v8)/include
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd)/extra
 
-ifeq ($(target),win)
-cflags/$(pwd)/v8/ += -Wno-format
-cflags/$(pwd)/v8/ += -Wno-ignored-attributes
-endif
+cflags/$(pwd)/v8/ += -Wno-builtin-assume-aligned-alignment
 
 # XXX: macro-assembler-x64.cc checks TARGET_ARCH_* without including this :/
 cflags/$(pwd)/v8/ += -include base/build_config.h
