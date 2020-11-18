@@ -31,29 +31,33 @@ flags_ = $(if $(filter ./,$(1)),,$(call flags_,$(dir $(patsubst %/,%,$(1)))) $(c
 flags- = $(call flags_,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<))))
 flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(filter -I%,$(cflags/./$<) $(flags-) $(cflags)) $(filter-out -I%,$(cflags) $(flags-) $(cflags/./$<)))
 
+define compile
+$(job)@sed -e '1{x;s!.*!#line 1 "$<"!;p;x;};$(chacks/./$<)' $< | $(prefix) $($(1)) $(more/$(arch)) -MD -MP -c -o $@ $(3) -x $(2) - -iquote$(dir $<) $(flags) $(xflags)
+endef
+
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cc) $(more/$(arch)) -MD -MP -c -o $@ $< $(flags)
+	$(call compile,cc,c,)
 
 $(output)/%.m.o: $$(specific) $$(folder).m $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cc) $(more/$(arch)) -fobjc-arc -MD -MP -c -o $@ $< $(flags)
+	$(call compile,cc,objective-c,-fobjc-arc)
 
 $(output)/%.mm.o: $$(specific) $$(folder).mm $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx) $(more/$(arch)) -std=gnu++17 -fobjc-arc -MD -MP -c -o $@ $< $(flags) $(xflags)
+	$(call compile,cxx,objective-c++,-std=gnu++17 -fobjc-arc)
 
 $(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@$(prefix) $(cxx) $(more/$(arch)) -std=c++17 -MD -MP -c -o $@ $< $(flags) $(xflags)
+	$(call compile,cxx,c++,-std=c++17)
 
 $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
@@ -66,7 +70,7 @@ ifeq ($(filter notidy,$(debug)),)
 	fi
 endif
 	@echo [CC] $(target)/$(arch) $<
-	$(job)@sed -e '1{x;s!.*!#line 1 "$<"!;p;x;};$(chacks/./$<)' $< | $(prefix) $(cxx) $(more/$(arch)) -std=c++2a -MD -MP -c -o $@ -x c++ - -iquote$(dir $<) $(flags) $(xflags)
+	$(call compile,cxx,c++,-std=c++2a)
 
 $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 	$(specific)

@@ -15,8 +15,6 @@ cflags += -DMINGW_HAS_SECURE_API
 
 cflags += -DHAVE_WINSOCK2_H
 
-cflags += -DABSL_FORCE_THREAD_IDENTITY_MODE=ABSL_THREAD_IDENTITY_MODE_USE_TLS
-
 # XXX: technically for boost
 lflags += -lmswsock
 # XXX: technically for boringtun
@@ -37,6 +35,9 @@ cflags/$(pwd)/webrtc/rtc_base/checks.cc += -Wno-format
 
 cflags/$(pwd)/webrtc/rtc_base/platform_thread_types.cc += -include $(pwd/webrtc)/../setname.hpp
 cflags/$(pwd)/abseil-cpp/absl/base/internal/thread_identity.cc += -include pthread.h
+
+chacks/$(pwd)/webrtc/api/task_queue/task_queue_base.cc += s/defined(WEBRTC_POSIX)/1/g
+chacks/$(pwd)/webrtc/rtc_base/synchronization/yield_policy.cc += s/defined(WEBRTC_POSIX)/1/g
 
 source += $(pwd)/webrtc/rtc_base/synchronization/rw_lock_win.cc
 source += $(pwd)/webrtc/rtc_base/win32.cc
