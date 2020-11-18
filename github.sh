@@ -22,8 +22,8 @@ rel=$(curl -su "${usr}" --data-raw '{
 
 env/upload-gha.sh "${usr}" "${git}" "${rel}" app-android/out-and/Orchid.apk application/vnd.android.package-archive orchid-apk_"${ver}".apk
 
-env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-lnx/x86_64/orchid application/x-elf orchid-lnx_"${ver}"
-env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-mac/x86_64/orchid application/x-mach-binary orchid-mac_"${ver}"
+env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-lnx/x86_64/orchidcd application/x-elf orchidcd-lnx_"${ver}"
+env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-mac/x86_64/orchidcd application/x-mach-binary orchidcd-mac_"${ver}"
 
 env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-shared/out-lnx/x86_64/orchidd application/x-elf orchidd-lnx_"${ver}"
 env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-shared/out-mac/x86_64/orchidd application/x-mach-binary orchidd-mac_"${ver}"
