@@ -66,7 +66,8 @@ Signature Sign(const Secret &secret, const Brick<32> &data);
 Common Recover(const Brick<32> &data, const Signature &signature);
 
 inline Common Recover(const Brick<32> &data, uint8_t v, const Brick<32> &r, const Brick<32> &s) {
-    return Recover(data, Signature(r, s, v));
+    orc_assert(v >= 27);
+    return Recover(data, Signature(r, s, v - 27));
 }
 
 Beam Object(int nid);

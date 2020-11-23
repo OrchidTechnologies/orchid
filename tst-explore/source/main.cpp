@@ -152,9 +152,9 @@ int Main(int argc, const char *const argv[]) {
 
         const unsigned needed(83328);
 
-        const auto latest(co_await endpoint.Latest());
-        //const uint256_t latest(10645961);
-        for (auto number(latest); number != 0; --number) {
+        const auto height(co_await endpoint.Height());
+        //const uint256_t height(10645961);
+        for (auto number(height); number != 0; --number) {
             const auto block(co_await endpoint.Header(number));
 
             for (; timestamp - 1 > block.timestamp_; --round)
@@ -170,23 +170,23 @@ int Main(int argc, const char *const argv[]) {
             uint256_t limit(block.limit_);
 
             Pile<uint256_t, uint256_t> prices;
-            for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &transaction) {
-                return endpoint(transaction.hash_);
-            }, block.transactions_)), block.transactions_)) {
+            for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &record) {
+                return endpoint[record.hash_];
+            }, block.records_)), block.records_)) {
                 const auto &receipt(*zipped.get<0>());
-                const auto &transaction(zipped.get<1>());
-                const auto &price(transaction.price_);
+                const auto &record(zipped.get<1>());
+                const auto &bid(record.bid_);
                 const auto &gas(receipt.gas_);
-                //if (price == uint256_t("50000000000"))
-                //    Log() << transaction.hash_ << std::endl;
+                //if (bid == uint256_t("50000000000"))
+                //    Log() << record.hash_ << std::endl;
                 static const uint256_t Ten10("10000000000");
-                if (transaction.from_ == block.miner_ ||
-                    price == 0 || price == 1 ||
-                    price == 1000000000 || price == Ten10 ||
-                miners.find(transaction.from_) != miners.end())
+                if (record.from_ == block.miner_ ||
+                    bid == 0 || bid == 1 ||
+                    bid == 1000000000 || bid == Ten10 ||
+                miners.find(record.from_) != miners.end())
                     limit -= gas;
                 else
-                    prices(price, gas);
+                    prices(bid, gas);
             }
 
             if (!prices.any() || limit < needed)
@@ -199,7 +199,7 @@ int Main(int argc, const char *const argv[]) {
             const auto gwei(wei / Ten9);
 
             //if (gwei < 100)
-            Log() << std::dec << "#" << block.number_ << " @" << block.timestamp_ << std::fixed <<
+            Log() << std::dec << "#" << block.height_ << " @" << block.timestamp_ << std::fixed <<
                 " " << "-" << std::setprecision(1) << remain <<
                 " " << "=" << std::setprecision(1) << (Float(prices.med()) / Ten9) <<
                 " " << ">" << std::setprecision(1) << gwei <<
@@ -215,21 +215,21 @@ int Main(int argc, const char *const argv[]) {
     Router router;
 
     router(http::verb::get, R"(/c/1/diff.png)", [&](Request request) -> task<Response> {
-        auto number(co_await endpoint.Latest());
         std::multimap<uint256_t, std::tuple<uint64_t, uint64_t>> prices;
         uint64_t maximum(0);
 
+        auto number(co_await endpoint.Height());
         for (unsigned i(0); i != 16; ++i) {
             const auto block(co_await endpoint.Header(number--));
 
-            for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &transaction) {
-                return endpoint(transaction.hash_);
-            }, block.transactions_)), block.transactions_)) {
+            for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &record) {
+                return endpoint[record.hash_];
+            }, block.records_)), block.records_)) {
                 const auto &receipt(*zipped.get<0>());
-                const auto &transaction(zipped.get<1>());
-                prices.emplace(std::piecewise_construct, std::forward_as_tuple(transaction.price_), std::forward_as_tuple(transaction.gas_, receipt.gas_));
-                if (maximum < transaction.gas_)
-                    maximum = transaction.gas_;
+                const auto &record(zipped.get<1>());
+                prices.emplace(std::piecewise_construct, std::forward_as_tuple(record.bid_), std::forward_as_tuple(record.gas_, receipt.gas_));
+                if (maximum < record.gas_)
+                    maximum = record.gas_;
             }
         }
 
@@ -270,7 +270,7 @@ int Main(int argc, const char *const argv[]) {
     });
 
     router(http::verb::get, R"(/c/1/gas.png)", [&](Request request) -> task<Response> {
-        auto number(co_await endpoint.Latest());
+        auto number(co_await endpoint.Height());
         Pile<uint256_t, uint64_t> prices;
         uint64_t limit(0);
 
@@ -278,27 +278,27 @@ int Main(int argc, const char *const argv[]) {
             const auto block(co_await endpoint.Header(number--));
             limit += block.limit_;
 
-            for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &transaction) {
-                return endpoint(transaction.hash_);
-            }, block.transactions_)), block.transactions_)) {
+            for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &record) {
+                return endpoint[record.hash_];
+            }, block.records_)), block.records_)) {
                 const auto &receipt(*zipped.get<0>());
-                const auto &transaction(zipped.get<1>());
-                const auto &price(transaction.price_);
+                const auto &record(zipped.get<1>());
+                const auto &bid(record.bid_);
                 const auto &gas(receipt.gas_);
 #if 0
-                //if (price == uint256_t("50000000000"))
-                //    Log() << transaction.hash_ << std::endl;
+                //if (bid == uint256_t("50000000000"))
+                //    Log() << record.hash_ << std::endl;
                 static const uint256_t Ten10("10000000000");
-                if (transaction.from_ == block.miner_ ||
-                    price == 0 || price == 1 ||
-                    price == 1000000000 || price == Ten10 ||
-                miners.find(transaction.from_) != miners.end())
+                if (record.from_ == block.miner_ ||
+                    bid == 0 || bid == 1 ||
+                    bid == 1000000000 || bid == Ten10 ||
+                miners.find(record.from_) != miners.end())
                     limit -= gas;
                 else
 #else
-                if (transaction.from_ != block.miner_)
+                if (record.from_ != block.miner_)
 #endif
-                    prices(price, gas);
+                    prices(bid, gas);
             }
         }
 
@@ -368,7 +368,7 @@ int Main(int argc, const char *const argv[]) {
         level(0.5, 1.0, 0.5, pct60);
 
 
-        level(1.0, 0.5, 0.5, Float(co_await endpoint.Price()) / Ten9);
+        level(1.0, 0.5, 0.5, Float(co_await endpoint.Bid()) / Ten9);
 
         co_await gauge->Update();
         level(0.5, 0.5, 1.0, Float(gauge->Price()) / Ten9);
@@ -389,7 +389,7 @@ int Main(int argc, const char *const argv[]) {
     });
 
     const Store store(Load(args["tls"].as<std::string>()));
-    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Chain());
+    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
     Thread().join();
     return 0;
 }

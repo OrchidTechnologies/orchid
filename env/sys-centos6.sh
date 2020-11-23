@@ -10,7 +10,7 @@ mkdir -p "${sysroot}"
 pushd "${sysroot}"
 
 function rpm() {
-    curl -s http://vault.centos.org/6.0/os/x86_64/Packages/"$1".el6.x86_64.rpm | rpm2cpio - | cpio -i
+    curl -s https://vault.centos.org/6.0/os/x86_64/Packages/"$1".el6.x86_64.rpm | rpm2cpio - | cpio -i
     find . -type d ! -perm 755 -exec chmod 755 {} +
 }
 

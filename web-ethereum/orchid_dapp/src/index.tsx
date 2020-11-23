@@ -18,7 +18,6 @@ import messages_ko from './i18n/ko.json';
 import {getParam, testLocalization_} from "./util/util";
 import {Route, setURL} from "./components/Route";
 import {WalletProviderState, WalletProviderStatus} from "./api/orchid-eth-web3";
-import {start} from "repl";
 
 //const messages: Record<string, Record<string, any>> = {
 const messages: any = {
@@ -49,8 +48,10 @@ const App: FC = () => {
   useEffect(() => {
       let api = OrchidAPI.shared();
       let walletStatusSub = api.eth.provider.walletStatus.subscribe(newWalletStatus => {
-        console.log("new wallet status: ", WalletProviderState[newWalletStatus.state], newWalletStatus.account);
-        if (!newWalletStatus.account || newWalletStatus.account !== walletStatus.account) {
+        console.log("new wallet status: ", WalletProviderState[newWalletStatus.state], newWalletStatus.account, walletStatus.account);
+        // If no account or account has chnaged, default the route
+        if (!newWalletStatus.account || (walletStatus.account && newWalletStatus.account !== walletStatus.account)) {
+          console.log("new wallet account: clearing route")
           setURL(Route.None)
         }
         setWalletStatus(newWalletStatus);

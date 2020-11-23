@@ -207,6 +207,11 @@ export class Info extends Component<any, any> {
         <div style={{marginTop: "16px"}}/>
         <LockStatus/>
 
+        {/*disconnect button*/}
+        <div style={{marginTop: "32px"}}/>
+            <Button variant="light" onClick={ () =>
+              OrchidAPI.shared().eth.provider.disconnect()
+            }>{"Disconnect Provider"}</Button>
       </Container>
     );
   }

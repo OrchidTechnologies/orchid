@@ -49,6 +49,7 @@ v8src := $(patsubst %,$(pwd)/v8/src/%,$(shell cd $(pwd)/v8/src && find . \
 v8src += $(foreach temp,$(wildcard $(pwd)/v8/third_party/inspector_protocol/crdtp/*.cc),$(if $(findstring test,$(temp)),,$(temp)))
 
 v8src += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/*.cc))
+v8src := $(filter-out %/deoptimizer-cfi-builtins.cc,$(v8src))
 v8src := $(filter-out %/deoptimizer-cfi-empty.cc,$(v8src))
 v8src := $(filter-out %/unwinding-info-win64.cc,$(v8src))
 
@@ -190,10 +191,7 @@ cflags += -I$(pwd/v8)/include
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd)/extra
 
-ifeq ($(target),win)
-cflags/$(pwd)/v8/ += -Wno-format
-cflags/$(pwd)/v8/ += -Wno-ignored-attributes
-endif
+cflags/$(pwd)/v8/ += -Wno-builtin-assume-aligned-alignment
 
 # XXX: macro-assembler-x64.cc checks TARGET_ARCH_* without including this :/
 cflags/$(pwd)/v8/ += -include base/build_config.h

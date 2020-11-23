@@ -193,5 +193,6 @@ cflags += -I$(pwd)/cpp-jwt/include
 include $(pwd)/asio.mk
 
 $(call include,rtc/target.mk)
+$(call include,krypton/target.mk)
 $(call include,openvpn3.mk)
 $(call include,sqlite.mk)

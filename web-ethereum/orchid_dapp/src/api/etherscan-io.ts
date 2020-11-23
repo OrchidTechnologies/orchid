@@ -7,7 +7,6 @@ export class EtherscanIO {
   apiKey: string = "73BIQR3R1ER56V53PSSAPNUTQUFVHCVVVH";
   api_url: string = 'https://api.etherscan.io/api';
   lotteryContractAddress: EthAddress = OrchidContracts.lottery_addr();
-  lotteryFundMethodHash: string = OrchidContracts.lottery_push_method_hash;
   startBlock: number = 872000;
 
   /*
@@ -70,7 +69,7 @@ export class EtherscanIO {
       'fromBlock': this.startBlock.toString(),
       'toBlock': 'latest',
       'address': this.lotteryContractAddress,
-      'topic0': this.lotteryFundMethodHash,
+      'topic0': OrchidContracts.lottery_update_event_hash,
       'topic0_1_opr': 'and',
       'topic1': EtherscanIO.pad64Chars(funder),
       'topic1_2_opr': 'and',

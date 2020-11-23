@@ -192,7 +192,9 @@ ifeq ($(target),ios)
 # adrp x5, :got:.Lrconst ; ldr x5, [x5, #:got_lo12:.Lrconst] ;
 w_libgcrypt += gcry_cv_gcc_aarch64_platform_as_ok=no
 w_libgcrypt += --disable-asm
+endif
 
+ifneq ($(filter ios mac,$(target)),)
 # XXX: rndlinux.c  ret = getentropy (buffer, nbytes);  (syscall() backup)
 # error: implicit declaration of function 'getentropy' is invalid in C99
 w_libgcrypt += ac_cv_func_getentropy=no

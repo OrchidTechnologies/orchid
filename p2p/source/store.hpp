@@ -30,18 +30,18 @@ namespace orc {
 class Store {
   private:
     std::string key_;
-    std::string chain_;
+    std::string certificates_;
 
   public:
-    Store(std::string key, std::string chain);
+    Store(std::string key, std::string certificates);
     Store(const std::string &store);
 
     const std::string &Key() const {
         return key_;
     }
 
-    const std::string &Chain() const {
-        return chain_;
+    const std::string &Certificates() const {
+        return certificates_;
     }
 };
 

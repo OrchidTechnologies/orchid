@@ -32,110 +32,6 @@ namespace orc {
 
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>> uint160_t;
 
-class Nested {
-  protected:
-    bool scalar_;
-    mutable std::string value_;
-    mutable std::vector<Nested> array_;
-
-  private:
-    static void enc(std::string &data, unsigned length);
-    static void enc(std::string &data, unsigned length, uint8_t offset);
-
-  public:
-    Nested() :
-        scalar_(true)
-    {
-    }
-
-    Nested(bool scalar, std::string value, std::vector<Nested> array) :
-        scalar_(scalar),
-        value_(std::move(value)),
-        array_(std::move(array))
-    {
-    }
-
-    Nested(uint8_t value) :
-        scalar_(true),
-        value_(1, char(value))
-    {
-    }
-
-    Nested(std::string value) :
-        scalar_(true),
-        value_(std::move(value))
-    {
-    }
-
-    Nested(const char *value) :
-        Nested(std::string(value))
-    {
-    }
-
-    Nested(const Buffer &buffer) :
-        Nested(buffer.str())
-    {
-    }
-
-    Nested(std::initializer_list<Nested> list) :
-        scalar_(false)
-    {
-        for (auto nested(list.begin()); nested != list.end(); ++nested)
-            array_.emplace_back(nested->scalar_, std::move(nested->value_), std::move(nested->array_));
-    }
-
-    Nested(Nested &&rhs) noexcept :
-        scalar_(rhs.scalar_),
-        value_(std::move(rhs.value_)),
-        array_(std::move(rhs.array_))
-    {
-    }
-
-    bool scalar() const {
-        return scalar_;
-    }
-
-    size_t size() const {
-        orc_assert(!scalar_);
-        return array_.size();
-    }
-
-    const Nested &operator [](unsigned i) const {
-        orc_assert(!scalar_);
-        orc_assert(i < size());
-        return array_[i];
-    }
-
-    Subset buf() const {
-        orc_assert(scalar_);
-        return Subset(value_);
-    }
-
-    const std::string &str() const {
-        orc_assert(scalar_);
-        return value_;
-    }
-
-    uint256_t num() const {
-        orc_assert(scalar_);
-        uint256_t value;
-        if (value_.empty())
-            value = 0;
-        else
-            boost::multiprecision::import_bits(value, value_.rbegin(), value_.rend(), 8, false);
-        return value;
-    }
-
-    void enc(std::string &data) const;
-};
-
-std::ostream &operator <<(std::ostream &out, const Nested &value);
-
-Nested Explode(Window &window);
-Nested Explode(Window &&window);
-
-std::string Implode(Nested nested);
-
 class Address :
     private uint160_t
 {
@@ -593,8 +489,6 @@ struct Coder {
         return builder;
     }
 };
-
-uint64_t Timestamp();
 
 }
 

@@ -38,13 +38,12 @@ more/$(1) := -arch $(1)
 endef
 $(each)
 
-clang := $(shell xcrun -f clang)
-
+clang := clang
 objc := $(clang) $(more)
 
 ifeq ($(filter crossndk,$(debug)),)
 cc := $(clang) $(more)
-cxx := $(shell xcrun -f clang++) $(more)
+cxx := clang++ $(more)
 
 ifeq ($(tidy)$(filter notidy,$(debug)),)
 debug += notidy

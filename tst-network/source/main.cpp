@@ -212,8 +212,8 @@ task<void> Stakes(const Endpoint &endpoint, const Address &directory, const Bloc
 
 template <typename Code_>
 task<void> Stakes(const Endpoint &endpoint, const Address &directory, const Code_ &code) {
-    const auto number(co_await endpoint.Latest());
-    const auto block(co_await endpoint.Header(number));
+    const auto height(co_await endpoint.Height());
+    const auto block(co_await endpoint.Header(height));
     const auto [account, root] = co_await endpoint.Get(block, directory, nullptr, 0x3U);
     co_await Stakes(endpoint, directory, block, account.storage_, root, code);
 }
@@ -455,14 +455,14 @@ int Main(int argc, const char *const argv[]) {
 
         body << "Cost: ";
         body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 83328) << " || ";
-        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 67663) << " || ";
+        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 66327) << " || ";
         body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)";
         body << "\n";
 
         body << "      ";
         body << "1k= $" << std::fixed << std::setprecision(2) << (overhead * 1000) << " || ";
         body << "$1= " << std::fixed << uint64_t(1 / overhead) << " || ";
-        body << "rf= $" << std::fixed << std::setprecision(2) << (overhead * 58949);
+        body << "rf= $" << std::fixed << std::setprecision(2) << (overhead * 57654);
         body << "\n";
 
         body << "\n";
@@ -544,7 +544,7 @@ int Main(int argc, const char *const argv[]) {
     });
 
     const Store store(Load(args["tls"].as<std::string>()));
-    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Chain());
+    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
     Thread().join();
     return 0;
 }

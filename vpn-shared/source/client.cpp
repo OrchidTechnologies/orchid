@@ -65,7 +65,7 @@ task<void> Client::Submit() {
 task<void> Client::Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature) {
     const Header header{Magic_, hash};
     co_await Send(Datagram(Port_, Port_, Tie(header,
-        Command(Submit_, signature.v_, signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt))
+        Command(Submit_, uint8_t(signature.v_ + 27), signature.r_, signature.s_, ticket.Knot(lottery_, chain_, receipt))
     )));
 }
 

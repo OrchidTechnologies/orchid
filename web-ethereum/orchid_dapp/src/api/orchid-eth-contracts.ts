@@ -32,8 +32,9 @@ export class OrchidContracts {
       || this.directory_addr() !== this.directory_addr_final
   }
 
-  static lottery_push_method_hash: string =
-    '0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc'; // This is topic[0] of the push event.
+  // This is topic[0] of the Update event.
+  static lottery_update_event_hash: string =
+    '0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc';
 
   // TODO: Now that the contracts are final we can figure out the actual max gas these methods
   // TODO: can possibly consume, taking into account variation in storage allocation for new users.

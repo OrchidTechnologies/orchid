@@ -61,6 +61,7 @@ cflags += -Werror
 cflags += -Wno-unknown-warning-option
 
 cflags += -Wno-deprecated-volatile
+cflags += -Wno-range-loop-analysis
 
 cflags += -fmessage-length=0
 cflags += -ferror-limit=0
@@ -107,7 +108,7 @@ cflags += -I$(output)/extra
 $(output)/extra/revision.hpp: force
 	@mkdir -p $(dir $@)
 ifeq ($(filter nodiff,$(debug)),)
-	@env/revision.sh $(if $(filter nolist,$(debug)),--) $(cc) --version | xxd -i >$@.new
+	@env/revision.sh $(if $(filter nolist,$(debug)),--) $(cc) $(more/$(default)) $(wflags) | xxd -i >$@.new
 else
 	@echo >$@.new
 endif

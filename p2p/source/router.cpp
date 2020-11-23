@@ -83,7 +83,7 @@ task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
     }
 }
 
-void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params) {
+void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
     asio::ssl::context ssl{asio::ssl::context::tlsv12};
 
     ssl.set_options(
@@ -92,7 +92,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
         asio::ssl::context::single_dh_use |
     0);
 
-    ssl.use_certificate_chain(asio::buffer(chain.data(), chain.size()));
+    ssl.use_certificate_chain(asio::buffer(certificates.data(), certificates.size()));
     ssl.use_private_key(asio::buffer(key.data(), key.size()), asio::ssl::context::file_format::pem);
     ssl.use_tmp_dh(asio::buffer(params.data(), params.size()));
 

@@ -24,7 +24,6 @@ import withdrawIconSelected from '../assets/withdraw.svg'
 import {Divider, hashPath, Visibility} from "../util/util";
 import {OrchidAPI} from "../api/orchid-api";
 import {pathToRoute, Route, RouteContext, setURL} from "./Route";
-import {Overview} from "./overview/Overview";
 import {TransactionPanel} from "./TransactionPanel";
 import {OrchidTransactionDetail} from "../api/orchid-tx";
 import {S} from "../i18n/S";
@@ -51,7 +50,7 @@ export const Layout: FC = () => {
     let api = OrchidAPI.shared();
     // new user defaults
     let newUserSub = api.newUser.subscribe(isNew => {
-      console.log("user is new: ", isNew)
+      //console.log("user is new: ", isNew)
       setIsNewUser(isNew);
     });
     let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
@@ -71,7 +70,7 @@ export const Layout: FC = () => {
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
   let navEnabled = true;
   return (
-    <RouteContext.Provider value={{
+  <RouteContext.Provider value={{
       route: route,
       setNavEnabled: (enabled: boolean) => {
         console.log("set nav enabled: ", enabled);
@@ -116,7 +115,6 @@ export const Layout: FC = () => {
         {bannerTransactions}
         <Row className="page-content">
           <Col>
-            <Visibility visible={route === Route.Overview}><Overview/></Visibility>
             <Visibility visible={route === Route.Info || (route === Route.None && !isNewUser)}><Info/></Visibility>
             <Visibility visible={route === Route.CreateAccount || (route === Route.None && isNewUser)}><CreateAccount/></Visibility>
             <Visibility visible={route === Route.AddFunds}><AddFunds/></Visibility>

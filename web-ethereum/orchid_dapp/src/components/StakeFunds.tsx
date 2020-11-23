@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useRef, useState} from "react";
+import React, {FC, useCallback, useEffect, useRef, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {errorClass, parseFloatSafe, parseIntSafe} from "../util/util";
 import {SubmitButton} from "./SubmitButton";
@@ -41,11 +41,7 @@ export const StakeFunds: FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    updateCurrentStake().then();
-  }, [stakeeAddress]);
-
-  async function updateCurrentStake() {
+  const updateCurrentStake = useCallback(async () => {
     let api = OrchidAPI.shared();
     if (stakeeAddress === null) {
       //console.log("missing stakee address");
@@ -53,7 +49,11 @@ export const StakeFunds: FC = () => {
     }
     let stake = await api.eth.orchidGetStake(stakeeAddress);
     setCurrentStakeAmount(stake);
-  }
+  }, [stakeeAddress]);
+
+  useEffect(() => {
+    updateCurrentStake().then();
+  }, [updateCurrentStake, stakeeAddress]);
 
   function clearForm() {
     let field = amountInput.current;

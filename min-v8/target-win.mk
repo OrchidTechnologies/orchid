@@ -19,5 +19,8 @@ cflags/$(pwd/v8)/src/base/platform/platform-win32.cc += -U__MINGW32__ -DPAGE_TAR
 cflags/$(pwd/v8)/src/./base/platform/time.cc += -include $(pwd/v8)/../time.hpp
 cflags/$(pwd/v8)/src/diagnostics/unwinding-info-win64.cc += -U_WIN32_WINNT -D_WIN32_WINNT=0x0602
 
+cflags/$(pwd)/v8/ += -Wno-format
+cflags/$(pwd)/v8/ += -Wno-ignored-attributes
+
 cflags += -include $(pwd/v8)/../extra.hpp
 lflags += -ldbghelp

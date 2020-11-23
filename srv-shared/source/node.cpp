@@ -27,7 +27,7 @@
 
 namespace orc {
 
-void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &chain, const std::string &params) {
+void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
     Router router;
 
     router(http::verb::post, "/", [&](Request request) -> task<Response> {
@@ -60,7 +60,7 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
         co_return Respond(request, http::status::ok, "text/plain", std::string(VersionData, VersionSize));
     });
 
-    router.Run(bind, port, key, chain, params);
+    router.Run(bind, port, key, certificates, params);
     Thread().join();
 }
 

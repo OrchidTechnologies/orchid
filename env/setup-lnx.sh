@@ -3,7 +3,7 @@ set -e
 
 export DEBIAN_FRONTEND=noninteractive
 sudo -EH apt-get -y install autoconf automake bc bison cpio capnproto flex gettext gperf groff libtool ninja-build pkg-config python python3-pip python3-setuptools rpm tcl texinfo vim-common
-sudo -EH apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev clang-tidy-9
+sudo -EH apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev clang-tidy-9 lld-9
 
 function usable() {
     # Ubuntu bionic ships meson 0.45, which is too old to build glib

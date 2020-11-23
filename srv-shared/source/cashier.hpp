@@ -26,7 +26,7 @@
 #include <map>
 #include <string>
 
-#include "endpoint.hpp"
+#include "executor.hpp"
 #include "event.hpp"
 #include "float.hpp"
 #include "local.hpp"
@@ -65,8 +65,7 @@ class Cashier :
 
     const Float price_;
 
-    const Address personal_;
-    const std::string password_;
+    const Executor &executor_;
     const S<Updated<uint256_t>> balance_;
 
     const Address lottery_;
@@ -87,7 +86,7 @@ class Cashier :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Cashier(Endpoint endpoint, const Float &price, const Address &personal, std::string password, const Address &lottery, const uint256_t &chain, const Address &recipient);
+    Cashier(Endpoint endpoint, const Float &price, const Executor &executor, const Address &lottery, const uint256_t &chain, const Address &recipient);
     ~Cashier() override = default;
 
     void Open(S<Origin> origin, Locator locator);
@@ -105,7 +104,7 @@ class Cashier :
         Spawn([=]() mutable noexcept -> task<void> {
             for (;;) {
                 orc_ignore({
-                    co_await selector.Send(endpoint_, personal_, password_, lottery_, gas, price, std::forward<Args_>(args)...);
+                    co_await executor_.Send(lottery_, 0, selector(std::forward<Args_>(args)...));
                     break;
                 });
 

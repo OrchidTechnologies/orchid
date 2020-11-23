@@ -19,7 +19,15 @@ echo "${head}"
 echo "${merge}"
 echo
 
-"$@" | head -n 1
+if [[ $# -eq 0 ]]; then
+    echo; echo
+else
+    "$@" --version | head -n 1
+    # ld64 doesn't support --version and prints its version to stderr
+    # Android NDK has a temporary /buildbot folder for its repository
+    "$@" -Wl,-v 2>&1 | sed -e '1!d;s@/tmp[0-9A-Za-z]\{6\}@/tmpXXXXXX@' || true
+fi
+
 rustc --version
 echo
 

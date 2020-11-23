@@ -53,6 +53,11 @@ class Argument final {
 
     Argument(uint64_t value) :
         value_([&]() {
+#ifdef __APPLE__
+            std::ostringstream data;
+            data << "0x" << std::hex << value;
+            return data.str();
+#else
             std::string data;
             data.resize(18);
             const auto start(data.data());
@@ -63,6 +68,7 @@ class Argument final {
             orc_assert(result.ec == std::errc());
             data.resize(result.ptr - start);
             return data;
+#endif
         }())
     {
     }
@@ -103,8 +109,8 @@ class Argument final {
         value_(Json::arrayValue)
     {
         int index(0);
-        for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[index] = Argument(arg->value_);
+        for (const auto &arg : args)
+            value_[index++] = std::move(Argument(arg).value_);
     }
 
     Argument(std::map<std::string, Argument> args) :
@@ -112,6 +118,12 @@ class Argument final {
     {
         for (auto arg(args.begin()); arg != args.end(); ++arg)
             value_[arg->first] = std::move(arg->second);
+    }
+
+    template <typename Type_>
+    Argument(std::optional<Type_> arg) :
+        value_(arg ? std::move(Argument(std::move(*arg)).value_) : Json::nullValue)
+    {
     }
 
     operator Json::Value &&() && {

@@ -33,4 +33,11 @@ uint64_t Monotonic() {
     return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 }
 
+uint64_t Timestamp() {
+    using std::chrono::system_clock;
+    system_clock::time_point point(system_clock::now());
+    system_clock::duration duration(point.time_since_epoch());
+    return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+}
+
 }
