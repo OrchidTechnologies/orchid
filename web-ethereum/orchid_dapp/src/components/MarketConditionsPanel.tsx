@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
-import {ETH, GWEI, min, OXT, USD} from "../api/orchid-types";
+import {ETH, OXT, USD} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
@@ -15,7 +15,7 @@ export class AccountRecommendation {
   public balance: OXT;
   public deposit: OXT;
   public txEth: ETH; // ETH required for the funding transaction
-  public txUsd: ETH; // USD equivalent of the ETH required for the funding transaction
+  public txUsd: USD; // USD equivalent of the ETH required for the funding transaction
 
   // The max face value of a ticket that can be written with this account composition.
   get maxFaceValue(): OXT {
@@ -42,7 +42,6 @@ export class AccountRecommendation {
     this.txUsd = txUsd;
   }
 }
-
 
 export class MarketConditions {
   public gasCostToRedeem: ETH
@@ -77,21 +76,24 @@ export class MarketConditions {
       throw Error("Invalid efficiency target: cannot equal or exceed 1.0");
     }
     targetEfficiency = Math.min(targetEfficiency, 0.99);
-    let {oxtCostToRedeem} = await this.getCostToRedeemTicket();
+    let {oxtCostToRedeem}: { gasCostToRedeem: ETH; oxtCostToRedeem: OXT } =
+      await this.getCostToRedeemTicket();
+
     let faceValue: OXT = oxtCostToRedeem.divide(1.0 - targetEfficiency);
     let deposit = faceValue.multiply(2.0);
     let balance = faceValue.multiply(balanceFaceValues);
+    // console.log(`account recommendation keiki: faceValue=${faceValue.keiki}, deposit=${deposit.keiki}, balance=${balance.keiki}`)
 
     // Recommend the amount of ETH required for the account creation
     let api = OrchidAPI.shared();
-    let gasPrice: GWEI
+    let gasPrice: ETH
     try {
       gasPrice = await api.eth.getGasPrice();
     } catch (err) {
       console.log("market conditions: error fetching gas price");
       throw Error("gas price unavailable")
     }
-    let txEthRequired: ETH = gasPrice.multiply(OrchidContracts.add_funds_total_max_gas).toEth();
+    let txEthRequired: ETH = gasPrice.multiply(OrchidContracts.add_funds_total_max_gas);
     let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
     let txUsdEthEqvuivalent = pricing.ethToUSD(txEthRequired);
 
@@ -101,21 +103,21 @@ export class MarketConditions {
   static async forBalance(balance: OXT, escrow: OXT): Promise<MarketConditions> {
     //console.log("fetch market conditions")
     let {gasCostToRedeem, oxtCostToRedeem} = await this.getCostToRedeemTicket();
-    let limitedByBalance = balance.value <= escrow.divide(2.0).value;
+    let limitedByBalance = balance.lte(escrow.divide(2.0));
     let maxFaceValue: OXT = OrchidLottery.maxTicketFaceValue(balance, escrow);
-    let ticketUnderwater = oxtCostToRedeem.value >= maxFaceValue.value;
+    let ticketUnderwater = oxtCostToRedeem.gte(maxFaceValue);
 
     // value received as a fraction of ticket face value
-    let efficiency = Math.max(0, maxFaceValue.subtract(oxtCostToRedeem).value / maxFaceValue.value);
+    let efficiency = Math.max(0, maxFaceValue.subtract(oxtCostToRedeem).floatValue / maxFaceValue.floatValue);
 
     return new MarketConditions(gasCostToRedeem, oxtCostToRedeem, maxFaceValue, ticketUnderwater, efficiency, limitedByBalance);
   }
 
-  private static async getCostToRedeemTicket() {
+  private static async getCostToRedeemTicket(): Promise<{ gasCostToRedeem: ETH; oxtCostToRedeem: OXT }> {
     let api = OrchidAPI.shared();
     let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
-    let gasPrice: GWEI = await api.eth.getGasPrice();
-    let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket)).toEth();
+    let gasPrice: ETH = await api.eth.getGasPrice();
+    let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket));
     let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
     return {gasCostToRedeem, oxtCostToRedeem};
   }
@@ -153,7 +155,7 @@ export const MarketConditionsPanel: React.FC = () => {
     return <div/>
   }
 
-  //let gasPrice = new GWEI(5.0);
+  //let gasPrice = new ETH.fromNumberAsGwei(5.0);
   //let pricing = new Pricing(0.004, 5.0)
   //let pot = Mocks.lotteryPot(1.0, 20.0)
 

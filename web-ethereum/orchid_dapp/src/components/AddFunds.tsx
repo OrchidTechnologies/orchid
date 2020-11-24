@@ -3,8 +3,7 @@ import {OrchidAPI} from "../api/orchid-api";
 import {
   CancellablePromise,
   Divider,
-  errorClass, formatCurrency, makeCancelable,
-  parseFloatSafe,
+  errorClass, makeCancelable,
   useInterval,
   Visibility
 } from "../util/util";
@@ -12,9 +11,9 @@ import {TransactionProgress, TransactionStatus} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Modal, Row} from "react-bootstrap";
 import './AddFunds.css'
-import {EthAddress, ETH, GWEI, max, OXT, USD} from "../api/orchid-types";
+import {EthAddress, ETH, max, OXT, USD} from "../api/orchid-types";
 import {
-  GasPricingStrategy, isEthAddress, keikiToOxtString, LotteryPot, oxtToKeiki, Signer,
+  GasPricingStrategy, isEthAddress, keikiToOxtString, LotteryPot, Signer,
   Wallet, weiToETHString
 } from "../api/orchid-eth";
 import {OrchidContracts} from "../api/orchid-eth-contracts";
@@ -65,8 +64,8 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
   // Form state: Controlled values
   // TODO: addXXX is derived state that can be removed now.
-  const [addBalance, setAddBalance] = useState<number | null>(null); // OXT
-  const [addDeposit, setAddDeposit] = useState<number | null>(null); // OXT
+  const [addBalance, setAddBalance] = useState<OXT | null>(null); // OXT
+  const [addDeposit, setAddDeposit] = useState<OXT | null>(null); // OXT
   const [balanceError, setBalanceError] = useState(props.createAccount);
   const [escrowError, setEscrowError] = useState(props.createAccount);
   const [tx, setTx] = useState(new TransactionStatus());
@@ -85,7 +84,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   // Initialization
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let walletSubscription = api.wallet.subscribe(wallet => {
+    let walletSubscription: Subscription = api.wallet.subscribe(wallet => {
       //console.log("addfunds: add funds got wallet: ", wallet);
       setWallet(wallet ?? null)
     });
@@ -169,7 +168,8 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
   // Fetch market conditions periodically
   useInterval(() => {
-    fetchMarketConditions().then().catch(e => { });
+    fetchMarketConditions().then().catch(e => {
+    });
   }, 15000);
 
   // TODO: throttle this
@@ -208,7 +208,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           new AccountRecommendation(
             OXT.fromKeiki(pot.balance),
             OXT.fromKeiki(pot.escrow),
-            new ETH(0), new USD(0)));
+            ETH.zero, USD.zero));
       } else {
         // recommend the higher of recommended or current balances
         setAccountRecommendation(
@@ -228,14 +228,13 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     if (userEnteredBalance != null) {
       // We have a user entered desired balance amount
       setAddBalance(
-        Math.max(0, userEnteredBalance.subtract(
-          OXT.fromKeiki(pot?.balance ?? BigInt(0))).value));
+        max(OXT.zero, userEnteredBalance.subtract(pot?.balanceOXT ?? OXT.zero))
+      );
     } else {
       // Use the recommendation
       if (accountRecommendation != null) {
         setAddBalance(
-          Math.max(0, accountRecommendation.balance.subtract(
-            OXT.fromKeiki(pot?.balance ?? BigInt(0))).value)
+          max(OXT.zero, accountRecommendation.balance.subtract(pot?.balanceOXT ?? OXT.zero))
         );
       } else {
         setAddBalance(null);
@@ -245,13 +244,12 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     if (userEnteredDeposit != null) {
       // We have a user entered desired deposit amount
       setAddDeposit(
-        Math.max(0, userEnteredDeposit.subtract(
-          OXT.fromKeiki(pot?.escrow ?? BigInt(0))).value));
+        max(OXT.zero, userEnteredDeposit.subtract(pot?.escrowOXT ?? OXT.zero))
+      );
     } else {
       if (accountRecommendation != null) {
         setAddDeposit(
-          Math.max(0, accountRecommendation.deposit.subtract(
-            OXT.fromKeiki(pot?.escrow ?? BigInt(0))).value)
+          max(OXT.zero, accountRecommendation.deposit.subtract(pot?.escrowOXT ?? OXT.zero))
         );
       } else {
         setAddDeposit(null);
@@ -273,11 +271,14 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
   // Validate the balance and deposit form fields
   useEffect(() => {
-    let walletBalance = wallet?.oxtBalance || BigInt(0)
+    let walletBalance: OXT = wallet?.oxtBalanceOXT ?? OXT.zero;
     // console.log("validate: ", addAmount, addEscrow)
-    let totalSpend: BigInt = BigInt(oxtToKeiki(addBalance || 0)).add(oxtToKeiki(addDeposit || 0))
+
+    // let totalSpend: BigInt = BigInt(oxtToKeiki(addBalance || 0)).add(oxtToKeiki(addDeposit || 0))
+    let totalSpend: OXT = (addBalance || OXT.zero).add(addDeposit || OXT.zero);
+
     // console.log("total spend = ", BigInt(totalSpend) / 1e18)
-    let overSpend = totalSpend > (walletBalance || 0);
+    let overSpend = totalSpend.gt(walletBalance);
     // console.log("overspend = ", overSpend)
     // let escrowEmpty = addEscrow == null || addEscrow === 0;
     // let amountEmpty = addAmount == null || addAmount === 0;
@@ -316,11 +317,11 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       txResult.current.scrollIntoView();
     }
     try {
-      const amountKeiki = oxtToKeiki(addBalance || 0);
-      const escrowKeiki = oxtToKeiki(addDeposit || 0);
+      const amountKeiki = addBalance?.keiki || BigInt.zero;
+      const escrowKeiki = addDeposit?.keiki || BigInt.zero;
 
       // Choose a gas price
-      let medianGasPrice: GWEI = await api.eth.getGasPrice();
+      let medianGasPrice: ETH = await api.eth.getGasPrice();
       let gasPrice = GasPricingStrategy.chooseGasPrice(
         OrchidContracts.add_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
       if (!gasPrice) {
@@ -398,13 +399,13 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   // End: logging
    */
 
-  let totalSpend = (addBalance ?? 0) + (addDeposit ?? 0)
+  let totalSpend: OXT = (addBalance ?? OXT.zero).add(addDeposit ?? OXT.zero)
   let submitEnabled =
     wallet !== null
     && !tx.isRunning()
     && !(balanceError || escrowError)
     && (addBalance != null || addDeposit != null)
-    && totalSpend > 0
+    && totalSpend.gt(OXT.zero)
     // create account needs a signer key
     && !(props.createAccount && signerKeyError)
     // need pot info unless we are creating an account
@@ -412,8 +413,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   ;
 
   function formatOxt(oxt: OXT | null): string | null {
-    //return oxt?.value.toFixedLocalized(2).replaceAll(',', '') ?? null
-    return oxt?.value.toFixedLocalized(2).replace(/,/g, '') ?? null
+    return oxt?.floatValue.toFixedLocalized(2).replace(/,/g, '') ?? null
   }
 
   let newBalanceStr = formatOxt(userEnteredBalance)
@@ -423,15 +423,16 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
   const maxEfficiency = 99.0;
   let totalOXTRequired: OXT | null = (addBalance != null && addDeposit != null) ?
-    OXT.fromNumber(addBalance + addDeposit) : null
+    addBalance.add(addDeposit) : null
+  // console.log(`totalOXTRequired = ${totalOXTRequired}, addBalance = ${addBalance?.keiki}, addDeposit = ${addDeposit?.keiki}`);
   const estGas: number | null =
-    (totalOXTRequired === null || totalOXTRequired.value === 0) ? 0
-      : (accountRecommendation?.txEth.value ?? null)
+    (totalOXTRequired === null || totalOXTRequired.floatValue === 0) ? 0
+      : (accountRecommendation?.txEth.floatValue ?? null)
 
   const warnOXT = OXT.fromKeikiOrDefault(wallet?.oxtBalance, OXT.zero)
-    .lessThan(totalOXTRequired ?? OXT.zero)
+    .lt(totalOXTRequired ?? OXT.zero)
   const warnETH = ETH.fromWei(wallet?.ethBalance ?? BigInt(0))
-    .lessThan(accountRecommendation?.txEth ?? ETH.zero)
+    .lt(accountRecommendation?.txEth ?? ETH.zero)
 
   let provider = OrchidAPI.shared().eth.provider;
   let walletConnected =
@@ -493,8 +494,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           <input
             className="editable"
             onChange={(e) => {
-              let deposit = parseFloatSafe(e.currentTarget.value);
-              setUserEnteredDeposit(deposit == null ? OXT.zero : OXT.fromNumber(deposit));
+              setUserEnteredDeposit(OXT.fromString(e.currentTarget.value) ?? OXT.zero);
               // When the user enters one value adopt the corresponding pot value
               if (!userEnteredBalance && accountRecommendation?.balance) {
                 setUserEnteredBalance(accountRecommendation?.balance)
@@ -550,8 +550,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           <input
             className="editable"
             onChange={(e) => {
-              let amount = parseFloatSafe(e.currentTarget.value);
-              setUserEnteredBalance(amount == null ? OXT.zero : OXT.fromNumber(amount));
+              setUserEnteredBalance(OXT.fromString(e.currentTarget.value) ?? OXT.zero);
               // When the user enters a balance value adopt the corresponding pot value
               if (!userEnteredDeposit && accountRecommendation?.deposit) {
                 setUserEnteredDeposit(accountRecommendation?.deposit)
@@ -575,7 +574,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
         </Col>
         <Col>
           <div className="oxt-1">{
-            totalOXTRequired?.value.toFixedLocalized(4) ?? "..."
+            totalOXTRequired?.floatValue.toFixedLocalized(4) ?? "..."
           }</div>
         </Col>
       </Row>

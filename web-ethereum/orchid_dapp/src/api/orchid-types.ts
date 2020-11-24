@@ -1,12 +1,10 @@
+import {parseFloatSafe} from "../util/util";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export type EthAddress = string;
 export type Secret = string;
 export type TransactionId = string;
-
-// TODO: Convert This to a real type as with OXT below
-export type KEIKI = BigInt
 
 // Helper for RxJS with Typescript
 export function isNotNull<T>(a: T | null): a is T {
@@ -17,165 +15,154 @@ export function isDefined<T>(a: T | undefined): a is T {
   return a !== undefined;
 }
 
-class ScalarNumberValue {
-  value: number;
+export type KEIKI = BigInt // 1e18 KEIKI per OXT
+export type WEI = BigInt // 1e18 WEI per ETH
 
-  constructor(value: number) {
-    this.value = value
+export class OXT {
+  static zero: OXT = new OXT(BigInt.zero);
+
+  keiki: KEIKI;
+
+  // The float value of the OXT
+  get floatValue(): number {
+    return BigInt(this.keiki).toJSNumber() / 1e18;
   }
 
-  // TODO: These should work, allowing us to remove the duplicate implementations in the
-  // TODO: subclasses, however TS can't invoke the constructor, e.g.:
-  // TODO: "Class constructor GWEI cannot be invoked without 'new'"
-  /*
-  public multiply(other: number): this {
-    return this.constructor(this.value * other);
+  private constructor(keiki: KEIKI) {
+    this.keiki = keiki
   }
-
-  public divide(other: number): this {
-    return this.constructor(this.value / other);
-  }
-
-  public subtract(other: this): this {
-    return this.constructor(this.value - other.value);
-  }
-
-  public add(other: this): this {
-    return this.constructor(this.value + other.value);
-  }
-   */
-
-  toString(): string {
-    return this.value.toString();
-  }
-
-  //bool operator ==(o) => o is ScalarValue<T> && o.value == value;
-  // int get hashCode => value.hashCode;
-}
-
-class ScalarBigIntValue {
-  value: BigInt;
-
-  public constructor(value: BigInt) {
-    this.value = value
-  }
-}
-
-export class OXT extends ScalarNumberValue {
-  static zero: OXT = OXT.fromNumber(0);
 
   public multiply(other: number): OXT {
-    return new OXT(this.value * other);
+    // perform floating point multiplication
+    // Note: We could take a precision here and do the arithmetic with int
+    return new OXT(BigInt(Math.round(BigInt(this.keiki).toJSNumber() * other)));
   }
 
   public divide(other: number): OXT {
-    return new OXT(this.value / other);
+    // perform floating point division
+    // Note: We could take a precision here and do the arithmetic with int
+    return new OXT(BigInt(Math.round(BigInt(this.keiki).toJSNumber() / other)));
   }
 
   public subtract(other: OXT): OXT {
-    return new OXT(this.value - other.value);
+    return new OXT(BigInt(this.keiki).subtract(other.keiki));
   }
 
   public add(other: OXT): OXT {
-    return new OXT(this.value + other.value);
+    return new OXT(BigInt(this.keiki).add(other.keiki));
   }
 
-  public lessThan(other: OXT): boolean {
-    return this.value < other.value;
+  public lt(other: OXT): boolean {
+    return BigInt(this.keiki).lt(other.keiki);
+  }
+  public lte(other: OXT): boolean {
+    return BigInt(this.keiki).leq(other.keiki);
+  }
+  public gt(other: OXT): boolean {
+    return BigInt(this.keiki).gt(other.keiki);
+  }
+  public gte(other: OXT): boolean {
+    return BigInt(this.keiki).geq(other.keiki);
   }
 
-  // TODO: update to KEIKI
-  static fromKeiki(keiki: BigInt): OXT {
-    // Note: native, not integer division here
-    return new OXT(BigInt(keiki) / 1e18);
+  static fromKeiki(keiki: KEIKI): OXT {
+    return new OXT(keiki);
   }
 
-  static fromKeikiOrDefault(keiki: BigInt | undefined, defaultValue: OXT): OXT {
+  static fromKeikiOrDefault(keiki: KEIKI | undefined, defaultValue: OXT): OXT {
     return keiki ? this.fromKeiki(keiki) : defaultValue
   }
 
-  static fromNumber(num: number): OXT {
-    return new OXT(num);
+  static fromNumber(oxt: number): OXT {
+    return new OXT(BigInt(Math.round(oxt * 1e18))); // multiply prior to int conversion
   }
 
-  public toKeiki(): KEIKI {
-    return BigInt(Math.round(this.value) * 1e18);
+  static fromString(oxt: string): OXT | null {
+    let floatValue = parseFloatSafe(oxt);
+    // console.log(`oxt fromstring: ${oxt} = ${floatValue}, keiki value = ${OXT.fromNumber(floatValue??0).keiki}`)
+    if (!floatValue) { return null; }
+    return OXT.fromNumber(floatValue);
   }
 }
 
 export function min(a: OXT, b: OXT): OXT {
-  return new OXT(Math.min(a.value, b.value));
+  return OXT.fromKeiki(BigInt.min(a.keiki, b.keiki));
 }
+
 export function max(a: OXT, b: OXT): OXT {
-  return new OXT(Math.max(a.value, b.value));
+  return OXT.fromKeiki(BigInt.max(a.keiki, b.keiki));
 }
 
-// TODO: Work in progress migrating from the typedef
-export class Keiki extends ScalarBigIntValue {
+export class ETH {
+  static zero: ETH = new ETH(BigInt.zero);
 
-  public subtract(other: Keiki): Keiki {
-    return new Keiki(BigInt(this.value).minus(other.value));
+  wei: WEI
+
+  // The float value
+  get floatValue(): number {
+    return BigInt(this.wei).toJSNumber() / 1e18;
   }
 
-  public add(other: Keiki): Keiki {
-    return new Keiki(BigInt(this.value).plus(other.value));
+  get floatValueGwei(): number {
+    return BigInt(this.wei).toJSNumber() / 1e9;
   }
 
-  static fromOXT(oxt: OXT): KEIKI {
-    return oxt.toKeiki();
+  private constructor(wei: WEI) {
+    this.wei = wei
   }
 
-  public toOXT(): OXT {
-    return OXT.fromKeiki(this.value);
-  }
-}
-
-export class ETH extends ScalarNumberValue {
-  static zero: ETH = new ETH(0);
-
-  public static fromWei(wei: BigInt) {
-    return new ETH(BigInt(wei) / 1e18);
-  }
-  public lessThan(other: ETH): boolean {
-    return this.value < other.value;
-  }
-}
-
-export class GWEI extends ScalarNumberValue {
-  public multiply(other: number): GWEI {
-    return new GWEI(this.value * other);
+  public static fromWei(wei: WEI) {
+    return new ETH(wei);
   }
 
-  public divide(other: number): GWEI {
-    return new GWEI(this.value / other);
+  public static fromWeiString(wei: string): ETH {
+    return new ETH(BigInt(wei));
   }
 
-  public subtract(other: GWEI): GWEI {
-    return new GWEI(this.value - other.value);
+  static fromNumberAsGwei(gwei: number): ETH {
+    return new ETH(BigInt(Math.round(gwei * 1e9))); // multiply prior to int conversion
   }
 
-  public add(other: GWEI): GWEI {
-    return new GWEI(this.value + other.value);
+  public multiply(other: number): ETH {
+    // perform floating point multiplication
+    // Note: We could take a precision here and do the arithmetic with int
+    return new ETH(BigInt(Math.round(BigInt(this.wei).toJSNumber() * other)));
   }
 
-  public toEth(): ETH {
-    return new ETH(this.value / 1e9);
+  public divide(other: number): ETH {
+    // perform floating point division
+    // Note: We could take a precision here and do the arithmetic with int
+    return new ETH(BigInt(Math.round(BigInt(this.wei).toJSNumber() / other)));
   }
 
-  public toWei(): BigInt {
-    return BigInt(Math.round(this.value) * 1e9);
+  public subtract(other: ETH): ETH {
+    return new ETH(BigInt(this.wei).subtract(other.wei));
   }
 
-  public static fromWei(wei: number) {
-    return new GWEI(wei / 1e9);
+  public add(other: ETH): ETH {
+    return new ETH(BigInt(this.wei).plus(other.wei));
   }
-  public static fromWeiString(wei: string) {
-    return new GWEI(BigInt(wei) / 1e9);
+
+  public lt(other: ETH): boolean {
+    return this.wei < other.wei;
   }
 }
 
-export class USD extends ScalarNumberValue {
-  public lessThan(other: USD): boolean {
-    return this.value < other.value;
+export class USD {
+  static zero: USD = new USD(0);
+
+  // TODO: This should probably store as int cents
+  dollars: number;
+
+  private constructor(dollars: number) {
+    this.dollars = dollars;
+  }
+
+  public static fromNumber(dollars: number): USD {
+    return new USD(dollars);
+  }
+
+  public lt(other: USD): boolean {
+    return this.dollars < other.dollars;
   }
 }

@@ -6,8 +6,7 @@ import {EtherscanIO, LotteryPotUpdateEvent} from "./etherscan-io";
 import {isDefined, isNotNull} from "./orchid-types";
 import {OrchidTransactionDetail, OrchidTransactionMonitor} from "./orchid-tx";
 import {WalletProviderState, WalletProviderStatus} from "./orchid-eth-web3";
-import {getBoolParam, isDebug} from "../util/util";
-import {findDOMNode} from "react-dom";
+import {isDebug} from "../util/util";
 // import {MockOrchidTransactionMonitor} from "./orchid-eth-mock";
 
 /// The high level API for observation of a user's wallet and Orchid account state.

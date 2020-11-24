@@ -192,6 +192,7 @@ export class OrchidTransactionMonitor {
     let web3 = OrchidAPI.shared().eth.web3;
     let ethTxs = orcTx.transactionHashes.map(async function (hash) {
       let receipt: TransactionReceipt = await web3.eth.getTransactionReceipt(hash);
+      //console.log("transaction receipt: ", receipt);
       if (receipt) {
         let currentBlock = await web3.eth.getBlockNumber();
         return EthereumTransaction.fromReceipt(currentBlock, receipt);

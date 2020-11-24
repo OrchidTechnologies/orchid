@@ -33,7 +33,7 @@ export class OrchidLottery {
   // survival probabilty target. Returns null if the value cannot be determined.
   static expectedTickets(balance: OXT, deposit: OXT): number | null {
     let table = this.getAccountSurvivalTable();
-    let efRatio = Math.floor(balance.value / this.maxTicketFaceValue(balance, deposit).value);
+    let efRatio = Math.floor(balance.floatValue / this.maxTicketFaceValue(balance, deposit).floatValue);
     return efRatio < table.length ? table[efRatio] : null
   }
 

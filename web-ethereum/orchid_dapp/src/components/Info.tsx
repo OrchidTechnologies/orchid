@@ -93,10 +93,10 @@ export class Info extends Component<any, any> {
         let minViableAccountRecommendation = await Orchid.minViableAccountComposition();
         let accountRecommendation = await Orchid.recommendedAccountComposition();
         this.setState({
-          accountRecommendationBalanceMin: minViableAccountRecommendation.balance.value.toFixedLocalized(2),
-          accountRecommendationDepositMin: minViableAccountRecommendation.deposit.value.toFixedLocalized(2),
-          accountRecommendationBalance: accountRecommendation.balance.value.toFixedLocalized(2),
-          accountRecommendationDeposit: accountRecommendation.deposit.value.toFixedLocalized(2)
+          accountRecommendationBalanceMin: minViableAccountRecommendation.balance.floatValue.toFixedLocalized(2),
+          accountRecommendationDepositMin: minViableAccountRecommendation.deposit.floatValue.toFixedLocalized(2),
+          accountRecommendationBalance: accountRecommendation.balance.floatValue.toFixedLocalized(2),
+          accountRecommendationDeposit: accountRecommendation.deposit.floatValue.toFixedLocalized(2)
         });
       } catch (err) {
         console.log("unable to fetch min viable account info")

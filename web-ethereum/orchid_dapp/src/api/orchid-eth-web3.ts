@@ -83,14 +83,12 @@ export class OrchidWeb3API {
   constructor() {
     // web3modal providers
     const providerOptions = {
-      /*
         walletconnect: {
           package: WalletConnectProvider,
           options: {
-            infuraId: "9c757f25dc1146aca2abbca676a3e3a7"
+            infuraId: "63c2f3be7b02422d821307f1270e5baf"
           }
         },
-       */
     };
 
     // web3modal
