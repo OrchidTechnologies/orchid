@@ -47,6 +47,9 @@ source += all/vpn-apple/source/protect.cpp
 source += all/vpn-apple/source/tunnel.cpp
 endif
 ifeq ($(target),win)
+source += all/vpn-windows/source/protect.cpp
+source += all/vpn-windows/source/tunnel.cpp
+cflags += -Iall/vpn-windows/source
 cflags += -Iall/vpn-windows/tap-windows6/src
 endif
 ifeq ($(target),lnx)

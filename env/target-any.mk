@@ -73,6 +73,8 @@ usr := /usr/local
 include ../default.mk
 -include ../local.mk
 
+debug += nostrip
+
 ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s
 endif

@@ -25,6 +25,10 @@
 
 #include <asio/ip/tcp.hpp>
 
+#ifdef _WIN32
+#include <synchapi.h>
+#endif
+
 #include "baton.hpp"
 #include "link.hpp"
 #include "sewer.hpp"
@@ -92,6 +96,8 @@ class Acceptor :
 
     void Open(const Socket &endpoint) {
         acceptor_.open(asio::ip::tcp::v4());
+        Log() << __func__ << ":" << __LINE__ << " sleeping for 5 seconds to allow firewall dialog" << std::endl;
+        Sleep(5000);
         acceptor_.bind(endpoint);
         acceptor_.listen();
         acceptor_.non_blocking(true);

@@ -164,6 +164,14 @@ void wireshark_setup()
 {
     g_setenv("WIRESHARK_DEBUG_WMEM_OVERRIDE", "simple", 1);
 
+#ifdef _WIN32
+    // since we're statically linking, glib's DllMain isn't called to run gobject_init()
+    BOOL WINAPI DllMain (HINSTANCE hinstDLL,
+                         DWORD     fdwReason,
+                         LPVOID    lpvReserved);
+    DllMain(GetModuleHandle(nullptr), DLL_PROCESS_ATTACH, nullptr);
+#endif
+
     ws_init_version_info("Orchid", NULL, epan_get_compiled_version_info,  NULL);
 
     // Get credential information for later use.

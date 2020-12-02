@@ -35,7 +35,11 @@ ORC_IMPORT decltype(system_bind) hooked_bind __asm__(ORC_SYMBOL "bind");
 ORC_IMPORT decltype(system_connect) hooked_connect __asm__(ORC_SYMBOL "connect");
 
 extern "C" int orchid_bind(SOCKET socket, const struct sockaddr *address, socklen_t length) {
+#ifdef _WIN32
+    return hooked_bind(socket, address, length);
+#else
     return Protect(socket, &hooked_bind, address, length);
+#endif
 }
 
 extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, socklen_t length) {

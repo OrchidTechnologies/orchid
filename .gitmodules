@@ -178,3 +178,6 @@
 [submodule "chains"]
 	path = p2p/chains
 	url = https://github.com/ethereum-lists/chains.git
+[submodule "openvpn"]
+	path = vpn-windows/openvpn
+	url = https://github.com/OpenVPN/openvpn.git

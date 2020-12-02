@@ -82,8 +82,9 @@ lflags += -static
 lflags += -pthread
 lflags += -lssp
 
-wflags += -fuse-ld=ld
+wflags += -fuse-ld=lld
 lflags += -Wl,--no-insert-timestamp
+lflags += -Wl,-Xlink=-force:multiple
 
 #cflags += -DNOMINMAX
 cflags += -DWIN32_LEAN_AND_MEAN=
