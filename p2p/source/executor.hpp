@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -23,38 +23,36 @@
 #ifndef ORCHID_EXECUTOR_HPP
 #define ORCHID_EXECUTOR_HPP
 
-#include "endpoint.hpp"
+#include "chain.hpp"
 
 namespace orc {
 
+struct Execution {
+    std::optional<uint256_t> nonce;
+    std::optional<uint256_t> bid;
+    std::optional<uint64_t> gas;
+};
+
 class Executor {
-  protected:
-    Endpoint &endpoint_;
-
   public:
-    Executor(Endpoint &endpoint);
-
     virtual ~Executor() = default;
 
     virtual operator Address() const = 0;
-    virtual task<Signature> operator ()(const Buffer &data) const = 0;
+    virtual task<Signature> operator ()(const Chain &chain, const Buffer &data) const = 0;
 
-    virtual task<Bytes32> Send(const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const = 0;
+    virtual task<Bytes32> Send(const Chain &chain, const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const = 0;
 
-    task<Bytes32> Send(const std::optional<uint256_t> &nonce, const uint256_t &bid, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const;
-    task<Bytes32> Send(const std::optional<Address> &target, const uint256_t &value, const Buffer &data = Bytes()) const;
+    task<Bytes32> Send(const Chain &chain, Execution execution, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const;
 };
 
 class MissingExecutor :
     public Executor
 {
   public:
-    using Executor::Executor;
-
     operator Address() const override;
-    task<Signature> operator ()(const Buffer &data) const override;
+    task<Signature> operator ()(const Chain &chain, const Buffer &data) const override;
 
-    task<Bytes32> Send(const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
+    task<Bytes32> Send(const Chain &chain, const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
 
     using Executor::Send;
 };
@@ -63,15 +61,15 @@ class UnlockedExecutor :
     public Executor
 {
   private:
-    Address common_;
+    const Address address_;
 
   public:
-    UnlockedExecutor(Endpoint &endpoint, Address common);
+    UnlockedExecutor(Address address);
 
     operator Address() const override;
-    task<Signature> operator ()(const Buffer &data) const override;
+    task<Signature> operator ()(const Chain &chain, const Buffer &data) const override;
 
-    task<Bytes32> Send(const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
+    task<Bytes32> Send(const Chain &chain, const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
 
     using Executor::Send;
 };
@@ -80,36 +78,46 @@ class PasswordExecutor :
     public Executor
 {
   private:
-    Address common_;
-    std::string password_;
+    const Address address_;
+    const std::string password_;
 
   public:
-    PasswordExecutor(Endpoint &endpoint, Address common, std::string password);
+    PasswordExecutor(Address address, std::string password);
 
     operator Address() const override;
-    task<Signature> operator ()(const Buffer &data) const override;
+    task<Signature> operator ()(const Chain &chain, const Buffer &data) const override;
 
-    task<Bytes32> Send(const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
+    task<Bytes32> Send(const Chain &chain, const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
+
+    using Executor::Send;
+};
+
+class BasicExecutor :
+    public Executor
+{
+  public:
+    task<Bytes32> Send(const Chain &chain, const Buffer &data) const;
+    virtual task<Bytes32> Send(const Chain &chain, const uint256_t &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data, bool eip155) const = 0;
+    task<Bytes32> Send(const Chain &chain, const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
 
     using Executor::Send;
 };
 
 class SecretExecutor :
-    public Executor
+    public BasicExecutor
 {
   private:
-    Secret secret_;
+    const Secret secret_;
 
   public:
-    SecretExecutor(Endpoint &endpoint, const Secret &secret);
+    SecretExecutor(const Secret &secret);
 
     operator Address() const override;
-    task<Signature> operator ()(const Buffer &data) const override;
+    task<Signature> operator ()(const Chain &chain, const Buffer &data) const override;
 
-    task<Bytes32> Send(const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
-    task<Bytes32> Send(const std::optional<uint256_t> &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data, const std::optional<uint256_t> &chain) const;
+    task<Bytes32> Send(const Chain &chain, const uint256_t &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data, bool eip155) const override;
 
-    using Executor::Send;
+    using BasicExecutor::Send;
 };
 
 }

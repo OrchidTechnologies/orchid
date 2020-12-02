@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -20,23 +20,21 @@
 /* }}} */
 
 
-#ifndef ORCHID_UTILITY_HPP
-#define ORCHID_UTILITY_HPP
+#ifndef ORCHID_PROVIDER_HPP
+#define ORCHID_PROVIDER_HPP
 
-#include <tuple>
+#include "chain.hpp"
+#include "jsonrpc.hpp"
+#include "locator.hpp"
 
 namespace orc {
 
-template <size_t L, typename... T, std::size_t... I>
-auto Pick(const std::tuple<T...> &data, std::index_sequence<I...>) {
-    return std::make_tuple(std::get<I + L>(data)...);
-}
-
-template <size_t L, size_t R, typename... T>
-auto Slice(const std::tuple<T...> &data) {
-    return Pick<L>(data, std::make_index_sequence<R - L>());
-}
+struct Provider {
+    Address address_;
+    Locator locator_;
+    S<rtc::SSLFingerprint> fingerprint_;
+};
 
 }
 
-#endif//ORCHID_UTILITY_HPP
+#endif//ORCHID_PROVIDER_HPP

@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -138,12 +138,12 @@ inline std::string Unparse(Argument &&data) {
     return writer.write(std::move(data));
 }
 
-inline Json::Value Parse(const std::string &data) {
+inline Json::Value Parse(const std::string &data) { orc_block({
     Json::Value result;
     Json::Reader reader;
     orc_assert(reader.parse(data, result, false));
     return result;
-}
+}, "parsing " << data); }
 
 template <typename Type_>
 struct Element;

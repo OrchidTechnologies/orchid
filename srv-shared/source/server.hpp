@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -40,7 +40,8 @@
 namespace orc {
 
 class Cashier;
-class Market;
+class Croupier;
+struct Market;
 class Origin;
 
 class Server :
@@ -55,9 +56,8 @@ class Server :
   private:
     const rtc::scoped_refptr<rtc::RTCCertificate> local_;
 
-    const S<Origin> origin_;
     const S<Cashier> cashier_;
-    const S<Market> market_;
+    const S<Croupier> croupier_;
 
     Nest nest_;
 
@@ -68,8 +68,8 @@ class Server :
         Float balance_ = 0;
         std::map<Bytes32, Float> expected_;
 
-        std::map<Bytes32, std::pair<Bytes32, uint256_t>> reveals_;
-        decltype(reveals_.end()) commit_ = reveals_.end();
+        std::list<std::pair<Bytes32, uint256_t>> reveals_;
+        decltype(reveals_.end()) reveal_ = reveals_.end();
 
         uint256_t issued_ = 0;
         std::set<std::tuple<uint256_t, Bytes32, Address>> nonces_;
@@ -85,10 +85,11 @@ class Server :
     void Commit(const Lock<Locked_> &locked);
     Float Expected(const Lock<Locked_> &locked);
 
-    task<void> Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit);
+    task<void> Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &reveal);
     task<void> Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id = Zero<32>());
 
-    void Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data);
+    void Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data);
+    void Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data);
 
   protected:
     void Land(Pipe<Buffer> *pipe, const Buffer &data) override;
@@ -98,12 +99,12 @@ class Server :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Server(S<Origin> origin, S<Cashier> cashier, S<Market> market);
+    Server(S<Cashier> cashier, S<Croupier> croupier);
 
     task<void> Open(Pipe<Buffer> &pipe);
     task<void> Shut() noexcept override;
 
-    task<std::string> Respond(const std::string &offer, std::vector<std::string> ice);
+    task<std::string> Respond(const S<Origin> &origin, const std::string &offer, std::vector<std::string> ice);
 };
 
 std::string Filter(bool answer, const std::string &serialized);

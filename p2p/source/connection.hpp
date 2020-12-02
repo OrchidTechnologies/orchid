@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -71,7 +71,7 @@ class Association :
     task<size_t> Read(const Mutables &buffers) override {
         size_t writ;
         try {
-            writ = co_await association_.async_receive(buffers, Token());
+            writ = co_await association_.async_receive(buffers, Adapt());
         } catch (const asio::system_error &error) {
             auto code(error.code());
             if (code == asio::error::eof)
@@ -84,7 +84,7 @@ class Association :
     }
 
     virtual task<void> Open(const Socket &endpoint) { orc_ahead orc_block({
-        co_await association_.async_connect(endpoint, Token());
+        co_await association_.async_connect(endpoint, Adapt());
         association_.non_blocking(true);
     }, "connecting to " << endpoint); }
 
@@ -96,7 +96,7 @@ class Association :
         //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
         const size_t writ(co_await [&]() -> task<size_t> { try {
-            co_return co_await association_.async_send(Sequence(data), Token());
+            co_return co_await association_.async_send(Sequence(data), Adapt());
         } catch (const asio::system_error &error) {
             orc_adapt(error);
         } }());

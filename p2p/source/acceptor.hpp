@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -66,7 +66,7 @@ class Acceptor :
         asio::ip::tcp::socket connection(Context());
         asio::ip::tcp::endpoint endpoint;
         try {
-            co_await acceptor_.async_accept(connection, endpoint, Token());
+            co_await acceptor_.async_accept(connection, endpoint, Adapt());
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::eof)

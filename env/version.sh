@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Cycc/Cympile - Shared Build Scripts for Make
-# Copyright (C) 2013-2019  Jay Freeman (saurik)
+# Copyright (C) 2013-2020  Jay Freeman (saurik)
 
 # Zero Clause BSD license {{{
 #

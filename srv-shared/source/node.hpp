@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -33,13 +33,13 @@
 namespace orc {
 
 class Cashier;
-class Market;
+class Croupier;
 
 class Node final {
   private:
     const S<Origin> origin_;
     const S<Cashier> cashier_;
-    const S<Market> market_;
+    const S<Croupier> croupier_;
     const S<Egress> egress_;
     const std::vector<std::string> ice_;
 
@@ -48,10 +48,10 @@ class Node final {
     }; Locked<Locked_> locked_;
 
   public:
-    Node(S<Origin> origin, S<Cashier> cashier, S<Market> market, S<Egress> egress, std::vector<std::string> ice) :
+    Node(S<Origin> origin, S<Cashier> cashier, S<Croupier> croupier, S<Egress> egress, std::vector<std::string> ice) :
         origin_(std::move(origin)),
         cashier_(std::move(cashier)),
-        market_(std::move(market)),
+        croupier_(std::move(croupier)),
         egress_(std::move(egress)),
         ice_(std::move(ice))
     {
@@ -62,7 +62,7 @@ class Node final {
         auto &cache(locked->servers_[fingerprint]);
         if (auto server = cache.lock())
             return server;
-        const auto server(Break<BufferSink<Server>>(origin_, cashier_, market_));
+        const auto server(Break<BufferSink<Server>>(cashier_, croupier_));
         Egress::Wire(egress_, *server);
         server->self_ = server;
         cache = server;

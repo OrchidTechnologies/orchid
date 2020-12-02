@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -29,10 +29,10 @@ namespace orc {
 task<boost::asio::ip::tcp::endpoint> Duplex::Open(const Locator &locator) { orc_block({
     const auto endpoints(co_await origin_->Resolve(locator.host_, locator.port_));
     auto &lowest(boost::beast::get_lowest_layer(inner_));
-    const auto endpoint(co_await orc_value(co_return co_await, lowest.async_connect(endpoints, Token()),
+    const auto endpoint(co_await orc_value(co_return co_await, lowest.async_connect(endpoints, Adapt()),
         "connecting to" << endpoints));
     lowest.expires_never();
-    co_await inner_.async_handshake(locator.host_, locator.path_, Token());
+    co_await inner_.async_handshake(locator.host_, locator.path_, Adapt());
     co_return endpoint;
 }, "opening " << locator); }
 

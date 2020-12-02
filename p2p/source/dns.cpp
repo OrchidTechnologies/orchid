@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -44,7 +44,7 @@ task<std::vector<asio::ip::tcp::endpoint>> Origin::Resolve(const std::string &ho
 
     static const std::regex re("[0-9.]+");
     if (std::regex_match(host, re)) {
-        const auto endpoints(co_await resolver.async_resolve(host, port, orc::Token()));
+        const auto endpoints(co_await resolver.async_resolve(host, port, orc::Adapt()));
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
@@ -54,7 +54,7 @@ task<std::vector<asio::ip::tcp::endpoint>> Origin::Resolve(const std::string &ho
 
         for (const auto &answer : result["Answer"])
             if (answer["type"].asUInt64() == 1) {
-                const auto endpoints(co_await resolver.async_resolve(answer["data"].asString(), port, orc::Token()));
+                const auto endpoints(co_await resolver.async_resolve(answer["data"].asString(), port, orc::Adapt()));
                 for (const auto &endpoint : endpoints)
                     results.emplace_back(endpoint);
             }

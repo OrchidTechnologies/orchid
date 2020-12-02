@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -36,6 +36,15 @@ namespace orc {
 // XXX: none of this is REMOTELY efficient
 // XXX: this predates Buffer and makes no sense
 
+template <typename Type_>
+std::string Stripped(Type_ value) {
+    Number<decltype(value)> data(value);
+    auto span(data.span());
+    while (span.size() != 0 && span[0] == 0)
+        ++span;
+    return {reinterpret_cast<const char *>(span.data()), span.size()};
+}
+
 class Nested {
   protected:
     bool scalar_;
@@ -59,20 +68,11 @@ class Nested {
     {
     }
 
-    Nested(uint8_t value) :
+    template <typename Type_, typename = std::enable_if_t<std::is_integral_v<Type_> && std::is_unsigned_v<Type_> && !std::is_same_v<Type_, bool>>>
+    Nested(Type_ value) :
         scalar_(true),
-        value_(value == 0 ? 0 : 1, value)
+        value_(Stripped(value))
     {
-    }
-
-    Nested(uint64_t value) :
-        scalar_(true)
-    {
-        Number<uint64_t> number(value);
-        auto span(number.span());
-        while (span.size() != 0 && span[0] == 0)
-            ++span;
-        value_ = {reinterpret_cast<const char *>(span.data()), span.size()};
     }
 
     Nested(std::string value) :
@@ -83,6 +83,11 @@ class Nested {
 
     Nested(const char *value) :
         Nested(std::string(value))
+    {
+    }
+
+    Nested(std::nullopt_t) :
+        Nested()
     {
     }
 
@@ -102,13 +107,7 @@ class Nested {
     template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
     Nested(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
         scalar_(true),
-        value_([&]() -> std::string {
-            Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>> data(value);
-            auto span(data.span());
-            while (span.size() != 0 && span[0] == 0)
-                ++span;
-            return {reinterpret_cast<const char *>(span.data()), span.size()};
-        }())
+        value_(Stripped(value))
     {
     }
 

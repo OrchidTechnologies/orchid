@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -47,7 +47,7 @@ class Maybe :
         return *this;
     }
 
-    template <typename Code_, typename std::enable_if_t<std::is_invocable_v<Code_ &&>>>
+    template <typename Code_, typename = std::enable_if_t<std::is_invocable_v<Code_ &&>>>
     void operator()(Code_ &&code) noexcept {
         try {
             operator =(std::forward<Code_>(code)());
@@ -86,7 +86,7 @@ class Maybe<void> {
         error_ = nullptr;
     }
 
-    template <typename Code_, typename std::enable_if_t<std::is_invocable_v<Code_ &&>>>
+    template <typename Code_, typename = std::enable_if_t<std::is_invocable_v<Code_ &&>>>
     void operator()(Code_ &&code) noexcept {
         try {
             std::forward<Code_>(code)();

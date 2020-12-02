@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -26,31 +26,46 @@
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
-#include "jsonrpc.hpp"
-#include "locator.hpp"
+#include "chain.hpp"
 #include "origin.hpp"
+#include "provider.hpp"
+#include "valve.hpp"
 
 namespace orc {
 
-class Client;
-class Market;
+struct Stake {
+    uint256_t amount_;
+    Maybe<std::string> url_;
 
-class Network {
+    Stake(uint256_t amount, Maybe<std::string> url) :
+        amount_(std::move(amount)),
+        url_(std::move(url))
+    {
+    }
+};
+
+class Network :
+    public Valve
+{
   private:
-    const Locator locator_;
+    const S<Chain> chain_;
     const Address directory_;
     const Address location_;
-
-    const S<Market> market_;
-    const S<Updated<Float>> oracle_;
 
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
 
   public:
-    Network(const std::string &rpc, Address directory, Address location, const S<Origin> &origin);
+    Network(S<Chain> chain, Address directory, Address location);
 
-    // XXX: this should be task<Client &> but cppcoro doesn't seem to support that
-    task<Client *> Select(BufferSunk &sunk, const S<Origin> &origin, const std::string &name, const Address &provider, const Address &lottery, const uint256_t &chain, const Secret &secret, const Address &funder, const char *justin);
+    Network(const Network &) = delete;
+    Network(Network &&) = delete;
+
+    void Open();
+    task<void> Shut() noexcept override;
+
+    task<std::map<Address, Stake>> Scan();
+
+    task<Provider> Select(const std::string &name, const Address &provider);
 };
 
 }

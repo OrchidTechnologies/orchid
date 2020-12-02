@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -24,11 +24,14 @@
 #define ORCHID_TICKET_HPP
 
 #include "crypto.hpp"
+#include "float.hpp"
 #include "jsonrpc.hpp"
 
 namespace orc {
 
-struct Ticket {
+static const Float Two128(uint256_t(1) << 128);
+
+struct Ticket0 {
     Bytes32 commit_;
     uint256_t issued_;
     Bytes32 nonce_;
@@ -43,7 +46,7 @@ struct Ticket {
         return (ratio_ + uint256_t(1)) * amount_;
     }
 
-    Bytes32 Encode0(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
+    Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
         static const auto orchid_(Hash("Orchid.grab"));
 
         return Hash(Coder<
@@ -64,17 +67,28 @@ struct Ticket {
             receipt
         ));
     }
+};
+
+struct Ticket1 {
+    Bytes32 commit_;
+    uint64_t issued_;
+    Bytes32 nonce_;
+    uint128_t amount_;
+    uint128_t ratio_;
+    uint64_t expire_;
+    Address funder_;
+
+    uint256_t Value() const {
+        return (ratio_ + uint256_t(1)) * amount_;
+    }
 
     uint256_t Packed1() const {
-        return (start_ + range_ - issued_) << 192 | uint256_t(ratio_ >> 64) << 128 | amount_; }
+        return uint256_t(expire_ - issued_) << 192 | uint256_t(ratio_ >> 64) << 128 | amount_; }
     uint256_t Packed2() const {
-        return issued_ << 193 | uint256_t(funder_.num()) << 33; }
+        return uint256_t(issued_) << 193 | uint256_t(funder_.num()) << 33; }
 
     template <typename ...Args_>
-    Bytes32 Encode1(const Address &lottery, const uint256_t &chain, const Args_ &...args, const uint32_t &salt, bool direct) const {
-        auto flags(Zero<12>());
-        flags[11] = direct ? 1 : 0;
-
+    Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Args_ &...args, const uint32_t &salt) const {
         return Hash(Coder<
             Bytes32,
             uint256_t,
@@ -88,18 +102,6 @@ struct Ticket {
             Packed2(),
             args..., lottery, chain
         ));
-    }
-
-    auto Knot(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
-        return Tie(
-            commit_,
-            issued_, nonce_,
-            lottery, chain,
-            amount_, ratio_,
-            start_, range_,
-            funder_, recipient_,
-            receipt
-        );
     }
 };
 

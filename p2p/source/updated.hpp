@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -34,6 +34,7 @@ class Updated {
     Locked<Type_> value_;
 
   public:
+    // XXX: remove this constructor
     Updated() = default;
 
     Updated(Type_ &&value) :

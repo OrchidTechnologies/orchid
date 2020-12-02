@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -20,26 +20,25 @@
 /* }}} */
 
 
+#include "chain.hpp"
 #include "chainlink.hpp"
-#include "endpoint.hpp"
 #include "fiat.hpp"
 #include "parallel.hpp"
 #include "updater.hpp"
 
 namespace orc {
 
-task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation, const Float &adjust) {
-    static const Selector<uint256_t> latestAnswer_("latestAnswer");
-    co_return Float(co_await latestAnswer_.Call(endpoint, "latest", aggregation, 90000)) / adjust;
-}
+const Address ChainlinkETHUSD("0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F");
+const Address ChainlinkOXTUSD("0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA");
 
-task<S<Updated<Fiat>>> ChainlinkFiat(unsigned milliseconds, Endpoint endpoint) {
-    co_return co_await Opened(Updating(milliseconds, [endpoint = std::move(endpoint)]() -> task<Fiat> {
-        const auto [eth_usd, oxt_usd] = *co_await Parallel(
-            Chainlink(endpoint, "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F", Ten8),
-            Chainlink(endpoint, "0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA", Ten8));
-        co_return Fiat{eth_usd / Ten18, oxt_usd / Ten18};
-    }, "Chainlink"));
-}
+task<Float> Chainlink(const Chain &chain, const Address &pair, const Float &backup, const Float &adjust) { try {
+    static const Selector<uint256_t> latestAnswer_("latestAnswer");
+    const auto value(Float(co_await latestAnswer_.Call(chain, "latest", pair, 90000)));
+    co_return (value == 0 ? backup : value) / adjust;
+} orc_catch({
+    // XXX: Chainlink oracles seem to each have a killswitch left by the Chainlink team :/
+    // I need to characterize the ways this killswitch operates to avoid an eclipse attack
+    co_return backup / adjust;
+}) }
 
 }

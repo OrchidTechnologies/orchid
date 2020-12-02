@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -122,6 +122,9 @@ class Task {
     };
 
   public:
+    Task(std::nullptr_t) noexcept {
+    }
+
     Task(std::experimental::coroutine_handle<promise_type> code) noexcept :
         code_(std::move(code))
     {
@@ -136,6 +139,10 @@ class Task {
     ~Task() {
         if (code_ != nullptr)
             code_.destroy();
+    }
+
+    operator bool() const noexcept {
+        return code_ != nullptr;
     }
 
     auto operator co_await() const && noexcept {
@@ -257,6 +264,9 @@ class Task<void>::promise_type :
 
 template <typename Value_>
 using task = Task<Value_>;
+
+/*template <typename Value_>
+using T = Task<Value_>;*/
 
 inline task<void> Nop() {
     co_return;

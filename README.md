@@ -1,4 +1,4 @@
-![](app-shared/assets/images/3.0x/name_logo.png "Orchid Logo")
+![](gui-orchid/assets/images/3.0x/name_logo.png "Orchid Logo")
 
 Overview
 ========

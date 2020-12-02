@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -21,17 +21,14 @@
 
 
 #include "coinbase.hpp"
-#include "fiat.hpp"
 #include "json.hpp"
 #include "locator.hpp"
 #include "origin.hpp"
-#include "parallel.hpp"
-#include "updater.hpp"
 
 namespace orc {
 
-task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &from, const Float &adjust) {
-    const auto response(co_await origin.Fetch("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + from + "-" + to + "/spot"}, {}, {}));
+task<Float> Coinbase(Origin &origin, const std::string &pair, const Float &adjust) {
+    const auto response(co_await origin.Fetch("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + pair + "/spot"}, {}, {}));
     const auto result(Parse(response.body()));
     if (response.result() == http::status::ok) {
         const auto &data(result["data"]);
@@ -44,18 +41,6 @@ task<Float> Coinbase(Origin &origin, const std::string &to, const std::string &f
         const auto message(error["message"].asString());
         orc_throw(response.result() << "/" << id << ": " << message);
     }
-}
-
-task<Fiat> Coinbase(Origin &origin, const std::string &to) { try {
-    auto [eth, oxt] = *co_await Parallel(Coinbase(origin, to, "ETH", Ten18), Coinbase(origin, to, "OXT", Ten18));
-    co_return Fiat{std::move(eth), std::move(oxt)};
-} orc_stack({}, "updating fiat prices") }
-
-
-task<S<Updated<Fiat>>> CoinbaseFiat(unsigned milliseconds, S<Origin> origin, std::string currency) {
-    co_return co_await Opened(Updating(milliseconds, [origin = std::move(origin), currency = std::move(currency)]() -> task<Fiat> {
-        co_return co_await Coinbase(*origin, currency);
-    }, "Coinbase"));
 }
 
 }

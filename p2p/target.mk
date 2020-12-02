@@ -1,5 +1,5 @@
 # Orchid - WebRTC P2P VPN Market (on Ethereum)
-# Copyright (C) 2017-2019  The Orchid Authors
+# Copyright (C) 2017-2020  The Orchid Authors
 
 # GNU Affero General Public License, Version 3 {{{ */
 #
@@ -102,6 +102,10 @@ cflags/$(pwd)/boost/libs/filesystem/src/operations.cpp += -Wno-unused-const-vari
 endif
 
 
+#cflags += -DCTRE_ENABLE_LITERALS
+cflags += -I$(pwd)/ctre/single-header
+
+
 source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include
 
@@ -191,6 +195,15 @@ cflags += -I$(pwd)/cpp-jwt/include
 
 
 include $(pwd)/asio.mk
+include $(pwd)/protobuf.mk
+
+$(eval $(call protobuf,$(pwd)/trezor-common/protob))
+source += $(output)/pb/messages.pb.cc
+header += $(output)/pb/messages.pb.h
+source += $(output)/pb/messages-common.pb.cc
+header += $(output)/pb/messages-common.pb.h
+source += $(output)/pb/messages-ethereum.pb.cc
+header += $(output)/pb/messages-ethereum.pb.h
 
 $(call include,rtc/target.mk)
 $(call include,krypton/target.mk)

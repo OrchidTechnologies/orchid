@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -47,7 +47,7 @@ namespace orc {
 
 extern std::atomic<uint64_t> copied_;
 
-inline void Copy(void *dst, const void *src, size_t len) {
+inline void Copy(void *dst, const void *src, size_t len) noexcept {
     memcpy(dst, src, len);
     copied_ += len;
 }
@@ -97,7 +97,7 @@ class Buffer {
     std::vector<uint8_t> vec() const;
 
     std::string str() const;
-    std::string hex() const;
+    std::string hex(bool prefix = true) const;
 };
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer);
@@ -244,6 +244,23 @@ std::tuple<View, View> Split(const View &value, const Range<> &range);
 cppcoro::generator<View> Split(const View &value, const View &delimeter);
 
 void Split(const View &value, const View &delimeter, const std::function<void (View, View)> &code);
+
+template <size_t Index_>
+using View_ = View;
+
+template <size_t ...Indices_>
+auto Split(View value, const View &delimeter, std::index_sequence<Indices_...>) {
+    std::tuple<View_<Indices_>..., View> split; ([&]() {
+        const auto range(Find(value, delimeter));
+        orc_assert(range);
+        std::tie(std::get<Indices_>(split), value) = Split(value, *range);
+    }(), ...); std::get<sizeof...(Indices_)>(split) = std::move(value); return split;
+}
+
+template <unsigned Size_>
+auto Split(const View &value, const View &delimeter) {
+    return Split(value, delimeter, std::make_index_sequence<Size_ - 1>());
+}
 
 class Region :
     public Buffer
@@ -831,11 +848,6 @@ inline bool operator ==(const Region &lhs, const Region &rhs) {
 }
 
 bool operator ==(const Region &lhs, const Buffer &rhs);
-
-template <typename Buffer_>
-inline bool operator !=(const Region &lhs, const Buffer_ &rhs) {
-    return !(lhs == rhs);
-}
 
 inline bool operator <(const Region &lhs, const Region &rhs) {
     const auto size(lhs.size());

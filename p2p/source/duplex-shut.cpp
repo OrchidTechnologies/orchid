@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -28,7 +28,7 @@ namespace orc {
 
 void Duplex::Shut() noexcept {
     Spawn([&]() noexcept -> task<void> { try {
-        co_await inner_.async_close(boost::beast::websocket::close_code::normal, Token());
+        co_await inner_.async_close(boost::beast::websocket::close_code::normal, Adapt());
     } catch (const asio::system_error &error) {
         orc_except({ orc_adapt(error); })
     } }, __FUNCTION__);

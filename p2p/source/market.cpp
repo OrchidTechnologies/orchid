@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -20,49 +20,24 @@
 /* }}} */
 
 
-#include "coinbase.hpp"
-#include "fiat.hpp"
-#include "gauge.hpp"
+#include "binance.hpp"
+#include "chain.hpp"
+#include "locator.hpp"
 #include "market.hpp"
+#include "parallel.hpp"
+#include "updater.hpp"
 
 namespace orc {
 
-static const Float Two128(uint256_t(1) << 128);
-
-Market::Market(unsigned milliseconds, const S<Origin> &origin, S<Updated<Fiat>> fiat) :
-    fiat_(std::move(fiat)),
-    gauge_(Make<Gauge>(milliseconds, origin))
-{
+task<Market> Market::New(unsigned milliseconds, S<Chain> chain, Currency currency) {
+    auto bid(co_await Opened(Updating(milliseconds, [chain]() -> task<uint256_t> {
+        co_return co_await chain->Bid(); }, "Bid")));
+    co_return Market{std::move(chain), std::move(currency), std::move(bid)};
 }
 
-Float Market::Convert(const checked_int256_t &balance) const {
-    return Float(balance) / Two128 * (*fiat_)().oxt_;
-}
-
-checked_int256_t Market::Convert(const Float &balance) const {
-    return checked_int256_t(balance / (*fiat_)().oxt_ * Two128);
-}
-
-std::pair<Float, uint256_t> Market::Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint128_t &ratio, const uint256_t &gas) const {
-    const auto fiat((*fiat_)());
-
-    const auto base(Float(amount) * fiat.oxt_);
-    const auto until(start + range);
-
-    std::pair<Float, uint256_t> credit(0, 10*Gwei);
-
-    const auto prices(gauge_->Prices());
-    for (const auto &[price, time] : *prices) {
-        const auto when(now + unsigned(time));
-        if (when >= until) continue;
-        const auto cost(price * Gwei / 10);
-        const auto profit((start < when ? base * Float(range - (when - start)) / Float(range) : base) - Float(gas * cost) * fiat.eth_);
-        if (profit > std::get<0>(credit))
-            credit = {profit, cost};
-    }
-
-    credit.first *= Float(ratio + 1) / Two128;
-    return credit;
+task<Market> Market::New(unsigned milliseconds, uint256_t chain, const S<Origin> &origin, Locator locator, std::string currency) {
+    auto [chain$, currency$] = *co_await Parallel(Chain::New({std::move(locator), origin}, {}, chain), Binance(milliseconds, origin, std::move(currency)));
+    co_return co_await New(milliseconds, std::move(chain$), std::move(currency$));
 }
 
 }

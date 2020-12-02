@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -24,12 +24,12 @@
 #include <pc/webrtc_sdp.h>
 
 #include "cashier.hpp"
+#include "chain.hpp"
 #include "channel.hpp"
+#include "croupier.hpp"
 #include "crypto.hpp"
 #include "datagram.hpp"
-#include "endpoint.hpp"
 #include "local.hpp"
-#include "market.hpp"
 #include "protocol.hpp"
 #include "server.hpp"
 #include "spawn.hpp"
@@ -75,7 +75,7 @@ class Incoming final :
     }
 
     template <typename... Args_>
-    static S<Incoming> Create(Args_ &&...args) {
+    static S<Incoming> New(Args_ &&...args) {
         auto self(Make<Incoming>(std::forward<Args_>(args)...));
         self->self_ = self;
         return self;
@@ -125,9 +125,10 @@ task<void> Server::Send(const Buffer &data) {
 
 void Server::Commit(const Lock<Locked_> &locked) {
     const auto reveal(Random<32>());
-    if (locked->commit_ != locked->reveals_.end())
-        locked->commit_->second.second = Timestamp();
-    locked->commit_ = locked->reveals_.try_emplace(Hash(reveal), reveal, 0).first;
+    if (locked->reveal_ != locked->reveals_.end())
+        locked->reveal_->second = Timestamp();
+    locked->reveals_.emplace_front(reveal, 0);
+    locked->reveal_ = locked->reveals_.begin();
 }
 
 Float Server::Expected(const Lock<Locked_> &locked) {
@@ -137,26 +138,22 @@ Float Server::Expected(const Lock<Locked_> &locked) {
     return balance;
 }
 
-task<void> Server::Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &commit) {
-    Header header{Magic_, id};
-    co_await Send(pipe, Datagram(Port_, destination, Tie(header,
-        Command(Stamp_, Monotonic()),
-        Command(Invoice_, serial, Complement(market_->Convert(balance)), cashier_->Tuple(), commit)
-    )), true);
+task<void> Server::Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id, uint64_t serial, const Float &balance, const Bytes32 &reveal) {
+    co_return co_await Send(pipe, Datagram(Port_, destination, Tie(Header{Magic_, id}, croupier_->Invoice(serial, balance, reveal))), true);
 }
 
 task<void> Server::Invoice(Pipe<Buffer> &pipe, const Socket &destination, const Bytes32 &id) {
-    const auto [serial, balance, commit] = [&]() { const auto locked(locked_());
-        return std::make_tuple(locked->serial_, Expected(locked), locked->commit_->first); }();
-    co_await Invoice(pipe, destination, id, serial, balance, commit);
+    const auto [serial, balance, reveal] = [&]() { const auto locked(locked_());
+        return std::make_tuple(locked->serial_, Expected(locked), locked->reveal_->first); }();
+    co_await Invoice(pipe, destination, id, serial, balance, reveal);
 }
 
-void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data) {
+void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data) {
     const auto [
         v, r, s,
         commit,
         issued, nonce,
-        lottery, chain,
+        contract, chain,
         amount, ratio,
         start, range,
         funder, recipient,
@@ -173,18 +170,17 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     // XXX: fix Coder and Selector to not require this to Beam
     const Beam receipt(window);
 
-    orc_assert(std::tie(lottery, chain, recipient) == cashier_->Tuple());
-
     const auto until(start + range);
     const auto now(Timestamp());
     orc_assert(until > now);
 
-    const uint256_t gas(receipt.size() == 0 ? 84000 /*83267*/ : 103000);
-    const auto [expected, price] = market_->Credit(now, start, range, amount, ratio, gas);
+    const auto &lottery(croupier_->Find0(contract, chain, recipient));
+    const uint64_t gas(receipt.size() == 0 ? 84000 /*83267*/ : 103000);
+    const auto [expected, price] = lottery->Credit(now, start, range, amount, ratio, gas);
     if (expected <= 0)
         return;
 
-    const auto ticket(Ticket{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode0(lottery, chain, receipt));
+    const auto ticket(Ticket0{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode(contract, chain, receipt));
     const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
 
     const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
@@ -201,19 +197,20 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
         }
 
         const auto reveal([&]() {
-            const auto reveal(locked->reveals_.find(commit));
-            orc_assert(reveal != locked->reveals_.end());
-            const auto expire(reveal->second.second);
-            orc_assert(expire == 0 || reveal->second.second + 60 > now);
-            return reveal->second.first;
-        }());
+            for (const auto &reveal : locked->reveals_)
+                if (Hash(reveal.first) == commit) {
+                    const auto &expire(reveal.second);
+                    orc_assert(expire == 0 || expire + 60 > now);
+                    return reveal.first;
+                }
+        orc_assert(false); }());
 
         orc_assert(locked->expected_.emplace(ticket, expected).second);
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
         const auto winner(Hash(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
-        if (winner && locked->commit_->first == commit)
+        if (winner && locked->reveal_->first == commit)
             Commit(locked);
 
         return std::make_tuple(reveal, winner);
@@ -222,7 +219,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
     // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
     Spawn([=, price = price, commit = commit, issued = issued, nonce = nonce, v = v, r = r, s = s, amount = amount, ratio = ratio, start = start, range = range, funder = funder, recipient = recipient, reveal = reveal, winner = winner]() noexcept -> task<void> { try {
-        const auto valid(co_await cashier_->Check(signer, funder, amount, recipient, receipt));
+        const auto valid(co_await lottery->Check(signer, funder, amount, recipient, receipt));
 
         {
             const auto locked(locked_());
@@ -243,17 +240,7 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
 
         std::vector<Bytes32> old;
 
-        static Selector<void,
-            Bytes32 /*reveal*/, Bytes32 /*commit*/,
-            uint256_t /*issued*/, Bytes32 /*nonce*/,
-            uint8_t /*v*/, Bytes32 /*r*/, Bytes32 /*s*/,
-            uint128_t /*amount*/, uint128_t /*ratio*/,
-            uint256_t /*start*/, uint128_t /*range*/,
-            Address /*funder*/, Address /*recipient*/,
-            Bytes /*receipt*/, std::vector<Bytes32> /*old*/
-        > grab("grab");
-
-        cashier_->Send(grab, gas, price,
+        lottery->Send(croupier_->hack(), gas, price,
             reveal, commit,
             issued, nonce,
             v, r, s,
@@ -265,11 +252,100 @@ void Server::Submit(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id,
     } orc_catch({}) }, __FUNCTION__);
 }
 
+void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data) {
+    const auto [
+        v, r, s,
+        commit, nonce,
+        issued, expire,
+        contract, chain,
+        amount, ratio,
+        funder
+    ] = Take<
+        uint8_t, Brick<32>, Brick<32>,
+        Bytes32, Bytes32,
+        uint64_t, uint64_t,
+        Address, uint256_t,
+        uint128_t, uint128_t,
+        Address
+    >(data);
+
+    const auto recipient(croupier_->Recipient());
+
+    const auto now(Timestamp());
+    orc_assert(expire > now);
+
+    const auto &lottery(croupier_->Find1(contract, chain));
+    const uint64_t gas(60000);
+    const auto [expected, price] = lottery->Credit(now, expire, 0, amount, ratio, gas);
+    if (expected <= 0)
+        return;
+
+    const auto ticket(Ticket1{commit, issued, nonce, amount, ratio, expire, funder}.Encode(contract, chain, {}));
+    const Address signer(Recover(ticket, v, r, s));
+    Log() << std::dec << signer << " " << amount << std::endl;
+
+    const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
+        const auto locked(locked_());
+
+        orc_assert(issued >= locked->issued_);
+        auto &nonces(locked->nonces_);
+        orc_assert(nonces.emplace(issued, nonce, signer).second);
+        while (nonces.size() > horizon_) {
+            const auto oldest(nonces.begin());
+            orc_assert(oldest != nonces.end());
+            locked->issued_ = std::get<0>(*oldest) + 1;
+            nonces.erase(oldest);
+        }
+
+        const auto reveal([&]() {
+            for (const auto &reveal : locked->reveals_)
+                if (Hash(Tie(reveal.first.num<uint256_t>() >> 128, uint256_t(recipient.num()))) == commit) {
+                    const auto &expire(reveal.second);
+                    orc_assert(expire == 0 || expire + 60 > now);
+                    return reveal.first;
+                }
+        orc_assert(false); }());
+
+        orc_assert(locked->expected_.emplace(ticket, expected).second);
+        ++locked->serial_;
+
+        // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
+        const auto winner(Hash(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
+        if (winner && locked->reveal_->first == commit)
+            Commit(locked);
+
+        return std::make_tuple(reveal, winner);
+    }();
+
+    // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
+    // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
+    Spawn([=, price = price, commit = commit, /*issued = issued, expire = expire, nonce = nonce, v = v, r = r, s = s,*/ amount = amount, ratio = ratio, funder = funder, recipient = recipient, reveal = reveal, winner = winner]() noexcept -> task<void> { try {
+        const auto valid(co_await lottery->Check(signer, funder, amount, recipient));
+
+        {
+            const auto locked(locked_());
+            const auto expected(locked->expected_.find(ticket));
+            orc_assert(expected != locked->expected_.end());
+            if (valid)
+                locked->balance_ += expected->second;
+            else
+                ++locked->serial_;
+            locked->expected_.erase(expected);
+        }
+
+        if (!valid) {
+            co_await Invoice(*this, source);
+            co_return;
+        } else if (!winner)
+            co_return;
+    } orc_catch({}) }, __FUNCTION__);
+}
+
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) { orc_ignore({
     if (Bill(data, true) && !Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Port_)
             return false;
-        if (cashier_ == nullptr)
+        if (croupier_ == nullptr)
             return true;
 
         nest_.Hatch([&]() noexcept { return [this, source, data = Beam(data)]() -> task<void> {
@@ -279,8 +355,11 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) { orc_ignore({
 
             Scan(window, [&, &id = id](const Buffer &data) { try {
                 const auto [command, window] = Take<uint32_t, Window>(data);
-                if (command == Submit_)
-                    Submit(this, source, id, window);
+                if (false);
+                else if (command == Submit0_)
+                    Submit0(this, source, id, window);
+                else if (command == Submit1_)
+                    Submit1(this, source, id, window);
             } orc_catch({}) });
 
             co_await Invoice(*this, source, id);
@@ -304,12 +383,11 @@ void Server::Stop(const std::string &error) noexcept {
     orc_insist_(error.empty(), error);
 }
 
-Server::Server(S<Origin> origin, S<Cashier> cashier, S<Market> market) :
+Server::Server(S<Cashier> cashier, S<Croupier> croupier) :
     Valve(typeid(*this).name()),
     local_(Certify()),
-    origin_(std::move(origin)),
     cashier_(std::move(cashier)),
-    market_(std::move(market))
+    croupier_(std::move(croupier))
 {
     const auto locked(locked_());
     Commit(locked);
@@ -326,8 +404,8 @@ task<void> Server::Shut() noexcept {
     co_await Valve::Shut();
 }
 
-task<std::string> Server::Respond(const std::string &offer, std::vector<std::string> ice) {
-    auto incoming(Incoming::Create(self_, origin_, local_, std::move(ice)));
+task<std::string> Server::Respond(const S<Origin> &origin, const std::string &offer, std::vector<std::string> ice) {
+    auto incoming(Incoming::New(self_, origin, local_, std::move(ice)));
     auto answer(co_await incoming->Answer(offer));
     co_return answer;
     co_return Filter(true, answer);

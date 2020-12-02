@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -23,6 +23,7 @@
 #ifndef ORCHID_PARALLEL_HPP
 #define ORCHID_PARALLEL_HPP
 
+#include <cppcoro/task.hpp>
 #include <cppcoro/when_all.hpp>
 
 #include "try.hpp"

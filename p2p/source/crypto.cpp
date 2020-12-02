@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -66,8 +66,9 @@ Brick<32> Hash(const std::string &data) {
 }
 
 
-Signature::Signature(const Brick<65> &data) {
-    std::tie(r_, s_, v_) = Take<Brick<32>, Brick<32>, Number<uint8_t>>(data);
+Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
+    r_(r), s_(s), v_(v)
+{
 }
 
 Signature::Signature(const Brick<64> &data, int v) {
@@ -82,11 +83,8 @@ Signature::Signature(const Brick<64> &data, int v) {
     }
 }
 
-Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
-    r_(r),
-    s_(s),
-    v_(v)
-{
+Signature::Signature(const Brick<65> &data) {
+    std::tie(r_, s_, v_) = Take<Brick<32>, Brick<32>, Number<uint8_t>>(data);
 }
 
 

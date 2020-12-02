@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -26,6 +26,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
+#include <boost/beast/websocket.hpp>
 
 #include "baton.hpp"
 #include "router.hpp"
@@ -33,6 +34,8 @@
 #include "task.hpp"
 
 namespace orc {
+
+namespace beast = boost::beast;
 
 const char *Params() {
     return
@@ -47,29 +50,52 @@ const char *Params() {
     ;
 }
 
-template <typename Stream_>
+template <bool Expires_, typename Stream_>
 task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
-    boost::beast::flat_buffer buffer;
+    beast::flat_buffer buffer;
 
     for (;;) {
         Request request(socket);
         try {
-            co_await http::async_read(stream, buffer, request, Token());
+            co_await http::async_read(stream, buffer, request, Adapt());
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (false);
             else if (code == asio::ssl::error::stream_truncated);
-            else if (code == boost::beast::error::timeout);
+            else if (code == beast::error::timeout);
             else if (code == http::error::end_of_stream);
             else if (code == http::error::partial_message);
             else orc_adapt(error);
             co_return;
         }
 
+        if (beast::websocket::is_upgrade(request)) {
+            if constexpr (Expires_)
+                beast::get_lowest_layer(stream).expires_never();
+            Log() << request << std::endl;
+            beast::websocket::stream<Stream_> ws(std::move(stream));
+            ws.set_option(beast::websocket::stream_base::timeout::suggested(beast::role_type::server));
+            ws.set_option(beast::websocket::stream_base::decorator([](beast::websocket::response_type &response) {
+                response.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            }));
+            co_await ws.async_accept(request, Adapt());
+
+            for (;;) {
+                const auto writ(co_await ws.async_read(buffer, Adapt()));
+                orc_insist(buffer.size() == writ);
+                Log() << writ << std::endl;
+                ws.text(ws.got_text());
+                orc_insist(co_await ws.async_write(buffer.data(), Adapt()) == writ);
+                buffer.consume(writ);
+            }
+
+            co_return;
+        }
+
         const auto response(co_await [&]() -> task<Response> { try {
-            for (const auto &[verb, path, code] : routes_)
-                if ((verb == http::verb::unknown || verb == request.method()) && std::regex_match(request.target().to_string(), path))
-                    co_return co_await code(std::move(request));
+            for (const auto &route : routes_)
+                if (auto response = route(request))
+                    co_return co_await std::move(response);
             Log() << request << std::endl;
             // XXX: maybe return method_not_allowed if path is found but method is not
             co_return Respond(request, http::status::not_found, "text/plain", "");
@@ -77,7 +103,7 @@ task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
             co_return Respond(request, http::status::internal_server_error, "text/plain", error.what());
         } }());
 
-        co_await http::async_write(stream, response, Token());
+        co_await http::async_write(stream, response, Adapt());
         if (!response.keep_alive())
             break;
     }
@@ -112,16 +138,16 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
         for (;;) {
             asio::ip::tcp::socket connection(Context());
             asio::ip::tcp::endpoint endpoint;
-            co_await acceptor.async_accept(connection, endpoint, Token());
+            co_await acceptor.async_accept(connection, endpoint, Adapt());
             Spawn([this, connection = std::move(connection), endpoint = std::move(endpoint), &ssl]() mutable noexcept -> task<void> { try {
-                boost::beast::ssl_stream<boost::beast::tcp_stream> stream(std::move(connection), ssl);
-                boost::beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
+                beast::ssl_stream<beast::tcp_stream> stream(std::move(connection), ssl);
+                beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
-                co_await stream.async_handshake(asio::ssl::stream_base::server, Token());
-                co_await Handle(stream, endpoint);
+                co_await stream.async_handshake(asio::ssl::stream_base::server, Adapt());
+                co_await Handle<true>(stream, endpoint);
 
                 try {
-                    co_await stream.async_shutdown(Token());
+                    co_await stream.async_shutdown(Adapt());
                 } catch (const asio::system_error &error) {
                     // XXX: SSL_OP_IGNORE_UNEXPECTED_EOF ?
                     //const auto code(error.code());
@@ -145,9 +171,9 @@ void Router::Run(const std::string &path) {
 
         for (;;) {
             asio::local::stream_protocol::socket connection(Context());
-            co_await acceptor.async_accept(connection, Token());
+            co_await acceptor.async_accept(connection, Adapt());
             Spawn([this, connection = std::move(connection)]() mutable noexcept -> task<void> {
-                co_await Handle(connection, Socket());
+                co_await Handle<false>(connection, Socket());
             }, "Router::handle");
         }
     }, "Router::accept");

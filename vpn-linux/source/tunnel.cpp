@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -32,7 +32,8 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
     auto &sync(sunk.Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
     auto file(sync->native_handle());
 
-    struct ifreq request = {.ifr_flags = IFF_TUN | IFF_NO_PI};
+    struct ifreq request;
+    request.ifr_flags = IFF_TUN | IFF_NO_PI;
     strncpy(request.ifr_name, device.c_str(), IFNAMSIZ);
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     orc_assert(ioctl(file, TUNSETIFF, (void *) &request) >= 0);

@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -37,13 +37,13 @@ namespace orc {
 
 template <typename Stream_>
 task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) { orc_ahead
-    orc_block({ (void) co_await http::async_write(stream, req, orc::Token()); },
+    orc_block({ (void) co_await http::async_write(stream, req, orc::Adapt()); },
         "writing http request");
 
     // this buffer must be maintained if this socket object is ever reused
     boost::beast::flat_buffer buffer;
     http::response<http::dynamic_body> res;
-    orc_block({ (void) co_await http::async_read(stream, buffer, res, orc::Token()); },
+    orc_block({ (void) co_await http::async_read(stream, buffer, res, orc::Adapt()); },
         "reading http response");
 
     // XXX: I can probably return this as a buffer array
@@ -91,7 +91,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
         // XXX: beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
 
         orc_block({ try {
-            co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Token());
+            co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Adapt());
         } catch (const asio::system_error &error) {
             orc_adapt(error);
         } }, "in ssl handshake");

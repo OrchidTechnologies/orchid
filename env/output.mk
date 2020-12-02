@@ -1,5 +1,5 @@
 # Cycc/Cympile - Shared Build Scripts for Make
-# Copyright (C) 2013-2019  Jay Freeman (saurik)
+# Copyright (C) 2013-2020  Jay Freeman (saurik)
 
 # Zero Clause BSD license {{{
 #
@@ -32,7 +32,7 @@ flags- = $(call flags_,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)
 flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(filter -I%,$(cflags/./$<) $(flags-) $(cflags)) $(filter-out -I%,$(cflags) $(flags-) $(cflags/./$<)))
 
 define compile
-$(job)@sed -e '1{x;s!.*!#line 1 "$<"!;p;x;};$(chacks/./$<)' $< | $(prefix) $($(1)) $(more/$(arch)) -MD -MP -c -o $@ $(3) -x $(2) - -iquote$(dir $<) $(flags) $(xflags)
+$(job)@sed -e '1{x;s!.*!#line 1 "$<"!;p;x;};$(chacks/./$<)' $< | $(prefix) $($(1)) $(more/$(arch)) -MD -MP -c -o $@ $(3) $(flags) $(xflags) -iquote$(dir $<) -x $(2) -
 endef
 
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)

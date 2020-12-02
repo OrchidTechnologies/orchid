@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -48,9 +48,9 @@ struct Signature {
     Brick<32> s_;
     uint8_t v_;
 
-    Signature(const Brick<65> &data);
-    Signature(const Brick<64> &data, int v);
     Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v);
+    Signature(const Brick<64> &data, int v);
+    Signature(const Brick<65> &data);
 
     operator Brick<65>() const {
         auto [external] = Take<Brick<65>>(Tie(r_, s_, Number<uint8_t>(v_)));

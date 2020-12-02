@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -20,7 +20,7 @@
 /* }}} */
 
 
-#include "endpoint.hpp"
+#include "chain.hpp"
 #include "local.hpp"
 #include "task.hpp"
 #include "ticket.hpp"
@@ -41,19 +41,19 @@ int Main(int argc, const char *const argv[]) {
         const uint256_t chain(1);
 
         const auto local(Break<Local>());
-        Endpoint endpoint(local, {"https", "cloudflare-eth.com", "443", "/"});
+        Chain chain(local, {"https", "cloudflare-eth.com", "443", "/"});
 
         const auto input(co_await [&]() -> task<Beam> {
 #if 0
             co_return Bless("0x66458bbdd330f03b5966c622edcaa802932935fae4276ff7914479676be56e52773a54da68139e95b80dd8dc0aee4d37e2a9df058f29decc631d6ac6c8b34fc6414f7e91000000000000000000000000000000000000000000000000000000005eeb83d727e30c91220a33fe20d4561e53a2e65611ca002512efa3d9569f929d619263fe000000000000000000000000000000000000000000000000000000000000001b954b3725829049af21c58931aa3236827041c0814f7bcb4c8e4d6eea9d371de17d117839e5f2f45002d21eccfc8be1a58f31e0594385a93b280a85cac55d403500000000000000000000000000000000000000000000000068155a43676e000000000000000000000000000000000000ffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000005eeb9ff7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000091f053f14a814a8229f6473fcbb6f8bc42f43da50000000000000000000000005b2a0ecd5560237ac8418d931a789fcd9fffdc1900000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
 #else
-            const auto txn(co_await endpoint("eth_getTransactionByHash", {hash}));
+            const auto txn(co_await chain("eth_getTransactionByHash", {hash}));
             orc_assert(Address(txn["to"].asString()) == lottery);
 
             const uint256_t number(txn["blockNumber"].asString());
             std::cout << "number: " << std::dec << number << std::endl;
 
-            const auto block(co_await endpoint("eth_getBlockByHash", {txn["blockHash"].asString(), false}));
+            const auto block(co_await chain("eth_getBlockByHash", {txn["blockHash"].asString(), false}));
             const uint256_t timestamp(block["timestamp"].asString());
             std::cout << "timestamp: " << timestamp << std::endl;
 
@@ -98,7 +98,7 @@ int Main(int argc, const char *const argv[]) {
         std::cout << "signer: " << signer << std::endl;
 
         const std::string latest("latest");
-        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(endpoint, latest, lottery, uint256_t(90000), funder, signer);
+        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(chain, latest, lottery, uint256_t(90000), funder, signer);
         std::cout << "balance: " << balance << std::endl;
         std::cout << "escrow: " << escrow << std::endl;
         std::cout << "unlock: " << unlock << std::endl;
@@ -106,7 +106,7 @@ int Main(int argc, const char *const argv[]) {
         std::cout << "codehash: " << codehash << std::endl;
         std::cout << "shared: " << shared << std::endl;
 
-        const auto logs(co_await endpoint("eth_getLogs", {Multi{
+        const auto logs(co_await chain("eth_getLogs", {Multi{
             {"fromBlock", "0x0"},
             {"toBlock", latest},
             {"address", lottery},

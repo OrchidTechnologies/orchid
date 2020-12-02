@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -162,6 +162,8 @@ class Transport :
         nest_.Hatch([&]() noexcept { return [this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
             //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
             co_await Inner().Send(buffer);
+        // XXX: like half of clang-tidy, this lint doesn't work! :/
+        // NOLINTNEXTLINE (clang-analyzer-cplusplus.NewDeleteLeaks)
         }; }, __FUNCTION__);
 
         return true;

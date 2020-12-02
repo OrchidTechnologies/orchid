@@ -2,11 +2,20 @@
 set -e
 
 export DEBIAN_FRONTEND=noninteractive
-sudo -EH apt-get -y install autoconf automake bc bison cpio capnproto flex gettext gperf groff libtool ninja-build pkg-config python python3-pip python3-setuptools rpm tcl texinfo vim-common
-sudo -EH apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev clang-tidy-9 lld-9
+
+sudo -EH apt-get -y install \
+    bc cpio capnproto rpm tcl vim-common \
+    clang clang-tidy lld \
+    libc++-dev libc++abi-dev \
+    python python3-pip python3-setuptools \
+    bison flex gperf \
+    gettext groff texinfo \
+    autoconf automake libtool \
+    ninja-build pkg-config \
 
 function usable() {
     # Ubuntu bionic ships meson 0.45, which is too old to build glib
+    # XXX: consider checking for meson 0.52 (it broke cross linking)
     for version in $(apt-cache show meson | sed -e '/^Version: */!d;s///'); do
         if dpkg --compare-versions "${version}" ">=" "0.48.0"; then
             return

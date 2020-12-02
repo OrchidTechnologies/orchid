@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -34,10 +34,9 @@
 
 #include "baton.hpp"
 #include "cairo.hpp"
+#include "chain.hpp"
 #include "crypto.hpp"
-#include "endpoint.hpp"
 #include "float.hpp"
-#include "gauge.hpp"
 #include "json.hpp"
 #include "jsonrpc.hpp"
 #include "load.hpp"
@@ -122,7 +121,7 @@ int Main(int argc, const char *const argv[]) {
 
     const auto origin(Break<Local>());
     const std::string rpc(args["rpc"].as<std::string>());
-    Endpoint endpoint(origin, Locator::Parse(rpc));
+    const auto chain(Wait(Chain::New({rpc, origin}, {})));
 
     const auto gauge(Make<Gauge>(60*1000, origin));
 
@@ -146,22 +145,22 @@ int Main(int argc, const char *const argv[]) {
         static const auto Ten26(Ten18 * Ten8);
         const auto start(Timestamp());
 
-        uint256_t round(co_await latestRound_.Call(endpoint, "latest", chainlink, gas) + 1);
+        uint256_t round(co_await latestRound_.Call(chain, "latest", chainlink, gas) + 1);
         uint256_t timestamp(0);
         Float answer;
 
         const unsigned needed(83328);
 
-        const auto height(co_await endpoint.Height());
+        const auto height(co_await chain->Height());
         //const uint256_t height(10645961);
         for (auto number(height); number != 0; --number) {
-            const auto block(co_await endpoint.Header(number));
+            const auto block(co_await chain->Header(number));
 
             for (; timestamp - 1 > block.timestamp_; --round)
                 std::tie(timestamp, answer) = *co_await Parallel(
-                    getTimestamp_.Call(endpoint, "latest", chainlink, gas, round),
+                    getTimestamp_.Call(chain, "latest", chainlink, gas, round),
                     [&]() -> task<Float> {
-                        co_return Float(co_await getAnswer_.Call(endpoint, "latest", chainlink, gas, round)) / Ten26;
+                        co_return Float(co_await getAnswer_.Call(chain, "latest", chainlink, gas, round)) / Ten26;
                     }());
 
             //static const uint256_t Day(24*60*60);
@@ -171,7 +170,7 @@ int Main(int argc, const char *const argv[]) {
 
             Pile<uint256_t, uint256_t> prices;
             for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &record) {
-                return endpoint[record.hash_];
+                return (*chain)[record.hash_];
             }, block.records_)), block.records_)) {
                 const auto &receipt(*zipped.get<0>());
                 const auto &record(zipped.get<1>());
@@ -214,16 +213,16 @@ int Main(int argc, const char *const argv[]) {
 
     Router router;
 
-    router(http::verb::get, R"(/c/1/diff.png)", [&](Request request) -> task<Response> {
+    router(http::verb::get, "/c/1/diff.png", [&](Request request) -> task<Response> {
         std::multimap<uint256_t, std::tuple<uint64_t, uint64_t>> prices;
         uint64_t maximum(0);
 
-        auto number(co_await endpoint.Height());
+        auto number(co_await chain->Height());
         for (unsigned i(0); i != 16; ++i) {
-            const auto block(co_await endpoint.Header(number--));
+            const auto block(co_await chain->Header(number--));
 
             for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &record) {
-                return endpoint[record.hash_];
+                return (*chain)[record.hash_];
             }, block.records_)), block.records_)) {
                 const auto &receipt(*zipped.get<0>());
                 const auto &record(zipped.get<1>());
@@ -269,17 +268,17 @@ int Main(int argc, const char *const argv[]) {
         co_return Respond(request, http::status::ok, "image/png", surface.png());
     });
 
-    router(http::verb::get, R"(/c/1/gas.png)", [&](Request request) -> task<Response> {
-        auto number(co_await endpoint.Height());
+    router(http::verb::get, "/c/1/gas.png", [&](Request request) -> task<Response> {
+        auto number(co_await chain->Height());
         Pile<uint256_t, uint64_t> prices;
         uint64_t limit(0);
 
         for (unsigned i(0); i != 128; ++i) {
-            const auto block(co_await endpoint.Header(number--));
+            const auto block(co_await chain->Header(number--));
             limit += block.limit_;
 
             for (const auto &zipped : Zip(*co_await Parallel(Map([&](const auto &record) {
-                return endpoint[record.hash_];
+                return (*chain)[record.hash_];
             }, block.records_)), block.records_)) {
                 const auto &receipt(*zipped.get<0>());
                 const auto &record(zipped.get<1>());
@@ -368,7 +367,7 @@ int Main(int argc, const char *const argv[]) {
         level(0.5, 1.0, 0.5, pct60);
 
 
-        level(1.0, 0.5, 0.5, Float(co_await endpoint.Bid()) / Ten9);
+        level(1.0, 0.5, 0.5, Float(co_await chain->Bid()) / Ten9);
 
         co_await gauge->Update();
         level(0.5, 0.5, 1.0, Float(gauge->Price()) / Ten9);

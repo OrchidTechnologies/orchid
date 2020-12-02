@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -29,7 +29,7 @@ task<size_t> Duplex::Read(const Mutables &buffers) {
     size_t writ;
     try {
         boost::beast::buffers_adaptor buffer(buffers);
-        writ = co_await inner_.async_read(buffer, Token());
+        writ = co_await inner_.async_read(buffer, Adapt());
     } catch (const asio::system_error &error) {
         auto code(error.code());
         if (code == asio::error::eof)

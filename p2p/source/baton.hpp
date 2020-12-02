@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -103,7 +103,7 @@ class Baton<void, asio::error_code, Value_> :
     }
 };
 
-struct Token {
+struct Adapt {
 };
 
 template <typename Type_, typename... Values_>
@@ -128,13 +128,13 @@ namespace boost {
 namespace asio {
 
 template <typename Type_, typename... Values_>
-struct async_result<orc::Token, Type_ (Values_...)> {
+struct async_result<orc::Adapt, Type_ (Values_...)> {
     async_result() = delete;
 
     typedef decltype(*std::declval<orc::Baton<Type_, Values_...>>()) return_type;
 
     template <typename Initiation_, typename... Args_>
-    static return_type initiate(Initiation_ initiation, orc::Token &&, Args_... args) {
+    static return_type initiate(Initiation_ initiation, orc::Adapt &&, Args_... args) {
         orc::Baton<Type_, Values_...> baton;
         std::move(initiation)(orc::Handler<Type_, Values_...>(&baton), std::move(args)...);
         co_return co_await *baton;

@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -45,16 +45,22 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
+#include "binance.hpp"
 #include "boring.hpp"
+#include "butcher.hpp"
 #include "cashier.hpp"
+#include "chain.hpp"
 #include "channel.hpp"
-#include "coinbase.hpp"
+#include "croupier.hpp"
+#include "crypto.hpp"
 #include "egress.hpp"
+#include "executor.hpp"
 #include "fiat.hpp"
 #include "jsonrpc.hpp"
 #include "load.hpp"
 #include "local.hpp"
-#include "market.hpp"
+#include "lottery0.hpp"
+#include "lottery1.hpp"
 #include "node.hpp"
 #include "remote.hpp"
 #include "router.hpp"
@@ -65,7 +71,7 @@
 #include "task.hpp"
 #include "transport.hpp"
 #include "tunnel.hpp"
-#include "utility.hpp"
+#include "updater.hpp"
 #include "version.hpp"
 
 namespace orc {
@@ -73,6 +79,8 @@ namespace orc {
 namespace po = boost::program_options;
 
 int Main(int argc, const char *const argv[]) {
+    std::vector<std::string> chains;
+
     po::variables_map args;
 
     po::options_description group("general command line");
@@ -83,27 +91,19 @@ int Main(int argc, const char *const argv[]) {
 
     po::options_description options;
 
-    { po::options_description group("orchid eth addresses");
+    { po::options_description group("lottery contracts");
     group.add_options()
-        //("token", po::value<std::string>()->default_value("0x4575f41308EC1483f3d399aa9a2826d74Da13Deb"))
-        ("lottery", po::value<std::string>()->default_value("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"))
-        ("location", po::value<std::string>()->default_value("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD"))
+        ("lottery0", po::value<std::string>()->default_value("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"))
+        ("ethereum", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
+        ("websocket", po::value<std::string>()->default_value("ws://127.0.0.1:8546/"), "ethereum websocket private API endpoint")
+        ("lottery1", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
+        ("chain", po::value<std::vector<std::string>>(&chains), "like 1,ETH,https://cloudflare-eth.com/")
     ; options.add(group); }
 
-    { po::options_description group("user eth addresses");
+    { po::options_description group("payment addresses");
     group.add_options()
         ("executor", po::value<std::string>(), "address to use for making transactions")
-        ("password", po::value<std::string>()->default_value(""), "password to unlock executor account")
         ("recipient", po::value<std::string>(), "deposit address for client payments")
-        ("provider", po::value<std::string>(), "provider address in stake directory")
-    ; options.add(group); }
-
-    { po::options_description group("external resources");
-    group.add_options()
-        ("chainid", po::value<unsigned>()->default_value(1), "ropsten = 3; rinkeby = 4; goerli = 5")
-        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
-        ("ws", po::value<std::string>()->default_value("ws://127.0.0.1:8546/"), "ethereum websocket private API endpoint")
-        ("stun", po::value<std::string>()->default_value("stun.l.google.com:19302"), "stun server url to use for discovery")
     ; options.add(group); }
 
     { po::options_description group("webrtc signaling");
@@ -114,6 +114,7 @@ int Main(int argc, const char *const argv[]) {
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
         ("dh", po::value<std::string>(), "diffie hellman params (pem encoded)")
         ("network", po::value<std::string>(), "local interface for ICE candidates")
+        ("stun", po::value<std::string>()->default_value("stun.l.google.com:19302"), "stun server url to use for discovery")
     ; options.add(group); }
 
     { po::options_description group("bandwidth pricing");
@@ -218,9 +219,6 @@ int Main(int argc, const char *const argv[]) {
     std::cerr << "gpg = " << gpg << std::endl;
 
 
-    Address location(args["location"].as<std::string>());
-    std::string password(args["password"].as<std::string>());
-
     auto origin(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
 
@@ -257,40 +255,57 @@ int Main(int argc, const char *const argv[]) {
     }
 
 
-    auto rpc(Locator::Parse(args["rpc"].as<std::string>()));
-    Endpoint endpoint(origin, rpc);
-
-    if (args.count("provider") != 0) {
-        const PasswordExecutor provider(endpoint, args["provider"].as<std::string>(), password);
-
-        Wait([&]() -> task<void> {
-            const auto height(co_await endpoint.Height());
-            static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look("look");
-            if (Slice<1, 4>(co_await look.Call(endpoint, height, location, 90000, provider)) != std::tie(url, tls, gpg)) {
-                static const Selector<void, Bytes, Bytes, Bytes> move("move");
-                co_await provider.Send(location, 0, move(Beam(url), Beam(tls), {}));
-            }
-        }());
-    }
-
     auto cashier([&]() -> S<Cashier> {
         const auto price(Float(args["price"].as<std::string>()) / (1024 * 1024 * 1024));
-        if (price == 0)
-            return nullptr;
-
-        orc_assert_(args.count("executor") != 0, "must specify --executor unless --price is 0");
-        const PasswordExecutor executor(endpoint, args["executor"].as<std::string>(), password);
-        const auto recipient(args.count("recipient") == 0 ? Address(executor) : Address(args["recipient"].as<std::string>()));
-
-        auto cashier(Break<Cashier>(
-            std::move(endpoint), price, executor,
-            Address(args["lottery"].as<std::string>()), args["chainid"].as<unsigned>(), recipient
-        ));
-        cashier->Open(origin, Locator::Parse(args["ws"].as<std::string>()));
-        return cashier;
+        return price == 0 ? nullptr : Make<Cashier>(price);
     }());
 
-    auto market(Make<Market>(5*60*1000, origin, Wait(CoinbaseFiat(5*60*1000, origin, args["currency"].as<std::string>()))));
+
+    auto croupier(Wait([&]() -> task<S<Croupier>> {
+        orc_assert(args["currency"].as<std::string>() == "USD");
+
+        orc_assert_(args.count("executor") != 0, "must specify --executor unless --price is 0");
+        auto executor(Make<SecretExecutor>(Bless(args["executor"].as<std::string>())));
+        const auto recipient(args.count("recipient") == 0 ? Address(*executor) : Address(args["recipient"].as<std::string>()));
+
+        const unsigned milliseconds(5*60*1000);
+
+        auto lottery0(co_await [&]() -> task<S<Lottery0>> {
+            auto chain(co_await Chain::New({args["ethereum"].as<std::string>(), origin}, {}));
+            Address contract(args["lottery0"].as<std::string>());
+
+            static Selector<Address> what_("what");
+            auto token(co_await what_.Call(*chain, "latest", contract, 90000));
+
+            auto lottery0(Break<Lottery0>(Token{
+                co_await Market::New(milliseconds, std::move(chain), co_await Binance(milliseconds, origin, "ETH")),
+                std::move(token),
+                co_await Binance(milliseconds, origin, "OXT")
+            }, std::move(contract)));
+
+            co_await lottery0->Open(origin, args["websocket"].as<std::string>());
+            co_return std::move(lottery0);
+        }());
+
+        std::map<uint256_t, S<Lottery1>> lotteries1;
+
+        const Address contract(args["lottery1"].as<std::string>());
+
+        for (const auto &market : chains) {
+            auto [chain, currency, locator] = [&]() {
+                const auto [chain, currency, locator] = Split<3>(market, {','});
+                return std::make_tuple(uint256_t(chain.operator std::string()), currency.operator std::string(), Locator(locator.operator std::string()));
+            }();
+            auto market$(co_await Market::New(milliseconds, chain, origin, std::move(locator), std::move(currency)));
+            const auto bid((*market$.bid_)());
+            Log() << market$.currency_.name_ << " $" << (Float(bid) * market$.currency_.dollars_() * 100000) << " @" << std::dec << bid << std::endl;
+            lotteries1.try_emplace(std::move(chain), Break<Lottery1>(std::move(market$), contract));
+        }
+
+        auto croupier(Make<Croupier>(recipient, std::move(executor), std::move(lottery0), std::move(lotteries1)));
+        co_return std::move(croupier);
+    }()));
+
 
     auto egress([&]() { if (false) {
 #ifdef __linux__
@@ -334,7 +349,8 @@ int Main(int argc, const char *const argv[]) {
         co_await remote->Resolve("one.one.one.one", "443");
     }());
 
-    const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(market), std::move(egress), std::move(ice)));
+
+    const auto node(Make<Node>(std::move(origin), std::move(cashier), std::move(croupier), std::move(egress), std::move(ice)));
     node->Run(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Certificates(), params);
     return 0;
 }

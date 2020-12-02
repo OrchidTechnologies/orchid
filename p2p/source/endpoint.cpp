@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -20,161 +20,9 @@
 /* }}} */
 
 
-#include <regex>
-
 #include "endpoint.hpp"
-#include "error.hpp"
-#include "json.hpp"
-#include "nested.hpp"
 
 namespace orc {
-
-static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
-    size_t offset(0);
-    orc_assert(!proofs.isNull());
-    for (auto e(proofs.size()), i(decltype(e)(0)); i != e; ++i) {
-        const auto data(Bless(proofs[i].asString()));
-        orc_assert(Hash(data) == hash);
-
-        const auto proof(Explode(data));
-        switch (proof.size()) {
-            case 17: {
-                if (offset == path.size() * 2)
-                    return Explode(proof[16].buf());
-                const auto data(proof[path.nib(offset++)].buf());
-                if (data.size() == 0)
-                    return Nested();
-                hash = data;
-            } break;
-
-            case 2: {
-                const auto leg(proof[0].buf());
-                const auto type(leg.nib(0));
-                for (size_t i((type & 0x1) != 0 ? 1 : 2), e(leg.size() * 2); i != e; ++i)
-                    if (path.nib(offset++) != leg.nib(i))
-                        return Nested();
-                const Segment segment(proof[1].buf());
-                if ((type & 0x2) != 0)
-                    return Explode(segment);
-                hash = segment;
-            } break;
-
-            default:
-                orc_assert(false);
-        }
-    }
-
-    orc_assert(false);
-}
-
-Receipt::Receipt(Json::Value &&value) :
-    height_(To(value["blockNumber"].asString())),
-    status_([&]() {
-        const uint256_t status(value["status"].asString());
-        return status != 0;
-    }()),
-    contract_([&]() -> Address {
-        const auto contract(value["contractAddress"]);
-        if (contract.isNull())
-            return Address();
-        return contract.asString();
-    }()),
-    gas_(To(value["gasUsed"].asString()))
-{
-}
-
-Record::Record(const uint256_t &chain, const Json::Value &value) :
-    Transaction{
-        uint256_t(value["nonce"].asString()),
-        uint256_t(value["gasPrice"].asString()),
-        To(value["gas"].asString()),
-        [&]() -> std::optional<Address> {
-            const auto &target(value["to"]);
-            if (target.isNull())
-                return std::nullopt;
-            return target.asString();
-        }(),
-        uint256_t(value["value"].asString()),
-    },
-    hash_(Bless(value["hash"].asString())),
-    from_(value["from"].asString())
-{
-    const auto data(Bless(value["input"].asString()));
-    const uint256_t gas(gas_);
-    const Number<uint256_t> r(uint256_t(value["r"].asString()));
-    const Number<uint256_t> s(uint256_t(value["s"].asString()));
-    const auto v(uint256_t(value["v"].asString()));
-    if (v >= 35) {
-        Signature signature(r, s, uint8_t(v - 35 - chain * 2));
-        orc_assert(Address(Recover(Hash(Implode({nonce_, bid_, gas_, target_, amount_, data, chain, uint8_t(0), uint8_t(0)})), signature)) == from_);
-    } else {
-        orc_assert(v >= 27);
-        Signature signature(r, s, uint8_t(v - 27));
-        orc_assert(Address(Recover(Hash(Implode({nonce_, bid_, gas_, target_, amount_, data})), signature)) == from_);
-    }
-}
-
-Block::Block(const uint256_t &chain, Json::Value &&value) :
-    height_(To(value["number"].asString())),
-    state_(value["stateRoot"].asString()),
-    timestamp_(To(value["timestamp"].asString())),
-    limit_(To(value["gasLimit"].asString())),
-    miner_(value["miner"].asString()),
-    records_([&]() {
-        std::vector<Record> records;
-        for (auto &record : value["transactions"])
-            records.emplace_back(chain, std::move(record));
-        return records;
-    }())
-{
-    // XXX: verify transaction root
-}
-
-Account::Account(const uint256_t &nonce, const uint256_t &balance) :
-    nonce_(nonce),
-    balance_(balance)
-{
-}
-
-Account::Account(const Block &block, const Json::Value &value) :
-    nonce_(value["nonce"].asString()),
-    balance_(value["balance"].asString()),
-    storage_(value["storageHash"].asString()),
-    code_(value["codeHash"].asString())
-{
-    const auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), Hash(Number<uint160_t>(value["address"].asString()))));
-    if (leaf.scalar()) {
-        orc_assert(leaf.buf().size() == 0);
-        orc_assert(nonce_ == 0);
-        orc_assert(balance_ == 0);
-        orc_assert(storage_ == uint256_t("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"));
-        orc_assert(code_ == uint256_t("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
-    } else {
-        orc_assert(leaf.size() == 4);
-        orc_assert(leaf[0].num() == nonce_);
-        orc_assert(leaf[1].num() == balance_);
-        orc_assert(leaf[2].num() == storage_);
-        orc_assert(leaf[3].num() == code_);
-    }
-}
-
-uint256_t Endpoint::Get(unsigned index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
-    const auto storage(storages[index]);
-    orc_assert(uint256_t(storage["key"].asString()) == key);
-    const uint256_t value(storage["value"].asString());
-    const auto leaf(Verify(storage["proof"], root, Hash(Number<uint256_t>(key))));
-    orc_assert(leaf.num() == value);
-    return value;
-}
-
-static Brick<32> Name(const std::string &name) {
-    if (name.empty())
-        return Zero<32>();
-    const auto period(name.find('.'));
-    if (period == std::string::npos)
-        return Hash(Tie(Zero<32>(), Hash(name)));
-    return Hash(Tie(Name(name.substr(period + 1)), Hash(name.substr(0, period))));
-}
 
 task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args) const { orc_block({
     Json::FastWriter writer;
@@ -183,14 +31,15 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
         Json::Value root;
         root["jsonrpc"] = "2.0";
         root["method"] = method;
-        root["id"] = "";
+        // XXX: xDAI eth_gasPrice has a JSON injection bug that requires this field be an integer :/
+        root["id"] = 0;
         root["params"] = std::move(args);
         return root;
     }()));
 
     const auto data(Parse((co_await origin_->Fetch("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
 
-    if (flags_.verbose_)
+    if (false)
         Log() << "JSON/RPC\n" << body << writer.write(data) << std::endl;
 
     orc_assert(data["jsonrpc"] == "2.0");
@@ -206,53 +55,8 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
 
     const auto id(data["id"]);
     orc_assert(!id.isNull());
-    orc_assert(id == "");
+    orc_assert(id == 0);
     co_return data["result"];
-}, "calling " << method); }
-
-task<uint256_t> Endpoint::Chain() const {
-    const auto chain(uint256_t((co_await operator()("eth_chainId", {})).asString()));
-    co_return chain;
-}
-
-task<uint256_t> Endpoint::Bid() const {
-    co_return uint256_t((co_await operator()("eth_gasPrice", {})).asString());
-}
-
-task<uint64_t> Endpoint::Height() const {
-    const auto height(To((co_await operator ()("eth_blockNumber", {})).asString()));
-    orc_assert_(height != 0, "ethereum server has not synchronized any blocks");
-    co_return height;
-}
-
-task<Block> Endpoint::Header(const Argument &height) const {
-    co_return Block(1, co_await operator ()("eth_getBlockByNumber", {height, true}));
-}
-
-task<uint256_t> Endpoint::Balance(const Address &address) const {
-    co_return uint256_t((co_await operator ()("eth_getBalance", {address, "latest"})).asString());
-}
-
-task<std::optional<Receipt>> Endpoint::operator [](const Bytes32 &transaction) const {
-    auto receipt(co_await operator ()("eth_getTransactionReceipt", {transaction}));
-    if (receipt.isNull())
-        co_return std::optional<Receipt>();
-    co_return std::optional<Receipt>(std::in_place, std::move(receipt));
-}
-
-task<Address> Endpoint::Resolve(const Argument &height, const std::string &name) const {
-    static const std::regex re("0x[0-9A-Fa-f]{40}");
-    if (std::regex_match(name, re))
-        co_return name;
-
-    const auto node(Name(name));
-    static const Address ens("0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e");
-
-    static const Selector<Address, Bytes32> resolver_("resolver");
-    const auto resolver(co_await resolver_.Call(*this, height, ens, 90000, node));
-
-    static const Selector<Address, Bytes32> addr_("addr");
-    co_return co_await addr_.Call(*this, height, resolver, 90000, node);
-}
+}, "calling " << method << " on " << locator_); }
 
 }

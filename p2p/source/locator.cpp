@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -27,17 +27,20 @@
 
 namespace orc {
 
-Locator Locator::Parse(const std::string &url) {
-    auto base(skyr::make_url(url));
-    orc_assert_(base, base.error().message());
-    auto &value(base.value());
-    auto scheme(value.protocol());
-    orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');
-    scheme.resize(scheme.size() - 1);
-    auto port(value.port());
-    if (port.empty())
-        port = std::to_string(skyr::url::default_port(scheme).value_or(0));
-    return Locator(std::move(scheme), value.hostname(), port, value.pathname());
+Locator::Locator(const std::string &locator) :
+    Locator([&]() {
+        auto base(skyr::make_url(locator));
+        orc_assert_(base, base.error().message());
+        auto &value(base.value());
+        auto scheme(value.protocol());
+        orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');
+        scheme.resize(scheme.size() - 1);
+        auto port(value.port());
+        if (port.empty())
+            port = std::to_string(skyr::url::default_port(scheme).value_or(0));
+        return Locator(std::move(scheme), value.hostname(), port, value.pathname());
+    }())
+{
 }
 
 std::ostream &operator <<(std::ostream &out, const Locator &locator) {

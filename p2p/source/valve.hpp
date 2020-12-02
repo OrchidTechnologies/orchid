@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -94,6 +94,12 @@ auto Using(Code_ code, Args_ &&...args) -> decltype(code(std::declval<Type_ &>()
 
     co_await valve.Shut();
     std::rethrow_exception(error);
+}
+
+template <typename Type_, typename ...Args_>
+task<Type_> Opened(Type_ &&valve, Args_ &&...args) {
+    co_await valve->Open(std::forward<Args_>(args)...);
+    co_return std::forward<Type_>(valve);
 }
 
 }

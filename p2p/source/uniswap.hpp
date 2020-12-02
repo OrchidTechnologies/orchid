@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -24,21 +24,19 @@
 #define ORCHID_UNISWAP_HPP
 
 #include "float.hpp"
-#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
 
 class Address;
-struct Block;
-class Endpoint;
-struct Fiat;
+class Chain;
 
-template <typename Type_>
-class Updated;
+static const Float Ten6("1000000");
 
-task<Float> Uniswap(const Endpoint &endpoint, const Block &block, const Address &pair);
-task<S<Updated<Fiat>>> UniswapFiat(unsigned milliseconds, Endpoint endpoint);
+extern const Address UniswapUSDCETH;
+extern const Address UniswapOXTETH;
+
+task<Float> Uniswap(const Chain &chain, const Address &pair, const Float &adjust);
 
 }
 

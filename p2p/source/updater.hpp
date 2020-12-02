@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -77,12 +77,6 @@ class Updater :
 template <typename Code_>
 auto Updating(unsigned milliseconds, Code_ &&code, const char *name) {
     return Break<Updater<Code_>>(milliseconds, std::forward<Code_>(code), name);
-}
-
-template <typename Type_>
-task<Type_> Opened(Type_ &&valve) {
-    co_await valve->Open();
-    co_return std::forward<Type_>(valve);
 }
 
 }

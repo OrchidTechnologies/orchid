@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get -y install clang curl git-core software-properties-common sudo unzip
+apt-get -y install curl git-core software-properties-common sudo unzip
 
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9
 apt-add-repository "deb http://repos.azul.com/azure-only/zulu/apt stable main"

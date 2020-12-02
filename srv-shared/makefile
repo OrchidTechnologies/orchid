@@ -1,5 +1,5 @@
 # Orchid - WebRTC P2P VPN Market (on Ethereum)
-# Copyright (C) 2017-2019  The Orchid Authors
+# Copyright (C) 2017-2020  The Orchid Authors
 
 # GNU Affero General Public License, Version 3 {{{ */
 #
@@ -18,7 +18,14 @@
 # }}}
 
 
-args := --price 0
+args := --price 0 --currency USD
+
+args += --chain 1,ETH,https://cloudflare-eth.com/
+args += --chain 30,BTC,https://public-node.rsk.co/
+args += --chain 56,BNB,https://bsc-dataseed.binance.org/
+args += --chain 100,DAI,https://rpc.xdaichain.com/
+args += --chain 43114,AVAX,https://api.avax.network/ext/bc/C/rpc
+#args += --chain 1313161554,NEAR,https://rpc.mainnet.near.org/
 
 include env/target.mk
 

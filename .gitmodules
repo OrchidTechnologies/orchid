@@ -140,7 +140,7 @@
 	path = min-v8/trace_event
 	url = https://chromium.googlesource.com/chromium/src/base/trace_event/common.git
 [submodule "protobuf"]
-	path = min-v8/protobuf
+	path = p2p/protobuf
 	url = https://chromium.googlesource.com/external/github.com/google/protobuf
 [submodule "jinja2"]
 	path = min-v8/jinja2
@@ -184,3 +184,9 @@
 [submodule "vpn-libraries"]
 	path = min-krypton/vpn-libraries
 	url = https://github.com/google/vpn-libraries.git
+[submodule "compile-time-regular-expressions"]
+	path = p2p/ctre
+	url = https://github.com/hanickadot/compile-time-regular-expressions.git
+[submodule "trezor-common"]
+	path = p2p/trezor-common
+	url = https://github.com/trezor/trezor-common.git

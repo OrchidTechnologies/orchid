@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -27,7 +27,7 @@ namespace orc {
 
 task<void> Duplex::Send(const Buffer &data) {
     const size_t writ(co_await [&]() -> task<size_t> { try {
-        co_return co_await inner_.async_write(Sequence(data), Token());
+        co_return co_await inner_.async_write(Sequence(data), Adapt());
     } catch (const asio::system_error &error) {
         orc_adapt(error);
     } }());

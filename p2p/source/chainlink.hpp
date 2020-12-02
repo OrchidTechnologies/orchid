@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -24,23 +24,19 @@
 #define ORCHID_CHAINLINK_HPP
 
 #include "float.hpp"
-#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
 
 class Address;
-class Endpoint;
-
-struct Fiat;
-
-template <typename Type_>
-class Updated;
+class Chain;
 
 static const Float Ten8("100000000");
 
-task<Float> Chainlink(const Endpoint &endpoint, const Address &aggregation, const Float &adjust);
-task<S<Updated<Fiat>>> ChainlinkFiat(unsigned milliseconds, Endpoint endpoint);
+extern const Address ChainlinkETHUSD;
+extern const Address ChainlinkOXTUSD;
+
+task<Float> Chainlink(const Chain &chain, const Address &pair, const Float &backup, const Float &adjust);
 
 }
 

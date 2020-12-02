@@ -1,5 +1,5 @@
 # Orchid - WebRTC P2P VPN Market (on Ethereum)
-# Copyright (C) 2017-2019  The Orchid Authors
+# Copyright (C) 2017-2020  The Orchid Authors
 
 # Zero Clause BSD license {{{
 #
@@ -192,6 +192,9 @@ cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd)/extra
 
 cflags/$(pwd)/v8/ += -Wno-builtin-assume-aligned-alignment
+
+# XXX: this was fixed in a later commit that broke a bunch of other stuff :(
+cflags/$(pwd)/v8/ += -Wno-final-dtor-non-final-class
 
 # XXX: macro-assembler-x64.cc checks TARGET_ARCH_* without including this :/
 cflags/$(pwd)/v8/ += -include base/build_config.h

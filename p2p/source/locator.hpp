@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -27,14 +27,18 @@
 
 namespace orc {
 
-class Locator final {
-  public:
-    const std::string scheme_;
-    const std::string host_;
-    const std::string port_;
-    const std::string path_;
+struct Locator final {
+    std::string scheme_;
+    std::string host_;
+    std::string port_;
+    std::string path_;
 
-    static Locator Parse(const std::string &url);
+    Locator(const std::string &locator);
+
+    Locator(const char *locator) :
+        Locator(std::string(locator))
+    {
+    }
 
     Locator(std::string scheme, std::string host, std::string port, std::string path) :
         scheme_(std::move(scheme)),
@@ -50,6 +54,10 @@ class Locator final {
 
     bool operator <(const Locator &rhs) const {
         return Tuple() < rhs.Tuple();
+    }
+
+    Locator operator +(const char *path) const {
+        return {scheme_, host_, port_, path_ + path};
     }
 };
 

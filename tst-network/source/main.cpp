@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -35,31 +35,35 @@
 #include <rtc_base/logging.h>
 
 #include "baton.hpp"
+#include "binance.hpp"
 #include "boring.hpp"
 #include "chainlink.hpp"
 #include "chart.hpp"
-#include "client.hpp"
+#include "client0.hpp"
+#include "client1.hpp"
 #include "coinbase.hpp"
 #include "crypto.hpp"
+#include "currency.hpp"
 #include "dns.hpp"
 #include "float.hpp"
 #include "fiat.hpp"
-#include "gauge.hpp"
 #include "json.hpp"
 #include "jsonrpc.hpp"
+#include "kraken.hpp"
 #include "load.hpp"
 #include "local.hpp"
 #include "markup.hpp"
 #include "network.hpp"
+#include "oracle.hpp"
 #include "pile.hpp"
 #include "remote.hpp"
 #include "router.hpp"
-#include "sequence.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
 #include "time.hpp"
 #include "transport.hpp"
 #include "uniswap.hpp"
+#include "updater.hpp"
 #include "version.hpp"
 
 using boost::multiprecision::uint256_t;
@@ -77,7 +81,6 @@ struct Report {
     std::optional<Float> cost_;
     Float speed_;
     Host host_;
-    Address recipient_;
     std::string version_;
 };
 
@@ -100,11 +103,8 @@ task<Host> Find(Origin &origin) {
     co_return Parse((co_await origin.Fetch("GET", {"https", "cydia.saurik.com", "443", "/debug.json"}, {}, {})).ok())["host"].asString();
 }
 
-task<std::string> Version(Origin &origin, const std::string &url) { try {
-    orc_assert(!url.empty());
-    orc_assert(url[url.size()-1] == '/');
-
-    auto version((co_await origin.Fetch("GET", Locator::Parse(url + "version.txt"), {}, {})).ok());
+task<std::string> Version(Origin &origin, const Locator &url) { try {
+    auto version((co_await origin.Fetch("GET", url + "version.txt", {}, {})).ok());
     const auto line(version.find('\n'));
     if (line != std::string::npos)
         version = version.substr(0, line);
@@ -136,13 +136,15 @@ task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
     });
 }
 
-task<Report> TestOrchid(const S<Origin> &origin, std::string name, Network &network, const char *provider, const Secret &secret, const Address &funder) {
-    (co_await orc_optic)->Name(provider);
+task<Report> TestOrchid(const S<Origin> &origin, std::string name, const S<Network> &network, const char *address, std::function<task<Client *> (BufferSink<Remote> &)> code) {
+    (co_await orc_optic)->Name(address);
 
-    std::cout << provider << " " << name << std::endl;
+    std::cout << address << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        auto &client(*co_await network.Select(remote, origin, "untrusted.orch1d.eth", provider, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", 1, secret, funder, nullptr));
+        const auto provider(co_await network->Select("untrusted.orch1d.eth", address));
+        Client &client(*co_await code(remote));
+        co_await client.Open(provider, origin);
         remote.Open();
 
         const auto host(co_await Find(remote));
@@ -163,23 +165,11 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, Network &netw
             return global->benefit_;
         }());
 
-        const auto recipient(client.Recipient());
-        const auto version(co_await Version(*origin, client.URL()));
+        const auto version(co_await Version(*origin, provider.locator_));
         const auto cost((spent - balance) / minimum * (1024 * 1024 * 1024));
-        co_return Report{provider, cost, speed, host, recipient, version};
+        co_return Report{provider.address_.str(), cost, speed, host, version};
     });
 }
-
-struct Stake {
-    uint256_t amount_;
-    Maybe<std::string> url_;
-
-    Stake(uint256_t amount, Maybe<std::string> url) :
-        amount_(std::move(amount)),
-        url_(std::move(url))
-    {
-    }
-};
 
 struct State {
     uint256_t timestamp_;
@@ -194,38 +184,6 @@ struct State {
 };
 
 std::shared_ptr<State> state_;
-
-template <typename Code_>
-task<void> Stakes(const Endpoint &endpoint, const Address &directory, const Block &block, const uint256_t &storage, const uint256_t &primary, const Code_ &code) {
-    if (primary == 0)
-        co_return;
-
-    const auto stake(Hash(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
-    const auto [left, right, stakee, amount, delay] = co_await endpoint.Get(block, directory, storage, stake + 6, stake + 7, stake + 4, stake + 2, stake + 3);
-    orc_assert(amount != 0);
-
-    *co_await Parallel(
-        Stakes(endpoint, directory, block, storage, left, code),
-        Stakes(endpoint, directory, block, storage, right, code),
-        code(uint160_t(stakee), amount, delay));
-}
-
-template <typename Code_>
-task<void> Stakes(const Endpoint &endpoint, const Address &directory, const Code_ &code) {
-    const auto height(co_await endpoint.Height());
-    const auto block(co_await endpoint.Header(height));
-    const auto [account, root] = co_await endpoint.Get(block, directory, nullptr, 0x3U);
-    co_await Stakes(endpoint, directory, block, account.storage_, root, code);
-}
-
-task<Float> Kraken(Origin &origin, const std::string &pair) {
-    co_return Float(Parse((co_await origin.Fetch("GET", {"https", "api.kraken.com", "443", "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString());
-}
-
-task<Fiat> Kraken(Origin &origin) {
-    const auto [eth_usd, oxt_eth] = *co_await Parallel(Kraken(origin, "XETHZUSD"), Kraken(origin, "OXTETH"));
-    co_return Fiat{eth_usd / Ten18, eth_usd * oxt_eth / Ten18};
-}
 
 void Print(std::ostream &body, const std::string &name, const Maybe<Report> &maybe) {
     body << " " << name << ": " << std::string(11 - name.size(), ' ');
@@ -246,11 +204,6 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
         else
             body << "-.----";
         body << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
-        if (report->recipient_ != Address(0)) {
-            std::ostringstream recipient;
-            recipient << report->recipient_;
-            body << "\n" << std::string(13, ' ') << recipient.str().substr(2);
-        }
         if (!report->version_.empty())
             body << "\n" << std::string(13, ' ') << report->version_;
     } else orc_insist(false);
@@ -312,34 +265,51 @@ int Main(int argc, const char *const argv[]) {
 
     Initialize();
 
-    const auto origin(Break<Local>());
-    const std::string rpc(args["rpc"].as<std::string>());
+    const unsigned milliseconds(60*1000);
 
-    Endpoint endpoint(origin, Locator::Parse(rpc));
+    const auto origin(Break<Local>());
+    const Locator locator(args["rpc"].as<std::string>());
+    const auto chain(Wait(Chain::New({locator, origin}, {}, 1)));
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
-    Network network(rpc, directory, location, origin);
+    const auto network(Break<Network>(chain, directory, location));
 
     const Address funder(args["funder"].as<std::string>());
     const auto secret(Bless<Secret>(args["secret"].as<std::string>()));
 
-    const auto coinbase(Wait(CoinbaseFiat(60*1000, origin, "USD")));
 
-    const auto kraken(Wait(Opened(Updating(60*1000, [origin]() -> task<Fiat> {
-        co_return co_await Kraken(*origin);
+    const auto oracle(Wait(Oracle(milliseconds, chain)));
+    const auto oxt(Wait(Token::OXT(milliseconds, chain)));
+    const auto bnb(Wait(Market::New(milliseconds, 56, origin, "https://bsc-dataseed.binance.org/", "BNB")));
+
+    const auto coinbase(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Coinbase(*origin, "ETH-USD"), Coinbase(*origin, "OXT-USD"));
+    }, "Coinbase"))));
+
+    const auto binance(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Binance(*origin, "ETHUSDT"), Binance(*origin, "OXTUSDT"));
+    }, "Binance"))));
+
+    const auto kraken(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
+        const auto [eth, oxt] = *co_await Parallel(Kraken(*origin, "XETHZUSD"), Kraken(*origin, "OXTETH", 1));
+        co_return std::make_tuple(eth, eth * oxt);
     }, "Kraken"))));
 
-    const auto uniswap(Wait(UniswapFiat(60*1000, endpoint)));
+    const auto uniswap(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
+        const auto [eth, oxt] = *co_await Parallel(Uniswap(*chain, UniswapUSDCETH, Ten6), Uniswap(*chain, UniswapOXTETH, 1));
+        co_return std::make_tuple(eth, eth / oxt);
+    }, "Uniswap"))));
 
-    // XXX: these are duplicated inside of Network (pass them in)
-    const auto chainlink(Wait(ChainlinkFiat(60*1000, endpoint)));
-    const auto gauge(Make<Gauge>(60*1000, origin));
+    const auto chainlink(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Chainlink(*chain, ChainlinkETHUSD, 0, Ten8 * Ten18), Chainlink(*chain, ChainlinkOXTUSD, 0, Ten8 * Ten18));
+    }, "Chainlink"))));
 
-    const auto account(Wait(Opened(Updating(60*1000, [endpoint, funder, signer = Address(Commonize(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
+
+    const auto account(Wait(Opened(Updating(milliseconds, [chain, funder, signer = Address(Commonize(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
         static const Address lottery("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
-        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(endpoint, "latest", lottery, uint256_t(90000), funder, signer);
+        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(*chain, "latest", lottery, uint256_t(90000), funder, signer);
         co_return std::make_pair(balance, escrow);
     }, "Account"))));
 
@@ -360,31 +330,7 @@ int Main(int argc, const char *const argv[]) {
 
         *co_await Parallel([&]() -> task<void> { try {
             (co_await orc_optic)->Name("Stakes");
-
-            cppcoro::async_mutex mutex;
-            std::map<Address, uint256_t> stakes;
-
-            co_await Stakes(endpoint, directory, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) -> task<void> {
-                std::cout << "DELAY " << stakee << " " << std::dec << delay << " " << std::dec << amount << std::endl;
-                if (delay < 90*24*60*60)
-                    co_return;
-                const auto lock(co_await mutex.scoped_lock_async());
-                stakes[stakee] += amount;
-            });
-
-            // XXX: Zip doesn't work if I inline this argument
-            const auto urls(co_await Parallel(Map([&](const auto &stake) {
-                return [&](Address provider) -> Task<std::string> {
-                    static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
-                    const auto &[set, url, tls, gpg] = co_await look_.Call(endpoint, "latest", location, 90000, provider);
-                    orc_assert(set != 0);
-                    co_return url.str();
-                }(stake.first);
-            }, stakes)));
-
-            // XXX: why can't I move things out of this iterator? (note: I did use auto)
-            for (const auto &stake : Zip(urls, stakes))
-                orc_assert(state->stakes_.try_emplace(stake.get<1>().first, stake.get<1>().second, stake.get<0>()).second);
+            state->stakes_ = co_await network->Scan();
         } catch (...) {
         } }(), [&]() -> task<void> {
             (co_await orc_optic)->Name("Tests");
@@ -408,12 +354,15 @@ int Main(int argc, const char *const argv[]) {
                 {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
                 //{"0xc654a58330b8659399067c309Be93659FbaCbEA6", "Orchid"},
                 {"0x69A4Ed2024bc7056fBA8E18cEfc2c40932B923E3", "PIA"},
-                //{"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
+                {"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
                 {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(TestOrchid(origin, name, network, provider, secret, funder));
+                tests.emplace_back(TestOrchid(origin, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client *> {
+                    co_return co_await Client0::Wire(remote, oracle, oxt, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", secret, funder);
+                    //co_return co_await Client1::Wire(remote, oracle, bnb, "0xff9978B7b309021D39a76f52Be377F2B95D72394", secret, funder);
+                }));
             }
 
             auto reports(co_await Parallel(std::move(tests)));
@@ -427,7 +376,7 @@ int Main(int argc, const char *const argv[]) {
 
     Router router;
 
-    router(http::verb::get, R"(/)", [&](Request request) -> task<Response> {
+    router(http::verb::get, "/", [&](Request request) -> task<Response> {
         const auto state(std::atomic_load(&state_));
         orc_assert(state);
 
@@ -439,19 +388,19 @@ int Main(int argc, const char *const argv[]) {
             std::setprecision(1) << (Float(balance) / Ten18) << "/" << (Float(escrow) / Ten18) << "\n";
         body << "\n";
 
-        { const auto fiat((*coinbase)()); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
-        { const auto fiat((*kraken)()); body << "Kraken:    $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
-        { const auto fiat((*uniswap)()); body << "Uniswap:   $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
-        { const auto fiat((*chainlink)()); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (fiat.eth_ * Ten18) << " $" << std::setprecision(5) << (fiat.oxt_ * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*coinbase)(); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*binance)(); body << "Binance:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*kraken)(); body << "Kraken:    $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*uniswap)(); body << "Uniswap:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*chainlink)(); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         body << "\n";
 
         for (const auto &[name, provider] : state->providers_)
             Print(body, name, provider);
         body << "\n";
 
-        const auto price(gauge->Price());
-        const auto fiat((*coinbase)());
-        const auto overhead(Float(price) * fiat.eth_);
+        const auto price((*oxt.market_.bid_)());
+        const auto overhead(Float(price) * oxt.market_.currency_.dollars_());
 
         body << "Cost: ";
         body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 83328) << " || ";
@@ -460,9 +409,9 @@ int Main(int argc, const char *const argv[]) {
         body << "\n";
 
         body << "      ";
+        body << "rf= $" << std::fixed << std::setprecision(2) << (overhead * 57654) << " || ";
         body << "1k= $" << std::fixed << std::setprecision(2) << (overhead * 1000) << " || ";
-        body << "$1= " << std::fixed << uint64_t(1 / overhead) << " || ";
-        body << "rf= $" << std::fixed << std::setprecision(2) << (overhead * 57654);
+        body << "$1= " << std::fixed << uint64_t(1 / overhead);
         body << "\n";
 
         body << "\n";
@@ -473,7 +422,7 @@ int Main(int argc, const char *const argv[]) {
         body << "\n";
 
         const auto gas(84000);
-        const auto coefficient((overhead * gas) / (fiat.oxt_ * Ten18));
+        const auto coefficient((overhead * gas) / (oxt.currency_.dollars_() * Ten18));
 
         const auto bound((coefficient / ((1-0.80) / 2)).convert_to<float>());
         const auto zero((coefficient / ((1-0.00) / 2)).convert_to<float>());
@@ -511,7 +460,7 @@ int Main(int argc, const char *const argv[]) {
         co_return Respond(request, http::status::ok, "text/html", markup());
     });
 
-    const auto oracle([&]() {
+    const auto median([&]() {
         const auto state(std::atomic_load(&state_));
         orc_assert(state);
 
@@ -521,21 +470,21 @@ int Main(int argc, const char *const argv[]) {
                 if (!report->cost_ || *report->cost_ == 0)
                     continue;
                 const auto stake(state->stakes_.find(report->stakee_));
-                orc_assert(stake != state->stakes_.end());
-                costs(*report->cost_, stake->second.amount_);
+                if (stake != state->stakes_.end())
+                    costs(*report->cost_, stake->second.amount_);
             }
 
         return costs.med();
     });
 
-    router(http::verb::get, R"(/chainlink/0)", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", oracle().str());
+    router(http::verb::get, "/chainlink/0", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, "text/plain", median().str());
     });
 
-    router(http::verb::post, R"(/chainlink/1)", [&](Request request) -> task<Response> {
+    router(http::verb::post, "/chainlink/1", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, "application/json", Unparse(Multi{
             {"jobRunID", Parse(request.body())["id"].asString()},
-            {"data", Multi{{"price", oracle().str()}}},
+            {"data", Multi{{"price", median().str()}}},
         }));
     });
 

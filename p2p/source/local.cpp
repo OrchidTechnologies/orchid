@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -61,7 +61,7 @@ class LocalOpening :
                 asio::ip::udp::endpoint endpoint;
                 size_t writ;
                 try {
-                    writ = co_await connection_.async_receive_from(asio::buffer(data), endpoint, Token());
+                    writ = co_await connection_.async_receive_from(asio::buffer(data), endpoint, Adapt());
                 } catch (const asio::system_error &error) {
                     orc_ignore({ orc_adapt(error); });
                     continue;
@@ -90,7 +90,7 @@ class LocalOpening :
     }
 
     task<void> Send(const Buffer &data, const Socket &socket) override {
-        const auto writ(co_await connection_.async_send_to(Sequence(data), {socket.Host(), socket.Port()}, Token()));
+        const auto writ(co_await connection_.async_send_to(Sequence(data), {socket.Host(), socket.Port()}, Adapt()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };

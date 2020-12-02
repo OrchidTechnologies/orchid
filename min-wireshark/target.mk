@@ -1,5 +1,5 @@
 # Orchid - WebRTC P2P VPN Market (on Ethereum)
-# Copyright (C) 2017-2019  The Orchid Authors
+# Copyright (C) 2017-2020  The Orchid Authors
 
 # Zero Clause BSD license {{{
 #
@@ -11,8 +11,8 @@
 
 pwd/wireshark := $(pwd)/wireshark
 
-archive += $(pwd/wireshark)
-linked += $(pwd/wireshark).a
+archive += $(pwd/wireshark)/epan
+linked += $(pwd/wireshark)/epan.a
 
 wireshark := 
 cflags/$(pwd/wireshark)/ := 
@@ -88,6 +88,7 @@ wireshark := $(filter-out \
 
 source += $(wireshark)
 cflags += -I$(pwd)/extra
+cflags += -iquote$(pwd)/extra
 cflags += -I$(pwd/wireshark)
 
 cflags/$(pwd/wireshark)/ += -D'DATA_DIR=""'

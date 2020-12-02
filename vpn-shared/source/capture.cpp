@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -33,7 +33,8 @@
 #include "boring.hpp"
 #include "datagram.hpp"
 #include "capture.hpp"
-#include "client.hpp"
+#include "client0.hpp"
+#include "client1.hpp"
 #include "connection.hpp"
 #include "database.hpp"
 #include "forge.hpp"
@@ -42,6 +43,7 @@
 #include "local.hpp"
 #include "monitor.hpp"
 #include "network.hpp"
+#include "oracle.hpp"
 #include "origin.hpp"
 #include "port.hpp"
 #include "retry.hpp"
@@ -674,19 +676,33 @@ static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueCon
     return JS_ThrowInternalError(context, "%s", error.what());
 } }
 
-static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S<Origin> &origin, const Host &local, unsigned hop, const boost::filesystem::path &group) { orc_block({
+static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network, const S<Origin> &origin, const Host &local, unsigned hop, const boost::filesystem::path &group, const Locator &locator, const S<Updated<Prices>> &oracle, const Token &oxt) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
+
     } else if (protocol == "orchid") {
         const Address lottery(heap.eval<std::string>(hops + ".lottery", "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"));
-        const uint256_t chain(heap.eval<double>(hops + ".chainid", 1));
         const auto secret(orc_value(return, Bless<Secret>(heap.eval<std::string>(hops + ".secret")), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
-        const Address provider(heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000"));
-        const std::string justin(heap.eval<std::string>(hops + ".justin", ""));
-        co_await network.Select(sunk, origin, curator, provider, lottery, chain, secret, funder, justin.empty() ? nullptr : boost::filesystem::absolute(justin, group).string().c_str());
+        auto chain(co_await Chain::New({locator, origin}, {}, uint256_t(heap.eval<double>(hops + ".chainid", 1))));
+        const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
+        auto &client(*co_await Client0::Wire(sunk, oracle, oxt, lottery, secret, funder));
+        co_await client.Open(provider, origin);
+
+    } else if (protocol == "orch1d") {
+        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0xff9978B7b309021D39a76f52Be377F2B95D72394"));
+        const auto secret(orc_value(return, Bless<Secret>(heap.eval<std::string>(hops + ".secret")), "parsing .secret"));
+        const Address funder(heap.eval<std::string>(hops + ".funder"));
+        const std::string curator(heap.eval<std::string>(hops + ".curator"));
+        const auto chain(uint256_t(heap.eval<double>(hops + ".chainid", 1)));
+        const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
+        Locator locator(heap.eval<std::string>(hops + ".rpc"));
+        std::string currency(heap.eval<std::string>(hops + ".currency"));
+        auto &client(*co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, chain, origin, std::move(locator), std::move(currency)), lottery, secret, funder));
+        co_await client.Open(provider, origin);
+
     } else if (protocol == "openvpn") {
         co_await Connect(sunk, origin, local,
             heap.eval<std::string>(hops + ".ovpnfile"),
@@ -697,8 +713,6 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, Network &network, const S
         co_await Guard(sunk, origin, local, heap.eval<std::string>(hops + ".config"));
     } else orc_assert_(false, "unknown hop protocol: " << protocol);
 }, "building hop #" << hop); }
-
-extern double WinRatio_;
 
 void Capture::Start(const std::string &path) {
     Heap heap; {
@@ -736,8 +750,6 @@ void Capture::Start(const std::string &path) {
     if (hops == 0)
         return Start(std::move(local));
 
-    WinRatio_ = heap.eval<double>("eth_winratio");
-
 #if 0
     auto remote(Break<BufferSink<Remote>>());
     const auto host(remote->Host());
@@ -748,21 +760,29 @@ void Capture::Start(const std::string &path) {
     auto &sunk(Start());
 #endif
 
-    Network network(heap.eval<std::string>("rpc"), Address(heap.eval<std::string>("eth_directory")), Address(heap.eval<std::string>("eth_location")), local);
-
-    auto code([this, heap = std::move(heap), hops, local = std::move(local), network = std::move(network), host, group](BufferSunk &sunk) mutable -> task<void> {
+    auto code([this, heap = std::move(heap), hops, local = std::move(local), host, group](BufferSunk &sunk) mutable -> task<void> {
         locked_()->connected_ = false;
+
+        const Locator locator(heap.eval<std::string>("rpc"));
+        const auto directory(Address(heap.eval<std::string>("eth_directory")));
+        const auto location(Address(heap.eval<std::string>("eth_location")));
+
+        const auto chain(co_await Chain::New({locator, local}, {}, 1));
+        const auto network(Break<Network>(chain, directory, location));
+
+        const unsigned milliseconds(5*60*1000);
+        const auto [oracle, oxt] = *co_await Parallel(Oracle(milliseconds, chain), Token::OXT(5*60*1000, chain));
 
         auto origin(local);
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<BufferSink<Remote>>());
-            co_await Single(*remote, heap, network, origin, remote->Host(), i, group);
+            co_await Single(*remote, heap, network, origin, remote->Host(), i, group, locator, oracle, oxt);
             remote->Open();
             origin = std::move(remote);
         }
 
-        co_await Single(sunk, heap, network, origin, host, hops - 1, group);
+        co_await Single(sunk, heap, network, origin, host, hops - 1, group, locator, oracle, oxt);
         locked_()->connected_ = true;
     });
 

@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -70,12 +70,22 @@ class Address :
         return Number<uint160_t>(num());
     }
 
+    std::string str() const;
+
     operator Argument() const {
         return buf();
     }
 };
 
-std::ostream &operator <<(std::ostream &out, const Address &address);
+inline std::ostream &operator <<(std::ostream &out, const Address &address) {
+    return out << address.str();
+}
+
+inline std::ostream &operator <<(std::ostream &out, const std::optional<Address> &address) {
+    if (!address)
+        return out << "(null)";
+    return out << *address;
+}
 
 inline bool Each(const Address &address, const std::function<bool (const uint8_t *, size_t)> &code) {
     return address.buf().each(code);

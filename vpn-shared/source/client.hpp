@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -25,33 +25,28 @@
 
 #include <atomic>
 
-// XXX: give a patch to Lewis Baker to fix this
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreorder"
-#include <cppcoro/shared_task.hpp>
-#pragma clang diagnostic pop
-
 #include <rtc_base/rtc_certificate.h>
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "bond.hpp"
-#include "crypto.hpp"
-#include "endpoint.hpp"
+#include "float.hpp"
 #include "jsonrpc.hpp"
-#include "judge.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
+#include "oracle.hpp"
 #include "origin.hpp"
+#include "provider.hpp"
 #include "signed.hpp"
 #include "ticket.hpp"
-#include "updated.hpp"
 
 // XXX: move this somewhere and maybe find a library
-namespace gsl { template <typename T> using owner = T; }
+namespace gsl { template <typename Type_> using owner = Type_; }
 
 namespace orc {
 
-class Market;
+struct Currency;
+struct Market;
+class Shopper;
 
 class Client :
     public Pump<Buffer>,
@@ -60,31 +55,11 @@ class Client :
   private:
     const rtc::scoped_refptr<rtc::RTCCertificate> local_;
 
-    const std::string url_;
-    const U<rtc::SSLFingerprint> remote_;
-
-    const Endpoint endpoint_;
-    const S<Market> market_;
-    const S<Updated<Float>> oracle_;
-
-    const Address lottery_;
-    const uint256_t chain_;
-
-    const Secret secret_;
-    const Address funder_;
-
-    const Address seller_;
-    const Bytes hoarded_;
-
-    const uint128_t face_;
-    const uint256_t prepay_;
-
-    gsl::owner<FILE *> const justin_;
+    const S<Updated<Prices>> oracle_;
 
     struct Pending {
-        Ticket ticket_;
-        Signature signature_;
-        Float expected_;
+        Beam command_;
+        Float amount_;
     };
 
     struct Locked_ {
@@ -96,44 +71,31 @@ class Client :
         std::map<Bytes32, Pending> pending_;
         Float spent_ = 0;
 
-        Judge judge_;
-        Float judgement_ = 0;
-
         int64_t serial_ = -1;
-        checked_int256_t balance_ = 0;
-        Bytes32 commit_ = Zero<32>();
-        Address recipient_ = 0;
-        cppcoro::shared_task<Bytes> ring_;
+        Float balance_ = 0;
     }; Locked<Locked_> locked_;
 
     Nest nest_;
     Socket socket_;
 
-    task<void> Submit();
-    task<void> Submit(const Bytes32 &hash, const Ticket &ticket, const Bytes &receipt, const Signature &signature);
-    task<void> Submit(uint256_t amount);
-
     void Transfer(size_t size, bool send);
 
-    cppcoro::shared_task<Bytes> Ring(Address recipient);
+    task<void> Submit();
+    task<void> Submit(const Bytes32 &ticket, const Buffer &command);
 
   protected:
+    task<void> Submit(const Bytes32 &ticket, const Buffer &command, const Float &amount);
+
+    virtual task<void> Submit(const Float &amount) = 0;
+    virtual void Invoice(const Bytes32 &id, const Buffer &data);
+
     void Land(Pipe *pipe, const Buffer &data) override;
     void Stop() noexcept override;
 
   public:
-    Client(BufferDrain &drain,
-        std::string url, U<rtc::SSLFingerprint> remote,
-        Endpoint endpoint, S<Market> market, S<Updated<Float>> oracle,
-        const Address &lottery, const uint256_t &chain,
-        const Secret &secret, const Address &funder,
-        const Address &seller, const uint128_t &face,
-        const char *justin
-    );
+    Client(BufferDrain &drain, S<Updated<Prices>> oracle);
 
-    ~Client() override;
-
-    task<void> Open(const S<Origin> &origin);
+    task<void> Open(const Provider &provider, const S<Origin> &origin);
     task<void> Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;
@@ -142,12 +104,9 @@ class Client :
     uint64_t Benefit();
     Float Spent();
     Float Balance();
-    Float Judgement();
-    uint128_t Face();
-    uint256_t Gas();
-    const std::string &URL();
-    Address Recipient();
 };
+
+uint128_t Ratio(const uint128_t &face, const Float &amount, const Market &market, const Currency &currency, const uint64_t &gas);
 
 }
 

@@ -57,6 +57,25 @@ jobs:
       run: debug=ldid make -j3 -C app-macos precache='--no-android --no-ios --macos'
 
 
+  build-mac-snd:
+    runs-on: macos-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make macOS sender
+      run: make -j3 -C eth-sender
+    - uses: actions/upload-artifact@v1
+      with:
+        name: cj-mac
+        path: eth-sender/out-mac/x86_64/cj
+
+
   build-mac-cli:
     runs-on: macos-latest
 
@@ -288,7 +307,7 @@ jobs:
 
 
   build-lnx-bad:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
 

@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -43,10 +43,10 @@ class Channel :
     Event opened_;
 
   public:
-    static task<Socket> Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
-
     Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel);
     Channel(BufferDrain &drain, const S<Peer> &peer, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string());
+
+    static task<Socket> Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
     ~Channel() override;
 

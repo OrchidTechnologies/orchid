@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -25,17 +25,20 @@
 
 #include <functional>
 #include <list>
-#include <regex>
 #include <string>
 
 #include <boost/beast/http/write.hpp>
 #include <boost/beast/version.hpp>
 
+#include "ctre.hpp"
 #include "response.hpp"
 #include "socket.hpp"
 #include "task.hpp"
 
 namespace orc {
+
+using namespace ctre::literals;
+typedef ctre::regex_results<const char *> Matches;
 
 const char *Params();
 
@@ -54,9 +57,9 @@ inline std::ostream &operator <<(std::ostream &out, const Request &request) {
 
 class Router {
   private:
-    std::list<std::tuple<http::verb, std::regex, std::function<task<Response> (Request)>>> routes_;
+    std::list<std::function<task<Response> (Request &)>> routes_;
 
-    template <typename Stream_>
+    template <bool Expires_, typename Stream_>
     task<void> Handle(Stream_ &stream, const Socket &socket);
 
   public:
@@ -66,8 +69,26 @@ class Router {
     void Run(const std::string &path);
 #endif
 
-    void operator()(http::verb verb, const std::string &path, std::function<task<Response> (Request)> code) {
-        routes_.emplace_back(verb, path, std::move(code));
+    void operator ()(http::verb verb, std::string path, std::function<task<Response> (Request)> code) {
+        routes_.emplace_back([verb, path = std::move(path), code = std::move(code)](Request &request) -> task<Response> {
+            if (verb != http::verb::unknown && verb != request.method())
+                return nullptr;
+            if (request.target() != path)
+                return nullptr;
+            return code(std::move(request));
+        });
+    }
+
+    template <typename Path_>
+    void operator ()(http::verb verb, ctre::regular_expression<Path_> path, std::function<task<Response> (Matches, Request)> code) {
+        routes_.emplace_back([verb, path = std::move(path), code = std::move(code)](Request &request) -> task<Response> {
+            if (verb != http::verb::unknown && verb != request.method())
+                return nullptr;
+            auto matches(path.match(request.target()));
+            if (!matches)
+                return nullptr;
+            return code(std::move(matches), std::move(request));
+        });
     }
 };
 

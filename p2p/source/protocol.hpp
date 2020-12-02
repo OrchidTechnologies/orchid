@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2019  The Orchid Authors
+ * Copyright (C) 2017-2020  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -36,8 +36,12 @@ typedef std::tuple<uint32_t, Bytes32> Header;
 
 static uint32_t Magic_(0xff0fce1d);
 static uint32_t Stamp_(0xee6d796e);
-static uint32_t Submit_(0xfd90e312);
-static uint32_t Invoice_(0x01959987);
+
+static uint32_t Submit0_(0xfd90e312);
+static uint32_t Submit1_(0xae35c332);
+
+static uint32_t Invoice0_(0x01959987);
+static uint32_t Commit1_(0x69dc1297);
 
 void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code);
 
