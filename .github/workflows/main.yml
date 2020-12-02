@@ -144,7 +144,7 @@ jobs:
         path: app-windows/out-win/package
 
 
-  build-win-tst:
+  build-win-cli:
     runs-on: ubuntu-latest
 
     steps:
@@ -158,8 +158,12 @@ jobs:
     - name: git submodule
       run: env/submodule.sh --jobs 3
 
-    - name: make Windows test
-      run: make -j3 -C tst-network target=win
+    - name: make Windows client
+      run: make -j3 -C cli-shared target=win
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidcd-win
+        path: cli-shared/out-win/x86_64/orchidcd.exe
 
 
   build-win-srv:

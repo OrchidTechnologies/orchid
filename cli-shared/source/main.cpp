@@ -71,6 +71,16 @@ int Main(int argc, const char *const argv[]) {
     const auto capture(Break<BufferSink<Capture>>(local));
 
     Tunnel(*capture, "", [&](const std::string &device, const std::string &argument) {
+#ifdef _WIN32
+        orc_assert(system(("netsh interface ip set address \"" + device + "\" static " + local.String() + " 255.255.255.0").c_str()) == 0);
+        orc_assert(system(("netsh interface ip set subinterface \"" + device + "\" mtu=1100").c_str()) == 0);
+        orc_assert(system(("netsh interface ipv4 set interface \"" + device + "\" metric=0").c_str()) == 0);
+
+        if (args.count("capture") != 0)
+            orc_assert(system(("netsh interface ipv4 add route " + args["capture"].as<std::string>() + " " + argument + "/32 \"" + device + "\"").c_str()) == 0);
+        else
+            orc_assert(system(("netsh interface ipv4 add route 0.0.0.0/0 \"" + device + "\" 10.7.0.4 metric=0").c_str()) == 0);
+#else
         orc_assert(system(("ifconfig " + device + " inet " + local.String() + " " + local.String() + " mtu 1100 up").c_str()) == 0);
 
         if (args.count("capture") != 0)
@@ -86,6 +96,7 @@ int Main(int argc, const char *const argv[]) {
         }
 
         orc_assert(system(("route -n add 10.7.0.4 " + argument + " " + device).c_str()) == 0);
+#endif
 
         capture->Start(args["config"].as<std::string>());
     });
