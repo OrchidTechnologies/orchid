@@ -178,8 +178,9 @@ task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string
             while (!address.empty() && address[address.size() - 1] == ' ')
                 address = address.substr(0, address.size() - 1);
             const auto slash(address.find('/'));
-            orc_assert(slash != std::string::npos);
-            Host host(address.substr(0, slash));
+            if (slash != std::string::npos)
+                address = address.substr(0, slash);
+            Host host(address);
             if (host.v4())
                 return host;
         }
