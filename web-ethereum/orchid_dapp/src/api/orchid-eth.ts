@@ -2,7 +2,7 @@
 // Orchid Ethereum Contracts Lib
 //
 import {OrchidContracts} from "./orchid-eth-contracts";
-import {EthAddress, ETH, GWEI, Keiki, KEIKI, OXT, Secret} from "./orchid-types";
+import {EthAddress, ETH, KEIKI, OXT, Secret} from "./orchid-types";
 import Web3 from "web3";
 import {PromiEvent} from "web3-core";
 import {OrchidAPI} from "./orchid-api";
@@ -19,13 +19,22 @@ declare global {
     ethereum: any
   }
 }
-// TODO: Use the Wei and Keiki types here
 /// A Funder address containing ETH to perform contract transactions  and possibly
 /// OXT to fund a Lottery Pot.
 export class Wallet {
   public address: EthAddress;
+
+  // TODO: Migrate to the typed versions below then remove
   public ethBalance: BigInt; // Wei
   public oxtBalance: BigInt; // Keiki (1e18 per OXT)
+
+  // TODO: Migrate to these and rename
+  public get oxtBalanceOXT(): OXT {
+    return OXT.fromKeiki(this.oxtBalance);
+  }
+  public get ethBalanceETH(): ETH {
+    return ETH.fromWei(this.ethBalance);
+  }
 
   constructor() {
     this.address = "";
@@ -68,9 +77,20 @@ export type Web3Wallet = any;
 /// A Lottery Pot containing OXT funds against which lottery tickets are issued.
 export class LotteryPot {
   public signer: Signer;
+
+  // TODO: migrate and remove
   public balance: KEIKI;
   public escrow: KEIKI; // TODO: rename deposit
+
   public unlock: Date | null;
+
+  // TODO: Migrate to these and rename
+  public get balanceOXT(): OXT {
+    return OXT.fromKeiki(this.balance);
+  }
+  public get escrowOXT(): OXT {
+    return OXT.fromKeiki(this.escrow);
+  }
 
   constructor(signer: Signer, balance: BigInt, escrow: BigInt, unlock: Date | null) {
     this.signer = signer;
@@ -120,7 +140,7 @@ export class OrchidEthereumAPI {
     }
     try {
       let overrideBalanceOXT: number | null = parseFloatSafe(getParam("walletBalanceOxt"));
-      let overrideBalance: BigInt | null = overrideBalanceOXT ? new OXT(overrideBalanceOXT).toKeiki() : null
+      let overrideBalance: KEIKI | null = overrideBalanceOXT ? OXT.fromNumber(overrideBalanceOXT).keiki : null
       wallet.oxtBalance = overrideBalance || BigInt(await OrchidContracts.token.methods.balanceOf(accounts[0]).call());
     } catch (err) {
       console.log("Error getting oxt balance", err);
@@ -432,8 +452,8 @@ export class OrchidEthereumAPI {
     // Allow overrides
     let overrideBalanceOXT: number | null = parseFloatSafe(getParam("balance"));
     let overrideEscrowOXT: number | null = parseFloatSafe(getParam("deposit"));
-    let overrideBalance: BigInt | null = overrideBalanceOXT ? new OXT(overrideBalanceOXT).toKeiki() : null
-    let overrideEscrow: BigInt | null = overrideEscrowOXT ? new OXT(overrideEscrowOXT).toKeiki() : null
+    let overrideBalance: BigInt | null = overrideBalanceOXT ? OXT.fromNumber(overrideBalanceOXT).keiki : null
+    let overrideEscrow: BigInt | null = overrideEscrowOXT ? OXT.fromNumber(overrideEscrowOXT).keiki : null
 
     //console.log("get lottery pot for signer: ", signer);
     let result = await OrchidContracts.lottery.methods
@@ -463,32 +483,32 @@ export class OrchidEthereumAPI {
   }
 
   // The current median gas price for the past few blocks
-  async getGasPrice(): Promise<GWEI> {
+  async getGasPrice(): Promise<ETH> {
     try {
-      return GWEI.fromWeiString(await this.web3.eth.getGasPrice())
+      return ETH.fromWeiString(await this.web3.eth.getGasPrice())
     } catch (err) {
       console.log("WARNING: defaulting gas price in disconnected state.  Testing only!")
-      return new GWEI(50);
+      return ETH.fromNumberAsGwei(50);
     }
   }
 }
 
 export class GasPricingStrategy {
 
-  // TODO: Have this return GWEI
+  // TODO: Have this return ETH price
   /// Choose a gas price taking into account current gas price and the wallet balance.
   /// This strategy uses a multiple of the current median gas price up to a hard limit on
   /// both gas price and fraction of the wallet's remaiing ETH balance.
   // Note: Some of the usage of BigInt in here is convoluted due to the need to import the polyfill.
   static chooseGasPrice(
-    targetGasAmount: number, currentMedianGasPrice: GWEI, currentEthBalance: BigInt): number | undefined {
+    targetGasAmount: number, currentMedianGasPrice: ETH, currentEthBalance: BigInt): number | undefined {
     let maxPriceGwei = 200.0;
     let minPriceGwei = 5.0;
     let medianMultiplier = 1.2;
     let maxWalletFrac = 1.0;
 
     // Target our multiple of the median price
-    let targetPrice: BigInt = currentMedianGasPrice.multiply(medianMultiplier).toWei();
+    let targetPrice: BigInt = currentMedianGasPrice.multiply(medianMultiplier).wei;
 
     // Don't exceed max price
     let maxPrice: BigInt = BigInt(maxPriceGwei).multiply(1e9);
@@ -516,7 +536,7 @@ export class GasPricingStrategy {
     let price = BigInt(targetSpend).divide(targetGasAmount);
 
     console.log(`Gas price calculation, `
-      + `targetGasAmount: ${targetGasAmount}, medianGasPrice: ${currentMedianGasPrice.value}, ethBalance: ${currentEthBalance}, chose price: ${BigInt(price).divide(1e9)}`
+      + `targetGasAmount: ${targetGasAmount}, medianGasPrice: ${currentMedianGasPrice.floatValueGwei}, ethBalance: ${currentEthBalance}, chose price: ${BigInt(price).divide(1e9)}`
     );
 
     return price.toJSNumber();
@@ -535,7 +555,7 @@ export function keikiToOxtString(keiki: BigInt | null, decimals: number = 2, ifN
     return ifNull
   }
   decimals = Math.round(decimals);
-  let val: number = new Keiki(keiki).toOXT().value;
+  let val: number = OXT.fromKeiki(keiki).floatValue;
   return val.toFixedLocalized(decimals);
 }
 
@@ -544,13 +564,13 @@ export function weiToETHString(wei: BigInt | null, decimals: number = 2, ifNull:
     return ifNull
   }
   decimals = Math.round(decimals);
-  let val: number = ETH.fromWei(wei).value;
+  let val: number = ETH.fromWei(wei).floatValue;
   return val.toFixedLocalized(decimals);
 }
 
 // @deprecated - use OXT instance methods
 export function oxtToKeiki(oxt: number): KEIKI {
-  return new OXT(oxt).toKeiki();
+  return OXT.fromNumber(oxt).keiki;
 }
 
 

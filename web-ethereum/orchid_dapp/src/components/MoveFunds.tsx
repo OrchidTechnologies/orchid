@@ -10,7 +10,7 @@ import {Subscription} from "rxjs";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export class MoveFunds extends Component {
+export class MoveFunds extends Component<any, any> {
 
   state = {
     moveAmount: null as number | null,

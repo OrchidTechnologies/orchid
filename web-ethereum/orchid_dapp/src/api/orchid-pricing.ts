@@ -1,5 +1,5 @@
 /// Pricing captures exchange rates at a point in time and supports conversion.
-import {USD, OXT, ETH, GWEI, min} from "./orchid-types";
+import {USD, OXT, ETH, min} from "./orchid-types";
 import {LotteryPot} from "./orchid-eth";
 import {OrchidAPI} from "./orchid-api";
 
@@ -15,19 +15,19 @@ export class Pricing {
   }
 
   public toUSD(oxt: OXT): USD | null {
-    return new USD(oxt.value * this.oxtToUsdRate);
+    return USD.fromNumber(oxt.floatValue * this.oxtToUsdRate);
   }
 
   public toOXT(usd: USD): OXT | null {
-    return new OXT(usd.value / this.oxtToUsdRate);
+    return OXT.fromNumber(usd.dollars / this.oxtToUsdRate);
   }
 
   ethToOxt(eth: ETH): OXT {
-    return new OXT(this.oxtToUsdRate / this.ethToUsdRate * eth.value);
+    return OXT.fromNumber(this.oxtToUsdRate / this.ethToUsdRate * eth.floatValue);
   }
 
   ethToUSD(eth: ETH): USD {
-    return new USD(eth.value * this.ethToUsdRate);
+    return USD.fromNumber(eth.floatValue * this.ethToUsdRate);
   }
 
   toString(): string {
@@ -96,8 +96,8 @@ export class OrchidPricingAPI {
     if (pricing == null) {
       throw Error("no pricing")
     }
-    let gasPrice: GWEI = await OrchidAPI.shared().eth.getGasPrice();
-    let gasCostToRedeem: ETH = gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket).toEth()
+    let gasPrice: ETH = await OrchidAPI.shared().eth.getGasPrice();
+    let gasCostToRedeem: ETH = gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket);
     let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
     let maxFaceValue: OXT = min(
       OXT.fromKeiki(pot.balance),

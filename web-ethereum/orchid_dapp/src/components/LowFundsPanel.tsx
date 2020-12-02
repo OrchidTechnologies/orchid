@@ -47,19 +47,19 @@ export const LowFundsPanel: React.FC = () => {
 
   //let pot = Mocks.lotteryPot(1.0, 20.0)
 
-  let balanceLow = OXT.fromKeiki(pot.balance).lessThan(accountRecommendation.balance);
-  let depositLow = OXT.fromKeiki(pot.escrow).lessThan(accountRecommendation.deposit);
+  let balanceLow = OXT.fromKeiki(pot.balance).lt(accountRecommendation.balance);
+  let depositLow = OXT.fromKeiki(pot.escrow).lt(accountRecommendation.deposit);
 
   if (!balanceLow && !depositLow) {
     return <div/>
   }
 
   let balance = OXT.fromKeiki(pot.balance);
-  let balanceStr = formatCurrency(balance.value, 'OXT');
+  let balanceStr = formatCurrency(balance.floatValue, 'OXT');
   let deposit = OXT.fromKeiki(pot.escrow);
-  let depositStr = formatCurrency(deposit.value, 'OXT');
-  let addBalanceStr = accountRecommendation.balance.subtract(balance).value.toFixedLocalized(2) + ' OXT';
-  let addDepositStr = accountRecommendation.deposit.subtract(deposit).value.toFixedLocalized(2) + ' OXT';
+  let depositStr = formatCurrency(deposit.floatValue, 'OXT');
+  let addBalanceStr = accountRecommendation.balance.subtract(balance).floatValue.toFixedLocalized(2) + ' OXT';
+  let addDepositStr = accountRecommendation.deposit.subtract(deposit).floatValue.toFixedLocalized(2) + ' OXT';
 
   let title;
   let text;
