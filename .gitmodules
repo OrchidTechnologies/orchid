@@ -190,6 +190,3 @@
 [submodule "trezor-common"]
 	path = p2p/trezor-common
 	url = https://github.com/trezor/trezor-common.git
-[submodule "openvpn"]
-	path = vpn-windows/openvpn
-	url = https://github.com/OpenVPN/openvpn.git

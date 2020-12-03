@@ -35,6 +35,8 @@ webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
 
+webrtc += $(pwd)/webrtc/api/numerics/samples_stats_counter.cc
+
 webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event.cc
 webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event_log.cc
 
@@ -124,8 +126,9 @@ webrtc += $(wildcard $(pwd/libsrtp)/srtp/*.c)
 cflags += -I$(pwd/libsrtp)/include
 webrtc += $(wildcard $(pwd/libsrtp)/crypto/*/*.c)
 cflags += -I$(pwd/libsrtp)/crypto/include
-cflags/$(pwd/libsrtp)/ += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
-cflags/$(pwd)/webrtc/pc/srtp_session.cc += -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H
+libsrtp := -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H -DGCM -DOPENSSL
+cflags/$(pwd/libsrtp)/ += $(libsrtp)
+cflags/$(pwd/webrtc)/pc/srtp_session.cc += $(libsrtp)
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
 webrtc += $(filter-out %/sctp_cc_functions.c,$(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c))
@@ -133,6 +136,8 @@ source += $(pwd)/congestion.cc
 cflags += -I$(pwd)/usrsctp
 cflags += -I$(pwd)/usrsctp/usrsctplib
 cflags += -I$(pwd)/sctp-idata/src
+# XXX: tracking this __NR_getrandom issue in https://github.com/sctplab/usrsctp/pull/533
+chacks/$(pwd)/usrsctp/usrsctplib/user_environment.c += s/defined(__EMSCRIPTEN__)/1/g
 
 
 webrtc := $(filter-out %_noop.cc,$(webrtc))
@@ -178,8 +183,6 @@ webrtc := $(foreach v,$(webrtc),$(if $(findstring /virtual_,$(v)),,$(v)))
 source += $(webrtc)
 
 
-# this is for libsrtp
-cflags += -DOPENSSL
 # this is for libwebrtc
 cflags += -DHAVE_SCTP
 

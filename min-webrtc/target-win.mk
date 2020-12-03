@@ -39,5 +39,4 @@ cflags/$(pwd)/abseil-cpp/absl/base/internal/thread_identity.cc += -include pthre
 chacks/$(pwd)/webrtc/api/task_queue/task_queue_base.cc += s/defined(WEBRTC_POSIX)/1/g
 chacks/$(pwd)/webrtc/rtc_base/synchronization/yield_policy.cc += s/defined(WEBRTC_POSIX)/1/g
 
-source += $(pwd)/webrtc/rtc_base/synchronization/rw_lock_win.cc
 source += $(pwd)/webrtc/rtc_base/win32.cc

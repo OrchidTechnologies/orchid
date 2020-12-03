@@ -242,14 +242,17 @@ $(each)
 $(call include,glib/target.mk)
 
 # c-ares {{{
-$(output)/%/$(pwd)/c-ares/ares_build.h: $(output)/%/$(pwd)/c-ares/Makefile
-	touch $@
-$(output)/%/$(pwd)/c-ares/.libs/libcares.a: $(output)/%/$(pwd)/c-ares/ares_build.h
-	$(MAKE) -C $(dir $<)
+p_c-ares := -I$(CURDIR)/$(pwd)/c-ares/src/lib
 
-cflags/$(pwd/wireshark)/ += -I@/$(pwd)/c-ares
-header += @/$(pwd)/c-ares/ares_build.h
-linked += $(pwd)/c-ares/.libs/libcares.a
-cflags/$(pwd/wireshark)/ += -I$(pwd)/c-ares
+$(output)/%/$(pwd)/c-ares/include/ares_build.h: $(output)/%/$(pwd)/c-ares/Makefile
+	touch $@
+	$(MAKE) -C $(dir $@)
+$(output)/%/$(pwd)/c-ares/src/lib/.libs/libcares.a: $(output)/%/$(pwd)/c-ares/include/ares_build.h
+	$(MAKE) -C $(patsubst %/include/ares_build.h,%,$<)/src
+
+cflags/$(pwd/wireshark)/ += -I@/$(pwd)/c-ares/include
+header += @/$(pwd)/c-ares/include/ares_build.h
+linked += $(pwd)/c-ares/src/lib/.libs/libcares.a
+cflags/$(pwd/wireshark)/ += -I$(pwd)/c-ares/include
 cflags += -DCARES_STATICLIB
 # }}}

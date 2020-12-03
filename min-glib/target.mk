@@ -11,8 +11,8 @@
 
 # glib {{{
 w_glib := 
-w_glib += -Dlibmount=false
-w_glib += -Diconv=gnu
+w_glib += -Dlibmount=disabled
+w_glib += -Diconv=external
 
 m_glib := 
 
