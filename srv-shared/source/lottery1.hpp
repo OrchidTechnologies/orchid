@@ -37,7 +37,6 @@
 #include "sleep.hpp"
 #include "signed.hpp"
 #include "spawn.hpp"
-#include "station.hpp"
 #include "updated.hpp"
 
 namespace orc {
@@ -48,21 +47,6 @@ class Lottery1 :
   private:
     const Market market_;
     const Address contract_;
-
-#if 0
-    U<Station> station_;
-
-    struct Cache_ {
-        std::map<uint128_t, Identity> subscriptions_;
-        std::map<Identity, S<Pot>> pots_;
-    }; Locked<Cache_> cache_;
-
-    task<void> Look(const Address &signer, const Address &funder, const std::string &combined);
-
-  protected:
-    void Land(Json::Value data) override;
-    void Stop(const std::string &error) noexcept override;
-#endif
 
   public:
     Lottery1(Market market, Address contract);

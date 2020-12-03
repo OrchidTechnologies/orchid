@@ -38,54 +38,22 @@
 #include "sleep.hpp"
 #include "signed.hpp"
 #include "spawn.hpp"
-#include "station.hpp"
 #include "token.hpp"
 #include "updated.hpp"
 
 namespace orc {
 
-typedef std::tuple<Address, Address> Identity;
-
-static std::string Combine(const Address &signer, const Address &funder) {
-    return Tie(signer, funder).hex();
-}
-
-struct Pot :
-    public Event
-{
-    struct Locked_ {
-        uint128_t amount_ = 0;
-        uint128_t escrow_ = 0;
-        uint256_t unlock_ = 0;
-    }; Locked<Locked_> locked_;
-};
-
 class Lottery0 :
-    public Valve,
-    public Drain<Json::Value>
+    public Valve
 {
   private:
     const Token token_;
     const Address contract_;
 
-    U<Station> station_;
-
-    struct Cache_ {
-        std::map<uint128_t, Identity> subscriptions_;
-        std::map<Identity, S<Pot>> pots_;
-    }; Locked<Cache_> cache_;
-
-    task<void> Look(const Address &signer, const Address &funder, const std::string &combined);
-
-  protected:
-    void Land(Json::Value data) override;
-    void Stop(const std::string &error) noexcept override;
-
   public:
     Lottery0(Token token, Address contract);
     ~Lottery0() override = default;
 
-    task<void> Open(S<Origin> origin, Locator locator);
     task<void> Shut() noexcept override;
 
     auto Tuple() const {

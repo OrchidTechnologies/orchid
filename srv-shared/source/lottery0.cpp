@@ -31,116 +31,6 @@
 
 namespace orc {
 
-static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
-static const auto Bound_(Hash("Update(address,address)"));
-
-task<void> Lottery0::Look(const Address &signer, const Address &funder, const std::string &combined) {
-    static const auto look(Hash("look(address,address)").Clip<4>().num<uint32_t>());
-    Builder builder;
-    Coder<Address, Address>::Encode(builder, funder, signer);
-    co_await station_->Send("eth_call", 'C' + combined, {Multi{
-        {"to", contract_},
-        {"gas", uint256_t(90000)},
-        {"data", Tie(look, builder)},
-    }, "latest"});
-}
-
-void Lottery0::Land(Json::Value data) { try {
-    const auto id(data["id"]);
-    if (id.isNull()) {
-        const auto method(data["method"].asString());
-        orc_assert(method == "eth_subscription");
-
-        const auto params(data["params"]);
-        const auto result(params["result"]);
-        const auto topics(result["topics"]);
-        const Number<uint256_t> event(topics[0].asString());
-
-        if (false) {
-        } else if (event == Update_) {
-#if 0
-            const uint128_t subscription(params["subscription"].asString());
-
-            const auto pot([&]() {
-                const auto cache(cache_());
-                const auto identity(cache->subscriptions_.find(subscription));
-                orc_assert(identity != cache->subscriptions_.end());
-                const auto pot(cache->pots_.find(identity->second));
-                orc_assert(pot != cache->pots_.end());
-                return pot->second;
-            }());
-#else
-            const Number<uint256_t> funder(topics[1].asString());
-            const Number<uint256_t> signer(topics[2].asString());
-            const Identity identity{signer.num<uint256_t>(), funder.num<uint256_t>()};
-
-            const auto pot([&]() {
-                const auto cache(cache_());
-                const auto pot(cache->pots_.find(identity));
-                orc_assert(pot != cache->pots_.end());
-                return pot->second;
-            }());
-#endif
-
-            const auto data(Bless(result["data"].asString()));
-            Window window(data);
-            const auto [amount, escrow, unlock] = Coded<std::tuple<uint128_t, uint128_t, uint256_t>>::Decode(window);
-            window.Stop();
-
-            {
-                const auto locked(pot->locked_());
-                locked->amount_ = amount;
-                locked->escrow_ = escrow;
-                locked->unlock_ = unlock;
-            }
-
-            (*pot)();
-        } else if (event == Bound_) {
-            std::cout << "BIND " << data << std::endl;
-        } else orc_throw("unknown message " << data);
-    } else {
-        const auto value(id.asString());
-        const auto [identity] = Take<Identity>(Bless(value.substr(1)));
-        const auto result(data["result"].asString());
-        switch (value[0]) {
-            case 'S': {
-                orc_assert(cache_()->subscriptions_.emplace(result, identity).second);
-            } break;
-
-            case 'C': {
-                const auto data(Bless(result));
-                Window window(data);
-                const auto [amount, escrow, unlock, verify, codehash, shared] = Coded<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>>::Decode(window);
-                window.Stop();
-
-                const auto pot([this, &identity = identity]() {
-                    const auto cache(cache_());
-                    const auto pot(cache->pots_.find(identity));
-                    orc_assert(pot != cache->pots_.end());
-                    return pot->second;
-                }());
-
-                {
-                    const auto locked(pot->locked_());
-                    locked->amount_ = amount;
-                    locked->escrow_ = escrow;
-                    locked->unlock_ = unlock;
-                }
-
-                (*pot)();
-            } break;
-
-            default:
-                orc_insist(false);
-        }
-    }
-} orc_stack({}, "parsing " << data) }
-
-void Lottery0::Stop(const std::string &error) noexcept {
-    orc_insist_(false, error);
-    Valve::Stop();
-}
-
 Lottery0::Lottery0(Token token, Address contract) :
     Valve(typeid(*this).name()),
     token_(std::move(token)),
@@ -148,22 +38,8 @@ Lottery0::Lottery0(Token token, Address contract) :
 {
 }
 
-task<void> Lottery0::Open(S<Origin> origin, Locator locator) {
-    co_await [&]() -> task<void> {
-        auto duplex(std::make_unique<Duplex>(origin));
-        co_await duplex->Open(locator);
-
-        auto station(std::make_unique<Covered<Sink<Station, Drain<Json::Value>>>>(*this));
-        auto &structured(station->Wire<BufferSink<Structured>>());
-        auto &inverted(structured.Wire<Inverted>(std::move(duplex)));
-        inverted.Open();
-        station_ = std::move(station);
-    }();
-}
-
 task<void> Lottery0::Shut() noexcept {
-    if (station_ != nullptr)
-        co_await station_->Shut();
+    Valve::Stop();
     co_await Valve::Shut();
 }
 
@@ -175,36 +51,16 @@ std::pair<Float, uint256_t> Lottery0::Credit(const uint256_t &now, const uint256
 }
 
 task<bool> Lottery0::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {
-    const auto [pot, subscribe] = [&]() -> std::tuple<S<Pot>, bool> {
-        const auto cache(cache_());
-        auto &pot(cache->pots_[{signer, funder}]);
-        if (pot != nullptr)
-            return {pot, false};
-        else {
-            pot = Make<Pot>();
-            return {pot, true};
-        }
-    }();
+    static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look_("look");
+    const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look_.Call(*token_.market_.chain_, "latest", contract_, 90000, funder, signer);
 
-    if (subscribe) {
-        auto combined(Combine(signer, funder));
+    // XXX: check codehash/shared
 
-        co_await station_->Send("eth_subscribe", 'S' + combined, {"logs", Multi{
-            {"address", contract_},
-            {"topics", {{Update_, Bound_}, Number<uint256_t>(funder.num()), Number<uint256_t>(signer.num())}},
-        }});
+    orc_assert(unlock == 0);
 
-        co_await Look(signer, funder, combined);
-    }
-
-    co_await **pot;
-
-    const auto locked(pot->locked_());
-    if (amount > locked->amount_)
+    if (amount > balance)
         co_return false;
-    if (amount > locked->escrow_ / 2)
-        co_return false;
-    if (locked->unlock_ != 0)
+    if (amount > escrow / 2)
         co_return false;
     co_return true;
 }

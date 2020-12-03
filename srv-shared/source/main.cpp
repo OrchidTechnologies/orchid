@@ -95,7 +95,6 @@ int Main(int argc, const char *const argv[]) {
     group.add_options()
         ("lottery0", po::value<std::string>()->default_value("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"))
         ("ethereum", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
-        ("websocket", po::value<std::string>()->default_value("ws://127.0.0.1:8546/"), "ethereum websocket private API endpoint")
         ("lottery1", po::value<std::string>()->default_value("0xff9978B7b309021D39a76f52Be377F2B95D72394"))
         ("chain", po::value<std::vector<std::string>>(&chains), "like 1,ETH,https://cloudflare-eth.com/")
     ; options.add(group); }
@@ -277,14 +276,11 @@ int Main(int argc, const char *const argv[]) {
             static Selector<Address> what_("what");
             auto token(co_await what_.Call(*chain, "latest", contract, 90000));
 
-            auto lottery0(Break<Lottery0>(Token{
+            co_return Break<Lottery0>(Token{
                 co_await Market::New(milliseconds, std::move(chain), co_await Binance(milliseconds, origin, "ETH")),
                 std::move(token),
                 co_await Binance(milliseconds, origin, "OXT")
-            }, std::move(contract)));
-
-            co_await lottery0->Open(origin, args["websocket"].as<std::string>());
-            co_return std::move(lottery0);
+            }, std::move(contract));
         }());
 
         std::map<uint256_t, S<Lottery1>> lotteries1;
