@@ -30,22 +30,12 @@ contract OrchidSender {
         uint256 amount;
     }
 
-    function transferv(address token, uint256 total, Send[] calldata sends) external {
-        {
-            (bool _s, bytes memory _d) = address(token).call(
-                abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), total));
-            require(_s && abi.decode(_d, (bool)));
-        }
-
+    function transferv(address token, Send[] calldata sends) external {
         for (uint i = sends.length; i != 0; ) {
             Send calldata send = sends[--i];
-            require(total >= send.amount);
-            total -= send.amount;
             (bool _s, bytes memory _d) = address(token).call(
-                abi.encodeWithSignature("transfer(address,uint256)", send.recipient, send.amount));
-            require(_s && (_d.length == 0 || abi.decode(_d, (bool))));
+                abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, send.recipient, send.amount));
+            require(_s && abi.decode(_d, (bool)));
         }
-
-        require(total == 0);
     }
 }

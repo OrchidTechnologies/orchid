@@ -142,9 +142,9 @@ template <>
 struct Option<Address> {
 static Address _(std::string arg) {
     if (false);
-    else if (arg == "tv0") {
-        orc_assert_(*chain_ == 1, "tv0 is not on chain " << chain_);
-        return "0x1fb31CcF378FDE2bFa8f1C5F35888162cE11b24f"; }
+    else if (arg == "tv1") {
+        orc_assert_(*chain_ == 1, "tv1 is not on chain " << chain_);
+        return "0x69d868560a3137c25f43a011cbe4654a954c08e7"; }
     else if (arg == "OTT") {
         orc_assert_(*chain_ == 1, "OTT is not on chain " << chain_);
         return "0xff9978B7b309021D39a76f52Be377F2B95D72394"; }
@@ -424,8 +424,8 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
         std::cout << "total = " << total << std::endl;
 
-        static Selector<void, Address, uint256_t, std::vector<Send>> transferv("transferv");
-        std::cout << (co_await executor_->Send(*chain_, {.nonce=nonce_}, sender, 0, transferv(token, total, sends))).hex() << std::endl;
+        static Selector<void, Address, std::vector<Send>> transferv("transferv");
+        std::cout << (co_await executor_->Send(*chain_, {.nonce=nonce_}, sender, 0, transferv(token, sends))).hex() << std::endl;
 
     } else orc_assert_(false, "unknown command " << command);
 
