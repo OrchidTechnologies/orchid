@@ -273,6 +273,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "address") {
         std::cout << executor_->operator Address() << std::endl;
 
+    } else if (command == "allowance") {
+        const auto [token, address, recipient] = Options<Address, Address, Address>(args);
+        static Selector<uint256_t, Address, Address> allowance("allowance");
+        std::cout << co_await allowance.Call(*chain_, "latest", token, 90000, address, recipient) << std::endl;
+
     } else if (command == "approve") {
         const auto [token, recipient, amount] = Options<Address, Address, uint256_t>(args);
         static Selector<bool, Address, uint256_t> approve("approve");
