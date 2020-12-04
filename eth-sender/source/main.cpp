@@ -192,7 +192,7 @@ static cppcoro::shared_task<S<Executor>> _(std::string arg) {
         co_return std::move(executor);
     } else if (arg.size() == 64)
         co_return Make<SecretExecutor>(Bless(arg));
-    else if (arg.size() == 22)
+    else if (arg.size() == 42)
         co_return Make<UnlockedExecutor>(arg);
     else orc_assert(false);
 } };
