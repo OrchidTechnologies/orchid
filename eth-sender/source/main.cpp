@@ -281,8 +281,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "balance") {
         const auto [token, address] = Options<Address, Address>(args);
         static Selector<uint256_t, Address> balanceOf("balanceOf");
-        const auto balance(co_await balanceOf.Call(*chain_, "latest", token, 90000, address));
-        std::cout << balance << std::endl;
+        std::cout << co_await balanceOf.Call(*chain_, "latest", token, 90000, address) << std::endl;
 
     } else if (command == "block") {
         const auto [height] = Options<uint64_t>(args);
