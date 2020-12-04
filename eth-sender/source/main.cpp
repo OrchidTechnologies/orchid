@@ -401,9 +401,15 @@ task<int> Main(int argc, const char *const argv[]) { try {
         uint256_t total(0);
 
         const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
-        for (const auto &line : Split(csv, {'\n'})) {
+        for (auto line : Split(csv, {'\n'})) {
             if (line.size() == 0 || line[0] == '#')
                 continue;
+            if (line[line.size() - 1] == '\r') {
+                line -= 1;
+                if (line.size() == 0)
+                    continue;
+            }
+
             const auto comma(Find(line, {','}));
             orc_assert(comma);
             auto [recipient, amount] = Split(line, *comma);

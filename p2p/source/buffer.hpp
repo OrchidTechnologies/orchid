@@ -198,10 +198,15 @@ class Span :
         return Span(this->data_ + offset, this->size_ - offset);
     }
 
-    Span &operator +=(size_t offset) {
+    Span &operator -=(size_t offset) {
         orc_assert(this->size_ >= offset);
-        this->data_ += offset;
         this->size_ -= offset;
+        return *this;
+    }
+
+    Span &operator +=(size_t offset) {
+        operator -=(offset);
+        this->data_ += offset;
         return *this;
     }
 
