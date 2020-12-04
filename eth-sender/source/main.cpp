@@ -276,7 +276,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "approve") {
         const auto [token, recipient, amount] = Options<Address, Address, uint256_t>(args);
         static Selector<bool, Address, uint256_t> approve("approve");
-        std::cout << co_await executor_->Send(*chain_, {}, token, 0, approve(recipient, amount)) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {}, token, 0, approve(recipient, amount))).hex() << std::endl;
 
     } else if (command == "balance") {
         const auto [token, address] = Options<Address, Address>(args);
@@ -294,7 +294,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "deploy") {
         auto [amount, code, data] = Options<uint256_t, Bytes, Bytes>(args);
-        std::cout << co_await executor_->Send(*chain_, {}, std::nullopt, amount, Tie(code, data)) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {}, std::nullopt, amount, Tie(code, data))).hex() << std::endl;
 
     } else if (command == "derive") {
         const auto [secret] = Options<Bytes32>(args);
@@ -309,7 +309,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
             std::cout << record.hash_ << std::endl;
         else {
             orc_assert_(account.balance_ >= bid * 247000, record.from_ << " <= " << bid * 247000);
-            std::cout << co_await chain_->Send("eth_sendRawTransaction", {Subset(Implode({record.nonce_, record.bid_, record.gas_, record.target_, record.amount_, record.data_, 27u, 0x247000u, 0x2470u}))}) << std::endl;
+            std::cout << (co_await chain_->Send("eth_sendRawTransaction", {Subset(Implode({record.nonce_, record.bid_, record.gas_, record.target_, record.amount_, record.data_, 27u, 0x247000u, 0x2470u}))})).hex() << std::endl;
         }
 
     } else if (command == "generate") {
@@ -344,7 +344,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "lottery1:move") {
         const auto [lottery, amount, signer, adjust, retrieve] = Options<Address, uint256_t, Address, uint256_t, uint256_t>(args);
         static Selector<void, Address, uint256_t> move("move");
-        std::cout << co_await executor_->Send(*chain_, {}, lottery, amount, move(signer, adjust << 128 | retrieve)) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, move(signer, adjust << 128 | retrieve))).hex() << std::endl;
 
     } else if (command == "nonce") {
         const auto [address] = Options<Address>(args);
@@ -365,32 +365,32 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
-        std::cout << co_await executor_->Send(*chain_, {}, recipient, amount, data) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {}, recipient, amount, data)).hex() << std::endl;
 
     } else if (command == "singleton") {
         auto [code, salt] = Options<Bytes, Bytes32>(args);
         static Selector<Address, Bytes, Bytes32> deploy("deploy");
         static Address factory("0xce0042B868300000d44A59004Da54A005ffdcf9f");
-        std::cout << co_await executor_->Send(*chain_, {}, factory, 0, deploy(code, salt)) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, deploy(code, salt))).hex() << std::endl;
 
 #if 0
     } else if (command == "singleton-500") {
         auto [code, salt] = Options<Bytes, Bytes32>(args);
         static Selector<Address, Bytes, Bytes32> deploy("deploy");
         static Address factory();
-        std::cout << co_await executor_->Send(*chain_, {}, factory, 0, deploy(code, salt)) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, deploy(code, salt))).hex() << std::endl;
 #endif
 
     } else if (command == "submit") {
         const auto [raw] = Options<Bytes>(args);
-        std::cout << co_await chain_->Send("eth_sendRawTransaction", {raw}) << std::endl;
+        std::cout << (co_await chain_->Send("eth_sendRawTransaction", {raw})).hex() << std::endl;
 
     } else if (command == "transfer") {
         const auto [token, recipient, amount, data] = Options<Address, Address, uint256_t, Bytes>(args);
         static Selector<bool, Address, uint256_t> transfer("transfer");
         static Selector<void, Address, uint256_t, Bytes> transferAndCall("transferAndCall");
-        std::cout << co_await executor_->Send(*chain_, {}, token, 0, data.size() == 0 ?
-            transfer(recipient, amount) : transferAndCall(recipient, amount, data)) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {}, token, 0, data.size() == 0 ?
+            transfer(recipient, amount) : transferAndCall(recipient, amount, data))).hex() << std::endl;
 
     } else if (command == "transferv") {
         orc_assert(nonce_);
@@ -421,7 +421,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
         std::cout << "total = " << total << std::endl;
 
         static Selector<void, Address, uint256_t, std::vector<Send>> transferv("transferv");
-        std::cout << co_await executor_->Send(*chain_, {.nonce=nonce_}, sender, 0, transferv(token, total, sends)) << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {.nonce=nonce_}, sender, 0, transferv(token, total, sends))).hex() << std::endl;
 
     } else orc_assert_(false, "unknown command " << command);
 
