@@ -46,6 +46,7 @@ S<Chain> chain_;
 S<Executor> executor_;
 uint256_t multiple_ = 1;
 std::optional<uint256_t> nonce_;
+std::optional<uint64_t> gas_;
 Locator rpc_{"http", "127.0.0.1", "8545", "/"};
 
 class Args :
@@ -139,13 +140,14 @@ static uint256_t _(std::string_view arg) {
     return uint256_t(Decimal(arg.substr(0, last + 1)) * shift);
 } };
 
+static Address TransferV("0x2c1820DBc112149b30b8616Bf73D552BEa4C9F1F");
+
 template <>
 struct Option<Address> {
 static Address _(std::string arg) {
     if (false);
-    else if (arg == "tv1") {
-        orc_assert_(*chain_ == 1, "tv1 is not on chain " << chain_);
-        return "0x69d868560a3137c25f43a011cbe4654a954c08e7"; }
+    else if (arg == "transferv") {
+        return TransferV; }
     else if (arg == "OTT") {
         orc_assert_(*chain_ == 1, "OTT is not on chain " << chain_);
         return "0xff9978B7b309021D39a76f52Be377F2B95D72394"; }
@@ -241,6 +243,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
         if (false);
         ORC_PARAM(bid,flags.,_)
         ORC_PARAM(executor,,)
+        ORC_PARAM(gas,,_)
         ORC_PARAM(nonce,,_)
         ORC_PARAM(rpc,,_)
         ORC_PARAM(verbose,flags.,_)
@@ -305,16 +308,41 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [secret] = Options<Bytes32>(args);
         std::cout << Commonize(secret).hex() << std::endl;
 
-    } else if (command == "factory") {
+    } else if (command == "deterministic-100") {
+        auto [code] = Options<Bytes>(args);
+        static Address factory("0x7A0D94F55792C434d74a40883C6ed8545E406D12");
+        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, code)).hex() << std::endl;
+
+    } else if (command == "deterministic-500") {
+        auto [code] = Options<Bytes>(args);
+        static Address factory("0x83aa38958768B9615B138339Cbd8601Fc2963D4d");
+        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, code)).hex() << std::endl;
+
+    } else if (command == "eip2470") {
         Options<>(args);
         const auto bid(flags.bid_ ? *flags.bid_ : uint256_t(100 * Ten9));
-        Record record(0, bid, 247000, std::nullopt, 0, Bless("0x608060405234801561001057600080fd5b50610134806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80634af63f0214602d575b600080fd5b60cf60048036036040811015604157600080fd5b810190602081018135640100000000811115605b57600080fd5b820183602082011115606c57600080fd5b80359060200191846001830284011164010000000083111715608d57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550509135925060eb915050565b604080516001600160a01b039092168252519081900360200190f35b6000818351602085016000f5939250505056fea26469706673582212206b44f8a82cb6b156bfcc3dc6aadd6df4eefd204bc928a4397fd15dacf6d5320564736f6c63430006020033"), *chain_, 27u, 0x247000u, 0x2470u);
+        static uint64_t gas(247000);
+        Record record(0, bid, gas, std::nullopt, 0, Bless("608060405234801561001057600080fd5b50610134806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80634af63f0214602d575b600080fd5b60cf60048036036040811015604157600080fd5b810190602081018135640100000000811115605b57600080fd5b820183602082011115606c57600080fd5b80359060200191846001830284011164010000000083111715608d57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550509135925060eb915050565b604080516001600160a01b039092168252519081900360200190f35b6000818351602085016000f5939250505056fea26469706673582212206b44f8a82cb6b156bfcc3dc6aadd6df4eefd204bc928a4397fd15dacf6d5320564736f6c63430006020033"), *chain_, 27u, 0x247000u, 0x2470u);
         const auto [account] = co_await chain_->Get(co_await block(), record.from_, nullptr);
         if (account.nonce_ != 0)
             std::cout << record.hash_ << std::endl;
         else {
-            orc_assert_(account.balance_ >= bid * 247000, record.from_ << " <= " << bid * 247000);
+            orc_assert_(account.balance_ >= bid * gas, record.from_ << " <= " << bid * gas);
             std::cout << (co_await chain_->Send("eth_sendRawTransaction", {Subset(Implode({record.nonce_, record.bid_, record.gas_, record.target_, record.amount_, record.data_, 27u, 0x247000u, 0x2470u}))})).hex() << std::endl;
+        }
+
+    } else if (command == "factory") {
+        Options<>(args);
+        const auto bid(flags.bid_ ? *flags.bid_ : uint256_t(100 * Ten9));
+        static uint64_t gas(100000);
+        static const uint256_t twos("0x2222222222222222222222222222222222222222222222222222222222222222");
+        Record record(0, bid, 100000, std::nullopt, 0, Bless("601f80600e600039806000f350fe60003681823780368234f58015156014578182fd5b80825250506014600cf3"), *chain_, 27u, twos, twos);
+        const auto [account] = co_await chain_->Get(co_await block(), record.from_, nullptr);
+        if (account.nonce_ != 0)
+            std::cout << record.hash_ << std::endl;
+        else {
+            orc_assert_(account.balance_ >= bid * gas, record.from_ << " <= " << bid * gas);
+            std::cout << (co_await chain_->Send("eth_sendRawTransaction", {Subset(Implode({record.nonce_, record.bid_, record.gas_, record.target_, record.amount_, record.data_, 27u, twos, twos}))})).hex() << std::endl;
         }
 
     } else if (command == "generate") {
@@ -370,21 +398,19 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
-        std::cout << (co_await executor_->Send(*chain_, {}, recipient, amount, data)).hex() << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_, .gas = gas_}, recipient, amount, data)).hex() << std::endl;
 
-    } else if (command == "singleton") {
+    } else if (command == "singleton-100") {
         auto [code, salt] = Options<Bytes, Bytes32>(args);
         static Selector<Address, Bytes, Bytes32> deploy("deploy");
         static Address factory("0xce0042B868300000d44A59004Da54A005ffdcf9f");
-        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, deploy(code, salt))).hex() << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {.gas = 3000000}, factory, 0, deploy(code, salt))).hex() << std::endl;
 
-#if 0
     } else if (command == "singleton-500") {
         auto [code, salt] = Options<Bytes, Bytes32>(args);
         static Selector<Address, Bytes, Bytes32> deploy("deploy");
-        static Address factory();
-        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, deploy(code, salt))).hex() << std::endl;
-#endif
+        static Address factory("0xe14b5ae0d1e8a4e9039d40e5bf203fd21e2f6241");
+        std::cout << (co_await executor_->Send(*chain_, {.gas = 3000000}, factory, 0, deploy(code, salt))).hex() << std::endl;
 
     } else if (command == "submit") {
         const auto [raw] = Options<Bytes>(args);
@@ -399,7 +425,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "transferv") {
         orc_assert(nonce_);
-        const auto [token, sender, multiple] = Options<Address, Address, uint256_t>(args);
+        const auto [token, multiple] = Options<Address, uint256_t>(args);
 
         typedef std::tuple<Address, uint256_t> Send;
         std::vector<Send> sends;
@@ -426,7 +452,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
         std::cout << "total = " << total << std::endl;
 
         static Selector<void, Address, std::vector<Send>> transferv("transferv");
-        std::cout << (co_await executor_->Send(*chain_, {.nonce=nonce_}, sender, 0, transferv(token, sends))).hex() << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, TransferV, 0, transferv(token, sends))).hex() << std::endl;
 
     } else orc_assert_(false, "unknown command " << command);
 
