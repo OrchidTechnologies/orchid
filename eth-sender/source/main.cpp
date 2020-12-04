@@ -413,7 +413,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
             orc_assert(comma);
             auto [recipient, amount] = Split(line, *comma);
             const auto &send(sends.emplace_back(std::string(recipient), uint256_t(Option<Float>::_(amount) * Float(multiple))));
-            std::cout << "transfer " << token << " " << std::get<0>(send) << " " << std::get<1>(send) << std::endl;
+            std::cout << "transfer " << token << " " << std::get<0>(send) << " " << std::get<1>(send) << " 0x" << std::endl;
             total += std::get<1>(send);
         }
 
