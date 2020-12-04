@@ -38,6 +38,29 @@ def get_usd_per_eth() -> float:
     logging.debug(f"usd_per_eth: {usd_per_eth}")
     return usd_per_eth
 
+def get_func_token_cost_usd(func_name, func_params) -> float:
+    return 0.0
+
+def get_apicall_gas_price(func_name, func_params, total_usd):
+    func_token_cost_usd = get_func_token_cost_usd(func_name, func_params)
+    remain_usd          = total_usd - func_token_cost_usd
+    if (remain_usd <= 0.0):
+        logging.debug(f"get_apicall_gas_price error:  func_token_cost_usd({func_token_cost_usd}) > total_usd({total_usd}) ")
+        return 0.0
+    usd_per_eth     = get_usd_per_eth()
+    if (usd_per_eth <= 0.0):
+        logging.debug(f"get_apicall_gas_price error:  usd_per_eth({usd_per_eth}) invalid ")
+        return 0.0
+    gas_cost_usd    = remain_usd
+    gas_cost_eth    = gas_cost_usd / usd_per_eth
+    gas_cost_gwei   = gas_cost_eth * float(1000*1000*1000)
+    est_gas_use     = get_est_gas(api_func)
+    if (est_gas_use <= 0):
+        logging.debug(f"get_apicall_gas_price error:  est_gas_use({est_gas_use}) invalid ")
+        return 0.0
+    gas_price       = gas_cost_gwei / est_gas_use
+    return gas_price
+
 def get_pac_recycle_value_usd(total_oxt: float) -> float:
     usd_per_oxt     = get_usd_per_oxt()
     usd_value       = total_oxt * usd_per_oxt
