@@ -26,6 +26,7 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include "decimal.hpp"
 #include "executor.hpp"
 #include "float.hpp"
 #include "load.hpp"
@@ -108,9 +109,9 @@ static Bytes32 _(std::string arg) {
 } };
 
 template <>
-struct Option<Float> {
-static Float _(std::string_view arg) {
-    return Float(arg);
+struct Option<Decimal> {
+static Decimal _(std::string_view arg) {
+    return Decimal(arg);
 } };
 
 template <>
@@ -122,20 +123,20 @@ static uint64_t _(std::string_view arg) {
 template <>
 struct Option<uint256_t> {
 static uint256_t _(std::string_view arg) {
-    Float shift(1);
+    Decimal shift(1);
 
     auto last(arg.size());
     for (;;) {
         orc_assert(last-- != 0);
         if (false);
         else if (arg[last] == 'G')
-            shift *= Ten9;
+            shift *= 1000000000;
         else break;
     }
 
     if (shift == 1)
         return uint256_t(arg);
-    return uint256_t(Float(arg.substr(0, last + 1)) * shift);
+    return uint256_t(Decimal(arg.substr(0, last + 1)) * shift);
 } };
 
 template <>
@@ -417,7 +418,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
             const auto comma(Find(line, {','}));
             orc_assert(comma);
             auto [recipient, amount] = Split(line, *comma);
-            const auto &send(sends.emplace_back(std::string(recipient), uint256_t(Option<Float>::_(amount) * Float(multiple))));
+            const auto &send(sends.emplace_back(std::string(recipient), uint256_t(Option<Decimal>::_(amount) * Decimal(multiple))));
             std::cout << "transfer " << token << " " << std::get<0>(send) << " " << std::get<1>(send) << " 0x" << std::endl;
             total += std::get<1>(send);
         }
