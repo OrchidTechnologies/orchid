@@ -44,7 +44,7 @@ Address::Address(const char *address) :
 }
 
 Address::Address(const Brick<64> &common) :
-    Address(Hash(common).skip<12>().num<uint160_t>())
+    Address(HashK(common).skip<12>().num<uint160_t>())
 {
 }
 

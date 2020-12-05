@@ -34,7 +34,7 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
     orc_assert(!proofs.isNull());
     for (auto e(proofs.size()), i(decltype(e)(0)); i != e; ++i) {
         const auto data(Bless(proofs[i].asString()));
-        orc_assert(Hash(data) == hash);
+        orc_assert(HashK(data) == hash);
 
         const auto proof(Explode(data));
         switch (proof.size()) {
@@ -84,17 +84,17 @@ Receipt::Receipt(Json::Value &&value) :
 }
 
 Bytes32 Transaction::hash(const uint256_t &v, const uint256_t &r, const uint256_t &s) const {
-    return Hash(Implode({nonce_, bid_, gas_, target_, amount_, data_, v, r, s}));
+    return HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, v, r, s}));
 }
 
 Address Transaction::from(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const {
     if (v >= 35) {
         Signature signature(Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 35 - chain * 2));
-        return Recover(Hash(Implode({nonce_, bid_, gas_, target_, amount_, data_, chain, uint8_t(0), uint8_t(0)})), signature);
+        return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, chain, uint8_t(0), uint8_t(0)})), signature);
     } else {
         orc_assert(v >= 27);
         Signature signature(Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 27));
-        return Recover(Hash(Implode({nonce_, bid_, gas_, target_, amount_, data_})), signature);
+        return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_})), signature);
     }
 }
 
@@ -180,7 +180,7 @@ Account::Account(const Block &block, const Json::Value &value) :
     storage_(value["storageHash"].asString()),
     code_(value["codeHash"].asString())
 {
-    const auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), Hash(Number<uint160_t>(value["address"].asString()))));
+    const auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), HashK(Number<uint160_t>(value["address"].asString()))));
     if (leaf.scalar()) {
         orc_assert(leaf.buf().size() == 0);
         orc_assert(nonce_ == 0);
@@ -200,7 +200,7 @@ uint256_t Chain::Get(unsigned index, const Json::Value &storages, const Region &
     const auto storage(storages[index]);
     orc_assert(uint256_t(storage["key"].asString()) == key);
     const uint256_t value(storage["value"].asString());
-    const auto leaf(Verify(storage["proof"], root, Hash(Number<uint256_t>(key))));
+    const auto leaf(Verify(storage["proof"], root, HashK(Number<uint256_t>(key))));
     orc_assert(leaf.num() == value);
     return value;
 }
@@ -210,8 +210,8 @@ static Brick<32> Name(const std::string &name) {
         return Zero<32>();
     const auto period(name.find('.'));
     if (period == std::string::npos)
-        return Hash(Tie(Zero<32>(), Hash(name)));
-    return Hash(Tie(Name(name.substr(period + 1)), Hash(name.substr(0, period))));
+        return HashK(Tie(Zero<32>(), HashK(name)));
+    return HashK(Tie(Name(name.substr(period + 1)), HashK(name.substr(0, period))));
 }
 
 task<S<Chain>> Chain::New(Endpoint endpoint, Flags flags, uint256_t chain) {

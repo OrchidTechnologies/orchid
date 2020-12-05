@@ -53,7 +53,7 @@ task<void> Stakes(const S<Chain> &chain, const Address &directory, const Block &
     if (primary == 0)
         co_return;
 
-    const auto stake(Hash(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
+    const auto stake(HashK(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
     const auto [left, right, stakee, amount, delay] = co_await chain->Get(block, directory, storage, stake + 6, stake + 7, stake + 4, stake + 2, stake + 3);
     orc_assert(amount != 0);
 

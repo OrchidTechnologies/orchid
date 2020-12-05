@@ -108,7 +108,7 @@ struct Tester {
         co_await show();
 
         const auto reveal(Nonzero<32>());
-        const auto commit(Hash(reveal));
+        const auto commit(HashK(reveal));
 
         const auto nonce(Nonzero<32>());
 
@@ -124,7 +124,7 @@ struct Tester {
 
         const Ticket0 ticket{commit, issued, nonce, face, ratio, start, range, funder, recipient};
         const auto hash(ticket.Encode(lottery, chain_, receipt));
-        const auto signature(Sign(secret, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
+        const auto signature(Sign(secret, HashK(Tie("\x19""Ethereum Signed Message:\n32", hash))));
 
         co_await Audit("grab", co_await provider_.Send(chain_, {}, lottery, 0, grab(reveal, commit, issued, nonce, signature.v_ + 27, signature.r_, signature.s_, face, ratio, start, range, funder, recipient, receipt, {})));
 
@@ -202,7 +202,7 @@ struct Tester {
 
         const auto payment([&]() {
             const auto reveal(Nonzero<16>().num<uint128_t>());
-            const auto commit(Hash(Coder<uint128_t, uint256_t>::Encode(reveal, where())));
+            const auto commit(HashK(Coder<uint128_t, uint256_t>::Encode(reveal, where())));
 
             const uint128_t face(1);
             const uint128_t ratio(Float(Two128) - 1);
@@ -240,11 +240,11 @@ struct Tester {
         const auto seed(Nonzero<32>());
         const unsigned count(100);
         std::vector<Bytes32> saved; {
-            auto refund(Hash(Coder<Bytes32, Address>::Encode(seed, recipient)));
+            auto refund(HashK(Coder<Bytes32, Address>::Encode(seed, recipient)));
             for (unsigned i(0); i != count; ++i) {
                 if (!Zeros(refund))
                     saved.emplace_back(refund);
-                refund = Hash(refund);
+                refund = HashK(refund);
             }
         }
         if (saved.size() < 75)

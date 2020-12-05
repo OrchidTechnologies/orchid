@@ -126,15 +126,15 @@ SecretExecutor::operator Address() const {
 }
 
 task<Signature> SecretExecutor::operator ()(const Chain &chain, const Buffer &data) const {
-    co_return Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n", std::to_string(data.size()), data)));
+    co_return Sign(secret_, HashK(Tie("\x19""Ethereum Signed Message:\n", std::to_string(data.size()), data)));
 }
 
 task<Bytes32> SecretExecutor::Send(const Chain &chain, const uint256_t &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data, bool eip155) const {
     co_return co_await BasicExecutor::Send(chain, Subset([&]() { if (eip155) {
-        const auto signature(Sign(secret_, Hash(Implode({nonce, bid, gas, target, value, data, chain.operator const uint256_t &(), uint256_t(0), uint256_t(0)}))));
+        const auto signature(Sign(secret_, HashK(Implode({nonce, bid, gas, target, value, data, chain.operator const uint256_t &(), uint256_t(0), uint256_t(0)}))));
         return Implode({nonce, bid, gas, target, value, data, signature.v_ + 35 + 2 * chain.operator const uint256_t &(), signature.r_, signature.s_});
     } else {
-        const auto signature(Sign(secret_, Hash(Implode({nonce, bid, gas, target, value, data}))));
+        const auto signature(Sign(secret_, HashK(Implode({nonce, bid, gas, target, value, data}))));
         return Implode({nonce, bid, gas, target, value, data, uint8_t(signature.v_ + 27), signature.r_, signature.s_});
     } }()));
 }

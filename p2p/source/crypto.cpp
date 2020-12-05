@@ -20,10 +20,11 @@
 /* }}} */
 
 
-#include <openssl/objects.h>
-
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
+
+#include <openssl/objects.h>
+#include <openssl/sha.h>
 
 extern "C" {
 #include <sha3.h>
@@ -46,7 +47,7 @@ void Random(uint8_t *data, size_t size) {
     generator.generate(data, data + size);
 }
 
-Brick<32> Hash(const Buffer &data) {
+Brick<32> HashK(const Buffer &data) {
     sha3_context context;
     sha3_Init256(&context);
     sha3_SetFlags(&context, SHA3_FLAGS_KECCAK);
@@ -61,10 +62,19 @@ Brick<32> Hash(const Buffer &data) {
     return hash;
 }
 
-Brick<32> Hash(const std::string &data) {
-    return Hash(Subset(data));
-}
+Brick<32> Hash2(const Buffer &data) {
+    SHA256_CTX context;
+    SHA256_Init(&context);
 
+    data.each([&](const uint8_t *data, size_t size) {
+        SHA256_Update(&context, data, size);
+        return true;
+    });
+
+    Brick<SHA256_DIGEST_LENGTH> hash;
+    SHA256_Final(hash.data(), &context);
+    return hash;
+}
 
 Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
     r_(r), s_(s), v_(v)

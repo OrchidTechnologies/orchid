@@ -106,7 +106,7 @@ const int   nsamples = 1000;
         {
             char buffer[256];
             sprintf(buffer, "f8a8%i", i*3229 + 319);
-            auto hvalue     = Hash(std::string(buffer));
+            auto hvalue     = HashK(std::string(buffer));
 		    auto [unused, addr] = Take<Brick<12>, Brick<20>>(Tie(hvalue));
 	        Address raddr(addr.num<uint160_t>());
 	        uint128_t ntokens = (rand()%16)*(rand()%16)+1;

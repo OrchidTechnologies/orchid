@@ -352,7 +352,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "hash") {
         auto [data] = Options<Bytes>(args);
-        std::cout << Hash(data).hex() << std::endl;
+        std::cout << HashK(data).hex() << std::endl;
 
     } else if (command == "height") {
         Options<>(args);

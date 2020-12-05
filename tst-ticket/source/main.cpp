@@ -27,8 +27,8 @@
 
 namespace orc {
 
-static const auto Update_(Hash("Update(address,address,uint128,uint128,uint256)"));
-static const auto Bound_(Hash("Update(address,address)"));
+static const auto Update_(HashK("Update(address,address,uint128,uint128,uint256)"));
+static const auto Bound_(HashK("Update(address,address)"));
 
 int Main(int argc, const char *const argv[]) {
     orc_assert(argc == 2);
@@ -84,7 +84,7 @@ int Main(int argc, const char *const argv[]) {
         std::cout << "start: " << start << std::endl;
         std::cout << "range: " << range << std::endl;
 
-        const auto winner(Hash(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
+        const auto winner(HashK(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
         std::cout << "winner: " << winner << std::endl;
 
         std::cout << "amount: " << amount << std::endl;
@@ -94,7 +94,7 @@ int Main(int argc, const char *const argv[]) {
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
 
         const auto ticket(Ticket{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode0(lottery, chain, receipt));
-        const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
+        const Address signer(Recover(HashK(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
         std::cout << "signer: " << signer << std::endl;
 
         const std::string latest("latest");

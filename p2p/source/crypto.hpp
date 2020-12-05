@@ -40,8 +40,13 @@ Brick<Size_> Random() {
     return value;
 }
 
-Brick<32> Hash(const Buffer &data);
-Brick<32> Hash(const std::string &data);
+Brick<32> HashK(const Buffer &data);
+inline Brick<32> HashK(const std::string &data) {
+    return HashK(Subset(data)); }
+
+Brick<32> Hash2(const Buffer &data);
+inline Brick<32> Hash2(const std::string &data) {
+    return Hash2(Subset(data)); }
 
 struct Signature {
     Brick<32> r_;

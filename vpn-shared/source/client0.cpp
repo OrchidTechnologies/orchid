@@ -47,7 +47,7 @@ task<void> Client0::Submit(const Float &amount) {
     const auto start(issued + 60 * 60 * 2);
     const Ticket0 ticket{commit, issued, nonce, face_, Ratio(face_, amount, token_.market_, token_.currency_, Gas()), start, 0, funder_, recipient};
     const auto hash(ticket.Encode(lottery_, *token_.market_.chain_, receipt));
-    const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
+    const auto signature(Sign(secret_, HashK(Tie("\x19""Ethereum Signed Message:\n32", hash))));
 
     co_await Client::Submit(hash, Tie(Command(Submit0_,
         uint8_t(signature.v_ + 27), signature.r_, signature.s_, Tie(
