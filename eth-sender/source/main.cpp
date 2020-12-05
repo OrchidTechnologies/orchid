@@ -26,6 +26,7 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include "base58.hpp"
 #include "decimal.hpp"
 #include "executor.hpp"
 #include "float.hpp"
@@ -295,6 +296,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "block") {
         const auto [height] = Options<uint64_t>(args);
         co_await chain_->Header(height);
+
+    } else if (command == "cb58") {
+        auto [data] = Options<Bytes>(args);
+        std::cout << ToBase58(Tie(data, Hash2(data).Clip<28, 4>())) << std::endl;
 
     } else if (command == "code") {
         const auto [address] = Options<Address>(args);

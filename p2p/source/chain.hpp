@@ -295,7 +295,7 @@ class Selector final :
             signature << ')';
             return signature.str();
         }()),
-        value_(boost::endian::native_to_big(HashK(name_).template Clip<4>().template num<uint32_t>()))
+        value_(boost::endian::native_to_big(HashK(name_).template Clip<0, 4>().template num<uint32_t>()))
     {
     }
 
