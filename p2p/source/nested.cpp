@@ -72,7 +72,7 @@ std::ostream &operator <<(std::ostream &out, const Nested &value) {
     } else if ([&]() {
         return true;
     }()) {
-        std::cerr << Subset(value.str());
+        out << Subset(value.str());
     } else {
         out << '"';
         for (uint8_t c : value.str())

@@ -188,7 +188,14 @@ Account::Account(const Block &block, const Json::Value &value) :
         orc_assert(storage_ == uint256_t("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"));
         orc_assert(code_ == uint256_t("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
     } else {
-        orc_assert(leaf.size() == 4);
+        switch (leaf.size()) {
+            case 4: break;
+            // XXX: avalanche sometimes has a 5th element
+            // I'm pretty sure this is "money pending import"
+            case 5: orc_assert(leaf[4].num() == 0); break;
+            default: orc_throw("awkward account object " << leaf);
+        }
+
         orc_assert(leaf[0].num() == nonce_);
         orc_assert(leaf[1].num() == balance_);
         orc_assert(leaf[2].num() == storage_);
