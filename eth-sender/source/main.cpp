@@ -401,6 +401,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
                 break;
             } else co_await Sleep(1000);
 
+    } else if (command == "rlp") {
+        const auto [data] = Options<Bytes>(args);
+        std::cout << Explode(data) << std::endl;
+
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_, .gas = gas_}, recipient, amount, data)).hex() << std::endl;
