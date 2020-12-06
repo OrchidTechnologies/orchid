@@ -33,6 +33,7 @@
 #include "load.hpp"
 #include "local.hpp"
 #include "nested.hpp"
+#include "segwit.hpp"
 #include "signed.hpp"
 #include "sleep.hpp"
 #include "ticket.hpp"
@@ -293,6 +294,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<uint256_t, Address> balanceOf("balanceOf");
         std::cout << co_await balanceOf.Call(*chain_, "latest", token, 90000, address) << std::endl;
 
+    } else if (command == "bid") {
+        Options<>(args);
+        std::cout << (co_await chain_->Bid()) << std::endl;
+
     } else if (command == "block") {
         const auto [height] = Options<uint64_t>(args);
         co_await chain_->Header(height);
@@ -311,7 +316,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "derive") {
         const auto [secret] = Options<Bytes32>(args);
-        std::cout << Commonize(secret).hex() << std::endl;
+        std::cout << ToUncompressed(Derive(secret)).hex() << std::endl;
 
     } else if (command == "deterministic-100") {
         auto [code] = Options<Bytes>(args);
@@ -349,6 +354,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
             orc_assert_(account.balance_ >= bid * gas, record.from_ << " <= " << bid * gas);
             std::cout << (co_await chain_->Send("eth_sendRawTransaction", {Subset(Implode({record.nonce_, record.bid_, record.gas_, record.target_, record.amount_, record.data_, 27u, twos, twos}))})).hex() << std::endl;
         }
+
+    } else if (command == "federation") {
+        static Selector<std::tuple<std::string>> getFederationAddress("getFederationAddress");
+        const auto [federation] = co_await getFederationAddress.Call(*chain_, "latest", "0x0000000000000000000000000000000001000006", 90000);
+        std::cout << federation << std::endl;
 
     } else if (command == "generate") {
         Options<>(args);
@@ -393,6 +403,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [number] = Options<uint256_t>(args);
         std::cout << "0x" << std::hex << number << std::endl;
 
+    } else if (command == "p2pkh") {
+        // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+        const auto [data] = Options<Bytes>(args);
+        std::cout << ToBase58Check(Tie('\x00', HashR(Hash2(ToCompressed(Derive(data)))))) << std::endl;
+
     } else if (command == "receipt") {
         const auto [transaction] = Options<Bytes32>(args);
         for (;;)
@@ -404,6 +419,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "rlp") {
         const auto [data] = Options<Bytes>(args);
         std::cout << Explode(data) << std::endl;
+
+    } else if (command == "segwit") {
+        // https://bitcointalk.org/index.php?topic=4992632.0
+        const auto [data] = Options<Bytes>(args);
+        std::cout << ToSegwit(HashR(Hash2(data))) << std::endl;
 
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
@@ -462,6 +482,13 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
         static Selector<void, Address, std::vector<Send>> transferv("transferv");
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, TransferV, 0, transferv(token, sends))).hex() << std::endl;
+
+    } else if (command == "wif") {
+        // https://en.bitcoin.it/wiki/Wallet_import_format
+        // prefix with 0x80 for mainnet and 0xEF for testnet
+        // suffix with 0x01 if this will be a compressed key
+        const auto [data] = Options<Bytes>(args);
+        std::cout << ToBase58Check(data) << std::endl;
 
     } else orc_assert_(false, "unknown command " << command);
 

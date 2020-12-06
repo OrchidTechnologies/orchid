@@ -122,7 +122,7 @@ SecretExecutor::SecretExecutor(const Secret &secret) :
 }
 
 SecretExecutor::operator Address() const {
-    return Commonize(secret_);
+    return Derive(secret_);
 }
 
 task<Signature> SecretExecutor::operator ()(const Chain &chain, const Buffer &data) const {

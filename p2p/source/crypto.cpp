@@ -24,13 +24,13 @@
 #include <boost/random/random_device.hpp>
 
 #include <openssl/objects.h>
+#include <openssl/ripemd.h>
 #include <openssl/sha.h>
 
 extern "C" {
 #include <sha3.h>
 }
 
-#include <secp256k1.h>
 #include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
 
@@ -76,6 +76,20 @@ Brick<32> Hash2(const Buffer &data) {
     return hash;
 }
 
+Brick<20> HashR(const Buffer &data) {
+    RIPEMD160_CTX context;
+    RIPEMD160_Init(&context);
+
+    data.each([&](const uint8_t *data, size_t size) {
+        RIPEMD160_Update(&context, data, size);
+        return true;
+    });
+
+    Brick<RIPEMD160_DIGEST_LENGTH> hash;
+    RIPEMD160_Final(hash.data(), &context);
+    return hash;
+}
+
 Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
     r_(r), s_(s), v_(v)
 {
@@ -103,21 +117,35 @@ static const secp256k1_context *Curve() {
     return context_.get();
 }
 
-static Common Serialize(const secp256k1_context *context, secp256k1_pubkey &common) {
+Key Derive(const Secret &secret) {
+    const auto context(Curve());
+    Key key;
+    orc_assert(secp256k1_ec_pubkey_create(context, &key, secret.data()) != 0);
+    return key;
+}
+
+Brick<64> ToUncompressed(const Key &key) {
+    const auto context(Curve());
+
     std::array<uint8_t, 65> data;
     size_t size(data.size());
-    orc_assert(secp256k1_ec_pubkey_serialize(context, data.data(), &size, &common, SECP256K1_EC_UNCOMPRESSED) != 0);
+    orc_assert(secp256k1_ec_pubkey_serialize(context, data.data(), &size, &key, SECP256K1_EC_UNCOMPRESSED) != 0);
     orc_assert(size == data.size());
 
     orc_assert(data[0] == 0x04);
     return Bounded<65>(data).skip<1>();
 }
 
-Common Commonize(const Secret &secret) {
+Brick<33> ToCompressed(const Key &key) {
     const auto context(Curve());
-    secp256k1_pubkey common;
-    orc_assert(secp256k1_ec_pubkey_create(context, &common, secret.data()) != 0);
-    return Serialize(context, common);
+
+    Brick<33> data;
+    size_t size(data.size());
+    orc_assert(secp256k1_ec_pubkey_serialize(context, data.data(), &size, &key, SECP256K1_EC_COMPRESSED) != 0);
+    orc_assert(size == data.size());
+
+    orc_assert(data[0] == 0x02 || data[0] == 0x03);
+    return data;
 }
 
 Signature Sign(const Secret &secret, const Brick<32> &data) {
@@ -133,16 +161,16 @@ Signature Sign(const Secret &secret, const Brick<32> &data) {
     return {external, v};
 }
 
-Common Recover(const Brick<32> &data, const Signature &signature) {
+Key Recover(const Brick<32> &data, const Signature &signature) {
     const auto context(Curve());
 
     secp256k1_ecdsa_recoverable_signature internal;
     const auto [combined] = Take<Brick<64>>(Tie(signature.r_, signature.s_));
     orc_assert(secp256k1_ecdsa_recoverable_signature_parse_compact(context, &internal, combined.data(), signature.v_) != 0);
 
-    secp256k1_pubkey common;
-    orc_assert(secp256k1_ecdsa_recover(context, &common, &internal, data.data()) != 0);
-    return Serialize(context, common);
+    Key key;
+    orc_assert(secp256k1_ecdsa_recover(context, &key, &internal, data.data()) != 0);
+    return key;
 }
 
 Beam Object(int nid) {

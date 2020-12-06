@@ -23,6 +23,8 @@
 #ifndef ORCHID_CRYPTO_HPP
 #define ORCHID_CRYPTO_HPP
 
+#include <secp256k1.h>
+
 #include "buffer.hpp"
 
 #define _crycall(code) do { \
@@ -48,6 +50,10 @@ Brick<32> Hash2(const Buffer &data);
 inline Brick<32> Hash2(const std::string &data) {
     return Hash2(Subset(data)); }
 
+Brick<20> HashR(const Buffer &data);
+inline Brick<20> HashR(const std::string &data) {
+    return HashR(Subset(data)); }
+
 struct Signature {
     Brick<32> r_;
     Brick<32> s_;
@@ -64,13 +70,16 @@ struct Signature {
 };
 
 using Secret = Brick<32>;
-using Common = Brick<64>;
-Common Commonize(const Secret &secret);
+typedef secp256k1_pubkey Key;
+Key Derive(const Secret &secret);
+
+Brick<64> ToUncompressed(const Key &key);
+Brick<33> ToCompressed(const Key &key);
 
 Signature Sign(const Secret &secret, const Brick<32> &data);
-Common Recover(const Brick<32> &data, const Signature &signature);
+Key Recover(const Brick<32> &data, const Signature &signature);
 
-inline Common Recover(const Brick<32> &data, uint8_t v, const Brick<32> &r, const Brick<32> &s) {
+inline Key Recover(const Brick<32> &data, uint8_t v, const Brick<32> &r, const Brick<32> &s) {
     orc_assert(v >= 27);
     return Recover(data, Signature(r, s, v - 27));
 }

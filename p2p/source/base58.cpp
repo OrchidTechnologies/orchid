@@ -21,6 +21,7 @@
 
 
 #include "base58.hpp"
+#include "crypto.hpp"
 
 namespace orc {
 
@@ -104,6 +105,10 @@ std::vector<uint8_t> Base58Decode(const std::string& data, CodecMapping mapping)
 std::string ToBase58(const Buffer &data) {
     // XXX: reimplement with scatter/gather
     return Base58Encode(data.vec(), {AlphaMap, Base58Map});
+}
+
+std::string ToBase58Check(const Buffer &data) {
+    return ToBase58(Tie(data, Hash2(Hash2(Tie(data))).Clip<0, 4>()));
 }
 
 }

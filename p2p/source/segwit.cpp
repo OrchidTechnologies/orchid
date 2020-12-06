@@ -20,36 +20,14 @@
 /* }}} */
 
 
-#include <regex>
+#include <segwit_addr.h>
 
-#include <eEVM/util.h>
-
-#include "crypto.hpp"
-#include "error.hpp"
-#include "jsonrpc.hpp"
+#include "segwit.hpp"
 
 namespace orc {
 
-Address::Address(const std::string &address) :
-    uint160_t(address)
-{
-    static const std::regex re("0x[0-9a-fA-F]{40}");
-    orc_assert_(std::regex_match(address, re), "invalid address " << address);
-    //orc_assert(eevm::is_checksum_address(address));
-}
-
-Address::Address(const char *address) :
-    uint160_t(std::string(address))
-{
-}
-
-Address::Address(const Brick<64> &common) :
-    Address(HashK(common).skip<12>().num<uint160_t>())
-{
-}
-
-std::string Address::str() const {
-    return eevm::to_checksum_address(Number<uint256_t>(num()).num<eevm::Address>());
+std::string ToSegwit(const Buffer &data) {
+    return segwit_addr::encode("bc", 0, data.vec());
 }
 
 }

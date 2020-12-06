@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#ifndef ORCHID_BASE58_HPP
-#define ORCHID_BASE58_HPP
+#ifndef ORCHID_SEGWIT_HPP
+#define ORCHID_SEGWIT_HPP
 
 #include <string>
 
@@ -29,11 +29,9 @@
 
 namespace orc {
 
-std::string ToBase58(const Buffer &data);
-Beam FromBase58(const std::string &data);
-
-std::string ToBase58Check(const Buffer &data);
+std::string ToSegwit(const Buffer &data);
+Beam FromSegwit(const std::string &data);
 
 }
 
-#endif//ORCHID_BASE58_HPP
+#endif//ORCHID_SEGWIT_HPP

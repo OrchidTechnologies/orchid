@@ -20,20 +20,35 @@
 /* }}} */
 
 
-#ifndef ORCHID_BASE58_HPP
-#define ORCHID_BASE58_HPP
+#include <regex>
 
-#include <string>
+#include <eEVM/util.h>
 
-#include "buffer.hpp"
+#include "address.hpp"
+#include "error.hpp"
 
 namespace orc {
 
-std::string ToBase58(const Buffer &data);
-Beam FromBase58(const std::string &data);
-
-std::string ToBase58Check(const Buffer &data);
-
+Address::Address(const std::string &address) :
+    uint160_t(address)
+{
+    static const std::regex re("0x[0-9a-fA-F]{40}");
+    orc_assert_(std::regex_match(address, re), "invalid address " << address);
+    //orc_assert(eevm::is_checksum_address(address));
 }
 
-#endif//ORCHID_BASE58_HPP
+Address::Address(const char *address) :
+    uint160_t(std::string(address))
+{
+}
+
+Address::Address(const Key &key) :
+    Address(HashK(ToUncompressed(key)).skip<12>().num<uint160_t>())
+{
+}
+
+std::string Address::str() const {
+    return eevm::to_checksum_address(Number<uint256_t>(num()).num<eevm::Address>());
+}
+
+}
