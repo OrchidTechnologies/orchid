@@ -83,10 +83,12 @@ class Association :
         co_return writ;
     }
 
-    virtual task<void> Open(const Socket &endpoint) { orc_ahead orc_block({
+    virtual task<void> Open(const Socket &endpoint) { orc_ahead orc_block({ try {
         co_await association_.async_connect(endpoint, Adapt());
         association_.non_blocking(true);
-    }, "connecting to " << endpoint); }
+    } catch (const asio::system_error &error) {
+        orc_adapt(error);
+    } }, "connecting to " << endpoint); }
 
     void Shut() noexcept override {
         association_.close();
@@ -143,11 +145,11 @@ class Connection :
         // XXX: this is only on Linux 2.6.37+, so we will get an error that needs to be handled on CentOS 6
         association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_USER_TIMEOUT>(timeout));
 #endif
-
-        co_return co_await Association::Open(endpoint);
     } catch (const asio::system_error &error) {
         orc_adapt(error);
-    } }
+    }
+        co_return co_await Association::Open(endpoint);
+    }
 
     void Shut() noexcept override {
         try {
