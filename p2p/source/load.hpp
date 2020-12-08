@@ -29,15 +29,15 @@
 
 namespace orc {
 
-inline std::string Load(const std::string &file) {
+inline std::string Load(const std::string &file) { orc_block({
     std::string data;
     boost::filesystem::load_string_file(file, data);
     return data;
-}
+}, "loading from " << file); }
 
-inline void Save(const std::string &file, const std::string &data) {
+inline void Save(const std::string &file, const std::string &data) { orc_block({
     boost::filesystem::save_string_file(file, data);
-}
+}, "saving to " << file); }
 
 }
 
