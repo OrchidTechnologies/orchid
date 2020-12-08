@@ -113,17 +113,23 @@ class Connection :
     task<void> Open(const Socket &endpoint) override { try {
         association_.open(endpoint.Host().v4() ? asio::ip::tcp::v4() : asio::ip::tcp::v6());
 
-        association_.set_option(asio::ip::tcp::socket::keep_alive(true));
-
         // XXX: consider setting keepalive timeout separately for connection than from actual data
 
-        // XXX: we maybe should be using SIO_KEEPALIVE_VALS via WSAIoctl on Win32 instead of TCP_KEEP*
-        // XXX: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/dd877220(v=vs.85)
-        // XXX: https://bugs.python.org/issue34932 https://bugs.python.org/issue32394
+#ifdef _WIN32
+        tcp_keepalive alive {
+            .onoff = TRUE,
+            .keepalivetime = TCP_KEEPIDLE_DEFAULT,
+            .keepaliveinterval = TCP_KEEPINTVL_DEFAULT,
+        };
 
+        DWORD result(0);
+        orc_assert(WSAIoctl(association_.native_handle(), SIO_KEEPALIVE_VALS, &alive, sizeof(alive), nullptr, 0, &result, nullptr, nullptr) != SOCKET_ERROR);
+#else
+        association_.set_option(asio::ip::tcp::socket::keep_alive(true));
         association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPIDLE>(TCP_KEEPIDLE_DEFAULT / 1000));
         association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPINTVL>(TCP_KEEPINTVL_DEFAULT / 1000));
         association_.set_option(asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPCNT>(TCP_KEEPCNT_DEFAULT));
+#endif
 
         const auto timeout(TCP_KEEPIDLE_DEFAULT + TCP_KEEPINTVL_DEFAULT * TCP_KEEPCNT_DEFAULT);
 #if 0
