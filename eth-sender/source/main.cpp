@@ -483,6 +483,14 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<void, Address, std::vector<Send>> transferv("transferv");
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, TransferV, 0, transferv(token, sends))).hex() << std::endl;
 
+    } else if (command == "verify") {
+        auto [height] = Options<uint64_t>(args);
+        do {
+            co_await chain_->Header(height);
+            if (height % 1000 == 0)
+                std::cerr << height << std::endl;
+        } while (height--);
+
     } else if (command == "wif") {
         // https://en.bitcoin.it/wiki/Wallet_import_format
         // prefix with 0x80 for mainnet and 0xEF for testnet
