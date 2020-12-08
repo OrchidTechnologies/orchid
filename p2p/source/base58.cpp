@@ -69,11 +69,11 @@ std::string Base58Encode(const std::vector<uint8_t>& data, CodecMapping mapping)
       digits[j] = static_cast<uint8_t>(carry % 58);
       carry /= 58;
     }
-    for (; carry; carry /= 58)
+    for (; carry != 0; carry /= 58)
       digits[digitslen++] = static_cast<uint8_t>(carry % 58);
   }
   std::string result;
-  for (size_t i = 0; i < (data.size() - 1) && !data[i]; i++)
+  for (size_t i = 0; i < (data.size() - 1) && data[i] == 0; i++)
     result.push_back(mapping.BaseMapping[0]);
   for (size_t i = 0; i < digitslen; i++)
     result.push_back(mapping.BaseMapping[digits[digitslen - 1 - i]]);
@@ -92,7 +92,7 @@ std::vector<uint8_t> Base58Decode(const std::string& data, CodecMapping mapping)
       carry += static_cast<uint32_t>(result[j] * 58);
       result[j] = static_cast<uint8_t>(carry);
     }
-    for (; carry; carry >>=8)
+    for (; carry != 0; carry >>=8)
       result[resultlen++] = static_cast<uint8_t>(carry);
   }
   result.resize(resultlen);
