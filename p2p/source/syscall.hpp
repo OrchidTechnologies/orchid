@@ -35,7 +35,7 @@
     for (auto success : std::initializer_list<long>({__VA_ARGS__})) \
         if (error == success) \
             return (decltype(expr)) -success; \
-    orc_throw(error); \
+    orc_throw("\"" << strerror(error) << "\" calling " << #expr); \
 } }()
 
 #define orc_packed \

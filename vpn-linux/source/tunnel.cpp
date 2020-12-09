@@ -23,6 +23,7 @@
 #include <linux/if_tun.h>
 
 #include "sync.hpp"
+#include "syscall.hpp"
 #include "tunnel.hpp"
 
 namespace orc {
@@ -36,7 +37,7 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
     request.ifr_flags = IFF_TUN | IFF_NO_PI;
     strncpy(request.ifr_name, device.c_str(), IFNAMSIZ);
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
-    orc_assert(ioctl(file, TUNSETIFF, (void *) &request) >= 0);
+    orc_syscall(ioctl(file, TUNSETIFF, &request));
     code(request.ifr_name, "dev");
 
     sync.Open();
