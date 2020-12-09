@@ -194,6 +194,11 @@ cflags += -I$(pwd)/SPCDNS/src
 cflags += -I$(pwd)/cpp-jwt/include
 
 
+source += $(pwd)/bech32/ref/c++/bech32.cpp
+source += $(pwd)/bech32/ref/c++/segwit_addr.cpp
+cflags += -I$(pwd)/bech32/ref/c++
+
+
 include $(pwd)/asio.mk
 include $(pwd)/protobuf.mk
 

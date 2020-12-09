@@ -104,9 +104,7 @@ class Error final :
     }
 
 #define orc_stack(code, text) \
-    catch (orc::Error &error) { code \
-        throw orc_log(std::move(error) << ' ', text); \
-    } catch (const std::exception &error) { code \
+    catch (const std::exception &error) { code \
         throw orc_log(orc::Error() << error.what() << ' ', text); \
     }
 

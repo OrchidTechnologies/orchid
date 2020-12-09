@@ -95,8 +95,8 @@ class Buffer {
     }
 
     std::vector<uint8_t> vec() const;
-
     std::string str() const;
+
     std::string hex(bool prefix = true) const;
 };
 
@@ -198,10 +198,15 @@ class Span :
         return Span(this->data_ + offset, this->size_ - offset);
     }
 
-    Span &operator +=(size_t offset) {
+    Span &operator -=(size_t offset) {
         orc_assert(this->size_ >= offset);
-        this->data_ += offset;
         this->size_ -= offset;
+        return *this;
+    }
+
+    Span &operator +=(size_t offset) {
+        operator -=(offset);
+        this->data_ += offset;
         return *this;
     }
 
@@ -576,11 +581,11 @@ class Brick final :
         return this->data_[index];
     }
 
-    template <size_t Clip_>
-    typename std::enable_if<Clip_ <= Size_, Brick<Clip_>>::type Clip() {
-        Brick<Clip_> value;
-        for (size_t i(0); i != Clip_; ++i)
-            value[i] = this->data_[i];
+    template <size_t Offset_, size_t Count_>
+    std::enable_if_t<Offset_ + Count_ <= Size_, Brick<Count_>> Clip() {
+        Brick<Count_> value;
+        for (size_t i(0); i != Count_; ++i)
+            value[i] = this->data_[Offset_ + i];
         return value;
     }
 };

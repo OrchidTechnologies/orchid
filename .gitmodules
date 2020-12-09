@@ -190,3 +190,6 @@
 [submodule "trezor-common"]
 	path = p2p/trezor-common
 	url = https://github.com/trezor/trezor-common.git
+[submodule "bech32"]
+	path = p2p/bech32
+	url = https://github.com/sipa/bech32.git

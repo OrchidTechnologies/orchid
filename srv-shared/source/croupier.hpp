@@ -68,8 +68,8 @@ class Croupier {
     Builder Invoice(uint64_t serial, const Float &balance, const Bytes32 &reveal) const {
         Builder builder;
         builder += Tie(Command(Stamp_, Monotonic()));
-        builder += Tie(lottery0_->Invoice(serial, balance, Hash(reveal), recipient_));
-        builder += Tie(Command(Commit1_, Hash(Tie(reveal.num<uint256_t>() >> 128, uint256_t(recipient_.num())))));
+        builder += Tie(lottery0_->Invoice(serial, balance, HashK(reveal), recipient_));
+        builder += Tie(Command(Commit1_, HashK(Tie(reveal.num<uint256_t>() >> 128, uint256_t(recipient_.num())))));
 #if 0
         for (const auto &[chain, lottery1] : lotteries1_)
             builder += lottery1->Invoice();

@@ -66,7 +66,7 @@ Client1::Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, c
 
 task<Client1 *> Client1::Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder) {
     static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address> read_("read");
-    auto [escrow_balance, unlock_warned, bound] = co_await read_.Call(*market.chain_, "latest", lottery, 90000, funder, Address(Commonize(secret)), 0);
+    auto [escrow_balance, unlock_warned, bound] = co_await read_.Call(*market.chain_, "latest", lottery, 90000, funder, Address(Derive(secret)), 0);
     co_return &sunk.Wire<Client1>(std::move(oracle), std::move(market), lottery, secret, funder, uint128_t(escrow_balance >> 128) / 2);
 }
 

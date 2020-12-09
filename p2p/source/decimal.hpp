@@ -20,25 +20,15 @@
 /* }}} */
 
 
-#ifndef ORCHID_LOAD_HPP
-#define ORCHID_LOAD_HPP
+#ifndef ORCHID_DECIMAL_HPP
+#define ORCHID_DECIMAL_HPP
 
-#include <string>
-
-#include <boost/filesystem/string_file.hpp>
+#include <boost/multiprecision/cpp_dec_float.hpp>
 
 namespace orc {
 
-inline std::string Load(const std::string &file) { orc_block({
-    std::string data;
-    boost::filesystem::load_string_file(file, data);
-    return data;
-}, "loading from " << file); }
-
-inline void Save(const std::string &file, const std::string &data) { orc_block({
-    boost::filesystem::save_string_file(file, data);
-}, "saving to " << file); }
+typedef boost::multiprecision::cpp_dec_float_50 Decimal;
 
 }
 
-#endif//ORCHID_LOAD_HPP
+#endif//ORCHID_DECIMAL_HPP

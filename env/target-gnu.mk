@@ -11,4 +11,9 @@
 
 qflags += -fdata-sections -ffunction-sections
 qflags += -fvisibility=hidden
+
+ifneq ($(target),win)
+# XXX: symbol garbage collection is broken on Win32 lld
+# a deterministic issue is the thread_ Pirate in Origin
 lflags += -Wl,--gc-sections
+endif

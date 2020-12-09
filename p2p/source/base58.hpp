@@ -20,25 +20,20 @@
 /* }}} */
 
 
-#ifndef ORCHID_LOAD_HPP
-#define ORCHID_LOAD_HPP
+#ifndef ORCHID_BASE58_HPP
+#define ORCHID_BASE58_HPP
 
 #include <string>
 
-#include <boost/filesystem/string_file.hpp>
+#include "buffer.hpp"
 
 namespace orc {
 
-inline std::string Load(const std::string &file) { orc_block({
-    std::string data;
-    boost::filesystem::load_string_file(file, data);
-    return data;
-}, "loading from " << file); }
+std::string ToBase58(const Buffer &data);
+Beam FromBase58(const std::string &data);
 
-inline void Save(const std::string &file, const std::string &data) { orc_block({
-    boost::filesystem::save_string_file(file, data);
-}, "saving to " << file); }
+std::string ToBase58Check(const Buffer &data);
 
 }
 
-#endif//ORCHID_LOAD_HPP
+#endif//ORCHID_BASE58_HPP

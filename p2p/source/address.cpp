@@ -20,25 +20,35 @@
 /* }}} */
 
 
-#ifndef ORCHID_LOAD_HPP
-#define ORCHID_LOAD_HPP
+#include <regex>
 
-#include <string>
+#include <eEVM/util.h>
 
-#include <boost/filesystem/string_file.hpp>
+#include "address.hpp"
+#include "error.hpp"
 
 namespace orc {
 
-inline std::string Load(const std::string &file) { orc_block({
-    std::string data;
-    boost::filesystem::load_string_file(file, data);
-    return data;
-}, "loading from " << file); }
-
-inline void Save(const std::string &file, const std::string &data) { orc_block({
-    boost::filesystem::save_string_file(file, data);
-}, "saving to " << file); }
-
+Address::Address(const std::string &address) :
+    uint160_t(address)
+{
+    static const std::regex re("0x[0-9a-fA-F]{40}");
+    orc_assert_(std::regex_match(address, re), "invalid address " << address);
+    //orc_assert(eevm::is_checksum_address(address));
 }
 
-#endif//ORCHID_LOAD_HPP
+Address::Address(const char *address) :
+    uint160_t(std::string(address))
+{
+}
+
+Address::Address(const Key &key) :
+    Address(HashK(ToUncompressed(key)).skip<12>().num<uint160_t>())
+{
+}
+
+std::string Address::str() const {
+    return eevm::to_checksum_address(Number<uint256_t>(num()).num<eevm::Address>());
+}
+
+}

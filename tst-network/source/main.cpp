@@ -306,7 +306,7 @@ int Main(int argc, const char *const argv[]) {
     }, "Chainlink"))));
 
 
-    const auto account(Wait(Opened(Updating(milliseconds, [chain, funder, signer = Address(Commonize(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
+    const auto account(Wait(Opened(Updating(milliseconds, [chain, funder, signer = Address(Derive(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
         static const Address lottery("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
         const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(*chain, "latest", lottery, uint256_t(90000), funder, signer);

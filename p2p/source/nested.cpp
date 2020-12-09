@@ -32,7 +32,7 @@ void Nested::enc(std::string &data, unsigned length) {
 }
 
 void Nested::enc(std::string &data, unsigned length, uint8_t offset) {
-    if (length < 57)
+    if (length < 56)
         data += char(length + offset);
     else {
         std::string binary;
@@ -72,7 +72,7 @@ std::ostream &operator <<(std::ostream &out, const Nested &value) {
     } else if ([&]() {
         return true;
     }()) {
-        std::cerr << Subset(value.str());
+        out << Subset(value.str());
     } else {
         out << '"';
         for (uint8_t c : value.str())

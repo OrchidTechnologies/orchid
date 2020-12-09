@@ -294,7 +294,7 @@ jobs:
     steps:
 
     - name: install NDK r21
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.0.6113669" >/dev/null
+      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.3.6528147" >/dev/null
 
     - uses: actions/checkout@v2
     - name: env/setup
@@ -303,7 +303,7 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make Linux server
-      run: ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.0.6113669 make -j3 -C srv-shared target=lnx
+      run: ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.3.6528147 make -j3 -C srv-shared target=lnx
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx

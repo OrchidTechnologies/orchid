@@ -47,7 +47,7 @@ task<void> Client0::Submit(const Float &amount) {
     const auto start(issued + 60 * 60 * 2);
     const Ticket0 ticket{commit, issued, nonce, face_, Ratio(face_, amount, token_.market_, token_.currency_, Gas()), start, 0, funder_, recipient};
     const auto hash(ticket.Encode(lottery_, *token_.market_.chain_, receipt));
-    const auto signature(Sign(secret_, Hash(Tie("\x19""Ethereum Signed Message:\n32", hash))));
+    const auto signature(Sign(secret_, HashK(Tie("\x19""Ethereum Signed Message:\n32", hash))));
 
     co_await Client::Submit(hash, Tie(Command(Submit0_,
         uint8_t(signature.v_ + 27), signature.r_, signature.s_, Tie(
@@ -98,7 +98,7 @@ Client0::Client0(BufferDrain &drain, S<Updated<Prices>> oracle, Token token, con
 
 task<Client0 *> Client0::Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Token token, const Address &lottery, const Secret &secret, const Address &funder) {
     static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look_("look");
-    auto [amount, escrow, unlock, seller, codehash, hoarded] = co_await look_.Call(*token.market_.chain_, "latest", lottery, 90000, funder, Address(Commonize(secret)));
+    auto [amount, escrow, unlock, seller, codehash, hoarded] = co_await look_.Call(*token.market_.chain_, "latest", lottery, 90000, funder, Address(Derive(secret)));
     orc_assert(unlock == 0);
     co_return &sunk.Wire<Client0>(std::move(oracle), std::move(token), lottery, secret, funder, seller, std::move(hoarded), escrow / 2);
 }

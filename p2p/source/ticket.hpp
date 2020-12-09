@@ -47,9 +47,9 @@ struct Ticket0 {
     }
 
     Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Bytes &receipt) const {
-        static const auto orchid_(Hash("Orchid.grab"));
+        static const auto orchid_(HashK("Orchid.grab"));
 
-        return Hash(Coder<
+        return HashK(Coder<
             Bytes32, Bytes32,
             uint256_t, Bytes32,
             Address, uint256_t,
@@ -89,14 +89,14 @@ struct Ticket1 {
 
     template <typename ...Args_>
     Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Args_ &...args, const uint32_t &salt) const {
-        return Hash(Coder<
+        return HashK(Coder<
             Bytes32,
             uint256_t,
             uint256_t,
             uint256_t,
             Args_..., Address, uint256_t
         >::Encode(
-            Hash(Coder<Bytes32, uint32_t>::Encode(commit_, salt)),
+            HashK(Coder<Bytes32, uint32_t>::Encode(commit_, salt)),
             uint128_t(nonce_.num<uint256_t>()),
             Packed1(),
             Packed2(),

@@ -181,7 +181,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         return;
 
     const auto ticket(Ticket0{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode(contract, chain, receipt));
-    const Address signer(Recover(Hash(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
+    const Address signer(Recover(HashK(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
 
     const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
         const auto locked(locked_());
@@ -198,7 +198,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
         const auto reveal([&]() {
             for (const auto &reveal : locked->reveals_)
-                if (Hash(reveal.first) == commit) {
+                if (HashK(reveal.first) == commit) {
                     const auto &expire(reveal.second);
                     orc_assert(expire == 0 || expire + 60 > now);
                     return reveal.first;
@@ -209,7 +209,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
-        const auto winner(Hash(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
+        const auto winner(HashK(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
         if (winner && locked->reveal_->first == commit)
             Commit(locked);
 
@@ -299,7 +299,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
         const auto reveal([&]() {
             for (const auto &reveal : locked->reveals_)
-                if (Hash(Tie(reveal.first.num<uint256_t>() >> 128, uint256_t(recipient.num()))) == commit) {
+                if (HashK(Tie(reveal.first.num<uint256_t>() >> 128, uint256_t(recipient.num()))) == commit) {
                     const auto &expire(reveal.second);
                     orc_assert(expire == 0 || expire + 60 > now);
                     return reveal.first;
@@ -310,7 +310,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
-        const auto winner(Hash(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
+        const auto winner(HashK(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
         if (winner && locked->reveal_->first == commit)
             Commit(locked);
 
