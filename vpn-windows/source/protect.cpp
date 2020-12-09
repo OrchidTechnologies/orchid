@@ -71,7 +71,7 @@ DWORD getTunIface() {
 
 #define SUBNET_EQ(a, mask, b) ((a & mask) == (b & mask))
 
-DWORD default_gateway_outside_tun(u_long dest)
+std::pair<DWORD, DWORD> default_gateway_outside_tun(u_long dest)
 {
     DWORD dwSize = sizeof(MIB_IPFORWARDTABLE) + 1024;
     auto ipForwardTable = std::make_unique<uint8_t[]>(dwSize);
@@ -90,7 +90,7 @@ DWORD default_gateway_outside_tun(u_long dest)
                              lpMsgBuf, sizeof(lpMsgBuf), nullptr)) {
                 Log() << "GetIpForwardTable error: " << lpMsgBuf << std::endl;
             }
-            return -1;
+            return std::make_pair(-1, 0);
         }
         break;
     }
@@ -99,6 +99,7 @@ DWORD default_gateway_outside_tun(u_long dest)
     DWORD prefix = 0;
     DWORD index = -1;
     DWORD metric = ULONG_MAX;
+    DWORD nextHop = 0;
     for (DWORD i = 0; i < pIpForwardTable->dwNumEntries; i++) {
         PMIB_IPFORWARDROW row = &pIpForwardTable->table[i];
         if (row->dwForwardType == MIB_IPROUTE_TYPE_INVALID) {
@@ -115,9 +116,10 @@ DWORD default_gateway_outside_tun(u_long dest)
             prefix = forwardPrefix;
             index = row->dwForwardIfIndex;
             metric = row->dwForwardMetric1;
+            nextHop = row->dwForwardNextHop;
         }
     }
-    return index;
+    return std::make_pair(index, nextHop);
 }
 
 std::unique_ptr<sockaddr_storage> get_addr_by_index(DWORD index)
@@ -165,7 +167,7 @@ int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t), c
     }
     const sockaddr_in *sin = reinterpret_cast<const sockaddr_in *>(address);
 
-    auto index = default_gateway_outside_tun(sin->sin_addr.s_addr);
+    auto [index, gateway] = default_gateway_outside_tun(sin->sin_addr.s_addr);
 
     DWORD dwSize = sizeof(IP_ADAPTER_ADDRESSES) + 1024;
     auto addresses = std::make_unique<uint8_t[]>(dwSize);
@@ -202,13 +204,24 @@ int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t), c
         if (curAddress->FirstUnicastAddress == nullptr) {
             continue;
         }
-        auto a = curAddress->FirstUnicastAddress->Address;
-
-        auto r = bind(socket, a.lpSockaddr, a.iSockaddrLength);
-        if (r < 0) {
-            Log() << "bind failed:" << WSAGetLastError() << std::endl;
+        bool done = false;
+        for (auto ua = curAddress->FirstUnicastAddress; ua != nullptr; ua = ua->Next) {
+            auto a = ua->Address;
+            sockaddr_in *sin = reinterpret_cast<sockaddr_in*>(a.lpSockaddr);
+            ULONG mask;
+            ConvertLengthToIpv4Mask(ua->OnLinkPrefixLength, &mask);
+            if (SUBNET_EQ(sin->sin_addr.s_addr, mask, gateway)) {
+                auto r = bind(socket, a.lpSockaddr, a.iSockaddrLength);
+                if (r < 0) {
+                    Log() << "bind failed:" << WSAGetLastError() << std::endl;
+                }
+                done = true;
+                break;
+            }
         }
-        break;
+        if (done) {
+            break;
+        }
     }
     return attach(socket, address, length);
 }
