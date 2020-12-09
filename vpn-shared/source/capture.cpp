@@ -747,8 +747,10 @@ void Capture::Start(const std::string &path) {
     S<Origin> local(Break<Local>());
 
     const auto hops(unsigned(heap.eval<double>("hops.length")));
-    if (hops == 0)
+    if (hops == 0) {
+        locked_()->connected_ = true;
         return Start(std::move(local));
+    }
 
 #if 0
     auto remote(Break<BufferSink<Remote>>());
