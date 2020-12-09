@@ -3,6 +3,40 @@ import os
 import requests
 from web3 import Web3
 
+
+balances = {}
+transactions = {}
+
+def get_account_balance(receiptHash):
+    balance = balances[receiptHash]
+    return balance
+
+def credit_account_balance(receiptHash, cost_usd):
+    balance = balances[receiptHash] + cost_usd
+    return balance
+
+def debit_account_balance(receiptHash, cost_usd):
+    balance = balances[receiptHash] - cost_usd
+    return balance
+
+def save_transaction(txnhash, txn):
+    transactions[txnhash] = txn
+    return txn
+
+def load_transaction(txnhash):
+    txn = transactions[txnhash]
+    return txn
+
+
+
+def get_executor_account():
+    pubkey = 0xCA9E026D96829f5805B14Fb8223db4a0822D72a7
+    privkey = 0x64a31b5a2cd7d11cfd349cb52408b98b8d9c4161fa3f914929913791e49a4a93
+    return pubkey,privkey
+
+
+
+
 def get_usd_per_x_coinbase(token_sym) -> float:
     r = requests.get(url="https://api.coinbase.com/v2/prices/" + token_sym + "-USD/spot")
     data = r.json()
@@ -44,14 +78,14 @@ def get_txn_cost_usd(txn):
     cost_usd  = cost_eth * usd_per_eth
     return cost_usd
 
-def sendRaw_wei_(web3_websock,txn,  pubkey,privkey,nonce,max_cost_wei):
+def sendRaw_wei_(w3,txn,  pubkey,privkey,nonce,max_cost_wei):
 
     cost_wei     = get_txn_cost_wei(txn)
     if (cost_wei > max_cost_wei):
         logging.debug(f'sign_send_Transaction cost_wei({cost_wei}) > max_cost_wei({max_cost_wei})')
         return None,0.0
 
-    w3       = Web3(Web3.WebsocketProvider(web3_websock, websocket_timeout=900))
+    #w3       = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
 
     txn['from']  = pubkey
     txn['nonce'] = nonce
@@ -64,7 +98,7 @@ def sendRaw_wei_(web3_websock,txn,  pubkey,privkey,nonce,max_cost_wei):
     return txn_hash.hex(),cost_wei
 
 
-def sendRaw_usd_(web3_websock,txn, pubkey,privkey,nonce,max_cost_usd):
+def sendRaw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd):
 
     usd_per_eth = get_usd_per_x_coinbase('ETH')
     if (usd_per_eth == 0.0):
@@ -73,23 +107,27 @@ def sendRaw_usd_(web3_websock,txn, pubkey,privkey,nonce,max_cost_usd):
     max_cost_eth = max_cost_usd / usd_per_eth
     max_cost_wei = max_cost_eth * wei_per_eth
 
-    txnhash,cost_wei = sendRaw_wei_(web3_websock,txn, pubkey,privkey,nonce,max_cost_wei)
+    txnhash,cost_wei = sendRaw_wei_(w3,txn, pubkey,privkey,nonce,max_cost_wei)
 
     cost_eth = cost_wei / wei_per_eth
     cost_usd = cost_eth * usd_per_eth
 
     return txnhash,cost_usd
 
+def get_nonce_(w3,pubkey):
+    nonce = w3.eth.getTransactionCount(account=pubkey)
+    return nonce
 
-def sendRaw(web3_websock,txn,receiptHash):
 
-    #todo: make fully idempotent, get the transaction hash and look it up?
+def sendRaw(W3WSock,txn,receiptHash):
+
+    w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
 
     max_cost_usd     = get_account_balance(receiptHash)
     pubkey,privkey   = get_executor_account()
-    nonce            = get_nonce(pubkey)
+    nonce            = get_nonce_(w3,pubkey)
 
-    txnhash,cost_usd = sendRaw_usd_(web3_websock,txn, pubkey,privkey,nonce,max_cost_usd)
+    txnhash,cost_usd = sendRaw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd)
 
     if (txnhash != None):
         save_transaction(txnhash, txn)
@@ -98,9 +136,9 @@ def sendRaw(web3_websock,txn,receiptHash):
     return txnhash
 
 
-def has_transaction_failed(web3_websock,txnhash,txn):
+def has_transaction_failed(W3WSock,txnhash,txn):
 
-    w3 = Web3(Web3.WebsocketProvider(web3_websock, websocket_timeout=900))
+    w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
     success     = True
     txn_receipt = None
     try:
@@ -111,7 +149,7 @@ def has_transaction_failed(web3_websock,txnhash,txn):
 
     pubkey     = txn['from']
     txn_nonce  = txn['nonce']
-    cur_nonce  = get_nonce(pubkey)
+    cur_nonce  = get_nonce_(w3,pubkey)
 
     result = (success == False) or ((txn_receipt == None) and (cur_nonce > txn_nonce))
 
@@ -119,11 +157,11 @@ def has_transaction_failed(web3_websock,txnhash,txn):
 
 
 
-def refund_failed_txn(web3_websock,txnhash,receiptHash):
+def refund_failed_txn(W3WSock,txnhash,receiptHash):
 
     txn = load_transaction(txnhash)
 
-    if (has_transaction_failed(web3_websock,txn) == False):
+    if (has_transaction_failed(W3WSock,txn) == False):
         return "error: transaction {} is still pending"
 
     cost_usd = get_txn_cost_usd(txn)
