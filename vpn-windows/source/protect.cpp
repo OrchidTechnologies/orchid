@@ -70,7 +70,6 @@ DWORD getTunIface() {
 }
 
 #define SUBNET_EQ(a, mask, b) ((a & mask) == (b & mask))
-#define SUBNET_PREFIX(a, mask, b) (!SUBNET_EQ(a, mask, b)) ? 0 : (b & mask)
 
 DWORD default_gateway_outside_tun(u_long dest)
 {
@@ -108,7 +107,10 @@ DWORD default_gateway_outside_tun(u_long dest)
         if (row->dwForwardIfIndex == tunIndex) {
             continue;
         }
-        DWORD forwardPrefix = SUBNET_PREFIX(row->dwForwardDest, row->dwForwardMask, dest);
+        if (!SUBNET_EQ(row->dwForwardDest, row->dwForwardMask, dest)) {
+            continue;
+        }
+        DWORD forwardPrefix = dest & row->dwForwardMask;
         if (forwardPrefix > prefix || (forwardPrefix == prefix && row->dwForwardMetric1 < metric)) {
             prefix = forwardPrefix;
             index = row->dwForwardIfIndex;
