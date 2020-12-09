@@ -5,6 +5,7 @@ include env/common.mk
 
 all: cli-lnx
 all: cli-mac
+all: cli-win
 
 all: app-ios
 all: app-and
@@ -25,6 +26,10 @@ cli-lnx:
 .PHONY: cli-mac
 cli-mac:
 	$(MAKE) -C cli-shared target=mac
+
+.PHONY: cli-win
+cli-win:
+	$(MAKE) -C cli-shared target=win
 
 .PHONY: tst-win
 tst-win:
@@ -64,5 +69,5 @@ app-mac:
 
 
 .PHONY: github
-github: app-and cli-lnx cli-mac srv-lnx srv-mac srv-win
+github: app-and cli-lnx cli-mac cli-win srv-lnx srv-mac srv-win
 	./github.sh $(github)

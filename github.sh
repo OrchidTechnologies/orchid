@@ -6,7 +6,7 @@ git=$2
 shift 2
 [[ $# -eq 0 ]]
 
-make -j5 app-and cli-{lnx,mac} srv-{lnx,mac,win}
+make -j5 app-and {cli,srv}-{lnx,mac,win}
 
 tag=$(git describe --tags --match="v*" --exact-match)
 ver=${tag#v}
@@ -24,6 +24,7 @@ env/upload-gha.sh "${usr}" "${git}" "${rel}" app-android/out-and/Orchid.apk appl
 
 env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-lnx/x86_64/orchidcd application/x-elf orchidcd-lnx_"${ver}"
 env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-mac/x86_64/orchidcd application/x-mach-binary orchidcd-mac_"${ver}"
+env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-win/x86_64/orchidcd.exe application/vnd.microsoft.portable-executable orchidcd-win_"${ver}".exe
 
 env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-shared/out-lnx/x86_64/orchidd application/x-elf orchidd-lnx_"${ver}"
 env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-shared/out-mac/x86_64/orchidd application/x-mach-binary orchidd-mac_"${ver}"
