@@ -71,7 +71,7 @@ std::string guid_to_name(const char *guid)
         status = RegOpenKeyExA(HKEY_LOCAL_MACHINE, connection_string.c_str(), 0, KEY_READ, &connection_key);
 
         if (status != ERROR_SUCCESS) {
-            Log() << "Error opening registry key: " << connection_string << std::endl;
+            //Log() << "Error opening registry key: " << connection_string << std::endl;
             continue;
         }
 
