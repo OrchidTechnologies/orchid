@@ -1,38 +1,112 @@
 import logging
 import os
 import requests
+import random
 from web3 import Web3
 
-
-balances = {}
-transactions = {}
-
-def get_account_balance(receiptHash):
-    balance = balances[receiptHash]
-    return balance
-
-def credit_account_balance(receiptHash, cost_usd):
-    balance = balances[receiptHash] + cost_usd
-    return balance
-
-def debit_account_balance(receiptHash, cost_usd):
-    balance = balances[receiptHash] - cost_usd
-    return balance
-
-def save_transaction(txnhash, txn):
-    transactions[txnhash] = txn
-    return txn
-
-def load_transaction(txnhash):
-    txn = transactions[txnhash]
-    return txn
+LocalTest = False
 
 
+if (LocalTest == False):
 
-def get_executor_account():
-    pubkey = 0xCA9E026D96829f5805B14Fb8223db4a0822D72a7
-    privkey = 0x64a31b5a2cd7d11cfd349cb52408b98b8d9c4161fa3f914929913791e49a4a93
-    return pubkey,privkey
+    import boto3
+    from boto3.dynamodb.conditions import Key
+
+    def dynamodb_readall(tableName):
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(os.environ['tableName'])
+        results = table.query()
+        return results
+
+    def dynamodb_read1(tableName, keyname, key):
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(os.environ['tableName'])
+        results = table.query(ConsistentRead=True, KeyConditionExpression=Key(keyname).eq(key))
+        result = None
+        if (results['Count'] > 0):  # we found a match, return it
+            result = results['Items'][0]
+        return result
+
+    def dynamodb_write1(tableName, item):
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(os.environ['tableName'])
+        ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+        table.put_item(Item=ddb_item)
+        return item
+
+    def get_account_balance(receiptHash):
+        item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
+        balance = 0
+        if (item != None):
+            balance = item['balance']
+        return balance
+
+    def credit_account_balance(receiptHash, cost_usd):
+        item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
+        balance = 0
+        if (item != None):
+            balance = item['balance'] = item['balance'] + cost_usd
+            dynamodb_write1('BALANCES_TABLE_NAME', item)
+        return balance
+
+    def debit_account_balance(receiptHash, cost_usd):
+        item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
+        balance = 0
+        if (item != None):
+            balance = item['balance'] = item['balance'] - cost_usd
+            dynamodb_write1('BALANCES_TABLE_NAME', item)
+        return balance
+
+    def save_transaction(txnhash, txn):
+        txn['txnhash'] = txnhash
+        dynamodb_write1('TXNS_TABLE_NAME', txn)
+        return txn
+
+    def load_transaction(txnhash):
+        txn = dynamodb_read1('TXNS_TABLE_NAME', 'txnhash', txnhash)
+        return txn
+
+    def get_executor_account():
+        results = dynamodb_readall('EXECUTORS_TABLE_NAME')
+        num_execs = results['Count']
+        index = randit(0,num_execs-1)
+        pubkey = None
+        privkey = None
+        if (num_execs > 0):
+            result = results['Items'][index]
+            pubkey = result['pubkey']
+            privkey = result['privkey']
+        return pubkey,privkey
+
+else :
+
+    balances = {}
+    transactions = {}
+
+    def get_account_balance(receiptHash):
+        balance = balances[receiptHash]
+        return balance
+
+    def credit_account_balance(receiptHash, cost_usd):
+        balance = balances[receiptHash] + cost_usd
+        return balance
+
+    def debit_account_balance(receiptHash, cost_usd):
+        balance = balances[receiptHash] - cost_usd
+        return balance
+
+    def save_transaction(txnhash, txn):
+        transactions[txnhash] = txn
+        return txn
+
+    def load_transaction(txnhash):
+        txn = transactions[txnhash]
+        return txn
+
+    def get_executor_account():
+        pubkey = 0xCA9E026D96829f5805B14Fb8223db4a0822D72a7
+        privkey = 0x64a31b5a2cd7d11cfd349cb52408b98b8d9c4161fa3f914929913791e49a4a93
+        return pubkey,privkey
 
 
 
