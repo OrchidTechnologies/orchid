@@ -78,10 +78,16 @@ if (LocalTest == False):
             privkey = result['privkey']
         return pubkey,privkey
 
+    def target_in_whitelist(pubkey):
+        result = dynamodb_read1('TARGETS_TABLE_NAME', 'pubkey', pubkey)
+        return result != None
+
+
 else :
 
     balances = {}
     transactions = {}
+    whitelist_targets = { 0xCA9E026D96829f5805B14Fb8223db4a0822D72a7 }
 
     def get_account_balance(receiptHash):
         balance = balances[receiptHash]
@@ -107,6 +113,9 @@ else :
         pubkey = 0xCA9E026D96829f5805B14Fb8223db4a0822D72a7
         privkey = 0x64a31b5a2cd7d11cfd349cb52408b98b8d9c4161fa3f914929913791e49a4a93
         return pubkey,privkey
+
+    def target_in_whitelist(target):
+        return target in whitelist_targets
 
 
 
@@ -194,6 +203,10 @@ def get_nonce_(w3,pubkey):
 
 
 def sendRaw(W3WSock,txn,receiptHash):
+
+    if (target_in_whitelist(txn['to']) == False):
+        logging.debug(f'ERROR sendRaw: txn target: {txn} non in whitelist')
+        return None
 
     w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
 
