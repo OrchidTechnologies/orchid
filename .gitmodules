@@ -174,7 +174,7 @@
 	url = git://git.code.sf.net/p/libpng/code
 [submodule "pixman"]
 	path = min-cairo/pixman
-	url = https://gitlab.freedesktop.org/pixman/pixman.git
+	url = https://github.com/freedesktop/pixman.git
 [submodule "chains"]
 	path = p2p/chains
 	url = https://github.com/ethereum-lists/chains.git
