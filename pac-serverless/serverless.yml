@@ -121,6 +121,27 @@ provider:
       Resource:
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-MaintainPool"
 functions:
+  send_raw:
+    handler: entry_send_raw.main
+    timeout: 10
+    events:
+      - http:
+          path: send_raw
+          method: post
+  refund_failed_txn:
+    handler: entry_refund_failed_txn.main
+    timeout: 10
+    events:
+      - http:
+          path: refund_failed_txn
+          method: post
+  payment_apple:
+    handler: entry_payment_apple.main
+    timeout: 10
+    events:
+      - http:
+          path: payment_apple
+          method: post
   pac:
     handler: handler.main
     timeout: 10
@@ -234,6 +255,60 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: signer
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+      DeletionPolicy: Retain
+    BalancesTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:provider.environment.BALANCES_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: receiptHash
+            AttributeType: S
+          - AttributeName: balance
+            AttributeType: "N"
+        KeySchema:
+          - AttributeName: receiptHash
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+      DeletionPolicy: Retain
+    TxnsTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:provider.environment.TXNS_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: txnhash
+            AttributeType: S
+          - AttributeName: txn
+            AttributeType: S
+        KeySchema:
+          - AttributeName: txnhash
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+      DeletionPolicy: Retain
+    ExecutorsTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:provider.environment.EXECUTORS_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: pubkey
+            AttributeType: S
+          - AttributeName: privkey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pubkey
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+      DeletionPolicy: Retain
+    TargetsTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:provider.environment.TARGETS_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: pubkey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pubkey
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Retain
