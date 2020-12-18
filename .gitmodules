@@ -84,7 +84,7 @@
 	url = https://github.com/spc476/SPCDNS
 [submodule "wireshark"]
 	path = min-wireshark/wireshark
-	url = https://code.wireshark.org/review/wireshark
+	url = https://gitlab.com/wireshark/wireshark.git
 [submodule "libgpg-error"]
 	path = min-wireshark/libgpg-error
 	url = https://github.com/gpg/libgpg-error.git
