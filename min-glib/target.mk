@@ -61,7 +61,7 @@ header += @/usr/include/iconv.h
 
 define _
 $(output)/$(1)/usr/include/%.h $(output)/$(1)/usr/lib/lib%.a: $(output)/$(1)/$(pwd)/lib%/Makefile $(sysroot)
-	$(MAKE) -C $$(dir $$<) install
+	$$(MAKE) -C $$(dir $$<) install
 endef
 $(each)
 # }}}
