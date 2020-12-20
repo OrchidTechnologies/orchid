@@ -21,7 +21,7 @@
 assemble := windows
 platform := windows-x64
 
-generated := $(pwd)/gui/$(assemble)/flutter/generated_plugin_registrant%cc
+generated := $(pwd/gui)/$(assemble)/flutter/generated_plugin_registrant%cc
 
 debug += noaot
 
@@ -40,12 +40,15 @@ cflags += -I$(pwd)/engine/shell/platform/common/cpp/client_wrapper{,/include{,/f
 cflags += -I$(pwd)/engine/shell/platform/windows/public
 cflags += -I$(pwd)/engine/shell/platform/common/cpp/public
 
+cflags/$(pwd/gui)/ += -UWIN32_LEAN_AND_MEAN
 cflags/$(pwd)/ += -UWIN32_LEAN_AND_MEAN
 
+cflags/$(pwd/gui)/ += -DUNICODE
 cflags/$(pwd)/ += -DUNICODE
+
 lflags += -municode
 
-lflags += $(pwd)/$(engine)/flutter_windows.dll.lib
+lflags += $(engine)/flutter_windows.dll.lib
 lflags += -lole32
 
 $(output)/package/flutter_windows.dll: $(engine)/flutter_windows.dll

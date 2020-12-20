@@ -6,20 +6,11 @@ mkdir app-flutter
 cd app-flutter
 
 ln -s ../app-shared shared
-ln -s shared/flutter
-ln -s shared/gui/in_app_purchase
-
-ln -s shared/gui/pubspec.yaml
-ln -s shared/gui/lib
-ln -s shared/gui/assets
-
 ln -s ../app-flutter.mk makefile
+ln -s ../gui-"$1" gui
 
-flutter=flutter/bin/flutter
+ln -s gui/pubspec.yaml
+ln -s gui/lib
+ln -s gui/assets
 
-"${flutter}" create -i objc -a java --no-pub --project-name orchid .
-rm -f README.md
-
-"${flutter}" build apk
-"${flutter}" build macos
-"${flutter}" build ios
+make create

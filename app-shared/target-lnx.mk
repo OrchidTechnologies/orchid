@@ -21,7 +21,7 @@
 assemble := linux
 platform := linux-x64
 
-generated := $(pwd)/gui/$(assemble)/flutter/generated_plugin_registrant%cc
+generated := $(pwd/gui)/$(assemble)/flutter/generated_plugin_registrant%cc
 
 debug += noaot
 
@@ -33,7 +33,7 @@ include $(pwd)/target-cpp.mk
 cflags += -I$(pwd)/engine/shell/platform/$(assemble)/public
 cflags += -I$(pwd)/engine/shell/platform/common/cpp/public
 
-lflags += $(pwd)/$(engine)/libflutter_linux_gtk.so
+lflags += $(engine)/libflutter_linux_gtk.so
 
 $(output)/package/libflutter_linux_gtk.so: $(engine)/libflutter_linux_gtk.so
 	@mkdir -p $(dir $@)

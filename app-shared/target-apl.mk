@@ -33,8 +33,13 @@ endif
 
 codesign += && touch $(3)
 
-cflags += -Fflutter/bin/cache/artifacts/engine/$(platform)
-lflags += -Fflutter/bin/cache/artifacts/engine/$(platform)
+ifeq ($(target),mac)
+cflags += -F$(engine)
+lflags += -F$(engine)
+else
+cflags += -F$(engine)/$(framework).xcframework/$(xcframework)
+lflags += -F$(engine)/$(framework).xcframework/$(xcframework)
+endif
 
 app := $(bundle)$(contents)/Frameworks/App.framework
 embed := $(bundle)$(contents)/Frameworks/$(framework).framework
@@ -42,8 +47,8 @@ embed := $(bundle)$(contents)/Frameworks/$(framework).framework
 ifeq ($(target),mac)
 temp := 
 else
-temp := ios/Flutter/AppFrameworkInfo.plist
-$(temp): flutter/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
+temp := $(pwd/gui)/ios/Flutter/AppFrameworkInfo.plist
+$(temp): $(pwd/flutter)/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
 	mkdir -p $(dir $@)
 	cp -f $< $@
 endif
@@ -53,9 +58,10 @@ rsync := rsync -a --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature 
 $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist: $(dart) $(temp)
 	# XXX: as far as I can tell flutter's build system is just entirely broken :/
 	rm -rf .dart_tool/flutter_build $(output)/flutter
-	$(flutter) assemble \
+	cd $(pwd/gui) && $(flutter) assemble \
 	    -dTargetPlatform="$(platform)" \
 	    -dTargetFile="lib/main.dart" \
+	    -dSdkRoot="$(isysroot)" \
 	    -dBuildMode="$(mode)" \
 	    -dIosArchs="$(default)" \
 	    -dTreeShakeIcons="false" \
@@ -65,15 +71,17 @@ $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%pl
 	    -dEnableBitcode="" \
 	    -dDartDefines="" \
 	    -dExtraFrontEndOptions="" \
-	    --output="$(output)/flutter" \
+	    --output="$(CURDIR)/$(output)/flutter" \
 	    $(mode)_$(assemble)_bundle_flutter_assets
 	@mkdir -p $(dir $(app)) $(dir $(embed))
 ifeq ($(target),mac)
 	$(rsync) $(output)/flutter/$(framework).framework $(dir $(embed))
 else
-	$(rsync) --filter '- $(framework)' $(engine)/$(framework).framework $(dir $(embed))
-	xcrun bitcode_strip -r $(engine)/$(framework).framework/Flutter -o $(embed)/$(framework)
+	$(rsync) --filter '- $(framework)' $(engine)/$(framework).xcframework/$(xcframework)/Flutter.framework $(dir $(embed))
+	xcrun bitcode_strip -r $(engine)/$(framework).xcframework/$(xcframework)/Flutter.framework/Flutter -o $(embed)/$(framework)
+ifeq ($(target),ios)
 	lipo $(patsubst %,-extract %,$(archs)) $(embed)/$(framework) -output $(embed)/$(framework)
+endif
 endif
 	$(rsync) $(output)/flutter/App.framework $(dir $(app))
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))
@@ -89,15 +97,15 @@ $(embed)$(versions)$(signature): shared/empty.plist $(embed)$(versions)$(resourc
 	$(call codesign,$(embed),$<,$@)
 
 
-cflags += -I$(assemble)/Pods/Headers/Public
+cflags += -I$(pwd/gui)/$(assemble)/Pods/Headers/Public
 
-$(assemble)/Pods/Manifest.lock: $(assemble)/Podfile shared/gui/.flutter-plugins
-	cd $(assemble) && pod install
+$(pwd/gui)/$(assemble)/Pods/Manifest.lock: $(pwd/gui)/$(assemble)/Podfile $(pwd/gui)/.flutter-plugins
+	cd $(pwd/gui)/$(assemble) && pod install
 	touch $@
 
-$(output)/XCBuildData/build.db: shared/empty.plist $(assemble)/Pods/Manifest.lock
+$(output)/XCBuildData/build.db: shared/empty.plist $(pwd/gui)/$(assemble)/Pods/Manifest.lock
 	@mkdir -p "$(bundle)$(contents)"
-	xcodebuild -project $(assemble)/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
+	cd $(pwd/gui) && xcodebuild -project $(assemble)/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
 	shopt -s nullglob; for framework in $(output)/Release/*/*.framework; do \
 	    $(rsync) "$${framework}" "$(bundle)$(contents)/Frameworks"; \
 	    framework="$(bundle)$(contents)/Frameworks/$${framework##*/}"; \

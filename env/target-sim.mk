@@ -12,6 +12,7 @@
 archs += x86_64
 openssl/x86_64 := iossimulator-xcrun
 host/x86_64 := x86_64-apple-darwin
+triple/x86_64 := x86_64-apple-ios
 meson/x86_64 := x86_64
 
 sdk := iphonesimulator
@@ -21,4 +22,10 @@ include $(pwd)/target-apl.mk
 
 default := x86_64
 support := iPhoneSimulator
+xcframework := ios-x86_64-simulator
+
+contents := 
+resources := 
+versions := 
+
 debug += noaot

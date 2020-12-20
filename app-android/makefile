@@ -54,19 +54,19 @@ $(output)/assets/flutter_assets/AssetManifest%json: $(output)/flutter/flutter_as
 	@mkdir -p $(dir $@)
 	rsync -a --delete $(dir $<) $(dir $@)
 
-flutter/bin/cache/artifacts/engine/android-%-release/flutter.jar: flutter/packages/flutter/pubspec.lock
+$(pwd/flutter)/bin/cache/artifacts/engine/android-%-release/flutter.jar: $(pwd/flutter)/packages/flutter/pubspec.lock
 	@
 
 temp := $(foreach arch,$(jni),$(foreach base,orchid flutter app,$(output)/jnilibs/$(arch)/lib$(base).so))
 
-$(output)/jnilibs/%/libflutter.so: flutter/bin/cache/artifacts/engine/android-$$(flutter/$$*)-release/flutter.jar
+$(output)/jnilibs/%/libflutter.so: $(pwd/flutter)/bin/cache/artifacts/engine/android-$$(flutter/$$*)-release/flutter.jar
 	@mkdir -p $(dir $@)
 	unzip -p $< lib/$*/libflutter.so >$@
 
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
 	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all \
 	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
-	    -PflutterJar=flutter/bin/cache/artifacts/engine/android-arm-release/flutter.jar
+	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar -PorcInterface='$(pwd/gui)'
 	exit 0
 	touch $@
 

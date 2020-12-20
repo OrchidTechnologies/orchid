@@ -67,7 +67,6 @@ local :=
 local += app.mm.o
 
 local += $(subst %,.,$(generated)).o
-$(call depend,ios/Runner/GeneratedPluginRegistrant.m.o,ios/Pods/Manifest.lock)
 
 include env/output.mk
 
@@ -75,11 +74,6 @@ define _
 -include $(patsubst %.o,$(output)/$(1)/%.d,$(local))
 endef
 $(each)
-
-
-cflags += -Fflutter/bin/cache/artifacts/engine/ios
-lflags += -Fflutter/bin/cache/artifacts/engine/ios
-
 
 
 ifneq ($(target),sim)

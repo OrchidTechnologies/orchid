@@ -21,7 +21,9 @@
 assemble := ios
 platform := ios
 
-generated := $(pwd)/gui/ios/Runner/GeneratedPluginRegistrant%m
+generated := $(pwd/gui)/ios/Runner/GeneratedPluginRegistrant%m
 
 framework := Flutter
 include $(pwd)/target-apl.mk
+
+$(call depend,$(pwd/gui)/ios/Runner/GeneratedPluginRegistrant.m.o,$(pwd/gui)/ios/Pods/Manifest.lock)

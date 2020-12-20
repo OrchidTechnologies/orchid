@@ -24,13 +24,13 @@ rsync := rsync -a --delete
 
 $(output)/package/data/flutter_assets/AssetManifest%json: $(dart)
 	rm -rf .dart_tool/flutter_build $(output)/flutter
-	$(flutter) assemble \
+	cd $(pwd/gui) && $(flutter) assemble \
 	    -dTargetPlatform="$(platform)" \
 	    -dTargetFile="lib/main.dart" \
 	    -dBuildMode="$(mode)" \
 	    -dTreeShakeIcons="false" \
 	    -dTrackWidgetCreation="true" \
-	    --output="$(output)/flutter" \
+	    --output="$(CURDIR)/$(output)/flutter" \
 	    $(mode)_bundle_$(assemble)_assets
 	@mkdir -p $(dir $@)
 	$(rsync) $(output)/flutter/flutter_assets/ $(dir $@)
@@ -41,20 +41,20 @@ source += $(filter-out \
     %_unittests.cc \
 ,$(wildcard $(pwd)/engine/shell/platform/common/cpp/client_wrapper/*.cc))
 
-cflags += -I$(pwd)/gui/$(assemble)
+cflags += -I$(pwd/gui)/$(assemble)
 source += $(subst %,.,$(generated))
 header += $(subst %,.,$(generated))
 
 # XXX: does flutter enforce that windows uses .cpp and linux uses .cc or is that an accident?
-source += $(wildcard $(pwd)/gui/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/*.cc)
-source += $(wildcard $(pwd)/gui/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/*.cpp)
+source += $(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/*.cc)
+source += $(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/*.cpp)
 
-cflags += $(patsubst %,-I%,$(wildcard $(pwd)/gui/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/include))
+cflags += $(patsubst %,-I%,$(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/include))
 cflags += -DFLUTTER_PLUGIN_IMPL
 
-template := $(pwd)/flutter/packages/flutter_tools/templates/app/$(assemble).tmpl
+template := $(pwd/flutter)/packages/flutter_tools/templates/app/$(assemble).tmpl
 
-$(output)/package/data/icudtl.dat: flutter/bin/cache/artifacts/engine/$(platform)/icudtl.dat
+$(output)/package/data/icudtl.dat: $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)/icudtl.dat
 	@mkdir -p $(dir $@)
 	cp -f $< $@
 signed += $(output)/package/data/icudtl.dat

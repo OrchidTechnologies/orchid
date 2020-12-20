@@ -27,7 +27,7 @@ subprojects {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-def flutter = files(flutterJar)
+def flutter = files(orcFlutter)
 
 android {
     compileSdkVersion 29
@@ -47,6 +47,7 @@ android {
 
     sourceSets {
         main {
+            java.srcDirs += [orcInterface + "/android/app/src/main/java"]
             assets.srcDirs += ['out-and/assets']
             jniLibs.srcDirs = ['out-and/jnilibs']
         }
@@ -66,7 +67,7 @@ android {
 }
 
 import groovy.json.JsonSlurper
-def plugins = new JsonSlurper().parseText(new File("shared/gui/.flutter-plugins-dependencies").text)
+def plugins = new JsonSlurper().parseText(new File(orcInterface + "/.flutter-plugins-dependencies").text)
 plugins.plugins.android.each { dependency ->
     def plugin = project.rootProject.findProject(":${dependency.name}")
 

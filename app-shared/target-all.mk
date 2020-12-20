@@ -19,35 +19,36 @@
 
 
 forks := 
-include $(pwd)/gui/target.mk
+include $(pwd/gui)/target.mk
 
-flutter := $(CURDIR)/flutter/bin/flutter --suppress-analytics --verbose
+pwd/flutter := $(pwd)/flutter
+flutter := $(CURDIR)/$(pwd/flutter)/bin/flutter --suppress-analytics --verbose
 
 # -a is needed as flutter (incorrectly) only installs files for windows *target* on windows *host*
 # https://github.com/flutter/flutter/issues/58379
 precache := --linux --macos --windows -a
 
-flutter/packages/flutter/pubspec.lock: flutter/packages/flutter/pubspec.yaml $(call head,flutter)
-	cd flutter && git clean -fxd
-	cd flutter && bin/flutter config --enable-linux-desktop
-	cd flutter && bin/flutter config --enable-macos-desktop
-	cd flutter && bin/flutter config --enable-windows-desktop
-	cd flutter && bin/flutter precache $(precache)
-	cd flutter && bin/flutter update-packages
+$(pwd/flutter)/packages/flutter/pubspec.lock: $(pwd/flutter)/packages/flutter/pubspec.yaml $(call head,$(pwd/flutter))
+	cd $(pwd/flutter) && git clean -fxd
+	cd $(pwd/flutter) && bin/flutter config --enable-linux-desktop
+	cd $(pwd/flutter) && bin/flutter config --enable-macos-desktop
+	cd $(pwd/flutter) && bin/flutter config --enable-windows-desktop
+	cd $(pwd/flutter) && bin/flutter precache $(precache)
+	cd $(pwd/flutter) && bin/flutter update-packages
 
 dart := 
-dart += shared/gui/.dart_tool/package_config.json
-dart += shared/gui/.flutter-plugins
-dart += .packages
+dart += $(pwd/gui)/.dart_tool/package_config.json
+dart += $(pwd/gui)/.flutter-plugins
+dart += $(pwd/gui)/.packages
 
 # XXX: use $(dart) to generate the first three of these
-shared/gui/.dart_tool/package_config%json shared/gui/%flutter-plugins %packages $(generated): shared/gui/pubspec.yaml shared/gui/pubspec.lock flutter/packages/flutter/pubspec.lock $(forks)
-	@mkdir -p shared/gui/{android,ios,linux,macos,windows}
-	@rm -f shared/gui/.flutter-plugins
-	cd shared/gui && $(flutter) pub get
-	@touch shared/gui/.packages
+$(pwd/gui)/.dart_tool/package_config%json $(pwd/gui)/%flutter-plugins $(pwd/gui)/%packages $(generated): $(pwd/gui)/pubspec.yaml $(pwd/gui)/pubspec.lock $(pwd/flutter)/packages/flutter/pubspec.lock $(forks)
+	@mkdir -p $(pwd/gui)/{android,ios,linux,macos,windows}
+	@rm -f $(pwd/gui)/.flutter-plugins
+	cd $(pwd/gui) && $(flutter) pub get
+	@touch $(pwd/gui)/.packages
 
-dart += $(shell find lib/ -name '*.dart')
+dart += $(shell find $(pwd/gui)/lib/ -name '*.dart')
 
 ifeq ($(filter noaot,$(debug)),)
 mode := release
@@ -59,4 +60,4 @@ engine :=
 precompiled := 
 endif
 
-engine := flutter/bin/cache/artifacts/engine/$(platform)$(engine)
+engine := $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)$(engine)

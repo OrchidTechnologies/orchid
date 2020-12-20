@@ -3,6 +3,23 @@ on: [push]
 jobs:
 
 
+
+  build-flt-orc:
+    runs-on: macos-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make skeleton
+      run: ./app-flutter.sh orchid && cd app-flutter && make
+
+
+
   build-ios-app:
     runs-on: macos-latest
 
@@ -135,7 +152,7 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: setup plugins
-      run: debug=crossndk make -j3 -C app-windows shared/gui/.flutter-plugins
+      run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
     - name: make Windows app
       run: make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
     - uses: actions/upload-artifact@v1
@@ -204,7 +221,7 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: setup plugins
-      run: debug=crossndk make -j3 -C app-linux shared/gui/.flutter-plugins
+      run: debug=crossndk make -j3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins
     - name: make Linux app
       run: debug=crossndk make -j3 -C app-linux precache='--no-android --no-ios --linux'
     - uses: actions/upload-artifact@v1

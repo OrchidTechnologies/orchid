@@ -75,6 +75,7 @@ include $(pwd)/checks.mk
 
 include ../default.mk
 -include ../local.mk
+include ../setup.mk
 
 ifeq ($(filter nostrip,$(debug)),)
 lflags += -Wl,-s

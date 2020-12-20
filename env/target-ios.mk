@@ -28,6 +28,7 @@ include $(pwd)/target-apl.mk
 
 default := arm64
 support := iPhoneOS
+xcframework := ios-armv7_arm64
 
 contents := 
 resources := 

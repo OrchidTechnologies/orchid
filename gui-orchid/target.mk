@@ -18,12 +18,12 @@
 # }}}
 
 
-shared/gui/in_app_purchase/pubspec.yaml: $(call head,shared/gui/plugins) shared/gui/target.mk
-	rsync -a --delete shared/gui/plugins/packages/in_app_purchase/ $(dir $@)
+$(pwd/gui)/in_app_purchase/pubspec.yaml: $(call head,$(pwd/gui)/plugins) $(pwd/gui)/target.mk
+	rsync -a --delete $(pwd/gui)/plugins/packages/in_app_purchase/ $(dir $@)
 	rsync -a --delete $(dir $@){ios,macos}/
 	sed -ie 's@Flutter/Flutter@FlutterMacOS/FlutterMacOS@g' $(dir $@)macos/Classes/*.[hm]
 	sed -ie 's/Platform\.isIOS/Platform.isIOS || Platform.isMacOS/g' $(dir $@)lib/src/in_app_purchase/in_app_purchase_connection.dart
 	sed -ie "s/'Flutter'/'FlutterMacOS'/g; s/:ios, '[^']*'/:osx, '10.11'/g; s/, 'VALID_ARCHS' => '[^']*'//g" $(dir $@)macos/*.podspec
 	sed -ie 'x;/./{G;};x;/^ *ios:/h;/^$$/{x;s/ios:/macos:/g;}' $(dir $@)pubspec.yaml
 	@touch $@
-forks += shared/gui/in_app_purchase/pubspec.yaml
+forks += $(pwd/gui)/in_app_purchase/pubspec.yaml

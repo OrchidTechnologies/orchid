@@ -21,7 +21,7 @@
 assemble := macos
 platform := darwin-x64
 
-generated := $(pwd)/gui/macos/Flutter/GeneratedPluginRegistrant%swift
+generated := $(pwd/gui)/macos/Flutter/GeneratedPluginRegistrant%swift
 
 framework := FlutterMacOS
 include $(pwd)/target-apl.mk
