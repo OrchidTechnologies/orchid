@@ -29,7 +29,7 @@
 
 namespace orc {
 
-DWORD getTunIface() {
+DWORD getTunIndex() {
     DWORD dwSize = sizeof(IP_ADAPTER_ADDRESSES) + 1024;
     auto addresses = std::make_unique<uint8_t[]>(dwSize);
     auto pAddresses = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(addresses.get());
@@ -95,7 +95,7 @@ std::pair<DWORD, DWORD> default_gateway_outside_tun(u_long dest)
         break;
     }
 
-    DWORD tunIndex = getTunIface();
+    DWORD tunIndex = getTunIndex();
     DWORD prefix = 0;
     DWORD index = -1;
     DWORD metric = ULONG_MAX;

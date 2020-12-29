@@ -23,6 +23,8 @@
 #ifndef ORCHID_PROTECT_HPP
 #define ORCHID_PROTECT_HPP
 
+#include <string>
+
 #ifdef _WIN32
 #include <winsock2.h>
 typedef int socklen_t;
@@ -32,6 +34,9 @@ typedef int SOCKET;
 #endif
 
 namespace orc {
+
+void setTunIface(const std::string &iface);
+std::string getTunIface();
 
 int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t)
 #ifdef _WIN32

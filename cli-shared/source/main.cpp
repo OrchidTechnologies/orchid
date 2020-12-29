@@ -33,6 +33,7 @@
 #include "error.hpp"
 #include "log.hpp"
 #include "port.hpp"
+#include "protect.hpp"
 #include "transport.hpp"
 #include "tunnel.hpp"
 
@@ -71,6 +72,7 @@ int Main(int argc, const char *const argv[]) {
     const auto capture(Break<BufferSink<Capture>>(local));
 
     Tunnel(*capture, "", [&](const std::string &device, const std::string &argument) {
+        setTunIface(device);
 #ifdef _WIN32
         orc_assert(system(("netsh interface ip set address \"" + device + "\" static " + local.String() + " 255.255.255.0").c_str()) == 0);
         orc_assert(system(("netsh interface ip set subinterface \"" + device + "\" mtu=1100").c_str()) == 0);
