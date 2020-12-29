@@ -62,6 +62,10 @@ source += $(wildcard source/*.cpp)
 
 cflags += -DORC_FIBER
 
+ifeq ($(target),lnx)
+lflags += -static
+endif
+
 include env/output.mk
 
 $(output)/%/orchidcd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))

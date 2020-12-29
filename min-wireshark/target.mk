@@ -65,8 +65,14 @@ wireshark := $(filter-out \
 cflags/$(pwd/wireshark)/ += -DHAVE_ALLOCA_H
 cflags/$(pwd/wireshark)/ += -DHAVE_ARPA_INET_H
 cflags/$(pwd/wireshark)/ += -DHAVE_GRP_H
-cflags/$(pwd/wireshark)/ += -DHAVE_MKSTEMPS
 cflags/$(pwd/wireshark)/ += -DHAVE_PWD_H
+
+cflags/$(pwd/wireshark)/ += -DHAVE_MKSTEMPS
+cflags/$(pwd/wireshark)/ += -DHAVE_STRPTIME
+
+wireshark := $(filter-out \
+    %/strptime.c \
+,$(wireshark))
 
 cflags/$(pwd/wireshark)/epan/addr_resolv.c += -include netdb.h
 endif

@@ -19,6 +19,7 @@ rpm kernel-headers-2.6.32-71
 rpm glibc-2.12-1.7
 rpm glibc-headers-2.12-1.7
 rpm glibc-devel-2.12-1.7
+rpm glibc-static-2.12-1.7
 rpm libgcc-4.4.4-13
 rpm gcc-4.4.4-13
 rpm libstdc++-devel-4.4.4-13
