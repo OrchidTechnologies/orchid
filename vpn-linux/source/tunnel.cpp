@@ -28,7 +28,7 @@
 
 namespace orc {
 
-void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &, const std::string &)> &code) {
+void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code) {
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     auto &sync(sunk.Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
     auto file(sync->native_handle());
@@ -38,7 +38,7 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
     strncpy(request.ifr_name, device.c_str(), IFNAMSIZ);
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     orc_syscall(ioctl(file, TUNSETIFF, &request));
-    code(request.ifr_name, "dev");
+    code(request.ifr_name);
 
     sync.Open();
 }

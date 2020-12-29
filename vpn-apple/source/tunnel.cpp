@@ -34,7 +34,7 @@
 
 namespace orc {
 
-void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &, const std::string &)> &code) {
+void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code) {
     auto &family(sunk.Wire<BufferSink<Family>>());
     auto &sync(family.Wire<SyncConnection<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
     auto file(sync->native_handle());
@@ -62,7 +62,7 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
         while (orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)), EBUSY) != 0);
     }
 
-    code("utun" + std::to_string(address.sc_unit - 1), "-interface");
+    code("utun" + std::to_string(address.sc_unit - 1));
     sync.Open();
 }
 

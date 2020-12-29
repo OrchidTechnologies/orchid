@@ -96,7 +96,7 @@ std::string guid_to_name(const char *guid)
     return nullptr;
 }
 
-void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &, const std::string &)> &code) {
+void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code) {
 
     std::string actual_name;
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
@@ -176,7 +176,7 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
             Log() << "WARNING: The TAP-Windows driver rejected a TAP_WIN_IOCTL_SET_MEDIA_STATUS DeviceIoControl call." << std::endl;
         }
 
-        in_addr_t local = htonl(Host_);
+        in_addr_t local = htonl(Host_.operator uint32_t());
         in_addr_t remote_netmask = inet_addr("255.255.255.0");
         in_addr_t ep[] {local, local & remote_netmask, remote_netmask};
 
@@ -194,7 +194,7 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
     // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     auto &sync(sunk.Wire<SyncFile<asio::windows::stream_handle>>(Context(), h));
 
-    code(actual_name, "dev");
+    code("\"" + actual_name + "\"");
 
     sync.Open();
 }

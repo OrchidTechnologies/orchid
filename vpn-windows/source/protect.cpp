@@ -62,7 +62,7 @@ DWORD getTunIface() {
             continue;
         }
         sockaddr_in *sin = reinterpret_cast<sockaddr_in*>(curAddress->FirstUnicastAddress->Address.lpSockaddr);
-        if (sin->sin_addr.s_addr == htonl(Host_)) {
+        if (sin->sin_addr.s_addr == htonl(Host_.operator uint32_t())) {
             return curAddress->IfIndex;
         }
     }

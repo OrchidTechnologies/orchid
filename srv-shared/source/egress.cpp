@@ -131,7 +131,7 @@ task<void> Egress::Translator::Send(const Buffer &data) {
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
             const Three source(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(tcp.source));
             const auto translated(Translate(source));
-            ForgeIP4(span, &openvpn::IPv4Header::saddr, translated.Host());
+            ForgeIP4(span, &openvpn::IPv4Header::saddr, translated.Host().operator uint32_t());
             Forge(tcp, &openvpn::TCPHeader::source, translated.Port());
             co_return co_await egress_->Send(beam);
         } break;
@@ -140,7 +140,7 @@ task<void> Egress::Translator::Send(const Buffer &data) {
             auto &udp(span.cast<openvpn::UDPHeader>(length));
             const Three source(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
             const auto translated(Translate(source));
-            ForgeIP4(span, &openvpn::IPv4Header::saddr, translated.Host());
+            ForgeIP4(span, &openvpn::IPv4Header::saddr, translated.Host().operator uint32_t());
             Forge(udp, &openvpn::UDPHeader::source, translated.Port());
             co_return co_await egress_->Send(beam);
         } break;
@@ -149,7 +149,7 @@ task<void> Egress::Translator::Send(const Buffer &data) {
             auto &icmp(span.cast<openvpn::ICMPv4>());
             const Three source(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(icmp.id));
             const auto translated(Translate(source));
-            ForgeIP4(span, &openvpn::IPv4Header::saddr, translated.Host());
+            ForgeIP4(span, &openvpn::IPv4Header::saddr, translated.Host().operator uint32_t());
             Forge(icmp, &openvpn::ICMPv4::id, translated.Port());
             co_return co_await egress_->Send(beam);
         } break;
@@ -167,7 +167,7 @@ void Egress::Land(const Buffer &data) {
             auto &tcp(span.cast<openvpn::TCPHeader>(length));
             const Three destination(openvpn::IPCommon::TCP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(tcp.dest));
             if (const auto translation = Find(destination)) {
-                ForgeIP4(span, &openvpn::IPv4Header::daddr, translation->translated_.Host());
+                ForgeIP4(span, &openvpn::IPv4Header::daddr, translation->translated_.Host().operator uint32_t());
                 Forge(tcp, &openvpn::TCPHeader::dest, translation->translated_.Port());
                 return translation->translator_.Land(beam);
             }
@@ -177,7 +177,7 @@ void Egress::Land(const Buffer &data) {
             auto &udp(span.cast<openvpn::UDPHeader>(length));
             const Three destination(openvpn::IPCommon::UDP, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
             if (const auto translation = Find(destination)) {
-                ForgeIP4(span, &openvpn::IPv4Header::daddr, translation->translated_.Host());
+                ForgeIP4(span, &openvpn::IPv4Header::daddr, translation->translated_.Host().operator uint32_t());
                 Forge(udp, &openvpn::UDPHeader::dest, translation->translated_.Port());
                 return translation->translator_.Land(beam);
             }
@@ -187,7 +187,7 @@ void Egress::Land(const Buffer &data) {
             auto &icmp(span.cast<openvpn::ICMPv4>());
             const Three destination(openvpn::IPCommon::ICMPv4, boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(icmp.id));
             if (const auto translation = Find(destination)) {
-                ForgeIP4(span, &openvpn::IPv4Header::daddr, translation->translated_.Host());
+                ForgeIP4(span, &openvpn::IPv4Header::daddr, translation->translated_.Host().operator uint32_t());
                 Forge(icmp, &openvpn::ICMPv4::id, translation->translated_.Port());
                 return translation->translator_.Land(beam);
             }

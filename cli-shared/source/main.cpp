@@ -31,6 +31,7 @@
 #include "baton.hpp"
 #include "capture.hpp"
 #include "error.hpp"
+#include "execute.hpp"
 #include "log.hpp"
 #include "port.hpp"
 #include "transport.hpp"
@@ -68,34 +69,43 @@ int Main(int argc, const char *const argv[]) {
 
 
     const auto local(Host_);
+    const Host network(local.operator uint32_t() & ~0xff);
+    const Host gateway(network.operator uint32_t() | 0x01);
+
     const auto capture(Break<BufferSink<Capture>>(local));
 
-    Tunnel(*capture, "", [&](const std::string &device, const std::string &argument) {
+    Tunnel(*capture, "", [&](const std::string &device) {
+        static const unsigned mtu(1100);
+
 #ifdef _WIN32
-        orc_assert(system(("netsh interface ip set address \"" + device + "\" static " + local.String() + " 255.255.255.0").c_str()) == 0);
-        orc_assert(system(("netsh interface ip set subinterface \"" + device + "\" mtu=1100").c_str()) == 0);
-        orc_assert(system(("netsh interface ipv4 set interface \"" + device + "\" metric=0").c_str()) == 0);
+        Execute("netsh", "interface", "ip", "set", "address", device, "static", local, "255.255.255.0");
+        Execute("netsh", "interface", "ip", "set", "subinterface", device, "mtu=" + std::to_string(mtu));
+        Execute("netsh", "interface", "ipv4", "set", "interface", device, "metric=0");
 
-        if (args.count("capture") != 0)
-            orc_assert(system(("netsh interface ipv4 add route " + args["capture"].as<std::string>() + " " + argument + "/32 \"" + device + "\"").c_str()) == 0);
-        else
-            orc_assert(system(("netsh interface ipv4 add route 0.0.0.0/0 \"" + device + "\" 10.7.0.4 metric=0").c_str()) == 0);
+        const auto destination(args.count("capture") != 0 ? Host(args["capture"].as<std::string>())/32 : "0.0.0.0/0");
+        Execute("netsh", "interface", "ipv4", "add", "route", destination, device, gateway, "metric=0");
+
+        //Execute("netsh", "interface", "ipv4", "add", "route", network, device, "metric=0");
 #else
-        orc_assert(system(("ifconfig " + device + " inet " + local.String() + " " + local.String() + " mtu 1100 up").c_str()) == 0);
+        Execute("ifconfig", device, "inet", local/24,
+#ifndef __APPLE__
+            "dstaddr",
+#endif
+        local, "mtu", std::to_string(mtu), "up");
+
+#ifdef __APPLE__
+        const auto argument("-interface");
+#else
+        const auto argument("dev");
+#endif
 
         if (args.count("capture") != 0)
-            orc_assert(system(("route -n add " + args["capture"].as<std::string>() + " " + argument + " " + device).c_str()) == 0);
-        else
-            // XXX: having a 0.0.0.0/* route causes connect() to fail with "Network is unreachable" on macOS
-            //orc_assert(system(("route -n add -net 0.0.0.0/1 " + argument + " " + device).c_str()) == 0);
-            //orc_assert(system(("route -n add -net 128.0.0.0/1 " + argument + " " + device).c_str()) == 0);
-        for (unsigned i(0); i != 8; ++i) {
-            std::ostringstream command;
-            command << "route -n add -net " << std::to_string(1 << i) << ".0.0.0/" << std::to_string(8 - i) << " " << argument << " " << device;
-            orc_assert_(system(command.str().c_str()) == 0, "system(" << command.str() << ")");
-        }
+            Execute("route", "-n", "add", Host(args["capture"].as<std::string>()), argument, device);
+        else for (unsigned i(0); i != 8; ++i)
+            // having a 0.0.0.0/* route causes connect() to fail with "Network is unreachable" on macOS
+            Execute("route", "-n", "add" , "-net", std::to_string(1 << i) + ".0.0.0/" + std::to_string(8 - i), argument, device);
 
-        orc_assert(system(("route -n add 10.7.0.4 " + argument + " " + device).c_str()) == 0);
+        Execute("route", "-n", "add", "-net", network/24, argument, device);
 #endif
 
         capture->Start(args["config"].as<std::string>());

@@ -322,8 +322,8 @@ int Main(int argc, const char *const argv[]) {
             orc_assert_(false, "cannot find interface " << tunnel);
         }());
 
-        auto egress(Break<BufferSink<Egress>>(local.Host()));
-        Tunnel(*egress, tunnel, [&](const std::string &, const std::string &) {});
+        auto egress(Break<BufferSink<Egress>>(local.Host().operator uint32_t()));
+        Tunnel(*egress, tunnel, [&](const std::string &) {});
         return egress;
 #endif
     } else if (args.count("openvpn") != 0) {

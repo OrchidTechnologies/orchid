@@ -114,7 +114,7 @@ class Host {
         return memcmp(data_.data(), static_cast<const void *>((const uint8_t[]) {0,0,0,0, 0,0,0,0, 0,0,0xff,0xff}), 12) == 0;
     }
 
-    operator uint32_t() const {
+    explicit operator uint32_t() const {
         orc_assert(v4());
         return data_[12] << 24 | data_[13] << 16 | data_[14] << 8 | data_[15];
     }
@@ -151,8 +151,13 @@ class Host {
             return rtc::IPAddress(operator in6_addr());
     }
 
-    std::string String() const {
+    explicit operator std::string() const {
         return operator asio::ip::address().to_string();
+    }
+
+    // XXX: this should return Masked
+    std::string operator /(unsigned mask) const {
+        return operator std::string() + "/" + std::to_string(mask);
     }
 
     bool operator <(const Host &rhs) const {
@@ -169,7 +174,7 @@ class Host {
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Host &host) {
-    return out << host.String();
+    return out << host.operator std::string();
 }
 
 class Socket {

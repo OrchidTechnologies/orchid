@@ -30,7 +30,7 @@
 
 namespace orc {
 
-void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &, const std::string &)> &code);
+void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code);
 
 }
 

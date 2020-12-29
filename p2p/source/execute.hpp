@@ -31,10 +31,11 @@ namespace orc {
 // XXX: this is an unreasonable implementation to stub the API
 template <typename... Args_>
 void Execute(const std::string &path, const Args_ &...args) {
-    std::ostringstream command;
-    command << path;
-    (void(command << ' ' << args), ...);
-    orc_assert(system(command.str().c_str()) == 0);
+    std::ostringstream builder;
+    builder << path;
+    (void(builder << ' ' << args), ...);
+    const auto command(builder.str());
+    orc_assert_(system(command.c_str()) == 0, "system(" << command << ") != 0");
 }
 
 }

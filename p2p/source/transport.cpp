@@ -405,7 +405,7 @@ class Middle :
 
     bool tun_builder_add_address(const std::string &address, int prefix, const std::string &gateway, bool ipv6, bool net30) noexcept override {
         orc_insist(!ipv6);
-        remote_ = Host(address);
+        remote_ = Host(address).operator uint32_t();
         return true;
     }
 

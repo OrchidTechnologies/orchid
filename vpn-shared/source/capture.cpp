@@ -197,8 +197,8 @@ class Nameless :
         const auto &destination(five.Target());
         // XXX: IPv6
         const auto row_id(insert_(five.Protocol(),
-            source.Host(), source.Port(),
-            destination.Host(), destination.Port()
+            source.Host().operator uint32_t(), source.Port(),
+            destination.Host().operator uint32_t(), destination.Port()
         ));
         flow_to_row_.emplace(five, row_id);
 
@@ -704,13 +704,13 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         co_await client.Open(provider, origin);
 
     } else if (protocol == "openvpn") {
-        co_await Connect(sunk, origin, local,
+        co_await Connect(sunk, origin, local.operator uint32_t(),
             heap.eval<std::string>(hops + ".ovpnfile"),
             heap.eval<std::string>(hops + ".username"),
             heap.eval<std::string>(hops + ".password")
         );
     } else if (protocol == "wireguard") {
-        co_await Guard(sunk, origin, local, heap.eval<std::string>(hops + ".config"));
+        co_await Guard(sunk, origin, local.operator uint32_t(), heap.eval<std::string>(hops + ".config"));
     } else orc_assert_(false, "unknown hop protocol: " << protocol);
 }, "building hop #" << hop); }
 
