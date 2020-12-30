@@ -146,16 +146,16 @@ class Task {
     }
 
     auto operator co_await() const && noexcept {
-        typedef class : public Awaitable {
+        class Awaitable_ : public Awaitable {
           public:
             using Awaitable::Awaitable;
 
             auto await_resume() const {
 		return *this->code_.promise();
             }
-        } Awaitable;
+        };
 
-        return Awaitable(code_);
+        return Awaitable_(code_);
     }
 
     void Set(Fiber *fiber) {
