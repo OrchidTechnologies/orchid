@@ -15,20 +15,22 @@ std::optional<std::string> default_gateway_outside_tun(const std::string &tun)
     char buf[1024];
     FILE *f = popen("route -n", "r");
     int lines = 0;
-    while (!feof(f) && fgets(buf, sizeof(buf), f) != NULL) {
+    while (feof(f) == 0 && fgets(buf, sizeof(buf), f) != nullptr) {
         if (lines >= 2) {
             std::istringstream ss(buf);
             // Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
             // 0.0.0.0         172.17.0.1      0.0.0.0         UG    0      0        0 eth0
-            std::string dst, gateway, genmask, flags, metric, ref, use, iface;
-            ss >> dst;
-            ss >> gateway;
-            ss >> genmask;
-            ss >> flags;
-            ss >> metric;
-            ss >> ref;
-            ss >> use;
-            ss >> iface;
+            #define ORC_READ(field) \
+                std::string field; \
+                ss >> field;
+            ORC_READ(dst)
+            ORC_READ(gateway)
+            ORC_READ(genmask)
+            ORC_READ(flags)
+            ORC_READ(metric)
+            ORC_READ(ref)
+            ORC_READ(use)
+            ORC_READ(iface)
             // TODO: we should compare IP with destintion/mask for non-default routes
             if (iface != tun && dst == "0.0.0.0") {
                 pclose(f);
