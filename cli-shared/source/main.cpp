@@ -34,6 +34,7 @@
 #include "execute.hpp"
 #include "log.hpp"
 #include "port.hpp"
+#include "protect.hpp"
 #include "transport.hpp"
 #include "tunnel.hpp"
 
@@ -76,6 +77,8 @@ int Main(int argc, const char *const argv[]) {
 
     Tunnel(*capture, "", [&](const std::string &device) {
         static const unsigned mtu(1100);
+
+        setTunIface(device);
 
 #ifdef _WIN32
         Execute("netsh", "interface", "ip", "set", "address", device, "static", local, "255.255.255.0");
