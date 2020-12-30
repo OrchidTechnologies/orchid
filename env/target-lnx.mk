@@ -14,19 +14,29 @@ dll := so
 lib := a
 exe := 
 
+ifeq ($(libc),)
+libc := gnu
+endif
+
 meson := linux
 
 archs += x86_64
 openssl/x86_64 := linux-x86_64
-host/x86_64 := x86_64-linux-gnu
-triple/x86_64 := x86_64-unknown-linux-gnu
+host/x86_64 := x86_64-linux-$(libc)
+triple/x86_64 := x86_64-unknown-linux-$(libc)
 meson/x86_64 := x86_64
 
 archs += aarch64
 openssl/aarch64 := linux-aarch64
-host/aarch64 := aarch64-linux-gnu
-triple/aarch64 := aarch64-unknown-linux-gnu
+host/aarch64 := aarch64-linux-$(libc)
+triple/aarch64 := aarch64-unknown-linux-$(libc)
 meson/aarch64 := aarch64
+
+archs += mips
+openssl/mips := linux-mips32
+host/mips := mips-linux-$(libc)
+triple/mips := mips-unknown-linux-$(libc)
+meson/mips := mips
 
 include $(pwd)/target-elf.mk
 lflags += -Wl,--hash-style=gnu
@@ -64,9 +74,9 @@ lflags += -lrt
 define _
 more/$(1) := 
 more/$(1) += -B$(llvm)/$(1)-linux-android/bin
-more/$(1) += -target $(1)-pc-linux-gnu
-ranlib/$(1) := $(llvm)/bin/$(1)-linux-android-ranlib
-ar/$(1) := $(llvm)/bin/$(1)-linux-android-ar
+more/$(1) += -target $(1)-linux-$(libc)
+ranlib/$(1) := $(llvm)/bin/llvm-ranlib
+ar/$(1) := $(llvm)/bin/llvm-ar
 strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
 windres/$(1) := false
 # XXX: this check is horrible and doesn't _usually_ work
