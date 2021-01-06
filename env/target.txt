@@ -1,0 +1,2 @@
+https://mesonbuild.com/Reference-tables.html
+https://doc.rust-lang.org/nightly/rustc/platform-support.html
