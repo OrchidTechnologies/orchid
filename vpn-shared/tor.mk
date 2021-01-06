@@ -21,6 +21,10 @@ p_tor :=
 l_tor := 
 deps := 
 
+# XXX: crypto_openssl_mgt.h needs to #include opensslconf.h
+# (I should file this upstream, but Tor closed their Trac?)
+p_tor += -DOPENSSL_NO_ENGINE
+
 p_tor += -I@/$(pwd)/libevent/include
 p_tor += -I$(CURDIR)/$(pwd)/libevent/include
 deps += $(pwd)/libevent/include/event2/event-config.h

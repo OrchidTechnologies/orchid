@@ -136,8 +136,6 @@ source += $(pwd)/congestion.cc
 cflags += -I$(pwd)/usrsctp
 cflags += -I$(pwd)/usrsctp/usrsctplib
 cflags += -I$(pwd)/sctp-idata/src
-# XXX: tracking this __NR_getrandom issue in https://github.com/sctplab/usrsctp/pull/533
-chacks/$(pwd)/usrsctp/usrsctplib/user_environment.c += s/defined(__EMSCRIPTEN__)/1/g
 
 
 webrtc := $(filter-out %_noop.cc,$(webrtc))
@@ -153,13 +151,14 @@ webrtc := $(filter-out $(pwd)/webrtc/rtc_base/strings/json.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/%,$(webrtc))
 source += $(pwd)/webrtc/rtc_base/system/file_wrapper.cc
 
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac_%.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/boringssl_%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_gcd.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_libevent.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac_%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_stdlib.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_win.cc,$(webrtc))
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win32%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win/%.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win32%.cc,$(webrtc))
 
 webrtc := $(filter-out %_benchmark.cc,$(webrtc))
 webrtc := $(filter-out %_dump.cc,$(webrtc))
@@ -203,7 +202,7 @@ cflags += -DHAVE_UINT64_T
 
 cflags += -DPACKAGE_STRING='""'
 # this matches the version of libmaxminddb
-cflags += -DPACKAGE_VERSION='"1.4.3"'
+cflags += -DPACKAGE_VERSION='"1.5.0"'
 
 cflags += -Wno-deprecated-declarations
 cflags += -Wno-implicit-int-float-conversion

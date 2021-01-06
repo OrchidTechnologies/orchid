@@ -248,8 +248,6 @@ $(each)
 $(call include,glib/target.mk)
 
 # c-ares {{{
-p_c-ares := -I$(CURDIR)/$(pwd)/c-ares/src/lib
-
 $(output)/%/$(pwd)/c-ares/include/ares_build.h: $(output)/%/$(pwd)/c-ares/Makefile
 	touch $@
 	$(MAKE) -C $(dir $@)

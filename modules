@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+function each() {
+    sed -e $'/^\tpath = /!d;s///' .gitmodules | sort
+}
+
+each | while read -r sub; do (
+    cd "${sub}"
+    git fetch -v
+) done
+
+declare -A head
+
+function tag() {
+    head[$1]=$(cd "$1" && git tag -l | grep -P '^'"$2"'$' | tail -n 1)
+    echo "${head[$1]}"
+}
+
+head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
+head[app-shared/flutter]=1.25.0-8.1.pre
+tag p2p/boost 'boost-[0-9.]*'
+tag min-webrtc/abseil-cpp '[0-9].*'
+tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'
+head[min-krypton/vpn-libraries]=origin/main
+
+each | while read -r sub; do (
+    cd "${sub}"
+    echo
+    echo "${sub}"
+    git log --color --graph --format=oneline HEAD...${head[${sub}]-origin/master} || echo $sub
+) done | less -R
+
+# url is stuck due to https://forums.developer.apple.com/thread/120977
