@@ -230,6 +230,21 @@ jobs:
         path: app-linux/out-lnx/package
 
 
+  build-lnx-tst:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Linux dashboard
+      run: debug=crossndk make -j3 -C tst-network
+
+
   build-lnx-cli:
     runs-on: ubuntu-latest
 

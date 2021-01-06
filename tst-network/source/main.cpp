@@ -117,7 +117,7 @@ task<std::string> Version(Origin &origin, const Locator &url) { try {
 task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
     (co_await orc_optic)->Name("OpenVPN");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        co_await Connect(remote, origin, remote.Host(), std::move(ovpn), "", "");
+        co_await Connect(remote, origin, remote.Host().operator uint32_t(), std::move(ovpn), "", "");
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
@@ -128,7 +128,7 @@ task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
 task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
     (co_await orc_optic)->Name("WireGuard");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        co_await Guard(remote, origin, remote.Host(), std::move(config));
+        co_await Guard(remote, origin, remote.Host().operator uint32_t(), std::move(config));
         remote.Open();
         const auto host(co_await Find(remote));
         const auto [speed, size] = co_await Measure(remote);
