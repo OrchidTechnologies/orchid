@@ -52,10 +52,16 @@ def main(event, context):
 
     receipt          = body.get('receipt', '')
     target_bundle_id = body.get('target_bundle_id', '')
+    account_id       = body.get('account_id', '')
+    # todo: add optional existing account
 
     msg, receipt_hash, total_usd = handle_receipt_apple(receipt, target_bundle_id, Stage)
 
+    if ((account_id is None) or (account_id == '')):
+        account_id = receipt_hash
+
     if (msg == "success"):
-        return response_success(receipt_hash, total_usd)
+        credit_account_balance(account_id, total_usd)
+        return response_success(account_id, total_usd)
     else:
         return response_error(msg)
