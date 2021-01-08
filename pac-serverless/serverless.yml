@@ -76,6 +76,10 @@ provider:
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
     RECYCLE_TABLE_NAME: PAC-Recycle-${self:provider.stage}
     RESULT_TABLE_NAME: PAC-Result-${self:provider.stage}
+    BALANCES_TABLE_NAME: PAC-BalancesT-${self:provider.stage}
+    TXNS_TABLE_NAME: PAC-TXNsT-${self:provider.stage}
+    EXECUTORS_TABLE_NAME: PAC-ExecutorsT-${self:provider.stage}
+    TARGETS_TABLE_NAME: PAC-TargetsT-${self:provider.stage}
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
     NET_ORCHID_PACTIER1_POOL_SIZE: ${self:custom.myEnvironment.NET_ORCHID_PACTIER1_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
@@ -265,8 +269,6 @@ resources:
         AttributeDefinitions:
           - AttributeName: receiptHash
             AttributeType: S
-          - AttributeName: balance
-            AttributeType: "N"
         KeySchema:
           - AttributeName: receiptHash
             KeyType: HASH
@@ -279,8 +281,6 @@ resources:
         AttributeDefinitions:
           - AttributeName: txnhash
             AttributeType: S
-          - AttributeName: txn
-            AttributeType: S
         KeySchema:
           - AttributeName: txnhash
             KeyType: HASH
@@ -292,8 +292,6 @@ resources:
         TableName: ${self:provider.environment.EXECUTORS_TABLE_NAME}
         AttributeDefinitions:
           - AttributeName: pubkey
-            AttributeType: S
-          - AttributeName: privkey
             AttributeType: S
         KeySchema:
           - AttributeName: pubkey

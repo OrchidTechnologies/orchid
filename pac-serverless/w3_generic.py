@@ -37,14 +37,14 @@ if (LocalTest == False):
     def get_account_balance(receiptHash):
         item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
         balance = 0
-        if (item != None):
+        if (item is not None):
             balance = item['balance']
         return balance
 
     def credit_account_balance(receiptHash, cost_usd):
         item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
         balance = 0
-        if (item != None):
+        if (item is not None):
             balance = item['balance'] = item['balance'] + cost_usd
             dynamodb_write1('BALANCES_TABLE_NAME', item)
         return balance
@@ -52,7 +52,7 @@ if (LocalTest == False):
     def debit_account_balance(receiptHash, cost_usd):
         item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
         balance = 0
-        if (item != None):
+        if (item is not None):
             balance = item['balance'] = item['balance'] - cost_usd
             dynamodb_write1('BALANCES_TABLE_NAME', item)
         return balance
@@ -216,10 +216,11 @@ def sendRaw(W3WSock,txn,receiptHash):
 
     txnhash,cost_usd = sendRaw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd)
 
-    if (txnhash != None):
+    if (txnhash is not None):
         save_transaction(txnhash, txn)
         debit_account_balance(receiptHash, cost_usd)
 
+    # todo: add from and nonce?
     return txnhash
 
 
@@ -238,7 +239,7 @@ def has_transaction_failed(W3WSock,txnhash,txn):
     txn_nonce  = txn['nonce']
     cur_nonce  = get_nonce_(w3,pubkey)
 
-    result = (success == False) or ((txn_receipt == None) and (cur_nonce > txn_nonce))
+    result = (success == False) or ((txn_receipt is None) and (cur_nonce > txn_nonce))
 
     return result
 
@@ -246,6 +247,7 @@ def has_transaction_failed(W3WSock,txnhash,txn):
 
 def refund_failed_txn(W3WSock,txnhash,receiptHash):
 
+    # store W3WSock with transaction
     txn = load_transaction(txnhash)
 
     if (has_transaction_failed(W3WSock,txn) == False):
