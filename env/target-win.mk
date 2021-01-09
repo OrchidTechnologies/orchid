@@ -72,7 +72,7 @@ lflags += -nostdlib++ -lsupc++
 define _
 ranlib/$(1) := $(1)-w64-mingw32-ranlib
 ar/$(1) := $(1)-w64-mingw32-ar
-strip/$(1) := $(1)-w64-mingw32-ar
+strip/$(1) := $(1)-w64-mingw32-strip
 windres/$(1) := $(1)-w64-mingw32-windres
 export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := true
 # XXX: this should be $(shell realpath $(shell which $(1)-w64-mingw32-gcc))
