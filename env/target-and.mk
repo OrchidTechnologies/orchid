@@ -42,6 +42,10 @@ host/x86_64 := x86_64-linux-android
 triple/x86_64 := x86_64-linux-android
 meson/x86_64 := x86_64
 
+ifeq ($(machine),)
+machine := arm64-v8a
+endif
+
 include $(pwd)/target-elf.mk
 
 aver := 21
@@ -90,5 +94,3 @@ $(each)
 endif
 
 lflags += -lm -llog
-
-default := arm64-v8a

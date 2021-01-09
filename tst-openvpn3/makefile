@@ -25,14 +25,14 @@ version := 0.9
 args := ../PureVPN.ovpn -x -u "$(username)" -p "$(password)"
 
 .PHONY: all
-all: $(output)/$(default)/orchid$(exe)
+all: $(output)/$(machine)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/orchid$(exe)
+test: $(output)/$(machine)/orchid$(exe)
 	sudo $< $(args)
 
 .PHONY: debug
-debug: $(output)/$(default)/orchid$(exe)
+debug: $(output)/$(machine)/orchid$(exe)
 	sudo lldb -o 'run $(args)' $<
 
 source += $(wildcard vpn/p2p/lz4/lib/*.c)

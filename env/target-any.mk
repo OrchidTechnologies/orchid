@@ -90,6 +90,10 @@ endif
 objc := false
 include $(pwd)/target-$(target).mk
 
+ifeq ($(machine),)
+machine := $(default)
+endif
+
 cflags += -I@/usr/include
 
 define depend
@@ -103,13 +107,13 @@ $(eval folder := $(subst $(space),/,$(wordlist 2,$(words $(temp)),$(temp))))
 endef
 specific = $(eval $(value preamble))
 
-cflags += -I$(output)/extra
+cflags += -I@/extra
 
 .PHONY: force
-$(output)/extra/revision.hpp: force
+$(output)/%/extra/revision.hpp: force
 	@mkdir -p $(dir $@)
 ifeq ($(filter nodiff,$(debug)),)
-	@env/revision.sh $(if $(filter nolist,$(debug)),--) $(cc) $(more/$(default)) $(wflags) | xxd -i >$@.new
+	@env/revision.sh $(if $(filter nolist,$(debug)),--) $(cc) $(more/$*) $(wflags) | xxd -i >$@.new
 else
 	@echo >$@.new
 endif

@@ -38,6 +38,10 @@ host/mips := mips-linux-$(libc)
 triple/mips := mips-unknown-linux-$(libc)
 meson/mips := mips
 
+ifeq ($(machine),)
+machine := $(shell uname -m)
+endif
+
 include $(pwd)/target-elf.mk
 lflags += -Wl,--hash-style=gnu
 
@@ -54,7 +58,7 @@ $(each)
 cc := clang$(suffix)
 cxx := clang++$(suffix)
 
-cxx += -stdlib=libc++
+include $(pwd)/target-cxx.mk
 
 tidy := $(shell which clang-tidy 2>/dev/null)
 ifeq ($(tidy)$(filter notidy,$(debug)),)
@@ -64,7 +68,6 @@ endif
 else
 
 more := 
-more += --sysroot $(CURDIR)/$(output)/sysroot
 more += --gcc-toolchain=$(CURDIR)/$(output)/sysroot/usr
 include $(pwd)/target-ndk.mk
 include $(pwd)/target-cxx.mk
@@ -73,6 +76,11 @@ lflags += -lrt
 
 define _
 more/$(1) := 
+ifeq ($(1),x86_64)
+more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot
+else
+more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot/usr/$(host/$(1))
+endif
 more/$(1) += -B$(llvm)/$(1)-linux-android/bin
 more/$(1) += -target $(1)-linux-$(libc)
 ranlib/$(1) := $(llvm)/bin/llvm-ranlib
@@ -90,7 +98,11 @@ endef
 $(each)
 
 ifeq ($(distro),)
+ifeq ($(machine),x86_64)
 distro := centos6
+else
+distro := ubuntu bionic
+endif
 endif
 
 $(output)/sysroot: env/sys-$(word 1,$(distro)).sh env/setup-sys.sh
@@ -106,5 +118,3 @@ endif
 
 lflags += -ldl
 lflags += -pthread
-
-default := x86_64

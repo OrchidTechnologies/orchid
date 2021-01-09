@@ -15,12 +15,15 @@ host/x86_64 := x86_64-apple-darwin
 triple/x86_64 := x86_64-apple-ios
 meson/x86_64 := x86_64
 
+ifeq ($(machine),)
+machine := x86_64
+endif
+
 sdk := iphonesimulator
 runtime := ios
 more := -mios-simulator-version-min=11.0
 include $(pwd)/target-apl.mk
 
-default := x86_64
 support := iPhoneSimulator
 xcframework := ios-x86_64-simulator
 

@@ -63,7 +63,7 @@ $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%pl
 	    -dTargetFile="lib/main.dart" \
 	    -dSdkRoot="$(isysroot)" \
 	    -dBuildMode="$(mode)" \
-	    -dIosArchs="$(default)" \
+	    -dIosArchs="$(machine)" \
 	    -dTreeShakeIcons="false" \
 	    -dTrackWidgetCreation="" \
 	    -dDartObfuscation="false" \
@@ -105,7 +105,7 @@ $(pwd/gui)/$(assemble)/Pods/Manifest.lock: $(pwd/gui)/$(assemble)/Podfile $(pwd/
 
 $(output)/XCBuildData/build.db: shared/empty.plist $(pwd/gui)/$(assemble)/Pods/Manifest.lock
 	@mkdir -p "$(bundle)$(contents)"
-	cd $(pwd/gui) && xcodebuild -project $(assemble)/Pods/Pods.xcodeproj -alltargets -arch $(default) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
+	cd $(pwd/gui) && xcodebuild -project $(assemble)/Pods/Pods.xcodeproj -alltargets -arch $(machine) -sdk $(sdk) SYMROOT=$(CURDIR)/$(output)
 	shopt -s nullglob; for framework in $(output)/Release/*/*.framework; do \
 	    $(rsync) "$${framework}" "$(bundle)$(contents)/Frameworks"; \
 	    framework="$(bundle)$(contents)/Frameworks/$${framework##*/}"; \

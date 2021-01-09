@@ -25,18 +25,18 @@ include env/target.mk
 version := 0.9
 
 .PHONY: all
-all: $(output)/$(default)/orchidcd$(exe)
+all: $(output)/$(machine)/orchidcd$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/orchidcd$(exe)
+test: $(output)/$(machine)/orchidcd$(exe)
 	sudo $< $(args)
 
 .PHONY: leak
-leak: $(output)/$(default)/orchidcd$(exe)
+leak: $(output)/$(machine)/orchidcd$(exe)
 	sudo bash -c 'MallocStackLogging=1 $< $(args)'
 
 .PHONY: debug
-debug: $(output)/$(default)/orchidcd$(exe)
+debug: $(output)/$(machine)/orchidcd$(exe)
 	sudo lldb -o 'b malloc_error_break' -o 'run $(args)' $<
 
 $(call include,vpn/target.mk)

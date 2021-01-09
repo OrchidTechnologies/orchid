@@ -23,14 +23,14 @@ include env/target.mk
 args := 0x264930d4c83496ebe0ef1615d6d500c1c1f0aee37160b17cf548e7f8cefb0121
 
 .PHONY: all
-all: $(output)/$(default)/ticket$(exe)
+all: $(output)/$(machine)/ticket$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/ticket$(exe)
+test: $(output)/$(machine)/ticket$(exe)
 	$< $(args)
 
 .PHONY: debug
-debug: $(output)/$(default)/ticket$(exe)
+debug: $(output)/$(machine)/ticket$(exe)
 	lldb -o 'run $(args)' $<
 
 $(call include,p2p/target.mk)

@@ -26,14 +26,14 @@ include env/target.mk
 version := 0.9
 
 .PHONY: all
-all: $(output)/$(default)/orchid$(exe)
+all: $(output)/$(machine)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/orchid$(exe)
+test: $(output)/$(machine)/orchid$(exe)
 	$< $(args)
 
 .PHONY: debug
-debug: $(output)/$(default)/orchid$(exe)
+debug: $(output)/$(machine)/orchid$(exe)
 	lldb -o 'run $(args)' $<
 
 $(call include,cro/target.mk)

@@ -245,7 +245,7 @@ jobs:
       run: debug=crossndk make -j3 -C tst-network
 
 
-  build-lnx-cli:
+  build-lnx-cli-amd64:
     runs-on: ubuntu-latest
 
     steps:
@@ -257,11 +257,30 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make Linux client
-      run: debug=crossndk make -j3 -C cli-shared
+      run: debug=crossndk make -j3 -C cli-shared machine=x86_64
     - uses: actions/upload-artifact@v1
       with:
-        name: orchidcd-lnx
+        name: orchidcd-lnx-amd64
         path: cli-shared/out-lnx/x86_64/orchidcd
+
+
+  build-lnx-cli-arm64:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Linux client
+      run: debug=crossndk make -j3 -C cli-shared machine=aarch64
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidcd-lnx-arm64
+        path: cli-shared/out-lnx/aarch64/orchidcd
 
 
   build-lnx-srv:

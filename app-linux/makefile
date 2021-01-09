@@ -54,9 +54,9 @@ lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgtk-3.so
 lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgio-2.0.so
 lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgobject-2.0.so
 
-$(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(default)/%,$(object) $(linked))
+$(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))
 	@echo [LD] $@
-	@set -o pipefail; $(cxx) $(more/$(default)) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) -Wl,-rpath,. 2>&1 | nl
+	@set -o pipefail; $(cxx) $(more/$(machine)) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) -Wl,-rpath,. 2>&1 | nl
 	@openssl sha256 -r $@
 	@ls -la $@
 signed += $(output)/package/$(name)$(exe)

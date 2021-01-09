@@ -23,10 +23,10 @@ args :=
 include env/target.mk
 
 .PHONY: all
-all: $(output)/$(default)/cj$(exe)
+all: $(output)/$(machine)/cj$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/cj$(exe)
+test: $(output)/$(machine)/cj$(exe)
 	$< $(args)
 
 source += $(wildcard source/*.cpp)

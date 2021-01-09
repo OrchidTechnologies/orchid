@@ -30,6 +30,10 @@ triple/x86_64 := x86_64-pc-windows-gnu
 meson/x86_64 := x86_64
 bits/x86_64 := 64
 
+ifeq ($(machine),)
+machine := x86_64
+endif
+
 include $(pwd)/target-gnu.mk
 
 define _
@@ -132,5 +136,3 @@ $(output)/$(1)/%.msys2:
 sysroot += $(patsubst %,$(output)/$(1)/%.msys2,$(msys2))
 endef
 $(each)
-
-default := x86_64

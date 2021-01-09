@@ -26,22 +26,22 @@ include env/target.mk
 version := 0.9
 
 .PHONY: all
-all: $(output)/$(default)/orchid$(exe)
+all: $(output)/$(machine)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/orchid$(exe)
+test: $(output)/$(machine)/orchid$(exe)
 	$< $(args)
 
 .PHONY: debug
-debug: $(output)/$(default)/orchid$(exe)
+debug: $(output)/$(machine)/orchid$(exe)
 	lldb -o 'run $(args)' $<
 
 .PHONY: record
-record: $(output)/$(default)/orchid$(exe)
+record: $(output)/$(machine)/orchid$(exe)
 	perf record --call-graph dwarf $< $(args)
 
 .PHONY: report
-report: $(output)/$(default)/orchid$(exe)
+report: $(output)/$(machine)/orchid$(exe)
 	perf report --sort=cpu
 
 $(call include,p2p/target.mk)

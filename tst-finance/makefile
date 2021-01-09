@@ -23,14 +23,14 @@ args :=
 include env/target.mk
 
 .PHONY: all
-all: $(output)/$(default)/orchid$(exe)
+all: $(output)/$(machine)/orchid$(exe)
 
 .PHONY: test
-test: $(output)/$(default)/orchid$(exe)
+test: $(output)/$(machine)/orchid$(exe)
 	$< $(args)
 
 .PHONY: debug
-debug: $(output)/$(default)/orchid$(exe)
+debug: $(output)/$(machine)/orchid$(exe)
 	lldb -o 'run $(args)' $<
 
 $(call include,p2p/target.mk)

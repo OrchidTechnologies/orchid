@@ -21,6 +21,10 @@ host/x86_64 := x86_64-apple-darwin
 triple/x86_64 := x86_64-apple-darwin
 meson/x86_64 := x86_64
 
+ifeq ($(machine),)
+machine := x86_64
+endif
+
 sdk := macosx
 runtime := osx
 more := -mmacosx-version-min=10.14
@@ -33,8 +37,6 @@ ccrs/$(1) := HOST
 endif
 endef
 $(each)
-
-default := x86_64
 
 contents := /Contents
 resources := /Resources

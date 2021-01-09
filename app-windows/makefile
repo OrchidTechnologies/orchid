@@ -33,10 +33,10 @@ $(call include,shared/target-win.mk)
 
 include env/output.mk
 
-$(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(default)/%,$(object) $(linked))
+$(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@set -o pipefail; $(cxx) $(more/$(default)) -Wl,-subsystem,windows $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 -Wl,-v | nl
+	@set -o pipefail; $(cxx) $(more/$(machine)) -Wl,-subsystem,windows $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 -Wl,-v | nl
 	@openssl sha256 -r $@
 	@ls -la $@
 signed += $(output)/package/$(name)$(exe)

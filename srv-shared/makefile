@@ -29,7 +29,7 @@ args += --chain 43114,AVAX,https://api.avax.network/ext/bc/C/rpc
 
 include env/target.mk
 
-binary := $(output)/$(default)/orchidd$(exe)
+binary := $(output)/$(machine)/orchidd$(exe)
 
 .PHONY: all
 all: $(binary)
@@ -43,7 +43,7 @@ debug: $(binary)
 	lldb -o 'b malloc_error_break' -o 'run $(args)' $<
 
 .PHONY: record
-record: $(output)/$(default)/orchidd$(exe)
+record: $(output)/$(machine)/orchidd$(exe)
 	perf record --call-graph dwarf $< $(args)
 
 .PHONY: report

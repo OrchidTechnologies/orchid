@@ -21,12 +21,15 @@ host/arm64 := aarch64-apple-darwin
 triple/arm64 := aarch64-apple-ios
 meson/arm64 := aarch64
 
+ifeq ($(machine),)
+machine := arm64
+endif
+
 sdk := iphoneos
 runtime := ios
 more := -miphoneos-version-min=11.0
 include $(pwd)/target-apl.mk
 
-default := arm64
 support := iPhoneOS
 xcframework := ios-armv7_arm64
 
