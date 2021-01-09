@@ -115,23 +115,25 @@ qflags += -Wno-nonportable-include-path
 
 cflags += -I$(pwd)/mingw
 
+mingw := git-8.0.0.6001.98dad1fe
+
 msys2 := 
-msys2 += crt-git-7.0.0.5553.e922460c-1
-msys2 += dlfcn-1.2.0-1
-msys2 += gcc-9.3.0-2
-msys2 += headers-git-7.0.0.5553.e922460c-1
-msys2 += winpthreads-git-7.0.0.5544.15da3ce2-1
+msys2 += crt-$(mingw)-1
+msys2 += dlfcn-1.2.0-2
+msys2 += gcc-10.2.0-6
+msys2 += headers-$(mingw)-1
+msys2 += winpthreads-$(mingw)-3
 
 define _
 temp := $(output)/$(1)/mingw$(bits/$(1))/mingw
 $$(temp):
 	@mkdir -p $$(dir $$@)
-	ln -s $(1)-w64-mingw32 $$@
+	ln -sf $(1)-w64-mingw32 $$@
 sysroot += $$(temp)
 
 $(output)/$(1)/%.msys2:
 	@mkdir -p $$(dir $$@)
-	curl http://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.xz | tar -C $(output)/$(1) -Jxvf-
+	curl https://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.zst | zstd -d | tar -C $(output)/$(1) -xvf-
 	@touch $$@
 sysroot += $(patsubst %,$(output)/$(1)/%.msys2,$(msys2))
 endef
