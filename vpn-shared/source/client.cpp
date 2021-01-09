@@ -20,8 +20,6 @@
 /* }}} */
 
 
-#include <boost/multiprecision/cpp_bin_float.hpp>
-
 #include <rtc_base/openssl_identity.h>
 
 #include "channel.hpp"

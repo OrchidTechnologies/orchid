@@ -34,6 +34,7 @@
 #include "link.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
+#include "peer.hpp"
 #include "shared.hpp"
 #include "task.hpp"
 

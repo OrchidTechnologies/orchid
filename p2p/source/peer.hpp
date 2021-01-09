@@ -25,6 +25,7 @@
 
 #include <api/peer_connection_interface.h>
 
+#include "configuration.hpp"
 #include "error.hpp"
 #include "event.hpp"
 #include "link.hpp"
@@ -68,11 +69,6 @@ class SetObserver :
 };
 
 class Channel;
-
-struct Configuration final {
-    rtc::scoped_refptr<rtc::RTCCertificate> tls_;
-    std::vector<std::string> ice_;
-};
 
 class Peer :
     public std::enable_shared_from_this<Peer>,
@@ -131,7 +127,6 @@ class Peer :
 };
 
 std::string Strip(const std::string &sdp);
-rtc::scoped_refptr<rtc::RTCCertificate> Certify();
 
 }
 

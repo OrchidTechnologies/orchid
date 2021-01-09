@@ -27,6 +27,7 @@
 #include <pc/sctp_data_channel_transport.h>
 
 #include "channel.hpp"
+#include "peer.hpp"
 #include "pirate.hpp"
 #include "tube.hpp"
 

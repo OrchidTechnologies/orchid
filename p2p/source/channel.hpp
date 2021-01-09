@@ -25,11 +25,16 @@
 
 #include <functional>
 
-#include "peer.hpp"
+#include <api/data_channel_interface.h>
+
+#include "configuration.hpp"
+#include "link.hpp"
 #include "trace.hpp"
 
 namespace orc {
 
+class Origin;
+class Peer;
 class Socket;
 
 class Channel :
