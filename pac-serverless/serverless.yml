@@ -118,12 +118,19 @@ provider:
         - "Fn::GetAtt": [ ReceiptTable, Arn ]
         - "Fn::GetAtt": [ RecycleTable, Arn ]
         - "Fn::GetAtt": [ ResultTable, Arn ]
+        - "Fn::GetAtt": [ BalancesTable, Arn ]
+        - "Fn::GetAtt": [ TxnsTable, Arn ]
+        - "Fn::GetAtt": [ ExecutorsTable, Arn ]
+        - "Fn::GetAtt": [ TargetsTable, Arn ]
     - Effect: "Allow"
       Action:
         - "lambda:InvokeFunction"
         - "lambda:InvokeAsync"
       Resource:
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-MaintainPool"
+        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-payment_apple"
+        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-send_raw"
+        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-refund_failed_txn"
 functions:
   send_raw:
     handler: entry_send_raw.main

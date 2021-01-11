@@ -13,6 +13,7 @@ from ecdsa import SigningKey, SECP256k1
 from inapppy import AppStoreValidator, InAppPyValidationError
 from typing import Any, Dict, Optional, Tuple
 from asn1crypto.cms import ContentInfo
+from utils import configure_logging, is_true
 
 
 
@@ -111,31 +112,34 @@ def product_to_usd(product_id: str) -> float:
     mapping = get_product_id_mapping()
     return mapping.get(product_id, -1)
 
-def handle_receipt_apple(receipt, target_bundle_id, Stage):
+def handle_receipt(receipt, target_bundle_id, product_id, Stage, verify_receipt):
 
     # extract and hash the receipt body payload
     receipt_hash = hash_receipt_body(receipt)
 
     apple_response = process_app_pay_receipt(receipt)
 
-    if (apple_response[0] is None):
+    if (verify_receipt) and (apple_response[0] is None):
         return f"invalid_receipt: {apple_response[1]}", None, 0
 
     validation_result: dict = apple_response[1]
     bundle_id = 0
-    if validation_result is None:
-        return "invalid_null_bundle_id", None, 0
-    else:
-        bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
 
-    if (bundle_id != target_bundle_id):
-        return "unexpected_bundle_id: {bundle_id}", None, 0
+    if (verify_receipt):
+        if validation_result is None:
+            return "invalid_null_bundle_id", None, 0
+        else:
+            bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
 
-    if (validation_result['receipt']['in_app'] is None) or (len(validation_result['receipt']['in_app']) == 0):
-        return "unexpected in_app result is empty", None, 0
+        if (bundle_id != target_bundle_id):
+            return f"unexpected_bundle_id: {bundle_id} != {target_bundle_id}", None, 0
+
+        if (validation_result['receipt']['in_app'] is None) or (len(validation_result['receipt']['in_app']) == 0):
+            return "unexpected in_app result is empty", None, 0
 
 
-    product_id = body.get('product_id', validation_result['receipt']['in_app'][0]['product_id'])
+    if (product_id is None):
+        product_id = validation_result['receipt']['in_app'][0]['product_id']
     quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
 
     if Stage == 'dev':

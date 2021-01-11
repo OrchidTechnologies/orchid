@@ -14,13 +14,13 @@ if (LocalTest == False):
 
     def dynamodb_readall(tableName):
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table(os.environ['tableName'])
+        table = dynamodb.Table(tableName)
         results = table.query()
         return results
 
     def dynamodb_read1(tableName, keyname, key):
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table(os.environ['tableName'])
+        table = dynamodb.Table(tableName)
         results = table.query(ConsistentRead=True, KeyConditionExpression=Key(keyname).eq(key))
         result = None
         if (results['Count'] > 0):  # we found a match, return it
@@ -29,45 +29,45 @@ if (LocalTest == False):
 
     def dynamodb_write1(tableName, item):
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table(os.environ['tableName'])
+        table = dynamodb.Table(tableName)
         ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
         table.put_item(Item=ddb_item)
         return item
 
     def get_account_balance(receiptHash):
-        item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
+        item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'receiptHash', receiptHash)
         balance = 0
         if (item is not None):
             balance = item['balance']
         return balance
 
     def credit_account_balance(receiptHash, cost_usd):
-        item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
+        item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'receiptHash', receiptHash)
         balance = 0
         if (item is not None):
             balance = item['balance'] = item['balance'] + cost_usd
-            dynamodb_write1('BALANCES_TABLE_NAME', item)
+            dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
         return balance
 
     def debit_account_balance(receiptHash, cost_usd):
-        item = dynamodb_read1('BALANCES_TABLE_NAME', 'receiptHash', receiptHash)
+        item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'receiptHash', receiptHash)
         balance = 0
         if (item is not None):
             balance = item['balance'] = item['balance'] - cost_usd
-            dynamodb_write1('BALANCES_TABLE_NAME', item)
+            dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
         return balance
 
     def save_transaction(txnhash, txn):
         txn['txnhash'] = txnhash
-        dynamodb_write1('TXNS_TABLE_NAME', txn)
+        dynamodb_write1(os.environ['TXNS_TABLE_NAME'], txn)
         return txn
 
     def load_transaction(txnhash):
-        txn = dynamodb_read1('TXNS_TABLE_NAME', 'txnhash', txnhash)
+        txn = dynamodb_read1(os.environ['TXNS_TABLE_NAME'], 'txnhash', txnhash)
         return txn
 
     def get_executor_account():
-        results = dynamodb_readall('EXECUTORS_TABLE_NAME')
+        results = dynamodb_readall(os.environ['EXECUTORS_TABLE_NAME'])
         num_execs = results['Count']
         index = randit(0,num_execs-1)
         pubkey = None
@@ -79,7 +79,7 @@ if (LocalTest == False):
         return pubkey,privkey
 
     def target_in_whitelist(pubkey):
-        result = dynamodb_read1('TARGETS_TABLE_NAME', 'pubkey', pubkey)
+        result = dynamodb_read1(os.environ['TARGETS_TABLE_NAME'], 'pubkey', pubkey)
         return result != None
 
 
@@ -205,8 +205,9 @@ def get_nonce_(w3,pubkey):
 def sendRaw(W3WSock,txn,receiptHash):
 
     if (target_in_whitelist(txn['to']) == False):
-        logging.debug(f'ERROR sendRaw: txn target: {txn} non in whitelist')
-        return None
+        errmsg = f'ERROR sendRaw: txn target: {txn} non in whitelist'
+        logging.debug(errmsg)
+        return None,0,errmsg
 
     w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
 
@@ -216,12 +217,14 @@ def sendRaw(W3WSock,txn,receiptHash):
 
     txnhash,cost_usd = sendRaw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd)
 
+    msg = "unknown error"
     if (txnhash is not None):
         save_transaction(txnhash, txn)
         debit_account_balance(receiptHash, cost_usd)
+        msg = "success"
 
     # todo: add from and nonce?
-    return txnhash
+    return txnhash,cost_usd,msg
 
 
 def has_transaction_failed(W3WSock,txnhash,txn):
@@ -250,11 +253,15 @@ def refund_failed_txn(W3WSock,txnhash,receiptHash):
     # store W3WSock with transaction
     txn = load_transaction(txnhash)
 
+    if (txn is None):
+        return f"error: transaction {txnhash} not found"
+
     if (has_transaction_failed(W3WSock,txn) == False):
-        return "error: transaction {} is still pending"
+        return f"error: transaction {txnhash} is still pending"
 
     cost_usd = get_txn_cost_usd(txn)
     credit_account_balance(receiptHash, cost_usd)
+    #todo: erase txn on success
 
     return "success"
 

@@ -5,7 +5,7 @@ import os
 import w3_generic
 
 from decimal import Decimal
-from utils import configure_logging
+from utils import configure_logging, is_true
 
 configure_logging(level="DEBUG")
 
@@ -26,7 +26,7 @@ def response_success(txnhash,cost_usd):
     logging.debug(f'Transaction submitted with txnhash: {txnhash}.')
     response = {
         "isBase64Encoded": False,
-        "statusCode": 201,
+        "statusCode": 200,
         "headers": {},
         "body": json.dumps({
             "message": 'Transaction submitted with txnhash: {txnhash}.',
@@ -54,7 +54,7 @@ def main(event, context):
     txn         = body.get('txn', '')
     receiptHash = body.get('receiptHash', '')
 
-    txnhash,cost_usd,msg = send_raw(W3WSock,txn,receiptHash)
+    txnhash,cost_usd,msg = w3_generic.send_raw(W3WSock,txn,receiptHash)
 
     if (txnhash != None):
         response_success(txnhash,cost_usd)
