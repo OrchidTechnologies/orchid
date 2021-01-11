@@ -2,8 +2,8 @@ import "../i18n/i18n_util"
 import React, {EffectCallback, FC, useEffect, useRef} from "react";
 import {Row} from "react-bootstrap";
 import {isEthAddress} from "../api/orchid-eth";
-import {intl} from "../index";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 // Return the relative path of the deployment
@@ -39,7 +39,7 @@ export function isDebug(): boolean {
   return getBoolParam("debug", false);
 }
 
-  export function getEthAddressParam(name: string, defaultValue: string): string {
+export function getEthAddressParam(name: string, defaultValue: string): string {
   let addr = getParam(name);
 
   if (addr == null) {
@@ -145,33 +145,17 @@ export function testLocalization_(en: Record<string, any>) {
 }
 
 /// Remove any "0x" prefix on a hex string.
-export function removeHexPrefix(value: string | undefined): string | undefined {
+export function removeHexPrefix(value: string | null): string | null {
   if (!value) {
     return value;
   }
   return value.startsWith('0x') ? value.substr(2) : value;
 }
 
-// TODO: Move into number extension in i18 utils?
-/// Format a currency to default two digits of precision with an optional suffix
-/// and null behavior.
-export function formatCurrency(
-  value: number, suffix: string, digits: number = 2, ifNull: string = "..."): string {
-  if (value == null) {
-    return ifNull;
-  }
-  // TODO: Why can't I call this global interface extension method here as elsewhere?
-  //return value.toFixedLocalized(digits) + (suffix != null ? " $suffix" : "");
-  return intl.formatNumber(value, {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: digits
-  }) + (suffix != null ? ` ${suffix}` : "");
-}
-
 /// Return an hsb color ranging from green to yellow to red for values 0.0 to 1.0;
 export function trafficLightShade(value: number) {
-    value = 1.0 - Math.min(1.0, value);
-    return {h: value * 0.3, s: 0.9, b: 0.9}
+  value = 1.0 - Math.min(1.0, value);
+  return {h: value * 0.3, s: 0.9, b: 0.9}
 }
 
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/
@@ -190,32 +174,17 @@ export function useInterval(callback: EffectCallback, delay: number) {
         savedCallback.current();
       }
     }
-    if (delay !== null) {
-      let id = setInterval(tick, delay);
-      return () => clearInterval(id);
-    }
+
+    let id = setInterval(tick, delay);
+    return () => clearInterval(id);
   }, [delay]);
 }
 
-export interface CancellablePromise<T> {
-  promise: Promise<T>
-  cancel(): void
+// Helper for RxJS with Typescript
+export function isNotNull<T>(a: T | null): a is T {
+  return a !== null;
 }
 
-export function makeCancelable<T>(promise: Promise<T>): CancellablePromise<T> {
-  let hasCanceled_ = false;
-
-  const wrappedPromise = new Promise<T>((resolve, reject) => {
-    promise.then(
-      val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
-      error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
-    );
-  });
-
-  return {
-    promise: wrappedPromise,
-    cancel() {
-      hasCanceled_ = true;
-    },
-  } as CancellablePromise<T>;
+export function isDefined<T>(a: T | undefined): a is T {
+  return a !== undefined;
 }

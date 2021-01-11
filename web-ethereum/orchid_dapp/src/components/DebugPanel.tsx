@@ -2,19 +2,19 @@ import React from "react";
 import './DebugPanel.css'
 import {OrchidAPI} from "../api/orchid-api";
 import {Container} from "react-bootstrap";
-import {OrchidContracts} from "../api/orchid-eth-contracts";
 import {SubmitButton} from "./SubmitButton";
 import {S} from "../i18n/S";
 
 export const DebugPanel: React.FC = () => {
+  let api = OrchidAPI.shared();
   function doReset() {
-    let api = OrchidAPI.shared();
-    if (!api.wallet.value) { return; }
-    api.eth.orchidReset(api.wallet.value);
+    let wallet = api.wallet.value
+    if (!api.eth || !wallet) { return; }
+    api.eth.orchidReset(wallet).then();
   }
   let resetOption = <div/>;
   // If we are on a test contract offer the reset button
-  if (OrchidContracts.lottery_addr() !== OrchidContracts.lottery_addr_final) {
+  if (api.eth?.contractsOverridden) {
     resetOption = (
       <SubmitButton onClick={()=>{doReset()}} enabled={true}>{S.resetAccount}</SubmitButton>
     );

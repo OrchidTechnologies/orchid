@@ -24,16 +24,6 @@ export class S {
     defaultMessage: 'Your Orchid Account is funded and ready to go!'}); }
   static get yourWalletIsEmpty() { return intl.formatMessage({id: 'yourWalletIsEmpty',
     defaultMessage: 'Your wallet is empty.'}); }
-  static get transferOXTandEnoughETH() { return intl.formatMessage({id: 'transferOXTandEnoughETH',
-    defaultMessage: 'Transfer OXT and enough ETH to cover two transactions to this dapp wallet in order to continue.'}); }
-  static get yourWalletETHbalanceIsEmpty() { return intl.formatMessage({id: 'yourWalletETHbalanceIsEmpty',
-    defaultMessage: 'Your wallet ETH balance is empty.'}); }
-  static get transferEnoughETHtoCoverTwo() { return intl.formatMessage({id: 'transferEnoughETHtoCoverTwo',
-    defaultMessage: 'Transfer enough ETH to cover two transactions to this dapp wallet in order to continue.'}); }
-  static get yourWalletOXTbalanceIsEmpty() { return intl.formatMessage({id: 'yourWalletOXTbalanceIsEmpty',
-    defaultMessage: 'Your wallet OXT balance is empty.'}); }
-  static get transferOXTToThisDappWallet() { return intl.formatMessage({id: 'transferOXTToThisDappWallet',
-    defaultMessage: 'Transfer OXT to this dapp wallet in order to continue.'}); }
   static get youAreReadyToCreateOrchidAccount() { return intl.formatMessage({id: 'youAreReadyToCreateOrchidAccount',
     defaultMessage: 'You are ready to create an Orchid account with funds from your wallet.'}); }
   static get continueBelowToCreateAccount() { return intl.formatMessage({id: 'continueBelowToCreateAccount',
@@ -120,8 +110,6 @@ export class S {
     defaultMessage: 'Your deposit secures access to the Orchid network and demonstrates authenticity to bandwidth sellers.'}); }
   static get total() { return intl.formatMessage({id: 'total',
     defaultMessage: 'Total'}); }
-  static get addOXT() { return intl.formatMessage({id: 'addOXT',
-    defaultMessage: 'Add OXT'}); }
   static get withdrawFromBalance() { return intl.formatMessage({id: 'withdrawFromBalance',
     defaultMessage: 'Withdraw from balance'}); }
   static get balance() { return intl.formatMessage({id: 'balance',
@@ -132,8 +120,6 @@ export class S {
     defaultMessage: 'Withdraw Full Balance and Deposit'}); }
   static get noteIfOverdraftOccurs() { return intl.formatMessage({id: 'noteIfOverdraftOccurs',
     defaultMessage: 'Note: If an overdraft occurs on your Orchid balance, your deposit will be lost.'}); }
-  static get withdrawOXT() { return intl.formatMessage({id: 'withdrawOXT',
-    defaultMessage: 'Withdraw OXT'}); }
   static get funderWalletAddress() { return intl.formatMessage({id: 'funderWalletAddress',
     defaultMessage: 'Funder wallet address'}); }
   static get copy() { return intl.formatMessage({id: 'copy',
@@ -176,10 +162,6 @@ export class S {
     defaultMessage: 'Deposit funds are required to participate in the Orchid network and can be withdrawn after an unlock notice period.'}); }
   static get availableLotteryPotBalance() { return intl.formatMessage({id: 'availableLotteryPotBalance',
     defaultMessage: 'Available Lottery Pot Balance Amount'}); }
-  static get amountInOXT() { return intl.formatMessage({id: 'amountInOXT',
-    defaultMessage: 'Amount in OXT'}); }
-  static get oxt() { return intl.formatMessage({id: 'oxt',
-    defaultMessage: 'OXT'}); }
   static get moveToDepositAmount() { return intl.formatMessage({id: 'moveToDepositAmount',
     defaultMessage: 'Move to Deposit Amount'}); }
   static get submit() { return intl.formatMessage({id: 'submit',
@@ -199,8 +181,8 @@ export class S {
     defaultMessage: 'Add to Stake'}); }
   static get stakeFunds() { return intl.formatMessage({id: 'stakeFunds',
     defaultMessage: 'Stake Funds'}); }
-  static get stakeOxt() { return intl.formatMessage({id: 'stakeOxt',
-    defaultMessage: 'Stake OXT'}); }
+  static get stake() { return intl.formatMessage({id: 'stake',
+    defaultMessage: 'Stake'}); }
   static get stakeeAddress() { return intl.formatMessage({id: 'stakeeAddress',
     defaultMessage: 'Stakee (Provider) Address'}); }
   static get stakeeProvider() { return intl.formatMessage({id: 'stakeeProvider',

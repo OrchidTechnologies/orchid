@@ -87,9 +87,9 @@ html, body {
   margin-right: 10px;
 }
 
-/* OXT label formatting */
-.oxt-1-pad,
-.oxt-1 {
+/* Funds token label formatting */
+.funds-1-pad,
+.funds-1 {
   font-size: 17px;
   font-weight: bold;
   font-stretch: normal;
@@ -100,7 +100,7 @@ html, body {
   color: #3a3149;
 }
 
-.oxt-1-pad {
+.funds-1-pad {
   margin-right: 16px;
 }
 

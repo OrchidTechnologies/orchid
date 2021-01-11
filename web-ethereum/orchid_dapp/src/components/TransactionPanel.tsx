@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import {
   EthereumTransactionStatus,
   OrchidTransactionDetail,
@@ -7,11 +7,13 @@ import {
 import {Col, Collapse, Container, Row} from "react-bootstrap";
 import {OrchidAPI} from "../api/orchid-api";
 import {S} from "../i18n/S";
+import {WalletProviderContext} from "../index";
 
 export const TransactionPanel: React.FC<{
   tx: OrchidTransactionDetail
 }> = (props) => {
   const [open, setOpen] = useState(false);
+  const walletStatus = useContext(WalletProviderContext);
 
   let running = props.tx.status === EthereumTransactionStatus.PENDING;
   let type: string = "";
@@ -40,7 +42,7 @@ export const TransactionPanel: React.FC<{
   }
 
   let status: string = "";
-  switch(props.tx.status) {
+  switch (props.tx.status) {
     case EthereumTransactionStatus.PENDING:
       status = S.pending;
       break;
@@ -61,7 +63,7 @@ export const TransactionPanel: React.FC<{
   let ethTxs = props.tx.transactions.map(tx => {
 
     let statusTerm: string = "";
-    switch(tx.status) {
+    switch (tx.status) {
       case EthereumTransactionStatus.PENDING:
         statusTerm = S.pending;
         break;
@@ -74,7 +76,7 @@ export const TransactionPanel: React.FC<{
     }
 
     let status = multiple ?
-      (<Row style={{marginTop: '4px'}}><Col>{S.status}: { statusTerm }</Col></Row>) : "";
+      (<Row style={{marginTop: '4px'}}><Col>{S.status}: {statusTerm}</Col></Row>) : "";
 
     return <Row key={tx.hash}>
       <Col style={{marginTop: '0px'}}>
@@ -93,9 +95,12 @@ export const TransactionPanel: React.FC<{
               fontStyle: 'italic', fontSize: '14px', textOverflow: "ellipsis",
               whiteSpace: 'nowrap',
             }}>
-            <a style={{color: "lightblue"}}
-               target="_blank" rel="noopener noreferrer"
-               href={tx.getLink()}>{S.viewOnBlockchain}</a>
+            {walletStatus.chainInfo?.isEthereumMainNet ?
+              <a style={{color: "lightblue"}}
+                 target="_blank" rel="noopener noreferrer"
+                 href={tx.getLink()}>{S.viewOnBlockchain}</a>
+              : null
+            }
           </Col>
         </Row>
         {status}
@@ -113,64 +118,68 @@ export const TransactionPanel: React.FC<{
   }
 
   return (
-    <Container
-      style={{
-        color: "white",
-        backgroundColor: "#5f45ba",
-        width: "100%",
-        padding: "12px",
-        paddingLeft: '24px',
-        paddingRight: '24px',
-      }}
-    >
-      <Row onClick={() => { setOpen(!open) }} >
-        <Col style={{
-          flexGrow: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingRight: 0
+    <Collapse in={true} appear={true}>
+      <Container
+        style={{
+          color: "white",
+          backgroundColor: "#5f45ba",
+          width: "100%",
+          padding: "12px",
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}
+      >
+        <Row onClick={() => {
+          setOpen(!open)
         }}>
-          <div style={{fontSize: '16px', width: '5px'}}>{open ? "▾" : "▸"}</div>
-        </Col>
-        <Col>
-          <span>{S.transaction} {status}</span>
-          <div style={{fontStyle: 'italic', fontSize: '14px',}}>{type}</div>
-        </Col>
-        <Col
-          style={{
+          <Col style={{
             flexGrow: 0,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            paddingRight: '0px',
-          }}
-        >
-          <div
-            className={["spinner-small", running ? "" : "hidden"].join(" ")}/>
-        </Col>
-        <Col style={{
-          flexGrow: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-          onClick={(e:any) => {
-            dismiss();
-            e.stopPropagation();
-          }}
-        >
-          <div>×</div>
-        </Col>
-      </Row>
-      <Collapse in={open}>
-        <Row style={{marginTop: '0px', marginBottom: '8px'}}>
+            paddingRight: 0
+          }}>
+            <div style={{fontSize: '16px', width: '5px'}}>{open ? "▾" : "▸"}</div>
+          </Col>
           <Col>
-            {ethTxs}
+            <span>{S.transaction} {status}</span>
+            <div style={{fontStyle: 'italic', fontSize: '14px',}}>{type}</div>
+          </Col>
+          <Col
+            style={{
+              flexGrow: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingRight: '0px',
+            }}
+          >
+            <div
+              className={["spinner-small", running ? "" : "hidden"].join(" ")}/>
+          </Col>
+          <Col style={{
+            flexGrow: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+               onClick={(e: any) => {
+                 dismiss();
+                 e.stopPropagation();
+               }}
+          >
+            <div>×</div>
           </Col>
         </Row>
-      </Collapse>
-    </Container>
+        <Collapse in={open}>
+          <Row style={{marginTop: '0px', marginBottom: '8px'}}>
+            <Col>
+              {ethTxs}
+            </Col>
+          </Row>
+        </Collapse>
+      </Container>
+    </Collapse>
   );
 };
 

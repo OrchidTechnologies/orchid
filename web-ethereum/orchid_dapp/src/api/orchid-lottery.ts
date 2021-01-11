@@ -1,4 +1,4 @@
-import {min, OXT} from "./orchid-types";
+import {min, LotFunds} from "./orchid-eth-token-types";
 
 export class OrchidLottery {
   // The default ticket win probility
@@ -31,7 +31,7 @@ export class OrchidLottery {
 
   // The expected number of tickets that can be written at the default ticket win rate and default
   // survival probabilty target. Returns null if the value cannot be determined.
-  static expectedTickets(balance: OXT, deposit: OXT): number | null {
+  static expectedTickets(balance: LotFunds, deposit: LotFunds): number | null {
     let table = this.getAccountSurvivalTable();
     let efRatio = Math.floor(balance.floatValue / this.maxTicketFaceValue(balance, deposit).floatValue);
     return efRatio < table.length ? table[efRatio] : null
@@ -39,10 +39,10 @@ export class OrchidLottery {
 
   // The expected cumulative value of tickets that can be written with this account composition
   // at the expected ticket count.
-  static expectedTicketValue(balance: OXT, deposit: OXT): OXT | null {
+  static expectedTicketValue(balance: LotFunds, deposit: LotFunds): LotFunds | null {
     let n = this.expectedTickets(balance, deposit);
     return n ?
-      this.maxTicketFaceValue(balance, deposit).multiply(n).multiply(this.ticketWinProbability)
+      (this.maxTicketFaceValue(balance, deposit).multiply(n).multiply(this.ticketWinProbability))
       : null;
   }
 
@@ -78,7 +78,7 @@ export class OrchidLottery {
 
   private static _table: Array<number> | null = null
 
-  static maxTicketFaceValue(balance: OXT, deposit: OXT): OXT {
-    return min(balance, deposit.divide(2.0));
+  static maxTicketFaceValue(balance: LotFunds, deposit: LotFunds): LotFunds {
+    return min( balance, deposit.divide(2.0));
   }
 }

@@ -1,141 +1,37 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
-import {OrchidPricingAPI, Pricing} from "../api/orchid-pricing";
-import {ETH, OXT, USD} from "../api/orchid-types";
 import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
-import {OrchidContracts} from "../api/orchid-eth-contracts";
-import {OrchidLottery} from "../api/orchid-lottery";
+import {MarketConditions} from "../api/orchid-market-conditions";
+import {WalletProviderContext} from "../index";
+import {Cancellable, makeCancellable} from "../util/async-util";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-/// A recommendation for account composition based on current market rates.
-export class AccountRecommendation {
-  public balance: OXT;
-  public deposit: OXT;
-  public txEth: ETH; // ETH required for the funding transaction
-  public txUsd: USD; // USD equivalent of the ETH required for the funding transaction
-
-  // The max face value of a ticket that can be written with this account composition.
-  get maxFaceValue(): OXT {
-    return OrchidLottery.maxTicketFaceValue(this.balance, this.deposit);
-  }
-
-  // The expected number of tickets that can be written with this account composition at the
-  // default ticket win rate and default survival probabilty target. Returns null if the value
-  // cannot be determined.
-  get expectedTickets(): number | null {
-    return OrchidLottery.expectedTickets(this.balance, this.deposit);
-  }
-
-  // The expected cumulative value of tickets that can be written with this account composition
-  // at the expected ticket count.
-  get expectedTicketValue(): OXT | null {
-    return OrchidLottery.expectedTicketValue(this.balance, this.deposit);
-  }
-
-  constructor(balance: OXT, deposit: OXT, txEth: ETH, txUsd: USD) {
-    this.balance = balance;
-    this.deposit = deposit;
-    this.txEth = txEth;
-    this.txUsd = txUsd;
-  }
-}
-
-export class MarketConditions {
-  public gasCostToRedeem: ETH
-  public oxtCostToRedeem: OXT
-  public maxFaceValue: OXT
-  public ticketUnderwater: boolean
-  public efficiency: number
-  public limitedByBalance: boolean
-
-  public efficiencyPerc(): string {
-    return (this.efficiency * 100).toFixed() + "%";
-  }
-
-  constructor(gasCostToRedeem: ETH, oxtCostToRedeem: OXT, maxFaceValue: OXT, ticketUnderwater: boolean, efficiency: number, limitedByBalance: boolean) {
-    this.gasCostToRedeem = gasCostToRedeem;
-    this.oxtCostToRedeem = oxtCostToRedeem;
-    this.maxFaceValue = maxFaceValue;
-    this.ticketUnderwater = ticketUnderwater;
-    this.efficiency = efficiency;
-    this.limitedByBalance = limitedByBalance;
-  }
-
-  static async for(pot: LotteryPot): Promise<MarketConditions> {
-    return this.forBalance(OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow));
-  }
-
-  /// Given a target efficiency and a desired number of face value multiples in the balance
-  /// (assuming two in the deposit) recommend balance, deposit, and required ETH amounts based
-  // on current market conditions.
-  static async getAccountRecommendation(targetEfficiency: number, balanceFaceValues: number): Promise<AccountRecommendation> {
-    if (targetEfficiency >= 1.0) {
-      throw Error("Invalid efficiency target: cannot equal or exceed 1.0");
-    }
-    targetEfficiency = Math.min(targetEfficiency, 0.99);
-    let {oxtCostToRedeem}: { gasCostToRedeem: ETH; oxtCostToRedeem: OXT } =
-      await this.getCostToRedeemTicket();
-
-    let faceValue: OXT = oxtCostToRedeem.divide(1.0 - targetEfficiency);
-    let deposit = faceValue.multiply(2.0);
-    let balance = faceValue.multiply(balanceFaceValues);
-    // console.log(`account recommendation keiki: faceValue=${faceValue.keiki}, deposit=${deposit.keiki}, balance=${balance.keiki}`)
-
-    // Recommend the amount of ETH required for the account creation
-    let api = OrchidAPI.shared();
-    let gasPrice: ETH
-    try {
-      gasPrice = await api.eth.getGasPrice();
-    } catch (err) {
-      console.log("market conditions: error fetching gas price");
-      throw Error("gas price unavailable")
-    }
-    let txEthRequired: ETH = gasPrice.multiply(OrchidContracts.add_funds_total_max_gas);
-    let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
-    let txUsdEthEqvuivalent = pricing.ethToUSD(txEthRequired);
-
-    return new AccountRecommendation(balance, deposit, txEthRequired, txUsdEthEqvuivalent);
-  }
-
-  static async forBalance(balance: OXT, escrow: OXT): Promise<MarketConditions> {
-    //console.log("fetch market conditions")
-    let {gasCostToRedeem, oxtCostToRedeem} = await this.getCostToRedeemTicket();
-    let limitedByBalance = balance.lte(escrow.divide(2.0));
-    let maxFaceValue: OXT = OrchidLottery.maxTicketFaceValue(balance, escrow);
-    let ticketUnderwater = oxtCostToRedeem.gte(maxFaceValue);
-
-    // value received as a fraction of ticket face value
-    let efficiency = Math.max(0, maxFaceValue.subtract(oxtCostToRedeem).floatValue / maxFaceValue.floatValue);
-
-    return new MarketConditions(gasCostToRedeem, oxtCostToRedeem, maxFaceValue, ticketUnderwater, efficiency, limitedByBalance);
-  }
-
-  private static async getCostToRedeemTicket(): Promise<{ gasCostToRedeem: ETH; oxtCostToRedeem: OXT }> {
-    let api = OrchidAPI.shared();
-    let pricing: Pricing = await OrchidPricingAPI.shared().getPricing();
-    let gasPrice: ETH = await api.eth.getGasPrice();
-    let gasCostToRedeem: ETH = (gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket));
-    let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
-    return {gasCostToRedeem, oxtCostToRedeem};
-  }
-}
-
 export const MarketConditionsPanel: React.FC = () => {
 
-  const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [pot, setPot] = useState<LotteryPot | null>();
   const [marketConditions, setMarketConditions] = useState<MarketConditions>();
+  let {fundsToken: funds} = useContext(WalletProviderContext);
 
   useEffect(() => {
+    let cancellablePromises: Array<Cancellable> = [];
     let api = OrchidAPI.shared();
     let fetch = (async () => {
-      if (!pot) {
+      if (!pot || !api.eth) {
         return;
       }
-      setMarketConditions(await MarketConditions.for(pot));
+      try {
+        let marketConditions = await makeCancellable(
+          api.eth.marketConditions.for(pot), cancellablePromises).promise;
+        setMarketConditions(marketConditions);
+        setShown(marketConditions.ticketUnderwater);
+      } catch (err) {
+        // console.log("error getting market conditions: ", err);
+      }
     });
     let potSubscription = api.lotteryPot.subscribe(async pot => {
       setPot(pot)
@@ -146,12 +42,13 @@ export const MarketConditionsPanel: React.FC = () => {
     // todo: is this closing over stale state?  Switch to useInterval.
     let timer = setInterval(fetch, 15000/*ms*/);
     return () => {
+      cancellablePromises.forEach(p => p.cancel());
       clearInterval(timer);
       potSubscription.unsubscribe();
     };
   }, [pot]);
 
-  if (!pot || marketConditions === undefined) {
+  if (!pot || marketConditions === undefined || !(funds?.symbol)) {
     return <div/>
   }
 
@@ -159,14 +56,9 @@ export const MarketConditionsPanel: React.FC = () => {
   //let pricing = new Pricing(0.004, 5.0)
   //let pot = Mocks.lotteryPot(1.0, 20.0)
 
-  // calculation
-
-  if (!marketConditions.ticketUnderwater) {
-    return <div/>
-  }
-
   let title = "Abnormal Market Conditions"
-  let text = "Due to market conditions, which take into account Ethereum gas costs, the price of OXT and the price of OXT/ETH, your account will not function. \n"
+  let text = `Due to market conditions, which take into account network gas costs, ` +
+    `and the price of ${funds?.symbol}, your account will not function. \n`
 
   let alertIcon =
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -182,50 +74,52 @@ export const MarketConditionsPanel: React.FC = () => {
     </svg>
 
   return (
-    <Container
-      style={{
-        color: "white",
-        backgroundColor: "#BE092A",
-        width: "100%",
-        padding: "12px",
-        paddingLeft: '24px',
-        paddingRight: '24px',
-      }}
-    >
-      <Row onClick={() => {
-        setOpen(!open)
-      }}>
-        <Col style={{
-          flexGrow: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingRight: 0
+    <Collapse in={shown} appear={true}>
+      <Container
+        style={{
+          color: "white",
+          backgroundColor: "#BE092A",
+          width: "100%",
+          padding: "12px",
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}
+      >
+        <Row onClick={() => {
+          setExpanded(!expanded)
         }}>
-          <div style={{fontSize: '16px', width: '5px'}}>{open ? "▾" : "▸"}</div>
-        </Col>
-        <Col>
-          <span>{alertIcon}</span><span style={{paddingLeft: '20px'}}>{title}</span>
-        </Col>
-        <Col
-          style={{
+          <Col style={{
             flexGrow: 0,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            paddingRight: '0px',
-          }}
-        >
-        </Col>
-      </Row>
-      <Collapse in={open}>
-        <Row style={{marginTop: '12px', marginBottom: '8px'}}>
+            paddingRight: 0
+          }}>
+            <div style={{fontSize: '16px', width: '5px'}}>{expanded ? "▾" : "▸"}</div>
+          </Col>
           <Col>
-            {text}
+            <span>{alertIcon}</span><span style={{paddingLeft: '20px'}}>{title}</span>
+          </Col>
+          <Col
+            style={{
+              flexGrow: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingRight: '0px',
+            }}
+          >
           </Col>
         </Row>
-      </Collapse>
-    </Container>
+        <Collapse in={expanded}>
+          <Row style={{marginTop: '12px', marginBottom: '8px'}}>
+            <Col>
+              {text}
+            </Col>
+          </Row>
+        </Collapse>
+      </Container>
+    </Collapse>
   );
 };
 

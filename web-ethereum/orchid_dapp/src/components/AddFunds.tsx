@@ -1,41 +1,36 @@
 import React, {FC, useCallback, useContext, useEffect, useState} from "react";
-import {OrchidAPI} from "../api/orchid-api";
 import {
-  CancellablePromise,
   Divider,
-  errorClass, makeCancelable,
-  useInterval,
+  errorClass, useInterval,
   Visibility
 } from "../util/util";
 import {TransactionProgress, TransactionStatus} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Modal, Row} from "react-bootstrap";
 import './AddFunds.css'
-import {EthAddress, ETH, max, OXT, USD} from "../api/orchid-types";
-import {
-  GasPricingStrategy, isEthAddress, keikiToOxtString, LotteryPot, Signer,
-  Wallet, weiToETHString
-} from "../api/orchid-eth";
-import {OrchidContracts} from "../api/orchid-eth-contracts";
+import {isEthAddress, LotteryPot, Signer, Wallet} from "../api/orchid-eth";
 import {S} from "../i18n/S";
-import {Orchid} from "../api/orchid";
-import {AccountRecommendation, MarketConditions} from "./MarketConditionsPanel";
-import {OrchidPricingAPI} from "../api/orchid-pricing";
 import {colorForEfficiency, EfficiencyMeter} from "./EfficiencyMeter";
 import {EfficiencySlider} from "./EfficiencySlider";
 import antsImage from '../assets/ants.svg'
 import {AccountQRCode} from "./AccountQRCode";
-import {Subscription} from "rxjs";
-import {Route, RouteContext} from "./Route";
+import {Route, RouteContext} from "./RouteContext";
 import {WalletProviderState} from "../api/orchid-eth-web3";
 import {OrchidLottery} from "../api/orchid-lottery";
+import {AccountRecommendation, MarketConditions} from "../api/orchid-market-conditions";
+import {EthAddress} from "../api/orchid-eth-types";
+import {max, LotFunds} from "../api/orchid-eth-token-types";
+import {AccountContext, ApiContext, WalletContext, WalletProviderContext} from "../index";
+import {Cancellable, makeCancellable} from "../util/async-util";
+import {Spacer} from "./Spacer";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export const CreateAccount: FC = (props) => {
+export const CreateAccount: FC = () => {
   return <AddOrCreate createAccount={true}/>
 }
-export const AddFunds: FC = (props) => {
+export const AddFunds: FC = () => {
   return <AddOrCreate createAccount={false}/>
 }
 
@@ -50,22 +45,23 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   const [signerKeyError, setSignerKeyError] = useState(true);
 
   // Existing account state
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [pot, setPot] = useState<LotteryPot | null>(null);
   const [potMarketConditions, setPotMarketConditions] = useState<MarketConditions | null>(null);
 
   // Form state: User entered values
-  const [userEnteredBalance, setUserEnteredBalance] = useState<OXT | null>(null);
+  const [userEnteredBalance, setUserEnteredBalance] = useState<LotFunds | null>(null);
   const [editingBalance, setEditingBalance] = useState(false);
-  const [userEnteredDeposit, setUserEnteredDeposit] = useState<OXT | null>(null);
+  const [userEnteredDeposit, setUserEnteredDeposit] = useState<LotFunds | null>(null);
   const [editingDeposit, setEditingDeposit] = useState(false);
+  const [userEnteredSizePickerValue, setUserEnteredSizePickerValue] = useState<number | null>(null);
   // TODO: We should probably do this for consistency:
   //const [userEnteredEfficiencySliderValue, setUserEnteredEfficiencySliderValue] = useState<number | null>(null);
 
+  const [sizePickerValue, setSizePickerValue] = useState<number | null>(null);
+
   // Form state: Controlled values
   // TODO: addXXX is derived state that can be removed now.
-  const [addBalance, setAddBalance] = useState<OXT | null>(null); // OXT
-  const [addDeposit, setAddDeposit] = useState<OXT | null>(null); // OXT
+  const [addBalance, setAddBalance] = useState<LotFunds | null>(null);
+  const [addDeposit, setAddDeposit] = useState<LotFunds | null>(null);
   const [balanceError, setBalanceError] = useState(props.createAccount);
   const [escrowError, setEscrowError] = useState(props.createAccount);
   const [tx, setTx] = useState(new TransactionStatus());
@@ -77,26 +73,26 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   const [generatedSigner, setGeneratedSigner] = useState<Signer | null>(null);
   const [generatingSigner, setGeneratingSigner] = useState(false);
 
-  const [sizePickerValue, setSizePickerValue] = useState<number | null>(null);
 
+  // Contexts
   let {setRoute} = useContext(RouteContext);
+  let {fundsToken, gasToken} = useContext(WalletProviderContext);
+  let api = useContext(ApiContext);
+  let wallet = useContext(WalletContext);
+  let pot = useContext(AccountContext);
 
   // Initialization
   useEffect(() => {
-    let api = OrchidAPI.shared();
-    let walletSubscription: Subscription = api.wallet.subscribe(wallet => {
-      //console.log("addfunds: add funds got wallet: ", wallet);
-      setWallet(wallet ?? null)
-    });
-
     // Default to recommended efficiency for create
-    let getRecommendedPromise: CancellablePromise<AccountRecommendation> | null
+    let cancellablePromises: Array<Cancellable> = [];
     if (props.createAccount) {
       (async () => {
         try {
-          getRecommendedPromise = makeCancelable(Orchid.recommendedAccountComposition());
-          setAccountRecommendation(await getRecommendedPromise.promise);
-          setEfficiencySliderValue(Orchid.recommendationEfficiency * 100)
+          if (api.eth) {
+            setAccountRecommendation(
+              await makeCancellable(api.eth.marketConditions.recommendedAccountComposition(), cancellablePromises).promise);
+            setEfficiencySliderValue(api.eth.marketConditions.recommendationEfficiency * 100)
+          }
         } catch (err) {
           if (err.isCanceled) {
             //console.log("addfunds: fetch recommended account cancelled")
@@ -107,30 +103,19 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       })();
     }
 
-    // Subscribe to current account info for add
-    let potSubscription: Subscription | null = null
-    if (!props.createAccount) {
-      potSubscription = api.lotteryPot.subscribe(async pot => {
-        setPot(pot)
-      })
-    }
-
-    // Prime other data sources
-    try {
-      OrchidPricingAPI.shared().getPricing().then().catch(e => {
-      });
-      api.eth.getGasPrice().then().catch(e => {
-      });
-    } catch (err) {
-      console.log("addfunds: error priming data sources")
-    }
-
     return () => {
-      getRecommendedPromise?.cancel();
-      potSubscription?.unsubscribe();
-      walletSubscription.unsubscribe();
+      cancellablePromises.forEach(p => p.cancel());
     };
-  }, [props.createAccount]);
+  }, [api.eth, props.createAccount]);
+
+  // return the current user balance/escrow ratio or zero if undefined
+  const currentPotRatio: () => number = useCallback(() => {
+    if (!pot?.balance || !pot.escrow || pot.escrow.isZero()) {
+      return 0
+    }
+    // escrow is two face values
+    return Math.floor(pot.balance.floatValue / ((pot.escrow.floatValue) / 2));
+  }, [pot]);
 
   // Update market conditions for the current account (if any)
   // (This is wrapped in useCallback to allow it to be used from both useInterval and useEffect below.)
@@ -140,25 +125,26 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       setPotMarketConditions(null);
       return;
     }
-    // TODO: This needs to be cancellable
+    // TODO: This needs to be cancellable (have it return the promise)
     // Market conditions for prospective pot composition
-    const mc = await MarketConditions.forBalance(
-      OXT.fromKeiki(pot.balance), OXT.fromKeiki(pot.escrow));
-    setPotMarketConditions(mc);
+    if (api.eth) {
+      const mc = await api.eth.marketConditions.forBalance(pot.balance, pot.escrow);
+      setPotMarketConditions(mc);
 
-    // Default the efficiency picker for the user's current account
-    if (efficiencySliderValue == null) {
-      //console.log("addfunds: setting efficiency slider")
-      setEfficiencySliderValue(mc?.efficiency * 100 ?? 0)
+      // Default the efficiency picker for the user's current account
+      if (efficiencySliderValue == null) {
+        //console.log("addfunds: setting efficiency slider")
+        setEfficiencySliderValue(mc?.efficiency * 100 ?? 0)
+      }
     }
 
     // Default the size ratio picker for the user's current account if reasonable
     if (sizePickerValue == null) {
-      const current = currentPotRatio()
+      const current: number = currentPotRatio()
       setSizePickerValue(current <= OrchidLottery.maxPrecomputedEFRatio ? current : 1)
     }
+  }, [currentPotRatio, api.eth, pot, efficiencySliderValue, sizePickerValue]);
 
-  }, [pot, efficiencySliderValue, sizePickerValue]);
 
   // Fetch market conditions when the pot changes
   useEffect(() => {
@@ -172,20 +158,31 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     });
   }, 15000);
 
-  // TODO: throttle this
-  // Manage the account composition recommendation, updating it on user changes to the efficiency
-  // and size pickers.  The user's current balance and deposit put a floor on the recommendation.
+  // Update account composition recommendation on user changes to the efficiency and size pickers,
+  // using the user's current balance and deposit as a floor on the recommendation.
   //   (desired efficiency, desired size ratio) => nominal recommendation
   //   recommendation = max(nominal recommendation, user pot values)
   useEffect(() => {
+    if (!gasToken) {
+      setAccountRecommendation(null);
+      return;
+    }
     const minEfficiencyChange = 3.0; // perc
+
+    // TODO: throttle this
     (async () => {
+      if (!api.eth) {
+        return;
+      }
       // Get the account recommendation for the efficiency and size picker values
       let recommendation: AccountRecommendation
       try {
-        recommendation = await MarketConditions.getAccountRecommendation(
-          (efficiencySliderValue ?? (Orchid.recommendationEfficiency * 100.0)) / 100.0,
-          sizePickerValue ?? Orchid.recommendationBalanceFaceValues
+        let marketConditions = api.eth.marketConditions;
+        recommendation = await marketConditions.getAccountRecommendation(
+          (
+            (efficiencySliderValue && efficiencySliderValue > 0 ? efficiencySliderValue : null)
+            ?? (marketConditions.recommendationEfficiency * 100.0)) / 100.0,
+          (userEnteredSizePickerValue ?? sizePickerValue) ?? marketConditions.recommendationBalanceFaceValues
         )
       } catch (err) {
         console.log("addfunds: unable to fetch market conditions: ", err)
@@ -201,40 +198,43 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       // We have an account so take into account current balances in the recommendation.
       const minChange =
         Math.abs(efficiencySliderValue - potMarketConditions.efficiency * 100) < minEfficiencyChange
-        && sizePickerValue === currentPotRatio();
+        && (userEnteredSizePickerValue ?? sizePickerValue) === currentPotRatio();
       if (minChange) {
         // We are within the min efficiency change just put the original values back.
-        setAccountRecommendation(
-          new AccountRecommendation(
-            OXT.fromKeiki(pot.balance),
-            OXT.fromKeiki(pot.escrow),
-            ETH.zero, USD.zero));
+        setAccountRecommendation(new AccountRecommendation(pot.balance, pot.escrow, gasToken.zero));
       } else {
         // recommend the higher of recommended or current balances
         setAccountRecommendation(
           new AccountRecommendation(
-            max(recommendation.balance, OXT.fromKeiki(pot.balance)),
-            max(recommendation.deposit, OXT.fromKeiki(pot.escrow)),
-            recommendation.txEth, recommendation.txUsd)
+            max(recommendation.balance, pot.balance),
+            max(recommendation.deposit, pot.escrow),
+            recommendation.txGasFundsRequired)
         );
       }
     })();
-  }, [efficiencySliderValue, sizePickerValue, pot, potMarketConditions])
+  }, [currentPotRatio, api.eth, efficiencySliderValue, sizePickerValue, userEnteredSizePickerValue, pot, potMarketConditions, gasToken])
 
-  // Handle user entered values.
-  // user entered values, account recommendation => slider value
+  // Handle user entered balance and deposit values updating the efficiency slider and size picker to match.
+  // user entered values, account recommendation => slider value, picker value
   // TODO: The "add" amounts are derived state that we can get rid of now.
   useEffect(() => {
+    if (!fundsToken) {
+      setAddBalance(null)
+      setAddDeposit(null)
+      return;
+    }
+    const zero = fundsToken.zero;
+
     if (userEnteredBalance != null) {
       // We have a user entered desired balance amount
       setAddBalance(
-        max(OXT.zero, userEnteredBalance.subtract(pot?.balanceOXT ?? OXT.zero))
+        max(zero, userEnteredBalance.subtract(pot?.balance ?? zero))
       );
     } else {
       // Use the recommendation
       if (accountRecommendation != null) {
         setAddBalance(
-          max(OXT.zero, accountRecommendation.balance.subtract(pot?.balanceOXT ?? OXT.zero))
+          max(zero, accountRecommendation.balance.subtract(pot?.balance ?? zero))
         );
       } else {
         setAddBalance(null);
@@ -244,12 +244,12 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     if (userEnteredDeposit != null) {
       // We have a user entered desired deposit amount
       setAddDeposit(
-        max(OXT.zero, userEnteredDeposit.subtract(pot?.escrowOXT ?? OXT.zero))
+        max(zero, userEnteredDeposit.subtract(pot?.escrow ?? zero))
       );
     } else {
       if (accountRecommendation != null) {
         setAddDeposit(
-          max(OXT.zero, accountRecommendation.deposit.subtract(pot?.escrowOXT ?? OXT.zero))
+          max(zero, accountRecommendation.deposit.subtract(pot?.escrow ?? zero))
         );
       } else {
         setAddDeposit(null);
@@ -258,53 +258,57 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
     // Update efficiency slider for the new values
     if (userEnteredBalance != null || userEnteredDeposit != null) {
-      let newBalance: OXT = userEnteredBalance ?? (accountRecommendation?.balance ?? OXT.zero);
-      let newDeposit: OXT = userEnteredDeposit ?? (accountRecommendation?.deposit ?? OXT.zero);
+      let newBalance: LotFunds = userEnteredBalance ?? (accountRecommendation?.balance ?? zero);
+      let newDeposit: LotFunds = userEnteredDeposit ?? (accountRecommendation?.deposit ?? zero);
       (async () => {
-        const mc = await MarketConditions.forBalance(newBalance, newDeposit);
-        //console.log("update slider for user entered values: ", newBalance, newDeposit, mc.efficiency * 100);
-        setEfficiencySliderValue(mc.efficiency * 100)
+        if (api.eth) {
+          const mc = await api.eth.marketConditions.forBalance(newBalance, newDeposit);
+          //console.log("update slider for user entered values: ", newBalance, newDeposit, mc.efficiency * 100);
+          setEfficiencySliderValue(mc.efficiency * 100)
+        }
       })();
     }
 
-  }, [userEnteredBalance, userEnteredDeposit, accountRecommendation, pot])
+    // Update the size picker for the new values
+    if (!userEnteredSizePickerValue && pot) {
+      const balance = userEnteredBalance || pot.balance
+      const deposit = userEnteredDeposit || pot.escrow
+      const value = Math.floor(balance.floatValue / ((deposit.floatValue) / 2));
+      setSizePickerValue(value <= OrchidLottery.maxPrecomputedEFRatio ? value : 1)
+    }
+
+  }, [api.eth, fundsToken, userEnteredBalance, userEnteredDeposit, userEnteredSizePickerValue, accountRecommendation, pot])
 
   // Validate the balance and deposit form fields
   useEffect(() => {
-    let walletBalance: OXT = wallet?.oxtBalanceOXT ?? OXT.zero;
+    if (!fundsToken) {
+      return;
+    }
+    const zero = fundsToken.zero;
+    let walletBalance: LotFunds = wallet?.fundsBalance ?? zero;
     // console.log("validate: ", addAmount, addEscrow)
 
-    // let totalSpend: BigInt = BigInt(oxtToKeiki(addBalance || 0)).add(oxtToKeiki(addDeposit || 0))
-    let totalSpend: OXT = (addBalance || OXT.zero).add(addDeposit || OXT.zero);
+    let totalSpend: LotFunds = (addBalance || zero).add(addDeposit || zero);
 
     // console.log("total spend = ", BigInt(totalSpend) / 1e18)
     let overSpend = totalSpend.gt(walletBalance);
-    // console.log("overspend = ", overSpend)
-    // let escrowEmpty = addEscrow == null || addEscrow === 0;
-    // let amountEmpty = addAmount == null || addAmount === 0;
-    // let missingRequiredAmount = (props.createAccount || escrowEmpty) && amountEmpty;
-    //setAmountError(missingRequiredAmount || overSpend);
     setBalanceError(overSpend);
-    // let missingRequiredEscrow = (props.createAccount || amountEmpty) && escrowEmpty;
-    //setEscrowError(missingRequiredEscrow || overSpend);
     setEscrowError(overSpend);
-  }, [wallet, addBalance, addDeposit])
+  }, [fundsToken, wallet, addBalance, addDeposit])
 
   async function submitAddFunds() {
-    let api = OrchidAPI.shared();
-    if (!wallet) {
+    if (!wallet || !fundsToken || !api.eth) {
       return;
     }
+    const zero = fundsToken.zero;
     let walletAddress = wallet.address;
-    let walletBalance = wallet.oxtBalance
     console.log("submit add funds: ", walletAddress, addBalance, addDeposit);
-
     let signerAddress =
       props.createAccount ?
         (generatedSigner?.address ?? newSignerAddress)
         : (api.signer.value?.address)
 
-    if (walletAddress == null || signerAddress == null || walletBalance == null) {
+    if (walletAddress == null || signerAddress == null) {
       return;
     }
     if (props.createAccount && (addBalance == null || addDeposit == null)) {
@@ -317,19 +321,9 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       txResult.current.scrollIntoView();
     }
     try {
-      const amountKeiki = addBalance?.keiki || BigInt.zero;
-      const escrowKeiki = addDeposit?.keiki || BigInt.zero;
-
-      // Choose a gas price
-      let medianGasPrice: ETH = await api.eth.getGasPrice();
-      let gasPrice = GasPricingStrategy.chooseGasPrice(
-        OrchidContracts.add_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
-      if (!gasPrice) {
-        console.log("addfunds: gas price potentially too low.");
-      }
-
-      let txId = await api.eth.orchidAddFunds(
-        walletAddress, signerAddress, amountKeiki, escrowKeiki, walletBalance, gasPrice);
+      const amount = addBalance ?? zero;
+      const deposit = addDeposit ?? zero
+      let txId = await api.eth.orchidAddFunds(walletAddress, signerAddress, amount, deposit, wallet);
 
       if (props.createAccount) {
         await api.updateSigners();
@@ -358,87 +352,68 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   // Generate a new signer for the user
   async function generateSigner() {
     setGeneratingSigner(true)
-    if (wallet == null) {
-      return
-    }
     // defer this expensive operation a bit so that the button can show the disabled state.
     setTimeout(() => {
+      if (wallet == null) {
+        return
+      }
       console.log("set interval")
-      const signer = OrchidAPI.shared().eth.orchidCreateSigner(wallet)
+      if (!api.eth) {
+        return
+      }
+      const signer = api.eth.orchidCreateSigner(wallet)
       setGeneratedSigner(signer)
       setGeneratingSigner(false)
     }, 500);
     setSignerKeyError(false)
   }
 
-  // return the current user balance/escrow ratio or zero if undefined
-  function currentPotRatio(): number {
-    if (!pot?.balance || !pot.escrow || pot.escrow === BigInt(0)) {
-      return 0
-    }
-    // escrow is two face values
-    return Math.floor(BigInt(pot.balance).divide(BigInt(pot.escrow).divide(2)));
-  }
+  // useTraceUpdate(
+  //   [currentPotRatio, api.eth, efficiencySliderValue, sizePickerValue, pot, potMarketConditions, gasToken]
+  // );
 
   ///
   /// Render
   ///
 
-  // Begin: logging (can be removed)
-  /*
-  let expectedTicketValue = accountRecommendation?.expectedTicketValue
-  let expectedTickets = accountRecommendation?.expectedTickets
-  let efRatio = Math.floor((accountRecommendation?.balance.value ?? 1) / (accountRecommendation?.maxFaceValue.value ?? 1));
-  console.log(
-    "size picker value = ", sizePickerValue,
-    ", balance = ", accountRecommendation?.balance.value,
-    ", deposit = ", accountRecommendation?.deposit.value,
-    ", ratio = ", efRatio,
-    ", expectedTickets = ", expectedTickets,
-    ", expectedTicketValue = ", expectedTicketValue?.value)
-  // End: logging
-   */
+  // todo: merge with Token formatCurrency?
+  function formatFunds(val: LotFunds | null): string | null {
+    return val?.floatValue.toFixedLocalized(4).replace(/,/g, '') ?? null
+  }
 
-  let totalSpend: OXT = (addBalance ?? OXT.zero).add(addDeposit ?? OXT.zero)
+  let totalSpend: LotFunds | null = addBalance && addDeposit ? addBalance.add(addDeposit) : null;
   let submitEnabled =
     wallet !== null
-    && !tx.isRunning()
+    && !tx.isRunning
     && !(balanceError || escrowError)
     && (addBalance != null || addDeposit != null)
-    && totalSpend.gt(OXT.zero)
+    && (totalSpend?.gtZero() ?? false)
     // create account needs a signer key
     && !(props.createAccount && signerKeyError)
     // need pot info unless we are creating an account
     && (pot != null || props.createAccount)
   ;
 
-  function formatOxt(oxt: OXT | null): string | null {
-    return oxt?.floatValue.toFixedLocalized(2).replace(/,/g, '') ?? null
-  }
-
-  let newBalanceStr = formatOxt(userEnteredBalance)
-    ?? (formatOxt(accountRecommendation?.balance ?? null) ?? null)
-  let newDepositStr = formatOxt(userEnteredDeposit)
-    ?? (formatOxt(accountRecommendation?.deposit ?? null) ?? null)
+  let newBalanceStr = formatFunds(userEnteredBalance)
+    ?? (formatFunds(accountRecommendation?.balance ?? null) ?? null)
+  let newDepositStr = formatFunds(userEnteredDeposit)
+    ?? (formatFunds(accountRecommendation?.deposit ?? null) ?? null)
 
   const maxEfficiency = 99.0;
-  let totalOXTRequired: OXT | null = (addBalance != null && addDeposit != null) ?
+  let totalFundsRequired: LotFunds | null = (addBalance != null && addDeposit != null) ?
     addBalance.add(addDeposit) : null
-  // console.log(`totalOXTRequired = ${totalOXTRequired}, addBalance = ${addBalance?.keiki}, addDeposit = ${addDeposit?.keiki}`);
+  // console.log(`totalFundsRequired = ${totalFundsRequired}, addBalance = ${addBalance?.keiki}, addDeposit = ${addDeposit?.keiki}`);
   const estGas: number | null =
-    (totalOXTRequired === null || totalOXTRequired.floatValue === 0) ? 0
-      : (accountRecommendation?.txEth.floatValue ?? null)
+    (totalFundsRequired === null || totalFundsRequired.floatValue === 0) ? 0
+      : (accountRecommendation?.txGasFundsRequired.floatValue ?? null)
 
-  const warnOXT = OXT.fromKeikiOrDefault(wallet?.oxtBalance, OXT.zero)
-    .lt(totalOXTRequired ?? OXT.zero)
-  const warnETH = ETH.fromWei(wallet?.ethBalance ?? BigInt(0))
-    .lt(accountRecommendation?.txEth ?? ETH.zero)
+  const warnFunds =
+    (fundsToken && (wallet?.fundsBalance ?? fundsToken.zero).lt(totalFundsRequired ?? fundsToken.zero)) ?? false
+  const warnGas =
+    (gasToken && (wallet?.gasFundsBalance ?? gasToken.zero).lt(accountRecommendation?.txGasFundsRequired ?? gasToken.zero)) ?? false
 
-  let provider = OrchidAPI.shared().eth.provider;
-  let walletConnected =
-    provider.walletStatus.value.state === WalletProviderState.Connected
-    && provider.walletStatus.value.isMainNet()
-
+  let provider = api.provider;
+  let walletConnected = provider.walletStatus.value.state === WalletProviderState.Connected
   let generateSignerEnabled = !generatingSigner && walletConnected
 
   return (
@@ -463,7 +438,8 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       <Divider noGutters={true} marginTop={16}/>
 
       {/*funder wallet*/}
-      <FunderWalletPanel wallet={wallet} warnOXT={warnOXT} warnETH={warnETH}/>
+      <FunderWalletPanel wallet={wallet} warnFunds={warnFunds} warnGas={warnGas}
+                         singleToken={fundsToken?.symbol === gasToken?.symbol}/>
       <Divider noGutters={true} marginTop={16}/>
 
       {/*efficiency picker*/}
@@ -494,11 +470,12 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           <input
             className="editable"
             onChange={(e) => {
-              setUserEnteredDeposit(OXT.fromString(e.currentTarget.value) ?? OXT.zero);
+              // setUserEnteredSizePickerValue(null)
+              setUserEnteredDeposit((fundsToken?.fromString(e.currentTarget.value) ?? fundsToken?.zero) ?? null);
               // When the user enters one value adopt the corresponding pot value
-              if (!userEnteredBalance && accountRecommendation?.balance) {
-                setUserEnteredBalance(accountRecommendation?.balance)
-              }
+              // if (!userEnteredBalance && accountRecommendation?.balance) {
+              //   setUserEnteredBalance(accountRecommendation?.balance ?? null)
+              // }
             }}
             type="number"
             value={editingDeposit ? undefined : newDepositStr || (0).toFixedLocalized(2)}
@@ -517,21 +494,21 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
 
       <label className="title subheading">{"Pick your size"}</label>
       <label style={{fontSize: 16, marginBottom: 0}}>
-        {/*Based on current market stats and selected account ratio of {sizePickerValue ?? "..."}, */}
-        {/*we estimate with 80%+ probability you will receive OXT value greater than:*/}
         Account size is the ratio of your account balance to half of your deposit size.
       </label>
 
       {/*size picker*/}
       <SizePicker
-        value={sizePickerValue ?? 0}
+        value={userEnteredSizePickerValue ?? sizePickerValue ?? 0}
         label={
-          // formatOxt(accountRecommendation?.expectedTicketValue ?? null) ?? "..."
-          sizePickerValue?.toString() ?? "..."
+          (userEnteredSizePickerValue?.toString() ?? sizePickerValue?.toString()) ?? "..."
         }
         min={1}
         max={OrchidLottery.maxPrecomputedEFRatio}
-        sizeChanged={setSizePickerValue}
+        sizeChanged={size => {
+          setUserEnteredBalance(null)
+          setUserEnteredSizePickerValue(size)
+        }}
       />
 
       <p className="instructions" style={{marginBottom: 16}}>
@@ -550,10 +527,11 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           <input
             className="editable"
             onChange={(e) => {
-              setUserEnteredBalance(OXT.fromString(e.currentTarget.value) ?? OXT.zero);
+              setUserEnteredSizePickerValue(null)
+              setUserEnteredBalance((fundsToken?.fromString(e.currentTarget.value) ?? fundsToken?.zero) ?? null);
               // When the user enters a balance value adopt the corresponding pot value
               if (!userEnteredDeposit && accountRecommendation?.deposit) {
-                setUserEnteredDeposit(accountRecommendation?.deposit)
+                setUserEnteredDeposit(accountRecommendation?.deposit ?? null)
               }
               return true;
             }}
@@ -570,25 +548,26 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       {/*Totals*/}
       <Row className="total-row" noGutters={true}>
         <Col>
-          <label>{"Total OXT"}</label>
+          <label>{"Total "}{fundsToken?.symbol}</label>
         </Col>
         <Col>
-          <div className="oxt-1">{
-            totalOXTRequired?.floatValue.toFixedLocalized(4) ?? "..."
+          <div className="funds-1">{
+            totalFundsRequired?.floatValue.toFixedLocalized(4) ?? "..."
           }</div>
         </Col>
       </Row>
       <Row className="total-row nomargin" noGutters={true}>
         <Col>
-          <label>{"ETH Network Fee"}</label>
+          <label>{"Network Fee "}{gasToken?.symbol}</label>
         </Col>
         <Col>
-          <div className="oxt-1">{estGas?.toFixedLocalized(4) ?? "..."}</div>
+          <div className="funds-1">{estGas?.toFixedLocalized(4) ?? "..."}</div>
         </Col>
       </Row>
 
+      <Spacer height={24}/>
       <SubmitButton onClick={() => submitAddFunds()} enabled={submitEnabled}>
-        {props.createAccount ? S.createAccount : S.addOXT}
+        {props.createAccount ? S.createAccount : S.addFunds}
       </SubmitButton>
 
       <TransactionProgress ref={txResult} tx={tx}/>
@@ -611,8 +590,8 @@ function OrchidAccountPanel(props: { pot: LotteryPot | null, marketConditions: M
         <label>{S.balance}</label>
       </Col>
       <Col>
-        <div className="oxt-1-pad">
-          {props.pot?.balance == null ? "..." : keikiToOxtString(props.pot.balance, 2)}
+        <div className="funds-1-pad">
+          {props.pot?.balance.toFixedLocalized() ?? "..."}
         </div>
       </Col>
     </Row>
@@ -622,8 +601,8 @@ function OrchidAccountPanel(props: { pot: LotteryPot | null, marketConditions: M
         <label>{S.deposit}</label>
       </Col>
       <Col>
-        <div className="oxt-1-pad">
-          {props.pot?.escrow == null ? "..." : keikiToOxtString(props.pot.escrow, 2)}
+        <div className="funds-1-pad">
+          {props.pot?.escrow.toFixedLocalized() ?? "..."}
         </div>
       </Col>
     </Row>
@@ -644,21 +623,28 @@ function OrchidAccountPanel(props: { pot: LotteryPot | null, marketConditions: M
 
 function FunderWalletPanel(props: {
   wallet: Wallet | null,
-  warnOXT: boolean,
-  warnETH: boolean
+  warnFunds: boolean,
+  warnGas: boolean,
+  singleToken: boolean
 }) {
-  let fundTypes: string | null = null;
-  if (props.warnOXT && !props.warnETH) {
-    fundTypes = "OXT"
+  let {fundsToken: funds, gasToken: gas} = useContext(WalletProviderContext);
+
+  let fundTypesText: string | null = null;
+  if (props.warnFunds && !props.warnGas) {
+    fundTypesText = funds?.symbol ?? "funds"
   }
-  if (!props.warnOXT && props.warnETH) {
-    fundTypes = "ETH"
+  if (!props.warnFunds && props.warnGas) {
+    fundTypesText = gas?.symbol ?? "funds"
   }
-  if (props.warnOXT && props.warnETH) {
-    fundTypes = "OXT and ETH"
+  if (props.warnFunds && props.warnGas) {
+    if (funds?.symbol && gas?.symbol) {
+      fundTypesText = `${funds.symbol} and ${gas.symbol}`
+    } else {
+      fundTypesText = "funds"
+    }
   }
-  const warning: string | null = fundTypes ?
-    "You'll need additional " + fundTypes + " to complete the add funds transaction." : null
+  const warning: string | null = fundTypesText ?
+    "You'll need additional " + fundTypesText + " to complete a transaction." : null
 
   return <>
     <div className={"funder-panel"}>
@@ -667,26 +653,29 @@ function FunderWalletPanel(props: {
         <Col
           style={{overflow: 'hidden', flexGrow: 2,}}>
           <div
-            style={{overflow: 'hidden', textOverflow: "ellipsis"}} className="oxt-1-pad">
+            style={{overflow: 'hidden', textOverflow: "ellipsis"}} className="funds-1-pad">
             {props.wallet?.address ?? "..."}
           </div>
         </Col>
       </Row>
       <Row>
-        <Col><label className={props.warnOXT ? "warn" : ""}>{"Available OXT"}</label></Col>
+        <Col><label
+          className={props.warnFunds ? "warn" : ""}>{"Available "}{funds?.symbol ?? "Funds"}</label></Col>
         <Col>
-          <div className={"oxt-1-pad" + (props.warnOXT ? " warn" : "")}>
-            {keikiToOxtString(props.wallet?.oxtBalance ?? null)}</div>
+          <div className={"funds-1-pad" + (props.warnFunds ? " warn" : "")}>
+            {props.wallet?.fundsBalance.toFixedLocalized() ?? "..."}</div>
         </Col>
       </Row>
-      <Row>
-        <Col><label className={props.warnETH ? "warn" : ""}>{"Available ETH"}</label></Col>
+      <Row className={props.singleToken ? "hidden" : ""}>
+        <Col><label
+          className={props.warnGas ? "warn" : ""}>{"Available "}{gas?.symbol ?? "Gas Funds"}</label></Col>
         <Col>
-          <div className={"oxt-1-pad" + (props.warnETH ? " warn" : "")}>
-            {weiToETHString(props.wallet?.ethBalance ?? null)}</div>
+          <div className={"funds-1-pad" + (props.warnGas ? " warn" : "")}>
+            {props.wallet?.gasFundsBalance.toFixedLocalized() ?? "..."}
+          </div>
         </Col>
       </Row>
-      {fundTypes ? <p className="instructions warn">{warning}</p> : ""}
+      {fundTypesText ? <p className="instructions warn">{warning}</p> : ""}
     </div>
   </>;
 }
@@ -706,7 +695,7 @@ function SignerAddressInstructions(props: any) {
         <p>
           The signer address refers to one part of a key-pair that the Orchid app uses to pay for
           decentralized service. The Orchid app requires the signer key to sign valid payments, and
-          Orchid DApp requires the signer address to store on-chain with account's OXT.
+          Orchid DApp requires the signer address to store on-chain with account's funds.
         </p>
         <p>
           You can generate the signer in the DApp, and then scan it into the app by linking the
@@ -825,4 +814,3 @@ function SizePicker(props: {
     </Col>
   </Row>;
 }
-

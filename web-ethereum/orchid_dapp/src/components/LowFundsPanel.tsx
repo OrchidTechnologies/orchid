@@ -1,31 +1,33 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {Col, Collapse, Container, Row} from "react-bootstrap";
-import {OXT} from "../api/orchid-types";
-import {OrchidAPI} from "../api/orchid-api";
 import {LotteryPot} from "../api/orchid-eth";
-import {CancellablePromise, formatCurrency, makeCancelable} from "../util/util";
-import {Orchid} from "../api/orchid";
-import {AccountRecommendation} from "./MarketConditionsPanel";
+import {AccountRecommendation} from "../api/orchid-market-conditions";
+import {AccountContext, ApiContext} from "../index";
+import {CancellablePromise, makeCancellable} from "../util/async-util";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export const LowFundsPanel: React.FC = () => {
-  const [open, setOpen] = useState(false);
-  const [pot, setPot] = useState<LotteryPot|null>();
+  const [shown, setShown] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [accountRecommendation, setAccountRecommendation] = useState<AccountRecommendation | null>(null);
 
-  useEffect(() => {
-    let api = OrchidAPI.shared();
-    let potSubscription = api.lotteryPot.subscribe(pot => {
-      setPot(pot)
-    });
+  let api = useContext(ApiContext);
+  let pot = useContext(AccountContext);
 
-    let getRecommendation: CancellablePromise<AccountRecommendation> =
-      makeCancelable(Orchid.minViableAccountComposition());
+  // update recommendation when pot changes
+  useEffect(() => {
+    let cancellablePromises: Array<CancellablePromise<AccountRecommendation>> = [];
     (async () => {
+      if (!pot || !api.eth) {
+        return
+      }
       try {
-        setAccountRecommendation(await getRecommendation.promise);
+        let accountRecommendation = await makeCancellable(
+          api.eth.marketConditions.minViableAccountComposition(), cancellablePromises).promise;
+        setAccountRecommendation(accountRecommendation);
+        setShown(isBalanceLow(pot, accountRecommendation) || isDepositLow(pot, accountRecommendation));
       } catch (err) {
         if (err.isCanceled) {
           //console.log("recommendation cancelled")
@@ -36,10 +38,9 @@ export const LowFundsPanel: React.FC = () => {
     })();
 
     return () => {
-      getRecommendation.cancel()
-      potSubscription.unsubscribe();
+      cancellablePromises.forEach(p => p.cancel());
     };
-  }, []);
+  }, [api.eth, pot]);
 
   if (!pot || accountRecommendation == null) {
     return <div/>
@@ -47,22 +48,18 @@ export const LowFundsPanel: React.FC = () => {
 
   //let pot = Mocks.lotteryPot(1.0, 20.0)
 
-  let balanceLow = OXT.fromKeiki(pot.balance).lt(accountRecommendation.balance);
-  let depositLow = OXT.fromKeiki(pot.escrow).lt(accountRecommendation.deposit);
-
-  if (!balanceLow && !depositLow) {
-    return <div/>
-  }
-
-  let balance = OXT.fromKeiki(pot.balance);
-  let balanceStr = formatCurrency(balance.floatValue, 'OXT');
-  let deposit = OXT.fromKeiki(pot.escrow);
-  let depositStr = formatCurrency(deposit.floatValue, 'OXT');
-  let addBalanceStr = accountRecommendation.balance.subtract(balance).floatValue.toFixedLocalized(2) + ' OXT';
-  let addDepositStr = accountRecommendation.deposit.subtract(deposit).floatValue.toFixedLocalized(2) + ' OXT';
+  let balance = pot.balance;
+  let balanceStr = balance.formatCurrency();
+  let deposit = pot.escrow;
+  let depositStr = deposit.formatCurrency();
+  let addBalanceStr = accountRecommendation.balance.subtract(balance).formatCurrency();
+  let addDepositStr = accountRecommendation.deposit.subtract(deposit).formatCurrency();
 
   let title;
   let text;
+
+  let balanceLow = isBalanceLow(pot, accountRecommendation);
+  let depositLow = isDepositLow(pot, accountRecommendation);
 
   if (balanceLow) {
     title = "Balance too low";
@@ -73,7 +70,7 @@ export const LowFundsPanel: React.FC = () => {
     text = `Your deposit of ${depositStr} is too low. Add at least ${addDepositStr} to your deposit for the Orchid app to function.`;
   }
   if (depositLow && balanceLow) {
-    title = "Balance & deposit too low";
+    title = "Balance & Deposit too low";
     text = `Your deposit and balance are too low.  ` +
       `Add at least ${addDepositStr} to your deposit and ${addBalanceStr} to your balance for the Orchid app to function.`;
   }
@@ -92,51 +89,60 @@ export const LowFundsPanel: React.FC = () => {
     </svg>;
 
   return (
-    <Container
-      style={{
-        color: "black",
-        backgroundColor: "#EBEDF6",
-        width: "100%",
-        padding: "12px",
-        paddingLeft: '24px',
-        paddingRight: '24px',
-      }}
-    >
-      <Row onClick={() => {
-        setOpen(!open)
-      }}>
-        <Col style={{
-          flexGrow: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingRight: 0
+    <Collapse in={shown}>
+      <Container
+        style={{
+          color: "black",
+          backgroundColor: "#EBEDF6",
+          width: "100%",
+          padding: "12px",
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}
+      >
+        <Row onClick={() => {
+          setExpanded(!expanded)
         }}>
-          <div style={{fontSize: '16px', width: '5px'}}>{open ? "▾" : "▸"}</div>
-        </Col>
-        <Col>
-          <span>{alertIcon}</span><span style={{paddingLeft: '20px'}}>{title}</span>
-        </Col>
-        <Col
-          style={{
+          <Col style={{
             flexGrow: 0,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            paddingRight: '0px',
-          }}
-        >
-        </Col>
-      </Row>
-      <Collapse in={open}>
-        <Row style={{marginTop: '12px', marginBottom: '8px'}}>
+            paddingRight: 0
+          }}>
+            <div style={{fontSize: '16px', width: '5px'}}>{expanded ? "▾" : "▸"}</div>
+          </Col>
           <Col>
-            {text}
+            <span>{alertIcon}</span><span style={{paddingLeft: '20px'}}>{title}</span>
+          </Col>
+          <Col
+            style={{
+              flexGrow: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingRight: '0px',
+            }}
+          >
           </Col>
         </Row>
-      </Collapse>
-    </Container>
+        <Collapse in={expanded} appear={true}>
+          <Row style={{marginTop: '12px', marginBottom: '8px'}}>
+            <Col>
+              {text}
+            </Col>
+          </Row>
+        </Collapse>
+      </Container>
+    </Collapse>
   );
 };
 
+function isBalanceLow(pot: LotteryPot, accountRecommendation: AccountRecommendation): boolean {
+  return pot.balance.lt(accountRecommendation.balance);
+}
+
+function isDepositLow(pot: LotteryPot, accountRecommendation: AccountRecommendation): boolean {
+  return pot.escrow.lt(accountRecommendation.deposit);
+}
 

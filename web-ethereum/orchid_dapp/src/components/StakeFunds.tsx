@@ -1,13 +1,14 @@
-import React, {FC, useCallback, useEffect, useRef, useState} from "react";
+import React, {FC, useCallback, useContext, useEffect, useRef, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {errorClass, parseFloatSafe, parseIntSafe} from "../util/util";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import './AddFunds.css'
-import {EthAddress} from "../api/orchid-types";
-import {GasPricingStrategy, isEthAddress, keikiToOxtString, oxtToKeiki} from "../api/orchid-eth";
-import {OrchidContracts} from "../api/orchid-eth-contracts";
+import {isEthAddress } from "../api/orchid-eth";
 import {S} from "../i18n/S";
+import {EthAddress} from "../api/orchid-eth-types";
+import {LotFunds} from "../api/orchid-eth-token-types";
+import {WalletProviderContext} from "../index";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
@@ -15,8 +16,8 @@ export const StakeFunds: FC = () => {
   const defaultStakeDelay = 90 * 24 * 3600; // 90 days in seconds
 
   // Add funds state
-  const [walletBalance, setWalletBalance] = useState<BigInt | null>(null);
-  const [currentStakeAmount, setCurrentStakeAmount] = useState<BigInt | null>(null);
+  const [walletBalance, setWalletBalance] = useState<LotFunds | null>(null);
+  const [currentStakeAmount, setCurrentStakeAmount] = useState<LotFunds | null>(null);
 
   const [addStakeAmount, setAddStakeAmount] = useState<number | null>(null);
   const [addStakeAmountError, setAddStakeAmountError] = useState(true);
@@ -30,11 +31,13 @@ export const StakeFunds: FC = () => {
   const [txRunning, setTxRunning] = useState(false);
   let amountInput = useRef<HTMLInputElement | null>(null);
 
+  let {fundsToken: fundsTokenType} = useContext(WalletProviderContext);
+
   useEffect(() => {
     let api = OrchidAPI.shared();
-    let walletSubscription = api.wallet_wait.subscribe(wallet => {
+    let walletSubscription = api.wallet.subscribe(wallet => {
       //console.log("add funds got wallet: ", wallet);
-      setWalletBalance(wallet.oxtBalance);
+      setWalletBalance(wallet?.fundsBalance ?? null);
     });
     return () => {
       walletSubscription.unsubscribe();
@@ -43,11 +46,12 @@ export const StakeFunds: FC = () => {
 
   const updateCurrentStake = useCallback(async () => {
     let api = OrchidAPI.shared();
+    if (!api.eth) { return }
     if (stakeeAddress === null) {
       //console.log("missing stakee address");
       return;
     }
-    let stake = await api.eth.orchidGetStake(stakeeAddress);
+    let stake: LotFunds = await api.eth.orchidGetStake(stakeeAddress);
     setCurrentStakeAmount(stake);
   }, [stakeeAddress]);
 
@@ -64,33 +68,25 @@ export const StakeFunds: FC = () => {
 
   async function submitAddStake() {
     let api = OrchidAPI.shared();
+    if (!fundsTokenType) { return }
     let wallet = api.wallet.value;
-    if (!wallet) {
+    if (!wallet || !api.eth) {
       return;
     }
     let walletAddress = wallet.address;
-    let walletBalance = wallet.oxtBalance;
     console.log("submit add funds: ", walletAddress, addStakeAmount, stakeDelaySeconds);
     if (walletAddress == null || addStakeAmount == null || stakeeAddress == null
-      || stakeDelaySeconds == null || walletBalance == null) {
+      || stakeDelaySeconds == null) {
       return;
     }
 
     try {
       setTxRunning(true);
-      const amountWei = oxtToKeiki(addStakeAmount);
+      const addAmountFunds: LotFunds = fundsTokenType.fromNumber(addStakeAmount);
 
-      // Choose a gas price
-      let medianGasPrice = await api.eth.getGasPrice();
-      let gasPrice = GasPricingStrategy.chooseGasPrice(
-        OrchidContracts.stake_funds_total_max_gas, medianGasPrice, wallet.ethBalance);
-      if (!gasPrice) {
-        console.log("Add funds: gas price potentially too low.");
-      }
-
-      let delayValue = BigInt(stakeDelaySeconds); // seconds
+      let delayValue: BigInt = BigInt(stakeDelaySeconds); // seconds
       await api.eth.orchidStakeFunds(
-        walletAddress, stakeeAddress, amountWei, walletBalance, delayValue, gasPrice);
+        walletAddress, stakeeAddress, addAmountFunds, wallet, delayValue);
       api.updateWallet().then();
       console.log("updating stake");
       updateCurrentStake().then();
@@ -119,8 +115,8 @@ export const StakeFunds: FC = () => {
           <label>{S.fromAvailable}</label>
         </Col>
         <Col>
-          <div className="oxt-1-pad">
-            {walletBalance == null ? "..." : keikiToOxtString(walletBalance, 2)}
+          <div className="funds-1-pad">
+            {walletBalance == null ? "..." : walletBalance.toFixedLocalized(2)}
           </div>
         </Col>
       </Row>
@@ -131,8 +127,8 @@ export const StakeFunds: FC = () => {
           <label>{S.currentStake}</label>
         </Col>
         <Col>
-          <div className="oxt-1-pad">
-            {currentStakeAmount == null ? "..." : keikiToOxtString(currentStakeAmount, 2)}
+          <div className="funds-1-pad">
+            {currentStakeAmount == null ? "..." : currentStakeAmount.toFixedLocalized(2)}
           </div>
         </Col>
       </Row>
@@ -173,10 +169,12 @@ export const StakeFunds: FC = () => {
             onChange={(e) => {
               let amount = parseFloatSafe(e.currentTarget.value);
               setAddStakeAmount(amount);
-              setAddStakeAmountError(amount == null || oxtToKeiki(amount) > (walletBalance || 0));
+              if (fundsTokenType) {
+                setAddStakeAmountError(amount == null || fundsTokenType.fromNumber(amount).gt(walletBalance || fundsTokenType.zero));
+              }
             }}
             type="number"
-            placeholder={S.oxt}
+            placeholder={fundsTokenType?.symbol ?? "Funds"}
             defaultValue={undefined}
           />
         </Col>
@@ -204,7 +202,7 @@ export const StakeFunds: FC = () => {
       </Row>
 
       <SubmitButton onClick={() => submitAddStake()} enabled={submitEnabled}>
-        {S.stakeOxt}
+        {S.stake}
       </SubmitButton>
     </Container>
   );

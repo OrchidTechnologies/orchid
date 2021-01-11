@@ -1,13 +1,14 @@
 //
 // Orchid Web3 Provider API
 //
-import {OrchidContracts} from "./orchid-eth-contracts";
 import Web3 from "web3";
 import "../i18n/i18n_util";
 import {BehaviorSubject} from "rxjs";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import {OrchidAPI} from "./orchid-api";
+import {ChainInfo, EVMChains} from "./chains/chains";
+import {GasFunds, LotFunds, TokenType} from "./orchid-eth-token-types";
 
 declare global {
   interface Window {
@@ -40,6 +41,18 @@ export class WalletProviderStatus {
   chainId: number | undefined
   networkId: number | undefined
 
+  get chainInfo(): ChainInfo | null {
+    return this.chainId ? EVMChains.getChain(this.chainId) : null;
+  }
+
+  get fundsToken(): TokenType<LotFunds> | null {
+    return this.chainInfo?.fundsToken ?? null
+  }
+
+  get gasToken(): TokenType<GasFunds> | null {
+    return this.chainInfo?.gasToken ?? null
+  }
+
   static unknown = new WalletProviderStatus(WalletProviderState.Unknown)
   static noWalletProvider = new WalletProviderStatus(WalletProviderState.NoWalletProvider)
   static error = new WalletProviderStatus(WalletProviderState.Error)
@@ -58,11 +71,6 @@ export class WalletProviderStatus {
     this.chainId = chainId
     this.networkId = networkId
   }
-
-  isMainNet(): boolean {
-    // TODO: we need a table here
-    return this.chainId === 1;
-  }
 }
 
 
@@ -72,6 +80,16 @@ export class WalletProviderStatus {
 /// https://eips.ethereum.org/EIPS/eip-1102 (account authorization)
 /// https://nodejs.org/api/events.html (event emitter API)
 export class OrchidWeb3API {
+
+  private static instance: OrchidWeb3API;
+
+  static shared() {
+    if (!OrchidWeb3API.instance) {
+      OrchidWeb3API.instance = new OrchidWeb3API();
+    }
+    return OrchidWeb3API.instance;
+  }
+
   web3: Web3 | null = null;
   web3Modal: Web3Modal;
 
@@ -80,15 +98,15 @@ export class OrchidWeb3API {
 
   private deregisterListeners: (() => void) | undefined;
 
-  constructor() {
+  private constructor() {
     // web3modal providers
     const providerOptions = {
-        walletconnect: {
-          package: WalletConnectProvider,
-          options: {
-            infuraId: "63c2f3be7b02422d821307f1270e5baf"
-          }
-        },
+      walletconnect: {
+        package: WalletConnectProvider,
+        options: {
+          infuraId: "63c2f3be7b02422d821307f1270e5baf"
+        }
+      },
     };
 
     // web3modal
@@ -157,7 +175,6 @@ export class OrchidWeb3API {
 
     // We now have either a web3modal provider or we should look for a default injected environment
     await this.registerListeners(provider);
-    this.initContracts();
   }
 
   async disconnect() {
@@ -174,8 +191,9 @@ export class OrchidWeb3API {
     }
     await this.web3Modal.clearCachedProvider();
     this.currentProvider = null;
+    this.web3 = null;
     this.walletStatus.next(WalletProviderStatus.noWalletProvider);
-    OrchidAPI.shared().clear();
+    await OrchidAPI.shared().clear();
   }
 
   private async registerListeners(provider: any) {
@@ -380,22 +398,4 @@ export class OrchidWeb3API {
       return null;
     }
   }
-
-  private initContracts() {
-    if (!this.web3) {
-      return
-    }
-
-    // Init contracts
-    try {
-      OrchidContracts.token = new this.web3.eth.Contract(OrchidContracts.token_abi, OrchidContracts.token_addr());
-      OrchidContracts.lottery = new this.web3.eth.Contract(OrchidContracts.lottery_abi, OrchidContracts.lottery_addr());
-      OrchidContracts.directory = new this.web3.eth.Contract(OrchidContracts.directory_abi, OrchidContracts.directory_addr());
-    } catch (err) {
-      console.log("Error constructing contracts");
-      this.walletStatus.next(WalletProviderStatus.error);
-    }
-
-  }
-
 }
