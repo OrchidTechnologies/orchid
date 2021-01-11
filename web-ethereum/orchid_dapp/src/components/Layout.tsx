@@ -23,21 +23,19 @@ import withdrawIcon from '../assets/withdraw-outlined.svg'
 import withdrawIconSelected from '../assets/withdraw.svg'
 import {Divider, hashPath, Visibility} from "../util/util";
 import {OrchidAPI} from "../api/orchid-api";
-import {pathToRoute, Route, RouteContext, setURL} from "./Route";
+import {pathToRoute, Route, RouteContext, RouteContextType} from "./RouteContext";
 import {TransactionPanel} from "./TransactionPanel";
 import {OrchidTransactionDetail} from "../api/orchid-tx";
 import {S} from "../i18n/S";
 import {StakeFunds} from "./StakeFunds";
 import {MarketConditionsPanel} from "./MarketConditionsPanel";
 import {LowFundsPanel} from "./LowFundsPanel";
+import {WalletProviderContext} from "../index";
 
 export const Layout: FC = () => {
 
-  const [route, setRoute] = useState<Route>(pathToRoute(hashPath()) ?? Route.None);
-  const [navEnabledState, /*setNavEnabledState*/] = useState(true);
   const [isNewUser, setIsNewUser] = useState(true);
   const [orchidTransactions, setOrchidTransactions] = useState<OrchidTransactionDetail[]>([]);
-
   const moreMenuItems = new Map<Route, string>([
     [Route.Info, S.info],
     [Route.Transactions, S.transactions],
@@ -45,6 +43,8 @@ export const Layout: FC = () => {
     [Route.LockFunds, S.lockUnlockFunds],
     [Route.DebugPanel, S.advanced]
   ]);
+  const {route, setRoute}: RouteContextType = useContext(RouteContext);
+  let {chainId} = useContext(WalletProviderContext);
 
   useEffect(() => {
     let api = OrchidAPI.shared();
@@ -53,14 +53,25 @@ export const Layout: FC = () => {
       //console.log("user is new: ", isNew)
       setIsNewUser(isNew);
     });
-    let orchidTransactionsSub = api.orchid_transactions_wait.subscribe(txs => {
-      setOrchidTransactions(txs);
+    let orchidTransactionsSub = api.orchid_transactions.subscribe(txs => {
+      let filteredTx = (txs ?? []).filter((tx) => {
+        return tx.chainId === chainId
+      })
+      setOrchidTransactions(filteredTx);
     });
+
+    // update the route on user entered url hash changes
+    window.onhashchange = function () {
+      console.log("user changed hash path")
+      setRoute(pathToRoute(hashPath()) ?? Route.None);
+    }
+
     return () => {
       newUserSub.unsubscribe();
       orchidTransactionsSub.unsubscribe();
+      window.onhashchange = null;
     };
-  }, [route]);
+  }, [chainId, route, setRoute]);
 
   let bannerTransactions = orchidTransactions.map(orcTx => {
     return (<Row key={orcTx.hash}><TransactionPanel tx={orcTx}/></Row>);
@@ -70,14 +81,6 @@ export const Layout: FC = () => {
   let moreItemsSelected = Array.from(moreMenuItems.keys()).includes(route);
   let navEnabled = true;
   return (
-  <RouteContext.Provider value={{
-      route: route,
-      setNavEnabled: (enabled: boolean) => {
-        console.log("set nav enabled: ", enabled);
-        //setNavEnabledState(enabled)
-      },
-      setRoute: (route:Route)=>{ setURL(route); setRoute(route); }
-    }}>
       <Container className="main-content">
         <Row>
           <Col>
@@ -128,7 +131,6 @@ export const Layout: FC = () => {
         </Row>
         {/*<Divider/>*/}
       </Container>
-    </RouteContext.Provider>
   );
   // @formatter:on
 };

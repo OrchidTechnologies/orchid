@@ -12,32 +12,30 @@ import {
 } from "react-bootstrap";
 import './Header.css';
 import {OrchidAPI} from "../api/orchid-api";
-import {keikiToOxtString, Signer} from "../api/orchid-eth";
-import {Route, RouteContext} from "./Route";
+import {Signer} from "../api/orchid-eth";
+import {Route, RouteContext} from "./RouteContext";
 import {S} from "../i18n/S";
 import {Subscription} from "rxjs";
-import {WalletProviderState, WalletProviderStatus} from "../api/orchid-eth-web3";
+import {WalletProviderState} from "../api/orchid-eth-web3";
+import {LotFunds} from "../api/orchid-eth-token-types";
+import {AccountContext, WalletProviderContext} from "../index";
+import {ChainInfo} from "../api/chains/chains";
 
 export const Header: React.FC = () => {
-  const [oxtBalance, setOxtBalance] = useState<string | null>(null);
   const [newUser, setNewUser] = useState<boolean | undefined>(undefined);
   const [signers, setSigners] = useState<Signer[] | null>(null);
-  const [walletStatus, setWalletStatus] = useState<WalletProviderStatus | undefined>(undefined);
   const [connecting, setConnecting] = useState(false);
+
+  let pot = useContext(AccountContext);
+  let fundsBalance = pot?.balance;
+  let walletStatus = useContext(WalletProviderContext);
+  //let {fundsToken, gasToken} = walletStatus;
 
   useEffect(() => {
     let subscriptions: Subscription [] = [];
     let api = OrchidAPI.shared();
     subscriptions.push(api.newUser.subscribe(setNewUser));
     subscriptions.push(api.signersAvailable.subscribe(setSigners));
-    subscriptions.push(api.lotteryPot.subscribe(pot => {
-      if (pot) {
-        setOxtBalance(keikiToOxtString(pot.balance, 2));
-      } else {
-        setOxtBalance(null);
-      }
-    }));
-    subscriptions.push(api.eth.provider.walletStatus.subscribe(setWalletStatus));
     return () => {
       subscriptions.forEach(sub => {
         sub.unsubscribe()
@@ -45,11 +43,12 @@ export const Header: React.FC = () => {
     };
   }, []);
 
-  let showAccountSelector = !newUser && !(oxtBalance == null);
+  let showAccountSelector = !newUser && fundsBalance;
   //if (walletStatus) { console.log("header: wallet connection status: ", WalletProviderState[walletStatus.state], walletStatus.account); }
   let showConnectButton = !showAccountSelector
     //&& (walletStatus?.state === WalletProviderState.NoWalletProvider || walletStatus?.state === WalletProviderState.NotConnected)
-    && (walletStatus?.state === WalletProviderState.NoWalletProvider)
+    && (walletStatus?.state === WalletProviderState.NoWalletProvider);
+  let showNewAccount = !showAccountSelector && walletStatus.state === WalletProviderState.Connected;
   return (
     <Container>
       <Row noGutters={true} style={{marginBottom: '14px'}}>
@@ -60,33 +59,48 @@ export const Header: React.FC = () => {
                src={logo} alt="Orchid Account"/>
         </Col>
 
-        {/*Account / Balance*/}
-        {
-          showAccountSelector ?
-            <AccountSelector signers={signers || []} oxtBalance={oxtBalance || ""}/> : null
-        }
-        {
-          showConnectButton ?
-            <ConnectButton disabled={connecting} onClick={() => {
-              setConnecting(true);
-              OrchidAPI.shared().eth.provider.connect(true).finally( ()=>{
-                  setConnecting(false);
-              });
-            }}/>
-            : null
-        }
-        {
-          (walletStatus?.state === WalletProviderState.Connected && !walletStatus?.isMainNet()) ?
-            <div style={{width: 200, fontStyle: 'italic', fontSize: 14, textAlign: 'right'}}>
-            Please connect to<br/>Ethereum Main Net</div> : null
-        }
+        {/*right column*/}
+        <Col style={{textAlign: "right"}}>
+          <Row noGutters={true} style={{display: "block"}}>
+            {/*Account / Balance*/}
+            {
+              showAccountSelector ?
+                <AccountSelector
+                  signers={signers || []}
+                  fundsBalance={fundsBalance ?? null}
+                  chainInfo={walletStatus.chainInfo}
+                /> : null
+            }
+            {
+              showNewAccount ? <span>New Account</span> : null
+            }
+            {
+              showConnectButton ?
+                <ConnectButton disabled={connecting} onClick={() => {
+                  setConnecting(true);
+                  OrchidAPI.shared().provider.connect(true).finally(() => {
+                    setConnecting(false);
+                  });
+                }}/>
+                : null
+            }
+          </Row>
 
+          {/*show chain info*/}
+          <Row noGutters={true} style={{display: "block"}}>
+              <span style={{fontSize: 12, marginTop: 8}}>
+                {walletStatus.chainInfo?.name ?? ""}
+              </span>
+          </Row>
+        </Col>
       </Row>
     </Container>
   );
 };
 
-function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
+function AccountSelector(props: {
+  signers: Signer [], fundsBalance: LotFunds | null, chainInfo: ChainInfo | null
+}) {
   let {setRoute} = useContext(RouteContext);
   return (
     <OverlayTrigger
@@ -130,7 +144,7 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
               <ListGroupItem
                 onClick={() => {
                   // disconnect
-                  OrchidAPI.shared().eth.provider.disconnect()
+                  OrchidAPI.shared().provider.disconnect()
                 }}
                 key={"disconnect-item"}
                 style={{
@@ -145,19 +159,20 @@ function AccountSelector(props: { signers: Signer [], oxtBalance: string }) {
       }>
       <div>
         <AccountBalance {...props}/>
+        {/*<span style={{display: "block", fontSize: 12, marginTop: 4}}>{props.chainInfo?.name ?? ""}</span>*/}
       </div>
     </OverlayTrigger>
   );
 }
 
-function AccountBalance(props: { oxtBalance: string }) {
+function AccountBalance(props: { fundsBalance: LotFunds | null }) {
   return (
-    <Row>
+    <Row noGutters={true}>
       <Col style={{flexGrow: 2}}>
         <Row noGutters={true}>
           <Col>
             <div className="header-balance">{S.balanceCaps}</div>
-            <div className="header-balance-value">{props.oxtBalance || ""} OXT</div>
+            <div className="header-balance-value">{props.fundsBalance?.formatCurrency() ?? ""}</div>
           </Col>
           <Col style={{flexGrow: 0}}>
             <img style={{
@@ -172,6 +187,7 @@ function AccountBalance(props: { oxtBalance: string }) {
     </Row>
   );
 }
+
 function ConnectButton(props: { disabled: boolean, onClick: () => void }) {
   return <div className={"submit-button"}>
     <button
@@ -181,4 +197,3 @@ function ConnectButton(props: { disabled: boolean, onClick: () => void }) {
     </button>
   </div>;
 }
-

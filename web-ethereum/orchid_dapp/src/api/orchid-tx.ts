@@ -1,5 +1,6 @@
 import {TransactionReceipt} from "web3-core";
-import {OrchidContracts} from "./orchid-eth-contracts";
+import {OrchidWeb3API} from "./orchid-eth-web3";
+import Web3 from "web3";
 import {OrchidAPI} from "./orchid-api";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -13,38 +14,39 @@ export enum EthereumTransactionStatus {
 
 export class EthereumTransaction {
 
-  static requiredConfirmations(): number {
-      return OrchidContracts.contracts_overridden() ? 1 : 2
-  };
-
   hash: string;
+  requiredConfirmations: number
   confirmations: number;
 
   // An indication that the transaction failed or threw an error in the contract.
   failed: boolean;
 
-  constructor(hash: string, confirmations: number, failed: boolean) {
+
+  constructor(hash: string, requiredConfirmations: number, confirmations: number, failed: boolean) {
     this.hash = hash;
+    this.requiredConfirmations = requiredConfirmations;
     this.confirmations = confirmations;
     this.failed = failed;
   }
 
-  static fromReceipt(currentBlock: number, receipt: TransactionReceipt): EthereumTransaction {
+  static fromReceipt(currentBlock: number, receipt: TransactionReceipt, requiredConfirmations: number): EthereumTransaction {
     let confirmations = currentBlock - receipt.blockNumber + 1;
-    return new EthereumTransaction(receipt.transactionHash, confirmations,
+    return new EthereumTransaction(
+      receipt.transactionHash, requiredConfirmations, confirmations,
+      // TODO:
       // Note: receipt.status may be undefined here, contrary to the API.
       receipt.status === false);
   }
 
   static pending(hash: string): EthereumTransaction {
-    return new EthereumTransaction(hash, 0, false);
+    return new EthereumTransaction(hash,  1, 0, false);
   }
 
   get status(): EthereumTransactionStatus {
     if (this.failed) {
       return EthereumTransactionStatus.FAILURE;
     }
-    if (this.confirmations < EthereumTransaction.requiredConfirmations()) {
+    if (this.confirmations < this.requiredConfirmations) {
       return EthereumTransactionStatus.PENDING;
     }
     return EthereumTransactionStatus.SUCCESS;
@@ -54,7 +56,7 @@ export class EthereumTransaction {
     return `https://etherscan.io/tx/${this.hash}`;
   }
 
-  public toString = () : string => {
+  public toString = (): string => {
     return `Eth TX: hash: ${this.hash}, status: ${this.status}, confirmations: ${this.confirmations}, failed: ${this.failed}`;
   }
 }
@@ -71,12 +73,16 @@ export class OrchidTransaction {
   // The composite type of the overall transaction
   type: OrchidTransactionType;
 
+  // The chain for this transaction
+  chainId: number
+
   // One or more transactions that must complete for the operation to be successfull, ordered by nonce.
   transactionHashes: string [];
 
-  constructor(submitted: Date, type: OrchidTransactionType, transactionHashes: string[]) {
+  constructor(submitted: Date, type: OrchidTransactionType, chainId: number, transactionHashes: string[]) {
     this.submitted = submitted;
     this.type = type;
+    this.chainId = chainId;
     this.transactionHashes = transactionHashes;
   }
 
@@ -85,7 +91,7 @@ export class OrchidTransaction {
     return this.transactionHashes[0];
   }
 
-  public toString = () : string => {
+  public toString = (): string => {
     return `Orchid TX: date: ${this.submitted}, type: ${this.type}`;
   }
 }
@@ -97,7 +103,7 @@ export class OrchidTransactionDetail extends OrchidTransaction {
   transactions: EthereumTransaction [];
 
   constructor(parent: OrchidTransaction, transactions: EthereumTransaction[]) {
-    super(parent.submitted, parent.type, parent.transactionHashes);
+    super(parent.submitted, parent.type, parent.chainId, parent.transactionHashes);
     this.transactions = transactions;
   }
 
@@ -112,13 +118,14 @@ export class OrchidTransactionDetail extends OrchidTransaction {
     return EthereumTransactionStatus.SUCCESS;
   }
 
-  public toString = () : string => {
+  public toString = (): string => {
     return `Orchid TX: date: ${this.submitted}, type: ${this.type}, txs: ${this.transactions}`;
   }
 }
 
 export type OrchidTransactionMonitorListener = (transactions: OrchidTransactionDetail []) => void;
 
+// TODO: Scope all of this per chain
 /// Monitor for in-flight transactions.
 /// These are persisted and then removed when the user manually dismisses them.
 export class OrchidTransactionMonitor {
@@ -160,8 +167,8 @@ export class OrchidTransactionMonitor {
       let orcTxs: OrchidTransaction [] = JSON.parse(item);
       // Note: This craziness is required in order to be able to use our TypeScript computed
       // Note: property (`hash`) on the JSON deserialized objects.  We have to recreate them.
-      return orcTxs.map(tx => new OrchidTransaction(tx.submitted, tx.type, tx.transactionHashes));
-    }catch(err) {
+      return orcTxs.map(tx => new OrchidTransaction(tx.submitted, tx.type, tx.chainId, tx.transactionHashes));
+    } catch (err) {
       console.log("Error loading monitored orchid transactions");
       return [];
     }
@@ -171,10 +178,13 @@ export class OrchidTransactionMonitor {
     localStorage.setItem(ORCHID_ETH_TX_KEY, JSON.stringify(txs));
   }
 
-  // Called once per second
   private async interval() {
     if (!this.lastUpdate || (Date.now() - this.lastUpdate.getTime()) > this.POLLING_INTERVAL) {
-      this.update();
+      try {
+        await this.update();
+      } catch (err) {
+        console.log(err);
+      }
     }
   }
 
@@ -189,13 +199,19 @@ export class OrchidTransactionMonitor {
   }
 
   private async getDetail(orcTx: OrchidTransaction): Promise<OrchidTransactionDetail> {
-    let web3 = OrchidAPI.shared().eth.web3;
+    let web3: Web3 | null = OrchidWeb3API.shared().web3;
     let ethTxs = orcTx.transactionHashes.map(async function (hash) {
+      if (!web3) {
+        throw Error("eth unavailable")
+      }
       let receipt: TransactionReceipt = await web3.eth.getTransactionReceipt(hash);
       //console.log("transaction receipt: ", receipt);
       if (receipt) {
         let currentBlock = await web3.eth.getBlockNumber();
-        return EthereumTransaction.fromReceipt(currentBlock, receipt);
+
+        // TODO: We should probably store chain info / number of required confirmations with the stored transactions
+        const requiredConfirmations = OrchidAPI.shared().eth?.requiredConfirmations ?? 2;
+        return EthereumTransaction.fromReceipt(currentBlock, receipt, requiredConfirmations);
       } else {
         return EthereumTransaction.pending(hash);
       }

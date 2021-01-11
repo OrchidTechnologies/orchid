@@ -1,6 +1,5 @@
-import React, {Component} from 'react';
+import React, {Component, useContext} from 'react';
 import {OrchidAPI} from "../api/orchid-api";
-import {keikiToOxtString} from "../api/orchid-eth";
 import {LockStatus} from "./LockStatus";
 import {errorClass, Visibility} from "../util/util";
 import './Info.css'
@@ -8,22 +7,32 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import {Subscription} from "rxjs";
 import {AccountQRCode} from "./AccountQRCode";
 import {S} from "../i18n/S";
-import {Orchid} from "../api/orchid";
-import {MarketConditions} from "./MarketConditionsPanel";
 import {EfficiencyMeterRow} from "./EfficiencyMeter";
 import {Spacer} from "./Spacer";
+import {AccountRecommendation} from "../api/orchid-market-conditions";
+import {WalletProviderContext} from "../index";
+import {WalletProviderStatus} from "../api/orchid-eth-web3";
+import {CancellablePromise, makeCancellable} from "../util/async-util";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export class Info extends Component<any, any> {
+export function Info() {
+  let walletContext: WalletProviderStatus = useContext(WalletProviderContext);
+  return <InfoImpl walletContext={walletContext}/>
+}
+
+export class InfoImpl extends Component<{
+  walletContext: WalletProviderStatus
+}, any> {
   state = {
     signerAddress: "",
-    signerConfigString: undefined,
+    signerConfigString: null,
     walletAddress: "",
-    ethBalance: "",
-    ethBalanceError: true,
-    oxtBalance: "",
-    oxtBalanceError: true,
+    gasBalance: "",
+    gasBalanceError: true,
+    lotBalance: "",
+    lotBalanceError: true,
     potBalance: "",
     potEscrow: "",
     accountRecommendationBalanceMin: null,
@@ -33,6 +42,7 @@ export class Info extends Component<any, any> {
     marketConditions: null
   };
   subscriptions: Subscription [] = [];
+  cancellablePromises: Array<CancellablePromise<AccountRecommendation>> = [];
   walletAddressInput = React.createRef<HTMLInputElement>();
   signerAddressInput = React.createRef<HTMLInputElement>();
 
@@ -43,29 +53,19 @@ export class Info extends Component<any, any> {
       api.signer.subscribe(signer => {
         this.setState({
           signerAddress: signer != null ? signer.address : "",
-          signerConfigString: signer != null ? signer.toConfigString() : undefined
+          signerConfigString: signer != null ? signer.toConfigString() : null
         });
       }));
 
     this.subscriptions.push(
       api.wallet.subscribe(wallet => {
-        if (!wallet) {
-          this.setState({
-            walletAddress: "",
-            ethBalance: "",
-            ethBalanceError: false,
-            oxtBalance: "",
-            oxtBalanceError: false
-          });
-        } else {
-          this.setState({
-            walletAddress: wallet.address,
-            ethBalance: keikiToOxtString(wallet.ethBalance, 4),
-            ethBalanceError: wallet.ethBalance <= BigInt(0),
-            oxtBalance: keikiToOxtString(wallet.oxtBalance, 4),
-            oxtBalanceError: wallet.oxtBalance <= BigInt(0),
-          });
-        }
+        this.setState({
+          walletAddress: wallet?.address ?? "",
+          gasBalance: wallet?.gasFundsBalance.toFixedLocalized(4) ?? "",
+          gasBalanceError: wallet?.gasFundsBalance.lteZero() ?? false,
+          lotBalance: wallet?.fundsBalance.toFixedLocalized(4) ?? "",
+          lotBalanceError: wallet?.fundsBalance.lteZero() ?? false,
+        });
       }));
 
     this.subscriptions.push(
@@ -78,33 +78,46 @@ export class Info extends Component<any, any> {
           });
         } else {
           this.setState({
-            potBalance: keikiToOxtString(pot.balance, 4),
-            potEscrow: keikiToOxtString(pot.escrow, 4),
+            potBalance: pot.balance.toFixedLocalized(4),
+            potEscrow: pot.escrow.toFixedLocalized(4),
           });
-          MarketConditions.for(pot).then(marketConditions => {
-            this.setState({marketConditions: marketConditions});
-          });
+          try {
+            if (api.eth) {
+              api.eth.marketConditions.for(pot).then(marketConditions => {
+                this.setState({marketConditions: marketConditions});
+              });
+            } else {
+              this.setState({marketConditions: null});
+            }
+          } catch (err) {
+            console.log(err)
+          }
         }
       }));
 
-    // TODO: Deal with cancellation here
     (async () => {
+      if (!api.eth) {
+        return
+      }
       try {
-        let minViableAccountRecommendation = await Orchid.minViableAccountComposition();
-        let accountRecommendation = await Orchid.recommendedAccountComposition();
+        let minViableAccountRecommendation =
+          await makeCancellable(api.eth.marketConditions.minViableAccountComposition(), this.cancellablePromises).promise;
+        let accountRecommendation =
+          await makeCancellable(api.eth.marketConditions.recommendedAccountComposition(), this.cancellablePromises).promise;
         this.setState({
-          accountRecommendationBalanceMin: minViableAccountRecommendation.balance.floatValue.toFixedLocalized(2),
-          accountRecommendationDepositMin: minViableAccountRecommendation.deposit.floatValue.toFixedLocalized(2),
-          accountRecommendationBalance: accountRecommendation.balance.floatValue.toFixedLocalized(2),
-          accountRecommendationDeposit: accountRecommendation.deposit.floatValue.toFixedLocalized(2)
+          accountRecommendationBalanceMin: minViableAccountRecommendation.balance.toFixedLocalized(),
+          accountRecommendationDepositMin: minViableAccountRecommendation.deposit.toFixedLocalized(),
+          accountRecommendationBalance: accountRecommendation.balance.toFixedLocalized(),
+          accountRecommendationDeposit: accountRecommendation.deposit.toFixedLocalized()
         });
       } catch (err) {
-        console.log("unable to fetch min viable account info")
+        console.log("unable to fetch min viable account info: ", err)
       }
     })();
   }
 
   componentWillUnmount(): void {
+    this.cancellablePromises.forEach(p => p.cancel());
     this.subscriptions.forEach(sub => {
       sub.unsubscribe()
     })
@@ -127,6 +140,8 @@ export class Info extends Component<any, any> {
   };
 
   render() {
+    const {fundsToken: funds, gasToken: gas} = this.props.walletContext;
+
     return (
       <Container className="Balances form-style">
         <label className="title">{S.info}</label>
@@ -148,17 +163,19 @@ export class Info extends Component<any, any> {
         {/*wallet balance*/}
         <Row>
           <Col>
-            <label className="form-row-label">ETH</label>
-            <span className={errorClass(this.state.ethBalanceError)}> * </span>
+            <label className="form-row-label">{gas?.symbol ?? "Gas Funds"}
+              <span className={errorClass(this.state.gasBalanceError)}> * </span>
+            </label>
             <input className="form-row-field" type="text"
-                   value={this.state.ethBalance}
+                   value={this.state.gasBalance}
                    readOnly/>
           </Col>
           <Col>
-            <label className="form-row-label">OXT</label>
-            <span className={errorClass(this.state.oxtBalanceError)}> * </span>
+            <label className="form-row-label">{funds?.symbol ?? "Funds"}
+              <span className={errorClass(this.state.lotBalanceError)}> * </span>
+            </label>
             <input className="form-row-field" type="text"
-                   value={this.state.oxtBalance}
+                   value={this.state.lotBalance}
                    readOnly/>
           </Col>
         </Row>
@@ -178,11 +195,11 @@ export class Info extends Component<any, any> {
         </Row>
 
         {/*account QR Code*/}
-        <Visibility visible={this.state.signerConfigString !== undefined}>
+        <Visibility visible={this.state.signerConfigString !== null}>
           <AccountQRCode data={this.state.signerConfigString}/>
         </Visibility>
 
-        {/*pot balance and escrow*/}
+        {/*pot balance and deposit*/}
         <label style={{fontWeight: "bold", marginTop: "16px"}}>{S.orchidAccount}</label>
         <Row>
           <Col>
@@ -199,6 +216,23 @@ export class Info extends Component<any, any> {
           </Col>
         </Row>
 
+        {/*recommended account balance and deposit*/}
+        <label style={{fontWeight: "bold", marginTop: "16px"}}>Recommended Account</label>
+        <Row>
+          <Col>
+            <label className="form-row-label">{S.balance}</label>
+            <input className="form-row-field"
+                   value={this.state.accountRecommendationBalance ?? ""}
+                   type="text" readOnly/>
+          </Col>
+          <Col>
+            <label className="form-row-label">{S.deposit}</label>
+            <input className="form-row-field"
+                   value={this.state.accountRecommendationDeposit ?? ""}
+                   type="text" readOnly/>
+          </Col>
+        </Row>
+
         <Spacer height={12}/>
         <EfficiencyMeterRow marketConditions={this.state.marketConditions}
                             label={"Market Efficiency"}/>
@@ -209,11 +243,11 @@ export class Info extends Component<any, any> {
 
         {/*disconnect button*/}
         <div style={{marginTop: "32px"}}/>
-            <Button variant="light" onClick={ () =>
-              OrchidAPI.shared().eth.provider.disconnect()
-            }>{"Disconnect Provider"}</Button>
+        <Button variant="light" onClick={() =>
+          OrchidAPI.shared().provider.disconnect()
+        }>{"Disconnect Provider"}</Button>
       </Container>
-    );
+    )
   }
 }
 
