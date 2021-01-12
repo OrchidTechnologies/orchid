@@ -1,8 +1,14 @@
+import boto3
+import json
 import logging
 import os
 import requests
 import random
+
 from web3 import Web3
+from boto3.dynamodb.conditions import Key
+from decimal import Decimal
+from typing import Any, Dict, Optional, Tuple
 
 LocalTest = False
 
@@ -42,19 +48,27 @@ if (LocalTest == False):
         return balance
 
     def credit_account_balance(receiptHash, cost_usd):
+        logging.debug(f"credit_account_balance({receiptHash},{cost_usd})")
         item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'receiptHash', receiptHash)
-        balance = 0
-        if (item is not None):
-            balance = item['balance'] = item['balance'] + cost_usd
-            dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
+        balance = cost_usd
+        if (item is None):
+            item = {}
+        else:
+            balance += item['balance']
+        item['balance'] = balance
+        item['receiptHash'] = receiptHash
+        dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
         return balance
 
     def debit_account_balance(receiptHash, cost_usd):
+        logging.debug(f"debit_account_balance({receiptHash},{cost_usd})")
         item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'receiptHash', receiptHash)
         balance = 0
         if (item is not None):
             balance = item['balance'] = item['balance'] - cost_usd
             dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
+        else:
+            logging.debug(f"debit_account_balance account {receiptHash} not found")
         return balance
 
     def save_transaction(txnhash, txn):
@@ -129,7 +143,7 @@ def get_usd_per_x_coinbase(token_sym) -> float:
         usd_per_x = float(data['data']['amount'])
     else:
         logging.debug(f"invalid token or not found: {token_sym}")
-    logging.debug(f"usd_per_x_coinbase {token_sym}: {usd_per_eth}")
+    logging.debug(f"usd_per_x_coinbase {token_sym}: {usd_per_x}")
     return usd_per_x
 
 # example: OXT ETH BTC DAI BNB AVAX
@@ -142,7 +156,7 @@ def get_usd_per_x_binance(token_sym) -> float:
         usd_per_x = float(data['price'])
     else:
         logging.debug(f"invalid token or not found: {token_sym}")
-    logging.debug(f"usd_per_x_binance {token_sym}: {usd_per_eth}")
+    logging.debug(f"usd_per_x_binance {token_sym}: {usd_per_x}")
     return usd_per_x
 
 def get_txn_cost_wei(txn):
@@ -155,11 +169,16 @@ def get_txn_cost_wei(txn):
 
 wei_per_eth = 1000000000000000000
 
-def get_txn_cost_usd(txn):
+'''
+def get_txn_cost_usd(txn, symbol):
     cost_wei  = get_txn_cost_wei(txn)
     cost_eth  = cost_wei / wei_per_eth
-    cost_usd  = cost_eth * usd_per_eth
+    usd_per_x = get_usd_per_x_binance(symbol)
+    if (usd_per_x == 0.0):
+        usd_per_x = get_usd_per_x_coinbase(symbol)
+    cost_usd  = cost_eth * usd_per_x
     return cost_usd
+'''
 
 def sendRaw_wei_(w3,txn,  pubkey,privkey,nonce,max_cost_wei):
 
@@ -219,6 +238,7 @@ def sendRaw(W3WSock,txn,receiptHash):
 
     msg = "unknown error"
     if (txnhash is not None):
+        txn['cost_usd'] = cost_usd
         save_transaction(txnhash, txn)
         debit_account_balance(receiptHash, cost_usd)
         msg = "success"
@@ -252,6 +272,10 @@ def refund_failed_txn(W3WSock,txnhash,receiptHash):
 
     # store W3WSock with transaction
     txn = load_transaction(txnhash)
+    cost_usd = txn['cost_usd']
+
+    if (cost_usd == 0):
+        return f"error: transaction {txnhash} already redeemed"
 
     if (txn is None):
         return f"error: transaction {txnhash} not found"
@@ -259,9 +283,13 @@ def refund_failed_txn(W3WSock,txnhash,receiptHash):
     if (has_transaction_failed(W3WSock,txn) == False):
         return f"error: transaction {txnhash} is still pending"
 
-    cost_usd = get_txn_cost_usd(txn)
+    #symbol = '?'
+    #cost_usd = get_txn_cost_usd(txn,symbol)
     credit_account_balance(receiptHash, cost_usd)
-    #todo: erase txn on success
+
+    #erase txn on success
+    txn['cost_usd'] = 0
+    save_transaction(txn,txnhash)
 
     return "success"
 
