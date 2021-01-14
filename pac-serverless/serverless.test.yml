@@ -23,6 +23,19 @@
   response:
     status: 200
 
+- name: 200 simple send_raw
+  endpoint:
+    function: send_raw
+  request:
+    body:
+      receiptHash: 'cc869752a27345251867434c78a071945ecbfcc76a0ea728091181001ac9ac15'
+      txn:
+        to: '0xA614b7c04303814c1Ed20b1CeEB7Cd5394E1511f'
+        gas: '0x57c0'
+        gasPrice: '0x1C67C44400'
+        value: '0x9184e72a'
+  response:
+    status: 200
 
 - name: 502 with no receipt
   endpoint:
