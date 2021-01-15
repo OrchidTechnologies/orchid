@@ -218,7 +218,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
     // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
-    Spawn([=, price = price, commit = commit, issued = issued, nonce = nonce, v = v, r = r, s = s, amount = amount, ratio = ratio, start = start, range = range, funder = funder, recipient = recipient, reveal = reveal, winner = winner]() noexcept -> task<void> { try {
+    nest_.Hatch([&, &price = price, &commit = commit, &issued = issued, &nonce = nonce, &v = v, &r = r, &s = s, &amount = amount, &ratio = ratio, &start = start, &range = range, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
         const auto valid(co_await lottery->Check(signer, funder, amount, recipient, receipt));
 
         {
@@ -249,7 +249,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             funder, recipient,
             receipt, old
         );
-    } orc_catch({}) }, __FUNCTION__);
+    } orc_catch({}) }; }, __FUNCTION__);
 }
 
 void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data) {
@@ -319,7 +319,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
     // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
-    Spawn([=, price = price, commit = commit, /*issued = issued, expire = expire, nonce = nonce, v = v, r = r, s = s,*/ amount = amount, ratio = ratio, funder = funder, recipient = recipient, reveal = reveal, winner = winner]() noexcept -> task<void> { try {
+    nest_.Hatch([&, &amount = amount, &funder = funder, &recipient = recipient, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
         const auto valid(co_await lottery->Check(signer, funder, amount, recipient));
 
         {
@@ -338,7 +338,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             co_return;
         } else if (!winner)
             co_return;
-    } orc_catch({}) }, __FUNCTION__);
+    } orc_catch({}) }; }, __FUNCTION__);
 }
 
 void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) { orc_ignore({
