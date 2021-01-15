@@ -108,7 +108,7 @@ class _PurchasePageState extends State<PurchasePage> {
                 constraints: BoxConstraints(maxWidth: 500),
                 child: Column(
                   children: <Widget>[
-                    if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                    if (AppSize(context).tallerThan(AppSize.iphone_12_max))
                       pady(64),
                     pady(8),
                     _buildInstructions(),

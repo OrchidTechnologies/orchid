@@ -73,7 +73,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                   constraints: BoxConstraints(maxWidth: 700),
                   child: Column(
                     children: <Widget>[
-                      if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                      if (AppSize(context).tallerThan(AppSize.iphone_12_max))
                         pady(64),
                       _buildUserName(),
                       _buildPassword(),
