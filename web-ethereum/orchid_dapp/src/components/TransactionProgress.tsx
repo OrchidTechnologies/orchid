@@ -1,10 +1,10 @@
 import React, {Component} from "react";
 import {EtherscanIO} from "../api/etherscan-io";
 import {findDOMNode} from "react-dom";
-import {TransactionId} from "../api/orchid-types";
 import {Visibility} from "../util/util";
 import {Signer} from "../api/orchid-eth";
 import {AccountQRCode} from "./AccountQRCode";
+import {TransactionId} from "../api/orchid-eth-types";
 
 export enum TransactionState {
   New, Running, Completed, Failed
@@ -28,7 +28,7 @@ export class TransactionStatus {
     this.signer = signer;
   }
 
-  isRunning(): boolean {
+  get isRunning(): boolean {
     return this.state === TransactionState.Running;
   }
 
@@ -53,7 +53,7 @@ export class TransactionStatus {
 }
 
 // Note: this is a component to support the `scrollIntoView` method.
-export class TransactionProgress extends Component<{ tx: TransactionStatus }> {
+export class TransactionProgress extends Component<any, { tx: TransactionStatus }> {
 
   render() {
     let {result, state, txId, signer} = this.props.tx;

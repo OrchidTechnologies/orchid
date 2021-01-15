@@ -6,10 +6,13 @@ export enum Route {
   MoveFunds, LockFunds, DebugPanel, StakeFundsTest
 }
 
-export const RouteContext = React.createContext({
+export interface RouteContextType {
+  route: Route,
+  setRoute: (_: Route) => void
+}
+
+export const RouteContext = React.createContext<RouteContextType>({
   route: Route.Overview,
-  setNavEnabled: (_: boolean) => {
-  },
   setRoute: (_: Route) => {
   }
 });

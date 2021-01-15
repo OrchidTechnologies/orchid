@@ -1,15 +1,11 @@
-import {EthAddress} from "./orchid-types";
-import { Contract } from "web3-eth-contract";
-import {getEthAddressParam} from "../util/util";
+import {EthAddress} from "../orchid-eth-types";
+import {getEthAddressParam} from "../../util/util";
 import {AbiItem} from "web3-utils";
 
-export class OrchidContracts {
+export class OrchidContractMainNetV0 {
+  // The earliest block from which we look for events on chain for this contract.
+  static startBlock: number = 872000;
 
-  static token: Contract;
-  static lottery: Contract;
-  static directory: Contract;
-
-  // TODO: We can get the token address from the lottery contract with `what()` now.
   static token_addr_final: EthAddress = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb'; // OXT Main net
   static token_addr(): EthAddress {
     return getEthAddressParam('token_addr', this.token_addr_final);
@@ -36,8 +32,6 @@ export class OrchidContracts {
   static lottery_update_event_hash: string =
     '0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc';
 
-  // TODO: Now that the contracts are final we can figure out the actual max gas these methods
-  // TODO: can possibly consume, taking into account variation in storage allocation for new users.
   static token_approval_max_gas: number = 50000;
   static lottery_push_max_gas: number = 175000;
   static directory_push_max_gas: number = 300000;
@@ -48,9 +42,11 @@ export class OrchidContracts {
   static lottery_move_max_gas: number = 150000;
 
   // Total max gas used by an add funds operation.
-  static add_funds_total_max_gas: number = OrchidContracts.token_approval_max_gas + OrchidContracts.lottery_push_max_gas;
+  static add_funds_total_max_gas: number = OrchidContractMainNetV0.token_approval_max_gas + OrchidContractMainNetV0.lottery_push_max_gas;
 
-  static stake_funds_total_max_gas: number = OrchidContracts.add_funds_total_max_gas;
+  static stake_funds_total_max_gas: number = OrchidContractMainNetV0.add_funds_total_max_gas;
+
+  static redeem_ticket_max_gas = 100000;
 
   static token_abi: AbiItem [] = [
     {
@@ -1008,4 +1004,3 @@ export class OrchidContracts {
   ];
 
 }
-

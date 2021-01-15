@@ -7,7 +7,7 @@ import './AccountQRCode.css'
 const QRCode = require('qrcode.react');
 
 export const AccountQRCode: React.FC<{
-  data: string | undefined,
+  data: string | null,
 }> = (props) => {
   const [revealed, setRevealed] = useState<boolean>(false);
 

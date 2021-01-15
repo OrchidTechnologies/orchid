@@ -1,109 +1,60 @@
 /// Pricing captures exchange rates at a point in time and supports conversion.
-import {USD, OXT, ETH, min} from "./orchid-types";
-import {LotteryPot} from "./orchid-eth";
-import {OrchidAPI} from "./orchid-api";
+import {GasFunds, LotFunds, TokenType} from "./orchid-eth-token-types";
 
-export class Pricing {
-  public date: Date;
-  public ethToUsdRate: number;
-  public oxtToUsdRate: number;
+export class USD {
+  static zero: USD = new USD(0);
 
-  constructor(ethToUsdRate: number, oxtToUsdRate: number) {
-    this.date = new Date();
-    this.ethToUsdRate = ethToUsdRate;
-    this.oxtToUsdRate = oxtToUsdRate;
+  // TODO: This should probably stored as int cents
+  dollars: number;
+
+  private constructor(dollars: number) {
+    this.dollars = dollars;
   }
 
-  public toUSD(oxt: OXT): USD | null {
-    return USD.fromNumber(oxt.floatValue * this.oxtToUsdRate);
+  public static fromNumber(dollars: number): USD {
+    return new USD(dollars);
   }
 
-  public toOXT(usd: USD): OXT | null {
-    return OXT.fromNumber(usd.dollars / this.oxtToUsdRate);
-  }
-
-  ethToOxt(eth: ETH): OXT {
-    return OXT.fromNumber(this.oxtToUsdRate / this.ethToUsdRate * eth.floatValue);
-  }
-
-  ethToUSD(eth: ETH): USD {
-    return USD.fromNumber(eth.floatValue * this.ethToUsdRate);
-  }
-
-  toString(): string {
-    return 'Pricing{date: $date, ethToUsdRate: $ethToUsdRate, oxtToUsdRate: $oxtToUsdRate}';
+  public lt(other: USD): boolean {
+    return this.dollars < other.dollars;
   }
 }
 
-/// Exchange rates
-export class OrchidPricingAPI {
-  private static instance: OrchidPricingAPI;
+export class Pricing {
+  fundsTokenType: TokenType<LotFunds>
+  gasTokenType: TokenType<GasFunds>
 
-  static exchangeRatesProviderUrl = 'https://api.coinbase.com/v2/exchange-rates';
+  public date: Date;
+  public lotFundsToUsdRate: number; // e.g. OXT per USD
+  public gasFundsToUsdRate: number; // e.g. ETH per USD
 
-  private constructor() {
+  constructor(
+    fundsTokenType: TokenType<LotFunds>,
+    gasTokenType: TokenType<GasFunds>,
+    gasFundsToUsdRate: number,
+    lotFundsToUsdRate: number)
+  {
+    this.fundsTokenType = fundsTokenType;
+    this.gasTokenType = gasTokenType;
+    this.date = new Date();
+    this.lotFundsToUsdRate = lotFundsToUsdRate;
+    this.gasFundsToUsdRate = gasFundsToUsdRate;
   }
 
-  static shared() {
-    if (!OrchidPricingAPI.instance) {
-      OrchidPricingAPI.instance = new OrchidPricingAPI();
-    }
-    return OrchidPricingAPI.instance;
+  public toUSD(val: LotFunds): USD | null {
+    return USD.fromNumber(val.floatValue * this.lotFundsToUsdRate);
   }
 
-  _lastPricing?: Pricing
-
-  /// Get a snapshot of current pricing data at the current time.
-  /// This method may return null if no pricing data is available and the UI
-  /// should handle this as a routine condition by hiding displayed conversions.
-  /// This method is cached for a period of time and safe to call repeatedly.
-  async getPricing(): Promise<Pricing> {
-
-    // Cache for a period of time
-    const cachePeriod = 3000; // ms
-    if (this._lastPricing != null && Date.now() - this._lastPricing.date.getTime() < cachePeriod) {
-      return this._lastPricing;
-    }
-
-    try {
-      const response: Response = await fetch(OrchidPricingAPI.exchangeRatesProviderUrl);
-      if (response.status !== 200) {
-        throw Error(`Error status code: ${response.status}`);
-      }
-      let body = await response.json();
-
-      let rates = body['data']['rates'];
-      this._lastPricing = new Pricing(
-        /*ethToUsdRate:*/ parseFloat(rates['ETH']),
-        /*oxtToUsdRate:*/ parseFloat(rates['OXT'])
-      );
-      return this._lastPricing;
-    } catch (err) {
-      console.log("Error fetching pricing: $err");
-      throw err;
-    }
+  public toFunds(usd: USD): LotFunds | null {
+    return this.fundsTokenType.fromNumber(usd.dollars / this.lotFundsToUsdRate);
   }
 
-  static gasCostToRedeemTicket = 100000;
+  gasFundsToFunds(eth: GasFunds): LotFunds {
+    return this.fundsTokenType.fromNumber(this.lotFundsToUsdRate / this.gasFundsToUsdRate * eth.floatValue);
+  }
 
-  /// Calculate the current real world value of the largest ticket that can be
-  /// issued from this lottery pot, taking into account the amount of gas required
-  /// to redeem the ticket, current gas prices, and the OXT-ETH exchange rate.
-  /// Returns the net value in OXT, which may be zero or negative if the ticket
-  /// would be unprofitable to redeem.
-  async getMaxTicketValue(pot: LotteryPot): Promise<OXT> {
-    let pricing = await this.getPricing();
-    if (pricing == null) {
-      throw Error("no pricing")
-    }
-    let gasPrice: ETH = await OrchidAPI.shared().eth.getGasPrice();
-    let gasCostToRedeem: ETH = gasPrice.multiply(OrchidPricingAPI.gasCostToRedeemTicket);
-    let oxtCostToRedeem: OXT = pricing.ethToOxt(gasCostToRedeem);
-    let maxFaceValue: OXT = min(
-      OXT.fromKeiki(pot.balance),
-      OXT.fromKeiki(pot.escrow).divide(2.0)
-    );
-    return maxFaceValue.subtract(oxtCostToRedeem);
+  gasFundsToUsd(eth: GasFunds): USD {
+    return USD.fromNumber(eth.floatValue * this.gasFundsToUsdRate);
   }
 }
 

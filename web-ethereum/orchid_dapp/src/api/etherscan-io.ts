@@ -1,13 +1,11 @@
-import {EthAddress} from "./orchid-types";
-import {OrchidContracts} from "./orchid-eth-contracts";
+import {EthAddress, LotteryPotUpdateEvent} from "./orchid-eth-types";
+import {LotFunds, TokenType} from "./orchid-eth-token-types";
 
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
 export class EtherscanIO {
   apiKey: string = "73BIQR3R1ER56V53PSSAPNUTQUFVHCVVVH";
   api_url: string = 'https://api.etherscan.io/api';
-  lotteryContractAddress: EthAddress = OrchidContracts.lottery_addr();
-  startBlock: number = 872000;
 
   /*
     Get lottery pot funding events for the specified address in descending
@@ -61,15 +59,22 @@ export class EtherscanIO {
     ]
     }
   */
-  async getEvents(funder: EthAddress, signer: EthAddress): Promise<LotteryPotUpdateEvent[]> {
+  async getLotteryUpdateEvents(
+    lotteryContractAddress: EthAddress,
+    lotteryUpdateEventHash: string,
+    startBlock: number,
+    funder: EthAddress,
+    signer: EthAddress,
+    fundsToken: TokenType<LotFunds>,
+  ): Promise<LotteryPotUpdateEvent[]> {
     let url = new URL(this.api_url);
     let params: { [index: string]: string } = {
       'module': 'logs',
       'action': 'getLogs',
-      'fromBlock': this.startBlock.toString(),
+      'fromBlock': startBlock.toString(),
       'toBlock': 'latest',
-      'address': this.lotteryContractAddress,
-      'topic0': OrchidContracts.lottery_update_event_hash,
+      'address': lotteryContractAddress,
+      'topic0': lotteryUpdateEventHash,
       'topic0_1_opr': 'and',
       'topic1': EtherscanIO.pad64Chars(funder),
       'topic1_2_opr': 'and',
@@ -120,8 +125,8 @@ export class EtherscanIO {
       const timeStamp = new Date(parseInt(ev['timeStamp']) * 1000);
 
       return new LotteryPotUpdateEvent(
-          balance,
-          escrow,
+          balance ? fundsToken.fromInt(balance) : null, null,
+          escrow ? fundsToken.fromInt(escrow) : null, null,
           ev['blockNumber'],
           timeStamp,
           ev['gasPrice'],
@@ -154,26 +159,6 @@ export class EtherscanIO {
 function _assert(condition: boolean, message: string) {
   if (!condition) {
     throw message || "Assertion failed";
-  }
-}
-
-export class LotteryPotUpdateEvent {
-  public balance: BigInt;
-  public escrow: BigInt;
-  public blockNumber: string;
-  public timeStamp: Date;
-  public gasPrice: string;
-  public gasUsed: string;
-  public transactionHash: string;
-
-  constructor(balance: BigInt, escrow: BigInt, blockNumber: string, timeStamp: Date, gasPrice: string, gasUsed: string, transactionHash: string) {
-    this.balance = balance;
-    this.escrow = escrow;
-    this.blockNumber = blockNumber;
-    this.timeStamp = timeStamp;
-    this.gasPrice = gasPrice;
-    this.gasUsed = gasUsed;
-    this.transactionHash = transactionHash;
   }
 }
 

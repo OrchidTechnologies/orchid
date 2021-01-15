@@ -5,7 +5,7 @@ import os
 import w3_generic
 
 from decimal import Decimal
-from utils import configure_logging
+from utils import configure_logging, is_true
 
 configure_logging(level="DEBUG")
 
@@ -28,7 +28,7 @@ def response_success(txnhash):
     logging.debug(msg)
     response = {
         "isBase64Encoded": False,
-        "statusCode": 201,
+        "statusCode": 200,
         "headers": {},
         "body": json.dumps({
             "message": msg,
@@ -55,7 +55,7 @@ def main(event, context):
     txnhash     = body.get('txnhash', '')
     receiptHash = body.get('receiptHash', '')
 
-    msg  = refund_failed_txn(W3WSock,txnhash,receiptHash)
+    msg  = w3_generic.refund_failed_txn(W3WSock,txnhash,receiptHash)
 
     if (msg == "success"):
         return response_success(txnhash)

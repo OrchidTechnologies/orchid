@@ -2,7 +2,7 @@ import React, {FC} from "react";
 import {Visibility} from "../util/util";
 import {Col, Row} from "react-bootstrap";
 import ProgressLine from "./ProgressLine";
-import {MarketConditions} from "./MarketConditionsPanel";
+import {MarketConditions} from "../api/orchid-market-conditions";
 
 export function colorForEfficiency(efficiency: number | null): string {
     if (efficiency == null) { return 'grey'}

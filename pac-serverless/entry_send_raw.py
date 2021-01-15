@@ -2,10 +2,11 @@ import boto3
 import json
 import logging
 import os
+import sys
 import w3_generic
 
 from decimal import Decimal
-from utils import configure_logging
+from utils import configure_logging, is_true
 
 configure_logging(level="DEBUG")
 
@@ -23,13 +24,14 @@ def response_error(msg=None):
     return response
 
 def response_success(txnhash,cost_usd):
-    logging.debug(f'Transaction submitted with txnhash: {txnhash}.')
+    msg = f'Transaction submitted with txnhash: {txnhash}, cost_usd: {cost_usd}.'
+    logging.debug(msg)
     response = {
         "isBase64Encoded": False,
-        "statusCode": 201,
+        "statusCode": 200,
         "headers": {},
         "body": json.dumps({
-            "message": 'Transaction submitted with txnhash: {txnhash}.',
+            "message": msg,
             "txnhash": txnhash,
             "cost_usd": cost_usd,
         })
@@ -50,13 +52,21 @@ def main(event, context):
     logging.debug(f'body: {body}')
 
 
-    W3WSock     = body.get('W3WSock', '')
-    txn         = body.get('txn', '')
-    receiptHash = body.get('receiptHash', '')
+    try:
+        #W3WSock     = body.get('W3WSock', '')
+        W3WSock     = os.environ['WEB3_WEBSOCKET']
+        txn         = body.get('txn', '')
+        receiptHash = body.get('receiptHash', '')
 
-    txnhash,cost_usd,msg = send_raw(W3WSock,txn,receiptHash)
+        txnhash,cost_usd,msg = w3_generic.send_raw(W3WSock,txn,receiptHash)
 
-    if (txnhash != None):
-        response_success(txnhash,cost_usd)
+        logging.debug(f'send_raw txnhash({txnhash}) cost_usd({cost_usd}) msg({msg}) ')
+    except ValueError as e:
+        msg = str(e)
+    except:
+        msg = sys.exc_info()[0]
+
+    if (msg == 'success'):
+        return response_success(txnhash,cost_usd)
     else:
-        response_error(msg)
+        return response_error(msg)
