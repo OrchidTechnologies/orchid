@@ -191,7 +191,6 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
     }
     RegCloseKey(adapter_key);
 
-    // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     auto &sync(sunk.Wire<SyncFile<asio::windows::stream_handle>>(Context(), h));
 
     code("\"" + actual_name + "\"");

@@ -80,7 +80,6 @@ bool vpn_protect(int s)
         CATCH(return false);
         jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
         CATCH(return false);
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
         jboolean success = env->CallStaticBooleanMethod(cOrchidVpnService, mVpnProtect, s);
         CATCH(return false);
         //Log() << "vpn_protect fd:" << s << " success:" << (bool)success << std::endl;

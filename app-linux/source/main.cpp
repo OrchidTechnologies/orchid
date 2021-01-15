@@ -59,7 +59,6 @@ static void my_application_init(MyApplication *self) {
 }
 
 MyApplication *my_application_new() {
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     return MY_APPLICATION(g_object_new(my_application_get_type(), "application-id", "net.orchid.Orchid", nullptr));
 }
 

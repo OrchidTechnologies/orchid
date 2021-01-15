@@ -68,10 +68,9 @@ Log::~Log() { try {
 
 #if 0
 #elif defined(__APPLE__)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-type-cstyle-cast)
+    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     NSLog((NSString *)CFSTR("%s"), log.c_str());
 #elif defined(__ANDROID__)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "%s", log.c_str());
 #else
     std::cerr << log << std::endl;

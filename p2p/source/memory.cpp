@@ -229,7 +229,6 @@ void Hook() {
     return;
 
     Log() << "TMPDIR : " << getenv("TMPDIR") << std::endl;
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     file_ = orc_syscall(open((std::string(getenv("TMPDIR")) + "/hook.log").c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644));
 
     if (file_ == -1)

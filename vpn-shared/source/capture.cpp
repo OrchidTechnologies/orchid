@@ -672,7 +672,6 @@ static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueCon
     Log() << std::string(data, size) << std::endl;
     return JS_UNDEFINED;
 } catch (const std::exception &error) {
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
     return JS_ThrowInternalError(context, "%s", error.what());
 } }
 

@@ -37,7 +37,8 @@ checks += cppcoreguidelines-pro-type-cstyle-cast
 #checks += cppcoreguidelines-pro-type-member-init
 #checks += cppcoreguidelines-pro-type-reinterpret-cast
 checks += cppcoreguidelines-pro-type-static-cast-downcast
-checks += cppcoreguidelines-pro-type-vararg
+# XXX: r22 clang-tidy mis-flags non-const char * as va_list
+#checks += cppcoreguidelines-pro-type-vararg
 checks += cppcoreguidelines-slicing
 # XXX: it isn't clear to me whether this is overkill or not
 #checks += cppcoreguidelines-special-member-functions
