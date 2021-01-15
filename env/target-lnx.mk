@@ -72,6 +72,8 @@ more += --gcc-toolchain=$(CURDIR)/$(output)/sysroot/usr
 include $(pwd)/target-ndk.mk
 include $(pwd)/target-cxx.mk
 
+export LD_LIBRARY_PATH := $(llvm)/lib64:$(LD_LIBRARY_PATH)
+
 lflags += -lrt
 
 define _
