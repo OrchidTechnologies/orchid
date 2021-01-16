@@ -4,7 +4,7 @@ import {BehaviorSubject, Observable, of} from "rxjs";
 import {filter, flatMap, map, shareReplay, take} from "rxjs/operators";
 import {OrchidTransactionDetail, OrchidTransactionMonitor} from "./orchid-tx";
 import {OrchidWeb3API, WalletProviderState, WalletProviderStatus} from "./orchid-eth-web3";
-import {isDebug, isNotNull} from "../util/util";
+import {debugV0, isDebug, isNotNull} from "../util/util";
 import {OrchidEthereumApiV0Impl} from "./v0/orchid-eth-v0";
 import {OrchidEthereumApiV1Impl} from "./v1/orchid-eth-v1";
 import {LotteryPotUpdateEvent} from "./orchid-eth-types";
@@ -28,7 +28,7 @@ export class OrchidAPI {
           console.log(`Missing chain info: ${walletStatus.chainInfo}`);
           return;
         }
-        if (walletStatus.chainInfo.isEthereumMainNet) {
+        if (walletStatus.chainInfo.isEthereumMainNet || debugV0()) {
           this.eth = new OrchidEthereumApiV0Impl(web3) as OrchidEthereumAPI;
         } else {
           // Assume v1 contract for now

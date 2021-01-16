@@ -315,7 +315,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
       return;
     }
 
-    setRoute(Route.CreateAccount); // Keep the user on this page until further navigation
+    setRoute(props.createAccount ? Route.CreateAccount : Route.AddFunds); // Keep the user on this page until further navigation
     setTx(TransactionStatus.running());
     if (txResult.current != null) {
       txResult.current.scrollIntoView();

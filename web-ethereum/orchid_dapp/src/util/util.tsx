@@ -39,6 +39,11 @@ export function isDebug(): boolean {
   return getBoolParam("debug", false);
 }
 
+// force the v0 contract selection even if we are on a test net
+export function debugV0(): boolean {
+  return getBoolParam("v0", false);
+}
+
 export function getEthAddressParam(name: string, defaultValue: string): string {
   let addr = getParam(name);
 

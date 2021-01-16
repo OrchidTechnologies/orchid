@@ -1,4 +1,5 @@
 import {GasFunds, LotFunds, TokenType} from "../orchid-eth-token-types";
+import {debugV0} from "../../util/util";
 
 export class EVMChains {
   public static ETHEREUM_MAIN_NET = 1
@@ -58,7 +59,7 @@ export class ChainInfo {
     this.chainId = json.chainId;
 
     // TODO: Hard coded knowledge of contract version
-    if (this.chainId === EVMChains.ETHEREUM_MAIN_NET) {
+    if (this.chainId === EVMChains.ETHEREUM_MAIN_NET || debugV0()) {
       // for main net assume the v0 contract
       this.gasToken = EVMChains.ETH_TOKEN;
       this.fundsToken = EVMChains.OXT_TOKEN;

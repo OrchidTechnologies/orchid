@@ -8,7 +8,7 @@ import {
   Wallet
 } from "../orchid-eth-types";
 import {GasFunds, LotFunds, min, TokenType} from "../orchid-eth-token-types";
-import {getParam} from "../../util/util";
+import {debugV0, getParam} from "../../util/util";
 import {OrchidAPI} from "../orchid-api";
 import {OrchidTransaction, OrchidTransactionType} from "../orchid-tx";
 import {PromiEvent} from "web3-core";
@@ -31,7 +31,7 @@ export type V1 = OrchidEthereumApiV0Impl
 export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
 
   public web3: Web3
-  public chainId = EVMChains.ETHEREUM_MAIN_NET;
+  public chainId = debugV0() ? EVMChains.ganacheChain.chainId : EVMChains.ETHEREUM_MAIN_NET;
   public fundsTokenType: TokenType<LotFunds>
   public gasTokenType: TokenType<GasFunds>
   public isV0 = true
