@@ -318,7 +318,7 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void _retryPurchase() {
-    OrchidPACServer().processPendingPACTransaction();
+    OrchidPACServer().advancePendingPACTransaction();
   }
 
   void _confirmDeleteTransaction() async {

@@ -26,7 +26,7 @@ class OrchidPACServer {
 
   /// Process the current PAC transaction if required. This method can be
   /// called at any time to attempt to move the process to the next state.
-  void processPendingPACTransaction() async {
+  void advancePendingPACTransaction() async {
     log("iap: process pending pac tx");
     var tx = await PacTransaction.shared.get();
     if (tx == null) {
@@ -75,7 +75,7 @@ class OrchidPACServer {
         tx.state = PacTransactionState.WaitingForRetry;
         var delay = Duration(seconds: 5); // TODO
         Future.delayed(delay).then((_) {
-          processPendingPACTransaction();
+          advancePendingPACTransaction();
         });
       } else {
         // Wait for user action

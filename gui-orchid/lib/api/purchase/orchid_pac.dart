@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/units.dart';
-import 'orchid_purchase.dart';
 
 /// A purchased access credit with a localized price and product id.
 class PAC {
@@ -43,8 +42,6 @@ enum PacTransactionState {
 }
 
 /// A PacTransaction represents a pending transactions with the PAC server.
-/// It is created with the transaction id resulting from an IAP and used
-/// to monitor fulfillment.
 class PacTransaction {
   DateTime date = DateTime.now();
   String productId;

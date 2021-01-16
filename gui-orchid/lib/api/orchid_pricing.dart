@@ -173,7 +173,6 @@ class MarketConditions {
   ETH gasCostToRedeem;
   OXT oxtCostToRedeem;
   OXT maxFaceValue;
-  bool ticketUnderwater;
   double efficiency;
   bool limitedByBalance;
 
@@ -181,7 +180,6 @@ class MarketConditions {
       this.gasCostToRedeem,
       this.oxtCostToRedeem,
       this.maxFaceValue,
-      this.ticketUnderwater,
       this.efficiency,
       this.limitedByBalance);
 
@@ -198,8 +196,7 @@ class MarketConditions {
     var costToRedeem = await getCostToRedeemTicket();
     var limitedByBalance = balance.value <= (escrow / 2.0).value;
     OXT maxFaceValue = LotteryPot.maxTicketFaceValueFor(balance, escrow);
-    var ticketUnderwater =
-        costToRedeem.oxtCostToRedeem.value >= maxFaceValue.value;
+    //var ticketUnderwater = costToRedeem.oxtCostToRedeem.value >= maxFaceValue.value;
 
     // value received as a fraction of ticket face value
     double efficiency = maxFaceValue.value == 0
@@ -214,7 +211,6 @@ class MarketConditions {
         costToRedeem.gasCostToRedeem,
         costToRedeem.oxtCostToRedeem,
         maxFaceValue,
-        ticketUnderwater,
         efficiency,
         limitedByBalance);
   }
