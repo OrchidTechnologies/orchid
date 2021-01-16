@@ -157,7 +157,7 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
       return new Promise<string>(function (resolve, reject) {
         thisCapture.tokenContract.methods.approve(
           OrchidContractMainNetV0.lottery_addr(),
-          total.toString()
+          total.intValue.toString()
         ).send({
           from: funder,
           gas: OrchidContractMainNetV0.token_approval_max_gas,
@@ -182,7 +182,7 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
       return new Promise<string>(function (resolve, reject) {
         thisCapture.lotteryContract.methods.push(
           signer,
-          total.toString(),
+          total.intValue.toString(),
           escrow.intValue.toString()
         ).send({
           from: funder,
