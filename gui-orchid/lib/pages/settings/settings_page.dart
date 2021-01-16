@@ -66,10 +66,11 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(),
       child: Padding(
         padding: EdgeInsets.all(
-            AppSize(context).tallerThan(AppSize.iphone_xs_max) ? 128 : 0),
+            AppSize(context).tallerThan(AppSize.iphone_12_max) ? 128 : 0),
         child: SingleChildScrollView(
           child: SafeArea(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 // Accounts
                 pady(16),

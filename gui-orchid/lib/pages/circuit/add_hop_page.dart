@@ -65,7 +65,7 @@ class _AddHopPageState extends State<AddHopPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    if (AppSize(context).tallerThan(AppSize.iphone_xs_max))
+                    if (AppSize(context).tallerThan(AppSize.iphone_12_max))
                       pady(64),
                     pady(40),
                     Padding(

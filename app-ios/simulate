@@ -14,9 +14,9 @@ tmux new-session -d -s $session
 tmux set status-bg default
 tmux split-window -v
 tmux select-pane -t 0
-tmux send-keys "flutter/bin/flutter logs" C-m
+tmux send-keys "shared/flutter/bin/flutter logs" C-m
 tmux select-pane -t 1
-tmux send-keys "flutter/bin/flutter attach" C-m
+tmux send-keys "cd ../gui-orchid; ../app-shared/flutter/bin/flutter attach" C-m
 
 # Give flutter attach time to start.
 echo "Waiting 10s for attach..."

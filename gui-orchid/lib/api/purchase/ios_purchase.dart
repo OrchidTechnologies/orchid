@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/api/orchid_pricing.dart';
+import '../orchid_api.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_pac_server.dart';
@@ -29,6 +30,9 @@ class IOSOrchidPurchaseAPI
 
   @override
   void initStoreListener() async {
+    if (OrchidAPI.mockAPI) {
+      return;
+    }
     log("iap: init store listener");
     SKPaymentQueueWrapper().setTransactionObserver(this);
 
@@ -184,7 +188,7 @@ class IOSOrchidPurchaseAPI
       log("iap: error getting receipt data for comleted iap");
     }
 
-    OrchidPACServer().processPendingPACTransaction();
+    OrchidPACServer().advancePendingPACTransaction();
   }
 
   static Map<String, PAC> productsCached;
