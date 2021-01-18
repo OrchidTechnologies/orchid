@@ -7,7 +7,7 @@ import {
   Signer,
   Wallet
 } from "../orchid-eth-types";
-import {GasFunds, LotFunds, min, TokenType} from "../orchid-eth-token-types";
+import {GasFunds, LotFunds, max, min, TokenType} from "../orchid-eth-token-types";
 import {debugV0, getParam} from "../../util/util";
 import {OrchidAPI} from "../orchid-api";
 import {OrchidTransaction, OrchidTransactionType} from "../orchid-tx";
@@ -148,21 +148,22 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
 
     // Don't attempt to add more than the wallet balance.
     // This mitigates the potential for rounding errors in calculated amounts.
-    const total: LotFunds = min(amount.add(escrow), wallet.fundsBalance);
+    let total: LotFunds = min(amount.add(escrow), wallet.fundsBalance);
     console.log("Add funds  signer: ", signer, " amount: ", (total.subtract(escrow)), " escrow: ", escrow);
 
     const thisCapture = this;
 
-    async function doApproveTx() {
+    async function doApproveTx(approvalAmount: LotFunds) {
       return new Promise<string>(function (resolve, reject) {
         thisCapture.tokenContract.methods.approve(
           OrchidContractMainNetV0.lottery_addr(),
-          total.intValue.toString()
+          approvalAmount.intValue.toString()
         ).send({
           from: funder,
           gas: OrchidContractMainNetV0.token_approval_max_gas,
           gasPrice: gasPrice
         })
+          // An approval tx resolves immediately after the user submits.
           .on("transactionHash", (hash: any) => {
             console.log("Approval hash: ", hash);
             resolve(hash);
@@ -178,7 +179,9 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
       });
     }
 
-    async function doFundTx(approvalHash: string) {
+    // If approvalHash is provided it will be supplied to the transaction monitor as part of a
+    // the composite Orchid transaction.
+    async function doFundTx(approvalHash: string | null) {
       return new Promise<string>(function (resolve, reject) {
         thisCapture.lotteryContract.methods.push(
           signer,
@@ -190,29 +193,35 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
           gasPrice: gasPrice
         })
           .on("transactionHash", (hash: any) => {
-            console.log("Fund hash: ", hash);
+            console.log("doFundTx: Fund hash: ", hash);
             OrchidAPI.shared().transactionMonitor.add(
-              new OrchidTransaction(new Date(), OrchidTransactionType.AddFunds, thisCapture.chainId, [approvalHash, hash]));
+              new OrchidTransaction(new Date(), OrchidTransactionType.AddFunds, thisCapture.chainId,
+                approvalHash ? [approvalHash, hash] : [hash])
+            );
           })
           .on('confirmation', (confirmationNumber: any, receipt: any) => {
-            console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
+            console.log("doFundTx: Fund confirmation", confirmationNumber, JSON.stringify(receipt));
             // Wait for confirmations on the funding tx.
             if (confirmationNumber >= thisCapture.requiredConfirmations) {
               const hash = receipt['transactionHash'];
               resolve(hash);
             } else {
-              console.log("waiting for more confirmations...");
+              console.log("doFundTx: waiting for more confirmations...");
             }
           })
           .on('error', (err: any) => {
-            console.log("Fund error: ", JSON.stringify(err));
+            console.log("doFundTx: Fund error: ", JSON.stringify(err));
             reject(err['message']);
           });
       });
     }
 
-    // The approval tx resolves immediately after the user submits.
-    let approvalHash = await doApproveTx();
+    // Check allowance and do any necessary approval.
+    const oxtAllowance = this.fundsTokenType.fromIntString(
+      await this.tokenContract.methods.allowance(funder, OrchidContractMainNetV0.lottery_addr()).call());
+    const approvalAmount = max(this.fundsTokenType.zero, total.subtract(oxtAllowance));
+    console.log(`Current allowance: ${oxtAllowance.floatValue}, approval amount = ${approvalAmount}, do approval = ${approvalAmount.gtZero()}`)
+    let approvalHash = approvalAmount.gtZero() ? await doApproveTx(approvalAmount) : null;
 
     // Introduce a short artificial delay before issuing the second tx
     // Issue: We have had reports of problems where only one dialog is presented to the user.
