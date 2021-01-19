@@ -7,7 +7,7 @@ import {
   Signer,
   Wallet
 } from "../orchid-eth-types";
-import {GasFunds, LotFunds, max, min, TokenType} from "../orchid-eth-token-types";
+import {GasFunds, LotFunds, min, TokenType} from "../orchid-eth-token-types";
 import {debugV0, getParam} from "../../util/util";
 import {OrchidAPI} from "../orchid-api";
 import {OrchidTransaction, OrchidTransactionType} from "../orchid-tx";
@@ -148,16 +148,16 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
 
     // Don't attempt to add more than the wallet balance.
     // This mitigates the potential for rounding errors in calculated amounts.
-    let total: LotFunds = min(amount.add(escrow), wallet.fundsBalance);
+    const total: LotFunds = min(amount.add(escrow), wallet.fundsBalance);
     console.log("Add funds  signer: ", signer, " amount: ", (total.subtract(escrow)), " escrow: ", escrow);
 
     const thisCapture = this;
 
-    async function doApproveTx(approvalAmount: LotFunds) {
+    async function doApproveTx() {
       return new Promise<string>(function (resolve, reject) {
         thisCapture.tokenContract.methods.approve(
           OrchidContractMainNetV0.lottery_addr(),
-          approvalAmount.intValue.toString()
+          total.intValue.toString()
         ).send({
           from: funder,
           gas: OrchidContractMainNetV0.token_approval_max_gas,
@@ -216,12 +216,10 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
       });
     }
 
-    // Check allowance and do any necessary approval.
+    // Check allowance and skip approval if sufficient.
     const oxtAllowance = this.fundsTokenType.fromIntString(
       await this.tokenContract.methods.allowance(funder, OrchidContractMainNetV0.lottery_addr()).call());
-    const approvalAmount = max(this.fundsTokenType.zero, total.subtract(oxtAllowance));
-    console.log(`Current allowance: ${oxtAllowance.floatValue}, approval amount = ${approvalAmount}, do approval = ${approvalAmount.gtZero()}`)
-    let approvalHash = approvalAmount.gtZero() ? await doApproveTx(approvalAmount) : null;
+    let approvalHash = oxtAllowance.lt(total) ? await doApproveTx() : null;
 
     // Introduce a short artificial delay before issuing the second tx
     // Issue: We have had reports of problems where only one dialog is presented to the user.

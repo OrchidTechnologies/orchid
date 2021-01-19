@@ -246,6 +246,8 @@ export class InfoImpl extends Component<{
         <Button variant="light" onClick={() =>
           OrchidAPI.shared().provider.disconnect()
         }>{"Disconnect Provider"}</Button>
+
+        <div style={{marginTop: "24px", fontSize: 12}}>Version 0.9.23</div>
       </Container>
     )
   }
