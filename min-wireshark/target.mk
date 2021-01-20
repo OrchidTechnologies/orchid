@@ -214,7 +214,7 @@ $(call depend,$(pwd)/libgcrypt/Makefile,@/usr/lib/libgpg-error.a)
 .PRECIOUS: $(output)/%/$(pwd)/libgcrypt/src/gcrypt.h
 # XXX: one of the test cases uses system() (not allowed on iOS) and there is no --disable-tests
 $(output)/%/$(pwd)/libgcrypt/src/gcrypt.h $(output)/%/$(pwd)/libgcrypt/src/.libs/libgcrypt.a: $(output)/%/$(pwd)/libgcrypt/Makefile
-	for sub in compat mpi cipher random src; do $(MAKE) -C $(dir $<)/$${sub}; done
+	for sub in compat mpi cipher random src; do $(MAKE) -C $(dir $<)/$${sub} CC_FOR_BUILD=clang; done
 
 cflags += -I@/$(pwd)/libgcrypt/src
 linked += $(pwd)/libgcrypt/src/.libs/libgcrypt.a
@@ -240,7 +240,7 @@ header += @/usr/include/gpg-error.h
 
 define _
 $(output)/$(1)/usr/include/%.h $(output)/$(1)/usr/lib/lib%.a: $(output)/$(1)/$(pwd)/lib%/Makefile $(sysroot)
-	$$(MAKE) -C $$(dir $$<) install
+	$$(MAKE) -C $$(dir $$<) install CC_FOR_BUILD=clang
 endef
 $(each)
 # }}}

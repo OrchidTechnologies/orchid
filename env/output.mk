@@ -78,9 +78,8 @@ $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 	@echo [RC] $(target)/$(arch) $<
 	$(job)@$(prefix) $(windres/$(arch)) -o $@ $< $(filter -I%,$(flags) $(xflags))
 
-# XXX: -fuse-ld doesn't work with meson due to https://github.com/mesonbuild/meson/issues/6662
 define _
-$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(filter-out -fuse-ld=%,$(wflags))' '$(xflags)' '$(mflags)')
+$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
 endef
 $(each)
 

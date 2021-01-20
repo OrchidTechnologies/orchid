@@ -67,6 +67,9 @@ cxx += -stdlib=libc++
 xflags += -nostdinc++
 xflags += -isystem $(toolchain)/usr/include/c++/v1
 
+# the r22 NDK prefers its own copy of ld
+wflags += -fuse-ld=/usr/bin/ld
+
 endif
 
 define _

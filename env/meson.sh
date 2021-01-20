@@ -34,14 +34,16 @@ xflags=(${xflags})
 
 mkdir -p "${output}/${arch}"
 
-cflags=("${qflags[@]}")
-cflags+=(-I"${curdir}/${output}/${arch}/usr/include")
+cflags=(-I"${curdir}/${output}/${arch}/usr/include")
+lflags=(-L"${curdir}/${output}/${arch}/usr/lib")
 
-lflags=("${wflags[@]}")
-lflags+=(-L"${curdir}/${output}/${arch}/usr/lib")
+cflags+=("${qflags[@]}")
+
+cfg="${curdir}/${output}/${arch}/meson.cfg"
+echo "${wflags[@]}" >"${curdir}/${output}/${arch}/meson.cfg"
+cfg=(--config "${cfg}")
 
 function args() {
-    shift
     comma=false
     for arg in "$@"; do
         if ${comma}; then
@@ -61,21 +63,22 @@ cpu = '${meson[1]}'
 endian = 'little'
 
 [binaries]
-c = '${cc[0]}'
-cpp = '${cxx[0]}'
-objc = '${objc[0]}'
+c = [$(args "${cc[@]}" "${cfg[@]}")]
+cpp = [$(args "${cxx[@]}" "${cfg[@]}")]
+objc = [$(args "${objc[@]}" "${cfg[@]}")]
+ld = 'ld'
 ar = '${ar}'
 strip = '${strip}'
 windres = '${windres}'
 pkgconfig = '${curdir}/env/pkg-config'
 
 [properties]
-c_args = [$(args "${cc[@]}" "${cflags[@]}")]
-cpp_args = [$(args "${cxx[@]}" "${cflags[@]} ${xflags[@]}")]
-objc_args = [$(args "${objc[@]}" "${cflags[@]}")]
-c_link_args = [$(args "${cc[@]}" "${lflags[@]}")]
-cpp_link_args = [$(args "${cxx[@]}" "${lflags[@]}")]
-objc_link_args = [$(args "${objc[@]}" "${lflags[@]}")]
+c_args = [$(args "${cflags[@]}")]
+cpp_args = [$(args "${cflags[@]}" "${xflags[@]}")]
+objc_args = [$(args "${cflags[@]}")]
+c_link_args = [$(args "${lflags[@]}")]
+cpp_link_args = [$(args "${lflags[@]}")]
+objc_link_args = [$(args "${lflags[@]}")]
 $(for mflag in ${mflags[@]}; do
     echo "${mflag%%=*} = ${mflag#*=}"
 done)
