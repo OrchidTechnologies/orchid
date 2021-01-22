@@ -18,7 +18,9 @@ function tag() {
 }
 
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
-head[app-shared/flutter]=1.25.0-8.1.pre
+head[app-shared/flutter]=1.26.0-8.0.pre
+head[env/libcxx]=origin/release_90
+head[env/libcxxabi]=origin/release_90
 tag p2p/boost 'boost-[0-9.]*'
 tag min-webrtc/abseil-cpp '[0-9].*'
 tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'

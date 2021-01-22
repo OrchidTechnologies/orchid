@@ -216,7 +216,7 @@ packages:
       path: in_app_purchase
       relative: true
     source: path
-    version: "0.3.4+18"
+    version: "0.3.5+1"
   intl:
     dependency: transitive
     description:

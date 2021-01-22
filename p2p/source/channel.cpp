@@ -178,7 +178,7 @@ task<void> Channel::Send(const Buffer &data) {
 
     const auto size(data.size());
     rtc::CopyOnWriteBuffer buffer(size);
-    data.copy(buffer.data(), size);
+    data.copy(buffer.MutableData(), size);
 
 #if 0
     co_await Post([&]() {
