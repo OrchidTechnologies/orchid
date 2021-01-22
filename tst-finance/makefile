@@ -38,9 +38,6 @@ $(call include,zlb/target.mk)
 
 source += $(wildcard source/*.cpp)
 
-# XXX: send a patch to cpp-jwt
-cflags += -Wno-switch
-
 cflags += -I$(pwd)/p2p/boost/libs/iostreams/include
 
 source += $(pwd)/p2p/boost/libs/iostreams/src/gzip.cpp

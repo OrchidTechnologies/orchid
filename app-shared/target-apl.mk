@@ -56,7 +56,6 @@ endif
 rsync := rsync -a --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature Headers Modules)
 
 $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist: $(dart) $(temp)
-	# XXX: as far as I can tell flutter's build system is just entirely broken :/
 	rm -rf .dart_tool/flutter_build $(output)/flutter
 	cd $(pwd/gui) && $(flutter) assemble \
 	    -dTargetPlatform="$(platform)" \

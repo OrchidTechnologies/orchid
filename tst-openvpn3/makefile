@@ -48,10 +48,6 @@ cflags += -D'OPENVPN_PACKET_LOG="packet.log"'
 cflags += -Ivpn/p2p/openvpn3
 cflags += -Ivpn/p2p/openvpn3/client
 
-cflags/vpn/p2p/openvpn3 += -Wno-address-of-temporary
-cflags/vpn/p2p/openvpn3 += -Wno-delete-non-virtual-dtor
-cflags/vpn/p2p/openvpn3 += -Wno-inconsistent-missing-override
-
 ifeq ($(target),ios)
 cflags/vpn/p2p/openvpn3 += -ObjC++
 endif
@@ -64,10 +60,12 @@ $(call include,vpn/p2p/rtc/openssl.mk)
 source += vpn/p2p/openvpn3/test/ovpncli/cli.cpp
 source += vpn/p2p/source/log.cpp
 
+ifeq ($(target),mac)
 lflags += -framework CoreServices
 lflags += -framework Foundation
 lflags += -framework IOKit
 lflags += -framework SystemConfiguration
+endif
 
 include env/output.mk
 

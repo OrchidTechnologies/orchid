@@ -77,8 +77,6 @@ ranlib/$(1) := ranlib
 ar/$(1) := ar
 strip/$(1) := strip
 windres/$(1) := false
-export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_RUSTFLAGS := $$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $$(more/$(1)),-C link-arg=$$(arg)) $(rflags)
-export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $(firstword $(cc))
 endef
 $(each)
 

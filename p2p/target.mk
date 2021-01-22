@@ -26,11 +26,12 @@ cflags += -Wno-missing-selector-name
 cflags += -Wno-overloaded-shift-op-parentheses
 cflags += -Wno-potentially-evaluated-expression
 cflags += -Wno-tautological-constant-out-of-range-compare
+cflags += -Wno-tautological-overlap-compare
+
 
 cflags += -fcoroutines-ts
 
 cflags += -I$(pwd)/extra
-# XXX: cflags += -I$(output)/$(pwd)
 
 
 cflags += -I$(pwd)/cppcoro/include
@@ -85,10 +86,10 @@ cflags += -DLWIP_ERRNO_STDINCLUDE
 
 
 # Android sockaddr_storage is more indirect
+ifeq ($(target),and)
 cflags/$(pwd)/lwip/ += -Wno-missing-braces
 cflags/$(pwd)/source/lwip.cpp += -Wno-missing-braces
-
-cflags/$(pwd)/source/transport.cpp += -Wno-unused-private-field
+endif
 
 cflags += -I$(pwd)/BeastHttp/BeastHttp/include
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
@@ -108,6 +109,9 @@ cflags += -I$(pwd)/ctre/single-header
 
 source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include
+
+# XXX: I'm using a deprecated jsoncpp API surface
+cflags += -Wno-deprecated-declarations
 
 
 source += $(pwd)/SHA3IUF/sha3.c
@@ -137,6 +141,7 @@ cflags += -I$(pwd/secp256k1)/include
 cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)
 cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)/src
 cflags/$(pwd/secp256k1)/ += -include $(pwd/secp256k1)/../field.h
+cflags/$(pwd/secp256k1)/ += -Wno-unused-function
 
 $(output)/gen_context: $(pwd/secp256k1)/src/gen_context.c
 	gcc -o $@ $< -I$(pwd/secp256k1) -DECMULT_GEN_PREC_BITS=4
@@ -172,8 +177,6 @@ source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c
 
 cflags += -I$(pwd)/eEVM/3rdparty
 cflags += -I$(pwd)/eEVM/include
-
-cflags += -Wno-tautological-overlap-compare
 
 
 linked += $(pwd)/challenge-bypass-ristretto-ffi/librust.a

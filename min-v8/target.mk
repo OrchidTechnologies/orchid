@@ -193,6 +193,11 @@ cflags += -I$(pwd)/extra
 
 cflags/$(pwd)/v8/ += -Wno-builtin-assume-aligned-alignment
 
+# XXX: src/base/safe_conversions_impl.h:158:46: error: implicit conversion from 'std::__1::numeric_limits<long>::type' (aka 'long') to 'double' changes value from 9223372036854775807 to 9223372036854775808 [-Werror,-Wimplicit-int-float-conversion]
+#                : GetRangeConstraint(value <= std::numeric_limits<Dst>::max(),
+#                                           ~~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cflags/$(pwd)/v8/ += -Wno-implicit-int-float-conversion
+
 # XXX: this was fixed in a later commit that broke a bunch of other stuff :(
 cflags/$(pwd)/v8/ += -Wno-final-dtor-non-final-class
 

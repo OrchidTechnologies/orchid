@@ -28,7 +28,7 @@ else
     "$@" -Wl,-v 2>&1 | sed -e '1!d;s@/tmp[0-9A-Za-z]\{6\}@/tmpXXXXXX@' || true
 fi
 
-rustc --version
+PATH=${PATH}:~/.cargo/bin rustc --version
 echo
 
 if "${list}"; then

@@ -111,6 +111,8 @@ webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/stats/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/system_wrappers/source/*.cc)
 
+cflags/$(pwd)/webrtc/rtc_base/random.cc += -Wno-implicit-int-float-conversion
+
 
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/internal/*.cc)
@@ -136,6 +138,11 @@ source += $(pwd)/congestion.cc
 cflags += -I$(pwd)/usrsctp
 cflags += -I$(pwd)/usrsctp/usrsctplib
 cflags += -I$(pwd)/sctp-idata/src
+
+ifeq ($(target),win)
+cflags/$(pwd)/usrsctp/usrsctplib/ += -Wno-unused-function
+cflags/$(pwd)/congestion.cc += -Wno-unused-function
+endif
 
 
 webrtc := $(filter-out %_noop.cc,$(webrtc))
@@ -203,11 +210,6 @@ cflags += -DHAVE_UINT64_T
 cflags += -DPACKAGE_STRING='""'
 # this matches the version of libmaxminddb
 cflags += -DPACKAGE_VERSION='"1.5.0"'
-
-cflags += -Wno-deprecated-declarations
-cflags += -Wno-implicit-int-float-conversion
-cflags += -Wno-inconsistent-missing-override
-cflags += -Wno-unused-function
 
 cflags += -D__Userspace__
 cflags += -DSCTP_DEBUG

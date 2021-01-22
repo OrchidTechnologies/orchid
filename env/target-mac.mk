@@ -30,14 +30,6 @@ runtime := osx
 more := -mmacosx-version-min=10.14
 include $(pwd)/target-apl.mk
 
-define _
-# XXX: this check is ridiculous and worse than the Linux one
-ifeq ($(uname-s)-$(1),Darwin-x86_64)
-ccrs/$(1) := HOST
-endif
-endef
-$(each)
-
 contents := /Contents
 resources := /Resources
 versions := /Versions/A

@@ -44,13 +44,16 @@ catch (const std::exception &error) { \
     orc_insist(false); \
 }
 
-static std::string cfs(NSData *data) {
+#if 0
+// XXX: this flags -Wunused-function as it isn't in a header file
+static inline std::string cfs(NSData *data) {
     if (data != nil)
         return {static_cast<const char *>([data bytes]), [data length]};
     else return {};
 }
+#endif
 
-static std::string cfs(NSString *data) {
+static inline std::string cfs(NSString *data) {
     if (data != nil)
         return [data UTF8String];
     else return {};

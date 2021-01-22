@@ -26,6 +26,7 @@ cflags += -I$(pwd)/source
 source += $(wildcard $(pwd)/source/*.cpp)
 source += $(wildcard $(pwd)/source/*.mm)
 
+# XXX: this will be fixed with the Capture refactor
 cflags/$(pwd)/source/tunnel.mm += -Wno-arc-retain-cycles
 
 $(call include,shared/target.mk)

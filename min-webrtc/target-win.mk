@@ -30,7 +30,6 @@ lflags += -lshlwapi
 lflags += -lwinmm
 lflags += -lws2_32
 
-cflags/$(pwd)/webrtc/rtc_base/logging.cc += -Wno-undef
 cflags/$(pwd)/webrtc/rtc_base/checks.cc += -Wno-format
 
 cflags/$(pwd)/webrtc/rtc_base/platform_thread_types.cc += -include $(pwd/webrtc)/../setname.hpp

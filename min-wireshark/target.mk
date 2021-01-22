@@ -53,9 +53,10 @@ cflags/$(pwd/wireshark)/ += -include malloc.h
 cflags/$(pwd/wireshark)/ += -Wno-format
 cflags/$(pwd/wireshark)/ += -Wno-missing-braces
 
+cflags/$(pwd/wireshark)/epan/dissectors/packet-epl-profile-parser.c += -include stdlib.h
 cflags/$(pwd/wireshark)/epan/dissectors/packet-smb2.c += -D_MSC_VER
 cflags/$(pwd/wireshark)/wsutil/getopt_long.c += -DNO_OLDNAMES
-cflags/$(pwd/wireshark)/epan/dissectors/packet-epl-profile-parser.c += -include stdlib.h
+cflags/$(pwd/wireshark)/wsutil/filesystem.c += -Wno-unused-function
 else
 wireshark := $(filter-out \
     %/file_util.c \

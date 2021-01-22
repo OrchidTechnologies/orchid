@@ -37,9 +37,4 @@ cflags += -I$(pwd)/openvpn3/client
 cflags += -DOPENVPN_EXTERNAL_TRANSPORT_FACTORY
 cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
 
-cflags/$(pwd)/openvpn3/ += -Wno-address-of-temporary
-cflags/$(pwd)/openvpn3/ += -Wno-delete-non-virtual-dtor
 cflags/$(pwd)/openvpn3/ += -Wno-deprecated-enum-enum-conversion
-cflags/$(pwd)/openvpn3/ += -Wno-unused-private-field
-cflags/$(pwd)/openvpn3/ += -Wno-unused-variable
-cflags/$(pwd)/openvpn3/ += -Wno-vexing-parse

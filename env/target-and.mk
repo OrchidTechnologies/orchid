@@ -86,8 +86,6 @@ ranlib/$(1) := $(llvm)/bin/$$(temp)-ranlib
 ar/$(1) := $(llvm)/bin/$$(temp)-ar
 strip/$(1) := $(llvm)/bin/$$(temp)-strip
 windres/$(1) := false
-binary/$(1) := $(ndk)/toolchains/llvm/prebuilt/$(prebuilt)/bin/$(host/$(1))$(aver)-clang
-export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := $$(binary/$(1))
 endef
 $(each)
 

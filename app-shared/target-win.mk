@@ -30,9 +30,6 @@ include $(pwd)/target-cpp.mk
 source += $(wildcard $(template)/runner/*.cpp)
 cflags += -I$(template)/runner
 
-# XXX: I submitted this as a pull request here https://github.com/flutter/flutter/pull/67899
-chacks/$(template)/runner/win32_window.cpp += s/\(case WM_SIZE:\)/\1{/;s/\(case WM_ACTIVATE:\)/}\1/
-
 source += $(filter-out %_unittests.cc,$(wildcard $(pwd)/engine/shell/platform/windows/client_wrapper/*.cc))
 cflags += -I$(pwd)/engine/shell/platform/windows/client_wrapper/include
 cflags += -I$(pwd)/engine/shell/platform/common/cpp/client_wrapper{,/include{,/flutter}}

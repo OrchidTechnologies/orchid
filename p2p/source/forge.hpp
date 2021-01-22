@@ -37,20 +37,20 @@ namespace orc {
 // XXX: I can do much better than this
 
 template <typename Header_>
-static void Forge(Header_ &header, int adjust) {
+static inline void Forge(Header_ &header, int adjust) {
     boost::endian::big_to_native_inplace(header.check);
     openvpn::tcp_adjust_checksum(adjust, header.check);
     boost::endian::native_to_big_inplace(header.check);
 }
 
-static void Forge(openvpn::ICMPv4 &header, int adjust) {
+static inline void Forge(openvpn::ICMPv4 &header, int adjust) {
     boost::endian::big_to_native_inplace(header.checksum);
     openvpn::tcp_adjust_checksum(adjust, header.checksum);
     boost::endian::native_to_big_inplace(header.checksum);
 }
 
 template <typename Header_>
-uint16_t Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
+uint16_t inline Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
     auto before(boost::endian::big_to_native(header.*field));
     header.*field = boost::endian::native_to_big(value);
     Forge(header, int32_t(before) - int32_t(value));
@@ -59,7 +59,7 @@ uint16_t Forge(Header_ &header, uint16_t (Header_::*field), uint16_t value) {
 
 uint32_t ForgeIP4(Span<> &span, uint32_t (openvpn::IPv4Header::*field), uint32_t value);
 
-static void Forge(Span<> &span, openvpn::TCPHeader &tcp, const Socket &source, const Socket &destination) {
+static inline void Forge(Span<> &span, openvpn::TCPHeader &tcp, const Socket &source, const Socket &destination) {
     ForgeIP4(span, &openvpn::IPv4Header::saddr, source.Host().operator uint32_t());
     Forge(tcp, &openvpn::TCPHeader::source, source.Port());
     ForgeIP4(span, &openvpn::IPv4Header::daddr, destination.Host().operator uint32_t());

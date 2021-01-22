@@ -27,9 +27,6 @@ debug += noaot
 
 include $(pwd)/target-cpp.mk
 
-#source += $(wildcard $(template)/*.cc)
-#cflags += -I$(template).tmpl
-
 cflags += -I$(pwd)/engine/shell/platform/$(assemble)/public
 cflags += -I$(pwd)/engine/shell/platform/common/cpp/public
 

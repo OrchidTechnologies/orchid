@@ -58,8 +58,11 @@ ifeq ($(tidy)$(filter notidy,$(debug)),)
 debug += notidy
 endif
 
+ar := llvm-ar
+
 else
 include $(pwd)/target-ndk.mk
+ar := $(llvm)/bin/llvm-ar
 endif
 
 include $(pwd)/target-cxx.mk
@@ -71,14 +74,9 @@ lflags += -nostdlib++ -lsupc++
 
 define _
 ranlib/$(1) := $(1)-w64-mingw32-ranlib
-ar/$(1) := $(1)-w64-mingw32-ar
+ar/$(1) := $(ar)
 strip/$(1) := $(1)-w64-mingw32-strip
 windres/$(1) := $(1)-w64-mingw32-windres
-export CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(1))))_LINKER := true
-# XXX: this should be $(shell realpath $(shell which $(1)-w64-mingw32-gcc))
-# however, I'm blocked on https://github.com/rust-lang/rust/issues/68887
-# XXX: also, Rust does not correctly link on 32-bit Windows due to this :(
-# essentially same issue: https://github.com/rust-lang/rust/issues/12859
 endef
 $(each)
 
@@ -90,7 +88,6 @@ include $(pwd)/target-lld.mk
 lflags += -Wl,--no-insert-timestamp
 lflags += -Wl,-Xlink=-force:multiple
 
-#cflags += -DNOMINMAX
 cflags += -DWIN32_LEAN_AND_MEAN=
 cflags += -D_CRT_RAND_S=
 
@@ -107,8 +104,6 @@ mflags += has_function_stpcpy=false
 # pragma warning(disable : ...)
 cflags += -Wno-pragma-pack
 cflags += -Wno-unknown-pragmas
-
-cflags += -Wno-unused-const-variable
 
 qflags += -I$(CURDIR)/$(pwd)/win32
 qflags += -Wno-nonportable-include-path

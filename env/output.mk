@@ -79,7 +79,10 @@ $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 	$(job)@$(prefix) $(windres/$(arch)) -o $@ $< $(filter -I%,$(flags) $(xflags))
 
 define _
-$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
+# meson passes --allow-shlib-undefined to lld, which only recently added it https://reviews.llvm.org/D57385
+# this bug is now fixed in meson, but also not until recently https://github.com/mesonbuild/meson/pull/5912
+# thankfully, we don't actually need to use lld, as we aren't going to use anything meson is going to link?
+$(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(filter-out -fuse-ld=lld,$(wflags))' '$(xflags)' '$(mflags)')
 endef
 $(each)
 
@@ -106,13 +109,11 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 
-ifeq ($(shell which rustup),)
-export PATH := $(HOME)/.cargo/bin:$(PATH)
-endif
+rust := PATH=$${PATH}:~/.cargo/bin
 
 .PHONY: $(output)/%.rustup
 $(output)/%.rustup:
-	rustup target add $*
+	$(rust) rustup target add $*
 
 ifneq ($(uname-o),Cygwin)
 export RUSTC_WRAPPER=$(CURDIR)/env/rustc-wrapper
@@ -121,11 +122,18 @@ endif
 $(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
 	$(specific)
 	@mkdir -p $(dir $@)
-	cd $(folder) && RUST_BACKTRACE=1 PATH=$${PATH}:$(dir $(word 1,$(cc))) \
-	    $(if $(ccrs/$(arch)),$(ccrs/$(arch)),TARGET)_CC='$(cc) $(more/$(arch)) $(qflags)' \
-	    $(if $(ccrs/$(arch)),$(ccrs/$(arch)),TARGET)_AR='$(ar/$(arch))' \
+	
+	@# rust/cargo/cc incorrectly models --target $host as building for the host
+	@# this bug is being tracked https://github.com/rust-lang/cargo/issues/8147
+	@$(eval ccrs := $(if $(filter $(triple/$(arch)),$(shell $(rust) rustup show | sed -e '/^Default host: /!d;s///')),HOST,TARGET))
+	@# or if using rustc: rustc --version --verbose | sed -e '/^host: /!d;s///'
+	
+	cd $(folder) && RUST_BACKTRACE=1 $(rust):$(dir $(word 1,$(cc))) \
+	    $(ccrs)_CC='$(cc) $(more/$(arch)) $(qflags)' $(ccrs)_AR='$(ar/$(arch))' \
 	    PKG_CONFIG_ALLOW_CROSS=1 PKG_CONFIG="$(CURDIR)/env/pkg-config" ENV_ARCH="$(arch)" \
 	    CARGO_HOME='$(call path,$(CURDIR)/$(output)/cargo)' CARGO_INCREMENTAL=0 \
+	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_LINKER='$(firstword $(cc))' \
+	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_RUSTFLAGS='$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $(more/$(arch)),-C link-arg=$(arg)) $(rflags)' \
 	    cargo build --verbose --lib --release --target $(triple/$(arch)) \
 	    --target-dir $(call path,$(CURDIR)/$(output)/$(arch)/$(folder))
 	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/lib$(subst -,_,$(notdir $(folder))).a $@
