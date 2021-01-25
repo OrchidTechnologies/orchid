@@ -6,6 +6,9 @@ class OrchidPlatform {
   // after changing the advanced config (which may override it).
   static bool pretendToBeAndroid = false;
 
+  // If non-null this is a language code.
+  static String languageOverride;
+
   static bool get isMacOS {
     return !pretendToBeAndroid && Platform.isMacOS;
   }

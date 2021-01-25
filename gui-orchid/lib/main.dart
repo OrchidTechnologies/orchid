@@ -21,5 +21,7 @@ void main() async {
   if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }
+  OrchidPlatform.languageOverride = (await OrchidVPNConfig.getUserConfigJS())
+      .evalStringDefault("lang", null);
   runApp(OrchidApp());
 }

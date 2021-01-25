@@ -152,6 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     context: context),
 
                 // Reset instructions
+                /*
                 pady(8),
                 Divider(),
                 PageTile(
@@ -161,6 +162,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     onPressed: _resetInstructions,
                   ),
                 ),
+                 */
 
                 // Logging
                 if (_showLogging) ...[

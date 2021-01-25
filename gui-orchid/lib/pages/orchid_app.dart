@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
@@ -19,7 +20,9 @@ class OrchidApp extends StatelessWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: S.delegate.supportedLocales,
+      supportedLocales: OrchidPlatform.languageOverride == null
+          ? S.delegate.supportedLocales
+          : [Locale.fromSubtags(languageCode: OrchidPlatform.languageOverride)],
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
@@ -51,11 +54,11 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
             animation: Listenable.merge([backgroundColor, iconColor]),
             builder: (context, snapshot) {
               return AppBar(
-                backgroundColor: backgroundColor.value,
-                elevation: 0,
-                iconTheme: IconThemeData(color: iconColor.value),
-                brightness: Brightness.light // status bar
-              );
+                  backgroundColor: backgroundColor.value,
+                  elevation: 0,
+                  iconTheme: IconThemeData(color: iconColor.value),
+                  brightness: Brightness.light // status bar
+                  );
             }),
       ),
       body: ConnectPage(
