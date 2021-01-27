@@ -2408,6 +2408,16 @@ class S {
       args: [],
     );
   }
+
+  /// `Signer Address`
+  String get signerAddress {
+    return Intl.message(
+      'Signer Address',
+      name: 'signerAddress',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

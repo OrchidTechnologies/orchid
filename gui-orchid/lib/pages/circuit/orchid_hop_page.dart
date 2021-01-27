@@ -351,7 +351,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.signerKey + ':',
+        Text(s.signerAddress + ':',
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
                 color: _keyRefValid()

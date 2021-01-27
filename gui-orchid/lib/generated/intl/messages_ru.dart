@@ -224,6 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "shortToMediumTermUsage" : MessageLookupByLibrary.simpleMessage("Краткосрочное и среднесрочное использование"),
     "showInstructions" : MessageLookupByLibrary.simpleMessage("Показать инструкции"),
     "showStatusPage" : MessageLookupByLibrary.simpleMessage("Показать страницу статуса"),
+    "signerAddress" : MessageLookupByLibrary.simpleMessage("Адрес подписывающей стороны"),
     "signerKey" : MessageLookupByLibrary.simpleMessage("Ключ подписанта"),
     "sourcePort" : MessageLookupByLibrary.simpleMessage("Порт источника"),
     "spentOnlyWhenTheVpnIsActive" : MessageLookupByLibrary.simpleMessage("Средства тратятся только когда VPN активен."),

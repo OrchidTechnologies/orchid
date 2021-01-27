@@ -224,6 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "shortToMediumTermUsage" : MessageLookupByLibrary.simpleMessage("중장기 사용"),
     "showInstructions" : MessageLookupByLibrary.simpleMessage("설명 표시"),
     "showStatusPage" : MessageLookupByLibrary.simpleMessage("상태 페이지 표시"),
+    "signerAddress" : MessageLookupByLibrary.simpleMessage("서명자 주소"),
     "signerKey" : MessageLookupByLibrary.simpleMessage("서명자 키"),
     "sourcePort" : MessageLookupByLibrary.simpleMessage("원본 포트"),
     "spentOnlyWhenTheVpnIsActive" : MessageLookupByLibrary.simpleMessage("VPN이 활성화 된 경우에만 사용됨."),

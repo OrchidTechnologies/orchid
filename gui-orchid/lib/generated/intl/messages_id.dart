@@ -224,6 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "shortToMediumTermUsage" : MessageLookupByLibrary.simpleMessage("Penggunaan jangka pendek hingga menengah"),
     "showInstructions" : MessageLookupByLibrary.simpleMessage("Tampilkan petunjuk"),
     "showStatusPage" : MessageLookupByLibrary.simpleMessage("Tampilkan halaman status"),
+    "signerAddress" : MessageLookupByLibrary.simpleMessage("Alamat Penandatangan"),
     "signerKey" : MessageLookupByLibrary.simpleMessage("Kunci penanda tangan"),
     "sourcePort" : MessageLookupByLibrary.simpleMessage("Porta sumber"),
     "spentOnlyWhenTheVpnIsActive" : MessageLookupByLibrary.simpleMessage("Terpakai hanya saat VPN aktif."),

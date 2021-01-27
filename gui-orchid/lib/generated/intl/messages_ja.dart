@@ -224,6 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "shortToMediumTermUsage" : MessageLookupByLibrary.simpleMessage("短期から中期の使用"),
     "showInstructions" : MessageLookupByLibrary.simpleMessage("指示を表示する"),
     "showStatusPage" : MessageLookupByLibrary.simpleMessage("ステータス ページを表示"),
+    "signerAddress" : MessageLookupByLibrary.simpleMessage("署名者の住所"),
     "signerKey" : MessageLookupByLibrary.simpleMessage("署名者キー"),
     "sourcePort" : MessageLookupByLibrary.simpleMessage("ソース ポート"),
     "spentOnlyWhenTheVpnIsActive" : MessageLookupByLibrary.simpleMessage("VPNが起動中の場合にのみ使用されます。"),
