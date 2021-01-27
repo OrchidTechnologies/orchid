@@ -4,6 +4,7 @@ theme:
 pages:
 
 Home: index.md
-Using the Orchid App: using-orchid.md
 Orchid Accounts: accounts.md
+The Orchid Client: using-orchid.md
+The Orchid DApp: orchid-dapp.md
 FAQ: faq.md
