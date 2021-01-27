@@ -1,71 +1,156 @@
-# How to Use Orchid
+# Quick Setup
 
-## Home Screen
+To run Orchid with the decentralized network of providers, you will need an Orchid account first. Access to an Orchid account is a requirement, as that is the payment account that pays the providers. Once you have an account, you can then set up the profile (typically done automatically) and hit the connect button to get VPN service.
 
-Orchid’s home screen is a representation of your device’s Internet connection. The switch in the upper right corner turns Orchid on/off and the middle section allows you to add and delete ‘hops’ which are VPN connections. On the bottom, there are two tabs. One is for Hops, which is the home screen, and the Traffic tab is a network protocol analyzer that allows you to see information about your phone's network connections.
+## Access an Orchid account
 
-The simplest configuration for Orchid is to use just one VPN connection. When configured with one hop, Orchid is similar to a typical VPN app, which can only connect to one VPN server at a time. Websites that you visit will then see the IP address and details of the VPN server as opposed to the IP address associated with your device. 
+See set up an Orchid account on how to buy, create or get access to an Orchid account.
 
-When you add multiple connections, Orchid uses layered encryption to route your traffic through each connection. If a multiple hop route is constructed, traffic flows through the hops from the top to the bottom. The Orchid app supports Orchid VPN connections as well as typical OpenVPN connections. 
+## Add the Orchid account to profile
 
-Add a hop by clicking on the Add Hop button in the middle of the screen and then going to the hop selection screen. To delete a hop, swipe it to the right or left.
+The Orchid account can be added to the client app by either scanning the QR code, or copy/pasting the account into the app. Look for the “Copy” button next to the QR code in the dApp which will copy the text of the account into your clipboard. If someone shares an account purely by text, you can also copy the account to the clipboard by highlighting the text of the account and hitting copy.
 
-Each hop to an Orchid node requires an Orchid account to pay for service. Read more about how to setup an Orchid account.
+Once you have the account information via QR or text, you can then go to Manage Profile -> New Hop -> Link Orchid Account which brings up the interface to either scan the QR code, or paste in the text from the clipboard.
 
-For more information about Orchid in general, read the About Orchid section. For information on what kinds of protections Orchid provides, read the Security and Privacy section.
+## Connecting
+
+After attaching the account, you will end up back at the Home screen and can tap Connect to connect to one of the decentralized VPN providers. If there is a problem with an Orchid account used in the profile, a red exclamation mark will appear in the Manage Profile button. If this mark appears, the app will not be able to connect successfully to a provider. Read the Orchid account troubleshooting guide for help.
+
+After tapping connect, the Orchid app will do a number of things:
+* Show the “Connecting” status
+* Stop all internet traffic across the device (kill switch)
+* Go through the stake-weighted random selection to find a provider
+* Check to ensure that provider is in the Curator
+* Connect to the provider
+* If an error is hit, go back to 2 and re-try
+* Change the status from “Connecting” to “Connected” and change the screen state from white to purple
+
+Note that this process can sometimes take a few minutes, depending on the status of Orchid’s providers. It is also possible to connect to a server, have the screen change states, and then have the connection die. Typically turning the app off/on can help kickstart the reconnect process whenever you experience no connectivity.
+
+# Key concepts
+
+## Orchid Accounts
+
+To access the Orchid network of providers, you need either Orchid Credits purchased with your native currency within the Orchid App (iOS/macOS only), or an Orchid Account created and funded using crypto currency with the dApp at account.orchid.com
+
+Credits can be purchased in the iOS or macOS app by hitting ‘Buy Orchid Credits’ in the notification area, or by going to ‘Manage Profile’, ‘New Hop’, and then ‘Buy Orchid Account’. While Orchid Credits are simpler to set up, creating an Orchid account using the dApp gives more control over the account, as purchased accounts are limited: there is no way to top-up, fix small deposits or to withdraw the funds from a purchased account.
+
+Jump to [Orchid Accounts](https://docs.orchid.com/en/stable/accounts/) for more information.
 
 ## Hops
 
-Orchid ‘hops’ are vpn connections to the Internet. Examples include a connection to an Orchid node or an OpenVPN connection to a VPN server. You can add and delete hops from the homescreen. Each hop will need a form of authentication to make the server connection. 
+Orchid ‘hops’ are VPN connections to the Internet. Examples include a connection to an Orchid node or an OpenVPN connection to an OpenVPN server. You can add and delete hops from the ‘Manage Profile’ screen within the Orchid App. Each hop will need a form of authentication to make a server connection. When multiple hops are added, internet traffic for the device goes through each server from top to bottom.
 
-Add a hop by clicking on the Add Hop button from the home screen and then selecting a way to add the hop. To add an Orchid hop, select "I have a QR code" if you generated a QR code from your Orchid account or select “I have an Orchid account” to manually input your Ethereum wallet address and generate a signing key that you can put into the app. To add an OpenVPN hop, select “I have an existing VPN subscription” and input the credentials.
+To add a hop in the Orchid Client, go to ‘Manage Profile’ and click ‘New Hop’. From here, you can choose to:
+* Buy an Orchid Account (iOS/macOS only feature)
+* Link an Orchid Account
+* Create a Custom Account (Android only feature)
+* Enter an OpenVPN config using your credentials
+* Enter a WireGuard config
 
-### OpenVPN hops
+Orchid has its own VPN wireline protocol, the Orchid protocol. The traffic to and from Orchid nodes uses the Orchid protocol. The traffic appears as webRTC traffic, which is advantageous for security and includes tiny nanopyments that flow with the traffic.
 
-Orchid supports OpenVPN. If you have an existing VPN provider, you can add a hop using OpenVPN credentials. To add an OpenVPN hop, click Add Hop -> I have an existing VPN subscription. Then enter your username, password and paste in the configuration for your OpenVPN connection.
+Each Orchid node also has a Curator — this is the curated list that is associated with the hop. When a connection is initiated, the Curator creates a subset of the available Orchid nodes for the hop to create the connection.
 
-### Orchid hops
+The main component of the Orchid node is the Orchid account associated with it. Each Orchid hop requires a valid Orchid account to continue to pay for VPN service.
 
-Orchid has its own VPN wireline protocol, the Orchid protocol. The traffic to and from Orchid nodes uses the Orchid protocol. The traffic looks like webRTC traffic, which is advantageous for security and includes tiny nanopyments that flow with the traffic.
+## Profile Manager
 
-Each Orchid node also has a curator — this is the curated list that is associated with the hop. When a connection is initiated, the curator creates a subset of the available Orchid nodes for the hop to create the connection. 
+To access the profile manager, hit ‘Manage Profile’ on the Orchid home / status screen. 
 
-The main component of the Orchid node is going to be the Orchid account associated with it. Each hop requires a valid Orchid account to continue to pay for VPN service.
+The profile manager is used to organize hops into the “profile” that your device will use to connect to the Internet. A typical VPN user only needs one hop. Hops can be mixed and matched here to form your own custom-styled circuits. For example, you could configure a profile with three different Orchid hops, so that your Internet traffic passes through three different servers between your device and the server you are accessing. 
 
-### Linking  an Orchid Account
+On this screen, you’ll also see ‘View Deleted Hops’ at the bottom. This is an easy way to restore recently removed hops.
 
-To add an Orchid account, open the app and select "New Hop" on the homescreen and then "Link Orchid Account" from the add hop screen. Scan or copy/paste the code into the app.
+There is currently no way to save profiles, nor an easy way to switch between them. The profile manager allows you to only modify the active profile at any given time. If you delete hops, they are still saved and available to be restored.
 
-Once you scan the QR code, the app will create a hop using that Orchid account and your default curator settings. You will then be dropped into the hop information screen that shows the saved information. Using the "Share Orchid Account" button, you can pop a QR code and share the Orchid account you just created with other people or devices. Press the back arrow to get back to the main screen. 
+# How to create an Orchid hop
 
-From the main screen, turn the toggle in the upper right to turn Orchid on.
+To use Orchid's decentralized providers, you will need to add an Orchid hop to your profile. The WireGuard and OpenVPN options are for making connections to existing servers where you have login credentials. 
 
-# Config Import/Export
+Orchid hops will use the attached Orchid account to send payments and then connect to a random provider on the network.
 
-## Hop Configuration
-A configuration specifying all details needed to connect to a single Orchid hop. It begins with `account = ...`
+From the Manage Profile screen, tap "New Hop" and then select an option:
 
-### Export
-To export a hop configuration, you must first add and configure a 'New Hop' within the Orchid iOS or Android application. Once this is complete, select the hop from the main screen. Scroll down and click the purple 'Share Orchid Account' button. This will display a prominant QR code representation of the Hop Configuration that you can scan and import from a different device. Running the QR code through any decoder will reveal the raw configuration contained within.
+## Buy an Orchid account (iOS/macOS only)
 
-### Import
-From the main screen within the Orchid iOS or Android application, select `New Hop -> I have a QR code`. You can then click the purple `Scan` button to quickly scan and import a Hop Configuration QR code. Alternatively, if you have the raw Hop Configuration, copy it to your device's clipboard and click the `Paste` button.
+In the iOS and macOS app, you can simply buy a pre-created Orchid account. These accounts come in 3 different sizes and are pre-filled with funds. The purchased accounts can only connect to our list of [preferred providers](https://www.orchid.com/preferredproviders).
 
+Purchased accounts are custodied by Orchid. There is no current way to add funds to them. Email contact@orchid.com for help with purchased accounts.
 
-## Complete Configuration (Hops Configuration)
-A configuration made up of the hop configurations for all hops setup within the application.  It begins with `hops = ...`
+## Linking an Orchid account
 
-### Export
-From within the Orchid iOS or Android application, open the hamburger menu (`☰`) in the top left corner. Next, go to `Settings -> Manage Configuration (beta) -> Export`. This will display the raw complete configuration (hops configuration). You can copy it to your device's clipboard using the purple `Copy` button at the bottom. Alternatively, you can produce a QR Code representation by clicking the QR Code button immediately to the left of the `Copy` button.
+If you have created an Orchid account in the dApp, you can tap Link Orchid Account to simply scan in the QR code. The other option is to copy the text of the account into your clipboard and then tap the Paste option to read in the account that way.
 
-### Import
-From within the Orchid iOS or Android application, open the hamburger menu (`☰`) in the top left corner. Next, go to `Settings -> Manage Configuration (beta) -> Import`. You can either paste the raw configuration into the text field or click on the QR Code button at the bottom to scan a QR Code representation of the configuration. After doing so, click the `Import` button to save. Note that this will overwrite all existing configured hops within the application.
+Orchid accounts are shareable, so if your friend sends you a QR code or the text of their account, you can link the account and use it by using the Link Orchid Account option.
+
+## Create a custom account
+
+The custom account option is in the Android app only. With this option you can generate a signer key and use that with your funder wallet to fund the account in the dApp. 
+
+To create a custom account:
+* Tap Create Custom Account from the New Hop menu
+* Paste in the public address of your funder wallet
+* Select "Generate new key"
+* Tap Save in the upper right
+* Tap the Orchid hop from the Profile Manager
+* Tap Copy next to the signer address
+* Paste the signer address into the dApp on the [Create Account](https://docs.orchid.com/en/stable/orchid-dapp/#create-account/) flow
+
+The last step will fund the empty account that was created in the app.
+
+# How to restore deleted hops
+
+To restore deleted hops, go to ‘Manage Profile’ from the home / status screen. At the bottom you’ll see a link to ‘View Deleted Hops’.
+
+You’ll need to:
+* Click into the hop you want to restore
+* Hit ‘Share Orchid Account’ and hit ‘Copy’
+* Return to the ‘Manage Profile’ screen, click ‘New Hop’ then ‘Link Orchid Account’ and ‘Paste’
+* Your deleted hop will now appear at the bottom of your list of hops
+
+# A note on multiple hops
+
+Orchid supports the use of multiple hops, allowing your Internet connection to be routed through an arbitrary number of VPN servers before reaching its destination. For more information about the implications of multiple hops, refer to the FAQ section on Security.
+
+Different protocols can be used with the multiple hop feature. For example, you could set up your traffic to go to three different Orchid servers, three different WireGuard servers or a combination therein. 
+
+# Using traditional VPN connections
+
+## OpenVPN
+
+To use an OpenVPN hop, you’ll need your username, password and configuration file from your VPN provider. You can usually find these in your provider VPN account under manual configuration or OpenVPN configuration.
+
+To use your OpenVPN configuration, go to ‘Manage Profile’ and ‘New Hop’ then ‘Enter OpenVPN Config’.
+
+## WireGuard
+
+To use your OpenVPN configuration, go to ‘Manage Profile’ and ‘New Hop’ then ‘Enter WireGuard Config’.
+
+Paste your WireGuard configuration into the text box and tap save in the upper right corner. The WireGuard account will now become an active hop available at the manage profile screen.
+
+# Using the traffic monitor
+
+Orchid has a built-in traffic monitor that can run with or without an Orchid account. Using the traffic monitor is similar to WireShark--and Orchid works on iOS! The traffic monitor also works across every platform that Orchid supports.
+
+There are two ways to enable the traffic monitor:
+* If you have a connection with at least one hop set up, when your connection is active you will be able to use the traffic monitor
+* If you have no hops set up, you can go to ‘Settings’ and then you can enable ‘Allow No Hop VPN’
+
+Once it’s enabled, you can find the traffic monitor from the home screen by opening the menu from the icon on the top left of the screen. ‘Traffic Monitor’ is at the bottom of the menu.
+
+## Filters
+
+Enter a hostname or partial hostname into the search bar to show only matching rows.
+Enter multiple terms separated by a space to combine hostname filters using “AND” logic.  e.g. “goog api” will match rows including both “goog” and “api”, such as “api1.google.com”.
+Use a “-” minus sign to exclude terms.  e.g. “-goog” will show all hostnames *except* those matching “goog”.  You can mix these to include and exclude combinations such as: “google -api” to find all “google” entries excluding those with “api”.
+Use “prot:<name of protocol>”to filter by protocol name.  e.g. “prot:imap” will match all traffic identified as “imap” connections and  “-prot:dns” will filter out all DNS queries from the results.
 
 # Gathering Logs
 
 When debugging client-side issues, you might be requested to share logs. These logs provide advanced details about what the Orchid client is doing behind the scenes to provide you with a private browsing experience. This page is designed to help you collect and share the logs.
 
-# Android Prerequisites
+## Android Prerequisites
 Start by turning on developer and debugging mode on the phone by going to `Settings -> About Phone -> About Software` and tapping on the build number repeatedly until it prompts you to enable developer mode. Then go to `Settings -> Developer Settings -> Turn on USB Debugging`. Finally, you can run the following command on your computer with your phone connected via USB to view the logs.
 
 ## Android and iOS Prerequisites
@@ -96,3 +181,23 @@ grep -vi 'secret' client.log
 
 ## Sharing the Logs
 The logs you gather will be quite long. You almost certainly do not want to paste them in their entirety into something like a Telegram message. Instead, we encourage you to either share them as an attachment via your preferred method of communication. Or if you are using a communication platform that doesn't support attachments, you can utilize a private pastebin service such as [GitHub Gists](https://gist.github.com), which will provide you with a secret URL you can share to grant access to your logs.
+
+# Orchid App troubleshooting/FAQs
+
+## Help, my Internet connection shut off after I turned Orchid on
+
+Orchid has a built-in “kill switch” and so turning Orchid on will destroy all existing connections to the Internet and force them to go through Orchid. If Orchid is trying to connect, the Internet will be shut off until a connection is established. This is a feature that ensures that none of your Internet traffic will accidentally leak due to a disconnect/reconnect without you pressing the button first. This ensures that when you hit “connect” your traffic is now only going through Orchid.
+
+Read [Connecting](https://docs.orchid.com/en/stable/using-orchid/#connecting) for more information on exactly what happens when you hit connect.
+
+## I can’t find my QR code after making an account
+
+When the QR code or text of an account is truly lost, the account is lost as well. If the account was ever added to the Orchid app, the account should appear under View Deleted hops from the Manage Profile screen.
+
+The funds are NOT LOST! To recover the funds from a lost account, you will need to [withdraw the funds](https://docs.orchid.com/en/stable/orchid-dapp/#withdraw) from that Orchid account using the dApp and the funder wallet used to create the account. 
+
+## Low balance/deposit/efficiency warning
+
+Under certain market conditions, users need to increase the size of their deposit. The market conditions are primarily driven by the price of the currency and the amount of network fees required for the provider to claim a ticket. The face value of the ticket needs to be large enough for it to be profitable to pay the network fees to grab it. 
+
+To fix this, see [Deposit size too small](https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small)
