@@ -56,9 +56,9 @@ def main(event, context):
         #W3WSock     = body.get('W3WSock', '')
         W3WSock     = os.environ['WEB3_WEBSOCKET']
         txn         = body.get('txn', '')
-        receiptHash = body.get('receiptHash', '')
+        account_id  = body.get('account_id', '')
 
-        txnhash,cost_usd,msg = w3_generic.send_raw(W3WSock,txn,receiptHash)
+        txnhash,cost_usd,msg = w3_generic.send_raw(W3WSock,txn,account_id)
 
         logging.debug(f'send_raw txnhash({txnhash}) cost_usd({cost_usd}) msg({msg}) ')
     except ValueError as e:

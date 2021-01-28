@@ -28,7 +28,7 @@
     function: send_raw
   request:
     body:
-      receiptHash: 'cc869752a27345251867434c78a071945ecbfcc76a0ea728091181001ac9ac15'
+      account_id: 'cc869752a27345251867434c78a071945ecbfcc76a0ea728091181001ac9ac15'
       txn:
         to: '0xA614b7c04303814c1Ed20b1CeEB7Cd5394E1511f'
         gas: '0x57c0'
