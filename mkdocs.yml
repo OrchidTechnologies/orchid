@@ -1,10 +1,11 @@
 site_name: Orchid
 theme:
   name: readthedocs
-pages:
 
-Home: index.md
-Orchid Accounts: accounts.md
-The Orchid Client: using-orchid.md
-The Orchid DApp: orchid-dapp.md
-FAQ: faq.md
+nav:
+
+    - Home: 'index.md'
+    - Orchid Accounts: 'accounts.md'
+    - The Orchid Client: 'using-orchid.md'
+    - The Orchid DApp: 'orchid-dapp.md'
+    - FAQ: 'faq.md'
