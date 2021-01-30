@@ -189,8 +189,7 @@ webrtc := $(foreach v,$(webrtc),$(if $(findstring /virtual_,$(v)),,$(v)))
 source += $(webrtc)
 
 
-# this is for libwebrtc
-cflags += -DHAVE_SCTP
+cflags += -DWEBRTC_HAVE_SCTP
 
 cflags += -DABSL_ALLOCATOR_NOTHROW=0
 cflags += -DDCHECK_ALWAYS_ON
