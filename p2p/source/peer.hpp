@@ -50,7 +50,7 @@ class CreateObserver :
     }
 
     void OnFailure(webrtc::RTCError error) noexcept override {
-        orc_insist(false);
+        orc_insist_(false, error.message());
     }
 };
 
@@ -64,7 +64,7 @@ class SetObserver :
     }
 
     void OnFailure(webrtc::RTCError error) noexcept override {
-        orc_insist(false);
+        orc_insist_(false, error.message());
     }
 };
 
