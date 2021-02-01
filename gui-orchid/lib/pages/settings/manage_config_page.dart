@@ -36,9 +36,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           Padding(
             padding:
                 const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16),
-            child: Text(
-                'Warning: These features are intended for advanced users only.  Please read all instructions.',
-                style: instructionsStyle),
+            child: Text(s.warningThesefeature, style: instructionsStyle),
           ),
           Divider(),
           pady(16),
