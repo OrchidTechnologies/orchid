@@ -224,7 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "shortToMediumTermUsage" : MessageLookupByLibrary.simpleMessage("Uso intermedio en la red"),
     "showInstructions" : MessageLookupByLibrary.simpleMessage("Mostrar instrucciones"),
     "showStatusPage" : MessageLookupByLibrary.simpleMessage("Mostrar Página de Estado"),
-    "signerAddress" : MessageLookupByLibrary.simpleMessage("Dirección del firmante"),
+    "signerAddress" : MessageLookupByLibrary.simpleMessage("Dirección Firmante"),
     "signerKey" : MessageLookupByLibrary.simpleMessage("Clave Firmante"),
     "sourcePort" : MessageLookupByLibrary.simpleMessage("Puerto de Origen"),
     "spentOnlyWhenTheVpnIsActive" : MessageLookupByLibrary.simpleMessage("Se consume sólo cuando la VPN está activa."),
