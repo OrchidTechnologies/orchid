@@ -31,7 +31,12 @@ cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 
 $(call include,quickjs.mk)
 
+# XXX: tor broke their build by putting a bare "ar" in combine-libs :/
+# I figured out where they hid their new issue tracker and am pending.
+ifneq (,)
 $(call include,tor.mk)
+endif
+
 $(call include,libevent.mk)
 
 $(call include,wsk/target.mk)
