@@ -28,6 +28,7 @@ The More tab provides a few more screens for navigation.
 In order to make the dApp active, you will need to attach a funder wallet. The “Connect” button will pop-up your wallet options, depending on whether you are on desktop or mobile, and whether or not a wallet is detected. This step is similar to “logging in” in some sense, as the funder wallet you use to create the account is required to access and manage the account.
 
 The key supported wallet connection methods:
+
 * Load the dApp in a dApp browser, such as MetaMask Mobile or Trust Wallet
 * Use any desktop browser and then connect a mobile wallet with WalletConnect
 * Use a desktop browser with MetaMask enabled as a web3 browser plugin
