@@ -35,6 +35,8 @@ $(call include,quickjs.mk)
 # I figured out where they hid their new issue tracker and am pending.
 ifneq (,)
 $(call include,tor.mk)
+else
+$(call include,zlb/target.mk)
 endif
 
 $(call include,libevent.mk)
