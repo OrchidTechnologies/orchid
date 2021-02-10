@@ -11,37 +11,9 @@ from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
 
-from utils import configure_logging, is_true
+from utils import configure_logging, is_true, response
 
-configure_logging(level="DEBUG")
-
-
-def response_error(msg=None):
-    logging.warning(msg)
-    response = {
-        "isBase64Encoded": False,
-        "statusCode": 401,
-        "headers": {},
-        "body": json.dumps({
-            "message": msg,
-        })
-    }
-    return response
-
-def response_success(txnhash,cost_usd):
-    msg = f'Transaction submitted with txnhash: {txnhash}, cost_usd: {cost_usd}.'
-    logging.info(msg)
-    response = {
-        "isBase64Encoded": False,
-        "statusCode": 200,
-        "headers": {},
-        "body": json.dumps({
-            "message": msg,
-            "txnhash": txnhash,
-            "cost_usd": cost_usd,
-        })
-    }
-    return response
+configure_logging(level="INFO")
 
 
 wei_per_eth = 1000000000000000000
@@ -148,6 +120,6 @@ def main(event, context):
     logging.info(f'send_raw txnhash({txnhash}) cost_usd({cost_usd}) msg({msg}) ')
 
     if (msg == 'success'):
-        return response_success(txnhash,cost_usd)
+        return response(200,{'msg':msg,'txnhash':txnhash,'cost_usd':cost_usd})
     else:
-        return response_error(msg)
+        return response(401,{'msg':msg})

@@ -6,37 +6,9 @@ import w3_generic
 import payments_apple
 
 from decimal import Decimal
-from utils import configure_logging, is_true
+from utils import configure_logging, is_true, response
 
 configure_logging(level="DEBUG")
-
-def response_error(msg=None):
-    logging.warning(msg)
-    response = {
-        "isBase64Encoded": False,
-        "statusCode": 401,
-        "headers": {},
-        "body": json.dumps({
-            "message": msg,
-        })
-    }
-    return response
-
-def response_success(receipt_hash, total_usd):
-    msg = f'Successfully processed apple receipt with hash: {receipt_hash} for credit of ${total_usd}.'
-    logging.debug(msg)
-    response = {
-        "isBase64Encoded": False,
-        "statusCode": 200,
-        "headers": {},
-        "body": json.dumps({
-            "message": msg,
-            "receipt_hash": receipt_hash,
-            "total_usd": total_usd,
-        })
-    }
-    return response
-
 
 def main(event, context):
     stage = os.environ['STAGE']
@@ -62,7 +34,7 @@ def main(event, context):
 
     if os.environ['STAGE'] != 'dev':
         if body.get('verify_receipt') or body.get('product_id'):
-            return response_error("invalid_dev_param")
+            return response(402,{'msg':'invalid_dev_param'})
 
     msg, receipt_hash, total_usd = payments_apple.handle_receipt(receipt, product_id, stage, verify_receipt)
 
@@ -71,6 +43,6 @@ def main(event, context):
 
     if (msg == "success"):
         w3_generic.credit_account_balance(account_id, total_usd)
-        return response_success(account_id, total_usd)
+        return response(200,{'msg':msg,'account_id':account_id,'total_usd':total_usd})
     else:
-        return response_error(msg)
+        return response(402,{'msg':msg})

@@ -54,37 +54,37 @@ if (LocalTest == False):
         return delete_response
 
     def get_account_balance(account_id):
-        item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
+        account = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
         balance = 0
-        if (item is not None):
-            balance = item['balance']
+        if (account is not None):
+            balance = account['balance']
         return balance
 
     def credit_account_balance(account_id, cost_usd):
         logging.info(f"credit_account_balance({account_id},{cost_usd})")
-        item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
+        account = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
         balance = cost_usd
-        if (item is None):
-            item = {}
-            item['vnonce'] = 0
+        if (account is None):
+            account = {}
+            account['nonces'] = {}
         else:
-            balance += float(item['balance'])
-        item['balance'] = balance
-        item['account_id'] = account_id
-        dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
+            balance += float(account['balance'])
+        account['balance'] = balance
+        account['account_id'] = account_id
+        dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], account)
         return balance
 
     def debit_account_balance(account_id, cost_usd):
         logging.info(f"debit_account_balance({account_id},{cost_usd})")
-        item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
+        account = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
         balance = 0
-        if (item is not None):
-            balance = float(item['balance']) - cost_usd
-            item['balance'] = balance
-            dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
+        if (account is not None):
+            balance = float(account['balance']) - cost_usd
+            account['balance'] = balance
+            dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], account)
         else:
             logging.warning(f"debit_account_balance account {account_id} not found")
-        return item
+        return account
 
     def save_transaction(txnhash, txn):
         txn['txnhash'] = txnhash
