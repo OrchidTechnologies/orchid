@@ -2,6 +2,7 @@ import boto3
 import json
 import logging
 import os
+import sys
 import requests
 import random
 
@@ -11,6 +12,12 @@ from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
 
 LocalTest = False
+
+
+def default(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError("Object! of type '%s' is not JSON serializable" % type(obj).__name__)
 
 
 if (LocalTest == False):
@@ -36,9 +43,15 @@ if (LocalTest == False):
     def dynamodb_write1(tableName, item):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(tableName)
-        ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+        ddb_item = json.loads(json.dumps(item,default=default), parse_float=Decimal)  # Work around DynamoDB lack of float support
         table.put_item(Item=ddb_item)
         return item
+
+    def dynamodb_delete1(tableName,keyname,key):
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(tableName)
+        delete_response = table.delete_item(Key={keyname: key}, ReturnValues='ALL_OLD')
+        return delete_response
 
     def get_account_balance(account_id):
         item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
@@ -48,11 +61,12 @@ if (LocalTest == False):
         return balance
 
     def credit_account_balance(account_id, cost_usd):
-        logging.debug(f"credit_account_balance({account_id},{cost_usd})")
+        logging.info(f"credit_account_balance({account_id},{cost_usd})")
         item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
         balance = cost_usd
         if (item is None):
             item = {}
+            item['vnonce'] = 0
         else:
             balance += float(item['balance'])
         item['balance'] = balance
@@ -61,7 +75,7 @@ if (LocalTest == False):
         return balance
 
     def debit_account_balance(account_id, cost_usd):
-        logging.debug(f"debit_account_balance({account_id},{cost_usd})")
+        logging.info(f"debit_account_balance({account_id},{cost_usd})")
         item = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
         balance = 0
         if (item is not None):
@@ -69,8 +83,8 @@ if (LocalTest == False):
             item['balance'] = balance
             dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], item)
         else:
-            logging.debug(f"debit_account_balance account {account_id} not found")
-        return balance
+            logging.warning(f"debit_account_balance account {account_id} not found")
+        return item
 
     def save_transaction(txnhash, txn):
         txn['txnhash'] = txnhash
@@ -91,6 +105,7 @@ if (LocalTest == False):
             result = results['Items'][index]
             pubkey = result['pubkey']
             privkey = result['privkey']
+        logging.info(f"get_executor_account {pubkey} {privkey}")
         return pubkey,privkey
 
     def target_in_whitelist(pubkey):
@@ -143,8 +158,8 @@ def get_usd_per_x_coinbase(token_sym) -> float:
     if ('data' in data):
         usd_per_x = float(data['data']['amount'])
     else:
-        logging.debug(f"invalid token or not found: {token_sym}")
-    logging.debug(f"usd_per_x_coinbase {token_sym}: {usd_per_x}")
+        logging.info(f"invalid token or not found: {token_sym}")
+    logging.info(f"usd_per_x_coinbase {token_sym}: {usd_per_x}")
     return usd_per_x
 
 # example: OXT ETH BTC DAI BNB AVAX
@@ -156,45 +171,42 @@ def get_usd_per_x_binance(token_sym) -> float:
     if ('price' in data):
         usd_per_x = float(data['price'])
     else:
-        logging.debug(f"invalid token or not found: {token_sym}")
-    logging.debug(f"usd_per_x_binance {token_sym}: {usd_per_x}")
+        logging.info(f"invalid token or not found: {token_sym}")
+    logging.info(f"usd_per_x_binance {token_sym}: {usd_per_x}")
     return usd_per_x
 
 def get_txn_cost_wei(txn):
-    value_wei    = txn['value']
-    gas          = txn['gas']
-    gasPrice     = txn['gasPrice']
+    value_wei    = txn.get('value',0)
+    gas          = txn.get('gas',0)
+    gasPrice     = txn.get('gasPrice',0)
     gascost_wei  = int(gas,0)*int(gasPrice,0)
     cost_wei     = int(value_wei,0) + int(gascost_wei)
-    logging.debug(f"get_txn_cost_wei gas({gas}) gasPrice({gasPrice}) gascost_wei({gascost_wei}) cost_wei({cost_wei})")
+    logging.info(f"get_txn_cost_wei gas({gas}) gasPrice({gasPrice}) gascost_wei({gascost_wei}) cost_wei({cost_wei})")
     return cost_wei
 
 wei_per_eth = 1000000000000000000
 
 
-def send_raw_wei_(w3,txn,  pubkey,privkey,nonce,max_cost_wei):
+
+def send_raw_wei_(w3,txn,  privkey,max_cost_wei):
 
     cost_wei     = float(get_txn_cost_wei(txn))
-
-    txn['from']  = pubkey
-    txn['nonce'] = nonce
-
-    logging.debug(f'send_raw_wei_ from({pubkey}) nonce({nonce}) cost_wei({cost_wei}) max_cost_wei({max_cost_wei})')
+    logging.info(f'send_raw_wei_ cost_wei({cost_wei}) max_cost_wei({max_cost_wei})')
 
     if (cost_wei > max_cost_wei):
-        logging.debug(f'sign_send_Transaction cost_wei({cost_wei}) > max_cost_wei({max_cost_wei})')
+        logging.warning(f'sign_send_Transaction cost_wei({cost_wei}) > max_cost_wei({max_cost_wei})')
         return None,0.0
 
     txn_signed = w3.eth.account.sign_transaction(txn, private_key=privkey)
-    logging.debug(f'sign_send_Transaction txn_signed: {txn_signed}')
+    logging.info(f'sign_send_Transaction txn_signed: {txn_signed}')
 
     txn_hash = w3.eth.sendRawTransaction(txn_signed.rawTransaction)
-    logging.debug(f'sign_send_Transaction submitted transaction with hash: {txn_hash.hex()}')
+    logging.info(f'sign_send_Transaction submitted transaction with hash: {txn_hash.hex()}')
 
     return txn_hash.hex(),cost_wei
 
 
-def send_raw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd):
+def send_raw_usd_(w3,txn, privkey,max_cost_usd):
 
     usd_per_eth = get_usd_per_x_coinbase('ETH')
     if (usd_per_eth == 0.0):
@@ -203,7 +215,7 @@ def send_raw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd):
     max_cost_eth = float(max_cost_usd) / float(usd_per_eth)
     max_cost_wei = float(max_cost_eth) * float(wei_per_eth)
 
-    txnhash,cost_wei = send_raw_wei_(w3,txn, pubkey,privkey,nonce,max_cost_wei)
+    txnhash,cost_wei = send_raw_wei_(w3,txn, privkey,max_cost_wei)
 
     cost_eth = cost_wei / wei_per_eth
     cost_usd = cost_eth * usd_per_eth
@@ -212,15 +224,17 @@ def send_raw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd):
 
 def get_nonce_(w3,pubkey):
     nonce = w3.eth.getTransactionCount(account=pubkey)
+    logging.info(f'get_nonce_ pubkey:{pubkey} nonce:{nonce}')
     return nonce
 
 
-def send_raw(W3WSock,txn,account_id):
+
+def send_raw_old(W3WSock,txn,account_id,debit = True):
 
     to = txn['to']
     if (target_in_whitelist(to) == False):
         errmsg = f'ERROR sendRaw: txn target: {to} not in whitelist'
-        logging.debug(errmsg)
+        logging.warning(errmsg)
         return None,0,errmsg
 
     w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
@@ -229,15 +243,27 @@ def send_raw(W3WSock,txn,account_id):
     pubkey,privkey   = get_executor_account()
     nonce            = get_nonce_(w3,pubkey)
 
-    logging.debug(f'send_raw max_cost_usd({max_cost_usd}) pubkey({pubkey}) privkey({privkey}) nonce({nonce}) ')
+    if (txn['from'] is None):
+        txn['from']  = pubkey
 
-    txnhash,cost_usd = send_raw_usd_(w3,txn, pubkey,privkey,nonce,max_cost_usd)
+    if (txn['nonce'] is None):
+        txn['nonce'] = nonce
+
+    logging.info(f'send_raw max_cost_usd({max_cost_usd}) pubkey({pubkey}) privkey({privkey}) nonce({nonce}) ')
+
+    txnhash,cost_usd = send_raw_usd_(w3,txn, privkey,max_cost_usd)
 
     msg = "unknown error"
     if (txnhash is not None):
-        txn['cost_usd'] = cost_usd
+        if (debit):
+            debit_account_balance(account_id, cost_usd)
+        account = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
+        txn['account_id'] = account_id
+        txn['vnonce']     = account['vnonce']
+        txn['cost_usd']   = cost_usd
         save_transaction(txnhash, txn)
-        debit_account_balance(account_id, cost_usd)
+        account['vnonce'] = int(account['vnonce']) + 1
+        dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], account)
         msg = "success"
 
     # todo: add from and nonce?
@@ -289,3 +315,73 @@ def refund_failed_txn(W3WSock,txnhash,account_id):
     save_transaction(txn,txnhash)
 
     return "success"
+
+
+
+
+def send_raw_(w3,txn_,privkey):
+
+
+    txn = txn_.copy();
+
+    txn.pop('status')
+    txn.pop('account_id')
+    txn.pop('txnhash')
+    txn.pop('vnonce')
+    txn.pop('cost_usd')
+
+    txn_s = str(txn)
+    logging.info(f'send_raw_ privkey:{privkey}  txn: {txn_s}  ')
+
+    txn_signed = w3.eth.account.sign_transaction(txn, private_key=privkey)
+    logging.info(f'sign_send_Transaction txn_signed: {txn_signed} with privkey:{privkey}')
+
+    txn_hash = w3.eth.sendRawTransaction(txn_signed.rawTransaction)
+    logging.info(f'sign_send_Transaction submitted transaction with hash: {txn_hash.hex()}')
+
+    return txn_hash.hex()
+
+def send_raw(W3WSock,txn):
+
+    txnhash = txn['txnhash']
+    logging.info(f'send_raw_internal_  txnhash:{txnhash}')
+
+    w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
+
+    to = txn['to']
+    if (target_in_whitelist(to) == False):
+        msg = f'ERROR sendRaw: txn target: {to} not in whitelist'
+        logging.warning(msg)
+        return None,msg
+
+    pubkey = txn['from']
+
+    if (txn.get('from') is None):
+        pubkey,privkey = get_executor_account()
+        txn['from']    = pubkey
+
+    executor = dynamodb_read1(os.environ['EXECUTORS_TABLE_NAME'], 'pubkey', pubkey)
+    privkey  = executor['privkey']
+
+    if (txn.get('nonce') is None):
+        nonce        = get_nonce_(w3,pubkey)
+        txn['nonce'] = nonce
+
+    eth_txnhash = None
+    #eth_txnhash = send_raw_(w3,txn,privkey)
+
+    try:
+        msg = 'success'
+        eth_txnhash = send_raw_(w3,txn,privkey)
+    except ValueError as e:
+        msg = str(e)
+        logging.warning(f'ERROR: {msg}')
+    except:
+        msg = sys.exc_info()[0]
+        logging.warning(f'ERRORs: {msg}')
+
+
+    txn['eth_txnhash'] = eth_txnhash
+    txn['status'] = 'pending'
+
+    return txn,msg
