@@ -51,7 +51,7 @@ def main(event, context):
     logging.debug(f'body: {body}')
 
     receipt     = body.get('receipt', '')
-    bundle_id   = body.get('bundle_id', '')
+    #bundle_id   = body.get('bundle_id', '')
     account_id  = body.get('account_id', '')
     product_id  = body.get('product_id', None)
     verify_receipt = True
@@ -64,7 +64,7 @@ def main(event, context):
         if body.get('verify_receipt') or body.get('product_id'):
             return response_error("invalid_dev_param")
 
-    msg, receipt_hash, total_usd = payments_apple.handle_receipt(receipt, bundle_id, product_id, stage, verify_receipt)
+    msg, receipt_hash, total_usd = payments_apple.handle_receipt(receipt, product_id, stage, verify_receipt)
 
     if ((account_id is None) or (account_id == '')):
         account_id = receipt_hash
