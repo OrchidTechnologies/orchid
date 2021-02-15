@@ -35,7 +35,7 @@ To access the Orchid network of providers, you need either Orchid Credits purcha
 
 Credits can be purchased in the iOS or macOS app by hitting ‘Buy Orchid Credits’ in the notification area, or by going to ‘Manage Profile’, ‘New Hop’, and then ‘Buy Orchid Account’. While Orchid Credits are simpler to set up, creating an Orchid account using the dApp gives more control over the account, as purchased accounts are limited: there is no way to top-up, fix small deposits or to withdraw the funds from a purchased account.
 
-Jump to [Orchid Accounts](https://docs.orchid.com/en/stable/accounts/) for more information.
+Jump to [Orchid Accounts](../accounts/) for more information.
 
 ## Hops
 
@@ -95,7 +95,7 @@ To create a custom account:
 * Tap Save in the upper right
 * Tap the Orchid hop from the Profile Manager
 * Tap Copy next to the signer address
-* Paste the signer address into the dApp on the [Create Account](https://docs.orchid.com/en/stable/orchid-dapp/#create-account/) flow
+* Paste the signer address into the dApp on the [Create Account](../orchid-dapp/#create-account/) flow
 
 The last step will fund the empty account that was created in the app.
 
@@ -188,16 +188,16 @@ The logs you gather will be quite long. You almost certainly do not want to past
 
 Orchid has a built-in “kill switch” and so turning Orchid on will destroy all existing connections to the Internet and force them to go through Orchid. If Orchid is trying to connect, the Internet will be shut off until a connection is established. This is a feature that ensures that none of your Internet traffic will accidentally leak due to a disconnect/reconnect without you pressing the button first. This ensures that when you hit “connect” your traffic is now only going through Orchid.
 
-Read [Connecting](https://docs.orchid.com/en/stable/using-orchid/#connecting) for more information on exactly what happens when you hit connect.
+Read [Connecting](../using-orchid/#connecting) for more information on exactly what happens when you hit connect.
 
 ## I can’t find my QR code after making an account
 
 When the QR code or text of an account is truly lost, the account is lost as well. If the account was ever added to the Orchid app, the account should appear under View Deleted hops from the Manage Profile screen.
 
-The funds are NOT LOST! To recover the funds from a lost account, you will need to [withdraw the funds](https://docs.orchid.com/en/stable/orchid-dapp/#withdraw) from that Orchid account using the dApp and the funder wallet used to create the account. 
+The funds are NOT LOST! To recover the funds from a lost account, you will need to [withdraw the funds](../orchid-dapp/#withdraw) from that Orchid account using the dApp and the funder wallet used to create the account. 
 
 ## Low balance/deposit/efficiency warning
 
 Under certain market conditions, users need to increase the size of their deposit. The market conditions are primarily driven by the price of the currency and the amount of network fees required for the provider to claim a ticket. The face value of the ticket needs to be large enough for it to be profitable to pay the network fees to grab it. 
 
-To fix this, see [Deposit size too small](https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small)
+To fix this, see [Deposit size too small](../accounts/#deposit-size-too-small)

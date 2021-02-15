@@ -6,8 +6,8 @@ The Orchid accounts hold the funds that pay providers through the nanopayment sy
 # How to get an Orchid account
 
 * Purchase an account (iOS/macOS only feature) custodied by Orchid
-* [Create](https://docs.orchid.com/en/stable/orchid-dapp/#create-account) and self-custody an Orchid account using the Orchid dApp
-* [Access an account](https://docs.orchid.com/en/stable/accounts/#Sharing-orchid-accounts) that was shared with you
+* [Create](../orchid-dapp/#create-account) and self-custody an Orchid account using the Orchid dApp
+* [Access an account](../accounts/#Sharing-orchid-accounts) that was shared with you
 
 ## Purchased Orchid accounts (iOS/macOS only feature)
 
@@ -44,7 +44,7 @@ When an Orchid account is created, the deposit is “locked” and cannot be wit
 
 Market conditions are constantly changing. This includes fluctuations in network fees (Ethereum gas amounts) and changes in the conversion rate from the currency held in the account to the currency to pay network fees (OXT -> ETH). When the account efficiency gets low, it is a good idea to add additional OXT to the deposit of the account to increase the efficiency.
 
-The dApp has an [efficiency slider](https://docs.orchid.com/en/stable/orchid-dapp/#efficiency-slider-to-determine-deposit-size/) that displays the amount of deposit necessary to achieve that efficiency.
+The dApp has an [efficiency slider](../orchid-dapp/#efficiency-slider-to-determine-deposit-size/) that displays the amount of deposit necessary to achieve that efficiency.
 
 Increasing the size of the deposit increases the efficiency of the account by increasing the face value of the tickets. 
 
@@ -56,7 +56,7 @@ As a practical matter, while using the Orchid VPN, you will notice that the bala
 
 The balance of an Orchid account can be thought of as a number of tickets. The size of the ticket is governed by the deposit, as the network requires two tickets worth of deposit for payments to be accepted. The two tickets worth of deposit is required to prevent double spending attacks. So for example, if the account’s deposit size is 150 OXT and there is 225 OXT in the balance, the Orchid account has 3 tickets worth of balance because the size of each ticket is 75 OXT (deposit / 2) and there are 3 tickets worth of balance (total balance / ticket size).
 
-The dApp has an [Add Funds](https://docs.orchid.com/en/stable/orchid-dapp/#add-funds) screen to add additional balance to your account. 
+The dApp has an [Add Funds](../orchid-dapp/#add-funds) screen to add additional balance to your account. 
 
 ## Tickets
 
@@ -94,7 +94,7 @@ The public portion of the signer, the signer address, is used when funding the O
 
 The signer address is used by providers to ensure the funds in an Orchid account correspond to a ticket they receive for service. The address can also be used to lookup information about the account on-chain.
 
-The signer is generated when a [custom Orchid account](https://docs.orchid.com/en/stable/using-orchid/#create-a-custom-account) is created (Android only feature) or when [creating an Orchid account](https://docs.orchid.com/en/stable/orchid-dapp/#create-account) in the dApp. 
+The signer is generated when a [custom Orchid account](../using-orchid/#create-a-custom-account) is created (Android only feature) or when [creating an Orchid account](../orchid-dapp/#create-account) in the dApp. 
 
 ## Sharing Orchid accounts
 
@@ -122,4 +122,4 @@ The Orchid dApp can add funds to the account’s deposit, which will improve the
 
 ## What is the difference between Balance and Deposit in my Orchid Account?
 
-The [balance](https://docs.orchid.com/en/stable/accounts/#balance) is the collateral for the tickets sent from the user to the provider. Over time, as winning tickets are issued from your Orchid app, the Orchid account balance will drop. The [deposit](https://docs.orchid.com/en/stable/accounts/#deposit) is the Orchid token held in escrow to disincentivize double spending on the network. This amount never depletes and can be withdrawn after a 24hr "unlock" period.
+The [balance](../accounts/#balance) is the collateral for the tickets sent from the user to the provider. Over time, as winning tickets are issued from your Orchid app, the Orchid account balance will drop. The [deposit](../accounts/#deposit) is the Orchid token held in escrow to disincentivize double spending on the network. This amount never depletes and can be withdrawn after a 24hr "unlock" period.

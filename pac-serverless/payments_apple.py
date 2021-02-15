@@ -112,7 +112,7 @@ def product_to_usd(product_id: str) -> float:
     mapping = get_product_id_mapping()
     return mapping.get(product_id, -1)
 
-def handle_receipt(receipt, target_bundle_id, product_id, Stage, verify_receipt):
+def handle_receipt(receipt, product_id, Stage, verify_receipt):
 
     # extract and hash the receipt body payload
     receipt_hash = hash_receipt_body(receipt)
@@ -131,12 +131,8 @@ def handle_receipt(receipt, target_bundle_id, product_id, Stage, verify_receipt)
         else:
             bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
 
-        if (bundle_id != target_bundle_id):
-            return f"unexpected_bundle_id: {bundle_id} != {target_bundle_id}", None, 0
-
         if (validation_result['receipt']['in_app'] is None) or (len(validation_result['receipt']['in_app']) == 0):
             return "unexpected in_app result is empty", None, 0
-
 
     if (product_id is None):
         product_id = validation_result['receipt']['in_app'][0]['product_id']
@@ -147,7 +143,7 @@ def handle_receipt(receipt, target_bundle_id, product_id, Stage, verify_receipt)
     else:
         total_usd = product_to_usd(product_id=product_id) * quantity
 
-    logging.debug(f"handle_receipt_apple  product_id: {product_id}  quantity: {quantity}  total_usd: {total_usd}")
+    logging.debug(f"handle_receipt_apple  product_id: {product_id}  bundle_id: {bundle_id}  quantity: {quantity}  total_usd: {total_usd}")
 
     if total_usd <= 0:
         return "invalid_product_id total_usd <= 0", None, 0

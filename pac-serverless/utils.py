@@ -8,6 +8,23 @@ from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 
 
+def decimal_default(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError("Object! of type '%s' is not JSON serializable" % type(obj).__name__)
+
+def response(statusCode, data):
+    msg = data.get('msg','response success')
+    logging.info(msg)
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": statusCode,
+        "headers": {},
+        "body": json.dumps(data,default=decimal_default)
+    }
+    return response
+
+
 def configure_logging(level=os.environ.get('LOG_LEVEL', "DEBUG")):
     logging.debug(f'Setting log level: {level}')
     if len(logging.getLogger().handlers) > 0:

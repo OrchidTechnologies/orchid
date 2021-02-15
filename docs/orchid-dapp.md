@@ -28,6 +28,7 @@ The More tab provides a few more screens for navigation.
 In order to make the dApp active, you will need to attach a funder wallet. The “Connect” button will pop-up your wallet options, depending on whether you are on desktop or mobile, and whether or not a wallet is detected. This step is similar to “logging in” in some sense, as the funder wallet you use to create the account is required to access and manage the account.
 
 The key supported wallet connection methods:
+
 * Load the dApp in a dApp browser, such as MetaMask Mobile or Trust Wallet
 * Use any desktop browser and then connect a mobile wallet with WalletConnect
 * Use a desktop browser with MetaMask enabled as a web3 browser plugin
@@ -62,7 +63,7 @@ Because efficiency is coupled tightly with network transaction fees, it is usefu
 
 ## Size picker to determine balance size
 
-Due to the nature of the nanopayment system, the size of the balance needs some thought. Because payments are sent as probabilities of winning larger sums of money (what we call “lottery tickets”) the balance needs to be large enough to make tickets that will be accepted by providers. Learn more about [tickets here](https://docs.orchid.com/en/stable/accounts/#tickets).
+Due to the nature of the nanopayment system, the size of the balance needs some thought. Because payments are sent as probabilities of winning larger sums of money (what we call “lottery tickets”) the balance needs to be large enough to make tickets that will be accepted by providers. Learn more about [tickets here](../accounts/#tickets).
 
 Since the deposit is not used to pay for bandwidth, the amount of currency in your account that can be used for purchasing service is determined by the balance amount. 
 
@@ -132,7 +133,7 @@ Finally, you’ll see whether the funds in your account are locked or unlocked.
 
 # Notification banners
 
-Notification banners alert you to changes related to market interactions and the Orchid network that impact your Orchid account balance and deposit. For help with specific notification messages, see [Orchid account troubleshooting](https://docs.orchid.com/en/stable/accounts/#orchid-account-troubleshooting).
+Notification banners alert you to changes related to market interactions and the Orchid network that impact your Orchid account balance and deposit. For help with specific notification messages, see [Orchid account troubleshooting](../accounts/#orchid-account-troubleshooting).
 
 Notification banners also appear when there are transactions submitted from the dApp, approved by the funder wallet and awaiting confirmation from the blockchain.
 

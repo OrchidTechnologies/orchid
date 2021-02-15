@@ -76,7 +76,7 @@ provider:
     RECEIPT_TABLE_NAME: PAC-Receipts-${self:provider.stage}
     RECYCLE_TABLE_NAME: PAC-Recycle-${self:provider.stage}
     RESULT_TABLE_NAME: PAC-Result-${self:provider.stage}
-    BALANCES_TABLE_NAME: PAC-BalancesT-${self:provider.stage}
+    BALANCES_TABLE_NAME: PAC-Balances-${self:provider.stage}
     TXNS_TABLE_NAME: PAC-TXNsT-${self:provider.stage}
     EXECUTORS_TABLE_NAME: PAC-ExecutorsT-${self:provider.stage}
     TARGETS_TABLE_NAME: PAC-TargetsT-${self:provider.stage}
@@ -128,10 +128,24 @@ provider:
         - "lambda:InvokeAsync"
       Resource:
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-MaintainPool"
+        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-txn_monitor"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-payment_apple"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-send_raw"
+        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-get_account"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-refund_failed_txn"
 functions:
+  txn_monitor:
+    handler: txn_monitor.main
+    timeout: 900
+    events:
+      - schedule: rate(1 minute)
+  get_account:
+    handler: entry_account.main
+    timeout: 10
+    events:
+      - http:
+          path: get_account
+          method: post
   send_raw:
     handler: entry_send_raw.main
     timeout: 10
@@ -274,10 +288,10 @@ resources:
       Properties:
         TableName: ${self:provider.environment.BALANCES_TABLE_NAME}
         AttributeDefinitions:
-          - AttributeName: receiptHash
+          - AttributeName: account_id
             AttributeType: S
         KeySchema:
-          - AttributeName: receiptHash
+          - AttributeName: account_id
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
       DeletionPolicy: Retain

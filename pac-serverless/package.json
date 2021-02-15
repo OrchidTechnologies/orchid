@@ -14,7 +14,7 @@
     "serverless-python-requirements": "^5.0.1"
   },
   "devDependencies": {
-    "serverless-plugin-datadog": "^0.22.0",
+    "serverless-plugin-datadog": "^2.11.0",
     "serverless-prune-plugin": "^1.4.3"
   }
 }
