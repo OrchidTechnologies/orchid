@@ -691,7 +691,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         co_await client.Open(provider, origin);
 
     } else if (protocol == "orch1d") {
-        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0xff9978B7b309021D39a76f52Be377F2B95D72394"));
+        const Address lottery(heap.eval<std::string>(hops + ".lottery", "0xDBbB66055F403aD3cb605f2406aC6529525E0000"));
         const auto secret(orc_value(return, Bless<Secret>(heap.eval<std::string>(hops + ".secret")), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
