@@ -89,7 +89,7 @@ void Client::Invoice(const Bytes32 &id, const Buffer &data) {
 
     auto predicted(locked->balance_);
     for (const auto &pending : locked->pending_)
-        locked->spent_ += pending.second.amount_;
+        predicted += pending.second.amount_;
 
     const auto prepay(prices.gb1_ / 1024 * 2);
     if (prepay > predicted)
