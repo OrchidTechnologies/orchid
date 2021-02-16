@@ -142,12 +142,22 @@ static uint256_t _(std::string_view arg) {
     return uint256_t(Decimal(arg.substr(0, last + 1)) * shift);
 } };
 
+template <>
+struct Option<uint128_t> {
+static uint128_t _(std::string_view arg) {
+    return uint128_t(Option<uint256_t>::_(arg));
+} };
+
 static Address TransferV("0x2c1820DBc112149b30b8616Bf73D552BEa4C9F1F");
 
 template <>
 struct Option<Address> {
 static Address _(std::string arg) {
     if (false);
+    else if (arg == "lottery0") {
+        return "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"; }
+    else if (arg == "lottery1") {
+        return "0xDBbB66055F403aD3cb605f2406aC6529525E0000"; }
     else if (arg == "transferv") {
         return TransferV; }
     else if (arg == "OTT") {
@@ -388,6 +398,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
             std::cout << std::setw(2) << byte;
         }
         std::cout << std::endl;
+
+    } else if (command == "lottery0:push") {
+        const auto [lottery, signer, balance, escrow] = Options<Address, Address, uint128_t, uint128_t>(args);
+        static Selector<void, Address, uint128_t, uint128_t> push("push");
+        std::cout << (co_await executor_->Send(*chain_, {.gas = 175000}, lottery, 0, push(signer, balance + escrow, escrow))).hex() << std::endl;
 
     } else if (command == "lottery1:move") {
         const auto [lottery, amount, signer, adjust, retrieve] = Options<Address, uint256_t, Address, uint256_t, uint256_t>(args);
