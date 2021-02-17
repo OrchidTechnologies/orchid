@@ -48,7 +48,7 @@ std::pair<Float, uint256_t> Lottery1::Credit(const uint256_t &now, const uint256
     // XXX this used to use ethgasstation but now has a pretty lame gas model
     // XXX in fact I am not correctly modelling this problem at all anymore
     const auto bid((*market_.bid_)());
-    return {(Float(amount) * market_.currency_.dollars_() - Float(gas * bid) * market_.currency_.dollars_()) * Float(ratio + 1) / Two128, bid};
+    return {(Float(amount) * market_.currency_.dollars_() - Float(gas * bid) * market_.currency_.dollars_()) * (Float(ratio) + 1) / Two128, bid};
 }
 
 task<bool> Lottery1::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient) {
