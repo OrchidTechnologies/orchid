@@ -39,7 +39,7 @@ task<S<Updated<Prices>>> Oracle(unsigned milliseconds, S<Chain> chain) {
 
         // XXX: our Chainlink aggregation can have its answer forged by either Chainlink swapping the oracle set
         //      or by Orchid modifying the backend from our dashboard that Chainlink pays its oracles to consult
-        co_return Prices{gb1, oxt > 0.10 ? 0.10 : oxt, xau};
+        co_return Prices{gb1 > 0.10 ? 0.10 : gb1, oxt, xau};
     }, "Oracle"));
 }
 
