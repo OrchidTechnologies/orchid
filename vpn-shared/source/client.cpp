@@ -69,15 +69,14 @@ void Client::Invoice(const Bytes32 &id, const Buffer &data) {
 
     const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
 
-    const auto locked(locked_());
-    // XXX: implement rollover strategy
-    if (locked->serial_ >= serial)
-        return;
-
     const auto prices((*oracle_)());
+    const auto locked(locked_());
 
-    locked->serial_ = serial;
-    locked->balance_ = Float(Complement(balance)) * prices.oxt_ / Two128;
+    // XXX: implement rollover strategy
+    if (locked->serial_ < serial) {
+        locked->serial_ = serial;
+        locked->balance_ = Float(Complement(balance)) * prices.oxt_ / Two128;
+    }
 
     if (!id.zero()) {
         auto pending(locked->pending_.find(id));
