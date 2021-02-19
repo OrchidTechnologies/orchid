@@ -16,4 +16,6 @@ xflags += -isystem $(CURDIR)/$(pwd)/libcxxabi/include
 source += $(wildcard $(pwd)/libcxx/src/*.cpp)
 cflags/$(pwd)/libcxx/ += -D_LIBCPP_BUILDING_LIBRARY
 cflags/$(pwd)/libcxx/ += -D__GLIBCXX__
+
+qflags += -D_LIBCPP_DISABLE_AVAILABILITY
 qflags += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS

@@ -20,7 +20,7 @@
 /* }}} */
 
 
-#include <skyr/url.hpp>
+#include <skyr/v1/url.hpp>
 
 #include "error.hpp"
 #include "locator.hpp"
@@ -30,7 +30,7 @@ namespace orc {
 Locator::Locator(const std::string &locator) :
     Locator([&]() {
         auto base(skyr::make_url(locator));
-        orc_assert_(base, base.error().message());
+        orc_assert_(base, skyr::make_error_code(base.error()).message());
         auto &value(base.value());
         auto scheme(value.protocol());
         orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');

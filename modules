@@ -32,5 +32,3 @@ each | while read -r sub; do (
     echo "${sub}"
     git log --color --graph --format=oneline HEAD...${head[${sub}]-origin/master} || echo $sub
 ) done | less -R
-
-# url is stuck due to https://forums.developer.apple.com/thread/120977
