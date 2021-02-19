@@ -243,7 +243,7 @@ class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
             Text(
                 _balance == null
                     ? "("+s.setup+")"
-                    : "${_balance.value.toStringAsFixed(2)} "+s.oxt,
+                    : "${_balance.floatValue.toStringAsFixed(2)} "+s.oxt,
                 textAlign: TextAlign.left,
                 style: AppText.sideDrawerTitleStyle
                     .copyWith(fontSize: 12, height: 1.2)),

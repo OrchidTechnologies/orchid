@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/api/preferences/observable_preference.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'connect/connect_page.dart';
@@ -39,9 +42,18 @@ class OrchidAppNoTabs extends StatefulWidget {
 }
 
 class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
-  ValueNotifier<Color> backgroundColor = ValueNotifier(Colors.white);
-  ValueNotifier<Color> iconColor = ValueNotifier(Color(0xFF3A3149));
+  ValueNotifier<Color> _backgroundColor = ValueNotifier(Colors.white);
+  ValueNotifier<Color> _iconColor = ValueNotifier(Color(0xFF3A3149));
 
+  @override
+  void initState() {
+    super.initState();
+    initStateAsync();
+  }
+
+  void initStateAsync() async {}
+
+  // If the hop is empty initialize it to defaults now.
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
@@ -51,22 +63,26 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
       appBar: PreferredSize(
         preferredSize: preferredSize,
         child: AnimatedBuilder(
-            animation: Listenable.merge([backgroundColor, iconColor]),
+            animation: Listenable.merge([_backgroundColor, _iconColor]),
             builder: (context, snapshot) {
               return AppBar(
-                  backgroundColor: backgroundColor.value,
+                  backgroundColor: _backgroundColor.value,
                   elevation: 0,
-                  iconTheme: IconThemeData(color: iconColor.value),
+                  iconTheme: IconThemeData(color: _iconColor.value),
                   brightness: Brightness.light // status bar
                   );
             }),
       ),
-      body: ConnectPage(
-        appBarColor: backgroundColor,
-        iconColor: iconColor,
-      ),
+      body: _body(),
       backgroundColor: Colors.white,
       drawer: SideDrawer(),
+    );
+  }
+
+  Widget _body() {
+    return ConnectPage(
+      appBarColor: _backgroundColor,
+      iconColor: _iconColor,
     );
   }
 }

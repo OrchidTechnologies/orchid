@@ -154,7 +154,7 @@ class _HelpFeedbackPageState extends State<HelpFeedbackPage> {
   }
 
   Future<void> _showFeedbackSentDialog() {
-    return Dialogs.showAppDialog(
+    return AppDialogs.showAppDialog(
         context: context,
         title: "Feedback Sent!",
         bodyText: "Your feedback has been submitted.");

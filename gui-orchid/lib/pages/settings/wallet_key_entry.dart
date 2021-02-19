@@ -140,7 +140,7 @@ class _WalletKeyEntryState extends State<WalletKeyEntry> {
   }
 
   static Future<void> _showWalletLinkedDialog(@required BuildContext context) {
-    return Dialogs.showAppDialog(
+    return AppDialogs.showAppDialog(
         context: context,
         title: "Wallet linked!",
         bodyText:
@@ -149,7 +149,7 @@ class _WalletKeyEntryState extends State<WalletKeyEntry> {
 
   static Future<void> _showWalletLinkFailedDialog(
       @required BuildContext context) {
-    return Dialogs.showAppDialog(
+    return AppDialogs.showAppDialog(
         context: context,
         title: "Whoops!",
         bodyText:

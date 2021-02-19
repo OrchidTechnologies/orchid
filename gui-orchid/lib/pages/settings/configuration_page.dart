@@ -115,7 +115,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
       }
     } catch (err) {
       print("Error parsing config: $err");
-      Dialogs.showConfigurationChangeFailed(context, errorText: err.toString());
+      AppDialogs.showConfigurationChangeFailed(context, errorText: err.toString());
       return;
     }
     OrchidAPI().setConfiguration(newConfig).then((bool saved) {
@@ -123,10 +123,10 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
       if (saved) {
         UserPreferences().setUserConfig(newConfig);
         _configFileTextLast = newConfig;
-        Dialogs.showConfigurationChangeSuccess(context);
+        AppDialogs.showConfigurationChangeSuccess(context);
       } else {
         _readyToSave.add(true);
-        Dialogs.showConfigurationChangeFailed(context);
+        AppDialogs.showConfigurationChangeFailed(context);
       }
     });
   }

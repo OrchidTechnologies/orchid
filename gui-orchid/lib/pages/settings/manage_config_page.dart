@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/page_tile.dart';
@@ -96,7 +96,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   }
 
   void _doExport() async {
-    String hopsConfig = await OrchidVPNConfig.generateHopsConfig();
+    String hopsConfig = await OrchidVPNConfigV0.generateConfig();
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return ImportExportConfig.export(
         title: s.exportHopsConfiguration,
@@ -109,14 +109,14 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return ImportExportConfig.import(
         title: s.importHopsConfiguration,
-        validator: OrchidVPNConfigValidation.configValid,
+        validator: OrchidVPNConfigValidationV0.configValid,
         onImport: _importConfig,
       );
     }));
   }
 
   void _importConfig(String config) async {
-    await OrchidVPNConfig.importConfig(config);
+    await OrchidVPNConfigV0.importConfig(config);
     Navigator.pop(context);
   }
 

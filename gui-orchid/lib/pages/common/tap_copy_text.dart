@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 class TapToCopyText extends StatefulWidget {
   final String text;
   final TextStyle style;
+  final EdgeInsets padding;
 
-  const TapToCopyText(this.text, {Key key, this.style}) : super(key: key);
+  const TapToCopyText(this.text, {Key key, this.style, this.padding})
+      : super(key: key);
 
   @override
   _TapToCopyTextState createState() => _TapToCopyTextState();
@@ -27,8 +29,12 @@ class _TapToCopyTextState extends State<TapToCopyText> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       child: Padding(
-        padding: const EdgeInsets.only(top: 16, bottom: 16),
-        child: Text(_showText, style: widget.style),
+        padding: widget.padding ?? const EdgeInsets.only(top: 16, bottom: 16),
+        child: Text(
+          _showText,
+          overflow: TextOverflow.ellipsis,
+          style: widget.style,
+        ),
       ),
       onTap: _onTap,
     );
@@ -37,7 +43,7 @@ class _TapToCopyTextState extends State<TapToCopyText> {
   void _onTap() async {
     Clipboard.setData(ClipboardData(text: widget.text));
     setState(() {
-      _showText = "Copied...";
+      _showText = "Copied";
     });
     await Future.delayed(Duration(milliseconds: 500));
     setState(() {

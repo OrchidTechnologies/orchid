@@ -44,7 +44,7 @@ class Crypto {
     return new EthereumKeyPair(
         private: privateKey,
         public: toHex(publicKey),
-        address: toHex(ethereumAddress));
+        addressString: toHex(ethereumAddress));
   }
 
   static String toHex(Uint8List bytes) {
@@ -74,7 +74,6 @@ class Crypto {
       throw Exception("invalid key");
     }
   }
-
 }
 
 class EthereumKeyPair {
@@ -84,10 +83,15 @@ class EthereumKeyPair {
   // The EC public key
   final String public;
 
+  // TODO: Deprecated, migrate this to EthereumAddress
   // The ethereum address for this keypair
-  final String address;
+  final String addressString;
 
-  const EthereumKeyPair({this.private, this.public, this.address});
+  EthereumAddress get address {
+    return EthereumAddress.from(addressString);
+  }
+
+  const EthereumKeyPair({this.private, this.public, this.addressString});
 }
 
 class DartSecureRandom implements SecureRandom {
@@ -152,8 +156,17 @@ class StoredEthereumKey {
       @required this.private})
       : this.uid = uid ?? time.millisecondsSinceEpoch.toString();
 
-  EthereumKeyPair keys() {
-    return Crypto.fromPrivateKey(private);
+  EthereumKeyPair _keyPair;
+
+  EthereumAddress get address {
+    return get().address;
+  }
+
+  EthereumKeyPair get() {
+    if (_keyPair == null) {
+      _keyPair = Crypto.fromPrivateKey(private);
+    }
+    return _keyPair;
   }
 
   StoredEthereumKeyRef ref() {
@@ -173,8 +186,32 @@ class StoredEthereumKey {
         'private': private.toString()
       };
 
-  String formatSecret() {
+  /// Format the secret as a 64 character hex string, zero padded, without prefix.
+  String formatSecretFixed() {
     return "${private.toRadixString(16)}".padLeft(64, '0');
+  }
+
+  static Map<String, StoredEthereumKey> map(List<StoredEthereumKey> list) {
+    return {for (var key in list) key.uid: key};
+  }
+
+  static StoredEthereumKey find(List<StoredEthereumKey> list, String uid) {
+    return list.firstWhere((key) => key.uid == uid, orElse: () => null);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StoredEthereumKey &&
+          runtimeType == other.runtimeType &&
+          uid == other.uid;
+
+  @override
+  int get hashCode => uid.hashCode;
+
+  @override
+  String toString() {
+    return 'StoredEthereumKey{uid: $uid, time: $time, imported: $imported}';
   }
 }
 
@@ -195,7 +232,7 @@ class StoredEthereumKeyRef {
     var keys = await UserPreferences().getKeys();
     try {
       return getFrom(keys);
-    } catch(err) {
+    } catch (err) {
       throw Exception("get key error: $err");
     }
   }
@@ -205,7 +242,7 @@ class StoredEthereumKeyRef {
       return keys.firstWhere((key) {
         return key.uid == keyUid;
       });
-    } catch(err) {
+    } catch (err) {
       throw Exception("getFrom(key) error: $err");
     }
   }
@@ -217,6 +254,10 @@ class StoredEthereumKeyRef {
 }
 
 class EthereumAddress {
+  // Used as null value in contract calls.
+  static EthereumAddress zero =
+      EthereumAddress.from('0x0000000000000000000000000000000000000000');
+
   BigInt value;
 
   EthereumAddress(BigInt value) {
@@ -226,6 +267,10 @@ class EthereumAddress {
 
   EthereumAddress.from(String text) {
     this.value = parse(text);
+  }
+
+  static fromNullable(String text) {
+    return text == null ? null : EthereumAddress.from(text);
   }
 
   // TODO: EIP55
@@ -258,4 +303,13 @@ class EthereumAddress {
       throw Exception("invalid, value");
     }
   }
+
+  @override
+  bool operator ==(other) {
+    return other is EthereumAddress && value == other.value;
+  }
+
+  @override
+  // TODO: implement hashCode
+  int get hashCode => value.hashCode;
 }

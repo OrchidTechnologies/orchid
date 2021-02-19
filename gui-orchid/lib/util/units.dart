@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 
 class ScalarValue<T extends num> {
   final T value;
@@ -21,32 +22,72 @@ class ScalarValue<T extends num> {
   int get hashCode => value.hashCode;
 }
 
-class OXT extends ScalarValue<double> {
-  const OXT(double value) : super(value);
+// Support migration of legacy code and clarify explicit usage of OXT.
+// Note: Dart's type system is just awful.  It will automatically downcast
+// Note: types in assignment and argument inference, totally breaking the
+// Note: type safety of having this subclass.
+class OXT extends Token {
 
-  // TODO: Figure out how to move these operator overloads to the base class
+  OXT(BigInt value) : super(TokenTypes.OXT, value);
+
+  static OXT fromInt(BigInt keiki) {
+    return OXT(keiki);
+  }
+
+  static OXT fromDouble(double value) {
+    return cast(TokenTypes.OXT.fromDouble(value));
+  }
+
+  static OXT cast(Token token) {
+    if (token.type != TokenTypes.OXT) {
+      throw AssertionError('Token type mismatch!: $token');
+    }
+    return OXT(token.intValue);
+  }
+
+  @override
+  OXT multiplyInt(int other) {
+    return cast(super.multiplyInt(other));
+  }
+
+  @override
+  OXT multiplyDouble(double other) {
+    return cast(super.multiplyDouble(other));
+  }
+
+  @override
   OXT operator *(double other) {
-    return OXT(value * other);
+    return multiplyDouble(other);
   }
 
+  @override
+  OXT divideDouble(double other) {
+    return cast(super.divideDouble(other));
+  }
+
+  @override
   OXT operator /(double other) {
-    return OXT(value / other);
+    return divideDouble(other);
   }
 
-  OXT operator -(OXT other) {
-    return OXT(value - other.value);
+  @override
+  OXT subtract(Token other) {
+    return cast(super.subtract(other));
   }
 
-  OXT operator +(OXT other) {
-    return OXT(value + other.value);
+  @override
+  OXT operator -(Token other) {
+    return subtract(other);
   }
 
-  static OXT min(OXT a, OXT b) {
-    return OXT(math.min(a.value, b.value));
+  @override
+  OXT add(Token other) {
+    return cast(super.add(other));
   }
 
-  static OXT fromKeiki(BigInt keiki) {
-    return OXT(keiki / BigInt.from(1e18));
+  @override
+  OXT operator +(Token other) {
+    return add(other);
   }
 }
 
@@ -98,6 +139,7 @@ class GWEI extends ScalarValue<double> {
   }
 }
 
+// TODO: Convert to int pennies?
 class USD extends ScalarValue<double> {
   const USD(double value) : super(value);
 }
@@ -113,6 +155,6 @@ String formatCurrency(num value,
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0.0" + "#" * (digits - 1), locale).format(value) +
+  return NumberFormat("#0.00" + "#" * (digits - 1), locale).format(value) +
       (suffix != null ? " $suffix" : "");
 }

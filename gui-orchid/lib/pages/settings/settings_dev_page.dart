@@ -35,8 +35,6 @@ class _SettingsDevPage extends State<SettingsDevPage> {
   void initState() {
     super.initState();
 
-    var api = OrchidAPI();
-
   //    api.getDeveloperSettings().then((Map<String, String> settingsMap) {
   //      setState(() {
   //        _developerSettings = DeveloperSettings.fromMap(settingsMap,

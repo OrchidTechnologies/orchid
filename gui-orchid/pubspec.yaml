@@ -37,6 +37,7 @@ dependencies:
   http: 0.12.2
   in_app_purchase:
     path: in_app_purchase
+  jdenticon_dart: ^1.2.1+1
   percent_indicator: 2.1.8
   pointycastle: 1.0.2
   provider: 4.3.2+3

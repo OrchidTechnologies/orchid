@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
@@ -61,8 +61,8 @@ class ScanOrPasteDialog extends StatelessWidget {
                 child: ScanOrPasteOrchidAccount(
                     spacing:
                         screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
-                    onImportAccount: (ParseOrchidAccountResult result) async {
-                      var hop = await OrchidVPNConfig.importAccountAsHop(result);
+                    onImportAccount: (ParseOrchidAccountResultV0 result) async {
+                      var hop = await OrchidVPNConfigV0.importAccountAsHop(result);
                       Navigator.of(context).pop();
                       onAddFlowComplete(hop);
                     }),

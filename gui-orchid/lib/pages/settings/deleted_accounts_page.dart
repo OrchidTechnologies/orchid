@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
@@ -156,7 +156,7 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   Future<bool> _confirmDeleteHop(dismissDirection) async {
-    var result = await Dialogs.showConfirmationDialog(
+    var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
       body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
@@ -223,10 +223,10 @@ class _AccountsPageState extends State<AccountsPage> {
         EthereumAddress.from('0x6dd46c5f9f19ab8790f6249322f58028a3185087');
     _orphanedPacAccounts = [];
     for (var key in orphanedKeys) {
-      var signer = EthereumAddress.from(key.keys().address);
+      var signer = EthereumAddress.from(key.get().addressString);
       try {
-        var pot = await OrchidEthereum.getLotteryPot(orchidPacFunder, signer);
-        if (pot.balance.value <= 0) {
+        var pot = await OrchidEthereumV0.getLotteryPot(orchidPacFunder, signer);
+        if (pot.balance.lteZero()) {
           log("account: zero balance found for keys: [$orchidPacFunder, $signer]");
           continue;
         }

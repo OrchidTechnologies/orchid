@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_api.dart';
-import '../orchid_budget_api.dart';
 import '../orchid_log_api.dart';
 
 class UserPreferences {
@@ -60,22 +60,6 @@ class UserPreferences {
   Future<bool> setPromptedForVPNPermission(bool value) async {
     return (await SharedPreferences.getInstance())
         .setBool(UserPreferenceKey.PromptedForVPNPermission.toString(), value);
-  }
-
-  Future<bool> setBudget(Budget budget) async {
-    String value = jsonEncode(budget);
-    print("json = $value");
-    return (await SharedPreferences.getInstance())
-        .setString(UserPreferenceKey.Budget.toString(), value);
-  }
-
-  Future<Budget> getBudget() async {
-    String value = (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.Budget.toString());
-    if (value == null) {
-      return null;
-    }
-    return Budget.fromJson(jsonDecode(value));
   }
 
   // Set the circuit / hops configuration
@@ -183,7 +167,7 @@ class UserPreferences {
     var keys = ((await UserPreferences().getKeys()) ?? []);
     try {
       keys.removeWhere((key) => key.uid == keyRef.keyUid);
-    } catch( err) {
+    } catch (err) {
       log("account: error removing key: $keyRef");
       return false;
     }
@@ -277,7 +261,7 @@ class UserPreferences {
             .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
       });
 
-  /// Stores the shared, single, outstanding PAC transaction or null if there is none.
+  /// The shared, single, outstanding PAC transaction or null if there is none.
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
       key: UserPreferenceKey.PacTransaction,
       loadValue: (key) async {
@@ -290,11 +274,48 @@ class UserPreferences {
         String value = tx != null ? jsonEncode(tx) : null;
         return writeStringForKey(key, value);
       });
+
+  /// A list of account information indicating the active identity (signer key)
+  /// and the active account (funder and chainid) for that identity.
+  /// The order of this list is significant in that the first account designates
+  /// the active identity. The list should contain at most one account per identity.
+  ObservablePreference<List<Account>> activeAccounts = ObservablePreference(
+      key: UserPreferenceKey.ActiveAccounts,
+      loadValue: (key) async {
+        String value = await readStringForKey(key);
+        if (value == null) {
+          return [];
+        }
+        try {
+          var jsonList = jsonDecode(value) as List<dynamic>;
+          return jsonList
+              .map((el) {
+                try {
+                  return Account.fromJson(el);
+                } catch (err) {
+                  OrchidAPI().logger().write("Error decoding account: $err");
+                  return null;
+                }
+              })
+              .where((account) => account != null)
+              .toList();
+        } catch (err) {
+          OrchidAPI().logger().write("Error retrieving accounts!: $err");
+          return [];
+        }
+      },
+      storeValue: (key, selectedAccounts) {
+        String value =
+            selectedAccounts != null ? jsonEncode(selectedAccounts) : null;
+        return writeStringForKey(key, value);
+      });
+
+  ObservableBoolPreference guiV1 =
+      ObservableBoolPreference(UserPreferenceKey.GuiV1);
 }
 
 enum UserPreferenceKey {
   PromptedForVPNPermission,
-  Budget,
   Circuit,
   RecentlyDeletedHops,
   UserConfig,
@@ -306,5 +327,7 @@ enum UserPreferenceKey {
   VPNSwitchInstructionsViewed,
   FirstLaunchInstructionsViewed,
   AllowNoHopVPN,
-  PacTransaction
+  PacTransaction,
+  ActiveAccounts,
+  GuiV1
 }

@@ -14,7 +14,7 @@ class OrchidHop extends CircuitHop {
 
   // Helper method to resolve the signer address from the keystore.
   EthereumAddress getSigner(List<StoredEthereumKey> keys) {
-    return EthereumAddress.from(keyRef.getFrom(keys).keys().address);
+    return EthereumAddress.from(keyRef.getFrom(keys).get().addressString);
   }
 
   OrchidHop(

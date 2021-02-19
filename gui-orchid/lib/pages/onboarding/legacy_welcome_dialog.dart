@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -85,8 +85,8 @@ class LegacyWelcomeDialog {
                 ScanOrPasteOrchidAccount(
                     spacing:
                         screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
-                    onImportAccount: (ParseOrchidAccountResult result) async {
-                      var hop = await OrchidVPNConfig.importAccountAsHop(result);
+                    onImportAccount: (ParseOrchidAccountResultV0 result) async {
+                      var hop = await OrchidVPNConfigV0.importAccountAsHop(result);
                       Navigator.of(context).pop(); // TODO: probably not necessary?
                       onAddFlowComplete(hop);
                     }),

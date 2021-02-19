@@ -192,7 +192,7 @@ class _SettingsLogPage extends State<SettingsLogPage> {
   void _onSave() {}
 
   void _confirmDelete() {
-    Dialogs.showConfirmationDialog(
+    AppDialogs.showConfirmationDialog(
         context: context,
         body: s.clearAllLogData,
         cancelText: s.cancel,

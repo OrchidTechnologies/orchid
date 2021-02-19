@@ -101,7 +101,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
 
     if (_keys != null) {
       items.addAll(_keys.map((key) {
-        var address = key.keys().address;
+        var address = key.get().addressString;
         return new DropdownMenuItem<KeySelectionItem>(
           value: KeySelectionItem(keyRef: key.ref()),
           child: Text(address,

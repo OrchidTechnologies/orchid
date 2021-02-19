@@ -1,12 +1,9 @@
 import 'dart:math';
 
-import 'package:orchid/api/orchid_budget_api.dart';
-import 'package:orchid/api/orchid_eth.dart';
 import 'package:orchid/util/units.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'orchid_api.dart';
 import 'orchid_log_api.dart';
 
 /// Exchange rates
@@ -51,21 +48,6 @@ class OrchidPricingAPI {
     }
   }
 
-  static int gasCostToRedeemTicket = 100000;
-
-  /// Calculate the current real world value of the largest ticket that can be
-  /// issued from this lottery pot, taking into account the amount of gas required
-  /// to redeem the ticket, current gas prices, and the OXT-ETH exchange rate.
-  /// Returns the net value in OXT, which may be zero or negative if the ticket
-  /// would be unprofitable to redeem.
-  Future<OXT> getMaxTicketValue(LotteryPot pot) async {
-    Pricing pricing = await getPricing();
-    GWEI gasPrice = await OrchidEthereum().getGasPrice();
-    ETH gasCostToRedeem = (gasPrice * gasCostToRedeemTicket).toEth();
-    OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
-    OXT maxFaceValue = OXT.min(pot.balance, pot.deposit / 2.0);
-    return maxFaceValue - oxtCostToRedeem;
-  }
 }
 
 /// Pricing captures exchange rates at a point in time and supports conversion.
@@ -88,18 +70,18 @@ class Pricing {
     if (oxt == null) {
       return null;
     }
-    return USD(oxt.value * oxtToUsdRate);
+    return USD(oxt.floatValue * oxtToUsdRate);
   }
 
   OXT toOXT(USD usd) {
     if (usd == null) {
       return null;
     }
-    return OXT(usd.value / oxtToUsdRate);
+    return OXT.fromDouble(usd.value / oxtToUsdRate);
   }
 
   OXT ethToOxt(ETH eth) {
-    return OXT(oxtToUsdRate / ethToUsdRate * eth.value);
+    return OXT.fromDouble(oxtToUsdRate / ethToUsdRate * eth.value);
   }
 
   @override
@@ -167,67 +149,4 @@ class StaticExchangeRates {
     "VND": 21.32,
     "ZAR": 15.74,
   };
-}
-
-class MarketConditions {
-  ETH gasCostToRedeem;
-  OXT oxtCostToRedeem;
-  OXT maxFaceValue;
-  double efficiency;
-  bool limitedByBalance;
-
-  MarketConditions(
-      this.gasCostToRedeem,
-      this.oxtCostToRedeem,
-      this.maxFaceValue,
-      this.efficiency,
-      this.limitedByBalance);
-
-  String efficiencyPerc() {
-    return (this.efficiency * 100).toStringAsFixed(2) + "%";
-  }
-
-  static Future<MarketConditions> forPot(LotteryPot pot) async {
-    return forBalance(pot.balance, pot.deposit);
-  }
-
-  static Future<MarketConditions> forBalance(OXT balance, OXT escrow) async {
-    log("fetch market conditions");
-    var costToRedeem = await getCostToRedeemTicket();
-    var limitedByBalance = balance.value <= (escrow / 2.0).value;
-    OXT maxFaceValue = LotteryPot.maxTicketFaceValueFor(balance, escrow);
-    //var ticketUnderwater = costToRedeem.oxtCostToRedeem.value >= maxFaceValue.value;
-
-    // value received as a fraction of ticket face value
-    double efficiency = maxFaceValue.value == 0
-        ? 0
-        : max(
-                0,
-                (maxFaceValue - costToRedeem.oxtCostToRedeem).value /
-                    maxFaceValue.value)
-            .toDouble();
-
-    return new MarketConditions(
-        costToRedeem.gasCostToRedeem,
-        costToRedeem.oxtCostToRedeem,
-        maxFaceValue,
-        efficiency,
-        limitedByBalance);
-  }
-
-  static getCostToRedeemTicket() async {
-    Pricing pricing = await OrchidPricingAPI().getPricing();
-    GWEI gasPrice = await OrchidEthereum().getGasPrice();
-    ETH gasCostToRedeem =
-        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toEth();
-    OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
-    return CostToRedeem(gasCostToRedeem, oxtCostToRedeem);
-  }
-}
-
-class CostToRedeem {
-  ETH gasCostToRedeem;
-  OXT oxtCostToRedeem;
-
-  CostToRedeem(this.gasCostToRedeem, this.oxtCostToRedeem);
 }

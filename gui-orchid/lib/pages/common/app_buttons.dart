@@ -3,6 +3,8 @@ import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
+import 'formatting.dart';
+
 /// A rounded rectangle text button.
 class RoundedRectButton extends StatelessWidget {
   final String text;
@@ -28,11 +30,18 @@ class RoundedRectButton extends StatelessWidget {
       elevation: elevation,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16))),
-      child: icon ?? AppText.body(
-          text: text,
-          color: textColor ?? AppColors.text_light,
-          letterSpacing: 1.25,
-          lineHeight: 1.14),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          icon ?? Container(),
+          icon != null ? padx(14) : Container(),
+          AppText.body(
+              text: text,
+              color: textColor ?? AppColors.text_light,
+              letterSpacing: 1.25,
+              lineHeight: 1.14),
+        ],
+      ),
       color: backgroundColor ?? AppColors.purple_3,
       onPressed: onPressed,
     );
@@ -44,12 +53,14 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
   const RoundTitledRaisedImageButton({
     Key key,
     @required this.title,
-    @required this.imageName,
+    this.imageName,
     @required this.onPressed,
+    this.icon,
   }) : super(key: key);
 
   final String title;
   final String imageName;
+  final Icon icon;
   final VoidCallback onPressed;
 
   @override
@@ -62,8 +73,9 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
           color: AppColors.purple_3,
           child: Column(
             children: <Widget>[
-              Image.asset(imageName,
-                  color: AppColors.white, width: 40, height: 40),
+              icon ??
+                  Image.asset(imageName,
+                      color: AppColors.white, width: 40, height: 40),
             ],
           ),
           onPressed: onPressed,
@@ -154,7 +166,9 @@ class SaveActionButton extends StatelessWidget {
           s.save,
           style: AppText.actionButtonStyle.copyWith(
               // TODO: We need to get the TitledPage to publish colors on the context (theme)
-              color: isValid ? AppColors.purple_3: AppColors.purple_3.withOpacity(0.4)),
+              color: isValid
+                  ? AppColors.purple_3
+                  : AppColors.purple_3.withOpacity(0.4)),
         ),
         onPressed: isValid ? onPressed : null);
   }

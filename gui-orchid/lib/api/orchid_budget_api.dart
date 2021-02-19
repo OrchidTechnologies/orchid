@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/units.dart';
 
 import 'orchid_crypto.dart';
@@ -16,13 +17,17 @@ class OrchidBudgetAPI {
 }
 
 /// Lottery pot balance and deposit amounts.
-class LotteryPot {
+// TODO: Remove after migration
+// Note: This supports migration of OXT-specific code. If we simply generalize
+// Note: the value types to Token Dart would not catch assignment type errors
+// Note: until runtime due to its automatic downcasting.
+class OXTLotteryPot implements LotteryPot {
   final OXT deposit;
   final OXT balance;
   final BigInt unlock;
   final EthereumAddress verifier;
 
-  LotteryPot({
+  OXTLotteryPot({
     this.deposit,
     this.balance,
     this.unlock,
@@ -34,48 +39,40 @@ class LotteryPot {
   }
 
   static OXT maxTicketFaceValueFor(OXT balance, OXT deposit) {
-    return OXT.min(balance, deposit / 2.0);
+    //print("ZZZ: Token.min(${balance.floatValue}, ${deposit / 2.0}) = ${Token.min(balance, deposit / 2.0)}");
+    print("PPP: Token.min, deposit fv / 2.0 = ${deposit.floatValue / 2.0}, deposit / 2.0 =  ${(deposit / 2.0).floatValue}");
+    print("PPP1: ${deposit.floatValue / 2.0}");
+    return Token.min(balance, deposit / 2.0);
+  }
+
+  @override
+  String toString() {
+    return 'OXTLotteryPot{deposit: $deposit, balance: $balance}';
   }
 }
 
-// TODO: Placeholder budget api
-/// A budget representing a deposit, spend rate, and term.
-class Budget {
-  OXT deposit;
-  OXT spendRate; // OXT per Month
-  Months term;
+class LotteryPot {
+  final Token deposit;
+  final Token balance;
+  final BigInt unlock;
 
-  Budget({this.deposit, this.spendRate, this.term});
+  LotteryPot({
+    this.deposit,
+    this.balance,
+    this.unlock,
+  });
 
-  Budget.fromJson(Map<String, dynamic> json)
-      : deposit = OXT(json['deposit']),
-        spendRate = OXT(json['spendRate']),
-        term = Months(json['term']);
+  Token get maxTicketFaceValue {
+    return maxTicketFaceValueFor(balance, deposit);
+  }
 
-  Map<String, dynamic> toJson() => {
-        'deposit': deposit.value,
-        'spendRate': spendRate.value,
-        'term': term.value
-      };
 
-  bool operator ==(o) =>
-      o is Budget &&
-      o.deposit == deposit &&
-      o.spendRate == spendRate &&
-      o.term == term;
+  @override
+  String toString() {
+    return 'LotteryPot{deposit: $deposit, balance: $balance, unlock: $unlock}';
+  }
 
-// todo: hash
-}
-
-// TODO: Placeholder budget api
-/// A set of recommended budgets including low, average, and high usage scenarios
-/// as well as a custom budget recommendation based on the user's history.
-class BudgetRecommendation {
-  final Budget lowUsage;
-  final Budget averageUsage;
-  final Budget highUsage;
-  final Budget recommended;
-
-  const BudgetRecommendation(
-      {this.lowUsage, this.averageUsage, this.highUsage, this.recommended});
+  static Token maxTicketFaceValueFor(Token balance, Token deposit) {
+    return Token.min(balance, deposit / 2.0);
+  }
 }

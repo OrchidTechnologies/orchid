@@ -20,22 +20,28 @@ class AppTextField extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
 
-  AppTextField(
-      {this.hintText,
-      this.trailing,
-      this.controller,
-      this.obscureText = false,
-      this.maxLines = 1,
-      this.enabled = true,
-      this.readOnly = false,
-      this.padding,
-      this.margin});
+  final bool numeric;
+  final double height;
+
+  AppTextField({
+    this.hintText,
+    this.trailing,
+    this.controller,
+    this.obscureText = false,
+    this.maxLines = 1,
+    this.enabled = true,
+    this.readOnly = false,
+    this.padding,
+    this.margin,
+    this.numeric = false,
+    this.height = 56,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
         decoration: readOnly ? BoxDecoration() : textFieldEnabledDecoration,
-        height: 56,
+        height: height,
         margin: margin ??
             (readOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 20)),
         child: Row(
@@ -49,14 +55,19 @@ class AppTextField extends StatelessWidget {
                   controller: controller,
                   autocorrect: false,
                   textAlign: TextAlign.left,
+                  //textAlignVertical: TextAlignVertical.bottom,
                   maxLines: maxLines,
                   decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: hintText,
-                      //hintStyle: AppText.textHintStyle
+                    //contentPadding: EdgeInsets.only(bottom: 10),
+                    border: InputBorder.none,
+                    hintText: hintText,
+                    //hintStyle: AppText.textHintStyle
                   ),
                   onChanged: null,
                   focusNode: null,
+                  keyboardType: numeric
+                      ? TextInputType.numberWithOptions(decimal: true)
+                      : null,
                 ),
               ),
             ),

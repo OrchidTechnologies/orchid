@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/api/qrcode.dart';
+import 'package:orchid/pages/common/qrcode.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
@@ -18,7 +18,7 @@ import 'package:flutter/services.dart';
 import '../app_colors.dart';
 
 typedef ImportAccountCompletion = void Function(
-    ParseOrchidAccountResult result);
+    ParseOrchidAccountResultV0 result);
 
 // Used from the LegacyWelcomeDialog and AddHopPage->ScanOrPasteDialog
 class ScanOrPasteOrchidAccount extends StatefulWidget {
@@ -78,7 +78,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   }
 
   void _scanQRCode() async {
-    ParseOrchidAccountResult parseAccountResult;
+    ParseOrchidAccountResultV0 parseAccountResult;
     try {
       String text = await QRCode.scan();
       if (text == null) {
@@ -97,7 +97,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   }
 
   void _pasteCode() async {
-    ParseOrchidAccountResult parseAccountResult;
+    ParseOrchidAccountResultV0 parseAccountResult;
     try {
       ClipboardData data = await Clipboard.getData('text/plain');
       String text = data.text;
@@ -117,23 +117,23 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   }
 
   void _scanQRCodeError() {
-    Dialogs.showAppDialog(
+    AppDialogs.showAppDialog(
         context: context,
         title: s.invalidQRCode,
         bodyText: s.theQRCodeYouScannedDoesNot);
   }
 
   void _pasteCodeError() {
-    Dialogs.showAppDialog(
+    AppDialogs.showAppDialog(
         context: context,
         title: s.invalidCode,
         bodyText: s.theCodeYouPastedDoesNot);
   }
 
-  Future<ParseOrchidAccountResult> _parseConfig(
+  Future<ParseOrchidAccountResultV0> _parseConfig(
       BuildContext context, String config) async {
     var existingKeys = await UserPreferences().getKeys();
-    return OrchidVPNConfig.parseOrchidAccount(config, existingKeys);
+    return OrchidVPNConfigV0.parseOrchidAccount(config, existingKeys);
   }
 
   S get s {
