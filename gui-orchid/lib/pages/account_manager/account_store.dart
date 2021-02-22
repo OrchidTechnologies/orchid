@@ -85,23 +85,48 @@ class AccountStore extends ChangeNotifier {
     activeAccounts = await UserPreferences().activeAccounts.get();
 
     // Clear discovered if we are changing identities
-    if (discoveredAccounts.isNotEmpty &&
-        discoveredAccounts.first.identityUid != activeIdentity.uid) {
+    if (activeIdentity == null ||
+        (discoveredAccounts.isNotEmpty &&
+            discoveredAccounts.first.identityUid != activeIdentity.uid)) {
       discoveredAccounts = [];
     }
     notifyListeners();
 
-    // Discover accounts for the active identity on V0 Ethereum.
-    discoveredAccounts =
-    await OrchidEthereumV0().discoverAccounts(signer: activeIdentity);
-    notifyListeners();
+    if (activeIdentity != null) {
+      // Discover accounts for the active identity on V0 Ethereum.
+      discoveredAccounts =
+          await OrchidEthereumV0().discoverAccounts(signer: activeIdentity);
+      notifyListeners();
 
-    // Discover accounts for the active identity on V1 chains.
-    discoveredAccounts += await OrchidEthereumV1()
-        .discoverAccounts(chain: Chains.xDAI, signer: activeIdentity);
-    notifyListeners();
+      // Discover accounts for the active identity on V1 chains.
+      discoveredAccounts += await OrchidEthereumV1()
+          .discoverAccounts(chain: Chains.xDAI, signer: activeIdentity);
+      notifyListeners();
+    }
 
     return this;
+  }
+
+  Future<void> removeIdentity(StoredEthereumKey identity) async {
+    // Remove the key
+    await UserPreferences().removeKey(identity.ref());
+
+    // Remove any active account or identity selection using that key
+    var activeAccounts = await UserPreferences().activeAccounts.get();
+    activeAccounts.removeWhere((a) => a.identityUid == identity.uid);
+    await UserPreferences().activeAccounts.set(activeAccounts);
+
+    // Refresh
+    await load();
+  }
+
+  Future<void> addIdentity(StoredEthereumKey identity) async {
+    await UserPreferences().addKey(identity);
+    identities = await UserPreferences().getKeys();
+    setActiveIdentity(identity);
+
+    // Refresh
+    await load();
   }
 
   @override

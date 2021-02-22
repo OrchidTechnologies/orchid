@@ -1,11 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jdenticon_dart/jdenticon_dart.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/pages/circuit/orchid_hop_page.dart';
+import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
 import 'package:orchid/pages/common/account_chart.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
@@ -65,7 +71,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                             alignment: Alignment.centerRight,
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: _buildIdentityPopupMenu(),
+                              child: _buildIdentitySelectorMenu(),
                             )),
                       ],
                     ),
@@ -82,27 +88,123 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         });
   }
 
-  Widget _buildIdentityPopupMenu() {
-    var formatIdentity = (StoredEthereumKey identity) {
-      if (identity == null) return null;
-      return identity.address.toString().prefix(12);
-    };
-
-    return PopupMenuButton<StoredEthereumKey>(
+  Widget _buildIdentitySelectorMenu() {
+    return PopupMenuButton<IdentitySelectorMenuItem>(
       icon: Icon(Icons.settings, color: Colors.grey),
-      initialValue: _accountStore.activeIdentity,
-      onSelected: (StoredEthereumKey identity) async {
-        _accountStore.setActiveIdentity(identity);
+      initialValue: _accountStore.activeIdentity != null
+          ? IdentitySelectorMenuItem(identity: _accountStore.activeIdentity)
+          : null,
+      onSelected: (IdentitySelectorMenuItem item) async {
+        if (item.isIdentity) {
+          _accountStore.setActiveIdentity(item.identity);
+        } else {
+          item.action();
+        }
       },
       itemBuilder: (BuildContext context) {
-        return _accountStore.identities.map((identity) {
-          return PopupMenuItem<StoredEthereumKey>(
-            value: identity,
-            child: Text(formatIdentity(identity)),
+        var items = _accountStore.identities.map((StoredEthereumKey identity) {
+          var item = IdentitySelectorMenuItem(identity: identity);
+          return PopupMenuItem<IdentitySelectorMenuItem>(
+            value: item,
+            child: Text(item.formatIdentity()),
           );
         }).toList();
+
+        // Add the import, export actions
+        return items +
+            [
+              PopupMenuItem<IdentitySelectorMenuItem>(
+                  value: IdentitySelectorMenuItem(action: _newIdentity),
+                  child: Text('New')),
+              PopupMenuItem<IdentitySelectorMenuItem>(
+                  value: IdentitySelectorMenuItem(action: _importIdentity),
+                  child: Text('Import')),
+              PopupMenuItem<IdentitySelectorMenuItem>(
+                  value: IdentitySelectorMenuItem(action: _exportIdentity),
+                  child: Text('Export')),
+              PopupMenuItem<IdentitySelectorMenuItem>(
+                  value:
+                      IdentitySelectorMenuItem(action: _confirmDeleteIdentity),
+                  child: Text('Delete'))
+            ];
       },
     );
+  }
+
+  void _importIdentity() {
+    ScanOrPasteDialog.show(
+      context: context,
+      onImportAccount: (ParseOrchidAccountResult result) async {
+        if (result.identity != null) {
+          if (result.identity.isNew) {
+            await UserPreferences().addKey(result.identity.signer);
+            await _accountStore.load();
+          }
+          _accountStore.setActiveIdentity(result.identity.signer);
+        } else {
+          if (result.account.newKeys.isNotEmpty) {
+            await UserPreferences().addKeys(result.account.newKeys);
+            await _accountStore.load();
+          }
+          _accountStore.setActiveIdentity(result.account.account.signer);
+        }
+      },
+    );
+  }
+
+  void _newIdentity() async {
+    var secret = Crypto.generateKeyPair().private;
+    var key = StoredEthereumKey(
+      imported: false,
+      time: DateTime.now(),
+      uid: Crypto.uuid(),
+      private: secret,
+    );
+    await _accountStore.addIdentity(key);
+  }
+
+  void _exportIdentity() async {
+    var identity = _accountStore.activeIdentity;
+    if (identity == null) {
+      return;
+    }
+    var config = 'account={ secret: "${identity.formatSecretFixed()}" }';
+    var title = 'My Orchid Identity' + ':';
+    OrchidHopPage.showShareConfigStringDialog(
+        context: context, title: title, config: config);
+  }
+
+  // Delete the active identity after in-use check and user confirmation.
+  void _confirmDeleteIdentity() async {
+    var identity = _accountStore.activeIdentity;
+    if (identity == null) {
+      return;
+    }
+
+    List<String> activeKeyUids = await OrchidVPNConfigV0.getInUseKeyUids();
+
+    if (activeKeyUids.contains(identity.uid)) {
+      await AppDialogs.showAppDialog(
+          context: context,
+          title: "Signer in use",
+          bodyText: "This signer key is in use and cannot be deleted.");
+      return;
+    }
+
+    await AppDialogs.showConfirmationDialog(
+      context: context,
+      title: "Delete Identity?",
+      body: "This cannot be undone.  Please back up keys before deleting them.",
+      cancelText: s.cancel,
+      actionText: s.delete,
+      commitAction: () {
+        _doDeleteIdentity(identity);
+      },
+    );
+  }
+
+  void _doDeleteIdentity(StoredEthereumKey identity) async {
+    await _accountStore.removeIdentity(identity);
   }
 
   Column _buildIdentityHeader() {
@@ -153,12 +255,10 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     }).toList();
 
     // Sort
-    log("XXX: before sort accounts = $accounts");
     accounts.sort((AccountModel a, AccountModel b) {
       // put active at the top (descending)
       return a.active ? -1 : 1;
     });
-    log("XXX: after sort accounts = $accounts");
 
     return RefreshIndicator(
       displacement: 20,
@@ -203,8 +303,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   ListTile _buildAccountTile(AccountModel account, int index) {
-    // log("XXX: build account tile for account: $account");
-
     var style = TextStyle(fontSize: 15);
     return ListTile(
       tileColor: account.active ? Colors.green.shade50 : null,
@@ -284,7 +382,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _setActiveAccount(AccountModel account) {
-    log("XXX: set active account: $account");
     _accountStore.setActiveAccount(account.detail.account); // a bit convoluted
     OrchidAPI().updateConfiguration();
     AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
@@ -335,4 +432,37 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     });
     super.dispose();
   }
+
+  S get s {
+    return S.of(context);
+  }
+}
+
+class IdentitySelectorMenuItem {
+  /// Either an identity...
+  final StoredEthereumKey identity;
+
+  /// ...or an action with label
+  final Function() action;
+
+  IdentitySelectorMenuItem({this.identity, this.action});
+
+  bool get isIdentity {
+    return identity != null;
+  }
+
+  String formatIdentity() {
+    return identity?.address?.toString()?.prefix(12) ?? "ERROR";
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is IdentitySelectorMenuItem &&
+          runtimeType == other.runtimeType &&
+          identity == other.identity &&
+          action == other.action;
+
+  @override
+  int get hashCode => identity.hashCode ^ action.hashCode;
 }

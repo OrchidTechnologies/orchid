@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
@@ -107,15 +105,14 @@ class OrchidVPNConfigV0 {
     Map<String, dynamic> json = jsonDecode(hopsString);
 
     // Resolve imported secrets to existing stored keys or new temporary keys
-    var tempKeys = List<StoredEthereumKey>();
-    var uid = DateTime.now().millisecondsSinceEpoch;
+    var tempKeys = <StoredEthereumKey>[];
     List<dynamic> hops = json['hops'];
     hops.asMap().forEach((index, hop) {
       // Only interested in Orchid hops here
       if (hop['protocol'] != "orchid") {
         return;
       }
-      _resolveImportedKeyFromJSON(hop, existingKeys, (uid + index), tempKeys);
+      _resolveImportedKeyFromJSON(hop, existingKeys, tempKeys);
     });
 
     return ParseCircuitResultV0(
@@ -152,10 +149,8 @@ class OrchidVPNConfigV0 {
     String curator = json['curator'];
 
     // Resolve imported secrets to existing stored keys or new temporary keys
-    var newKeys = List<StoredEthereumKey>();
-    var uid = DateTime.now().millisecondsSinceEpoch;
-    StoredEthereumKey key =
-        _resolveImportedKey(secret, existingKeys, uid, newKeys);
+    var newKeys = <StoredEthereumKey>[]; // type required here
+    StoredEthereumKey key = resolveImportedKey(secret, existingKeys, newKeys);
     var orchidAccount =
         OrchidAccountV0(curator: curator, funder: funder, signer: key);
     return ParseOrchidAccountResultV0(account: orchidAccount, newKeys: newKeys);
@@ -163,11 +158,8 @@ class OrchidVPNConfigV0 {
 
   /// Resolve the key in an imported JSON hop, adding a 'keyRef' to the hop
   /// to the json.  If a new key is created it is added to the existingKeys list.
-  static void _resolveImportedKeyFromJSON(
-      dynamic hop,
-      List<StoredEthereumKey> existingKeys,
-      int nextKeyUid, // the uid to use for any newly created key
-      List<StoredEthereumKey> newKeys) {
+  static void _resolveImportedKeyFromJSON(dynamic hop,
+      List<StoredEthereumKey> existingKeys, List<StoredEthereumKey> newKeys) {
     var secret = hop['secret'];
     if (secret == null) {
       throw Exception("missing secret");
@@ -175,18 +167,14 @@ class OrchidVPNConfigV0 {
     if (hop['keyRef'] != null) {
       throw Exception("keyRef in parsed json");
     }
-    StoredEthereumKey key =
-        _resolveImportedKey(secret, existingKeys, nextKeyUid, newKeys);
+    StoredEthereumKey key = resolveImportedKey(secret, existingKeys, newKeys);
     hop['keyRef'] = key.ref().toString();
   }
 
   /// Find an imported key secret in existing keys or create a new key and
   /// add it to the newKeys list.  In both cases the key is returned.
-  static StoredEthereumKey _resolveImportedKey(
-      String secret,
-      List<StoredEthereumKey> existingKeys,
-      int nextKeyUid, // the uid to use for any newly created key
-      List<StoredEthereumKey> newKeys) {
+  static StoredEthereumKey resolveImportedKey(String secret,
+      List<StoredEthereumKey> existingKeys, List<StoredEthereumKey> newKeys) {
     if (secret == null) {
       throw Exception("missing secret");
     }
@@ -204,7 +192,7 @@ class OrchidVPNConfigV0 {
       key = StoredEthereumKey(
           imported: true,
           time: DateTime.now(),
-          uid: nextKeyUid.toString(),
+          uid: Crypto.uuid(),
           private: BigInt.parse(secret, radix: 16));
       newKeys.add(key);
       //print("parse: generated new key");
@@ -259,6 +247,21 @@ class OrchidVPNConfigV0 {
       keyRef: result.account.signer.ref(),
     );
     return hop;
+  }
+
+  /// Return key uids for configured hops
+  static Future<List<String>> getInUseKeyUids() async {
+    // Get the active hop keys
+    var activeHops = (await UserPreferences().getCircuit()).hops;
+    List<OrchidHop> activeOrchidHops =
+    activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
+    List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
+      return h.keyRef;
+    }).toList();
+    List<String> activeKeyUids = activeKeys.map((e) => e.keyUid).toList();
+    log("account: activeKeyUuids = $activeKeyUids");
+
+    return activeKeyUids;
   }
 } // OrchidVPNConfig
 
@@ -320,11 +323,16 @@ class OrchidAccountV0 {
 }
 
 /// Result holding a parsed imported Orchid account. The account signer key refers
-/// to either an existin key in the user's keystore or a newly imported but not yet
+/// to either an existing key in the user's keystore or a newly imported but not yet
 /// saved temporary key in the newKeys list.
 class ParseOrchidAccountResultV0 {
   final OrchidAccountV0 account;
   final List<StoredEthereumKey> newKeys;
 
   ParseOrchidAccountResultV0({this.account, this.newKeys});
+
+  @override
+  String toString() {
+    return 'ParseOrchidAccountResultV0{account: $account, newKeys: $newKeys}';
+  }
 }

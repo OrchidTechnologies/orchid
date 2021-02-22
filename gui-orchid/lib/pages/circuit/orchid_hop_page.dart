@@ -52,6 +52,44 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 
   @override
   _OrchidHopPageState createState() => _OrchidHopPageState();
+
+  static Future<void> showShareConfigStringDialog({
+    BuildContext context,
+    String title,
+    String config,
+  }) async {
+    return AppDialogs.showAppDialog(
+        context: context,
+        title: title,
+        body: Container(
+          width: 250,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: QrImage(
+                  data: config,
+                  version: QrVersions.auto,
+                  size: 250.0,
+                ),
+              ),
+              _buildCopyButton(context, config)
+            ],
+          ),
+        ));
+  }
+
+  static Widget _buildCopyButton(BuildContext context, String config) {
+    var s = S.of(context);
+    return RoundedRectButton(
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white,
+        text: s.copy,
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: config));
+        });
+  }
+
 }
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
@@ -324,7 +362,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           Container(
             width: 150,
             child: Text("Balance: " +
-                formatCurrency(utx.update.endBalance.floatValue, suffix: 'OXT')),
+                formatCurrency(utx.update.endBalance.floatValue,
+                    suffix: 'OXT')),
           ),
           padx(8),
           Flexible(child: Text(utx.tx.transactionHash.substring(0, 8) + '...'))
@@ -569,10 +608,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var oxtPriceText =
         formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: 'USD');
     var gasPriceText = formatCurrency(gasPrice.value, suffix: 'GWEI');
-    String maxFaceValueText =
-        formatCurrency(marketConditions.maxFaceValue?.floatValue, suffix: 'OXT');
-    String costToRedeemText =
-        formatCurrency(marketConditions.oxtCostToRedeem.floatValue, suffix: 'OXT');
+    String maxFaceValueText = formatCurrency(
+        marketConditions.maxFaceValue?.floatValue,
+        suffix: 'OXT');
+    String costToRedeemText = formatCurrency(
+        marketConditions.oxtCostToRedeem.floatValue,
+        suffix: 'OXT');
     bool ticketUnderwater = marketConditions.oxtCostToRedeem.floatValue >=
         marketConditions.maxFaceValue.floatValue;
 
@@ -781,7 +822,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       // funder and signer from the stored hop
       EthereumAddress funder = _hop()?.funder;
       StoredEthereumKey signerKey = await _hop()?.keyRef?.get();
-      EthereumAddress signer = EthereumAddress.from(signerKey.get().addressString);
+      EthereumAddress signer =
+          EthereumAddress.from(signerKey.get().addressString);
 
       // TESTING
       //funder = EthereumAddress.from("0x27fb8edcf854602704fe8438243d0959219db126");
@@ -851,35 +893,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   void _exportAccount() async {
     var config = await _hop().accountConfigString();
-    AppDialogs.showAppDialog(
-        context: context,
-        title: s.myOrchidAccount + ':',
-        body: Container(
-          width: 250,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: QrImage(
-                  data: config,
-                  version: QrVersions.auto,
-                  size: 250.0,
-                ),
-              ),
-              _buildCopyButton(config)
-            ],
-          ),
-        ));
-  }
-
-  Widget _buildCopyButton(String config) {
-    return RoundedRectButton(
-        backgroundColor: Colors.deepPurple,
-        textColor: Colors.white,
-        text: s.copy,
-        onPressed: () {
-          Clipboard.setData(ClipboardData(text: config));
-        });
+    var title = S.of(context).myOrchidAccount + ':';
+    OrchidHopPage.showShareConfigStringDialog(context: context, title: title, config: config);
   }
 
   S get s {

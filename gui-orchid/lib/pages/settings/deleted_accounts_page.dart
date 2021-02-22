@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -245,7 +246,7 @@ class _AccountsPageState extends State<AccountsPage> {
 
   Future<List<StoredEthereumKey>> getOrphanedKeys() async {
     // Get the active hop keys
-    List<String> activeKeyUuids = await getActiveHopKeys();
+    List<String> activeKeyUuids = await OrchidVPNConfigV0.getInUseKeyUids();
 
    // Get recently deleted hop list keys
     List<String> deletedKeyUuids = getRecentlyDeletedHopKeys();
@@ -276,20 +277,6 @@ class _AccountsPageState extends State<AccountsPage> {
     log("account: deletedKeyUuids = $deletedKeyUuids");
 
     return deletedKeyUuids;
-  }
-
-  Future<List<String>> getActiveHopKeys() async {
-    // Get the active hop keys
-    var activeHops = (await UserPreferences().getCircuit()).hops;
-    List<OrchidHop> activeOrchidHops =
-        activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
-    List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
-      return h.keyRef;
-    }).toList();
-    List<String> activeKeyUuids = activeKeys.map((e) => e.keyUid).toList();
-    log("account: activeKeyUuids = $activeKeyUuids");
-
-    return activeKeyUuids;
   }
 
   Widget _buildInstructions() {

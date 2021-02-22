@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
@@ -27,8 +28,7 @@ class _WelcomePanelState extends State<WelcomePanel>
     initStateAsync();
   }
 
-  void initStateAsync() async {
-  }
+  void initStateAsync() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -130,10 +130,12 @@ class _WelcomePanelState extends State<WelcomePanel>
                       onPressed: _onDoSetup))
             else
               ScanOrPasteOrchidAccount(
-                onImportAccount: (ParseOrchidAccountResultV0 result) async {
-                  var hop = await OrchidVPNConfigV0.importAccountAsHop(result);
+                onImportAccount: (ParseOrchidAccountResult result) async {
+                  var hop = await OrchidVPNConfigV0.importAccountAsHop(
+                      result.account);
                   CircuitUtils.addHopToCircuit(hop);
                 },
+                v0Only: true,
               ),
             pady(16)
           ],

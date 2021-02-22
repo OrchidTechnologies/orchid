@@ -10,6 +10,8 @@ import 'package:pointycastle/ecc/curves/secp256k1.dart';
 import 'package:pointycastle/key_generators/api.dart';
 import 'package:pointycastle/key_generators/ec_key_generator.dart';
 import 'package:pointycastle/src/utils.dart' as decode;
+import 'package:uuid/uuid.dart';
+import 'package:uuid/uuid_util.dart';
 
 class Crypto {
   static final ECDomainParameters curve = ECCurve_secp256k1();
@@ -73,6 +75,10 @@ class Crypto {
     } catch (err) {
       throw Exception("invalid key");
     }
+  }
+
+  static String uuid()  {
+    return Uuid(options: {'grng': UuidUtil.cryptoRNG}).v4();
   }
 }
 
@@ -211,7 +217,7 @@ class StoredEthereumKey {
 
   @override
   String toString() {
-    return 'StoredEthereumKey{uid: $uid, time: $time, imported: $imported}';
+    return 'StoredEthereumKey{uid: $uid, address: $address, time: $time, imported: $imported}';
   }
 }
 

@@ -1,24 +1,39 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/circuit/add_hop_page.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
 import 'package:orchid/pages/common/formatting.dart';
 
 // Used from the AdHopPage:
 // Dialog that contains the two button scan/paste control.
 class ScanOrPasteDialog extends StatelessWidget {
-  final AddFlowCompletion onAddFlowComplete;
+  final ImportAccountCompletion onImportAccount;
+  final bool v0Only;
 
   const ScanOrPasteDialog({
     Key key,
-    this.onAddFlowComplete,
+    this.onImportAccount,
+    this.v0Only = false,
   }) : super(key: key);
+
+  static Future<void> show({
+    BuildContext context,
+    ImportAccountCompletion onImportAccount,
+    bool v0Only = false,
+  }) {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ScanOrPasteDialog(
+            onImportAccount: onImportAccount,
+            v0Only: v0Only,
+          );
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,13 +74,13 @@ class ScanOrPasteDialog extends StatelessWidget {
               pady(16),
               FittedBox(
                 child: ScanOrPasteOrchidAccount(
-                    spacing:
-                        screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
-                    onImportAccount: (ParseOrchidAccountResultV0 result) async {
-                      var hop = await OrchidVPNConfigV0.importAccountAsHop(result);
-                      Navigator.of(context).pop();
-                      onAddFlowComplete(hop);
-                    }),
+                  spacing: screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
+                  onImportAccount: (ParseOrchidAccountResult result) async {
+                    onImportAccount(result);
+                    Navigator.of(context).pop();
+                  },
+                  v0Only: v0Only,
+                ),
               ),
               pady(16),
             ],

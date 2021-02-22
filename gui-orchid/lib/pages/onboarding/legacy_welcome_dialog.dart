@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -83,13 +84,16 @@ class LegacyWelcomeDialog {
                 RichText(text: topText),
                 pady(12),
                 ScanOrPasteOrchidAccount(
-                    spacing:
-                        screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
-                    onImportAccount: (ParseOrchidAccountResultV0 result) async {
-                      var hop = await OrchidVPNConfigV0.importAccountAsHop(result);
-                      Navigator.of(context).pop(); // TODO: probably not necessary?
-                      onAddFlowComplete(hop);
-                    }),
+                  spacing: screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
+                  onImportAccount: (ParseOrchidAccountResult result) async {
+                    var hop = await OrchidVPNConfigV0.importAccountAsHop(
+                        result.account);
+                    Navigator.of(context)
+                        .pop(); // TODO: probably not necessary?
+                    onAddFlowComplete(hop);
+                  },
+                  v0Only: true,
+                ),
                 Divider(thickness: 1.0),
                 pady(16),
                 RichText(text: bodyText),
@@ -103,5 +107,4 @@ class LegacyWelcomeDialog {
       },
     );
   }
-
 }
