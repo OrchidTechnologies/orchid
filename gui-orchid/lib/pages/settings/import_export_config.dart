@@ -4,10 +4,10 @@ import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/api/qrcode.dart';
+import 'package:orchid/pages/common/qrcode.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
@@ -228,7 +228,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   }
 
   void _exportQR() {
-    Dialogs.showAppDialog(
+    AppDialogs.showAppDialog(
         context: context,
         title: "My Orchid Config:",
         body: Container(

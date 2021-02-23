@@ -1,7 +1,12 @@
+import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
-enum OrchidTransactionType {
+class OrchidContractV0 {
+  static int gasCostToRedeemTicketV0 = 100000;
+}
+
+enum OrchidTransactionTypeV0 {
   unknown,
   push,
   pull,
@@ -16,11 +21,11 @@ enum OrchidTransactionType {
   lock,
 }
 
-class OrchidUpdateTransaction {
-  OrchidTransaction tx;
-  OrchidUpdateEvent update;
+class OrchidUpdateTransactionV0 {
+  OrchidTransactionV0 tx;
+  OrchidUpdateEventV0 update;
 
-  OrchidUpdateTransaction(this.tx, this.update);
+  OrchidUpdateTransactionV0(this.tx, this.update);
 
   @override
   String toString() {
@@ -28,24 +33,23 @@ class OrchidUpdateTransaction {
   }
 }
 
-class OrchidTransaction {
-
+class OrchidTransactionV0 {
   static var lotteryV0Methods = {
-    OrchidTransactionType.push: 0x73fb4644,
-    OrchidTransactionType.pull: 0xa6cbd6e3,
-    OrchidTransactionType.grab: 0x66458bbd,
-    OrchidTransactionType.bind: 0xf8825a0c,
-    OrchidTransactionType.move: 0x043d695f,
-    OrchidTransactionType.warn: 0xe53b3f6d,
-    OrchidTransactionType.yank: 0x5f51b34e,
-    OrchidTransactionType.kill: 0x0, // todo:
-    OrchidTransactionType.burn: 0x0, // todo:
-    OrchidTransactionType.give: 0x0, // todo:
-    OrchidTransactionType.lock: 0x0, // todo:
+    OrchidTransactionTypeV0.push: 0x73fb4644,
+    OrchidTransactionTypeV0.pull: 0xa6cbd6e3,
+    OrchidTransactionTypeV0.grab: 0x66458bbd,
+    OrchidTransactionTypeV0.bind: 0xf8825a0c,
+    OrchidTransactionTypeV0.move: 0x043d695f,
+    OrchidTransactionTypeV0.warn: 0xe53b3f6d,
+    OrchidTransactionTypeV0.yank: 0x5f51b34e,
+    OrchidTransactionTypeV0.kill: 0x0, // todo:
+    OrchidTransactionTypeV0.burn: 0x0, // todo:
+    OrchidTransactionTypeV0.give: 0x0, // todo:
+    OrchidTransactionTypeV0.lock: 0x0, // todo:
   };
 
   String transactionHash;
-  OrchidTransactionType type;
+  OrchidTransactionTypeV0 type;
 
   // Payment amount or null for no payment
   OXT payment;
@@ -54,7 +58,7 @@ class OrchidTransaction {
     return payment != null;
   }
 
-  OrchidTransaction({this.transactionHash, this.type, this.payment});
+  OrchidTransactionV0({this.transactionHash, this.type, this.payment});
 
   /*
   {
@@ -87,28 +91,28 @@ class OrchidTransaction {
   [1]:  7be9533c72823a29c2d91d4470bae08d94931b5e55b50dc8a1c8e2adbfbb5f4b
   [2]:  000000000000000000000000000000000000000000000000000000005f9c885f
    */
-  static OrchidTransaction fromJsonRpcResult(dynamic result) {
+  static OrchidTransactionV0 fromJsonRpcResult(dynamic result) {
     // Parse the results
     var hash = result['hash'];
     var buff = HexStringBuffer(result['input']);
     int methodId = buff.takeMethodId();
     var inverseMap = lotteryV0Methods.map((k, v) => MapEntry(v, k));
-    OrchidTransactionType transactionType =
-        inverseMap[methodId] ?? OrchidTransactionType.unknown;
+    OrchidTransactionTypeV0 transactionType =
+        inverseMap[methodId] ?? OrchidTransactionTypeV0.unknown;
 
     OXT amount;
-    if (transactionType == OrchidTransactionType.grab) {
+    if (transactionType == OrchidTransactionTypeV0.grab) {
       buff.takeBytes32(); // bytes32 reveal,
       buff.takeBytes32(); // bytes32 commit,
       buff.takeUint256(); // uint256 issued,
       buff.takeBytes32(); // bytes32 nonce,
-      buff.takeUint8();   // uint8 v,
+      buff.takeUint8(); // uint8 v,
       buff.takeBytes32(); // bytes32 r,
       buff.takeBytes32(); // bytes32 s
-      amount = OXT.fromKeiki(buff.takeUint128());
+      amount = OXT.fromInt(buff.takeUint128());
     }
 
-    return OrchidTransaction(
+    return OrchidTransactionV0(
         transactionHash: hash, type: transactionType, payment: amount ?? null);
   }
 
@@ -118,12 +122,12 @@ class OrchidTransaction {
   }
 }
 
-class OrchidUpdateEvent {
+class OrchidUpdateEventV0 {
   String transactionHash;
   OXT endBalance;
   OXT endDeposit;
 
-  OrchidUpdateEvent({this.transactionHash, this.endBalance, this.endDeposit});
+  OrchidUpdateEventV0({this.transactionHash, this.endBalance, this.endDeposit});
 
   /*
     {
@@ -142,14 +146,14 @@ class OrchidUpdateEvent {
       "removed": false
     }
    */
-  static OrchidUpdateEvent fromJsonRpcResult(dynamic result) {
+  static OrchidUpdateEventV0 fromJsonRpcResult(dynamic result) {
     // Parse the results
     String transactionHash = result['transactionHash'];
     var buff = HexStringBuffer(result['data']);
-    OXT balance = OXT.fromKeiki(buff.take(64)); // uint128 padded
-    OXT deposit = OXT.fromKeiki(buff.take(64)); // uint128 padded
+    OXT balance = OXT.fromInt(buff.take(64)); // uint128 padded
+    OXT deposit = OXT.fromInt(buff.take(64)); // uint128 padded
 
-    return OrchidUpdateEvent(
+    return OrchidUpdateEventV0(
         transactionHash: transactionHash,
         endBalance: balance,
         endDeposit: deposit);
@@ -158,5 +162,37 @@ class OrchidUpdateEvent {
   @override
   String toString() {
     return 'OrchidUpdateEvent{transactionHash: $transactionHash, endBalance: $endBalance, endDeposit: $endDeposit}';
+  }
+}
+
+class OrchidCreateEvent {
+  final String transactionHash;
+  final EthereumAddress funder;
+  final EthereumAddress signer;
+
+  OrchidCreateEvent(this.transactionHash, this.funder, this.signer);
+}
+
+// A create event indicates an initial funding event for a
+class OrchidCreateEventV0 implements OrchidCreateEvent {
+  final String transactionHash;
+  final EthereumAddress funder;
+  final EthereumAddress signer;
+
+  OrchidCreateEventV0({this.transactionHash, this.funder, this.signer});
+
+  static OrchidCreateEventV0 fromJsonRpcResult(dynamic result) {
+    // Parse the results
+    String transactionHash = result['transactionHash'];
+    var funder = EthereumAddress(HexStringBuffer( result['topics'][1] ).takeAddress());
+    var signer = EthereumAddress(HexStringBuffer( result['topics'][2] ).takeAddress());
+
+    return OrchidCreateEventV0(
+        transactionHash: transactionHash, funder: funder, signer: signer);
+  }
+
+  @override
+  String toString() {
+    return 'OrchidCreateEvent{transactionHash: $transactionHash, funder: $funder, signer: $signer}';
   }
 }

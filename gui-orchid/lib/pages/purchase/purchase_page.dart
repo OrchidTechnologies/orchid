@@ -6,7 +6,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/add_hop_page.dart';
 import 'package:orchid/pages/common/dialogs.dart';
@@ -75,7 +75,7 @@ class _PurchasePageState extends State<PurchasePage> {
     updateProducts(refresh: false);
     updateProducts(refresh: true);
 
-    _storeStatus = await OrchidPACServer().storeStatus();
+    _storeStatus = await OrchidPACServerV0().storeStatus();
     if (mounted) {
       setState(() {});
     }
@@ -318,7 +318,7 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void _retryPurchase() {
-    OrchidPACServer().advancePendingPACTransaction();
+    OrchidPACServerV0().advancePendingPACTransaction();
   }
 
   void _confirmDeleteTransaction() async {
@@ -328,11 +328,11 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   void _deleteTransaction() {
-    Dialogs.showConfirmationDialog(
+    AppDialogs.showConfirmationDialog(
         context: context,
         title: s.deleteTransaction,
         body: s.clearThisInProgressTransactionExplain +
-            " http://orchid.com/contact",
+            " https://orchid.com/contact",
         commitAction: _confirmDeleteTransaction);
   }
 
@@ -617,17 +617,17 @@ class _PurchasePageState extends State<PurchasePage> {
     setState(() {
       _overlayStatusMessage = s.setUpAccount;
     });
-    ParseOrchidAccountResult parseAccountResult;
+    ParseOrchidAccountResultV0 parseAccountResult;
     try {
       var existingKeys = await UserPreferences().getKeys();
       parseAccountResult =
-          OrchidVPNConfig.parseOrchidAccount(pacAccountString, existingKeys);
+          OrchidVPNConfigV0.parseOrchidAccount(pacAccountString, existingKeys);
     } catch (err) {
       log("iap: error parsing purchased orchid account: $err");
       throw Exception("error in server response");
     }
     if (parseAccountResult != null) {
-      var hop = await OrchidVPNConfig.importAccountAsHop(parseAccountResult);
+      var hop = await OrchidVPNConfigV0.importAccountAsHop(parseAccountResult);
       widget.onAddFlowComplete(hop);
     } else {
       throw Exception("Error setting up account");
@@ -665,7 +665,7 @@ class _PurchasePageState extends State<PurchasePage> {
       log("iap: purchase error called with incorrect pac tx state");
     }
 
-    await Dialogs.showAppDialog(
+    await AppDialogs.showAppDialog(
       context: context,
       title: s.purchaseError,
       bodyText: rateLimitExceeded

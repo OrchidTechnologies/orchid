@@ -4,11 +4,12 @@ import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -70,6 +71,7 @@ class _ConnectPageState extends State<ConnectPage>
     _checkHopAlerts(null);
   }
 
+  // TODO: This needs to handle v1 configs
   /// Check Orchid Hop's lottery pot for alert conditions and reflect that in the
   /// manage profile button.
   /// Note: This should really be merged with the logic from circuit page that does
@@ -82,10 +84,10 @@ class _ConnectPageState extends State<ConnectPage>
     for (var hop in hops) {
       if (hop is OrchidHop) {
         try {
-          var pot = await OrchidEthereum.getLotteryPot(
+          var pot = await OrchidEthereumV0.getLotteryPot(
               hop.funder, hop.getSigner(keys));
-          var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
-          if (ticketValue.value <= 0) {
+          var ticketValue = await MarketConditionsV0.getMaxTicketValueV0(pot);
+          if (ticketValue.lteZero()) {
             showBadge = true;
           }
         } catch (err) {
@@ -207,7 +209,11 @@ class _ConnectPageState extends State<ConnectPage>
                   side: BorderSide(color: borderColor, width: 2),
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               onPressed: () async {
-                await Navigator.pushNamed(context, AppRoutes.circuit);
+                if (await UserPreferences().guiV1.get()) {
+                  await Navigator.pushNamed(context, AppRoutes.identity);
+                } else {
+                  await Navigator.pushNamed(context, AppRoutes.circuit);
+                }
                 _checkHopAlerts(null);
               },
               child: Row(

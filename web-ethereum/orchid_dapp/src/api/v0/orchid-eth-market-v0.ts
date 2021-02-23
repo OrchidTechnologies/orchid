@@ -8,7 +8,7 @@ import {
   MarketConditions,
   MarketConditionsSource
 } from "../orchid-market-conditions";
-import {OrchidContractV1} from "../v1/orchid-eth-contract-v1";
+import {OrchidContractMainNetV0} from "./orchid-eth-contract-v0";
 
 export class MarketConditionsSourceImplV0 implements MarketConditionsSource {
   eth: OrchidEthereumAPI
@@ -75,7 +75,7 @@ export class MarketConditionsSourceImplV0 implements MarketConditionsSource {
   async getCostToRedeemTicket(): Promise<{ gasCostToRedeem: GasFunds; lotCostToRedeem: LotFunds }> {
     let pricing: Pricing = await OrchidPricingMainNetV0.shared().getPricing();
     let gasPrice: GasFunds = await this.eth.getGasPrice();
-    let gasCostToRedeem: GasFunds = gasPrice.multiply(OrchidContractV1.redeem_ticket_max_gas);
+    let gasCostToRedeem: GasFunds = gasPrice.multiply(OrchidContractMainNetV0.redeem_ticket_max_gas);
     let lotCostToRedeem: LotFunds = pricing.gasFundsToFunds(gasCostToRedeem);
     return {gasCostToRedeem, lotCostToRedeem};
   }

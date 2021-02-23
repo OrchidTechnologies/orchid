@@ -188,13 +188,16 @@ class IOSOrchidPurchaseAPI
       log("iap: error getting receipt data for comleted iap");
     }
 
-    OrchidPACServer().advancePendingPACTransaction();
+    OrchidPACServerV0().advancePendingPACTransaction();
   }
 
   static Map<String, PAC> productsCached;
 
   @override
   Future<Map<String, PAC>> requestProducts({bool refresh = false}) async {
+    if (OrchidAPI.mockAPI) {
+      return Map();
+    }
     if (productsCached != null && !refresh) {
       log("iap: returning cached products");
       return productsCached;

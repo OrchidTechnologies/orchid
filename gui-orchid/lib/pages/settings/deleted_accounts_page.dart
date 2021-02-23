@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
@@ -156,7 +157,7 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   Future<bool> _confirmDeleteHop(dismissDirection) async {
-    var result = await Dialogs.showConfirmationDialog(
+    var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
       body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
@@ -223,10 +224,10 @@ class _AccountsPageState extends State<AccountsPage> {
         EthereumAddress.from('0x6dd46c5f9f19ab8790f6249322f58028a3185087');
     _orphanedPacAccounts = [];
     for (var key in orphanedKeys) {
-      var signer = EthereumAddress.from(key.keys().address);
+      var signer = EthereumAddress.from(key.get().addressString);
       try {
-        var pot = await OrchidEthereum.getLotteryPot(orchidPacFunder, signer);
-        if (pot.balance.value <= 0) {
+        var pot = await OrchidEthereumV0.getLotteryPot(orchidPacFunder, signer);
+        if (pot.balance.lteZero()) {
           log("account: zero balance found for keys: [$orchidPacFunder, $signer]");
           continue;
         }
@@ -245,7 +246,7 @@ class _AccountsPageState extends State<AccountsPage> {
 
   Future<List<StoredEthereumKey>> getOrphanedKeys() async {
     // Get the active hop keys
-    List<String> activeKeyUuids = await getActiveHopKeys();
+    List<String> activeKeyUuids = await OrchidVPNConfigV0.getInUseKeyUids();
 
    // Get recently deleted hop list keys
     List<String> deletedKeyUuids = getRecentlyDeletedHopKeys();
@@ -276,20 +277,6 @@ class _AccountsPageState extends State<AccountsPage> {
     log("account: deletedKeyUuids = $deletedKeyUuids");
 
     return deletedKeyUuids;
-  }
-
-  Future<List<String>> getActiveHopKeys() async {
-    // Get the active hop keys
-    var activeHops = (await UserPreferences().getCircuit()).hops;
-    List<OrchidHop> activeOrchidHops =
-        activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
-    List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
-      return h.keyRef;
-    }).toList();
-    List<String> activeKeyUuids = activeKeys.map((e) => e.keyUid).toList();
-    log("account: activeKeyUuids = $activeKeyUuids");
-
-    return activeKeyUuids;
   }
 
   Widget _buildInstructions() {

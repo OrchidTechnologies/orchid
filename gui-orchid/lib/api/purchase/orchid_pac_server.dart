@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
 import 'orchid_purchase.dart';
 
 /// The PAC service exchanges an in-app purchase receipt for an Orchid PAC.
-class OrchidPACServer {
-  static final OrchidPACServer _shared = OrchidPACServer._internal();
+class OrchidPACServerV0 {
+  static final OrchidPACServerV0 _shared = OrchidPACServerV0._internal();
 
   /// PAC Server status URL
   final String statusUrl =
@@ -18,11 +18,11 @@ class OrchidPACServer {
   final String recycleUrl =
       'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/recycle';
 
-  factory OrchidPACServer() {
+  factory OrchidPACServerV0() {
     return _shared;
   }
 
-  OrchidPACServer._internal();
+  OrchidPACServerV0._internal();
 
   /// Process the current PAC transaction if required. This method can be
   /// called at any time to attempt to move the process to the next state.

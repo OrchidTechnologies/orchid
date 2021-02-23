@@ -8,3 +8,19 @@ Widget padx(double width) {
 Widget pady(double height) {
   return SizedBox(height: height);
 }
+
+extension WidgetListExtensions<Widget> on List<Widget> {
+  /// Adds the [value] between all elements in the list
+  void spaced(double value) {
+    for (int i = this.length - 1; i > 0; i--) {
+      this.insert(i, SizedBox(width: value, height: value) as Widget);
+    }
+  }
+}
+
+extension StringExtensions on String {
+  String prefix(int len, {String elide = "…"}) {
+    return this.substring(0, len) + elide;
+  }
+}
+

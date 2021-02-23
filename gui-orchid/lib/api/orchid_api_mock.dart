@@ -234,19 +234,6 @@ class MockOrchidAPI implements OrchidAPI {
     vpnConnectionStatus.add(state);
   }
 
-  Map<String, String> _developerSettings = Map();
-
-  @override
-  Future<Map<String, String>> getDeveloperSettings() async {
-    return _developerSettings;
-  }
-
-  @override
-  void setDeveloperSetting({String name, String value}) {
-    debugPrint("Set developer setting: $name, $value");
-    _developerSettings[name] = value;
-  }
-
   @override
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
@@ -277,7 +264,8 @@ class MockOrchidAPI implements OrchidAPI {
   // TODO: Copied from orchid_api_real, combine.
   /// Set the Orchid Configuration file contents
   Future<bool> setConfiguration(String userConfig) async {
-    await RealOrchidAPI.generateCombinedConfig(userConfig);
+    var combinedConfig = await RealOrchidAPI.generateCombinedConfig(userConfig);
+    log("api fake: combinedConfig = $combinedConfig");
     // Do nothing.  Fake save.
     return true;
   }

@@ -84,7 +84,7 @@ export class Token<T extends Token<T>> {
     return new Token(this.type, intValue) as this; // Note the cast
   }
 
-// The float value in nominal units (e.g. ETH, OXT)
+  // The float value in nominal units (e.g. ETH, OXT)
   get floatValue(): number {
     return BigInt(this.intValue).toJSNumber() / this.type.multiplier;
   }

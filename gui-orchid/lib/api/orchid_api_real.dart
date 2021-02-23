@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_eth.dart';
 import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
+import 'configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'monitoring/orchid_status.dart';
 import 'orchid_budget_api.dart';
+import 'orchid_eth/v0/orchid_eth_v0.dart';
 import 'orchid_log_api.dart';
 import 'orchid_pricing.dart';
 
@@ -181,16 +181,6 @@ class RealOrchidAPI implements OrchidAPI {
   }
 
   @override
-  Future<Map<String, String>> getDeveloperSettings() async {
-    return Map();
-  }
-
-  @override
-  void setDeveloperSetting({String name, String value}) {
-    // TODO:
-  }
-
-  @override
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
   }
@@ -219,7 +209,7 @@ class RealOrchidAPI implements OrchidAPI {
   /// and publish it to the VPN.
   Future<bool> setConfiguration(String userConfig) async {
     String combinedConfig = await generateCombinedConfig(userConfig);
-    log("combined config = {$combinedConfig}");
+    log("api: combined config = {$combinedConfig}");
 
     // todo: return a bool from the native side?
     String result = await _platform
@@ -232,10 +222,10 @@ class RealOrchidAPI implements OrchidAPI {
   // The desired format is (JavaScript, not JSON) e.g.:
   static Future<String> generateManagedConfig() async {
     // Circuit configuration
-    var managedConfig = await OrchidVPNConfig.generateHopsConfig();
+    var managedConfig = await OrchidVPNConfig.generateConfig();
 
-    // Inject the default RPC provider
-    managedConfig += '\nrpc = "${OrchidEthereum.providerUrl}";';
+    // Inject the default (main net Ethereum) RPC provider
+    managedConfig += '\nrpc = "${OrchidEthereumV0.defaultEthereumProviderUrl}";';
 
     // Inject the status socket name
     managedConfig += '\ncontrol = "${OrchidStatus.socketName}";';
@@ -249,8 +239,8 @@ class RealOrchidAPI implements OrchidAPI {
     String generatedConfig;
     try {
       generatedConfig = await generateManagedConfig();
-    } catch (err) {
-      OrchidAPI().logger().write("Error rendering config: $err");
+    } catch (err, stack) {
+      OrchidAPI().logger().write("Error rendering config: $err\n$stack");
       generatedConfig = " ";
     }
 

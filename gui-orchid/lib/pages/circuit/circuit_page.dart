@@ -3,21 +3,18 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_pricing.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
-import 'package:orchid/pages/circuit/openvpn_hop_page.dart';
-import 'package:orchid/pages/circuit/orchid_hop_page.dart';
-import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/app_reorderable_list.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
@@ -27,11 +24,9 @@ import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/onboarding/legacy_welcome_dialog.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
-import 'package:orchid/util/collections.dart';
 
 import '../app_gradients.dart';
 import '../app_text.dart';
-import '../app_transitions.dart';
 import 'add_hop_page.dart';
 import 'hop_editor.dart';
 import 'hop_tile.dart';
@@ -133,12 +128,12 @@ class CircuitPageState extends State<CircuitPage>
       CircuitHop hop = uniqueHop.hop;
       if (hop is OrchidHop) {
         try {
-          var pot = await OrchidEthereum.getLotteryPot(
+          var pot = await OrchidEthereumV0.getLotteryPot(
               hop.funder, hop.getSigner(keys));
-          var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
-          _showHopAlert[uniqueHop.contentHash] = ticketValue.value <= 0;
-        } catch (err) {
-          log("Error checking ticket value: $err");
+          var ticketValue = await MarketConditionsV0.getMaxTicketValueV0(pot);
+          _showHopAlert[uniqueHop.contentHash] = ticketValue.lteZero();
+        } catch (err, stack) {
+          log("Error checking ticket value: $err\n$stack");
         }
       }
     }
@@ -687,7 +682,7 @@ class CircuitPageState extends State<CircuitPage>
     }
     try {
       _dialogInProgress = true;
-      await Dialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+      await AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
     } finally {
       _dialogInProgress = false;
     }
@@ -711,7 +706,7 @@ class CircuitPageState extends State<CircuitPage>
 
   // Callback for swipe to delete
   Future<bool> _confirmDeleteHop(dismissDirection) async {
-    var result = await Dialogs.showConfirmationDialog(
+    var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
       body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
@@ -740,7 +735,7 @@ class CircuitPageState extends State<CircuitPage>
       if (hop is OrchidHop) {
         var keys = await UserPreferences().getKeys();
         EthereumAddress signer = hop.getSigner(keys);
-        OrchidPACServer().recycle(funder: hop.funder, signer: signer);
+        OrchidPACServerV0().recycle(funder: hop.funder, signer: signer);
       }
     }
   }

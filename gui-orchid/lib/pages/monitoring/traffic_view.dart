@@ -477,7 +477,7 @@ class ClearTrafficActionButton extends StatelessWidget {
 
   void _confirmDelete(BuildContext context) {
     S s = S.of(context);
-    Dialogs.showConfirmationDialog(
+    AppDialogs.showConfirmationDialog(
         context: context,
         title: s.deleteAllData + "?",
         body: s.thisWillDeleteRecorded,

@@ -3,10 +3,11 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/api/qrcode.dart';
+import 'package:orchid/pages/common/qrcode.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
@@ -24,9 +25,13 @@ typedef ImportAccountCompletion = void Function(
 class ScanOrPasteOrchidAccount extends StatefulWidget {
   final ImportAccountCompletion onImportAccount;
   final double spacing;
+  final bool v0Only;
 
   const ScanOrPasteOrchidAccount(
-      {Key key, @required this.onImportAccount, this.spacing})
+      {Key key,
+      @required this.onImportAccount,
+      this.spacing,
+      this.v0Only = false})
       : super(key: key);
 
   @override
@@ -74,10 +79,10 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
             : SizedBox(),
         textColor: Colors.white,
         backgroundColor: AppColors.teal_3,
-        onPressed: _scanQRCode);
+        onPressed: _scanCode);
   }
 
-  void _scanQRCode() async {
+  void _scanCode() async {
     ParseOrchidAccountResult parseAccountResult;
     try {
       String text = await QRCode.scan();
@@ -85,7 +90,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
         log("user cancelled scan");
         return;
       }
-      parseAccountResult = await _parseConfig(context, text);
+      parseAccountResult = await _parse(text);
     } catch (err) {
       print("error parsing scanned orchid account: $err");
     }
@@ -102,7 +107,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
       ClipboardData data = await Clipboard.getData('text/plain');
       String text = data.text;
       try {
-        parseAccountResult = await _parseConfig(context, text);
+        parseAccountResult = await _parse(text);
       } catch (err) {
         print("error parsing pasted orchid account: $err");
       }
@@ -117,23 +122,21 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   }
 
   void _scanQRCodeError() {
-    Dialogs.showAppDialog(
+    AppDialogs.showAppDialog(
         context: context,
         title: s.invalidQRCode,
         bodyText: s.theQRCodeYouScannedDoesNot);
   }
 
   void _pasteCodeError() {
-    Dialogs.showAppDialog(
+    AppDialogs.showAppDialog(
         context: context,
         title: s.invalidCode,
         bodyText: s.theCodeYouPastedDoesNot);
   }
 
-  Future<ParseOrchidAccountResult> _parseConfig(
-      BuildContext context, String config) async {
-    var existingKeys = await UserPreferences().getKeys();
-    return OrchidVPNConfig.parseOrchidAccount(config, existingKeys);
+  Future<ParseOrchidAccountResult> _parse(String text) async {
+    return await ParseOrchidAccountResult.parse(text, v0Only: widget.v0Only);
   }
 
   S get s {

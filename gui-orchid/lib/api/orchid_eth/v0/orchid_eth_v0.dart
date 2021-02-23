@@ -1,18 +1,22 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
-import 'orchid_budget_api.dart';
-import 'orchid_crypto.dart';
-import 'orchid_tx.dart';
+import '../orchid_account.dart';
+import '../../orchid_budget_api.dart';
+import '../../orchid_crypto.dart';
+import 'orchid_contract_v0.dart';
 
-class OrchidEthereum {
-  static OrchidEthereum _shared = OrchidEthereum._init();
+class OrchidEthereumV0 {
+  static OrchidEthereumV0 _shared = OrchidEthereumV0._init();
   static int startBlock = 872000;
 
-  static var providerUrl = 'htt' +
+  static var defaultEthereumProviderUrl = 'htt' +
       'ps://et' +
       'h-main' +
       'ne' +
@@ -30,9 +34,9 @@ class OrchidEthereum {
   // Note: The first four bytes of the signature hash (Remix can provide this).
   static var lotteryLookMethodHash = '1554ad5d';
 
-  OrchidEthereum._init();
+  OrchidEthereumV0._init();
 
-  factory OrchidEthereum() {
+  factory OrchidEthereumV0() {
     return _shared;
   }
 
@@ -40,7 +44,7 @@ class OrchidEthereum {
   static Future<String> get url async {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
     // Note: This var is also used by the tunnel for the eth provider.
-    return jsConfig.evalStringDefault('rpc', providerUrl);
+    return jsConfig.evalStringDefault('rpc', defaultEthereumProviderUrl);
   }
 
   /*
@@ -61,7 +65,7 @@ class OrchidEthereum {
     Result:
     {"jsonrpc":"2.0","id":1,"result":"0x000000000000000000000000000000000000000000000002b5e3af16b18800000000000000000000000000000000000000000000000000008ac7230489e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000"}
   */
-  static Future<LotteryPot> getLotteryPot(
+  static Future<OXTLotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
     print("fetch pot for: $funder, $signer, url = ${await url}");
 
@@ -83,8 +87,8 @@ class OrchidEthereum {
 
     // Parse the results
     var buff = HexStringBuffer(result);
-    OXT balance = OXT.fromKeiki(buff.take(64)); // uint128 padded
-    OXT deposit = OXT.fromKeiki(buff.take(64)); // uint128 padded
+    OXT balance = OXT.fromInt(buff.take(64)); // uint128 padded
+    OXT deposit = OXT.fromInt(buff.take(64)); // uint128 padded
     BigInt unlock = buff.take(64); // uint256
 
     // The verifier only has a non-zero value for PACs.
@@ -93,17 +97,18 @@ class OrchidEthereum {
       verifier = EthereumAddress(buff.take(64));
     } catch (err) {}
 
-    return LotteryPot(
+    return OXTLotteryPot(
         balance: balance, deposit: deposit, unlock: unlock, verifier: verifier);
   }
 
   DateTime _lastGasPriceTime;
-  GWEI _lastGasPrice;
+  GWEI _lastGasPriceLegacy; // TODO: Remove
 
   /// Get the current median gas price.
   /// curl $url --data '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}'
   /// {"jsonrpc":"2.0","id":0,"result":"0x2cb417800"}
   /// This method is cached for a period of time and safe to call repeatedly.
+  /// TODO: Migrate to Token-abstracted version and remove
   Future<GWEI> getGasPrice() async {
     // Allow override via config for testing
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
@@ -113,10 +118,10 @@ class OrchidEthereum {
     }
 
     // Cache for a period of time
-    if (_lastGasPrice != null &&
+    if (_lastGasPriceLegacy != null &&
         DateTime.now().difference(_lastGasPriceTime) < Duration(minutes: 5)) {
       print("returning cached gas price");
-      return _lastGasPrice;
+      return _lastGasPriceLegacy;
     }
 
     print("fetching gas price");
@@ -124,22 +129,22 @@ class OrchidEthereum {
     if (result.startsWith('0x')) {
       result = result.substring(2);
     }
-    _lastGasPrice = GWEI.fromWei(BigInt.parse(result, radix: 16));
+    _lastGasPriceLegacy = GWEI.fromWei(BigInt.parse(result, radix: 16));
     _lastGasPriceTime = DateTime.now();
-    return _lastGasPrice;
+    return _lastGasPriceLegacy;
   }
 
   /// Get Orchid transactions associated with Update events that affect the balance.
   /// Transactions are returned in date order.
-  Future<List<OrchidUpdateTransaction>> getUpdateTransactions({
+  Future<List<OrchidUpdateTransactionV0>> getUpdateTransactions({
     EthereumAddress funder,
     EthereumAddress signer,
   }) async {
-    List<OrchidUpdateEvent> events = await getUpdateEvents(funder, signer);
-    List<OrchidUpdateTransaction> transactions =
+    List<OrchidUpdateEventV0> events = await getUpdateEvents(funder, signer);
+    List<OrchidUpdateTransactionV0> transactions =
         await Future.wait(events.map((event) async {
       var tx = await getTransactionResult(event.transactionHash);
-      return OrchidUpdateTransaction(tx, event);
+      return OrchidUpdateTransactionV0(tx, event);
     }));
     return transactions;
   }
@@ -149,10 +154,11 @@ class OrchidEthereum {
       $url -H 'Content-Type: application/json' \
       --data '{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params": ["'$txHash'"], "id":1}'
    */
-  Future<OrchidTransaction> getTransactionResult(String transactionHash) async {
+  Future<OrchidTransactionV0> getTransactionResult(
+      String transactionHash) async {
     //print("fetch transaction for: $transactionHash");
     var params = [transactionHash];
-    return OrchidTransaction.fromJsonRpcResult(
+    return OrchidTransactionV0.fromJsonRpcResult(
         await jsonRPC(method: "eth_getTransactionByHash", params: params));
   }
 
@@ -186,7 +192,7 @@ class OrchidEthereum {
     ]
   }
    */
-  Future<List<OrchidUpdateEvent>> getUpdateEvents(
+  Future<List<OrchidUpdateEventV0>> getUpdateEvents(
     EthereumAddress funder,
     EthereumAddress signer,
   ) async {
@@ -200,29 +206,79 @@ class OrchidEthereum {
           abiEncoded(funder, prefix: true),
           abiEncoded(signer, prefix: true)
         ],
-        "fromBlock": "0x"+startBlock.toRadixString(16)
+        "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
     dynamic results = await jsonRPC(method: "eth_getLogs", params: params);
-    List<OrchidUpdateEvent> events = results.map<OrchidUpdateEvent>((var result) {
-      return OrchidUpdateEvent.fromJsonRpcResult(result);
+    List<OrchidUpdateEventV0> events =
+        results.map<OrchidUpdateEventV0>((var result) {
+      return OrchidUpdateEventV0.fromJsonRpcResult(result);
     }).toList();
     return events;
   }
 
+  Future<List<OrchidCreateEventV0>> getCreateEvents(
+    EthereumAddress signer,
+  ) async {
+    print("fetch update events for: $signer, url = ${await url}");
+    const createEventHash =
+        "0x96b5b9b8a7193304150caccf9b80d150675fa3d6af57761d8d8ef1d6f9a1a909";
+    var params = [
+      {
+        "topics": [
+          createEventHash,
+          "null", // no funder topic for index 1
+          abiEncoded(signer, prefix: true)
+        ],
+        "fromBlock": "0x" + startBlock.toRadixString(16)
+      }
+    ];
+    dynamic results = await jsonRPC(method: "eth_getLogs", params: params);
+    List<OrchidCreateEventV0> events =
+        results.map<OrchidCreateEventV0>((var result) {
+      return OrchidCreateEventV0.fromJsonRpcResult(result);
+    }).toList();
+    return events;
+  }
+
+  Future<List<Account>> discoverAccounts({signer: StoredEthereumKey}) async {
+    // Discover accounts for the active identity on V0 Ethereum.
+    List<OrchidCreateEventV0> v0CreateEvents =
+        await OrchidEthereumV0().getCreateEvents(signer.address);
+    return v0CreateEvents.map((event) {
+      return Account(
+          identityUid: signer.uid,
+          chainId: Chains.ETH_CHAINID,
+          funder: event.funder);
+    }).toList();
+  }
+
   static Future<dynamic> jsonRPC({
-    String method,
+    @required String method,
+    List<Object> params = const [],
+  }) async {
+    return jsonRPCForUrl(url: await url, method: method, params: params);
+  }
+
+  static Future<dynamic> jsonRPCForUrl({
+    @required String url,
+    @required String method,
     List<Object> params = const [],
   }) async {
     // construct the abi encoded eth_call
     var postBody = jsonEncode(
         {"jsonrpc": "2.0", "method": method, "id": 1, "params": params});
 
+    // json null params should not be quoted
+    postBody = postBody.replaceAll('"null"', 'null');
+    //log("XXX: postbody = $postBody");
+
     // do the post
     var response = await http.post(await url,
         headers: {"Content-Type": "application/json"}, body: postBody);
 
     if (response.statusCode != 200) {
+      log("jsonRPC: error response: ${response.body}");
       throw Exception("Error status code: ${response.statusCode}");
     }
     var body = json.decode(response.body);
@@ -243,5 +299,4 @@ class OrchidEthereum {
   static String quote(String s) {
     return '"' + s + '"';
   }
-
 }

@@ -37,6 +37,9 @@ class HexStringBuffer {
   BigInt takeBytes32() {
     return take(64);
   }
+  BigInt takeAddress() {
+    return take(64);
+  }
   BigInt takeUint128() {
     return take(64);
   }

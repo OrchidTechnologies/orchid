@@ -67,7 +67,7 @@ class _OnboardingVPNPermissionPageState
 
   // Show a confirmation dialog
   void _confirmNext() {
-    Dialogs.showConfirmationDialog(
+    AppDialogs.showConfirmationDialog(
         context: context,
         title: "Allow Connection",
         body:

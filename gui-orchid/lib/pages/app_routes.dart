@@ -13,12 +13,12 @@ import 'package:orchid/pages/settings/configuration_page.dart';
 import 'package:orchid/pages/settings/keygen_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
-import 'package:orchid/pages/settings/accounts_page.dart';
+import 'package:orchid/pages/settings/deleted_accounts_page.dart';
 import 'package:orchid/pages/settings/settings_dev_page.dart';
 import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'package:orchid/pages/settings/settings_vpn_credentials_page.dart';
-import 'budget/balance_page.dart';
+import 'account_manager/account_manager_page.dart';
 import 'circuit/circuit_page.dart';
 import 'help/help_overview.dart';
 import 'help/legal_page.dart';
@@ -43,18 +43,16 @@ class AppRoutes {
   static const String onboarding_link_wallet = "/onboarding/link_wallet";
   static const String onboarding_link_wallet_success = "/onboarding/link_wallet/success";
   static const String onboarding_vpn_credentials = "/onboarding/vpn_credentials";
-  static const String balance = "/budget/balance";
-  static const String budget_overview = "/budget/overview";
   static const String keygen = "/settings/keygen";
   static const String keys = "/settings/keys";
   static const String manage_config = "/settings/manage_config";
   static const String circuit = "/circuit";
+  static const String identity = "/identity";
   static const String traffic = "/traffic";
   static const String accounts = "/settings/accounts";
   static const String home = "/";
 
   static final Map<String, WidgetBuilder> routes = {
-    //home: (context) => CircuitPageStandalone(),
     connect: (context) => LegacyConnectPage(),
     settings: (context) => SettingsPage(),
     settings_vpn: (context) => SettingsVPNCredentialsPage(),
@@ -72,12 +70,12 @@ class AppRoutes {
     onboarding_link_wallet: (context) => OnboardingLinkWalletPage(),
     onboarding_link_wallet_success: (context) => OnboardingLinkWalletSuccessPage(),
     onboarding_vpn_credentials: (context) => OnboardingVPNCredentialsPage(),
-    balance: (context) => BalancePage(),
     keygen: (context) => KeyGenPage(),
     keys: (context) => KeysPage(),
     circuit: (context) => CircuitPage(),
     traffic: (context) => TrafficView(),
     accounts: (context) => AccountsPage(),
-    manage_config: (context) => ManageConfigPage()
+    manage_config: (context) => ManageConfigPage(),
+    identity: (context) => AccountManagerPage()
   };
 }

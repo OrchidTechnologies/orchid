@@ -131,6 +131,9 @@ def handle_receipt(receipt, product_id, Stage, verify_receipt):
         else:
             bundle_id = validation_result.get('receipt', {}).get('bundle_id', '')
 
+        if (bundle_id != os.environ['BUNDLE_ID']):
+            return f"bad bundle_id{bundle_id} != {os.environ['BUNDLE_ID']}", None, 0
+
         if (validation_result['receipt']['in_app'] is None) or (len(validation_result['receipt']['in_app']) == 0):
             return "unexpected in_app result is empty", None, 0
 

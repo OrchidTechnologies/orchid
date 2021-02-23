@@ -58,7 +58,7 @@ class _KeyGenPageState extends State<KeyGenPage> {
                   ),
                   pady(8),
                   SelectableText(
-                    keyPair?.address ?? "",
+                    keyPair?.addressString ?? "",
                     style: monoStyle,
                   ),
 
@@ -168,7 +168,7 @@ class _KeyGenPageState extends State<KeyGenPage> {
   }
 
   void _copyAccount() async {
-    Clipboard.setData(ClipboardData(text: keyPair.address));
+    Clipboard.setData(ClipboardData(text: keyPair.addressString));
   }
   void _copyPrivate() async {
     Clipboard.setData(ClipboardData(text: keyPair.private.toString()));

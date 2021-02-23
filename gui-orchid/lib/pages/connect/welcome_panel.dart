@@ -1,7 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
@@ -21,7 +21,6 @@ class WelcomePanel extends StatefulWidget {
 class _WelcomePanelState extends State<WelcomePanel>
     with TickerProviderStateMixin {
   bool _collapsed = false;
-  bool _pretendToBeAndroid = false; // for testing
 
   @override
   void initState() {
@@ -29,11 +28,7 @@ class _WelcomePanelState extends State<WelcomePanel>
     initStateAsync();
   }
 
-  void initStateAsync() async {
-    _pretendToBeAndroid = (await OrchidVPNConfig.getUserConfigJS())
-        .evalBoolDefault('isAndroid', false);
-    setState(() {});
-  }
+  void initStateAsync() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -136,9 +131,11 @@ class _WelcomePanelState extends State<WelcomePanel>
             else
               ScanOrPasteOrchidAccount(
                 onImportAccount: (ParseOrchidAccountResult result) async {
-                  var hop = await OrchidVPNConfig.importAccountAsHop(result);
+                  var hop = await OrchidVPNConfigV0.importAccountAsHop(
+                      result.account);
                   CircuitUtils.addHopToCircuit(hop);
                 },
+                v0Only: true,
               ),
             pady(16)
           ],

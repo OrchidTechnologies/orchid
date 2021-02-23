@@ -1,89 +1,56 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/util/hex.dart';
 
-import '../orchid_api.dart';
-import '../orchid_log_api.dart';
-import 'js_config.dart';
+import '../../orchid_api.dart';
+import '../../orchid_log_api.dart';
 
-// TODO: The parsing in this class should be simplified using the (real) JSConfig parser.
 /// Support for reading and generating the JavaScript configuration file used by the Orchid VPN.
-class OrchidVPNConfig {
-  /// Return a JS queryable representation of the user visible configuration
-  /// If there is an error parsing the configuation an empty JSConfig is returned.
-  static Future<JSConfig> getUserConfigJS() async {
-    try {
-      return JSConfig(await OrchidAPI().getConfiguration());
-    } catch (err) {
-      print("Error parsing user entered configuration as JS: $err");
-    }
-    return JSConfig("");
-  }
-
+// Note: The parsing in this class should be simplified using the (real) JSConfig parser.
+class OrchidVPNConfigV0 {
   /// Generate the circuit hops list portion of the VPN config managed by the UI.
   /// The desired format is a JavaScript object literal assignment, e.g.:
   /// hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}, {protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
-  static Future<String> generateHopsConfig() async {
+  static Future<String> generateConfig() async {
     Circuit circuit = await UserPreferences().getCircuit();
     List<StoredEthereumKey> keys = await UserPreferences().getKeys();
     List<CircuitHop> hops = circuit?.hops ?? [];
 
     /// Convert each hop to a json map and replace values as required by the rendered config.
-    var hopsListConfig = hops.map((hop) async {
+    var hopsListConfig = hops.map((hop) {
       // To JSON
       var hopJson = hop.toJson();
-
-      // TODO: The PAC server returns the seller and we are planning to store it
-      // TODO: with the account itself when we have a persistent "account" model.
-      // TODO: For now we'll do a just-in-time lookup here.
-      // For Orchid hops using PACs look up the verifier address and add it as
-      // a "seller" field for the tunnel.
-      if (hop is OrchidHop) {
-        try {
-          LotteryPot lotteryPot = await OrchidEthereum.getLotteryPot(hop.funder,
-              EthereumAddress.from(hop.keyRef
-                  .getFrom(keys)
-                  .keys()
-                  .address));
-          if (lotteryPot.verifier != null) {
-            hopJson['seller'] = lotteryPot.verifier.toString();
-          }
-        } catch(err) {
-          log("Unable to look up seller: $err");
-        }
-      }
 
       // Resolve key references
       var resolvedKeysHop = resolveKeyReferencesForExport(hopJson, keys);
 
       // Perform any needed transformations on the individual key/values in the json.
-      return resolvedKeysHop.map((String key, dynamic value) {
-        // The protocol value is transformed to lowercase.
-        if (key == 'protocol') {
-          value = value.toString().toLowerCase();
-        }
-        // Escape newlines in string values
-        if (value is String) {
-          value = value.replaceAll('\n', '\\n');
-        }
-        // Quote all values for now
-        return MapEntry(key, "\"$value\"");
-      }).toString();
+      return toConfigJS(resolvedKeysHop);
     }).toList();
 
-    // TODO: Remove this when the map above no longer requires async for the
-    // TODO: seller lookup.
-    List<String> result = await Future.wait(hopsListConfig);
+    return "hops = $hopsListConfig;";
+  }
 
-    return "hops = $result;";
+  /// Render a map to a JS literal with un-quoted keys (not JSON) and quoted values.
+  static String toConfigJS(Map<String, dynamic> map) {
+    return map.map((String key, dynamic value) {
+      // The protocol value is transformed to lowercase.
+      if (key == 'protocol') {
+        value = value.toString().toLowerCase();
+      }
+      // Escape newlines in string values
+      if (value is String) {
+        value = value.replaceAll('\n', '\\n');
+      }
+      // Quote all values except for numbers
+      return MapEntry(key, (value is int) ? value : "\"$value\"");
+    }).toString();
   }
 
   /// Replace JSON "keyRef" key references with private key "secret" values.
@@ -97,7 +64,7 @@ class OrchidVPNConfig {
           var keyRef = StoredEthereumKeyRef.from(value);
           try {
             StoredEthereumKey key = keyRef.getFrom(keys);
-            secret = key.formatSecret();
+            secret = key.formatSecretFixed();
           } catch (err) {
             log("resolveKeyReferences invalid key ref: $keyRef");
           }
@@ -115,7 +82,7 @@ class OrchidVPNConfig {
   ///   hops = [{curator: "partners.orch1d.eth", protocol: "orchid", funder: "0x405bc10e04e3f487e9925ad5815e4406d78b769e", secret: "894643a2de07568a51f7fe59650365dea0e04376819ecff08e686face92ca16e"}];
   /// TODO: For now we are transforming the JS object literal into JSON for parsing.
   /// TODO: We should update this to use our JSConfig (real) JS parser.
-  static ParseCircuitResult parseCircuit(
+  static ParseCircuitResultV0 parseCircuit(
       String js, List<StoredEthereumKey> existingKeys) {
     // Remove newlines, etc.
     js = _normalizeInputJSON(js);
@@ -138,24 +105,23 @@ class OrchidVPNConfig {
     Map<String, dynamic> json = jsonDecode(hopsString);
 
     // Resolve imported secrets to existing stored keys or new temporary keys
-    var tempKeys = List<StoredEthereumKey>();
-    var uid = DateTime.now().millisecondsSinceEpoch;
+    var tempKeys = <StoredEthereumKey>[];
     List<dynamic> hops = json['hops'];
     hops.asMap().forEach((index, hop) {
       // Only interested in Orchid hops here
       if (hop['protocol'] != "orchid") {
         return;
       }
-      _resolveImportedKeyFromJSON(hop, existingKeys, (uid + index), tempKeys);
+      _resolveImportedKeyFromJSON(hop, existingKeys, tempKeys);
     });
 
-    return ParseCircuitResult(
+    return ParseCircuitResultV0(
         circuit: Circuit.fromJson(json), newKeys: tempKeys);
   }
 
   /// Parse an imported Orchid account from JS (input text containing a valid account assignment).
   /// TODO: We should update this to use our JSConfig (real) JS parser.
-  static ParseOrchidAccountResult parseOrchidAccount(
+  static ParseOrchidAccountResultV0 parseOrchidAccount(
       String js, List<StoredEthereumKey> existingKeys) {
     // Remove newlines, etc.
     js = _normalizeInputJSON(js);
@@ -183,22 +149,17 @@ class OrchidVPNConfig {
     String curator = json['curator'];
 
     // Resolve imported secrets to existing stored keys or new temporary keys
-    var newKeys = List<StoredEthereumKey>();
-    var uid = DateTime.now().millisecondsSinceEpoch;
-    StoredEthereumKey key =
-        _resolveImportedKey(secret, existingKeys, uid, newKeys);
+    var newKeys = <StoredEthereumKey>[]; // type required here
+    StoredEthereumKey key = resolveImportedKey(secret, existingKeys, newKeys);
     var orchidAccount =
-        OrchidAccount(curator: curator, funder: funder, signer: key);
-    return ParseOrchidAccountResult(account: orchidAccount, newKeys: newKeys);
+        OrchidAccountV0(curator: curator, funder: funder, signer: key);
+    return ParseOrchidAccountResultV0(account: orchidAccount, newKeys: newKeys);
   }
 
   /// Resolve the key in an imported JSON hop, adding a 'keyRef' to the hop
   /// to the json.  If a new key is created it is added to the existingKeys list.
-  static void _resolveImportedKeyFromJSON(
-      dynamic hop,
-      List<StoredEthereumKey> existingKeys,
-      int nextKeyUid, // the uid to use for any newly created key
-      List<StoredEthereumKey> newKeys) {
+  static void _resolveImportedKeyFromJSON(dynamic hop,
+      List<StoredEthereumKey> existingKeys, List<StoredEthereumKey> newKeys) {
     var secret = hop['secret'];
     if (secret == null) {
       throw Exception("missing secret");
@@ -206,18 +167,14 @@ class OrchidVPNConfig {
     if (hop['keyRef'] != null) {
       throw Exception("keyRef in parsed json");
     }
-    StoredEthereumKey key =
-        _resolveImportedKey(secret, existingKeys, nextKeyUid, newKeys);
+    StoredEthereumKey key = resolveImportedKey(secret, existingKeys, newKeys);
     hop['keyRef'] = key.ref().toString();
   }
 
   /// Find an imported key secret in existing keys or create a new key and
   /// add it to the newKeys list.  In both cases the key is returned.
-  static StoredEthereumKey _resolveImportedKey(
-      String secret,
-      List<StoredEthereumKey> existingKeys,
-      int nextKeyUid, // the uid to use for any newly created key
-      List<StoredEthereumKey> newKeys) {
+  static StoredEthereumKey resolveImportedKey(String secret,
+      List<StoredEthereumKey> existingKeys, List<StoredEthereumKey> newKeys) {
     if (secret == null) {
       throw Exception("missing secret");
     }
@@ -235,7 +192,7 @@ class OrchidVPNConfig {
       key = StoredEthereumKey(
           imported: true,
           time: DateTime.now(),
-          uid: nextKeyUid.toString(),
+          uid: Crypto.uuid(),
           private: BigInt.parse(secret, radix: 16));
       newKeys.add(key);
       //print("parse: generated new key");
@@ -247,7 +204,7 @@ class OrchidVPNConfig {
   /// Existing signer keys are unaffected.
   static Future<bool> importConfig(String config) async {
     var existingKeys = await UserPreferences().getKeys();
-    var parsedCircuit = OrchidVPNConfig.parseCircuit(config, existingKeys);
+    var parsedCircuit = parseCircuit(config, existingKeys);
 
     // Save any newly imported keys
     if (parsedCircuit.newKeys.length > 0) {
@@ -278,7 +235,7 @@ class OrchidVPNConfig {
   /// Create a hop from an account parse result, save any new keys, and return the hop
   /// to the add flow completion.
   static Future<CircuitHop> importAccountAsHop(
-      ParseOrchidAccountResult result) async {
+      ParseOrchidAccountResultV0 result) async {
     print(
         "result: ${result.account.funder}, ${result.account.signer}, new keys = ${result.newKeys.length}");
     // Save any new keys
@@ -291,12 +248,27 @@ class OrchidVPNConfig {
     );
     return hop;
   }
+
+  /// Return key uids for configured hops
+  static Future<List<String>> getInUseKeyUids() async {
+    // Get the active hop keys
+    var activeHops = (await UserPreferences().getCircuit()).hops;
+    List<OrchidHop> activeOrchidHops =
+    activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
+    List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
+      return h.keyRef;
+    }).toList();
+    List<String> activeKeyUids = activeKeys.map((e) => e.keyUid).toList();
+    log("account: activeKeyUuids = $activeKeyUids");
+
+    return activeKeyUids;
+  }
 } // OrchidVPNConfig
 
 typedef OrchidConfigValidator = bool Function(String config);
 
 /// Validation logic for imported VPN configurations.
-class OrchidVPNConfigValidation {
+class OrchidVPNConfigValidationV0 {
   /// Validate the orchid configuration.
   /// @See OrchidConfigValidator.
   static bool configValid(String config) {
@@ -305,7 +277,7 @@ class OrchidVPNConfigValidation {
     }
     try {
       var parsedCircuit =
-          OrchidVPNConfig.parseCircuit(config, [] /*no existing keys*/);
+          OrchidVPNConfigV0.parseCircuit(config, [] /*no existing keys*/);
       var circuit = parsedCircuit.circuit;
       return _isValidCircuitForImport(circuit);
     } catch (err, s) {
@@ -333,29 +305,34 @@ class OrchidVPNConfigValidation {
 /// Result holding a parsed circuit. Each hop has a keyRef referring to either
 /// an existin key in the user's keystore or a newly imported but not yet saved
 /// temporary key in the newKeys list.
-class ParseCircuitResult {
+class ParseCircuitResultV0 {
   final Circuit circuit;
   final List<StoredEthereumKey> newKeys;
 
-  ParseCircuitResult({this.circuit, this.newKeys});
+  ParseCircuitResultV0({this.circuit, this.newKeys});
 }
 
 // An Orchid account
-class OrchidAccount {
+class OrchidAccountV0 {
   final String curator;
   final EthereumAddress funder;
   final StoredEthereumKey signer;
 
-  OrchidAccount(
+  OrchidAccountV0(
       {@required this.curator, @required this.funder, @required this.signer});
 }
 
 /// Result holding a parsed imported Orchid account. The account signer key refers
-/// to either an existin key in the user's keystore or a newly imported but not yet
+/// to either an existing key in the user's keystore or a newly imported but not yet
 /// saved temporary key in the newKeys list.
-class ParseOrchidAccountResult {
-  final OrchidAccount account;
+class ParseOrchidAccountResultV0 {
+  final OrchidAccountV0 account;
   final List<StoredEthereumKey> newKeys;
 
-  ParseOrchidAccountResult({this.account, this.newKeys});
+  ParseOrchidAccountResultV0({this.account, this.newKeys});
+
+  @override
+  String toString() {
+    return 'ParseOrchidAccountResultV0{account: $account, newKeys: $newKeys}';
+  }
 }

@@ -6,13 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_pricing.dart';
-import 'package:orchid/api/orchid_tx.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/scan_paste_account.dart';
+import 'package:orchid/pages/common/account_chart.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
 import 'package:orchid/pages/common/dialogs.dart';
@@ -23,13 +25,10 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/tap_clears_focus.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/util/units.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../app_colors.dart';
 import '../app_sizes.dart';
 import '../app_text.dart';
-import 'budget_page.dart';
 import 'curator_page.dart';
 import 'hop_editor.dart';
 import 'key_selection.dart';
@@ -53,6 +52,44 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 
   @override
   _OrchidHopPageState createState() => _OrchidHopPageState();
+
+  static Future<void> showShareConfigStringDialog({
+    BuildContext context,
+    String title,
+    String config,
+  }) async {
+    return AppDialogs.showAppDialog(
+        context: context,
+        title: title,
+        body: Container(
+          width: 250,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: QrImage(
+                  data: config,
+                  version: QrVersions.auto,
+                  size: 250.0,
+                ),
+              ),
+              _buildCopyButton(context, config)
+            ],
+          ),
+        ));
+  }
+
+  static Widget _buildCopyButton(BuildContext context, String config) {
+    var s = S.of(context);
+    return RoundedRectButton(
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white,
+        text: s.copy,
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: config));
+        });
+  }
+
 }
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
@@ -62,9 +99,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   KeySelectionItem _initialSelectedItem;
   KeySelectionItem _selectedKeyItem;
   bool _showBalance = false;
-  LotteryPot _lotteryPot; // initially null
-  MarketConditions _marketConditions;
-  List<OrchidUpdateTransaction> _transactions;
+  OXTLotteryPot _lotteryPot; // initially null
+  MarketConditionsV0 _marketConditions;
+  List<OrchidUpdateTransactionV0> _transactions;
   DateTime _lotteryPotLastUpdate;
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
@@ -217,12 +254,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               child: _buildCuration(),
               onDetail: !widget.disabled ? _editCurator : null),
           pady(36),
-          /*
-          divider(),
-          pady(24),
-          _buildSection(
-              title: s.rateLimit, child: _buildBudget(), onDetail: _editBudget),
-           */
         ],
       ),
     );
@@ -331,7 +362,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           Container(
             width: 150,
             child: Text("Balance: " +
-                formatCurrency(utx.update.endBalance.value, suffix: 'OXT')),
+                formatCurrency(utx.update.endBalance.floatValue,
+                    suffix: 'OXT')),
           ),
           padx(8),
           Flexible(child: Text(utx.tx.transactionHash.substring(0, 8) + '...'))
@@ -448,63 +480,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: [
         Flexible(child: _buildAccountBalance()),
         Expanded(
-          child: _buildAccountChart(),
+          child: AccountChart(
+              lotteryPot: _lotteryPot,
+              efficiency: _marketConditions?.efficiency,
+              transactions: _transactions),
         )
       ],
-    );
-  }
-
-  Widget _buildAccountChart() {
-    if (_marketConditions == null ||
-        _lotteryPot == null ||
-        _transactions == null) {
-      return Container();
-    }
-
-    var chartModel = AccountBalanceChartModel(_lotteryPot, _transactions);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        CircularPercentIndicator(
-          progressColor: Colors.deepPurple,
-          lineWidth: 10,
-          radius: 70,
-          percent: _marketConditions.efficiency,
-        ),
-        pady(2),
-        Text("Efficiency: " + _marketConditions.efficiencyPerc()),
-        pady(16),
-        // Show the tickets available / used line
-        _buildTicketsAvailableLineChart(chartModel),
-        pady(8),
-        Text("Min Tickets available: ${chartModel.availableTicketsCurrentMax}"),
-      ],
-    );
-  }
-
-  // Build the tickets available horizontal line chart
-  // This consists of "dashed" segments indicating the number of tickets available
-  // at the last high-water mark with a subset colored to indicate currently available.
-  Padding _buildTicketsAvailableLineChart(AccountBalanceChartModel chartModel) {
-    var totalCount = chartModel.availableTicketsHighWatermarkMax;
-    var currentCount = chartModel.availableTicketsCurrentMax;
-
-    double margin = totalCount < 10 ? 8 : 2;
-    var colorFor =
-        (int i) => i < currentCount ? Colors.deepPurple : Colors.grey;
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 8),
-      child: Row(
-          children: List.generate(
-        totalCount,
-        (i) => Flexible(
-          child: Container(
-            margin: EdgeInsets.symmetric(horizontal: margin),
-            height: 10,
-            color: colorFor(i),
-          ),
-        ),
-      ).toList()),
     );
   }
 
@@ -519,11 +500,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         height: 20.0 / 15.0);
 
     var balanceText = _lotteryPot?.balance != null
-        ? NumberFormat('#0.0###').format(_lotteryPot?.balance?.value) +
+        ? NumberFormat('#0.0###').format(_lotteryPot?.balance?.floatValue) +
             " ${s.oxt}"
         : "...";
     var depositText = _lotteryPot?.deposit != null
-        ? NumberFormat('#0.0###').format(_lotteryPot?.deposit?.value) +
+        ? NumberFormat('#0.0###').format(_lotteryPot?.deposit?.floatValue) +
             " ${s.oxt}"
         : '...';
 
@@ -569,17 +550,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Widget _buildBudget() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        pady(16),
-        Text(s.viewOrModifyRateLimit,
-            textAlign: TextAlign.left, style: AppText.dialogBody),
-      ],
-    );
-  }
-
   Widget _buildMarketStatsLink() {
     return Align(
       alignment: Alignment.centerLeft,
@@ -613,9 +583,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       return;
     }
 
-    var marketConditions = await MarketConditions.forPot(_lotteryPot);
+    var marketConditions = await MarketConditionsV0.forPot(_lotteryPot);
     Pricing pricing = await OrchidPricingAPI().getPricing();
-    GWEI gasPrice = await OrchidEthereum().getGasPrice();
+    GWEI gasPrice = await OrchidEthereumV0().getGasPrice();
     bool gasPriceHigh = gasPrice.value >= 50.0; // TODO
     /*
     // data
@@ -638,26 +608,28 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var oxtPriceText =
         formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: 'USD');
     var gasPriceText = formatCurrency(gasPrice.value, suffix: 'GWEI');
-    String maxFaceValueText =
-        formatCurrency(marketConditions.maxFaceValue?.value, suffix: 'OXT');
-    String costToRedeemText =
-        formatCurrency(marketConditions.oxtCostToRedeem.value, suffix: 'OXT');
-    bool ticketUnderwater = marketConditions.oxtCostToRedeem.value >=
-        marketConditions.maxFaceValue.value;
+    String maxFaceValueText = formatCurrency(
+        marketConditions.maxFaceValue?.floatValue,
+        suffix: 'OXT');
+    String costToRedeemText = formatCurrency(
+        marketConditions.oxtCostToRedeem.floatValue,
+        suffix: 'OXT');
+    bool ticketUnderwater = marketConditions.oxtCostToRedeem.floatValue >=
+        marketConditions.maxFaceValue.floatValue;
 
     String limitedByText = marketConditions.limitedByBalance
         ? s.yourMaxTicketValueIsCurrentlyLimitedByYourBalance +
-            " ${formatCurrency(_lotteryPot.balance.value, suffix: 'OXT')}.  " +
+            " ${formatCurrency(_lotteryPot.balance.floatValue, suffix: 'OXT')}.  " +
             s.considerAddingOxtToYourAccountBalance
         : s.yourMaxTicketValueIsCurrentlyLimitedByYourDeposit +
-            " ${formatCurrency(_lotteryPot.deposit.value, suffix: 'OXT')}.  " +
+            " ${formatCurrency(_lotteryPot.deposit.floatValue, suffix: 'OXT')}.  " +
             s.considerAddingOxtToYourDepositOrMovingFundsFrom;
 
     String limitedByTitleText = marketConditions.limitedByBalance
         ? s.balanceTooLow
         : s.depositSizeTooSmall;
 
-    return Dialogs.showAppDialog(
+    return AppDialogs.showAppDialog(
         context: context,
         title: s.marketStats,
         body: Column(
@@ -705,13 +677,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             CuratorEditorPage(editableHop: widget.editableHop));
     await Navigator.push(context, route);
     _curatorField.text = _hop()?.curator;
-  }
-
-  void _editBudget() {
-    var route = MaterialPageRoute(
-        builder: (context) =>
-            BudgetEditorPage(editableHop: widget.editableHop));
-    Navigator.push(context, route);
   }
 
   void _onKeySelected(KeySelectionItem key) {
@@ -783,7 +748,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   /// Copy the wallet address to the clipboard
   void _onCopyButton() async {
     StoredEthereumKey key = await _selectedKeyItem.keyRef.get();
-    Clipboard.setData(ClipboardData(text: key.keys().address));
+    Clipboard.setData(ClipboardData(text: key.get().addressString));
   }
 
   // Participate in the save operation and then delegate to the on complete handler.
@@ -857,48 +822,49 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       // funder and signer from the stored hop
       EthereumAddress funder = _hop()?.funder;
       StoredEthereumKey signerKey = await _hop()?.keyRef?.get();
-      EthereumAddress signer = EthereumAddress.from(signerKey.keys().address);
+      EthereumAddress signer =
+          EthereumAddress.from(signerKey.get().addressString);
 
       // TESTING
       //funder = EthereumAddress.from("0x27fb8edcf854602704fe8438243d0959219db126");
       //signer = EthereumAddress.from("0x932b1456abf113f744e68cf253eed6496d786aab");
 
       // Fetch the pot balance
-      LotteryPot pot;
-      MarketConditions marketConditions;
-      List<OrchidUpdateTransaction> transactions;
+      OXTLotteryPot pot;
+      MarketConditionsV0 marketConditions;
+      List<OrchidUpdateTransactionV0> transactions;
       try {
-        pot = await OrchidEthereum.getLotteryPot(funder, signer)
+        pot = await OrchidEthereumV0.getLotteryPot(funder, signer)
             .timeout(Duration(seconds: 60));
+        print("POT: funder = $funder, signer = $signer");
       } catch (err) {
         log('Error fetching lottery pot: $err');
         return;
       }
       try {
-        marketConditions = await MarketConditions.forPot(pot);
-      } catch (err) {
-        log('Error fetching market conditions: $err');
+        marketConditions = await MarketConditionsV0.forPot(pot);
+      } catch (err, stack) {
+        log('Error fetching market conditions: $err\n$stack');
         return;
       }
-      var ticketValue = await OrchidPricingAPI().getMaxTicketValue(pot);
+      var ticketValue = await MarketConditionsV0.getMaxTicketValueV0(pot);
       try {
-        transactions = await OrchidEthereum()
+        transactions = await OrchidEthereumV0()
             .getUpdateTransactions(funder: funder, signer: signer);
       } catch (err) {
         log('Error fetching account update transactions: $err');
-        return;
       }
       if (mounted) {
         setState(() {
           _lotteryPot = pot;
           _marketConditions = marketConditions;
-          _showMarketStatsAlert = ticketValue.value <= 0;
+          _showMarketStatsAlert = ticketValue.lteZero();
           _transactions = transactions;
         });
       }
       _lotteryPotLastUpdate = DateTime.now();
-    } catch (err) {
-      log("Can't fetch balance: $err");
+    } catch (err, stack) {
+      log("Can't fetch balance: $err, $stack");
 
       // Allow a stale balance for a period of time.
       if (_lotteryPotLastUpdate != null &&
@@ -927,35 +893,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   void _exportAccount() async {
     var config = await _hop().accountConfigString();
-    Dialogs.showAppDialog(
-        context: context,
-        title: s.myOrchidAccount + ':',
-        body: Container(
-          width: 250,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: QrImage(
-                  data: config,
-                  version: QrVersions.auto,
-                  size: 250.0,
-                ),
-              ),
-              _buildCopyButton(config)
-            ],
-          ),
-        ));
-  }
-
-  Widget _buildCopyButton(String config) {
-    return RoundedRectButton(
-        backgroundColor: Colors.deepPurple,
-        textColor: Colors.white,
-        text: s.copy,
-        onPressed: () {
-          Clipboard.setData(ClipboardData(text: config));
-        });
+    var title = S.of(context).myOrchidAccount + ':';
+    OrchidHopPage.showShareConfigStringDialog(context: context, title: title, config: config);
   }
 
   S get s {
@@ -975,36 +914,3 @@ class FakeAccountBalanceChartModel extends AccountBalanceChartModel {
     return 10;
   }
 }*/
-
-class AccountBalanceChartModel {
-  LotteryPot pot;
-  List<OrchidUpdateTransaction> transactions;
-
-  AccountBalanceChartModel(this.pot, this.transactions);
-
-  // The number of tickets that could be written using the max possible face value
-  int get availableTicketsCurrentMax {
-    return pot.maxTicketFaceValue.value == 0
-        ? 0
-        : (pot.balance.value / pot.maxTicketFaceValue.value).floor();
-  }
-
-  // The last balance resulting from user actions other than a payment
-  // i.e. the last time the user toppped up or made a withdrawal.
-  OXT get lastBalanceHighWatermark {
-    var balanceAdjustments =
-        this.transactions.where((utx) => !utx.tx.isPayment).toList();
-    return balanceAdjustments.isNotEmpty
-        ? balanceAdjustments.last.update.endBalance
-        : pot.balance;
-  }
-
-  // The number of tickets that could be written using the max possible face value
-  // at the time of the last high-water mark
-  int get availableTicketsHighWatermarkMax {
-    return pot.maxTicketFaceValue.value == 0
-        ? 0
-        : (lastBalanceHighWatermark.value / pot.maxTicketFaceValue.value)
-            .floor();
-  }
-}

@@ -7,7 +7,6 @@ enum HopProtocol { Orchid, OpenVPN, WireGuard }
 
 // A hop element of a circuit
 class CircuitHop {
-  String uuid;
   HopProtocol protocol;
 
   CircuitHop(this.protocol) {

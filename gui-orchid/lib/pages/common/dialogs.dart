@@ -5,7 +5,7 @@ import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 
-class Dialogs {
+class AppDialogs {
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
   static Future<void> showAppDialog({
     @required BuildContext context,
@@ -118,7 +118,7 @@ class Dialogs {
       return null;
     }
     var warning = warn ? s.changesWillTakeEffectInstruction : "";
-    return Dialogs.showAppDialog(
+    return AppDialogs.showAppDialog(
         context: context,
         title: s.saved + "!",
         bodyText: s.configurationSaved + " " + warning);
@@ -127,7 +127,7 @@ class Dialogs {
   static void showConfigurationChangeFailed(BuildContext context,
       {String errorText}) {
     S s = S.of(context);
-    Dialogs.showAppDialog(
+    AppDialogs.showAppDialog(
         context: context,
         title: s.whoops + "!",
         bodyText: s.configurationFailedInstruction +

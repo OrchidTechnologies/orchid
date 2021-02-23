@@ -75,7 +75,7 @@ class _KeysPageState extends State<KeysPage> {
   ListTile _buildKeyTile(StoredEthereumKey key, int index) {
     var title = _copiedIndex == index
         ? "Copied to clipboard..."
-        : "Key: ${key.keys().address.substring(0, 20) + '...'}";
+        : "Key: ${key.get().addressString.substring(0, 20) + '...'}";
     return ListTile(
         onTap: () {
           _tapKey(key, index);
@@ -121,7 +121,7 @@ class _KeysPageState extends State<KeysPage> {
   }
 
   void _tapKey(StoredEthereumKey key, int index) async {
-    Clipboard.setData(ClipboardData(text: key.keys().address));
+    Clipboard.setData(ClipboardData(text: key.get().addressString));
     setState(() {
       _copiedIndex = index;
     });

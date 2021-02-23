@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/js_config.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -13,8 +13,8 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 
 import '../app_colors.dart';
+import '../app_routes.dart';
 import '../app_sizes.dart';
-import '../orchid_app.dart';
 
 /// The main settings page.
 class SettingsPage extends StatefulWidget {
@@ -25,9 +25,11 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   var _defaultCurator = TextEditingController();
 
+  // TODO: These switches should work directly with ObservablePreference
   bool _queryBalances = false;
   bool _allowNoHopVPN = false;
   bool _showLogging = false;
+  bool _guiV1 = false;
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
     _allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
+    _guiV1 = await UserPreferences().guiV1.get();
     setLoggingConfig();
     setPlatformConfig();
     setState(() {});
@@ -78,7 +81,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 PageTile(
                   title: s.deletedHops,
                   onTap: () async {
-                    await Navigator.pushNamed(context, '/settings/accounts');
+                    await Navigator.pushNamed(context, AppRoutes.accounts);
                   },
                 ),
 
@@ -137,8 +140,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 PageTile(
                   title: "Advanced Configuration",
                   onTap: () async {
-                    await Navigator.pushNamed(
-                        context, '/settings/configuration');
+                    await Navigator.pushNamed(context, AppRoutes.configuration);
                     initStateAsync(); // update anything that may have changed via config
                   },
                 ),
@@ -173,22 +175,44 @@ class _SettingsPageState extends State<SettingsPage> {
                       context: context),
                 ],
 
-                pady(32),
+                // V1 UI opt-in
+                pady(8),
+                Divider(),
+                PageTile(
+                  title: "GUI Version 1",
+                  trailing: Switch(
+                    activeColor: AppColors.purple_3,
+                    value: _guiV1,
+                    onChanged: (bool value) async {
+                      await UserPreferences().guiV1.set(value);
+                      OrchidAPI().updateConfiguration();
+                      AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+                      setState(() {
+                        _guiV1 = value;
+                      });
+                    },
+                  ),
+                ),
+
+
+                // TESTING: Remove
+                pady(8),
+                Divider(),
+                PageTile(
+                  title: "(DEBUG) Reset Active Accounts",
+                  trailing: RaisedButton(
+                    child: Text("Reset"),
+                    onPressed: () {
+                      UserPreferences().activeAccounts.set([]);
+                    },
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  void _resetInstructions() async {
-    UserPreferences().resetInstructions();
-    Dialogs.showAppDialog(
-        context: context,
-        title: "Reset",
-        bodyText:
-            "Help instructions will be shown again in appropriate places.");
   }
 
   void _curatorChanged() {

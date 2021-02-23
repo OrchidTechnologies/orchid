@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -103,8 +105,14 @@ class _AddHopPageState extends State<AddHopPage> {
                               context: context,
                               builder: (BuildContext context) {
                                 return ScanOrPasteDialog(
-                                    onAddFlowComplete:
-                                        widget.onAddFlowComplete);
+                                  onImportAccount:
+                                      (ParseOrchidAccountResult result) async {
+                                    var hop = await OrchidVPNConfigV0
+                                        .importAccountAsHop(result.account);
+                                    widget.onAddFlowComplete(hop);
+                                  },
+                                  v0Only: true,
+                                );
                               });
                         },
                         imageName: 'assets/images/scan.png'),

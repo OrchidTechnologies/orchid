@@ -172,14 +172,14 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
   }
 
   Future<void> _showCredentialsSavedDialog() {
-    return Dialogs.showAppDialog(
+    return AppDialogs.showAppDialog(
         context: context,
         title: "VPN Credentials Saved!",
         bodyText: "Your credentials have been saved.");
   }
 
   Future<void> _showCredentialsSaveFailedDialog() {
-    return Dialogs.showAppDialog(
+    return AppDialogs.showAppDialog(
         context: context,
         title: "Whoops!",
         bodyText:
