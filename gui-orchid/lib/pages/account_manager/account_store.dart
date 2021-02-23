@@ -10,6 +10,7 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 
 // An observable list of identities and active accounts.
 class AccountStore extends ChangeNotifier {
+
   /// Identity
   List<StoredEthereumKey> identities = [];
 
@@ -21,8 +22,14 @@ class AccountStore extends ChangeNotifier {
   /// Accounts designated by the user as active
   List<Account> activeAccounts = [];
 
+  /// If true accounts are discovered on-chain for the active identity,
+  /// otherwise only the saved active accounts are loaded.
+  final bool discoverAccounts;
+
   /// Accounts discovered on chain
   List<Account> discoveredAccounts = [];
+
+  AccountStore({this.discoverAccounts = true});
 
   /// All accounts known for the active identity.
   /// This list is not ordered.
@@ -92,7 +99,7 @@ class AccountStore extends ChangeNotifier {
     }
     notifyListeners();
 
-    if (activeIdentity != null) {
+    if (discoverAccounts && activeIdentity != null) {
       // Discover accounts for the active identity on V0 Ethereum.
       discoveredAccounts =
           await OrchidEthereumV0().discoverAccounts(signer: activeIdentity);

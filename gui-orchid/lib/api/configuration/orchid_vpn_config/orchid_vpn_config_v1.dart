@@ -14,7 +14,7 @@ class OrchidVPNConfigV1 {
   /// The desired format is a JavaScript object literal assignment, e.g.:
   /// hops = [{protocol: "orchid", secret: "HEX", funder: "0xHEX"}];
   static Future<String> generateConfig() async {
-    var accountStore = await AccountStore().load();
+    var accountStore = await AccountStore(discoverAccounts: false).load();
     Account account = accountStore.activeAccount;
 
     if (account == null || account.isIdentityPlaceholder) {
