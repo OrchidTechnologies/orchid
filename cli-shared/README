@@ -1,0 +1,1 @@
+This folder contains the "orchid client daemon", a lower-level client that we currently mostly use to do standalone testing of our stack, but which also happens to be our primary client for Linux and Windows. To build it, run "make".

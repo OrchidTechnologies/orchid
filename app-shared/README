@@ -1,0 +1,1 @@
+This folder contains some "shared code" for the various platform-specific clients. To actually build a client, go into the platform-specific app-* folder and run "make".

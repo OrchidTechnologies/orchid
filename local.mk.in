@@ -1,3 +1,5 @@
+# XXX: write the documentation promised in app-{ios,macos}/README for how to configure the code signing certificates and provisioning profiles for the Apple build system
+
 name := Orchid
 domain := com.example
 
