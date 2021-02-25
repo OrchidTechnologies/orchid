@@ -170,7 +170,7 @@ struct Tester {
 
       secret:
         const auto secret(Random<32>());
-        const Address signer(Commonize(secret));
+        const Address signer(Derive(secret));
         if (Zeros(signer.buf()))
             goto secret;
 
@@ -214,7 +214,7 @@ struct Tester {
             const auto salt(Nonzero<4>().num<uint32_t>());
             const auto nonce(Nonzero<32>());
 
-            const Ticket1 ticket{commit, issued, nonce, face, ratio, expire, funder, recipient};
+            const Ticket1 ticket{commit, issued, nonce, face, ratio, expire, funder};
             const auto signature(Sign(secret, ticket.Encode<Args_...>(lottery, chain_, args..., salt)));
             if (Zeros(signature.operator Brick<65>()))
                 goto sign;
@@ -343,7 +343,7 @@ struct Tester {
 #if 1
       secret:
         const auto secret(Random<32>());
-        const Address signer(Commonize(secret));
+        const Address signer(Derive(secret));
         if (Zeros(signer.buf()))
             goto secret;
 
