@@ -69,9 +69,20 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     #define ORC_WRN(u, w) (w == 0 ? 0 : u << 128 | w)
 
-    event Create(address indexed funder, address indexed signer ORC_PRM(indexed));
-    event Update(address indexed funder, address indexed signer ORC_PRM(indexed));
-    event Delete(address indexed funder, address indexed signer ORC_PRM(indexed));
+
+    event Warn(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 unlock_warned);
+    event Claim(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 escrow_amount);
+
+    event Create(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 escrow_amount);
+    event Update(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 escrow_amount);
+
+    #define ORC_EVT(f, s, v) { \
+        if (create) \
+            emit Create(f, s ORC_ARG, v); \
+        else \
+            emit Update(f, s ORC_ARG, v); \
+    }
+
 
     struct Lottery {
 #if defined(ORC_SYM) && !defined(ORC_ERC)
@@ -99,7 +110,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         Pot storage pot = ORC_POT(f, s); \
         uint256 cache = pot.escrow_amount_; \
         require(uint128(cache) + a >> 128 == 0); \
-        pot.escrow_amount_ = cache + a; \
+        bool create = cache == 0; \
+        cache += a; \
+        pot.escrow_amount_ = cache; \
+        ORC_EVT(f, s, cache) \
     }
 
 
@@ -169,12 +183,13 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         Pot storage pot = ORC_POT(funder, signer);
 
         uint256 escrow = pot.escrow_amount_;
+        bool create = escrow == 0;
         amount += uint128(escrow);
         escrow = escrow >> 128;
-    {
-        bool create;
 
         int256 adjust = int256(adjust_retrieve) >> 128;
+        uint256 retrieve = uint128(adjust_retrieve);
+
         if (adjust < 0) {
             uint256 warned = pot.unlock_warned_;
             uint256 unlock = warned >> 128;
@@ -188,22 +203,14 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             require(recover <= warned);
             require(unlock - 1 < block.timestamp);
             pot.unlock_warned_ = ORC_WRN(unlock, warned - recover);
+            emit Warn(msg.sender, signer ORC_ARG, pot.unlock_warned_);
         } else if (adjust != 0) {
-            if (escrow == 0)
-                create = true;
-
             uint256 transfer = uint256(adjust);
             require(transfer <= amount);
             amount -= transfer;
             escrow += transfer;
         }
 
-        if (create)
-            emit Create(funder, signer ORC_ARG);
-        else
-            emit Update(funder, signer ORC_ARG);
-    }
-        uint256 retrieve = uint128(adjust_retrieve);
         if (retrieve != 0) {
             require(retrieve <= amount);
             amount -= retrieve;
@@ -211,7 +218,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         require(amount < 1 << 128);
         require(escrow < 1 << 128);
-        pot.escrow_amount_ = escrow << 128 | amount;
+        uint256 cache = escrow << 128 | amount;
+        pot.escrow_amount_ = cache;
+
+        ORC_EVT(funder, signer, cache)
 
         if (retrieve != 0)
             ORC_SND(funder, retrieve)
@@ -220,7 +230,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     function warn(address signer ORC_PRM(), uint128 warned) external {
         Pot storage pot = ORC_POT(msg.sender, signer);
         pot.unlock_warned_ = ORC_WRN(ORC_DAY, warned);
-        emit Update(msg.sender, signer ORC_ARG);
+        emit Warn(msg.sender, signer ORC_ARG, pot.unlock_warned_);
     }
 
 
@@ -330,12 +340,12 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         uint256 cache = pot.escrow_amount_;
 
         if (uint128(cache) >= amount) {
-            emit Update(funder, signer ORC_ARG);
             pot.escrow_amount_ = cache - amount;
+            emit Claim(funder, signer ORC_ARG, pot.escrow_amount_);
             return amount;
         } else {
-            emit Delete(funder, signer ORC_ARG);
             pot.escrow_amount_ = 0;
+            emit Claim(funder, signer ORC_ARG, 0);
             return uint128(cache);
         }
     }
