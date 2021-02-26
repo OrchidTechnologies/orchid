@@ -22,7 +22,7 @@ def get_transaction_status(W3WSock,txn):
     eth_txnhash = txn['eth_txnhash']
 
 
-    logging.info(f'get_transaction_status txnhash:{txnhash}  eth_txnhash:{eth_txnhash} ')
+    logging.info(f'get_transaction_status W3WSock: {W3WSock} txnhash:{txnhash}  eth_txnhash:{eth_txnhash} ')
     success     = True
     txn_receipt = None
     try:
@@ -52,13 +52,15 @@ def get_transaction_status(W3WSock,txn):
         return "pending"
 
 
-def update_txn(W3WSock,txn):
+def update_txn(txn):
     txnhash     = txn.get('txnhash')
     status      = txn.get('status','')
     account_id  = txn.get('account_id')
     chainId     = txn.get('chainId','1')
 
-    logging.info(f'update_txn txnhash:{txnhash}  status:{status}  account_id:{account_id}')
+    W3WSock     = w3_generic.get_w3wsock_provider(chainId)
+
+    logging.info(f'update_txn txnhash:{txnhash}  status:{status}  account_id:{account_id} chainId:{chainId} W3WSock: {W3WSock}')
 
     if (account_id is None):
         return txn
@@ -80,7 +82,9 @@ def update_txn(W3WSock,txn):
         if (txn_vnonce == acc_vnonce):
             txn.pop('nonce')
             txn,msg = w3_generic.send_raw(W3WSock,txn)
+            logging.info(f'writing txn: {str(txn)}')
             w3_generic.dynamodb_write1(os.environ['TXNS_TABLE_NAME'],txn)
+            logging.info(f'txn written')
         return txn
 
     if ((status == 'success') or (status == 'error')):
@@ -106,22 +110,21 @@ def update_txn(W3WSock,txn):
 
     return txn
 
-def update_txns(W3WSock):
+def update_txns():
 
-    logging.info(f'update_txns  W3WSock: {W3WSock}  reading DB')
+    logging.info(f'update_txns  reading DB')
     results = w3_generic.dynamodb_readall(os.environ['TXNS_TABLE_NAME'])
 
     num_txns = results['Count']
-    logging.info(f'update_txns  W3WSock: {W3WSock}  num_txns: {num_txns}')
+    logging.info(f'update_txns  num_txns: {num_txns}')
 
     for txn in results['Items']:
-        update_txn(W3WSock,txn)
+        update_txn(txn)
     return
 
 def main(event, context):
 
     logging.info('main')
-    W3WSock     = os.environ['WEB3_WEBSOCKET']
-    update_txns(W3WSock)
+    update_txns()
 
     return
