@@ -21,8 +21,8 @@
 /* }}} */
 
 
-pragma solidity 0.7.2;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.7.6;
+pragma abicoder v2;
 
 #define ORC_CAT(a, b) a ## b
 #define ORC_DAY (block.timestamp + 1 days)
@@ -146,8 +146,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         if (data.length == 0)
             ORC_ADD(sender, sender, amount)
         else {
-            // XXX: this should be calldataload(data.offset), maybe with an add or a shr in there
-            bytes memory copy = data; bytes4 selector; assembly { selector := mload(add(copy, 32)) }
+            bytes4 selector; assembly { selector := calldataload(data.offset) }
             if (false) {
             } else if (selector == Move_) {
                 address signer; uint256 adjust_retrieve;
