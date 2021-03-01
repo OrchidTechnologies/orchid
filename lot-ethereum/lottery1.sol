@@ -143,21 +143,20 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 #else
         IERC20 token = IERC20(msg.sender);
 #endif
-        if (data.length == 0)
-            ORC_ADD(sender, sender, amount)
-        else {
-            bytes4 selector; assembly { selector := calldataload(data.offset) }
-            if (false) {
-            } else if (selector == Move_) {
-                address signer; uint256 adjust_retrieve;
-                (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
-                move_(sender, signer ORC_ARG, amount, adjust_retrieve);
-            } else if (selector == Gift_) {
-                address funder; address signer;
-                (funder, signer) = abi.decode(data[4:], (address, address));
-                ORC_ADD(funder, signer, amount)
-            } else require(false);
-        }
+
+        require(data.length >= 4);
+        bytes4 selector; assembly { selector := calldataload(data.offset) }
+
+        if (false) {
+        } else if (selector == Move_) {
+            address signer; uint256 adjust_retrieve;
+            (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
+            move_(sender, signer ORC_ARG, amount, adjust_retrieve);
+        } else if (selector == Gift_) {
+            address funder; address signer;
+            (funder, signer) = abi.decode(data[4:], (address, address));
+            ORC_ADD(funder, signer, amount)
+        } else require(false);
     }
 
     function onTokenTransfer(address sender, uint256 amount, bytes calldata data) external returns (bool) {
@@ -167,10 +166,6 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     function move_(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
 #else
-    receive() external payable {
-        ORC_ADD(msg.sender, msg.sender, msg.value)
-    }
-
     function gift(address funder, address signer) external payable {
         ORC_ADD(funder, signer, msg.value)
     }
