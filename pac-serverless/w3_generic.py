@@ -349,12 +349,12 @@ def send_raw_(w3,txn_,privkey):
 
     return txn_hash.hex()
 
-def send_raw(W3WSock,txn):
+def send_raw(w3,txn):
 
     txnhash = txn['txnhash']
     logging.info(f'send_raw  txnhash:{txnhash}')
 
-    w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
+    #w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
 
     to = txn['to']
     if (target_in_whitelist(to) == False):
@@ -402,6 +402,33 @@ def send_raw(W3WSock,txn):
     txn['status'] = 'pending'
 
     return txn,msg
+
+
+def test_connections(providers):
+
+    for x in providers:
+        w3 = Web3(Web3.WebsocketProvider(x, websocket_timeout=400))
+        try:
+            w3.eth.getTransactionCount(account='0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b')
+        except Exception as ex:
+            logging.info(f'test_connections  {x}  failure: {str(ex)}')
+            w3 = None
+        if (w3 is not None):
+            logging.info(f'test_connections  {x}  success')
+            return w3
+    return None
+
+
+def get_w3wsock_providers():
+
+    providers = {}
+
+    providers[1]  = test_connections([os.environ['WEB3_WEBSOCKET']])
+    providers[100] = test_connections(['wss://rpc.xdaichain.com/wss', 'wss://xdai.poanetwork.dev/wss'])
+
+    logging.info(f'get_w3wsock_providers:  {str(providers)} ')
+
+    return providers
 
 
 def get_w3wsock_provider(chainId_):
