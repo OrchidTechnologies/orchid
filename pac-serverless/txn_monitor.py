@@ -65,7 +65,7 @@ def update_txn(w3wsmap, txn):
     if (w3 is None):
         msg = f'w3 provider for chainId:{chainId} not found!'
         logging.error(msg)
-        #raise Exception(msg)
+        raise Exception(msg)
         return txn
 
     if (account_id is None):
