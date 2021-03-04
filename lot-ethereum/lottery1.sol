@@ -106,14 +106,19 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     #define ORC_POT(f, s) \
         lotteries_[f].pots_[s]ORC_ARR
 
-    #define ORC_ADD(f, s, a) { \
-        Pot storage pot = ORC_POT(f, s); \
+    #define ORC_ADD(funder, signer, escrow) { \
+        Pot storage pot = ORC_POT(funder, signer); \
         uint256 cache = pot.escrow_amount_; \
-        require(uint128(cache) + a >> 128 == 0); \
+        if (escrow != 0) { \
+            require(escrow <= amount); \
+            amount -= escrow; \
+            require((cache >> 128) + escrow >> 128 == 0); \
+        } \
+        require(uint128(cache) + amount >> 128 == 0); \
         bool create = cache == 0; \
-        cache += a; \
+        cache += escrow << 128 | amount; \
         pot.escrow_amount_ = cache; \
-        ORC_EVT(f, s, cache) \
+        ORC_EVT(funder, signer, cache) \
     }
 
 
@@ -124,9 +129,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         require(_s && abi.decode(_d, (bool))); \
     }
 
-    function gift(address funder, address signer ORC_PRM(), uint256 amount) external {
+    function gift(address funder, address signer ORC_PRM(), uint256 amount, uint256 escrow) external {
         ORC_FRM(amount)
-        ORC_ADD(funder, signer, amount)
+        ORC_ADD(funder, signer, escrow)
     }
 
     function move(address signer ORC_PRM(), uint256 amount, int256 adjust, uint256 retrieve) external {
@@ -135,7 +140,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
     bytes4 constant private Move_ = bytes4(keccak256("move(address,int256,uint256)"));
-    bytes4 constant private Gift_ = bytes4(keccak256("gift(address,address)"));
+    bytes4 constant private Gift_ = bytes4(keccak256("gift(address,address,uint256)"));
 
     function tokenFallback(address sender, uint256 amount, bytes calldata data) public {
 #if defined(ORC_ERC)
@@ -153,9 +158,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             (signer, adjust, retrieve) = abi.decode(data[4:], (address, int256, uint256));
             move_(sender, signer ORC_ARG, amount, adjust, retrieve);
         } else if (selector == Gift_) {
-            address funder; address signer;
-            (funder, signer) = abi.decode(data[4:], (address, address));
-            ORC_ADD(funder, signer, amount)
+            address funder; address signer; uint256 escrow;
+            (funder, signer, escrow) = abi.decode(data[4:], (address, address, uint256));
+            ORC_ADD(funder, signer, escrow)
         } else require(false);
     }
 
@@ -166,8 +171,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
     function move_(address funder, address signer ORC_PRM(), uint256 amount, int256 adjust, uint256 retrieve) private {
 #else
-    function gift(address funder, address signer) external payable {
-        ORC_ADD(funder, signer, msg.value)
+    function gift(address funder, address signer, uint256 escrow) external payable {
+        uint256 amount = msg.value;
+        ORC_ADD(funder, signer, escrow)
     }
 
     function move(address signer, int256 adjust, uint256 retrieve) external payable {
@@ -358,7 +364,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         else if (destination >> 255 == 0) \
             ORC_SND(recipient, amount) \
         else \
-            ORC_ADD(recipient, recipient, amount)
+            ORC_ADD(recipient, recipient, 0)
 
     function claimN(bytes32[] calldata refunds, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
         ORC_CLM
