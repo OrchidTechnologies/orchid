@@ -24,44 +24,12 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-#define ORC_CAT(a, b) a ## b
 #define ORC_DAY (block.timestamp + 1 days)
 #define ORC_SHA(a, ...) keccak256(abi.encode(a,## __VA_ARGS__))
 
-#if defined(ORC_SYM) && !defined(ORC_ERC)
-#define ORC_ARG , token
-#define ORC_ARR [token]
-#define ORC_PRM(x) , IERC20 x token
-#define ORC_SUF(n, s) n ## tok
-#define ORC_TOK token
-#else
-#define ORC_ARG
-#define ORC_ARR
-#define ORC_PRM(x)
-#if defined(ORC_SYM)
-#define ORC_SUF(n, s) ORC_CAT(n, s)
-#else
-#define ORC_SUF(n, s) n ## eth
-#endif
-#define ORC_TOK IERC20(ORC_ERC)
-#endif
-
-#if defined(ORC_SYM)
 interface IERC20 {}
 
-#define ORC_SND(r, a) { \
-    (bool _s, bytes memory _d) = address(ORC_TOK).call( \
-        abi.encodeWithSignature("transfer(address,uint256)", r, a)); \
-    require(_s && (_d.length == 0 || abi.decode(_d, (bool)))); \
-}
-#else
-#define ORC_SND(r, a) { \
-    (bool _s,) = r.call{value: a}(""); \
-    require(_s); \
-}
-#endif
-
-contract ORC_SUF(OrchidLottery1, ORC_SYM) {
+contract OrchidLottery1 {
     struct Pot {
         uint256 escrow_amount_;
         uint256 unlock_warned_;
@@ -70,41 +38,36 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     #define ORC_WRN(u, w) (w == 0 ? 0 : u << 128 | w)
 
 
-    event Warn(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 unlock_warned);
-    event Claim(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 escrow_amount);
+    event Warn(address indexed funder, address indexed signer, IERC20 indexed token, uint256 unlock_warned);
+    event Claim(address indexed funder, address indexed signer, IERC20 indexed token, uint256 escrow_amount);
 
-    event Create(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 escrow_amount);
-    event Update(address indexed funder, address indexed signer ORC_PRM(indexed), uint256 escrow_amount);
+    event Create(address indexed funder, address indexed signer, IERC20 indexed token, uint256 escrow_amount);
+    event Update(address indexed funder, address indexed signer, IERC20 indexed token, uint256 escrow_amount);
 
     #define ORC_EVT(f, s, v) { \
         if (create) \
-            emit Create(f, s ORC_ARG, v); \
+            emit Create(f, s, token, v); \
         else \
-            emit Update(f, s ORC_ARG, v); \
+            emit Update(f, s, token, v); \
     }
 
 
     struct Lottery {
-#if defined(ORC_SYM) && !defined(ORC_ERC)
         mapping(address => mapping(IERC20 => Pot)) pots_;
-#else
-        mapping(address => Pot) pots_;
-#endif
-
         uint256 bound_;
         mapping(address => uint256) recipients_;
     }
 
     mapping(address => Lottery) private lotteries_;
 
-    function read(address funder, address signer, address recipient ORC_PRM()) external view returns (uint256, uint256, uint256) {
+    function read(address funder, address signer, IERC20 token, address recipient) external view returns (uint256, uint256, uint256) {
         Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.pots_[signer]ORC_ARR;
+        Pot storage pot = lottery.pots_[signer][token];
         return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_ << 128 | lottery.recipients_[recipient]);
     }
 
     #define ORC_POT(f, s) \
-        lotteries_[f].pots_[s]ORC_ARR
+        lotteries_[f].pots_[s][token]
 
     #define ORC_ADD(funder, signer, escrow) { \
         Pot storage pot = ORC_POT(funder, signer); \
@@ -122,32 +85,34 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
     }
 
 
-#if defined(ORC_SYM)
     #define ORC_FRM(a) { \
-        (bool _s, bytes memory _d) = address(ORC_TOK).call( \
+        (bool _s, bytes memory _d) = address(token).call( \
             abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), a)); \
         require(_s && abi.decode(_d, (bool))); \
     }
 
-    function gift(address funder, address signer ORC_PRM(), uint256 amount, uint256 escrow) external {
+    #define ORC_TRN(funder) if (retrieve != 0) { \
+        (bool success, bytes memory result) = address(token).call( \
+            abi.encodeWithSignature("transfer(address,uint256)", funder, retrieve)); \
+        require(success && (result.length == 0 || abi.decode(result, (bool)))); \
+    }
+
+    function gift(address funder, address signer, IERC20 token, uint256 amount, uint256 escrow) external {
         ORC_FRM(amount)
         ORC_ADD(funder, signer, escrow)
     }
 
-    function move(address signer ORC_PRM(), uint256 amount, int256 adjust, uint256 retrieve) external {
+    function move(address signer, IERC20 token, uint256 amount, int256 adjust, uint256 retrieve) external {
         ORC_FRM(amount)
-        move_(msg.sender, signer ORC_ARG, amount, adjust, retrieve);
+        move_(msg.sender, signer, token, amount, adjust, retrieve);
+        ORC_TRN(msg.sender)
     }
 
     bytes4 constant private Move_ = bytes4(keccak256("move(address,int256,uint256)"));
     bytes4 constant private Gift_ = bytes4(keccak256("gift(address,address,uint256)"));
 
     function tokenFallback(address sender, uint256 amount, bytes calldata data) public {
-#if defined(ORC_ERC)
-        require(IERC20(msg.sender) == IERC20(ORC_ERC));
-#else
         IERC20 token = IERC20(msg.sender);
-#endif
 
         require(data.length >= 4);
         bytes4 selector; assembly { selector := calldataload(data.offset) }
@@ -156,7 +121,8 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         } else if (selector == Move_) {
             address signer; int256 adjust; uint256 retrieve;
             (signer, adjust, retrieve) = abi.decode(data[4:], (address, int256, uint256));
-            move_(sender, signer ORC_ARG, amount, adjust, retrieve);
+            move_(sender, signer, token, amount, adjust, retrieve);
+            ORC_TRN(sender)
         } else if (selector == Gift_) {
             address funder; address signer; uint256 escrow;
             (funder, signer, escrow) = abi.decode(data[4:], (address, address, uint256));
@@ -169,17 +135,29 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         return true;
     }
 
-    function move_(address funder, address signer ORC_PRM(), uint256 amount, int256 adjust, uint256 retrieve) private {
-#else
-    function gift(address funder, address signer, uint256 escrow) external payable {
+
+    #define ORC_HRD() \
+        IERC20 token = IERC20(0); \
         uint256 amount = msg.value;
+
+    function gift(address funder, address signer, uint256 escrow) external payable {
+        ORC_HRD()
         ORC_ADD(funder, signer, escrow)
     }
 
     function move(address signer, int256 adjust, uint256 retrieve) external payable {
-        address payable funder = msg.sender;
-        uint256 amount = msg.value;
-#endif
+        address funder = msg.sender;
+        ORC_HRD()
+        move_(funder, signer, token, amount, adjust, retrieve);
+
+        if (retrieve != 0) {
+            (bool success,) = funder.call{value: retrieve}("");
+            require(success);
+        }
+    }
+
+
+    function move_(address funder, address signer, IERC20 token, uint256 amount, int256 adjust, uint256 retrieve) private {
         Pot storage pot = ORC_POT(funder, signer);
 
         uint256 escrow = pot.escrow_amount_;
@@ -200,7 +178,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             require(recover <= warned);
             require(unlock - 1 < block.timestamp);
             pot.unlock_warned_ = ORC_WRN(unlock, warned - recover);
-            emit Warn(msg.sender, signer ORC_ARG, pot.unlock_warned_);
+            emit Warn(msg.sender, signer, token, pot.unlock_warned_);
         } else if (adjust != 0) {
             uint256 transfer = uint256(adjust);
             require(transfer <= amount);
@@ -219,15 +197,12 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         pot.escrow_amount_ = cache;
 
         ORC_EVT(funder, signer, cache)
-
-        if (retrieve != 0)
-            ORC_SND(funder, retrieve)
     }
 
-    function warn(address signer ORC_PRM(), uint128 warned) external {
+    function warn(address signer, IERC20 token, uint128 warned) external {
         Pot storage pot = ORC_POT(msg.sender, signer);
         pot.unlock_warned_ = ORC_WRN(ORC_DAY, warned);
-        emit Warn(msg.sender, signer ORC_ARG, pot.unlock_warned_);
+        emit Warn(msg.sender, signer, token, pot.unlock_warned_);
     }
 
 
@@ -303,11 +278,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         bytes32 s;
     }
 
-    function claim_(
-        uint256 destination,
-        Ticket calldata ticket
-        ORC_PRM()
-    ) private returns (uint256) {
+    function claim_(uint256 destination, Ticket calldata ticket, IERC20 token) private returns (uint256) {
         uint256 issued = (ticket.packed1 >> 192);
         uint256 expire = issued + (ticket.packed2 >> 193);
         if (expire <= block.timestamp)
@@ -315,7 +286,7 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         bytes32 digest; assembly { digest := chainid() } digest = ORC_SHA(
             ORC_SHA(ORC_SHA(ticket.packed0 >> 128, destination), uint32(ticket.packed2 >> 1)),
-            uint128(ticket.packed0), ticket.packed1, ticket.packed2 & ~uint256(0x1ffffffff) ORC_ARG, this, digest);
+            uint128(ticket.packed0), ticket.packed1, ticket.packed2 & ~uint256(0x1ffffffff), token, this, digest);
         address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
         if (uint64(ticket.packed1 >> 128) < uint64(uint256(ORC_SHA(ticket.packed0, issued))))
@@ -333,24 +304,23 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             return 0;
         track.packed = expire << 160 | uint256(msg.sender);
     }
-        Pot storage pot = lottery.pots_[signer]ORC_ARR;
+        Pot storage pot = lottery.pots_[signer][token];
         uint256 cache = pot.escrow_amount_;
 
         if (uint128(cache) >= amount) {
             pot.escrow_amount_ = cache - amount;
-            emit Claim(funder, signer ORC_ARG, pot.escrow_amount_);
+            emit Claim(funder, signer, token, pot.escrow_amount_);
             return amount;
         } else {
             pot.escrow_amount_ = 0;
-            emit Claim(funder, signer ORC_ARG, 0);
+            emit Claim(funder, signer, token, 0);
             return uint128(cache);
         }
     }
 
 
     /*struct Destination {
-        uint1 direct;
-        uint95 pepper;
+        uint96 pepper;
         address recipient;
     }*/
 
@@ -360,13 +330,10 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
             destination |= uint256(recipient = msg.sender);
 
     #define ORC_DST \
-        if (amount == 0) {} \
-        else if (destination >> 255 == 0) \
-            ORC_SND(recipient, amount) \
-        else \
+        if (amount != 0) \
             ORC_ADD(recipient, recipient, 0)
 
-    function claimN(bytes32[] calldata refunds, uint256 destination, Ticket[] calldata tickets ORC_PRM()) external {
+    function claimN(bytes32[] calldata refunds, uint256 destination, IERC20 token, Ticket[] calldata tickets) external {
         ORC_CLM
 
         for (uint256 i = refunds.length; i != 0; )
@@ -376,19 +343,19 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         uint256 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += claim_(destination, tickets[--i] ORC_ARG);
+            amount += claim_(destination, tickets[--i], token);
             assembly { mstore(0x40, segment) }
         }
         ORC_DST
     }
 
-    function claim1(bytes32 refund, uint256 destination, Ticket calldata ticket ORC_PRM()) external {
+    function claim1(bytes32 refund, uint256 destination, IERC20 token, Ticket calldata ticket) external {
         ORC_CLM
 
         if (refund != 0)
             ORC_DEL(refund)
 
-        uint256 amount = claim_(destination, ticket ORC_ARG);
+        uint256 amount = claim_(destination, ticket, token);
         ORC_DST
     }
 }
