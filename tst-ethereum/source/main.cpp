@@ -182,7 +182,7 @@ struct Tester {
 
         const auto check([&](signed adjust) -> task<void> {
             balance += adjust;
-            const auto [escrow_balance, unlock_warned, bound] = co_await read.Call(chain_, "latest", lottery, 90000, customer_, signer, token, 0);
+            const auto [escrow_balance, unlock_warned, bound] = co_await read.Call(chain_, "latest", lottery, 90000, token, customer_, signer, 0);
             //Log() << std::dec << uint128_t(escrow_balance) << " " << uint128_t(escrow_balance >> 128) << std::endl;
             orc_assert(uint128_t(escrow_balance) == balance);
             orc_assert(uint128_t(escrow_balance >> 128) == escrow);
@@ -300,7 +300,7 @@ struct Tester {
         co_await move(customer_, lottery, 10, signer, 0, 0);
         co_await check(10);
 
-        co_await Audit("warn", co_await customer_.Send(chain_, {}, lottery, 0, warn(signer, token, 4)));
+        co_await Audit("warn", co_await customer_.Send(chain_, {}, lottery, 0, warn(token, signer, 4)));
         co_await check(0);
 
         co_await move(customer_, lottery, 0, signer, -4, 21);
@@ -356,14 +356,14 @@ struct Tester {
 
 #if 1
         co_await Test1("erc20", lottery1, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &funder, const Address &signer, const uint256_t &escrow) -> task<void> {
-            static Selector<void, Address, Address, Address, uint256_t, uint256_t> gift("gift");
+            static Selector<void, Address, uint256_t, Address, Address, uint256_t> gift("gift");
             co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
-            co_await Audit("gift", co_await sender.Send(chain_, {}, lottery, 0, gift(funder, signer, token, value, escrow)));
+            co_await Audit("gift", co_await sender.Send(chain_, {}, lottery, 0, gift(token, value, funder, signer, escrow)));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
-            static Selector<void, Address, Address, uint256_t, checked_int256_t, uint256_t> move("move");
+            static Selector<void, Address, uint256_t, Address, checked_int256_t, uint256_t> move("move");
             if (value != 0)
                 co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
-            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, 0, move(signer, token, value, adjust, retrieve)));
+            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, 0, move(token, value, signer, adjust, retrieve)));
         }, token);
 #endif
 
