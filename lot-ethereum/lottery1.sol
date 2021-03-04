@@ -36,6 +36,7 @@ contract OrchidLottery1 {
     }
 
     #define ORC_WRN(u, w) (w == 0 ? 0 : u << 128 | w)
+    #define ORC_128(v) require((v) < 1 << 128)
 
 
     event Warn(address indexed funder, address indexed signer, IERC20 indexed token, uint256 unlock_warned);
@@ -75,9 +76,9 @@ contract OrchidLottery1 {
         if (escrow != 0) { \
             require(escrow <= amount); \
             amount -= escrow; \
-            require((cache >> 128) + escrow >> 128 == 0); \
+            ORC_128((cache >> 128) + escrow); \
         } \
-        require(uint128(cache) + amount >> 128 == 0); \
+        ORC_128(uint128(cache) + amount); \
         bool create = cache == 0; \
         cache += escrow << 128 | amount; \
         pot.escrow_amount_ = cache; \
@@ -193,8 +194,8 @@ contract OrchidLottery1 {
             amount -= retrieve;
         }
 
-        require(amount < 1 << 128);
-        require(escrow < 1 << 128);
+        ORC_128(amount);
+        ORC_128(escrow);
         uint256 cache = escrow << 128 | amount;
         pot.escrow_amount_ = cache;
 
