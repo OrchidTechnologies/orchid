@@ -901,16 +901,3 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return S.of(context);
   }
 }
-
-/*
-// TESTING
-class FakeAccountBalanceChartModel extends AccountBalanceChartModel {
-  FakeAccountBalanceChartModel(LotteryPot pot, List<OrchidUpdateTransaction> transactions) : super(pot, transactions);
-
-  @override int get availableTicketsCurrentMax {
-    return 7;
-  }
-  @override int get availableTicketsHighWatermarkMax {
-    return 10;
-  }
-}*/

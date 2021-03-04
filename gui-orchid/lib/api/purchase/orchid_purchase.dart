@@ -33,9 +33,17 @@ abstract class OrchidPurchaseAPI {
   static String productIdPrefix = 'net.orchid';
 
   // PAC product ids
-  static String pacTier1 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1';
-  static String pacTier2 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2';
-  static String pacTier3 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3';
+  static List<String> pacProductIds = [
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier7',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier8',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier9',
+  ];
 
   // The raw value from the iOS API
   static const int SKErrorPaymentCancelled = 2;
@@ -44,7 +52,7 @@ abstract class OrchidPurchaseAPI {
 
   void initStoreListener();
 
-  Future<Map<String,PAC>> requestProducts({bool refresh = false});
+  Future<Map<String, PAC>> requestProducts({bool refresh = false});
 
   /// Make the app store purchase. This method will throw
   /// PACPurchaseExceedsRateLimit if the daily purchase rate has been exceeded.

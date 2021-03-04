@@ -3,6 +3,19 @@ import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
 class OrchidContractV0 {
+  // Lottery contract address on main net
+  static var lotteryContractAddress =
+      '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
+
+  static String updateEventHashV0 =
+      "0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc";
+
+  static String createEventHashV0 =
+      "0x96b5b9b8a7193304150caccf9b80d150675fa3d6af57761d8d8ef1d6f9a1a909";
+
+  // The ABI identifier for the `look` method.
+  static var lotteryLookMethodHash = '1554ad5d';
+
   static int gasCostToRedeemTicketV0 = 100000;
 }
 
@@ -184,8 +197,10 @@ class OrchidCreateEventV0 implements OrchidCreateEvent {
   static OrchidCreateEventV0 fromJsonRpcResult(dynamic result) {
     // Parse the results
     String transactionHash = result['transactionHash'];
-    var funder = EthereumAddress(HexStringBuffer( result['topics'][1] ).takeAddress());
-    var signer = EthereumAddress(HexStringBuffer( result['topics'][2] ).takeAddress());
+    var funder =
+        EthereumAddress(HexStringBuffer(result['topics'][1]).takeAddress());
+    var signer =
+        EthereumAddress(HexStringBuffer(result['topics'][2]).takeAddress());
 
     return OrchidCreateEventV0(
         transactionHash: transactionHash, funder: funder, signer: signer);

@@ -17,7 +17,7 @@ class OrchidVPNConfigV1 {
     var accountStore = await AccountStore(discoverAccounts: false).load();
     Account account = accountStore.activeAccount;
 
-    if (account == null || account.isIdentityPlaceholder) {
+    if (account == null) {
       return "hops = [];";
     }
 

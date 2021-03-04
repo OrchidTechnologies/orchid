@@ -9,14 +9,10 @@ import '../../orchid_budget_api.dart';
 import '../../orchid_crypto.dart';
 import '../v0/orchid_eth_v0.dart';
 import '../v0/orchid_contract_v0.dart';
+import 'orchid_contract_v1.dart';
 
 class OrchidEthereumV1 {
   static OrchidEthereumV1 _shared = OrchidEthereumV1._init();
-
-  // Lottery contract address (all chains).
-  // TODO: This is the temporary xDai V1 contract address
-  static var lotteryContractAddressV1 =
-      '0xDBbB66055F403aD3cb605f2406aC6529525E0000';
 
   OrchidEthereumV1._init();
 
@@ -60,13 +56,12 @@ class OrchidEthereumV1 {
     EthereumAddress signer,
   ) async {
     print("fetch update events for: $signer, url = ${chain.providerUrl}");
-    const createEventHash =
-        "0x96b5b9b8a7193304150caccf9b80d150675fa3d6af57761d8d8ef1d6f9a1a909";
     var startBlock = 0; // TODO: per chain
     var params = [
       {
+        "address": "${await OrchidContractV1.lotteryContractAddressV1}",
         "topics": [
-          createEventHash,
+          OrchidContractV1.createEventHashV1,
           "null", // no funder topic for index 1
           abiEncoded(signer, prefix: true)
         ],
@@ -99,14 +94,12 @@ class OrchidEthereumV1 {
       {chain: Chain, funder: EthereumAddress, signer: EthereumAddress}) async {
     print("fetch pot for: $funder, $signer, chain = $chain");
 
-    var readMethodHash = '5185c7d7';
-
     // construct the abi encoded eth_call
     var params = [
       {
-        "to": "$lotteryContractAddressV1",
+        "to": "${await OrchidContractV1.lotteryContractAddressV1}",
         "data":
-            "0x$readMethodHash${abiEncoded(funder)}${abiEncoded(signer)}${abiEncoded(EthereumAddress.zero)}"
+            "0x${OrchidContractV1.readMethodHash}${abiEncoded(funder)}${abiEncoded(signer)}${abiEncoded(EthereumAddress.zero)}"
       },
       "latest"
     ];
@@ -131,8 +124,7 @@ class OrchidEthereumV1 {
     BigInt unlock = buff.takeUint256();
     //EthereumAddress verifier = EthereumAddress(buff.takeAddress());
 
-    return LotteryPot(
-        balance: balance, deposit: deposit, unlock: unlock);
+    return LotteryPot(balance: balance, deposit: deposit, unlock: unlock);
   }
 
   static String abiEncoded(EthereumAddress address, {prefix: false}) {
