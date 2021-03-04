@@ -129,12 +129,12 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         ORC_ADD(funder, signer, amount)
     }
 
-    function move(address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) external {
+    function move(address signer ORC_PRM(), uint256 amount, int256 adjust, uint256 retrieve) external {
         ORC_FRM(amount)
-        move_(msg.sender, signer ORC_ARG, amount, adjust_retrieve);
+        move_(msg.sender, signer ORC_ARG, amount, adjust, retrieve);
     }
 
-    bytes4 constant private Move_ = bytes4(keccak256("move(address,uint256)"));
+    bytes4 constant private Move_ = bytes4(keccak256("move(address,int256,uint256)"));
     bytes4 constant private Gift_ = bytes4(keccak256("gift(address,address)"));
 
     function tokenFallback(address sender, uint256 amount, bytes calldata data) public {
@@ -149,9 +149,9 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
 
         if (false) {
         } else if (selector == Move_) {
-            address signer; uint256 adjust_retrieve;
-            (signer, adjust_retrieve) = abi.decode(data[4:], (address, uint256));
-            move_(sender, signer ORC_ARG, amount, adjust_retrieve);
+            address signer; int256 adjust; uint256 retrieve;
+            (signer, adjust, retrieve) = abi.decode(data[4:], (address, int256, uint256));
+            move_(sender, signer ORC_ARG, amount, adjust, retrieve);
         } else if (selector == Gift_) {
             address funder; address signer;
             (funder, signer) = abi.decode(data[4:], (address, address));
@@ -164,13 +164,13 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         return true;
     }
 
-    function move_(address funder, address signer ORC_PRM(), uint256 amount, uint256 adjust_retrieve) private {
+    function move_(address funder, address signer ORC_PRM(), uint256 amount, int256 adjust, uint256 retrieve) private {
 #else
     function gift(address funder, address signer) external payable {
         ORC_ADD(funder, signer, msg.value)
     }
 
-    function move(address signer, uint256 adjust_retrieve) external payable {
+    function move(address signer, int256 adjust, uint256 retrieve) external payable {
         address payable funder = msg.sender;
         uint256 amount = msg.value;
 #endif
@@ -180,9 +180,6 @@ contract ORC_SUF(OrchidLottery1, ORC_SYM) {
         bool create = escrow == 0;
         amount += uint128(escrow);
         escrow = escrow >> 128;
-
-        int256 adjust = int256(adjust_retrieve) >> 128;
-        uint256 retrieve = uint128(adjust_retrieve);
 
         if (adjust < 0) {
             uint256 warned = pot.unlock_warned_;

@@ -365,10 +365,10 @@ struct Tester {
             co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
             co_await Audit("gift", co_await sender.Send(chain_, {}, lottery, 0, gift(funder, signer, token, value)));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
-            static Selector<void, Address, Address, uint256_t, uint256_t> move("move");
+            static Selector<void, Address, Address, uint256_t, checked_int256_t, uint256_t> move("move");
             if (value != 0)
                 co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
-            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, 0, move(signer, token, value, Combine(adjust, retrieve))));
+            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, 0, move(signer, token, value, adjust, retrieve)));
         }, token);
 #endif
 
@@ -378,10 +378,10 @@ struct Tester {
             co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
             co_await Audit("gift", co_await sender.Send(chain_, {}, lottery, 0, gift(funder, signer, value)));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
-            static Selector<void, Address, uint256_t, uint256_t> move("move");
+            static Selector<void, Address, uint256_t, checked_int256_t, uint256_t> move("move");
             if (value != 0)
                 co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
-            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, 0, move(signer, value, Combine(adjust, retrieve))));
+            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, 0, move(signer, value, adjust, retrieve)));
         });
 #endif
 
@@ -392,8 +392,8 @@ struct Tester {
             co_await Audit("gift", co_await sender.Send(chain_, {}, token, 0, transferAndCall(lottery, value, Beam(gift(funder, signer)))));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
             Log() << std::dec << co_await balanceOf.Call(chain_, "latest", token, 90000, lottery1tok) << std::endl;
-            static Selector<void, Address, uint256_t> move("move");
-            co_await Audit("move", co_await sender.Send(chain_, {}, token, 0, transferAndCall(lottery, value, Beam(move(signer, Combine(adjust, retrieve))))));
+            static Selector<void, Address, checked_int256_t, uint256_t> move("move");
+            co_await Audit("move", co_await sender.Send(chain_, {}, token, 0, transferAndCall(lottery, value, Beam(move(signer, adjust, retrieve)))));
             Log() << std::dec << co_await balanceOf.Call(chain_, "latest", token, 90000, lottery1tok) << std::endl;
         }, token);
         Log() << std::dec << co_await balanceOf.Call(chain_, "latest", token, 90000, lottery1tok) << std::endl;
@@ -405,8 +405,8 @@ struct Tester {
             static Selector<void, Address, Address> gift("gift");
             co_await Audit("gift", co_await sender.Send(chain_, {}, lottery, value, gift(funder, signer)));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const uint256_t &retrieve) -> task<void> {
-            static Selector<void, Address, uint256_t> move("move");
-            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, value, move(signer, Combine(adjust, retrieve))));
+            static Selector<void, Address, checked_int256_t, uint256_t> move("move");
+            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, value, move(signer, adjust, retrieve)));
         });
 #endif
     }
