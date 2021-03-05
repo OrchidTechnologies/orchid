@@ -161,18 +161,11 @@ struct Tester {
         > Payment;
 
         static Selector<void,
-            Bytes32 /*refund*/,
-            uint256_t /*destination*/,
             Address /*token*/,
-            Payment /*ticket*/
-        > claim1("claim1");
-
-        static Selector<void,
+            uint256_t /*destination*/,
             std::vector<Bytes32> /*refunds*/,
-            uint256_t /*destination*/,
-            Address /*token*/,
             std::vector<Payment> /*tickets*/
-        > claimN("claimN");
+        > claim("claim");
 
         const auto indirect((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<>(Bless(boost::replace_all_copy(Load("../lot-ethereum/build/OrchidRecipient.bin"), OXT.buf().hex().substr(2), lottery.buf().hex().substr(2))))))).contract_);
 
@@ -257,12 +250,6 @@ struct Tester {
             goto seed;
         co_await Audit("save", co_await recipient.Send(chain_, {}, lottery, 0, save(count - 1, seed)));
 
-        const auto refund([&]() {
-            const auto refund(saved.back());
-            saved.pop_back();
-            return refund;
-        });
-
         const auto refunds([&](unsigned count) {
             orc_assert(saved.size() >= count);
             std::vector<Bytes32> array(saved.end() - count, saved.end());
@@ -300,27 +287,21 @@ struct Tester {
         for (unsigned p(0); p != 4; ++p)
             for (unsigned d(0); d != (p+1)*2+1; ++d) {
                 std::ostringstream name;
-                name << "claimN(" << std::hex << std::uppercase << p << "," << d << ")";
+                name << "claim(" << std::hex << std::uppercase << p << "," << d << ")";
 
                 const auto positive(
                     EVM_BASIC+ perp*p+
                     (token==Address()?4*32:16*32-144)+
                     4*31+(p==0?4:16+update+5000)+
                     4*31+(d==0?4:16)+perd*d+
-                1643);
+                1616);
 
                 auto negative(EVM_STORE_NEW*d);
 
                 if (negative > positive / 2) negative = positive / 2;
-                co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claimN(refunds(d), where(), token, payments(p))), positive - negative);
+                co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claim(token, where(), refunds(d), payments(p))), positive - negative);
                 co_await check(-p);
             }
-
-        co_await Audit("claim1(1,0)", co_await provider_.Send(chain_, {}, lottery, 0, claim1(Zero<32>(), where(), token, payment())), EVM_BASIC+perp+update+6356);
-        co_await check(-1);
-
-        co_await Audit("claim1(1,1)", co_await provider_.Send(chain_, {}, lottery, 0, claim1(refund(), where(), token, payment())), EVM_BASIC+perp+update+5869+perd-EVM_STORE_NEW);
-        co_await check(-1);
 
         co_await move(customer_, lottery, 10, signer, 0, 0);
         co_await check(10);

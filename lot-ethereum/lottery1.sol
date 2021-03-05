@@ -320,17 +320,10 @@ contract OrchidLottery1 {
         address recipient;
     }*/
 
-    #define ORC_CLM \
-        address payable recipient = address(destination); \
-        if (recipient == address(0)) \
+    function claim(IERC20 token, uint256 destination, bytes32[] calldata refunds, Ticket[] calldata tickets) external {
+        address payable recipient = address(destination);
+        if (recipient == address(0))
             destination |= uint256(recipient = msg.sender);
-
-    #define ORC_DST \
-        if (amount != 0) \
-            ORC_ADD(recipient, recipient, recipient, 0)
-
-    function claimN(bytes32[] calldata refunds, uint256 destination, IERC20 token, Ticket[] calldata tickets) external {
-        ORC_CLM
 
         for (uint256 i = refunds.length; i != 0; )
             ORC_DEL(refunds[--i])
@@ -342,16 +335,8 @@ contract OrchidLottery1 {
             amount += claim_(destination, tickets[--i], token);
             assembly { mstore(0x40, segment) }
         }
-        ORC_DST
-    }
 
-    function claim1(bytes32 refund, uint256 destination, IERC20 token, Ticket calldata ticket) external {
-        ORC_CLM
-
-        if (refund != 0)
-            ORC_DEL(refund)
-
-        uint256 amount = claim_(destination, ticket, token);
-        ORC_DST
+        if (amount != 0) \
+            ORC_ADD(recipient, recipient, recipient, 0)
     }
 }
