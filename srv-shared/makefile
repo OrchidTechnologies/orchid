@@ -24,6 +24,7 @@ args += --chain 1,ETH,https://cloudflare-eth.com/
 args += --chain 30,BTC,https://public-node.rsk.co/
 args += --chain 56,BNB,https://bsc-dataseed.binance.org/
 args += --chain 100,DAI,https://rpc.xdaichain.com/
+args += --chain 137,MATIC,https://rpc-mainnet.maticvigil.com/
 args += --chain 43114,AVAX,https://api.avax.network/ext/bc/C/rpc
 #args += --chain 1313161554,NEAR,https://rpc.mainnet.near.org/
 
