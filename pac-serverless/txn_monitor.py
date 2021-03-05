@@ -14,15 +14,15 @@ from utils import configure_logging, is_true
 
 configure_logging(level="INFO")
 
-def get_transaction_status(W3WSock,txn):
+def get_transaction_status(w3,txn):
 
-    w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
+    #w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
 
     txnhash     = txn['txnhash']
     eth_txnhash = txn['eth_txnhash']
 
 
-    logging.info(f'get_transaction_status txnhash:{txnhash}  eth_txnhash:{eth_txnhash} ')
+    logging.info(f'get_transaction_status  txnhash:{txnhash}  eth_txnhash:{eth_txnhash} ')
     success     = True
     txn_receipt = None
     try:
@@ -52,13 +52,21 @@ def get_transaction_status(W3WSock,txn):
         return "pending"
 
 
-def update_txn(W3WSock,txn):
+def update_txn(w3wsmap, txn):
     txnhash     = txn.get('txnhash')
     status      = txn.get('status','')
     account_id  = txn.get('account_id')
     chainId     = txn.get('chainId','1')
 
-    logging.info(f'update_txn txnhash:{txnhash}  status:{status}  account_id:{account_id}')
+    logging.info(f'update_txn txnhash:{txnhash}  status:{status}  account_id:{account_id} chainId:{chainId} ')
+
+    w3          = w3wsmap.get(chainId)
+
+    if (w3 is None):
+        msg = f'w3 provider for chainId:{chainId} not found!'
+        logging.error(msg)
+        #raise Exception(msg)
+        return txn
 
     if (account_id is None):
         return txn
@@ -67,7 +75,7 @@ def update_txn(W3WSock,txn):
 
     # check txn status
     if (status != 'new'):
-        status = get_transaction_status(W3WSock,txn)
+        status = get_transaction_status(w3,txn)
 
     if ((status == 'new') or (status == 'clobbered')):
         txn_vnonce   = int(txn.get('vnonce',0))
@@ -79,8 +87,10 @@ def update_txn(W3WSock,txn):
         logging.info(f'update_txn txnhash:{txnhash} new/clobbered  txn_vnonce:{txn_vnonce}  acc_vnonce:{acc_vnonce}')
         if (txn_vnonce == acc_vnonce):
             txn.pop('nonce')
-            txn,msg = w3_generic.send_raw(W3WSock,txn)
+            txn,msg = w3_generic.send_raw(w3,txn)
+            logging.info(f'writing txn: {str(txn)}')
             w3_generic.dynamodb_write1(os.environ['TXNS_TABLE_NAME'],txn)
+            logging.info(f'txn written')
         return txn
 
     if ((status == 'success') or (status == 'error')):
@@ -106,22 +116,23 @@ def update_txn(W3WSock,txn):
 
     return txn
 
-def update_txns(W3WSock):
+def update_txns():
 
-    logging.info(f'update_txns  W3WSock: {W3WSock}  reading DB')
+    w3wsmap = w3_generic.get_w3wsock_providers()
+
+    logging.info(f'update_txns  reading DB')
     results = w3_generic.dynamodb_readall(os.environ['TXNS_TABLE_NAME'])
 
     num_txns = results['Count']
-    logging.info(f'update_txns  W3WSock: {W3WSock}  num_txns: {num_txns}')
+    logging.info(f'update_txns  num_txns: {num_txns}')
 
     for txn in results['Items']:
-        update_txn(W3WSock,txn)
+        update_txn(w3wsmap, txn)
     return
 
 def main(event, context):
 
     logging.info('main')
-    W3WSock     = os.environ['WEB3_WEBSOCKET']
-    update_txns(W3WSock)
+    update_txns()
 
     return

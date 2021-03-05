@@ -8,6 +8,7 @@ import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/tap_copy_text.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/util/listenable_builder.dart';
 
 import '../app_sizes.dart';
@@ -43,7 +44,7 @@ class _AccountViewState extends State<AccountView> {
   }
 
   Widget build(BuildContext context) {
-    var style1 = TextStyle(fontSize: 18);
+    var style1 = TextStyle(fontSize: 17);
     return TitledPage(
       title: 'Account View',
       child: ListenableBuilder(
@@ -81,22 +82,29 @@ class _AccountViewState extends State<AccountView> {
                         padding: const EdgeInsets.symmetric(horizontal: 32.0),
                         child: Column(children: [
                           pady(16),
-                          LabeledCurrencyValue(
-                              label: "Balance:",
-                              style: style1,
-                              value: _detail.lotteryPot?.balance),
-                          pady(8),
-                          LabeledCurrencyValue(
-                              label: "Deposit:",
-                              style: style1,
-                              value: _detail.lotteryPot?.deposit),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildBalance(style1),
+                              /*
+                              RoundedRectButton(
+                                text: "Add Funds",
+                                icon: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {},
+                              ),
+                               */
+                            ],
+                          ),
                           pady(8),
                           Divider(),
                           pady(24),
                           if (_showAccountChart())
                             Container(width: 250, child: _buildAccountChart()),
-                          if (_showAccountChart()) pady(24),
-                          _buildAddFundsButton(),
+                          // if (_showAccountChart()) pady(24),
+                          // _buildAddFundsButton(),
                           pady(24),
                         ]),
                       ),
@@ -109,12 +117,28 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 
+  Column _buildBalance(TextStyle style1) {
+    return Column(
+      children: [
+        LabeledCurrencyValue(
+            label: "Balance:",
+            style: style1,
+            value: _detail.lotteryPot?.balance),
+        pady(8),
+        LabeledCurrencyValue(
+            label: "Deposit:",
+            style: style1,
+            value: _detail.lotteryPot?.deposit),
+      ],
+    );
+  }
+
   Widget _buildAddFundsButton() {
     return Container(
       width: 150,
       child: RoundedRectButton(
         text: "Add Funds",
-        onPressed: _showPotComposer,
+        onPressed: _addFunds,
       ),
     );
   }
@@ -140,14 +164,21 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 
-  void _showPotComposer() async {
+  void _addFunds() async {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (BuildContext context) {
-              return AccountComposerPage(widget.account.chain.nativeCurrency);
-            }));
+      context,
+      MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (BuildContext context) {
+            return PurchasePage(completion: () {});
+          }),
+
+      // MaterialPageRoute(
+      //     fullscreenDialog: true,
+      //     builder: (BuildContext context) {
+      //       return AccountComposerPage(widget.account.chain.nativeCurrency);
+      //     }),
+    );
   }
 
   Widget _buildHeader() {

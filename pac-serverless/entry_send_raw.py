@@ -19,6 +19,7 @@ configure_logging(level="INFO")
 wei_per_eth = 1000000000000000000
 
 
+
 def new_txn(W3WSock,txn,account_id):
 
     txnhash = cost_usd = msg = None
@@ -43,24 +44,27 @@ def new_txn(W3WSock,txn,account_id):
         logging.warning(msg)
         return txnhash,cost_usd,msg
 
-    balance      = account.get('balance',0.0)
+    balance      = float(account.get('balance',0.0))
     max_cost_usd = balance
+
+    logging.info(f'account_id: {account_id}  balance: {balance} chainId: {chainId}')
 
     txn_vnonce   = txn.get('nonce')
     if (txn_vnonce is None):
         txn_vnonce = 0
         acc_nonces = account.get('nonces')
         if (acc_nonces is not None):
-            txn_vnonce = acc_nonces.get(chainID,0)
+            txn_vnonce = acc_nonces.get(chainId,0)
 
     txn['vnonce']  = txn_vnonce
 
     txnhash = Web3.keccak(text=f"{chainId}:{account_id}:{txn_vnonce}").hex()
     txn['txnhash'] = txnhash
 
-    usd_per_eth = w3_generic.get_usd_per_x_coinbase('ETH')
+    symbol = w3_generic.get_symbol_from_chainId(chainId)
+    usd_per_eth = w3_generic.get_usd_per_x_coinbase(symbol)
     if (usd_per_eth == 0.0):
-        usd_per_eth = w3_generic.get_usd_per_x_binance('ETH')
+        usd_per_eth = w3_generic.get_usd_per_x_binance(symbol)
 
     max_cost_eth = float(max_cost_usd) / float(usd_per_eth)
     max_cost_wei = float(max_cost_eth) * float(wei_per_eth)
@@ -99,6 +103,7 @@ def new_txn(W3WSock,txn,account_id):
 
     return txnhash,cost_usd,'success'
 
+
 def main(event, context):
     stage = os.environ['STAGE']
     body  = json.loads(event.get('body', {}))
@@ -112,9 +117,11 @@ def main(event, context):
     logging.info(f'body: {body}')
 
     #W3WSock     = body.get('W3WSock', '')
-    W3WSock     = os.environ['WEB3_WEBSOCKET']
+    #W3WSock     = os.environ['WEB3_WEBSOCKET']
     txn         = body.get('txn', '')
     account_id  = body.get('account_id')
+    chainId     = txn.get('chainId',1)
+    W3WSock     = w3_generic.get_w3wsock_provider(chainId)
 
     txnhash,cost_usd,msg = new_txn(W3WSock,txn,account_id)
     logging.info(f'send_raw txnhash({txnhash}) cost_usd({cost_usd}) msg({msg}) ')

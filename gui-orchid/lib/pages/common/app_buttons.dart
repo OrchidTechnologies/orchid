@@ -36,10 +36,12 @@ class RoundedRectButton extends StatelessWidget {
           icon ?? Container(),
           icon != null ? padx(14) : Container(),
           AppText.body(
+              textAlign: TextAlign.left,
               text: text,
               color: textColor ?? AppColors.text_light,
               letterSpacing: 1.25,
               lineHeight: 1.14),
+          if (icon != null) padx(8)
         ],
       ),
       color: backgroundColor ?? AppColors.purple_3,
@@ -123,14 +125,16 @@ class TextControlButton extends StatelessWidget {
 /// A flat Text button that is styled like a web link.
 class LinkStyleTextButton extends StatelessWidget {
   final VoidCallback onPressed;
-  String text;
-  TextAlign alignment;
-  Color color;
+  final String text;
+  final TextAlign alignment;
+  final Color color;
 
-  LinkStyleTextButton(this.text,
-      {this.alignment = TextAlign.center,
-      this.onPressed,
-      this.color = AppColors.grey_3});
+  LinkStyleTextButton(
+    this.text, {
+    this.alignment = TextAlign.center,
+    this.onPressed,
+    this.color = AppColors.grey_3,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -171,5 +175,56 @@ class SaveActionButton extends StatelessWidget {
                   : AppColors.purple_3.withOpacity(0.4)),
         ),
         onPressed: isValid ? onPressed : null);
+  }
+}
+
+/// A rounded button comprising a title and trailing icon,
+/// as used in the scan/paste dialog.
+class TitleIconButton extends StatelessWidget {
+  final String text;
+  final Widget trailing;
+  final Color textColor;
+  final Color backgroundColor;
+  final Color borderColor;
+  final VoidCallback onPressed;
+  final double spacing;
+
+  const TitleIconButton({
+    Key key,
+    @required this.text,
+    @required this.trailing,
+    @required this.textColor,
+    @required this.backgroundColor,
+    this.borderColor,
+    @required this.onPressed,
+    this.spacing = 4,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      color: backgroundColor,
+      onPressed: onPressed,
+      shape: RoundedRectangleBorder(
+          side: BorderSide(
+              color: borderColor ?? backgroundColor,
+              width: 1,
+              style: BorderStyle.solid),
+          borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
+        child: Row(
+          children: <Widget>[
+            AppText.body(
+                text: text,
+                color: textColor,
+                letterSpacing: 1.25,
+                lineHeight: 1.14),
+            padx(spacing),
+            trailing
+          ],
+        ),
+      ),
+    );
   }
 }

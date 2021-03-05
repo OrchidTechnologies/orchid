@@ -8,7 +8,10 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
+import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
@@ -19,6 +22,8 @@ import 'package:orchid/pages/common/formatting.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/pages/common/tap_copy_text.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/pages/purchase/purchase_page.dart';
+import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/units.dart';
 
@@ -36,7 +41,6 @@ class AccountManagerPage extends StatefulWidget {
 }
 
 class _AccountManagerPageState extends State<AccountManagerPage> {
-  double _usdCredit = 0;
   var _accountStore = AccountStore();
 
   Map<Account, AccountDetailPoller> _accountDetailMap = {};
@@ -49,6 +53,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   void initStateAsync() async {
     _accountStore.load();
+    PacTransaction.shared.ensureInitialized();
   }
 
   @override
@@ -62,6 +67,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Stack(
                       alignment: Alignment.center,
@@ -75,12 +81,15 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                             )),
                       ],
                     ),
-                    Divider(),
-                    _buildCreditsView(_usdCredit),
-                    Divider(),
+                    pady(16),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                      child: PurchaseStatus(),
+                    ),
+                    pady(8),
+                    Divider(height: 1),
                     Expanded(child: _buildAccountList()),
-                    //FloatingAddButton(onPressed: _addKey),
-                  ]..spaced(8),
+                  ],
                 ),
               ),
             ),
@@ -100,6 +109,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         } else {
           item.action();
         }
+        AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
       },
       itemBuilder: (BuildContext context) {
         var items = _accountStore.identities.map((StoredEthereumKey identity) {
@@ -219,6 +229,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             child: Center(
               child: TapToCopyText(
                   _accountStore.activeIdentity.address.toString(),
+                  key:
+                      ValueKey(_accountStore.activeIdentity.address.toString()),
                   padding: EdgeInsets.zero,
                   style: AppText.dialogTitle),
             ),
@@ -260,45 +272,63 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return a.active ? -1 : 1;
     });
 
+    Widget footer() {
+      if (OrchidPlatform.isNotApple) {
+        return Container();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 24),
+        child: Align(
+            child: Container(
+          width: 190,
+          child: _buildAddFundsButton(),
+        )),
+      );
+    }
+
+    var child = accounts.isEmpty
+        ? ListView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0),
+                child: Center(
+                    child: Text(
+                        _accountStore.activeIdentity != null
+                            ? "Searching for accounts..."
+                            : "",
+                        style: AppText.noteStyle)),
+              ),
+              footer()
+            ],
+          )
+        : ListView.separated(
+            separatorBuilder: (BuildContext context, int index) =>
+                Divider(height: 1),
+            key: PageStorageKey('account list view'),
+            primary: true,
+            itemCount: accounts.length + 1,
+            itemBuilder: (BuildContext context, int index) {
+              if (index == accounts.length) {
+                return footer();
+              }
+              var account = accounts[index];
+              return Theme(
+                data: ThemeData(accentColor: AppColors.purple_3),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: IntrinsicHeight(
+                    child: _buildAccountTile(account, index),
+                  ),
+                ),
+              );
+            });
+
     return RefreshIndicator(
       displacement: 20,
       onRefresh: () async {
         _accountStore.load();
       },
-      child: accounts.isEmpty
-          ? ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 24.0),
-                  child: Center(
-                      child: Text(
-                          _accountStore.activeIdentity != null
-                              ? "Searching for accounts..."
-                              : "",
-                          style: AppText.noteStyle)),
-                )
-              ],
-            )
-          : ListView.separated(
-              separatorBuilder: (BuildContext context, int index) =>
-                  Divider(height: 1),
-              key: PageStorageKey('account list view'),
-              primary: true,
-              itemCount: accounts.length,
-              itemBuilder: (BuildContext context, int index) {
-                var account = accounts[index];
-                return Theme(
-                  data: ThemeData(accentColor: AppColors.purple_3),
-                  child: Container(
-                    //height: 70,
-                    alignment: Alignment.center,
-                    //decoration: BoxDecoration(color: Colors.transparent),
-                    child: IntrinsicHeight(
-                      child: _buildAccountTile(account, index),
-                    ),
-                  ),
-                );
-              }),
+      child: child,
     );
   }
 
@@ -362,28 +392,25 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  Widget _buildCreditsView(double credit) {
-    var style = TextStyle(fontSize: 17);
-    var creditString = '\$' + (credit != null ? formatCurrency(credit) : "...");
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Text("VPN Credits:", style: style),
-      padx(4),
-      Text(creditString, style: style.copyWith(fontWeight: FontWeight.bold)),
-      padx(36),
-      RoundedRectButton(
-        text: "Add Funds",
-        icon: Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-        onPressed: _addFunds,
-      ),
-    ]);
+  Widget _buildAddFundsButton() {
+    return StreamBuilder<PacTransaction>(
+        stream: PacTransaction.shared.stream(),
+        builder: (context, snapshot) {
+          var enabled =
+              _accountStore.activeIdentity != null && snapshot.data == null;
+          return RoundedRectButton(
+            text: "Add Credit",
+            icon: Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+            onPressed: enabled ? _addFunds : null,
+          );
+        });
   }
 
   void _setActiveAccount(AccountModel account) {
     _accountStore.setActiveAccount(account.detail.account); // a bit convoluted
-    OrchidAPI().updateConfiguration();
     AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
   }
 
@@ -393,17 +420,17 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     }));
   }
 
-  // TODO: Replace with new purchase page
   void _addFunds() async {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (BuildContext context) {
-              return TitledPage(
-                  title: 'Add Funds', cancellable: true, child: Container());
-              // return PurchasePage(onAddFlowComplete: (CircuitHop result) {  },);
-            }));
+      context,
+      MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (BuildContext context) {
+            return PurchasePage(completion: () {
+              log("purchase complete");
+            });
+          }),
+    );
   }
 
   // Return a cached or new account detail poller for the account.

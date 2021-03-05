@@ -1,18 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
+import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/pages/circuit/add_hop_page.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/pages/common/loading.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -20,12 +17,14 @@ import 'package:in_app_purchase/store_kit_wrappers.dart';
 import '../app_sizes.dart';
 import '../app_text.dart';
 
+typedef PurchasePageCompletion = void Function(); // TODO: return
+
 class PurchasePage extends StatefulWidget {
-  final AddFlowCompletion onAddFlowComplete;
-  final bool cancellable;
+  final PurchasePageCompletion completion;
+  final bool cancellable; // show the close button instead of a back arrow
 
   const PurchasePage(
-      {Key key, @required this.onAddFlowComplete, this.cancellable = false})
+      {Key key, @required this.completion, this.cancellable = false})
       : super(key: key);
 
   @override
@@ -33,56 +32,26 @@ class PurchasePage extends StatefulWidget {
 }
 
 class _PurchasePageState extends State<PurchasePage> {
-  List<StreamSubscription> _rxSubscriptions = List();
-  //Pricing _pricing;
+  List<StreamSubscription> _subscriptions = [];
 
-  // Purchase status overlay state
-  bool _showOverlayPane = false;
-  String _overlayStatusMessage;
-  bool _requiresUserAction = false;
-  bool _showHelp = false;
   PACStoreStatus _storeStatus;
 
-  Map<String, PAC> _pacs = {
-    OrchidPurchaseAPI.pacTier1: PAC(
-        productId: OrchidPurchaseAPI.pacTier1,
-        localPurchasePrice: null,
-        localCurrencyCode: "USD",
-        localDisplayPrice: null),
-    OrchidPurchaseAPI.pacTier2: PAC(
-        productId: OrchidPurchaseAPI.pacTier2,
-        localPurchasePrice: null,
-        localCurrencyCode: "USD",
-        localDisplayPrice: null),
-    OrchidPurchaseAPI.pacTier3: PAC(
-        productId: OrchidPurchaseAPI.pacTier3,
-        localPurchasePrice: null,
-        localCurrencyCode: "USD",
-        localDisplayPrice: null),
-  };
+  List<PAC> _pacs;
 
   @override
   void initState() {
     ScreenOrientation.portrait();
     super.initState();
-    _rxSubscriptions
-        .add(PacTransaction.shared.stream().listen(_pacTransactionUpdated));
     initStateAsync();
   }
 
   void initStateAsync() async {
-    // Show cached products immediately followed by an update.
-    updateProducts(refresh: false);
-    updateProducts(refresh: true);
+    initProducts();
 
-    _storeStatus = await OrchidPACServerV0().storeStatus();
+    _storeStatus = await OrchidPACServer().storeStatus();
     if (mounted) {
       setState(() {});
     }
-
-    // Disable price display
-    //_pricing = await OrchidAPI().pricing().getPricing();
-    //setState(() {});
   }
 
   @override
@@ -97,68 +66,35 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget buildPage(BuildContext context) {
-    return Stack(
-    children: <Widget>[
-        SingleChildScrollView(
-          child: Padding(
-            padding:
-                const EdgeInsets.only(left: 30, right: 30, top: 0, bottom: 16),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 500),
-                child: Column(
-                  children: <Widget>[
-                    if (AppSize(context).tallerThan(AppSize.iphone_12_max))
-                      pady(64),
-                    pady(8),
-                    _buildInstructions(),
-                    pady(16),
-                    _buildPurchaseCardView(
-                        pac: _pacs[OrchidPurchaseAPI.pacTier1],
-                        title: s.tryOutOrchid,
-                        subtitle: _buildPurchaseDescriptionText(
-                          text: "- " + s.goodForBrowsingAndLightActivity,
-                        ),
-                        gradBegin: 0,
-                        gradEnd: 2),
-                    pady(24),
-                    _buildPurchaseCardView(
-                        pac: _pacs[OrchidPurchaseAPI.pacTier2],
-                        title: s.average,
-                        subtitle: _buildPurchaseDescriptionText(
-                          text: "- " +
-                              s.goodForAnIndividual +
-                              "\n" +
-                              "- " +
-                              s.shortToMediumTermUsage,
-                        ),
-                        gradBegin: -2,
-                        gradEnd: 1),
-                    pady(24),
-                    _buildPurchaseCardView(
-                      pac: _pacs[OrchidPurchaseAPI.pacTier3],
-                      title: s.heavy,
-                      subtitle: _buildPurchaseDescriptionText(
-                        text: "- " +
-                            s.goodForBandwidthheavyUsesSharing +
-                            "\n" +
-                            "- " +
-                            s.longerTermUsage,
-                      ),
-                      gradBegin: -1,
-                      gradEnd: -1,
-                    ),
-                    pady(32),
-                    _buildPreferredProviderText()
-                  ],
+    return SafeArea(
+      child: Stack(
+        children: <Widget>[
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                  left: 30, right: 30, top: 0, bottom: 16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 500),
+                  child: Column(
+                    children: <Widget>[
+                      if (AppSize(context).tallerThan(AppSize.iphone_12_max))
+                        pady(64),
+                      pady(12),
+                      _buildInstructions(),
+                      pady(16),
+                      _buildPACList(),
+                      pady(32),
+                      _buildPreferredProviderText()
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (_showOverlayPane) _buildOverlay(),
-        if (!_storeOpen && !_showOverlayPane) _buildStoreDown()
-      ],
+          if (!_storeOpen) _buildStoreDown()
+        ],
+      ),
     );
   }
 
@@ -174,30 +110,6 @@ class _PurchasePageState extends State<PurchasePage> {
         TextSpan(text: text, style: subtitleStyleBold),
       ],
     );
-  }
-
-  Widget _buildOverlay() {
-    Size size = MediaQuery.of(context).size;
-    return Center(
-        child: Container(
-            color: _requiresUserAction
-                ? Colors.transparent
-                : Colors.white24.withOpacity(0.5),
-            width: size.width,
-            height: size.height,
-            child: Center(
-                child: IntrinsicHeight(
-              child: Container(
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                padding:
-                    EdgeInsets.only(left: 32, right: 32, top: 40, bottom: 40),
-                child: _requiresUserAction
-                    ? _buildRequiresUserAction()
-                    : _buildProgressOverlay(),
-              ),
-            ))));
   }
 
   Widget _buildStoreDown() {
@@ -240,102 +152,6 @@ class _PurchasePageState extends State<PurchasePage> {
             ))));
   }
 
-  Column _buildProgressOverlay() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        CircularProgressIndicator(),
-        pady(12),
-        Text(
-          _overlayStatusMessage ?? "",
-          style: TextStyle(fontSize: 20),
-        )
-      ],
-    );
-  }
-
-  Column _buildRequiresUserAction() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text(
-          s.pacPurchaseWaiting,
-          style: TextStyle(fontSize: 20),
-        ),
-        pady(16),
-        FlatButton(
-            color: Colors.blue.shade800,
-            child: Text(
-              s.retry,
-              style: TextStyle(color: Colors.white),
-            ),
-            onPressed: _retryPurchase),
-        _showHelp ? _buildHelpExpanded() : _buildHelp()
-      ],
-    );
-  }
-
-  Column _buildHelp() {
-    return Column(
-      children: <Widget>[
-        pady(24),
-        LinkText(s.getHelpResolvingIssue,
-            style: AppText.linkStyle, onTapped: _expandHelp),
-      ],
-    );
-  }
-
-  Column _buildHelpExpanded() {
-    return Column(
-      children: <Widget>[
-        pady(24),
-        FlatButton(
-            color: AppText.linkStyle.color,
-            child: Text(s.copyDebugInfo, style: TextStyle(color: Colors.white)),
-            onPressed: _copyDebugInfo),
-        pady(24),
-        LinkText(s.contactOrchid,
-            style: AppText.linkStyle, url: 'https://orchid.com/contact'),
-        pady(24),
-        FlatButton(
-            color: Colors.redAccent,
-            child: Text(s.remove, style: TextStyle(color: Colors.white)),
-            onPressed: _deleteTransaction),
-      ],
-    );
-  }
-
-  void _expandHelp() {
-    setState(() {
-      _showHelp = true;
-    });
-  }
-
-  void _copyDebugInfo() async {
-    PacTransaction tx = await PacTransaction.shared.get();
-    Clipboard.setData(
-        ClipboardData(text: tx != null ? tx.userDebugString() : '<no tx>'));
-  }
-
-  void _retryPurchase() {
-    OrchidPACServerV0().advancePendingPACTransaction();
-  }
-
-  void _confirmDeleteTransaction() async {
-    //var tx = await PacTransaction.shared.get();
-    //OrchidPurchaseAPI().finishTransaction(tx.transactionId);
-    await PacTransaction.shared.clear();
-  }
-
-  void _deleteTransaction() {
-    AppDialogs.showConfirmationDialog(
-        context: context,
-        title: s.deleteTransaction,
-        body: s.clearThisInProgressTransactionExplain +
-            " https://orchid.com/contact",
-        commitAction: _confirmDeleteTransaction);
-  }
-
   var checkRowStyle = const TextStyle(
       color: Color(0xFF3A3149),
       fontSize: 15.0,
@@ -354,7 +170,6 @@ class _PurchasePageState extends State<PurchasePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        pady(16),
         Text(s.onetimePurchase, style: titleStyle),
         pady(16),
         _buildCheckRow(s.spentOnlyWhenTheVpnIsActive),
@@ -362,18 +177,6 @@ class _PurchasePageState extends State<PurchasePage> {
         _buildCheckRow(s.noSubscriptionCreditsDontExpire),
         pady(8),
         _buildCheckRow(s.unlimitedDevicesAndSharing),
-        /*
-        pady(8),
-        _buildCheckRowRich(TextSpan(children: [
-          TextSpan(
-              text: s.bandwidthWillFluctuateBasedOnMarketDynamics+"  ",
-              style: checkRowStyle),
-          LinkTextSpan(
-            text: s.learnMore,
-            style: AppText.linkStyle.copyWith(fontSize: 15.0),
-          )
-        ])),
-         */
         pady(12),
       ],
     );
@@ -413,6 +216,62 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
+  Widget _buildPACList() {
+    if (_pacs == null) {
+      return LoadingIndicator(height: 50);
+    }
+    if (_pacs.isEmpty) {
+      return LoadingIndicator(
+          height: 50, text: "No PACs available at this time.");
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: _pacs
+          .map(
+            (pac) => Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: _buildPacPurchaseCard(pac),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildPacPurchaseCard(PAC pac) {
+    const valueStyle = TextStyle(
+        color: Colors.black,
+        fontSize: 18.0,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.38,
+        fontFamily: 'SFProText-Regular',
+        height: 25.0 / 20.0);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        _purchase(purchase: pac);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("PAC", style: valueStyle),
+              Text("${pac.localDisplayPrice ?? '...'}",
+                  style: valueStyle.copyWith(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /*
   Widget _buildPurchaseCardView(
       {PAC pac,
       String title,
@@ -431,25 +290,10 @@ class _PurchasePageState extends State<PurchasePage> {
         letterSpacing: 0.38,
         fontFamily: 'SFProText-Regular',
         height: 25.0 / 20.0);
-    const valueSubtitleStyle = TextStyle(
-        color: Colors.white,
-        fontSize: 13.0,
-        fontWeight: FontWeight.normal,
-        fontFamily: 'SFProText-Regular',
-        height: 16.0 / 12.0);
 
-    /*
-    var usdString = formatCurrency(pac.localPurchasePrice, ifNull: '...');
-    var oxtString = pac.localPurchasePrice != null
-        ? NumberFormat('0.00')
-            .format(_pricing?.toOXT(pac.localPurchasePrice ?? 0)
-        : '...';
-     */
-
-    var enabled = pac.localPurchasePrice != null
-        && _storeOpen == true
-        && _productForSale(pac)
-    ;
+    var enabled = pac.localPurchasePrice != null &&
+        _storeOpen == true &&
+        _productForSale(pac);
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
@@ -469,7 +313,7 @@ class _PurchasePageState extends State<PurchasePage> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.0),
-          gradient: grad,
+
         ),
         child: Padding(
           padding:
@@ -527,8 +371,21 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
+   */
+
   Future<void> _purchase({PAC purchase}) async {
     log("iap: calling purchase: $purchase");
+    // TODO: Temporarily disable purchase
+    if (!OrchidAPI.mockAPI) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    // Add the pending transactions for this purchase
+    PacPurchaseTransaction(
+      PacAddBalanceTransaction.pending(productId: purchase.productId),
+      PacSubmitRawTransaction(""),
+    ).save();
 
     // Initiate the in-app purchase
     try {
@@ -538,122 +395,34 @@ class _PurchasePageState extends State<PurchasePage> {
         var skerror = err;
         if (skerror.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
           log("iap: user cancelled");
-          return null;
         }
       }
       log("iap: Error in purchase call: $err");
-      _purchaseError(rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
-      return null;
+      await _iapPurchaseError(
+          rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
     }
-  }
 
-  // Respond to updates of the PAC transaction status
-  void _pacTransactionUpdated(PacTransaction tx) async {
-    if (tx == null) {
-      _clearOverlay();
-      return;
-    }
-    switch (tx.state) {
-      case PacTransactionState.Pending:
-        _showOverlay(s.preparingPurchase);
-        break;
-      case PacTransactionState.InProgress:
-        _showOverlay(s.fetchingPurchasedPAC);
-        break;
-      case PacTransactionState.WaitingForRetry:
-        _showOverlay(s.retryingPurchasedPAC);
-        break;
-      case PacTransactionState.WaitingForUserAction:
-        _showOverlay(s.retryPurchasedPAC, requiresUserAction: true);
-        break;
-      case PacTransactionState.Error:
-        _clearOverlay();
-        _purchaseError();
-        break;
-      case PacTransactionState.Complete:
-        await _completeTransaction(tx);
-        _clearOverlay();
-        break;
-    }
+    Navigator.of(context).pop();
   }
 
   // Collect a completed PAC transaction and apply it to the hop.
-  Future<void> _completeTransaction(PacTransaction tx) async {
+  Future<void> _completeAddBalanceTransaction(PacTransaction txIn) async {
     log("iap: complete transaction");
-
-    var serverResponse = tx.serverResponse;
-    if (serverResponse == null) {
-      throw Exception("empty server response");
+    if (!(txIn is PacAddBalanceTransaction)) {
+      throw Exception("not an add balance tx");
     }
-
-    String pacAccountString;
-    try {
-      var pacResponseJson = json.decode(serverResponse);
-      pacAccountString = pacResponseJson['config'];
-      if (pacAccountString == null) {
-        log("iap: error no server response");
-        throw Exception("no config in server response");
-      }
-    } catch (err) {
-      log("iap: error decoding server response json: $err");
-      throw Exception("invalid server response");
-    }
+    var tx = txIn as PacAddBalanceTransaction;
 
     // Successfully parsed the server response.
     //OrchidPurchaseAPI().finishTransaction(tx.transactionId);
     PacTransaction.shared.clear();
 
-    // Record the purchase for rate limiting
-    try {
-      var productMap = await OrchidPurchaseAPI().requestProducts();
-      //PAC pac = OrchidPurchaseAPI.pacForProductId(tx.productId);
-      PAC pac = productMap[tx.productId];
-      OrchidPurchaseAPI.addPurchaseToRateLimit(pac);
-    } catch (err) {
-      log("pac: Unable to find pac for product id!");
-    }
-
-    // Parse the account response and create a hop
-    setState(() {
-      _overlayStatusMessage = s.setUpAccount;
-    });
-    ParseOrchidAccountResultV0 parseAccountResult;
-    try {
-      var existingKeys = await UserPreferences().getKeys();
-      parseAccountResult =
-          OrchidVPNConfigV0.parseOrchidAccount(pacAccountString, existingKeys);
-    } catch (err) {
-      log("iap: error parsing purchased orchid account: $err");
-      throw Exception("error in server response");
-    }
-    if (parseAccountResult != null) {
-      var hop = await OrchidVPNConfigV0.importAccountAsHop(parseAccountResult);
-      widget.onAddFlowComplete(hop);
-    } else {
-      throw Exception("Error setting up account");
-    }
-  }
-
-  void _showOverlay(String message, {bool requiresUserAction = false}) {
-    log("iap: display message: $message");
-    setState(() {
-      _showOverlayPane = true;
-      _overlayStatusMessage = message;
-      _requiresUserAction = requiresUserAction;
-    });
-  }
-
-  void _clearOverlay() {
-    setState(() {
-      _showOverlayPane = false;
-      _overlayStatusMessage = null;
-      _requiresUserAction = false;
-    });
+    widget.completion();
   }
 
   /// Handle a purchase error by clearing any error pac transaction and
   /// showing a dialog.
-  void _purchaseError({bool rateLimitExceeded = false}) async {
+  Future<void> _iapPurchaseError({bool rateLimitExceeded = false}) async {
     log("iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
@@ -665,7 +434,7 @@ class _PurchasePageState extends State<PurchasePage> {
       log("iap: purchase error called with incorrect pac tx state");
     }
 
-    await AppDialogs.showAppDialog(
+    return await AppDialogs.showAppDialog(
       context: context,
       title: s.purchaseError,
       bodyText: rateLimitExceeded
@@ -674,23 +443,36 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
-  void updateProducts({bool refresh}) async {
+  void initProducts() async {
+    // Show cached products immediately followed by an update.
+    await updateProducts(refresh: false);
+    if (mounted) {
+      setState(() {});
+    }
+    await updateProducts(refresh: true);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> updateProducts({bool refresh}) async {
     if (refresh) {
       log("iap: purchase page refresh products");
     } else {
       log("iap: purchase page fetch cached products");
     }
     try {
-      _pacs = await OrchidPurchaseAPI().requestProducts(refresh: refresh);
+      Map<String, PAC> updatedPacs =
+          await OrchidPurchaseAPI().requestProducts(refresh: refresh);
+      _pacs = updatedPacs.isNotEmpty ? updatedPacs.values.toList() : _pacs;
     } catch (err) {
       log("iap: error requesting products for purchase page: $err");
     }
-    setState(() {});
   }
 
   @override
   void dispose() {
-    _rxSubscriptions.forEach((sub) {
+    _subscriptions.forEach((sub) {
       sub.cancel();
     });
     super.dispose();
@@ -705,13 +487,17 @@ class _PurchasePageState extends State<PurchasePage> {
     return _storeStatus == null || _storeStatus.open;
   }
 
+/*
   bool _productForSale(PAC pac) {
     // default to selling if any ambiguity
-    if (_storeStatus == null) { return true; }
+    if (_storeStatus == null) {
+      return true;
+    }
     var status = _storeStatus.product[pac.productId];
     if (status == false) {
       return false;
     }
     return true;
   }
+   */
 }

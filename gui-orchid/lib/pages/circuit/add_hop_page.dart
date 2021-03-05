@@ -11,7 +11,6 @@ import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/purchase/purchase_page.dart';
 import '../app_sizes.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
@@ -32,7 +31,7 @@ class AddHopPage extends StatefulWidget {
 }
 
 class _AddHopPageState extends State<AddHopPage> {
-  bool _showPACs = false;
+  // bool _showPACs = false;
   bool _showWireGuard = false;
 
   @override
@@ -42,7 +41,7 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   void initStateAsync() async {
-    _showPACs = (await OrchidPurchaseAPI().apiConfig()).enabled;
+    // _showPACs = (await OrchidPurchaseAPI().apiConfig()).enabled;
     _showWireGuard = true;
     setState(() {});
   }
@@ -86,6 +85,7 @@ class _AddHopPageState extends State<AddHopPage> {
                             color: Color(0xff504960))),
                     pady(24),
 
+                    /*
                     // PAC Purchase
                     if (_showPACs) _divider(),
                     if (_showPACs)
@@ -95,6 +95,7 @@ class _AddHopPageState extends State<AddHopPage> {
                             _addHopFromPACPurchase();
                           },
                           svgName: 'assets/svg/attach_money.svg'),
+                     */
 
                     // Link Account
                     _divider(),
@@ -217,12 +218,13 @@ class _AddHopPageState extends State<AddHopPage> {
 
   // Perform a PAC purchase and await the resulting hop result.
   // Return the resulting hop on the navigation stack as we pop this view.
+  /*
   void _addHopFromPACPurchase() async {
     var route = MaterialPageRoute<CircuitHop>(builder: (BuildContext context) {
-      return PurchasePage(onAddFlowComplete: widget.onAddFlowComplete);
+      return PurchasePageV0(onAddFlowComplete: widget.onAddFlowComplete);
     });
     _pushCircuitBuilderRoute(route);
-  }
+  }*/
 
   // Push the editor or other builder that returns a circuit hop.
   void _pushCircuitBuilderRoute(MaterialPageRoute<CircuitHop> route) async {

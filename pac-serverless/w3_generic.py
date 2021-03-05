@@ -321,14 +321,22 @@ def refund_failed_txn(W3WSock,txnhash,account_id):
 
 def send_raw_(w3,txn_,privkey):
 
+    txn   = txn_.copy();
 
-    txn = txn_.copy();
-
-    txn.pop('status')
-    txn.pop('account_id')
-    txn.pop('txnhash')
-    txn.pop('vnonce')
-    txn.pop('cost_usd')
+    if ('status' in txn):
+        txn.pop('status')
+    if ('account_id' in txn):
+        txn.pop('account_id')
+    if ('txnhash' in txn):
+        txn.pop('txnhash')
+    if ('vnonce' in txn):
+        txn.pop('vnonce')
+    if ('cost_usd' in txn):
+        txn.pop('cost_usd')
+    if ('chainId' in txn):
+        txn.pop('chainId')
+    if ('eth_txnhash' in txn):
+        txn.pop('eth_txnhash')
 
     txn_s = str(txn)
     logging.info(f'send_raw_ privkey:{privkey}  txn: {txn_s}  ')
@@ -341,12 +349,12 @@ def send_raw_(w3,txn_,privkey):
 
     return txn_hash.hex()
 
-def send_raw(W3WSock,txn):
+def send_raw(w3,txn):
 
     txnhash = txn['txnhash']
-    logging.info(f'send_raw_internal_  txnhash:{txnhash}')
+    logging.info(f'send_raw  txnhash:{txnhash}')
 
-    w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
+    #w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
 
     to = txn['to']
     if (target_in_whitelist(to) == False):
@@ -367,9 +375,16 @@ def send_raw(W3WSock,txn):
         nonce        = get_nonce_(w3,pubkey)
         txn['nonce'] = nonce
 
+    logging.info(f'sending txn')
+
     eth_txnhash = None
     #eth_txnhash = send_raw_(w3,txn,privkey)
 
+    msg = 'success'
+    eth_txnhash = send_raw_(w3,txn,privkey)
+
+
+    """
     try:
         msg = 'success'
         eth_txnhash = send_raw_(w3,txn,privkey)
@@ -380,8 +395,60 @@ def send_raw(W3WSock,txn):
         msg = sys.exc_info()[0]
         logging.warning(f'ERRORs: {msg}')
 
+    """
+
 
     txn['eth_txnhash'] = eth_txnhash
     txn['status'] = 'pending'
 
     return txn,msg
+
+
+def test_connections(providers):
+
+    for x in providers:
+        w3 = Web3(Web3.WebsocketProvider(x, websocket_timeout=400))
+        try:
+            w3.eth.getTransactionCount(account='0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b')
+        except Exception as ex:
+            logging.info(f'test_connections  {x}  failure: {str(ex)}')
+            w3 = None
+        if (w3 is not None):
+            logging.info(f'test_connections  {x}  success')
+            return w3
+    return None
+
+
+def get_w3wsock_providers():
+
+    providers = {}
+
+    providers[1]  = test_connections([os.environ['WEB3_WEBSOCKET']])
+    providers[100] = test_connections(['wss://rpc.xdaichain.com/wss', 'wss://xdai.poanetwork.dev/wss'])
+
+    logging.info(f'get_w3wsock_providers:  {str(providers)} ')
+
+    return providers
+
+
+def get_w3wsock_provider(chainId_):
+
+    W3WSock = None
+    chainId = int(chainId_)
+    if (chainId == 1):
+        W3WSock = os.environ['WEB3_WEBSOCKET']
+    if (chainId == 100):
+        W3WSock = 'wss://rpc.xdaichain.com/wss'
+
+    logging.info(f'get_w3wsock_provider  chainId:{chainId} W3WSock:{W3WSock}')
+
+    return W3WSock
+
+def get_symbol_from_chainId(chainId_):
+    symbol = None
+    chainId = int(chainId_)
+    if (chainId == 1):
+        symbol = 'ETH'
+    if (chainId == 100):
+        symbol = 'DAI'
+    return symbol

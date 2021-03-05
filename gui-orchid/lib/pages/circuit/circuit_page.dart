@@ -23,7 +23,6 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/common/wrapped_switch.dart';
 import 'package:orchid/pages/onboarding/legacy_welcome_dialog.dart';
 import 'package:orchid/pages/onboarding/welcome_dialog.dart';
-import 'package:orchid/pages/purchase/purchase_page.dart';
 
 import '../app_gradients.dart';
 import '../app_text.dart';
@@ -55,7 +54,7 @@ class CircuitPage extends StatefulWidget {
 // TODO: used.  If this remains the case remove it.
 class CircuitPageState extends State<CircuitPage>
     with TickerProviderStateMixin {
-  List<StreamSubscription> _rxSubs = List();
+  List<StreamSubscription> _rxSubs = [];
   List<UniqueHop> _hops;
 
   // Master timeline for connect animation
@@ -650,9 +649,9 @@ class CircuitPageState extends State<CircuitPage>
         onComplete: _addHopComplete, showCallouts: _hops.isEmpty);
   }
 
-  void _addHopFromPACPurchase() {
-    CircuitUtils.purchasePAC(context, onComplete: _addHopComplete);
-  }
+  // void _addHopFromPACPurchase() {
+  //   CircuitUtils.purchasePAC(context, onComplete: _addHopComplete);
+  // }
 
   // Local page state updates after hop addition.
   void _addHopComplete(UniqueHop uniqueHop) {
@@ -722,11 +721,12 @@ class CircuitPageState extends State<CircuitPage>
     var removedHop = _hops.removeAt(index);
     setState(() {});
     _saveCircuit();
-    _recycleHopIfAllowed(uniqueHop);
+    // _recycleHopIfAllowed(uniqueHop);
     UserPreferences().addRecentlyDeletedHop(removedHop.hop);
   }
 
   // Recycle the hop if configured to do so.
+  /*
   Future _recycleHopIfAllowed(UniqueHop uniqueHop) async {
     bool recycle = (await OrchidVPNConfig.getUserConfigJS())
         .evalBoolDefault('pacs.recycle', false);
@@ -738,7 +738,7 @@ class CircuitPageState extends State<CircuitPage>
         OrchidPACServerV0().recycle(funder: hop.funder, signer: signer);
       }
     }
-  }
+  }*/
 
   // Callback for drag to reorder
   void _onReorder(int oldIndex, int newIndex) {
@@ -759,6 +759,7 @@ class CircuitPageState extends State<CircuitPage>
   // Note: By design the switch on this page does not track or respond to the
   // Note: connection state after initialization.  See `monitoring_page.dart`
   // Note: for a version of the switch that does attempt to track the connection.
+  /*
   void _connectSwitchChanged(bool toEnabled) async {
     if (toEnabled) {
       bool allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
@@ -772,6 +773,7 @@ class CircuitPageState extends State<CircuitPage>
       _disconnect();
     }
   }
+   */
 
   // Note: By design the switch on this page does not track or respond to the
   // Note: connection state after initialization.  See `monitoring_page.dart`
@@ -893,6 +895,7 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   // TODO: No switch in current page impl so this is unused.
+  /*
   void _showWelcomeDialog() async {
     var pacsEnabled = (await OrchidPurchaseAPI().apiConfig()).enabled;
     if (pacsEnabled) {
@@ -910,7 +913,7 @@ class CircuitPageState extends State<CircuitPage>
       LegacyWelcomeDialog.show(
           context: context, onAddFlowComplete: _legacyWelcomeScreenAddHop);
     }
-  }
+  }*/
 
   // TODO: Remove after PACs are in place on all platforms or when an alternate
   // TODO: fallback for the PACs feature flag exists.
@@ -1012,6 +1015,7 @@ class CircuitUtils {
 
   // Show the purchase PAC screen directly as a modal, skipping the 'add hop'
   // choice screen. This is used by the welcome dialog.
+  /*
   static void purchasePAC(BuildContext context,
       {HopCompletion onComplete}) async {
     var addFlowCompletion = (CircuitHop result) {
@@ -1019,14 +1023,14 @@ class CircuitUtils {
     };
     var route = MaterialPageRoute<CircuitHop>(
         builder: (BuildContext context) {
-          return PurchasePage(
+          return PurchasePageV0(
             onAddFlowComplete: addFlowCompletion,
             cancellable: true,
           );
         },
         fullscreenDialog: true);
     _pushNewHopEditorRoute(context, route, onComplete);
-  }
+  }*/
 
   static void addHopToCircuit(CircuitHop hop) async {
     var circuit = await UserPreferences().getCircuit();

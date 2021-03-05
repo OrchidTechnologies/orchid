@@ -1,0 +1,13 @@
+{
+  "target": "dev"
+  "dev": {
+    "url": "",
+    "funder": "",
+    "lottery": ""
+  }
+  "prod": {
+    "url": "",
+    "funder": "",
+    "lottery": ""
+  }
+}

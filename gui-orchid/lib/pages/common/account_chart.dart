@@ -7,6 +7,8 @@ import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
+import 'loading.dart';
+
 class AccountChart extends StatelessWidget {
   final LotteryPot lotteryPot;
   final double efficiency;
@@ -27,11 +29,7 @@ class AccountChart extends StatelessWidget {
   static Widget buildAccountChart(LotteryPot lotteryPot, double efficiency,
       List<OrchidUpdateTransactionV0> transactions) {
     if (efficiency == null) {
-      return Container(
-        alignment: Alignment.center,
-        height: 150,
-        child: Text("Loading..."),
-      );
+      return LoadingIndicator();
     }
 
     var chartModel = (lotteryPot != null && transactions != null)
