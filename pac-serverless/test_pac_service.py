@@ -55,9 +55,9 @@ class TestPacService(unittest.TestCase):
         txn['to'] = testdata['lottery']['address']
         txn['gas'] = "0x2ab98"
         txn['gasPrice'] = "0x3b9aca00"
-        txn['value'] = "0x14"
+        txn['value'] = "0xde0b6b3a7640000"
         txn['chainId'] = 100
-        txn['data'] = lottery.encodeABI(fn_name='move', args=[testdata['accounts'][0].address, 10])
+        txn['data'] = lottery.encodeABI(fn_name='move', args=[testdata['accounts'][0].address, 100000000000000000 << 128])
         print(txn)
 
         r = self.send_raw(id, 100, txn)
