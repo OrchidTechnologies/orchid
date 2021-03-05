@@ -36,6 +36,14 @@
 #include "ticket.hpp"
 #include "time.hpp"
 
+#define EVM_BASIC 21000
+#define EVM_ECDSA 3000
+#define EVM_EVENT_ARG 256
+#define EVM_EVENT_IDX 375
+#define EVM_STORE_NEW 15000
+#define EVM_STORE_SET 5000
+#define EVM_STORE_GET 800
+
 namespace orc {
 
 namespace po = boost::program_options;
@@ -273,28 +281,45 @@ struct Tester {
         escrow += 1;
         co_await check(74);
 
-        static const unsigned per(3000+800+20000+800+7992);
+        static const auto update(
+            EVM_STORE_GET+EVM_STORE_SET+
+            EVM_EVENT_IDX*2+EVM_EVENT_ARG*3+
+        0);
+
+        static const unsigned perp(
+            EVM_ECDSA+
+            EVM_STORE_GET+EVM_STORE_NEW+EVM_STORE_SET+
+            EVM_STORE_GET+
+            update+
+        1224);
+
+        static const unsigned perd(
+            16*32+EVM_STORE_GET+EVM_STORE_SET+
+        262);
 
         for (unsigned p(0); p != 4; ++p)
             for (unsigned d(0); d != (p+1)*2+1; ++d) {
                 std::ostringstream name;
                 name << "claimN(" << std::hex << std::uppercase << p << "," << d << ")";
-                const auto positive(21000+1836 +per*p+(p==0?0:12+7400+4437) +(512+800+5000+265)*d+(d==0?0:12));
-                auto negative(15000*d);
+
+                const auto positive(
+                    EVM_BASIC+ perp*p+
+                    (token==Address()?4*32:16*32-144)+
+                    4*31+(p==0?4:16+update+5000)+
+                    4*31+(d==0?4:16)+perd*d+
+                1643);
+
+                auto negative(EVM_STORE_NEW*d);
+
                 if (negative > positive / 2) negative = positive / 2;
                 co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claimN(refunds(d), where(), token, payments(p))), positive - negative);
                 co_await check(-p);
             }
 
-#if 0
-        co_await Audit("claim1(1,0)", co_await provider_.Send(chain_, {}, indirect, 0, claim1(Zero<32>(), where(), token, payment())), 33735+per);
-        co_await check(-1);
-#endif
-
-        co_await Audit("claim1(1,0)", co_await provider_.Send(chain_, {}, lottery, 0, claim1(Zero<32>(), where(), token, payment())), 33735+per);
+        co_await Audit("claim1(1,0)", co_await provider_.Send(chain_, {}, lottery, 0, claim1(Zero<32>(), where(), token, payment())), EVM_BASIC+perp+update+6356);
         co_await check(-1);
 
-        co_await Audit("claim1(1,1)", co_await provider_.Send(chain_, {}, lottery, 0, claim1(refund(), where(), token, payment())), 25062+per);
+        co_await Audit("claim1(1,1)", co_await provider_.Send(chain_, {}, lottery, 0, claim1(refund(), where(), token, payment())), EVM_BASIC+perp+update+5869+perd-EVM_STORE_NEW);
         co_await check(-1);
 
         co_await move(customer_, lottery, 10, signer, 0, 0);
