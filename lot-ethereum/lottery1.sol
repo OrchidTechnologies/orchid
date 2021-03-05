@@ -38,7 +38,7 @@ contract OrchidLottery1 {
     #define ORC_WRN(u, w) (w == 0 ? 0 : u << 128 | w)
     #define ORC_128(v) require((v) < 1 << 128)
 
-    event Create(address indexed funder, address indexed signer, IERC20 indexed token);
+    event Create(IERC20 indexed token, address indexed funder, address indexed signer);
     event Update(bytes32 indexed account, uint256 escrow_amount, address sender);
     event Delete(bytes32 indexed account, uint256 unlock_warned);
 
@@ -64,7 +64,7 @@ contract OrchidLottery1 {
         Pot storage pot = ORC_POT(funder, signer); \
         uint256 cache = pot.escrow_amount_; \
         if (cache == 0) \
-            emit Create(funder, signer, token); \
+            emit Create(token, funder, signer); \
         if (escrow != 0) { \
             require(escrow <= amount); \
             amount -= escrow; \
@@ -73,7 +73,7 @@ contract OrchidLottery1 {
         ORC_128(uint128(cache) + amount); \
         cache += escrow << 128 | amount; \
         pot.escrow_amount_ = cache; \
-        emit Update(ORC_SHA(funder, signer, token), cache, sender); \
+        emit Update(ORC_SHA(token, funder, signer), cache, sender); \
     }
 
 
@@ -155,7 +155,7 @@ contract OrchidLottery1 {
 
         uint256 escrow = pot.escrow_amount_;
         if (escrow == 0)
-            emit Create(funder, signer, token);
+            emit Create(token, funder, signer);
         amount += uint128(escrow);
         escrow = escrow >> 128;
 
@@ -173,7 +173,7 @@ contract OrchidLottery1 {
             require(recover <= warned);
             require(unlock - 1 < block.timestamp);
             pot.unlock_warned_ = ORC_WRN(unlock, warned - recover);
-            emit Delete(ORC_SHA(msg.sender, signer, token), pot.unlock_warned_);
+            emit Delete(ORC_SHA(token, msg.sender, signer), pot.unlock_warned_);
         } else if (adjust != 0) {
             uint256 transfer = uint256(adjust);
             require(transfer <= amount);
@@ -191,13 +191,13 @@ contract OrchidLottery1 {
         uint256 cache = escrow << 128 | amount;
         pot.escrow_amount_ = cache;
 
-        emit Update(ORC_SHA(funder, signer, token), cache, funder);
+        emit Update(ORC_SHA(token, funder, signer), cache, funder);
     }
 
     function warn(IERC20 token, address signer, uint128 warned) external {
         Pot storage pot = ORC_POT(msg.sender, signer);
         pot.unlock_warned_ = ORC_WRN(ORC_DAY, warned);
-        emit Delete(ORC_SHA(msg.sender, signer, token), pot.unlock_warned_);
+        emit Delete(ORC_SHA(token, msg.sender, signer), pot.unlock_warned_);
     }
 
 
@@ -305,11 +305,11 @@ contract OrchidLottery1 {
         if (uint128(cache) >= amount) {
             cache -= amount;
             pot.escrow_amount_ = cache;
-            emit Update(ORC_SHA(funder, signer, token), cache, address(0));
+            emit Update(ORC_SHA(token, funder, signer), cache, address(0));
             return amount;
         } else {
             pot.escrow_amount_ = 0;
-            emit Update(ORC_SHA(funder, signer, token), 0, address(0));
+            emit Update(ORC_SHA(token, funder, signer), 0, address(0));
             return uint128(cache);
         }
     }
