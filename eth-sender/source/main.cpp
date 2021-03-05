@@ -406,8 +406,14 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "lottery1:move") {
         const auto [lottery, amount, signer, adjust, retrieve] = Options<Address, uint256_t, Address, uint256_t, uint256_t>(args);
-        static Selector<void, Address, uint256_t> move("move");
-        std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, move(signer, adjust << 128 | retrieve))).hex() << std::endl;
+        static Selector<void, Address, checked_int256_t, uint256_t> move("move");
+        std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, move(signer, adjust, retrieve))).hex() << std::endl;
+
+    } else if (command == "lottery1:read") {
+        const auto [lottery, token, funder, signer] = Options<Address, Address, Address, Address>(args);
+        static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address, Address> read("read");
+        const auto [escrow_balance, unlock_warned, bound] = co_await read.Call(*chain_, "latest", lottery, 90000, token, funder, signer, 0);
+        std::cout << escrow_balance << " " << unlock_warned << std::endl;
 
     } else if (command == "nonce") {
         const auto [address] = Options<Address>(args);
