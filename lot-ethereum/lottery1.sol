@@ -336,7 +336,7 @@ contract OrchidLottery1 {
             assembly { mstore(0x40, segment) }
         }
 
-        if (amount != 0) \
+        if (amount != 0)
             ORC_ADD(recipient, recipient, recipient, 0)
     }
 }
