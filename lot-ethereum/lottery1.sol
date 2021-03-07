@@ -62,11 +62,8 @@ contract OrchidLottery1 {
         return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_ << 128 | lottery.recipients_[recipient]);
     }
 
-    #define ORC_POT(f, s) \
-        lotteries_[f].pots_[s][token]
-
     #define ORC_ADD(sender, funder, signer, escrow) { \
-        Pot storage pot = ORC_POT(funder, signer); \
+        Pot storage pot = lotteries_[funder].pots_[signer][token]; \
         uint256 cache = pot.escrow_amount_; \
         if (cache == 0) \
             emit Create(token, funder, signer); \
@@ -156,7 +153,7 @@ contract OrchidLottery1 {
 
 
     function move_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
-        Pot storage pot = ORC_POT(funder, signer);
+        Pot storage pot = lotteries_[funder].pots_[signer][token];
 
         uint256 backup;
         uint256 escrow;
