@@ -37,8 +37,7 @@ all += build/OrchidLottery0.bin
 
 build/OrchidLottery1.bin: lottery1.sol
 	@mkdir -p $(dir $@)
-	cpp -C -P lottery1.sol >build/lottery1.sol
-	env/solc.sh 0.7.6 build build/lottery1.sol --evm-version istanbul --optimize --optimize-runs $(runs)
+	env/solc.sh 0.7.6 build lottery1.sol --evm-version istanbul --optimize --optimize-runs $(runs)
 all += build/OrchidLottery1.bin
 
 build/OrchidRecipient.bin: recipient.yul

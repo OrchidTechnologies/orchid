@@ -24,10 +24,6 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-#define ORC_256 keccak256)(abi.encodePacked
-#define ORC_191 byte(0x19), byte(0x00), this
-#define ORC_128(v) require((v) < 1 << 128)
-
 interface IERC20 {}
 
 contract OrchidLottery1 {
@@ -70,10 +66,12 @@ contract OrchidLottery1 {
         require(success && abi.decode(result, (bool)));
     }
 
-    #define ORC_TRN(funder) if (retrieve != 0) { \
-        (bool success, bytes memory result) = address(token).call( \
-            abi.encodeWithSignature("transfer(address,uint256)", funder, retrieve)); \
-        require(success && (result.length == 0 || abi.decode(result, (bool)))); \
+    function send_(address sender, IERC20 token, uint256 retrieve) private {
+        if (retrieve != 0) {
+            (bool success, bytes memory result) = address(token).call(
+                abi.encodeWithSignature("transfer(address,uint256)", sender, retrieve));
+            require(success && (result.length == 0 || abi.decode(result, (bool))));
+        }
     }
 
     function gift(IERC20 token, uint256 amount, address funder, address signer, uint256 escrow) external {
@@ -84,7 +82,7 @@ contract OrchidLottery1 {
     function move(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
         from_(token, amount);
         move_(msg.sender, token, amount, signer, adjust, lock, retrieve);
-        ORC_TRN(msg.sender)
+        send_(msg.sender, token, retrieve);
     }
 
 
@@ -100,7 +98,7 @@ contract OrchidLottery1 {
             (signer, adjust, lock, retrieve) = abi.decode(data[4:],
                 (address, int256, int256, uint256));
             move_(sender, token, amount, signer, adjust, lock, retrieve);
-            ORC_TRN(sender)
+            send_(msg.sender, token, retrieve);
         } else if (selector == bytes4(keccak256("gift(address,address,uint256)"))) {
             address funder; address signer; uint256 escrow;
             (funder, signer, escrow) = abi.decode(data[4:],
@@ -140,14 +138,14 @@ contract OrchidLottery1 {
         if (escrow != 0) {
             require(escrow <= amount);
             amount -= escrow;
-            ORC_128((cache >> 128) + escrow);
+            require((cache >> 128) + escrow < 1 << 128);
         }
 
-        ORC_128(uint128(cache) + amount);
+        require(uint128(cache) + amount < 1 << 128);
         cache += escrow << 128 | amount;
         pot.escrow_amount_ = cache;
 
-        emit Update((ORC_256(token, funder, signer)), cache, sender);
+        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, sender);
     }
 
     function move_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
@@ -207,7 +205,7 @@ contract OrchidLottery1 {
 
             warned += uint256(lock);
             require(warned > uint256(lock));
-            ORC_128(warned);
+            require(warned < 1 << 128);
         }
 
         if (retrieve != 0) {
@@ -218,16 +216,16 @@ contract OrchidLottery1 {
         if (unlock != 0) {
             uint256 cache = (warned == 0 ? 0 : unlock << 128 | warned);
             pot.unlock_warned_ = cache;
-            emit Delete((ORC_256(token, funder, signer)), cache);
+            emit Delete(keccak256(abi.encodePacked(token, funder, signer)), cache);
         }
     } {
-        ORC_128(amount);
-        ORC_128(escrow);
+        require(amount < 1 << 128);
+        require(escrow < 1 << 128);
 
         uint256 cache = escrow << 128 | amount;
         if (cache != backup) {
             pot.escrow_amount_ = cache;
-            emit Update((ORC_256(token, funder, signer)), cache, funder);
+            emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, funder);
         }
     } }
 
@@ -263,7 +261,7 @@ contract OrchidLottery1 {
     mapping(bytes32 => Track) private tracks_;
 
     function save(uint256 count, bytes32 seed) external {
-        for (seed = (ORC_256(seed, msg.sender));; seed = (ORC_256(seed))) {
+        for (seed = keccak256(abi.encodePacked(seed, msg.sender));; seed = keccak256(abi.encodePacked(seed))) {
             tracks_[seed].packed = uint256(msg.sender);
             if (count-- == 0)
                 break;
@@ -310,12 +308,12 @@ contract OrchidLottery1 {
         if (expire <= block.timestamp)
             return 0;
 
-        bytes32 digest; assembly { digest := chainid() } digest = (ORC_256(ORC_191, digest,
-            (ORC_256((ORC_256(uint128(ticket.packed0 >> 128), destination)), uint32(ticket.packed2 >> 1))),
+        bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encodePacked(byte(0x19), byte(0x00), this, digest,
+            keccak256(abi.encodePacked(keccak256(abi.encodePacked(uint128(ticket.packed0 >> 128), destination)), uint32(ticket.packed2 >> 1))),
             uint128(ticket.packed0), ticket.packed1, uint224(ticket.packed2 >> 33), token));
         address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
-        if (uint64(ticket.packed1 >> 128) < uint64(uint256((ORC_256(ticket.packed0, issued)))))
+        if (uint64(ticket.packed1 >> 128) < uint64(uint256(keccak256(abi.encodePacked(ticket.packed0, issued)))))
             return 0;
         uint256 amount = uint128(ticket.packed1);
 
@@ -336,11 +334,11 @@ contract OrchidLottery1 {
         if (uint128(cache) >= amount) {
             cache -= amount;
             pot.escrow_amount_ = cache;
-            emit Update((ORC_256(token, funder, signer)), cache, address(0));
+            emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, address(0));
             return amount;
         } else {
             pot.escrow_amount_ = 0;
-            emit Update((ORC_256(token, funder, signer)), 0, address(0));
+            emit Update(keccak256(abi.encodePacked(token, funder, signer)), 0, address(0));
             return uint128(cache);
         }
     }
