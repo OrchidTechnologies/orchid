@@ -37,8 +37,6 @@ contract OrchidLottery1 {
         uint256 unlock_warned_;
     }
 
-    #define ORC_WRN(u, w) (w == 0 ? 0 : u << 128 | w)
-
     event Create(IERC20 indexed token, address indexed funder, address indexed signer);
     event Update(bytes32 indexed account, uint256 escrow_amount, address sender);
     event Delete(bytes32 indexed account, uint256 unlock_warned);
@@ -96,13 +94,13 @@ contract OrchidLottery1 {
         ORC_ADD(msg.sender, funder, signer, escrow)
     }
 
-    function move(IERC20 token, uint256 amount, address signer, int256 adjust, uint256 retrieve) external {
+    function move(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
         ORC_FRM(amount)
-        move_(msg.sender, token, amount, signer, adjust, retrieve);
+        move_(msg.sender, token, amount, signer, adjust, lock, retrieve);
         ORC_TRN(msg.sender)
     }
 
-    bytes4 constant private Move_ = bytes4(keccak256("move(address,int256,uint256)"));
+    bytes4 constant private Move_ = bytes4(keccak256("move(address,int256,int256,uint256)"));
     bytes4 constant private Gift_ = bytes4(keccak256("gift(address,address,uint256)"));
 
     function tokenFallback(address sender, uint256 amount, bytes calldata data) public {
@@ -113,13 +111,15 @@ contract OrchidLottery1 {
 
         if (false) {
         } else if (selector == Move_) {
-            address signer; int256 adjust; uint256 retrieve;
-            (signer, adjust, retrieve) = abi.decode(data[4:], (address, int256, uint256));
-            move_(sender, token, amount, signer, adjust, retrieve);
+            address signer; int256 adjust; int256 lock; uint256 retrieve;
+            (signer, adjust, lock, retrieve) = abi.decode(data[4:],
+                (address, int256, int256, uint256));
+            move_(sender, token, amount, signer, adjust, lock, retrieve);
             ORC_TRN(sender)
         } else if (selector == Gift_) {
             address funder; address signer; uint256 escrow;
-            (funder, signer, escrow) = abi.decode(data[4:], (address, address, uint256));
+            (funder, signer, escrow) = abi.decode(data[4:],
+                (address, address, uint256));
             ORC_ADD(sender, funder, signer, escrow)
         } else require(false);
     }
@@ -139,10 +139,10 @@ contract OrchidLottery1 {
         ORC_ADD(msg.sender, funder, signer, escrow)
     }
 
-    function move(address signer, int256 adjust, uint256 retrieve) external payable {
+    function move(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
         address funder = msg.sender;
         ORC_HRD()
-        move_(funder, token, amount, signer, adjust, retrieve);
+        move_(funder, token, amount, signer, adjust, lock, retrieve);
 
         if (retrieve != 0) {
             (bool success,) = funder.call{value: retrieve}("");
@@ -151,35 +151,64 @@ contract OrchidLottery1 {
     }
 
 
-    function move_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, uint256 retrieve) private {
+    function move_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
         Pot storage pot = ORC_POT(funder, signer);
 
-        uint256 escrow = pot.escrow_amount_;
-        if (escrow == 0)
-            emit Create(token, funder, signer);
-        amount += uint128(escrow);
-        escrow = escrow >> 128;
+        uint256 backup;
+        uint256 escrow;
+
+        if (adjust != 0 || amount != retrieve) {
+            backup = pot.escrow_amount_;
+            if (backup == 0)
+                emit Create(token, funder, signer);
+            escrow = backup >> 128;
+            amount += uint128(backup);
+        } else {
+            backup = 0;
+            escrow = 0;
+        }
+    {
+        uint256 warned;
+        uint256 unlock;
+
+        if (adjust < 0 || lock != 0) {
+            warned = pot.unlock_warned_;
+            unlock = warned >> 128;
+            warned = uint128(warned);
+        }
 
         if (adjust < 0) {
-            uint256 warned = pot.unlock_warned_;
-            uint256 unlock = warned >> 128;
-            warned = uint128(warned);
+            require(unlock - 1 < block.timestamp);
 
             uint256 recover = uint256(-adjust);
             require(int256(recover) != adjust);
+
             require(recover <= escrow);
             amount += recover;
             escrow -= recover;
 
             require(recover <= warned);
-            require(unlock - 1 < block.timestamp);
-            pot.unlock_warned_ = ORC_WRN(unlock, warned - recover);
-            emit Delete((ORC_256(token, msg.sender, signer)), pot.unlock_warned_);
+            warned -= recover;
         } else if (adjust != 0) {
             uint256 transfer = uint256(adjust);
+
             require(transfer <= amount);
             amount -= transfer;
             escrow += transfer;
+        }
+
+        if (lock < 0) {
+            uint256 decrease = uint256(-lock);
+            require(int256(decrease) != lock);
+
+            require(decrease <= warned);
+            warned -= decrease;
+        } else if (lock != 0) {
+            unlock = ORC_DAY;
+
+            warned += uint256(lock);
+            require(warned > uint256(lock));
+            ORC_128(warned);
         }
 
         if (retrieve != 0) {
@@ -187,19 +216,21 @@ contract OrchidLottery1 {
             amount -= retrieve;
         }
 
+        if (unlock != 0) {
+            uint256 cache = (warned == 0 ? 0 : unlock << 128 | warned);
+            pot.unlock_warned_ = cache;
+            emit Delete((ORC_256(token, funder, signer)), cache);
+        }
+    } {
         ORC_128(amount);
         ORC_128(escrow);
+
         uint256 cache = escrow << 128 | amount;
-        pot.escrow_amount_ = cache;
-
-        emit Update((ORC_256(token, funder, signer)), cache, funder);
-    }
-
-    function warn(IERC20 token, address signer, uint128 warned) external {
-        Pot storage pot = ORC_POT(msg.sender, signer);
-        pot.unlock_warned_ = ORC_WRN(ORC_DAY, warned);
-        emit Delete((ORC_256(token, msg.sender, signer)), pot.unlock_warned_);
-    }
+        if (cache != backup) {
+            pot.escrow_amount_ = cache;
+            emit Update((ORC_256(token, funder, signer)), cache, funder);
+        }
+    } }
 
 
     event Bound(address indexed funder);
@@ -285,7 +316,7 @@ contract OrchidLottery1 {
             uint128(ticket.packed0), ticket.packed1, uint224(ticket.packed2 >> 33), token));
         address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
-        if (uint64(ticket.packed1 >> 128) < uint64(uint256(ORC_SHA(ticket.packed0, issued))))
+        if (uint64(ticket.packed1 >> 128) < uint64(uint256((ORC_256(ticket.packed0, issued)))))
             return 0;
         uint256 amount = uint128(ticket.packed1);
 

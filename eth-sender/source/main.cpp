@@ -405,9 +405,9 @@ task<int> Main(int argc, const char *const argv[]) { try {
         std::cout << (co_await executor_->Send(*chain_, {.gas = 175000}, lottery, 0, push(signer, balance + escrow, escrow))).hex() << std::endl;
 
     } else if (command == "lottery1:move") {
-        const auto [lottery, amount, signer, adjust, retrieve] = Options<Address, uint256_t, Address, uint256_t, uint256_t>(args);
-        static Selector<void, Address, checked_int256_t, uint256_t> move("move");
-        std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, move(signer, adjust, retrieve))).hex() << std::endl;
+        const auto [lottery, amount, signer, adjust, lock, retrieve] = Options<Address, uint256_t, Address, uint256_t, uint256_t, uint256_t>(args);
+        static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> move("move");
+        std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, move(signer, adjust, lock, retrieve))).hex() << std::endl;
 
     } else if (command == "lottery1:read") {
         const auto [lottery, token, funder, signer] = Options<Address, Address, Address, Address>(args);
