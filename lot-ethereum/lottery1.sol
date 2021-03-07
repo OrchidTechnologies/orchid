@@ -100,8 +100,6 @@ contract OrchidLottery1 {
         ORC_TRN(msg.sender)
     }
 
-    bytes4 constant private Move_ = bytes4(keccak256("move(address,int256,int256,uint256)"));
-    bytes4 constant private Gift_ = bytes4(keccak256("gift(address,address,uint256)"));
 
     function tokenFallback(address sender, uint256 amount, bytes calldata data) public {
         IERC20 token = IERC20(msg.sender);
@@ -110,13 +108,13 @@ contract OrchidLottery1 {
         bytes4 selector; assembly { selector := calldataload(data.offset) }
 
         if (false) {
-        } else if (selector == Move_) {
+        } else if (selector == bytes4(keccak256("move(address,int256,int256,uint256)"))) {
             address signer; int256 adjust; int256 lock; uint256 retrieve;
             (signer, adjust, lock, retrieve) = abi.decode(data[4:],
                 (address, int256, int256, uint256));
             move_(sender, token, amount, signer, adjust, lock, retrieve);
             ORC_TRN(sender)
-        } else if (selector == Gift_) {
+        } else if (selector == bytes4(keccak256("gift(address,address,uint256)"))) {
             address funder; address signer; uint256 escrow;
             (funder, signer, escrow) = abi.decode(data[4:],
                 (address, address, uint256));
