@@ -350,7 +350,7 @@ contract OrchidLottery1 {
         address recipient;
     }*/
 
-    function claim(IERC20 token, uint256 destination, bytes32[] calldata refunds, Ticket[] calldata tickets) external {
+    function claim(IERC20 token, uint256 destination, Ticket[] calldata tickets, bytes32[] calldata refunds) external {
         address payable recipient = address(destination);
         if (recipient == address(0))
             destination |= uint256(recipient = msg.sender);

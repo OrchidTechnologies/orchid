@@ -163,8 +163,8 @@ struct Tester {
         static Selector<void,
             Address /*token*/,
             uint256_t /*destination*/,
-            std::vector<Bytes32> /*refunds*/,
-            std::vector<Payment> /*tickets*/
+            std::vector<Payment> /*tickets*/,
+            std::vector<Bytes32> /*refunds*/
         > claim("claim");
 
         const auto indirect((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<>(Bless(boost::replace_all_copy(Load("../lot-ethereum/build/OrchidRecipient.bin"), OXT.buf().hex().substr(2), lottery.buf().hex().substr(2))))))).contract_);
@@ -320,7 +320,7 @@ struct Tester {
                 auto negative(EVM_STORE_NEW*d);
 
                 if (negative > positive / 2) negative = positive / 2;
-                co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claim(token, where(), refunds(d), payments(p))), positive - negative);
+                co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claim(token, where(), payments(p), refunds(d))), positive - negative);
                 for (unsigned i(0); i != p; ++i)
                     co_await check(accounts[i], -1);
             }
