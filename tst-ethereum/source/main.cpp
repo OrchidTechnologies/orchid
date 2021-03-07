@@ -169,24 +169,42 @@ struct Tester {
 
         const auto indirect((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<>(Bless(boost::replace_all_copy(Load("../lot-ethereum/build/OrchidRecipient.bin"), OXT.buf().hex().substr(2), lottery.buf().hex().substr(2))))))).contract_);
 
-      secret:
-        const auto secret(Random<32>());
-        const Address signer(Derive(secret));
-        if (Zeros(signer.buf()))
-            goto secret;
+        struct Account {
+            Secret secret_;
+            Address signer_;
+
+            unsigned balance_;
+            unsigned escrow_;
+
+            Account(const Secret &secret, const Address &signer) :
+                secret_(secret),
+                signer_(signer),
+                balance_(0),
+                escrow_(0)
+            {
+            }
+        };
+
+        std::vector<Account> accounts;
+
+        for (unsigned i(0); i != 3; ++i) {
+          secret:
+            const auto secret(Random<32>());
+            const Address signer(Derive(secret));
+            if (Zeros(signer.buf()))
+                goto secret;
+            accounts.emplace_back(secret, signer);
+        }
 
         const auto &funder(customer_);
         const auto &recipient(provider_);
 
-        unsigned balance(0);
-        unsigned escrow(0);
-
-        const auto check([&](signed adjust) -> task<void> {
-            balance += adjust;
-            const auto [escrow_balance, unlock_warned, bound] = co_await read.Call(chain_, "latest", lottery, 90000, token, customer_, signer, 0);
+        const auto check([&](Account &account, signed adjust) -> task<void> {
+            account.balance_ += adjust;
+            const auto [escrow_balance, unlock_warned, bound] = co_await read.Call(chain_, "latest", lottery, 90000, token, customer_, account.signer_, 0);
             //Log() << std::dec << uint128_t(escrow_balance) << " " << uint128_t(escrow_balance >> 128) << std::endl;
-            orc_assert(uint128_t(escrow_balance) == balance);
-            orc_assert(uint128_t(escrow_balance >> 128) == escrow);
+            orc_assert(uint128_t(escrow_balance) == account.balance_);
+            orc_assert(uint128_t(escrow_balance >> 128) == account.escrow_);
             if (unlock_warned != 0) {
                 const auto warned((uint128_t(unlock_warned)));
                 const auto unlock(uint128_t(unlock_warned >> 128));
@@ -199,7 +217,7 @@ struct Tester {
             return recipient.operator Address().num();
         });
 
-        const auto payment([&]() {
+        const auto payment([&](Account &account) {
             const auto reveal(Nonzero<16>().num<uint128_t>());
             const auto commit(HashK(Tie(reveal, where())));
 
@@ -214,7 +232,7 @@ struct Tester {
             const auto nonce(Nonzero<32>());
 
             const Ticket1 ticket{commit, issued, nonce, face, ratio, expire, funder};
-            const auto signature(Sign(secret, ticket.Encode(lottery, chain_, token, salt)));
+            const auto signature(Sign(account.secret_, ticket.Encode(lottery, chain_, token, salt)));
             if (Zeros(signature.operator Brick<65>()))
                 goto sign;
 
@@ -227,10 +245,11 @@ struct Tester {
         });
 
         const auto payments([&](unsigned count) {
+            orc_assert(count <= accounts.size());
             std::vector<Payment> payments;
             payments.reserve(count);
             for (unsigned i(0); i != count; ++i)
-                payments.emplace_back(payment());
+                payments.emplace_back(payment(accounts[i]));
             return payments;
         });
 
@@ -260,13 +279,15 @@ struct Tester {
 
         co_await move(provider_, lottery, 1, provider_, 1, 0, 0);
 
-        co_await move(customer_, lottery, 10, signer, 3, 0, 0);
-        escrow += 3;
-        co_await check(7);
+        for (Account &account : accounts) {
+            co_await move(customer_, lottery, 10, account.signer_, 3, 0, 0);
+            account.escrow_ += 3;
+            co_await check(account, 7);
 
-        co_await gift(provider_, lottery, 75, customer_, signer, 1);
-        escrow += 1;
-        co_await check(74);
+            co_await gift(provider_, lottery, 75, customer_, account.signer_, 1);
+            account.escrow_ += 1;
+            co_await check(account, 74);
+        }
 
         static const auto update(
             EVM_STORE_GET+EVM_STORE_SET+
@@ -300,18 +321,21 @@ struct Tester {
 
                 if (negative > positive / 2) negative = positive / 2;
                 co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claim(token, where(), refunds(d), payments(p))), positive - negative);
-                co_await check(-p);
+                for (unsigned i(0); i != p; ++i)
+                    co_await check(accounts[i], -1);
             }
 
-        co_await move(customer_, lottery, 10, signer, 0, 0, 0);
-        co_await check(10);
+        auto &account(accounts[0]);
 
-        co_await move(customer_, lottery, 0, signer, 0, 4, 0);
-        co_await check(0);
+        co_await move(customer_, lottery, 10, account.signer_, 0, 0, 0);
+        co_await check(account, 10);
 
-        co_await move(customer_, lottery, 0, signer, -4, 0, 21);
-        escrow -= 4;
-        co_await check(4-21);
+        co_await move(customer_, lottery, 0, account.signer_, 0, 4, 0);
+        co_await check(account, 0);
+
+        co_await move(customer_, lottery, 0, account.signer_, -4, 0, 21);
+        account.escrow_ -= 4;
+        co_await check(account, 4-21);
     }
 
     auto Combine(const checked_int256_t &adjust, const uint256_t &retrieve) {
