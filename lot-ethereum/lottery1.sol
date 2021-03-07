@@ -62,28 +62,12 @@ contract OrchidLottery1 {
         return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_ << 128 | lottery.recipients_[recipient]);
     }
 
-    #define ORC_ADD(sender, funder, signer, escrow) { \
-        Pot storage pot = lotteries_[funder].pots_[signer][token]; \
-        uint256 cache = pot.escrow_amount_; \
-        if (cache == 0) \
-            emit Create(token, funder, signer); \
-        if (escrow != 0) { \
-            require(escrow <= amount); \
-            amount -= escrow; \
-            ORC_128((cache >> 128) + escrow); \
-        } \
-        ORC_128(uint128(cache) + amount); \
-        cache += escrow << 128 | amount; \
-        pot.escrow_amount_ = cache; \
-        emit Update((ORC_256(token, funder, signer)), cache, sender); \
-    }
 
-
-    #define ORC_FRM(a) { \
-        require(token != IERC20(0)); \
-        (bool _s, bytes memory _d) = address(token).call( \
-            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), a)); \
-        require(_s && abi.decode(_d, (bool))); \
+    function from_(IERC20 token, uint256 amount) private {
+        require(token != IERC20(0));
+        (bool success, bytes memory result) = address(token).call(
+            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, this, amount));
+        require(success && abi.decode(result, (bool)));
     }
 
     #define ORC_TRN(funder) if (retrieve != 0) { \
@@ -93,12 +77,12 @@ contract OrchidLottery1 {
     }
 
     function gift(IERC20 token, uint256 amount, address funder, address signer, uint256 escrow) external {
-        ORC_FRM(amount)
-        ORC_ADD(msg.sender, funder, signer, escrow)
+        from_(token, amount);
+        gift_(msg.sender, funder, token, amount, signer, escrow);
     }
 
     function move(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
-        ORC_FRM(amount)
+        from_(token, amount);
         move_(msg.sender, token, amount, signer, adjust, lock, retrieve);
         ORC_TRN(msg.sender)
     }
@@ -121,7 +105,7 @@ contract OrchidLottery1 {
             address funder; address signer; uint256 escrow;
             (funder, signer, escrow) = abi.decode(data[4:],
                 (address, address, uint256));
-            ORC_ADD(sender, funder, signer, escrow)
+            gift_(sender, funder, token, amount, signer, escrow);
         } else require(false);
     }
 
@@ -131,19 +115,13 @@ contract OrchidLottery1 {
     }
 
 
-    #define ORC_HRD() \
-        IERC20 token = IERC20(0); \
-        uint256 amount = msg.value;
-
     function gift(address funder, address signer, uint256 escrow) external payable {
-        ORC_HRD()
-        ORC_ADD(msg.sender, funder, signer, escrow)
+        gift_(msg.sender, funder, IERC20(0), msg.value, signer, escrow);
     }
 
     function move(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
         address funder = msg.sender;
-        ORC_HRD()
-        move_(funder, token, amount, signer, adjust, lock, retrieve);
+        move_(funder, IERC20(0), msg.value, signer, adjust, lock, retrieve);
 
         if (retrieve != 0) {
             (bool success,) = funder.call{value: retrieve}("");
@@ -151,6 +129,26 @@ contract OrchidLottery1 {
         }
     }
 
+
+    function gift_(address sender, address funder, IERC20 token, uint256 amount, address signer, uint256 escrow) private {
+        Pot storage pot = lotteries_[funder].pots_[signer][token];
+
+        uint256 cache = pot.escrow_amount_;
+        if (cache == 0)
+            emit Create(token, funder, signer);
+
+        if (escrow != 0) {
+            require(escrow <= amount);
+            amount -= escrow;
+            ORC_128((cache >> 128) + escrow);
+        }
+
+        ORC_128(uint128(cache) + amount);
+        cache += escrow << 128 | amount;
+        pot.escrow_amount_ = cache;
+
+        emit Update((ORC_256(token, funder, signer)), cache, sender);
+    }
 
     function move_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
         Pot storage pot = lotteries_[funder].pots_[signer][token];
@@ -370,6 +368,6 @@ contract OrchidLottery1 {
         }
 
         if (amount != 0)
-            ORC_ADD(recipient, recipient, recipient, 0)
+            gift_(recipient, recipient, token, amount, recipient, 0);
     }
 }
