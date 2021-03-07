@@ -32,6 +32,9 @@
 
 namespace orc {
 
+template <unsigned Bits_>
+using uint_t = boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked>>;
+
 using boost::multiprecision::uint128_t;
 using boost::multiprecision::uint256_t;
 

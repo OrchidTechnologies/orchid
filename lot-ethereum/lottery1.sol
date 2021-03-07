@@ -25,7 +25,9 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 #define ORC_DAY (block.timestamp + 1 days)
-#define ORC_SHA(a, ...) keccak256(abi.encode(a,## __VA_ARGS__))
+#define ORC_256 keccak256)(abi.encodePacked
+#define ORC_191 byte(0x19), byte(0x00), this
+#define ORC_128(v) require((v) < 1 << 128)
 
 interface IERC20 {}
 
@@ -36,7 +38,6 @@ contract OrchidLottery1 {
     }
 
     #define ORC_WRN(u, w) (w == 0 ? 0 : u << 128 | w)
-    #define ORC_128(v) require((v) < 1 << 128)
 
     event Create(IERC20 indexed token, address indexed funder, address indexed signer);
     event Update(bytes32 indexed account, uint256 escrow_amount, address sender);
@@ -73,7 +74,7 @@ contract OrchidLottery1 {
         ORC_128(uint128(cache) + amount); \
         cache += escrow << 128 | amount; \
         pot.escrow_amount_ = cache; \
-        emit Update(ORC_SHA(token, funder, signer), cache, sender); \
+        emit Update((ORC_256(token, funder, signer)), cache, sender); \
     }
 
 
@@ -173,7 +174,7 @@ contract OrchidLottery1 {
             require(recover <= warned);
             require(unlock - 1 < block.timestamp);
             pot.unlock_warned_ = ORC_WRN(unlock, warned - recover);
-            emit Delete(ORC_SHA(token, msg.sender, signer), pot.unlock_warned_);
+            emit Delete((ORC_256(token, msg.sender, signer)), pot.unlock_warned_);
         } else if (adjust != 0) {
             uint256 transfer = uint256(adjust);
             require(transfer <= amount);
@@ -191,13 +192,13 @@ contract OrchidLottery1 {
         uint256 cache = escrow << 128 | amount;
         pot.escrow_amount_ = cache;
 
-        emit Update(ORC_SHA(token, funder, signer), cache, funder);
+        emit Update((ORC_256(token, funder, signer)), cache, funder);
     }
 
     function warn(IERC20 token, address signer, uint128 warned) external {
         Pot storage pot = ORC_POT(msg.sender, signer);
         pot.unlock_warned_ = ORC_WRN(ORC_DAY, warned);
-        emit Delete(ORC_SHA(token, msg.sender, signer), pot.unlock_warned_);
+        emit Delete((ORC_256(token, msg.sender, signer)), pot.unlock_warned_);
     }
 
 
@@ -232,7 +233,7 @@ contract OrchidLottery1 {
     mapping(bytes32 => Track) private tracks_;
 
     function save(uint256 count, bytes32 seed) external {
-        for (seed = ORC_SHA(seed, msg.sender);; seed = ORC_SHA(seed)) {
+        for (seed = (ORC_256(seed, msg.sender));; seed = (ORC_256(seed))) {
             tracks_[seed].packed = uint256(msg.sender);
             if (count-- == 0)
                 break;
@@ -279,9 +280,9 @@ contract OrchidLottery1 {
         if (expire <= block.timestamp)
             return 0;
 
-        bytes32 digest; assembly { digest := chainid() } digest = ORC_SHA(
-            ORC_SHA(ORC_SHA(ticket.packed0 >> 128, destination), uint32(ticket.packed2 >> 1)),
-            uint128(ticket.packed0), ticket.packed1, ticket.packed2 & ~uint256(0x1ffffffff), token, this, digest);
+        bytes32 digest; assembly { digest := chainid() } digest = (ORC_256(ORC_191, digest,
+            (ORC_256((ORC_256(uint128(ticket.packed0 >> 128), destination)), uint32(ticket.packed2 >> 1))),
+            uint128(ticket.packed0), ticket.packed1, uint224(ticket.packed2 >> 33), token));
         address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
 
         if (uint64(ticket.packed1 >> 128) < uint64(uint256(ORC_SHA(ticket.packed0, issued))))
@@ -305,11 +306,11 @@ contract OrchidLottery1 {
         if (uint128(cache) >= amount) {
             cache -= amount;
             pot.escrow_amount_ = cache;
-            emit Update(ORC_SHA(token, funder, signer), cache, address(0));
+            emit Update((ORC_256(token, funder, signer)), cache, address(0));
             return amount;
         } else {
             pot.escrow_amount_ = 0;
-            emit Update(ORC_SHA(token, funder, signer), 0, address(0));
+            emit Update((ORC_256(token, funder, signer)), 0, address(0));
             return uint128(cache);
         }
     }

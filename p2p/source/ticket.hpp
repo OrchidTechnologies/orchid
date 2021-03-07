@@ -88,19 +88,8 @@ struct Ticket1 {
         return uint256_t(issued_) << 193 | uint256_t(funder_.num()) << 33; }
 
     Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Address &token, const uint32_t &salt) const {
-        return HashK(Coder<
-            Bytes32,
-            uint256_t,
-            uint256_t,
-            uint256_t,
-            Address, Address, uint256_t
-        >::Encode(
-            HashK(Coder<Bytes32, uint32_t>::Encode(commit_, salt)),
-            uint128_t(nonce_.num<uint256_t>()),
-            Packed1(),
-            Packed2(),
-            token, lottery, chain
-        ));
+        return HashK(Tie(uint8_t(0x19), uint8_t(0x00), lottery, chain, HashK(Tie(commit_, salt)),
+            uint128_t(nonce_.num<uint256_t>()), Packed1(), uint_t<224>(Packed2() >> 33), token));
     }
 };
 
