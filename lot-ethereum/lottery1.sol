@@ -272,12 +272,12 @@ contract OrchidLottery1 {
         }
     }
 
-    #define ORC_DEL(d) { \
-        Track storage track = tracks_[d]; \
-        uint256 packed = track.packed; \
-        if (packed >> 160 <= block.timestamp) \
-            if (address(packed) == msg.sender) \
-                delete track.packed; \
+    function spend_(bytes32 refund) private {
+        Track storage track = tracks_[refund];
+        uint256 packed = track.packed;
+        if (packed >> 160 <= block.timestamp)
+            if (address(packed) == msg.sender)
+                delete track.packed;
     }
 
 
@@ -359,7 +359,7 @@ contract OrchidLottery1 {
             destination |= uint256(recipient = msg.sender);
 
         for (uint256 i = refunds.length; i != 0; )
-            ORC_DEL(refunds[--i])
+            spend_(refunds[--i]);
 
         uint256 segment; assembly { segment := mload(0x40) }
 
