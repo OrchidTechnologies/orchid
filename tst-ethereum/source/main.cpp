@@ -343,7 +343,7 @@ struct Tester {
     }
 
     task<void> Test() {
-        const auto lottery1((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<>(Bless(Load("../lot-ethereum/build/OrchidLottery1.bin")))()))).contract_);
+        const auto lottery1((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<uint64_t>(Bless(Load("../lot-ethereum/build/OrchidLottery1.bin")))(0)))).contract_);
 
 #if 1
         static Selector<void, bool, std::vector<Address>> bind1("bind");

@@ -24,7 +24,6 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-#define ORC_DAY (block.timestamp + 1 days)
 #define ORC_256 keccak256)(abi.encodePacked
 #define ORC_191 byte(0x19), byte(0x00), this
 #define ORC_128(v) require((v) < 1 << 128)
@@ -32,6 +31,13 @@ pragma abicoder v2;
 interface IERC20 {}
 
 contract OrchidLottery1 {
+    uint64 private immutable day_;
+
+    constructor(uint64 day) {
+        day_ = day;
+    }
+
+
     struct Pot {
         uint256 escrow_amount_;
         uint256 unlock_warned_;
@@ -202,7 +208,7 @@ contract OrchidLottery1 {
             require(decrease <= warned);
             warned -= decrease;
         } else if (lock != 0) {
-            unlock = ORC_DAY;
+            unlock = block.timestamp + day_;
 
             warned += uint256(lock);
             require(warned > uint256(lock));
@@ -238,10 +244,10 @@ contract OrchidLottery1 {
 
         uint i = recipients.length;
         if (i == 0)
-            lottery.bound_ = allow ? 0 : ORC_DAY;
+            lottery.bound_ = allow ? 0 : block.timestamp + day_;
         else {
             uint256 value = allow ? uint256(-1) :
-                lottery.bound_ < block.timestamp ? 0 : ORC_DAY;
+                lottery.bound_ < block.timestamp ? 0 : block.timestamp + day_;
             do lottery.recipients_[recipients[--i]] = value;
             while (i != 0);
         }
