@@ -79,9 +79,9 @@ contract OrchidLottery1 {
         gift_(msg.sender, funder, token, amount, signer, escrow);
     }
 
-    function move(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
+    function edit(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
         from_(token, amount);
-        move_(msg.sender, token, amount, signer, adjust, lock, retrieve);
+        edit_(msg.sender, token, amount, signer, adjust, lock, retrieve);
         send_(msg.sender, token, retrieve);
     }
 
@@ -93,11 +93,11 @@ contract OrchidLottery1 {
         bytes4 selector; assembly { selector := calldataload(data.offset) }
 
         if (false) {
-        } else if (selector == bytes4(keccak256("move(address,int256,int256,uint256)"))) {
+        } else if (selector == bytes4(keccak256("edit(address,int256,int256,uint256)"))) {
             address signer; int256 adjust; int256 lock; uint256 retrieve;
             (signer, adjust, lock, retrieve) = abi.decode(data[4:],
                 (address, int256, int256, uint256));
-            move_(sender, token, amount, signer, adjust, lock, retrieve);
+            edit_(sender, token, amount, signer, adjust, lock, retrieve);
             send_(msg.sender, token, retrieve);
         } else if (selector == bytes4(keccak256("gift(address,address,uint256)"))) {
             address funder; address signer; uint256 escrow;
@@ -117,9 +117,9 @@ contract OrchidLottery1 {
         gift_(msg.sender, funder, IERC20(0), msg.value, signer, escrow);
     }
 
-    function move(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
+    function edit(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
         address funder = msg.sender;
-        move_(funder, IERC20(0), msg.value, signer, adjust, lock, retrieve);
+        edit_(funder, IERC20(0), msg.value, signer, adjust, lock, retrieve);
 
         if (retrieve != 0) {
             (bool success,) = funder.call{value: retrieve}("");
@@ -148,7 +148,7 @@ contract OrchidLottery1 {
         emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, sender);
     }
 
-    function move_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
+    function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
         Pot storage pot = lotteries_[funder].pots_[signer][token];
 
         uint256 backup;

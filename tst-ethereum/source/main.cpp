@@ -144,8 +144,8 @@ struct Tester {
         co_await show();
     }
 
-    template <typename Gift_, typename Move_>
-    task<void> Test1(const std::string &kind, const Address &lottery, Gift_ &&gift, Move_ &&move, const Address &token) {
+    template <typename Gift_, typename Edit_>
+    task<void> Test1(const std::string &kind, const Address &lottery, Gift_ &&gift, Edit_ &&edit, const Address &token) {
         Log() << "==========" << std::endl;
         Log() << "lottery1 (" << kind << ")" << std::endl;
 
@@ -277,10 +277,10 @@ struct Tester {
         });
 
 
-        co_await move(provider_, lottery, 1, provider_, 1, 0, 0);
+        co_await edit(provider_, lottery, 1, provider_, 1, 0, 0);
 
         for (Account &account : accounts) {
-            co_await move(customer_, lottery, 10, account.signer_, 3, 0, 0);
+            co_await edit(customer_, lottery, 10, account.signer_, 3, 0, 0);
             account.escrow_ += 3;
             co_await check(account, 7);
 
@@ -327,13 +327,13 @@ struct Tester {
 
         auto &account(accounts[0]);
 
-        co_await move(customer_, lottery, 10, account.signer_, 0, 0, 0);
+        co_await edit(customer_, lottery, 10, account.signer_, 0, 0, 0);
         co_await check(account, 10);
 
-        co_await move(customer_, lottery, 0, account.signer_, 0, 4, 0);
+        co_await edit(customer_, lottery, 0, account.signer_, 0, 4, 0);
         co_await check(account, 0);
 
-        co_await move(customer_, lottery, 0, account.signer_, -4, 0, 21);
+        co_await edit(customer_, lottery, 0, account.signer_, -4, 0, 21);
         account.escrow_ -= 4;
         co_await check(account, 4-21);
     }
@@ -390,10 +390,10 @@ struct Tester {
             co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
             co_await Audit("gift", co_await sender.Send(chain_, {}, lottery, 0, gift(token, value, funder, signer, escrow)));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const checked_int256_t &lock, const uint256_t &retrieve) -> task<void> {
-            static Selector<void, Address, uint256_t, Address, checked_int256_t, checked_int256_t, uint256_t> move("move");
+            static Selector<void, Address, uint256_t, Address, checked_int256_t, checked_int256_t, uint256_t> edit("edit");
             if (value != 0)
                 co_await Audit("approve", co_await sender.Send(chain_, {}, token, 0, approve(lottery, value)));
-            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, 0, move(token, value, signer, adjust, lock, retrieve)));
+            co_await Audit("edit", co_await sender.Send(chain_, {}, lottery, 0, edit(token, value, signer, adjust, lock, retrieve)));
         }, token);
 #endif
 
@@ -404,8 +404,8 @@ struct Tester {
             co_await Audit("gift", co_await sender.Send(chain_, {}, token, 0, transferAndCall(lottery, value, Beam(gift(funder, signer, escrow)))));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const checked_int256_t &lock, const uint256_t &retrieve) -> task<void> {
             Log() << std::dec << co_await balanceOf.Call(chain_, "latest", token, 90000, lottery1) << std::endl;
-            static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> move("move");
-            co_await Audit("move", co_await sender.Send(chain_, {}, token, 0, transferAndCall(lottery, value, Beam(move(signer, adjust, lock, retrieve)))));
+            static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> edit("edit");
+            co_await Audit("edit", co_await sender.Send(chain_, {}, token, 0, transferAndCall(lottery, value, Beam(edit(signer, adjust, lock, retrieve)))));
             Log() << std::dec << co_await balanceOf.Call(chain_, "latest", token, 90000, lottery1) << std::endl;
         }, token);
         Log() << std::dec << co_await balanceOf.Call(chain_, "latest", token, 90000, lottery1) << std::endl;
@@ -417,8 +417,8 @@ struct Tester {
             static Selector<void, Address, Address, uint256_t> gift("gift");
             co_await Audit("gift", co_await sender.Send(chain_, {}, lottery, value, gift(funder, signer, escrow)));
         }, [&](const Executor &sender, const Address &lottery, const uint256_t &value, const Address &signer, const checked_int256_t &adjust, const checked_int256_t &lock, const uint256_t &retrieve) -> task<void> {
-            static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> move("move");
-            co_await Audit("move", co_await sender.Send(chain_, {}, lottery, value, move(signer, adjust, lock, retrieve)));
+            static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> edit("edit");
+            co_await Audit("edit", co_await sender.Send(chain_, {}, lottery, value, edit(signer, adjust, lock, retrieve)));
         }, 0);
 #endif
     }
