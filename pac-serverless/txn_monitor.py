@@ -56,11 +56,11 @@ def update_txn(w3wsmap, txn):
     txnhash     = txn.get('txnhash')
     status      = txn.get('status','')
     account_id  = txn.get('account_id')
-    chainId     = txn.get('chainId','1')
+    chainId     = int(txn.get('chainId','1'))
 
-    logging.info(f'update_txn txnhash:{txnhash}  status:{status}  account_id:{account_id} chainId:{chainId} ')
+    logging.info(f'update_txn w3wsmap: {str(w3wsmap)} txnhash:{txnhash}  status:{status}  account_id:{account_id} chainId:{chainId} ')
 
-    w3          = w3wsmap.get(chainId)
+    w3          = w3wsmap.get(int(chainId))
 
     if (w3 is None):
         msg = f'w3 provider for chainId:{chainId} not found!'
@@ -81,8 +81,8 @@ def update_txn(w3wsmap, txn):
         txn_vnonce   = int(txn.get('vnonce',0))
         acc_nonces   = account.get('nonces')
         acc_vnonce   = 0
-        if (acc_nonces is None):
-            acc_vnonce = int(acc_nonces.get(chainId,0))
+        if (acc_nonces is not None):
+            acc_vnonce = int(acc_nonces.get(str(chainId),0))
         acc_nonces = {}
         logging.info(f'update_txn txnhash:{txnhash} new/clobbered  txn_vnonce:{txn_vnonce}  acc_vnonce:{acc_vnonce}')
         if (txn_vnonce == acc_vnonce):
@@ -100,12 +100,14 @@ def update_txn(w3wsmap, txn):
         acc_vnonce   = 0
         if (acc_nonces is None):
             acc_nonces = {}
-        acc_vnonce = int(acc_nonces.get(chainId,0))
+        acc_vnonce = int(acc_nonces.get(str(chainId),0))
         logging.info(f'update_txn txnhash:{txnhash} success/error  txn_vnonce:{txn_vnonce}  acc_vnonce:{acc_vnonce}')
         acc_vnonce   = max(acc_vnonce, txn_vnonce + 1)
-        acc_nonces[chainId] = acc_vnonce
+        acc_nonces[str(chainId)] = acc_vnonce
         account['nonces'] = acc_nonces
+        logging.info(f'writing account: {str(account)}')
         w3_generic.dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], account)
+        logging.info(f'deleting txn: {txnhash}')
         w3_generic.dynamodb_delete1(os.environ['TXNS_TABLE_NAME'],'txnhash',txnhash)
         return txn
 
@@ -120,7 +122,7 @@ def update_txns():
 
     w3wsmap = w3_generic.get_w3wsock_providers()
 
-    logging.info(f'update_txns  reading DB')
+    logging.info(f'update_txns  reading DB  w3wsmap: {str(w3wsmap)} ')
     results = w3_generic.dynamodb_readall(os.environ['TXNS_TABLE_NAME'])
 
     num_txns = results['Count']
