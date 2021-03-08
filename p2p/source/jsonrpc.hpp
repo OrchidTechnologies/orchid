@@ -24,6 +24,7 @@
 #define ORCHID_JSONRPC_HPP
 
 #include "address.hpp"
+#include "signed.hpp"
 
 namespace orc {
 
@@ -62,13 +63,14 @@ struct Numeric<true, Size_, Type_> {
     static const bool dynamic_ = false;
 
     static Type_ Decode(Window &window) {
+        // XXX: verify size of type
         Brick<32> brick;
         window.Take(brick);
         return brick.template num<uint256_t>().convert_to<Type_>();
     }
 
     static void Encode(Builder &builder, const Type_ &value) {
-        builder += Number<uint256_t>(value, signbit(value) ? 0xff : 0x00);
+        builder += Number<uint256_t>(Complement(value), signbit(value) ? 0xff : 0x00);
     }
 
     static void Size(size_t &offset, const Type_ &value) {
@@ -103,14 +105,14 @@ struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     }
 };
 
-/*template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
 struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::signed_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> :
     public Numeric<true, (Bits_ >> 3), boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::signed_magnitude, Check_, void>>>
 {
     static void Name(std::ostringstream &signature) {
         signature << "int" << std::dec << Bits_;
     }
-};*/
+};
 
 template <>
 struct Coded<Address, void> {

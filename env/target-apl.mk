@@ -62,15 +62,15 @@ lflags += $(resource)/lib/darwin/libclang_rt.$(runtime).a
 more += -B$(dir $(clang))
 more += -fno-strict-return
 include $(pwd)/target-ndk.mk
+cxx += -stdlib=libc++
+
+xflags += -nostdinc++
+xflags += -isystem $(toolchain)/usr/include/c++/v1
 
 # the r22 NDK prefers its own copy of ld
 wflags += -fuse-ld=/usr/bin/ld
 
 endif
-
-include $(pwd)/target-cxx.mk
-cflags/$(pwd)/libcxx/ += -DLIBCXX_BUILDING_LIBCXXABI
-lflags += -lc++abi
 
 define _
 ranlib/$(1) := ranlib

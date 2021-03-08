@@ -52,12 +52,16 @@ cflags += -I$(pwd)/source
 $(call depend,$(pwd)/source/version.cpp.o,@/extra/revision.hpp)
 
 
-cflags += -I$(pwd)/range-v3/include
-
 cflags += -I$(pwd)/expected/include
 cflags += -I$(pwd)/url/include
 cflags += -I$(pwd)/url/src
-source += $(wildcard $(pwd)/url/src/v1/*/*.cpp)
+source += $(filter-out \
+    %/filesystem.cpp \
+,$(wildcard \
+    $(pwd)/url/src/unicode/*.cpp \
+    $(pwd)/url/src/url/*.cpp \
+    $(pwd)/url/src/url/percent_encoding/*.cpp \
+))
 
 
 source += $(wildcard $(pwd)/lwip/src/api/*.c)

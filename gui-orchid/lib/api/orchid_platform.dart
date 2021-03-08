@@ -28,4 +28,8 @@ class OrchidPlatform {
   static bool get isApple {
     return isIOS || isMacOS;
   }
+
+  static bool get isNotApple {
+    return !isApple;
+  }
 }

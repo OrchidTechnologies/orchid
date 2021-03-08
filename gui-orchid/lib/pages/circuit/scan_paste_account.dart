@@ -7,6 +7,7 @@ import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/qrcode.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -141,54 +142,5 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
 
   S get s {
     return S.of(context);
-  }
-}
-
-class TitleIconButton extends StatelessWidget {
-  final String text;
-  final Widget trailing;
-  final Color textColor;
-  final Color backgroundColor;
-  final Color borderColor;
-  final VoidCallback onPressed;
-  final double spacing;
-
-  const TitleIconButton({
-    Key key,
-    @required this.text,
-    @required this.trailing,
-    @required this.textColor,
-    @required this.backgroundColor,
-    this.borderColor,
-    @required this.onPressed,
-    this.spacing = 4,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return FlatButton(
-      color: backgroundColor,
-      onPressed: onPressed,
-      shape: RoundedRectangleBorder(
-          side: BorderSide(
-              color: borderColor ?? backgroundColor,
-              width: 1,
-              style: BorderStyle.solid),
-          borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
-        child: Row(
-          children: <Widget>[
-            AppText.body(
-                text: text,
-                color: textColor,
-                letterSpacing: 1.25,
-                lineHeight: 1.14),
-            padx(spacing),
-            trailing
-          ],
-        ),
-      ),
-    );
   }
 }

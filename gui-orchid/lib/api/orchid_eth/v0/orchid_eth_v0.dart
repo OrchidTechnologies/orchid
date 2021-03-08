@@ -26,14 +26,6 @@ class OrchidEthereumV0 {
       'o/v' +
       '2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
 
-  // Lottery contract address on main net
-  static var lotteryContractAddress =
-      '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
-
-  // The ABI identifier for the `look` method.
-  // Note: The first four bytes of the signature hash (Remix can provide this).
-  static var lotteryLookMethodHash = '1554ad5d';
-
   OrchidEthereumV0._init();
 
   factory OrchidEthereumV0() {
@@ -72,9 +64,9 @@ class OrchidEthereumV0 {
     // construct the abi encoded eth_call
     var params = [
       {
-        "to": "$lotteryContractAddress",
+        "to": "${OrchidContractV0.lotteryContractAddress}",
         "data":
-            "0x$lotteryLookMethodHash${abiEncoded(funder)}${abiEncoded(signer)}"
+            "0x${OrchidContractV0.lotteryLookMethodHash}${abiEncoded(funder)}${abiEncoded(signer)}"
       },
       "latest"
     ];
@@ -156,7 +148,6 @@ class OrchidEthereumV0 {
    */
   Future<OrchidTransactionV0> getTransactionResult(
       String transactionHash) async {
-    //print("fetch transaction for: $transactionHash");
     var params = [transactionHash];
     return OrchidTransactionV0.fromJsonRpcResult(
         await jsonRPC(method: "eth_getTransactionByHash", params: params));
@@ -197,12 +188,10 @@ class OrchidEthereumV0 {
     EthereumAddress signer,
   ) async {
     print("fetch update events for: $funder, $signer, url = ${await url}");
-    const updateEventHash =
-        "0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc";
     var params = [
       {
         "topics": [
-          updateEventHash,
+          OrchidContractV0.updateEventHashV0,
           abiEncoded(funder, prefix: true),
           abiEncoded(signer, prefix: true)
         ],
@@ -221,12 +210,10 @@ class OrchidEthereumV0 {
     EthereumAddress signer,
   ) async {
     print("fetch update events for: $signer, url = ${await url}");
-    const createEventHash =
-        "0x96b5b9b8a7193304150caccf9b80d150675fa3d6af57761d8d8ef1d6f9a1a909";
     var params = [
       {
         "topics": [
-          createEventHash,
+          OrchidContractV0.createEventHashV0,
           "null", // no funder topic for index 1
           abiEncoded(signer, prefix: true)
         ],

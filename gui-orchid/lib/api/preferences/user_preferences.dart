@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -261,14 +262,19 @@ class UserPreferences {
             .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
       });
 
-  /// The shared, single, outstanding PAC transaction or null if there is none.
+  /// The PAC transaction or null if there is none.
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
       key: UserPreferenceKey.PacTransaction,
       loadValue: (key) async {
         String value = await readStringForKey(key);
-        return value != null
-            ? PacTransaction.fromJson(jsonDecode(value))
-            : null;
+        try {
+          return value != null
+              ? PacTransaction.fromJson(jsonDecode(value))
+              : null;
+        } catch(err) {
+          log("pacs: Unable to decode v1 transaction, returning null: $value, $err");
+          return null;
+        }
       },
       storeValue: (key, tx) {
         String value = tx != null ? jsonEncode(tx) : null;

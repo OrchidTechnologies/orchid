@@ -35,23 +35,11 @@ build/OrchidLottery0.bin: lottery0.sol
 	env/solc.sh 0.5.13 build lottery0.sol --evm-version istanbul
 all += build/OrchidLottery0.bin
 
-build/OrchidLottery1eth.bin: lottery1.sol
+build/OrchidLottery1.bin: lottery1.sol
 	@mkdir -p $(dir $@)
-	cpp -C -P lottery1.sol >lottery1-eth.sol
-	env/solc.sh 0.7.2 build lottery1-eth.sol --evm-version istanbul --optimize --optimize-runs $(runs)
-all += build/OrchidLottery1eth.bin
-
-build/OrchidLottery1tok.bin: lottery1.sol
-	@mkdir -p $(dir $@)
-	cpp -C -P lottery1.sol >lottery1-tok.sol -DORC_SYM=
-	env/solc.sh 0.7.2 build lottery1-tok.sol --evm-version istanbul --optimize --optimize-runs $(runs)
-all += build/OrchidLottery1tok.bin
-
-build/OrchidLottery1oxt.bin: lottery1.sol
-	@mkdir -p $(dir $@)
-	cpp -C -P lottery1.sol >lottery1-oxt.sol -DORC_SYM=oxt -DORC_ERC=0x4575f41308EC1483f3d399aa9a2826d74Da13Deb
-	env/solc.sh 0.7.2 build lottery1-oxt.sol --evm-version istanbul --optimize --optimize-runs $(runs)
-all += build/OrchidLottery1oxt.bin
+	cpp -C -P lottery1.sol >build/lottery1.sol
+	env/solc.sh 0.7.6 build build/lottery1.sol --evm-version istanbul --optimize --optimize-runs $(runs)
+all += build/OrchidLottery1.bin
 
 build/OrchidRecipient.bin: recipient.yul
 	@mkdir -p $(dir $@)

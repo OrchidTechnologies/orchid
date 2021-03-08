@@ -35,7 +35,7 @@ using Integer = boost::multiprecision::number<boost::multiprecision::backends::c
 template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
 Integer<Bits_, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked> Complement(const Integer<Bits_, boost::multiprecision::signed_magnitude, Check_> &value) {
     typedef Integer<Bits_, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked> Value;
-    return value.sign() != 0 ? ~Value(-value) + 1 : Value(value);
+    return Value(value);
 }
 
 template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>

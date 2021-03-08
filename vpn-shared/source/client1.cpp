@@ -32,7 +32,7 @@ task<void> Client1::Submit(const Float &amount) {
     const auto issued(Timestamp());
     const auto expire(issued + 60 * 60 * 2);
     const Ticket1 ticket{commit, issued, nonce, face_, Ratio(face_, amount, market_, market_.currency_, Gas()), expire, funder_};
-    const auto hash(ticket.Encode(lottery_, *market_.chain_, 0));
+    const auto hash(ticket.Encode(lottery_, *market_.chain_, {}, {}));
     const auto signature(Sign(secret_, hash));
     co_await Client::Submit(hash, Tie(Command(Submit1_,
         uint8_t(signature.v_ + 27), signature.r_, signature.s_,
@@ -65,8 +65,8 @@ Client1::Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, c
 }
 
 task<Client1 *> Client1::Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder) {
-    static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address> read_("read");
-    auto [escrow_balance, unlock_warned, bound] = co_await read_.Call(*market.chain_, "latest", lottery, 90000, funder, Address(Derive(secret)), 0);
+    static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address, Address> read_("read");
+    auto [escrow_balance, unlock_warned, bound] = co_await read_.Call(*market.chain_, "latest", lottery, 90000, {}, funder, Address(Derive(secret)), 0);
     co_return &sunk.Wire<Client1>(std::move(oracle), std::move(market), lottery, secret, funder, uint128_t(escrow_balance >> 128) / 2);
 }
 

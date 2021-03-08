@@ -41,7 +41,7 @@ class MarketConditionsV1 implements MarketConditions {
 
   static Future<Token> getCostToRedeemTicket(Chain chain) async {
     Token gasPrice = await OrchidEthereumV1().getGasPrice(chain);
-    log("XXX: gas price for chain: ${chain.name} = ${gasPrice.intValue}");
+    //log("XXX: gas price for chain: ${chain.name} = ${gasPrice.intValue}");
     return gasPrice * OrchidContractV1.gasCostToRedeemTicket.toDouble();
   }
 

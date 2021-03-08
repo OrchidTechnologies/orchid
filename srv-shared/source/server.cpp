@@ -280,7 +280,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     if (expected <= 0)
         return;
 
-    const auto ticket(Ticket1{commit, issued, nonce, amount, ratio, expire, funder}.Encode(contract, chain, {}));
+    const auto ticket(Ticket1{commit, issued, nonce, amount, ratio, expire, funder}.Encode(contract, chain, {}, {}));
     const Address signer(Recover(ticket, v, r, s));
     Log() << std::dec << signer << " " << amount << std::endl;
 

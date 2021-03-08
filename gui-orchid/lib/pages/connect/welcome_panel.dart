@@ -274,7 +274,8 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   void _onBuyCredits() {
-    CircuitUtils.purchasePAC(context);
+    // TODO: V1
+    // CircuitUtils.purchasePAC(context);
   }
 
   void _onDoSetup() {

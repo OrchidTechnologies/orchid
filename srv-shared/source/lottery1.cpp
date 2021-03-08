@@ -52,8 +52,8 @@ std::pair<Float, uint256_t> Lottery1::Credit(const uint256_t &now, const uint256
 }
 
 task<bool> Lottery1::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient) {
-    static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address> read_("read");
-    auto [escrow_balance, unlock_warned, bound] = co_await read_.Call(*market_.chain_, "latest", contract_, 90000, funder, signer, recipient);
+    static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address, Address> read_("read");
+    auto [escrow_balance, unlock_warned, bound] = co_await read_.Call(*market_.chain_, "latest", contract_, 90000, {}, funder, signer, recipient);
 
     // XXX: check bound
 

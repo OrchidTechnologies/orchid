@@ -1,30 +1,32 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 
-// An observable list of identities and active accounts.
+/// An observable list of identities and active accounts.
 class AccountStore extends ChangeNotifier {
+  /// If true accounts are discovered on-chain for the active identity,
+  /// otherwise only the saved active accounts are loaded.
+  final bool discoverAccounts;
 
   /// Identity
   List<StoredEthereumKey> identities = [];
 
   /// The active identity, determined by the active account record
   StoredEthereumKey get activeIdentity {
-    return StoredEthereumKey.find(identities, activeAccount?.identityUid);
+    var selectedAccount =
+        activeAccounts.isNotEmpty ? activeAccounts.first : null;
+    return StoredEthereumKey.find(identities, selectedAccount?.identityUid);
   }
 
-  /// Accounts designated by the user as active
+  /// Accounts designated by the user as active.
+  /// The first account in this list designates the active identity.
   List<Account> activeAccounts = [];
-
-  /// If true accounts are discovered on-chain for the active identity,
-  /// otherwise only the saved active accounts are loaded.
-  final bool discoverAccounts;
 
   /// Accounts discovered on chain
   List<Account> discoveredAccounts = [];
@@ -43,7 +45,10 @@ class AccountStore extends ChangeNotifier {
 
   /// The active account
   Account get activeAccount {
-    return activeAccounts.isNotEmpty ? activeAccounts.first : null;
+    if (activeAccounts.isEmpty || activeAccounts.first.isIdentityPlaceholder) {
+      return null;
+    }
+    return activeAccounts.first;
   }
 
   /// Set the active account for the given chain and identity: (signer, chain -> funder)
@@ -69,6 +74,9 @@ class AccountStore extends ChangeNotifier {
 
     // Refresh everything
     load();
+
+    OrchidAPI().circuitConfigurationChanged.add(null);
+    OrchidAPI().updateConfiguration();
   }
 
   /// Set an active identity

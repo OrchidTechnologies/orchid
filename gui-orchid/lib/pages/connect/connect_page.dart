@@ -9,8 +9,8 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/generated/l10n.dart';
+import 'package:orchid/pages/account_manager/account_store.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/api/notifications.dart';
@@ -38,7 +38,8 @@ class ConnectPage extends StatefulWidget {
 class _ConnectPageState extends State<ConnectPage>
     with TickerProviderStateMixin {
   // Current state reflected by the page, driving color and animation.
-  OrchidConnectionState _connectionState = OrchidConnectionState.VPNNotConnected;
+  OrchidConnectionState _connectionState =
+      OrchidConnectionState.VPNNotConnected;
 
   // Animation controller for transitioning to the connected state
   AnimationController _connectAnimController;
@@ -49,16 +50,18 @@ class _ConnectPageState extends State<ConnectPage>
   Animation<LinearGradient> _backgroundGradient;
   Animation<Color> _iconColor;
 
-  bool _hasConfiguredHops = false;
+  bool _hasConfiguredCircuit = false;
 
-  bool get _showWelcomePane => !_hasConfiguredHops;
+  // TODO:
+  // bool get _showWelcomePane => !_hasConfiguredCircuit;
+  bool get _showWelcomePane => false;
 
   bool _enableConnectWithoutHops = false;
 
   Timer _checkHopAlertsTimer;
   bool _showProfileBadge = false;
 
-  List<StreamSubscription> _subs = List();
+  List<StreamSubscription> _subs = [];
 
   @override
   void initState() {
@@ -78,6 +81,16 @@ class _ConnectPageState extends State<ConnectPage>
   /// Note: the same, however this requires a unique id for hops. Refactor at that time
   /// Note: by hoisting the logic here and passing the data to circuit page.
   void _checkHopAlerts(timer) async {
+    // TODO: don't show badges when in V1 UI mode
+    if (await UserPreferences().guiV1.get()) {
+      if (mounted) {
+        setState(() {
+          _showProfileBadge = false;
+        });
+      }
+      return;
+    }
+
     var hops = (await UserPreferences().getCircuit()).hops;
     var keys = await UserPreferences().getKeys();
     bool showBadge = false;
@@ -134,7 +147,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     // TODO: The circuit really should be observable directly via OrchidAPI
     _subs.add(OrchidAPI().circuitConfigurationChanged.listen((value) {
-      _updateWelcomePane();
+      _updateCircuitStatus();
       _checkHopAlerts(null); // refresh alert status
     }));
 
@@ -142,6 +155,13 @@ class _ConnectPageState extends State<ConnectPage>
       setState(() {
         _enableConnectWithoutHops = value;
       });
+    }));
+
+    // Monitor changes in the UI version preference
+    _subs.add(UserPreferences().guiV1.stream().listen((event) {
+      _checkHopAlerts(null);
+      _updateCircuitStatus();
+      setState(() {}); // Refresh UI
     }));
   }
 
@@ -392,7 +412,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     bool buttonEnabled =
         // Enabled when there is a circuit (or overridden for traffic monitoring)
-        (_hasConfiguredHops || _enableConnectWithoutHops) ||
+        (_hasConfiguredCircuit || _enableConnectWithoutHops) ||
             // Enabled if we are already connected (corner case of changed config while connected).
             _connectionState == OrchidConnectionState.VPNConnecting ||
             _connectionState == OrchidConnectionState.VPNConnected ||
@@ -506,9 +526,14 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  // TODO: The circuit really should be observable directly via OrchidAPI
-  void _updateWelcomePane() async {
-    _hasConfiguredHops = (await UserPreferences().getCircuit()).hops.isNotEmpty;
+  void _updateCircuitStatus() async {
+    var prefs = UserPreferences();
+    if (await prefs.guiV1.get()) {
+      var accountStore = await AccountStore(discoverAccounts: false).load();
+      _hasConfiguredCircuit = accountStore.activeAccount != null;
+    } else {
+      _hasConfiguredCircuit = (await prefs.getCircuit()).hops.isNotEmpty;
+    }
     setState(() {});
   }
 
