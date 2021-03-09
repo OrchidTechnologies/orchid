@@ -261,7 +261,9 @@ contract OrchidLottery1 {
     mapping(bytes32 => Track) private tracks_;
 
     function save(uint256 count, bytes32 seed) external {
-        for (seed = keccak256(abi.encodePacked(seed, msg.sender));; seed = keccak256(abi.encodePacked(seed))) {
+        for (seed = keccak256(abi.encodePacked(
+            keccak256(abi.encodePacked(seed, msg.sender))
+        , address(0)));; seed = keccak256(abi.encodePacked(seed))) {
             tracks_[seed].packed = uint256(msg.sender);
             if (count-- == 0)
                 break;
@@ -324,7 +326,7 @@ contract OrchidLottery1 {
             if (lottery.recipients_[recipient] <= block.timestamp)
                 return 0;
     {
-        Track storage track = tracks_[bytes32(uint256(signer)) ^ digest];
+        Track storage track = tracks_[keccak256(abi.encodePacked(digest, signer))];
         if (track.packed != 0)
             return 0;
         track.packed = expire << 160 | uint256(msg.sender);

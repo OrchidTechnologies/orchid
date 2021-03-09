@@ -241,7 +241,7 @@ struct Tester {
         const auto seed(Nonzero<32>());
         const unsigned count(100);
         std::vector<Bytes32> saved; {
-            auto refund(HashK(Tie(seed, recipient)));
+            auto refund(HashK(Tie(HashK(Tie(seed, recipient)), Address())));
             for (unsigned i(0); i != count; ++i) {
                 if (!Zeros(refund))
                     saved.emplace_back(refund);
