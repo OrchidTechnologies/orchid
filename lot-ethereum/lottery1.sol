@@ -332,16 +332,16 @@ contract OrchidLottery1 {
         Pot storage pot = lottery.pots_[signer][token];
         uint256 cache = pot.escrow_amount_;
 
-        if (uint128(cache) >= amount) {
+        if (uint128(cache) >= amount)
             cache -= amount;
-            pot.escrow_amount_ = cache;
-            emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, address(0));
-            return amount;
-        } else {
-            pot.escrow_amount_ = 0;
-            emit Update(keccak256(abi.encodePacked(token, funder, signer)), 0, address(0));
-            return uint128(cache);
+        else {
+            amount = uint128(cache);
+            cache = 0;
         }
+
+        pot.escrow_amount_ = cache;
+        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, address(0));
+        return amount;
     }
 
 
