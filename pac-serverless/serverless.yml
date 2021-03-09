@@ -47,6 +47,9 @@ custom:
     RECYCLE_KEY:
       prod: 'PAC_RECYCLE_KEY_PROD'
       dev: 'PAC_RECYCLE_KEY_DEV'
+    TXN_MONITOR_MODE:
+      prod: ''
+      dev: 'auto'
   datadog:
     addLayers: true
     flushMetricsToLogs: true
@@ -83,6 +86,7 @@ provider:
     DEFAULT_POOL_SIZE: ${self:custom.myEnvironment.DEFAULT_POOL_SIZE.${self:provider.stage}}
     NET_ORCHID_PACTIER1_POOL_SIZE: ${self:custom.myEnvironment.NET_ORCHID_PACTIER1_POOL_SIZE.${self:provider.stage}}
     STAGE: ${self:provider.stage}
+    TXN_MONITOR_MODE: ${self:custom.myEnvironment.TXN_MONITOR_MODE.${self:provider.stage}}
     LOG_LEVEL: ${self:custom.myEnvironment.LOG_LEVEL.${self:provider.stage}}
     ENABLE_MONITORING: ${self:custom.myEnvironment.ENABLE_MONITORING.${self:provider.stage}}
     PAC_FUNDER_PUBKEY_SECRET: ${self:custom.myEnvironment.PAC_FUNDER_PUBKEY_SECRET.${self:provider.stage}}
@@ -139,6 +143,13 @@ functions:
     timeout: 900
     events:
       - schedule: rate(1 minute)
+  manage_monitor:
+    handler: entry_txn_monitor
+    timeout: 10
+    events:
+      - http:
+        path: entry_txn_monitor.main
+        method: post
   get_account:
     handler: entry_account.main
     timeout: 10
