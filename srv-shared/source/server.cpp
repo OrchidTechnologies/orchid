@@ -255,32 +255,30 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id, const Buffer &data) {
     const auto [
         v, r, s,
-        commit, nonce,
-        issued, expire,
         contract, chain,
-        amount, ratio,
+        commit, issued, nonce,
+        amount, expire, ratio,
         funder
     ] = Take<
         uint8_t, Brick<32>, Brick<32>,
-        Bytes32, Bytes32,
-        uint64_t, uint64_t,
         Address, uint256_t,
-        uint128_t, uint128_t,
+        Brick<32>, uint64_t, Brick<8>,
+        uint128_t, uint32_t, uint64_t,
         Address
     >(data);
 
     const auto recipient(croupier_->Recipient());
 
     const auto now(Timestamp());
-    orc_assert(expire > now);
+    orc_assert(issued + expire > now);
 
     const auto &lottery(croupier_->Find1(contract, chain));
     const uint64_t gas(60000);
-    const auto [expected, price] = lottery->Credit(now, expire, 0, amount, ratio, gas);
+    const auto [expected, price] = lottery->Credit(now, issued + expire, 0, amount, uint128_t(ratio) << 64, gas);
     if (expected <= 0)
         return;
 
-    const auto ticket(Ticket1{commit, issued, nonce, amount, ratio, expire, funder}.Encode(contract, chain, {}, {}));
+    const auto ticket(Ticket1{commit, issued, nonce, amount, expire, ratio, funder}.Encode(contract, chain, {}));
     const Address signer(Recover(ticket, v, r, s));
     Log() << std::dec << signer << " " << amount << std::endl;
 
@@ -289,7 +287,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
         orc_assert(issued >= locked->issued_);
         auto &nonces(locked->nonces_);
-        orc_assert(nonces.emplace(issued, nonce, signer).second);
+        orc_assert(nonces.emplace(issued, Tie(Zero<24>(), nonce), signer).second);
         while (nonces.size() > horizon_) {
             const auto oldest(nonces.begin());
             orc_assert(oldest != nonces.end());
@@ -310,7 +308,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
-        const auto winner(HashK(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
+        const auto winner(HashK(Tie(reveal, issued, nonce)).skip<24>().num<uint64_t>() <= ratio);
         if (winner && locked->reveal_->first == commit)
             Commit(locked);
 

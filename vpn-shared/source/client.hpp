@@ -106,7 +106,7 @@ class Client :
     Float Balance();
 };
 
-uint128_t Ratio(const uint128_t &face, const Float &amount, const Market &market, const Currency &currency, const uint64_t &gas);
+Float Ratio(const uint128_t &face, const Float &amount, const Market &market, const Currency &currency, const uint64_t &gas);
 
 }
 

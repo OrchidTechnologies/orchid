@@ -278,16 +278,15 @@ contract OrchidLottery1 {
 
 
     /*struct Ticket {
-        uint128 reveal;
-        uint128 nonce;
+        uint256 reveal;
 
         uint64 issued;
-        uint64 ratio;
+        uint64 nonce;
         uint128 amount;
 
-        uint63 expire;
+        uint31 expire;
+        uint64 ratio;
         address funder;
-        uint32 salt;
         uint1 v;
 
         bytes32 r;
@@ -295,32 +294,34 @@ contract OrchidLottery1 {
     }*/
 
     struct Ticket {
+        bytes32 reveal;
         uint256 packed0;
         uint256 packed1;
-        uint256 packed2;
         bytes32 r;
         bytes32 s;
     }
 
-    function claim_(uint256 destination, Ticket calldata ticket, IERC20 token) private returns (uint256) {
-        uint256 issued = (ticket.packed1 >> 192);
-        uint256 expire = issued + (ticket.packed2 >> 193);
+    function claim_(IERC20 token, address recipient, Ticket calldata ticket) private returns (uint256) {
+        uint256 expire = (ticket.packed0 >> 192) + (ticket.packed1 >> 225);
         if (expire <= block.timestamp)
             return 0;
 
-        bytes32 digest; assembly { digest := chainid() } digest = keccak256(abi.encodePacked(byte(0x19), byte(0x00), this, digest,
-            keccak256(abi.encodePacked(keccak256(abi.encodePacked(uint128(ticket.packed0 >> 128), destination)), uint32(ticket.packed2 >> 1))),
-            uint128(ticket.packed0), ticket.packed1, uint224(ticket.packed2 >> 33), token));
-        address signer = ecrecover(digest, uint8((ticket.packed2 & 1) + 27), ticket.r, ticket.s);
+        bytes32 digest; assembly { digest := chainid() }
+        digest = keccak256(abi.encodePacked(
+            byte(0x19), byte(0x00), this, digest, token,
+            keccak256(abi.encodePacked(ticket.reveal, recipient)),
+            ticket.packed0, ticket.packed1 >> 1));
 
-        if (uint64(ticket.packed1 >> 128) < uint64(uint256(keccak256(abi.encodePacked(ticket.packed0, issued)))))
+        address signer = ecrecover(digest, uint8((ticket.packed1 & 1) + 27), ticket.r, ticket.s);
+
+        if (uint64(ticket.packed1 >> 161) < uint64(uint256(keccak256(abi.encodePacked(ticket.reveal, uint128(ticket.packed0 >> 128))))))
             return 0;
-        uint256 amount = uint128(ticket.packed1);
+        uint256 amount = uint128(ticket.packed0);
 
-        address funder = address(ticket.packed2 >> 33);
+        address funder = address(ticket.packed1 >> 1);
         Lottery storage lottery = lotteries_[funder];
         if (lottery.bound_ - 1 < block.timestamp)
-            if (lottery.recipients_[address(destination)] <= block.timestamp)
+            if (lottery.recipients_[recipient] <= block.timestamp)
                 return 0;
     {
         Track storage track = tracks_[bytes32(uint256(signer)) ^ digest];
@@ -344,15 +345,9 @@ contract OrchidLottery1 {
     }
 
 
-    /*struct Destination {
-        uint96 pepper;
-        address recipient;
-    }*/
-
-    function claim(IERC20 token, uint256 destination, Ticket[] calldata tickets, bytes32[] calldata refunds) external {
-        address payable recipient = address(destination);
+    function claim(IERC20 token, address recipient, Ticket[] calldata tickets, bytes32[] calldata refunds) external {
         if (recipient == address(0))
-            destination |= uint256(recipient = msg.sender);
+            recipient = msg.sender;
 
         for (uint256 i = refunds.length; i != 0; )
             spend_(refunds[--i]);
@@ -361,7 +356,7 @@ contract OrchidLottery1 {
 
         uint256 amount = 0;
         for (uint256 i = tickets.length; i != 0; ) {
-            amount += claim_(destination, tickets[--i], token);
+            amount += claim_(token, recipient, tickets[--i]);
             assembly { mstore(0x40, segment) }
         }
 

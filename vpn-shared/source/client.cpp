@@ -186,9 +186,9 @@ Float Client::Balance() {
     return locked->balance_;
 }
 
-uint128_t Ratio(const uint128_t &face, const Float &amount, const Market &market, const Currency &currency, const uint64_t &gas) {
+Float Ratio(const uint128_t &face, const Float &amount, const Market &market, const Currency &currency, const uint64_t &gas) {
     // XXX: this is entirely wrong, actually
-    return uint128_t(Float(Two128) * amount / (Float(face) * currency.dollars_() - Float(gas * (*market.bid_)()) * market.currency_.dollars_()));
+    return amount / (Float(face) * currency.dollars_() - Float(gas * (*market.bid_)()) * market.currency_.dollars_());
 }
 
 }

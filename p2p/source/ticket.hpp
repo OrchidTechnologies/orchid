@@ -29,6 +29,7 @@
 
 namespace orc {
 
+static const Float Two64(uint256_t(1) << 64);
 static const Float Two128(uint256_t(1) << 128);
 
 struct Ticket0 {
@@ -69,27 +70,27 @@ struct Ticket0 {
     }
 };
 
+typedef std::tuple<Bytes32, uint256_t, uint256_t, Bytes32, Bytes32> Payment1;
+
 struct Ticket1 {
     Bytes32 commit_;
     uint64_t issued_;
-    Bytes32 nonce_;
+    Brick<8> nonce_;
     uint128_t amount_;
-    uint128_t ratio_;
-    uint64_t expire_;
+    uint32_t expire_;
+    uint64_t ratio_;
     Address funder_;
 
     uint256_t Value() const {
         return (ratio_ + uint256_t(1)) * amount_;
     }
 
-    uint256_t Packed1() const {
-        return uint256_t(expire_ - issued_) << 192 | uint256_t(ratio_ >> 64) << 128 | amount_; }
-    uint256_t Packed2() const {
-        return uint256_t(issued_) << 193 | uint256_t(funder_.num()) << 33; }
+    Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Address &token) const {
+        return HashK(Tie(uint8_t(0x19), uint8_t(0x00), lottery, chain, token, commit_, issued_, nonce_, amount_, expire_, ratio_, funder_));
+    }
 
-    Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Address &token, const uint32_t &salt) const {
-        return HashK(Tie(uint8_t(0x19), uint8_t(0x00), lottery, chain, HashK(Tie(commit_, salt)),
-            uint128_t(nonce_.num<uint256_t>()), Packed1(), uint_t<224>(Packed2() >> 33), token));
+    auto Payment(const Bytes32 &reveal, const Signature &signature) const {
+        return Payment1(reveal, uint256_t(issued_) << 192 | uint256_t(nonce_.num<uint64_t>()) << 128 | amount_, uint256_t(expire_) << 225 | uint256_t(ratio_) << 161 | uint256_t(funder_.num()) << 1 | signature.v_, signature.r_, signature.s_);
     }
 };
 

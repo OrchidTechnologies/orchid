@@ -153,17 +153,10 @@ struct Tester {
         static Selector<void, uint256_t, Bytes32> save("save");
         static Selector<void, Address, Address, uint128_t> warn("warn");
 
-        typedef std::tuple<
-            uint256_t /*random*/,
-            uint256_t /*values*/,
-            uint256_t /*packed*/,
-            Bytes32 /*r*/, Bytes32 /*s*/
-        > Payment;
-
         static Selector<void,
             Address /*token*/,
-            uint256_t /*destination*/,
-            std::vector<Payment> /*tickets*/,
+            Address /*recipient*/,
+            std::vector<Payment1> /*tickets*/,
             std::vector<Bytes32> /*refunds*/
         > claim("claim");
 
@@ -213,40 +206,30 @@ struct Tester {
         });
 
 
-        const auto where([&]() -> uint256_t {
-            return recipient.operator Address().num();
-        });
-
         const auto payment([&](Account &account) {
-            const auto reveal(Nonzero<16>().num<uint128_t>());
-            const auto commit(HashK(Tie(reveal, where())));
+            const auto reveal(Nonzero<32>());
+            const auto commit(HashK(Tie(reveal, recipient)));
 
             const uint128_t face(1);
-            const uint128_t ratio(Float(Two128) - 1);
+            const uint64_t ratio(-1);
 
             const auto issued(Timestamp() - 60);
-            const auto expire(issued + 20 + 60 * 60 * 60);
+            const uint32_t expire(20 + 60 * 60 * 60);
 
           sign:
-            const auto salt(Nonzero<4>().num<uint32_t>());
-            const auto nonce(Nonzero<32>());
+            const auto nonce(Nonzero<8>());
 
-            const Ticket1 ticket{commit, issued, nonce, face, ratio, expire, funder};
-            const auto signature(Sign(account.secret_, ticket.Encode(lottery, chain_, token, salt)));
+            const Ticket1 ticket{commit, issued, nonce, face, expire, ratio, funder};
+            const auto signature(Sign(account.secret_, ticket.Encode(lottery, chain_, token)));
             if (Zeros(signature.operator Brick<65>()))
                 goto sign;
 
-            return Payment(
-                uint256_t(reveal) << 128 | uint128_t(nonce.num<uint256_t>()),
-                ticket.Packed1(),
-                ticket.Packed2() | uint256_t(salt) << 1 | signature.v_,
-                signature.r_, signature.s_
-            );
+            return ticket.Payment(reveal, signature);
         });
 
         const auto payments([&](unsigned count) {
             orc_assert(count <= accounts.size());
-            std::vector<Payment> payments;
+            std::vector<Payment1> payments;
             payments.reserve(count);
             for (unsigned i(0); i != count; ++i)
                 payments.emplace_back(payment(accounts[i]));
@@ -320,7 +303,7 @@ struct Tester {
                 auto negative(EVM_STORE_NEW*d);
 
                 if (negative > positive / 2) negative = positive / 2;
-                co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claim(token, where(), payments(p), refunds(d))), positive - negative);
+                co_await Audit(name.str(), co_await provider_.Send(chain_, {}, lottery, 0, claim(token, recipient, payments(p), refunds(d))), positive - negative);
                 for (unsigned i(0); i != p; ++i)
                     co_await check(accounts[i], -1);
             }

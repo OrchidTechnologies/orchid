@@ -38,7 +38,7 @@ static uint32_t Magic_(0xff0fce1d);
 static uint32_t Stamp_(0xee6d796e);
 
 static uint32_t Submit0_(0xfd90e312);
-static uint32_t Submit1_(0xae35c332);
+static uint32_t Submit1_(0xf0ece7ca);
 
 static uint32_t Invoice0_(0x01959987);
 static uint32_t Commit1_(0x69dc1297);
