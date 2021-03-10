@@ -188,6 +188,7 @@ class OrchidPACServer {
 
     log("iap: purchase tx: submit raw");
     tx.submitRaw.serverResponse = await _callSubmitRaw(tx.submitRaw);
+    tx.submitRaw.state = PacTransactionState.Complete;
 
     return [tx.addBalance.serverResponse, tx.submitRaw.serverResponse]
         .toString();
@@ -197,7 +198,6 @@ class OrchidPACServer {
     get_account
     {'account_id': '0x00A0844371B32aF220548DCE332989404Fda2EeF'}
    */
-
   /// Get the PAC server USD balance for the account
   Future<USD> getBalance({
     @required EthereumAddress signer,
