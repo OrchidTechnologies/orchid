@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Orchid - WebRTC P2P VPN Market (on Ethereum)
 # Copyright (C) 2017-2020  The Orchid Authors
 
@@ -17,32 +19,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # }}}
 
+set -e
+set -o pipefail
 
-include env/common.mk
+runs=4294967295
 
-runs := 4294967295
-
-.PHONY: all
-all:
-
-build/OrchidVerifier.bin: verifier.sol
-	@mkdir -p $(dir $@)
-	env/solc.sh 0.7.2 build verifier.sol --evm-version homestead
-all += build/OrchidVerifier.bin
-
-build/OrchidLottery0.bin: lottery0.sol
-	@mkdir -p $(dir $@)
-	env/solc.sh 0.5.13 build lottery0.sol --evm-version istanbul
-all += build/OrchidLottery0.bin
-
-build/OrchidLottery1.bin: lottery1.sol
-	@mkdir -p $(dir $@)
-	env/solc.sh 0.7.6 build lottery1.sol --evm-version istanbul --optimize --optimize-runs $(runs)
-all += build/OrchidLottery1.bin
-
-build/OrchidRecipient.bin: recipient.yul
-	@mkdir -p $(dir $@)
-	env/solc.sh 0.7.2 - recipient.yul --strict-assembly | tee /dev/stderr | sed -e '/^Binary/{x;N;p};d' | tr -d $$'\n' >$@
-all += build/OrchidRecipient.bin
-
-all: $(all)
+env/solc.sh 0.7.2 build verifier.sol --evm-version homestead
+env/solc.sh 0.5.13 build lottery0.sol --evm-version istanbul
+env/solc.sh 0.7.6 build lottery1.sol --evm-version istanbul --optimize --optimize-runs "${runs}"
+#env/solc.sh 0.7.2 - recipient.yul --strict-assembly | tee /dev/stderr | sed -e '/^Binary/{x;N;p};d' | tr -d $$'\n' >build/OrchidRecipient.bin

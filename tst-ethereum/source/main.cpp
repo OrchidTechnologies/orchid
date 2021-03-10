@@ -160,8 +160,6 @@ struct Tester {
             std::vector<Bytes32> /*refunds*/
         > claim("claim");
 
-        const auto indirect((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<>(Bless(boost::replace_all_copy(Load("../lot-ethereum/build/OrchidRecipient.bin"), OXT.buf().hex().substr(2), lottery.buf().hex().substr(2))))))).contract_);
-
         struct Account {
             Secret secret_;
             Address signer_;
