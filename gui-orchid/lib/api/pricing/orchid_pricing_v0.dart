@@ -1,30 +1,28 @@
-import 'dart:math';
 
 import 'package:orchid/util/units.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'orchid_log_api.dart';
 
-/// Exchange rates
-class OrchidPricingAPI {
-  static OrchidPricingAPI _shared = OrchidPricingAPI._init();
+/// Token Exchange rates
+class OrchidPricingAPIV0 {
+  static OrchidPricingAPIV0 _shared = OrchidPricingAPIV0._init();
   static var exchangeRatesProviderUrl =
       'https://api.coinbase.com/v2/exchange-rates';
 
-  OrchidPricingAPI._init();
+  OrchidPricingAPIV0._init();
 
-  factory OrchidPricingAPI() {
+  factory OrchidPricingAPIV0() {
     return _shared;
   }
 
-  Pricing _lastPricing;
+  PricingV0 _lastPricing;
 
   /// Get a snapshot of current pricing data at the current time.
   /// This method may return null if no pricing data is available and the UI
   /// should handle this as a routine condition by hiding displayed conversions.
   /// This method is cached for a period of time and safe to call repeatedly.
-  Future<Pricing> getPricing() async {
+  Future<PricingV0> getPricing() async {
     // Cache for a period of time
     if (_lastPricing != null &&
         DateTime.now().difference(_lastPricing.date) < Duration(minutes: 5)) {
@@ -38,7 +36,7 @@ class OrchidPricingAPI {
       }
       var body = json.decode(response.body);
       var rates = body['data']['rates'];
-      _lastPricing = Pricing(
+      _lastPricing = PricingV0(
           ethToUsdRate: double.parse(rates['ETH']),
           oxtToUsdRate: double.parse(rates['OXT']));
       return _lastPricing;
@@ -51,12 +49,12 @@ class OrchidPricingAPI {
 }
 
 /// Pricing captures exchange rates at a point in time and supports conversion.
-class Pricing {
+class PricingV0 {
   DateTime date;
   double ethToUsdRate;
   double oxtToUsdRate;
 
-  Pricing({
+  PricingV0({
     DateTime date,
     @required double ethToUsdRate,
     @required double oxtToUsdRate,
@@ -88,65 +86,4 @@ class Pricing {
   String toString() {
     return 'Pricing{date: $date, ethToUsdRate: $ethToUsdRate, oxtToUsdRate: $oxtToUsdRate}';
   }
-}
-
-class StaticExchangeRates {
-  static USD from({double price, String currencyCode}) {
-    double rate = rates[currencyCode];
-    if (rate == null) {
-      log("iap: conversion rate not found for: $currencyCode");
-      return USD(price); // default to 1.0
-    }
-    return USD(price / rate);
-  }
-
-  // dollars * rate = localized price
-  static Map<String, double> rates = {
-    "AED": 3.58,
-    "AUD": 1.57,
-    "BGN": 2.14,
-    "BRL": 3.56,
-    "CAD": 1.43,
-    "CHF": 1.00,
-    "CLP": 0.64,
-    "CNY": 6.44,
-    "COP": 3705.29,
-    "CZK": 25.61,
-    "DKK": 8.44,
-    "EGP": 17.17,
-    "EUR": 0.93,
-    "EUR": 1.14,
-    "GBP": 1.00,
-    "HKD": 7.58,
-    "HRK": 8.58,
-    "HUF": 356.22,
-    "IDR": 14.16,
-    "ILS": 3.71,
-    "INR": 78.54,
-    "JPY": 123.03,
-    "KRW": 1273.25,
-    "KZT": 356.22,
-    "MXN": 18.45,
-    "MYR": 4.28,
-    "NGN": 357.65,
-    "NOK": 10.73,
-    "NZD": 1.72,
-    "PEN": 3.28,
-    "PHP": 49.93,
-    "PKR": 157.37,
-    "PLN": 4.72,
-    "QAR": 3.58,
-    "RON": 5.01,
-    "RUB": 75.68,
-    "SAR": 3.58,
-    "SEK": 9.16,
-    "SGD": 1.43,
-    "THB": 28.47,
-    "TRY": 7.15,
-    "TWD": 32.90,
-    "TZS": 2131.62,
-    "USD": 1.00,
-    "VND": 21.32,
-    "ZAR": 15.74,
-  };
 }

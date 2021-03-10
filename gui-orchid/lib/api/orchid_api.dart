@@ -4,7 +4,6 @@ import 'package:orchid/api/orchid_types.dart';
 import 'package:rxdart/rxdart.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
-import 'orchid_pricing.dart';
 
 ///
 /// Orchid App Channel API
@@ -94,10 +93,7 @@ abstract class OrchidAPI {
   /// API for funds and budgeting
   OrchidBudgetAPI budget();
 
-  /// API for exchange rates
-  OrchidPricingAPI pricing();
-
-  /// The the path for files shared between the 
+  /// The the path for files shared between the
   Future<String> groupContainerPath();
 
   /// The build version

@@ -22,7 +22,8 @@ class Chains {
       chainId: XDAI_CHAINID,
       name: "xDAI",
       nativeCurrency: TokenTypes.XDAI,
-      providerUrl: 'https://dai.poa.network',
+      // providerUrl: 'https://dai.poa.network',
+      providerUrl: 'https://rpc.xdaichain.com/',
       icon: SvgPicture.asset('assets/svg/logo-xdai.svg'));
 
   // TODO: Embed the chain.info db here as we do in the dapp.
@@ -63,6 +64,11 @@ class Chain {
 
   @override
   int get hashCode => chainId.hashCode;
+
+  @override
+  String toString() {
+    return 'Chain{chainId: $chainId, name: $name}';
+  }
 }
 
 class TokenTypes {
@@ -79,7 +85,7 @@ class TokenTypes {
   static const TokenType XDAI = TokenType(
       name: 'xDAI',
       symbol: 'xDAI',
-      orchidConfigSymbol: 'DAI',
+      exchangeRateSymbol: 'DAI',
       decimals: 18,
       chainId: Chains.XDAI_CHAINID);
 }
@@ -98,14 +104,16 @@ class TokenType {
 
   final String name;
   final String symbol;
-  final String orchidConfigSymbol; // optional override
   final int decimals;
+
+  // optional symbol override for exchange conventions. e.g. DAI for xDAI
+  final String exchangeRateSymbol;
 
   const TokenType({
     @required this.chainId,
     @required this.name,
     @required this.symbol,
-    this.orchidConfigSymbol,
+    this.exchangeRateSymbol,
     @required this.decimals,
   });
 
@@ -123,6 +131,25 @@ class TokenType {
   Token fromDouble(double val) {
     return fromInt(BigInt.from((val * this.multiplier).round()));
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TokenType &&
+          runtimeType == other.runtimeType &&
+          chainId == other.chainId &&
+          name == other.name &&
+          symbol == other.symbol &&
+          decimals == other.decimals &&
+          exchangeRateSymbol == other.exchangeRateSymbol;
+
+  @override
+  int get hashCode =>
+      chainId.hashCode ^
+      name.hashCode ^
+      symbol.hashCode ^
+      decimals.hashCode ^
+      exchangeRateSymbol.hashCode;
 
   @override
   String toString() {

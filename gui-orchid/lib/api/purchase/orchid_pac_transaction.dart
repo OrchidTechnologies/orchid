@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/enums.dart';
+
+import '../orchid_crypto.dart';
 
 enum PacTransactionType {
   /// Legacy transaction
@@ -68,6 +71,12 @@ class PacTransaction {
             type: type,
             state: PacTransactionState.Error,
             serverResponse: message);
+
+  PacTransaction error(String message) {
+    this.state = PacTransactionState.Error;
+    this.serverResponse = message;
+    return this;
+  }
 
   Map<String, dynamic> toJson() => {
         'type': Enums.toStringValue(type),
@@ -147,15 +156,16 @@ class PacTransaction {
 
 class PacAddBalanceTransaction extends PacTransaction
     implements ReceiptTransaction {
+  EthereumAddress signer;
   String productId;
-  String transactionId;
   String receipt;
 
-  PacAddBalanceTransaction.pending({String productId})
+  PacAddBalanceTransaction.pending({@required EthereumAddress signer, String productId})
       : super(
           type: PacTransactionType.AddBalance,
           state: PacTransactionState.Pending,
         ) {
+    this.signer = signer;
     this.productId = productId;
   }
 
@@ -176,8 +186,8 @@ class PacAddBalanceTransaction extends PacTransaction
   PacAddBalanceTransaction.fromJson(Map<String, dynamic> json,
       {PacTransaction parent})
       : super.fromJsonBase(json, parent: parent) {
+    signer = EthereumAddress.fromNullable(json['signer']);
     productId = json['productId'];
-    transactionId = json['transactionId'];
     receipt = json['receipt'];
   }
 
@@ -185,8 +195,8 @@ class PacAddBalanceTransaction extends PacTransaction
   Map<String, dynamic> toJson() {
     var json = super.toJson();
     json.addAll({
+      'signer': signer?.toString() ?? null,
       'productId': productId,
-      'transactionId': transactionId,
       'receipt': receipt,
     });
     return json;
@@ -204,28 +214,28 @@ abstract class ReceiptTransaction extends PacTransaction {
 /// which will sign and fund its submission.
 // Technically could be called PacSubmitRawTransactionTransaction :)
 class PacSubmitRawTransaction extends PacTransaction {
-  String rawTransaction;
+  EthereumTransaction tx;
 
-  PacSubmitRawTransaction(String rawTransaction)
+  PacSubmitRawTransaction(EthereumTransaction rawTransaction)
       : super(
           state: PacTransactionState.Pending,
           type: PacTransactionType.SubmitRawTransaction,
         ) {
-    this.rawTransaction = rawTransaction;
+    this.tx = rawTransaction;
   }
 
   @override
   PacSubmitRawTransaction.fromJson(Map<String, dynamic> json,
       {PacTransaction parent})
       : super.fromJsonBase(json, parent: parent) {
-    rawTransaction = json['rawTransaction'];
+    tx = EthereumTransaction.fromJson(json['rawTransaction']);
   }
 
   @override
   Map<String, dynamic> toJson() {
     var json = super.toJson();
     json.addAll({
-      'rawTransaction': rawTransaction,
+      'rawTransaction': tx,
     });
     return json;
   }

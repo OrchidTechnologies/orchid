@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:ethereum_address/ethereum_address.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/hex.dart';
@@ -77,7 +78,7 @@ class Crypto {
     }
   }
 
-  static String uuid()  {
+  static String uuid() {
     return Uuid(options: {'grng': UuidUtil.cryptoRNG}).v4();
   }
 }
@@ -286,7 +287,9 @@ class EthereumAddress {
     if (value == null) {
       throw Exception("invalid bigint");
     }
-    return (prefix ? "0x" : "") + value.toRadixString(16).padLeft(40, '0');
+    var raw = value.toRadixString(16).padLeft(40, '0');
+    var eip55 = checksumEthereumAddress(raw);
+    return (prefix ? eip55 : Hex.remove0x(eip55));
   }
 
   // TODO: EIP55
@@ -294,7 +297,7 @@ class EthereumAddress {
     if (text == null) {
       throw Exception("invalid, null");
     }
-    text = Hex.removePrefix(text);
+    text = Hex.remove0x(text);
     if (text.length != 40) {
       throw Exception("invalid, length");
     }

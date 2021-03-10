@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
-import 'package:orchid/api/orchid_pricing.dart';
+import 'package:orchid/api/pricing/exchange_rates.dart';
+import 'package:orchid/util/units.dart';
 import '../orchid_api.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac.dart';
@@ -19,13 +20,13 @@ class IOSOrchidPurchaseAPI
   ///    verifyReceipt: false,
   ///    debug: true
   ///  }'
-  static PACApiConfig prodAPIConfig = PACApiConfig(
-      enabled: true,
-      url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple');
+  static PacApiConfig prodAPIConfig = PacApiConfig(
+    url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple',
+  );
 
   /// Return the API config allowing overrides from configuration.
   @override
-  Future<PACApiConfig> apiConfig() async {
+  Future<PacApiConfig> apiConfig() async {
     return OrchidPurchaseAPI.apiConfigWithOverrides(prodAPIConfig);
   }
 
@@ -33,18 +34,15 @@ class IOSOrchidPurchaseAPI
   void initStoreListener() async {
     log("iap: init store listener");
 
-    if (OrchidAPI.mockAPI) {
-      await _recoverTx();
-      return;
-    }
-
-    SKPaymentQueueWrapper().setTransactionObserver(this);
-
     // Log all PAC Tx activity for now
     await PacTransaction.shared.ensureInitialized();
     PacTransaction.shared.stream().listen((PacTransaction tx) {
       log("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
     });
+
+    if (!OrchidAPI.mockAPI) {
+      SKPaymentQueueWrapper().setTransactionObserver(this);
+    }
 
     // Note: This is an attempt to mitigate an "unable to connect to iTunes Store"
     // Note: error observed in TestFlight by starting the connection process earlier.
@@ -61,7 +59,7 @@ class IOSOrchidPurchaseAPI
   Future<void> _recoverTx() async {
     // Reset any existing tx after an app restart.
     var tx = await PacTransaction.shared.get();
-    if (tx != null) {
+    if (tx != null && tx.state != PacTransactionState.Complete) {
       log("iap: Found PAC tx in progress after app startup: $tx");
       tx.state = PacTransactionState.WaitingForUserAction;
       return tx.save();
@@ -73,13 +71,13 @@ class IOSOrchidPurchaseAPI
   Future<void> purchase(PAC pac) async {
     log("iap: purchase pac");
 
-    // Testing...
+    // Mock support
     if (OrchidAPI.mockAPI) {
       log("iap: mock purchase, delay");
-      Future.delayed(Duration(seconds: 2)).then((_) {
-        PacAddBalanceTransaction.pending(productId: "1234").save();
+      Future.delayed(Duration(seconds: 2)).then((_) async {
         log("iap: mock purchase, advance with receipt");
-        OrchidPACServer().advancePACTransactionsWithReceipt("receipt");
+        // The receipt may be overridden for testing with pac.receipt
+        OrchidPACServer().advancePACTransactionsWithReceipt("mock receipt");
       });
       return;
     }
@@ -100,7 +98,6 @@ class IOSOrchidPurchaseAPI
     var payment = SKPaymentWrapper(productIdentifier: pac.productId);
     try {
       log("iap: add payment to queue");
-      PacAddBalanceTransaction.pending(productId: pac.productId).save();
       await SKPaymentQueueWrapper().addPayment(payment);
     } catch (err) {
       log("Error adding payment to queue: $err");
@@ -119,16 +116,16 @@ class IOSOrchidPurchaseAPI
         case SKPaymentTransactionStateWrapper.purchasing:
           log("iap: IAP purchasing state");
           if (PacTransaction.shared.get() == null) {
-            log("iap: Unexpected purchasing state, recreating pending tx.");
-            PacAddBalanceTransaction.pending(
-                productId: tx.payment.productIdentifier)
-                .save();
+            log("iap: Unexpected purchasing state.");
+            // TODO: We'd like to salvage the receipt but what identity should we use?
+            // PacAddBalanceTransaction.pending(
+            //     signer: signer, productId: tx.payment.productIdentifier).save();
           }
           break;
 
         case SKPaymentTransactionStateWrapper.restored:
-        // Are we getting this on a second purchase attempt that we dropped?
-        // Attempting to just handle it as a new purchase for now.
+          // Are we getting this on a second purchase attempt that we dropped?
+          // Attempting to just handle it as a new purchase for now.
           log("iap: iap purchase restored?");
           _completeIAPTransaction(tx);
           break;
@@ -157,10 +154,9 @@ class IOSOrchidPurchaseAPI
             log("iap: was cancelled");
             PacTransaction.shared.clear();
           } else {
-            log("iap: IAP Failed, ${tx.toString()} error: type=${tx.error
-                .runtimeType}, code=${tx.error.code}, userInfo=${tx.error
-                .userInfo}, domain=${tx.error.domain}");
-            PacAddBalanceTransaction.error("iap failed").save();
+            log("iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
+            var pacTx = await PacTransaction.shared.get();
+            pacTx.error("iap failed").save();
           }
           break;
 
@@ -173,7 +169,6 @@ class IOSOrchidPurchaseAPI
 
   // The IAP is complete, update AML and the pending transaction status.
   Future _completeIAPTransaction(SKPaymentTransactionWrapper tx) async {
-
     // Record the purchase for rate limiting
     var productId = tx.payment.productIdentifier;
     try {
@@ -201,8 +196,7 @@ class IOSOrchidPurchaseAPI
 
       // If the receipt is still null there's not much we can do.
       if (receipt == null) {
-        log(
-            "iap: Completed purchase but no receipt found! Clearing transaction.");
+        log("iap: Completed purchase but no receipt found! Clearing transaction.");
         await PacTransaction.shared.clear();
         return;
       }
@@ -227,10 +221,12 @@ class IOSOrchidPurchaseAPI
           price += 1;
         }
         return PAC(
-            productId: id,
-            localCurrencyCode: "USD",
-            localDisplayPrice: "\$$price.00",
-            localPurchasePrice: 1.0);
+          productId: id,
+          localCurrencyCode: "USD",
+          localDisplayPrice: "\$$price.00",
+          localPurchasePrice: 1.0,
+          usdPriceApproximate: USD(1.0),
+        );
       }).toList();
       return {for (var pac in pacs) pac.productId: pac};
     }
@@ -242,9 +238,8 @@ class IOSOrchidPurchaseAPI
     var productIds = OrchidPurchaseAPI.pacProductIds;
     log("iap: product ids requested: $productIds");
     SkProductResponseWrapper productResponse =
-    await SKRequestMaker().startProductRequest(productIds);
-    log("iap: product response: ${productResponse.products.map((p) => p
-        .productIdentifier)}");
+        await SKRequestMaker().startProductRequest(productIds);
+    log("iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
 
     var toPAC = (SKProductWrapper prod) {
       double localizedPrice = double.parse(prod.price);
@@ -254,8 +249,8 @@ class IOSOrchidPurchaseAPI
           localPurchasePrice: localizedPrice,
           localCurrencyCode: currencyCode,
           localDisplayPrice:
-          NumberFormat.currency(symbol: prod.priceLocale.currencySymbol)
-              .format(localizedPrice),
+              NumberFormat.currency(symbol: prod.priceLocale.currencySymbol)
+                  .format(localizedPrice),
           usdPriceApproximate: StaticExchangeRates.from(
             price: localizedPrice,
             currencyCode: currencyCode,

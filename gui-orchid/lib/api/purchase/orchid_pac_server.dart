@@ -1,12 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_eth/eth_transaction.dart';
+import 'package:orchid/util/units.dart';
 import '../orchid_api.dart';
+import '../orchid_crypto.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac_transaction.dart';
 import 'orchid_purchase.dart';
+import 'package:orchid/util/strings.dart';
 
 /// The PAC service exchanges an in-app purchase receipt for an Orchid PAC.
 class OrchidPACServer {
@@ -23,12 +29,21 @@ class OrchidPACServer {
   OrchidPACServer._internal();
 
   /// Apply the receipt to any pending pac receipt transaction and advance it.
-  Future<void> advancePACTransactionsWithReceipt(String receipt) async {
+  Future<void> advancePACTransactionsWithReceipt(String receiptIn) async {
+    // Allow override of receipts with the test receipt.
+    var apiConfig = await OrchidPurchaseAPI().apiConfig();
+    if (apiConfig.testReceipt != null) {
+      log("iap: Using test receipt: ${apiConfig.testReceipt.prefix(8)}");
+    }
+    var receipt = apiConfig.testReceipt ?? receiptIn;
+
     //  Get the current transaction
     var tx = await PacTransaction.shared.get();
     if (tx == null) {
-      log("iap: receipt with no corresponding pac tx, attempting to salvage.");
-      tx = await PacAddBalanceTransaction.pending(productId: "unknown").save();
+      log("iap: receipt with no corresponding pac tx.");
+      // TODO: We'd like to salvage the receipt but what identity should we use?
+      // tx = await PacAddBalanceTransaction.pending(signer: signer, productId: "unknown").save();
+      return;
     }
 
     // Attach the receipt
@@ -48,7 +63,7 @@ class OrchidPACServer {
 
     var tx = await PacTransaction.shared.get();
     if (tx == null) {
-        log("iap: pac tx null, return");
+      log("iap: pac tx null, return");
       return;
     }
 
@@ -81,7 +96,7 @@ class OrchidPACServer {
 
     // Submit to the server
     try {
-      await apiSupport(); // support testing
+      await _apiSupport(); // support testing
 
       String response;
       switch (tx.type) {
@@ -125,16 +140,20 @@ class OrchidPACServer {
     await tx.save();
   }
 
-  Future<void> apiSupport() async {
-    if (OrchidAPI.mockAPI) {
+  Future<void> _apiSupport() async {
+    var apiConfig = await OrchidPurchaseAPI().apiConfig();
+
+    // Fail server calls for the mock api unless we have a test receipt
+    if (OrchidAPI.mockAPI && apiConfig.testReceipt == null) {
       log("iap: mock api, delay and throw exception");
       await Future.delayed(Duration(seconds: 2), () {});
       throw Exception("iap: mock api");
     }
-    var apiConfig = await OrchidPurchaseAPI().apiConfig();
+
+    // Fail if we are configured to fail
     if (apiConfig.serverFail) {
       await Future.delayed(Duration(seconds: 2));
-      throw Exception('Testing server failure!');
+      throw Exception('iap: mock failure!');
     }
   }
 
@@ -145,56 +164,22 @@ class OrchidPACServer {
       throw Exception('receipt is null');
     }
 
-    Map<String, String> params = {};
-    var apiConfig = await OrchidPurchaseAPI().apiConfig();
-
-    // Optional dev testing params
-    if (!apiConfig.verifyReceipt) {
-      params.addAll({'verify_receipt': 'False'});
-    }
-    if (apiConfig.debug) {
-      params.addAll({'debug': 'True'});
-    }
-
-    // Main params
-    params.addAll({'receipt': tx.receipt});
-
-    var postBody = jsonEncode(params);
-
-    // Note: the receipt exceeds the console log line length so keep it last
-    // Note: or explicitly truncate it.
-    log("iap: posting to ${apiConfig.url}, json = $postBody");
-
-    // Do the post
-    var response = await http.post(apiConfig.url,
-        headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: postBody);
-
-    // Validate the response status and content
-    //log("iap: pac server response: ${response.statusCode}, ${response.body}");
-    if (response.statusCode != 200) {
-      throw Exception(
-          "Error response: code=${response.statusCode} body=${response.body}");
-    }
-    var responseJson = json.decode(response.body);
-    var configString = responseJson['config'];
-    if (configString == null) {
-      throw Exception("No config in server response: $response");
-    }
-
-    return response.body;
+    return addBalance(signer: tx.signer, receipt: tx.receipt);
   }
 
-  Future<String> _callSubmitRaw(PacSubmitRawTransaction tx) async {
+  Future<String> _callSubmitRaw(PacSubmitRawTransaction rawTx) async {
     log("iap: submit send raw tx to PAC server");
-
-    //return response.body;
-    return "test...";
+    var tx = rawTx.tx;
+    var signer = tx.from;
+    var chainId = tx.chainId;
+    return submitRawTransaction(signer: signer, chainId: chainId, tx: tx);
   }
 
   Future<String> _callPurchase(PacPurchaseTransaction tx) async {
     log("iap: submit purchase tx to PAC server");
 
+    // Note: The add balance call should be idempotent, so guarding this
+    // Note: is not really necessary.
     if (tx.addBalance.state != PacTransactionState.Complete) {
       log("iap: purchase tx: add balance");
       tx.addBalance.serverResponse = await _callAddBalance(tx.addBalance);
@@ -206,6 +191,76 @@ class OrchidPACServer {
 
     return [tx.addBalance.serverResponse, tx.submitRaw.serverResponse]
         .toString();
+  }
+
+  /*
+    get_account
+    {'account_id': '0x00A0844371B32aF220548DCE332989404Fda2EeF'}
+   */
+
+  /// Get the PAC server USD balance for the account
+  Future<USD> getBalance({
+    @required EthereumAddress signer,
+    PacApiConfig apiConfig, // optional override
+  }) async {
+    var params = {'account_id': signer.toString(prefix: true)};
+    var result = await postJson(
+        method: 'get_account', params: params, apiConfig: apiConfig);
+    print("XXX: get balance result = $result");
+    return USD(0);
+  }
+
+  /*
+      payment_apple
+      {'receipt': 'MIIT0wYJ..', 'account_id': '0x00A0844371B32aF220548DCE332989404Fda2EeF'}
+   */
+  Future<String> addBalance({
+    @required EthereumAddress signer,
+    @required String receipt,
+    PacApiConfig apiConfig, // optional override
+  }) async {
+    var params = {
+      'account_id': signer.toString(prefix: true),
+      'receipt': receipt,
+    };
+    var result = await postJson(
+        method: 'payment_apple', params: params, apiConfig: apiConfig);
+    print("XXX: add balance result = " + result.toString());
+    return result.toString();
+  }
+
+  /*
+    send_raw
+    {
+      "account_id": "0x00A0844371B32aF220548DCE332989404Fda2EeF",
+      "chainId": 100,
+      "txn": {
+        "from": "0x00A0844371B32aF220548DCE332989404Fda2EeF",
+        "to": "0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b",
+        "gas": "0x2ab98", // 175k
+        "gasPrice": "0x3b9aca00", // 1e9
+        "value": "0xde0b6b3a7640000", // 1e18
+        "chainId": 100,
+        "data": "0x987ff31c00000..."
+      }
+    }
+   */
+  Future<String> submitRawTransaction({
+    @required EthereumAddress signer,
+    @required int chainId,
+    @required EthereumTransaction tx,
+    PacApiConfig apiConfig, // optional override
+  }) async {
+    var params = {
+      'account_id': signer.toString(prefix: true),
+      'chainId': chainId,
+      'txn': tx.toJson(),
+    };
+    print("XXX: send raw json = ${jsonEncode(params)}");
+    var result = await postJson(
+        method: 'send_raw', params: params, apiConfig: apiConfig);
+    print("XXX: send raw result = " + result.toString());
+    return result.toString();
   }
 
   Future<PACStoreStatus> storeStatus() async {
@@ -250,6 +305,50 @@ class OrchidPACServer {
     var disabled = parseBool(responseJson['disabled'], false);
 
     return PACStoreStatus(open: !disabled);
+  }
+
+  /// Post json to our PAC server
+  Future<dynamic> postJson({
+    @required String method,
+    Map<String, dynamic> params = const {},
+    PacApiConfig apiConfig, // optional override
+  }) async {
+    return _postJson(method: method, inParams: params, apiConfig: apiConfig);
+  }
+
+  Future<dynamic> _postJson({
+    @required String method,
+    Map<String, dynamic> inParams = const {},
+    PacApiConfig apiConfig, // optional override
+  }) async {
+    apiConfig = apiConfig ?? await OrchidPurchaseAPI().apiConfig();
+    var url = '${apiConfig.url}/$method';
+
+    Map<String, dynamic> params = {};
+    params.addAll(inParams);
+
+    // Optional dev testing params
+    if (!apiConfig.verifyReceipt) {
+      params.addAll({'verify_receipt': 'False'});
+    }
+    if (apiConfig.debug) {
+      params.addAll({'debug': 'True'});
+    }
+
+    // Do the post
+    var postBody = jsonEncode(params);
+    log("iap: posting to $url, json = $postBody");
+    var response = await http.post(url,
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: postBody);
+
+    // Validate the response status and content
+    log("iap: pac server response: ${response.statusCode}, ${response.body}");
+    if (response.statusCode != 200) {
+      throw Exception(
+          "Error response: code=${response.statusCode} body=${response.body}");
+    }
+    return json.decode(response.body);
   }
 }
 

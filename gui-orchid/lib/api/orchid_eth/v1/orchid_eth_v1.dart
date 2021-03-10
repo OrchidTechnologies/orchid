@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/hex.dart';
+import 'package:orchid/util/units.dart';
 
 import '../../configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import '../abi_encode.dart';
+import '../eth_transaction.dart';
 import '../orchid_account.dart';
 import '../../orchid_budget_api.dart';
 import '../../orchid_crypto.dart';
@@ -63,7 +67,7 @@ class OrchidEthereumV1 {
         "topics": [
           OrchidContractV1.createEventHashV1,
           "null", // no funder topic for index 1
-          abiEncoded(signer, prefix: true)
+          AbiEncode.address(signer, prefix: true)
         ],
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
@@ -94,12 +98,13 @@ class OrchidEthereumV1 {
       {chain: Chain, funder: EthereumAddress, signer: EthereumAddress}) async {
     print("fetch pot for: $funder, $signer, chain = $chain");
 
+    var address = AbiEncode.address;
     // construct the abi encoded eth_call
     var params = [
       {
         "to": "${await OrchidContractV1.lotteryContractAddressV1}",
         "data":
-            "0x${OrchidContractV1.readMethodHash}${abiEncoded(funder)}${abiEncoded(signer)}${abiEncoded(EthereumAddress.zero)}"
+            "0x${OrchidContractV1.readMethodHash}${address(funder)}${address(signer)}${address(EthereumAddress.zero)}"
       },
       "latest"
     ];
@@ -127,8 +132,54 @@ class OrchidEthereumV1 {
     return LotteryPot(balance: balance, deposit: deposit, unlock: unlock);
   }
 
-  static String abiEncoded(EthereumAddress address, {prefix: false}) {
-    return OrchidEthereumV0.abiEncoded(address, prefix: prefix);
+  /// Create a default funding transaction allocating the total usd value
+  /// in USD among balance, deposit, and gas.  This method chooses a
+  /// conservative gas price and exchange rate for the native currency.
+  Future<EthereumTransaction> createFundingTransaction({
+    Chain chain,
+    EthereumAddress signer,
+    USD totalUsdValue,
+  }) async {
+    var currency = chain.nativeCurrency;
+
+    // Gas
+    var gasPriceMultiplier = 1.1;
+    var gasPrice =
+        (await getGasPrice(chain)).multiplyDouble(gasPriceMultiplier);
+    var gas = OrchidContractV1.lotteryMoveMaxGas;
+    var gasCost = gasPrice.multiplyInt(gas);
+
+    // Allocate value
+    var usdToTokenRate = await OrchidPricing().usdToTokenRate(currency);
+    var totalTokenValue =
+        currency.fromDouble(totalUsdValue.value * usdToTokenRate);
+    var useableTokenValue = totalTokenValue.subtract(gasCost);
+
+    var contract =
+        EthereumAddress.from(await OrchidContractV1.lotteryContractAddressV1);
+
+    // TODO: We currently have no way of knowing if the account exists.
+    // TODO: As a placeholder we will just always allocate a fraction to escrow.
+    var escrowPercentage = 0.1;
+    var escrow = useableTokenValue * escrowPercentage;
+
+    var moveCall =
+        OrchidContractV1.abiEncodeMove(signer, escrow.intValue, BigInt.zero);
+
+    log("eth: createFundingTransaction "
+        "totalUsdValue = $totalUsdValue, "
+        "totalTokenValue = $totalTokenValue, "
+        "useableTokenValue = $useableTokenValue, "
+        "escrow = $escrow");
+    return EthereumTransaction(
+      from: signer,
+      to: contract,
+      gas: gas,
+      gasPrice: gasPrice.intValue,
+      value: useableTokenValue.intValue,
+      chainId: chain.chainId,
+      data: moveCall,
+    );
   }
 
   static Future<dynamic> jsonRPC({
@@ -136,7 +187,7 @@ class OrchidEthereumV1 {
     @required String method,
     List<Object> params = const [],
   }) async {
-    return OrchidEthereumV0.jsonRPCForUrl(
+    return OrchidEthereumV0.ethJsonRpcCall(
         url: url, method: method, params: params);
   }
 }

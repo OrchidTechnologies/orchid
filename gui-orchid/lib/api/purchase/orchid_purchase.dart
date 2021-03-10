@@ -48,7 +48,7 @@ abstract class OrchidPurchaseAPI {
   // The raw value from the iOS API
   static const int SKErrorPaymentCancelled = 2;
 
-  Future<PACApiConfig> apiConfig();
+  Future<PacApiConfig> apiConfig();
 
   void initStoreListener();
 
@@ -59,14 +59,15 @@ abstract class OrchidPurchaseAPI {
   Future<void> purchase(PAC pac);
 
   /// Return the API config allowing overrides from configuration.
-  static Future<PACApiConfig> apiConfigWithOverrides(
-      PACApiConfig prodAPIConfig) async {
+  static Future<PacApiConfig> apiConfigWithOverrides(
+      PacApiConfig prodAPIConfig) async {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
-    return PACApiConfig(
+    return PacApiConfig(
       enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
       url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
       verifyReceipt: jsConfig.evalBoolDefault(
           'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
+      testReceipt: jsConfig.evalStringDefault('pacs.receipt', prodAPIConfig.testReceipt),
       debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug),
       serverFail:
           jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
@@ -107,7 +108,7 @@ abstract class OrchidPurchaseAPI {
   }
 }
 
-class PACApiConfig {
+class PacApiConfig {
   /// Platform-specific PAC Server URL
   /// e.g. 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple'
   final String url;
@@ -118,16 +119,20 @@ class PACApiConfig {
   /// Optionally disable receipt verification in dev.
   final bool verifyReceipt;
 
+  // If configured the test receipt will be submitted with all calls.
+  final String testReceipt;
+
   /// Enable debug tracing.
   final bool debug;
 
   /// Simulate PAC server failure redeeming receipt
   final bool serverFail;
 
-  PACApiConfig({
-    @required this.enabled,
+  PacApiConfig({
     @required this.url,
+    this.enabled = true,
     this.verifyReceipt = true,
+    this.testReceipt,
     this.debug = false,
     this.serverFail = false,
   });

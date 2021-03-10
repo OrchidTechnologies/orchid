@@ -1,6 +1,6 @@
 
 class Hex {
-  static String removePrefix(String text) {
+  static String remove0x(String text) {
     if (text != null && text.toLowerCase().startsWith("0x")) {
       text = text.substring(2);
     }
@@ -12,7 +12,7 @@ class HexStringBuffer {
   String buff;
 
   HexStringBuffer(String value) {
-    this.buff = Hex.removePrefix(value);
+    this.buff = Hex.remove0x(value);
   }
 
   void skip(int chars) {

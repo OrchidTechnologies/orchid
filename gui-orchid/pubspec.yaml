@@ -22,6 +22,7 @@ dependencies:
   dartjsengine: 1.0.1
   dotted_border: 1.0.7
   email_validator: 1.0.6
+  ethereum_address: ^1.0.1 # for EIP-55
   flare_flutter: 2.0.6
   flutter:
     sdk: flutter

@@ -28,6 +28,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   String _statusMessage;
   bool _requiresUserAction = false;
   bool _showHelpExpanded = false;
+  bool _showCompleted = false;
 
   List<StreamSubscription> _subscriptions = [];
 
@@ -47,26 +48,83 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   Widget build(BuildContext context) {
     return AnimatedCrossFade(
       duration: Duration(milliseconds: 300),
-      crossFadeState: _statusMessage == null
+      // todo: clean this up
+      crossFadeState: _statusMessage == null && !_showCompleted
           ? CrossFadeState.showFirst
           : CrossFadeState.showSecond,
       firstChild:
-          Container(width: double.infinity, height: 0, color: Colors.green),
-      secondChild: _buildProgress(),
+          // Container(width: double.infinity, height: 0, color: Colors.green),
+          Container(height: 0),
+      secondChild: _buildStatusContainer(),
     );
   }
 
-  Widget _buildProgress() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        color: Colors.deepPurple.withOpacity(0.1),
-      ),
-      padding: EdgeInsets.all(16),
-      child: _requiresUserAction
-          ? _buildRequiresUserAction()
-          : _buildProgressIndicator(),
+  Widget _buildStatusContainer() {
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            color: Colors.deepPurple.withOpacity(0.1),
+          ),
+          padding: EdgeInsets.all(16),
+          child: _buildStatus(),
+        ),
+        if (_showCompleted)
+          Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              iconSize: 18,
+              icon: Icon(Icons.close),
+              onPressed: _dismissCompleted,
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _dismissCompleted() async {
+    print("XXX: dismiss complete");
+    var tx = (await PacTransaction.shared.get());
+    if (tx != null && tx.state != PacTransactionState.Complete) {
+      throw Exception("not completed");
+    }
+    if (tx != null) {
+      await _deleteTransaction();
+    }
+    setState(() {
+      _showCompleted = false;
+    });
+  }
+
+  Widget _buildStatus() {
+    if (_showCompleted) {
+      return _buildCompleted();
+    }
+    return _requiresUserAction
+        ? _buildRequiresUserAction()
+        : _buildProgressIndicator();
+  }
+
+  Widget _buildCompleted() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text(
+          'Transaction Complete',
+          style: TextStyle(fontSize: 16),
+        ),
+        pady(8),
+        Text(
+          'Your transaction is complete.  It may take some time before adjustments to your balances to appear.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+        ),
+        pady(16),
+        LinkText("Copy Receipt",
+            style: AppText.linkStyle, onTapped: _copyDebugInfo),
+      ],
     );
   }
 
@@ -91,6 +149,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     );
   }
 
+  // The spinner
   Column _buildProgressIndicator() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -134,7 +193,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         FlatButton(
             color: Colors.redAccent,
             child: Text(s.remove, style: TextStyle(color: Colors.white)),
-            onPressed: _deleteTransaction),
+            onPressed: _confirmDeleteTransaction),
       ],
     );
   }
@@ -146,6 +205,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   }
 
   void _copyDebugInfo() async {
+    log("iap: Copy debug info");
     PacTransaction tx = await PacTransaction.shared.get();
     Clipboard.setData(
         ClipboardData(text: tx != null ? tx.userDebugString() : '<no tx>'));
@@ -156,19 +216,17 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     OrchidPACServer().advancePACTransactions();
   }
 
-  void _confirmDeleteTransaction() async {
-    //var tx = await PacTransaction.shared.get();
-    //OrchidPurchaseAPI().finishTransaction(tx.transactionId);
-    await PacTransaction.shared.clear();
-  }
-
-  void _deleteTransaction() {
+  void _confirmDeleteTransaction() {
     AppDialogs.showConfirmationDialog(
         context: context,
         title: s.deleteTransaction,
         body: s.clearThisInProgressTransactionExplain +
             " https://orchid.com/contact",
-        commitAction: _confirmDeleteTransaction);
+        commitAction: _deleteTransaction);
+  }
+
+  Future<void> _deleteTransaction() async {
+    return await PacTransaction.shared.clear();
   }
 
   // Respond to updates of the PAC transaction status
@@ -197,8 +255,10 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         _show(s.purchaseError, requiresUserAction: true);
         break;
       case PacTransactionState.Complete:
-        // Allow the user to dismiss this?
-        PacTransaction.shared.clear();
+        log("XXX: iap: purchase status set complete");
+        setState(() {
+          _showCompleted = true;
+        });
         break;
     }
   }
