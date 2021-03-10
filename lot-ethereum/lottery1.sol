@@ -348,9 +348,6 @@ contract OrchidLottery1 {
 
 
     function claim(IERC20 token, address recipient, Ticket[] calldata tickets, bytes32[] calldata refunds) external {
-        if (recipient == address(0))
-            recipient = msg.sender;
-
         for (uint256 i = refunds.length; i != 0; )
             spend_(refunds[--i]);
 
