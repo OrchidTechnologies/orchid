@@ -117,7 +117,8 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         ),
         pady(8),
         Text(
-          'Your transaction is complete.  It may take some time before adjustments to your balances to appear.',
+          'Your transaction is complete.  '
+              'It may take some time for adjustments to your balances to appear.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
