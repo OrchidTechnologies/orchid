@@ -166,6 +166,6 @@ String formatCurrency(num value,
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0.00" + "#" * (digits - 1), locale).format(value) +
+  return NumberFormat("#0.00" + "#" * (digits - 2), locale).format(value) +
       (suffix != null ? " $suffix" : "");
 }

@@ -8,6 +8,7 @@ import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';
@@ -17,6 +18,8 @@ import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:orchid/util/units.dart';
+import '../app_colors.dart';
 import '../app_sizes.dart';
 import '../app_text.dart';
 
@@ -333,7 +336,7 @@ class _PurchasePageState extends State<PurchasePage> {
       behavior: HitTestBehavior.translucent,
       onTap: enabled
           ? () {
-              _purchase(purchase: pac);
+              _confirmPurchase(pac: pac);
             }
           : null,
       child: Container(
@@ -409,7 +412,7 @@ class _PurchasePageState extends State<PurchasePage> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
-        _purchase(purchase: pac);
+        _confirmPurchase(pac: pac);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -444,6 +447,109 @@ class _PurchasePageState extends State<PurchasePage> {
         TextSpan(text: text, style: subtitleStyleBold),
       ],
     );
+  }
+
+  Future<void> _confirmPurchase({PAC pac}) async {
+    var style1 = AppText.dialogBody.copyWith(fontSize: 16);
+    var valueStyle = AppText.valueStyle;
+
+    var credits = pac.localPurchasePrice;
+    var fee = pac.localPurchasePrice * 0.3;
+    var promo = fee;
+    var total = credits;
+
+    await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0))),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                pady(8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          pady(8),
+                          Text(
+                            "VPN Credits",
+                            style: style1,
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            "- Tx Fee",
+                            style: style1,
+                            textAlign: TextAlign.right,
+                          ),
+                          Text(
+                            "- Promo",
+                            style: style1,
+                            textAlign: TextAlign.right,
+                          ),
+                          Text(
+                            "Total",
+                            style: style1,
+                            textAlign: TextAlign.left,
+                          ),
+                        ],
+                      ),
+                    ),
+                    padx(24),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          pady(8),
+                          // TODO: Localize currency
+                          Text(
+                            '\$' + formatCurrency(credits),
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          ),
+                          Text(
+                            '- ' + formatCurrency(fee),
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          ),
+                          Text(
+                            '+ ' + formatCurrency(promo),
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          ),
+                          // TODO: Localize currency
+                          Text(
+                            '\$' + formatCurrency(total),
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pady(16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RoundedRectButton(
+                      text: "Buy",
+                      onPressed: () {
+                        Navigator.of(context).pop(true);
+                        _purchase(purchase: pac);
+                      },
+                    ),
+                  ],
+                )
+              ],
+            ),
+          );
+        });
   }
 
   Future<void> _purchase({PAC purchase}) async {

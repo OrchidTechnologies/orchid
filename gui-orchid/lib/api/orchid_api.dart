@@ -9,7 +9,7 @@ import 'orchid_log_api.dart';
 /// Orchid App Channel API
 ///
 abstract class OrchidAPI {
-  static bool mockAPI = false;
+  static bool mockAPI = true;
   static OrchidAPI _apiSingleton;
   static OrchidAPI _mockAPISingleton;
 
