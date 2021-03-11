@@ -595,7 +595,8 @@ class _PurchasePageState extends State<PurchasePage> {
 
     // Clear any error tx
     var tx = await PacTransaction.shared.get();
-    if (tx != null && tx.state == PacTransactionState.Error) {
+    if ((tx != null && tx.state == PacTransactionState.Error) ||
+        rateLimitExceeded) {
       log("iap: clearing error tx");
       await PacTransaction.shared.clear();
     } else {
