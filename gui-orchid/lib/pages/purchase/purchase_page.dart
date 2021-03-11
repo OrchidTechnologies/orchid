@@ -473,31 +473,33 @@ class _PurchasePageState extends State<PurchasePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          pady(8),
-                          Text(
-                            "VPN Credits",
-                            style: style1,
-                            textAlign: TextAlign.left,
-                          ),
-                          Text(
-                            "- Tx Fee",
-                            style: style1,
-                            textAlign: TextAlign.right,
-                          ),
-                          Text(
-                            "- Promo",
-                            style: style1,
-                            textAlign: TextAlign.right,
-                          ),
-                          Text(
-                            "Total",
-                            style: style1,
-                            textAlign: TextAlign.left,
-                          ),
-                        ],
+                      child: IntrinsicWidth(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            pady(8),
+                            Text(
+                              "VPN Credits",
+                              style: style1,
+                              textAlign: TextAlign.left,
+                            ),
+                            Text(
+                              "- Tx Fee",
+                              style: style1,
+                              textAlign: TextAlign.right,
+                            ),
+                            Text(
+                              "- Promo",
+                              style: style1,
+                              textAlign: TextAlign.right,
+                            ),
+                            Text(
+                              "Total",
+                              style: style1,
+                              textAlign: TextAlign.left,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     padx(24),
