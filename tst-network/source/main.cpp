@@ -47,6 +47,7 @@
 #include "dns.hpp"
 #include "float.hpp"
 #include "fiat.hpp"
+#include "huobi.hpp"
 #include "json.hpp"
 #include "jsonrpc.hpp"
 #include "kraken.hpp"
@@ -296,6 +297,10 @@ int Main(int argc, const char *const argv[]) {
         co_return std::make_tuple(eth, eth * oxt);
     }, "Kraken"))));
 
+    const auto huobi(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Huobi(*origin, "ethusdt"), Huobi(*origin, "oxtusdt"));
+    }, "Huobi"))));
+
     const auto uniswap(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
         const auto [eth, oxt] = *co_await Parallel(Uniswap(*chain, UniswapUSDCETH, Ten6), Uniswap(*chain, UniswapOXTETH, 1));
         co_return std::make_tuple(eth, eth / oxt);
@@ -391,6 +396,7 @@ int Main(int argc, const char *const argv[]) {
         { const auto [eth, oxt] = (*coinbase)(); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*binance)(); body << "Binance:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*kraken)(); body << "Kraken:    $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*huobi)(); body << "Huobi:  $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*uniswap)(); body << "Uniswap:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*chainlink)(); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         body << "\n";
