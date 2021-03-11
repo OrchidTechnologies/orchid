@@ -28,8 +28,8 @@
 
 namespace orc {
 
-const Address ChainlinkETHUSD("0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F");
-const Address ChainlinkOXTUSD("0x11eF34572CcaB4c85f0BAf03c36a14e0A9C8C7eA");
+const Address ChainlinkETHUSD("0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419");
+const Address ChainlinkOXTUSD("0xd75AAaE4AF0c398ca13e2667Be57AF2ccA8B5de6");
 
 task<Float> Chainlink(const Chain &chain, const Address &pair, const Float &backup, const Float &adjust) { try {
     static const Selector<uint256_t> latestAnswer_("latestAnswer");
