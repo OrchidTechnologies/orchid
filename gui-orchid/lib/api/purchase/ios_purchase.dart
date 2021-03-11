@@ -213,6 +213,8 @@ class IOSOrchidPurchaseAPI
   @override
   Future<Map<String, PAC>> requestProducts({bool refresh = false}) async {
     if (OrchidAPI.mockAPI) {
+
+      /*
       int price = 0;
       List<PAC> pacs = OrchidPurchaseAPI.pacProductIds.map((id) {
         if (price > 4) {
@@ -228,6 +230,16 @@ class IOSOrchidPurchaseAPI
           usdPriceApproximate: USD(1.0),
         );
       }).toList();
+
+       */
+      var price = 39.99;
+      var pacs = [PAC(
+        productId: OrchidPurchaseAPI.pacProductIds[0],
+        localCurrencyCode: "USD",
+        localDisplayPrice: "\$$price",
+        localPurchasePrice: price,
+        usdPriceApproximate: USD(price),
+      )];
       return {for (var pac in pacs) pac.productId: pac};
     }
     if (productsCached != null && !refresh) {

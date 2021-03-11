@@ -129,7 +129,9 @@ class TokenType {
 
   // From a number representing the nominal token denomination, e.g. 1.0 OXT
   Token fromDouble(double val) {
-    return fromInt(BigInt.from((val * this.multiplier).round()));
+    // Note: No explicit rounding needed here because BigInt converts for us
+    // Note: and round() on the double would overflow Dart's native int.
+    return fromInt(BigInt.from(val * this.multiplier));
   }
 
   @override

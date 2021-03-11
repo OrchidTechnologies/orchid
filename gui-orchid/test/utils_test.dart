@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/util/enums.dart';
+import 'package:orchid/util/units.dart';
 
 import 'expect.dart';
 
@@ -45,6 +48,19 @@ void main() {
       var retrieve = BigInt.from(0);
       var data = OrchidContractV1.abiEncodeMove(signer, adjust, retrieve);
       expectTrue(data == ref);
+    });
+
+    test('misc', () async {
+      var currency = Chains.xDAI.nativeCurrency;
+      // var usdToTokenRate = await OrchidPricing().usdToTokenRate(currency);
+      var usdToTokenRate = 1.0;
+      var totalUsdValue = USD(40);
+      var totalTokenValue =
+          currency.fromDouble(totalUsdValue.value * usdToTokenRate);
+      print("totalTokenValue = " + totalTokenValue.toString());
+      print("totalUsdValue = $totalUsdValue, "
+          "usdToTokenRate = $usdToTokenRate, "
+          "totalTokenValue = $totalTokenValue, ");
     });
 
     //

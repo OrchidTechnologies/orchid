@@ -168,6 +168,7 @@ class OrchidEthereumV1 {
 
     log("eth: createFundingTransaction "
         "totalUsdValue = $totalUsdValue, "
+        "usdToTokenRate = $usdToTokenRate, "
         "totalTokenValue = $totalTokenValue, "
         "useableTokenValue = $useableTokenValue, "
         "escrow = $escrow");
