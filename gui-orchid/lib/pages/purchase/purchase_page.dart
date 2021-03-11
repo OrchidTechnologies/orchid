@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -11,6 +10,7 @@ import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/loading.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
@@ -90,7 +90,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       pady(12),
                       _buildInstructions(),
                       pady(16),
-                      _buildPACList(),
+                      _buildPacList(),
                       pady(32),
                       _buildPreferredProviderText()
                     ],
@@ -209,7 +209,7 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
-  Widget _buildPACList() {
+  Widget _buildPacList() {
     if (_pacs == null) {
       return LoadingIndicator(height: 50);
     }
@@ -218,15 +218,182 @@ class _PurchasePageState extends State<PurchasePage> {
           height: 50, text: "No PACs available at this time.");
     }
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: _pacs
-          .map(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _fixedPacList()
+        /*
+         _pacs.map(
             (pac) => Padding(
               padding: const EdgeInsets.all(8.0),
               child: _buildPacPurchaseCard(pac),
             ),
           )
           .toList(),
+           */
+        );
+  }
+
+  // TODO: This assumes three pre-defined pac tiers rather than the list.
+  List<Widget> _fixedPacList() {
+    if (_pacs.isEmpty || _pacs.length < 3) {
+      log("iap: pacs not ready: $_pacs");
+      return [];
+    }
+    // TODO: Hard-coded expected ids
+    var pacTier1 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1';
+    var pacTier2 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2';
+    var pacTier3 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3';
+    var pac1 = _pacs.firstWhere((pac) => pac.productId == pacTier1);
+    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier2);
+    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier3);
+
+    return [
+      _buildPurchaseCardView(
+          pac: pac1,
+          title: s.tryOutOrchid,
+          subtitle: _buildPurchaseDescriptionText(
+            text: "- " + s.goodForBrowsingAndLightActivity,
+          ),
+          gradBegin: 0,
+          gradEnd: 2),
+      pady(24),
+      _buildPurchaseCardView(
+          pac: pac2,
+          title: s.average,
+          subtitle: _buildPurchaseDescriptionText(
+            text: "- " +
+                s.goodForAnIndividual +
+                "\n" +
+                "- " +
+                s.shortToMediumTermUsage,
+          ),
+          gradBegin: -2,
+          gradEnd: 1),
+      pady(24),
+      _buildPurchaseCardView(
+        pac: pac3,
+        title: s.heavy,
+        subtitle: _buildPurchaseDescriptionText(
+          text: "- " +
+              s.goodForBandwidthheavyUsesSharing +
+              "\n" +
+              "- " +
+              s.longerTermUsage,
+        ),
+        gradBegin: -1,
+        gradEnd: -1,
+      ),
+    ];
+  }
+
+  // TODO: Legacy?
+  Widget _buildPurchaseCardView(
+      {PAC pac,
+      String title,
+      TextSpan subtitle,
+      double gradBegin = 0.0,
+      double gradEnd = 1.0}) {
+    const titleStyle = TextStyle(
+        color: Colors.white,
+        fontSize: 17.0,
+        fontWeight: FontWeight.w600,
+        height: 20.0 / 17.0);
+    const valueStyle = TextStyle(
+        color: Colors.white,
+        fontSize: 18.0,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.38,
+        fontFamily: 'SFProText-Regular',
+        height: 25.0 / 20.0);
+    const valueSubtitleStyle = TextStyle(
+        color: Colors.white,
+        fontSize: 13.0,
+        fontWeight: FontWeight.normal,
+        fontFamily: 'SFProText-Regular',
+        height: 16.0 / 12.0);
+
+    /*
+    var usdString = formatCurrency(pac.localPurchasePrice, ifNull: '...');
+    var oxtString = pac.localPurchasePrice != null
+        ? NumberFormat('0.00')
+            .format(_pricing?.toOXT(pac.localPurchasePrice ?? 0)
+        : '...';
+     */
+
+    var enabled = pac.localPurchasePrice != null && _storeOpen == true;
+
+    Gradient grad = VerticalLinearGradient(
+        begin: Alignment(0.0, gradBegin),
+        end: Alignment(0.0, gradEnd),
+        colors: [
+          enabled ? Color(0xff4e71c2) : Colors.grey,
+          enabled ? Color(0xff258993) : Colors.grey
+        ]);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: enabled
+          ? () {
+              _purchase(purchase: pac);
+            }
+          : null,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0),
+          gradient: grad,
+        ),
+        child: Padding(
+          padding:
+              const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // top row with title and price
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  // left side title usage description
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(title,
+                            textAlign: TextAlign.left, style: titleStyle),
+                      ],
+                    ),
+                  ),
+                  padx(4),
+
+                  // right side title value display
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(children: [
+                      Text("${pac.localDisplayPrice ?? '...'}",
+                          style:
+                              valueStyle.copyWith(fontWeight: FontWeight.bold)),
+                      pady(2),
+                      /*
+                      Visibility(
+                        visible: _pricing != null,
+                        child:
+                            Text("~ $oxtString OXT", style: valueSubtitleStyle),
+                      ),
+                       */
+                    ]),
+                  ),
+                ],
+              ),
+              pady(4),
+
+              // bottom tier description text
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: RichText(text: subtitle, textAlign: TextAlign.left),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -261,6 +428,21 @@ class _PurchasePageState extends State<PurchasePage> {
           ),
         ),
       ),
+    );
+  }
+
+  // TODO:
+  TextSpan _buildPurchaseDescriptionText({String text}) {
+    const subtitleStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 12.0,
+      height: 16.0 / 12.0,
+    );
+    var subtitleStyleBold = subtitleStyle.copyWith(fontWeight: FontWeight.bold);
+    return TextSpan(
+      children: [
+        TextSpan(text: text, style: subtitleStyleBold),
+      ],
     );
   }
 

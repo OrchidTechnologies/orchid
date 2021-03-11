@@ -316,8 +316,9 @@ class UserPreferences {
         return writeStringForKey(key, value);
       });
 
-  ObservableBoolPreference guiV1 =
-      ObservableBoolPreference(UserPreferenceKey.GuiV1);
+  // Defaults false
+  ObservableBoolPreference guiV0 =
+      ObservableBoolPreference(UserPreferenceKey.GuiV0);
 }
 
 enum UserPreferenceKey {
@@ -335,5 +336,5 @@ enum UserPreferenceKey {
   AllowNoHopVPN,
   PacTransaction,
   ActiveAccounts,
-  GuiV1
+  GuiV0
 }

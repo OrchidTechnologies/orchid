@@ -21,8 +21,9 @@ class IOSOrchidPurchaseAPI
   ///    debug: true
   ///  }'
   static PacApiConfig prodAPIConfig = PacApiConfig(
-    url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple',
-  );
+      // url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple',
+      // TODO: Dev for this release!
+      url: 'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev');
 
   /// Return the API config allowing overrides from configuration.
   @override
@@ -213,34 +214,7 @@ class IOSOrchidPurchaseAPI
   @override
   Future<Map<String, PAC>> requestProducts({bool refresh = false}) async {
     if (OrchidAPI.mockAPI) {
-
-      /*
-      int price = 0;
-      List<PAC> pacs = OrchidPurchaseAPI.pacProductIds.map((id) {
-        if (price > 4) {
-          price += 5;
-        } else {
-          price += 1;
-        }
-        return PAC(
-          productId: id,
-          localCurrencyCode: "USD",
-          localDisplayPrice: "\$$price.00",
-          localPurchasePrice: 1.0,
-          usdPriceApproximate: USD(1.0),
-        );
-      }).toList();
-
-       */
-      var price = 39.99;
-      var pacs = [PAC(
-        productId: OrchidPurchaseAPI.pacProductIds[0],
-        localCurrencyCode: "USD",
-        localDisplayPrice: "\$$price",
-        localPurchasePrice: price,
-        usdPriceApproximate: USD(price),
-      )];
-      return {for (var pac in pacs) pac.productId: pac};
+      return _mockPacs();
     }
     if (productsCached != null && !refresh) {
       log("iap: returning cached products");
@@ -293,6 +267,34 @@ class IOSOrchidPurchaseAPI
   @override
   void restoreCompletedTransactionsFailed({SKError error}) {
     log("restore failed");
+  }
+
+  Map<String, PAC> _mockPacs() {
+    var price = 39.99;
+    var pacs = [
+      PAC(
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1',
+        localCurrencyCode: "USD",
+        localDisplayPrice: "\$$price",
+        localPurchasePrice: price,
+        usdPriceApproximate: USD(price),
+      ),
+      PAC(
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2',
+        localCurrencyCode: "USD",
+        localDisplayPrice: "\$$price",
+        localPurchasePrice: price,
+        usdPriceApproximate: USD(price),
+      ),
+      PAC(
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3',
+        localCurrencyCode: "USD",
+        localDisplayPrice: "\$$price",
+        localPurchasePrice: price,
+        usdPriceApproximate: USD(price),
+      ),
+    ];
+    return {for (var pac in pacs) pac.productId: pac};
   }
 }
 
