@@ -258,14 +258,17 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         contract, chain,
         commit, issued, nonce,
         amount, expire, ratio,
-        funder
+        funder, window
     ] = Take<
         uint8_t, Brick<32>, Brick<32>,
         Address, uint256_t,
         Brick<32>, uint64_t, Brick<8>,
         uint128_t, uint32_t, uint64_t,
-        Address
+        Address, Window
     >(data);
+
+    // XXX: fix Coder and Selector to not require this to Beam
+    const Beam receipt(window);
 
     const auto recipient(croupier_->Recipient());
 
@@ -278,7 +281,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     if (expected <= 0)
         return;
 
-    const auto ticket(Ticket1{commit, issued, nonce, amount, expire, ratio, funder}.Encode(contract, chain, {}));
+    const auto ticket(Ticket1{commit, issued, nonce, amount, expire, ratio, funder, HashK(receipt)}.Encode(contract, chain, {}));
     const Address signer(Recover(ticket, v, r, s));
     Log() << std::dec << signer << " " << amount << std::endl;
 

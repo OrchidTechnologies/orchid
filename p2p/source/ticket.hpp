@@ -70,7 +70,7 @@ struct Ticket0 {
     }
 };
 
-typedef std::tuple<Bytes32, uint256_t, uint256_t, Bytes32, Bytes32> Payment1;
+typedef std::tuple<Bytes32, Bytes32, uint256_t, uint256_t, Bytes32, Bytes32> Payment1;
 
 struct Ticket1 {
     Bytes32 commit_;
@@ -80,17 +80,18 @@ struct Ticket1 {
     uint32_t expire_;
     uint64_t ratio_;
     Address funder_;
+    Bytes32 data_;
 
     uint256_t Value() const {
         return (ratio_ + uint256_t(1)) * amount_;
     }
 
     Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Address &token) const {
-        return HashK(Tie(uint8_t(0x19), uint8_t(0x00), lottery, chain, token, commit_, issued_, nonce_, amount_, expire_, ratio_, funder_));
+        return HashK(Tie(uint8_t(0x19), uint8_t(0x00), lottery, chain, token, commit_, issued_, nonce_, amount_, expire_, ratio_, funder_, data_));
     }
 
     auto Payment(const Bytes32 &reveal, const Signature &signature) const {
-        return Payment1(reveal, uint256_t(issued_) << 192 | uint256_t(nonce_.num<uint64_t>()) << 128 | amount_, uint256_t(expire_) << 225 | uint256_t(ratio_) << 161 | uint256_t(funder_.num()) << 1 | signature.v_, signature.r_, signature.s_);
+        return Payment1(data_, reveal, uint256_t(issued_) << 192 | uint256_t(nonce_.num<uint64_t>()) << 128 | amount_, uint256_t(expire_) << 225 | uint256_t(ratio_) << 161 | uint256_t(funder_.num()) << 1 | signature.v_, signature.r_, signature.s_);
     }
 };
 

@@ -214,10 +214,12 @@ struct Tester {
             const auto issued(Timestamp() - 60);
             const uint32_t expire(20 + 60 * 60 * 60);
 
+            const auto data(Nonzero<32>());
+
           sign:
             const auto nonce(Nonzero<8>());
 
-            const Ticket1 ticket{commit, issued, nonce, face, expire, ratio, funder};
+            const Ticket1 ticket{commit, issued, nonce, face, expire, ratio, funder, data};
             const auto signature(Sign(account.secret_, ticket.Encode(lottery, chain_, token)));
             if (Zeros(signature.operator Brick<65>()))
                 goto sign;

@@ -275,6 +275,7 @@ contract OrchidLottery1 {
 
 
     /*struct Ticket {
+        uint256 data;
         uint256 reveal;
 
         uint64 issued;
@@ -291,6 +292,7 @@ contract OrchidLottery1 {
     }*/
 
     struct Ticket {
+        bytes32 data;
         bytes32 reveal;
         uint256 packed0;
         uint256 packed1;
@@ -310,7 +312,7 @@ contract OrchidLottery1 {
         digest = keccak256(abi.encodePacked(
             byte(0x19), byte(0x00), this, digest, token,
             keccak256(abi.encodePacked(ticket.reveal, recipient)),
-            ticket.packed0, ticket.packed1 >> 1));
+            ticket.packed0, ticket.packed1 >> 1, ticket.data));
 
         address signer = ecrecover(digest, uint8((ticket.packed1 & 1) + 27), ticket.r, ticket.s);
 

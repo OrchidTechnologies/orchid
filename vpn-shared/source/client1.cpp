@@ -32,7 +32,8 @@ task<void> Client1::Submit(const Float &amount) {
     const auto issued(Timestamp());
     const auto expire(60 * 60 * 2);
     const auto ratio(uint64_t(Two64 * Ratio(face_, amount, market_, market_.currency_, Gas()) - 1));
-    const Ticket1 ticket{commit, issued, nonce, face_, expire, ratio, funder_};
+    const Beam receipt;
+    const Ticket1 ticket{commit, issued, nonce, face_, expire, ratio, funder_, HashK(receipt)};
     const auto hash(ticket.Encode(lottery_, *market_.chain_, {}));
     const auto signature(Sign(secret_, hash));
     co_await Client::Submit(hash, Tie(Command(Submit1_,
