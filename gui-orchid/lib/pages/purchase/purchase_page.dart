@@ -242,12 +242,12 @@ class _PurchasePageState extends State<PurchasePage> {
       return [];
     }
     // TODO: Hard-coded expected ids
-    var pacTier1 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1';
-    var pacTier2 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2';
-    var pacTier3 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3';
-    var pac1 = _pacs.firstWhere((pac) => pac.productId == pacTier1);
-    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier2);
-    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier3);
+    var pacTier4 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4';
+    var pacTier5 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5';
+    var pacTier6 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6';
+    var pac1 = _pacs.firstWhere((pac) => pac.productId == pacTier4);
+    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier5);
+    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier6);
 
     return [
       _buildPurchaseCardView(

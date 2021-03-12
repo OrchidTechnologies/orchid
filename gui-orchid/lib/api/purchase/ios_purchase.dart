@@ -272,21 +272,21 @@ class IOSOrchidPurchaseAPI
     var price = 39.99;
     var pacs = [
       PAC(
-        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1',
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',
         localCurrencyCode: "USD",
         localCurrencySymbol: '\$',
         localPrice: price,
         usdPriceApproximate: USD(price),
       ),
       PAC(
-        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2',
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5',
         localCurrencyCode: "USD",
         localCurrencySymbol: '\$',
         localPrice: price,
         usdPriceApproximate: USD(price),
       ),
       PAC(
-        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3',
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6',
         localCurrencyCode: "EUR",
         localCurrencySymbol: '€',
         localPrice: price,

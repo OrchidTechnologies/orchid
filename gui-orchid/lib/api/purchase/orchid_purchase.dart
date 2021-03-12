@@ -34,15 +34,9 @@ abstract class OrchidPurchaseAPI {
 
   // PAC product ids
   static List<String> pacProductIds = [
-    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1',
-    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2',
-    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3',
-    // OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',
-    // OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5',
-    // OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6',
-    // OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier7',
-    // OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier8',
-    // OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier9',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5',
+    OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6',
   ];
 
   // The raw value from the iOS API
