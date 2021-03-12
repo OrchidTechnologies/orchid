@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 
@@ -72,11 +74,7 @@ class AccountStore extends ChangeNotifier {
     activeAccounts = accounts;
     await UserPreferences().activeAccounts.set(accounts);
 
-    // Refresh everything
-    load();
-
-    OrchidAPI().circuitConfigurationChanged.add(null);
-    OrchidAPI().updateConfiguration();
+    _accountsChanged();
   }
 
   /// Set an active identity
@@ -89,6 +87,17 @@ class AccountStore extends ChangeNotifier {
     );
     // Activate the found account or simply activate the identity
     setActiveAccount(toActivate ?? Account(identityUid: identity.uid));
+  }
+
+  // Notify listeners and publish changes.
+  void _accountsChanged() async {
+    // Refresh everything
+    await load();
+
+    // Publish the new config
+    OrchidAPI().circuitConfigurationChanged.add(null);
+    await OrchidAPI().updateConfiguration();
+    print("XXX: accounts changed: config = ${await OrchidVPNConfig.generateConfig()}");
   }
 
   // Load available identities and user selected active account information
@@ -122,7 +131,7 @@ class AccountStore extends ChangeNotifier {
     return this;
   }
 
-  Future<void> removeIdentity(StoredEthereumKey identity) async {
+  Future<void> deleteIdentity(StoredEthereumKey identity) async {
     // Remove the key
     await UserPreferences().removeKey(identity.ref());
 
@@ -131,17 +140,15 @@ class AccountStore extends ChangeNotifier {
     activeAccounts.removeWhere((a) => a.identityUid == identity.uid);
     await UserPreferences().activeAccounts.set(activeAccounts);
 
-    // Refresh
-    await load();
+    // If there are remaining accounts in the active accounts list the next
+    // (most recently active) one will become active.
+    _accountsChanged();
   }
 
   Future<void> addIdentity(StoredEthereumKey identity) async {
     await UserPreferences().addKey(identity);
     identities = await UserPreferences().getKeys();
     setActiveIdentity(identity);
-
-    // Refresh
-    await load();
   }
 
   @override

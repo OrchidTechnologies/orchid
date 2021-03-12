@@ -206,13 +206,13 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       cancelText: s.cancel,
       actionText: s.delete,
       commitAction: () {
-        _doDeleteIdentity(identity);
+        _deleteIdentity(identity);
       },
     );
   }
 
-  void _doDeleteIdentity(StoredEthereumKey identity) async {
-    await _accountStore.removeIdentity(identity);
+  void _deleteIdentity(StoredEthereumKey identity) async {
+    await _accountStore.deleteIdentity(identity);
   }
 
   Column _buildIdentityHeader() {
