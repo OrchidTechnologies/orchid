@@ -230,13 +230,12 @@ class IOSOrchidPurchaseAPI
     var toPAC = (SKProductWrapper prod) {
       double localizedPrice = double.parse(prod.price);
       String currencyCode = prod.priceLocale.currencyCode;
+      String currencySymbol = prod.priceLocale.currencySymbol;
       return PAC(
           productId: prod.productIdentifier,
-          localPurchasePrice: localizedPrice,
+          localPrice: localizedPrice,
           localCurrencyCode: currencyCode,
-          localDisplayPrice:
-              NumberFormat.currency(symbol: prod.priceLocale.currencySymbol)
-                  .format(localizedPrice),
+          localCurrencySymbol: currencySymbol,
           usdPriceApproximate: StaticExchangeRates.from(
             price: localizedPrice,
             currencyCode: currencyCode,
@@ -275,22 +274,22 @@ class IOSOrchidPurchaseAPI
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier1',
         localCurrencyCode: "USD",
-        localDisplayPrice: "\$$price",
-        localPurchasePrice: price,
+        localCurrencySymbol: '\$',
+        localPrice: price,
         usdPriceApproximate: USD(price),
       ),
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier2',
         localCurrencyCode: "USD",
-        localDisplayPrice: "\$$price",
-        localPurchasePrice: price,
+        localCurrencySymbol: '\$',
+        localPrice: price,
         usdPriceApproximate: USD(price),
       ),
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier3',
-        localCurrencyCode: "USD",
-        localDisplayPrice: "\$$price",
-        localPurchasePrice: price,
+        localCurrencyCode: "EUR",
+        localCurrencySymbol: '€',
+        localPrice: price,
         usdPriceApproximate: USD(price),
       ),
     ];

@@ -322,7 +322,7 @@ class _PurchasePageState extends State<PurchasePage> {
         : '...';
      */
 
-    var enabled = pac.localPurchasePrice != null && _storeOpen == true;
+    var enabled = pac.localPrice != null && _storeOpen == true;
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
@@ -453,8 +453,8 @@ class _PurchasePageState extends State<PurchasePage> {
     var style1 = AppText.dialogBody.copyWith(fontSize: 16);
     var valueStyle = AppText.valueStyle;
 
-    var credits = pac.localPurchasePrice;
-    var fee = pac.localPurchasePrice * 0.3;
+    var credits = pac.localPrice;
+    var fee = pac.localPrice * 0.3;
     var promo = fee;
     var total = credits;
 
@@ -508,9 +508,8 @@ class _PurchasePageState extends State<PurchasePage> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           pady(8),
-                          // TODO: Localize currency
                           Text(
-                            '\$' + formatCurrency(credits),
+                            pac.localDisplayPrice,
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
@@ -524,9 +523,8 @@ class _PurchasePageState extends State<PurchasePage> {
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
-                          // TODO: Localize currency
                           Text(
-                            '\$' + formatCurrency(total),
+                            pac.formatCurrency(total),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           )
