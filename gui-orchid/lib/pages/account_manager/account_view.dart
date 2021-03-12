@@ -130,6 +130,7 @@ class _AccountViewState extends State<AccountView> {
 
   Column _buildBalance(TextStyle style1) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LabeledCurrencyValue(
             label: "Balance:",

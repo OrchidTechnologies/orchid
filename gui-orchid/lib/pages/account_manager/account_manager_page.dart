@@ -218,7 +218,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Column _buildIdentityHeader() {
     return Column(
       children: [
-        Text("Signer Address", style: AppText.dialogTitle),
+        Text("Orchid Address", style: AppText.dialogTitle),
         if (_accountStore.activeIdentity != null) _buildIdenticon(),
         if (_accountStore.activeIdentity != null)
           Container(
@@ -382,7 +382,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       ),
       subtitle: account.active
           ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: const EdgeInsets.only(left: 54.0, top: 2),
               child: Text(
                 "Active",
                 textAlign: TextAlign.left,
