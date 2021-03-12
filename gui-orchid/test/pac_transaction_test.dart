@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
@@ -74,7 +75,9 @@ void main() {
       var addBalance = PacAddBalanceTransaction.pending(signer: signer, productId: "1234");
       var submitRaw = PacSubmitRawTransaction(ethTx);
       var tx = PacPurchaseTransaction(addBalance, submitRaw);
-      tx.addReceipt("receipt");
+
+      var receipt = 'receipt:'+('x'*7000)+'y';
+      tx.addReceipt(receipt);
       tx = roundTrip(tx);
       addBalance = tx.addBalance;
       submitRaw = tx.submitRaw;
@@ -86,7 +89,8 @@ void main() {
       expect(tx.type, PacTransactionType.PurchaseTransaction);
       expect(tx.state, PacTransactionState.Ready);
       expect(tx.date, isNotNull);
-      expect(tx.receipt, "receipt");
+      expect(tx.receipt, receipt);
+      print(tx.receipt);
     });
 
     test('raw eth tx round trip', () {

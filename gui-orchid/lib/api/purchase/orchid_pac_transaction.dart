@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
@@ -115,7 +116,7 @@ class PacTransaction {
   }
 
   String userDebugString() {
-    return toJson().toString();
+    return jsonEncode(toJson());
   }
 
   @override
