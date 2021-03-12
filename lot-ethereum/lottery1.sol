@@ -85,10 +85,7 @@ contract OrchidLottery1 {
         send_(msg.sender, token, retrieve);
     }
 
-
     function tokenFallback(address sender, uint256 amount, bytes calldata data) public {
-        IERC20 token = IERC20(msg.sender);
-
         require(data.length >= 4);
         bytes4 selector; assembly { selector := calldataload(data.offset) }
 
@@ -97,13 +94,13 @@ contract OrchidLottery1 {
             address signer; int256 adjust; int256 lock; uint256 retrieve;
             (signer, adjust, lock, retrieve) = abi.decode(data[4:],
                 (address, int256, int256, uint256));
-            edit_(sender, token, amount, signer, adjust, lock, retrieve);
-            send_(msg.sender, token, retrieve);
+            edit_(sender, IERC20(msg.sender), amount, signer, adjust, lock, retrieve);
+            send_(sender, IERC20(msg.sender), retrieve);
         } else if (selector == bytes4(keccak256("gift(address,address,uint256)"))) {
             address funder; address signer; uint256 escrow;
             (funder, signer, escrow) = abi.decode(data[4:],
                 (address, address, uint256));
-            gift_(sender, funder, token, amount, signer, escrow);
+            gift_(sender, funder, IERC20(msg.sender), amount, signer, escrow);
         } else require(false);
     }
 
@@ -118,11 +115,10 @@ contract OrchidLottery1 {
     }
 
     function edit(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
-        address funder = msg.sender;
-        edit_(funder, IERC20(0), msg.value, signer, adjust, lock, retrieve);
+        edit_(msg.sender, IERC20(0), msg.value, signer, adjust, lock, retrieve);
 
         if (retrieve != 0) {
-            (bool success,) = funder.call{value: retrieve}("");
+            (bool success,) = msg.sender.call{value: retrieve}("");
             require(success);
         }
     }
