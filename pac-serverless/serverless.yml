@@ -148,8 +148,8 @@ functions:
     timeout: 10
     events:
       - http:
-        path: entry_txn_monitor.main
-        method: post
+          path: entry_txn_monitor.main
+          method: post
   get_account:
     handler: entry_account.main
     timeout: 10
