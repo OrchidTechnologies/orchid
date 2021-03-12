@@ -133,8 +133,8 @@ def update_txns():
     return
 
 def main(event, context):
-    if os.environ['STAGE'] == 'dev' and os.environ['TXN_MONITOR_MODE'] == 'manual':
-        return
+#    if os.environ['STAGE'] == 'dev' and os.environ['TXN_MONITOR_MODE'] == 'manual':
+#        return
 
     logging.info('main')
     update_txns()
