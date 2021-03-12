@@ -46,8 +46,8 @@ contract OrchidLottery1 {
 
     struct Lottery {
         mapping(address => mapping(IERC20 => Pot)) pots_;
-        uint256 bound_;
-        mapping(address => uint256) recipients_;
+        uint256 closed_;
+        mapping(address => uint256) merchants_;
     }
 
     mapping(address => Lottery) private lotteries_;
@@ -55,7 +55,7 @@ contract OrchidLottery1 {
     function read(IERC20 token, address funder, address signer, address recipient) external view returns (uint256, uint256, uint256) {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer][token];
-        return (pot.escrow_amount_, pot.unlock_warned_, lottery.bound_ << 128 | lottery.recipients_[recipient]);
+        return (pot.escrow_amount_, pot.unlock_warned_, lottery.closed_ << 128 | lottery.merchants_[recipient]);
     }
 
 
@@ -226,22 +226,21 @@ contract OrchidLottery1 {
     } }
 
 
-    event Bound(address indexed funder);
+    event Enroll(address indexed funder);
 
-    function bind(bool allow, address[] calldata recipients) external {
+    function enroll(bool cancel, address[] calldata recipients) external {
         Lottery storage lottery = lotteries_[msg.sender];
 
         uint i = recipients.length;
         if (i == 0)
-            lottery.bound_ = allow ? 0 : block.timestamp + day_;
+            lottery.closed_ = cancel ? 0 : block.timestamp + day_;
         else {
-            uint256 value = allow ? uint256(-1) :
-                lottery.bound_ < block.timestamp ? 0 : block.timestamp + day_;
-            do lottery.recipients_[recipients[--i]] = value;
+            uint256 value = cancel ? uint256(-1) : block.timestamp + day_;
+            do lottery.merchants_[recipients[--i]] = value;
             while (i != 0);
         }
 
-        emit Bound(msg.sender);
+        emit Enroll(msg.sender);
     }
 
 
@@ -319,8 +318,8 @@ contract OrchidLottery1 {
         Lottery storage lottery = lotteries_[funder];
         Pot storage pot = lottery.pots_[signer][token];
 
-        if (lottery.bound_ - 1 < block.timestamp)
-            if (lottery.recipients_[recipient] <= block.timestamp)
+        if (lottery.closed_ - 1 < block.timestamp)
+            if (lottery.merchants_[recipient] <= block.timestamp)
                 return 0;
     {
         Track storage track = tracks_[keccak256(abi.encodePacked(digest, signer))];

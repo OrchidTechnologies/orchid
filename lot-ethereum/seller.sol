@@ -46,7 +46,7 @@ contract OrchidSeller {
 
     function enroll(bool cancel, address[] calldata recipients) external {
         require(msg.sender == owner_);
-        return lottery_.bind(!cancel, recipients);
+        return lottery_.enroll(cancel, recipients);
     }
 
 
