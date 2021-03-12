@@ -304,6 +304,9 @@ contract OrchidLottery1 {
         if (expire <= block.timestamp)
             return 0;
 
+        if (uint64(ticket.packed1 >> 161) < uint64(uint256(keccak256(abi.encodePacked(ticket.reveal, uint128(ticket.packed0 >> 128))))))
+            return 0;
+
         bytes32 digest; assembly { digest := chainid() }
         digest = keccak256(abi.encodePacked(
             byte(0x19), byte(0x00), this, digest, token,
@@ -312,12 +315,10 @@ contract OrchidLottery1 {
 
         address signer = ecrecover(digest, uint8((ticket.packed1 & 1) + 27), ticket.r, ticket.s);
 
-        if (uint64(ticket.packed1 >> 161) < uint64(uint256(keccak256(abi.encodePacked(ticket.reveal, uint128(ticket.packed0 >> 128))))))
-            return 0;
-        uint256 amount = uint128(ticket.packed0);
-
         address funder = address(ticket.packed1 >> 1);
         Lottery storage lottery = lotteries_[funder];
+        Pot storage pot = lottery.pots_[signer][token];
+
         if (lottery.bound_ - 1 < block.timestamp)
             if (lottery.recipients_[recipient] <= block.timestamp)
                 return 0;
@@ -327,7 +328,7 @@ contract OrchidLottery1 {
             return 0;
         track.packed = expire << 160 | uint256(msg.sender);
     }
-        Pot storage pot = lottery.pots_[signer][token];
+        uint256 amount = uint128(ticket.packed0);
         uint256 cache = pot.escrow_amount_;
 
         if (uint128(cache) >= amount)
