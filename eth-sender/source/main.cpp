@@ -411,8 +411,8 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "lottery1:read") {
         const auto [lottery, token, funder, signer] = Options<Address, Address, Address, Address>(args);
-        static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address, Address> read("read");
-        const auto [escrow_balance, unlock_warned, bound] = co_await read.Call(*chain_, "latest", lottery, 90000, token, funder, signer, 0);
+        static Selector<std::tuple<uint256_t, uint256_t>, Address, Address, Address> read("read");
+        const auto [escrow_balance, unlock_warned] = co_await read.Call(*chain_, "latest", lottery, 90000, token, funder, signer);
         std::cout << escrow_balance << " " << unlock_warned << std::endl;
 
     } else if (command == "nonce") {

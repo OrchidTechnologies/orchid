@@ -149,7 +149,7 @@ struct Tester {
         Log() << "==========" << std::endl;
         Log() << "lottery1 (" << kind << ")" << std::endl;
 
-        static Selector<std::tuple<uint256_t, uint256_t, uint256_t>, Address, Address, Address, Address> read("read");
+        static Selector<std::tuple<uint256_t, uint256_t>, Address, Address, Address> read("read");
         static Selector<void, uint256_t, Bytes32> save("save");
         static Selector<void, Address, Address, uint128_t> warn("warn");
 
@@ -192,7 +192,7 @@ struct Tester {
 
         const auto check([&](Account &account, signed adjust) -> task<void> {
             account.balance_ += adjust;
-            const auto [escrow_balance, unlock_warned, bound] = co_await read.Call(chain_, "latest", lottery, 90000, token, customer_, account.signer_, 0);
+            const auto [escrow_balance, unlock_warned] = co_await read.Call(chain_, "latest", lottery, 90000, token, customer_, account.signer_);
             //Log() << std::dec << uint128_t(escrow_balance) << " " << uint128_t(escrow_balance >> 128) << std::endl;
             orc_assert(uint128_t(escrow_balance) == account.balance_);
             orc_assert(uint128_t(escrow_balance >> 128) == account.escrow_);

@@ -52,10 +52,9 @@ contract OrchidLottery1 {
 
     mapping(address => Lottery) private lotteries_;
 
-    function read(IERC20 token, address funder, address signer, address recipient) external view returns (uint256, uint256, uint256) {
-        Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.pots_[signer][token];
-        return (pot.escrow_amount_, pot.unlock_warned_, lottery.closed_ << 128 | lottery.merchants_[recipient]);
+    function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256) {
+        Pot storage pot = lotteries_[funder].pots_[signer][token];
+        return (pot.escrow_amount_, pot.unlock_warned_);
     }
 
 
@@ -241,6 +240,14 @@ contract OrchidLottery1 {
         }
 
         emit Enroll(msg.sender);
+    }
+
+    function enrolled(address funder, address recipient) external view returns (uint256) {
+        Lottery storage lottery = lotteries_[funder];
+        if (recipient == address(0))
+            return lottery.closed_;
+        else
+            return lottery.merchants_[recipient];
     }
 
 
