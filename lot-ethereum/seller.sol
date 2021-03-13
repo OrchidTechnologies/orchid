@@ -100,8 +100,10 @@ contract OrchidSeller {
     }
 
 
-    function gift(address funder, address signer, uint256 escrow) external payable {
+    function gift(address signer, uint256 escrow) external payable {
         require(executors_[msg.sender] != 0);
-        return lottery_.gift{value: msg.value}(funder, signer, escrow);
+        require(escrow <= msg.value);
+        require(int256(escrow) >= 0);
+        return lottery_.edit{value: msg.value}(signer, int256(escrow), 0, 0);
     }
 }

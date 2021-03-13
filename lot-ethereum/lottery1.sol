@@ -40,7 +40,7 @@ contract OrchidLottery1 {
     }
 
     event Create(IERC20 indexed token, address indexed funder, address indexed signer);
-    event Update(bytes32 indexed account, uint256 escrow_amount, address sender);
+    event Update(bytes32 indexed account, uint256 escrow_amount);
     event Delete(bytes32 indexed account, uint256 unlock_warned);
 
 
@@ -73,11 +73,6 @@ contract OrchidLottery1 {
         }
     }
 
-    function gift(IERC20 token, uint256 amount, address funder, address signer, uint256 escrow) external {
-        from_(token, amount);
-        gift_(msg.sender, funder, token, amount, signer, escrow);
-    }
-
     function edit(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
         from_(token, amount);
         edit_(msg.sender, token, amount, signer, adjust, lock, retrieve);
@@ -95,11 +90,6 @@ contract OrchidLottery1 {
                 (address, int256, int256, uint256));
             edit_(sender, IERC20(msg.sender), amount, signer, adjust, lock, retrieve);
             send_(sender, IERC20(msg.sender), retrieve);
-        } else if (selector == bytes4(keccak256("gift(address,address,uint256)"))) {
-            address funder; address signer; uint256 escrow;
-            (funder, signer, escrow) = abi.decode(data[4:],
-                (address, address, uint256));
-            gift_(sender, funder, IERC20(msg.sender), amount, signer, escrow);
         } else require(false);
     }
 
@@ -108,10 +98,6 @@ contract OrchidLottery1 {
         return true;
     }
 
-
-    function gift(address funder, address signer, uint256 escrow) external payable {
-        gift_(msg.sender, funder, IERC20(0), msg.value, signer, escrow);
-    }
 
     function edit(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
         edit_(msg.sender, IERC20(0), msg.value, signer, adjust, lock, retrieve);
@@ -123,24 +109,18 @@ contract OrchidLottery1 {
     }
 
 
-    function gift_(address sender, address funder, IERC20 token, uint256 amount, address signer, uint256 escrow) private {
+    function gift_(address funder, IERC20 token, uint256 amount, address signer) private {
         Pot storage pot = lotteries_[funder].pots_[signer][token];
 
         uint256 cache = pot.escrow_amount_;
         if (cache == 0)
             emit Create(token, funder, signer);
 
-        if (escrow != 0) {
-            require(escrow <= amount);
-            amount -= escrow;
-            require((cache >> 128) + escrow < 1 << 128);
-        }
-
         require(uint128(cache) + amount < 1 << 128);
-        cache += escrow << 128 | amount;
+        cache += amount;
         pot.escrow_amount_ = cache;
 
-        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, sender);
+        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
     }
 
     function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
@@ -220,7 +200,7 @@ contract OrchidLottery1 {
         uint256 cache = escrow << 128 | amount;
         if (cache != backup) {
             pot.escrow_amount_ = cache;
-            emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, funder);
+            emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
         }
     } }
 
@@ -347,7 +327,7 @@ contract OrchidLottery1 {
         }
 
         pot.escrow_amount_ = cache;
-        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache, address(0));
+        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
         return amount;
     }
 
@@ -365,6 +345,6 @@ contract OrchidLottery1 {
         }
 
         if (amount != 0)
-            gift_(recipient, recipient, token, amount, recipient, 0);
+            gift_(recipient, token, amount, recipient);
     }
 }
