@@ -1,8 +1,8 @@
 # Orchid FAQ
 
-# Security and Privacy
+## Security and Privacy
 
-## What protections does the Orchid app provide?
+### What protections does the Orchid app provide?
 
 Basic Internet connections function by transmitting packets of data between two hosts (computers). In order to find their way, packets contain both a source and destination IP address. As packets move from the destination to the source, different routers and physical infrastructure require both of these addresses for the two-way connection to be established and maintained. This means that instantly and over time, the owners of the physical infrastructure are in a position to build a profile of Internet usage on their paying user (you!) and also to block content as the owner sees fit.
 
@@ -10,7 +10,7 @@ Typically these infrastructure owners are ISPs — mobile carriers providing pho
 
 If you are not happy with or do not trust your existing ISP(s), by using Orchid you can currently limit their knowledge to knowing only that you are sending and receiving bytes through Orchid, and completely block their ability to mess with the details of your traffic, unblocking the previously blocked content. They either block all of Orchid or nothing, so if things continue to work after turning on Orchid, then your ISP has allowed "Orchid in general" and cannot manipulate the individual bytes between you and the rest of the Internet, granting you access to the entire Internet.
 
-## How can the Orchid app help me with privacy today?
+### How can the Orchid app help me with privacy today?
 
 The goal with the Orchid app is to give users insight and control over the network connection of their device. To gain privacy, users configure a circuit in Orchid by setting up an Orchid account and funding it with OXT. Then the Orchid app connects to the Orchid network and selects a node using Orchid’s [linear stake-weighted algorithm](https://blog.orchid.com/orchids-network-random-selection-stake-weighting/) to serve as a VPN and pays for bandwidth via a continuous stream of tiny OXT [nanopayments](https://blog.orchid.com/introducing-nanopayments/).
 
@@ -26,7 +26,7 @@ A potential problem with using only a single VPN provider is that the provider r
 
 Another solution is to trust no single provider with enough information to know both who you are and what information you are accessing. To that end, Orchid supports an advanced feature that allows users to configure multi-hop routes by stringing together multiple nodes into a flexible multi-hop circuit. Orchid currently supports several underlying protocols including the native Orchid VPN protocol and OpenVPN, allowing users to mix and match Orchid nodes with traditional VPN nodes.  While the potential is there to protect the user from any one provider knowing enough information to reveal their circuit, this is an advanced feature that is currently "use at your own risk". 
 
-## How is Orchid private given that it has public payments on Ethereum?
+### How is Orchid private given that it has public payments on Ethereum?
 
 The Orchid app pays for the circuit by sending a continuous stream of tiny nanopayments to providers for the duration of the connection. While the [nanopayment architecture](https://blog.orchid.com/introducing-nanopayments) locks user funds into a smart contract and only issues on-chain payments to providers very rarely, occasional winning tickets do result in OXT macro-payments posted on the public Ethereum blockchain. When that happens, the user’s Ethereum address, the provider’s Ethereum address, and a timestamp are stored publically on the Ethereum blockchain. Note that the payment address of the provider is not a mapping to any single server; instead it is an arbitrary (and potentially temporary) payment address that the provider created specifically to receive funds. Also, the frequency of how often on-chain payments occur is configurable. 
 
@@ -38,9 +38,10 @@ A multi-hop circuit affords greater network protections, but to setup a multi-ho
 
 Orchid is working on additional features to mitigate payment leakage, such as onion payment routing.  The idea of this technique is to help obfuscate payments by routing them through several layers of indirection (paying Alice to pay Bob to pay Charlie). The payments then take a different random route than the traffic, preventing the rare occasional public payment records from indirectly revealing route information.
 
-## Can Orchid nodes monitor network traffic?
+### Can Orchid nodes monitor network traffic?
 
-Yes, providers on Orchid could monitor the bytes that come in and out of the Orchid node. However, all traffic carried over Orchid between hops from the user to the exit is encrypted at the Orchid protocol level, which is an additional layer of encryption. The final exit traffic is then decrypted by the exit node and sent to the destination. In many cases the underlying traffic will also be encrypted with protocols such as TLS, providing at least two layers of encryption. 
+Yes, providers on Orchid could monitor the bytes that come in and out of the Orchid node. However, all traffic carried over Orchid between hops from the user to the exit is encrypted at the Orchid protocol level, which is an additional layer of encryption. The final exit traffic is then decrypted by the exit node and sent to the destination. In many cases the underlying traffic will also be encrypted with protocols such as TLS, providing at least two layers of encryption.
+ 
 
 However, not all traffic on the Internet is encrypted and Orchid doesn’t fix that problem. The last hop configured in the active circuit will need to send the user requests out onto the Internet. So if the user sends an HTTP request, which has no SSL/TLS encryption, Orchid will honor that request and cleartext information would be revealed to the Orchid node. For this reason, you should always use SSL/TLS for sensitive Internet connections, even on Orchid. And even SSL/TLS encryption leaves metadata that the Orchid node could monitor, including the destination address, hostname, packet sizes and the timing of packets.
 
@@ -48,7 +49,7 @@ Using Orchid’s multi-hop feature with a three hop circuit would compartmentali
 
 Lastly, the Orchid client randomly selects from a "curated list" of providers. This adds an additional layer of protection as users could pick or make their own curated list of providers that they trust or someone that they trust, trusts. Orchid has a default list of trusted providers that ships with the Orchid app.
 
-## So I'm totally private and anonymous when I use a VPN like Orchid? 
+### So I'm totally private and anonymous when I use a VPN like Orchid? 
 
 **No.**
 
@@ -64,13 +65,13 @@ Furthermore, there is active network security research into "traffic fingerprint
 
 Orchid is researching "bandwidth burning" and related techniques to help obfuscate a user’s traffic against these advanced packet timing and size analysis attacks. 
 
-# Technology
+## Technology
 
-## How does the Orchid token (OXT) work?
+### How does the Orchid token (OXT) work?
 
 OXT is a "pre-mined" cryptocurrency based on the ERC-20 standard that will be used to decentralize trust between buyers and sellers in the Orchid marketplace. It also functions as a tool to promote security and healthy market dynamics, as providers can adjust their OXT stake to remain competitive. Read more about OXT [here](https://www.orchid.com/oxt).
 
-## How do curated lists work on Orchid?
+### How do curated lists work on Orchid?
 
 The Orchid client calls an on-chain ‘curated list’ smart contract which filters the viable nodes on Orchid (that is, nodes that have properly staked) into a custom subset. Initial releases of the official Orchid client will use this feature to prevent certain kinds of attacks from malicious exit nodes (e.g. SSL downgrade attacks) by using a default list consisting of trusted VPN partners. 
 
@@ -80,23 +81,23 @@ The official Orchid client has a default list and can select from different list
 
 The curated list mechanism is a means for the importation of external reputational trust to supplement the economic incentive based trust provided by node staking.
 
-## What is the Orchid Protocol?
+### What is the Orchid Protocol?
 
 The Orchid software is designed to use a custom VPN protocol, similar in scope to OpenVPN or WireGuard. The Orchid protocol is designed for high-performance networking and runs on top of WebRTC, a common web standard, widely used to transmit video and audio from inside browsers. Our protocol is intended to allow users to request access to remote network resources and pay for these resources using OXT via a nanopayments system.
 
-# Staking
+## Staking
 
-## What is Staking in Orchid?
+### What is Staking in Orchid?
 
 Staking is a process where one deposits and locks up an asset into an illiquid contract or mechanism in exchange for revenue or rewards.  Orchid providers stake OXT tokens in an Ethereum smart contract (the directory) to advertize their services to clients.  Orchid clients then select providers randomly, weighted by proportional stake, so that the probability of picking a particular provider is equal to their fraction of the total stake.
 
 Anyone else can also stake on a provider’s address, allowing a form of "delegated staking".  Any OXT holder can stake their OXT tokens on providers of their choosing.  There are no automatic benefits of staking on someone else’s behalf, but the staking mechanism could be combined with a revenue sharing contract between the staker and the stakee.
 
-## Is Orchid Staking like Proof of Stake?
+### Is Orchid Staking like Proof of Stake?
 
 Staking in Orchid is similar to proof of stake systems only in the sense of using stake as a linear weighting mechanism.  In most proof-of-stake systems stakeholders can automatically earn revenue just by running nodes with stake.  Orchid has no such automatic mechanism, and has no inflation to fund staking.  The only source of income on Orchid is customers paying for bandwidth.
 
-## How can I earn passive revenue on my OXT?
+### How can I earn passive revenue on my OXT?
 
 You can find an Orchid bandwidth provider who is seeking staking partners in exchange for a share of revenue or recurring payments - using any on-chain or off-chain mechanism.
 
