@@ -5,7 +5,6 @@ import os
 import sys
 import w3_generic
 
-
 from web3 import Web3
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
@@ -91,9 +90,12 @@ def new_txn(W3WSock,txn,account_id):
     prev_cost_usd = 0.0
     if (prev_txn is not None):
         prev_cost_usd = float(prev_txn['cost_usd'])
+        logging.info(f'found prev txn: {str(txn)}')
 
     new_cost_usd  = max(cost_usd, prev_cost_usd)
     diff_cost_usd = new_cost_usd - prev_cost_usd
+
+    logging.info(f'diff_cost_usd: {diff_cost_usd} = max({cost_usd},{prev_cost_usd}) - {prev_cost_usd} ')
 
     if (diff_cost_usd > max_cost_usd):
         msg = f'new_txn new_cost_usd({new_cost_usd}) > max_cost_usd({max_cost_usd})'

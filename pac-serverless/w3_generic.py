@@ -335,7 +335,7 @@ def test_connections(providers):
         if ((x[0:4] == 'wss:') or (x[0:3] == 'ws:')):
             w3 = Web3(Web3.WebsocketProvider(x, websocket_timeout=400))
         else:
-            w3 = Web3(Web3.HTTPProvider(x))
+            w3 = Web3(Web3.HTTPProvider(x, request_kwargs={'headers':{'referer':'https://account.orchid.com'}}) )
         try:
             w3.eth.getTransactionCount(account='0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b')
         except Exception as ex:
