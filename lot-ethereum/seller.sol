@@ -50,16 +50,32 @@ contract OrchidSeller {
     }
 
 
-    mapping(address => uint256) private executors_;
-
-    function allow(uint256 allowance, address[] calldata senders) external {
-        require(msg.sender == owner_);
-        for (uint i = senders.length; i != 0; )
-            executors_[senders[--i]] = allowance;
+    struct Executor {
+        uint256 allowance_;
     }
 
-    function allowed(address executor) external view returns (uint256) {
-        return executors_[executor];
+    mapping(IERC20 => mapping (address => Executor)) private executors_;
+
+    function allow(IERC20 token, uint256 allowance, address[] calldata senders) external {
+        mapping (address => Executor) storage executors = executors_[token];
+        require(msg.sender == owner_);
+        for (uint i = senders.length; i != 0; )
+            executors[senders[--i]].allowance_ = allowance;
+    }
+
+    function allowed(IERC20 token, address executor) external view returns (uint256) {
+        return executors_[token][executor].allowance_;
+    }
+
+    function execute_(IERC20 token, address sender, uint256 amount, uint256 retrieve) private {
+        Executor storage executor = executors_[token][sender];
+        uint256 allowance = executor.allowance_;
+        if (amount > retrieve)
+            amount -= retrieve;
+        else
+            amount = retrieve - amount;
+        require(allowance >= amount);
+        executor.allowance_ = allowance - amount;
     }
 
 
@@ -80,7 +96,7 @@ contract OrchidSeller {
     }
 
     function edit_(address sender, uint8 v, bytes32 r, bytes32 s, uint64 nonce, IERC20 token, uint256 amount, int256 adjust, int256 lock, uint256 retrieve, uint128 refill) private returns (address) {
-        require(amount == 0 && retrieve == 0 || executors_[sender] != 0);
+        execute_(token, sender, amount, retrieve);
 
         bytes32 digest; assembly { digest := chainid() }
         digest = keccak256(abi.encodePacked(byte(0x19), byte(0x00), this,
@@ -111,7 +127,7 @@ contract OrchidSeller {
 
 
     function gift(address signer, uint256 escrow) external payable {
-        require(executors_[msg.sender] != 0);
+        execute_(IERC20(0), msg.sender, msg.value, 0);
 
         (uint256 balance,) = lottery_.read(IERC20(0), address(this), signer);
         balance = (balance >> 128) + uint128(balance);
