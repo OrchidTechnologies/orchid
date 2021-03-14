@@ -45,14 +45,6 @@ contract OrchidLottery1 {
     event Update(bytes32 indexed key, uint256 escrow_amount);
     event Delete(bytes32 indexed key, uint256 unlock_warned);
 
-
-    struct Loop {
-        uint256 closed_;
-        mapping(address => uint256) merchants_;
-    }
-
-    mapping(address => Loop) private loops_;
-
     function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256) {
         Account storage account = accounts_[keccak256(abi.encodePacked(token, funder, signer))];
         return (account.escrow_amount_, account.unlock_warned_);
@@ -206,6 +198,13 @@ contract OrchidLottery1 {
         }
     } }
 
+
+    struct Loop {
+        uint256 closed_;
+        mapping(address => uint256) merchants_;
+    }
+
+    mapping(address => Loop) private loops_;
 
     event Enroll(address indexed funder);
 
