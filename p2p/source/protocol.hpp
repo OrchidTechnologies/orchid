@@ -41,7 +41,6 @@ static uint32_t Submit0_(0xfd90e312);
 static uint32_t Submit1_(0xf0ece7ca);
 
 static uint32_t Invoice0_(0x01959987);
-static uint32_t Commit1_(0x69dc1297);
 
 void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code);
 

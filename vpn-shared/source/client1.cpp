@@ -27,18 +27,23 @@
 namespace orc {
 
 task<void> Client1::Submit(const Float &amount) {
-    const auto commit(locked_()->commit_);
+    const auto [commit, recipient] = [&]() {
+        const auto locked(locked_());
+        return std::make_tuple(locked->commit_, locked->recipient_);
+    }();
+
     const auto nonce(Random<8>());
     const auto issued(Timestamp());
     const auto expire(60 * 60 * 2);
     const auto ratio(uint64_t(Two64 * Ratio(face_, amount, market_, market_.currency_, Gas()) - 1));
     const Beam receipt;
-    const Ticket1 ticket{commit, issued, nonce, face_, expire, ratio, funder_, HashK(receipt)};
+    const Ticket1 ticket{recipient, commit, issued, nonce, face_, expire, ratio, funder_, HashK(receipt)};
     const auto hash(ticket.Encode(lottery_, *market_.chain_, {}));
     const auto signature(Sign(secret_, hash));
     co_await Client::Submit(hash, Tie(Command(Submit1_,
         uint8_t(signature.v_ + 27), signature.r_, signature.s_,
         lottery_, market_.chain_->operator const uint256_t &(),
+        Address(0), recipient,
         ticket.commit_, ticket.issued_, ticket.nonce_,
         ticket.amount_, ticket.expire_, ticket.ratio_,
         ticket.funder_
@@ -47,12 +52,21 @@ task<void> Client1::Submit(const Float &amount) {
 
 void Client1::Invoice(const Bytes32 &id, const Buffer &data) {
     Client::Invoice(id, data);
+
     const auto [command, window] = Take<uint32_t, Window>(data);
-    if (command != Commit1_)
+    if (command != Invoice0_)
         return;
-    const auto [commit] = Take<Bytes32>(window);
+
+    const auto [serial, balance, lottery, chain, recipient, commit] = Take<int64_t, uint256_t, Address, uint256_t, Address, Bytes32>(window);
+
     const auto locked(locked_());
-    locked->commit_ = commit;
+
+    // XXX: implement rollover strategy
+    if (locked->serial_ < serial) {
+        locked->serial_ = serial;
+        locked->commit_ = commit;
+        locked->recipient_ = recipient;
+    }
 }
 
 Client1::Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder, const uint128_t &face) :

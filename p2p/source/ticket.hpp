@@ -73,6 +73,7 @@ struct Ticket0 {
 typedef std::tuple<Bytes32, Bytes32, uint256_t, uint256_t, Bytes32, Bytes32> Payment1;
 
 struct Ticket1 {
+    Address recipient_;
     Bytes32 commit_;
     uint64_t issued_;
     Brick<8> nonce_;
@@ -87,7 +88,7 @@ struct Ticket1 {
     }
 
     Bytes32 Encode(const Address &lottery, const uint256_t &chain, const Address &token) const {
-        return HashK(Tie(uint8_t(0x19), uint8_t(0x00), lottery, chain, token, commit_, issued_, nonce_, amount_, expire_, ratio_, funder_, data_));
+        return HashK(Tie(uint8_t(0x19), uint8_t(0x00), lottery, chain, token, recipient_, commit_, issued_, nonce_, amount_, expire_, ratio_, funder_, data_));
     }
 
     auto Payment(const Bytes32 &reveal, const Signature &signature) const {

@@ -306,7 +306,7 @@ contract OrchidLottery1 {
         bytes32 digest; assembly { digest := chainid() }
         digest = keccak256(abi.encodePacked(
             byte(0x19), byte(0x00), this, digest, token,
-            keccak256(abi.encodePacked(ticket.reveal, recipient)),
+            recipient, keccak256(abi.encodePacked(ticket.reveal)),
             ticket.packed0, ticket.packed1 >> 1, ticket.data));
 
         address signer = ecrecover(digest, uint8((ticket.packed1 & 1) + 27), ticket.r, ticket.s);

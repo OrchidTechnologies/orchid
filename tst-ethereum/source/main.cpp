@@ -206,7 +206,7 @@ struct Tester {
 
         const auto payment([&](Account &account) {
             const auto reveal(Nonzero<32>());
-            const auto commit(HashK(Tie(reveal, recipient)));
+            const auto commit(HashK(reveal));
 
             const uint128_t face(1);
             const uint64_t ratio(-1);
@@ -219,7 +219,7 @@ struct Tester {
           sign:
             const auto nonce(Nonzero<8>());
 
-            const Ticket1 ticket{commit, issued, nonce, face, expire, ratio, funder, data};
+            const Ticket1 ticket{recipient, commit, issued, nonce, face, expire, ratio, funder, data};
             const auto signature(Sign(account.secret_, ticket.Encode(lottery, chain_, token)));
             if (Zeros(signature.operator Brick<65>()))
                 goto sign;

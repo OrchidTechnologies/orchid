@@ -256,12 +256,14 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     const auto [
         v, r, s,
         contract, chain,
+        token, recipient,
         commit, issued, nonce,
         amount, expire, ratio,
         funder, window
     ] = Take<
         uint8_t, Brick<32>, Brick<32>,
         Address, uint256_t,
+        Address, Address,
         Brick<32>, uint64_t, Brick<8>,
         uint128_t, uint32_t, uint64_t,
         Address, Window
@@ -270,7 +272,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     // XXX: fix Coder and Selector to not require this to Beam
     const Beam receipt(window);
 
-    const auto recipient(croupier_->Recipient());
+    orc_assert(recipient == croupier_->Recipient());
 
     const auto now(Timestamp());
     orc_assert(issued + expire > now);
@@ -281,11 +283,11 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     if (expected <= 0)
         return;
 
-    const auto ticket(Ticket1{commit, issued, nonce, amount, expire, ratio, funder, HashK(receipt)}.Encode(contract, chain, {}));
+    const auto ticket(Ticket1{recipient, commit, issued, nonce, amount, expire, ratio, funder, HashK(receipt)}.Encode(contract, chain, {}));
     const Address signer(Recover(ticket, v, r, s));
     Log() << std::dec << signer << " " << amount << std::endl;
 
-    const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
+    const auto [reveal, winner] = [&, recipient = recipient, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
         const auto locked(locked_());
 
         orc_assert(issued >= locked->issued_);
@@ -300,7 +302,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
         const auto reveal([&]() {
             for (const auto &reveal : locked->reveals_)
-                if (HashK(Tie(reveal.first.num<uint256_t>() >> 128, uint256_t(recipient.num()))) == commit) {
+                if (HashK(reveal.first) == commit) {
                     const auto &expire(reveal.second);
                     orc_assert(expire == 0 || expire + 60 > now);
                     return reveal.first;

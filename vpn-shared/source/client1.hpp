@@ -54,6 +54,7 @@ class Client1 :
     struct Locked_ {
         int64_t serial_ = -1;
         Bytes32 commit_ = Zero<32>();
+        Address recipient_ = 0;
     }; Locked<Locked_> locked_;
 
     task<void> Submit(const Float &amount) override;
