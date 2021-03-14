@@ -91,7 +91,6 @@ contract OrchidLottery1 {
         return true;
     }
 
-
     function edit(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
         edit_(msg.sender, IERC20(0), msg.value, signer, adjust, lock, retrieve);
 
@@ -100,7 +99,6 @@ contract OrchidLottery1 {
             require(success);
         }
     }
-
 
     function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
         bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
@@ -326,7 +324,6 @@ contract OrchidLottery1 {
         emit Update(key, cache);
         return amount;
     }
-
 
     function claim(IERC20 token, address recipient, Ticket[] calldata tickets, bytes32[] calldata refunds) external {
         for (uint256 i = refunds.length; i != 0; )
