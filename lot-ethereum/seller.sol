@@ -85,6 +85,9 @@ contract OrchidSeller {
         require(account.nonce_ == nonce);
         account.nonce_ = nonce + 1;
 
+        if (amount > retrieve)
+            lottery_.mark(token, signer);
+
         return signer;
     }
 

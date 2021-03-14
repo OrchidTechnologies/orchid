@@ -196,8 +196,8 @@ struct Tester {
             //Log() << std::dec << uint128_t(escrow_balance) << " " << uint128_t(escrow_balance >> 128) << std::endl;
             orc_assert(uint128_t(escrow_balance) == account.balance_);
             orc_assert(uint128_t(escrow_balance >> 128) == account.escrow_);
-            if (unlock_warned != 0) {
-                const auto warned((uint128_t(unlock_warned)));
+            if (unlock_warned << 64 != 0) {
+                const auto warned((uint64_t(unlock_warned)));
                 const auto unlock(uint128_t(unlock_warned >> 128));
                 Log() << std::dec << warned << " " << unlock << std::endl;
             }
@@ -270,7 +270,7 @@ struct Tester {
 
         static const auto update(
             EVM_STORE_GET+EVM_STORE_SET+
-            EVM_EVENT_IDX*2+EVM_EVENT_ARG*3+
+            EVM_EVENT_IDX*2+EVM_EVENT_ARG*2+
         0);
 
         static const unsigned perp(

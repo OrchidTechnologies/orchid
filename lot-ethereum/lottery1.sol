@@ -138,12 +138,14 @@ contract OrchidLottery1 {
             amount += uint128(backup);
         }
     {
+        uint256 marked;
         uint256 warned;
         uint256 unlock;
 
         if (adjust < 0 || lock != 0) {
             warned = pot.unlock_warned_;
-            unlock = warned >> 128;
+            marked = warned >> 192;
+            unlock = uint64(warned >> 128);
             warned = uint128(warned);
         }
 
@@ -187,7 +189,7 @@ contract OrchidLottery1 {
         }
 
         if (unlock != 0) {
-            uint256 cache = (warned == 0 ? 0 : unlock << 128 | warned);
+            uint256 cache = marked << 192 | (warned == 0 ? 0 : unlock << 128 | warned);
             pot.unlock_warned_ = cache;
             emit Delete(account, cache);
         }
@@ -226,6 +228,14 @@ contract OrchidLottery1 {
             return lottery.closed_;
         else
             return lottery.merchants_[recipient];
+    }
+
+    function mark(IERC20 token, address signer) external {
+        Pot storage pot = lotteries_[msg.sender].pots_[signer][token];
+        uint256 cache = pot.unlock_warned_;
+        cache = block.timestamp << 192 | uint192(cache);
+        pot.unlock_warned_ = cache;
+        emit Delete(keccak256(abi.encodePacked(token, msg.sender, signer)), cache);
     }
 
 
@@ -306,7 +316,7 @@ contract OrchidLottery1 {
         Pot storage pot = lottery.pots_[signer][token];
 
         if (lottery.closed_ - 1 < block.timestamp)
-            if (lottery.merchants_[recipient] <= block.timestamp)
+            if (lottery.merchants_[recipient] <= pot.unlock_warned_ >> 192)
                 return 0;
     {
         Track storage track = tracks_[keccak256(abi.encodePacked(digest, signer))];
