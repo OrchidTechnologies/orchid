@@ -33,12 +33,18 @@ class AccountStore extends ChangeNotifier {
   /// Accounts discovered on chain
   List<Account> discoveredAccounts = [];
 
+  /// Cached accounts previously discovered on chain
+  List<Account> cachedDiscoveredAccounts = [];
+
   AccountStore({this.discoverAccounts = true});
 
-  /// All accounts known for the active identity.
-  /// This list is not ordered.
+  /// All accounts known for the active identity, unordered.
   List<Account> get accounts {
-    Set<Account> set = Set.from(discoveredAccounts);
+    // Cached
+    Set<Account> set = Set.from(cachedDiscoveredAccounts);
+    // Discovered
+    set.addAll(discoveredAccounts);
+    // Stored active
     if (activeAccount != null) {
       set.add(activeAccount);
     }
@@ -97,7 +103,8 @@ class AccountStore extends ChangeNotifier {
     // Publish the new config
     OrchidAPI().circuitConfigurationChanged.add(null);
     await OrchidAPI().updateConfiguration();
-    print("XXX: accounts changed: config = ${await OrchidVPNConfig.generateConfig()}");
+    print(
+        "XXX: accounts changed: config = ${await OrchidVPNConfig.generateConfig()}");
   }
 
   // Load available identities and user selected active account information
@@ -113,10 +120,23 @@ class AccountStore extends ChangeNotifier {
         (discoveredAccounts.isNotEmpty &&
             discoveredAccounts.first.identityUid != activeIdentity.uid)) {
       discoveredAccounts = [];
+      cachedDiscoveredAccounts = [];
+    }
+
+    // Load cached previously discovered accounts for this identity
+    if (discoverAccounts && activeIdentity != null) {
+      var cached = await UserPreferences().cachedDiscoveredAccounts.get();
+      cachedDiscoveredAccounts = cached
+          .where((account) => account.identityUid == activeIdentity.uid)
+          .toList();
+      log("account_store: loaded cached discovered accounts: "
+          "cached = $cached, filtered = $cachedDiscoveredAccounts");
     }
     notifyListeners();
 
+    // Discover new accounts for this identity
     if (discoverAccounts && activeIdentity != null) {
+      log("account_store: Discovering accounts");
       // Discover accounts for the active identity on V0 Ethereum.
       discoveredAccounts =
           await OrchidEthereumV0().discoverAccounts(signer: activeIdentity);
@@ -126,6 +146,12 @@ class AccountStore extends ChangeNotifier {
       discoveredAccounts += await OrchidEthereumV1()
           .discoverAccounts(chain: Chains.xDAI, signer: activeIdentity);
       notifyListeners();
+
+      // Cache any newly discovered accounts
+      if (discoveredAccounts.isNotEmpty) {
+        log("account_store: Saving discovered accounts: $discoveredAccounts");
+        UserPreferences().addCachedDiscoveredAccounts(discoveredAccounts);
+      }
     }
 
     return this;

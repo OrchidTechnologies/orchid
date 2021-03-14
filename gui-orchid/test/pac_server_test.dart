@@ -75,6 +75,7 @@ void main() async {
 
     test('get Binance exchange rate', () async {
       var price = await OrchidPricing().tokenToUsdRate(TokenTypes.XDAI);
+      // get again cached
       price = await OrchidPricing().tokenToUsdRate(TokenTypes.XDAI);
       print("xdai to usd = $price");
     });

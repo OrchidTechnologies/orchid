@@ -322,11 +322,15 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             });
 
     return RefreshIndicator(
-      displacement: 20,
+      displacement: 0,
       onRefresh: () async {
-        _accountDetailMap.clear();
-        _accountStore.load();
-        // _accountDetailMap.forEach((key, value) { value.refresh(); });
+        // Refresh the account details
+        _accountDetailMap.forEach((key, value) {
+          value.refresh();
+        });
+
+        // Look for new accounts
+        return _accountStore.load(); // Return the load future
       },
       child: child,
     );
@@ -458,11 +462,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     setState(() {}); // Trigger a UI refresh
   }
 
-  @override
-  void dispose() {
+  void _disposeAccountDetailMap() {
     _accountDetailMap.forEach((key, value) {
       value.removeListener(_accountDetailChanged);
+      value.dispose();
     });
+  }
+
+  @override
+  void dispose() {
+    _disposeAccountDetailMap();
     super.dispose();
   }
 

@@ -125,9 +125,9 @@ class IOSOrchidPurchaseAPI
           break;
 
         case SKPaymentTransactionStateWrapper.restored:
+          log("iap: iap purchase restored?");
           // Are we getting this on a second purchase attempt that we dropped?
           // Attempting to just handle it as a new purchase for now.
-          log("iap: iap purchase restored?");
           _completeIAPTransaction(tx);
           break;
 
