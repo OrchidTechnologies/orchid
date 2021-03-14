@@ -39,13 +39,14 @@ contract OrchidLottery1 {
         uint256 unlock_warned_;
     }
 
+    mapping(bytes32 => Account) accounts_;
+
     event Create(IERC20 indexed token, address indexed funder, address indexed signer);
     event Update(bytes32 indexed key, uint256 escrow_amount);
     event Delete(bytes32 indexed key, uint256 unlock_warned);
 
 
     struct Loop {
-        mapping(address => mapping(IERC20 => Account)) accounts_;
         uint256 closed_;
         mapping(address => uint256) merchants_;
     }
@@ -53,7 +54,7 @@ contract OrchidLottery1 {
     mapping(address => Loop) private loops_;
 
     function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256) {
-        Account storage account = loops_[funder].accounts_[signer][token];
+        Account storage account = accounts_[keccak256(abi.encodePacked(token, funder, signer))];
         return (account.escrow_amount_, account.unlock_warned_);
     }
 
@@ -110,7 +111,8 @@ contract OrchidLottery1 {
 
 
     function gift_(address funder, IERC20 token, uint256 amount, address signer) private {
-        Account storage account = loops_[funder].accounts_[signer][token];
+        bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
+        Account storage account = accounts_[key];
 
         uint256 cache = account.escrow_amount_;
         if (cache == 0)
@@ -120,12 +122,12 @@ contract OrchidLottery1 {
         cache += amount;
         account.escrow_amount_ = cache;
 
-        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
+        emit Update(key, cache);
     }
 
     function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
         bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
-        Account storage account = loops_[funder].accounts_[signer][token];
+        Account storage account = accounts_[key];
 
         uint256 backup;
         uint256 escrow;
@@ -231,11 +233,12 @@ contract OrchidLottery1 {
     }
 
     function mark(IERC20 token, address signer) external {
-        Account storage account = loops_[msg.sender].accounts_[signer][token];
+        bytes32 key = keccak256(abi.encodePacked(token, msg.sender, signer));
+        Account storage account = accounts_[key];
         uint256 cache = account.unlock_warned_;
         cache = block.timestamp << 192 | uint192(cache);
         account.unlock_warned_ = cache;
-        emit Delete(keccak256(abi.encodePacked(token, msg.sender, signer)), cache);
+        emit Delete(key, cache);
     }
 
 
@@ -312,13 +315,14 @@ contract OrchidLottery1 {
         address signer = ecrecover(digest, uint8((ticket.packed1 & 1) + 27), ticket.r, ticket.s);
 
         address funder = address(ticket.packed1 >> 1);
+        bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
+        Account storage account = accounts_[key];
+    {
         Loop storage loop = loops_[funder];
-        Account storage account = loop.accounts_[signer][token];
-
         if (loop.closed_ - 1 < block.timestamp)
             if (loop.merchants_[recipient] <= account.unlock_warned_ >> 192)
                 return 0;
-    {
+    } {
         Track storage track = tracks_[keccak256(abi.encodePacked(digest, signer))];
         if (track.packed != 0)
             return 0;
@@ -335,7 +339,7 @@ contract OrchidLottery1 {
         }
 
         account.escrow_amount_ = cache;
-        emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
+        emit Update(key, cache);
         return amount;
     }
 
