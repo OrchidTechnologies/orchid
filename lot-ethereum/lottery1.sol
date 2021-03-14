@@ -124,6 +124,7 @@ contract OrchidLottery1 {
     }
 
     function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
+        bytes32 account = keccak256(abi.encodePacked(token, funder, signer));
         Pot storage pot = lotteries_[funder].pots_[signer][token];
 
         uint256 backup;
@@ -135,9 +136,6 @@ contract OrchidLottery1 {
                 emit Create(token, funder, signer);
             escrow = backup >> 128;
             amount += uint128(backup);
-        } else {
-            backup = 0;
-            escrow = 0;
         }
     {
         uint256 warned;
@@ -191,7 +189,7 @@ contract OrchidLottery1 {
         if (unlock != 0) {
             uint256 cache = (warned == 0 ? 0 : unlock << 128 | warned);
             pot.unlock_warned_ = cache;
-            emit Delete(keccak256(abi.encodePacked(token, funder, signer)), cache);
+            emit Delete(account, cache);
         }
     } {
         require(amount < 1 << 128);
@@ -200,7 +198,7 @@ contract OrchidLottery1 {
         uint256 cache = escrow << 128 | amount;
         if (cache != backup) {
             pot.escrow_amount_ = cache;
-            emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
+            emit Update(account, cache);
         }
     } }
 
