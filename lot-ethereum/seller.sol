@@ -63,27 +63,34 @@ contract OrchidSeller {
     }
 
 
+    /*struct Account {
+        uint128 refill_;
+        uint64 zero_;
+        uint64 nonce_;
+    }*/
+
     struct Account {
-        uint256 nonce_;
+        uint256 packed_;
     }
 
     mapping(address => Account) private accounts_;
 
-    function next(address signer) external view returns (uint256) {
-        return accounts_[signer].nonce_;
+    function read(address signer) external view returns (uint256) {
+        return accounts_[signer].packed_;
     }
 
-    function next_(address sender, uint8 v, bytes32 r, bytes32 s, uint256 nonce, IERC20 token, uint256 amount, int256 adjust, int256 lock, uint256 retrieve) private returns (address) {
+    function edit_(address sender, uint8 v, bytes32 r, bytes32 s, uint64 nonce, IERC20 token, uint256 amount, int256 adjust, int256 lock, uint256 retrieve, uint128 refill) private returns (address) {
         require(amount == 0 && retrieve == 0 || executors_[sender] != 0);
 
         bytes32 digest; assembly { digest := chainid() }
         digest = keccak256(abi.encodePacked(byte(0x19), byte(0x00), this,
-            digest, nonce, token, amount, adjust, lock, retrieve));
+            digest, nonce, token, amount, adjust, lock, retrieve, refill));
         address signer = ecrecover(digest, v, r, s);
 
         Account storage account = accounts_[signer];
-        require(account.nonce_ == nonce);
-        account.nonce_ = nonce + 1;
+        uint256 cache = account.packed_;
+        require(uint64(cache) == nonce);
+        account.packed_ = uint256(refill) << 128 | uint64(nonce + 1);
 
         if (amount > retrieve)
             lottery_.mark(token, signer);
@@ -92,8 +99,8 @@ contract OrchidSeller {
     }
 
 
-    function edit(uint8 v, bytes32 r, bytes32 s, uint256 nonce, int256 adjust, int256 lock, uint256 retrieve) external payable {
-        address signer = next_(msg.sender, v, r, s, nonce, IERC20(0), msg.value, adjust, lock, retrieve);
+    function edit(uint8 v, bytes32 r, bytes32 s, uint64 nonce, int256 adjust, int256 lock, uint256 retrieve, uint128 refill) external payable {
+        address signer = edit_(msg.sender, v, r, s, nonce, IERC20(0), msg.value, adjust, lock, retrieve, refill);
         lottery_.edit{value: msg.value}(signer, adjust, lock, retrieve);
 
         if (retrieve != 0) {
@@ -105,8 +112,17 @@ contract OrchidSeller {
 
     function gift(address signer, uint256 escrow) external payable {
         require(executors_[msg.sender] != 0);
+
+        (uint256 balance,) = lottery_.read(IERC20(0), address(this), signer);
+        balance = (balance >> 128) + uint128(balance);
+    {
+        uint256 cache = accounts_[signer].packed_;
+        require(balance <= cache >> 128);
+    }
+        lottery_.mark(IERC20(0), signer);
+
         require(escrow <= msg.value);
         require(int256(escrow) >= 0);
-        return lottery_.edit{value: msg.value}(signer, int256(escrow), 0, 0);
+        lottery_.edit{value: msg.value}(signer, int256(escrow), 0, 0);
     }
 }
