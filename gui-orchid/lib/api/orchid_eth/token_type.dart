@@ -2,6 +2,7 @@ import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'v0/orchid_eth_v0.dart';
 
 class Chains {
@@ -74,18 +75,29 @@ class Chain {
 class TokenTypes {
   // ignore: non_constant_identifier_names
   static const TokenType ETH = TokenType(
-      name: 'ETH', symbol: 'ETH', decimals: 18, chainId: Chains.ETH_CHAINID);
+    name: 'ETH',
+    symbol: 'ETH',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    decimals: 18,
+    chainId: Chains.ETH_CHAINID,
+  );
 
   // ignore: non_constant_identifier_names
   // See class OXT.
   static const TokenType OXT = TokenType(
-      name: 'OXT', symbol: 'OXT', decimals: 18, chainId: Chains.ETH_CHAINID);
+    name: 'OXT',
+    symbol: 'OXT',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    decimals: 18,
+    chainId: Chains.ETH_CHAINID,
+  );
 
   // ignore: non_constant_identifier_names
   static const TokenType XDAI = TokenType(
       name: 'xDAI',
       symbol: 'xDAI',
-      exchangeRateSymbol: 'DAI',
+      exchangeRateSource:
+          BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
       decimals: 18,
       chainId: Chains.XDAI_CHAINID);
 }
@@ -97,24 +109,21 @@ class TokenTypes {
 // Note: tokens such as OXT.
 class TokenType {
   final int chainId;
+  final String name;
+  final String symbol;
+  final int decimals;
+  final ExchangeRateSource exchangeRateSource;
 
   Chain get chain {
     return Chains.chainFor(chainId);
   }
 
-  final String name;
-  final String symbol;
-  final int decimals;
-
-  // optional symbol override for exchange conventions. e.g. DAI for xDAI
-  final String exchangeRateSymbol;
-
   const TokenType({
     @required this.chainId,
     @required this.name,
     @required this.symbol,
-    this.exchangeRateSymbol,
     @required this.decimals,
+    @required this.exchangeRateSource,
   });
 
   // Return 1eN where N is the decimal count.
@@ -142,16 +151,11 @@ class TokenType {
           chainId == other.chainId &&
           name == other.name &&
           symbol == other.symbol &&
-          decimals == other.decimals &&
-          exchangeRateSymbol == other.exchangeRateSymbol;
+          decimals == other.decimals;
 
   @override
   int get hashCode =>
-      chainId.hashCode ^
-      name.hashCode ^
-      symbol.hashCode ^
-      decimals.hashCode ^
-      exchangeRateSymbol.hashCode;
+      chainId.hashCode ^ name.hashCode ^ symbol.hashCode ^ decimals.hashCode;
 
   @override
   String toString() {

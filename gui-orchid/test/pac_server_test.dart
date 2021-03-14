@@ -14,7 +14,7 @@ import 'package:orchid/api/purchase/orchid_purchase.dart';
 ///
 void main() async {
   // Disable for the CI
-  const bool disabled = true;
+  const bool disabled = false;
   if (disabled) {
     print("Disabled.");
     return;
@@ -73,14 +73,30 @@ void main() async {
       print("Submit raw complete...");
     });
 
-    test('get Binance exchange rate', () async {
+    test('get Binance exchange rates', () async {
+      // discontinued pair ordering
+      var rate1 = await BinanceExchangeRateSource(
+              symbolOverride: 'DAI', inverted: false)
+          .tokenToUsdRate(TokenTypes.XDAI);
+      var rate2 =
+          await BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true)
+              .tokenToUsdRate(TokenTypes.XDAI);
+      print("$rate1, $rate2");
+    });
+
+    test('get Binance exchange rates 2', () async {
       var price = await OrchidPricing().tokenToUsdRate(TokenTypes.XDAI);
       // get again cached
       price = await OrchidPricing().tokenToUsdRate(TokenTypes.XDAI);
       print("xdai to usd = $price");
     });
 
-    //
+    test('get Binance exchange rates 3', () async {
+      var price = await OrchidPricing().tokenToUsdRate(TokenTypes.ETH);
+      print("eth to usd = $price");
+      price = await OrchidPricing().tokenToUsdRate(TokenTypes.OXT);
+      print("oxt to usd = $price");
+    });
   });
 }
 

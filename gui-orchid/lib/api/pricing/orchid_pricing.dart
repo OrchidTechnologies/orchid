@@ -9,13 +9,6 @@ class OrchidPricing {
 
   static Duration cacheDuration = Duration(seconds: 30);
 
-  // Binance exchange rates
-  // https://api.binance.com/api/v3/avgPrice?symbol=ETHUSDT
-  static String url(TokenType tokenType) {
-    var symbol = tokenType.exchangeRateSymbol;
-    return 'https://api.binance.com/api/v3/avgPrice?symbol=${symbol}USDT';
-  }
-
   OrchidPricing._init();
 
   factory OrchidPricing() {
@@ -32,22 +25,9 @@ class OrchidPricing {
       return cached.rate;
     }
 
-    log("pricing: Fetching rate for: $tokenType");
-    try {
-      var response = await http
-          .get(url(tokenType), headers: {'referer': 'https://account.orchid.com'});
-      if (response.statusCode != 200) {
-        throw Exception("Error status code: ${response.statusCode}");
-      }
-      var body = json.decode(response.body);
-      var rate = double.parse(body['price']);
-      _cache[tokenType] = _CachedRate(rate);
-
-      return rate;
-    } catch (err) {
-      log("Error fetching pricing: $err");
-      throw err;
-    }
+    var rate = await tokenType.exchangeRateSource.tokenToUsdRate(tokenType);
+    _cache[tokenType] = _CachedRate(rate);
+    return rate;
   }
 
   Future<double> usdToTokenRate(TokenType tokenType) async {
@@ -67,5 +47,61 @@ class _CachedRate {
 
   bool newerThan(Duration duration) {
     return DateTime.now().difference(time) < duration;
+  }
+}
+
+abstract class ExchangeRateSource {
+  final String symbolOverride;
+
+  const ExchangeRateSource({this.symbolOverride});
+
+  /// Return the rate USD/Token: Tokens * Rate = USD
+  Future<double> tokenToUsdRate(TokenType tokenType);
+
+  Future<double> _invert(double rate) async {
+    if (rate == 0) {
+      throw Exception("invalid rate: $rate");
+    }
+    return 1.0 / rate;
+  }
+}
+
+class BinanceExchangeRateSource extends ExchangeRateSource {
+  /// Reverse the default <TOKEN>USDT pair ordering to USDT<TOKEN> and invert
+  /// the rate consistent with that. e.g. for DAI we must use 1/USDTDAI and
+  /// not DAIUSDT since DAIUSDT was delisted.
+  final bool inverted;
+
+  const BinanceExchangeRateSource(
+      {this.inverted = false, String symbolOverride})
+      : super(symbolOverride: symbolOverride); // Binance exchange rates
+
+  // https://api.binance.com/api/v3/avgPrice?symbol=ETHUSDT
+  String url(TokenType tokenType) {
+    var symbol = symbolOverride ?? tokenType.symbol.toUpperCase();
+    var pair = inverted ? 'USDT$symbol' : '${symbol}USDT';
+    return 'https://api.binance.com/api/v3/avgPrice?symbol=$pair';
+  }
+
+  /// Return the rate USD/Token: Tokens * Rate = USD
+  Future<double> tokenToUsdRate(TokenType tokenType) async {
+    var rate = await _getPrice(tokenType);
+    return inverted ? _invert(rate) : rate;
+  }
+
+  Future<double> _getPrice(TokenType tokenType) async {
+    log("pricing: Binance fetching rate for: $tokenType");
+    try {
+      var response = await http.get(url(tokenType),
+          headers: {'referer': 'https://account.orchid.com'});
+      if (response.statusCode != 200) {
+        throw Exception("Error status code: ${response.statusCode}");
+      }
+      var body = json.decode(response.body);
+      return double.parse(body['price']);
+    } catch (err) {
+      log("Error fetching pricing: $err");
+      throw err;
+    }
   }
 }
