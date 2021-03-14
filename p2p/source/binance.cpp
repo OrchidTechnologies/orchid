@@ -43,7 +43,7 @@ task<Float> Binance(Origin &origin, const std::string &pair, const Float &adjust
 
 task<Currency> Binance(unsigned milliseconds, S<Origin> origin, std::string currency) {
     auto dollars([updated = co_await Opened(Updating(milliseconds, [origin = std::move(origin), pair = currency + "USDT"]() -> task<Float> {
-        co_return co_await Binance(*origin, pair, Ten18);
+        co_return pair == "DAIUSDT" ? 1 / co_await Binance(*origin, "USDTDAI", 1 / Ten18) : co_await Binance(*origin, pair, Ten18);
     }, "Binance"))]() { return (*updated)(); });
 
     co_return Currency{std::move(currency), std::move(dollars)};
