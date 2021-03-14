@@ -102,21 +102,6 @@ contract OrchidLottery1 {
     }
 
 
-    function gift_(address funder, IERC20 token, uint256 amount, address signer) private {
-        bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
-        Account storage account = accounts_[key];
-
-        uint256 cache = account.escrow_amount_;
-        if (cache == 0)
-            emit Create(token, funder, signer);
-
-        require(uint128(cache) + amount < 1 << 128);
-        cache += amount;
-        account.escrow_amount_ = cache;
-
-        emit Update(key, cache);
-    }
-
     function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
         bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
         Account storage account = accounts_[key];
@@ -355,7 +340,19 @@ contract OrchidLottery1 {
             assembly { mstore(0x40, segment) }
         }
 
-        if (amount != 0)
-            gift_(recipient, token, amount, recipient);
+        if (amount != 0) {
+            bytes32 key = keccak256(abi.encodePacked(token, recipient, recipient));
+            Account storage account = accounts_[key];
+
+            uint256 cache = account.escrow_amount_;
+            if (cache == 0)
+                emit Create(token, recipient, recipient);
+
+            require(uint128(cache) + amount < 1 << 128);
+            cache += amount;
+            account.escrow_amount_ = cache;
+
+            emit Update(key, cache);
+        }
     }
 }
