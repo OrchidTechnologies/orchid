@@ -34,27 +34,27 @@ contract OrchidLottery1 {
     }
 
 
-    struct Pot {
+    struct Account {
         uint256 escrow_amount_;
         uint256 unlock_warned_;
     }
 
     event Create(IERC20 indexed token, address indexed funder, address indexed signer);
-    event Update(bytes32 indexed account, uint256 escrow_amount);
-    event Delete(bytes32 indexed account, uint256 unlock_warned);
+    event Update(bytes32 indexed key, uint256 escrow_amount);
+    event Delete(bytes32 indexed key, uint256 unlock_warned);
 
 
-    struct Lottery {
-        mapping(address => mapping(IERC20 => Pot)) pots_;
+    struct Loop {
+        mapping(address => mapping(IERC20 => Account)) accounts_;
         uint256 closed_;
         mapping(address => uint256) merchants_;
     }
 
-    mapping(address => Lottery) private lotteries_;
+    mapping(address => Loop) private loops_;
 
     function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256) {
-        Pot storage pot = lotteries_[funder].pots_[signer][token];
-        return (pot.escrow_amount_, pot.unlock_warned_);
+        Account storage account = loops_[funder].accounts_[signer][token];
+        return (account.escrow_amount_, account.unlock_warned_);
     }
 
 
@@ -110,28 +110,28 @@ contract OrchidLottery1 {
 
 
     function gift_(address funder, IERC20 token, uint256 amount, address signer) private {
-        Pot storage pot = lotteries_[funder].pots_[signer][token];
+        Account storage account = loops_[funder].accounts_[signer][token];
 
-        uint256 cache = pot.escrow_amount_;
+        uint256 cache = account.escrow_amount_;
         if (cache == 0)
             emit Create(token, funder, signer);
 
         require(uint128(cache) + amount < 1 << 128);
         cache += amount;
-        pot.escrow_amount_ = cache;
+        account.escrow_amount_ = cache;
 
         emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
     }
 
     function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
-        bytes32 account = keccak256(abi.encodePacked(token, funder, signer));
-        Pot storage pot = lotteries_[funder].pots_[signer][token];
+        bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
+        Account storage account = loops_[funder].accounts_[signer][token];
 
         uint256 backup;
         uint256 escrow;
 
         if (adjust != 0 || amount != retrieve) {
-            backup = pot.escrow_amount_;
+            backup = account.escrow_amount_;
             if (backup == 0)
                 emit Create(token, funder, signer);
             escrow = backup >> 128;
@@ -143,7 +143,7 @@ contract OrchidLottery1 {
         uint256 unlock;
 
         if (adjust < 0 || lock != 0) {
-            warned = pot.unlock_warned_;
+            warned = account.unlock_warned_;
             marked = warned >> 192;
             unlock = uint64(warned >> 128);
             warned = uint128(warned);
@@ -190,8 +190,8 @@ contract OrchidLottery1 {
 
         if (unlock != 0) {
             uint256 cache = marked << 192 | (warned == 0 ? 0 : unlock << 128 | warned);
-            pot.unlock_warned_ = cache;
-            emit Delete(account, cache);
+            account.unlock_warned_ = cache;
+            emit Delete(key, cache);
         }
     } {
         require(amount < 1 << 128);
@@ -199,8 +199,8 @@ contract OrchidLottery1 {
 
         uint256 cache = escrow << 128 | amount;
         if (cache != backup) {
-            pot.escrow_amount_ = cache;
-            emit Update(account, cache);
+            account.escrow_amount_ = cache;
+            emit Update(key, cache);
         }
     } }
 
@@ -208,14 +208,14 @@ contract OrchidLottery1 {
     event Enroll(address indexed funder);
 
     function enroll(bool cancel, address[] calldata recipients) external {
-        Lottery storage lottery = lotteries_[msg.sender];
+        Loop storage loop = loops_[msg.sender];
 
         uint i = recipients.length;
         if (i == 0)
-            lottery.closed_ = cancel ? 0 : block.timestamp + day_;
+            loop.closed_ = cancel ? 0 : block.timestamp + day_;
         else {
             uint256 value = cancel ? uint256(-1) : block.timestamp + day_;
-            do lottery.merchants_[recipients[--i]] = value;
+            do loop.merchants_[recipients[--i]] = value;
             while (i != 0);
         }
 
@@ -223,18 +223,18 @@ contract OrchidLottery1 {
     }
 
     function enrolled(address funder, address recipient) external view returns (uint256) {
-        Lottery storage lottery = lotteries_[funder];
+        Loop storage loop = loops_[funder];
         if (recipient == address(0))
-            return lottery.closed_;
+            return loop.closed_;
         else
-            return lottery.merchants_[recipient];
+            return loop.merchants_[recipient];
     }
 
     function mark(IERC20 token, address signer) external {
-        Pot storage pot = lotteries_[msg.sender].pots_[signer][token];
-        uint256 cache = pot.unlock_warned_;
+        Account storage account = loops_[msg.sender].accounts_[signer][token];
+        uint256 cache = account.unlock_warned_;
         cache = block.timestamp << 192 | uint192(cache);
-        pot.unlock_warned_ = cache;
+        account.unlock_warned_ = cache;
         emit Delete(keccak256(abi.encodePacked(token, msg.sender, signer)), cache);
     }
 
@@ -312,11 +312,11 @@ contract OrchidLottery1 {
         address signer = ecrecover(digest, uint8((ticket.packed1 & 1) + 27), ticket.r, ticket.s);
 
         address funder = address(ticket.packed1 >> 1);
-        Lottery storage lottery = lotteries_[funder];
-        Pot storage pot = lottery.pots_[signer][token];
+        Loop storage loop = loops_[funder];
+        Account storage account = loop.accounts_[signer][token];
 
-        if (lottery.closed_ - 1 < block.timestamp)
-            if (lottery.merchants_[recipient] <= pot.unlock_warned_ >> 192)
+        if (loop.closed_ - 1 < block.timestamp)
+            if (loop.merchants_[recipient] <= account.unlock_warned_ >> 192)
                 return 0;
     {
         Track storage track = tracks_[keccak256(abi.encodePacked(digest, signer))];
@@ -325,7 +325,7 @@ contract OrchidLottery1 {
         track.packed = expire << 160 | uint256(msg.sender);
     }
         uint256 amount = uint128(ticket.packed0);
-        uint256 cache = pot.escrow_amount_;
+        uint256 cache = account.escrow_amount_;
 
         if (uint128(cache) >= amount)
             cache -= amount;
@@ -334,7 +334,7 @@ contract OrchidLottery1 {
             cache = 0;
         }
 
-        pot.escrow_amount_ = cache;
+        account.escrow_amount_ = cache;
         emit Update(keccak256(abi.encodePacked(token, funder, signer)), cache);
         return amount;
     }
