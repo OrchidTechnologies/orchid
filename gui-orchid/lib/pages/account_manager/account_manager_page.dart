@@ -161,13 +161,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _newIdentity() async {
-    var secret = Crypto.generateKeyPair().private;
-    var key = StoredEthereumKey(
-      imported: false,
-      time: DateTime.now(),
-      uid: Crypto.uuid(),
-      private: secret,
-    );
+    var key = StoredEthereumKey.generate();
     await _accountStore.addIdentity(key);
   }
 

@@ -36,13 +36,6 @@ class UserPreferences {
     return await (await sharedPreferences()).setString(key.toString(), value);
   }
 
-  /// Reset all instructional / onboarding / first launch experience
-  /// options to their default state.
-  void resetInstructions() {
-    setVPNSwitchInstructionsViewed(false);
-    setFirstLaunchInstructionsViewed(false);
-  }
-
   ///
   /// Onboarding pages related preferences
   /// TODO: Replace these with one StringList?
@@ -71,6 +64,7 @@ class UserPreferences {
   }
 
   // Get the circuit / hops configuration
+  // This default to an empty [] circuit if uninitialized.
   Future<Circuit> getCircuit() async {
     String value = (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.Circuit.toString());
@@ -117,6 +111,7 @@ class UserPreferences {
         .setString(UserPreferenceKey.UserConfig.toString(), value);
   }
 
+  /// Return the user's keys or [] empty array if uninitialized.
   // Note: A format change or bug that causes a decoding error here would be bad.
   // Note: When we move these keys to secure storage the issues will change
   // Note: so we will rely on this for now.
@@ -239,17 +234,6 @@ class UserPreferences {
         UserPreferenceKey.VPNSwitchInstructionsViewed.toString(), value);
   }
 
-  Future<bool> getFirstLaunchInstructionsViewed() async {
-    return (await SharedPreferences.getInstance()).getBool(
-            UserPreferenceKey.FirstLaunchInstructionsViewed.toString()) ??
-        false;
-  }
-
-  Future<bool> setFirstLaunchInstructionsViewed(bool value) async {
-    return (await SharedPreferences.getInstance()).setBool(
-        UserPreferenceKey.FirstLaunchInstructionsViewed.toString(), value);
-  }
-
   ObservablePreference<bool> allowNoHopVPN = ObservablePreference(
       key: UserPreferenceKey.AllowNoHopVPN,
       loadValue: (key) async {
@@ -306,6 +290,11 @@ class UserPreferences {
   // Defaults false
   ObservableBoolPreference guiV0 =
       ObservableBoolPreference(UserPreferenceKey.GuiV0);
+
+  // Defaults true
+  ObservableBoolPreference firstLaunch = ObservableBoolPreference(
+      UserPreferenceKey.FirstLaunch,
+      defaultValue: true);
 }
 
 enum UserPreferenceKey {
@@ -319,10 +308,10 @@ enum UserPreferenceKey {
   DesiredVPNState,
   ShowStatusTab,
   VPNSwitchInstructionsViewed,
-  FirstLaunchInstructionsViewed,
   AllowNoHopVPN,
   PacTransaction,
   ActiveAccounts,
   CachedDiscoveredAccounts,
-  GuiV0
+  GuiV0,
+  FirstLaunch
 }

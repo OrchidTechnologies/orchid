@@ -82,15 +82,18 @@ class ObservableStringPreference extends ObservablePreference<String> {
             });
 }
 
-/// An observable boolean value which returns false when uninitialized
+/// An observable boolean value which returns false (or a specified default)
+/// when uninitialized
 class ObservableBoolPreference extends ObservablePreference<bool> {
-  ObservableBoolPreference(UserPreferenceKey key)
+  final bool defaultValue;
+
+  ObservableBoolPreference(UserPreferenceKey key, {this.defaultValue = false})
       : super(
             key: key,
             loadValue: (key) async {
               return (await SharedPreferences.getInstance())
                       .getBool(key.toString()) ??
-                  false;
+                  defaultValue;
             },
             storeValue: (key, value) async {
               return (await SharedPreferences.getInstance())

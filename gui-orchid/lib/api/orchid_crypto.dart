@@ -206,6 +206,16 @@ class StoredEthereumKey {
     return list.firstWhere((key) => key.uid == uid, orElse: () => null);
   }
 
+  static StoredEthereumKey generate() {
+    var secret = Crypto.generateKeyPair().private;
+    return StoredEthereumKey(
+      imported: false,
+      time: DateTime.now(),
+      uid: Crypto.uuid(),
+      private: secret,
+    );
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

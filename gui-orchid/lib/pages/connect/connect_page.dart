@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
@@ -72,6 +76,8 @@ class _ConnectPageState extends State<ConnectPage>
     _checkHopAlertsTimer =
         Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
     _checkHopAlerts(null);
+
+    _firstLaunchCheck();
   }
 
   // TODO: This needs to handle v1 configs
@@ -213,7 +219,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   Padding _buildManageProfileButton() {
     var textColor =
-        _showConnectedBackground() ? Colors.white : AppColors.purple_3;
+    _showConnectedBackground() ? Colors.white : AppColors.purple_3;
     var bgColor = Colors.transparent;
     var borderColor = AppColors.purple_3;
     return Padding(
@@ -295,13 +301,14 @@ class _ConnectPageState extends State<ConnectPage>
                 // Logo
                 if (tall) ...[
                   _buildLogo(),
-                ] else ...[
-                  Container(
-                      padding: EdgeInsets.only(left: 15),
-                      width: 60,
-                      height: 48,
-                      child: _buildLogo()),
-                ],
+                ] else
+                  ...[
+                    Container(
+                        padding: EdgeInsets.only(left: 15),
+                        width: 60,
+                        height: 48,
+                        child: _buildLogo()),
+                  ],
                 pady(48),
 
 //              if (_connectionState == OrchidConnectionState.Connecting ||
@@ -411,12 +418,12 @@ class _ConnectPageState extends State<ConnectPage>
     }
 
     bool buttonEnabled =
-        // Enabled when there is a circuit (or overridden for traffic monitoring)
-        (_hasConfiguredCircuit || _enableConnectWithoutHops) ||
-            // Enabled if we are already connected (corner case of changed config while connected).
-            _connectionState == OrchidConnectionState.VPNConnecting ||
-            _connectionState == OrchidConnectionState.VPNConnected ||
-            _connectionState == OrchidConnectionState.OrchidConnected;
+    // Enabled when there is a circuit (or overridden for traffic monitoring)
+    (_hasConfiguredCircuit || _enableConnectWithoutHops) ||
+        // Enabled if we are already connected (corner case of changed config while connected).
+        _connectionState == OrchidConnectionState.VPNConnecting ||
+        _connectionState == OrchidConnectionState.VPNConnected ||
+        _connectionState == OrchidConnectionState.OrchidConnected;
 
     if (!buttonEnabled) {
       bgColor = AppColors.neutral_4;
@@ -484,9 +491,10 @@ class _ConnectPageState extends State<ConnectPage>
   Widget _buildBackgroundGradient() {
     return AnimatedBuilder(
       animation: _connectAnimController,
-      builder: (context, child) => Container(
-        decoration: BoxDecoration(gradient: _backgroundGradient.value),
-      ),
+      builder: (context, child) =>
+          Container(
+            decoration: BoxDecoration(gradient: _backgroundGradient.value),
+          ),
     );
   }
 
@@ -513,7 +521,7 @@ class _ConnectPageState extends State<ConnectPage>
     }
 
     Color color =
-        _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
+    _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
 
     return Container(
       // Note: the emoji changes the baseline so we give this a couple of pixels
@@ -582,12 +590,12 @@ class _ConnectPageState extends State<ConnectPage>
 
     // The background gradient
     var backgroundGradientDisconnected =
-        VerticalLinearGradient(colors: [AppColors.white, AppColors.grey_6]);
+    VerticalLinearGradient(colors: [AppColors.white, AppColors.grey_6]);
     var backgroundGradientConnected = VerticalLinearGradient(
         colors: [AppColors.purple_3, AppColors.purple_1]);
     _backgroundGradient = LinearGradientTween(
-            begin: backgroundGradientDisconnected,
-            end: backgroundGradientConnected)
+        begin: backgroundGradientDisconnected,
+        end: backgroundGradientConnected)
         .animate(_connectAnimController);
 
     // Update the app bar color to match the start of the background gradient
@@ -613,7 +621,7 @@ class _ConnectPageState extends State<ConnectPage>
     // Toggle the current connection state
     switch (_connectionState) {
       case OrchidConnectionState.VPNDisconnecting:
-        // Do nothing while we are trying to disconnect
+      // Do nothing while we are trying to disconnect
         break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.VPNNotConnected:
@@ -652,6 +660,44 @@ class _ConnectPageState extends State<ConnectPage>
         }
       }
     }));
+  }
+
+  void _firstLaunchCheck() async {
+    log("first launch check.");
+    if (await UserPreferences().firstLaunch.get()) {
+      await _doFirstLaunchActivities();
+      await UserPreferences().firstLaunch.set(false);
+    }
+  }
+
+  Future<void> _doFirstLaunchActivities() async {
+    log("first launch: Do first launch activities.");
+    // If this is a new user with no identities create one.
+    var identities = await UserPreferences().getKeys();
+    if (identities.isEmpty) {
+      log("first launch: Creating default identity");
+      var key = StoredEthereumKey.generate();
+      await UserPreferences().addKey(key);
+
+      // Select it
+      AccountStore().setActiveIdentity(key);
+    }
+
+    // If this is an existing user with a 1-hop config migrate it to
+    // the active account in V1.
+    var circuit = await UserPreferences().getCircuit();
+    if (circuit.hops.length == 1 && circuit.hops[0] is OrchidHop) {
+      log("first launch: User has a 1-hop Orchid config, migrating.");
+      var hop = circuit.hops[0] as OrchidHop;
+      var account = Account(
+        identityUid: hop.keyRef.keyUid,
+        version: 0,
+        chainId: Chains.Ethereum.chainId,
+        funder: hop.funder
+      );
+      // Store the active account and publish the new config
+      AccountStore().setActiveAccount(account);
+    }
   }
 
   void _disableConnection() {

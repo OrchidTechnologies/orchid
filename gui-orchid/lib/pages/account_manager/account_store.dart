@@ -62,7 +62,7 @@ class AccountStore extends ChangeNotifier {
   /// Set the active account for the given chain and identity: (signer, chain -> funder)
   /// chainId and funder may be null to indicate an identity preference without
   /// a current account selection.
-  void setActiveAccount(Account account) async {
+  Future<void> setActiveAccount(Account account) async {
     if (account == activeAccount) {
       return;
     }

@@ -30,6 +30,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _allowNoHopVPN = false;
   bool _showLogging = false;
   bool _guiV0 = false;
+  bool _tester = false;
 
   @override
   void initState() {
@@ -45,20 +46,22 @@ class _SettingsPageState extends State<SettingsPage> {
         OrchidHop.appDefaultCurator;
     _allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
     _guiV0 = await UserPreferences().guiV0.get();
-    setLoggingConfig();
-    setPlatformConfig();
+
+    advancedConfigChanged();
     setState(() {});
   }
 
-  void setPlatformConfig() async {
-    OrchidPlatform.pretendToBeAndroid =
-        (await OrchidVPNConfig.getUserConfigJS())
-            .evalBoolDefault('isAndroid', false);
-  }
-
-  void setLoggingConfig() async {
+  /// Update system config based on changes to user advanced config
+  void advancedConfigChanged() async {
     var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+
     _showLogging = jsConfig.evalBoolDefault('logging', false);
+    _tester = jsConfig.evalBoolDefault('tester', false);
+
+    OrchidPlatform.pretendToBeAndroid =
+        jsConfig.evalBoolDefault('isAndroid', false);
+
+    setState(() {});
   }
 
   Widget build(BuildContext context) {
@@ -76,19 +79,15 @@ class _SettingsPageState extends State<SettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 // Accounts
-                pady(16),
-                Divider(),
-                PageTile(
+                _item(PageTile(
                   title: s.deletedHops,
                   onTap: () async {
                     await Navigator.pushNamed(context, AppRoutes.accounts);
                   },
-                ),
+                )),
 
                 // Default curator
-                pady(8),
-                Divider(),
-                PageTile(
+                _item(PageTile(
                   title: s.defaultCurator,
                   //imageName: "assets/images/assignment.png",
                   trailing: Container(
@@ -96,12 +95,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: AppTextField(
                           controller: _defaultCurator,
                           margin: EdgeInsets.zero)),
-                ),
+                )),
 
                 // Allow enable vpn with no hops
-                pady(8),
-                Divider(),
-                PageTile(
+                _item(PageTile(
                   title:
                       s.allowNoHopVPN + "\n(" + s.trafficMonitoringOnly + ")",
                   trailing: Switch(
@@ -114,12 +111,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       });
                     },
                   ),
-                ),
+                )),
 
                 // Balance query
-                pady(8),
-                Divider(),
-                PageTile(
+                _item(PageTile(
                   title: s.queryBalances,
                   //imageName: "assets/images/assignment.png",
                   trailing: Switch(
@@ -132,53 +127,32 @@ class _SettingsPageState extends State<SettingsPage> {
                       });
                     },
                   ),
-                ),
+                )),
 
                 // Advanced Configuration
-                pady(8),
-                Divider(),
-                PageTile(
+                _item(PageTile(
                   title: "Advanced Configuration",
                   onTap: () async {
                     await Navigator.pushNamed(context, AppRoutes.configuration);
-                    initStateAsync(); // update anything that may have changed via config
+                    advancedConfigChanged(); // update anything that may have changed via config
                   },
-                ),
+                )),
 
                 // Manage Data
-                pady(8),
-                Divider(),
-                PageTile.route(
+                _item(PageTile.route(
                     title: "Configuration Management",
                     routeName: '/settings/manage_config',
-                    context: context),
-
-                // Reset instructions
-                /*
-                pady(8),
-                Divider(),
-                PageTile(
-                  title: s.showInstructions,
-                  trailing: RaisedButton(
-                    child: Text(s.reset),
-                    onPressed: _resetInstructions,
-                  ),
-                ),
-                 */
+                    context: context)),
 
                 // Logging
-                if (_showLogging) ...[
-                  pady(16),
-                  PageTile.route(
+                if (_showLogging || _tester)
+                  _item(PageTile.route(
                       title: "Logging",
                       routeName: '/settings/log',
-                      context: context),
-                ],
+                      context: context)),
 
                 // V1 UI opt-out
-                pady(8),
-                Divider(),
-                PageTile(
+                _item(PageTile(
                   title: "Enable Multi-hop UI",
                   trailing: Switch(
                     activeColor: AppColors.purple_3,
@@ -193,26 +167,46 @@ class _SettingsPageState extends State<SettingsPage> {
                       });
                     },
                   ),
-                ),
+                )),
 
-                /*
-                pady(8),
-                Divider(),
-                PageTile(
-                  title: "(DEBUG) Reset Active Accounts",
-                  trailing: RaisedButton(
-                    child: Text("Reset"),
-                    onPressed: () {
-                      UserPreferences().activeAccounts.set([]);
-                    },
-                  ),
-                ),
-                 */
+                // Reset instructions
+                if (_tester)
+                  _item(PageTile(
+                    title: "(TEST) Reset First Launch",
+                    trailing: RaisedButton(
+                      child: Text(s.reset),
+                      onPressed: () {
+                        UserPreferences().firstLaunch.set(true);
+                      },
+                    ),
+                  )),
+
+                if (_tester)
+                  _item(PageTile(
+                    title: "(TEST) Reset V1 Account Data",
+                    trailing: RaisedButton(
+                      child: Text(s.reset),
+                      onPressed: () {
+                        UserPreferences().activeAccounts.set([]);
+                        UserPreferences().cachedDiscoveredAccounts.set({});
+                      },
+                    ),
+                  )),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _item(Widget child) {
+    return Column(
+      children: [
+        pady(8),
+        Divider(),
+        child,
+      ],
     );
   }
 
