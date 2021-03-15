@@ -123,6 +123,13 @@ contract OrchidLottery1 {
             warned = uint128(warned);
         }
 
+        if (lock > 0) {
+            unlock = block.timestamp + day_;
+
+            warned += uint256(lock);
+            require(warned > uint256(lock));
+        }
+
         if (adjust < 0) {
             require(unlock - 1 < block.timestamp);
 
@@ -149,12 +156,6 @@ contract OrchidLottery1 {
 
             require(decrease <= warned);
             warned -= decrease;
-        } else if (lock != 0) {
-            unlock = block.timestamp + day_;
-
-            warned += uint256(lock);
-            require(warned > uint256(lock));
-            require(warned < 1 << 128);
         }
 
         if (retrieve != 0) {
@@ -163,6 +164,8 @@ contract OrchidLottery1 {
         }
 
         if (unlock != 0) {
+            require(warned < 1 << 128);
+
             uint256 cache = marked << 192 | (warned == 0 ? 0 : unlock << 128 | warned);
             account.unlock_warned_ = cache;
             emit Delete(key, cache);
