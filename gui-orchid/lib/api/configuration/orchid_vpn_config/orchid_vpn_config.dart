@@ -20,8 +20,8 @@ class OrchidVPNConfig {
   }
 
   static Future<String> generateConfig() async {
-    return (await UserPreferences().guiV1.get())
-        ? OrchidVPNConfigV1.generateConfig()
-        : OrchidVPNConfigV0.generateConfig();
+    return (await UserPreferences().guiV0.get())
+        ? OrchidVPNConfigV0.generateConfig()
+        : OrchidVPNConfigV1.generateConfig();
   }
 }

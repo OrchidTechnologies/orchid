@@ -49,7 +49,7 @@ class OrchidVPNConfigV1 {
       config = {
         'protocol': 'orch1d', // leet!
         'chainid': chain.chainId,
-        'currency': chain.nativeCurrency.orchidConfigSymbol ??
+        'currency': chain.nativeCurrency.exchangeRateSource.symbolOverride ??
             chain.nativeCurrency.symbol,
         'rpc': chain.providerUrl,
         'curator': curator,

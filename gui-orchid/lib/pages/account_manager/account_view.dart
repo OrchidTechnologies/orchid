@@ -44,7 +44,6 @@ class _AccountViewState extends State<AccountView> {
   }
 
   Widget build(BuildContext context) {
-    var style1 = TextStyle(fontSize: 17);
     return TitledPage(
       title: 'Account View',
       child: ListenableBuilder(
@@ -77,38 +76,7 @@ class _AccountViewState extends State<AccountView> {
                   ),
                   Divider(height: 0),
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                        child: Column(children: [
-                          pady(16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildBalance(style1),
-                              /*
-                              RoundedRectButton(
-                                text: "Add Funds",
-                                icon: Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () {},
-                              ),
-                               */
-                            ],
-                          ),
-                          pady(8),
-                          Divider(),
-                          pady(24),
-                          if (_showAccountChart())
-                            Container(width: 250, child: _buildAccountChart()),
-                          // if (_showAccountChart()) pady(24),
-                          // _buildAddFundsButton(),
-                          pady(24),
-                        ]),
-                      ),
-                    ),
+                    child: _buildBottom(),
                   )
                 ],
               ),
@@ -117,8 +85,52 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 
+  Widget _buildBottom() {
+    var style1 = TextStyle(fontSize: 17);
+    return RefreshIndicator(
+      onRefresh: _detail.refresh,
+      child: Container(
+        height: double.infinity,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Column(children: [
+              pady(16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildBalance(style1),
+                  /*
+                                RoundedRectButton(
+                                  text: "Add Funds",
+                                  icon: Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () {},
+                                ),
+                                 */
+                ],
+              ),
+              pady(8),
+              Divider(),
+              pady(24),
+              if (_showAccountChart())
+                Container(width: 250, child: _buildAccountChart()),
+              // if (_showAccountChart()) pady(24),
+              // _buildAddFundsButton(),
+              pady(24),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
   Column _buildBalance(TextStyle style1) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LabeledCurrencyValue(
             label: "Balance:",
@@ -170,7 +182,8 @@ class _AccountViewState extends State<AccountView> {
       MaterialPageRoute(
           fullscreenDialog: true,
           builder: (BuildContext context) {
-            return PurchasePage(completion: () {});
+            return PurchasePage(
+                signer: widget.account.signer, completion: () {});
           }),
 
       // MaterialPageRoute(

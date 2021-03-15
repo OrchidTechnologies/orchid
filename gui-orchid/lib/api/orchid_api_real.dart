@@ -11,7 +11,6 @@ import 'monitoring/orchid_status.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_eth/v0/orchid_eth_v0.dart';
 import 'orchid_log_api.dart';
-import 'orchid_pricing.dart';
 
 class RealOrchidAPI implements OrchidAPI {
   static final RealOrchidAPI _singleton = RealOrchidAPI._internal();
@@ -183,11 +182,6 @@ class RealOrchidAPI implements OrchidAPI {
   @override
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
-  }
-
-  @override
-  OrchidPricingAPI pricing() {
-    return OrchidPricingAPI();
   }
 
   Future<String> groupContainerPath() async {

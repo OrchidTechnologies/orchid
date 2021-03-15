@@ -1,12 +1,28 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 
-// See https://pub.dev/packages/test
+import 'expect.dart';
+
 void main() {
   PacTransaction roundTrip(PacTransaction tx) {
     return PacTransaction.fromJson(jsonDecode(jsonEncode(tx)));
   }
+
+  var signer =
+      EthereumAddress.from('0x00A0844371B32aF220548DCE332989404Fda2EeF');
+  var ethTx = EthereumTransaction(
+      from: signer,
+      to: EthereumAddress.from("0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b"),
+      gas: 175000,
+      gasPrice: BigInt.from(1e9),
+      value: BigInt.from(1e18),
+      chainId: 100,
+      nonce: 1,
+      data: '0x987ff31c000000000...');
 
   group('Pac transaction should serialize and deserialize correctly', () {
     test('legacy', () {
@@ -18,29 +34,35 @@ void main() {
       expect(tx1.date, isNotNull);
     });
 
-    test('tx', () {
+    test('add balance error', () {
       var txIn = PacAddBalanceTransaction.error("error string");
       PacAddBalanceTransaction tx = roundTrip(txIn);
       expectTrue(tx is PacAddBalanceTransaction);
       expect(tx.state, PacTransactionState.Error);
       expect(tx.serverResponse, "error string");
+      expect(tx.signer, null);
     });
 
-    test('tx2', () {
-      var tx = PacSubmitRawTransaction("rawtx");
-      tx = roundTrip(tx);
-      expect(tx.state, PacTransactionState.Pending);
-      expectTrue(tx is PacSubmitRawTransaction);
+    test('submit raw tx', () {
+      var submitRawTx = PacSubmitRawTransaction(ethTx);
+      submitRawTx = roundTrip(submitRawTx);
+      expect(submitRawTx.state, PacTransactionState.Pending);
+      expectTrue(submitRawTx is PacSubmitRawTransaction);
+      expectTrue(submitRawTx.tx == ethTx);
+      expectTrue(
+          submitRawTx.tx.toJson().toString() == ethTx.toJson().toString());
+      print(submitRawTx.tx.toJson().toString());
     });
 
-    test('tx3', () {
-      var tx = PacAddBalanceTransaction.pending(productId: "1234");
+    test('add balance receipt', () {
+      var tx = PacAddBalanceTransaction.pending(signer: signer, productId: "1234");
 
       tx = roundTrip(tx);
       expectTrue(tx is PacAddBalanceTransaction);
       expect(tx.productId, "1234");
       expect(tx.state, PacTransactionState.Pending);
       expect(tx.date, isNotNull);
+      expect(tx.signer, signer);
 
       tx.retries = 3;
       tx.receipt = "receipt";
@@ -50,29 +72,57 @@ void main() {
     });
 
     test('purchase combined', () {
-      String rawTransaction = '{1234...}';
-      var addBalance = PacAddBalanceTransaction.pending(productId: "1234");
-      var submitRaw = PacSubmitRawTransaction(rawTransaction);
+      var addBalance = PacAddBalanceTransaction.pending(signer: signer, productId: "1234");
+      var submitRaw = PacSubmitRawTransaction(ethTx);
       var tx = PacPurchaseTransaction(addBalance, submitRaw);
-      print("tx before = ${tx.toJson()}");
-      tx.addReceipt("receipt");
+
+      var receipt = 'receipt:'+('x'*7000)+'y';
+      tx.addReceipt(receipt);
       tx = roundTrip(tx);
-      print("tx after = ${tx.toJson()}");
       addBalance = tx.addBalance;
       submitRaw = tx.submitRaw;
       expectTrue(tx is PacPurchaseTransaction);
       expectTrue(addBalance is PacAddBalanceTransaction);
       expectTrue(submitRaw is PacSubmitRawTransaction);
       expect(addBalance.productId, "1234");
-      expect(submitRaw.rawTransaction, rawTransaction);
+      expect(submitRaw.tx, ethTx);
       expect(tx.type, PacTransactionType.PurchaseTransaction);
-      expect(tx.state, PacTransactionState.Pending);
+      expect(tx.state, PacTransactionState.Ready);
       expect(tx.date, isNotNull);
-      expect(tx.receipt, "receipt");
+      expect(tx.receipt, receipt);
+      print(tx.receipt);
     });
-  });
-}
 
-void expectTrue(dynamic cond) {
-  expect(cond, true);
+    test('raw eth tx round trip', () {
+      var txOut = EthereumTransaction.fromJson(jsonDecode(jsonEncode(ethTx)));
+      expectTrue(ethTx.from == txOut.from);
+      expectTrue(ethTx.to == txOut.to);
+      expectTrue(ethTx.gas == txOut.gas);
+      expectTrue(ethTx.gasPrice == txOut.gasPrice);
+      expectTrue(ethTx.value == txOut.value);
+      expectTrue(ethTx.chainId == txOut.chainId);
+      expectTrue(ethTx.nonce == txOut.nonce);
+      expectTrue(ethTx.data == txOut.data);
+    });
+
+    test('raw eth tx round trip optional nonce', () {
+      var txNoNonce = EthereumTransaction(
+          from: EthereumAddress.from(
+              "0x00A0844371B32aF220548DCE332989404Fda2EeF"),
+          to: EthereumAddress.from(
+              "0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b"),
+          gas: 175000,
+          gasPrice: BigInt.from(1e9),
+          value: BigInt.from(1e18),
+          chainId: 100,
+          data: '0x987ff31c000000000...');
+
+      var txOut =
+          EthereumTransaction.fromJson(jsonDecode(jsonEncode(txNoNonce)));
+      expectTrue(txOut.nonce == null);
+      expect(txNoNonce.toJson().toString(), isNot(contains("nonce")));
+    });
+
+    //
+  });
 }

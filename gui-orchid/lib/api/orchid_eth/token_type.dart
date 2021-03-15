@@ -2,6 +2,7 @@ import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'v0/orchid_eth_v0.dart';
 
 class Chains {
@@ -22,7 +23,8 @@ class Chains {
       chainId: XDAI_CHAINID,
       name: "xDAI",
       nativeCurrency: TokenTypes.XDAI,
-      providerUrl: 'https://dai.poa.network',
+      // providerUrl: 'https://dai.poa.network',
+      providerUrl: 'https://rpc.xdaichain.com/',
       icon: SvgPicture.asset('assets/svg/logo-xdai.svg'));
 
   // TODO: Embed the chain.info db here as we do in the dapp.
@@ -63,23 +65,39 @@ class Chain {
 
   @override
   int get hashCode => chainId.hashCode;
+
+  @override
+  String toString() {
+    return 'Chain{chainId: $chainId, name: $name}';
+  }
 }
 
 class TokenTypes {
   // ignore: non_constant_identifier_names
   static const TokenType ETH = TokenType(
-      name: 'ETH', symbol: 'ETH', decimals: 18, chainId: Chains.ETH_CHAINID);
+    name: 'ETH',
+    symbol: 'ETH',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    decimals: 18,
+    chainId: Chains.ETH_CHAINID,
+  );
 
   // ignore: non_constant_identifier_names
   // See class OXT.
   static const TokenType OXT = TokenType(
-      name: 'OXT', symbol: 'OXT', decimals: 18, chainId: Chains.ETH_CHAINID);
+    name: 'OXT',
+    symbol: 'OXT',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    decimals: 18,
+    chainId: Chains.ETH_CHAINID,
+  );
 
   // ignore: non_constant_identifier_names
   static const TokenType XDAI = TokenType(
       name: 'xDAI',
       symbol: 'xDAI',
-      orchidConfigSymbol: 'DAI',
+      exchangeRateSource:
+          BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
       decimals: 18,
       chainId: Chains.XDAI_CHAINID);
 }
@@ -91,22 +109,21 @@ class TokenTypes {
 // Note: tokens such as OXT.
 class TokenType {
   final int chainId;
+  final String name;
+  final String symbol;
+  final int decimals;
+  final ExchangeRateSource exchangeRateSource;
 
   Chain get chain {
     return Chains.chainFor(chainId);
   }
 
-  final String name;
-  final String symbol;
-  final String orchidConfigSymbol; // optional override
-  final int decimals;
-
   const TokenType({
     @required this.chainId,
     @required this.name,
     @required this.symbol,
-    this.orchidConfigSymbol,
     @required this.decimals,
+    @required this.exchangeRateSource,
   });
 
   // Return 1eN where N is the decimal count.
@@ -121,8 +138,24 @@ class TokenType {
 
   // From a number representing the nominal token denomination, e.g. 1.0 OXT
   Token fromDouble(double val) {
-    return fromInt(BigInt.from((val * this.multiplier).round()));
+    // Note: No explicit rounding needed here because BigInt converts for us
+    // Note: and round() on the double would overflow Dart's native int.
+    return fromInt(BigInt.from(val * this.multiplier));
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TokenType &&
+          runtimeType == other.runtimeType &&
+          chainId == other.chainId &&
+          name == other.name &&
+          symbol == other.symbol &&
+          decimals == other.decimals;
+
+  @override
+  int get hashCode =>
+      chainId.hashCode ^ name.hashCode ^ symbol.hashCode ^ decimals.hashCode;
 
   @override
   String toString() {

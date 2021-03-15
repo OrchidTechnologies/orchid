@@ -10,7 +10,6 @@ import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
-import 'orchid_pricing.dart';
 
 ///
 /// Mock Orchid App Channel API Implementation
@@ -237,11 +236,6 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
-  }
-
-  @override
-  OrchidPricingAPI pricing() {
-    return OrchidPricingAPI();
   }
 
   Future<String> groupContainerPath() async {

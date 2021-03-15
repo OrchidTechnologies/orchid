@@ -29,7 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _queryBalances = false;
   bool _allowNoHopVPN = false;
   bool _showLogging = false;
-  bool _guiV1 = false;
+  bool _guiV0 = false;
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
     _allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
-    _guiV1 = await UserPreferences().guiV1.get();
+    _guiV0 = await UserPreferences().guiV0.get();
     setLoggingConfig();
     setPlatformConfig();
     setState(() {});
@@ -175,27 +175,27 @@ class _SettingsPageState extends State<SettingsPage> {
                       context: context),
                 ],
 
-                // V1 UI opt-in
+                // V1 UI opt-out
                 pady(8),
                 Divider(),
                 PageTile(
-                  title: "GUI Version 1",
+                  title: "Enable Multi-hop UI",
                   trailing: Switch(
                     activeColor: AppColors.purple_3,
-                    value: _guiV1,
+                    value: _guiV0,
                     onChanged: (bool value) async {
-                      await UserPreferences().guiV1.set(value);
+                      await UserPreferences().guiV0.set(value);
                       OrchidAPI().updateConfiguration();
-                      AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+                      AppDialogs.showConfigurationChangeSuccess(context,
+                          warnOnly: true);
                       setState(() {
-                        _guiV1 = value;
+                        _guiV0 = value;
                       });
                     },
                   ),
                 ),
 
-
-                // TESTING: Remove
+                /*
                 pady(8),
                 Divider(),
                 PageTile(
@@ -207,6 +207,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                 ),
+                 */
               ],
             ),
           ),

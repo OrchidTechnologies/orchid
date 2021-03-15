@@ -1,30 +1,40 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/loading.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:orchid/util/units.dart';
+import '../app_colors.dart';
 import '../app_sizes.dart';
 import '../app_text.dart';
 
 typedef PurchasePageCompletion = void Function(); // TODO: return
 
 class PurchasePage extends StatefulWidget {
+  final EthereumAddress signer;
   final PurchasePageCompletion completion;
   final bool cancellable; // show the close button instead of a back arrow
 
   const PurchasePage(
-      {Key key, @required this.completion, this.cancellable = false})
+      {Key key,
+      @required this.signer,
+      @required this.completion,
+      this.cancellable = false})
       : super(key: key);
 
   @override
@@ -83,7 +93,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       pady(12),
                       _buildInstructions(),
                       pady(16),
-                      _buildPACList(),
+                      _buildPacList(),
                       pady(32),
                       _buildPreferredProviderText()
                     ],
@@ -95,20 +105,6 @@ class _PurchasePageState extends State<PurchasePage> {
           if (!_storeOpen) _buildStoreDown()
         ],
       ),
-    );
-  }
-
-  TextSpan _buildPurchaseDescriptionText({String text}) {
-    const subtitleStyle = TextStyle(
-      color: Colors.white,
-      fontSize: 12.0,
-      height: 16.0 / 12.0,
-    );
-    var subtitleStyleBold = subtitleStyle.copyWith(fontWeight: FontWeight.bold);
-    return TextSpan(
-      children: [
-        TextSpan(text: text, style: subtitleStyleBold),
-      ],
     );
   }
 
@@ -216,7 +212,7 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
-  Widget _buildPACList() {
+  Widget _buildPacList() {
     if (_pacs == null) {
       return LoadingIndicator(height: 50);
     }
@@ -225,53 +221,74 @@ class _PurchasePageState extends State<PurchasePage> {
           height: 50, text: "No PACs available at this time.");
     }
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: _pacs
-          .map(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _fixedPacList()
+        /*
+         _pacs.map(
             (pac) => Padding(
               padding: const EdgeInsets.all(8.0),
               child: _buildPacPurchaseCard(pac),
             ),
           )
           .toList(),
-    );
+           */
+        );
   }
 
-  Widget _buildPacPurchaseCard(PAC pac) {
-    const valueStyle = TextStyle(
-        color: Colors.black,
-        fontSize: 18.0,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.38,
-        fontFamily: 'SFProText-Regular',
-        height: 25.0 / 20.0);
+  // TODO: This assumes three pre-defined pac tiers rather than the list.
+  List<Widget> _fixedPacList() {
+    if (_pacs.isEmpty || _pacs.length < 3) {
+      log("iap: pacs not ready: $_pacs");
+      return [];
+    }
+    // TODO: Hard-coded expected ids
+    var pacTier4 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4';
+    var pacTier5 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5';
+    var pacTier6 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6';
+    var pac1 = _pacs.firstWhere((pac) => pac.productId == pacTier4);
+    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier5);
+    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier6);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        _purchase(purchase: pac);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("PAC", style: valueStyle),
-              Text("${pac.localDisplayPrice ?? '...'}",
-                  style: valueStyle.copyWith(fontWeight: FontWeight.bold)),
-            ],
+    return [
+      _buildPurchaseCardView(
+          pac: pac1,
+          title: s.tryOutOrchid,
+          subtitle: _buildPurchaseDescriptionText(
+            text: "- " + s.goodForBrowsingAndLightActivity,
           ),
+          gradBegin: 0,
+          gradEnd: 2),
+      pady(24),
+      _buildPurchaseCardView(
+          pac: pac2,
+          title: s.average,
+          subtitle: _buildPurchaseDescriptionText(
+            text: "- " +
+                s.goodForAnIndividual +
+                "\n" +
+                "- " +
+                s.shortToMediumTermUsage,
+          ),
+          gradBegin: -2,
+          gradEnd: 1),
+      pady(24),
+      _buildPurchaseCardView(
+        pac: pac3,
+        title: s.heavy,
+        subtitle: _buildPurchaseDescriptionText(
+          text: "- " +
+              s.goodForBandwidthheavyUsesSharing +
+              "\n" +
+              "- " +
+              s.longerTermUsage,
         ),
+        gradBegin: -1,
+        gradEnd: -1,
       ),
-    );
+    ];
   }
 
-  /*
+  // TODO: Legacy?
   Widget _buildPurchaseCardView(
       {PAC pac,
       String title,
@@ -290,10 +307,22 @@ class _PurchasePageState extends State<PurchasePage> {
         letterSpacing: 0.38,
         fontFamily: 'SFProText-Regular',
         height: 25.0 / 20.0);
+    const valueSubtitleStyle = TextStyle(
+        color: Colors.white,
+        fontSize: 13.0,
+        fontWeight: FontWeight.normal,
+        fontFamily: 'SFProText-Regular',
+        height: 16.0 / 12.0);
 
-    var enabled = pac.localPurchasePrice != null &&
-        _storeOpen == true &&
-        _productForSale(pac);
+    /*
+    var usdString = formatCurrency(pac.localPurchasePrice, ifNull: '...');
+    var oxtString = pac.localPurchasePrice != null
+        ? NumberFormat('0.00')
+            .format(_pricing?.toOXT(pac.localPurchasePrice ?? 0)
+        : '...';
+     */
+
+    var enabled = pac.localPrice != null && _storeOpen == true;
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
@@ -307,13 +336,13 @@ class _PurchasePageState extends State<PurchasePage> {
       behavior: HitTestBehavior.translucent,
       onTap: enabled
           ? () {
-              _purchase(purchase: pac);
+              _confirmPurchase(pac: pac);
             }
           : null,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.0),
-
+          gradient: grad,
         ),
         child: Padding(
           padding:
@@ -371,20 +400,172 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
-   */
+  Widget _buildPacPurchaseCard(PAC pac) {
+    const valueStyle = TextStyle(
+        color: Colors.black,
+        fontSize: 18.0,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.38,
+        fontFamily: 'SFProText-Regular',
+        height: 25.0 / 20.0);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        _confirmPurchase(pac: pac);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("PAC", style: valueStyle),
+              Text("${pac.localDisplayPrice ?? '...'}",
+                  style: valueStyle.copyWith(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // TODO:
+  TextSpan _buildPurchaseDescriptionText({String text}) {
+    const subtitleStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 12.0,
+      height: 16.0 / 12.0,
+    );
+    var subtitleStyleBold = subtitleStyle.copyWith(fontWeight: FontWeight.bold);
+    return TextSpan(
+      children: [
+        TextSpan(text: text, style: subtitleStyleBold),
+      ],
+    );
+  }
+
+  Future<void> _confirmPurchase({PAC pac}) async {
+    var style1 = AppText.dialogBody.copyWith(fontSize: 16);
+    var valueStyle = AppText.valueStyle;
+
+    var credits = pac.localPrice;
+    var fee = pac.localPrice * 0.3;
+    var promo = fee;
+    var total = credits;
+
+    await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0))),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                pady(8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: IntrinsicWidth(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            pady(8),
+                            Text(
+                              "VPN Credits",
+                              style: style1,
+                              textAlign: TextAlign.left,
+                            ),
+                            Text(
+                              "- Tx Fee",
+                              style: style1,
+                              textAlign: TextAlign.right,
+                            ),
+                            Text(
+                              "- Promo",
+                              style: style1,
+                              textAlign: TextAlign.right,
+                            ),
+                            Text(
+                              "Total",
+                              style: style1,
+                              textAlign: TextAlign.left,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    padx(24),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          pady(8),
+                          Text(
+                            pac.localDisplayPrice,
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          ),
+                          Text(
+                            '- ' + formatCurrency(fee),
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          ),
+                          Text(
+                            '+ ' + formatCurrency(promo),
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          ),
+                          Text(
+                            pac.formatCurrency(total),
+                            style: valueStyle,
+                            textAlign: TextAlign.right,
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pady(16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RoundedRectButton(
+                      text: "Buy",
+                      onPressed: () {
+                        Navigator.of(context).pop(true);
+                        _purchase(purchase: pac);
+                      },
+                    ),
+                  ],
+                )
+              ],
+            ),
+          );
+        });
+  }
 
   Future<void> _purchase({PAC purchase}) async {
     log("iap: calling purchase: $purchase");
-    // TODO: Temporarily disable purchase
-    if (!OrchidAPI.mockAPI) {
-      Navigator.of(context).pop();
-      return;
-    }
 
-    // Add the pending transactions for this purchase
+    // TODO: Hard coded for xDAI currently
+    var fundingTx = await OrchidEthereumV1().createFundingTransaction(
+        signer: widget.signer,
+        chain: Chains.xDAI,
+        totalUsdValue: purchase.usdPriceApproximate);
+
+    // Add the pending transaction(s) for this purchase
     PacPurchaseTransaction(
-      PacAddBalanceTransaction.pending(productId: purchase.productId),
-      PacSubmitRawTransaction(""),
+      PacAddBalanceTransaction.pending(
+          signer: widget.signer, productId: purchase.productId),
+      PacSubmitRawTransaction(fundingTx),
     ).save();
 
     // Initiate the in-app purchase
@@ -405,29 +586,15 @@ class _PurchasePageState extends State<PurchasePage> {
     Navigator.of(context).pop();
   }
 
-  // Collect a completed PAC transaction and apply it to the hop.
-  Future<void> _completeAddBalanceTransaction(PacTransaction txIn) async {
-    log("iap: complete transaction");
-    if (!(txIn is PacAddBalanceTransaction)) {
-      throw Exception("not an add balance tx");
-    }
-    var tx = txIn as PacAddBalanceTransaction;
-
-    // Successfully parsed the server response.
-    //OrchidPurchaseAPI().finishTransaction(tx.transactionId);
-    PacTransaction.shared.clear();
-
-    widget.completion();
-  }
-
-  /// Handle a purchase error by clearing any error pac transaction and
-  /// showing a dialog.
+  /// An error during the IAP purchase should be resolved here by showing a
+  /// dialog and does not leave a pending or error state PAC transaction.
   Future<void> _iapPurchaseError({bool rateLimitExceeded = false}) async {
     log("iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
     var tx = await PacTransaction.shared.get();
-    if (tx != null && tx.state == PacTransactionState.Error) {
+    if ((tx != null && tx.state == PacTransactionState.Error) ||
+        rateLimitExceeded) {
       log("iap: clearing error tx");
       await PacTransaction.shared.clear();
     } else {

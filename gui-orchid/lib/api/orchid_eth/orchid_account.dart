@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 
-// TODO: Move this to a more appropriate package location
+import '../orchid_log_api.dart';
+
 /// The base model for accounts including signer, chain, and funder.
 class Account {
   final String identityUid; // stored signer key uid
@@ -43,7 +46,6 @@ class Account {
         'chainId': chainId == null ? null : chainId.toString(),
         'funder': funder == null ? null : funder.toString()
       };
-
 
   @override
   bool operator ==(Object other) =>

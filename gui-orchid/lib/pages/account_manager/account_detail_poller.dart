@@ -44,7 +44,11 @@ class AccountDetailPoller extends ChangeNotifier {
     _pollBalanceAndAccountDetails(); // kick one off immediately
   }
 
-  void _pollBalanceAndAccountDetails() async {
+  Future<void> refresh() {
+    return _pollBalanceAndAccountDetails();
+  }
+
+  Future<void> _pollBalanceAndAccountDetails() async {
     //log("XXX: polling account details: signer = $resolvedSigner, funder = $funder");
     if (balancePollInProgress) {
       return;
@@ -56,7 +60,7 @@ class AccountDetailPoller extends ChangeNotifier {
       try {
         _pot = await eth
             .getLotteryPot(funder, resolvedSigner)
-            .timeout(Duration(seconds: 60));
+            .timeout(Duration(seconds: 30));
       } catch (err) {
         log('Error fetching lottery pot: $err');
         return;

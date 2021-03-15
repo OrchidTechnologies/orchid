@@ -12,13 +12,13 @@ class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
   ///    verifyReceipt: false,
   ///    debug: true
   ///  }'
-  static PACApiConfig prodAPIConfig = PACApiConfig(
+  static PacApiConfig prodAPIConfig = PacApiConfig(
       enabled: false,
       url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/google');
 
   /// Return the API config allowing overrides from configuration.
   @override
-  Future<PACApiConfig> apiConfig() async {
+  Future<PacApiConfig> apiConfig() async {
     return OrchidPurchaseAPI.apiConfigWithOverrides(prodAPIConfig);
   }
   @override

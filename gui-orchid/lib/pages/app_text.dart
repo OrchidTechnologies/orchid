@@ -177,4 +177,12 @@ class AppText {
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
       fontSize: 16.0);
+
+  static TextStyle valueStyle = const TextStyle(
+      color: Colors.black,
+      fontSize: 15.0,
+      fontWeight: FontWeight.bold,
+      letterSpacing: -0.24,
+      fontFamily: 'SFProText-Regular',
+      height: 20.0 / 15.0);
 }

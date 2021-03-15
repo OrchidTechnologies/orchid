@@ -9,7 +9,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_pricing.dart';
+import 'package:orchid/api/pricing/orchid_pricing_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -584,7 +584,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }
 
     var marketConditions = await MarketConditionsV0.forPot(_lotteryPot);
-    Pricing pricing = await OrchidPricingAPI().getPricing();
+    PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
     GWEI gasPrice = await OrchidEthereumV0().getGasPrice();
     bool gasPriceHigh = gasPrice.value >= 50.0; // TODO
     /*

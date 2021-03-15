@@ -178,7 +178,7 @@ class OrchidVPNConfigV0 {
     if (secret == null) {
       throw Exception("missing secret");
     }
-    secret = Hex.removePrefix(secret);
+    secret = Hex.remove0x(secret);
     StoredEthereumKey key;
     try {
       // Find an existing key match

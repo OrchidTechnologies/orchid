@@ -5,7 +5,6 @@ import os
 import sys
 import w3_generic
 
-
 from web3 import Web3
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
@@ -35,7 +34,7 @@ def new_txn(W3WSock,txn,account_id):
     txn['account_id'] = account_id
     txn['status']     = 'new'
 
-    chainId = txn.get('chainId',1)
+    chainId = int(txn.get('chainId',1))
     txn['chainId'] = chainId
 
     account = w3_generic.dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
@@ -52,9 +51,11 @@ def new_txn(W3WSock,txn,account_id):
     txn_vnonce   = txn.get('nonce')
     if (txn_vnonce is None):
         txn_vnonce = 0
+        logging.info(f' txn_vnonce is none  getting nonces for {account_id}')
         acc_nonces = account.get('nonces')
         if (acc_nonces is not None):
-            txn_vnonce = acc_nonces.get(chainId,0)
+            txn_vnonce = acc_nonces.get(str(chainId),0)
+            logging.info(f' acc_nonces: {str(acc_nonces)} chainId: {chainId}  txn_vnonce: {txn_vnonce} ')
 
     txn['vnonce']  = txn_vnonce
 
@@ -66,17 +67,19 @@ def new_txn(W3WSock,txn,account_id):
     if (usd_per_eth == 0.0):
         usd_per_eth = w3_generic.get_usd_per_x_binance(symbol)
 
-    max_cost_eth = float(max_cost_usd) / float(usd_per_eth)
-    max_cost_wei = float(max_cost_eth) * float(wei_per_eth)
+    #max_cost_eth = float(max_cost_usd) / float(usd_per_eth)
+    #max_cost_wei = float(max_cost_eth) * float(wei_per_eth)
 
     cost_wei     = float(w3_generic.get_txn_cost_wei(txn))
 
-    logging.info(f'new_txn txnhash:{txnhash} cost_wei:{cost_wei} max_cost_wei:{max_cost_wei}')
+    logging.info(f'new_txn txnhash:{txnhash} cost_wei:{cost_wei} ')
 
+    '''
     if (cost_wei > max_cost_wei):
         msg = f'new_txn cost_wei:{cost_wei} > max_cost_wei:{max_cost_wei}'
         logging.info(msg)
         return txnhash,cost_usd,msg
+    '''
 
     #txnhash,cost_wei = send_raw_wei_(w3,txn, privkey,max_cost_wei)
 
@@ -86,19 +89,26 @@ def new_txn(W3WSock,txn,account_id):
     prev_txn = w3_generic.load_transaction(txnhash)
     prev_cost_usd = 0.0
     if (prev_txn is not None):
-        prev_cost_usd = prev_txn['cost_usd']
+        prev_cost_usd = float(prev_txn['cost_usd'])
+        logging.info(f'found prev txn: {str(txn)}')
 
-    new_cost_usd  = cost_usd - prev_cost_usd
-    if (new_cost_usd > max_cost_usd):
+    new_cost_usd  = max(cost_usd, prev_cost_usd)
+    diff_cost_usd = new_cost_usd - prev_cost_usd
+
+    logging.info(f'diff_cost_usd: {diff_cost_usd} = max({cost_usd},{prev_cost_usd}) - {prev_cost_usd} ')
+
+    if (diff_cost_usd > max_cost_usd):
         msg = f'new_txn new_cost_usd({new_cost_usd}) > max_cost_usd({max_cost_usd})'
         return txnhash,cost_usd,msg
 
-    w3_generic.debit_account_balance(account_id, new_cost_usd)
+    w3_generic.debit_account_balance(account_id, diff_cost_usd)
 
     txn['from'] = None
     txn['nonce'] = None
+    txn['cost_usd'] = new_cost_usd
 
-    txn['cost_usd'] = cost_usd
+    logging.info(f'writing txn: {str(txn)}')
+
     w3_generic.save_transaction(txnhash, txn)
 
     return txnhash,cost_usd,'success'

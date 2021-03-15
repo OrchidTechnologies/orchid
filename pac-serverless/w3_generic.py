@@ -188,86 +188,11 @@ wei_per_eth = 1000000000000000000
 
 
 
-def send_raw_wei_(w3,txn,  privkey,max_cost_wei):
-
-    cost_wei     = float(get_txn_cost_wei(txn))
-    logging.info(f'send_raw_wei_ cost_wei({cost_wei}) max_cost_wei({max_cost_wei})')
-
-    if (cost_wei > max_cost_wei):
-        logging.warning(f'sign_send_Transaction cost_wei({cost_wei}) > max_cost_wei({max_cost_wei})')
-        return None,0.0
-
-    txn_signed = w3.eth.account.sign_transaction(txn, private_key=privkey)
-    logging.info(f'sign_send_Transaction txn_signed: {txn_signed}')
-
-    txn_hash = w3.eth.sendRawTransaction(txn_signed.rawTransaction)
-    logging.info(f'sign_send_Transaction submitted transaction with hash: {txn_hash.hex()}')
-
-    return txn_hash.hex(),cost_wei
-
-
-def send_raw_usd_(w3,txn, privkey,max_cost_usd):
-
-    usd_per_eth = get_usd_per_x_coinbase('ETH')
-    if (usd_per_eth == 0.0):
-        usd_per_eth = get_usd_per_x_binance('ETH')
-
-    max_cost_eth = float(max_cost_usd) / float(usd_per_eth)
-    max_cost_wei = float(max_cost_eth) * float(wei_per_eth)
-
-    txnhash,cost_wei = send_raw_wei_(w3,txn, privkey,max_cost_wei)
-
-    cost_eth = cost_wei / wei_per_eth
-    cost_usd = cost_eth * usd_per_eth
-
-    return txnhash,cost_usd
-
 def get_nonce_(w3,pubkey):
     nonce = w3.eth.getTransactionCount(account=pubkey)
     logging.info(f'get_nonce_ pubkey:{pubkey} nonce:{nonce}')
     return nonce
 
-
-
-def send_raw_old(W3WSock,txn,account_id,debit = True):
-
-    to = txn['to']
-    if (target_in_whitelist(to) == False):
-        errmsg = f'ERROR sendRaw: txn target: {to} not in whitelist'
-        logging.warning(errmsg)
-        return None,0,errmsg
-
-    w3 = Web3(Web3.WebsocketProvider(W3WSock, websocket_timeout=900))
-
-    max_cost_usd     = get_account_balance(account_id)
-    pubkey,privkey   = get_executor_account()
-    nonce            = get_nonce_(w3,pubkey)
-
-    if (txn['from'] is None):
-        txn['from']  = pubkey
-
-    if (txn['nonce'] is None):
-        txn['nonce'] = nonce
-
-    logging.info(f'send_raw max_cost_usd({max_cost_usd}) pubkey({pubkey}) privkey({privkey}) nonce({nonce}) ')
-
-    txnhash,cost_usd = send_raw_usd_(w3,txn, privkey,max_cost_usd)
-
-    msg = "unknown error"
-    if (txnhash is not None):
-        if (debit):
-            debit_account_balance(account_id, cost_usd)
-        account = dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
-        txn['account_id'] = account_id
-        txn['vnonce']     = account['vnonce']
-        txn['cost_usd']   = cost_usd
-        save_transaction(txnhash, txn)
-        account['vnonce'] = int(account['vnonce']) + 1
-        dynamodb_write1(os.environ['BALANCES_TABLE_NAME'], account)
-        msg = "success"
-
-    # todo: add from and nonce?
-    return txnhash,cost_usd,msg
 
 
 def has_transaction_failed(W3WSock,txnhash,txn):
@@ -407,7 +332,10 @@ def send_raw(w3,txn):
 def test_connections(providers):
 
     for x in providers:
-        w3 = Web3(Web3.WebsocketProvider(x, websocket_timeout=400))
+        if ((x[0:4] == 'wss:') or (x[0:3] == 'ws:')):
+            w3 = Web3(Web3.WebsocketProvider(x, websocket_timeout=400))
+        else:
+            w3 = Web3(Web3.HTTPProvider(x, request_kwargs={'headers':{'referer':'https://account.orchid.com'}}) )
         try:
             w3.eth.getTransactionCount(account='0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b')
         except Exception as ex:
@@ -424,7 +352,7 @@ def get_w3wsock_providers():
     providers = {}
 
     providers[1]  = test_connections([os.environ['WEB3_WEBSOCKET']])
-    providers[100] = test_connections(['wss://rpc.xdaichain.com/wss', 'wss://xdai.poanetwork.dev/wss'])
+    providers[100] = test_connections(['https://rpc.xdaichain.com/','https://xdai.poanetwork.dev','wss://rpc.xdaichain.com/wss','wss://xdai.poanetwork.dev/wss'])
 
     logging.info(f'get_w3wsock_providers:  {str(providers)} ')
 

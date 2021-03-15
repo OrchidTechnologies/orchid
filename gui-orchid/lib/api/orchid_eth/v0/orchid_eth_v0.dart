@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
+import '../abi_encode.dart';
 import '../orchid_account.dart';
 import '../../orchid_budget_api.dart';
 import '../../orchid_crypto.dart';
@@ -65,13 +66,14 @@ class OrchidEthereumV0 {
     var params = [
       {
         "to": "${OrchidContractV0.lotteryContractAddress}",
-        "data":
-            "0x${OrchidContractV0.lotteryLookMethodHash}${abiEncoded(funder)}${abiEncoded(signer)}"
+        "data": "0x${OrchidContractV0.lotteryLookMethodHash}"
+            "${AbiEncode.address(funder)}"
+            "${AbiEncode.address(signer)}"
       },
       "latest"
     ];
 
-    String result = await jsonRPC(method: "eth_call", params: params);
+    String result = await jsonRpc(method: "eth_call", params: params);
     if (!result.startsWith("0x")) {
       print("Error result: $result");
       throw Exception();
@@ -117,7 +119,7 @@ class OrchidEthereumV0 {
     }
 
     print("fetching gas price");
-    String result = await jsonRPC(method: "eth_gasPrice");
+    String result = await jsonRpc(method: "eth_gasPrice");
     if (result.startsWith('0x')) {
       result = result.substring(2);
     }
@@ -150,7 +152,7 @@ class OrchidEthereumV0 {
       String transactionHash) async {
     var params = [transactionHash];
     return OrchidTransactionV0.fromJsonRpcResult(
-        await jsonRPC(method: "eth_getTransactionByHash", params: params));
+        await jsonRpc(method: "eth_getTransactionByHash", params: params));
   }
 
   /*
@@ -192,13 +194,13 @@ class OrchidEthereumV0 {
       {
         "topics": [
           OrchidContractV0.updateEventHashV0,
-          abiEncoded(funder, prefix: true),
-          abiEncoded(signer, prefix: true)
+          AbiEncode.address(funder, prefix: true),
+          AbiEncode.address(signer, prefix: true)
         ],
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
-    dynamic results = await jsonRPC(method: "eth_getLogs", params: params);
+    dynamic results = await jsonRpc(method: "eth_getLogs", params: params);
     List<OrchidUpdateEventV0> events =
         results.map<OrchidUpdateEventV0>((var result) {
       return OrchidUpdateEventV0.fromJsonRpcResult(result);
@@ -215,12 +217,12 @@ class OrchidEthereumV0 {
         "topics": [
           OrchidContractV0.createEventHashV0,
           "null", // no funder topic for index 1
-          abiEncoded(signer, prefix: true)
+          AbiEncode.address(signer, prefix: true)
         ],
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
-    dynamic results = await jsonRPC(method: "eth_getLogs", params: params);
+    dynamic results = await jsonRpc(method: "eth_getLogs", params: params);
     List<OrchidCreateEventV0> events =
         results.map<OrchidCreateEventV0>((var result) {
       return OrchidCreateEventV0.fromJsonRpcResult(result);
@@ -240,14 +242,15 @@ class OrchidEthereumV0 {
     }).toList();
   }
 
-  static Future<dynamic> jsonRPC({
+  static Future<dynamic> jsonRpc({
     @required String method,
     List<Object> params = const [],
   }) async {
-    return jsonRPCForUrl(url: await url, method: method, params: params);
+    return ethJsonRpcCall(url: await url, method: method, params: params);
   }
 
-  static Future<dynamic> jsonRPCForUrl({
+  /// Ethereum json rpc call
+  static Future<dynamic> ethJsonRpcCall({
     @required String url,
     @required String method,
     List<Object> params = const [],
@@ -261,8 +264,14 @@ class OrchidEthereumV0 {
     //log("XXX: postbody = $postBody");
 
     // do the post
-    var response = await http.post(await url,
-        headers: {"Content-Type": "application/json"}, body: postBody);
+    var response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Referer': 'https://account.orchid.com',
+      },
+      body: postBody,
+    );
 
     if (response.statusCode != 200) {
       log("jsonRPC: error response: ${response.body}");
@@ -275,15 +284,6 @@ class OrchidEthereumV0 {
 
     return body['result'];
   }
-
-  // Pad a 40 character address to 64 characters with no prefix
-  static String abiEncoded(EthereumAddress address, {prefix: false}) {
-    return (prefix ? "0x" : "") +
-        '000000000000000000000000' +
-        address.toString(prefix: false);
-  }
-
-  static String quote(String s) {
-    return '"' + s + '"';
-  }
 }
+
+class JsonRpc {}

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:jdenticon_dart/jdenticon_dart.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
-import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -11,7 +10,6 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
-import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
@@ -25,7 +23,7 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/util/strings.dart';
 
 import '../app_colors.dart';
 import '../app_sizes.dart';
@@ -208,19 +206,19 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       cancelText: s.cancel,
       actionText: s.delete,
       commitAction: () {
-        _doDeleteIdentity(identity);
+        _deleteIdentity(identity);
       },
     );
   }
 
-  void _doDeleteIdentity(StoredEthereumKey identity) async {
-    await _accountStore.removeIdentity(identity);
+  void _deleteIdentity(StoredEthereumKey identity) async {
+    await _accountStore.deleteIdentity(identity);
   }
 
   Column _buildIdentityHeader() {
     return Column(
       children: [
-        Text("Signer Address", style: AppText.dialogTitle),
+        Text("Orchid Address", style: AppText.dialogTitle),
         if (_accountStore.activeIdentity != null) _buildIdenticon(),
         if (_accountStore.activeIdentity != null)
           Container(
@@ -324,9 +322,15 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             });
 
     return RefreshIndicator(
-      displacement: 20,
+      displacement: 0,
       onRefresh: () async {
-        _accountStore.load();
+        // Refresh the account details
+        _accountDetailMap.forEach((key, value) {
+          value.refresh();
+        });
+
+        // Look for new accounts
+        return _accountStore.load(); // Return the load future
       },
       child: child,
     );
@@ -382,7 +386,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       ),
       subtitle: account.active
           ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: const EdgeInsets.only(left: 54.0, top: 2),
               child: Text(
                 "Active",
                 textAlign: TextAlign.left,
@@ -421,14 +425,20 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _addFunds() async {
+    var signer = _accountStore.activeIdentity?.address;
+    if (signer == null) {
+      throw Exception("iap: no signer!");
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
           fullscreenDialog: true,
           builder: (BuildContext context) {
-            return PurchasePage(completion: () {
-              log("purchase complete");
-            });
+            return PurchasePage(
+                signer: signer,
+                completion: () {
+                  log("purchase complete");
+                });
           }),
     );
   }
@@ -452,11 +462,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     setState(() {}); // Trigger a UI refresh
   }
 
-  @override
-  void dispose() {
+  void _disposeAccountDetailMap() {
     _accountDetailMap.forEach((key, value) {
       value.removeListener(_accountDetailChanged);
+      value.dispose();
     });
+  }
+
+  @override
+  void dispose() {
+    _disposeAccountDetailMap();
     super.dispose();
   }
 

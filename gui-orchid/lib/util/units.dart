@@ -27,7 +27,6 @@ class ScalarValue<T extends num> {
 // Note: types in assignment and argument inference, totally breaking the
 // Note: type safety of having this subclass.
 class OXT extends Token {
-
   OXT(BigInt value) : super(TokenTypes.OXT, value);
 
   static OXT fromInt(BigInt keiki) {
@@ -139,13 +138,25 @@ class GWEI extends ScalarValue<double> {
   }
 }
 
-// TODO: Convert to int pennies?
 class USD extends ScalarValue<double> {
+  // TODO: rebase on pennies?
   const USD(double value) : super(value);
-}
 
-class Months extends ScalarValue<int> {
-  const Months(int value) : super(value);
+  USD multiplyDouble(double other) {
+    return USD(value * other);
+  }
+
+  USD operator *(double other) {
+    return multiplyDouble(other);
+  }
+
+  USD divideDouble(double other) {
+    return USD(value / other);
+  }
+
+  USD operator /(double other) {
+    return divideDouble(other);
+  }
 }
 
 /// Format a currency to default two digits of precision with an optional suffix
@@ -155,6 +166,6 @@ String formatCurrency(num value,
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0.00" + "#" * (digits - 1), locale).format(value) +
+  return NumberFormat("#0.00" + "#" * (digits - 2), locale).format(value) +
       (suffix != null ? " $suffix" : "");
 }

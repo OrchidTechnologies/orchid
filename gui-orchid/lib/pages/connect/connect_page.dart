@@ -82,7 +82,7 @@ class _ConnectPageState extends State<ConnectPage>
   /// Note: by hoisting the logic here and passing the data to circuit page.
   void _checkHopAlerts(timer) async {
     // TODO: don't show badges when in V1 UI mode
-    if (await UserPreferences().guiV1.get()) {
+    if (!(await UserPreferences().guiV0.get())) {
       if (mounted) {
         setState(() {
           _showProfileBadge = false;
@@ -158,7 +158,7 @@ class _ConnectPageState extends State<ConnectPage>
     }));
 
     // Monitor changes in the UI version preference
-    _subs.add(UserPreferences().guiV1.stream().listen((event) {
+    _subs.add(UserPreferences().guiV0.stream().listen((event) {
       _checkHopAlerts(null);
       _updateCircuitStatus();
       setState(() {}); // Refresh UI
@@ -229,10 +229,10 @@ class _ConnectPageState extends State<ConnectPage>
                   side: BorderSide(color: borderColor, width: 2),
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               onPressed: () async {
-                if (await UserPreferences().guiV1.get()) {
-                  await Navigator.pushNamed(context, AppRoutes.identity);
-                } else {
+                if (await UserPreferences().guiV0.get()) {
                   await Navigator.pushNamed(context, AppRoutes.circuit);
+                } else {
+                  await Navigator.pushNamed(context, AppRoutes.identity);
                 }
                 _checkHopAlerts(null);
               },
@@ -240,7 +240,7 @@ class _ConnectPageState extends State<ConnectPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    s.manageProfile,
+                    "Manage Accounts",
                     style: TextStyle(color: textColor, fontSize: 16),
                   ),
                   if (_showProfileBadge) ...[
@@ -528,11 +528,11 @@ class _ConnectPageState extends State<ConnectPage>
 
   void _updateCircuitStatus() async {
     var prefs = UserPreferences();
-    if (await prefs.guiV1.get()) {
+    if (await prefs.guiV0.get()) {
+      _hasConfiguredCircuit = (await prefs.getCircuit()).hops.isNotEmpty;
+    } else {
       var accountStore = await AccountStore(discoverAccounts: false).load();
       _hasConfiguredCircuit = accountStore.activeAccount != null;
-    } else {
-      _hasConfiguredCircuit = (await prefs.getCircuit()).hops.isNotEmpty;
     }
     setState(() {});
   }
