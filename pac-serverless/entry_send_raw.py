@@ -62,29 +62,7 @@ def new_txn(W3WSock,txn,account_id):
     txnhash = Web3.keccak(text=f"{chainId}:{account_id}:{txn_vnonce}").hex()
     txn['txnhash'] = txnhash
 
-    symbol = w3_generic.get_symbol_from_chainId(chainId)
-    usd_per_eth = w3_generic.get_usd_per_x_coinbase(symbol)
-    if (usd_per_eth == 0.0):
-        usd_per_eth = w3_generic.get_usd_per_x_binance(symbol)
-
-    #max_cost_eth = float(max_cost_usd) / float(usd_per_eth)
-    #max_cost_wei = float(max_cost_eth) * float(wei_per_eth)
-
-    cost_wei     = float(w3_generic.get_txn_cost_wei(txn))
-
-    logging.info(f'new_txn txnhash:{txnhash} cost_wei:{cost_wei} ')
-
-    '''
-    if (cost_wei > max_cost_wei):
-        msg = f'new_txn cost_wei:{cost_wei} > max_cost_wei:{max_cost_wei}'
-        logging.info(msg)
-        return txnhash,cost_usd,msg
-    '''
-
-    #txnhash,cost_wei = send_raw_wei_(w3,txn, privkey,max_cost_wei)
-
-    cost_eth = cost_wei / wei_per_eth
-    cost_usd = cost_eth * usd_per_eth
+    cost_usd = w3_generic.get_txn_cost_usd(txn)
 
     prev_txn = w3_generic.load_transaction(txnhash)
     prev_cost_usd = 0.0

@@ -187,12 +187,23 @@ def get_txn_cost_wei(txn):
 wei_per_eth = 1000000000000000000
 
 
+def get_txn_cost_usd(txn):
+    chainId = txn['chainId']
+    symbol = get_symbol_from_chainId(chainId)
+    usd_per_eth = get_usd_per_x_coinbase(symbol)
+    if (usd_per_eth == 0.0):
+        usd_per_eth = get_usd_per_x_binance(symbol)
+
+    cost_wei = float(get_txn_cost_wei(txn))
+    cost_eth = cost_wei / wei_per_eth
+    cost_usd = cost_eth * usd_per_eth
+    logging.info(f'get_txn_cost_usd cost_wei:{cost_wei} cost_usd:{cost_usd}')
+
 
 def get_nonce_(w3,pubkey):
     nonce = w3.eth.getTransactionCount(account=pubkey)
     logging.info(f'get_nonce_ pubkey:{pubkey} nonce:{nonce}')
     return nonce
-
 
 
 def has_transaction_failed(W3WSock,txnhash,txn):
