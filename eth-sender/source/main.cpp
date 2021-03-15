@@ -37,6 +37,7 @@
 #include "signed.hpp"
 #include "sleep.hpp"
 #include "ticket.hpp"
+#include "time.hpp"
 #include "trezor.hpp"
 
 namespace orc {
@@ -148,12 +149,25 @@ static uint128_t _(std::string_view arg) {
     return uint128_t(Option<uint256_t>::_(arg));
 } };
 
+// XXX: this is incorrect because boost doesn't understand 2's compliment
+template <>
+struct Option<checked_int256_t> {
+static checked_int256_t _(std::string_view arg) {
+    orc_assert(!arg.empty());
+    if (arg[0] != '-')
+        return Option<uint256_t>::_(arg);
+    const auto value(Option<uint256_t>::_(arg.substr(1)));
+    return -checked_int256_t(value);
+} };
+
 static Address TransferV("0x2c1820DBc112149b30b8616Bf73D552BEa4C9F1F");
 
 template <>
 struct Option<Address> {
 static Address _(std::string arg) {
     if (false);
+    else if (arg == "0") {
+        return "0x0000000000000000000000000000000000000000"; }
     else if (arg == "factory@100") {
         return "0x7A0D94F55792C434d74a40883C6ed8545E406D12"; }
     else if (arg == "factory@500") {
@@ -412,15 +426,20 @@ task<int> Main(int argc, const char *const argv[]) { try {
         std::cout << (co_await executor_->Send(*chain_, {.gas = 175000}, lottery, 0, push(signer, balance + escrow, escrow))).hex() << std::endl;
 
     } else if (command == "lottery1:edit") {
-        const auto [lottery, amount, signer, adjust, lock, retrieve] = Options<Address, uint256_t, Address, uint256_t, uint256_t, uint256_t>(args);
+        const auto [lottery, amount, signer, adjust, lock, retrieve] = Options<Address, uint256_t, Address, checked_int256_t, checked_int256_t, uint256_t>(args);
         static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> edit("edit");
         std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, edit(signer, adjust, lock, retrieve))).hex() << std::endl;
+
+    } else if (command == "lottery1:mark") {
+        const auto [lottery, token, signer] = Options<Address, Address, Address>(args);
+        static Selector<void, Address, Address> mark("mark");
+        std::cout << (co_await executor_->Send(*chain_, {}, lottery, 0, mark(token, signer))).hex() << std::endl;
 
     } else if (command == "lottery1:read") {
         const auto [lottery, token, funder, signer] = Options<Address, Address, Address, Address>(args);
         static Selector<std::tuple<uint256_t, uint256_t>, Address, Address, Address> read("read");
         const auto [escrow_balance, unlock_warned] = co_await read.Call(*chain_, "latest", lottery, 90000, token, funder, signer);
-        std::cout << escrow_balance << " " << unlock_warned << std::endl;
+        std::cout << uint128_t(escrow_balance) << " " << (escrow_balance >> 128) << " " << uint128_t(unlock_warned) << " " << uint64_t(unlock_warned >> 128) << " " << (unlock_warned >> 192) << std::endl;
 
     } else if (command == "nonce") {
         const auto [address] = Options<Address>(args);
@@ -472,6 +491,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "submit") {
         const auto [raw] = Options<Bytes>(args);
         std::cout << (co_await chain_->Send("eth_sendRawTransaction", {raw})).hex() << std::endl;
+
+    } else if (command == "timestamp") {
+        Options<>(args);
+        std::cout << Timestamp() << std::endl;
 
     } else if (command == "transfer") {
         const auto [token, recipient, amount, data] = Options<Address, Address, uint256_t, Bytes>(args);
