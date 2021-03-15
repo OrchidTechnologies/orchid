@@ -366,7 +366,7 @@ int Main(int argc, const char *const argv[]) {
                 names.emplace_back(name);
                 tests.emplace_back(TestOrchid(origin, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client *> {
                     co_return co_await Client0::Wire(remote, oracle, oxt, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", secret, funder);
-                    //co_return co_await Client1::Wire(remote, oracle, bnb, "0xff9978B7b309021D39a76f52Be377F2B95D72394", secret, funder);
+                    //co_return co_await Client1::Wire(remote, oracle, bnb, "0xa0E6C3A38Bd54b33Aa9bE760473F0b026738fFaF", secret, funder);
                 }));
             }
 

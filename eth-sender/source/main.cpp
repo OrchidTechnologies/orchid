@@ -175,7 +175,7 @@ static Address _(std::string arg) {
     else if (arg == "lottery0") {
         return "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"; }
     else if (arg == "lottery1") {
-        return "0xDBbB66055F403aD3cb605f2406aC6529525E0000"; }
+        return "0xa0E6C3A38Bd54b33Aa9bE760473F0b026738fFaF"; }
     else if (arg == "transferv") {
         return TransferV; }
     else if (arg == "OTT") {
