@@ -154,6 +154,10 @@ template <>
 struct Option<Address> {
 static Address _(std::string arg) {
     if (false);
+    else if (arg == "factory@100") {
+        return "0x7A0D94F55792C434d74a40883C6ed8545E406D12"; }
+    else if (arg == "factory@500") {
+        return "0x83aa38958768B9615B138339Cbd8601Fc2963D4d"; }
     else if (arg == "lottery0") {
         return "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"; }
     else if (arg == "lottery1") {
@@ -167,6 +171,14 @@ static Address _(std::string arg) {
         orc_assert_(*chain_ == 1, "OXT is not on chain " << chain_);
         return "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb"; }
     else return arg;
+} };
+
+template <>
+struct Option<std::optional<Address>> {
+static std::optional<Address> _(std::string arg) {
+    if (arg == "null")
+        return std::nullopt;
+    return Option<Address>::_(arg);
 } };
 
 template <>
@@ -320,23 +332,17 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [address] = Options<Address>(args);
         std::cout << (co_await chain_->Code(co_await block(), address)).hex() << std::endl;
 
+    } else if (command == "create2") {
+        auto [factory, salt, code, data] = Options<Address, uint256_t, Bytes, Bytes>(args);
+        std::cout << Address(HashK(Tie(uint8_t(0xff), factory, salt, HashK(Tie(code, data)))).skip<12>().num<uint160_t>()) << std::endl;
+
     } else if (command == "deploy") {
-        auto [amount, code, data] = Options<uint256_t, Bytes, Bytes>(args);
-        std::cout << (co_await executor_->Send(*chain_, {}, std::nullopt, amount, Tie(code, data))).hex() << std::endl;
+        auto [factory, amount, code, data] = Options<std::optional<Address>, uint256_t, Bytes, Bytes>(args);
+        std::cout << (co_await executor_->Send(*chain_, {}, factory, amount, Tie(code, data))).hex() << std::endl;
 
     } else if (command == "derive") {
         const auto [secret] = Options<Bytes32>(args);
         std::cout << ToUncompressed(Derive(secret)).hex() << std::endl;
-
-    } else if (command == "deterministic-100") {
-        auto [code] = Options<Bytes>(args);
-        static Address factory("0x7A0D94F55792C434d74a40883C6ed8545E406D12");
-        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, code)).hex() << std::endl;
-
-    } else if (command == "deterministic-500") {
-        auto [code] = Options<Bytes>(args);
-        static Address factory("0x83aa38958768B9615B138339Cbd8601Fc2963D4d");
-        std::cout << (co_await executor_->Send(*chain_, {}, factory, 0, code)).hex() << std::endl;
 
     } else if (command == "eip2470") {
         Options<>(args);
@@ -351,6 +357,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
             std::cout << (co_await chain_->Send("eth_sendRawTransaction", {Subset(Implode({record.nonce_, record.bid_, record.gas_, record.target_, record.amount_, record.data_, 27u, 0x247000u, 0x2470u}))})).hex() << std::endl;
         }
 
+    // https://github.com/Zoltu/deterministic-deployment-proxy
     } else if (command == "factory") {
         Options<>(args);
         const auto bid(flags.bid_ ? *flags.bid_ : uint256_t(100 * Ten9));
