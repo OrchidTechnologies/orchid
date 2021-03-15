@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
@@ -169,14 +170,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 )),
 
-                // Reset instructions
                 if (_tester)
                   _item(PageTile(
                     title: "(TEST) Reset First Launch",
                     trailing: RaisedButton(
                       child: Text(s.reset),
                       onPressed: () {
-                        UserPreferences().firstLaunch.set(true);
+                        UserPreferences().releaseVersion.set(ReleaseVersion.firstLaunch());
                       },
                     ),
                   )),

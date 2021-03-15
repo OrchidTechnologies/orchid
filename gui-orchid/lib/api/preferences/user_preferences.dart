@@ -291,10 +291,18 @@ class UserPreferences {
   ObservableBoolPreference guiV0 =
       ObservableBoolPreference(UserPreferenceKey.GuiV0);
 
-  // Defaults true
-  ObservableBoolPreference firstLaunch = ObservableBoolPreference(
-      UserPreferenceKey.FirstLaunch,
-      defaultValue: true);
+  /// An incrementing integer app release version used to track first launch
+  /// and new release launch messaging.
+  ObservablePreference<ReleaseVersion> releaseVersion = ObservablePreference(
+      key: UserPreferenceKey.ReleaseVersion,
+      loadValue: (key) async {
+        return ReleaseVersion(
+            (await SharedPreferences.getInstance()).getInt(key.toString()));
+      },
+      storeValue: (key, value) async {
+        return (await SharedPreferences.getInstance())
+            .setInt(key.toString(), value.version);
+      });
 }
 
 enum UserPreferenceKey {
@@ -313,5 +321,5 @@ enum UserPreferenceKey {
   ActiveAccounts,
   CachedDiscoveredAccounts,
   GuiV0,
-  FirstLaunch
+  ReleaseVersion,
 }

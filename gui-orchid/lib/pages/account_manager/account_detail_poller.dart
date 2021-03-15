@@ -23,22 +23,24 @@ class AccountDetailPoller extends ChangeNotifier {
 
   AccountDetailPoller({this.account, this.resolvedSigner});
 
-  Timer balanceTimer;
-  bool balancePollInProgress = false;
+  Timer _balanceTimer;
+  bool _balancePollInProgress = false;
+  DateTime _lotteryPotLastUpdate;
+
   LotteryPot lotteryPot; // initially null
   MarketConditions marketConditions;
+  bool showMarketStatsAlert = false;
 
   // TODO:
   List<OrchidUpdateTransactionV0> transactions;
-  bool showMarketStatsAlert = false;
-  DateTime lotteryPotLastUpdate;
 
   OrchidEthereum get eth {
     return OrchidEthereum(account.chain);
   }
 
   void start() async {
-    balanceTimer = Timer.periodic(Duration(seconds: 15), (_) {
+    const pollingPeriod = Duration(seconds: 15);
+    _balanceTimer = Timer.periodic(pollingPeriod, (_) {
       _pollBalanceAndAccountDetails();
     });
     _pollBalanceAndAccountDetails(); // kick one off immediately
@@ -50,10 +52,10 @@ class AccountDetailPoller extends ChangeNotifier {
 
   Future<void> _pollBalanceAndAccountDetails() async {
     //log("XXX: polling account details: signer = $resolvedSigner, funder = $funder");
-    if (balancePollInProgress) {
+    if (_balancePollInProgress) {
       return;
     }
-    balancePollInProgress = true;
+    _balancePollInProgress = true;
     try {
       // Fetch the pot balance
       LotteryPot _pot;
@@ -66,7 +68,7 @@ class AccountDetailPoller extends ChangeNotifier {
         return;
       }
       lotteryPot = _pot;
-      lotteryPotLastUpdate = DateTime.now();
+      _lotteryPotLastUpdate = DateTime.now();
 
       MarketConditions _marketConditions;
       try {
@@ -99,19 +101,19 @@ class AccountDetailPoller extends ChangeNotifier {
       log("Can't fetch balance: $err\n$stack");
 
       // Allow a stale balance for a period of time.
-      if (lotteryPotLastUpdate != null &&
-          lotteryPotLastUpdate.difference(DateTime.now()) >
+      if (_lotteryPotLastUpdate != null &&
+          _lotteryPotLastUpdate.difference(DateTime.now()) >
               Duration(hours: 1)) {
         lotteryPot = null; // no balance available
         notifyListeners();
       }
     } finally {
-      balancePollInProgress = false;
+      _balancePollInProgress = false;
     }
   }
 
   void dispose() {
-    balanceTimer?.cancel();
+    _balanceTimer?.cancel();
     super.dispose();
   }
 }

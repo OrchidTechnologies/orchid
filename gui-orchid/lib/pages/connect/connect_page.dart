@@ -19,10 +19,12 @@ import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/common/gradients.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
 
 import '../app_routes.dart';
@@ -77,7 +79,7 @@ class _ConnectPageState extends State<ConnectPage>
         Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
     _checkHopAlerts(null);
 
-    _firstLaunchCheck();
+    _releaseVersionCheck();
   }
 
   // TODO: This needs to handle v1 configs
@@ -219,7 +221,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   Padding _buildManageProfileButton() {
     var textColor =
-    _showConnectedBackground() ? Colors.white : AppColors.purple_3;
+        _showConnectedBackground() ? Colors.white : AppColors.purple_3;
     var bgColor = Colors.transparent;
     var borderColor = AppColors.purple_3;
     return Padding(
@@ -301,14 +303,13 @@ class _ConnectPageState extends State<ConnectPage>
                 // Logo
                 if (tall) ...[
                   _buildLogo(),
-                ] else
-                  ...[
-                    Container(
-                        padding: EdgeInsets.only(left: 15),
-                        width: 60,
-                        height: 48,
-                        child: _buildLogo()),
-                  ],
+                ] else ...[
+                  Container(
+                      padding: EdgeInsets.only(left: 15),
+                      width: 60,
+                      height: 48,
+                      child: _buildLogo()),
+                ],
                 pady(48),
 
 //              if (_connectionState == OrchidConnectionState.Connecting ||
@@ -418,12 +419,12 @@ class _ConnectPageState extends State<ConnectPage>
     }
 
     bool buttonEnabled =
-    // Enabled when there is a circuit (or overridden for traffic monitoring)
-    (_hasConfiguredCircuit || _enableConnectWithoutHops) ||
-        // Enabled if we are already connected (corner case of changed config while connected).
-        _connectionState == OrchidConnectionState.VPNConnecting ||
-        _connectionState == OrchidConnectionState.VPNConnected ||
-        _connectionState == OrchidConnectionState.OrchidConnected;
+        // Enabled when there is a circuit (or overridden for traffic monitoring)
+        (_hasConfiguredCircuit || _enableConnectWithoutHops) ||
+            // Enabled if we are already connected (corner case of changed config while connected).
+            _connectionState == OrchidConnectionState.VPNConnecting ||
+            _connectionState == OrchidConnectionState.VPNConnected ||
+            _connectionState == OrchidConnectionState.OrchidConnected;
 
     if (!buttonEnabled) {
       bgColor = AppColors.neutral_4;
@@ -491,10 +492,9 @@ class _ConnectPageState extends State<ConnectPage>
   Widget _buildBackgroundGradient() {
     return AnimatedBuilder(
       animation: _connectAnimController,
-      builder: (context, child) =>
-          Container(
-            decoration: BoxDecoration(gradient: _backgroundGradient.value),
-          ),
+      builder: (context, child) => Container(
+        decoration: BoxDecoration(gradient: _backgroundGradient.value),
+      ),
     );
   }
 
@@ -521,7 +521,7 @@ class _ConnectPageState extends State<ConnectPage>
     }
 
     Color color =
-    _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
+        _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
 
     return Container(
       // Note: the emoji changes the baseline so we give this a couple of pixels
@@ -590,12 +590,12 @@ class _ConnectPageState extends State<ConnectPage>
 
     // The background gradient
     var backgroundGradientDisconnected =
-    VerticalLinearGradient(colors: [AppColors.white, AppColors.grey_6]);
+        VerticalLinearGradient(colors: [AppColors.white, AppColors.grey_6]);
     var backgroundGradientConnected = VerticalLinearGradient(
         colors: [AppColors.purple_3, AppColors.purple_1]);
     _backgroundGradient = LinearGradientTween(
-        begin: backgroundGradientDisconnected,
-        end: backgroundGradientConnected)
+            begin: backgroundGradientDisconnected,
+            end: backgroundGradientConnected)
         .animate(_connectAnimController);
 
     // Update the app bar color to match the start of the background gradient
@@ -621,7 +621,7 @@ class _ConnectPageState extends State<ConnectPage>
     // Toggle the current connection state
     switch (_connectionState) {
       case OrchidConnectionState.VPNDisconnecting:
-      // Do nothing while we are trying to disconnect
+        // Do nothing while we are trying to disconnect
         break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.VPNNotConnected:
@@ -662,12 +662,21 @@ class _ConnectPageState extends State<ConnectPage>
     }));
   }
 
-  void _firstLaunchCheck() async {
+  /// Do first launch and per-release activities.
+  Future<void> _releaseVersionCheck() async {
+    var version = await UserPreferences().releaseVersion.get();
+
     log("first launch check.");
-    if (await UserPreferences().firstLaunch.get()) {
+    if (version.isFirstLaunch) {
       await _doFirstLaunchActivities();
-      await UserPreferences().firstLaunch.set(false);
     }
+
+    log("new version check.");
+    if (version.isOlderThan(Release.current)) {
+      await _doNewReleaseActivities();
+    }
+
+    await UserPreferences().releaseVersion.set(Release.current);
   }
 
   Future<void> _doFirstLaunchActivities() async {
@@ -690,14 +699,22 @@ class _ConnectPageState extends State<ConnectPage>
       log("first launch: User has a 1-hop Orchid config, migrating.");
       var hop = circuit.hops[0] as OrchidHop;
       var account = Account(
-        identityUid: hop.keyRef.keyUid,
-        version: 0,
-        chainId: Chains.Ethereum.chainId,
-        funder: hop.funder
-      );
+          identityUid: hop.keyRef.keyUid,
+          version: 0,
+          chainId: Chains.Ethereum.chainId,
+          funder: hop.funder);
       // Store the active account and publish the new config
       AccountStore().setActiveAccount(account);
     }
+  }
+
+  Future<void> _doNewReleaseActivities() async {
+    log("new release: Do new release activities.");
+    return AppDialogs.showAppDialog(
+      context: context,
+      title: "New Release",
+      bodyText: Release.message,
+    );
   }
 
   void _disableConnection() {

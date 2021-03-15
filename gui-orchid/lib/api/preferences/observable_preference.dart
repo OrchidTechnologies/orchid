@@ -100,3 +100,21 @@ class ObservableBoolPreference extends ObservablePreference<bool> {
                   .setBool(key.toString(), value);
             });
 }
+
+class ReleaseVersion {
+  final int version;
+
+  ReleaseVersion(this.version);
+
+  ReleaseVersion.firstLaunch() : this.version = null;
+
+  /// This is represents a first launch of the app since the V1 UI.
+  bool get isFirstLaunch {
+    return version == null;
+  }
+
+  // Compare versions or return true if first launch.
+  bool isOlderThan(ReleaseVersion release) {
+    return version == null || version < release.version;
+  }
+}
