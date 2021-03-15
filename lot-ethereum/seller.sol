@@ -109,7 +109,7 @@ contract OrchidSeller {
         account.packed_ = uint256(refill) << 128 | uint64(nonce + 1);
 
         if (amount > retrieve)
-            lottery_.mark(token, signer);
+            lottery_.mark(token, signer, uint64(block.timestamp));
 
         return signer;
     }
@@ -135,7 +135,7 @@ contract OrchidSeller {
         uint256 cache = accounts_[signer].packed_;
         require(balance <= cache >> 128);
     }
-        lottery_.mark(IERC20(0), signer);
+        lottery_.mark(IERC20(0), signer, uint64(block.timestamp));
 
         require(escrow <= msg.value);
         require(int256(escrow) >= 0);

@@ -211,11 +211,12 @@ contract OrchidLottery1 {
             return loop.merchants_[recipient];
     }
 
-    function mark(IERC20 token, address signer) external {
+    function mark(IERC20 token, address signer, uint64 marked) external {
+        require(marked <= block.timestamp);
         bytes32 key = keccak256(abi.encodePacked(token, msg.sender, signer));
         Account storage account = accounts_[key];
         uint256 cache = account.unlock_warned_;
-        cache = block.timestamp << 192 | uint192(cache);
+        cache = marked << 192 | uint192(cache);
         account.unlock_warned_ = cache;
         emit Delete(key, cache);
     }

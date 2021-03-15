@@ -431,9 +431,9 @@ task<int> Main(int argc, const char *const argv[]) { try {
         std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, edit(signer, adjust, lock, retrieve))).hex() << std::endl;
 
     } else if (command == "lottery1:mark") {
-        const auto [lottery, token, signer] = Options<Address, Address, Address>(args);
-        static Selector<void, Address, Address> mark("mark");
-        std::cout << (co_await executor_->Send(*chain_, {}, lottery, 0, mark(token, signer))).hex() << std::endl;
+        const auto [lottery, token, signer, marked] = Options<Address, Address, Address, uint64_t>(args);
+        static Selector<void, Address, Address, uint64_t> mark("mark");
+        std::cout << (co_await executor_->Send(*chain_, {}, lottery, 0, mark(token, signer, marked))).hex() << std::endl;
 
     } else if (command == "lottery1:read") {
         const auto [lottery, token, funder, signer] = Options<Address, Address, Address, Address>(args);
