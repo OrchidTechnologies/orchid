@@ -278,11 +278,14 @@ struct Tester {
             EVM_STORE_GET+EVM_STORE_NEW+EVM_STORE_SET+
             EVM_STORE_GET+
             update+
-        1224);
+            6*32*16+
+        2977);
 
         static const unsigned perd(
             16*32+EVM_STORE_GET+EVM_STORE_SET+
-        262);
+        257);
+
+        Log() << std::dec << update << " " << perp << " " << perd << std::endl;
 
         for (unsigned p(0); p != 4; ++p)
             for (unsigned d(0); d != (p+1)*2+1; ++d) {
@@ -291,10 +294,10 @@ struct Tester {
 
                 const auto positive(
                     EVM_BASIC+ perp*p+
-                    (token==Address()?4*32:16*32-144)+
-                    4*31+(p==0?4:16+update+5000)+
+                    4*12+(token==Address()?4:16)*20+
+                    4*31+(p==0?4:16+update+678)+
                     4*31+(d==0?4:16)+perd*d+
-                1616);
+                1652);
 
                 auto negative(EVM_STORE_NEW*d);
 
