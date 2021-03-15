@@ -127,7 +127,7 @@ contract OrchidLottery1 {
             unlock = block.timestamp + day_;
 
             warned += uint256(lock);
-            require(warned > uint256(lock));
+            require(warned >= uint256(lock));
         }
 
         if (adjust < 0) {
