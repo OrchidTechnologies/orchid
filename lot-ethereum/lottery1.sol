@@ -51,13 +51,6 @@ contract OrchidLottery1 {
     }
 
 
-    function from_(IERC20 token, uint256 amount) private {
-        require(token != IERC20(0));
-        (bool success, bytes memory result) = address(token).call(
-            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, this, amount));
-        require(success && abi.decode(result, (bool)));
-    }
-
     function send_(address sender, IERC20 token, uint256 retrieve) private {
         if (retrieve != 0) {
             (bool success, bytes memory result) = address(token).call(
@@ -67,7 +60,11 @@ contract OrchidLottery1 {
     }
 
     function edit(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
-        from_(token, amount);
+        require(token != IERC20(0));
+        (bool success, bytes memory result) = address(token).call(
+            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, this, amount));
+        require(success && abi.decode(result, (bool)));
+
         edit_(msg.sender, token, amount, signer, adjust, lock, retrieve);
         send_(msg.sender, token, retrieve);
     }
