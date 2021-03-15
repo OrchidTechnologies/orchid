@@ -396,7 +396,7 @@ int Main(int argc, const char *const argv[]) {
         { const auto [eth, oxt] = (*coinbase)(); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*binance)(); body << "Binance:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*kraken)(); body << "Kraken:    $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*huobi)(); body << "Huobi:  $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*huobi)(); body << "Huobi:     $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*uniswap)(); body << "Uniswap:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*chainlink)(); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         body << "\n";
