@@ -196,9 +196,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     await AppDialogs.showConfirmationDialog(
       context: context,
       title: "Delete Identity?",
-      body: "This cannot be undone.  Please back up keys before deleting them.",
+      body:
+      "Deleting Identity: ${identity.address.toString().prefix(8)}" +
+      " cannot be undone.  Please back up keys if desired before deleting them.",
       cancelText: s.cancel,
-      actionText: s.delete,
+      actionText: "DELETE", // Localize all caps version
+      actionColor: Colors.red,
       commitAction: () {
         _deleteIdentity(identity);
       },
