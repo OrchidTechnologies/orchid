@@ -342,6 +342,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         auto [data] = Options<Bytes>(args);
         std::cout << ToBase58(Tie(data, Hash2(data).Clip<28, 4>())) << std::endl;
 
+    } else if (command == "chainlink") {
+        const auto [address] = Options<Address>(args);
+        static Selector<uint256_t> latestAnswer("latestAnswer");
+        std::cout << std::dec << co_await latestAnswer.Call(*chain_, "latest", address, 90000) << std::endl;
+
     } else if (command == "code") {
         const auto [address] = Options<Address>(args);
         std::cout << (co_await chain_->Code(co_await block(), address)).hex() << std::endl;
