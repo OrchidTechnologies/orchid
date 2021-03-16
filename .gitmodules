@@ -171,7 +171,7 @@
 	url = https://github.com/freedesktop/cairo.git
 [submodule "libpng"]
 	path = min-cairo/libpng
-	url = git://git.code.sf.net/p/libpng/code
+	url = https://git.code.sf.net/p/libpng/code
 [submodule "pixman"]
 	path = min-cairo/pixman
 	url = https://github.com/freedesktop/pixman.git
