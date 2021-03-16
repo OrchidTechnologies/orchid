@@ -16,3 +16,4 @@
 !/windows/flutter/CMakeLists.txt
 build
 test/receipt_local.txt
+*.log
