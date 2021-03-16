@@ -150,7 +150,7 @@ class _ConnectPageState extends State<ConnectPage>
       log('[connect page] Connection status changed: $state');
       _connectionStateChanged(state);
     }));
-    
+
     // TEST:
     Future.delayed(Duration(seconds: 3)).then((_) {
       _connectionStateChanged(OrchidConnectionState.OrchidConnected);
@@ -210,27 +210,31 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// The page content including the button title, button, and route info when connected.
   Widget _buildPageContent() {
-    return Column(
-      children: <Widget>[
-        // Line art background, logo, and connect button
-        Expanded(
-          flex: 12,
-          child: _buildCenterControls(),
-        ),
+    return OrientationBuilder(
+        builder: (BuildContext context, Orientation builderOrientation) {
+      var portrait = builderOrientation != Orientation.landscape;
+      return Column(
+        children: <Widget>[
+          // Line art background, logo, and connect button
+          Expanded(
+            flex: 12,
+            child: _buildCenterControls(),
+          ),
 
-        if (_guiV1) Spacer(flex: 1),
-        if (_guiV1)
-          ConnectStatusPanel(darkBackground: _showConnectedBackground()),
+          if (_guiV1 && portrait) Spacer(flex: 1),
+          if (_guiV1 && portrait)
+            ConnectStatusPanel(darkBackground: _showConnectedBackground()),
 
-        Spacer(flex: 1),
-        _buildManageAccountsButton(),
+          Spacer(flex: 1),
+          _buildManageAccountsButton(),
 
-        pady(24),
-        _buildStatusMessage(context),
+          pady(24),
+          _buildStatusMessage(context),
 
-        Spacer(flex: 2),
-      ],
-    );
+          Spacer(flex: 2),
+        ],
+      );
+    });
   }
 
   Padding _buildManageAccountsButton() {
