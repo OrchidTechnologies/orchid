@@ -60,7 +60,7 @@ class Router {
     std::list<std::function<task<Response> (Request &)>> routes_;
 
     template <bool Expires_, typename Stream_>
-    task<void> Handle(Stream_ &stream, const Socket &socket);
+    task<bool> Handle(Stream_ &stream, const Socket &socket);
 
   public:
     void Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params = Params());

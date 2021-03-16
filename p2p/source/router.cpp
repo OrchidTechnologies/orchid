@@ -51,7 +51,7 @@ const char *Params() {
 }
 
 template <bool Expires_, typename Stream_>
-task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
+task<bool> Router::Handle(Stream_ &stream, const Socket &socket) {
     beast::flat_buffer buffer;
 
     for (;;) {
@@ -66,7 +66,7 @@ task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
             else if (code == http::error::end_of_stream);
             else if (code == http::error::partial_message);
             else orc_adapt(error);
-            co_return;
+            co_return false;
         }
 
         if (beast::websocket::is_upgrade(request)) {
@@ -89,7 +89,7 @@ task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
                 buffer.consume(writ);
             }
 
-            co_return;
+            co_return true;
         }
 
         const auto response(co_await [&]() -> task<Response> { try {
@@ -107,6 +107,8 @@ task<void> Router::Handle(Stream_ &stream, const Socket &socket) {
         if (!response.keep_alive())
             break;
     }
+
+    co_return true;
 }
 
 void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
@@ -144,9 +146,7 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                 beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
                 co_await stream.async_handshake(asio::ssl::stream_base::server, Adapt());
-                co_await Handle<true>(stream, endpoint);
-
-                try {
+                if (co_await Handle<true>(stream, endpoint)) try {
                     co_await stream.async_shutdown(Adapt());
                 } catch (const asio::system_error &error) {
                     // XXX: SSL_OP_IGNORE_UNEXPECTED_EOF ?
