@@ -117,8 +117,8 @@ contract OrchidSeller {
     }
 
 
-    function edit(uint8 v, bytes32 r, bytes32 s, uint64 nonce, int256 adjust, int256 lock, uint256 retrieve, uint128 refill) external payable {
-        address signer = edit_(msg.sender, v, r, s, nonce, IERC20(0), msg.value, adjust, lock, retrieve, refill);
+    function edit(address signer, uint8 v, bytes32 r, bytes32 s, uint64 nonce, int256 adjust, int256 lock, uint256 retrieve, uint128 refill) external payable {
+        require(signer == edit_(msg.sender, v, r, s, nonce, IERC20(0), msg.value, adjust, lock, retrieve, refill));
         lottery_.edit{value: msg.value}(signer, adjust, lock, retrieve);
 
         if (retrieve != 0) {
