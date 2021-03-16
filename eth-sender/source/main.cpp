@@ -342,6 +342,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
         auto [data] = Options<Bytes>(args);
         std::cout << ToBase58(Tie(data, Hash2(data).Clip<28, 4>())) << std::endl;
 
+    } else if (command == "chain") {
+        Options<>(args);
+        std::cout << chain_->operator const uint256_t &() << std::endl;
+
     } else if (command == "chainlink") {
         const auto [address] = Options<Address>(args);
         static Selector<uint256_t> latestAnswer("latestAnswer");
