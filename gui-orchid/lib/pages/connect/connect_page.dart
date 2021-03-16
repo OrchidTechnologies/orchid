@@ -152,9 +152,9 @@ class _ConnectPageState extends State<ConnectPage>
     }));
 
     // TEST:
-    Future.delayed(Duration(seconds: 3)).then((_) {
-      _connectionStateChanged(OrchidConnectionState.OrchidConnected);
-    });
+    // Future.delayed(Duration(seconds: 3)).then((_) {
+    //   _connectionStateChanged(OrchidConnectionState.OrchidConnected);
+    // });
 
     _subs.add(AppNotifications().notification.listen((_) {
       setState(() {}); // Trigger refresh of the UI
