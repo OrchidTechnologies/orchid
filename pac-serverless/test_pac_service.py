@@ -2,12 +2,16 @@ import unittest
 import requests
 import json
 from web3 import Web3
+from eth_account.messages import encode_defunct, encode_intended_validator
 import sys
+from time import sleep
+from eth_abi import encode_abi
+from eth_abi.packed import encode_single_packed, encode_abi_packed
 
 w3 = None
 testdata = {}
 
-empty_nonces = {}
+empty_nonces = {"100": "0"}
 
 def setUpModule():
     thismod = sys.modules[__name__]
@@ -16,6 +20,7 @@ def setUpModule():
         thismod.testdata = data[data['target']]
     thismod.w3 = Web3(Web3.HTTPProvider(thismod.testdata['jsonrpc']))
     thismod.lottery = w3.eth.contract(address=thismod.testdata['lottery']['address'], abi=thismod.testdata['lottery']['abi'])
+    thismod.seller = w3.eth.contract(address=thismod.testdata['seller']['address'], abi=thismod.testdata['seller']['abi'])
     thismod.testdata['accounts'] = []
     acc = thismod.w3.eth.account.create()
     thismod.testdata['accounts'].append(acc)
@@ -34,16 +39,32 @@ class TestPacService(unittest.TestCase):
         reqdata = {'account_id': account_id, 'chainId': chain_id, 'txn': txn}
         return requests.post('{}{}'.format(testdata['url'], 'send_raw'), json=reqdata)
 
-    def move_txn(self, id, balance, deposit):
-        txn = {}
-        txn['from'] = id
-        txn['to'] = testdata['lottery']['address']
-        txn['gas'] = hex(175000) # "0x2ab98"
-        txn['gasPrice'] = hex(pow(10,9)) # "0x3b9aca00" <-- 1 "gwei"
-        txn['value'] = hex(int((balance + deposit) * pow(10,18))) #"0xde0b6b3a7640000" <-- 1 xdai
-        txn['chainId'] = 100 # xdai
-        txn['data'] = lottery.encodeABI(fn_name='move', args=[id, int(deposit * pow(10,18)) << 128])
-        return txn
+    def add_value_txn(self, acct, l2nonce, balance, deposit):
+        chainid = 100
+        tokenid = '0x0000000000000000000000000000000000000000'
+        amount = int((balance + deposit) * pow(10,18))
+        adjust = int(deposit * pow(10,18))
+        lock = retrieve = 0
+        refill = 1
+        acstat = seller.functions.read(acct.address).call()
+        l3nonce = int(('0'*16+hex(acstat)[2:])[-16:], 16)
+#        msg = encode_abi_packed(['bytes1', 'bytes1', 'address', 'uint256', 'uint64', 'address', 'uint256', 'int256', 'int256', 'uint256', 'uint128'],
+#                         [b'\x19', b'\x00', testdata['seller']['address'], chainid, l3nonce, tokenid, amount, adjust, lock, retrieve, refill])
+        msg = encode_abi_packed(['uint256', 'uint64', 'address', 'uint256', 'int256', 'int256', 'uint256', 'uint128'],
+                         [chainid, l3nonce, tokenid, amount, adjust, lock, retrieve, refill])
+        message = encode_intended_validator(validator_address=testdata['seller']['address'], primitive=msg)
+        sig = w3.eth.account.sign_message(message, private_key=acct.key)
+        txn = {
+            "from": acct.address,
+            "to": testdata['seller']['address'],
+            "gas": hex(175000),
+            "gasPrice": hex(pow(10,9)),
+            "value": hex(int((balance + deposit) * pow(10,18))),
+            "chainId": chainid,
+            "nonce": l2nonce,
+            "data": seller.encodeABI(fn_name='edit', args=[sig.v, bytearray.fromhex(hex(sig.r)[2:]), bytearray.fromhex(hex(sig.s)[2:]), l3nonce, adjust, lock, retrieve, refill]),
+        }
+        return txn, w3.eth.account.sign_transaction(txn, acct.key)
 
     def test_00_add_value(self):
         r = self.payment_apple(testdata['receipts'][0]['data'], testdata['accounts'][0].address)
@@ -63,13 +84,27 @@ class TestPacService(unittest.TestCase):
 
     def test_02_create_account(self):
         id = testdata['accounts'][0].address
-        txn = self.move_txn(id, 1, 0.1)
+        txn, sig = self.add_value_txn(testdata['accounts'][0], 0, 0.9, 0.1)
+        print("txn: ", txn)
         r = self.send_raw(id, 100, txn)
+        print(r.text)
         self.assertEqual(r.status_code, 200)
 
     def test_03_check_reduced_balance(self):
         id = testdata['accounts'][0].address
-        # XXX TODO - wait for txn to be submitted/confirmed
+        waiting = True
+        c = 0
+        while waiting:
+            r = self.get_account(id)
+            response = json.loads(r.text)
+            print(r.text)
+            if '100' in response['nonces'].keys():
+                if response['nonces']['100'] > 0:
+                    waiting = False
+            if c > 0:
+                waiting = False
+            c += 1
+            sleep(5)
         r = self.get_account(id)
         response = json.loads(r.text)
         self.assertEqual(r.status_code, 200)
@@ -81,7 +116,7 @@ class TestPacService(unittest.TestCase):
 
     def test_04_exceed_balance(self):
         id = testdata['accounts'][0].address
-        txn = self.move_txn(id, testdata['receipts'][0]['value'] + 10, 1)
+        txn, sig = self.add_value_txn(testdata['accounts'][0], 1, testdata['receipts'][0]['value'] + 10, 1)
         r = self.send_raw(id, 100, txn)
         self.assertEqual(r.status_code, 401)
         # XXX TODO - compare the error msg
