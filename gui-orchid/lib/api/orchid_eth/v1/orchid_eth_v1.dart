@@ -183,6 +183,31 @@ class OrchidEthereumV1 {
     );
   }
 
+  /// Get the Chainlink bandwidth price oracle value
+  // curl $url -H 'Content-Type: application/json' --data '{"jsonrpc":"2.0","method":"eth_call","params":[{"to": "0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0", "data": "0x50d25bcd"}, "latest"],"id":1}'
+  static Future<USD> getBandwidthPrice() async {
+    var contractAddress = '0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0';
+    var latestAnswerHash = '0x50d25bcd';
+
+    // construct the abi encoded eth_call
+    var params = [
+      {"to": contractAddress, "data": latestAnswerHash},
+      "latest"
+    ];
+
+    String result = await jsonRPC(
+        url: Chains.Ethereum.providerUrl, method: "eth_call", params: params);
+    if (!result.startsWith("0x")) {
+      print("Error result: $result");
+      throw Exception();
+    }
+
+    // Parse the results:
+    var buff = HexStringBuffer(result);
+    BigInt value = buff.takeUint256();
+    return USD(value.toDouble() / 1e5);
+  }
+
   static Future<dynamic> jsonRPC({
     @required String url,
     @required String method,

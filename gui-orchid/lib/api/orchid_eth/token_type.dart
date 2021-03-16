@@ -25,7 +25,7 @@ class Chains {
       nativeCurrency: TokenTypes.XDAI,
       // providerUrl: 'https://dai.poa.network',
       providerUrl: 'https://rpc.xdaichain.com/',
-      icon: SvgPicture.asset('assets/svg/logo-xdai.svg'));
+      icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'));
 
   // TODO: Embed the chain.info db here as we do in the dapp.
   // Get the chain for chainId

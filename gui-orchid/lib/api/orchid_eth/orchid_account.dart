@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 
 import '../orchid_log_api.dart';
 
@@ -63,6 +64,13 @@ class Account {
       version.hashCode ^
       chainId.hashCode ^
       funder.hashCode;
+
+  static Future<EthereumAddress> getSigner(Account account) async {
+    var identities = await UserPreferences().getKeys();
+    return StoredEthereumKey.find(identities, account.identityUid)
+        .get()
+        .address;
+  }
 
   @override
   String toString() {
