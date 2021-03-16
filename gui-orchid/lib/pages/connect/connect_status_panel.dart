@@ -118,80 +118,84 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 400),
-        child: Container(
-          height: 72,
-          child: FlatButton(
-              color: bgColor,
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(color: borderColor, width: 2.2),
-                  borderRadius: BorderRadius.all(Radius.circular(8))),
-              onPressed: () async {
-                await Navigator.pushNamed(context, AppRoutes.identity);
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  // Balance
-                  Row(
-                    children: [
-                      Container(
-                          child: chainIcon,
-                          width: imageSize,
-                          height: imageSize),
-                      padx(10),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Badge(
-                              showBadge: showBadge,
-                              position:
-                                  BadgePosition.bottomEnd(bottom: -3, end: -25),
-                              elevation: 0,
-                              badgeContent: Text('!',
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 12)),
-                              padding: EdgeInsets.all(8),
-                              toAnimate: false,
-                              child: Text("Balance", style: textStyle)),
-                          Container(
-                              width: 80,
-                              child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(balanceString,
-                                      textAlign: TextAlign.left,
-                                      style: valueStyle))),
-                        ],
-                      ),
-                    ],
-                  ),
+        child: FittedBox(
+          child: Container(
+            height: 72,
+            child: FlatButton(
+                color: bgColor,
+                shape: RoundedRectangleBorder(
+                    side: BorderSide(color: borderColor, width: 2.2),
+                    borderRadius: BorderRadius.all(Radius.circular(8))),
+                onPressed: () async {
+                  await Navigator.pushNamed(context, AppRoutes.identity);
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    // Balance
+                    Row(
+                      children: [
+                        Container(
+                            child: chainIcon,
+                            width: imageSize,
+                            height: imageSize),
+                        padx(10),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Badge(
+                                showBadge: showBadge,
+                                position:
+                                    BadgePosition.bottomEnd(bottom: -3, end: -25),
+                                elevation: 0,
+                                badgeContent: Text('!',
+                                    textAlign: TextAlign.left,
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 12)),
+                                padding: EdgeInsets.all(8),
+                                toAnimate: false,
+                                child: Text("Balance", style: textStyle)),
+                            Container(
+                                width: 80,
+                                child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(balanceString,
+                                        textAlign: TextAlign.left,
+                                        style: valueStyle))),
+                          ],
+                        ),
+                      ],
+                    ),
+                    
+                    padx(8),
 
-                  // Bandwidth Rate
-                  Row(
-                    children: [
-                      SvgPicture.asset(
-                        'assets/svg/icon_speed-meter-outline.svg',
-                        width: imageSize,
-                        height: imageSize,
-                        color: textColor,
-                      ),
-                      padx(16),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Bandwidth Cost", style: textStyle),
-                          Container(
-                              width: 80,
-                              child:
-                                  Text(bandwidthCostString, style: valueStyle)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              )),
+                    // Bandwidth Rate
+                    Row(
+                      children: [
+                        SvgPicture.asset(
+                          'assets/svg/icon_speed-meter-outline.svg',
+                          width: imageSize,
+                          height: imageSize,
+                          color: textColor,
+                        ),
+                        padx(16),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Bandwidth Cost", style: textStyle),
+                            Container(
+                                width: 80,
+                                child:
+                                    Text(bandwidthCostString, style: valueStyle)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                )),
+          ),
         ),
       ),
     );
