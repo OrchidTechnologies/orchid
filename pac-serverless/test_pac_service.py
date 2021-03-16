@@ -7,6 +7,8 @@ import sys
 w3 = None
 testdata = {}
 
+empty_nonces = {}
+
 def setUpModule():
     thismod = sys.modules[__name__]
     with open('test_data.json.local') as f:
@@ -32,6 +34,17 @@ class TestPacService(unittest.TestCase):
         reqdata = {'account_id': account_id, 'chainId': chain_id, 'txn': txn}
         return requests.post('{}{}'.format(testdata['url'], 'send_raw'), json=reqdata)
 
+    def move_txn(self, id, balance, deposit):
+        txn = {}
+        txn['from'] = id
+        txn['to'] = testdata['lottery']['address']
+        txn['gas'] = hex(175000) # "0x2ab98"
+        txn['gasPrice'] = hex(pow(10,9)) # "0x3b9aca00" <-- 1 "gwei"
+        txn['value'] = hex(int((balance + deposit) * pow(10,18))) #"0xde0b6b3a7640000" <-- 1 xdai
+        txn['chainId'] = 100 # xdai
+        txn['data'] = lottery.encodeABI(fn_name='move', args=[id, int(deposit * pow(10,18)) << 128])
+        return txn
+
     def test_00_add_value(self):
         r = self.payment_apple(testdata['receipts'][0]['data'], testdata['accounts'][0].address)
         self.assertEqual(r.status_code, 200)
@@ -46,24 +59,32 @@ class TestPacService(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(response['account_id'], id)
         self.assertEqual(float(response['balance']), testdata['receipts'][0]['value'])
-        self.assertEqual(response['nonces'], {})
+        self.assertEqual(response['nonces'], empty_nonces)
 
     def test_02_create_account(self):
         id = testdata['accounts'][0].address
-        txn = {}
-        txn['from'] = id
-        txn['to'] = testdata['lottery']['address']
-        txn['gas'] = "0x2ab98"
-        txn['gasPrice'] = "0x3b9aca00"
-        txn['value'] = "0xde0b6b3a7640000"
-        txn['chainId'] = 100
-        txn['data'] = lottery.encodeABI(fn_name='move', args=[testdata['accounts'][0].address, 100000000000000000 << 128])
-        print(txn)
-
+        txn = self.move_txn(id, 1, 0.1)
         r = self.send_raw(id, 100, txn)
-        print(r.text)
         self.assertEqual(r.status_code, 200)
 
+    def test_03_check_reduced_balance(self):
+        id = testdata['accounts'][0].address
+        # XXX TODO - wait for txn to be submitted/confirmed
+        r = self.get_account(id)
+        response = json.loads(r.text)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(response['account_id'], id)
+        rcpt_val = testdata['receipts'][0]['value']
+        balance = float(response['balance'])
+        self.assertNotEqual(rcpt_val, balance)
+        self.assertTrue(((rcpt_val - (1.1 + balance)) / rcpt_val) < 0.001) # should only differ by gas cost
+
+    def test_04_exceed_balance(self):
+        id = testdata['accounts'][0].address
+        txn = self.move_txn(id, testdata['receipts'][0]['value'] + 10, 1)
+        r = self.send_raw(id, 100, txn)
+        self.assertEqual(r.status_code, 401)
+        # XXX TODO - compare the error msg
 
 TODO = '''
 1) Multiple jobs hitting the same executor at the same time
@@ -73,9 +94,10 @@ TODO = '''
 2) Transaction failing at blockchain
    a) verify only correct cost is debited from account
 3) Transaction succeeding at blockchain
-   a) verify correct cost is debited from account
+X   a) verify correct cost is debited from account
 4) Transaction constraints
    a) verify whitelisting of only the funder contract
-   b) verify transaction requiring more value than account has is rejected
+X   b) verify transaction requiring more value than account has is rejected
    c) verify L2 nonces higher than current one are rejected
+   d) verify L2 nonces lower than current one are rejected
 '''
