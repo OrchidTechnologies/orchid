@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui';
 import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,6 +27,7 @@ import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
 
 import '../app_routes.dart';
+import 'connect_status_panel.dart';
 
 /// The main page containing the connect button.
 class ConnectPage extends StatefulWidget {
@@ -68,6 +68,8 @@ class _ConnectPageState extends State<ConnectPage>
   bool _showProfileBadge = false;
 
   List<StreamSubscription> _subs = [];
+
+  bool _guiV1 = true;
 
   @override
   void initState() {
@@ -149,6 +151,11 @@ class _ConnectPageState extends State<ConnectPage>
       _connectionStateChanged(state);
     }));
 
+    // TEST:
+    // Future.delayed(Duration(seconds: 3)).then((_) {
+    //   _connectionStateChanged(OrchidConnectionState.OrchidConnected);
+    // });
+
     _subs.add(AppNotifications().notification.listen((_) {
       setState(() {}); // Trigger refresh of the UI
     }));
@@ -166,7 +173,10 @@ class _ConnectPageState extends State<ConnectPage>
     }));
 
     // Monitor changes in the UI version preference
-    _subs.add(UserPreferences().guiV0.stream().listen((event) {
+    _subs.add(UserPreferences().guiV0.stream().listen((guiV0) {
+      _guiV1 = !guiV0;
+      // TEST:
+      // _guiV1 = false;
       _checkHopAlerts(null);
       _updateCircuitStatus();
       setState(() {}); // Refresh UI
@@ -200,26 +210,34 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// The page content including the button title, button, and route info when connected.
   Widget _buildPageContent() {
-    return Column(
-      children: <Widget>[
-        // Line art background, logo, and connect button
-        Expanded(
-          flex: 12,
-          child: _buildCenterControls(),
-        ),
+    return OrientationBuilder(
+        builder: (BuildContext context, Orientation builderOrientation) {
+      var portrait = builderOrientation != Orientation.landscape;
+      return Column(
+        children: <Widget>[
+          // Line art background, logo, and connect button
+          Expanded(
+            flex: 12,
+            child: _buildCenterControls(),
+          ),
 
-        Spacer(flex: 1),
-        _buildManageProfileButton(),
+          if (_guiV1 && portrait) Spacer(flex: 1),
+          if (_guiV1 && portrait)
+            ConnectStatusPanel(darkBackground: _showConnectedBackground()),
 
-        pady(20),
-        _buildStatusMessage(context),
+          Spacer(flex: 1),
+          _buildManageAccountsButton(),
 
-        Spacer(flex: 2),
-      ],
-    );
+          pady(24),
+          _buildStatusMessage(context),
+
+          Spacer(flex: 2),
+        ],
+      );
+    });
   }
 
-  Padding _buildManageProfileButton() {
+  Padding _buildManageAccountsButton() {
     var textColor =
         _showConnectedBackground() ? Colors.white : AppColors.purple_3;
     var bgColor = Colors.transparent;

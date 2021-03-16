@@ -124,8 +124,8 @@ class Chain :
         if (chain_ == 100)
             return true;
 
-        // 31337 Ganache "Implement eth_getProof RPC message" https://github.com/trufflesuite/ganache-core/issues/382
-        if (chain_ == 31337)
+        // Ganache "Implement eth_getProof RPC message" https://github.com/trufflesuite/ganache-core/issues/382
+        if (chain_ == 1337)
             return true;
 
         return false;

@@ -196,11 +196,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     await AppDialogs.showConfirmationDialog(
       context: context,
       title: "Delete Identity?",
-      body:
-      "Deleting Identity: ${identity.address.toString().prefix(8)}" +
-      " cannot be undone.  Please back up keys if desired before deleting them.",
+      body: "Deleting Identity: ${identity.address.toString().prefix(8)}" +
+          " cannot be undone.  Please back up keys if desired before deleting them.",
       cancelText: s.cancel,
-      actionText: "DELETE", // Localize all caps version
+      actionText: "DELETE",
+      // Localize all caps version
       actionColor: Colors.red,
       commitAction: () {
         _deleteIdentity(identity);
@@ -216,7 +216,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     return Column(
       children: [
         Text("Orchid Address", style: AppText.dialogTitle),
-        if (_accountStore.activeIdentity != null) _buildIdenticon(),
+        if (_accountStore.activeIdentity != null)
+          OrchidIdenticon(
+              value: _accountStore.activeIdentity.address.toString()),
         if (_accountStore.activeIdentity != null)
           Container(
             width:
@@ -231,17 +233,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             ),
           )
       ]..spaced(8),
-    );
-  }
-
-  Widget _buildIdenticon() {
-    String svg =
-        Jdenticon.toSvg(_accountStore.activeIdentity.address.toString());
-    return SvgPicture.string(
-      svg,
-      fit: BoxFit.contain,
-      height: 64,
-      width: 64,
     );
   }
 
@@ -442,8 +433,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   // Return a cached or new account detail poller for the account.
   AccountDetailPoller _accountDetail(Account account) {
-    var signer =
-        StoredEthereumKey.find(_accountStore.identities, account.identityUid);
+    var signer = StoredEthereumKey.find(_accountStore.identities, account.identityUid);
     var poller = _accountDetailMap[account];
     if (poller == null) {
       poller =
@@ -474,6 +464,24 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   S get s {
     return S.of(context);
+  }
+}
+
+class OrchidIdenticon extends StatelessWidget {
+  final String value;
+  final double size;
+
+  const OrchidIdenticon({
+    Key key,
+    @required this.value,
+    this.size = 64,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    String svg = Jdenticon.toSvg(value);
+    return SvgPicture.string(svg,
+        fit: BoxFit.contain, height: size, width: size);
   }
 }
 

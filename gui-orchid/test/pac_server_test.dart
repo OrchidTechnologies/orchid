@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
@@ -97,6 +98,12 @@ void main() async {
       price = await OrchidPricing().tokenToUsdRate(TokenTypes.OXT);
       print("oxt to usd = $price");
     });
+
+    test('get bandwidth price', () async {
+      var price = await OrchidEthereumV1.getBandwidthPrice();
+      print("bandwidth price = $price");
+    });
+
   });
 }
 

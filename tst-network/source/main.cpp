@@ -276,6 +276,9 @@ int Main(int argc, const char *const argv[]) {
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
     const auto network(Break<Network>(chain, directory, location));
 
+    static const Address lottery0("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
+    static const Address lottery1("0x02d361Da0cDa7bB6316e3e8D04D49a4738cC2fD3");
+
     const Address funder(args["funder"].as<std::string>());
     const auto secret(Bless<Secret>(args["secret"].as<std::string>()));
 
@@ -312,9 +315,8 @@ int Main(int argc, const char *const argv[]) {
 
 
     const auto account(Wait(Opened(Updating(milliseconds, [chain, funder, signer = Address(Derive(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
-        static const Address lottery("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
-        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(*chain, "latest", lottery, uint256_t(90000), funder, signer);
+        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(*chain, "latest", lottery0, uint256_t(90000), funder, signer);
         co_return std::make_pair(balance, escrow);
     }, "Account"))));
 
@@ -365,8 +367,8 @@ int Main(int argc, const char *const argv[]) {
             }) {
                 names.emplace_back(name);
                 tests.emplace_back(TestOrchid(origin, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client *> {
-                    co_return co_await Client0::Wire(remote, oracle, oxt, "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1", secret, funder);
-                    //co_return co_await Client1::Wire(remote, oracle, bnb, "0xa0E6C3A38Bd54b33Aa9bE760473F0b026738fFaF", secret, funder);
+                    co_return co_await Client0::Wire(remote, oracle, oxt, lottery0, secret, funder);
+                    //co_return co_await Client1::Wire(remote, oracle, dai, lottery1, secret, funder);
                 }));
             }
 

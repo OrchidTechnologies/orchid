@@ -219,7 +219,7 @@ contract OrchidLottery1 {
         bytes32 key = keccak256(abi.encodePacked(token, msg.sender, signer));
         Account storage account = accounts_[key];
         uint256 cache = account.unlock_warned_;
-        cache = marked << 192 | uint192(cache);
+        cache = uint256(marked) << 192 | uint192(cache);
         account.unlock_warned_ = cache;
         emit Delete(key, cache);
     }

@@ -33,7 +33,7 @@ task<Float> Huobi(Origin &origin, const std::string &pair, const Float &adjust) 
     if (false) {
     } else if (status == "ok") {
         const auto &ticks(result["tick"]["data"]);
-        orc_assert(ticks.size() > 0);
+        orc_assert(!ticks.empty());
         co_return Float(ticks[0]["price"].asString()) / adjust;
     } else if (status == "error") {
         const auto code(result["err-code"].asString());
