@@ -59,13 +59,13 @@ contract OrchidLottery1 {
         }
     }
 
-    function edit(IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) external {
+    function edit(IERC20 token, uint256 amount, address signer, int256 adjust, int256 warn, uint256 retrieve) external {
         require(token != IERC20(0));
         (bool success, bytes memory result) = address(token).call(
             abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, this, amount));
         require(success && abi.decode(result, (bool)));
 
-        edit_(msg.sender, token, amount, signer, adjust, lock, retrieve);
+        edit_(msg.sender, token, amount, signer, adjust, warn, retrieve);
         send_(msg.sender, token, retrieve);
     }
 
@@ -75,10 +75,10 @@ contract OrchidLottery1 {
 
         if (false) {
         } else if (selector == bytes4(keccak256("edit(address,int256,int256,uint256)"))) {
-            address signer; int256 adjust; int256 lock; uint256 retrieve;
-            (signer, adjust, lock, retrieve) = abi.decode(data[4:],
+            address signer; int256 adjust; int256 warn; uint256 retrieve;
+            (signer, adjust, warn, retrieve) = abi.decode(data[4:],
                 (address, int256, int256, uint256));
-            edit_(sender, IERC20(msg.sender), amount, signer, adjust, lock, retrieve);
+            edit_(sender, IERC20(msg.sender), amount, signer, adjust, warn, retrieve);
             send_(sender, IERC20(msg.sender), retrieve);
         } else require(false);
     }
@@ -88,8 +88,8 @@ contract OrchidLottery1 {
         return true;
     }
 
-    function edit(address signer, int256 adjust, int256 lock, uint256 retrieve) external payable {
-        edit_(msg.sender, IERC20(0), msg.value, signer, adjust, lock, retrieve);
+    function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) external payable {
+        edit_(msg.sender, IERC20(0), msg.value, signer, adjust, warn, retrieve);
 
         if (retrieve != 0) {
             (bool success,) = msg.sender.call{value: retrieve}("");
@@ -97,7 +97,7 @@ contract OrchidLottery1 {
         }
     }
 
-    function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 lock, uint256 retrieve) private {
+    function edit_(address funder, IERC20 token, uint256 amount, address signer, int256 adjust, int256 warn, uint256 retrieve) private {
         bytes32 key = keccak256(abi.encodePacked(token, funder, signer));
         Account storage account = accounts_[key];
 
@@ -116,18 +116,18 @@ contract OrchidLottery1 {
         uint256 warned;
         uint256 unlock;
 
-        if (adjust < 0 || lock != 0) {
+        if (adjust < 0 || warn != 0) {
             warned = account.unlock_warned_;
             marked = warned >> 192;
             unlock = uint64(warned >> 128);
             warned = uint128(warned);
         }
 
-        if (lock > 0) {
+        if (warn > 0) {
             unlock = block.timestamp + day_;
 
-            warned += uint256(lock);
-            require(warned >= uint256(lock));
+            warned += uint256(warn);
+            require(warned >= uint256(warn));
         }
 
         if (adjust < 0) {
@@ -150,9 +150,9 @@ contract OrchidLottery1 {
             escrow += transfer;
         }
 
-        if (lock < 0) {
-            uint256 decrease = uint256(-lock);
-            require(int256(decrease) != lock);
+        if (warn < 0) {
+            uint256 decrease = uint256(-warn);
+            require(int256(decrease) != warn);
 
             require(decrease <= warned);
             warned -= decrease;

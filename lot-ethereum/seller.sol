@@ -97,12 +97,12 @@ contract OrchidSeller {
         return accounts_[signer].packed_;
     }
 
-    function edit_(address sender, uint8 v, bytes32 r, bytes32 s, uint64 nonce, IERC20 token, uint256 amount, int256 adjust, int256 lock, uint256 retrieve, uint128 refill) private returns (address) {
+    function edit_(address sender, uint8 v, bytes32 r, bytes32 s, uint64 nonce, IERC20 token, uint256 amount, int256 adjust, int256 warn, uint256 retrieve, uint128 refill) private returns (address) {
         execute_(token, sender, amount, retrieve);
 
         bytes32 digest; assembly { digest := chainid() }
         digest = keccak256(abi.encodePacked(byte(0x19), byte(0x00), this,
-            digest, nonce, token, amount, adjust, lock, retrieve, refill));
+            digest, nonce, token, amount, adjust, warn, retrieve, refill));
         address signer = ecrecover(digest, v, r, s);
 
         Account storage account = accounts_[signer];
@@ -117,9 +117,9 @@ contract OrchidSeller {
     }
 
 
-    function edit(address signer, uint8 v, bytes32 r, bytes32 s, uint64 nonce, int256 adjust, int256 lock, uint256 retrieve, uint128 refill) external payable {
-        require(signer == edit_(msg.sender, v, r, s, nonce, IERC20(0), msg.value, adjust, lock, retrieve, refill));
-        lottery_.edit{value: msg.value}(signer, adjust, lock, retrieve);
+    function edit(address signer, uint8 v, bytes32 r, bytes32 s, uint64 nonce, int256 adjust, int256 warn, uint256 retrieve, uint128 refill) external payable {
+        require(signer == edit_(msg.sender, v, r, s, nonce, IERC20(0), msg.value, adjust, warn, retrieve, refill));
+        lottery_.edit{value: msg.value}(signer, adjust, warn, retrieve);
 
         if (retrieve != 0) {
             (bool success,) = msg.sender.call{value: retrieve}("");
