@@ -24,7 +24,7 @@ set -o pipefail
 
 runs=4294967295
 
-env/solc.sh 0.7.2 build verifier.sol --evm-version homestead
-env/solc.sh 0.5.13 build lottery0.sol --evm-version istanbul
-env/solc.sh 0.7.6 build seller.sol --evm-version istanbul --optimize --optimize-runs "${runs}"
+env/solc.sh 0.7.2 build verifier.sol --abi --evm-version homestead
+env/solc.sh 0.5.13 build lottery0.sol --abi --evm-version istanbul
+env/solc.sh 0.7.6 build seller.sol --abi --evm-version istanbul --optimize --optimize-runs "${runs}"
 #env/solc.sh 0.7.2 - recipient.yul --strict-assembly | tee /dev/stderr | sed -e '/^Binary/{x;N;p};d' | tr -d $$'\n' >build/OrchidRecipient.bin
