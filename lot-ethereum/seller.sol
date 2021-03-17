@@ -29,19 +29,25 @@ import "./lottery1.sol";
 contract OrchidSeller {
     OrchidLottery1 private immutable lottery_;
     address private owner_;
+    address private manager_;
 
     constructor(OrchidLottery1 lottery, address owner) {
         lottery_ = lottery;
         owner_ = owner;
+        manager_ = owner;
+
+        address[] memory recipients;
+        lottery.enroll(false, recipients);
     }
 
-    function head() external view returns (address) {
-        return owner_;
+    function head() external view returns (address, address) {
+        return (owner_, manager_);
     }
 
-    function hand(address owner) external {
+    function hand(address owner, address manager) external {
         require(msg.sender == owner_);
         owner_ = owner;
+        manager_ = manager;
     }
 
     function enroll(bool cancel, address[] calldata recipients) external {
@@ -57,7 +63,7 @@ contract OrchidSeller {
     mapping(IERC20 => mapping (address => Executor)) private executors_;
 
     function allow(IERC20 token, uint256 allowance, address[] calldata senders) external {
-        require(msg.sender == owner_);
+        require(msg.sender == manager_);
         mapping (address => Executor) storage executors = executors_[token];
         for (uint i = senders.length; i != 0; )
             executors[senders[--i]].allowance_ = allowance;
