@@ -139,6 +139,9 @@ static uint64_t _(std::string_view arg) {
 template <>
 struct Option<uint256_t> {
 static uint256_t _(std::string_view arg) {
+    if (arg == "-1")
+        return ~uint256_t(0);
+
     Decimal shift(1);
 
     auto last(arg.size());
@@ -469,6 +472,16 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "number") {
         const auto [number] = Options<uint256_t>(args);
         std::cout << "0x" << std::hex << number << std::endl;
+
+    } else if (command == "orchid:allow1") {
+        const auto [seller, token, allowance, sender] = Options<Address, Address, uint256_t, Address>(args);
+        static Selector<void, Address, uint256_t, std::vector<Address>> allow("allow");
+        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, allow(token, allowance, {sender}))).hex() << std::endl;
+
+    } else if (command == "orchid:allowed") {
+        const auto [seller, token, sender] = Options<Address, Address, Address>(args);
+        static Selector<uint256_t, Address, Address> allowed("allowed");
+        std::cout << co_await allowed.Call(*chain_, "latest", seller, 90000, token, sender) << std::endl;
 
     } else if (command == "p2pkh") {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
