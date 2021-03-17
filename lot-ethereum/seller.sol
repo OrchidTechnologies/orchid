@@ -68,6 +68,8 @@ contract OrchidSeller {
     }
 
     function execute_(IERC20 token, address sender, uint256 amount, uint256 retrieve) private {
+        if (amount == retrieve)
+            return;
         Executor storage executor = executors_[token][sender];
         uint256 allowance = executor.allowance_;
         if (allowance == uint256(-1))
