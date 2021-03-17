@@ -192,7 +192,7 @@ static Address _(std::string arg) {
     else if (arg == "lottery0") {
         return "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"; }
     else if (arg == "lottery1") {
-        return "0x02d361Da0cDa7bB6316e3e8D04D49a4738cC2fD3"; }
+        return "0x477230669CaA8750d3386F854F3f9375f68e4C06"; }
     else if (arg == "transferv") {
         return TransferV; }
     else if (arg == "OTT") {
