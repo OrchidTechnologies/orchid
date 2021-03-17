@@ -54,6 +54,7 @@ class TestPacService(unittest.TestCase):
                          [chainid, l3nonce, tokenid, amount, adjust, lock, retrieve, refill])
         message = encode_intended_validator(validator_address=testdata['seller']['address'], primitive=msg)
         sig = w3.eth.account.sign_message(message, private_key=acct.key)
+        print(sig)
         txn = {
             "from": acct.address,
             "to": testdata['seller']['address'],
@@ -62,7 +63,7 @@ class TestPacService(unittest.TestCase):
             "value": hex(int((balance + deposit) * pow(10,18))),
             "chainId": chainid,
             "nonce": l2nonce,
-            "data": seller.encodeABI(fn_name='edit', args=[sig.v, bytearray.fromhex(hex(sig.r)[2:]), bytearray.fromhex(hex(sig.s)[2:]), l3nonce, adjust, lock, retrieve, refill]),
+            "data": seller.encodeABI(fn_name='edit', args=[acct.address, sig.v, bytearray.fromhex(hex(sig.r)[2:]), bytearray.fromhex(hex(sig.s)[2:]), l3nonce, adjust, lock, retrieve, refill]),
         }
         return txn, w3.eth.account.sign_transaction(txn, acct.key)
 
