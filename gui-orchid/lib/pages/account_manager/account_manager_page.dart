@@ -263,11 +263,18 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         return Container();
       }
       return Padding(
-        padding: const EdgeInsets.only(top: 24),
+        padding: const EdgeInsets.only(top: 16),
         child: Align(
-            child: Container(
-          width: 190,
-          child: _buildAddFundsButton(),
+            child: Column(
+          children: [
+            Text("Pull to refresh accounts.",
+                style: AppText.noteStyle.copyWith(fontStyle: FontStyle.italic)),
+            pady(16),
+            Container(
+              width: 190,
+              child: _buildAddFundsButton(),
+            ),
+          ],
         )),
       );
     }
@@ -275,6 +282,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     var child = accounts.isEmpty
         ? ListView(
             children: [
+              /*
               Padding(
                 padding: const EdgeInsets.only(top: 24.0),
                 child: Center(
@@ -284,6 +292,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                             : "",
                         style: AppText.noteStyle)),
               ),
+               */
+              pady(8),
               footer()
             ],
           )
@@ -433,7 +443,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   // Return a cached or new account detail poller for the account.
   AccountDetailPoller _accountDetail(Account account) {
-    var signer = StoredEthereumKey.find(_accountStore.identities, account.identityUid);
+    var signer =
+        StoredEthereumKey.find(_accountStore.identities, account.identityUid);
     var poller = _accountDetailMap[account];
     if (poller == null) {
       poller =
