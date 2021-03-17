@@ -198,6 +198,7 @@ def get_txn_cost_usd(txn):
     cost_eth = cost_wei / wei_per_eth
     cost_usd = cost_eth * usd_per_eth
     logging.info(f'get_txn_cost_usd cost_wei:{cost_wei} cost_usd:{cost_usd}')
+    return cost_usd
 
 
 def get_nonce_(w3,pubkey):

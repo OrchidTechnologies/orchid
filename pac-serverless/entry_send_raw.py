@@ -65,9 +65,11 @@ def new_txn(W3WSock,txn):
     txn['txnhash'] = txnhash
 
     cost_usd = w3_generic.get_txn_cost_usd(txn)
-
     prev_txn = w3_generic.load_transaction(txnhash)
     prev_cost_usd = 0.0
+
+    logging.info(f'cost_usd:{cost_usd},prev_cost_usd:{prev_cost_usd}')
+
     if (prev_txn is not None):
         prev_cost_usd = float(prev_txn['cost_usd'])
         logging.info(f'found prev txn: {str(txn)}')
@@ -94,11 +96,13 @@ def new_txn(W3WSock,txn):
     return txnhash,cost_usd,'success'
 
 def verify_txn_sig(txn, sig):
-    msg = str(txn).replace("'", '"').replace(' ', '')
-    logging.info(msg)
-    message = messages.encode_defunct(text=msg)
+    txn_s = str(txn).replace("'", '"').replace(' ', '')
+    logging.info(f'verify_txn_sig txn_s:')
+    logging.info(txn_s)
+    message = messages.encode_defunct(text=txn_s)
     rec_pubaddr = w3.eth.account.recover_message(message, signature=sig)
-    logging.info(f'verify_txn_sig {txn['from']} == {rec_pubaddr}')
+    txn_from = txn['from']
+    logging.info(f'verify_txn_sig {txn_from} == {rec_pubaddr}')
     return txn['from'] == rec_pubaddr
 
 def main(event, context):
@@ -116,7 +120,7 @@ def main(event, context):
     txn         = json.loads(body.get('txn', ''))
     sig         = body.get('sig', '')
     if (sig != ''):
-        if (!verify_txn_sig(txn,sig)):
+        if (verify_txn_sig(txn,sig) == False):
             return response(409,{'msg':'Signature verification failure','txnhash':0,'cost_usd':0.0})
             
     #account_id  = body.get('account_id')
