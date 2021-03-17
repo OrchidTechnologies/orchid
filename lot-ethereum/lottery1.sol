@@ -239,11 +239,8 @@ contract OrchidLottery1 {
     function save(uint256 count, bytes32 seed) external {
         for (seed = keccak256(abi.encodePacked(
             keccak256(abi.encodePacked(seed, msg.sender))
-        , address(0)));; seed = keccak256(abi.encodePacked(seed))) {
+        , address(0))); count-- != 0; seed = keccak256(abi.encodePacked(seed)))
             tracks_[seed].packed = uint256(msg.sender);
-            if (count-- == 0)
-                break;
-        }
     }
 
     function spend_(bytes32 refund) private {
