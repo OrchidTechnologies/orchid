@@ -57,8 +57,8 @@ contract OrchidSeller {
     mapping(IERC20 => mapping (address => Executor)) private executors_;
 
     function allow(IERC20 token, uint256 allowance, address[] calldata senders) external {
-        mapping (address => Executor) storage executors = executors_[token];
         require(msg.sender == owner_);
+        mapping (address => Executor) storage executors = executors_[token];
         for (uint i = senders.length; i != 0; )
             executors[senders[--i]].allowance_ = allowance;
     }
@@ -75,7 +75,7 @@ contract OrchidSeller {
         if (allowance == uint256(-1))
             return;
         if (amount > retrieve)
-            amount -= retrieve;
+            amount = amount - retrieve;
         else
             amount = retrieve - amount;
         require(allowance >= amount);
@@ -130,12 +130,10 @@ contract OrchidSeller {
 
     function gift(address signer, uint256 escrow) external payable {
         execute_(IERC20(0), msg.sender, msg.value, 0);
-
+    {
         (uint256 balance,) = lottery_.read(IERC20(0), address(this), signer);
         balance = (balance >> 128) + uint128(balance);
-    {
-        uint256 cache = accounts_[signer].packed_;
-        require(balance <= cache >> 128);
+        require(balance <= accounts_[signer].packed_ >> 128);
     }
         lottery_.mark(IERC20(0), signer, uint64(block.timestamp));
 

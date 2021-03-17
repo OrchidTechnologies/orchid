@@ -349,7 +349,6 @@ contract OrchidLottery1 {
             require(uint128(cache) + amount < 1 << 128);
             cache += amount;
             account.escrow_amount_ = cache;
-
             emit Update(key, cache);
         }
     }
