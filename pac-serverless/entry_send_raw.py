@@ -94,8 +94,9 @@ def new_txn(W3WSock,txn):
     return txnhash,cost_usd,'success'
 
 def verify_txn_sig(txn, sig):
-
-    message = messages.encode_defunct(text=str(txn))
+    msg = str(txn).replace("'", '"').replace(' ', '')
+    logging.info(msg)
+    message = messages.encode_defunct(text=msg)
     rec_pubaddr = w3.eth.account.recover_message(message, signature=sig)
     logging.info(f'verify_txn_sig {txn['from']} == {rec_pubaddr}')
     return txn['from'] == rec_pubaddr

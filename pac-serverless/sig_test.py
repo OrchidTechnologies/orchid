@@ -13,7 +13,10 @@ def verify_txn_sig(msg):
     txn = msg['txn']
     sig = msg['sig']
 
-    message = messages.encode_defunct(text=str(txn))
+    msg = str(txn).replace("'", '"').replace(' ', '')
+    print("msg:\n", msg)
+    message = messages.encode_defunct(text=msg)
+    print("encoded message:\n", message)
     rec_pubaddr = w3.eth.account.recover_message(message, signature=sig)
     print("from =", txn['from'])
     print("rec_pubaddr =", rec_pubaddr)
@@ -36,10 +39,12 @@ def sig_test(filename, pubaddr, privkey):
     print(f'json: {json.dumps(txnjson)}')
 
     txn = txnjson['txn']
-    print(f'txn: {json.dumps(txn)}')
+    print(f'txn: {str(txn)}')
 
     #// This part prepares "version E" messages, using the EIP-191 standard
-    message = messages.encode_defunct(text=str(txn))
+    msg = str(txn).replace("'", '"').replace(' ', '')
+    print("msg:\n", msg)
+    message = messages.encode_defunct(text=msg)
     print("encoded message:\n", message)
 
     #// This part signs any EIP-191-valid message
