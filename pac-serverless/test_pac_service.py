@@ -36,7 +36,7 @@ class TestPacService(unittest.TestCase):
         return requests.post('{}{}'.format(testdata['url'], 'get_account'), json=reqdata)
 
     def send_raw(self, account_id, chain_id, txn):
-        reqdata = {'account_id': account_id, 'chainId': chain_id, 'txn': txn}
+        reqdata = {'account_id': account_id, 'chainId': chain_id, 'txn': json.dumps(txn)}
         return requests.post('{}{}'.format(testdata['url'], 'send_raw'), json=reqdata)
 
     def add_value_txn(self, acct, l2nonce, balance, deposit):
