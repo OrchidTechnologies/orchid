@@ -27,6 +27,7 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include "base58.hpp"
+#include "binance.hpp"
 #include "decimal.hpp"
 #include "executor.hpp"
 #include "float.hpp"
@@ -47,6 +48,7 @@ namespace po = boost::program_options;
 S<Origin> origin_;
 S<Chain> chain_;
 S<Executor> executor_;
+std::string currency_;
 uint256_t multiple_ = 1;
 std::optional<uint256_t> nonce_;
 std::optional<uint64_t> gas_;
@@ -293,6 +295,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
             return arg;
         if (false);
         ORC_PARAM(bid,flags.,_)
+        ORC_PARAM(currency,,_)
         ORC_PARAM(executor,,)
         ORC_PARAM(gas,,_)
         ORC_PARAM(nonce,,_)
@@ -347,6 +350,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "bid") {
         Options<>(args);
         std::cout << (co_await chain_->Bid()) << std::endl;
+
+    } else if (command == "binance") {
+        const auto [pair] = Options<std::string>(args);
+        std::cout << co_await Binance(*origin_, pair, 1) << std::endl;
 
     } else if (command == "block") {
         const auto [height] = Options<uint64_t>(args);
@@ -578,6 +585,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
         static Selector<void, Address, std::vector<Send>> transferv("transferv");
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, TransferV, 0, transferv(token, sends))).hex() << std::endl;
+
+    } else if (command == "value") {
+        const auto [address] = Options<Address>(args);
+        const auto [account] = co_await chain_->Get(co_await block(), address, nullptr);
+        std::cout << Float(account.balance_) * co_await Binance(*origin_, currency_ + "USDT", Ten18) << std::endl;
 
     } else if (command == "verify") {
         auto [height] = Options<uint64_t>(args);
