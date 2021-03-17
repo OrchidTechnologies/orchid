@@ -113,7 +113,7 @@ def main(event, context):
     logging.info(f'context: {context}')
     logging.info(f'body: {body}')
 
-    txn         = body.get('txn', '')
+    txn         = json.loads(body.get('txn', ''))
     sig         = body.get('sig', '')
     if (sig != ''):
         if (!verify_txn_sig(txn,sig)):

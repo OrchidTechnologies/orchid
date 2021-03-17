@@ -10,8 +10,8 @@ from typing import Any, Dict, Optional, Tuple
 from eth_account import Account, messages
 
 def verify_txn_sig(msg):
-    txn = msg['txn']
-    sig = msg['sig']
+    txn  = json.loads(msg['txn'])
+    sig  = msg['sig']
 
     msg = str(txn).replace("'", '"').replace(' ', '')
     print("msg:\n", msg)
@@ -38,7 +38,7 @@ def sig_test(filename, pubaddr, privkey):
     txnjson = json.loads(txnfile)
     print(f'json: {json.dumps(txnjson)}')
 
-    txn = txnjson['txn']
+    txn = json.loads(txnjson['txn'])
     print(f'txn: {str(txn)}')
 
     #// This part prepares "version E" messages, using the EIP-191 standard
