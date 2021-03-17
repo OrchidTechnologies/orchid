@@ -95,8 +95,9 @@ def new_txn(W3WSock,txn):
 
     return txnhash,cost_usd,'success'
 
-def verify_txn_sig(txn, sig):
-    txn_s = str(txn).replace("'", '"').replace(' ', '')
+def verify_txn_sig(txn_s, sig):
+#    txn_s = str(txn).replace("'", '"').replace(' ', '')
+    txn = json.loads(txn_s)
     logging.info(f'verify_txn_sig txn_s:')
     logging.info(txn_s)
     message = messages.encode_defunct(text=txn_s)
@@ -117,12 +118,13 @@ def main(event, context):
     logging.info(f'context: {context}')
     logging.info(f'body: {body}')
 
-    txn         = json.loads(body.get('txn', ''))
+    txn_s         = body.get('txn', '')
     sig         = body.get('sig', '')
     if (sig != ''):
-        if (verify_txn_sig(txn,sig) == False):
+        if (verify_txn_sig(txn_s,sig) == False):
             return response(409,{'msg':'Signature verification failure','txnhash':0,'cost_usd':0.0})
-            
+    txn = json.loads(txn_s)
+
     #account_id  = body.get('account_id')
     chainId     = txn.get('chainId',1)
     W3WSock     = w3_generic.get_w3wsock_provider(chainId)
