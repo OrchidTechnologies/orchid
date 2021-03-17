@@ -6,6 +6,9 @@ import sys
 import w3_generic
 
 from web3 import Web3
+from eth_account import Account, messages
+from web3.auto import w3
+
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
@@ -19,7 +22,7 @@ wei_per_eth = 1000000000000000000
 
 
 
-def new_txn(W3WSock,txn,account_id):
+def new_txn(W3WSock,txn):
 
     txnhash = cost_usd = msg = None
 
@@ -29,8 +32,7 @@ def new_txn(W3WSock,txn,account_id):
         logging.warning(msg)
         return txnhash,cost_usd,msg
 
-    if (account_id is None):
-        account_id    = txn.get('from','')
+    account_id    = txn.get('from','')
     txn['account_id'] = account_id
     txn['status']     = 'new'
 
@@ -91,6 +93,12 @@ def new_txn(W3WSock,txn,account_id):
 
     return txnhash,cost_usd,'success'
 
+def verify_txn_sig(txn, sig):
+
+    message = messages.encode_defunct(text=str(txn))
+    rec_pubaddr = w3.eth.account.recover_message(message, signature=sig)
+    logging.info(f'verify_txn_sig {txn['from']} == {rec_pubaddr}')
+    return txn['from'] == rec_pubaddr
 
 def main(event, context):
     stage = os.environ['STAGE']
@@ -104,17 +112,20 @@ def main(event, context):
     logging.info(f'context: {context}')
     logging.info(f'body: {body}')
 
-    #W3WSock     = body.get('W3WSock', '')
-    #W3WSock     = os.environ['WEB3_WEBSOCKET']
     txn         = body.get('txn', '')
-    account_id  = body.get('account_id')
+    sig         = body.get('sig', '')
+    if (sig != ''):
+        if (!verify_txn_sig(txn,sig)):
+            return response(409,{'msg':'Signature verification failure','txnhash':0,'cost_usd':0.0})
+            
+    #account_id  = body.get('account_id')
     chainId     = txn.get('chainId',1)
     W3WSock     = w3_generic.get_w3wsock_provider(chainId)
 
-    txnhash,cost_usd,msg = new_txn(W3WSock,txn,account_id)
+    txnhash,cost_usd,msg = new_txn(W3WSock,txn)
     logging.info(f'send_raw txnhash({txnhash}) cost_usd({cost_usd}) msg({msg}) ')
 
     if (msg == 'success'):
         return response(200,{'msg':msg,'txnhash':txnhash,'cost_usd':cost_usd})
     else:
-        return response(401,{'msg':msg})
+        return response(401,{'msg':msg,'txnhash':0,'cost_usd':0.0})
