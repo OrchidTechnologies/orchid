@@ -124,7 +124,14 @@ Key Derive(const Secret &secret) {
     return key;
 }
 
-Brick<64> ToUncompressed(const Key &key) {
+Key ToKey(const Region &data) {
+    const auto context(Curve());
+    Key key;
+    orc_assert(secp256k1_ec_pubkey_parse(context, &key, data.data(), data.size()));
+    return key;
+}
+
+Brick<65> ToUncompressed(const Key &key) {
     const auto context(Curve());
 
     std::array<uint8_t, 65> data;
@@ -133,7 +140,7 @@ Brick<64> ToUncompressed(const Key &key) {
     orc_assert(size == data.size());
 
     orc_assert(data[0] == 0x04);
-    return Bounded<65>(data).skip<1>();
+    return data;
 }
 
 Brick<33> ToCompressed(const Key &key) {

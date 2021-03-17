@@ -43,7 +43,7 @@ Address::Address(const char *address) :
 }
 
 Address::Address(const Key &key) :
-    Address(HashK(ToUncompressed(key)).skip<12>().num<uint160_t>())
+    Address(HashK(ToUncompressed(key).skip<1>()).skip<12>().num<uint160_t>())
 {
 }
 

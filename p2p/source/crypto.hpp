@@ -73,7 +73,9 @@ using Secret = Brick<32>;
 typedef secp256k1_pubkey Key;
 Key Derive(const Secret &secret);
 
-Brick<64> ToUncompressed(const Key &key);
+Key ToKey(const Region &data);
+
+Brick<65> ToUncompressed(const Key &key);
 Brick<33> ToCompressed(const Key &key);
 
 Signature Sign(const Secret &secret, const Brick<32> &data);

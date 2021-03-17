@@ -113,6 +113,18 @@ static Bytes32 _(std::string arg) {
 } };
 
 template <>
+struct Option<Key> {
+static Key _(std::string arg) {
+    return ToKey(Bless(arg));
+} };
+
+template <>
+struct Option<Signature> {
+static Signature _(std::string arg) {
+    return Brick<65>(Bless(arg));
+} };
+
+template <>
 struct Option<Decimal> {
 static Decimal _(std::string_view arg) {
     return Decimal(arg);
@@ -247,16 +259,14 @@ static Bytes _(std::string arg) {
 } };
 
 template <typename ...Types_, size_t ...Indices_>
-void Options(Args &args, std::tuple<Types_...> &options, std::index_sequence<Indices_...>) {
-    ((std::get<Indices_>(options) = Option<Types_>::_(args[Indices_])), ...);
+std::tuple<Types_...> Options(Args &args, std::index_sequence<Indices_...>) {
+    return std::tuple<Types_...>(Option<Types_>::_(args[Indices_])...);
 }
 
 template <typename ...Types_>
 auto Options(Args &args) {
-    std::tuple<Types_...> options;
-    Options(args, options, std::index_sequence_for<Types_...>());
     orc_assert(args.size() == sizeof...(Types_));
-    return options;
+    return Options<Types_...>(args, std::index_sequence_for<Types_...>());
 }
 
 task<int> Main(int argc, const char *const argv[]) { try {
@@ -313,7 +323,8 @@ task<int> Main(int argc, const char *const argv[]) { try {
             std::cout << Address(account.asString()) << std::endl;
 
     } else if (command == "address") {
-        std::cout << executor_->operator Address() << std::endl;
+        const auto [key] = Options<Key>(args);
+        std::cout << Address(key) << std::endl;
 
     } else if (command == "allowance") {
         const auto [token, address, recipient] = Options<Address, Address, Address>(args);
@@ -472,6 +483,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
                 break;
             } else co_await Sleep(1000);
 
+    } else if (command == "recover") {
+        const auto [signature, message] = Options<Signature, Bytes>(args);
+        std::cout << ToUncompressed(Recover(HashK(message), signature)).hex() << std::endl;
+
     } else if (command == "rlp") {
         const auto [data] = Options<Bytes>(args);
         std::cout << Explode(data) << std::endl;
@@ -481,9 +496,17 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [data] = Options<Bytes>(args);
         std::cout << ToSegwit(HashR(Hash2(data))) << std::endl;
 
+    } else if (command == "self") {
+        Options<>(args);
+        std::cout << executor_->operator Address() << std::endl;
+
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_, .gas = gas_}, recipient, amount, data)).hex() << std::endl;
+
+    } else if (command == "sign") {
+        const auto [secret, message] = Options<Bytes32, Bytes>(args);
+        std::cout << Sign(secret, HashK(message)).operator Brick<65>().hex() << std::endl;
 
     } else if (command == "singleton-100") {
         auto [code, salt] = Options<Bytes, Bytes32>(args);
