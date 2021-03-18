@@ -183,7 +183,23 @@ class OrchidCreateEvent {
   final EthereumAddress funder;
   final EthereumAddress signer;
 
-  OrchidCreateEvent(this.transactionHash, this.funder, this.signer);
+  OrchidCreateEvent({this.transactionHash, this.funder, this.signer});
+}
+
+class OrchidCreateEventV1 {
+  static OrchidCreateEvent fromJsonRpcResult(dynamic result) {
+    // Parse the results
+    String transactionHash = result['transactionHash'];
+    // topic 0 is the event hash
+    // topic 1 is the token address
+    var funder =
+        EthereumAddress(HexStringBuffer(result['topics'][2]).takeAddress());
+    var signer =
+        EthereumAddress(HexStringBuffer(result['topics'][3]).takeAddress());
+
+    return OrchidCreateEvent(
+        transactionHash: transactionHash, funder: funder, signer: signer);
+  }
 }
 
 // A create event indicates an initial funding event for a

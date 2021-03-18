@@ -42,7 +42,7 @@ void main() async {
 
     test('get L3 nonce', () async {
       print("Get L3 Nonce...");
-      var signer = EthereumAddress.from('0xD9B90C0A03d9Cf7aa2680773f81D62B761A41F65');
+      var signer = EthereumAddress.from('0xb033bA40615293740e863AB470C2c171291482Ba');
       await OrchidPacSeller.getL3Nonce(chain: Chains.xDAI, signer: signer);
     });
 
@@ -112,6 +112,23 @@ void main() async {
       var price = await OrchidEthereumV1.getBandwidthPrice();
       print("bandwidth price = $price");
     });
+    
+
+    /// curl \
+    //     $url -H 'Content-Type: application/json' \
+    //     --data '{"jsonrpc":"2.0","method":"eth_getLogs",
+    //     "params": [{ "address": "'$lottery'",
+    //     "topics": ["'$createEventHash'", null, null, "'$signer'"],
+    //     "fromBlock": "'$startBlock'" }], "id":1}'
+    /*
+    test('get create events v1', () async {
+      var signer = EthereumAddress.from('0xb033bA40615293740e863AB470C2c171291482Ba');
+      var events = await OrchidEthereumV1().getCreateEvents(Chains.xDAI, signer);
+      print("create events v1 = $events");
+    });
+     */
+
+    //
   });
 }
 

@@ -62,7 +62,7 @@ class OrchidEthereumV1 {
     EthereumAddress signer,
   ) async {
     print("fetch update events for: $signer, url = ${chain.providerUrl}");
-    var startBlock = 0; // TODO: per chain
+    var startBlock = 0; // per chain
     var params = [
       {
         "address": "${await OrchidContractV1.lotteryContractAddressV1}",
@@ -79,7 +79,7 @@ class OrchidEthereumV1 {
         url: chain.providerUrl, method: "eth_getLogs", params: params);
     List<OrchidCreateEvent> events =
         results.map<OrchidCreateEvent>((var result) {
-      return OrchidCreateEventV0.fromJsonRpcResult(result);
+      return OrchidCreateEventV1.fromJsonRpcResult(result);
     }).toList();
     return events;
   }
