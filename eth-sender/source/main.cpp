@@ -538,6 +538,13 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<void, std::vector<Gift>> giftv("giftv");
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, seller, total, giftv(gifts))).hex() << std::endl;
 
+    } else if (command == "orchid:read") {
+        const auto [seller, token, signer] = Options<Address, Address, Address>(args);
+        orc_assert(token == Address(0));
+        static Selector<uint256_t, Address> read("read");
+        const auto packed(co_await read.Call(*chain_, "latest", seller, 90000, signer));
+        std::cout << std::dec << (packed >> 64) << " " << uint64_t(packed) << std::endl;
+
     } else if (command == "p2pkh") {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
         const auto [data] = Options<Bytes>(args);
