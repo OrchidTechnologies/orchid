@@ -95,7 +95,7 @@ int Main(int argc, const char *const argv[]) {
     group.add_options()
         ("lottery0", po::value<std::string>()->default_value("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"))
         ("ethereum", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
-        ("lottery1", po::value<std::string>()->default_value("0x477230669CaA8750d3386F854F3f9375f68e4C06"))
+        ("lottery1", po::value<std::string>()->default_value("0xDDEb61f9DB3633F3e9c6ddAd7d2635e8cD58a172"))
         ("chain", po::value<std::vector<std::string>>(&chains), "like 1,ETH,https://cloudflare-eth.com/")
     ; options.add(group); }
 
