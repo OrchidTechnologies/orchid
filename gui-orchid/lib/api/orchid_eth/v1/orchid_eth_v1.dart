@@ -107,7 +107,10 @@ class OrchidEthereumV1 {
       {
         "to": "${await OrchidContractV1.lotteryContractAddressV1}",
         "data":
-            "0x${OrchidContractV1.readMethodHash}${address(funder)}${address(signer)}${address(EthereumAddress.zero)}"
+            "0x${OrchidContractV1.readMethodHash}"
+                "${address(EthereumAddress.zero)}"
+                "${address(funder)}"
+                "${address(signer)}"
       },
       "latest"
     ];
