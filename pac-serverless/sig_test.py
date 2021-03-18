@@ -10,19 +10,20 @@ from typing import Any, Dict, Optional, Tuple
 from eth_account import Account, messages
 
 def verify_txn_sig(msg):
-    txn  = json.loads(msg['txn'])
+    txn_s  = msg['txn']
     sig  = msg['sig']
+    txn = json.loads(txn_s)
 
-    msg = str(txn).replace("'", '"').replace(' ', '')
-    print("msg:\n", msg)
-    message = messages.encode_defunct(text=msg)
+#    msg = str(txn).replace("'", '"').replace(' ', '')
+    print("msg:\n", txn_s)
+    message = messages.encode_defunct(text=txn_s)
     print("encoded message:\n", message)
     rec_pubaddr = w3.eth.account.recover_message(message, signature=sig)
     print("from =", txn['from'])
     print("rec_pubaddr =", rec_pubaddr)
 
     assert(txn['from'] == rec_pubaddr)
-    
+
 def sig_test(filename, pubaddr, privkey):
 
     #acct = w3.eth.account.create('dkapd98fy7sd7dd')
@@ -30,7 +31,7 @@ def sig_test(filename, pubaddr, privkey):
     #print(acct.privateKey.hex())
     print(pubaddr)
     print(privkey)
-     
+
     file = open(filename, 'r')
     txnfile = file.read()
     print("file:")
@@ -64,6 +65,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-

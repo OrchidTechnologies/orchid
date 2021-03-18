@@ -35,8 +35,8 @@ class TestPacService(unittest.TestCase):
         reqdata = {'account_id': account_id}
         return requests.post('{}{}'.format(testdata['url'], 'get_account'), json=reqdata)
 
-    def send_raw(self, account_id, chain_id, txn):
-        reqdata = {'account_id': account_id, 'chainId': chain_id, 'txn': json.dumps(txn)}
+    def send_raw(self, account_id, chain_id, txn, sig):
+        reqdata = {'account_id': account_id, 'chainId': chain_id, 'txn': txn, 'sig': sig}
         return requests.post('{}{}'.format(testdata['url'], 'send_raw'), json=reqdata)
 
     def add_value_txn(self, acct, l2nonce, balance, deposit):
@@ -62,9 +62,14 @@ class TestPacService(unittest.TestCase):
             "value": hex(int((balance + deposit) * pow(10,18))),
             "chainId": chainid,
             "nonce": l2nonce,
-            "data": seller.encodeABI(fn_name='edit', args=[sig.v, bytearray.fromhex(hex(sig.r)[2:]), bytearray.fromhex(hex(sig.s)[2:]), l3nonce, adjust, lock, retrieve, refill]),
+            "data": seller.encodeABI(fn_name='edit', args=[acct.address, sig.v, bytearray.fromhex(hex(sig.r)[2:]), bytearray.fromhex(hex(sig.s)[2:]), l3nonce, adjust, lock, retrieve, refill]),
         }
-        return txn, w3.eth.account.sign_transaction(txn, acct.key)
+        txstr = json.dumps(txn)
+        txmsg = encode_defunct(text=txstr)
+        print(txmsg)
+        txsig = w3.eth.account.sign_message(txmsg, private_key=acct.key).signature.hex()
+        print(txsig)
+        return txstr, txsig
 
     def test_00_add_value(self):
         r = self.payment_apple(testdata['receipts'][0]['data'], testdata['accounts'][0].address)
@@ -86,7 +91,7 @@ class TestPacService(unittest.TestCase):
         id = testdata['accounts'][0].address
         txn, sig = self.add_value_txn(testdata['accounts'][0], 0, 0.9, 0.1)
         print("txn: ", txn)
-        r = self.send_raw(id, 100, txn)
+        r = self.send_raw(id, 100, txn, sig)
         print(r.text)
         self.assertEqual(r.status_code, 200)
 
@@ -117,7 +122,7 @@ class TestPacService(unittest.TestCase):
     def test_04_exceed_balance(self):
         id = testdata['accounts'][0].address
         txn, sig = self.add_value_txn(testdata['accounts'][0], 1, testdata['receipts'][0]['value'] + 10, 1)
-        r = self.send_raw(id, 100, txn)
+        r = self.send_raw(id, 100, txn, sig)
         self.assertEqual(r.status_code, 401)
         # XXX TODO - compare the error msg
 
