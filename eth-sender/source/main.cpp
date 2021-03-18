@@ -421,6 +421,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [federation] = co_await getFederationAddress.Call(*chain_, "latest", "0x0000000000000000000000000000000001000006", 90000);
         std::cout << federation << std::endl;
 
+    } else if (command == "gas") {
+        const auto [address] = Options<Address>(args);
+        const auto [account] = co_await chain_->Get(co_await block(), address, nullptr);
+        std::cout << account.balance_ / co_await chain_->Bid() << std::endl;
+
     } else if (command == "generate") {
         Options<>(args);
         const auto secret(Random<32>());
