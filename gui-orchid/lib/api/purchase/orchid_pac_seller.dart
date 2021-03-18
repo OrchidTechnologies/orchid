@@ -107,6 +107,7 @@ class OrchidPacSeller {
       retrieve: retrieve,
       refill: refill,
     ));
+    print("XXX packedEditParams = $packedEditParams");
     var sig = Web3DartUtils.web3Sign(keccak256(packedEditParams), signerKey);
 
     var tx = EthereumTransaction(
@@ -153,6 +154,28 @@ class OrchidPacSeller {
     BigInt retrieve,
     BigInt refill,
   }) {
+    print("return '0x' +"
+            "editMethodHash = $editMethodHash" +
+        '\n' +
+        "AbiEncode.address(signer) = ${AbiEncode.address(signer)}" +
+        '\n' +
+        "AbiEncode.uint8(signature.v) = ${AbiEncode.uint8(signature.v)}" +
+        '\n' +
+        "AbiEncode.bytes32(signature.r) = ${AbiEncode.bytes32(signature.r)}" +
+        '\n' +
+        "AbiEncode.bytes32(signature.s) = ${AbiEncode.bytes32(signature.s)}" +
+        '\n' +
+        "AbiEncode.uint64(BigInt.from(nonce)) = ${AbiEncode.uint64(BigInt.from(nonce))}" +
+        '\n' +
+        "AbiEncode.int256(adjust) = ${AbiEncode.int256(adjust)}" +
+        '\n' +
+        "AbiEncode.int256(warn) = ${AbiEncode.int256(warn)}" +
+        '\n' +
+        "AbiEncode.uint256(retrieve ?? BigInt.zero) = ${AbiEncode.uint256(retrieve ?? BigInt.zero)}" +
+        '\n' +
+        "AbiEncode.uint256(refill ?? BigInt.one) = ${AbiEncode.uint256(refill ?? BigInt.one)}" +
+        '\n');
+
     return '0x' +
         editMethodHash +
         AbiEncode.address(signer) +
@@ -193,6 +216,20 @@ class OrchidPacSeller {
     @required BigInt retrieve,
     @required BigInt refill,
   }) {
+    print(
+      "XXX: packedAbiEncodedEditParams:\n"
+        "AbiEncodePacked.bytes1(0x19) = ${AbiEncodePacked.bytes1(0x19)}\n" +
+        "AbiEncodePacked.bytes1(0x00) = ${AbiEncodePacked.bytes1(0x00)}\n" +
+        "AbiEncodePacked.address(pacSellerAddress) = ${AbiEncodePacked.address(pacSellerAddress)}\n" +
+        "AbiEncodePacked.uint256(BigInt.from(chainId)) = ${AbiEncodePacked.uint256(BigInt.from(chainId))}\n" +
+        "AbiEncodePacked.uint64(BigInt.from(l3Nonce)) = ${AbiEncodePacked.uint64(BigInt.from(l3Nonce))}\n" +
+        "AbiEncodePacked.address(token ?? EthereumAddress.zero) = ${AbiEncodePacked.address(token ?? EthereumAddress.zero)}\n" +
+        "AbiEncodePacked.uint256(amount) = ${AbiEncodePacked.uint256(amount)}\n" +
+        "AbiEncodePacked.int256(adjust) = ${AbiEncodePacked.int256(adjust)}\n" +
+        "AbiEncodePacked.int256(warn) = ${AbiEncodePacked.int256(warn)}\n" +
+        "AbiEncodePacked.uint256(retrieve) = ${AbiEncodePacked.uint256(retrieve)}\n" +
+        "AbiEncodePacked.uint256(refill) = ${AbiEncodePacked.uint256(refill)}\n");
+
     var encoded = '' +
         AbiEncodePacked.bytes1(0x19) +
         AbiEncodePacked.bytes1(0x00) +

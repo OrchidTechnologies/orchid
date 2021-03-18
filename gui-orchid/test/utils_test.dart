@@ -79,7 +79,10 @@ void main() {
       print(trimLongStrings(json));
     });
 
-    test('misc 3', () async {});
+    test('strings', () async {
+      expect("foobar".prefix(3, elide: "..."), equals("foo..."));
+      expect("foobar".suffix(3), equals("bar"));
+    });
 
     //
   });

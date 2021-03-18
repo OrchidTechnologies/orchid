@@ -4,8 +4,11 @@ extension StringExtensions on String {
     return this.substring(0, len) + elide;
   }
 
-  String trimTo(int maxLen) {
-    return this.length > maxLen ? this.substring(0, maxLen) : this;
+  String suffix(int len) {
+    if (this.length <= len) { return this; }
+    else {
+      return substring(this.length - len);
+    }
   }
 
 }
