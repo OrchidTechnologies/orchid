@@ -90,8 +90,7 @@ contract OrchidSeller {
 
 
     /*struct Account {
-        uint128 refill_;
-        uint64 zero_;
+        uint192 refill_;
         uint64 nonce_;
     }*/
 
@@ -106,7 +105,7 @@ contract OrchidSeller {
     }
 
 
-    function edit_(address sender, address signer, uint8 v, bytes32 r, bytes32 s, uint64 nonce, IERC20 token, uint256 amount, int256 adjust, int256 warn, uint256 retrieve, uint128 refill) private {
+    function edit_(address sender, address signer, uint8 v, bytes32 r, bytes32 s, uint64 nonce, IERC20 token, uint256 amount, int256 adjust, int256 warn, uint256 retrieve, uint256 refill) private {
         execute_(token, sender, amount, retrieve);
     {
         bytes32 digest; assembly { digest := chainid() }
@@ -116,14 +115,15 @@ contract OrchidSeller {
     } {
         Account storage account = accounts_[signer];
         uint256 cache = account.packed_;
+        require(uint192(refill) == refill);
         require(uint64(cache) == nonce);
-        account.packed_ = uint256(refill) << 128 | uint64(nonce + 1);
+        account.packed_ = uint256(refill) << 64 | uint64(nonce + 1);
     }
         if (amount > retrieve)
             lottery_.mark(token, signer, uint64(block.timestamp));
     }
 
-    function edit(address signer, uint8 v, bytes32 r, bytes32 s, uint64 nonce, int256 adjust, int256 warn, uint256 retrieve, uint128 refill) external payable {
+    function edit(address signer, uint8 v, bytes32 r, bytes32 s, uint64 nonce, int256 adjust, int256 warn, uint256 retrieve, uint256 refill) external payable {
         edit_(msg.sender, signer, v, r, s, nonce, IERC20(0), msg.value, adjust, warn, retrieve, refill);
         lottery_.edit{value: msg.value}(signer, adjust, warn, retrieve);
 
@@ -138,7 +138,7 @@ contract OrchidSeller {
     {
         (uint256 balance,) = lottery_.read(token, address(this), signer);
         balance = (balance >> 128) + uint128(balance);
-        if (balance > accounts_[signer].packed_ >> 128)
+        if (balance > accounts_[signer].packed_ >> 64)
             return false;
     }
 
