@@ -189,21 +189,23 @@ contract OrchidLottery1 {
 
     mapping(address => Loop) private loops_;
 
-    event Enroll(address indexed funder);
+    event Enroll(address indexed funder, address indexed recipient);
 
     function enroll(bool cancel, address[] calldata recipients) external {
         Loop storage loop = loops_[msg.sender];
 
         uint i = recipients.length;
-        if (i == 0)
+        if (i == 0) {
             loop.closed_ = cancel ? 0 : block.timestamp + day_;
-        else {
+            emit Enroll(msg.sender, address(0));
+        } else {
             uint256 value = cancel ? uint256(-1) : block.timestamp + day_;
-            do loop.merchants_[recipients[--i]] = value;
-            while (i != 0);
+            do {
+                address recipient = recipients[--i];
+                loop.merchants_[recipient] = value;
+                emit Enroll(msg.sender, recipient);
+            } while (i != 0);
         }
-
-        emit Enroll(msg.sender);
     }
 
     function enrolled(address funder, address recipient) external view returns (uint256) {
