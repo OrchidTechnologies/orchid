@@ -465,6 +465,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> edit("edit");
         std::cout << (co_await executor_->Send(*chain_, {}, lottery, amount, edit(signer, adjust, lock, retrieve))).hex() << std::endl;
 
+    } else if (command == "lottery1:enrolled") {
+        const auto [lottery, funder, recipient] = Options<Address, Address, Address>(args);
+        static Selector<uint256_t, Address, Address> enrolled("enrolled");
+        std::cout << co_await enrolled.Call(*chain_, "latest", lottery, 90000, funder, recipient) << std::endl;
+
     } else if (command == "lottery1:mark") {
         const auto [lottery, token, signer, marked] = Options<Address, Address, Address, uint64_t>(args);
         static Selector<void, Address, Address, uint64_t> mark("mark");
