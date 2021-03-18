@@ -2,11 +2,10 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
+import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 
@@ -15,7 +14,7 @@ import 'package:orchid/api/purchase/orchid_purchase.dart';
 ///
 void main() async {
   // Disable for the CI
-  const bool disabled = true;
+  const bool disabled = false;
   if (disabled) {
     print("Disabled.");
     return;
@@ -37,8 +36,14 @@ void main() async {
 
     test('get balance', () async {
       print("Get balance...");
-      await OrchidPACServer().getBalance(signer: signer, apiConfig: apiConfig);
-      print("Get balance complete...");
+      var account = await OrchidPACServer().getAccount(signer: signer, apiConfig: apiConfig);
+      print("account: $account");
+    });
+
+    test('get L3 nonce', () async {
+      print("Get L3 Nonce...");
+      var signer = EthereumAddress.from('0xD9B90C0A03d9Cf7aa2680773f81D62B761A41F65');
+      await OrchidPacSeller.getL3Nonce(chain: Chains.xDAI, signer: signer);
     });
 
     test('add balance', () async {
@@ -48,31 +53,35 @@ void main() async {
       print("Add balance complete...");
     });
 
+    /*
     test('submit raw tx', () async {
       print("Submit raw...");
       var adjust = BigInt.from(1e17); // 0.1
       var retrieve = BigInt.from(0);
       // A move transaction
       EthereumTransaction tx = EthereumTransaction(
-        from: signer,
-        // lottery contract address v1 (in flux)
-        to: EthereumAddress.from("0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b"),
-        gas: 175000,
-        gasPrice: BigInt.from(1e9),
-        value: BigInt.from(1e18),
-        chainId: Chains.xDAI.chainId,
+        params: EthereumTransactionParams(
+            from: signer,
+            // lottery contract address v1 (in flux)
+            to: EthereumAddress.from(
+                "0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b"),
+            gas: 175000,
+            gasPrice: BigInt.from(1e9),
+            value: BigInt.from(1e18),
+            chainId: Chains.xDAI.chainId),
         // No nonce
         // nonce: ...
         data: OrchidContractV1.abiEncodeMove(signer, adjust, retrieve),
       );
 
-      await OrchidPACServer().submitRawTransaction(
+      await OrchidPACServer().submitSellerTransaction(
           signer: signer,
           chainId: Chains.xDAI.chainId,
-          tx: tx,
+          txParams: tx,
           apiConfig: apiConfig);
       print("Submit raw complete...");
     });
+     */
 
     test('get Binance exchange rates', () async {
       // discontinued pair ordering
@@ -103,7 +112,6 @@ void main() async {
       var price = await OrchidEthereumV1.getBandwidthPrice();
       print("bandwidth price = $price");
     });
-
   });
 }
 

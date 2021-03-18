@@ -1,18 +1,24 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/units.dart';
+import 'package:web3dart/crypto.dart';
 import '../orchid_api.dart';
 import '../orchid_crypto.dart';
 import '../orchid_log_api.dart';
+import 'orchid_pac_seller.dart';
 import 'orchid_pac_transaction.dart';
 import 'orchid_purchase.dart';
 import 'package:orchid/util/strings.dart';
+import 'package:convert/convert.dart';
 
 /// The PAC service exchanges an in-app purchase receipt for an Orchid PAC.
 class OrchidPACServer {
@@ -107,8 +113,8 @@ class OrchidPACServer {
         case PacTransactionType.AddBalance:
           response = await _callAddBalance(tx);
           break;
-        case PacTransactionType.SubmitRawTransaction:
-          response = await _callSubmitRaw(tx);
+        case PacTransactionType.SubmitSellerTransaction:
+          response = await _callSubmitSellerTx(tx);
           break;
         case PacTransactionType.PurchaseTransaction:
           response = await _callPurchase(tx);
@@ -118,9 +124,9 @@ class OrchidPACServer {
       // Success: store the response.
       tx.serverResponse = response;
       tx.state = PacTransactionState.Complete;
-    } catch (err) {
+    } catch (err, stack) {
       // Server error
-      log("iap: error in pac submit: $err");
+      log("iap: error in pac submit: $err, $stack");
       tx.serverResponse = "$err";
 
       // Schedule retry
@@ -167,12 +173,28 @@ class OrchidPACServer {
     return addBalance(signer: tx.signer, receipt: tx.receipt);
   }
 
-  Future<String> _callSubmitRaw(PacSubmitRawTransaction rawTx) async {
-    log("iap: submit send raw tx to PAC server");
-    var tx = rawTx.tx;
-    var signer = tx.from;
+  Future<String> _callSubmitSellerTx(
+      PacSubmitSellerTransaction sellerTx) async {
+    log("iap: submit seller tx to PAC server: ${sellerTx.toJson()}");
+    var tx = sellerTx.txParams;
+    print("XXX: tx = $tx, tx.chainId = ${tx.chainId}");
     var chainId = tx.chainId;
-    return submitRawTransaction(signer: signer, chainId: chainId, tx: tx);
+    var chain = Chains.chainFor(chainId);
+    var signerKey = await sellerTx.signerKey.get();
+    var signer = signerKey.address;
+
+    var l2Nonce = (await getAccount(signer: signer)).nonces[tx.chainId];
+    var l3Nonce =
+        await OrchidPacSeller.getL3Nonce(chain: chain, signer: signer);
+
+    return submitSellerTransaction(
+      signerKey: await sellerTx.signerKey.get(),
+      chainId: chainId,
+      txParams: tx,
+      l2Nonce: l2Nonce,
+      l3Nonce: l3Nonce,
+      escrowParam: sellerTx.escrow,
+    );
   }
 
   Future<String> _callPurchase(PacPurchaseTransaction tx) async {
@@ -187,7 +209,7 @@ class OrchidPACServer {
     }
 
     log("iap: purchase tx: submit raw");
-    tx.submitRaw.serverResponse = await _callSubmitRaw(tx.submitRaw);
+    tx.submitRaw.serverResponse = await _callSubmitSellerTx(tx.submitRaw);
     tx.submitRaw.state = PacTransactionState.Complete;
 
     return [tx.addBalance.serverResponse, tx.submitRaw.serverResponse]
@@ -198,16 +220,16 @@ class OrchidPACServer {
     get_account
     {'account_id': '0x00A0844371B32aF220548DCE332989404Fda2EeF'}
    */
+
   /// Get the PAC server USD balance for the account
-  Future<USD> getBalance({
+  Future<PacAccount> getAccount({
     @required EthereumAddress signer,
     PacApiConfig apiConfig, // optional override
   }) async {
     var params = {'account_id': signer.toString(prefix: true)};
     var result = await postJson(
         method: 'get_account', params: params, apiConfig: apiConfig);
-    print("XXX: get balance result = $result");
-    return USD(0);
+    return PacAccount.fromJson(result);
   }
 
   /*
@@ -229,37 +251,53 @@ class OrchidPACServer {
     return result.toString();
   }
 
-  /*
-    send_raw
-    {
-      "account_id": "0x00A0844371B32aF220548DCE332989404Fda2EeF",
-      "chainId": 100,
-      "txn": {
-        "from": "0x00A0844371B32aF220548DCE332989404Fda2EeF",
-        "to": "0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b",
-        "gas": "0x2ab98", // 175k
-        "gasPrice": "0x3b9aca00", // 1e9
-        "value": "0xde0b6b3a7640000", // 1e18
-        "chainId": 100,
-        "data": "0x987ff31c00000..."
-      }
-    }
-   */
-  Future<String> submitRawTransaction({
-    @required EthereumAddress signer,
+  Future<String> submitSellerTransaction({
+    @required StoredEthereumKey signerKey,
     @required int chainId,
-    @required EthereumTransaction tx,
-    PacApiConfig apiConfig, // optional override
+    @required int l2Nonce,
+    @required int l3Nonce,
+    @required EthereumTransactionParams txParams,
+
+    // This is required here in order to sign the edit parameters (inner signature).
+    // The corresponding balance is inferred from the tx total value.
+    @required BigInt escrowParam,
+
+    // optional override supports testing
+    PacApiConfig apiConfig,
   }) async {
+    log("iap: submit seller transaction with key and params");
+
+    var adjust = escrowParam;
+    var editTx = OrchidPacSeller.sellerEditTransaction(
+      signerKey: signerKey,
+      params: txParams,
+      l2Nonce: l2Nonce,
+      l3Nonce: l3Nonce,
+      adjust: adjust,
+    );
+    
+    var txString =
+        PacSubmitSellerTransaction.encodePacTransactionString(editTx.toJson());
+
+    var txStringSig = OrchidPacSeller.signTransactionString(txString, signerKey);
+
+    var rsv = hex.decode(AbiEncode.uint256(txStringSig.r)) +
+        hex.decode(AbiEncode.uint256(txStringSig.s)) +
+        intToBytes(BigInt.from(txStringSig.v));
+
     var params = {
-      'account_id': signer.toString(prefix: true),
+      'account_id': signerKey.address.toString(prefix: true),
       'chainId': chainId,
-      'txn': tx.toJson(),
+      // txn is encoded as an escaped json string
+      'txn': txString,
+      'sig': '0x' + hex.encode(rsv)
     };
-    print("XXX: send raw json = ${jsonEncode(params)}");
+
+    // print("iap: seller tx: send raw json = ${jsonEncode(params)}");
     var result = await postJson(
         method: 'send_raw', params: params, apiConfig: apiConfig);
-    print("XXX: send raw result = " + result.toString());
+    // print("iap: seller tx: send raw result = " + result.toString());
+
     return result.toString();
   }
 
@@ -337,7 +375,7 @@ class OrchidPACServer {
 
     // Do the post
     var postBody = jsonEncode(params);
-    log("iap: posting to $url, json = $postBody");
+    printWrapped("iap: posting to $url, json = $postBody");
     var response = await http.post(url,
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: postBody);
@@ -362,4 +400,24 @@ class PACStoreStatus {
   //Map<String, bool> product;
 
   PACStoreStatus({this.open});
+}
+
+class PacAccount {
+  USD balance;
+  Map<int, int> nonces;
+
+  // get balance result = {account_id: 0x92cFa426Cb13Df5151aD1eC8865c5C6841546603,
+  //  nonces: {100: 3}, balance: 156.955389285125}
+  PacAccount.fromJson(Map<String, dynamic> json) {
+    this.balance = USD(double.parse(json['balance']));
+    var nonceJson = json['nonces'];
+    nonces = {
+      for (var key in nonceJson.keys) int.parse(key): int.parse(nonceJson[key])
+    };
+  }
+
+  @override
+  String toString() {
+    return 'PacAccount{balance: $balance, nonces: $nonces}';
+  }
 }

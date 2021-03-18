@@ -6,6 +6,8 @@ import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/enums.dart';
+import 'package:orchid/util/hex.dart';
+import 'package:orchid/util/strings.dart';
 
 import '../orchid_crypto.dart';
 
@@ -17,7 +19,7 @@ enum PacTransactionType {
   AddBalance,
 
   /// Utilize balance on the server to submit a transaction
-  SubmitRawTransaction,
+  SubmitSellerTransaction,
 
   /// Combines an add balance and submit raw transaction into one operation
   PurchaseTransaction,
@@ -105,8 +107,8 @@ class PacTransaction {
       case PacTransactionType.AddBalance:
         return PacAddBalanceTransaction.fromJson(json);
         break;
-      case PacTransactionType.SubmitRawTransaction:
-        return PacSubmitRawTransaction.fromJson(json);
+      case PacTransactionType.SubmitSellerTransaction:
+        return PacSubmitSellerTransaction.fromJson(json);
         break;
       case PacTransactionType.PurchaseTransaction:
         return PacPurchaseTransaction.fromJson(json);
@@ -121,7 +123,7 @@ class PacTransaction {
 
   @override
   String toString() {
-    return 'PacTransaction' + trimValues(toJson()).toString();
+    return 'PacTransaction' + trimLongStrings(toJson()).toString();
   }
 
   PacTransaction ready() {
@@ -143,16 +145,6 @@ class PacTransaction {
     return Enums.fromString(PacTransactionType.values, s);
   }
 
-  // Trim long string values for e.g. logging purposes
-  static Map<String, dynamic> trimValues(Map<String, dynamic> json,
-      {int max: 1024}) {
-    return json.map((String key, dynamic value) {
-      if (value.toString().length > max) {
-        value = value.toString().substring(0, max) + '...';
-      }
-      return MapEntry(key, value);
-    });
-  }
 }
 
 class PacAddBalanceTransaction extends PacTransaction
@@ -161,7 +153,8 @@ class PacAddBalanceTransaction extends PacTransaction
   String productId;
   String receipt;
 
-  PacAddBalanceTransaction.pending({@required EthereumAddress signer, String productId})
+  PacAddBalanceTransaction.pending(
+      {@required EthereumAddress signer, String productId})
       : super(
           type: PacTransactionType.AddBalance,
           state: PacTransactionState.Pending,
@@ -192,6 +185,19 @@ class PacAddBalanceTransaction extends PacTransaction
     receipt = json['receipt'];
   }
 
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PacAddBalanceTransaction &&
+          runtimeType == other.runtimeType &&
+          signer == other.signer &&
+          productId == other.productId &&
+          receipt == other.receipt;
+
+  @override
+  int get hashCode => signer.hashCode ^ productId.hashCode ^ receipt.hashCode;
+
   @override
   Map<String, dynamic> toJson() {
     var json = super.toJson();
@@ -214,39 +220,72 @@ abstract class ReceiptTransaction extends PacTransaction {
 /// Encapsulates a raw on-chain transaction for submission to the pac server,
 /// which will sign and fund its submission.
 // Technically could be called PacSubmitRawTransactionTransaction :)
-class PacSubmitRawTransaction extends PacTransaction {
-  EthereumTransaction tx;
+class PacSubmitSellerTransaction extends PacTransaction {
+  StoredEthereumKeyRef signerKey;
+  EthereumTransactionParams txParams;
 
-  PacSubmitRawTransaction(EthereumTransaction rawTransaction)
-      : super(
+  // Application-specific parameters to be encoded into the edit call.
+  // These cannot be baked into a data string because they include nonces
+  // that must be signed at submit time.
+  BigInt escrow;
+
+  PacSubmitSellerTransaction({
+    @required StoredEthereumKeyRef signerKey,
+    @required EthereumTransactionParams txParams,
+    @required BigInt escrow,
+  }) : super(
           state: PacTransactionState.Pending,
-          type: PacTransactionType.SubmitRawTransaction,
+          type: PacTransactionType.SubmitSellerTransaction,
         ) {
-    this.tx = rawTransaction;
+    this.signerKey = signerKey;
+    this.txParams = txParams;
+    this.escrow = escrow;
   }
 
   @override
-  PacSubmitRawTransaction.fromJson(Map<String, dynamic> json,
+  PacSubmitSellerTransaction.fromJson(Map<String, dynamic> json,
       {PacTransaction parent})
       : super.fromJsonBase(json, parent: parent) {
-    tx = EthereumTransaction.fromJson(json['rawTransaction']);
+    txParams = EthereumTransactionParams.fromJson(json['txParams']);
+    signerKey = StoredEthereumKeyRef.from(json['signerKeyUid']);
+    escrow = BigInt.parse(json['escrow']);
   }
 
   @override
   Map<String, dynamic> toJson() {
     var json = super.toJson();
     json.addAll({
-      'rawTransaction': tx,
+      'txParams': txParams,
+      'signerKeyUid': signerKey.keyUid,
+      'escrow': Hex.hex(escrow), // 0x...
     });
     return json;
   }
+
+  /// Escaped json string with EIP-191 version E.
+  static String encodePacTransactionString(Map<String, dynamic> json) {
+    return jsonEncode(json).replaceAll("'", '"').replaceAll(' ', '');
+  }
+
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PacSubmitSellerTransaction &&
+          runtimeType == other.runtimeType &&
+          signerKey == other.signerKey &&
+          txParams == other.txParams;
+
+  @override
+  int get hashCode => signerKey.hashCode ^ txParams.hashCode;
+
 }
 
 /// Combines a add balance and a submit raw transaction to fund an account.
 class PacPurchaseTransaction extends PacTransaction
     implements ReceiptTransaction {
   PacAddBalanceTransaction addBalance;
-  PacSubmitRawTransaction submitRaw;
+  PacSubmitSellerTransaction submitRaw;
 
   PacPurchaseTransaction(this.addBalance, this.submitRaw)
       : super(
@@ -272,7 +311,7 @@ class PacPurchaseTransaction extends PacTransaction
     this.addBalance =
         PacAddBalanceTransaction.fromJson(json['addBalance'], parent: this);
     this.submitRaw =
-        PacSubmitRawTransaction.fromJson(json['submitRaw'], parent: this);
+        PacSubmitSellerTransaction.fromJson(json['submitRaw'], parent: this);
   }
 
   @override

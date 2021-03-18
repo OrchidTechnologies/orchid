@@ -1,5 +1,42 @@
 import 'package:flutter/foundation.dart';
+import 'package:orchid/util/hex.dart';
 import '../orchid_crypto.dart';
+
+class EthereumTransaction extends EthereumTransactionParams {
+  final EthereumTransactionParams params;
+  final String data;
+
+  EthereumTransaction({this.params, this.data});
+
+  Map<String, dynamic> toJson() {
+    // Export flat json
+    var json = params.toJson();
+    json.addAll({'data': data});
+    return json;
+  }
+
+  EthereumTransaction.fromJson(Map<String, dynamic> json)
+      // Import from flat json
+      : params = EthereumTransactionParams.fromJson(json),
+        data = json['data'];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is EthereumTransaction &&
+          runtimeType == other.runtimeType &&
+          params == other.params &&
+          data == other.data;
+
+  @override
+  int get hashCode => super.hashCode ^ params.hashCode ^ data.hashCode;
+
+  @override
+  String toString() {
+    return 'EthereumTransaction{params: $params, data: $data}';
+  }
+}
 
 /*
     {
@@ -14,24 +51,22 @@ import '../orchid_crypto.dart';
       }
     }
 */
-class EthereumTransaction {
+class EthereumTransactionParams {
   final EthereumAddress from;
   final EthereumAddress to;
   final int gas;
   final BigInt gasPrice;
   final BigInt value;
   final int chainId;
-  final String data;
-  final int nonce;
+  final int nonce; // the L1 nonce or null
 
-  EthereumTransaction({
+  EthereumTransactionParams({
     @required this.from,
     @required this.to,
     @required this.gas,
     @required this.gasPrice,
     @required this.value,
     @required this.chainId,
-    @required this.data,
     this.nonce,
   });
 
@@ -43,7 +78,6 @@ class EthereumTransaction {
       'gasPrice': hex(gasPrice),
       'value': hex(value),
       'chainId': chainId, // decimal int
-      'data': data,
     };
     // Exclude nonce if null
     if (nonce != null) {
@@ -54,7 +88,7 @@ class EthereumTransaction {
     return json;
   }
 
-  EthereumTransaction.fromJson(Map<String, dynamic> json)
+  EthereumTransactionParams.fromJson(Map<String, dynamic> json)
       : from = EthereumAddress.from(json['from']),
         to = EthereumAddress.from(json['to']),
         // parse takes 0x for hex
@@ -62,18 +96,17 @@ class EthereumTransaction {
         gasPrice = BigInt.parse(json['gasPrice']),
         value = BigInt.parse(json['value']),
         chainId = json['chainId'],
-        nonce = json['nonce'],
-        data = json['data']; // decimal
+        nonce = json['nonce'];
 
   String hex(dynamic val) {
-    return '0x' + val.toRadixString(16);
+    return Hex.hex(val);
   }
 
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is EthereumTransaction &&
+      other is EthereumTransactionParams &&
           runtimeType == other.runtimeType &&
           from == other.from &&
           to == other.to &&
@@ -81,7 +114,6 @@ class EthereumTransaction {
           gasPrice == other.gasPrice &&
           value == other.value &&
           chainId == other.chainId &&
-          data == other.data &&
           nonce == other.nonce;
 
   @override
@@ -92,11 +124,10 @@ class EthereumTransaction {
       gasPrice.hashCode ^
       value.hashCode ^
       chainId.hashCode ^
-      data.hashCode ^
       nonce.hashCode;
 
   @override
   String toString() {
-    return 'EthereumTransaction' + (toJson().toString());
+    return 'EthereumTransactionParams' + (toJson().toString());
   }
 }

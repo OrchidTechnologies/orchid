@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
+import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
@@ -26,13 +27,13 @@ import '../app_text.dart';
 typedef PurchasePageCompletion = void Function(); // TODO: return
 
 class PurchasePage extends StatefulWidget {
-  final EthereumAddress signer;
+  final StoredEthereumKey signerKey;
   final PurchasePageCompletion completion;
   final bool cancellable; // show the close button instead of a back arrow
 
   const PurchasePage(
       {Key key,
-      @required this.signer,
+      @required this.signerKey,
       @required this.completion,
       this.cancellable = false})
       : super(key: key);
@@ -556,17 +557,18 @@ class _PurchasePageState extends State<PurchasePage> {
     log("iap: calling purchase: $purchase");
 
     // TODO: Hard coded for xDAI currently
-    var fundingTx = await OrchidEthereumV1().createFundingTransaction(
-        signer: widget.signer,
+    var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
+        signerKey: widget.signerKey,
         chain: Chains.xDAI,
         totalUsdValue: purchase.usdPriceApproximate);
 
+    var signer = widget.signerKey.address;
     // Add the pending transaction(s) for this purchase
     PacPurchaseTransaction(
-      PacAddBalanceTransaction.pending(
-          signer: widget.signer, productId: purchase.productId),
-      PacSubmitRawTransaction(fundingTx),
-    ).save();
+            PacAddBalanceTransaction.pending(
+                signer: signer, productId: purchase.productId),
+            fundingTx)
+        .save();
 
     // Initiate the in-app purchase
     try {

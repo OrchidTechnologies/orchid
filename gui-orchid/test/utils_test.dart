@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/util/enums.dart';
+import 'package:orchid/util/strings.dart';
 import 'package:orchid/util/units.dart';
 
 import 'expect.dart';
@@ -43,7 +44,7 @@ void main() {
           '0000000000000000000000009dc2ab9a2f747b350094715bad80331f996b461b'
           '0000000000000000016345785d8a000000000000000000000000000000000000';
       var signer =
-          EthereumAddress.from('0x9DC2AB9a2f747b350094715bAd80331F996b461B');
+      EthereumAddress.from('0x9DC2AB9a2f747b350094715bAd80331F996b461B');
       var adjust = BigInt.from(1e17);
       var retrieve = BigInt.from(0);
       var data = OrchidContractV1.abiEncodeMove(signer, adjust, retrieve);
@@ -56,12 +57,29 @@ void main() {
       var usdToTokenRate = 1.0;
       var totalUsdValue = USD(40);
       var totalTokenValue =
-          currency.fromDouble(totalUsdValue.value * usdToTokenRate);
+      currency.fromDouble(totalUsdValue.value * usdToTokenRate);
       print("totalTokenValue = " + totalTokenValue.toString());
       print("totalUsdValue = $totalUsdValue, "
           "usdToTokenRate = $usdToTokenRate, "
           "totalTokenValue = $totalTokenValue, ");
     });
+
+    test('trim long values in nested json', () async {
+      var receipt = 'MIIT0wYJKoZIhvcNAQcCoIITxDCCE8ACAQExCzAJBgUrDgMCGgUAMIIDdAYJKoZIhvcNAQcBoIIDZQSCA2ExggNdMAoCAQgCAQEEAhYAMAoCARQCAQEEAgwAMAsCAQECAQEEAwIBADALAgELAgEBBAMCAQAwCwIBDwIBAQQDAgEAMAsCARACAQEEAwIBADALAgEZAgEBBAMCAQMwDAIBCgIBAQQEFgI0KzAMAgEOAgEBBAQCAgDPMA0CAQ0CAQEEBQIDAfz9MA0CARMCAQEEBQwDMS4wMA4CAQkCAQEEBgIEUDI1MzAYAgEEAgECBBCcYZTNCNSnk8yiOD6j3CIqMBoCAQMCAQEEEgwQNDcuNTUyMjIzLjk5MDAxNDAbAgEAAgEBBBM,';
+      var json = {
+        'name': "Kate",
+        'foo': {
+          'a': 'foostring',
+          'bar': {
+            'receipt': receipt,
+            'b': 'barstring',
+          }
+        }
+      };
+      print(trimLongStrings(json));
+    });
+
+    test('misc 3', () async {});
 
     //
   });

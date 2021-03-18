@@ -423,8 +423,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _addFunds() async {
-    var signer = _accountStore.activeIdentity?.address;
-    if (signer == null) {
+    var signerKey = _accountStore.activeIdentity;
+    if (signerKey == null) {
       throw Exception("iap: no signer!");
     }
     Navigator.push(
@@ -433,7 +433,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           fullscreenDialog: true,
           builder: (BuildContext context) {
             return PurchasePage(
-                signer: signer,
+                signerKey: signerKey,
                 completion: () {
                   log("purchase complete");
                 });

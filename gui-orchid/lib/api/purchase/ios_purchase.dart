@@ -269,7 +269,7 @@ class IOSOrchidPurchaseAPI
   }
 
   Map<String, PAC> _mockPacs() {
-    var price = 39.99;
+    var price = 0.99;
     var pacs = [
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',

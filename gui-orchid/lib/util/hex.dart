@@ -6,6 +6,10 @@ class Hex {
     }
     return text;
   }
+
+  static String hex(dynamic val) {
+    return '0x' + val.toRadixString(16);
+  }
 }
 
 class HexStringBuffer {
@@ -40,10 +44,13 @@ class HexStringBuffer {
   BigInt takeAddress() {
     return take(64);
   }
+  BigInt takeUint256() {
+    return take(64);
+  }
   BigInt takeUint128() {
     return take(64);
   }
-  BigInt takeUint256() {
+  BigInt takeUint64() {
     return take(64);
   }
   BigInt takeUint8() {

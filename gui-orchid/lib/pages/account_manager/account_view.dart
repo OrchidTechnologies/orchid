@@ -145,6 +145,7 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 
+  /*
   Widget _buildAddFundsButton() {
     return Container(
       width: 150,
@@ -154,6 +155,7 @@ class _AccountViewState extends State<AccountView> {
       ),
     );
   }
+   */
 
   bool get _active {
     return widget.account.active || _activated;
@@ -176,6 +178,7 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 
+  /*
   void _addFunds() async {
     Navigator.push(
       context,
@@ -193,6 +196,7 @@ class _AccountViewState extends State<AccountView> {
       //     }),
     );
   }
+   */
 
   Widget _buildHeader() {
     var account = widget.account;

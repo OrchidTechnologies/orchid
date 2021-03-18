@@ -36,6 +36,7 @@ class Chains {
       case XDAI_CHAINID:
         return xDAI;
     }
+    throw Exception("no chain for chainId: $chainId");
   }
 }
 

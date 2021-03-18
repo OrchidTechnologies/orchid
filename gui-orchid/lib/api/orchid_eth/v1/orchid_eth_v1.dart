@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
 import '../../configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import '../abi_encode.dart';
-import '../eth_transaction.dart';
 import '../orchid_account.dart';
 import '../../orchid_budget_api.dart';
 import '../../orchid_crypto.dart';
@@ -55,6 +52,11 @@ class OrchidEthereumV1 {
     return _lastGasPrice;
   }
 
+  /*
+    event Create(IERC20 indexed token, address indexed funder, address indexed signer);
+    event Update(bytes32 indexed key, uint256 escrow_amount);
+    event Delete(bytes32 indexed key, uint256 unlock_warned);
+   */
   Future<List<OrchidCreateEvent>> getCreateEvents(
     Chain chain,
     EthereumAddress signer,
@@ -65,9 +67,10 @@ class OrchidEthereumV1 {
       {
         "address": "${await OrchidContractV1.lotteryContractAddressV1}",
         "topics": [
-          OrchidContractV1.createEventHashV1,
-          "null", // no funder topic for index 1
-          AbiEncode.address(signer, prefix: true)
+          OrchidContractV1.createEventHashV1, // topic[0]
+          "null", // no token address specified for topic[1]
+          "null", // no funder address specified for topic[2]
+          AbiEncode.address(signer, prefix: true) // topic[3]
         ],
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
@@ -109,8 +112,7 @@ class OrchidEthereumV1 {
       "latest"
     ];
 
-    String result = await jsonRPC(
-        url: chain.providerUrl, method: "eth_call", params: params);
+    String result = await ethCall(url: chain.providerUrl, params: params);
     if (!result.startsWith("0x")) {
       print("Error result: $result");
       throw Exception();
@@ -132,57 +134,6 @@ class OrchidEthereumV1 {
     return LotteryPot(balance: balance, deposit: deposit, unlock: unlock);
   }
 
-  /// Create a default funding transaction allocating the total usd value
-  /// in USD among balance, deposit, and gas.  This method chooses a
-  /// conservative gas price and exchange rate for the native currency.
-  Future<EthereumTransaction> createFundingTransaction({
-    Chain chain,
-    EthereumAddress signer,
-    USD totalUsdValue,
-  }) async {
-    var currency = chain.nativeCurrency;
-
-    // Gas
-    var gasPriceMultiplier = 1.1;
-    var gasPrice =
-        (await getGasPrice(chain)).multiplyDouble(gasPriceMultiplier);
-    var gas = OrchidContractV1.lotteryMoveMaxGas;
-    var gasCost = gasPrice.multiplyInt(gas);
-
-    // Allocate value
-    var usdToTokenRate = await OrchidPricing().usdToTokenRate(currency);
-    var totalTokenValue =
-        currency.fromDouble(totalUsdValue.value * usdToTokenRate);
-    var useableTokenValue = totalTokenValue.subtract(gasCost);
-
-    var contract =
-        EthereumAddress.from(await OrchidContractV1.lotteryContractAddressV1);
-
-    // TODO: We currently have no way of knowing if the account exists.
-    // TODO: As a placeholder we will just always allocate a fraction to escrow.
-    var escrowPercentage = 0.1;
-    var escrow = useableTokenValue * escrowPercentage;
-
-    var moveCall =
-        OrchidContractV1.abiEncodeMove(signer, escrow.intValue, BigInt.zero);
-
-    log("eth: createFundingTransaction "
-        "totalUsdValue = $totalUsdValue, "
-        "usdToTokenRate = $usdToTokenRate, "
-        "totalTokenValue = $totalTokenValue, "
-        "useableTokenValue = $useableTokenValue, "
-        "escrow = $escrow");
-    return EthereumTransaction(
-      from: signer,
-      to: contract,
-      gas: gas,
-      gasPrice: gasPrice.intValue,
-      value: useableTokenValue.intValue,
-      chainId: chain.chainId,
-      data: moveCall,
-    );
-  }
-
   /// Get the Chainlink bandwidth price oracle value
   // curl $url -H 'Content-Type: application/json' --data '{"jsonrpc":"2.0","method":"eth_call","params":[{"to": "0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0", "data": "0x50d25bcd"}, "latest"],"id":1}'
   static Future<USD> getBandwidthPrice() async {
@@ -195,8 +146,7 @@ class OrchidEthereumV1 {
       "latest"
     ];
 
-    String result = await jsonRPC(
-        url: Chains.Ethereum.providerUrl, method: "eth_call", params: params);
+    String result = await ethCall(url: Chains.Ethereum.providerUrl, params: params);
     if (!result.startsWith("0x")) {
       print("Error result: $result");
       throw Exception();
@@ -206,6 +156,14 @@ class OrchidEthereumV1 {
     var buff = HexStringBuffer(result);
     BigInt value = buff.takeUint256();
     return USD(value.toDouble() / 1e5);
+  }
+
+  static Future<dynamic> ethCall({
+    @required String url,
+    List<Object> params = const [],
+  }) async {
+    return OrchidEthereumV0.ethJsonRpcCall(
+        url: url, method: "eth_call", params: params);
   }
 
   static Future<dynamic> jsonRPC({

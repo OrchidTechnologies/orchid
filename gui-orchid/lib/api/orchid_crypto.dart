@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:ethereum_address/ethereum_address.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:pointycastle/api.dart';
@@ -13,6 +14,9 @@ import 'package:pointycastle/key_generators/ec_key_generator.dart';
 import 'package:pointycastle/src/utils.dart' as decode;
 import 'package:uuid/uuid.dart';
 import 'package:uuid/uuid_util.dart';
+import 'package:web3dart/credentials.dart';
+import 'package:web3dart/crypto.dart';
+import 'package:convert/convert.dart';
 
 class Crypto {
   static final ECDomainParameters curve = ECCurve_secp256k1();
@@ -264,6 +268,17 @@ class StoredEthereumKeyRef {
     }
   }
 
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StoredEthereumKeyRef &&
+          runtimeType == other.runtimeType &&
+          keyUid == other.keyUid;
+
+  @override
+  int get hashCode => keyUid.hashCode;
+
   @override
   String toString() {
     return keyUid;
@@ -331,4 +346,20 @@ class EthereumAddress {
   @override
   // TODO: implement hashCode
   int get hashCode => value.hashCode;
+}
+
+class Web3DartUtils {
+
+  static MsgSignature web3Sign(Uint8List payload, StoredEthereumKey key) {
+    final credentials = EthPrivateKey.fromHex(key.private.toRadixString(16));
+    //print("payload = ${hex.encode(payload)}");
+    // Use web3 sign(), not web3 credentials.sign() which does a keccak256 on payload.
+    return sign(payload, credentials.privateKey);
+  }
+
+  // Imitating what web3dart does
+  static Uint8List padUint8ListTo32(Uint8List data) {
+    return data.length == 32 ? data : Uint8List(32)
+        ..setRange(32 - data.length, 32, data);
+  }
 }

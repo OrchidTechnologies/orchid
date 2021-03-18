@@ -19,6 +19,7 @@ dependencies:
   # this library can be upgraded to at least 3.0.1
   barcode_scan: 2.0.2
   cupertino_icons: 1.0.2
+  #crypto_keys: ^0.1.4 # requires pointy_castle 2
   dartjsengine: 1.0.1
   dotted_border: 1.0.7
   email_validator: 1.0.6
@@ -54,6 +55,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  pedantic: ^1.10.0
 
 flutter:
   uses-material-design: true
