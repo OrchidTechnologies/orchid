@@ -134,17 +134,41 @@ contract OrchidSeller {
     }
 
 
+    function gift_(IERC20 token, uint256 amount, address signer, uint256 escrow) private returns (bool) {
+    {
+        (uint256 balance,) = lottery_.read(token, address(this), signer);
+        balance = (balance >> 128) + uint128(balance);
+        if (balance > accounts_[signer].packed_ >> 128)
+            return false;
+    }
+
+        lottery_.mark(token, signer, uint64(block.timestamp));
+
+        require(escrow <= amount);
+        require(int256(escrow) >= 0);
+        lottery_.edit{value: amount}(signer, int256(escrow), 0, 0);
+
+        return true;
+    }
+
     function gift(address signer, uint256 escrow) external payable {
         execute_(IERC20(0), msg.sender, msg.value, 0);
-    {
-        (uint256 balance,) = lottery_.read(IERC20(0), address(this), signer);
-        balance = (balance >> 128) + uint128(balance);
-        require(balance <= accounts_[signer].packed_ >> 128);
+        require(gift_(IERC20(0), msg.value, signer, escrow));
     }
-        lottery_.mark(IERC20(0), signer, uint64(block.timestamp));
 
-        require(escrow <= msg.value);
-        require(int256(escrow) >= 0);
-        lottery_.edit{value: msg.value}(signer, int256(escrow), 0, 0);
+
+    struct Gift {
+        address signer;
+        uint256 amount;
+        uint256 escrow;
+    }
+
+    function giftv(Gift[] calldata gifts) external payable {
+        require(msg.sender == manager_);
+
+        for (uint i = gifts.length; i != 0; ) {
+            Gift calldata temp = gifts[--i];
+            gift_(IERC20(0), temp.amount, temp.signer, temp.escrow);
+        }
     }
 }

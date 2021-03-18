@@ -500,6 +500,44 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<uint256_t, Address, Address> allowed("allowed");
         std::cout << co_await allowed.Call(*chain_, "latest", seller, 90000, token, sender) << std::endl;
 
+    } else if (command == "orchid:giftv") {
+        orc_assert(nonce_);
+        const auto [seller] = Options<Address>(args);
+
+        typedef std::tuple<Address, uint256_t, uint256_t> Gift;
+        std::vector<Gift> gifts;
+        uint256_t total(0);
+
+        const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
+        for (auto line : Split(csv, {'\n'})) {
+            if (line.size() == 0 || line[0] == '#')
+                continue;
+            if (line[line.size() - 1] == '\r') {
+                line -= 1;
+                if (line.size() == 0)
+                    continue;
+            }
+
+            const auto comma0(Find(line, {','}));
+            orc_assert(comma0);
+            auto [recipient, rest] = Split(line, *comma0);
+
+            const auto comma1(Find(rest, {','}));
+            orc_assert(comma1);
+            auto [amount, escrow] = Split(rest, *comma1);
+
+            const auto &gift(gifts.emplace_back(std::string(recipient), std::string(amount), std::string(escrow)));
+            orc_assert(std::get<1>(gift) >= std::get<2>(gift));
+
+            std::cout << "gift " << seller << " " << std::get<0>(gift) << " " << std::get<1>(gift) << " " << std::get<2>(gift) << std::endl;
+            total += std::get<1>(gift);
+        }
+
+        std::cout << "total = " << total << std::endl;
+
+        static Selector<void, std::vector<Gift>> giftv("giftv");
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, seller, total, giftv(gifts))).hex() << std::endl;
+
     } else if (command == "p2pkh") {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
         const auto [data] = Options<Bytes>(args);
