@@ -34,7 +34,7 @@ class AbiEncode {
   }
 
   static String bytes32(BigInt value) {
-    return value.toRadixString(16).padLeft(32, '0');
+    return value.toRadixString(16).padLeft(64, '0');
   }
 }
 

@@ -97,7 +97,7 @@ class OrchidPacSeller {
 
     var amount = params.value;
 
-    // Signed params args to the edit call
+    // Signed params args to the seller edit call
     var packedEditParams = hex.decode(packedAbiEncodedEditParams(
       chainId: params.chainId,
       l3Nonce: l3Nonce,
@@ -107,21 +107,26 @@ class OrchidPacSeller {
       retrieve: retrieve,
       refill: refill,
     ));
-    print("XXX packedEditParams = $packedEditParams");
     var sig = Web3DartUtils.web3Sign(keccak256(packedEditParams), signerKey);
 
+    // The abi encoded seller edit call tx data
+    var encodedSellerEditCall = abiEncodeSellerEdit(
+        signer: signerKey.address,
+        signature: sig,
+        l3Nonce: l3Nonce,
+        adjust: adjust,
+        warn: warn,
+        retrieve: retrieve,
+        refill: refill);
+
+    // The pac server transaction with encoded pac seller edit call
     var tx = EthereumTransaction(
       params: params,
-      data: abiEncodeSellerEdit(
-          signer: signerKey.address,
-          signature: sig,
-          nonce: l2Nonce,
-          adjust: adjust,
-          warn: warn,
-          retrieve: retrieve,
-          refill: refill),
+      data: encodedSellerEditCall,
+      nonce: l2Nonce,
     );
     log("XXX: pac seller, unsigned tx = ${tx.toJson()}");
+
     return tx;
   }
 
@@ -148,7 +153,7 @@ class OrchidPacSeller {
   static String abiEncodeSellerEdit({
     @required EthereumAddress signer,
     @required MsgSignature signature,
-    @required int nonce,
+    @required int l3Nonce,
     @required BigInt adjust,
     @required BigInt warn,
     BigInt retrieve,
@@ -165,7 +170,7 @@ class OrchidPacSeller {
         '\n' +
         "AbiEncode.bytes32(signature.s) = ${AbiEncode.bytes32(signature.s)}" +
         '\n' +
-        "AbiEncode.uint64(BigInt.from(nonce)) = ${AbiEncode.uint64(BigInt.from(nonce))}" +
+        "AbiEncode.uint64(BigInt.from(nonce)) = ${AbiEncode.uint64(BigInt.from(l3Nonce))}" +
         '\n' +
         "AbiEncode.int256(adjust) = ${AbiEncode.int256(adjust)}" +
         '\n' +
@@ -182,7 +187,7 @@ class OrchidPacSeller {
         AbiEncode.uint8(signature.v) +
         AbiEncode.bytes32(signature.r) +
         AbiEncode.bytes32(signature.s) +
-        AbiEncode.uint64(BigInt.from(nonce)) +
+        AbiEncode.uint64(BigInt.from(l3Nonce)) +
         AbiEncode.int256(adjust) +
         AbiEncode.int256(warn) +
         AbiEncode.uint256(retrieve ?? BigInt.zero) +
@@ -216,9 +221,8 @@ class OrchidPacSeller {
     @required BigInt retrieve,
     @required BigInt refill,
   }) {
-    print(
-      "XXX: packedAbiEncodedEditParams:\n"
-        "AbiEncodePacked.bytes1(0x19) = ${AbiEncodePacked.bytes1(0x19)}\n" +
+    print("XXX: packedAbiEncodedEditParams:\n"
+            "AbiEncodePacked.bytes1(0x19) = ${AbiEncodePacked.bytes1(0x19)}\n" +
         "AbiEncodePacked.bytes1(0x00) = ${AbiEncodePacked.bytes1(0x00)}\n" +
         "AbiEncodePacked.address(pacSellerAddress) = ${AbiEncodePacked.address(pacSellerAddress)}\n" +
         "AbiEncodePacked.uint256(BigInt.from(chainId)) = ${AbiEncodePacked.uint256(BigInt.from(chainId))}\n" +
