@@ -324,7 +324,7 @@ class EthereumAddress {
     }
     text = Hex.remove0x(text);
     if (text.length != 40) {
-      throw Exception("invalid, length");
+      throw Exception("invalid, length: $text");
     }
     try {
       var val = BigInt.parse(text, radix: 16);
