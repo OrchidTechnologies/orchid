@@ -26,7 +26,7 @@ pragma abicoder v2;
 
 import "./lottery1.sol";
 
-contract OrchidSeller {
+contract OrchidSeller1 {
     OrchidLottery1 private immutable lottery_;
     address private owner_;
     address private manager_;
