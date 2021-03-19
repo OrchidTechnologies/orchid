@@ -107,18 +107,19 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         : _buildProgressIndicator();
   }
 
+  // TODO: This message is tailored for the full purchase for this release.
+  // TODO: In the future it will need to look at the transaction type.
   Widget _buildCompleted() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
-          'Transaction Complete',
+          'Transaction Sent To Blockchain',
           style: TextStyle(fontSize: 16),
         ),
         pady(8),
         Text(
-          'Your transaction is complete.  '
-              'It may take some time for adjustments to your balances to appear.',
+          "Your purchase is complete and is now being processed by the xDai blockchain which can take up to a minute, sometimes longer. Pull down to refresh and your account with an updated balance will appear below.",
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
