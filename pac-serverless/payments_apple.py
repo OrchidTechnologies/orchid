@@ -7,6 +7,7 @@ import sha3
 import time
 import hashlib
 import base64
+import products
 
 from decimal import Decimal
 from ecdsa import SigningKey, SECP256k1
@@ -18,21 +19,7 @@ from utils import configure_logging, is_true
 
 
 def get_product_id_mapping(store: str = 'apple') -> dict:
-    mapping = {}
-    mapping['apple'] = {
-        'net.orchid.pactier1': 39.99,
-        'net.orchid.pactier2': 79.99,
-        'net.orchid.pactier3': 199.99,
-        'net.orchid.pactier4': 0.99,
-        'net.orchid.pactier5': 9.99,
-        'net.orchid.pactier6': 99.99
-    }
-#     mapping['google'] = {
-#         'net.orchid.pactier1': 4.99,
-#         'net.orchid.pactier2': 9.99,
-#         'net.orchid.pactier3': 19.99,
-#     }
-    return mapping.get(store, {})
+    return procuts.get_product_id_mapping(store)
 
 
 def hash_receipt_body(receipt):
@@ -104,7 +91,7 @@ def process_app_pay_receipt(
 
 
 def wildcard_product_to_usd(product_id: str) -> float:
-    mapping = get_product_id_mapping()
+    mapping = products.get_product_id_mapping()
     for id in mapping:
         if id.split('.')[-1] == product_id.split('.')[-1]:
             return mapping[id]
@@ -112,7 +99,7 @@ def wildcard_product_to_usd(product_id: str) -> float:
 
 
 def product_to_usd(product_id: str) -> float:
-    mapping = get_product_id_mapping()
+    mapping = products.get_product_id_mapping()
     return mapping.get(product_id, -1)
 
 def handle_receipt(receipt, product_id, Stage, verify_receipt):
