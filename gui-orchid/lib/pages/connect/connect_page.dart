@@ -730,8 +730,8 @@ class _ConnectPageState extends State<ConnectPage>
     log("new release: Do new release activities.");
     return AppDialogs.showAppDialog(
       context: context,
-      title: "New Release",
-      bodyText: Release.message,
+      title: await Release.title(context),
+      body: Release.message(context),
     );
   }
 

@@ -47,6 +47,7 @@ class _PurchasePageState extends State<PurchasePage> {
   PACStoreStatus _storeStatus;
   List<PAC> _pacs;
   bool _storeMessageDimissed = false;
+  USD _bandwidthPrice;
 
   @override
   void initState() {
@@ -59,6 +60,11 @@ class _PurchasePageState extends State<PurchasePage> {
     initProducts();
 
     _storeStatus = await OrchidPACServer().storeStatus();
+    if (mounted) {
+      setState(() {});
+    }
+
+    _bandwidthPrice = await OrchidEthereumV1.getBandwidthPrice();
     if (mounted) {
       setState(() {});
     }
@@ -91,7 +97,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       if (AppSize(context).tallerThan(AppSize.iphone_12_max))
                         pady(64),
                       pady(12),
-                      _buildInstructions(),
+                      _buildTopText(),
                       pady(16),
                       _buildPacList(),
                       pady(32),
@@ -173,7 +179,7 @@ class _PurchasePageState extends State<PurchasePage> {
       height: 20.0 / 15.0,
       letterSpacing: -0.24);
 
-  Widget _buildInstructions() {
+  Widget _buildTopText() {
     const titleStyle = TextStyle(
       color: Colors.black,
       fontSize: 22.0,
@@ -182,16 +188,24 @@ class _PurchasePageState extends State<PurchasePage> {
       fontFamily: 'SFProText-Semibold',
     );
 
+    var payPerUse = "Pay Per Use VPN Service";
+    var price = _bandwidthPrice != null
+        ? "\$" + formatCurrency(_bandwidthPrice.value)
+        : "...";
+    var currentAvgVPNPrice = "Current avg. VPN price is $price per GB";
+    var notASub = "Not a subscription, credits don't expire";
+    var shareAccountWith = "Share account with unlimited devices";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Text(s.onetimePurchase, style: titleStyle),
+        Text(payPerUse, style: titleStyle),
         pady(16),
-        _buildCheckRow(s.spentOnlyWhenTheVpnIsActive),
+        _buildCheckRow(currentAvgVPNPrice),
         pady(8),
-        _buildCheckRow(s.noSubscriptionCreditsDontExpire),
+        _buildCheckRow(notASub),
         pady(8),
-        _buildCheckRow(s.unlimitedDevicesAndSharing),
+        _buildCheckRow(shareAccountWith),
         pady(12),
       ],
     );
@@ -201,18 +215,28 @@ class _PurchasePageState extends State<PurchasePage> {
     const text = "Purchased credit accounts connect exclusively to our";
     const linkText = "preferred providers";
     const linkUrl = "https://www.orchid.com/preferredproviders";
+    const text2 = "All purchased accounts use the";
+    const linkText2 = "xDai cryptocurrency";
+    const linkUrl2 = "https://www.xdaichain.com/";
+
+    var style1 = TextStyle(fontStyle: FontStyle.italic);
+    var style2 = TextStyle(color: Colors.black, fontSize: 15);
+    var linkStyle =
+        AppText.linkStyle.copyWith(fontSize: 15.0, fontStyle: FontStyle.italic);
     return RichText(
-        text:
-            TextSpan(style: TextStyle(fontStyle: FontStyle.italic), children: [
-      TextSpan(
-          text: text + " ",
-          style: TextStyle(color: Colors.black, fontSize: 15)),
+        text: TextSpan(style: style1, children: [
+      TextSpan(text: text + " ", style: style2),
       LinkTextSpan(
         text: linkText,
         url: linkUrl,
-        style: AppText.linkStyle
-            .copyWith(fontSize: 15.0, fontStyle: FontStyle.italic),
-      )
+        style: linkStyle,
+      ),
+      TextSpan(text: ". " + text2 + " ", style: style2),
+      LinkTextSpan(
+        text: linkText2,
+        url: linkUrl2,
+        style: linkStyle,
+      ),
     ]));
   }
 
