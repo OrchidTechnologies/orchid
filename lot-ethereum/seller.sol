@@ -98,10 +98,14 @@ contract OrchidSeller {
         uint256 packed_;
     }
 
-    mapping(address => Account) private accounts_;
+    mapping(IERC20 => mapping(address => Account)) private accounts_;
+
+    function read(IERC20 token, address signer) public view returns (uint256) {
+        return accounts_[token][signer].packed_;
+    }
 
     function read(address signer) external view returns (uint256) {
-        return accounts_[signer].packed_;
+        return read(IERC20(0), signer);
     }
 
 
@@ -113,7 +117,7 @@ contract OrchidSeller {
             digest, nonce, token, amount, adjust, warn, retrieve, refill));
         require(signer == ecrecover(digest, v, r, s));
     } {
-        Account storage account = accounts_[signer];
+        Account storage account = accounts_[token][signer];
         uint256 cache = account.packed_;
         require(uint192(refill) == refill);
         require(uint64(cache) == nonce);
@@ -138,7 +142,7 @@ contract OrchidSeller {
     {
         (uint256 balance,) = lottery_.read(token, address(this), signer);
         balance = (balance >> 128) + uint128(balance);
-        if (balance > accounts_[signer].packed_ >> 64)
+        if (balance > accounts_[token][signer].packed_ >> 64)
             return false;
     }
 
