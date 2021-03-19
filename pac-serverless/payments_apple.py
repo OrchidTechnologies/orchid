@@ -19,7 +19,7 @@ from utils import configure_logging, is_true
 
 
 def get_product_id_mapping(store: str = 'apple') -> dict:
-    return procuts.get_product_id_mapping(store)
+    return products.get_product_id_mapping(store)
 
 
 def hash_receipt_body(receipt):
