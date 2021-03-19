@@ -7,7 +7,9 @@ def get_product_id_mapping(store: str = 'apple') -> dict:
         'net.orchid.pactier3': 199.99,
         'net.orchid.pactier4': 0.99,
         'net.orchid.pactier5': 9.99,
-        'net.orchid.pactier6': 99.99
+        'net.orchid.pactier6': 99.99,
+        'net.orchid.pactier6': 4.99,
+        'net.orchid.pactier6': 24.99
     }
 #     mapping['google'] = {
 #         'net.orchid.pactier1': 4.99,
