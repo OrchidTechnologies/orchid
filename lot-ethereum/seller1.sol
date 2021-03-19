@@ -31,10 +31,10 @@ contract OrchidSeller1 {
     address private owner_;
     address private manager_;
 
-    constructor(OrchidLottery1 lottery, address owner) {
+    constructor(OrchidLottery1 lottery) {
         lottery_ = lottery;
-        owner_ = owner;
-        manager_ = owner;
+        owner_ = msg.sender;
+        manager_ = msg.sender;
 
         address[] memory recipients;
         lottery.enroll(false, recipients);
