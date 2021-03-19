@@ -25,9 +25,10 @@ import 'package:convert/convert.dart';
 class OrchidPACServer {
   static final OrchidPACServer _shared = OrchidPACServer._internal();
 
+  // TODO: Integrate with ios purchase api api config... same url.
   /// PAC Server status URL
   final String storeStatusUrl =
-      'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/store_status';
+      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/store_status';
 
   factory OrchidPACServer() {
     return _shared;

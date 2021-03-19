@@ -21,9 +21,8 @@ class IOSOrchidPurchaseAPI
   ///    debug: true
   ///  }'
   static PacApiConfig prodAPIConfig = PacApiConfig(
-      // url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/apple',
-      // TODO: Dev for this release!
-      url: 'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev');
+    url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/',
+  );
 
   /// Return the API config allowing overrides from configuration.
   @override
