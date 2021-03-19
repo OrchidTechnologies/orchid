@@ -250,7 +250,7 @@ struct Tester {
         }
         if (saved.size() < 75)
             goto seed;
-        co_await Audit("save", co_await recipient.Send(chain_, {}, lottery, 0, save(count - 1, seed)));
+        co_await Audit("save", co_await recipient.Send(chain_, {}, lottery, 0, save(count, seed)));
 
         const auto refunds([&](unsigned count) {
             orc_assert(saved.size() >= count);
