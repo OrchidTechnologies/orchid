@@ -571,10 +571,6 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [data] = Options<Bytes>(args);
         std::cout << ToSegwit(HashR(Hash2(data))) << std::endl;
 
-    } else if (command == "self") {
-        Options<>(args);
-        std::cout << executor_->operator Address() << std::endl;
-
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_, .gas = gas_}, recipient, amount, data)).hex() << std::endl;
@@ -598,6 +594,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "submit") {
         const auto [raw] = Options<Bytes>(args);
         std::cout << (co_await chain_->Send("eth_sendRawTransaction", {raw})).hex() << std::endl;
+
+    } else if (command == "this") {
+        Options<>(args);
+        std::cout << executor_->operator Address() << std::endl;
 
     } else if (command == "timestamp") {
         Options<>(args);
