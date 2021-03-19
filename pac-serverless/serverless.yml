@@ -144,11 +144,18 @@ functions:
     events:
       - schedule: rate(1 minute)
   manage_monitor:
-    handler: entry_txn_monitor
+    handler: entry_txn_monitor.main
     timeout: 10
     events:
       - http:
-          path: entry_txn_monitor.main
+          path: entry_txn_monitor
+          method: post
+  store_status:
+    handler: entry_status.main
+    timeout: 10
+    events:
+      - http:
+          path: store_status
           method: post
   get_account:
     handler: entry_account.main
