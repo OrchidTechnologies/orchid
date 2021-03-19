@@ -277,7 +277,7 @@ int Main(int argc, const char *const argv[]) {
     const auto network(Break<Network>(chain, directory, location));
 
     static const Address lottery0("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
-    static const Address lottery1("0xDDEb61f9DB3633F3e9c6ddAd7d2635e8cD58a172");
+    static const Address lottery1("0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82");
 
     const Address funder(args["funder"].as<std::string>());
     const auto secret(Bless<Secret>(args["secret"].as<std::string>()));
