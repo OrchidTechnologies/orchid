@@ -51,12 +51,13 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
     initStateAsync();
   }
 
-  void initStateAsync() async {}
+  void initStateAsync() async { }
 
   // If the hop is empty initialize it to defaults now.
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
+    OrchidPlatform.staticLocale = locale;
     log("locale = $locale");
     var preferredSize = Size.fromHeight(kToolbarHeight);
     return Scaffold(

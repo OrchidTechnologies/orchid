@@ -8,8 +8,8 @@ class OrchidContractV1 {
   // TODO: This is the (in-progress) xDai V1 contract address
   // static var _lotteryContractAddressV1 = '0xA67D6eCAaE2c0073049BB230FB4A8a187E88B77b';
   // static var _lotteryContractAddressV1 = '0x02d361Da0cDa7bB6316e3e8D04D49a4738cC2fD3';
-  static var _lotteryContractAddressV1 =
-      '0xDDEb61f9DB3633F3e9c6ddAd7d2635e8cD58a172';
+  // static var _lotteryContractAddressV1 = '0xDDEb61f9DB3633F3e9c6ddAd7d2635e8cD58a172';
+  static var _lotteryContractAddressV1 = '0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82';
 
   static Future<String> get lotteryContractAddressV1 async {
     return (await OrchidVPNConfig.getUserConfigJS())

@@ -279,14 +279,14 @@ class IOSOrchidPurchaseAPI
         usdPriceApproximate: USD(price),
       ),
       PAC(
-        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5',
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10',
         localCurrencyCode: "USD",
         localCurrencySymbol: '\$',
         localPrice: price,
         usdPriceApproximate: USD(price),
       ),
       PAC(
-        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6',
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11',
         localCurrencyCode: "EUR",
         localCurrencySymbol: '€',
         localPrice: price,

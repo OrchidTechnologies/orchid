@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +8,13 @@ import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dar
 import 'package:orchid/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/util/json.dart';
 import 'package:orchid/util/units.dart';
 import 'package:web3dart/crypto.dart';
 import '../orchid_api.dart';
 import '../orchid_crypto.dart';
 import '../orchid_log_api.dart';
+import '../orchid_platform.dart';
 import 'orchid_pac_seller.dart';
 import 'orchid_pac_transaction.dart';
 import 'orchid_purchase.dart';
@@ -25,8 +26,8 @@ class OrchidPACServer {
   static final OrchidPACServer _shared = OrchidPACServer._internal();
 
   /// PAC Server status URL
-  final String statusUrl =
-      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/status';
+  final String storeStatusUrl =
+      'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/store_status';
 
   factory OrchidPACServer() {
     return _shared;
@@ -183,7 +184,7 @@ class OrchidPACServer {
     var signerKey = await sellerTx.signerKey.get();
     var signer = signerKey.address;
 
-    var l2Nonce = (await getAccount(signer: signer)).nonces[tx.chainId];
+    var l2Nonce = (await getPacAccount(signer: signer)).nonces[tx.chainId];
     var l3Nonce =
         await OrchidPacSeller.getL3Nonce(chain: chain, signer: signer);
 
@@ -222,12 +223,12 @@ class OrchidPACServer {
    */
 
   /// Get the PAC server USD balance for the account
-  Future<PacAccount> getAccount({
+  Future<PacAccount> getPacAccount({
     @required EthereumAddress signer,
     PacApiConfig apiConfig, // optional override
   }) async {
     var params = {'account_id': signer.toString(prefix: true)};
-    var result = await postJson(
+    var result = await _postJson(
         method: 'get_account', params: params, apiConfig: apiConfig);
     return PacAccount.fromJson(result);
   }
@@ -245,7 +246,7 @@ class OrchidPACServer {
       'account_id': signer.toString(prefix: true),
       'receipt': receipt,
     };
-    var result = await postJson(
+    var result = await _postJson(
         method: 'payment_apple', params: params, apiConfig: apiConfig);
     print("XXX: add balance result = " + result.toString());
     return result.toString();
@@ -275,11 +276,12 @@ class OrchidPACServer {
       l3Nonce: l3Nonce,
       adjust: adjust,
     );
-    
+
     var txString =
         PacSubmitSellerTransaction.encodePacTransactionString(editTx.toJson());
 
-    var txStringSig = OrchidPacSeller.signTransactionString(txString, signerKey);
+    var txStringSig =
+        OrchidPacSeller.signTransactionString(txString, signerKey);
 
     var rsv = hex.decode(AbiEncode.uint256(txStringSig.r)) +
         hex.decode(AbiEncode.uint256(txStringSig.s)) +
@@ -294,14 +296,24 @@ class OrchidPACServer {
     };
 
     // print("iap: seller tx: send raw json = ${jsonEncode(params)}");
-    var result = await postJson(
+    var result = await _postJson(
         method: 'send_raw', params: params, apiConfig: apiConfig);
     // print("iap: seller tx: send raw result = " + result.toString());
 
     return result.toString();
   }
 
+  /// V1 pac store status.  This method returns down in the event of error.
   Future<PACStoreStatus> storeStatus() async {
+    /*
+    $ curl -X POST -H "Content-Type: application/json"
+      --data '{"client_version":"0.9.24", "client_locale": "en"}'
+      --url https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/store_status
+      {"store_status": 1, "message": "", "sellers": {"100": "0xabEB207C9C82c80D2c03545A73F234d0544172A2"},
+      "products": {"net.orchid.pactier1": 39.99, "net.orchid.pactier2": 79.99,
+      "net.orchid.pactier3": 199.99, "net.orchid.pactier4": 0.99,
+      "net.orchid.pactier5": 9.99, "net.orchid.pactier6": 99.99}
+   */
     log("iap: check PAC server status");
 
     bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
@@ -312,58 +324,41 @@ class OrchidPACServer {
     }
 
     // Do the post
-    var response = await http.get(
-      statusUrl,
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-    );
-
-    // Validate the response status and content
-    log("iap: pac server status response: ${response.statusCode}, ${response.body}");
-    if (response.statusCode != 200) {
+    var responseJson;
+    try {
+      responseJson = await _postJsonToUrl(url: storeStatusUrl, paramsIn: {});
+    } catch (err) {
+      log("iap: pac server status response error: ${err}");
       return PACStoreStatus.down;
     }
 
-    // Safely and conservatively parse bool from the server
-    bool Function(Object val, bool defaultValue) parseBool =
-        (val, defaultValue) {
-      if (val == null) {
-        return defaultValue;
-      }
-      String sval = val.toString().toLowerCase();
-      if (sval == "true") {
-        return true;
-      }
-      if (sval == "false") {
-        return false;
-      }
-      return defaultValue;
-    };
+    // parse store status
+    var storeStatus =
+        Json.toIntSafe(responseJson['store_status'], defaultValue: 0);
 
-    var responseJson = json.decode(response.body);
-    var disabled = parseBool(responseJson['disabled'], false);
+    // parse store message
+    var jsonMessage = Json.trimStringOrNull(responseJson['message']);
+    String message = (await OrchidVPNConfig.getUserConfigJS())
+        .evalStringDefault('pacs.storeMessage', jsonMessage);
 
-    return PACStoreStatus(open: !disabled);
+    // parse the seller address map
+    // TODO: ...
+
+    // Testing...
+    // message = "Testing store message...";
+    // return PACStoreStatus.down;
+
+    return PACStoreStatus(open: storeStatus == 1, message: message);
   }
 
   /// Post json to our PAC server
-  Future<dynamic> postJson({
-    @required String method,
-    Map<String, dynamic> params = const {},
-    PacApiConfig apiConfig, // optional override
-  }) async {
-    return _postJson(method: method, inParams: params, apiConfig: apiConfig);
-  }
-
   Future<dynamic> _postJson({
     @required String method,
-    Map<String, dynamic> inParams = const {},
+    @required Map<String, dynamic> params,
     PacApiConfig apiConfig, // optional override
   }) async {
     apiConfig = apiConfig ?? await OrchidPurchaseAPI().apiConfig();
     var url = '${apiConfig.url}/$method';
-
-    Map<String, dynamic> params = {};
-    params.addAll(inParams);
 
     // Optional dev testing params
     if (!apiConfig.verifyReceipt) {
@@ -373,11 +368,35 @@ class OrchidPACServer {
       params.addAll({'debug': 'True'});
     }
 
-    // Do the post
+    return _postJsonToUrl(url: url, paramsIn: params);
+  }
+
+  /// Post json to our PAC server
+  Future<dynamic> _postJsonToUrl({
+    @required String url,
+    @required Map<String, dynamic> paramsIn,
+  }) async {
+    var clientVersion = await OrchidAPI().versionString();
+    var clientLocale =
+        '${OrchidPlatform.staticLocale.languageCode}-${OrchidPlatform.staticLocale.countryCode}';
+
+    var params = {};
+    params.addAll(paramsIn);
+
+    // Version and locale
+    params.addAll({
+      //'client_locale': clientLocale,
+      'client_version': clientVersion,
+    });
+
+    // Do the http post
     var postBody = jsonEncode(params);
     printWrapped("iap: posting to $url, json = $postBody");
     var response = await http.post(url,
-        headers: {"Content-Type": "application/json; charset=utf-8"},
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Accept-Language": clientLocale,
+        },
         body: postBody);
 
     // Validate the response status and content
@@ -391,15 +410,19 @@ class OrchidPACServer {
 }
 
 class PACStoreStatus {
-  static PACStoreStatus down = PACStoreStatus(open: false);
+  static PACStoreStatus down = PACStoreStatus(
+      open: false, message: "The store is temporarily unavailable.");
 
   // overall store status
-  bool open;
+  final bool open;
+
+  // Message to display or null if none.
+  final String message;
 
   // product status
   //Map<String, bool> product;
 
-  PACStoreStatus({this.open});
+  PACStoreStatus({this.message, this.open});
 }
 
 class PacAccount {
@@ -409,10 +432,12 @@ class PacAccount {
   // get balance result = {account_id: 0x92cFa426Cb13Df5151aD1eC8865c5C6841546603,
   //  nonces: {100: 3}, balance: 156.955389285125}
   PacAccount.fromJson(Map<String, dynamic> json) {
-    this.balance = USD(double.parse(json['balance']));
+    this.balance = USD(Json.toDouble(json['balance']));
     var nonceJson = json['nonces'];
     nonces = {
-      for (var key in nonceJson.keys) int.parse(key): int.parse(nonceJson[key])
+      // for (var key in nonceJson.keys) int.parse(key): int.parse(nonceJson[key])
+      for (var key in nonceJson.keys)
+        Json.toInt(key): Json.toInt(nonceJson[key])
     };
   }
 

@@ -7,7 +7,7 @@ import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/enums.dart';
 import 'package:orchid/util/hex.dart';
-import 'package:orchid/util/strings.dart';
+import 'package:orchid/util/json.dart';
 
 import '../orchid_crypto.dart';
 
@@ -123,7 +123,7 @@ class PacTransaction {
 
   @override
   String toString() {
-    return 'PacTransaction' + trimLongStrings(toJson()).toString();
+    return 'PacTransaction' + Json.trimLongStrings(toJson()).toString();
   }
 
   PacTransaction ready() {

@@ -36,7 +36,7 @@ void main() async {
 
     test('get balance', () async {
       print("Get balance...");
-      var account = await OrchidPACServer().getAccount(signer: signer, apiConfig: apiConfig);
+      var account = await OrchidPACServer().getPacAccount(signer: signer, apiConfig: apiConfig);
       print("account: $account");
     });
 

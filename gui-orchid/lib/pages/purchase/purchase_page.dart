@@ -44,10 +44,9 @@ class PurchasePage extends StatefulWidget {
 
 class _PurchasePageState extends State<PurchasePage> {
   List<StreamSubscription> _subscriptions = [];
-
   PACStoreStatus _storeStatus;
-
   List<PAC> _pacs;
+  bool _storeMessageDimissed = false;
 
   @override
   void initState() {
@@ -103,14 +102,17 @@ class _PurchasePageState extends State<PurchasePage> {
               ),
             ),
           ),
-          if (!_storeOpen) _buildStoreDown()
+          if (_storeDown || _showStoreMessage) _buildStoreMessage()
         ],
       ),
     );
   }
 
-  Widget _buildStoreDown() {
+  Widget _buildStoreMessage() {
     Size size = MediaQuery.of(context).size;
+    var text = _storeStatus?.message != null
+        ? _storeStatus.message
+        : "The Orchid Store is temporarily unavailable.  Please check back in a few minutes.";
     return Center(
         child: Container(
             color: Colors.white24.withOpacity(0.5),
@@ -131,17 +133,33 @@ class _PurchasePageState extends State<PurchasePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "The Orchid Store is temporarily unavailable.  "
-                        "Please check back in a few minutes.",
-                        style: TextStyle(color: Colors.black, fontSize: 13.0),
+                        text,
+                        style: TextStyle(color: Colors.black, fontSize: 14.0),
                       ),
                       pady(8),
                       LinkText(
                         "See orchid.com for help.",
                         overflow: TextOverflow.visible,
-                        style: AppText.linkStyle.copyWith(fontSize: 13.0),
+                        style: AppText.linkStyle.copyWith(fontSize: 12.0),
                         url: 'https://orchid.com/help',
                       ),
+                      if (_storeUp)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 24.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              RoundedRectButton(
+                                text: s.ok,
+                                onPressed: () {
+                                  setState(() {
+                                    _storeMessageDimissed = true;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        )
                     ],
                   ),
                 ),
@@ -244,11 +262,11 @@ class _PurchasePageState extends State<PurchasePage> {
     }
     // TODO: Hard-coded expected ids
     var pacTier4 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4';
-    var pacTier5 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier5';
-    var pacTier6 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier6';
+    var pacTier10 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10';
+    var pacTier11 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11';
     var pac1 = _pacs.firstWhere((pac) => pac.productId == pacTier4);
-    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier5);
-    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier6);
+    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier10);
+    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier11);
 
     return [
       _buildPurchaseCardView(
@@ -323,7 +341,7 @@ class _PurchasePageState extends State<PurchasePage> {
         : '...';
      */
 
-    var enabled = pac.localPrice != null && _storeOpen == true;
+    var enabled = pac.localPrice != null && _storeUp == true;
 
     Gradient grad = VerticalLinearGradient(
         begin: Alignment(0.0, gradBegin),
@@ -652,8 +670,18 @@ class _PurchasePageState extends State<PurchasePage> {
     return S.of(context);
   }
 
-  bool get _storeOpen {
-    return _storeStatus == null || _storeStatus.open;
+  // return up if not null
+  bool get _storeUp {
+    return _storeStatus != null && _storeStatus.open;
+  }
+
+  // return down if not null
+  bool get _storeDown {
+    return _storeStatus != null && !_storeStatus.open;
+  }
+
+  bool get _showStoreMessage {
+    return _storeStatus?.message != null && !_storeMessageDimissed;
   }
 
 /*

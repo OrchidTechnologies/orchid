@@ -18,8 +18,9 @@ import 'package:convert/convert.dart';
 import 'dart:convert' show utf8;
 
 class OrchidPacSeller {
-  static final EthereumAddress pacSellerAddress =
-      EthereumAddress.from('0xabEB207C9C82c80D2c03545A73F234d0544172A2');
+  // TODO: This is only valid for xDai.  The server will maintain a list.
+  static final EthereumAddress sellerContractAddress =
+      EthereumAddress.from('0x7dFae1C74a946FCb50e7376Ff40fe2Aa3A2F9B2b');
 
   // edit(address,uint8,bytes32,bytes32,uint64,int256,int256,uint256,uint256)
   static String editMethodHash = '8b6c888f';
@@ -65,7 +66,7 @@ class OrchidPacSeller {
 
     var txParams = EthereumTransactionParams(
       from: signer,
-      to: pacSellerAddress,
+      to: sellerContractAddress,
       gas: gas,
       gasPrice: gasPrice.intValue,
       value: useableTokenValue.intValue,
@@ -224,7 +225,7 @@ class OrchidPacSeller {
     print("XXX: packedAbiEncodedEditParams:\n"
             "AbiEncodePacked.bytes1(0x19) = ${AbiEncodePacked.bytes1(0x19)}\n" +
         "AbiEncodePacked.bytes1(0x00) = ${AbiEncodePacked.bytes1(0x00)}\n" +
-        "AbiEncodePacked.address(pacSellerAddress) = ${AbiEncodePacked.address(pacSellerAddress)}\n" +
+        "AbiEncodePacked.address(pacSellerAddress) = ${AbiEncodePacked.address(sellerContractAddress)}\n" +
         "AbiEncodePacked.uint256(BigInt.from(chainId)) = ${AbiEncodePacked.uint256(BigInt.from(chainId))}\n" +
         "AbiEncodePacked.uint64(BigInt.from(l3Nonce)) = ${AbiEncodePacked.uint64(BigInt.from(l3Nonce))}\n" +
         "AbiEncodePacked.address(token ?? EthereumAddress.zero) = ${AbiEncodePacked.address(token ?? EthereumAddress.zero)}\n" +
@@ -237,7 +238,7 @@ class OrchidPacSeller {
     var encoded = '' +
         AbiEncodePacked.bytes1(0x19) +
         AbiEncodePacked.bytes1(0x00) +
-        AbiEncodePacked.address(pacSellerAddress) +
+        AbiEncodePacked.address(sellerContractAddress) +
         AbiEncodePacked.uint256(BigInt.from(chainId)) +
         AbiEncodePacked.uint64(BigInt.from(l3Nonce)) +
         AbiEncodePacked.address(token ?? EthereumAddress.zero) +
@@ -254,7 +255,7 @@ class OrchidPacSeller {
   static Future<int> getL3Nonce({Chain chain, EthereumAddress signer}) async {
     var params = [
       {
-        "to": "$pacSellerAddress",
+        "to": "$sellerContractAddress",
         "data": "0x${readMethodHash}"
             "${AbiEncode.address(signer)}"
       },
