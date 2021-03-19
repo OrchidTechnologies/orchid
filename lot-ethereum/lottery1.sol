@@ -202,6 +202,7 @@ contract OrchidLottery1 {
             uint256 value = cancel ? uint256(-1) : block.timestamp + day_;
             do {
                 address recipient = recipients[--i];
+                require(recipient != address(0));
                 loop.merchants_[recipient] = value;
                 emit Enroll(msg.sender, recipient);
             } while (i != 0);
