@@ -268,7 +268,6 @@ class StoredEthereumKeyRef {
     }
   }
 
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -294,7 +293,7 @@ class EthereumAddress {
 
   EthereumAddress(BigInt value) {
     // Allow the string parser to validate.
-    this.value = parse(value.toRadixString(16));
+    this.value = parse(value.toRadixString(16).toLowerCase().padLeft(40, '0'));
   }
 
   EthereumAddress.from(String text) {
@@ -349,7 +348,6 @@ class EthereumAddress {
 }
 
 class Web3DartUtils {
-
   static MsgSignature web3Sign(Uint8List payload, StoredEthereumKey key) {
     final credentials = EthPrivateKey.fromHex(key.private.toRadixString(16));
     //print("payload = ${hex.encode(payload)}");
@@ -360,6 +358,6 @@ class Web3DartUtils {
   // Imitating what web3dart does
   static Uint8List padUint8ListTo32(Uint8List data) {
     return data.length == 32 ? data : Uint8List(32)
-        ..setRange(32 - data.length, 32, data);
+      ..setRange(32 - data.length, 32, data);
   }
 }
