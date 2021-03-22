@@ -153,21 +153,41 @@ class _SettingsPageState extends State<SettingsPage> {
                       context: context)),
 
                 // V1 UI opt-out
-                _item(PageTile(
-                  title: "Enable Multi-hop UI",
-                  trailing: Switch(
-                    activeColor: AppColors.purple_3,
-                    value: _guiV0,
-                    onChanged: (bool value) async {
-                      await UserPreferences().guiV0.set(value);
-                      OrchidAPI().updateConfiguration();
-                      AppDialogs.showConfigurationChangeSuccess(context,
-                          warnOnly: true);
-                      setState(() {
-                        _guiV0 = value;
-                      });
-                    },
-                  ),
+                _item(Column(
+                  children: [
+                    PageTile(
+                      title: "Enable Multi-hop UI",
+                      trailing: Switch(
+                        activeColor: AppColors.purple_3,
+                        value: _guiV0,
+                        onChanged: (bool value) async {
+                          await UserPreferences().guiV0.set(value);
+                          OrchidAPI().updateConfiguration();
+                          AppDialogs.showConfigurationChangeSuccess(context,
+                              warnOnly: true);
+                          setState(() {
+                            _guiV0 = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 16, right: 24, top: 0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.warning, color: Colors.deepPurple),
+                          padx(12),
+                          Expanded(
+                            child: Text(
+                                "If you want to use multi-hop, OpenVPN and WireGuard you’ll need to enable multi-hop interface. To buy credits, you’ll need to disable multi-hop interface.",
+                                style: TextStyle(fontSize: 14)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 )),
 
                 if (_tester)
@@ -176,7 +196,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     trailing: RaisedButton(
                       child: Text(s.reset),
                       onPressed: () {
-                        UserPreferences().releaseVersion.set(ReleaseVersion.firstLaunch());
+                        UserPreferences()
+                            .releaseVersion
+                            .set(ReleaseVersion.firstLaunch());
                       },
                     ),
                   )),
