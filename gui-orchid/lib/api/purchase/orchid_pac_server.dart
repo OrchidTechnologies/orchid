@@ -25,11 +25,6 @@ import 'package:convert/convert.dart';
 class OrchidPACServer {
   static final OrchidPACServer _shared = OrchidPACServer._internal();
 
-  // TODO: Integrate with ios purchase api api config... same url.
-  /// PAC Server status URL
-  // final String storeStatusUrl =
-  //     'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/store_status';
-
   factory OrchidPACServer() {
     return _shared;
   }
@@ -230,7 +225,7 @@ class OrchidPACServer {
   }) async {
     var params = {'account_id': signer.toString(prefix: true)};
     var result = await _postJson(
-        method: 'get_account', params: params, apiConfig: apiConfig);
+        method: 'get_account', paramsIn: params, apiConfig: apiConfig);
     return PacAccount.fromJson(result);
   }
 
@@ -248,7 +243,7 @@ class OrchidPACServer {
       'receipt': receipt,
     };
     var result = await _postJson(
-        method: 'payment_apple', params: params, apiConfig: apiConfig);
+        method: 'payment_apple', paramsIn: params, apiConfig: apiConfig);
     print("XXX: add balance result = " + result.toString());
     return result.toString();
   }
@@ -298,7 +293,7 @@ class OrchidPACServer {
 
     // print("iap: seller tx: send raw json = ${jsonEncode(params)}");
     var result = await _postJson(
-        method: 'send_raw', params: params, apiConfig: apiConfig);
+        method: 'send_raw', paramsIn: params, apiConfig: apiConfig);
     // print("iap: seller tx: send raw result = " + result.toString());
 
     return result.toString();
@@ -318,9 +313,9 @@ class OrchidPACServer {
     // Do the post
     var responseJson;
     try {
-      responseJson = await _postJson(method: "store_status", params: {});
-    } catch (err) {
-      log("iap: pac server status response error: ${err}");
+      responseJson = await _postJson(method: "store_status", paramsIn: {});
+    } catch (err, stack) {
+      log("iap: pac server status response error: $err, $stack");
       return PACStoreStatus.down;
     }
 
@@ -346,11 +341,15 @@ class OrchidPACServer {
   /// Post json to our PAC server
   Future<dynamic> _postJson({
     @required String method,
-    @required Map<String, dynamic> params,
+    @required Map<String, dynamic> paramsIn,
     PacApiConfig apiConfig, // optional override
   }) async {
     apiConfig = apiConfig ?? await OrchidPurchaseAPI().apiConfig();
     var url = '${apiConfig.url}/$method';
+
+    // Guard the unknown map type
+    var params = Map<String,dynamic>();
+    params.addAll(paramsIn);
 
     // Optional dev testing params
     if (!apiConfig.verifyReceipt) {
@@ -372,7 +371,8 @@ class OrchidPACServer {
     var clientLocale =
         '${OrchidPlatform.staticLocale.languageCode}-${OrchidPlatform.staticLocale.countryCode}';
 
-    var params = {};
+    // Guard the unknown map type
+    var params = Map<String,dynamic>();
     params.addAll(paramsIn);
 
     // Version and locale

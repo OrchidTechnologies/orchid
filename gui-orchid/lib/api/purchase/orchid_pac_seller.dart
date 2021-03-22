@@ -50,7 +50,9 @@ class OrchidPacSeller {
     var usdToTokenRate = await OrchidPricing().usdToTokenRate(currency);
     var totalTokenValue =
         currency.fromDouble(totalUsdValue.value * usdToTokenRate);
-    var useableTokenValue = totalTokenValue.subtract(gasCost);
+    const useableTokenValueFudgeFactor = 0.98;
+    var useableTokenValue =
+        totalTokenValue.subtract(gasCost) * useableTokenValueFudgeFactor;
 
     // TODO: We currently have no way of knowing if the account exists.
     // TODO: As a placeholder we will just always allocate a fraction to escrow.
@@ -61,8 +63,10 @@ class OrchidPacSeller {
         "totalUsdValue = $totalUsdValue, "
         "usdToTokenRate = $usdToTokenRate, "
         "totalTokenValue = $totalTokenValue, "
-        "useableTokenValue = $useableTokenValue, "
-        "escrow = $escrow");
+        "gasCost= $gasCost, "
+        "useableTokenValueFudgeFactor = $useableTokenValueFudgeFactor, "
+        "useableTokenValue = (total - gas) * fudge = $useableTokenValue, "
+        "escrow = useable * escrowPerc = $escrow");
 
     var txParams = EthereumTransactionParams(
       from: signer,
