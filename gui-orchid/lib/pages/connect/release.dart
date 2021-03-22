@@ -11,7 +11,11 @@ class Release {
 
   // Build a title string
   static Future<String> title(BuildContext context) async {
+    // e.g. "0.9.24 (48.299352.835478)";
     var version = await OrchidAPI().versionString();
+    if (version.contains(' ')) {
+      version = version.split(' ')[0];
+    }
     return 'What’s new in Orchid $version?';
   }
 

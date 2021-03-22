@@ -160,7 +160,7 @@ class _AccountsPageState extends State<AccountsPage> {
     var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
-      body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
+      bodyText: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
           "  " +
           s.ifYouPlanToReuseTheAccountLaterYouShould,
     );

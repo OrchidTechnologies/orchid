@@ -50,7 +50,6 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
         _update();
       }),
     );
-    UserPreferences().activeAccounts.ensureInitialized();
 
     const pollingPeriod = Duration(seconds: 15);
     _balanceTimer = Timer.periodic(pollingPeriod, (_) {

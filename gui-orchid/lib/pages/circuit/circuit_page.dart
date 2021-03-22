@@ -708,7 +708,7 @@ class CircuitPageState extends State<CircuitPage>
     var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
-      body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
+      bodyText: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
           "  " +
           s.ifYouPlanToReuseTheAccountLaterYouShould,
     );

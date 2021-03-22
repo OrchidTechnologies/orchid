@@ -21,7 +21,7 @@ class IOSOrchidPurchaseAPI
   ///    debug: true
   ///  }'
   static PacApiConfig prodAPIConfig = PacApiConfig(
-    url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/',
+    url: 'https://api.orchid.com/pac'
   );
 
   /// Return the API config allowing overrides from configuration.

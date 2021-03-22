@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/pages/common/link_text.dart';
 
 class AppText {
   static TextStyle headerStyle = TextStyle(
@@ -185,4 +186,14 @@ class AppText {
       letterSpacing: -0.24,
       fontFamily: 'SFProText-Regular',
       height: 20.0 / 15.0);
+
+  static LinkTextSpan buildLearnMoreLinkTextSpan() {
+    return LinkTextSpan(
+      text: "Learn more.",
+      style: AppText.linkStyle.copyWith(fontSize: 15),
+      url:
+      'https://docs.orchid.com/en/latest/accounts/#technical-parts-of-an-orchid-account',
+    );
+  }
+
 }

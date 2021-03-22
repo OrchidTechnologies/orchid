@@ -222,7 +222,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     AppDialogs.showConfirmationDialog(
         context: context,
         title: s.deleteTransaction,
-        body: s.clearThisInProgressTransactionExplain +
+        bodyText: s.clearThisInProgressTransactionExplain +
             " https://orchid.com/contact",
         commitAction: _deleteTransaction);
   }

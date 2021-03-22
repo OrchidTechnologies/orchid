@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -99,9 +100,9 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
 /// A flat Text button used as a control for e.g. "NEXT" and "DONE".
 class TextControlButton extends StatelessWidget {
   final VoidCallback onPressed;
-  String text;
-  TextAlign alignment;
-  Color color;
+  final String text;
+  final TextAlign alignment;
+  final Color color;
 
   TextControlButton(this.text,
       {this.alignment = TextAlign.left,
@@ -228,3 +229,30 @@ class TitleIconButton extends StatelessWidget {
     );
   }
 }
+
+class CopyTextButton extends StatelessWidget {
+  const CopyTextButton({
+    Key key,
+    @required this.copyText,
+  }) : super(key: key);
+
+  final String copyText;
+
+  @override
+  Widget build(BuildContext context) {
+    var s = S.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        RoundedRectButton(
+            backgroundColor: Colors.deepPurple,
+            textColor: Colors.white,
+            text: s.copy,
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: copyText));
+            }),
+      ],
+    );
+  }
+}
+

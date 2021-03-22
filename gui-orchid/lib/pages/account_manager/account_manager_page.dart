@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jdenticon_dart/jdenticon_dart.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
@@ -18,12 +19,14 @@ import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/tap_copy_text.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/strings.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../app_colors.dart';
 import '../app_sizes.dart';
@@ -51,7 +54,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   void initStateAsync() async {
     _accountStore.load();
-    PacTransaction.shared.ensureInitialized();
   }
 
   @override
@@ -171,9 +173,89 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
     var config = 'account={ secret: "${identity.formatSecretFixed()}" }';
-    var title = 'My Orchid Identity' + ':';
-    OrchidHopPage.showShareConfigStringDialog(
-        context: context, title: title, config: config);
+    var title = "Export this Orchid Key";
+    var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
+    var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
+
+    var body = RichText(
+        text: TextSpan(children: [
+      TextSpan(
+          text:
+              "A QR code and text for all the Orchid accounts associated with this key is below."
+                      ' ' +
+                  "We recommend" +
+                  ' ',
+          style: bodyStyle),
+      LinkTextSpan(
+        text: "backing it up" + '.',
+        style: linkStyle,
+        url:
+            'https://docs.orchid.com/en/latest/accounts/#technical-parts-of-an-orchid-account',
+      ),
+      TextSpan(
+          text: '\n\n' +
+              "Import this key on another device to share all the Orchid accounts associated with this Orchid identity.",
+          style: bodyStyle)
+    ]));
+
+    return AppDialogs.showAppDialog(
+        context: context,
+        title: title,
+        body: Container(
+          padding: EdgeInsets.all(8),
+          width: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              body,
+              pady(16),
+              GestureDetector(
+                onTap: () {
+                  log("XXX: copied");
+                  Clipboard.setData(ClipboardData(text: config));
+                },
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        width: 1,
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        QrImage(
+                          data: config,
+                          version: QrVersions.auto,
+                          size: 180.0,
+                        ),
+                        pady(8),
+                        Container(
+                          width: 180,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                s.copy,
+                                style: TextStyle(color: Colors.deepPurple),
+                              ),
+                              Icon(
+                                Icons.download_sharp,
+                                color: Colors.deepPurple,
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 
   // Delete the active identity after in-use check and user confirmation.
@@ -193,12 +275,27 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
 
+    var bodyStyle = AppText.dialogBody;//.copyWith(fontSize: 15);
+    var body = RichText(
+        text: TextSpan(children: [
+      TextSpan(
+        text: identity.address.toString().prefix(24) + '\n\n',
+        style: bodyStyle.copyWith(fontWeight: FontWeight.bold),
+      ),
+      TextSpan(
+        text:
+            "This cannot be undone. Deleting this Orchid key can cause funds in the associated Orchid accounts to become un-spendable. ",
+        style: bodyStyle,
+      ),
+      AppText.buildLearnMoreLinkTextSpan(),
+    ]));
+
     await AppDialogs.showConfirmationDialog(
       context: context,
-      title: "Delete Identity?",
-      body: "Deleting Identity: ${identity.address.toString().prefix(8)}" +
-          " cannot be undone.  Please back up keys if desired before deleting them.",
+      title: "Delete this Orchid Key",
+      body: body,
       cancelText: s.cancel,
+      //cancelColor: bodyStyle.color,
       actionText: "DELETE",
       // Localize all caps version
       actionColor: Colors.red,
@@ -398,8 +495,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     return StreamBuilder<PacTransaction>(
         stream: PacTransaction.shared.stream(),
         builder: (context, snapshot) {
-          var enabled =
-              _accountStore.activeIdentity != null && snapshot.data == null;
+          var tx = snapshot.data;
+          var enabled = _accountStore.activeIdentity != null && tx == null;
           return RoundedRectButton(
             text: "Add Credit",
             icon: Icon(

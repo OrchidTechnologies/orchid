@@ -27,8 +27,8 @@ class OrchidPACServer {
 
   // TODO: Integrate with ios purchase api api config... same url.
   /// PAC Server status URL
-  final String storeStatusUrl =
-      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/store_status';
+  // final String storeStatusUrl =
+  //     'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/store_status';
 
   factory OrchidPACServer() {
     return _shared;
@@ -306,15 +306,6 @@ class OrchidPACServer {
 
   /// V1 pac store status.  This method returns down in the event of error.
   Future<PACStoreStatus> storeStatus() async {
-    /*
-    $ curl -X POST -H "Content-Type: application/json"
-      --data '{"client_version":"0.9.24", "client_locale": "en"}'
-      --url https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/store_status
-      {"store_status": 1, "message": "", "sellers": {"100": "0xabEB207C9C82c80D2c03545A73F234d0544172A2"},
-      "products": {"net.orchid.pactier1": 39.99, "net.orchid.pactier2": 79.99,
-      "net.orchid.pactier3": 199.99, "net.orchid.pactier4": 0.99,
-      "net.orchid.pactier5": 9.99, "net.orchid.pactier6": 99.99}
-   */
     log("iap: check PAC server status");
 
     bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
@@ -327,7 +318,7 @@ class OrchidPACServer {
     // Do the post
     var responseJson;
     try {
-      responseJson = await _postJsonToUrl(url: storeStatusUrl, paramsIn: {});
+      responseJson = await _postJson(method: "store_status", params: {});
     } catch (err) {
       log("iap: pac server status response error: ${err}");
       return PACStoreStatus.down;

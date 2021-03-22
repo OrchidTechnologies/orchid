@@ -18,9 +18,10 @@ class ObservablePreference<T> {
   Future<T> Function(UserPreferenceKey key) loadValue;
   Future Function(UserPreferenceKey key, T value) storeValue;
 
-  /// Note: If you use this with a StreamBuilder you must call ensureInitialized
-  /// Note: during your initialization to ensure that a current value is loaded.
+  /// Note: This method triggers an async initialization, but does not
+  /// guarantee that the value will be ready when the stream is fetched.
   Stream<T> stream() {
+    ensureInitialized();
     return _subject.asBroadcastStream();
   }
 

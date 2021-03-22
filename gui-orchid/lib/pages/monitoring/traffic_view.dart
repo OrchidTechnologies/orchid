@@ -480,7 +480,7 @@ class ClearTrafficActionButton extends StatelessWidget {
     AppDialogs.showConfirmationDialog(
         context: context,
         title: s.deleteAllData + "?",
-        body: s.thisWillDeleteRecorded,
+        bodyText: s.thisWillDeleteRecorded,
         cancelText: s.cancelButtonTitle,
         actionText: s.okButtonTitle,
         commitAction: () async {

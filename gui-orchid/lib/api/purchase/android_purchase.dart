@@ -1,26 +1,26 @@
-
 import 'orchid_pac.dart';
 import 'orchid_purchase.dart';
 
 class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
-
   /// Default prod service endpoint configuration.
   /// May be overridden in configuration with e.g.
   /// 'pacs = {
   ///    enabled: true,
-  ///    url: 'https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/apple',
+  ///    url: 'https://xxx.amazonaws.com/dev/apple',
   ///    verifyReceipt: false,
   ///    debug: true
   ///  }'
   static PacApiConfig prodAPIConfig = PacApiConfig(
-      enabled: false,
-      url: 'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/google');
+    enabled: false,
+    url: 'https://api.orchid.com/pac/google',
+  );
 
   /// Return the API config allowing overrides from configuration.
   @override
   Future<PacApiConfig> apiConfig() async {
     return OrchidPurchaseAPI.apiConfigWithOverrides(prodAPIConfig);
   }
+
   @override
   initStoreListener() {
     // TODO: implement initStoreListener
@@ -31,9 +31,8 @@ class AndroidOrchidPurchaseAPI implements OrchidPurchaseAPI {
   }
 
   @override
-  Future<Map<String,PAC>> requestProducts({bool refresh = false}) {
+  Future<Map<String, PAC>> requestProducts({bool refresh = false}) {
     // TODO: implement requestProducts
     throw UnimplementedError();
   }
 }
-

@@ -1,18 +1,14 @@
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/qrcode.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
-import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:flutter/services.dart';
@@ -51,11 +47,11 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          if (!pasteOnly) ...[
-            _buildScanButton(showIcons),
-            padx(widget.spacing ?? 24),
-          ],
           _buildPasteButton(showIcons),
+          if (!pasteOnly) ...[
+            padx(widget.spacing ?? 24),
+            _buildScanButton(showIcons),
+          ],
         ],
       ),
     );

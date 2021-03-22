@@ -53,7 +53,7 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
   @override
   _OrchidHopPageState createState() => _OrchidHopPageState();
 
-  static Future<void> showShareConfigStringDialog({
+  static Future<void> showExportAccountDialog({
     BuildContext context,
     String title,
     String config,
@@ -73,23 +73,11 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
                   size: 250.0,
                 ),
               ),
-              _buildCopyButton(context, config)
+              CopyTextButton(copyText: config)
             ],
           ),
         ));
   }
-
-  static Widget _buildCopyButton(BuildContext context, String config) {
-    var s = S.of(context);
-    return RoundedRectButton(
-        backgroundColor: Colors.deepPurple,
-        textColor: Colors.white,
-        text: s.copy,
-        onPressed: () {
-          Clipboard.setData(ClipboardData(text: config));
-        });
-  }
-
 }
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
@@ -894,7 +882,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void _exportAccount() async {
     var config = await _hop().accountConfigString();
     var title = S.of(context).myOrchidAccount + ':';
-    OrchidHopPage.showShareConfigStringDialog(context: context, title: title, config: config);
+    OrchidHopPage.showExportAccountDialog(
+        context: context, title: title, config: config);
   }
 
   S get s {
