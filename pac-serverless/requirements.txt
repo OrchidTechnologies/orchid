@@ -11,10 +11,10 @@ cachetools==4.1.0
 certifi==2020.4.5.1
 chardet==3.0.4
 cytoolz==0.10.1
-docutils==0.16
+docutils==0.15
 ecdsa==0.15
 eth-abi==2.1.1
-eth-account==0.5.0
+eth-account==0.5.2
 eth-hash==0.2.0
 eth-keyfile==0.5.1
 eth-keys==0.3.1
@@ -40,7 +40,7 @@ multiaddr==0.0.9
 multidict==4.7.5
 mypy-extensions==0.4.3
 netaddr==0.7.19
-oauth2client==4.1.3
+oauth2client==3.0.0
 parsimonious==0.8.1
 protobuf==3.11.3
 pyasn1==0.4.8
@@ -60,7 +60,7 @@ typing-extensions==3.7.4.2
 uritemplate==3.0.1
 urllib3==1.25.9
 varint==1.0.2
-web3==5.7.0
+web3==5.9.0
 websockets==8.1
 yarl==1.4.2
 zipp==3.1.0
