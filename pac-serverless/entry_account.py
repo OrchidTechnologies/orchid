@@ -30,7 +30,7 @@ def main(event, context):
         account['balance'] = 0.0
 
     nonces = account.get('nonces',{})
-    for chainId in providers.keys():
+    for chainId in w3_generic.get_chainIds():
         nonce = str(nonces.get(str(chainId),'0'))
         nonces[str(chainId)] = nonce
     account['nonces'] = nonces

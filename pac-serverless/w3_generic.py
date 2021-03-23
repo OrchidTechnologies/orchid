@@ -373,6 +373,8 @@ def get_w3wsock_providers():
 
     return providers
 
+def get_chainIds():
+    return [1,100]
 
 def get_w3wsock_provider(chainId_):
 
