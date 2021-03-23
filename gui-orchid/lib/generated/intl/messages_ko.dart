@@ -19,7 +19,7 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'ko';
 
-  static m0(num) => "${Intl.plural(num, other: '${num}개의 홉이 구성되었습니다')}";
+  static m2(num) => "${Intl.plural(num, other: '${num}개의 홉이 구성되었습니다')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -155,7 +155,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noSubscriptionCreditsDontExpire" : MessageLookupByLibrary.simpleMessage("구독 중이지 않으며 크레딧이 만료되지 않습니다."),
     "noVersion" : MessageLookupByLibrary.simpleMessage("버전 없음"),
     "nothingToDisplayYet" : MessageLookupByLibrary.simpleMessage("표시할 항목이 없습니다. 표시할 항목이 생기면 여기에 트래픽이 표시됩니다."),
-    "numHopsConfigured" : m0,
+    "numHopsConfigured" : m2,
     "ofTraffic" : MessageLookupByLibrary.simpleMessage("교통의"),
     "ok" : MessageLookupByLibrary.simpleMessage("확인"),
     "okButtonTitle" : MessageLookupByLibrary.simpleMessage("확인"),

@@ -19,7 +19,7 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'es';
 
-  static m0(num) => "${Intl.plural(num, zero: 'Ningún Hop configurado', one: 'Un Hop configurado', two: 'Dos Hops configurados', other: '${num} Hops configurados')}";
+  static m2(num) => "${Intl.plural(num, zero: 'Ningún Hop configurado', one: 'Un Hop configurado', two: 'Dos Hops configurados', other: '${num} Hops configurados')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -155,7 +155,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noSubscriptionCreditsDontExpire" : MessageLookupByLibrary.simpleMessage("Sin suscripción, los créditos no caducan."),
     "noVersion" : MessageLookupByLibrary.simpleMessage("Sin versión"),
     "nothingToDisplayYet" : MessageLookupByLibrary.simpleMessage("Nada que mostrar aún. El tráfico aparecerá aquí cuando haya algo que mostrar."),
-    "numHopsConfigured" : m0,
+    "numHopsConfigured" : m2,
     "ofTraffic" : MessageLookupByLibrary.simpleMessage("de tráfico"),
     "ok" : MessageLookupByLibrary.simpleMessage("OK"),
     "okButtonTitle" : MessageLookupByLibrary.simpleMessage("OK"),

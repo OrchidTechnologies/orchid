@@ -233,7 +233,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         children: <Widget>[
           if (AppSize(context).tallerThan(AppSize.iphone_12_max)) pady(64),
           _buildSection(
-              title: "Account", child: _buildAccountDetails(), onDetail: null),
+              title: s.account, child: _buildAccountDetails(), onDetail: null),
           pady(16),
           divider(),
           pady(24),
@@ -349,7 +349,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           padx(16),
           Container(
             width: 150,
-            child: Text("Balance: " +
+            child: Text(s.balance +
+                ': ' +
                 formatCurrency(utx.update.endBalance.floatValue,
                     suffix: 'OXT')),
           ),
@@ -360,7 +361,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }).toList();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text("Transactions", style: AppText.textLabelStyle),
+      Text(s.transactions, style: AppText.textLabelStyle),
       pady(8),
       ...txRows,
     ]);

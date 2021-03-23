@@ -19,7 +19,7 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'zh';
 
-  static m0(num) => "${Intl.plural(num, other: '${num} 个已配置跃点')}";
+  static m2(num) => "${Intl.plural(num, other: '${num} 个已配置跃点')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -155,7 +155,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noSubscriptionCreditsDontExpire" : MessageLookupByLibrary.simpleMessage("没有订阅，积分不会过期。"),
     "noVersion" : MessageLookupByLibrary.simpleMessage("无版本"),
     "nothingToDisplayYet" : MessageLookupByLibrary.simpleMessage("尚无内容可供显示。存在可显示内容时，将于此处显示流量。"),
-    "numHopsConfigured" : m0,
+    "numHopsConfigured" : m2,
     "ofTraffic" : MessageLookupByLibrary.simpleMessage("流量"),
     "ok" : MessageLookupByLibrary.simpleMessage("好"),
     "okButtonTitle" : MessageLookupByLibrary.simpleMessage("好"),

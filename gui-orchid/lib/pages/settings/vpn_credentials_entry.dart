@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/app_text_field.dart';
@@ -95,6 +96,7 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
 
   @override
   Widget build(BuildContext context) {
+    var s = S.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -102,12 +104,12 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
 
           // Username
           AppLabeledTextField(
-              labelText: "Username", controller: _userNameTextController),
+              labelText: s.username, controller: _userNameTextController),
           SizedBox(height: 12),
 
           // Password
           AppPasswordField(
-              labelText: "Password",
+              labelText: s.password,
               // TODO: We need the password field's focus node to do this
               // Switch the label to a hint text showing fake obscured password.
               //hintText: _vpnConfigPublic == null ? null : "xxxxxxxxxx",
@@ -120,7 +122,7 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
             child: IntrinsicHeight(
               child: AppLabeledTextField(
                   //hintText: "Paste OVPN file contents",
-                  labelText: "Paste OVPN file contents",
+                  labelText: s.pasteYourOVPN,
                   maxLines: null, // unlimited
                   controller: _vpnConfigFileTextController),
             ),
@@ -132,7 +134,7 @@ class _VPNCredentialsEntryState extends State<VPNCredentialsEntry> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 16.0, top: 5.0),
-              child: Text("Optional",
+              child: Text(s.optional,
                   textAlign: TextAlign.left,
                   style: AppText.noteStyle.copyWith(color: AppColors.neutral_1)),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/account_manager/account_composer.dart';
 import 'package:orchid/pages/common/account_chart.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
@@ -45,7 +46,7 @@ class _AccountViewState extends State<AccountView> {
 
   Widget build(BuildContext context) {
     return TitledPage(
-      title: 'Account View',
+      title: S.of(context).accountView,
       child: ListenableBuilder(
           listenable: _detail,
           builder: (context, snapshot) {
@@ -101,16 +102,6 @@ class _AccountViewState extends State<AccountView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildBalance(style1),
-                  /*
-                                RoundedRectButton(
-                                  text: "Add Funds",
-                                  icon: Icon(
-                                    Icons.add,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () {},
-                                ),
-                                 */
                 ],
               ),
               pady(8),
@@ -133,12 +124,12 @@ class _AccountViewState extends State<AccountView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LabeledCurrencyValue(
-            label: "Balance:",
+            label: s.balance + ':',
             style: style1,
             value: _detail.lotteryPot?.balance),
         pady(8),
         LabeledCurrencyValue(
-            label: "Deposit:",
+            label: s.deposit + ':',
             style: style1,
             value: _detail.lotteryPot?.deposit),
       ],
@@ -165,7 +156,7 @@ class _AccountViewState extends State<AccountView> {
     return Container(
       width: 100,
       child: RoundedRectButton(
-        text: "Activate",
+        text: s.activate,
         onPressed: _active
             ? null
             : () {
@@ -242,6 +233,10 @@ class _AccountViewState extends State<AccountView> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  S get s {
+    return S.of(context);
   }
 }
 

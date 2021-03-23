@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/generated/l10n.dart';
 
 class TapToCopyText extends StatefulWidget {
   final String text;
@@ -43,7 +44,7 @@ class _TapToCopyTextState extends State<TapToCopyText> {
   void _onTap() async {
     Clipboard.setData(ClipboardData(text: widget.text));
     setState(() {
-      _showText = "Copied";
+      _showText = S.of(context).copied;
     });
     await Future.delayed(Duration(milliseconds: 500));
     setState(() {

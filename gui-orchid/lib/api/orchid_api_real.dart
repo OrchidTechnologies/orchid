@@ -208,7 +208,7 @@ class RealOrchidAPI implements OrchidAPI {
     // todo: return a bool from the native side?
     String result = await _platform
         .invokeMethod('set_config', <String, dynamic>{'text': combinedConfig});
-    return result == "true";
+    return result == 'true';
   }
 
   // Generate the portion of the VPN config managed by the GUI.  Managed config

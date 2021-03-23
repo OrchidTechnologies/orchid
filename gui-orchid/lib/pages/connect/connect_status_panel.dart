@@ -11,6 +11,7 @@ import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/util/units.dart';
@@ -183,7 +184,7 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Bandwidth Cost", style: textStyle),
+                            Text(S.of(context).bandwidthCost, style: textStyle),
                             Container(
                                 width: 80,
                                 child:

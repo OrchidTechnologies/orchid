@@ -9,6 +9,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/generated/l10n.dart';
@@ -125,17 +126,17 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             [
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _newIdentity),
-                  child: Text('New')),
+                  child: Text(s.newWord)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _importIdentity),
-                  child: Text('Import')),
+                  child: Text(s.import)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _exportIdentity),
-                  child: Text('Export')),
+                  child: Text(s.export)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value:
                       IdentitySelectorMenuItem(action: _confirmDeleteIdentity),
-                  child: Text('Delete'))
+                  child: Text(s.delete))
             ];
       },
     );
@@ -173,28 +174,22 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
     var config = 'account={ secret: "${identity.formatSecretFixed()}" }';
-    var title = "Export this Orchid Key";
+    var title = s.exportThisOrchidKey;
     var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
     var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
 
     var body = RichText(
         text: TextSpan(children: [
       TextSpan(
-          text:
-              "A QR code and text for all the Orchid accounts associated with this key is below."
-                      ' ' +
-                  "We recommend" +
-                  ' ',
+          text: s.aQrCodeAndTextForAllTheOrchidAccounts + s.weRecommend + ' ',
           style: bodyStyle),
       LinkTextSpan(
-        text: "backing it up" + '.',
+        text: s.backingItUp + '.',
         style: linkStyle,
-        url:
-            'https://docs.orchid.com/en/latest/accounts/#technical-parts-of-an-orchid-account',
+        url: OrchidUrls.partsOfOrchidAccount,
       ),
       TextSpan(
-          text: '\n\n' +
-              "Import this key on another device to share all the Orchid accounts associated with this Orchid identity.",
+          text: '\n\n' + s.importThisKeyOnAnotherDeviceToShareAllThe,
           style: bodyStyle)
     ]));
 
@@ -211,7 +206,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               pady(16),
               GestureDetector(
                 onTap: () {
-                  log("XXX: copied");
                   Clipboard.setData(ClipboardData(text: config));
                 },
                 child: Center(
@@ -270,12 +264,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     if (activeKeyUids.contains(identity.uid)) {
       await AppDialogs.showAppDialog(
           context: context,
-          title: "Signer in use",
-          bodyText: "This signer key is in use and cannot be deleted.");
+          title: s.orchidAccountInUse,
+          bodyText: s.thisOrchidAccountIsInUseAndCannotBeDeleted);
       return;
     }
 
-    var bodyStyle = AppText.dialogBody;//.copyWith(fontSize: 15);
+    var bodyStyle = AppText.dialogBody; //.copyWith(fontSize: 15);
     var body = RichText(
         text: TextSpan(children: [
       TextSpan(
@@ -283,20 +277,22 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         style: bodyStyle.copyWith(fontWeight: FontWeight.bold),
       ),
       TextSpan(
-        text:
-            "This cannot be undone. Deleting this Orchid key can cause funds in the associated Orchid accounts to become un-spendable. ",
+        text: s.thisCannotBeUndone +
+            " " +
+            s.deletingThisOrchidKeyCanCauseFundsInTheAssociated +
+            " ",
         style: bodyStyle,
       ),
-      AppText.buildLearnMoreLinkTextSpan(),
+      AppText.buildLearnMoreLinkTextSpan(context),
     ]));
 
     await AppDialogs.showConfirmationDialog(
       context: context,
-      title: "Delete this Orchid Key",
+      title: s.deleteThisOrchidKey,
       body: body,
       cancelText: s.cancel,
       //cancelColor: bodyStyle.color,
-      actionText: "DELETE",
+      actionText: s.delete,
       // Localize all caps version
       actionColor: Colors.red,
       commitAction: () {
@@ -312,7 +308,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Column _buildIdentityHeader() {
     return Column(
       children: [
-        Text("Orchid Address", style: AppText.dialogTitle),
+        Text(s.orchidAddress, style: AppText.dialogTitle),
         if (_accountStore.activeIdentity != null)
           OrchidIdenticon(
               value: _accountStore.activeIdentity.address.toString()),
@@ -364,7 +360,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         child: Align(
             child: Column(
           children: [
-            Text("Pull to refresh accounts.",
+            Text(s.pullToRefresh,
                 style: AppText.noteStyle.copyWith(fontStyle: FontStyle.italic)),
             pady(16),
             Container(
@@ -378,21 +374,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     var child = accounts.isEmpty
         ? ListView(
-            children: [
-              /*
-              Padding(
-                padding: const EdgeInsets.only(top: 24.0),
-                child: Center(
-                    child: Text(
-                        _accountStore.activeIdentity != null
-                            ? "Searching for accounts..."
-                            : "",
-                        style: AppText.noteStyle)),
-              ),
-               */
-              pady(8),
-              footer()
-            ],
+            children: [pady(8), footer()],
           )
         : ListView.separated(
             separatorBuilder: (BuildContext context, int index) =>
@@ -469,10 +451,14 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               child: Row(
                 children: [
                   LabeledCurrencyValue(
-                      label: "Balance:", style: style, value: account.balance),
+                      label: s.balance + ':',
+                      style: style,
+                      value: account.balance),
                   padx(8),
                   LabeledCurrencyValue(
-                      label: "Deposit:", style: style, value: account.deposit),
+                      label: s.deposit + ':',
+                      style: style,
+                      value: account.deposit),
                 ],
               ),
             ),
@@ -483,7 +469,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           ? Padding(
               padding: const EdgeInsets.only(left: 54.0, top: 2),
               child: Text(
-                "Active",
+                s.active,
                 textAlign: TextAlign.left,
               ),
             )
@@ -498,7 +484,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           var tx = snapshot.data;
           var enabled = _accountStore.activeIdentity != null && tx == null;
           return RoundedRectButton(
-            text: "Add Credit",
+            text: s.addCredit,
             icon: Icon(
               Icons.add,
               color: Colors.white,
@@ -607,7 +593,7 @@ class IdentitySelectorMenuItem {
   }
 
   String formatIdentity() {
-    return identity?.address?.toString()?.prefix(12) ?? "ERROR";
+    return identity?.address?.toString()?.prefix(12) ?? '???';
   }
 
   @override
