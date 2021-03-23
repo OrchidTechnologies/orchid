@@ -9,7 +9,7 @@ import 'package:orchid/pages/onboarding/onboarding_link_wallet_success_page.dart
 import 'package:orchid/pages/onboarding/onboarding_vpn_credentials_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
-import 'package:orchid/pages/settings/configuration_page.dart';
+import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:orchid/pages/settings/keygen_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
@@ -58,7 +58,7 @@ class AppRoutes {
     settings_vpn: (context) => SettingsVPNCredentialsPage(),
     settings_log: (context) => SettingsLogPage(),
     settings_dev: (context) => SettingsDevPage(),
-    configuration: (context) => ConfigurationPage(),
+    configuration: (context) => AdvancedConfigurationPage(),
     help: (context) => HelpPage(),
     help_overview: (context) => HelpOverviewPage(),
     privacy: (context) => PrivacyPage(),
