@@ -500,6 +500,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<uint256_t, Address, Address> allowed("allowed");
         std::cout << co_await allowed.Call(*chain_, "latest", seller, 90000, token, sender) << std::endl;
 
+    } else if (command == "orchid:hand") {
+        const auto [seller, owner, manager] = Options<Address, Address, Address>(args);
+        static Selector<void, Address, Address> hand("hand");
+        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, hand(owner, manager))).hex() << std::endl;
+
     } else if (command == "orchid:giftv") {
         orc_assert(nonce_);
         const auto [seller] = Options<Address>(args);
