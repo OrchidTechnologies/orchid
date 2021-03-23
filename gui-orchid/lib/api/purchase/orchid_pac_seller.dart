@@ -36,39 +36,41 @@ class OrchidPacSeller {
     StoredEthereumKey signerKey,
     USD totalUsdValue,
   }) async {
-    var currency = chain.nativeCurrency;
-    var signer = signerKey.address;
+    final currency = chain.nativeCurrency;
+    final signer = signerKey.address;
 
     // Gas
-    var gasPriceMultiplier = 1.1;
-    var gasPrice = (await OrchidEthereumV1().getGasPrice(chain))
+    const gasPriceMultiplier = 1.1;
+    final gasPrice = (await OrchidEthereumV1().getGasPrice(chain))
         .multiplyDouble(gasPriceMultiplier);
-    var gas = OrchidContractV1.lotteryMoveMaxGas;
-    var gasCost = gasPrice.multiplyInt(gas);
+    final gas = OrchidContractV1.lotteryMoveMaxGas;
+    final gasCost = gasPrice.multiplyInt(gas);
 
     // Allocate value
-    var usdToTokenRate = await OrchidPricing().usdToTokenRate(currency);
-    var totalTokenValue =
+    final usdToTokenRate = await OrchidPricing().usdToTokenRate(currency);
+    final totalTokenValue =
         currency.fromDouble(totalUsdValue.value * usdToTokenRate);
     const useableTokenValueFudgeFactor = 0.98;
-    var useableTokenValue =
+    final useableTokenValue =
         totalTokenValue.subtract(gasCost) * useableTokenValueFudgeFactor;
 
     // TODO: We currently have no way of knowing if the account exists.
     // TODO: As a placeholder we will just always allocate a fraction to escrow.
-    var escrowPercentage = 0.1;
-    var escrow = useableTokenValue * escrowPercentage;
+    // Set escrow
+    const escrowPercentage = 0.1;
+    final escrowMax = currency.fromDouble(USD(0.25).value * usdToTokenRate);
+    final escrow = Token.min(useableTokenValue * escrowPercentage, escrowMax);
 
     log("eth: createFundingTransaction "
         "totalUsdValue = $totalUsdValue, "
         "usdToTokenRate = $usdToTokenRate, "
         "totalTokenValue = $totalTokenValue, "
-        "gasCost= $gasCost, "
+        "gasCost = gasPrice * gas = $gasPrice * $gas = $gasCost, "
         "useableTokenValueFudgeFactor = $useableTokenValueFudgeFactor, "
         "useableTokenValue = (total - gas) * fudge = $useableTokenValue, "
-        "escrow = useable * escrowPerc = $escrow");
+        "escrow = useableTokenValue * $escrowPercentage capped at $escrowMax = $escrow");
 
-    var txParams = EthereumTransactionParams(
+    final txParams = EthereumTransactionParams(
       from: signer,
       to: sellerContractAddress,
       gas: gas,
