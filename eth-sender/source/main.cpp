@@ -524,11 +524,15 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
             const auto comma1(Find(rest, {','}));
             orc_assert(comma1);
-            auto [amount, escrow] = Split(rest, *comma1);
+            auto [amount$, escrow$] = Split(rest, *comma1);
 
-            const auto &gift(gifts.emplace_back(std::string(recipient), std::string(amount), std::string(escrow)));
-            orc_assert(std::get<1>(gift) >= std::get<2>(gift));
+            const uint256_t amount{std::string(amount$)};
+            const uint256_t escrow{std::string(escrow$)};
 
+            const auto combined(amount + escrow);
+            orc_assert(combined >= escrow);
+
+            const auto &gift(gifts.emplace_back(std::string(recipient), combined, escrow));
             std::cout << "gift " << seller << " " << std::get<0>(gift) << " " << std::get<1>(gift) << " " << std::get<2>(gift) << std::endl;
             total += std::get<1>(gift);
         }
