@@ -22,7 +22,7 @@ wei_per_eth = 1000000000000000000
 
 
 
-def new_txn(W3WSock,txn):
+def new_txn(w3wsmap,txn):
 
     txnhash = cost_usd = msg = None
 
@@ -93,7 +93,9 @@ def new_txn(W3WSock,txn):
 
     w3_generic.save_transaction(txnhash, txn)
 
-    return txnhash,cost_usd,'success'
+    txn = w3_generic.update_txn(w3wsmap, txn)
+
+    return txn.get('eth_txnhash'),cost_usd,'success'
 
 def verify_txn_sig(txn_s, sig):
 #    txn_s = str(txn).replace("'", '"').replace(' ', '')
@@ -125,11 +127,10 @@ def main(event, context):
             return response(409,{'msg':'Signature verification failure','txnhash':0,'cost_usd':0.0})
     txn = json.loads(txn_s)
 
-    #account_id  = body.get('account_id')
-    chainId     = txn.get('chainId',1)
-    W3WSock     = w3_generic.get_w3wsock_provider(chainId)
+    chainId = txn.get('chainId',1)
+    w3wsmap = w3_generic.get_w3wsock_providers()
 
-    txnhash,cost_usd,msg = new_txn(W3WSock,txn)
+    txnhash,cost_usd,msg = new_txn(w3wsmap,txn)
     logging.info(f'send_raw txnhash({txnhash}) cost_usd({cost_usd}) msg({msg}) ')
 
     if (msg == 'success'):
