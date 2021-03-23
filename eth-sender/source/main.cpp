@@ -559,6 +559,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [data] = Options<Bytes>(args);
         std::cout << ToBase58Check(Tie('\x00', HashR(Hash2(ToCompressed(Derive(data)))))) << std::endl;
 
+    } else if (command == "read") {
+        const auto [contract, slot] = Options<Address, uint256_t>(args);
+        const auto [account, value] = co_await chain_->Get(co_await block(), contract, nullptr, slot);
+        std::cout << "0x" << std::hex << value << std::endl;
+
     } else if (command == "receipt") {
         const auto [transaction] = Options<Bytes32>(args);
         for (;;)
