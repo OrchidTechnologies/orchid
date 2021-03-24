@@ -603,7 +603,7 @@ class _PurchasePageState extends State<PurchasePage> {
     var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
         signerKey: widget.signerKey,
         chain: Chains.xDAI,
-        totalUsdValue: purchase.usdPriceApproximate);
+        totalUsdValue: purchase.usdPriceExact);
 
     var signer = widget.signerKey.address;
     // Add the pending transaction(s) for this purchase
