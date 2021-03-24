@@ -13,7 +13,6 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/generated/l10n.dart';
-import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
 import 'package:orchid/pages/common/account_chart.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
@@ -54,7 +53,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void initStateAsync() async {
-    _accountStore.load();
+    await _accountStore.load();
+    _accountStore.addListener(_accountsUpdated);
+  }
+
+  void _accountsUpdated() async {
+    if (_accountStore.activeAccount == null &&
+        _accountStore.accounts.isNotEmpty) {
+      log("account_manager: setting default active account: ${_accountStore.accounts.first}");
+      _accountStore.setActiveAccount(_accountStore.accounts.first);
+    }
   }
 
   @override
@@ -553,6 +561,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   @override
   void dispose() {
     _disposeAccountDetailMap();
+    _accountStore.removeListener(_accountsUpdated);
     super.dispose();
   }
 
