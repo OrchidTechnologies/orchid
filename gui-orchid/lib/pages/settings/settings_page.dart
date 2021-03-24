@@ -74,8 +74,8 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Padding(
         padding: EdgeInsets.all(
             AppSize(context).tallerThan(AppSize.iphone_12_max) ? 128 : 0),
-        child: SingleChildScrollView(
-          child: SafeArea(
+        child: SafeArea(
+          child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
