@@ -64,7 +64,7 @@ def new_txn(w3wsmap,txn):
     txnhash = Web3.keccak(text=f"{chainId}:{account_id}:{txn_vnonce}").hex()
     txn['txnhash'] = txnhash
 
-    cost_usd = w3_generic.get_txn_cost_usd(txn)*0.99
+    cost_usd = w3_generic.get_txn_cost_usd(txn)*0.50
     prev_txn = w3_generic.load_transaction(txnhash)
     prev_cost_usd = 0.0
 
