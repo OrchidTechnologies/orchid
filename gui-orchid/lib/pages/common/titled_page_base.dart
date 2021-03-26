@@ -1,23 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/app_gradients.dart';
 
-/// A base class for stateless second level pages reached through navigation.
-/// These pages have a title with a back button.
-class TitledPageBase extends StatelessWidget {
-  final String title;
-
-  TitledPageBase({this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return TitledPage(title: title, child: buildPage(context));
-  }
-
-  Widget buildPage(BuildContext context) {
-    throw AssertionError("override this method");
-  }
-}
-
 /// A second level page reached through navigation.
 /// These pages have a title with a back button.
 class TitledPage extends StatelessWidget {

@@ -75,7 +75,7 @@ class _AccountsPageState extends State<AccountsPage> {
         list.add(Center(
             child: Padding(
           padding: const EdgeInsets.only(top: 16.0, bottom: 24),
-          child: Text("Deleted PACs"),
+          child: Text(s.deletedPacs),
         )));
       list.addAll((_orphanedPacAccounts ?? []).map((oa) {
         return _buildOrphanedAccountHopTile(oa);
@@ -160,7 +160,7 @@ class _AccountsPageState extends State<AccountsPage> {
     var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
-      body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
+      bodyText: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
           "  " +
           s.ifYouPlanToReuseTheAccountLaterYouShould,
     );
@@ -280,16 +280,17 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   Widget _buildInstructions() {
+    var s = S.of(context);
     return Padding(
       padding: const EdgeInsets.only(left: 32, right: 32),
       child: Text(
-          "To restore a deleted hop:" +
+          s.toRestoreADeletedHop +
               "\n\n" +
-              "1. Click the hop below then click ‘Share Orchid Account’ and hit ‘Copy’." +
+              s.oneClickTheHopBelowThenClickShareOrchidAccount +
               "\n" +
-              "2. Return to the ‘Manage Profile’ screen, click ‘New Hop’ then ‘Link Orchid Account’ and ‘Paste’." +
+              s.twoReturnToTheManageProfileScreenClickNewHop +
               "\n\n" +
-              "To permanently delete a hop from the list below, swipe left on it.",
+              s.toPermanentlyDeleteAHopFromTheListBelowSwipe,
           style: TextStyle(fontStyle: FontStyle.italic)),
     );
   }

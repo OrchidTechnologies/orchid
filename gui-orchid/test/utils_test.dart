@@ -2,9 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
-import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/util/enums.dart';
+import 'package:orchid/util/json.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:orchid/util/units.dart';
 
@@ -37,6 +37,21 @@ void main() {
       expectTrue(addrIn == fromNoEip55);
       // Render to EIP-55
       expectTrue(eip55 == fromNoEip55.toString());
+    });
+
+    test('eth address length', () {
+      // leading zeroes
+      var addrIn = '0x0001b26998dc278a176eF20B35DaB092741d9Bc3';
+      var addrOut = EthereumAddress.from(addrIn).toString(prefix: true);
+      print(addrOut);
+      expect(addrIn.toLowerCase(), equals(addrOut.toLowerCase()));
+    });
+
+    test('eth address length from bigint', () {
+      var addrIn = BigInt.zero;
+      var addrOut = EthereumAddress(addrIn);
+      print(addrOut);
+      expect(addrOut.toString(), equals(EthereumAddress.zero.toString()));
     });
 
     test('abi encode', () {
@@ -76,7 +91,7 @@ void main() {
           }
         }
       };
-      print(trimLongStrings(json));
+      print(Json.trimLongStrings(json));
     });
 
     test('strings', () async {

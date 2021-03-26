@@ -74,8 +74,8 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Padding(
         padding: EdgeInsets.all(
             AppSize(context).tallerThan(AppSize.iphone_12_max) ? 128 : 0),
-        child: SingleChildScrollView(
-          child: SafeArea(
+        child: SafeArea(
+          child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -132,7 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 // Advanced Configuration
                 _item(PageTile(
-                  title: "Advanced Configuration",
+                  title: s.advancedConfiguration,
                   onTap: () async {
                     await Navigator.pushNamed(context, AppRoutes.configuration);
                     advancedConfigChanged(); // update anything that may have changed via config
@@ -141,33 +141,53 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 // Manage Data
                 _item(PageTile.route(
-                    title: "Configuration Management",
+                    title: s.configurationManagement,
                     routeName: '/settings/manage_config',
                     context: context)),
 
                 // Logging
                 if (_showLogging || _tester)
                   _item(PageTile.route(
-                      title: "Logging",
+                      title: s.logging,
                       routeName: '/settings/log',
                       context: context)),
 
                 // V1 UI opt-out
-                _item(PageTile(
-                  title: "Enable Multi-hop UI",
-                  trailing: Switch(
-                    activeColor: AppColors.purple_3,
-                    value: _guiV0,
-                    onChanged: (bool value) async {
-                      await UserPreferences().guiV0.set(value);
-                      OrchidAPI().updateConfiguration();
-                      AppDialogs.showConfigurationChangeSuccess(context,
-                          warnOnly: true);
-                      setState(() {
-                        _guiV0 = value;
-                      });
-                    },
-                  ),
+                _item(Column(
+                  children: [
+                    PageTile(
+                      title: s.enableMultihopUi,
+                      trailing: Switch(
+                        activeColor: AppColors.purple_3,
+                        value: _guiV0,
+                        onChanged: (bool value) async {
+                          await UserPreferences().guiV0.set(value);
+                          OrchidAPI().updateConfiguration();
+                          AppDialogs.showConfigurationChangeSuccess(context,
+                              warnOnly: true);
+                          setState(() {
+                            _guiV0 = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 16, right: 24, top: 0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.warning, color: Colors.deepPurple),
+                          padx(12),
+                          Expanded(
+                            child: Text(
+                                s.ifYouWantToUseMultihopOpenvpnAndWireguardYoull,
+                                style: TextStyle(fontSize: 14)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 )),
 
                 if (_tester)
@@ -176,7 +196,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     trailing: RaisedButton(
                       child: Text(s.reset),
                       onPressed: () {
-                        UserPreferences().releaseVersion.set(ReleaseVersion.firstLaunch());
+                        UserPreferences()
+                            .releaseVersion
+                            .set(ReleaseVersion.firstLaunch());
                       },
                     ),
                   )),

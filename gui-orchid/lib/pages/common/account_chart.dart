@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -23,11 +24,11 @@ class AccountChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return buildAccountChart(lotteryPot, efficiency, transactions);
+    return buildAccountChart(context, lotteryPot, efficiency, transactions);
   }
 
-  static Widget buildAccountChart(LotteryPot lotteryPot, double efficiency,
-      List<OrchidUpdateTransactionV0> transactions) {
+  static Widget buildAccountChart(BuildContext context, LotteryPot lotteryPot,
+      double efficiency, List<OrchidUpdateTransactionV0> transactions) {
     if (efficiency == null) {
       return LoadingIndicator();
     }
@@ -40,7 +41,8 @@ class AccountChart extends StatelessWidget {
       children: [
         circularEfficiencyChart(efficiency),
         pady(2),
-        Text("Efficiency: " +
+        Text(S.of(context).efficiency +
+            ": " +
             MarketConditionsV0.efficiencyAsPercString(efficiency)),
         pady(16),
         // Show the tickets available / used line
@@ -50,7 +52,8 @@ class AccountChart extends StatelessWidget {
               buildTicketsAvailableLineChart(chartModel),
               pady(8),
               Text(
-                  "Min Tickets available: ${chartModel.availableTicketsCurrentMax}"),
+                S.of(context).minTicketsAvailableTickets(chartModel.availableTicketsCurrentMax),
+              ),
             ],
           ),
       ],

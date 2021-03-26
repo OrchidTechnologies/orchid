@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jdenticon_dart/jdenticon_dart.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
@@ -8,22 +9,24 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/generated/l10n.dart';
-import 'package:orchid/pages/circuit/orchid_hop_page.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
 import 'package:orchid/pages/common/account_chart.dart';
 import 'package:orchid/pages/common/app_buttons.dart';
 import 'package:orchid/pages/common/dialogs.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/tap_copy_text.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/strings.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../app_colors.dart';
 import '../app_sizes.dart';
@@ -50,8 +53,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void initStateAsync() async {
-    _accountStore.load();
-    PacTransaction.shared.ensureInitialized();
+    await _accountStore.load();
+    _accountStore.addListener(_accountsUpdated);
+  }
+
+  void _accountsUpdated() async {
+    if (_accountStore.activeAccount == null &&
+        _accountStore.accounts.isNotEmpty) {
+      log("account_manager: setting default active account: ${_accountStore.accounts.first}");
+      _accountStore.setActiveAccount(_accountStore.accounts.first);
+    }
   }
 
   @override
@@ -123,17 +134,17 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             [
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _newIdentity),
-                  child: Text('New')),
+                  child: Text(s.newWord)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _importIdentity),
-                  child: Text('Import')),
+                  child: Text(s.import)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _exportIdentity),
-                  child: Text('Export')),
+                  child: Text(s.export)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value:
                       IdentitySelectorMenuItem(action: _confirmDeleteIdentity),
-                  child: Text('Delete'))
+                  child: Text(s.delete))
             ];
       },
     );
@@ -171,9 +182,82 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
     var config = 'account={ secret: "${identity.formatSecretFixed()}" }';
-    var title = 'My Orchid Identity' + ':';
-    OrchidHopPage.showShareConfigStringDialog(
-        context: context, title: title, config: config);
+    var title = s.exportThisOrchidKey;
+    var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
+    var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
+
+    var body = RichText(
+        text: TextSpan(children: [
+      TextSpan(
+          text: s.aQrCodeAndTextForAllTheOrchidAccounts + s.weRecommend + ' ',
+          style: bodyStyle),
+      LinkTextSpan(
+        text: s.backingItUp + '.',
+        style: linkStyle,
+        url: OrchidUrls.partsOfOrchidAccount,
+      ),
+      TextSpan(
+          text: '\n\n' + s.importThisKeyOnAnotherDeviceToShareAllThe,
+          style: bodyStyle)
+    ]));
+
+    return AppDialogs.showAppDialog(
+        context: context,
+        title: title,
+        body: Container(
+          padding: EdgeInsets.all(8),
+          width: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              body,
+              pady(16),
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: config));
+                },
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        width: 1,
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        QrImage(
+                          data: config,
+                          version: QrVersions.auto,
+                          size: 180.0,
+                        ),
+                        pady(8),
+                        Container(
+                          width: 180,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                s.copy,
+                                style: TextStyle(color: Colors.deepPurple),
+                              ),
+                              Icon(
+                                Icons.download_sharp,
+                                color: Colors.deepPurple,
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 
   // Delete the active identity after in-use check and user confirmation.
@@ -188,18 +272,35 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     if (activeKeyUids.contains(identity.uid)) {
       await AppDialogs.showAppDialog(
           context: context,
-          title: "Signer in use",
-          bodyText: "This signer key is in use and cannot be deleted.");
+          title: s.orchidAccountInUse,
+          bodyText: s.thisOrchidAccountIsInUseAndCannotBeDeleted);
       return;
     }
 
+    var bodyStyle = AppText.dialogBody; //.copyWith(fontSize: 15);
+    var body = RichText(
+        text: TextSpan(children: [
+      TextSpan(
+        text: identity.address.toString().prefix(24) + '\n\n',
+        style: bodyStyle.copyWith(fontWeight: FontWeight.bold),
+      ),
+      TextSpan(
+        text: s.thisCannotBeUndone +
+            " " +
+            s.deletingThisOrchidKeyCanCauseFundsInTheAssociated +
+            " ",
+        style: bodyStyle,
+      ),
+      AppText.buildLearnMoreLinkTextSpan(context),
+    ]));
+
     await AppDialogs.showConfirmationDialog(
       context: context,
-      title: "Delete Identity?",
-      body: "Deleting Identity: ${identity.address.toString().prefix(8)}" +
-          " cannot be undone.  Please back up keys if desired before deleting them.",
+      title: s.deleteThisOrchidKey,
+      body: body,
       cancelText: s.cancel,
-      actionText: "DELETE",
+      //cancelColor: bodyStyle.color,
+      actionText: s.delete,
       // Localize all caps version
       actionColor: Colors.red,
       commitAction: () {
@@ -215,7 +316,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Column _buildIdentityHeader() {
     return Column(
       children: [
-        Text("Orchid Address", style: AppText.dialogTitle),
+        Text(s.orchidAddress, style: AppText.dialogTitle),
         if (_accountStore.activeIdentity != null)
           OrchidIdenticon(
               value: _accountStore.activeIdentity.address.toString()),
@@ -267,7 +368,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         child: Align(
             child: Column(
           children: [
-            Text("Pull to refresh accounts.",
+            Text(s.pullToRefresh,
                 style: AppText.noteStyle.copyWith(fontStyle: FontStyle.italic)),
             pady(16),
             Container(
@@ -281,21 +382,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     var child = accounts.isEmpty
         ? ListView(
-            children: [
-              /*
-              Padding(
-                padding: const EdgeInsets.only(top: 24.0),
-                child: Center(
-                    child: Text(
-                        _accountStore.activeIdentity != null
-                            ? "Searching for accounts..."
-                            : "",
-                        style: AppText.noteStyle)),
-              ),
-               */
-              pady(8),
-              footer()
-            ],
+            children: [pady(8), footer()],
           )
         : ListView.separated(
             separatorBuilder: (BuildContext context, int index) =>
@@ -372,10 +459,14 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               child: Row(
                 children: [
                   LabeledCurrencyValue(
-                      label: "Balance:", style: style, value: account.balance),
+                      label: s.balance + ':',
+                      style: style,
+                      value: account.balance),
                   padx(8),
                   LabeledCurrencyValue(
-                      label: "Deposit:", style: style, value: account.deposit),
+                      label: s.deposit + ':',
+                      style: style,
+                      value: account.deposit),
                 ],
               ),
             ),
@@ -386,7 +477,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           ? Padding(
               padding: const EdgeInsets.only(left: 54.0, top: 2),
               child: Text(
-                "Active",
+                s.active,
                 textAlign: TextAlign.left,
               ),
             )
@@ -398,10 +489,10 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     return StreamBuilder<PacTransaction>(
         stream: PacTransaction.shared.stream(),
         builder: (context, snapshot) {
-          var enabled =
-              _accountStore.activeIdentity != null && snapshot.data == null;
+          var tx = snapshot.data;
+          var enabled = _accountStore.activeIdentity != null && tx == null;
           return RoundedRectButton(
-            text: "Add Credit",
+            text: s.addCredit,
             icon: Icon(
               Icons.add,
               color: Colors.white,
@@ -470,6 +561,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   @override
   void dispose() {
     _disposeAccountDetailMap();
+    _accountStore.removeListener(_accountsUpdated);
     super.dispose();
   }
 
@@ -510,7 +602,7 @@ class IdentitySelectorMenuItem {
   }
 
   String formatIdentity() {
-    return identity?.address?.toString()?.prefix(12) ?? "ERROR";
+    return identity?.address?.toString()?.prefix(12) ?? '???';
   }
 
   @override

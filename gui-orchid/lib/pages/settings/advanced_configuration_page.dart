@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -14,12 +15,13 @@ import '../app_colors.dart';
 import '../app_text.dart';
 
 /// A page presenting a full screen editable text box for the Orchid config file.
-class ConfigurationPage extends StatefulWidget {
+class AdvancedConfigurationPage extends StatefulWidget {
   @override
-  _ConfigurationPageState createState() => _ConfigurationPageState();
+  _AdvancedConfigurationPageState createState() =>
+      _AdvancedConfigurationPageState();
 }
 
-class _ConfigurationPageState extends State<ConfigurationPage> {
+class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
   String _configFileTextLast = "";
   BehaviorSubject<bool> _readyToSave = BehaviorSubject<bool>.seeded(false);
   final _configFileTextController = TextEditingController();
@@ -43,7 +45,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
 
   @override
   Widget build(BuildContext context) {
-    String title = s.configuration;
+    String title = s.advancedConfiguration;
     return TapClearsFocus(
         child: TitledPage(title: title, child: buildPage(context)));
   }
@@ -55,10 +57,34 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: RoundTitledRaisedImageButton(
+                        title: s.copy,
+                        icon: Icon(Icons.copy, color: Colors.white, size: 20),
+                        onPressed: _onCopy)),
+                Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: RoundTitledRaisedImageButton(
+                        title: s.paste,
+                        icon: Icon(Icons.paste, color: Colors.white, size: 20),
+                        onPressed: _onPaste)),
+                Padding(
+                    padding: const EdgeInsets.only(left: 0, right: 0),
+                    child: RoundTitledRaisedImageButton(
+                        title: s.clear,
+                        icon: Icon(Icons.clear, color: Colors.white, size: 20),
+                        onPressed: _onClear)),
+              ],
+            ),
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(
-                    left: 16, right: 16, top: 24, bottom: 24),
+                    left: 16, right: 16, top: 8, bottom: 24),
                 child: Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -92,9 +118,14 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                 child: StreamBuilder<Object>(
                     stream: _readyToSave.stream,
                     builder: (context, snapshot) {
-                      return RoundedRectButton(
-                          text: s.saveButtonTitle,
-                          onPressed: _readyToSave.value ? _save : null);
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          RoundedRectButton(
+                              text: s.saveButtonTitle,
+                              onPressed: _readyToSave.value ? _onSave : null),
+                        ],
+                      );
                     }),
               ),
             ),
@@ -106,7 +137,24 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     );
   }
 
-  void _save() {
+  void _onCopy() {
+    Clipboard.setData(ClipboardData(text: _configFileTextController.text));
+  }
+
+  void _onPaste() async {
+    ClipboardData data = await Clipboard.getData('text/plain');
+    setState(() {
+      _configFileTextController.text = data.text;
+    });
+  }
+
+  void _onClear() {
+    setState(() {
+      _configFileTextController.text = '';
+    });
+  }
+
+  void _onSave() {
     var newConfig = _configFileTextController.text;
     try {
       // Just parse it to the AST to catch gross syntax errors.
@@ -115,7 +163,8 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
       }
     } catch (err) {
       print("Error parsing config: $err");
-      AppDialogs.showConfigurationChangeFailed(context, errorText: err.toString());
+      AppDialogs.showConfigurationChangeFailed(context,
+          errorText: err.toString());
       return;
     }
     OrchidAPI().setConfiguration(newConfig).then((bool saved) {

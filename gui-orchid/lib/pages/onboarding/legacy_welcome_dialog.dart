@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_sizes.dart';
 import 'package:orchid/pages/app_text.dart';
@@ -31,7 +32,7 @@ class LegacyWelcomeDialog {
         LinkTextSpan(
           text: "account.orchid.com",
           style: AppText.linkStyle.copyWith(fontSize: 15),
-          url: 'https://account.orchid.com',
+          url: OrchidUrls.accountOrchid,
         ),
         TextSpan(
             text: " " + s.inYourWalletBrowserInstruction, style: bodyStyle),

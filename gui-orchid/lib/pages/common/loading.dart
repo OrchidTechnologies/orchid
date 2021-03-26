@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 
 class LoadingIndicator extends StatelessWidget {
   final double height;
@@ -8,7 +9,7 @@ class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({
     Key key,
     this.height = 150,
-    this.text = "Loading...",
+    this.text,
   }) : super(key: key);
 
   @override
@@ -16,7 +17,7 @@ class LoadingIndicator extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       height: height,
-      child: Text(text),
+      child: Text(text ?? S.of(context).loading),
     );
   }
 }

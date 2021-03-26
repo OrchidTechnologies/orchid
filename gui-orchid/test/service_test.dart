@@ -14,7 +14,7 @@ import 'package:orchid/api/purchase/orchid_purchase.dart';
 ///
 void main() async {
   // Disable for the CI
-  const bool disabled = false;
+  const bool disabled = true;
   if (disabled) {
     print("Disabled.");
     return;

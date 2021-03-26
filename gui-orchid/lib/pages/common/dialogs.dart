@@ -21,7 +21,7 @@ class AppDialogs {
         // return object of type Dialog
         return AlertDialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8.0))),
+              borderRadius: BorderRadius.all(Radius.circular(16.0))),
           title: Text(title, style: AppText.dialogTitle),
           content: body ?? Text(bodyText, style: AppText.dialogBody),
           actions: <Widget>[
@@ -50,7 +50,8 @@ class AppDialogs {
   static Future<bool> showConfirmationDialog(
       {@required BuildContext context,
       String title,
-      String body,
+      Widget body,
+      String bodyText,
       String cancelText,
       Color cancelColor = AppColors.purple_3,
       actionText,
@@ -69,7 +70,7 @@ class AppDialogs {
                   style:
                       AppText.dialogTitle.copyWith(color: AppColors.neutral_1))
               : null,
-          content: Text(body ?? s.confirmThisAction + "?",
+          content: body ?? Text(bodyText ?? s.confirmThisAction + "?",
               style: AppText.dialogBody.copyWith(color: AppColors.neutral_2)),
           actions: <Widget>[
             FlatButton(

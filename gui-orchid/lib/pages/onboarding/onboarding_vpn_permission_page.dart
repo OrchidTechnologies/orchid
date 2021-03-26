@@ -70,7 +70,7 @@ class _OnboardingVPNPermissionPageState
     AppDialogs.showConfirmationDialog(
         context: context,
         title: "Allow Connection",
-        body:
+        bodyText:
             "Orchid VPN is requesting permission to set up a VPN extension that will"
             " allow it to show you your network traffic. Only allow this if you trust this source."
             "\n\nAn icon will be shown at the top of your screen while the VPN is in use. Allow?",

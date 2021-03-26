@@ -6,18 +6,23 @@ import 'package:orchid/pages/app_colors.dart';
 class PageTile extends StatelessWidget {
   final String title;
   final String imageName;
+  Widget body;
   Widget trailing;
   Widget leading;
   GestureTapCallback onTap;
   Color color;
+  double height;
 
-  PageTile(
-      {this.title,
-      this.imageName,
-      this.onTap,
-      this.leading,
-      this.trailing,
-      this.color = Colors.transparent});
+  PageTile({
+    this.title,
+    this.body,
+    this.imageName,
+    this.onTap,
+    this.leading,
+    this.trailing,
+    this.color = Colors.transparent,
+    this.height,
+  });
 
   PageTile.route(
       {this.title,
@@ -32,13 +37,16 @@ class PageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 50,
+        height: height ?? 50,
         color: color,
         child: ListTile(
             title: Text(title),
-            leading: leading ?? (imageName != null
-                ? Image(color: AppColors.purple, image: AssetImage(imageName))
-                : null),
+            subtitle: body,
+            leading: leading ??
+                (imageName != null
+                    ? Image(
+                        color: AppColors.purple, image: AssetImage(imageName))
+                    : null),
             trailing: trailing != null
                 ? trailing
                 : Icon(Icons.chevron_right, color: AppColors.purple),

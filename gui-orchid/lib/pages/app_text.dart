@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/pages/common/link_text.dart';
 
 class AppText {
   static TextStyle headerStyle = TextStyle(
@@ -111,11 +113,8 @@ class AppText {
       fontStyle: FontStyle.normal,
       fontSize: 14.0);
 
-  static TextStyle pasteButtonStyle =
-      TextStyle(
-          fontWeight: FontWeight.w400,
-          fontSize: 17, color: Colors.deepPurple
-      );
+  static TextStyle pasteButtonStyle = TextStyle(
+      fontWeight: FontWeight.w400, fontSize: 17, color: Colors.deepPurple);
 
   static TextStyle dialogTitle = const TextStyle(
       color: const Color(0xff3a3149),
@@ -185,4 +184,13 @@ class AppText {
       letterSpacing: -0.24,
       fontFamily: 'SFProText-Regular',
       height: 20.0 / 15.0);
+
+  static LinkTextSpan buildLearnMoreLinkTextSpan(BuildContext context) {
+    return LinkTextSpan(
+      text: S.of(context).learnMore,
+      style: AppText.linkStyle.copyWith(fontSize: 15),
+      url:
+          'https://docs.orchid.com/en/latest/accounts/#technical-parts-of-an-orchid-account',
+    );
+  }
 }

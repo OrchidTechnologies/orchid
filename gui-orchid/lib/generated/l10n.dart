@@ -1469,10 +1469,10 @@ class S {
     );
   }
 
-  /// `Import an Orchid account`
+  /// `Import an Orchid Account`
   String get importAnOrchidAccount {
     return Intl.message(
-      'Import an Orchid account',
+      'Import an Orchid Account',
       name: 'importAnOrchidAccount',
       desc: '',
       args: [],
@@ -2414,6 +2414,676 @@ class S {
     return Intl.message(
       'Signer Address',
       name: 'signerAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Legal`
+  String get legal {
+    return Intl.message(
+      'Legal',
+      name: 'legal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `What’s new in Orchid`
+  String get whatsNewInOrchid {
+    return Intl.message(
+      'What’s new in Orchid',
+      name: 'whatsNewInOrchid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Orchid is on xDai!`
+  String get orchidIsOnXdai {
+    return Intl.message(
+      'Orchid is on xDai!',
+      name: 'orchidIsOnXdai',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You can now purchase Orchid credits on xDai! Start using the VPN for as little as $1.`
+  String get youCanNowPurchaseOrchidCreditsOnXdaiStartUsing {
+    return Intl.message(
+      'You can now purchase Orchid credits on xDai! Start using the VPN for as little as \$1.',
+      name: 'youCanNowPurchaseOrchidCreditsOnXdaiStartUsing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `xDai accounts for past purchases`
+  String get xdaiAccountsForPastPurchases {
+    return Intl.message(
+      'xDai accounts for past purchases',
+      name: 'xdaiAccountsForPastPurchases',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `For any in-app purchase made before today, xDai funds have been added to the same account key. Have the bandwidth on us!`
+  String get forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave {
+    return Intl.message(
+      'For any in-app purchase made before today, xDai funds have been added to the same account key. Have the bandwidth on us!',
+      name: 'forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New interface`
+  String get newInterface {
+    return Intl.message(
+      'New interface',
+      name: 'newInterface',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Accounts are now organized under the Orchid Address they are associated with.`
+  String get accountsAreNowOrganizedUnderTheOrchidAddressTheyAre {
+    return Intl.message(
+      'Accounts are now organized under the Orchid Address they are associated with.',
+      name: 'accountsAreNowOrganizedUnderTheOrchidAddressTheyAre',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `See your active account balance and bandwidth cost on the home screen.`
+  String get seeYourActiveAccountBalanceAndBandwidthCostOnThe {
+    return Intl.message(
+      'See your active account balance and bandwidth cost on the home screen.',
+      name: 'seeYourActiveAccountBalanceAndBandwidthCostOnThe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No PACs available at this time.`
+  String get noPacsAvailableAtThisTime {
+    return Intl.message(
+      'No PACs available at this time.',
+      name: 'noPacsAvailableAtThisTime',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `See orchid.com for help.`
+  String get seeOrchidcomForHelp {
+    return Intl.message(
+      'See orchid.com for help.',
+      name: 'seeOrchidcomForHelp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pay Per Use VPN Service`
+  String get payPerUseVpnService {
+    return Intl.message(
+      'Pay Per Use VPN Service',
+      name: 'payPerUseVpnService',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current avg. VPN price is {price} per GB`
+  String currentAvgVpnPriceIsPricePerGb(Object price) {
+    return Intl.message(
+      'Current avg. VPN price is $price per GB',
+      name: 'currentAvgVpnPriceIsPricePerGb',
+      desc: '',
+      args: [price],
+    );
+  }
+
+  /// `Not a subscription, credits don't expire`
+  String get notASubscriptionCreditsDontExpire {
+    return Intl.message(
+      'Not a subscription, credits don\'t expire',
+      name: 'notASubscriptionCreditsDontExpire',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Share account with unlimited devices`
+  String get shareAccountWithUnlimitedDevices {
+    return Intl.message(
+      'Share account with unlimited devices',
+      name: 'shareAccountWithUnlimitedDevices',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Purchased credit accounts connect exclusively to our`
+  String get purchasedCreditAccountsConnectExclusivelyToOur {
+    return Intl.message(
+      'Purchased credit accounts connect exclusively to our',
+      name: 'purchasedCreditAccountsConnectExclusivelyToOur',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `preferred providers`
+  String get preferredProviders {
+    return Intl.message(
+      'preferred providers',
+      name: 'preferredProviders',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All purchased accounts use the`
+  String get allPurchasedAccountsUseThe {
+    return Intl.message(
+      'All purchased accounts use the',
+      name: 'allPurchasedAccountsUseThe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `xDai cryptocurrency`
+  String get xdaiCryptocurrency {
+    return Intl.message(
+      'xDai cryptocurrency',
+      name: 'xdaiCryptocurrency',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The Orchid Store is temporarily unavailable.  Please check back in a few minutes.`
+  String get theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn {
+    return Intl.message(
+      'The Orchid Store is temporarily unavailable.  Please check back in a few minutes.',
+      name: 'theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Talking to PAC Server`
+  String get talkingToPacServer {
+    return Intl.message(
+      'Talking to PAC Server',
+      name: 'talkingToPacServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Advanced Configuration`
+  String get advancedConfiguration {
+    return Intl.message(
+      'Advanced Configuration',
+      name: 'advancedConfiguration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deleted PACs`
+  String get deletedPacs {
+    return Intl.message(
+      'Deleted PACs',
+      name: 'deletedPacs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New`
+  String get newWord {
+    return Intl.message(
+      'New',
+      name: 'newWord',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copied`
+  String get copied {
+    return Intl.message(
+      'Copied',
+      name: 'copied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Efficiency`
+  String get efficiency {
+    return Intl.message(
+      'Efficiency',
+      name: 'efficiency',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Min Tickets available: {tickets}`
+  String minTicketsAvailableTickets(Object tickets) {
+    return Intl.message(
+      'Min Tickets available: $tickets',
+      name: 'minTicketsAvailableTickets',
+      desc: '',
+      args: [tickets],
+    );
+  }
+
+  /// `Transaction Sent To Blockchain`
+  String get transactionSentToBlockchain {
+    return Intl.message(
+      'Transaction Sent To Blockchain',
+      name: 'transactionSentToBlockchain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your purchase is complete and is now being processed by the xDai blockchain which can take up to a minute, sometimes longer. Pull down to refresh and your account with an updated balance will appear below.`
+  String get yourPurchaseIsCompleteAndIsNowBeingProcessedBy {
+    return Intl.message(
+      'Your purchase is complete and is now being processed by the xDai blockchain which can take up to a minute, sometimes longer. Pull down to refresh and your account with an updated balance will appear below.',
+      name: 'yourPurchaseIsCompleteAndIsNowBeingProcessedBy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copy Receipt`
+  String get copyReceipt {
+    return Intl.message(
+      'Copy Receipt',
+      name: 'copyReceipt',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Bandwidth Cost`
+  String get bandwidthCost {
+    return Intl.message(
+      'Bandwidth Cost',
+      name: 'bandwidthCost',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manage Accounts`
+  String get manageAccounts {
+    return Intl.message(
+      'Manage Accounts',
+      name: 'manageAccounts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Configuration Management`
+  String get configurationManagement {
+    return Intl.message(
+      'Configuration Management',
+      name: 'configurationManagement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable Multi-hop UI`
+  String get enableMultihopUi {
+    return Intl.message(
+      'Enable Multi-hop UI',
+      name: 'enableMultihopUi',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If you want to use multi-hop, OpenVPN and WireGuard you’ll need to enable multi-hop interface. To buy credits, you’ll need to disable multi-hop interface.`
+  String get ifYouWantToUseMultihopOpenvpnAndWireguardYoull {
+    return Intl.message(
+      'If you want to use multi-hop, OpenVPN and WireGuard you’ll need to enable multi-hop interface. To buy credits, you’ll need to disable multi-hop interface.',
+      name: 'ifYouWantToUseMultihopOpenvpnAndWireguardYoull',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `To restore a deleted hop:`
+  String get toRestoreADeletedHop {
+    return Intl.message(
+      'To restore a deleted hop:',
+      name: 'toRestoreADeletedHop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `1. Click the hop below then click ‘Share Orchid Account’ and hit ‘Copy’.`
+  String get oneClickTheHopBelowThenClickShareOrchidAccount {
+    return Intl.message(
+      '1. Click the hop below then click ‘Share Orchid Account’ and hit ‘Copy’.',
+      name: 'oneClickTheHopBelowThenClickShareOrchidAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `2. Return to the ‘Manage Profile’ screen, click ‘New Hop’ then ‘Link Orchid Account’ and ‘Paste’.`
+  String get twoReturnToTheManageProfileScreenClickNewHop {
+    return Intl.message(
+      '2. Return to the ‘Manage Profile’ screen, click ‘New Hop’ then ‘Link Orchid Account’ and ‘Paste’.',
+      name: 'twoReturnToTheManageProfileScreenClickNewHop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `To permanently delete a hop from the list below, swipe left on it.`
+  String get toPermanentlyDeleteAHopFromTheListBelowSwipe {
+    return Intl.message(
+      'To permanently delete a hop from the list below, swipe left on it.',
+      name: 'toPermanentlyDeleteAHopFromTheListBelowSwipe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Optional`
+  String get optional {
+    return Intl.message(
+      'Optional',
+      name: 'optional',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export this Orchid Key`
+  String get exportThisOrchidKey {
+    return Intl.message(
+      'Export this Orchid Key',
+      name: 'exportThisOrchidKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `A QR code and text for all the Orchid accounts associated with this key is below.`
+  String get aQrCodeAndTextForAllTheOrchidAccounts {
+    return Intl.message(
+      'A QR code and text for all the Orchid accounts associated with this key is below.',
+      name: 'aQrCodeAndTextForAllTheOrchidAccounts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `We recommend`
+  String get weRecommend {
+    return Intl.message(
+      'We recommend',
+      name: 'weRecommend',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `backing it up`
+  String get backingItUp {
+    return Intl.message(
+      'backing it up',
+      name: 'backingItUp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import this key on another device to share all the Orchid accounts associated with this Orchid identity.`
+  String get importThisKeyOnAnotherDeviceToShareAllThe {
+    return Intl.message(
+      'Import this key on another device to share all the Orchid accounts associated with this Orchid identity.',
+      name: 'importThisKeyOnAnotherDeviceToShareAllThe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Orchid Account in use`
+  String get orchidAccountInUse {
+    return Intl.message(
+      'Orchid Account in use',
+      name: 'orchidAccountInUse',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This Orchid Account is in use and cannot be deleted.`
+  String get thisOrchidAccountIsInUseAndCannotBeDeleted {
+    return Intl.message(
+      'This Orchid Account is in use and cannot be deleted.',
+      name: 'thisOrchidAccountIsInUseAndCannotBeDeleted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This cannot be undone.`
+  String get thisCannotBeUndone {
+    return Intl.message(
+      'This cannot be undone.',
+      name: 'thisCannotBeUndone',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deleting this Orchid key can cause funds in the associated Orchid accounts to become un-spendable.`
+  String get deletingThisOrchidKeyCanCauseFundsInTheAssociated {
+    return Intl.message(
+      'Deleting this Orchid key can cause funds in the associated Orchid accounts to become un-spendable.',
+      name: 'deletingThisOrchidKeyCanCauseFundsInTheAssociated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete this Orchid Key`
+  String get deleteThisOrchidKey {
+    return Intl.message(
+      'Delete this Orchid Key',
+      name: 'deleteThisOrchidKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Orchid Address`
+  String get orchidAddress {
+    return Intl.message(
+      'Orchid Address',
+      name: 'orchidAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pull to refresh.`
+  String get pullToRefresh {
+    return Intl.message(
+      'Pull to refresh.',
+      name: 'pullToRefresh',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Balance`
+  String get balance {
+    return Intl.message(
+      'Balance',
+      name: 'balance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Active`
+  String get active {
+    return Intl.message(
+      'Active',
+      name: 'active',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add Credit`
+  String get addCredit {
+    return Intl.message(
+      'Add Credit',
+      name: 'addCredit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account View`
+  String get accountView {
+    return Intl.message(
+      'Account View',
+      name: 'accountView',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activate`
+  String get activate {
+    return Intl.message(
+      'Activate',
+      name: 'activate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Paste an Orchid key from the clipboard to import all the Orchid accounts associated with that key.`
+  String get pasteAnOrchidKeyFromTheClipboardToImportAll {
+    return Intl.message(
+      'Paste an Orchid key from the clipboard to import all the Orchid accounts associated with that key.',
+      name: 'pasteAnOrchidKeyFromTheClipboardToImportAll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan or paste an Orchid key from the clipboard to import all the Orchid accounts associated with that key.`
+  String get scanOrPasteAnOrchidKeyFromTheClipboardTo {
+    return Intl.message(
+      'Scan or paste an Orchid key from the clipboard to import all the Orchid accounts associated with that key.',
+      name: 'scanOrPasteAnOrchidKeyFromTheClipboardTo',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Protect your traffic`
+  String get protectYourTraffic {
+    return Intl.message(
+      'Protect your traffic',
+      name: 'protectYourTraffic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Set up your first hop to activate your VPN connection.`
+  String get setUpYourFirstHopToActivateYourVpnConnection {
+    return Intl.message(
+      'Set up your first hop to activate your VPN connection.',
+      name: 'setUpYourFirstHopToActivateYourVpnConnection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `A ‘hop’ is a remote server along your path to the internet that your traffic is routed through.`
+  String get aHopIsARemoteServerAlongYourPathTo {
+    return Intl.message(
+      'A ‘hop’ is a remote server along your path to the internet that your traffic is routed through.',
+      name: 'aHopIsARemoteServerAlongYourPathTo',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Each hop adds a layer of indirection and obfuscation to your connection.`
+  String get eachHopAddsALayerOfIndirectionAndObfuscationTo {
+    return Intl.message(
+      'Each hop adds a layer of indirection and obfuscation to your connection.',
+      name: 'eachHopAddsALayerOfIndirectionAndObfuscationTo',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create your first hop to get started.`
+  String get createYourFirstHopToGetStarted {
+    return Intl.message(
+      'Create your first hop to get started.',
+      name: 'createYourFirstHopToGetStarted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account`
+  String get account {
+    return Intl.message(
+      'Account',
+      name: 'account',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Transactions`
+  String get transactions {
+    return Intl.message(
+      'Transactions',
+      name: 'transactions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View Deleted Hops`
+  String get viewDeletedHops {
+    return Intl.message(
+      'View Deleted Hops',
+      name: 'viewDeletedHops',
       desc: '',
       args: [],
     );

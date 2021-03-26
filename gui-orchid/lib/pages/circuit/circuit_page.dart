@@ -450,7 +450,7 @@ class CircuitPageState extends State<CircuitPage>
       child: Align(
         alignment: Alignment.bottomCenter,
         child: LinkText(
-          "View Deleted Hops",
+          s.viewDeletedHops,
           style: AppText.linkStyle
               .copyWith(fontSize: 13, fontStyle: FontStyle.italic),
           onTapped: () {
@@ -708,7 +708,7 @@ class CircuitPageState extends State<CircuitPage>
     var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
-      body: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
+      bodyText: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
           "  " +
           s.ifYouPlanToReuseTheAccountLaterYouShould,
     );

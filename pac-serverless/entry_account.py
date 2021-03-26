@@ -21,7 +21,6 @@ def main(event, context):
     logging.info(f'context: {context}')
     logging.info(f'body: {body}')
 
-    W3WSock     = os.environ['WEB3_WEBSOCKET']
     account_id  = body.get('account_id')
     logging.info(f'entry_account account_id: {account_id} ')
     account     = w3_generic.dynamodb_read1(os.environ['BALANCES_TABLE_NAME'], 'account_id', account_id)
@@ -30,9 +29,8 @@ def main(event, context):
         account = {}
         account['balance'] = 0.0
 
-    providers = w3_generic.get_w3wsock_providers()
     nonces = account.get('nonces',{})
-    for chainId in providers.keys():
+    for chainId in w3_generic.get_chainIds():
         nonce = str(nonces.get(str(chainId),'0'))
         nonces[str(chainId)] = nonce
     account['nonces'] = nonces

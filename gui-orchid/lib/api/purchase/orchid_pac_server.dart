@@ -25,11 +25,6 @@ import 'package:convert/convert.dart';
 class OrchidPACServer {
   static final OrchidPACServer _shared = OrchidPACServer._internal();
 
-  // TODO: Integrate with ios purchase api api config... same url.
-  /// PAC Server status URL
-  final String storeStatusUrl =
-      'https://veagsy1gee.execute-api.us-west-2.amazonaws.com/prod/store_status';
-
   factory OrchidPACServer() {
     return _shared;
   }
@@ -230,7 +225,7 @@ class OrchidPACServer {
   }) async {
     var params = {'account_id': signer.toString(prefix: true)};
     var result = await _postJson(
-        method: 'get_account', params: params, apiConfig: apiConfig);
+        method: 'get_account', paramsIn: params, apiConfig: apiConfig);
     return PacAccount.fromJson(result);
   }
 
@@ -248,7 +243,7 @@ class OrchidPACServer {
       'receipt': receipt,
     };
     var result = await _postJson(
-        method: 'payment_apple', params: params, apiConfig: apiConfig);
+        method: 'payment_apple', paramsIn: params, apiConfig: apiConfig);
     print("XXX: add balance result = " + result.toString());
     return result.toString();
   }
@@ -298,7 +293,7 @@ class OrchidPACServer {
 
     // print("iap: seller tx: send raw json = ${jsonEncode(params)}");
     var result = await _postJson(
-        method: 'send_raw', params: params, apiConfig: apiConfig);
+        method: 'send_raw', paramsIn: params, apiConfig: apiConfig);
     // print("iap: seller tx: send raw result = " + result.toString());
 
     return result.toString();
@@ -306,15 +301,6 @@ class OrchidPACServer {
 
   /// V1 pac store status.  This method returns down in the event of error.
   Future<PACStoreStatus> storeStatus() async {
-    /*
-    $ curl -X POST -H "Content-Type: application/json"
-      --data '{"client_version":"0.9.24", "client_locale": "en"}'
-      --url https://sbdds4zh8a.execute-api.us-west-2.amazonaws.com/dev/store_status
-      {"store_status": 1, "message": "", "sellers": {"100": "0xabEB207C9C82c80D2c03545A73F234d0544172A2"},
-      "products": {"net.orchid.pactier1": 39.99, "net.orchid.pactier2": 79.99,
-      "net.orchid.pactier3": 199.99, "net.orchid.pactier4": 0.99,
-      "net.orchid.pactier5": 9.99, "net.orchid.pactier6": 99.99}
-   */
     log("iap: check PAC server status");
 
     bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
@@ -327,9 +313,9 @@ class OrchidPACServer {
     // Do the post
     var responseJson;
     try {
-      responseJson = await _postJsonToUrl(url: storeStatusUrl, paramsIn: {});
-    } catch (err) {
-      log("iap: pac server status response error: ${err}");
+      responseJson = await _postJson(method: "store_status", paramsIn: {});
+    } catch (err, stack) {
+      log("iap: pac server status response error: $err, $stack");
       return PACStoreStatus.down;
     }
 
@@ -355,11 +341,15 @@ class OrchidPACServer {
   /// Post json to our PAC server
   Future<dynamic> _postJson({
     @required String method,
-    @required Map<String, dynamic> params,
+    @required Map<String, dynamic> paramsIn,
     PacApiConfig apiConfig, // optional override
   }) async {
     apiConfig = apiConfig ?? await OrchidPurchaseAPI().apiConfig();
     var url = '${apiConfig.url}/$method';
+
+    // Guard the unknown map type
+    var params = Map<String,dynamic>();
+    params.addAll(paramsIn);
 
     // Optional dev testing params
     if (!apiConfig.verifyReceipt) {
@@ -381,7 +371,8 @@ class OrchidPACServer {
     var clientLocale =
         '${OrchidPlatform.staticLocale.languageCode}-${OrchidPlatform.staticLocale.countryCode}';
 
-    var params = {};
+    // Guard the unknown map type
+    var params = Map<String,dynamic>();
     params.addAll(paramsIn);
 
     // Version and locale

@@ -53,7 +53,7 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
   @override
   _OrchidHopPageState createState() => _OrchidHopPageState();
 
-  static Future<void> showShareConfigStringDialog({
+  static Future<void> showExportAccountDialog({
     BuildContext context,
     String title,
     String config,
@@ -73,23 +73,11 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
                   size: 250.0,
                 ),
               ),
-              _buildCopyButton(context, config)
+              CopyTextButton(copyText: config)
             ],
           ),
         ));
   }
-
-  static Widget _buildCopyButton(BuildContext context, String config) {
-    var s = S.of(context);
-    return RoundedRectButton(
-        backgroundColor: Colors.deepPurple,
-        textColor: Colors.white,
-        text: s.copy,
-        onPressed: () {
-          Clipboard.setData(ClipboardData(text: config));
-        });
-  }
-
 }
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
@@ -245,7 +233,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         children: <Widget>[
           if (AppSize(context).tallerThan(AppSize.iphone_12_max)) pady(64),
           _buildSection(
-              title: "Account", child: _buildAccountDetails(), onDetail: null),
+              title: s.account, child: _buildAccountDetails(), onDetail: null),
           pady(16),
           divider(),
           pady(24),
@@ -361,7 +349,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           padx(16),
           Container(
             width: 150,
-            child: Text("Balance: " +
+            child: Text(s.balance +
+                ': ' +
                 formatCurrency(utx.update.endBalance.floatValue,
                     suffix: 'OXT')),
           ),
@@ -372,7 +361,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }).toList();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text("Transactions", style: AppText.textLabelStyle),
+      Text(s.transactions, style: AppText.textLabelStyle),
       pady(8),
       ...txRows,
     ]);
@@ -894,7 +883,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void _exportAccount() async {
     var config = await _hop().accountConfigString();
     var title = S.of(context).myOrchidAccount + ':';
-    OrchidHopPage.showShareConfigStringDialog(context: context, title: title, config: config);
+    OrchidHopPage.showExportAccountDialog(
+        context: context, title: title, config: config);
   }
 
   S get s {
