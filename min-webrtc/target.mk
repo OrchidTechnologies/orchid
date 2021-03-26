@@ -104,7 +104,11 @@ webrtc += $(filter-out \
     %/nat_socket_factory.cc \
 ,$(wildcard $(pwd)/webrtc/rtc_base/*.cc))
 
-webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*.cc)
+# XXX: I'd prefer to remove all %/experiments/*
+webrtc += $(filter-out \
+    %/experiments/encoder_info_settings.cc \
+,$(wildcard $(pwd)/webrtc/rtc_base/*/*.cc))
+
 webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*.mm)
 webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*/*.cc)
 
@@ -116,6 +120,8 @@ cflags/$(pwd)/webrtc/rtc_base/random.cc += -Wno-implicit-int-float-conversion
 
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/internal/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/numeric/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/numeric/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/*.cc)

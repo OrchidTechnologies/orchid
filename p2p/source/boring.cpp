@@ -86,9 +86,9 @@ Boring::Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, cons
     origin_(origin),
     local_(local),
     remote_(remote),
-    wireguard_(new_tunnel(secret.c_str(), common.c_str(), [](const char *message) {
+    wireguard_(new_tunnel(secret.c_str(), common.c_str(), 0, 0, [](const char *message) {
         Log() << "WireGuard: " << message << std::endl;
-    }, ALL))
+    }, TRACE))
 {
 }
 
