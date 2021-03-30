@@ -402,8 +402,7 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
     );
   }
 
-  /// Clear the unlock / warn time period.
-  async orchidLock(funder: EthAddress, signer: EthAddress): Promise<string> {
+  async orchidLock(_: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
     return this.evalOrchidTx(
       this.lotteryContract.methods.lock(signer).send({
         from: funder,
@@ -413,8 +412,7 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
   }
 
   /// Start the unlock / warn time period (one day in the future).
-  /// In v0 amount is ignored.
-  async orchidUnlock(funder: EthAddress, signer: EthAddress, amount: LotFunds): Promise<string> {
+  async orchidUnlock(_: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
     return this.evalOrchidTx(
       this.lotteryContract.methods.warn(signer).send({
         from: funder,
@@ -441,7 +439,7 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
     const unlock: number = Number(result[2]);
     const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
     //console.log("Pot info: ", balance, "escrow: ", escrow, "unlock: ", unlock, "unlock date:", unlockDate);
-    return new LotteryPot(signer, balance, escrow, unlockDate);
+    return LotteryPot.from(signer, balance, escrow, unlockDate);
   }
 
   // Exercise the reset account feature of the lotter_test_reset contract.

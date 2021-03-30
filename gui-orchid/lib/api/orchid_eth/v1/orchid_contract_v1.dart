@@ -27,6 +27,7 @@ class OrchidContractV1 {
   static int lotteryMoveMaxGas = 175000;
   static int createAccountMaxGas = lotteryMoveMaxGas;
 
+  /*
   // 'adjust' specifies how much to move from balance to escrow (positive)
   // or escrow to balance (negative)
   // 'retrieve' specifies an amount to extract from balance to the funder address
@@ -37,4 +38,5 @@ class OrchidContractV1 {
         AbiEncode.address(signer) +
         AbiEncode.uint256From(adjust, retrieve);
   }
+   */
 }

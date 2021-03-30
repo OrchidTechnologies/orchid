@@ -1,6 +1,6 @@
 import Web3 from "web3";
 import {
-  EthAddress,
+  EthAddress, EthereumAddress,
   EthereumKey,
   LotteryPot,
   LotteryPotUpdateEvent,
@@ -122,9 +122,6 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     const total: LotFunds = min(addBalance.add(addEscrow), wallet.fundsBalance);
     console.log("Add funds  signer: ", signer, " amount: ", (total.subtract(addEscrow)), " escrow: ", addEscrow);
 
-    // Positive adjust component moves from balance (incoming payable) to escrow.
-    let adjust_retrieve = BigInt(addEscrow.intValue).shiftLeft(128);
-
     // Choose a gas price
     let medianGasPrice: GasFunds = await this.getGasPrice();
     let gasPrice: number | undefined = GasPricingStrategy.chooseGasPrice(
@@ -133,14 +130,22 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
       console.log("addfunds: gas price potentially too low.");
     }
 
+    // 'adjust' specifies how much to move from balance to escrow (positive)
+    // or escrow to balance (negative)
+    // 'retrieve' specifies an amount to extract from balance to the funder address
+    let adjust = addEscrow.intValue;
+    let warn = BigInt.zero;
+    let retrieve = BigInt.zero;
+
     const thisCapture = this;
 
     async function doFundTx() {
       return new Promise<string>(function (resolve, reject) {
-        // function move(address signer, uint256 adjust_retrieve) external payable
-        thisCapture.lotteryContract.methods.move(
-          signer, adjust_retrieve.toString()
-        ).send({
+        // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) {
+        thisCapture.lotteryContract.methods
+          .edit(
+            signer, adjust.toString(), warn.toString(), retrieve.toString(),
+          ).send({
           from: funder,
           gas: OrchidContractV1.lottery_move_max_gas,
           gasPrice: gasPrice,
@@ -191,16 +196,20 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
   /// Move `amount` from balance to escrow, not exceeding `potBalance`.
   async orchidMoveFundsToEscrow(
     funder: EthAddress, signer: EthAddress, amount: LotFunds, potBalance: LotFunds): Promise<string> {
+
     console.log(`moveFunds amount: ${amount.toString()}`);
 
     // Don't take more than the pot balance. This check mitigates rounding errors.
     amount = min(amount, potBalance);
 
-    // Positive adjust component moves from balance (incoming payable) to escrow.
-    let adjust_retrieve = BigInt(amount.intValue).shiftLeft(128);
+    // positive adjust moves from balance to escrow
+    const adjust = BigInt(amount.intValue);
+    const retrieve = BigInt.zero;
+    const warn = BigInt.zero;
+
     return this.evalOrchidTx(
       this.lotteryContract.methods
-        .move(signer, adjust_retrieve.toString())
+        .edit(signer, adjust.toString(), warn.toString(), retrieve.toString())
         .send({
           from: funder,
           gas: OrchidContractV1.lottery_move_max_gas,
@@ -208,7 +217,6 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     );
   }
 
-  /// Withdraw `amount` from the lottery pot to the specified eth address, not exceeding `potBalance`.
   /// For v1 the target address must be the funder address or an error will be thrown.
   async orchidWithdrawFunds(
     funder: EthAddress, signer: EthAddress, targetAddress: EthAddress, amount: LotFunds, potBalance: LotFunds
@@ -221,10 +229,14 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     amount = min(amount, potBalance);
     console.log(`withdrawFunds to: ${targetAddress} amount: ${amount}`);
 
-    let adjust_retrieve: BigInt = amount.intValue;
+    const adjust = BigInt.zero;
+    const warn = BigInt.zero;
+    const retrieve = amount.intValue;
+
+    // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) {
     return this.evalOrchidTx(
       this.lotteryContract.methods
-        .move(signer, adjust_retrieve.toString())
+        .edit(signer, adjust.toString(), warn.toString(), retrieve.toString())
         .send({
           from: funder,
           gas: OrchidContractV1.lottery_pull_amount_max_gas,
@@ -232,7 +244,6 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     );
   }
 
-  /// Pull all funds and escrow, subject to lock time.
   /// For v1 the target address must be the funder address or an error will be thrown.
   async orchidWithdrawFundsAndEscrow(pot: LotteryPot, targetAddress: EthAddress): Promise<string> {
     const funder = pot.signer.wallet.address;
@@ -241,14 +252,15 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     if (funder !== targetAddress) {
       throw Error("orchdiWithdrawFunds: v1 contract target address must be funder.");
     }
-    // TODO: TEST: Is this correct?
+
     // adjust = negative escrow (move from escrow->balance)
     const adjust = BigInt(pot.escrow.intValue).multiply(-1);
     const retrieve = BigInt(pot.balance.add(pot.escrow).intValue);
-    let adjust_retrieve: BigInt = adjust.shiftLeft(128).add(retrieve);
+    const warn = BigInt.zero;
+
     return this.evalOrchidTx(
       this.lotteryContract.methods
-        .move(signer, adjust_retrieve.toString())
+        .edit(signer, adjust.toString(), warn.toString(), retrieve.toString())
         .send({
           from: funder,
           gas: OrchidContractV1.lottery_pull_amount_max_gas,
@@ -256,27 +268,42 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     );
   }
 
-  /// Clear the unlock / warn time period.
-  async orchidLock(funder: EthAddress, signer: EthAddress): Promise<string> {
-    // function warn(address signer , uint128 warned) external
-    // if 'warned' is zero clear the unlock time (flag that the escrow is locked again)
-    let warned = BigInt(0);
+  // "Warn" (unlock) the full escrow amount or whatever fraction of it remains un-warned.
+  // This starts the unlock / warn time period (one day in the future).
+  async orchidUnlock(pot: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
+
+    const adjust = BigInt.zero;
+    const retrieve = BigInt.zero;
+    // warn amount is the full escrow minus already warned
+    const warn = BigInt(pot.escrow.intValue).subtract(pot.warned?.intValue ?? BigInt.zero);
+    console.log(`orchidLock: escrow = ${pot.escrow.floatValue}, warned = ${pot.warned?.floatValue}, to warn = ${warn.toJSNumber()}`)
+
     return this.evalOrchidTx(
-      this.lotteryContract.methods.warn(signer, warned.toString()).send({
-        from: funder,
-        gas: OrchidContractV1.lottery_lock_max_gas
-      }), OrchidTransactionType.Lock
+      this.lotteryContract.methods
+        .edit(signer, adjust.toString(), warn.toString(), retrieve.toString())
+        .send({
+          from: funder,
+          gas: OrchidContractV1.lottery_warn_max_gas
+        }), OrchidTransactionType.Unlock
     );
   }
 
-  /// Start the unlock / warn time period (one day in the future).
-  async orchidUnlock(funder: EthAddress, signer: EthAddress, warned: LotFunds): Promise<string> {
-    // function warn(address signer , uint128 warned) external
+  // "Un-warn" (lock) the full warned (unlocked) amount.
+  async orchidLock(pot: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
+    const adjust = BigInt.zero;
+    const retrieve = BigInt.zero;
+    // warn amount is negative the currently warned amount
+    const warned = BigInt(pot.warned?.intValue ?? BigInt.zero);
+    const warn: BigInt = warned.multiply(BigInt(-1));
+    console.log(`orchidUnock: warn = ${warn}`)
+
     return this.evalOrchidTx(
-      this.lotteryContract.methods.warn(signer, warned.intValue.toString()).send({
-        from: funder,
-        gas: OrchidContractV1.lottery_warn_max_gas
-      }), OrchidTransactionType.Unlock
+      this.lotteryContract.methods
+        .edit(signer, adjust.toString(), warn.toString(), retrieve.toString())
+        .send({
+          from: funder,
+          gas: OrchidContractV1.lottery_lock_max_gas
+        }), OrchidTransactionType.Lock
     );
   }
 
@@ -287,10 +314,10 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     console.log("override balance = ", overrideBalance, getParam("balance"))
     let overrideDeposit: LotFunds | null = this.fundsTokenType.fromString(getParam("deposit"));
     //console.log("get lottery pot for signer: ", signer);
-    // read(address funder, address signer, address recipient ) external view
-    //   returns (uint256, uint256, uint256) escrow_amount, warned, bound
+    // function read(IERC20 token, address funder, address signer) external view
+    //   returns (uint256, uint256)
     let result = await this.lotteryContract.methods
-      .read(funder.address, signer.address, '0x0000000000000000000000000000000000000000'
+      .read(EthereumAddress.zeroString, funder.address, signer.address,
       ).call({from: funder.address});
     if (result == null || result.length < 3) {
       console.log("get lottery pot failed");
@@ -306,9 +333,10 @@ export class OrchidEthereumApiV1Impl implements OrchidEthereumAPI {
     const unlock = unlock_warned.shiftRight(128);
     console.log(`getlotterypot: warned = ${unlock}`)
     const unlockDate: Date | null = unlock > 0 ? new Date(unlock * 1000) : null;
+    const warned = this.fundsTokenType.fromInt(unlock_warned.and(mask128));
 
-    console.log("Pot info: ", balance, "escrow: ", deposit, "warned: ", unlock, "unlock date:", unlockDate);
-    return new LotteryPot(signer, balance, deposit, unlockDate);
+    console.log("Pot info: ", balance, "escrow: ", deposit, "unlock:", unlock, "warned: ", warned, "unlock date:", unlockDate);
+    return new LotteryPot(signer, balance, deposit, unlockDate, warned);
   }
 
   // Exercise the reset account feature of the lotter_test_reset contract.

@@ -206,6 +206,17 @@ class OrchidPACServer {
     }
 
     log("iap: purchase tx: submit raw");
+
+    // If we are retrying a one-shot purchase refresh the transaction params
+    // (account for gas price or calculation changes, etc.)
+    /*
+    if (tx.retries > 0) {
+      var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
+          signerKey: await tx.submitRaw.signerKey.get(),
+          chain: Chains.xDAI,
+          totalUsdValue: tx.submitRaw. purchase.usdPriceExact);
+    }
+    */
     tx.submitRaw.serverResponse = await _callSubmitSellerTx(tx.submitRaw);
     tx.submitRaw.state = PacTransactionState.Complete;
 

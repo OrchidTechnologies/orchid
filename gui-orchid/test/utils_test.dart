@@ -54,6 +54,7 @@ void main() {
       expect(addrOut.toString(), equals(EthereumAddress.zero.toString()));
     });
 
+    /*
     test('abi encode', () {
       var ref = '0x987ff31c'
           '0000000000000000000000009dc2ab9a2f747b350094715bad80331f996b461b'
@@ -65,6 +66,7 @@ void main() {
       var data = OrchidContractV1.abiEncodeMove(signer, adjust, retrieve);
       expectTrue(data == ref);
     });
+     */
 
     test('misc', () async {
       var currency = Chains.xDAI.nativeCurrency;
