@@ -43,8 +43,8 @@ class Database {
     sqlite3 *database_;
 
   public:
-    Database(const std::string &path) {
-        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr));
+    Database(const std::string &path, bool readonly = false) {
+        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr));
     }
 
     ~Database() { try {
