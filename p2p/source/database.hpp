@@ -79,7 +79,7 @@ class Statement_ {
     {
     }
 
-    Statement_(Statement_ &&statement) :
+    Statement_(Statement_ &&statement) noexcept :
         database_(statement.database_),
         finalize_(statement.finalize_),
         statement_(statement.statement_)
