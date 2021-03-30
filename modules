@@ -38,3 +38,5 @@ each | while read -r sub; do (
 
 # to upgrade zlib I need to upgrade base and build; the new base is using
 # features from libcxx after what I have, so I need to move to llvm embed
+
+# libgcrypt is currently stuck on iOS, due to https://dev.gnupg.org/T5375
