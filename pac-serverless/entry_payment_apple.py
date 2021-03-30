@@ -42,6 +42,8 @@ def main(event, context):
         account_id = receipt_hash
 
     if (msg == "success"):
+        item = { 'receipt': receipt_hash }
+        w3_generic.dynamodb_cwrite1(os.environ['RECEIPT_TABLE_NAME'], item, receipt_hash )
         w3_generic.credit_account_balance(account_id, total_usd)
         return response(200,{'msg':msg,'account_id':account_id,'total_usd':total_usd})
     else:

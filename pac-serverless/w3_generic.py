@@ -47,6 +47,16 @@ if (LocalTest == False):
         table.put_item(Item=ddb_item)
         return item
 
+
+    def dynamodb_cwrite1(tableName, item, key):
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(tableName)
+        ddb_item = json.loads(json.dumps(item), parse_float=Decimal)  # Work around DynamoDB lack of float support
+        # fail if already exists, raises ConditionalCheckFailedException
+        table.put_item(Item=ddb_item, ConditionExpression='attribute_not_exists(' + key + ')')
+        return item;
+
+
     def dynamodb_delete1(tableName,keyname,key):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(tableName)
