@@ -13,11 +13,13 @@ The Orchid accounts hold the funds that pay providers through the nanopayment sy
 
 ### Purchased Orchid accounts (iOS/macOS only feature)
 
-In the Orchid iOS and macOS apps, it is possible to simply purchase an Orchid account from Orchid Labs using an in-app purchase. These are distinct from Orchid accounts created in the dApp.
+In the Orchid iOS and macOS apps, it is possible to simply purchase an Orchid account from Orchid Labs using an in-app purchase. These are distinct from Orchid accounts created in the dApp and have the following properties:
 
-Currently these accounts are pre-filled with currency and the credentials for them are custodied by Orchid Labs. That means that once an account is purchased, the account cannot be refilled and the deposit cannot be increased if market conditions change. We are aware of this critical limitation and will address it in our next iteration of the in-app purchase system.
+* Purchased accounts connect only to [preferred providers](https://www.orchid.com/preferredproviders) for VPN service.  
+* It is not possible to transfer the crypto out of a purchased Orchid account in the same way as an account created in the dApp.
+* Accounts are created on the xDai blockchain and are denominated in the XDAI stablecoin.
 
-For now, email contact@orchid.com if your purchased account has any issues and we can promptly resolve them.
+Orchid takes your in-app purchase funds and adds the equivalent XDAI to the selected Orchid address on the xDai blockchain. Your balance and deposit will increase by the amount of USD purchased.
 
 ## Orchid account efficiency
 
@@ -26,6 +28,7 @@ Orchid’s nanopayments work on a principle: that sending someone a scratch lott
 When the efficiency of an account drops below 0%, providers will no longer accept payments from that account because the network fees are greater than the amount of value they could receive from a winning ticket. Accounts with 0% efficiency will not work with the VPN service and will warn the user with a red “!”. 
 
 There are three major factors that affect efficiency:
+
 * The size of the deposit of the account which determines the face value of the tickets
 * The network fees for a given moment in time
 * Currency conversion of the currency held in the account to the currency used to pay network fees
@@ -88,36 +91,30 @@ Simply put, the funder wallet is the custodian of the Orchid account. Without th
 
 If the keys to a funder wallet are lost, the associated Orchid account will still function, but the user cannot add funds, remove funds or make any changes to the account. You will be able to use the account while it’s efficiency is above 0%, until the balance is reduced to 0. If the deposit is lost and if the account efficiency drops below 0%, there is no way to add to the deposit.
 
-### The Orchid signer
+### The Orchid Address & Key
 
-Orchid accounts utilize their own keypair, the signer. The private portion of the key or “secret” is used by the client to sign tickets. The signer key is therefore a core technical property of the Orchid account and is the key bit of information that is shared when an Orchid account is shared between people or devices.
+Orchid accounts utilize their own keypair. The private portion of the key or “secret” is used by the client to sign tickets. The key is therefore a core technical property of the Orchid account and is the important bit of information that is shared when an Orchid account is shared between people or devices.
 
-The public portion of the signer, the signer address, is used when funding the Orchid account. The funding transaction that takes funds from the funder wallet and into the nanopayment contract requires the funds to be linked to a signer address. In the Orchid dApp, the signer address is required before a new Orchid account can be created.
+The public portion of the keypair is the address which is used when funding the Orchid account. The funding transaction that takes funds from the funder wallet and into the nanopayment contract requires the funds to be linked to an Orchid address. In the Orchid dApp, the address is required before a new Orchid account can be created – you can copy your Orchid Address in the latest version of the app and paste that in the signer address field in the dApp to create an account.
 
-The signer address is used by providers to ensure the funds in an Orchid account correspond to a ticket they receive for service. The address can also be used to lookup information about the account on-chain.
-
-The signer is generated when a [custom Orchid account](../using-orchid/#create-a-custom-account) is created (Android only feature) or when [creating an Orchid account](../orchid-dapp/#create-account) in the dApp. 
+The keypair is generated in the app. To create a new keypair, go to the Manage Accounts->Gear Icon->New. The Orchid address will be displayed next to an identicon and can be copied over to be used by the dApp to add an orchid account to this address. The key can be exported using the gear icon and saved and will have access to any accounts with that address.
 
 ### Sharing Orchid accounts
 
-There’s no limit to the number of people or devices that a single Orchid account can be shared with. The account is specified by the funder wallet and the signer secret. The QR code sharing feature in the app just encodes this information. The account information can also be copied and directly pasted into the client app as text. 
+There’s no limit to the number of people or devices that a single Orchid account can be shared with. The account is specified by the funder wallet and the signer secret. To share an account, you can click the cog wheel next to Orchid Address and then 'export.' A QR code encoding this information with a copy button will appear feature. The account information can also be copied and directly pasted into the client app as text. 
 
 The Orchid account format looks like this:
 
-account={ protocol: "orchid", funder: "<public funder wallet address>", secret: "<signer secret>" }
+account={ secret: "<signer secret>" }
 
-Note - the public funder wallet address starts with 0x, while the signer secret does not use the 0x prefix.
 
 ## Orchid Account Troubleshooting
 
 ### Deposit size too small
 Both the Orchid client app and the Orchid web dApp will display a warning when the Orchid account efficiency or balance is too low for usage. There are a few solutions when you see this error.
 
-**Turn off Orchid and wait for network fees to drop**
-A primary cause of a deposit that is too low could be a sudden spike in network transaction fees. If, for example, your Orchid account is on the Ethereum chain with OXT in it, then the Ethereum gas costs could suddenly spike, which causes your Orchid account’s efficiency to drop below 0. Waiting for network fees to settle is all that is needed for account efficiency to rise back up, and to get it working again.
-
 **For in-app purchased accounts (iOS/macOS only feature)**
-Orchid attempts to pre-fill Orchid accounts with enough of a deposit at the time of purchase, but market conditions can change rapidly. Email Orchid support at contact@orchid.com to fix problems with purchased accounts. In the near future, users will be able to manage their accounts through additional purchases in the client app. For now, there is no way for the user to fix purchased accounts with low efficiency. Do not try to fix purchased accounts in the dApp, as there is no way to do that correctly. We apologize for the inconvenience until this new system is online.
+Tap on the warning to go into the selected account. Simply Add Credit to the account to increase the balance and deposit with a purchase. Do not try to fix purchased accounts in the dApp, manage purchased accounts using in-app purchases only in the app.
 
 **For Orchid accounts created with the DApp**
 The Orchid dApp can add funds to the account’s deposit, which will improve the Orchid account efficiency and eliminate the warning, allowing the app to start working. To add funds, connect the funder wallet used to create the Orchid account and click on the Add Funds tab.

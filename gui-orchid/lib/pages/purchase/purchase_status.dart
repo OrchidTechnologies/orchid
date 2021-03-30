@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/pages/common/dialogs.dart';
@@ -114,17 +115,17 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
-          'Transaction Sent To Blockchain',
+          s.transactionSentToBlockchain,
           style: TextStyle(fontSize: 16),
         ),
         pady(8),
         Text(
-          "Your purchase is complete and is now being processed by the xDai blockchain which can take up to a minute, sometimes longer. Pull down to refresh and your account with an updated balance will appear below.",
+          s.yourPurchaseIsCompleteAndIsNowBeingProcessedBy,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
         pady(16),
-        LinkText("Copy Receipt",
+        LinkText(s.copyReceipt,
             style: AppText.linkStyle, onTapped: _copyDebugInfo),
       ],
     );
@@ -222,8 +223,8 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     AppDialogs.showConfirmationDialog(
         context: context,
         title: s.deleteTransaction,
-        bodyText: s.clearThisInProgressTransactionExplain +
-            " https://orchid.com/contact",
+        bodyText:
+            s.clearThisInProgressTransactionExplain + " " + OrchidUrls.contact,
         commitAction: _deleteTransaction);
   }
 
@@ -245,13 +246,14 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         _show(s.preparingPurchase);
         break;
       case PacTransactionState.InProgress:
-        _show('Talking to PAC Server');
+        _show(s.talkingToPacServer);
         break;
       case PacTransactionState.WaitingForRetry:
         _show(s.retryingPurchasedPAC);
         break;
       case PacTransactionState.WaitingForUserAction:
-        _show(s.retryPurchasedPAC, requiresUserAction: true);
+        var retry = tx.retries > 0 ? " (${tx.retries})" : "";
+        _show(s.retryPurchasedPAC + retry, requiresUserAction: true);
         break;
       case PacTransactionState.Error:
         _show(s.purchaseError, requiresUserAction: true);

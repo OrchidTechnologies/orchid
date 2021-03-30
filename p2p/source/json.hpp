@@ -134,8 +134,9 @@ class Argument final {
 typedef std::map<std::string, Argument> Multi;
 
 inline std::string Unparse(Argument &&data) {
-    Json::FastWriter writer;
-    return writer.write(std::move(data));
+    Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    return Json::writeString(builder, std::move(data));
 }
 
 inline Json::Value Parse(const std::string &data) { orc_block({

@@ -74,8 +74,8 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Padding(
         padding: EdgeInsets.all(
             AppSize(context).tallerThan(AppSize.iphone_12_max) ? 128 : 0),
-        child: SingleChildScrollView(
-          child: SafeArea(
+        child: SafeArea(
+          child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -132,7 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 // Advanced Configuration
                 _item(PageTile(
-                  title: "Advanced Configuration",
+                  title: s.advancedConfiguration,
                   onTap: () async {
                     await Navigator.pushNamed(context, AppRoutes.configuration);
                     advancedConfigChanged(); // update anything that may have changed via config
@@ -141,14 +141,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 // Manage Data
                 _item(PageTile.route(
-                    title: "Configuration Management",
+                    title: s.configurationManagement,
                     routeName: '/settings/manage_config',
                     context: context)),
 
                 // Logging
                 if (_showLogging || _tester)
                   _item(PageTile.route(
-                      title: "Logging",
+                      title: s.logging,
                       routeName: '/settings/log',
                       context: context)),
 
@@ -156,7 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 _item(Column(
                   children: [
                     PageTile(
-                      title: "Enable Multi-hop UI",
+                      title: s.enableMultihopUi,
                       trailing: Switch(
                         activeColor: AppColors.purple_3,
                         value: _guiV0,
@@ -181,7 +181,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           padx(12),
                           Expanded(
                             child: Text(
-                                "If you want to use multi-hop, OpenVPN and WireGuard you’ll need to enable multi-hop interface. To buy credits, you’ll need to disable multi-hop interface.",
+                                s.ifYouWantToUseMultihopOpenvpnAndWireguardYoull,
                                 style: TextStyle(fontSize: 14)),
                           ),
                         ],

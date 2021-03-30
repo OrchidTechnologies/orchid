@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
+import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_text.dart';
 import 'package:orchid/pages/common/formatting.dart';
 
@@ -16,7 +17,7 @@ class Release {
     if (version.contains(' ')) {
       version = version.split(' ')[0];
     }
-    return 'What’s new in Orchid $version?';
+    return S.of(context).whatsNewInOrchid + ' $version?';
   }
 
   // Build a release message
@@ -25,31 +26,32 @@ class Release {
         AppText.dialogBody.copyWith(fontSize: 14, color: Colors.black);
     var headingStyle = bodyStyle.copyWith(fontWeight: FontWeight.bold);
 
+    var s = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         if (OrchidPlatform.isApple) ...[
-          Text("Orchid is on xDai!", style: headingStyle),
+          Text(s.orchidIsOnXdai, style: headingStyle),
           pady(8),
           Text(
-            "You can now purchase Orchid credits on xDai! Start using the VPN for as little as \$1.",
+            s.youCanNowPurchaseOrchidCreditsOnXdaiStartUsing,
             style: bodyStyle,
           ),
           pady(16),
-          Text("xDai accounts for past purchases", style: headingStyle),
+          Text(s.xdaiAccountsForPastPurchases, style: headingStyle),
           pady(8),
           Text(
-            "For any in-app purchase made before today, xDai funds have been added to the same account key. Have the bandwidth on us!",
+            s.forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave,
             style: bodyStyle,
           ),
           pady(16),
         ],
-        Text("New interface", style: headingStyle),
+        Text(s.newInterface, style: headingStyle),
         pady(8),
         Text(
-          "Accounts are now organized under the Orchid Address they are associated with. "
-          "See your active account balance and bandwidth cost on the home screen.",
+          s.accountsAreNowOrganizedUnderTheOrchidAddressTheyAre +" " +
+          s.seeYourActiveAccountBalanceAndBandwidthCostOnThe,
           style: bodyStyle,
         ),
       ],

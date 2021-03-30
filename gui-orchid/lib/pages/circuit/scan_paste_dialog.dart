@@ -46,10 +46,10 @@ class ScanOrPasteDialog extends StatelessWidget {
     var bodyTextV0 = pasteOnly
         ? s.pasteYourExistingAccountBelowToAddItAsA
         : s.scanOrPasteYourExistingAccountBelowToAddIt;
-    var titleTextV1 = "Import an Orchid Key";
+    var titleTextV1 = s.importAnOrchidAccount;
     var bodyTextV1 = pasteOnly
-        ? "Paste an Orchid key from the clipboard to import all the Orchid accounts associated with that key."
-        : "Scan or paste an Orchid key from the clipboard to import all the Orchid accounts associated with that key.";
+        ? s.pasteAnOrchidKeyFromTheClipboardToImportAll
+        : s.scanOrPasteAnOrchidKeyFromTheClipboardTo;
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -89,7 +89,7 @@ class ScanOrPasteDialog extends StatelessWidget {
                         TextSpan(
                             text: bodyText + ' ',
                             style: AppText.dialogBody.copyWith(fontSize: 15)),
-                        AppText.buildLearnMoreLinkTextSpan(),
+                        AppText.buildLearnMoreLinkTextSpan(context),
                       ])),
                     ),
                     pady(16),

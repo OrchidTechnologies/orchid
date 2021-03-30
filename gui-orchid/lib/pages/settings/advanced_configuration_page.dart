@@ -45,7 +45,7 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
 
   @override
   Widget build(BuildContext context) {
-    String title = "Advanced Configuration";
+    String title = s.advancedConfiguration;
     return TapClearsFocus(
         child: TitledPage(title: title, child: buildPage(context)));
   }
@@ -75,7 +75,7 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
                 Padding(
                     padding: const EdgeInsets.only(left: 0, right: 0),
                     child: RoundTitledRaisedImageButton(
-                        title: "Clear",
+                        title: s.clear,
                         icon: Icon(Icons.clear, color: Colors.white, size: 20),
                         onPressed: _onClear)),
               ],

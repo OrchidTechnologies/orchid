@@ -8,7 +8,7 @@ class PAC {
   final double localPrice;
   final String localCurrencyCode; // e.g. "USD"
   final String localCurrencySymbol; // e.g. "$"
-  final USD usdPriceApproximate;
+  final USD usdPriceExact;
 
   /// Format the local price as a currency value with symbol.
   // e.g. "$1.99"
@@ -26,11 +26,11 @@ class PAC {
     @required this.localPrice,
     @required this.localCurrencyCode,
     @required this.localCurrencySymbol,
-    @required this.usdPriceApproximate,
+    @required this.usdPriceExact,
   });
 
   @override
   String toString() {
-    return 'PAC{_productId: $productId, localPurchasePrice: $localPrice, localDisplayName: $localDisplayPrice}, usdPriceApproximate: $usdPriceApproximate';
+    return 'PAC{_productId: $productId, localPurchasePrice: $localPrice, localDisplayName: $localDisplayPrice}, usdPriceApproximate: $usdPriceExact';
   }
 }

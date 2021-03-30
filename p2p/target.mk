@@ -201,6 +201,9 @@ source += $(pwd)/bech32/ref/c++/bech32.cpp
 source += $(pwd)/bech32/ref/c++/segwit_addr.cpp
 cflags += -I$(pwd)/bech32/ref/c++
 
+# for (const char& c : hrp) assert(c < 'A' || c > 'Z');
+cflags/$(pwd)/bech32/ += -Wno-unused-variable
+
 
 include $(pwd)/asio.mk
 include $(pwd)/protobuf.mk

@@ -266,7 +266,7 @@ class _ConnectPageState extends State<ConnectPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Manage Accounts",
+                    s.manageAccounts,
                     style: TextStyle(color: textColor, fontSize: 16),
                   ),
                   if (_showProfileBadge) ...[

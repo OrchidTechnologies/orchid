@@ -12,7 +12,7 @@ class LegalPage extends StatefulWidget {
 class _LegalPageState extends State<LegalPage> {
   @override
   Widget build(BuildContext context) {
-    return TitledPage(title: "Legal", child: buildPage(context));
+    return TitledPage(title: s.legal, child: buildPage(context));
   }
 
   Widget buildPage(BuildContext context) {
@@ -20,12 +20,10 @@ class _LegalPageState extends State<LegalPage> {
       children: <Widget>[
         PageTile.route(
             title: s.privacyPolicy,
-            //imageName: "assets/images/account_balance_wallet.png",
             routeName: '/help/privacy',
             context: context),
         PageTile.route(
-            title: "Open Source Licenses",
-            //imageName: "assets/images/assignment.png",
+            title: s.openSourceLicenses,
             routeName: '/help/open_source',
             context: context),
       ],

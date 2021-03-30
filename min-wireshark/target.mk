@@ -209,6 +209,8 @@ w_libgcrypt += ac_cv_func_getentropy=no
 endif
 
 w_libgcrypt += --with-libgpg-error-prefix=@/usr
+# XXX: I believe this is a bug? https://dev.gnupg.org/T5365
+w_libgcrypt += ac_cv_path_GPGRT_CONFIG=@/usr/bin/gpgrt-config
 $(call depend,$(pwd)/libgcrypt/Makefile,@/usr/include/gpg-error.h)
 $(call depend,$(pwd)/libgcrypt/Makefile,@/usr/lib/libgpg-error.a)
 

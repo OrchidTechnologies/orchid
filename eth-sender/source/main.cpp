@@ -500,6 +500,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<uint256_t, Address, Address> allowed("allowed");
         std::cout << co_await allowed.Call(*chain_, "latest", seller, 90000, token, sender) << std::endl;
 
+    } else if (command == "orchid:hand") {
+        const auto [seller, owner, manager] = Options<Address, Address, Address>(args);
+        static Selector<void, Address, Address> hand("hand");
+        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, hand(owner, manager))).hex() << std::endl;
+
     } else if (command == "orchid:giftv") {
         orc_assert(nonce_);
         const auto [seller] = Options<Address>(args);
@@ -524,11 +529,15 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
             const auto comma1(Find(rest, {','}));
             orc_assert(comma1);
-            auto [amount, escrow] = Split(rest, *comma1);
+            auto [amount$, escrow$] = Split(rest, *comma1);
 
-            const auto &gift(gifts.emplace_back(std::string(recipient), std::string(amount), std::string(escrow)));
-            orc_assert(std::get<1>(gift) >= std::get<2>(gift));
+            const uint256_t amount{std::string(amount$)};
+            const uint256_t escrow{std::string(escrow$)};
 
+            const auto combined(amount + escrow);
+            orc_assert(combined >= escrow);
+
+            const auto &gift(gifts.emplace_back(std::string(recipient), combined, escrow));
             std::cout << "gift " << seller << " " << std::get<0>(gift) << " " << std::get<1>(gift) << " " << std::get<2>(gift) << std::endl;
             total += std::get<1>(gift);
         }
@@ -549,6 +558,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
         const auto [data] = Options<Bytes>(args);
         std::cout << ToBase58Check(Tie('\x00', HashR(Hash2(ToCompressed(Derive(data)))))) << std::endl;
+
+    } else if (command == "read") {
+        const auto [contract, slot] = Options<Address, uint256_t>(args);
+        const auto [account, value] = co_await chain_->Get(co_await block(), contract, nullptr, slot);
+        std::cout << "0x" << std::hex << value << std::endl;
 
     } else if (command == "receipt") {
         const auto [transaction] = Options<Bytes32>(args);

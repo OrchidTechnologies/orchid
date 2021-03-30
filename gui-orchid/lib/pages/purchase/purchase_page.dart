@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
@@ -118,7 +119,7 @@ class _PurchasePageState extends State<PurchasePage> {
     Size size = MediaQuery.of(context).size;
     var text = _storeStatus?.message != null
         ? _storeStatus.message
-        : "The Orchid Store is temporarily unavailable.  Please check back in a few minutes.";
+        : s.theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn;
     return Center(
         child: Container(
             color: Colors.white24.withOpacity(0.5),
@@ -144,7 +145,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       ),
                       pady(8),
                       LinkText(
-                        "See orchid.com for help.",
+                        s.seeOrchidcomForHelp,
                         overflow: TextOverflow.visible,
                         style: AppText.linkStyle.copyWith(fontSize: 12.0),
                         url: 'https://orchid.com/help',
@@ -188,13 +189,13 @@ class _PurchasePageState extends State<PurchasePage> {
       fontFamily: 'SFProText-Semibold',
     );
 
-    var payPerUse = "Pay Per Use VPN Service";
+    var payPerUse = s.payPerUseVpnService;
     var price = _bandwidthPrice != null
         ? "\$" + formatCurrency(_bandwidthPrice.value)
         : "...";
-    var currentAvgVPNPrice = "Current avg. VPN price is $price per GB";
-    var notASub = "Not a subscription, credits don't expire";
-    var shareAccountWith = "Share account with unlimited devices";
+    var currentAvgVPNPrice = s.currentAvgVpnPriceIsPricePerGb(price);
+    var notASub = s.notASubscriptionCreditsDontExpire;
+    var shareAccountWith = s.shareAccountWithUnlimitedDevices;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -212,12 +213,12 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget _buildPreferredProviderText() {
-    const text = "Purchased credit accounts connect exclusively to our";
-    const linkText = "preferred providers";
-    const linkUrl = "https://www.orchid.com/preferredproviders";
-    const text2 = "All purchased accounts use the";
-    const linkText2 = "xDai cryptocurrency";
-    const linkUrl2 = "https://www.xdaichain.com/";
+    final text = s.purchasedCreditAccountsConnectExclusivelyToOur;
+    final linkText = s.preferredProviders;
+    final linkUrl = OrchidUrls.preferredProviders;
+    final text2 = s.allPurchasedAccountsUseThe;
+    final linkText2 = s.xdaiCryptocurrency;
+    final linkUrl2 = OrchidUrls.xdaiChain;
 
     var style1 = TextStyle(fontStyle: FontStyle.italic);
     var style2 = TextStyle(color: Colors.black, fontSize: 15);
@@ -261,7 +262,7 @@ class _PurchasePageState extends State<PurchasePage> {
     }
     if (_pacs.isEmpty) {
       return LoadingIndicator(
-          height: 50, text: "No PACs available at this time.");
+          height: 50, text: s.noPacsAvailableAtThisTime);
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -602,7 +603,7 @@ class _PurchasePageState extends State<PurchasePage> {
     var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
         signerKey: widget.signerKey,
         chain: Chains.xDAI,
-        totalUsdValue: purchase.usdPriceApproximate);
+        totalUsdValue: purchase.usdPriceExact);
 
     var signer = widget.signerKey.address;
     // Add the pending transaction(s) for this purchase

@@ -89,7 +89,7 @@ abstract class OrchidPurchaseAPI {
     log("isWithinPurchaseRateLimit: limit = $dailyPurchaseLimit, "
         "current = ${history.sum()}, history = ${history.toJson()}");
 
-    return history.sum() + pac.usdPriceApproximate.value <= dailyPurchaseLimit;
+    return history.sum() + pac.usdPriceExact.value <= dailyPurchaseLimit;
   }
 
   /// Record a purchase in the PAC purchase rate limit history.

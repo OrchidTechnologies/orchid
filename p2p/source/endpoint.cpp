@@ -25,9 +25,7 @@
 namespace orc {
 
 task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args) const { orc_block({
-    Json::FastWriter writer;
-
-    const auto body(writer.write([&]() {
+    const auto body(Unparse([&]() {
         Json::Value root;
         root["jsonrpc"] = "2.0";
         root["method"] = method;
@@ -40,18 +38,13 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     const auto data(Parse((co_await origin_->Fetch("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
 
     if (false)
-        Log() << "JSON/RPC\n" << body << writer.write(data) << std::endl;
+        Log() << "JSON/RPC\n" << body << Unparse(data) << std::endl;
 
     orc_assert(data["jsonrpc"] == "2.0");
 
     const auto error(data["error"]);
-    if (!error.isNull()) {
-        auto text(writer.write(error));
-        orc_assert(!text.empty());
-        orc_assert(text[text.size() - 1] == '\n');
-        text.resize(text.size() - 1);
-        orc_throw(text);
-    }
+    if (!error.isNull())
+        orc_throw(Unparse(error));
 
     const auto id(data["id"]);
     orc_assert(!id.isNull());

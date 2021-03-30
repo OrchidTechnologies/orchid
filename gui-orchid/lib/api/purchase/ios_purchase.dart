@@ -20,9 +20,8 @@ class IOSOrchidPurchaseAPI
   ///    verifyReceipt: false,
   ///    debug: true
   ///  }'
-  static PacApiConfig prodAPIConfig = PacApiConfig(
-    url: 'https://api.orchid.com/pac'
-  );
+  static PacApiConfig prodAPIConfig =
+      PacApiConfig(url: 'https://api.orchid.com/pac');
 
   /// Return the API config allowing overrides from configuration.
   @override
@@ -230,15 +229,14 @@ class IOSOrchidPurchaseAPI
       double localizedPrice = double.parse(prod.price);
       String currencyCode = prod.priceLocale.currencyCode;
       String currencySymbol = prod.priceLocale.currencySymbol;
+      var productId = prod.productIdentifier;
       return PAC(
-          productId: prod.productIdentifier,
-          localPrice: localizedPrice,
-          localCurrencyCode: currencyCode,
-          localCurrencySymbol: currencySymbol,
-          usdPriceApproximate: StaticExchangeRates.from(
-            price: localizedPrice,
-            currencyCode: currencyCode,
-          ));
+        productId: productId,
+        localPrice: localizedPrice,
+        localCurrencyCode: currencyCode,
+        localCurrencySymbol: currencySymbol,
+        usdPriceExact: _usdPriceForProduct(productId),
+      );
     };
 
     var pacs = productResponse.products.map(toPAC).toList();
@@ -246,6 +244,21 @@ class IOSOrchidPurchaseAPI
     productsCached = products;
     log("iap: returning products");
     return products;
+  }
+
+  // Note: currently hardcoded
+  // Return the exact USD price of the product
+  USD _usdPriceForProduct(String productId) {
+    final priceMap = {
+      OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4': USD(0.99),
+      OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10': USD(4.99),
+      OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11': USD(19.99),
+    };
+    var price = priceMap[productId];
+    if (price == null) {
+      throw Exception("No price known for product id: $productId");
+    }
+    return price;
   }
 
   @override
@@ -275,21 +288,21 @@ class IOSOrchidPurchaseAPI
         localCurrencyCode: "USD",
         localCurrencySymbol: '\$',
         localPrice: price,
-        usdPriceApproximate: USD(price),
+        usdPriceExact: USD(price),
       ),
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10',
         localCurrencyCode: "USD",
         localCurrencySymbol: '\$',
         localPrice: price,
-        usdPriceApproximate: USD(price),
+        usdPriceExact: USD(price),
       ),
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11',
         localCurrencyCode: "EUR",
         localCurrencySymbol: '€',
         localPrice: price,
-        usdPriceApproximate: USD(price),
+        usdPriceExact: USD(price),
       ),
     ];
     return {for (var pac in pacs) pac.productId: pac};

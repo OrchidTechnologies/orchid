@@ -43,8 +43,8 @@ class Database {
     sqlite3 *database_;
 
   public:
-    Database(const std::string &path) {
-        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr));
+    Database(const std::string &path, bool readonly = false) {
+        orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr));
     }
 
     ~Database() { try {
@@ -58,12 +58,52 @@ class Database {
     }
 };
 
-template <auto Results_, typename... Args_>
-class Statement {
-  private:
+class Statement_ {
+  protected:
     Database &database_;
+    bool finalize_;
     sqlite3_stmt *statement_;
 
+  public:
+    Statement_(Database &database, bool finalize) :
+        database_(database),
+        finalize_(finalize),
+        statement_(nullptr)
+    {
+    }
+
+    Statement_(const Statement_ &statement) :
+        database_(statement.database_),
+        finalize_(false),
+        statement_(statement.statement_)
+    {
+    }
+
+    Statement_(Statement_ &&statement) noexcept :
+        database_(statement.database_),
+        finalize_(statement.finalize_),
+        statement_(statement.statement_)
+    {
+        statement.finalize_ = false;
+        statement.statement_ = nullptr;
+    }
+
+    ~Statement_() { if (finalize_) try {
+        orc_sqlcall(sqlite3_finalize(statement_));
+    } catch (...) {
+        orc_insist(false);
+    } }
+
+    operator sqlite3_stmt *() const {
+        return statement_;
+    }
+};
+
+template <auto Results_, typename... Args_>
+class Statement :
+    public Statement_
+{
+  private:
     template <unsigned Index_>
     void Bind() {
     }
@@ -99,30 +139,34 @@ class Statement {
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text16, const std::u16string &, value.data(), value.size(), SQLITE_TRANSIENT)
 
+    template <unsigned Index_, typename Type_, typename... Rest_>
+    void Bind(const std::optional<Type_> &value, Rest_ &&...rest) {
+        if (value)
+            return Bind<Index_>(*value, std::forward<Rest_>(rest)...);
+        orc_sqlcall(sqlite3_bind_null(statement_, Index_));
+        return Bind<Index_ + 1>(std::forward<Rest_>(rest)...);
+    }
+
   public:
     Statement(Database &database, const char *code) :
-        database_(database)
+        Statement_(database, true)
     {
         // XXX: evaluate using SQLITE_PREPARE_PERSISTENT and sqlite3_prepare_v3
         orc_sqlcall(sqlite3_prepare_v2(database_, code, -1, &statement_, nullptr));
     }
 
-    ~Statement() { try {
-        if (statement_ != nullptr)
-            orc_sqlcall(sqlite3_finalize(statement_));
-    } catch (...) {
-        orc_insist(false);
-    } }
-
-    operator sqlite3_stmt *() const {
-        return statement_;
-    }
-
-    auto operator ()(const Args_ &...args) {
+    auto operator ()(const Args_ &...args) & {
         orc_sqlcall(sqlite3_reset(statement_));
         orc_sqlcall(sqlite3_clear_bindings(statement_));
         Bind<1>(args...);
         return Results_(database_, *this);
+    }
+
+    auto operator ()(const Args_ &...args) && {
+        orc_sqlcall(sqlite3_reset(statement_));
+        orc_sqlcall(sqlite3_clear_bindings(statement_));
+        Bind<1>(args...);
+        return Results_(database_, std::move(*this));
     }
 };
 
@@ -173,6 +217,14 @@ static std::u16string Get(sqlite3_stmt *statement, int column) {
     return std::u16string(static_cast<const char16_t *>(sqlite3_column_text16(statement, column)), sqlite3_column_bytes16(statement, column) / sizeof(char16_t));
 } };
 
+template <typename Type_>
+struct Column<std::optional<Type_>> {
+static std::optional<Type_> Get(sqlite3_stmt *statement, int column) {
+    if (sqlite3_column_type(statement, column) == SQLITE_NULL)
+        return std::nullopt;
+    return Column<Type_>::Get(statement, column);
+} };
+
 template <typename... Columns_, size_t... Indices_>
 inline std::tuple<Columns_...> Row(sqlite3_stmt *statement, std::index_sequence<Indices_...>) {
     return std::make_tuple<Columns_...>(Column<Columns_>::Get(statement, Indices_)...);
@@ -191,21 +243,17 @@ inline bool Step(Database &database_, sqlite3_stmt *statement) {
 }
 
 template <typename... Columns_>
-class Cursor_ final {
-  private:
-    Database &database_;
-    sqlite3_stmt *statement_;
-
+class Cursor_ final :
+    public Statement_
+{
   public:
     Cursor_(Database &database) :
-        database_(database),
-        statement_(nullptr)
+        Statement_(database, false)
     {
     }
 
-    Cursor_(Database &database, sqlite3_stmt *statement) :
-        database_(database),
-        statement_(statement)
+    Cursor_(Statement_ &&statement) :
+        Statement_(std::move(statement))
     {
         operator ++();
     }
@@ -221,7 +269,7 @@ class Cursor_ final {
     Cursor_ &operator ++() {
         orc_assert(statement_ != nullptr);
         if (!Step(database_, statement_))
-            statement_ = nullptr;
+            Statement_(std::move(*this));
         return *this;
     }
 
@@ -236,8 +284,17 @@ class Cursor_ final {
 };
 
 template <typename... Columns_>
-inline Cursor_<Columns_...> Cursor(Database &database, sqlite3_stmt *statement) {
-    return Cursor_<Columns_...>(database, statement);
+inline Cursor_<Columns_...> Cursor(Database &database, Statement_ statement) {
+    return Cursor_<Columns_...>(std::move(statement));
+}
+
+template <typename... Columns_>
+inline std::optional<std::tuple<Columns_...>> Half(Database &database_, sqlite3_stmt *statement) {
+    if (!Step(database_, statement))
+        return std::nullopt;
+    auto row(Row<Columns_...>(statement, std::index_sequence_for<Columns_...>()));
+    orc_assert(!Step(database_, statement));
+    return row;
 }
 
 template <typename... Columns_>

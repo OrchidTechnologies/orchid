@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/help/help_feedback_page.dart';
-import 'package:orchid/pages/help/help_page.dart';
 import 'package:orchid/pages/connect/legacy_connect_page.dart';
 import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/help/privacy_page.dart';
@@ -59,7 +58,6 @@ class AppRoutes {
     settings_log: (context) => SettingsLogPage(),
     settings_dev: (context) => SettingsDevPage(),
     configuration: (context) => AdvancedConfigurationPage(),
-    help: (context) => HelpPage(),
     help_overview: (context) => HelpOverviewPage(),
     privacy: (context) => PrivacyPage(),
     open_source: (context) => OpenSourcePage(),

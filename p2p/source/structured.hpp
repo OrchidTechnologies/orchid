@@ -54,7 +54,7 @@ class Structured :
     }
 
     task<void> Send(const Json::Value &data) override {
-        co_return co_await Inner().Send(Strung(Json::FastWriter().write(data)));
+        co_return co_await Inner().Send(Strung(Unparse(data)));
     }
 };
 

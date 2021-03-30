@@ -33,4 +33,10 @@ each | while read -r sub; do (
     git log --color --graph --format=oneline HEAD...${head[${sub}]-origin/master} || echo $sub
 ) done | less -R
 
-# url is stuck due to https://forums.developer.apple.com/thread/120977
+# url is stuck due to https://forums.developer.apple.com/thread/120977 :/
+# (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
+
+# to upgrade zlib I need to upgrade base and build; the new base is using
+# features from libcxx after what I have, so I need to move to llvm embed
+
+# libgcrypt is currently stuck on iOS, due to https://dev.gnupg.org/T5375

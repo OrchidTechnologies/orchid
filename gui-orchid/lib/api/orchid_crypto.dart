@@ -199,7 +199,7 @@ class StoredEthereumKey {
 
   /// Format the secret as a 64 character hex string, zero padded, without prefix.
   String formatSecretFixed() {
-    return "${private.toRadixString(16)}".padLeft(64, '0');
+    return private.toRadixString(16).padLeft(64, '0');
   }
 
   static Map<String, StoredEthereumKey> map(List<StoredEthereumKey> list) {
@@ -349,7 +349,7 @@ class EthereumAddress {
 
 class Web3DartUtils {
   static MsgSignature web3Sign(Uint8List payload, StoredEthereumKey key) {
-    final credentials = EthPrivateKey.fromHex(key.private.toRadixString(16));
+    final credentials = EthPrivateKey.fromHex(key.formatSecretFixed());
     //print("payload = ${hex.encode(payload)}");
     // Use web3 sign(), not web3 credentials.sign() which does a keccak256 on payload.
     return sign(payload, credentials.privateKey);

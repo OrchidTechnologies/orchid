@@ -212,6 +212,7 @@ def get_txn_cost_usd(txn):
 
 
 def get_nonce_(w3,pubkey):
+    logging.info(f'get_nonce_ pubkey:{pubkey} type:{type(pubkey)}')
     nonce = w3.eth.getTransactionCount(account=pubkey)
     logging.info(f'get_nonce_ pubkey:{pubkey} nonce:{nonce}')
     return nonce
