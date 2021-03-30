@@ -99,6 +99,14 @@ class Statement {
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text16, const std::u16string &, value.data(), value.size(), SQLITE_TRANSIENT)
 
+    template <unsigned Index_, typename Type_, typename... Rest_>
+    void Bind(const std::optional<Type_> &value, Rest_ &&...rest) {
+        if (value)
+            return Bind<Index_>(*value, std::forward<Rest_>(rest)...);
+        orc_sqlcall(sqlite3_bind_null(statement_, Index_));
+        return Bind<Index_ + 1>(std::forward<Rest_>(rest)...);
+    }
+
   public:
     Statement(Database &database, const char *code) :
         database_(database)
@@ -173,6 +181,14 @@ static std::u16string Get(sqlite3_stmt *statement, int column) {
     return std::u16string(static_cast<const char16_t *>(sqlite3_column_text16(statement, column)), sqlite3_column_bytes16(statement, column) / sizeof(char16_t));
 } };
 
+template <typename Type_>
+struct Column<std::optional<Type_>> {
+static std::optional<Type_> Get(sqlite3_stmt *statement, int column) {
+    if (sqlite3_column_type(statement, column) == SQLITE_NULL)
+        return std::nullopt;
+    return Column<Type_>::Get(statement, column);
+} };
+
 template <typename... Columns_, size_t... Indices_>
 inline std::tuple<Columns_...> Row(sqlite3_stmt *statement, std::index_sequence<Indices_...>) {
     return std::make_tuple<Columns_...>(Column<Columns_>::Get(statement, Indices_)...);
@@ -238,6 +254,15 @@ class Cursor_ final {
 template <typename... Columns_>
 inline Cursor_<Columns_...> Cursor(Database &database, sqlite3_stmt *statement) {
     return Cursor_<Columns_...>(database, statement);
+}
+
+template <typename... Columns_>
+inline std::optional<std::tuple<Columns_...>> Half(Database &database_, sqlite3_stmt *statement) {
+    if (!Step(database_, statement))
+        return std::nullopt;
+    auto row(Row<Columns_...>(statement, std::index_sequence_for<Columns_...>()));
+    orc_assert(!Step(database_, statement));
+    return row;
 }
 
 template <typename... Columns_>
