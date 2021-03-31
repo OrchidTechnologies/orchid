@@ -21,6 +21,7 @@ import 'package:orchid/pages/common/titled_page_base.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/util/units.dart';
+import 'package:styled_text/styled_text.dart';
 import '../app_colors.dart';
 import '../app_sizes.dart';
 import '../app_text.dart';
@@ -213,32 +214,25 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget _buildPreferredProviderText() {
-    final text = s.purchasedCreditAccountsConnectExclusivelyToOur;
-    final linkText = s.preferredProviders;
-    final linkUrl = OrchidUrls.preferredProviders;
-    final text2 = s.allPurchasedAccountsUseThe;
-    final linkText2 = s.xdaiCryptocurrency;
-    final linkUrl2 = OrchidUrls.xdaiChain;
-
-    var style1 = TextStyle(fontStyle: FontStyle.italic);
-    var style2 = TextStyle(color: Colors.black, fontSize: 15);
-    var linkStyle =
-        AppText.linkStyle.copyWith(fontSize: 15.0, fontStyle: FontStyle.italic);
-    return RichText(
-        text: TextSpan(style: style1, children: [
-      TextSpan(text: text + " ", style: style2),
-      LinkTextSpan(
-        text: linkText,
-        url: linkUrl,
-        style: linkStyle,
-      ),
-      TextSpan(text: ". " + text2 + " ", style: style2),
-      LinkTextSpan(
-        text: linkText2,
-        url: linkUrl2,
-        style: linkStyle,
-      ),
-    ]));
+    var bodyStyle = TextStyle(
+      // color: Colors.black,
+      fontSize: 15,
+      fontStyle: FontStyle.italic,
+    );
+    var linkStyle = AppText.linkStyle.copyWith(
+      fontSize: 15.0,
+      fontStyle: FontStyle.italic,
+    );
+    return StyledText(
+      style: bodyStyle,
+      text: s.purchasedCreditAccountsConnectExclusively +
+          '  ' +
+          s.allPurchasedAccountsUseThe,
+      styles: {
+        'link1': linkStyle.link(OrchidUrls.preferredProviders),
+        'link2': linkStyle.link(OrchidUrls.xdaiChain),
+      },
+    );
   }
 
   Row _buildCheckRow(String text) {
@@ -261,8 +255,7 @@ class _PurchasePageState extends State<PurchasePage> {
       return LoadingIndicator(height: 50);
     }
     if (_pacs.isEmpty) {
-      return LoadingIndicator(
-          height: 50, text: s.noPacsAvailableAtThisTime);
+      return LoadingIndicator(height: 50, text: s.noPacsAvailableAtThisTime);
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
