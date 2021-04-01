@@ -137,13 +137,14 @@ class AccountStore extends ChangeNotifier {
     // Discover new accounts for this identity
     if (discoverAccounts && activeIdentity != null) {
       log("account_store: Discovering accounts");
+
       // Discover accounts for the active identity on V1 chains.
-      discoveredAccounts += await OrchidEthereumV1()
+      discoveredAccounts = await OrchidEthereumV1()
           .discoverAccounts(chain: Chains.xDAI, signer: activeIdentity);
       notifyListeners();
 
       // Discover accounts for the active identity on V0 Ethereum.
-      discoveredAccounts =
+      discoveredAccounts +=
           await OrchidEthereumV0().discoverAccounts(signer: activeIdentity);
       notifyListeners();
 
