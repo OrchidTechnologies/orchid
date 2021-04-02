@@ -52,7 +52,7 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
 
     if (!device.empty()) {
         orc_assert(boost::algorithm::starts_with(device, "utun"));
-        address.sc_unit = To(device.substr(4));
+        address.sc_unit = To<decltype(address.sc_unit)>(device.substr(4));
         orc_syscall(connect(file, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)));
     } else {
         address.sc_unit = 0;

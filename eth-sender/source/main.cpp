@@ -135,7 +135,13 @@ static Decimal _(std::string_view arg) {
 template <>
 struct Option<uint64_t> {
 static uint64_t _(std::string_view arg) {
-    return To(arg);
+    return To<uint64_t>(arg);
+} };
+
+template <>
+struct Option<int> {
+static int _(std::string_view arg) {
+    return To<int>(arg);
 } };
 
 template <>
@@ -243,7 +249,7 @@ static cppcoro::shared_task<S<Executor>> _(std::string arg) {
                 flag = true;
                 index = index.substr(0, index.size() - 1);
             }
-            indices.push_back(To(index) | (flag ? 1 << 31 : 0));
+            indices.push_back(To<uint32_t>(index) | (flag ? 1 << 31 : 0));
         }
         auto session(co_await TrezorSession::New(origin_));
         auto executor(co_await TrezorExecutor::New(std::move(session), indices));

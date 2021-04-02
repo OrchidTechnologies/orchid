@@ -68,7 +68,7 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
 }
 
 Receipt::Receipt(Json::Value &&value) :
-    height_(To(value["blockNumber"].asString())),
+    height_(To<uint64_t>(value["blockNumber"].asString())),
     status_([&]() {
         const uint256_t status(value["status"].asString());
         return status != 0;
@@ -79,7 +79,7 @@ Receipt::Receipt(Json::Value &&value) :
             return Address();
         return contract.asString();
     }()),
-    gas_(To(value["gasUsed"].asString()))
+    gas_(To<uint64_t>(value["gasUsed"].asString()))
 {
 }
 
@@ -122,7 +122,7 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
     Transaction{
         uint256_t(value["nonce"].asString()),
         uint256_t(value["gasPrice"].asString()),
-        To(value["gas"].asString()),
+        To<uint64_t>(value["gas"].asString()),
         [&]() -> std::optional<Address> {
             const auto &target(value["to"]);
             if (target.isNull())
@@ -152,10 +152,10 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
 }
 
 Block::Block(const uint256_t &chain, Json::Value &&value) :
-    height_(To(value["number"].asString())),
+    height_(To<uint64_t>(value["number"].asString())),
     state_(value["stateRoot"].asString()),
-    timestamp_(To(value["timestamp"].asString())),
-    limit_(To(value["gasLimit"].asString())),
+    timestamp_(To<uint64_t>(value["timestamp"].asString())),
+    limit_(To<uint64_t>(value["gasLimit"].asString())),
     miner_(value["miner"].asString()),
 
     records_([&]() {
@@ -238,7 +238,7 @@ task<uint256_t> Chain::Bid() const {
 }
 
 task<uint64_t> Chain::Height() const {
-    const auto height(To((co_await operator ()("eth_blockNumber", {})).asString()));
+    const auto height(To<uint64_t>((co_await operator ()("eth_blockNumber", {})).asString()));
     orc_assert_(height != 0, "ethereum server has not synchronized any blocks");
     co_return height;
 }
