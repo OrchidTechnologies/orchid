@@ -28,7 +28,7 @@
 namespace orc {
 
 task<Float> Huobi(Base &base, const std::string &pair, const Float &adjust) {
-    const auto result(Parse((co_await base.Fetch("GET", {"https", "api.huobi.pro", "443", "/market/trade?symbol=" + pair}, {}, {})).ok()));
+    const auto result(Parse((co_await base.Fetch("GET", {{"https", "api.huobi.pro", "443"}, "/market/trade?symbol=" + pair}, {}, {})).ok()));
     const auto status(result["status"].asString());
     if (false) {
     } else if (status == "ok") {

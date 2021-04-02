@@ -92,7 +92,7 @@ task<Measurement> Measure(Base &base) {
 
     size_t size(0);
     for (unsigned i(0); i != 3; ++i) {
-        const auto test((co_await base.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
+        const auto test((co_await base.Fetch("GET", {{"https", "cache.saurik.com", "443"}, "/orchid/test-1MB.dat"}, {}, {})).ok());
         size += test.size();
     }
 
@@ -101,7 +101,7 @@ task<Measurement> Measure(Base &base) {
 
 task<Host> Find(Base &base) {
     // XXX: use STUN to do this instead of a Cydia endpoint
-    co_return Parse((co_await base.Fetch("GET", {"https", "cydia.saurik.com", "443", "/debug.json"}, {}, {})).ok())["host"].asString();
+    co_return Parse((co_await base.Fetch("GET", {{"https", "cydia.saurik.com", "443"}, "/debug.json"}, {}, {})).ok())["host"].asString();
 }
 
 task<std::string> Version(Base &base, const Locator &url) { try {

@@ -64,7 +64,7 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
 }, "resolving " << host << ":" << port); }
 
 cppcoro::shared_task<std::string> Base::Resolve_(Base &base, const std::string &host) {
-    co_return (co_await base.Fetch("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
+    co_return (co_await base.Fetch("GET", {{"https", "1.0.0.1", "443"}, "/dns-query?type=A&name=" + host}, {
         {"accept", "application/dns-json"}
     }, {})).ok();
 }

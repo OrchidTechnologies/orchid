@@ -30,7 +30,7 @@
 namespace orc {
 
 task<Float> Binance(Base &base, const std::string &pair, const Float &adjust) {
-    const auto response(co_await base.Fetch("GET", {"https", "api.binance.com", "443", "/api/v3/avgPrice?symbol=" + pair}, {}, {}));
+    const auto response(co_await base.Fetch("GET", {{"https", "api.binance.com", "443"}, "/api/v3/avgPrice?symbol=" + pair}, {}, {}));
     const auto result(Parse(response.body()));
     if (response.result() == http::status::ok)
         co_return Float(result["price"].asString()) / adjust;

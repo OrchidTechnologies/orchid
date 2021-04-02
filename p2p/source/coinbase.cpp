@@ -28,7 +28,7 @@
 namespace orc {
 
 task<Float> Coinbase(Base &base, const std::string &pair, const Float &adjust) {
-    const auto response(co_await base.Fetch("GET", {"https", "api.coinbase.com", "443", "/v2/prices/" + pair + "/spot"}, {}, {}));
+    const auto response(co_await base.Fetch("GET", {{"https", "api.coinbase.com", "443"}, "/v2/prices/" + pair + "/spot"}, {}, {}));
     const auto result(Parse(response.body()));
     if (response.result() == http::status::ok) {
         const auto &data(result["data"]);

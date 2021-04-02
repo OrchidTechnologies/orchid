@@ -55,7 +55,7 @@ task<Response> Fetch_(Stream_ &stream, http::request<http::string_body> &req) { 
 template <typename Socket_>
 task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead
     http::request<http::string_body> req{http::string_to_verb(method), locator.path_, 11};
-    req.set(http::field::host, locator.host_);
+    req.set(http::field::host, locator.origin_.host_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
     for (auto &[name, value] : headers)
@@ -65,14 +65,14 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
     req.body() = data;
 
     if (false) {
-    } else if (locator.scheme_ == "http") {
+    } else if (locator.origin_.scheme_ == "http") {
         co_return co_await Fetch_(socket, req);
-    } else if (locator.scheme_ == "https") {
+    } else if (locator.origin_.scheme_ == "https") {
         // XXX: this needs security
         asio::ssl::context context{asio::ssl::context::sslv23_client};
 
         if (!verify)
-            context.set_verify_callback(asio::ssl::rfc2818_verification(locator.host_));
+            context.set_verify_callback(asio::ssl::rfc2818_verification(locator.origin_.host_));
         else {
             context.set_verify_mode(asio::ssl::verify_peer);
 
@@ -87,7 +87,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
         }
 
         boost::beast::ssl_stream<Socket_ &> stream{socket, context};
-        orc_assert(SSL_set_tlsext_host_name(stream.native_handle(), locator.host_.c_str()));
+        orc_assert(SSL_set_tlsext_host_name(stream.native_handle(), locator.origin_.host_.c_str()));
         // XXX: beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
 
         orc_block({ try {
@@ -101,7 +101,7 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
 }
 
 task<Response> Fetch(Base &base, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
-    const auto endpoints(co_await base.Resolve(locator.host_, locator.port_));
+    const auto endpoints(co_await base.Resolve(locator.origin_.host_, locator.origin_.port_));
     std::exception_ptr error;
     for (const auto &endpoint : endpoints) try {
         Adapter adapter(Context(), co_await base.Connect(endpoint));

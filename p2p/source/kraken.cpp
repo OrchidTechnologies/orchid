@@ -28,7 +28,7 @@
 namespace orc {
 
 task<Float> Kraken(Base &base, const std::string &pair, const Float &adjust) {
-    co_return Float(Parse((co_await base.Fetch("GET", {"https", "api.kraken.com", "443", "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString()) / adjust;
+    co_return Float(Parse((co_await base.Fetch("GET", {{"https", "api.kraken.com", "443"}, "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString()) / adjust;
 }
 
 }

@@ -52,7 +52,7 @@ std::string currency_;
 uint256_t multiple_ = 1;
 std::optional<uint256_t> nonce_;
 std::optional<uint64_t> gas_;
-Locator rpc_{"http", "127.0.0.1", "8545", "/"};
+Locator rpc_{{"http", "127.0.0.1", "8545"}, "/"};
 
 class Args :
     public std::deque<std::string>
