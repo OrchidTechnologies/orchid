@@ -52,7 +52,7 @@ class Lottery1 :
     Lottery1(Market market, Address contract);
     ~Lottery1() override = default;
 
-    void Open(S<Origin> origin, Locator locator);
+    void Open(S<Base> base, Locator locator);
     task<void> Shut() noexcept override;
 
     const Address &Contract() const {

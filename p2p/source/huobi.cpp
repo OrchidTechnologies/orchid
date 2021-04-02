@@ -20,15 +20,15 @@
 /* }}} */
 
 
+#include "base.hpp"
 #include "huobi.hpp"
 #include "json.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 
 namespace orc {
 
-task<Float> Huobi(Origin &origin, const std::string &pair, const Float &adjust) {
-    const auto result(Parse((co_await origin.Fetch("GET", {"https", "api.huobi.pro", "443", "/market/trade?symbol=" + pair}, {}, {})).ok()));
+task<Float> Huobi(Base &base, const std::string &pair, const Float &adjust) {
+    const auto result(Parse((co_await base.Fetch("GET", {"https", "api.huobi.pro", "443", "/market/trade?symbol=" + pair}, {}, {})).ok()));
     const auto status(result["status"].asString());
     if (false) {
     } else if (status == "ok") {

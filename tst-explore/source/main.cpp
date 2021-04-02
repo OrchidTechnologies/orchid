@@ -119,11 +119,11 @@ int Main(int argc, const char *const argv[]) {
 
     Initialize();
 
-    const auto origin(Break<Local>());
+    const auto base(Break<Local>());
     const std::string rpc(args["rpc"].as<std::string>());
-    const auto chain(Wait(Chain::New({rpc, origin}, {})));
+    const auto chain(Wait(Chain::New({rpc, base}, {})));
 
-    const auto gauge(Make<Gauge>(60*1000, origin));
+    const auto gauge(Make<Gauge>(60*1000, base));
 
     std::set<Address> miners{
         "0x155296080f5889b9a4c328bcc533f928efd02a05",

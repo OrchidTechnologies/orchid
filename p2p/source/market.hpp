@@ -31,9 +31,9 @@
 
 namespace orc {
 
+class Base;
 class Chain;
 struct Locator;
-class Origin;
 
 struct Market {
     const S<Chain> chain_;
@@ -41,7 +41,7 @@ struct Market {
     const S<Updated<uint256_t>> bid_;
 
     static task<Market> New(unsigned milliseconds, S<Chain> chain, Currency currency);
-    static task<Market> New(unsigned milliseconds, uint256_t chain, const S<Origin> &origin, Locator locator, std::string currency);
+    static task<Market> New(unsigned milliseconds, uint256_t chain, const S<Base> &base, Locator locator, std::string currency);
 };
 
 }

@@ -129,7 +129,7 @@ Client::Client(BufferDrain &drain, S<Updated<Prices>> oracle) :
 {
 }
 
-task<void> Client::Open(const Provider &provider, const S<Origin> &origin) {
+task<void> Client::Open(const Provider &provider, const S<Base> &base) {
     const auto verify([&](const std::list<const rtc::OpenSSLCertificate> &certificates) -> bool {
         for (const auto &certificate : certificates)
             if (*provider.fingerprint_ == *rtc::SSLFingerprint::Create(provider.fingerprint_->algorithm, certificate))
@@ -139,12 +139,12 @@ task<void> Client::Open(const Provider &provider, const S<Origin> &origin) {
 
     auto &bonding(Bond());
 
-    socket_ = co_await Channel::Wire(bonding, origin, [&]() {
+    socket_ = co_await Channel::Wire(bonding, base, [&]() {
         Configuration configuration;
         configuration.tls_ = local_;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
-        const auto answer((co_await origin->Fetch("POST", provider.locator_, {}, offer, verify)).ok());
+        const auto answer((co_await base->Fetch("POST", provider.locator_, {}, offer, verify)).ok());
         if (Verbose) {
             Log() << "Offer: " << offer << std::endl;
             Log() << "Answer: " << answer << std::endl;

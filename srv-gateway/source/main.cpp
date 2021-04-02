@@ -108,7 +108,7 @@ int Main(int argc, const char *const argv[]) {
 
     Initialize();
 
-    const auto origin(Break<Local>());
+    const auto base(Break<Local>());
     const Locator locator(args["rpc"].as<std::string>());
 
     Router router;
@@ -117,7 +117,7 @@ int Main(int argc, const char *const argv[]) {
         const auto body(request.body());
         const auto parsed(Parse(body));
         //co_return Respond(request, http::status::payment_required, "application/json", "{}");
-        const auto response((co_await origin->Fetch("POST", locator, {{"content-type", "application/json"}}, body)).ok());
+        const auto response((co_await base->Fetch("POST", locator, {{"content-type", "application/json"}}, body)).ok());
         co_return Respond(request, http::status::ok, "application/json", response);
     });
 

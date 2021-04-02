@@ -24,25 +24,25 @@
 #include <p2p/client/basic_port_allocator.h>
 #include <rtc_base/network.h>
 
+#include "base.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 #include "pirate.hpp"
 
 namespace orc {
 
-Origin::Origin(const char *type, U<rtc::NetworkManager> manager) :
+Base::Base(const char *type, U<rtc::NetworkManager> manager) :
     Valve(type),
     manager_(std::move(manager)),
     cache_(*this)
 {
 }
 
-Origin::~Origin() = default;
+Base::~Base() = default;
 
 struct Thread_ { typedef rtc::Thread *(rtc::BasicPacketSocketFactory::*type); };
 template struct Pirate<Thread_, &rtc::BasicPacketSocketFactory::thread_>;
 
-U<cricket::PortAllocator> Origin::Allocator() {
+U<cricket::PortAllocator> Base::Allocator() {
     auto &factory(Factory());
     const auto thread(factory.*Loot<Thread_>::pointer);
     return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
@@ -52,7 +52,7 @@ U<cricket::PortAllocator> Origin::Allocator() {
 
 // XXX: for Local::Fetch, this should use NSURLSession on __APPLE__
 
-task<Response> Origin::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
+task<Response> Base::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) {
     co_return co_await orc::Fetch(*this, method, locator, headers, data, verify);
 }
 

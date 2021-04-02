@@ -29,9 +29,9 @@ namespace orc {
 
 Locator::Locator(const std::string &locator) :
     Locator([&]() {
-        auto base(skyr::make_url(locator));
-        orc_assert_(base, base.error().message());
-        auto &value(base.value());
+        auto result(skyr::make_url(locator));
+        orc_assert_(result, result.error().message());
+        auto &value(result.value());
         auto scheme(value.protocol());
         orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');
         scheme.resize(scheme.size() - 1);

@@ -55,14 +55,14 @@ struct Logger :
 #endif
 
 
-Peer::Peer(S<Origin> origin, Configuration configuration) :
-    origin_(std::move(origin)),
+Peer::Peer(S<Base> base, Configuration configuration) :
+    base_(std::move(base)),
     peer_([&]() {
         const auto &threads(Threads::Get());
 
         auto factory(webrtc::CreateModularPeerConnectionFactory([&]() {
             webrtc::PeerConnectionFactoryDependencies dependencies;
-            dependencies.network_thread = &origin_->Thread();
+            dependencies.network_thread = &base_->Thread();
             dependencies.worker_thread = threads.signals_.get();
             dependencies.signaling_thread = threads.signals_.get();
             return dependencies;
@@ -84,7 +84,7 @@ Peer::Peer(S<Origin> origin, Configuration configuration) :
 
         return factory->CreatePeerConnection(rtc, [&]() {
             webrtc::PeerConnectionDependencies dependencies(this);
-            dependencies.allocator = origin_->Allocator();
+            dependencies.allocator = base_->Allocator();
             return dependencies;
         }());
     }())

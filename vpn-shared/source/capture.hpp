@@ -33,7 +33,7 @@
 
 namespace orc {
 
-class Origin;
+class Base;
 
 class Analyzer {
   public:
@@ -100,7 +100,7 @@ class Capture :
 
     void Land(const Buffer &data, bool analyze);
 
-    void Start(S<Origin> origin);
+    void Start(S<Base> base);
     BufferSunk &Start();
     void Start(const std::string &path);
 

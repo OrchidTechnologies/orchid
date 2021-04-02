@@ -45,7 +45,7 @@ namespace orc {
 
 namespace po = boost::program_options;
 
-S<Origin> origin_;
+S<Base> base_;
 S<Chain> chain_;
 S<Executor> executor_;
 std::string currency_;
@@ -251,7 +251,7 @@ static cppcoro::shared_task<S<Executor>> _(std::string arg) {
             }
             indices.push_back(To<uint32_t>(index) | (flag ? 1 << 31 : 0));
         }
-        auto session(co_await TrezorSession::New(origin_));
+        auto session(co_await TrezorSession::New(base_));
         auto executor(co_await TrezorExecutor::New(std::move(session), indices));
         co_return std::move(executor);
     } else if (arg.size() == 64)
@@ -309,8 +309,8 @@ task<int> Main(int argc, const char *const argv[]) { try {
         ORC_PARAM(verbose,flags.,_)
     } }());
 
-    origin_ = Break<Local>();
-    chain_ = co_await Chain::New(Endpoint{rpc_, origin_}, flags);
+    base_ = Break<Local>();
+    chain_ = co_await Chain::New(Endpoint{rpc_, base_}, flags);
 
     if (executor.empty())
         executor_ = Make<MissingExecutor>();
@@ -364,7 +364,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "binance") {
         const auto [pair] = Options<std::string>(args);
-        std::cout << co_await Binance(*origin_, pair, 1) << std::endl;
+        std::cout << co_await Binance(*base_, pair, 1) << std::endl;
 
     } else if (command == "block") {
         const auto [height] = Options<uint64_t>(args);
@@ -678,7 +678,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "value") {
         const auto [address] = Options<Address>(args);
         const auto [account] = co_await chain_->Get(co_await block(), address, nullptr);
-        std::cout << Float(account.balance_) * co_await Binance(*origin_, currency_ + "USDT", Ten18) << std::endl;
+        std::cout << Float(account.balance_) * co_await Binance(*base_, currency_ + "USDT", Ten18) << std::endl;
 
     } else if (command == "verify") {
         auto [height] = Options<uint64_t>(args);

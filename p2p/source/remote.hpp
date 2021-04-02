@@ -25,14 +25,14 @@
 
 #include <lwip/netif.h>
 
+#include "base.hpp"
 #include "nest.hpp"
-#include "origin.hpp"
 #include "socket.hpp"
 
 namespace orc {
 
 class Remote :
-    public Origin,
+    public Base,
     public BufferDrain,
     public Sunken<Pump<Buffer>>
 {

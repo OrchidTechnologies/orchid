@@ -23,22 +23,22 @@
 #ifndef ORCHID_ENDPOINT_HPP
 #define ORCHID_ENDPOINT_HPP
 
+#include "base.hpp"
 #include "json.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 
 namespace orc {
 
 class Endpoint {
   private:
     const Locator locator_;
-    const S<Origin> origin_;
+    const S<Base> base_;
 
   public:
-    // XXX: default origin to Local
-    Endpoint(Locator locator, S<Origin> origin) :
+    // XXX: default base to Local
+    Endpoint(Locator locator, S<Base> base) :
         locator_(std::move(locator)),
-        origin_(std::move(origin))
+        base_(std::move(base))
     {
     }
 
@@ -47,8 +47,8 @@ class Endpoint {
     }
 
     // XXX: remove this once Network takes a Market
-    const S<Origin> &hack() const {
-        return origin_;
+    const S<Base> &hack() const {
+        return base_;
     }
 
     task<Json::Value> operator ()(const std::string &method, Argument args) const;

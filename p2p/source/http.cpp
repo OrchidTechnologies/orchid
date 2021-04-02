@@ -28,10 +28,10 @@
 #include <boost/asio/ssl/rfc2818_verification.hpp>
 
 #include "adapter.hpp"
+#include "base.hpp"
 #include "baton.hpp"
 #include "http.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 
 namespace orc {
 
@@ -100,11 +100,11 @@ task<Response> Fetch_(Socket_ &socket, const std::string &method, const Locator 
     } else orc_assert(false);
 }
 
-task<Response> Fetch(Origin &origin, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
-    const auto endpoints(co_await origin.Resolve(locator.host_, locator.port_));
+task<Response> Fetch(Base &base, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
+    const auto endpoints(co_await base.Resolve(locator.host_, locator.port_));
     std::exception_ptr error;
     for (const auto &endpoint : endpoints) try {
-        Adapter adapter(Context(), co_await origin.Connect(endpoint));
+        Adapter adapter(Context(), co_await base.Connect(endpoint));
         const auto response(co_await orc_value(co_return co_await, Fetch_(adapter, method, locator, headers, data, verify), "connected to " << endpoint));
         // XXX: potentially allow this to be passed in as a custom response validator
         orc_assert_(response.result() != boost::beast::http::status::bad_gateway, response);

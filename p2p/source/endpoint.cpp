@@ -35,7 +35,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
         return root;
     }()));
 
-    const auto data(Parse((co_await origin_->Fetch("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
+    const auto data(Parse((co_await base_->Fetch("POST", locator_, {{"content-type", "application/json"}}, body)).ok()));
 
     if (false)
         Log() << "JSON/RPC\n" << body << Unparse(data) << std::endl;

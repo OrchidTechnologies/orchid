@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#ifndef ORCHID_ORIGIN_HPP
-#define ORCHID_ORIGIN_HPP
+#ifndef ORCHID_BASE_HPP
+#define ORCHID_BASE_HPP
 
 #include <cppcoro/async_mutex.hpp>
 #include <cppcoro/shared_task.hpp>
@@ -47,18 +47,18 @@ namespace rtc {
 
 namespace orc {
 
-class Origin :
+class Base :
     public Valve
 {
   private:
     const U<rtc::NetworkManager> manager_;
 
-    static cppcoro::shared_task<std::string> Resolve_(Origin &origin, const std::string &host);
-    Cache<cppcoro::shared_task<std::string>, Origin &, std::string, &Resolve_> cache_;
+    static cppcoro::shared_task<std::string> Resolve_(Base &base, const std::string &host);
+    Cache<cppcoro::shared_task<std::string>, Base &, std::string, &Resolve_> cache_;
 
   public:
-    Origin(const char *type, U<rtc::NetworkManager> manager);
-    ~Origin() override;
+    Base(const char *type, U<rtc::NetworkManager> manager);
+    ~Base() override;
 
     virtual Host Host() = 0;
 
@@ -77,4 +77,4 @@ class Origin :
 
 }
 
-#endif//ORCHID_ORIGIN_HPP
+#endif//ORCHID_BASE_HPP

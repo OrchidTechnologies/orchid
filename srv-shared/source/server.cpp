@@ -63,8 +63,8 @@ class Incoming final :
     }
 
   public:
-    Incoming(S<Server> server, const S<Origin> &origin, rtc::scoped_refptr<rtc::RTCCertificate> local, std::vector<std::string> ice) :
-        Peer(origin, [&]() {
+    Incoming(S<Server> server, const S<Base> &base, rtc::scoped_refptr<rtc::RTCCertificate> local, std::vector<std::string> ice) :
+        Peer(base, [&]() {
             Configuration configuration;
             configuration.tls_ = std::move(local);
             configuration.ice_ = std::move(ice);
@@ -407,8 +407,8 @@ task<void> Server::Shut() noexcept {
     co_await Valve::Shut();
 }
 
-task<std::string> Server::Respond(const S<Origin> &origin, const std::string &offer, std::vector<std::string> ice) {
-    auto incoming(Incoming::New(self_, origin, local_, std::move(ice)));
+task<std::string> Server::Respond(const S<Base> &base, const std::string &offer, std::vector<std::string> ice) {
+    auto incoming(Incoming::New(self_, base, local_, std::move(ice)));
     auto answer(co_await incoming->Answer(offer));
     co_return answer;
     co_return Filter(true, answer);

@@ -29,9 +29,9 @@ extern "C" {
 #include <wireguard_ffi.h>
 }
 
+#include "base.hpp"
 #include "boring.hpp"
 #include "forge.hpp"
-#include "origin.hpp"
 #include "sleep.hpp"
 #include "trace.hpp"
 
@@ -81,9 +81,9 @@ void Boring::Stop(const std::string &error) noexcept {
     return Link::Stop(error);
 }
 
-Boring::Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, const Host &remote, const std::string &secret, const std::string &common) :
+Boring::Boring(BufferDrain &drain, const S<Base> &base, uint32_t local, const Host &remote, const std::string &secret, const std::string &common) :
     Link(typeid(*this).name(), drain),
-    origin_(origin),
+    base_(base),
     local_(local),
     remote_(remote),
     wireguard_(new_tunnel(secret.c_str(), common.c_str(), 0, 0, [](const char *message) {
@@ -163,7 +163,7 @@ task<void> Boring::Send(const Buffer &data) {
     }
 }
 
-task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string file) {
+task<void> Guard(BufferSunk &sunk, S<Base> base, uint32_t local, std::string file) {
     boost::property_tree::ptree tree; {
         std::istringstream data(file);
         boost::property_tree::ini_parser::read_ini(data, tree);
@@ -190,11 +190,11 @@ task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string
     const auto endpoint(tree.get<std::string>("Peer.Endpoint"));
     const auto colon(endpoint.find(':'));
     orc_assert(colon != std::string::npos);
-    const auto endpoints(co_await origin->Resolve(endpoint.substr(0, colon), endpoint.substr(colon + 1)));
+    const auto endpoints(co_await base->Resolve(endpoint.substr(0, colon), endpoint.substr(colon + 1)));
     orc_assert(!endpoints.empty());
 
-    auto &boring(sunk.Wire<BufferSink<Boring>>(origin, local, address, tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
-    co_await origin->Associate(boring, endpoints[0]);
+    auto &boring(sunk.Wire<BufferSink<Boring>>(base, local, address, tree.get<std::string>("Interface.PrivateKey"), tree.get<std::string>("Peer.PublicKey")));
+    co_await base->Associate(boring, endpoints[0]);
     boring.Open();
 }
 

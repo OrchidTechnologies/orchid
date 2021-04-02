@@ -23,11 +23,11 @@
 #ifndef ORCHID_CHAIN_HPP
 #define ORCHID_CHAIN_HPP
 
+#include "base.hpp"
 #include "crypto.hpp"
 #include "endpoint.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 #include "parallel.hpp"
 
 namespace orc {
