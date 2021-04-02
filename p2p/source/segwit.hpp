@@ -29,8 +29,7 @@
 
 namespace orc {
 
-std::string ToSegwit(const Buffer &data);
-Beam FromSegwit(const std::string &data);
+std::string ToSegwit(const std::string &prefix, int version, const Buffer &data);
 
 }
 

@@ -20,14 +20,18 @@
 /* }}} */
 
 
-#include <segwit_addr.h>
+#include <segwit_addr.cpp>
 
 #include "segwit.hpp"
 
 namespace orc {
 
-std::string ToSegwit(const Buffer &data) {
-    return segwit_addr::encode("bc", 0, data.vec());
+std::string ToSegwit(const std::string &prefix, int version, const Buffer &data) {
+    std::vector<uint8_t> bits;
+    if (version >= 0)
+        bits.push_back(version);
+    convertbits<8, 5, true>(bits, data.vec());
+    return bech32::encode(prefix, bits, version > 0 ? bech32::Encoding::BECH32M : bech32::Encoding::BECH32);
 }
 
 }
