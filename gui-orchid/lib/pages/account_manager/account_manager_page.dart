@@ -27,6 +27,7 @@ import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:styled_text/styled_text.dart';
 
 import '../app_colors.dart';
 import '../app_sizes.dart';
@@ -186,20 +187,18 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
     var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
 
-    var body = RichText(
-        text: TextSpan(children: [
-      TextSpan(
-          text: s.aQrCodeAndTextForAllTheOrchidAccounts + s.weRecommend + ' ',
-          style: bodyStyle),
-      LinkTextSpan(
-        text: s.backingItUp + '.',
-        style: linkStyle,
-        url: OrchidUrls.partsOfOrchidAccount,
-      ),
-      TextSpan(
-          text: '\n\n' + s.importThisKeyOnAnotherDeviceToShareAllThe,
-          style: bodyStyle)
-    ]));
+    var body = StyledText(
+      style: bodyStyle,
+      newLineAsBreaks: true,
+      text: s.aQrCodeAndTextForAllTheOrchidAccounts +
+          '  ' +
+          s.weRecommendBackingItUp +
+          '\n\n' +
+          s.importThisKeyOnAnotherDeviceToShareAllThe,
+      styles: {
+        'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
+      },
+    );
 
     return AppDialogs.showAppDialog(
         context: context,

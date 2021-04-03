@@ -2569,46 +2569,6 @@ class S {
     );
   }
 
-  /// `Purchased credit accounts connect exclusively to our`
-  String get purchasedCreditAccountsConnectExclusivelyToOur {
-    return Intl.message(
-      'Purchased credit accounts connect exclusively to our',
-      name: 'purchasedCreditAccountsConnectExclusivelyToOur',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `preferred providers`
-  String get preferredProviders {
-    return Intl.message(
-      'preferred providers',
-      name: 'preferredProviders',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `All purchased accounts use the`
-  String get allPurchasedAccountsUseThe {
-    return Intl.message(
-      'All purchased accounts use the',
-      name: 'allPurchasedAccountsUseThe',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `xDai cryptocurrency`
-  String get xdaiCryptocurrency {
-    return Intl.message(
-      'xDai cryptocurrency',
-      name: 'xdaiCryptocurrency',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `The Orchid Store is temporarily unavailable.  Please check back in a few minutes.`
   String get theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn {
     return Intl.message(
@@ -2839,26 +2799,6 @@ class S {
     );
   }
 
-  /// `We recommend`
-  String get weRecommend {
-    return Intl.message(
-      'We recommend',
-      name: 'weRecommend',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `backing it up`
-  String get backingItUp {
-    return Intl.message(
-      'backing it up',
-      name: 'backingItUp',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Import this key on another device to share all the Orchid accounts associated with this Orchid identity.`
   String get importThisKeyOnAnotherDeviceToShareAllThe {
     return Intl.message(
@@ -3084,6 +3024,36 @@ class S {
     return Intl.message(
       'View Deleted Hops',
       name: 'viewDeletedHops',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `We recommend <link>backing it up</link>.`
+  String get weRecommendBackingItUp {
+    return Intl.message(
+      'We recommend <link>backing it up</link>.',
+      name: 'weRecommendBackingItUp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Purchased credit accounts connect exclusively to our <link1>preferred providers</link1>.`
+  String get purchasedCreditAccountsConnectExclusively {
+    return Intl.message(
+      'Purchased credit accounts connect exclusively to our <link1>preferred providers</link1>.',
+      name: 'purchasedCreditAccountsConnectExclusively',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All purchased accounts use the <link2>xDai cryptocurrency</link2>.`
+  String get allPurchasedAccountsUseThe {
+    return Intl.message(
+      'All purchased accounts use the <link2>xDai cryptocurrency</link2>.',
+      name: 'allPurchasedAccountsUseThe',
       desc: '',
       args: [],
     );

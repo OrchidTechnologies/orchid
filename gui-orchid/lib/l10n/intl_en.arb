@@ -271,10 +271,6 @@
 	"currentAvgVpnPriceIsPricePerGb": "Current avg. VPN price is {price} per GB",
 	"notASubscriptionCreditsDontExpire": "Not a subscription, credits don't expire",
 	"shareAccountWithUnlimitedDevices": "Share account with unlimited devices",
-	"purchasedCreditAccountsConnectExclusivelyToOur": "Purchased credit accounts connect exclusively to our",
-	"preferredProviders": "preferred providers",
-	"allPurchasedAccountsUseThe": "All purchased accounts use the",
-	"xdaiCryptocurrency": "xDai cryptocurrency",
 	"theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "The Orchid Store is temporarily unavailable.  Please check back in a few minutes.",
 	"talkingToPacServer": "Talking to PAC Server",
 	"advancedConfiguration": "Advanced Configuration",
@@ -298,8 +294,6 @@
 	"optional": "Optional",
 	"exportThisOrchidKey": "Export this Orchid Key",
 	"aQrCodeAndTextForAllTheOrchidAccounts": "A QR code and text for all the Orchid accounts associated with this key is below.",
-	"weRecommend": "We recommend",
-	"backingItUp": "backing it up",
 	"importThisKeyOnAnotherDeviceToShareAllThe": "Import this key on another device to share all the Orchid accounts associated with this Orchid identity.",
 	"orchidAccountInUse": "Orchid Account in use",
 	"thisOrchidAccountIsInUseAndCannotBeDeleted": "This Orchid Account is in use and cannot be deleted.",
@@ -322,5 +316,8 @@
 	"createYourFirstHopToGetStarted": "Create your first hop to get started.",
 	"account": "Account",
 	"transactions": "Transactions",
-	"viewDeletedHops": "View Deleted Hops"
+	"viewDeletedHops": "View Deleted Hops",
+	"weRecommendBackingItUp": "We recommend <link>backing it up</link>.",
+	"purchasedCreditAccountsConnectExclusively": "Purchased credit accounts connect exclusively to our <link1>preferred providers</link1>.",
+	"allPurchasedAccountsUseThe": "All purchased accounts use the <link2>xDai cryptocurrency</link2>."
 }

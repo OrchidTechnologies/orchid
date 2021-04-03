@@ -42,7 +42,8 @@ inline bool operator ==(const std::from_chars_result &lhs, const std::from_chars
     return lhs.ptr == rhs.ptr && lhs.ec == rhs.ec;
 }
 
-inline unsigned long To(const std::string_view &value) {
+template <typename Type_>
+Type_ To(const std::string_view &value) {
     auto start(value.data());
     const auto size(value.size());
     const auto end(start + size);
@@ -52,7 +53,7 @@ inline unsigned long To(const std::string_view &value) {
         start += 2;
         return 16;
     }());
-    unsigned long number;
+    Type_ number;
     orc_assert_((std::from_chars(start, end, number, base) == std::from_chars_result{end, std::errc()}), value << " is not a number");
     return number;
 }
