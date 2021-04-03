@@ -20,25 +20,19 @@
 /* }}} */
 
 
-#ifndef ORCHID_HTTP_HPP
-#define ORCHID_HTTP_HPP
-
-#include <list>
-#include <map>
-#include <string>
-
-#include <rtc_base/openssl_certificate.h>
+#ifndef ORCHID_FETCHER_HPP
+#define ORCHID_FETCHER_HPP
 
 #include "response.hpp"
-#include "task.hpp"
 
 namespace orc {
 
-class Base;
-struct Locator;
-
-task<Response> Fetch(Base &base, const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify = nullptr);
+class Fetcher {
+  public:
+    virtual ~Fetcher() = default;
+    virtual task<Response> Fetch(http::request<http::string_body> &req) = 0;
+};
 
 }
 
-#endif//ORCHID_HTTP_HPP
+#endif//ORCHID_FETCHER_HPP

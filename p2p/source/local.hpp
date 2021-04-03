@@ -27,6 +27,8 @@
 
 namespace orc {
 
+// XXX: for Local::Fetch, this should use NSURLSession on __APPLE__
+
 class Local :
     public Base
 {

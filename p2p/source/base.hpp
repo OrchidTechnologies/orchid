@@ -26,10 +26,13 @@
 #include <cppcoro/async_mutex.hpp>
 #include <cppcoro/shared_task.hpp>
 
+#include <rtc_base/openssl_certificate.h>
+
 #include "cache.hpp"
 #include "dns.hpp"
-#include "http.hpp"
+#include "fetcher.hpp"
 #include "link.hpp"
+#include "locator.hpp"
 #include "reader.hpp"
 #include "sewer.hpp"
 #include "socket.hpp"
@@ -55,6 +58,8 @@ class Base :
 
     static cppcoro::shared_task<std::string> Resolve_(Base &base, const std::string &host);
     Cache<cppcoro::shared_task<std::string>, Base &, std::string, &Resolve_> cache_;
+
+    std::multimap<Origin, U<Fetcher>> fetchers_;
 
   public:
     Base(const char *type, U<rtc::NetworkManager> manager);
