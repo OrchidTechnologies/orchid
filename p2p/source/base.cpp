@@ -61,6 +61,7 @@ task<Response> Base::Fetch(const std::string &method, const Locator &locator, co
     http::request<http::string_body> req(http::string_to_verb(method), locator.path_, 11);
     req.set(http::field::host, locator.origin_.host_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    req.set(http::field::connection, "keep-alive");
 
     for (auto &[name, value] : headers)
         req.set(name, value);
