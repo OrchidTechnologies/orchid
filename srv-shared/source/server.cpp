@@ -180,8 +180,8 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     if (expected <= 0)
         return;
 
-    const auto ticket(Ticket0{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode(contract, chain, receipt));
-    const Address signer(Recover(HashK(Tie("\x19""Ethereum Signed Message:\n32", ticket)), v, r, s));
+    const auto digest(Ticket0{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode(contract, chain, receipt));
+    const Address signer(Recover(HashK(Tie("\x19""Ethereum Signed Message:\n32", digest)), v, r, s));
 
     const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
         const auto locked(locked_());
@@ -205,7 +205,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
                 }
         orc_assert(false); }());
 
-        orc_assert(locked->expected_.emplace(ticket, expected).second);
+        orc_assert(locked->expected_.emplace(digest, expected).second);
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
@@ -218,12 +218,13 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
     // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
-    nest_.Hatch([&, &price = price, &commit = commit, &issued = issued, &nonce = nonce, &v = v, &r = r, &s = s, &amount = amount, &ratio = ratio, &start = start, &range = range, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
-        const auto valid(co_await lottery->Check(signer, funder, amount, recipient, receipt));
+    nest_.Hatch([&, &commit = commit, &issued = issued, &nonce = nonce, &v = v, &r = r, &s = s, &amount = amount, &ratio = ratio, &start = start, &range = range, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
+        const auto usable(co_await lottery->Check(signer, funder, recipient));
+        const auto valid(usable >= amount);
 
         {
             const auto locked(locked_());
-            const auto expected(locked->expected_.find(ticket));
+            const auto expected(locked->expected_.find(digest));
             orc_assert(expected != locked->expected_.end());
             if (valid)
                 locked->balance_ += expected->second;
@@ -240,7 +241,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
         std::vector<Bytes32> old;
 
-        lottery->Send(croupier_->hack(), gas, price,
+        lottery->Send(croupier_->hack(),
             reveal, commit,
             issued, nonce,
             v, r, s,
@@ -272,7 +273,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     // XXX: fix Coder and Selector to not require this to Beam
     const Beam receipt(window);
 
-    orc_assert(recipient == croupier_->Recipient());
+    orc_assert_(recipient == croupier_->Recipient(), recipient << " != " << croupier_->Recipient() << " in " << data);
 
     const auto now(Timestamp());
     orc_assert(issued + expire > now);
@@ -283,9 +284,13 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     if (expected <= 0)
         return;
 
-    const auto ticket(Ticket1{recipient, commit, issued, nonce, amount, expire, ratio, funder, HashK(receipt)}.Encode(contract, chain, {}));
-    const Address signer(Recover(ticket, v, r, s));
-    Log() << std::dec << signer << " " << amount << std::endl;
+    const Ticket1 ticket{recipient, commit, issued, nonce, amount, expire, ratio, funder, HashK(receipt)};
+    const auto digest(ticket.Encode(contract, chain, {}));
+    const Signature signature(r, s, v - 27);
+    const Address signer(Recover(digest, signature));
+
+    if (Verbose)
+        Log() << std::dec << std::fixed << std::setprecision(16) << recipient << "<-" << funder << "/" << signer << " " << amount << " " << ratio << " " << issued << nonce << " " << expected << " " << locked_()->balance_ << std::endl;
 
     const auto [reveal, winner] = [&, recipient = recipient, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
         const auto locked(locked_());
@@ -309,7 +314,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
                 }
         orc_assert(false); }());
 
-        orc_assert(locked->expected_.emplace(ticket, expected).second);
+        orc_assert(locked->expected_.emplace(digest, expected).second);
         ++locked->serial_;
 
         // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
@@ -322,12 +327,13 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
     // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
-    nest_.Hatch([&, &amount = amount, &funder = funder, &recipient = recipient, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
-        const auto valid(co_await lottery->Check(signer, funder, amount, recipient));
+    nest_.Hatch([&, &amount = amount, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
+        const auto usable(co_await lottery->Check(signer, funder, recipient));
+        const auto valid(usable >= amount);
 
         {
             const auto locked(locked_());
-            const auto expected(locked->expected_.find(ticket));
+            const auto expected(locked->expected_.find(digest));
             orc_assert(expected != locked->expected_.end());
             if (valid)
                 locked->balance_ += expected->second;
@@ -341,6 +347,8 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             co_return;
         } else if (!winner)
             co_return;
+
+        lottery->Send(croupier_->hack(), recipient, ticket.Payment(reveal, signature));
     } orc_catch({}) }; }, __FUNCTION__);
 }
 

@@ -32,7 +32,7 @@
 namespace orc {
 
 Lottery0::Lottery0(Token token, Address contract) :
-    Valve(typeid(*this).name()),
+    Lottery(typeid(*this).name()),
     token_(std::move(token)),
     contract_(std::move(contract))
 {
@@ -50,19 +50,13 @@ std::pair<Float, uint256_t> Lottery0::Credit(const uint256_t &now, const uint256
     return {(Float(amount) * token_.currency_.dollars_() - Float(gas * bid) * token_.market_.currency_.dollars_()) * (Float(ratio) + 1) / Two128, bid};
 }
 
-task<bool> Lottery0::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt) {
+task<uint128_t> Lottery0::Check_(const Address &signer, const Address &funder, const Address &recipient) {
     static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look_("look");
     const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look_.Call(*token_.market_.chain_, "latest", contract_, 90000, funder, signer);
 
     // XXX: check codehash/shared
 
-    orc_assert(unlock == 0);
-
-    if (amount > balance)
-        co_return false;
-    if (amount > escrow / 2)
-        co_return false;
-    co_return true;
+    co_return unlock != 0 ? 0 : std::min(escrow / 2, balance);
 }
 
 }
