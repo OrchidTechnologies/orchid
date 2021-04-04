@@ -363,14 +363,14 @@ class Selector final :
 };
 
 template <typename... Args_>
-class Contract final :
+class Constructor final :
     public Region
 {
   private:
     Beam data_;
 
   public:
-    Contract(Beam data) :
+    Constructor(Beam data) :
         data_(std::move(data))
     {
     }
