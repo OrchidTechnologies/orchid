@@ -64,8 +64,7 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
         }
     }
 
-    static Brick<32> empty(HashK(Implode({})));
-    orc_assert(hash == empty);
+    orc_assert(hash == EmptyVector);
     return Nested(0u);
 }
 
@@ -172,23 +171,25 @@ Block::Block(const uint256_t &chain, Json::Value &&value) :
 
 Account::Account(const uint256_t &nonce, const uint256_t &balance) :
     nonce_(nonce),
-    balance_(balance)
+    balance_(balance),
+    storage_(Zero<32>()),
+    code_(Zero<32>())
 {
 }
 
 Account::Account(const Block &block, const Json::Value &value) :
     nonce_(value["nonce"].asString()),
     balance_(value["balance"].asString()),
-    storage_(value["storageHash"].asString()),
-    code_(value["codeHash"].asString())
+    storage_(Bless(value["storageHash"].asString())),
+    code_(Bless(value["codeHash"].asString()))
 {
     const auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), HashK(Number<uint160_t>(value["address"].asString()))));
     if (leaf.scalar()) {
         orc_assert(leaf.buf().size() == 0);
         orc_assert(nonce_ == 0);
         orc_assert(balance_ == 0);
-        orc_assert(storage_ == uint256_t("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"));
-        orc_assert(code_ == uint256_t("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+        orc_assert(storage_ == EmptyVector);
+        orc_assert(code_ == EmptyScalar);
     } else {
         switch (leaf.size()) {
             case 4: break;
@@ -200,8 +201,8 @@ Account::Account(const Block &block, const Json::Value &value) :
 
         orc_assert(leaf[0].num() == nonce_);
         orc_assert(leaf[1].num() == balance_);
-        orc_assert(leaf[2].num() == storage_);
-        orc_assert(leaf[3].num() == code_);
+        orc_assert(leaf[2].buf() == storage_);
+        orc_assert(leaf[3].buf() == code_);
     }
 }
 

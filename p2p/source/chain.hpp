@@ -90,8 +90,8 @@ struct Block {
 struct Account final {
     const uint256_t nonce_;
     const uint256_t balance_;
-    const uint256_t storage_;
-    const uint256_t code_;
+    const Brick<32> storage_;
+    const Brick<32> code_;
 
     Account(const uint256_t &nonce, const uint256_t &balance);
     Account(const Block &block, const Json::Value &value);
@@ -219,7 +219,7 @@ class Chain :
     }
 
     template <typename... Args_>
-    task<std::tuple<typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, const uint256_t &storage, Args_ &&...args) const {
+    task<std::tuple<typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, const Brick<32> &storage, Args_ &&...args) const {
         if (Insecure()) {
             const auto hypothesis(*co_await Parallel(
                 operator ()("eth_getStorageAt", {contract, uint256_t(args), block.height_})...));
@@ -229,9 +229,8 @@ class Chain :
         } else {
             const auto proof(co_await operator ()("eth_getProof", {contract, {Number<uint256_t>(std::forward<Args_>(args))...}, block.height_}));
             std::tuple<typename Result_<Args_>::type...> result;
-            Number<uint256_t> root(proof["storageHash"].asString());
-            orc_assert(storage == root.num<uint256_t>());
-            Get<0, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
+            orc_assert(Number<uint256_t>(proof["storageHash"].asString()) == storage);
+            Get<0, 0>(result, proof["storageProof"], storage, std::forward<Args_>(args)...);
             co_return result;
         }
     }

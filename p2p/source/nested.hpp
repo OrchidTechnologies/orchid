@@ -178,6 +178,9 @@ Nested Explode(Window &&window);
 
 std::string Implode(const Nested &nested);
 
+extern const Brick<32> EmptyScalar;
+extern const Brick<32> EmptyVector;
+
 }
 
 #endif//ORCHID_NESTED_HPP
