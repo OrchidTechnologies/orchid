@@ -100,6 +100,8 @@ class Client :
 
     task<void> Send(const Buffer &data) override;
 
+    virtual Address Recipient() = 0;
+
     void Update();
     uint64_t Benefit();
     Float Spent();

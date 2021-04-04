@@ -82,6 +82,7 @@ struct Report {
     std::optional<Float> cost_;
     Float speed_;
     Host host_;
+    Address recipient_;
     std::string version_;
 };
 
@@ -122,7 +123,7 @@ task<Report> TestOpenVPN(const S<Base> &base, std::string ovpn) {
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{"", std::nullopt, speed, host, ""};
+        co_return Report{"", std::nullopt, speed, host, {}, ""};
     });
 }
 
@@ -133,7 +134,7 @@ task<Report> TestWireGuard(const S<Base> &base, std::string config) {
         remote.Open();
         const auto host(co_await Find(remote));
         const auto [speed, size] = co_await Measure(remote);
-        co_return Report{"", std::nullopt, speed, host, ""};
+        co_return Report{"", std::nullopt, speed, host, {}, ""};
     });
 }
 
@@ -166,9 +167,10 @@ task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> 
             return global->benefit_;
         }());
 
+        const auto recipient(client.Recipient());
         const auto version(co_await Version(*base, provider.locator_));
         const auto cost((spent - balance) / minimum * (1024 * 1024 * 1024));
-        co_return Report{provider.address_.str(), cost, speed, host, version};
+        co_return Report{provider.address_.str(), cost, speed, host, recipient, version};
     });
 }
 
@@ -205,6 +207,11 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
         else
             body << "-.----";
         body << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
+        if (report->recipient_ != Address(0)) {
+            std::ostringstream recipient;
+            recipient << report->recipient_;
+            body << "\n" << std::string(13, ' ') << recipient.str().substr(2);
+        }
         if (!report->version_.empty())
             body << "\n" << std::string(13, ' ') << report->version_;
     } else orc_insist(false);
