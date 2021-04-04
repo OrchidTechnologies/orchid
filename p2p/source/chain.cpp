@@ -64,7 +64,9 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
         }
     }
 
-    orc_assert(false);
+    static Brick<32> empty(HashK(Implode({})));
+    orc_assert(hash == empty);
+    return Nested(0u);
 }
 
 Receipt::Receipt(Json::Value &&value) :
