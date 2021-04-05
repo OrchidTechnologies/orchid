@@ -1,9 +1,15 @@
 #!/bin/bash
 set -e
-if [[ $(autom4te --version | head -n 1) == "autom4te (GNU Autoconf) 2.69" ]]; then
-    unset MAKEFLAGS
-    unset MFLAGS
-    exec env/autogen__.sh "$@"
+
+src=$1
+shift
+cd "${src}"
+
+unset MAKEFLAGS
+unset MFLAGS
+
+if [[ -e ./autogen.sh ]]; then
+    NOCONFIGURE=1 ./autogen.sh "$@"
 else
-    exec docker run --rm -i -v "${PWD%/*}:/mnt" ubuntu:bionic /mnt/env/autogen_.sh "${PWD##*/}" "$@"
+    autoreconf -i
 fi
