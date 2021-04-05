@@ -103,7 +103,7 @@ export class Mocks {
   public lotteryPot(
     balance: number = 1.0, deposit: number = 1.0
   ): LotteryPot {
-    return new LotteryPot(
+    return LotteryPot.from(
       this.signer(),
       this.fundsTokenType.fromNumber(balance * 1e18),
       this.fundsTokenType.fromNumber(deposit * 1e18), null)

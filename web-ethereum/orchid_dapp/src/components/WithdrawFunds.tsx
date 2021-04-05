@@ -29,16 +29,20 @@ export const WithdrawFunds: FC = () => {
   let pot = useContext(AccountContext);
   let {fundsToken} = useContext(WalletProviderContext);
 
+  const v0 = api.eth?.isV0;
+  const targetAddress = v0 ? sendToAddress : wallet?.address;
+  console.log("targetAddress = ", targetAddress);
+
   async function submitWithdrawFunds() {
     const api = OrchidAPI.shared();
     const wallet = api.wallet.value;
     const signer = api.signer.value;
 
-    if (!wallet
+      if (!wallet
       || !signer
       || !api.eth
       || (userEnteredWithdrawAmount == null && !withdrawAll)
-      || sendToAddress == null
+      || targetAddress == null
       || !pot
       || !fundsToken
     ) {
@@ -54,7 +58,7 @@ export const WithdrawFunds: FC = () => {
     try {
       let txId: string;
       if (withdrawAll) {
-        txId = await api.eth.orchidWithdrawFundsAndEscrow(pot, sendToAddress);
+        txId = await api.eth.orchidWithdrawFundsAndEscrow(pot, targetAddress);
       } else {
         if (!userEnteredWithdrawAmount) {
           console.log("error no withdraw amount")
@@ -62,7 +66,7 @@ export const WithdrawFunds: FC = () => {
         }
         const withdrawFunds = fundsToken.fromNumber(userEnteredWithdrawAmount)
         txId = await api.eth.orchidWithdrawFunds(
-          wallet.address, signer.address, sendToAddress, withdrawFunds, pot.balance);
+          wallet.address, signer.address, targetAddress, withdrawFunds, pot.balance);
       }
       await api.updateLotteryPot();
       await api.updateWallet();
@@ -87,9 +91,9 @@ export const WithdrawFunds: FC = () => {
   let submitEnabled: boolean =
     !txRunning
     && !amountError
-    && !addressError
+    && !(addressError && v0)
     && wallet !== null
-    && sendToAddress !== null
+    && targetAddress !== null
     && (withdrawAll || !!withdrawAmount);
 
   return (

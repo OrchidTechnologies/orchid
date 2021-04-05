@@ -25,8 +25,8 @@
 
 namespace orc {
 
-Duplex::Duplex(S<Origin> origin) :
-    origin_(std::move(origin)),
+Duplex::Duplex(S<Base> base) :
+    base_(std::move(base)),
     inner_(Context())
 {
 }

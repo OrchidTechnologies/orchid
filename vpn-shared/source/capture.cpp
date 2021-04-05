@@ -30,6 +30,7 @@
 #include <dns.h>
 
 #include "acceptor.hpp"
+#include "base.hpp"
 #include "boring.hpp"
 #include "datagram.hpp"
 #include "capture.hpp"
@@ -44,7 +45,6 @@
 #include "monitor.hpp"
 #include "network.hpp"
 #include "oracle.hpp"
-#include "origin.hpp"
 #include "port.hpp"
 #include "retry.hpp"
 #include "remote.hpp"
@@ -363,7 +363,7 @@ class Transform :
 {
   private:
     Capture *const capture_;
-    const S<Origin> origin_;
+    const S<Base> base_;
 
     Socket local_;
     asio::ip::address_v4 remote_;
@@ -419,10 +419,10 @@ class Transform :
     }
 
   public:
-    Transform(Capture *capture, S<Origin> origin) :
+    Transform(Capture *capture, S<Base> base) :
         Internal(typeid(*this).name()),
         capture_(capture),
-        origin_(std::move(origin))
+        base_(std::move(base))
     {
     }
 
@@ -572,7 +572,7 @@ task<bool> Transform::Send(const Beam &data) {
                     span,
                     &tcp,
                 this]() mutable noexcept -> task<void> {
-                    if (orc_ignore({ flow->up_ = co_await origin_->Connect(four.Target()); }))
+                    if (orc_ignore({ flow->up_ = co_await base_->Connect(four.Target()); }))
                         Reset(four.Target(), four.Source(), 0, boost::endian::big_to_native(tcp.seq) + 1);
                     else {
                         Forge(span, tcp, socket, local_);
@@ -591,7 +591,7 @@ task<bool> Transform::Send(const Beam &data) {
             auto &punch(udp_[source]);
             if (punch == nullptr) {
                 auto sink(std::make_unique<Sink<Punch, BufferSewer>>(this, source));
-                co_await origin_->Unlid(*sink);
+                co_await base_->Unlid(*sink);
                 punch = std::move(sink);
             }
 
@@ -613,8 +613,8 @@ task<bool> Transform::Send(const Beam &data) {
     co_return false;
 }
 
-void Capture::Start(S<Origin> origin) {
-    auto transform(std::make_unique<Covered<Transform>>(this, std::move(origin)));
+void Capture::Start(S<Base> base) {
+    auto transform(std::make_unique<Covered<Transform>>(this, std::move(base)));
     transform->Connect(local_);
     internal_ = std::move(transform);
 }
@@ -675,7 +675,7 @@ static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueCon
     return JS_ThrowInternalError(context, "%s", error.what());
 } }
 
-static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network, const S<Origin> &origin, const Host &local, unsigned hop, const boost::filesystem::path &group, const Locator &locator, const S<Updated<Prices>> &oracle, const Token &oxt) { orc_block({
+static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network, const S<Base> &base, const Host &local, unsigned hop, const boost::filesystem::path &group, const Locator &locator, const S<Updated<Prices>> &oracle, const Token &oxt) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
@@ -685,10 +685,10 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         const auto secret(orc_value(return, Bless<Secret>(heap.eval<std::string>(hops + ".secret")), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
-        auto chain(co_await Chain::New({locator, origin}, {}, uint256_t(heap.eval<double>(hops + ".chainid", 1))));
+        auto chain(co_await Chain::New({locator, base}, {}, uint256_t(heap.eval<double>(hops + ".chainid", 1))));
         const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
         auto &client(*co_await Client0::Wire(sunk, oracle, oxt, lottery, secret, funder));
-        co_await client.Open(provider, origin);
+        co_await client.Open(provider, base);
 
     } else if (protocol == "orch1d") {
         const Address lottery(heap.eval<std::string>(hops + ".lottery", "0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82"));
@@ -699,17 +699,17 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
         Locator locator(heap.eval<std::string>(hops + ".rpc"));
         std::string currency(heap.eval<std::string>(hops + ".currency"));
-        auto &client(*co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, chain, origin, std::move(locator), std::move(currency)), lottery, secret, funder));
-        co_await client.Open(provider, origin);
+        auto &client(*co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, chain, base, std::move(locator), std::move(currency)), lottery, secret, funder));
+        co_await client.Open(provider, base);
 
     } else if (protocol == "openvpn") {
-        co_await Connect(sunk, origin, local.operator uint32_t(),
+        co_await Connect(sunk, base, local.operator uint32_t(),
             heap.eval<std::string>(hops + ".ovpnfile"),
             heap.eval<std::string>(hops + ".username"),
             heap.eval<std::string>(hops + ".password")
         );
     } else if (protocol == "wireguard") {
-        co_await Guard(sunk, origin, local.operator uint32_t(), heap.eval<std::string>(hops + ".config"));
+        co_await Guard(sunk, base, local.operator uint32_t(), heap.eval<std::string>(hops + ".config"));
     } else orc_assert_(false, "unknown hop protocol: " << protocol);
 }, "building hop #" << hop); }
 
@@ -743,7 +743,7 @@ void Capture::Start(const std::string &path) {
     if (!analysis.empty())
         analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
 
-    S<Origin> local(Break<Local>());
+    S<Base> local(Break<Local>());
 
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0) {
@@ -774,16 +774,16 @@ void Capture::Start(const std::string &path) {
         const unsigned milliseconds(5*60*1000);
         const auto [oracle, oxt] = *co_await Parallel(Oracle(milliseconds, chain), Token::OXT(5*60*1000, chain));
 
-        auto origin(local);
+        auto base(local);
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<BufferSink<Remote>>());
-            co_await Single(*remote, heap, network, origin, remote->Host(), i, group, locator, oracle, oxt);
+            co_await Single(*remote, heap, network, base, remote->Host(), i, group, locator, oracle, oxt);
             remote->Open();
-            origin = std::move(remote);
+            base = std::move(remote);
         }
 
-        co_await Single(sunk, heap, network, origin, host, hops - 1, group, locator, oracle, oxt);
+        co_await Single(sunk, heap, network, base, host, hops - 1, group, locator, oracle, oxt);
         locked_()->connected_ = true;
     });
 

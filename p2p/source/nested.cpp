@@ -138,4 +138,8 @@ Nested Explode(Window &&window) {
     return nested;
 }
 
+// XXX: "" should be {} once I fix Hash overloads
+const Brick<32> EmptyScalar(HashK(""));
+const Brick<32> EmptyVector(HashK(Implode({})));
+
 }

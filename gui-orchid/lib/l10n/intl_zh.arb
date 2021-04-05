@@ -259,7 +259,6 @@
 	"active": "活性",
 	"addCredit": "添加积分",
 	"advancedConfiguration": "进阶设定",
-	"allPurchasedAccountsUseThe": "所有购买的帐户都使用",
 	"backingItUp": "备份它",
 	"balance": "平衡",
 	"bandwidthCost": "带宽成本",
@@ -292,10 +291,8 @@
 	"orchidIsOnXdai": "兰花在xDai上！",
 	"pasteAnOrchidKeyFromTheClipboardToImportAll": "从剪贴板粘贴一个Orchid密钥，以导入与该密钥关联的所有Orchid帐户。",
 	"payPerUseVpnService": "按使用付费VPN服务",
-	"preferredProviders": "首选提供者",
 	"protectYourTraffic": "保护您的交通",
 	"pullToRefresh": "拉刷新。",
-	"purchasedCreditAccountsConnectExclusivelyToOur": "购买的信用帐户仅与我们的帐户相关",
 	"scanOrPasteAnOrchidKeyFromTheClipboardTo": "从剪贴板扫描或粘贴一个Orchid密钥，以导入与该密钥关联的所有Orchid帐户。",
 	"seeOrchidcomForHelp": "请访问orchid.com获取帮助。",
 	"seeYourActiveAccountBalanceAndBandwidthCostOnThe": "在主屏幕上查看您的有效帐户余额和带宽费用。",
@@ -314,7 +311,6 @@
 	"weRecommend": "我们推荐",
 	"whatsNewInOrchid": "兰花新功能",
 	"xdaiAccountsForPastPurchases": "xDai记录了过去的购买",
-	"xdaiCryptocurrency": "xDai加密货币",
 	"youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "您现在可以在xDai上购买Orchid积分！只需$ 1美元即可开始使用VPN。",
 	"yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "您的购买已完成，并且正在由xDai区块链处理，这可能需要一分钟，有时甚至更长的时间。下拉以刷新，余额更新后的帐户将显示在下方。"
 }

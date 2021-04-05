@@ -193,3 +193,6 @@
 [submodule "bech32"]
 	path = p2p/bech32
 	url = https://github.com/sipa/bech32.git
+[submodule "pugixml"]
+	path = p2p/pugixml
+	url = https://github.com/zeux/pugixml.git

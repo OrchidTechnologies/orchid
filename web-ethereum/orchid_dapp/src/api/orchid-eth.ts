@@ -43,9 +43,9 @@ export interface OrchidEthereumAPI {
 
   orchidWithdrawFundsAndEscrow(pot: LotteryPot, targetAddress: EthAddress): Promise<string>
 
-  orchidLock(funder: EthAddress, signer: EthAddress): Promise<string>
+  orchidLock(pot: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string>
 
-  orchidUnlock(funder: EthAddress, signer: EthAddress, amount: LotFunds): Promise<string>
+  orchidUnlock(pot: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string>
 
   orchidStakeFunds(funder: EthAddress, stakee: EthAddress, amount: LotFunds, wallet: Wallet, delay: BigInt): Promise<string>
 

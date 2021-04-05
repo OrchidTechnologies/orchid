@@ -3,6 +3,8 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get -y install autoconf gettext git-core libtool
+src=$1
+shift
 cd /mnt
-# XXX: run autogen__.sh
-NOCONFIGURE=1 ./autogen.sh
+cd "${src}"
+exec env/autogen__.sh "$@"

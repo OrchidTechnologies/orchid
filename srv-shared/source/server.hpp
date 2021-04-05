@@ -40,10 +40,10 @@
 
 namespace orc {
 
+class Base;
 class Cashier;
 class Croupier;
 struct Market;
-class Origin;
 
 class Server :
     public Valve,
@@ -105,7 +105,7 @@ class Server :
     task<void> Open(Pipe<Buffer> &pipe);
     task<void> Shut() noexcept override;
 
-    task<std::string> Respond(const S<Origin> &origin, const std::string &offer, std::vector<std::string> ice);
+    task<std::string> Respond(const S<Base> &base, const std::string &offer, std::vector<std::string> ice);
 };
 
 std::string Filter(bool answer, const std::string &serialized);

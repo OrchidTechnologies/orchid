@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/generated/l10n.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/common/link_text.dart';
+import 'package:styled_text/action_text_style.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AppText {
   static TextStyle headerStyle = TextStyle(
@@ -192,5 +194,47 @@ class AppText {
       url:
           'https://docs.orchid.com/en/latest/accounts/#technical-parts-of-an-orchid-account',
     );
+  }
+}
+
+// Extension using the style_text package.
+// Create a tappable link using our default link style.
+class LinkTextStyle extends ActionTextStyle {
+  static LinkTextStyle link(String url, {style: TextStyle}) {
+    return LinkTextStyle(
+        style: style ?? AppText.linkStyle,
+        onTap: (text, attributes) => launch(url, forceSafariVC: false));
+  }
+
+  LinkTextStyle({
+    TextStyle style,
+    ActionTappedCallback onTap,
+  }) : super(
+          inherit: style.inherit,
+          color: style.color,
+          fontSize: style.fontSize,
+          fontWeight: style.fontWeight,
+          fontStyle: style.fontStyle,
+          letterSpacing: style.letterSpacing,
+          wordSpacing: style.wordSpacing,
+          textBaseline: style.textBaseline,
+          height: style.height,
+          locale: style.locale,
+          foreground: style.foreground,
+          background: style.background,
+          shadows: style.shadows,
+          decoration: style.decoration,
+          decorationColor: style.decorationColor,
+          decorationStyle: style.decorationStyle,
+          debugLabel: style.debugLabel,
+          fontFamily: style.fontFamily,
+          fontFamilyFallback: style.fontFamilyFallback,
+          onTap: onTap,
+        );
+}
+
+extension LinkTextStyleExtensions on TextStyle {
+  LinkTextStyle link(String url) {
+    return LinkTextStyle.link(url, style: this);
   }
 }

@@ -31,12 +31,12 @@ class TrezorSession :
     public Valve
 {
   private:
-    const S<Origin> origin_;
+    const S<Base> base_;
     const std::string session_;
 
   public:
-    TrezorSession(S<Origin> origin, std::string session);
-    static task<S<TrezorSession>> New(S<Origin> origin);
+    TrezorSession(S<Base> base, std::string session);
+    static task<S<TrezorSession>> New(S<Base> base);
     task<void> Shut() noexcept override;
 
     template <uint16_t Type_, typename Response_, typename Request_>

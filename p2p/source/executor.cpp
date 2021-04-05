@@ -29,7 +29,7 @@ namespace orc {
 
 task<Bytes32> Executor::Send(const Chain &chain, Execution execution, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const { orc_block({
     const auto bid(execution.bid ? *execution.bid : co_await chain.Bid());
-    co_return co_await Send(chain, execution.nonce, bid, execution.gas ? *execution.gas : To((co_await chain("eth_estimateGas", {Multi{
+    co_return co_await Send(chain, execution.nonce, bid, execution.gas ? *execution.gas : To<uint64_t>((co_await chain("eth_estimateGas", {Multi{
         {"from", operator Address()},
         {"gasPrice", bid},
         {"to", target},

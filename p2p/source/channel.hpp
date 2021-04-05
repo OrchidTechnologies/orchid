@@ -33,7 +33,7 @@
 
 namespace orc {
 
-class Origin;
+class Base;
 class Peer;
 class Socket;
 
@@ -51,7 +51,7 @@ class Channel :
     Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel);
     Channel(BufferDrain &drain, const S<Peer> &peer, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string());
 
-    static task<Socket> Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
+    static task<Socket> Wire(BufferSunk &sunk, S<Base> base, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
 
     ~Channel() override;
 
@@ -67,7 +67,7 @@ class Channel :
     task<void> Send(const Buffer &data) override;
 };
 
-task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice);
+task<std::string> Description(const S<Base> &base, std::vector<std::string> ice);
 
 }
 

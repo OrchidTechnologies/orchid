@@ -45,14 +45,14 @@ namespace orc {
 
 namespace po = boost::program_options;
 
-S<Origin> origin_;
+S<Base> base_;
 S<Chain> chain_;
 S<Executor> executor_;
 std::string currency_;
 uint256_t multiple_ = 1;
 std::optional<uint256_t> nonce_;
 std::optional<uint64_t> gas_;
-Locator rpc_{"http", "127.0.0.1", "8545", "/"};
+Locator rpc_{{"http", "127.0.0.1", "8545"}, "/"};
 
 class Args :
     public std::deque<std::string>
@@ -135,7 +135,13 @@ static Decimal _(std::string_view arg) {
 template <>
 struct Option<uint64_t> {
 static uint64_t _(std::string_view arg) {
-    return To(arg);
+    return To<uint64_t>(arg);
+} };
+
+template <>
+struct Option<int> {
+static int _(std::string_view arg) {
+    return To<int>(arg);
 } };
 
 template <>
@@ -243,9 +249,9 @@ static cppcoro::shared_task<S<Executor>> _(std::string arg) {
                 flag = true;
                 index = index.substr(0, index.size() - 1);
             }
-            indices.push_back(To(index) | (flag ? 1 << 31 : 0));
+            indices.push_back(To<uint32_t>(index) | (flag ? 1 << 31 : 0));
         }
-        auto session(co_await TrezorSession::New(origin_));
+        auto session(co_await TrezorSession::New(base_));
         auto executor(co_await TrezorExecutor::New(std::move(session), indices));
         co_return std::move(executor);
     } else if (arg.size() == 64)
@@ -303,8 +309,8 @@ task<int> Main(int argc, const char *const argv[]) { try {
         ORC_PARAM(verbose,flags.,_)
     } }());
 
-    origin_ = Break<Local>();
-    chain_ = co_await Chain::New(Endpoint{rpc_, origin_}, flags);
+    base_ = Break<Local>();
+    chain_ = co_await Chain::New(Endpoint{rpc_, base_}, flags);
 
     if (executor.empty())
         executor_ = Make<MissingExecutor>();
@@ -342,6 +348,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<bool, Address, uint256_t> approve("approve");
         std::cout << (co_await executor_->Send(*chain_, {}, token, 0, approve(recipient, amount))).hex() << std::endl;
 
+    } else if (command == "avax") {
+        // https://docs.avax.network/build/references/cryptographic-primitives
+        const auto [key] = Options<Key>(args);
+        std::cout << ToSegwit("avax", -1, HashR(Hash2(ToCompressed(key)))) << std::endl;
+
     } else if (command == "balance") {
         const auto [token, address] = Options<Address, Address>(args);
         static Selector<uint256_t, Address> balanceOf("balanceOf");
@@ -353,7 +364,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "binance") {
         const auto [pair] = Options<std::string>(args);
-        std::cout << co_await Binance(*origin_, pair, 1) << std::endl;
+        std::cout << co_await Binance(*base_, pair, 1) << std::endl;
 
     } else if (command == "block") {
         const auto [height] = Options<uint64_t>(args);
@@ -556,8 +567,18 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "p2pkh") {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-        const auto [data] = Options<Bytes>(args);
-        std::cout << ToBase58Check(Tie('\x00', HashR(Hash2(ToCompressed(Derive(data)))))) << std::endl;
+        const auto [key] = Options<Key>(args);
+        std::cout << ToBase58Check(Tie('\x00', HashR(Hash2(ToCompressed(key))))) << std::endl;
+
+    } else if (command == "p2wpkh") {
+        // https://bitcointalk.org/index.php?topic=4992632.0
+        const auto [key] = Options<Key>(args);
+        std::cout << ToSegwit("bc", 0, HashR(Hash2(ToCompressed(key)))) << std::endl;
+
+    } else if (command == "p2wsh") {
+        // https://bitcointalk.org/index.php?topic=5227953
+        const auto [key] = Options<Key>(args);
+        std::cout << ToSegwit("bc", 0, Hash2(Tie(uint8_t(0x21), ToCompressed(key), uint8_t(0xac)))) << std::endl;
 
     } else if (command == "read") {
         const auto [contract, slot] = Options<Address, uint256_t>(args);
@@ -581,9 +602,8 @@ task<int> Main(int argc, const char *const argv[]) { try {
         std::cout << Explode(data) << std::endl;
 
     } else if (command == "segwit") {
-        // https://bitcointalk.org/index.php?topic=4992632.0
-        const auto [data] = Options<Bytes>(args);
-        std::cout << ToSegwit(HashR(Hash2(data))) << std::endl;
+        const auto [prefix, version, key] = Options<std::string, int, Key>(args);
+        std::cout << ToSegwit(prefix, version, HashR(Hash2(ToCompressed(key)))) << std::endl;
 
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
@@ -658,7 +678,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "value") {
         const auto [address] = Options<Address>(args);
         const auto [account] = co_await chain_->Get(co_await block(), address, nullptr);
-        std::cout << Float(account.balance_) * co_await Binance(*origin_, currency_ + "USDT", Ten18) << std::endl;
+        std::cout << Float(account.balance_) * co_await Binance(*base_, currency_ + "USDT", Ten18) << std::endl;
 
     } else if (command == "verify") {
         auto [height] = Options<uint64_t>(args);

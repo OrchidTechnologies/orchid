@@ -325,7 +325,7 @@ struct Tester {
     }
 
     task<void> Test() {
-        const auto lottery1((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<uint64_t>(Bless(Load("../lot-ethereum/build/OrchidLottery1.bin")))(0)))).contract_);
+        const auto lottery1((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Constructor<uint64_t>(Bless(Load("../lot-ethereum/build/OrchidLottery1.bin")))(0)))).contract_);
 
 #if 1
         static Selector<void, bool, std::vector<Address>> enroll("enroll");
@@ -340,7 +340,7 @@ struct Tester {
         static Selector<void, Address, uint256_t, Bytes> transferAndCall("transferAndCall");
 
       token:
-        const auto token((co_await Receipt(co_await customer_.Send(chain_, {}, std::nullopt, 0, Contract<>(Bless(Load("../tok-ethereum/build/OrchidToken677.bin")))()))).contract_);
+        const auto token((co_await Receipt(co_await customer_.Send(chain_, {}, std::nullopt, 0, Constructor<>(Bless(Load("../tok-ethereum/build/OrchidToken677.bin")))()))).contract_);
         if (Zeros(token.buf()))
             goto token;
 
@@ -354,9 +354,9 @@ struct Tester {
         if (Zeros(signer.buf()))
             goto secret;
 
-        const auto lottery0((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<Address>(Bless(Load("../lot-ethereum/build/OrchidLottery0.bin")))(token)))).contract_);
+        const auto lottery0((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Constructor<Address>(Bless(Load("../lot-ethereum/build/OrchidLottery0.bin")))(token)))).contract_);
 #if 1
-        const auto verifier((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Contract<>(Bless(Load("../lot-ethereum/build/OrchidPassword.bin")))()))).contract_);
+        const auto verifier((co_await Receipt(co_await deployer_.Send(chain_, {}, std::nullopt, 0, Constructor<>(Bless(Load("../lot-ethereum/build/OrchidPassword.bin")))()))).contract_);
         static Selector<void, Address, Address, Bytes> bind0("bind");
         co_await Audit("bind", co_await customer_.Send(chain_, {}, lottery0, 0, bind0(signer, verifier, {})));
         const Bytes receipt("password");
@@ -426,8 +426,8 @@ task<int> Main(int argc, const char *const argv[]) {
         co_return 0;
     }
 
-    const auto origin(Break<Local>());
-    const auto chain(co_await Chain::New({args["rpc"].as<std::string>(), origin}, {}));
+    const auto base(Break<Local>());
+    const auto chain(co_await Chain::New({args["rpc"].as<std::string>(), base}, {}));
 
     std::vector<UnlockedExecutor> accounts;
     for (const auto &account : co_await (*chain)("personal_listAccounts", {})) {

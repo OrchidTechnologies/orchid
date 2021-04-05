@@ -23,6 +23,9 @@
 #ifndef ORCHID_LOTTERY_HPP
 #define ORCHID_LOTTERY_HPP
 
+#include <map>
+#include <optional>
+
 #include "float.hpp"
 #include "integer.hpp"
 #include "signed.hpp"
@@ -31,17 +34,25 @@
 
 namespace orc {
 
-#if 0
+typedef std::tuple<Address, Address> Pot;
+
 class Lottery :
     public Valve
 {
+  protected:
+    // XXX: locking
+    std::map<Pot, std::optional<std::pair<uint128_t, uint64_t>>> cache_;
+
+    virtual task<uint128_t> Check_(const Address &signer, const Address &funder, const Address &recipient) = 0;
+
   public:
     Lottery(const char *type) :
         Valve(type)
     {
     }
+
+    task<uint128_t> Check(const Address &signer, const Address &funder, const Address &recipient);
 };
-#endif
 
 inline uint256_t Convert(const Float &balance) {
     return Complement(checked_int256_t(balance));

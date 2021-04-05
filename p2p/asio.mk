@@ -20,6 +20,7 @@
 
 boost := 
 boost += algorithm
+boost += align
 boost += any
 boost += array
 boost += asio
@@ -34,6 +35,7 @@ boost += core
 boost += date_time
 boost += detail
 boost += endian
+boost += exception
 boost += filesystem
 boost += foreach
 boost += function
@@ -43,6 +45,7 @@ boost += integer
 boost += intrusive
 boost += io
 boost += iterator
+boost += json
 boost += lexical_cast
 boost += logic
 boost += math

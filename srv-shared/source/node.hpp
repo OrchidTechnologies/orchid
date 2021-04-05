@@ -37,7 +37,7 @@ class Croupier;
 
 class Node final {
   private:
-    const S<Origin> origin_;
+    const S<Base> base_;
     const S<Cashier> cashier_;
     const S<Croupier> croupier_;
     const S<Egress> egress_;
@@ -48,8 +48,8 @@ class Node final {
     }; Locked<Locked_> locked_;
 
   public:
-    Node(S<Origin> origin, S<Cashier> cashier, S<Croupier> croupier, S<Egress> egress, std::vector<std::string> ice) :
-        origin_(std::move(origin)),
+    Node(S<Base> base, S<Cashier> cashier, S<Croupier> croupier, S<Egress> egress, std::vector<std::string> ice) :
+        base_(std::move(base)),
         cashier_(std::move(cashier)),
         croupier_(std::move(croupier)),
         egress_(std::move(egress)),

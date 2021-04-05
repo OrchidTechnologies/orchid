@@ -498,11 +498,11 @@ void Remote::Stop(const std::string &error) noexcept {
     netifapi_netif_set_link_down(&interface_);
     netifapi_netif_set_down(&interface_);
     netifapi_netif_remove(&interface_);
-    Origin::Stop();
+    Base::Stop();
 }
 
 Remote::Remote(const class Host &host) :
-    Origin(typeid(*this).name(), std::make_unique<Assistant>(host)),
+    Base(typeid(*this).name(), std::make_unique<Assistant>(host)),
     host_(host)
 {
     static bool setup(false);

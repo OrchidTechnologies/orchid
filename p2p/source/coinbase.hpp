@@ -30,9 +30,9 @@
 
 namespace orc {
 
-class Origin;
+class Base;
 
-task<Float> Coinbase(Origin &origin, const std::string &pair, const Float &adjust = Ten18);
+task<Float> Coinbase(Base &base, const std::string &pair, const Float &adjust = Ten18);
 
 }
 

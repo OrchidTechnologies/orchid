@@ -105,8 +105,8 @@ class Link :
 using BufferDrain = Drain<const Buffer &>;
 using BufferSunk = Sunk<BufferDrain, Pump<Buffer>>;
 
-template <typename Base_>
-using BufferSink = Sink<Base_, BufferDrain>;
+template <typename Super_>
+using BufferSink = Sink<Super_, BufferDrain>;
 
 }
 

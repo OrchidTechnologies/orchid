@@ -47,8 +47,8 @@ orc_trace();
     }
 
   public:
-    Actor(S<Origin> origin, Configuration configuration) :
-        Peer(std::move(origin), std::move(configuration))
+    Actor(S<Base> base, Configuration configuration) :
+        Peer(std::move(base), std::move(configuration))
     {
     }
 
@@ -81,8 +81,8 @@ Channel::Channel(BufferDrain &drain, const S<Peer> &peer, int id, const std::str
 {
 }
 
-task<Socket> Channel::Wire(BufferSunk &sunk, S<Origin> origin, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
-    const auto client(Make<Actor>(std::move(origin), std::move(configuration)));
+task<Socket> Channel::Wire(BufferSunk &sunk, S<Base> base, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
+    const auto client(Make<Actor>(std::move(base), std::move(configuration)));
     auto &channel(sunk.Wire<Channel>(client));
     const auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);
@@ -259,10 +259,10 @@ task<void> Channel::Send(const Buffer &data) {
 #endif
 }
 
-task<std::string> Description(const S<Origin> &origin, std::vector<std::string> ice) {
+task<std::string> Description(const S<Base> &base, std::vector<std::string> ice) {
     Configuration configuration;
     configuration.ice_ = std::move(ice);
-    const auto client(Make<Actor>(origin, std::move(configuration)));
+    const auto client(Make<Actor>(base, std::move(configuration)));
     const auto stopper(Break<BufferSink<Stopper>>());
     stopper->Wire<Channel>(client);
     co_return co_await client->Offer();

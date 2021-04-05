@@ -25,16 +25,16 @@
 #include <dns.h>
 #include <mappings.h>
 
+#include "base.hpp"
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
 #include "json.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 
 namespace orc {
 
-task<std::vector<asio::ip::tcp::endpoint>> Origin::Resolve(const std::string &host, const std::string &port) { orc_block({
+task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host, const std::string &port) { orc_block({
     if (host == "localhost")
         co_return co_await Resolve("127.0.0.1", port);
 
@@ -63,8 +63,8 @@ task<std::vector<asio::ip::tcp::endpoint>> Origin::Resolve(const std::string &ho
     co_return results;
 }, "resolving " << host << ":" << port); }
 
-cppcoro::shared_task<std::string> Origin::Resolve_(Origin &origin, const std::string &host) {
-    co_return (co_await origin.Fetch("GET", {"https", "1.0.0.1", "443", "/dns-query?type=A&name=" + host}, {
+cppcoro::shared_task<std::string> Base::Resolve_(Base &base, const std::string &host) {
+    co_return (co_await base.Fetch("GET", {{"https", "1.0.0.1", "443"}, "/dns-query?type=A&name=" + host}, {
         {"accept", "application/dns-json"}
     }, {})).ok();
 }

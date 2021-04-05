@@ -4,9 +4,15 @@ import {GasFunds, LotFunds} from "./orchid-eth-token-types";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 
-export type EthAddress = string;
 export type Secret = string;
 export type TransactionId = string;
+
+// TODO: Migrate
+export type EthAddress = string;
+
+export class EthereumAddress {
+  static zeroString = '0x0000000000000000000000000000000000000000';
+}
 
 export class Wallet {
   public address: EthAddress;
@@ -54,17 +60,22 @@ export interface EthereumKey {
 
 /// A Lottery Pot containing funds against which lottery tickets are issued.
 export class LotteryPot {
-  public signer: Signer;
-  public unlock: Date | null;
+  public signer: Signer
+  public unlock: Date | null
+  public warned: LotFunds | null
   public balance: LotFunds
   public escrow: LotFunds
 
-  constructor(signer: Signer, balance: LotFunds, escrow: LotFunds, unlock: Date | null) {
-    this.signer = signer;
+  static from(signer: Signer, balance: LotFunds, escrow: LotFunds, unlock: Date | null): LotteryPot {
+    return new LotteryPot(signer, balance, escrow, unlock, null);
+  }
+
+  constructor(signer: Signer, balance: LotFunds, escrow: LotFunds, unlock: Date | null, warned: LotFunds | null) {
     this.signer = signer;
     this.balance = balance;
     this.escrow = escrow;
     this.unlock = unlock;
+    this.warned = warned;
   }
 
   get isLocked(): boolean {
@@ -100,8 +111,7 @@ export class LotteryPotUpdateEvent {
     timeStamp: Date,
     gasPrice: string,
     gasUsed: number,
-    transactionHash: string)
-  {
+    transactionHash: string) {
     this.balance = balance;
     this.balanceChange = balanceChange;
     this.escrow = escrow;

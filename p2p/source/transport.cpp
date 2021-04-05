@@ -59,7 +59,7 @@ class Transport :
     public Sunken<Pump<Buffer>>
 {
   private:
-    const S<Origin> origin_;
+    const S<Base> base_;
     const openvpn::ExternalTransport::Config config_;
 
     openvpn_io::io_context &context_;
@@ -95,9 +95,9 @@ class Transport :
     }
 
   public:
-    Transport(S<Origin> origin, openvpn::ExternalTransport::Config config, openvpn_io::io_context &context, openvpn::TransportClientParent *parent) :
+    Transport(S<Base> base, openvpn::ExternalTransport::Config config, openvpn_io::io_context &context, openvpn::TransportClientParent *parent) :
         Covered(typeid(*this).name()),
-        origin_(std::move(origin)),
+        base_(std::move(base)),
         config_(std::move(config)),
         context_(context),
         parent_(parent),
@@ -119,9 +119,9 @@ class Transport :
             const auto remote(config_.remote_list->first_item());
             orc_assert(remote != nullptr);
 
-            const auto endpoints(co_await origin_->Resolve(remote->server_host, remote->server_port));
+            const auto endpoints(co_await base_->Resolve(remote->server_host, remote->server_port));
             for (const auto &endpoint : endpoints) {
-                co_await origin_->Associate(sunk, endpoint);
+                co_await base_->Associate(sunk, endpoint);
                 break;
             }
 
@@ -211,18 +211,18 @@ class Factory :
     public openvpn::TransportClientFactory
 {
   private:
-    S<Origin> origin_;
+    S<Base> base_;
     openvpn::ExternalTransport::Config config_;
 
   public:
-    Factory(S<Origin> origin, const openvpn::ExternalTransport::Config &config) :
-        origin_(std::move(origin)),
+    Factory(S<Base> base, const openvpn::ExternalTransport::Config &config) :
+        base_(std::move(base)),
         config_(config)
     {
     }
 
     openvpn::TransportClient::Ptr new_transport_client_obj(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) noexcept override {
-        openvpn::RCPtr transport(new BufferSink<Transport>(origin_, config_, context, parent));
+        openvpn::RCPtr transport(new BufferSink<Transport>(base_, config_, context, parent));
         transport->Open(*transport);
         return transport;
     }
@@ -327,7 +327,7 @@ class Middle :
     };
 
   private:
-    const S<Origin> origin_;
+    const S<Base> base_;
     const uint32_t local_;
 
     uint32_t remote_ = 0;
@@ -347,15 +347,15 @@ class Middle :
     }
 
   public:
-    Middle(BufferDrain &drain, S<Origin> origin, uint32_t local) :
+    Middle(BufferDrain &drain, S<Base> base, uint32_t local) :
         Link<Buffer>(typeid(*this).name(), drain),
-        origin_(std::move(origin)),
+        base_(std::move(base)),
         local_(local)
     {
     }
 
     openvpn::TransportClientFactory *new_transport_factory(const openvpn::ExternalTransport::Config &config) noexcept override {
-        return new orc::Factory(origin_, config);
+        return new orc::Factory(base_, config);
     }
 
     openvpn::TunClientFactory *new_tun_factory(const openvpn::ExternalTun::Config &config, const openvpn::OptionList &options) noexcept override {
@@ -495,8 +495,8 @@ class Middle :
     }
 };
 
-task<void> Connect(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string file, std::string username, std::string password) {
-    auto &middle(sunk.Wire<Middle>(std::move(origin), local));
+task<void> Connect(BufferSunk &sunk, S<Base> base, uint32_t local, std::string file, std::string username, std::string password) {
+    auto &middle(sunk.Wire<Middle>(std::move(base), local));
     co_await middle.Connect(std::move(file), std::move(username), std::move(password));
 }
 

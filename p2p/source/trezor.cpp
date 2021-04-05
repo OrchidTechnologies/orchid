@@ -32,29 +32,29 @@ namespace orc {
 namespace tzr = hw::trezor::messages;
 #define ORC_TREZOR(type) Call<tzr::MessageType_##type, tzr::ethereum::type>
 
-static task<std::string> Trezor(const S<Origin> &origin, const std::string &path, const std::string &data = {}) {
-    co_return (co_await origin->Fetch("POST", {"http", "localhost", "21325", path}, {
+static task<std::string> Trezor(const S<Base> &base, const std::string &path, const std::string &data = {}) {
+    co_return (co_await base->Fetch("POST", {{"http", "localhost", "21325"}, path}, {
         {"origin", "https://connect.trezor.io"},
     }, data)).ok();
 }
 
-TrezorSession::TrezorSession(S<Origin> origin, std::string session) :
+TrezorSession::TrezorSession(S<Base> base, std::string session) :
     Valve(typeid(*this).name()),
-    origin_(std::move(origin)),
+    base_(std::move(base)),
     session_(std::move(session))
 {
 }
 
-task<S<TrezorSession>> TrezorSession::New(S<Origin> origin) {
-    const auto devices(Parse(co_await Trezor(origin, "/enumerate")));
+task<S<TrezorSession>> TrezorSession::New(S<Base> base) {
+    const auto devices(Parse(co_await Trezor(base, "/enumerate")));
     const auto device(devices[0]);
     const auto previous(device["session"]);
-    const auto session(Parse(co_await Trezor(origin, "/acquire/" + device["path"].asString() + "/" + (previous.isNull() ? "null" : previous.asString()))));
-    co_return Break<TrezorSession>(std::move(origin), session["session"].asString());
+    const auto session(Parse(co_await Trezor(base, "/acquire/" + device["path"].asString() + "/" + (previous.isNull() ? "null" : previous.asString()))));
+    co_return Break<TrezorSession>(std::move(base), session["session"].asString());
 }
 
 task<void> TrezorSession::Shut() noexcept {
-    co_await Trezor(origin_, "/release/" + session_);
+    co_await Trezor(base_, "/release/" + session_);
     co_await Valve::Shut();
 }
 
@@ -65,7 +65,7 @@ task<Response_> TrezorSession::Call(uint16_t type, const Request_ &request) cons
     orc_assert(!data.empty());
 
   retry:
-    data = co_await Trezor(origin_, "/call/" + session_, Tie(type, uint32_t(data.size()), data).hex(false));
+    data = co_await Trezor(base_, "/call/" + session_, Tie(type, uint32_t(data.size()), data).hex(false));
     const auto output(Bless(data));
     Window window(output.subset(0, 6));
     const auto [kind, size] = Take<uint16_t, uint32_t>(output.subset(0, 6));

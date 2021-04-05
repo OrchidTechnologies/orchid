@@ -23,6 +23,7 @@
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
+#include <openssl/md5.h>
 #include <openssl/objects.h>
 #include <openssl/ripemd.h>
 #include <openssl/sha.h>
@@ -76,6 +77,20 @@ Brick<32> Hash2(const Buffer &data) {
     return hash;
 }
 
+Brick<20> Hash1(const Buffer &data) {
+    SHA_CTX context;
+    SHA1_Init(&context);
+
+    data.each([&](const uint8_t *data, size_t size) {
+        SHA1_Update(&context, data, size);
+        return true;
+    });
+
+    Brick<SHA_DIGEST_LENGTH> hash;
+    SHA1_Final(hash.data(), &context);
+    return hash;
+}
+
 Brick<20> HashR(const Buffer &data) {
     RIPEMD160_CTX context;
     RIPEMD160_Init(&context);
@@ -87,6 +102,20 @@ Brick<20> HashR(const Buffer &data) {
 
     Brick<RIPEMD160_DIGEST_LENGTH> hash;
     RIPEMD160_Final(hash.data(), &context);
+    return hash;
+}
+
+Brick<16> Hash5(const Buffer &data) {
+    MD5_CTX context;
+    MD5_Init(&context);
+
+    data.each([&](const uint8_t *data, size_t size) {
+        MD5_Update(&context, data, size);
+        return true;
+    });
+
+    Brick<MD5_DIGEST_LENGTH> hash;
+    MD5_Final(hash.data(), &context);
     return hash;
 }
 

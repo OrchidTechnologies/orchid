@@ -72,6 +72,8 @@ class Client0 :
 
     uint128_t Face();
     uint64_t Gas();
+
+    Address Recipient() override;
 };
 
 }
