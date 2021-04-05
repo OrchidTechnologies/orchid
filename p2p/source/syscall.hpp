@@ -25,18 +25,23 @@
 
 #include "error.hpp"
 
-#define orc_syscall(expr, ...) [&] { for (;;) { \
-    auto _value(expr); \
+// XXX: this is *ridiculous*, but lambdas break structured binding :/
+
+#define orc_syscall(expr, ...) ({ decltype(expr) _value; for (;;) { \
+    _value = (expr); \
     if ((long) _value != -1) \
-        return _value; \
+        break; \
     int error(errno); \
     if (error == EINTR) \
         continue; \
-    for (auto success : std::initializer_list<long>({__VA_ARGS__})) \
+    _value = 0; \
+    for (auto success : std::initializer_list<long>{__VA_ARGS__}) \
         if (error == success) \
-            return (decltype(expr)) -success; \
+            _value = (decltype(expr)) -success; \
+    if (_value != 0) \
+        break; \
     orc_throw("\"" << strerror(error) << "\" calling " << #expr); \
-} }()
+} _value; })
 
 #define orc_packed \
     __attribute__((__packed__))
