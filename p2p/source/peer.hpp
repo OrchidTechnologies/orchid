@@ -25,11 +25,11 @@
 
 #include <api/peer_connection_interface.h>
 
+#include "base.hpp"
 #include "configuration.hpp"
 #include "error.hpp"
 #include "event.hpp"
 #include "link.hpp"
-#include "origin.hpp"
 #include "threads.hpp"
 
 struct socket;
@@ -78,7 +78,7 @@ class Peer :
     friend class Channel;
 
   private:
-    const S<Origin> origin_;
+    const S<Base> base_;
     const rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_;
 
     // XXX: do I need to lock this?
@@ -96,7 +96,7 @@ class Peer :
     }
 
   public:
-    Peer(S<Origin> origin, Configuration configuration = Configuration());
+    Peer(S<Base> base, Configuration configuration = Configuration());
 
     ~Peer() override {
         orc_insist(closed_);

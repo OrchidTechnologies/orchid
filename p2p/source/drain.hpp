@@ -53,12 +53,12 @@ class Sunken {
     }
 };
 
-template <typename Base_>
+template <typename Super_>
 class Outer :
-    private Base_
+    private Super_
 {
   public:
-    using Base_::Inner;
+    using Super_::Inner;
 };
 
 template <typename Drain_, typename Inner_>
@@ -83,15 +83,15 @@ class Sunk {
     }
 };
 
-template <typename Base_, typename Drain_, typename Inner_ = typename std::remove_reference<decltype(std::declval<Outer<Base_>>().Inner())>::type>
+template <typename Super_, typename Drain_, typename Inner_ = typename std::remove_reference<decltype(std::declval<Outer<Super_>>().Inner())>::type>
 class Sink :
-    public Base_,
+    public Super_,
     public Sunk<Drain_, Inner_>
 {
   private:
     Inner_ &Inner() noexcept override {
         const auto inner(this->inner_.get());
-        orc_insist_(inner != nullptr, typeid(decltype(this->inner_.get())).name() << " " << typeid(Base_).name() << "::Inner() == nullptr");
+        orc_insist_(inner != nullptr, typeid(decltype(this->inner_.get())).name() << " " << typeid(Super_).name() << "::Inner() == nullptr");
         return *inner;
     }
 
@@ -99,7 +99,7 @@ class Sink :
         if (const auto inner = std::move(this->inner_))
             co_await inner->Shut();
         else
-            Base_::Stop(std::string());
+            Super_::Stop(std::string());
     }
 
     Drain_ &Gave() noexcept override {
@@ -107,12 +107,12 @@ class Sink :
     }
 
   public:
-    using Base_::Base_;
+    using Super_::Super_;
 
     ~Sink() override {
         if (Verbose)
-            Log() << "~BufferSink<" << typeid(Base_).name() << ">()" << std::endl;
-        orc_insist_(this->inner_ == nullptr, typeid(decltype(this->inner_.get())).name() << " " << typeid(Base_).name() << "::Inner() != nullptr");
+            Log() << "~BufferSink<" << typeid(Super_).name() << ">()" << std::endl;
+        orc_insist_(this->inner_ == nullptr, typeid(decltype(this->inner_.get())).name() << " " << typeid(Super_).name() << "::Inner() != nullptr");
     }
 };
 

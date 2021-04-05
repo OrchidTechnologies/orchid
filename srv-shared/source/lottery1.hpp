@@ -42,17 +42,20 @@
 namespace orc {
 
 class Lottery1 :
-    public Valve
+    public Lottery
 {
   private:
     const Market market_;
     const Address contract_;
 
+  protected:
+    task<uint128_t> Check_(const Address &signer, const Address &funder, const Address &recipient) override;
+
   public:
     Lottery1(Market market, Address contract);
     ~Lottery1() override = default;
 
-    void Open(S<Origin> origin, Locator locator);
+    void Open(S<Base> base, Locator locator);
     task<void> Shut() noexcept override;
 
     const Address &Contract() const {
@@ -61,28 +64,18 @@ class Lottery1 :
 
     std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint128_t &ratio, const uint64_t &gas) const;
 
-    task<bool> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient);
-
-    template <typename Selector_, typename... Args_>
-    void Send(const S<Executor> &executor, const uint64_t &gas, const uint256_t &price, Args_ &&...args) {
-        typedef std::tuple<
-            uint256_t /*random*/,
-            uint256_t /*values*/,
-            uint256_t /*packed*/,
-            Bytes32 /*r*/, Bytes32 /*s*/
-        > Payment;
-
+    void Send(const S<Executor> &executor, const Address &recipient, const Payment1 &payment) {
         static Selector<void,
-            Bytes32 /*refund*/,
-            uint256_t /*destination*/,
-            Payment /*ticket*/,
-            Args_... /*token*/
-        > claim1("claim1");
+            Address /*token*/,
+            Address /*recipient*/,
+            std::vector<Payment1> /*payments*/,
+            std::vector<Bytes32> /*refunds*/
+        > claim("claim");
 
         Spawn([=]() mutable noexcept -> task<void> {
             for (;;) {
                 orc_ignore({
-                    co_await executor->Send(*market_.chain_, {}, contract_, 0, claim1(std::forward<Args_>(args)...));
+                    co_await executor->Send(*market_.chain_, {}, contract_, 0, claim({}, recipient, {payment}, {}));
                     break;
                 });
 

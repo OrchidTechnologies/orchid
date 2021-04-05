@@ -32,7 +32,7 @@
 namespace orc {
 
 Lottery1::Lottery1(Market market, Address contract) :
-    Valve(typeid(*this).name()),
+    Lottery(typeid(*this).name()),
 
     market_(std::move(market)),
     contract_(std::move(contract))
@@ -51,27 +51,18 @@ std::pair<Float, uint256_t> Lottery1::Credit(const uint256_t &now, const uint256
     return {(Float(amount) * market_.currency_.dollars_() - Float(gas * bid) * market_.currency_.dollars_()) * (Float(ratio) + 1) / Two128, bid};
 }
 
-task<bool> Lottery1::Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient) {
+task<uint128_t> Lottery1::Check_(const Address &signer, const Address &funder, const Address &recipient) {
     static Selector<std::tuple<uint256_t, uint256_t>, Address, Address, Address> read_("read");
     auto [escrow_balance, unlock_warned] = co_await read_.Call(*market_.chain_, "latest", contract_, 90000, {}, funder, signer);
 
-    // XXX: check bound
+    // XXX: check loop for merchant
 
-    uint128_t escrow(escrow_balance >> 128);
+    const uint128_t escrow(escrow_balance >> 128);
     const uint128_t balance(escrow_balance);
     const uint128_t unlock(unlock_warned >> 128);
     const uint128_t warned(unlock_warned);
 
-    if (unlock != 0) {
-        orc_assert(escrow > warned);
-        escrow -= warned;
-    }
-
-    if (amount > balance)
-        co_return false;
-    if (amount > escrow / 2)
-        co_return false;
-    co_return true;
+    co_return escrow < warned ? 0 : std::min((escrow - warned) / 2, balance);
 }
 
 }

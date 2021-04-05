@@ -93,4 +93,8 @@ uint64_t Client1::Gas() {
     return 60000;
 }
 
+Address Client1::Recipient() {
+    return locked_()->recipient_;
+}
+
 }

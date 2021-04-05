@@ -64,7 +64,8 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
         }
     }
 
-    orc_assert(false);
+    orc_assert(hash == EmptyVector);
+    return Nested(0u);
 }
 
 Receipt::Receipt(Json::Value &&value) :
@@ -136,19 +137,37 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
     hash_(Bless(value["hash"].asString())),
     from_(value["from"].asString())
 {
-    // XXX: RSK incorrectly returns the v value from EIP155 encodings
-    // https://github.com/rsksmart/rskj/issues/1380
-    // XXX: RSK might have further broken stuff? more research needed
-    // https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP138.md
-    if (chain == 30)
-        return;
+    if (from_ != Address()) {
+        // RSK /might/ have transactions that are missing state to verify
+        // https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP138.md
 
-    const uint256_t v(value["v"].asString());
-    const uint256_t r(value["r"].asString());
-    const uint256_t s(value["s"].asString());
+        const uint256_t v(value["v"].asString());
+        const uint256_t r(value["r"].asString());
+        const uint256_t s(value["s"].asString());
 
-    orc_assert(hash_ == hash(v, r, s));
-    orc_assert(from_ == from(chain, v, r, s));
+        orc_assert(hash_ == hash(v, r, s));
+        orc_assert(from_ == from(chain, v, r, s));
+    } else {
+        if (false);
+        else if (chain == 137)
+            orc_assert(nonce_ == 0);
+
+        orc_assert(bid_ == 0);
+        orc_assert(gas_ == 0);
+
+        orc_assert(target_);
+        const auto target(target_->num());
+        if (false);
+        else if (chain == 30)
+            orc_assert(target == 0x1000008);
+        else if (chain == 137)
+            orc_assert(target == 0x0);
+
+        orc_assert(amount_ == 0);
+        orc_assert(data_.size() == 0);
+
+        // XXX: I feel like I should be able to verify more here :/
+    }
 }
 
 Block::Block(const uint256_t &chain, Json::Value &&value) :
@@ -170,23 +189,25 @@ Block::Block(const uint256_t &chain, Json::Value &&value) :
 
 Account::Account(const uint256_t &nonce, const uint256_t &balance) :
     nonce_(nonce),
-    balance_(balance)
+    balance_(balance),
+    storage_(Zero<32>()),
+    code_(Zero<32>())
 {
 }
 
 Account::Account(const Block &block, const Json::Value &value) :
     nonce_(value["nonce"].asString()),
     balance_(value["balance"].asString()),
-    storage_(value["storageHash"].asString()),
-    code_(value["codeHash"].asString())
+    storage_(Bless(value["storageHash"].asString())),
+    code_(Bless(value["codeHash"].asString()))
 {
     const auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), HashK(Number<uint160_t>(value["address"].asString()))));
     if (leaf.scalar()) {
         orc_assert(leaf.buf().size() == 0);
         orc_assert(nonce_ == 0);
         orc_assert(balance_ == 0);
-        orc_assert(storage_ == uint256_t("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"));
-        orc_assert(code_ == uint256_t("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+        orc_assert(storage_ == EmptyVector);
+        orc_assert(code_ == EmptyScalar);
     } else {
         switch (leaf.size()) {
             case 4: break;
@@ -198,8 +219,8 @@ Account::Account(const Block &block, const Json::Value &value) :
 
         orc_assert(leaf[0].num() == nonce_);
         orc_assert(leaf[1].num() == balance_);
-        orc_assert(leaf[2].num() == storage_);
-        orc_assert(leaf[3].num() == code_);
+        orc_assert(leaf[2].buf() == storage_);
+        orc_assert(leaf[3].buf() == code_);
     }
 }
 
@@ -227,8 +248,8 @@ task<S<Chain>> Chain::New(Endpoint endpoint, Flags flags, uint256_t chain) {
 
 task<S<Chain>> Chain::New(Endpoint endpoint, Flags flags) {
     auto chain(
-        endpoint.operator const Locator &().host_ == "cloudflare-eth.com" ? 1 :
-        endpoint.operator const Locator &().host_ == "rpc.mainnet.near.org" ? 1313161554 :
+        endpoint.operator const Locator &().origin_.host_ == "cloudflare-eth.com" ? 1 :
+        endpoint.operator const Locator &().origin_.host_ == "rpc.mainnet.near.org" ? 1313161554 :
     uint256_t((co_await endpoint("eth_chainId", {})).asString()));
     co_return co_await New(std::move(endpoint), std::move(flags), std::move(chain));
 }

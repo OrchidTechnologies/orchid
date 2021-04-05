@@ -31,11 +31,11 @@
 
 namespace orc {
 
+class Base;
 struct Currency;
-class Origin;
 
-task<Float> Binance(Origin &origin, const std::string &pair, const Float &adjust = Ten18);
-task<Currency> Binance(unsigned milliseconds, S<Origin> origin, std::string currency);
+task<Float> Binance(Base &base, const std::string &pair, const Float &adjust = Ten18);
+task<Currency> Binance(unsigned milliseconds, S<Base> base, std::string currency);
 
 }
 

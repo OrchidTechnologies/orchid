@@ -20,17 +20,17 @@
 /* }}} */
 
 
+#include "base.hpp"
 #include "binance.hpp"
 #include "currency.hpp"
 #include "json.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 #include "updater.hpp"
 
 namespace orc {
 
-task<Float> Binance(Origin &origin, const std::string &pair, const Float &adjust) {
-    const auto response(co_await origin.Fetch("GET", {"https", "api.binance.com", "443", "/api/v3/avgPrice?symbol=" + pair}, {}, {}));
+task<Float> Binance(Base &base, const std::string &pair, const Float &adjust) {
+    const auto response(co_await base.Fetch("GET", {{"https", "api.binance.com", "443"}, "/api/v3/avgPrice?symbol=" + pair}, {}, {}));
     const auto result(Parse(response.body()));
     if (response.result() == http::status::ok)
         co_return Float(result["price"].asString()) / adjust;
@@ -41,9 +41,9 @@ task<Float> Binance(Origin &origin, const std::string &pair, const Float &adjust
     }
 }
 
-task<Currency> Binance(unsigned milliseconds, S<Origin> origin, std::string currency) {
-    auto dollars([updated = co_await Opened(Updating(milliseconds, [origin = std::move(origin), pair = currency + "USDT"]() -> task<Float> {
-        co_return pair == "DAIUSDT" ? 1 / co_await Binance(*origin, "USDTDAI", 1 / Ten18) : co_await Binance(*origin, pair, Ten18);
+task<Currency> Binance(unsigned milliseconds, S<Base> base, std::string currency) {
+    auto dollars([updated = co_await Opened(Updating(milliseconds, [base = std::move(base), pair = currency + "USDT"]() -> task<Float> {
+        co_return pair == "DAIUSDT" ? 1 / co_await Binance(*base, "USDTDAI", 1 / Ten18) : co_await Binance(*base, pair, Ten18);
     }, "Binance"))]() { return (*updated)(); });
 
     co_return Currency{std::move(currency), std::move(dollars)};

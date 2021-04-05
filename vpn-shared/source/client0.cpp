@@ -112,4 +112,8 @@ uint64_t Client0::Gas() {
     return seller_ == Address(0) ? 84000 /*83267*/ : 103000;
 }
 
+Address Client0::Recipient() {
+    return locked_()->recipient_;
+}
+
 }

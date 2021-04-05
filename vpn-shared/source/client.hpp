@@ -28,13 +28,13 @@
 #include <rtc_base/rtc_certificate.h>
 #include <rtc_base/ssl_fingerprint.h>
 
+#include "base.hpp"
 #include "bond.hpp"
 #include "float.hpp"
 #include "jsonrpc.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
 #include "oracle.hpp"
-#include "origin.hpp"
 #include "provider.hpp"
 #include "signed.hpp"
 #include "ticket.hpp"
@@ -95,10 +95,12 @@ class Client :
   public:
     Client(BufferDrain &drain, S<Updated<Prices>> oracle);
 
-    task<void> Open(const Provider &provider, const S<Origin> &origin);
+    task<void> Open(const Provider &provider, const S<Base> &base);
     task<void> Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;
+
+    virtual Address Recipient() = 0;
 
     void Update();
     uint64_t Benefit();

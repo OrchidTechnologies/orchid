@@ -31,14 +31,14 @@ struct wireguard_tunnel;
 
 namespace orc {
 
-class Origin;
+class Base;
 
 class Boring :
     public Link<Buffer>,
     public Sunken<Pump<Buffer>>
 {
   private:
-    const S<Origin> origin_;
+    const S<Base> base_;
     uint32_t local_;
     uint32_t remote_;
 
@@ -55,7 +55,7 @@ class Boring :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Boring(BufferDrain &drain, const S<Origin> &origin, uint32_t local, const Host &remote, const std::string &secret, const std::string &common);
+    Boring(BufferDrain &drain, const S<Base> &base, uint32_t local, const Host &remote, const std::string &secret, const std::string &common);
     ~Boring() override;
 
     void Open();
@@ -63,7 +63,7 @@ class Boring :
     task<void> Send(const Buffer &data) override;
 };
 
-task<void> Guard(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string file);
+task<void> Guard(BufferSunk &sunk, S<Base> base, uint32_t local, std::string file);
 
 }
 

@@ -45,7 +45,7 @@ task<void> Network::Shut() noexcept {
 }
 
 template <typename Code_>
-task<void> Stakes(const S<Chain> &chain, const Address &directory, const Block &block, const uint256_t &storage, const uint256_t &primary, const Code_ &code) {
+task<void> Stakes(const S<Chain> &chain, const Address &directory, const Block &block, const Brick<32> &storage, const uint256_t &primary, const Code_ &code) {
     if (primary == 0)
         co_return;
 

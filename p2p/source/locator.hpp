@@ -27,10 +27,29 @@
 
 namespace orc {
 
-struct Locator final {
+struct Origin final {
     std::string scheme_;
     std::string host_;
     std::string port_;
+
+    Origin(std::string scheme, std::string host, std::string port) :
+        scheme_(std::move(scheme)),
+        host_(std::move(host)),
+        port_(std::move(port))
+    {
+    }
+
+    auto Tuple() const {
+        return std::tie(scheme_, host_, port_);
+    }
+
+    bool operator <(const Origin &rhs) const {
+        return Tuple() < rhs.Tuple();
+    }
+};
+
+struct Locator final {
+    Origin origin_;
     std::string path_;
 
     Locator(const std::string &locator);
@@ -40,16 +59,14 @@ struct Locator final {
     {
     }
 
-    Locator(std::string scheme, std::string host, std::string port, std::string path) :
-        scheme_(std::move(scheme)),
-        host_(std::move(host)),
-        port_(std::move(port)),
+    Locator(Origin origin, std::string path) :
+        origin_(std::move(origin)),
         path_(std::move(path))
     {
     }
 
     auto Tuple() const {
-        return std::tie(scheme_, host_, port_, path_);
+        return std::tie(origin_, path_);
     }
 
     bool operator <(const Locator &rhs) const {
@@ -57,7 +74,7 @@ struct Locator final {
     }
 
     Locator operator +(const char *path) const {
-        return {scheme_, host_, port_, path_ + path};
+        return {origin_, path_ + path};
     }
 };
 

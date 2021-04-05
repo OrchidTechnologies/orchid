@@ -23,12 +23,14 @@
 #ifndef ORCHID_LOCAL_HPP
 #define ORCHID_LOCAL_HPP
 
-#include "origin.hpp"
+#include "base.hpp"
 
 namespace orc {
 
+// XXX: for Local::Fetch, this should use NSURLSession on __APPLE__
+
 class Local :
-    public Origin
+    public Base
 {
   private:
     Local(U<rtc::NetworkManager> manager);

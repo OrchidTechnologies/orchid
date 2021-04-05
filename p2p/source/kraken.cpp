@@ -20,15 +20,15 @@
 /* }}} */
 
 
+#include "base.hpp"
 #include "json.hpp"
 #include "kraken.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 
 namespace orc {
 
-task<Float> Kraken(Origin &origin, const std::string &pair, const Float &adjust) {
-    co_return Float(Parse((co_await origin.Fetch("GET", {"https", "api.kraken.com", "443", "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString()) / adjust;
+task<Float> Kraken(Base &base, const std::string &pair, const Float &adjust) {
+    co_return Float(Parse((co_await base.Fetch("GET", {{"https", "api.kraken.com", "443"}, "/0/public/Ticker?pair=" + pair}, {}, {})).ok())["result"][pair]["c"][0].asString()) / adjust;
 }
 
 }

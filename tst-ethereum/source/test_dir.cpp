@@ -80,7 +80,7 @@ const int   nsamples = 1000;
 
     task<int> test_directory()
     {
-        Endpoint endpoint(GetLocal(), {"http", "localhost", "8545", "/"});
+        Endpoint endpoint(GetLocal(), {{"http", "localhost", "8545"}, "/"});
 
         co_await endpoint("web3_clientVersion", {});
 

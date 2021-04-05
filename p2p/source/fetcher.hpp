@@ -20,20 +20,19 @@
 /* }}} */
 
 
-#include "baton.hpp"
-#include "dns.hpp"
-#include "duplex.hpp"
+#ifndef ORCHID_FETCHER_HPP
+#define ORCHID_FETCHER_HPP
+
+#include "response.hpp"
 
 namespace orc {
 
-task<boost::asio::ip::tcp::endpoint> Duplex::Open(const Locator &locator) { orc_block({
-    const auto endpoints(co_await base_->Resolve(locator.origin_.host_, locator.origin_.port_));
-    auto &lowest(boost::beast::get_lowest_layer(inner_));
-    const auto endpoint(co_await orc_value(co_return co_await, lowest.async_connect(endpoints, Adapt()),
-        "connecting to" << endpoints));
-    lowest.expires_never();
-    co_await inner_.async_handshake(locator.origin_.host_, locator.path_, Adapt());
-    co_return endpoint;
-}, "opening " << locator); }
+class Fetcher {
+  public:
+    virtual ~Fetcher() = default;
+    virtual task<Response> Fetch(http::request<http::string_body> &req) = 0;
+};
 
 }
+
+#endif//ORCHID_FETCHER_HPP

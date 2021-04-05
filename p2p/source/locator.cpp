@@ -27,24 +27,28 @@
 
 namespace orc {
 
+std::ostream &operator <<(std::ostream &out, const Origin &origin) {
+    return out << origin.scheme_ << "://" << origin.host_ << ":" << origin.port_;
+}
+
 Locator::Locator(const std::string &locator) :
     Locator([&]() {
-        auto base(skyr::make_url(locator));
-        orc_assert_(base, base.error().message());
-        auto &value(base.value());
+        auto result(skyr::make_url(locator));
+        orc_assert_(result, result.error().message());
+        auto &value(result.value());
         auto scheme(value.protocol());
         orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');
         scheme.resize(scheme.size() - 1);
         auto port(value.port());
         if (port.empty())
             port = std::to_string(skyr::url::default_port(scheme).value_or(0));
-        return Locator(std::move(scheme), value.hostname(), port, value.pathname());
+        return Locator(Origin(std::move(scheme), value.hostname(), port), value.pathname());
     }())
 {
 }
 
 std::ostream &operator <<(std::ostream &out, const Locator &locator) {
-    return out << locator.scheme_ << "://" << locator.host_ << ":" << locator.port_ << locator.path_;
+    return out << locator.origin_ << locator.path_;
 }
 
 }

@@ -25,14 +25,14 @@
 
 #include <string>
 
+#include "base.hpp"
 #include "link.hpp"
-#include "origin.hpp"
 
 namespace orc {
 
 void Initialize();
 
-task<void> Connect(BufferSunk &sunk, S<Origin> origin, uint32_t local, std::string file, std::string username, std::string password);
+task<void> Connect(BufferSunk &sunk, S<Base> base, uint32_t local, std::string file, std::string username, std::string password);
 
 }
 

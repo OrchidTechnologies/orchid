@@ -41,7 +41,7 @@ int Main(int argc, const char *const argv[]) {
         const uint256_t chain(1);
 
         const auto local(Break<Local>());
-        Chain chain(local, {"https", "cloudflare-eth.com", "443", "/"});
+        Chain chain(local, {{"https", "cloudflare-eth.com", "443"}, "/"});
 
         const auto input(co_await [&]() -> task<Beam> {
 #if 0

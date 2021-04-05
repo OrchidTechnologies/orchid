@@ -44,11 +44,14 @@
 namespace orc {
 
 class Lottery0 :
-    public Valve
+    public Lottery
 {
   private:
     const Token token_;
     const Address contract_;
+
+  protected:
+    task<uint128_t> Check_(const Address &signer, const Address &funder, const Address &recipient) override;
 
   public:
     Lottery0(Token token, Address contract);
@@ -66,10 +69,8 @@ class Lottery0 :
 
     std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint128_t &ratio, const uint64_t &gas) const;
 
-    task<bool> Check(const Address &signer, const Address &funder, const uint128_t &amount, const Address &recipient, const Buffer &receipt);
-
     template <typename... Args_>
-    void Send(const S<Executor> &executor, const uint64_t &gas, const uint256_t &price, Args_ &&...args) {
+    void Send(const S<Executor> &executor, Args_ &&...args) {
         static Selector<void,
             Bytes32 /*reveal*/, Bytes32 /*commit*/,
             uint256_t /*issued*/, Bytes32 /*nonce*/,

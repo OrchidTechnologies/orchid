@@ -23,11 +23,11 @@
 #ifndef ORCHID_CHAIN_HPP
 #define ORCHID_CHAIN_HPP
 
+#include "base.hpp"
 #include "crypto.hpp"
 #include "endpoint.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 #include "parallel.hpp"
 
 namespace orc {
@@ -90,8 +90,8 @@ struct Block {
 struct Account final {
     const uint256_t nonce_;
     const uint256_t balance_;
-    const uint256_t storage_;
-    const uint256_t code_;
+    const Brick<32> storage_;
+    const Brick<32> code_;
 
     Account(const uint256_t &nonce, const uint256_t &balance);
     Account(const Block &block, const Json::Value &value);
@@ -193,6 +193,10 @@ class Chain :
         co_return std::get<0>(co_await Get(block, contract, nullptr));
     }
 
+    // XXX: xDAI incorrectly requires eth_getProof storage slot indices be DATA (Number), instead of QUANTITY (uint256_t)
+    //      usually, you get back the following error message, but sometimes it just returns a proof of the wrong slot :/
+    // {"code":-32602,"message":"Invalid params: invalid length 1, expected a 0x-prefixed hex string with length of 64."}
+
     template <typename... Args_>
     task<std::tuple<Account, typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, std::nullptr_t, Args_ &&...args) const {
         if (Insecure()) {
@@ -206,7 +210,7 @@ class Chain :
             Get<1, 2>(result, hypothesis, std::index_sequence_for<Args_...>());
             co_return result;
         } else {
-            const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.height_}));
+            const auto proof(co_await operator ()("eth_getProof", {contract, {Number<uint256_t>(std::forward<Args_>(args))...}, block.height_}));
             std::tuple<Account, typename Result_<Args_>::type...> result(Account(block, proof));
             Number<uint256_t> root(proof["storageHash"].asString());
             Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
@@ -215,7 +219,7 @@ class Chain :
     }
 
     template <typename... Args_>
-    task<std::tuple<typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, const uint256_t &storage, Args_ &&...args) const {
+    task<std::tuple<typename Result_<Args_>::type...>> Get(const Block &block, const Address &contract, const Brick<32> &storage, Args_ &&...args) const {
         if (Insecure()) {
             const auto hypothesis(*co_await Parallel(
                 operator ()("eth_getStorageAt", {contract, uint256_t(args), block.height_})...));
@@ -223,11 +227,10 @@ class Chain :
             Get<0, 0>(result, hypothesis, std::index_sequence_for<Args_...>());
             co_return result;
         } else {
-            const auto proof(co_await operator ()("eth_getProof", {contract, {uint256_t(std::forward<Args_>(args))...}, block.height_}));
+            const auto proof(co_await operator ()("eth_getProof", {contract, {Number<uint256_t>(std::forward<Args_>(args))...}, block.height_}));
             std::tuple<typename Result_<Args_>::type...> result;
-            Number<uint256_t> root(proof["storageHash"].asString());
-            orc_assert(storage == root.num<uint256_t>());
-            Get<0, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
+            orc_assert(Number<uint256_t>(proof["storageHash"].asString()) == storage);
+            Get<0, 0>(result, proof["storageProof"], storage, std::forward<Args_>(args)...);
             co_return result;
         }
     }
@@ -236,7 +239,10 @@ class Chain :
         if (Insecure()) {
             orc_insist(false);
         } else {
-            const auto proof(co_await operator ()("eth_getProof", {contract, args, block.height_}));
+            std::vector<Number<uint256_t>> numbers;
+            for (const auto &arg : args)
+                numbers.emplace_back(arg);
+            const auto proof(co_await operator ()("eth_getProof", {contract, numbers, block.height_}));
             std::tuple<Account, std::vector<uint256_t>> result(Account(block, proof));
             Number<uint256_t> root(proof["storageHash"].asString());
             auto storages(proof["storageProof"]);
@@ -357,14 +363,14 @@ class Selector final :
 };
 
 template <typename... Args_>
-class Contract final :
+class Constructor final :
     public Region
 {
   private:
     Beam data_;
 
   public:
-    Contract(Beam data) :
+    Constructor(Beam data) :
         data_(std::move(data))
     {
     }

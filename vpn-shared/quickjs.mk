@@ -18,6 +18,9 @@ source += $(pwd/quickjs)/libregexp.c $(filter-out \
 cflags/$(pwd/quickjs)/ += -Wno-unused-result
 cflags/$(pwd/quickjs)/ += -Wno-unused-variable
 
+# XXX: error: implicit conversion from 'long long' to 'double' changes value from 9223372036854775807 to 9223372036854775808
+cflags/$(pwd/quickjs)/ += -Wno-implicit-const-int-float-conversion
+
 cflags/$(pwd/quickjs)/ += -DCONFIG_VERSION='""'
 cflags/$(pwd/quickjs)/ += -include $(pwd/quickjs)/../environ.hpp
 

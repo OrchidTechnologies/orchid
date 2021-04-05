@@ -30,9 +30,9 @@
 
 namespace orc {
 
-class Origin;
+class Base;
 
-task<Float> Kraken(Origin &origin, const std::string &pair, const Float &adjust = Ten18);
+task<Float> Kraken(Base &base, const std::string &pair, const Float &adjust = Ten18);
 
 }
 

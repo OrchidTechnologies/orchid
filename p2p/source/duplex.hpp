@@ -26,8 +26,8 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 
+#include "base.hpp"
 #include "locator.hpp"
-#include "origin.hpp"
 #include "reader.hpp"
 
 namespace orc {
@@ -36,13 +36,13 @@ class Duplex final :
     public Stream
 {
   private:
-    S<Origin> origin_;
+    S<Base> base_;
 
   protected:
     boost::beast::websocket::stream<boost::beast::tcp_stream> inner_;
 
   public:
-    Duplex(S<Origin> origin);
+    Duplex(S<Base> base);
 
     decltype(inner_) *operator ->() {
         return &inner_;

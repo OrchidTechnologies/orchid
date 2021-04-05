@@ -82,30 +82,31 @@ struct Report {
     std::optional<Float> cost_;
     Float speed_;
     Host host_;
+    Address recipient_;
     std::string version_;
 };
 
 typedef std::tuple<Float, size_t> Measurement;
 
-task<Measurement> Measure(Origin &origin) {
+task<Measurement> Measure(Base &base) {
     const auto before(Monotonic());
 
     size_t size(0);
     for (unsigned i(0); i != 3; ++i) {
-        const auto test((co_await origin.Fetch("GET", {"https", "cache.saurik.com", "443", "/orchid/test-1MB.dat"}, {}, {})).ok());
+        const auto test((co_await base.Fetch("GET", {{"https", "cache.saurik.com", "443"}, "/orchid/test-1MB.dat"}, {}, {})).ok());
         size += test.size();
     }
 
     co_return Measurement{size * 8 / Float(Monotonic() - before), size};
 }
 
-task<Host> Find(Origin &origin) {
+task<Host> Find(Base &base) {
     // XXX: use STUN to do this instead of a Cydia endpoint
-    co_return Parse((co_await origin.Fetch("GET", {"https", "cydia.saurik.com", "443", "/debug.json"}, {}, {})).ok())["host"].asString();
+    co_return Parse((co_await base.Fetch("GET", {{"https", "cydia.saurik.com", "443"}, "/debug.json"}, {}, {})).ok())["host"].asString();
 }
 
-task<std::string> Version(Origin &origin, const Locator &url) { try {
-    auto version((co_await origin.Fetch("GET", url + "version.txt", {}, {})).ok());
+task<std::string> Version(Base &base, const Locator &url) { try {
+    auto version((co_await base.Fetch("GET", url + "version.txt", {}, {})).ok());
     const auto line(version.find('\n'));
     if (line != std::string::npos)
         version = version.substr(0, line);
@@ -115,29 +116,29 @@ task<std::string> Version(Origin &origin, const Locator &url) { try {
     co_return version;
 } orc_catch({ co_return ""; }) }
 
-task<Report> TestOpenVPN(const S<Origin> &origin, std::string ovpn) {
+task<Report> TestOpenVPN(const S<Base> &base, std::string ovpn) {
     (co_await orc_optic)->Name("OpenVPN");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        co_await Connect(remote, origin, remote.Host().operator uint32_t(), std::move(ovpn), "", "");
+        co_await Connect(remote, base, remote.Host().operator uint32_t(), std::move(ovpn), "", "");
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{"", std::nullopt, speed, host, ""};
+        co_return Report{"", std::nullopt, speed, host, {}, ""};
     });
 }
 
-task<Report> TestWireGuard(const S<Origin> &origin, std::string config) {
+task<Report> TestWireGuard(const S<Base> &base, std::string config) {
     (co_await orc_optic)->Name("WireGuard");
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        co_await Guard(remote, origin, remote.Host().operator uint32_t(), std::move(config));
+        co_await Guard(remote, base, remote.Host().operator uint32_t(), std::move(config));
         remote.Open();
         const auto host(co_await Find(remote));
         const auto [speed, size] = co_await Measure(remote);
-        co_return Report{"", std::nullopt, speed, host, ""};
+        co_return Report{"", std::nullopt, speed, host, {}, ""};
     });
 }
 
-task<Report> TestOrchid(const S<Origin> &origin, std::string name, const S<Network> &network, const char *address, std::function<task<Client *> (BufferSink<Remote> &)> code) {
+task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> &network, const char *address, std::function<task<Client *> (BufferSink<Remote> &)> code) {
     (co_await orc_optic)->Name(address);
 
     std::cout << address << " " << name << std::endl;
@@ -145,7 +146,7 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const S<Netwo
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         const auto provider(co_await network->Select("untrusted.orch1d.eth", address));
         Client &client(*co_await code(remote));
-        co_await client.Open(provider, origin);
+        co_await client.Open(provider, base);
         remote.Open();
 
         const auto host(co_await Find(remote));
@@ -166,9 +167,10 @@ task<Report> TestOrchid(const S<Origin> &origin, std::string name, const S<Netwo
             return global->benefit_;
         }());
 
-        const auto version(co_await Version(*origin, provider.locator_));
+        const auto recipient(client.Recipient());
+        const auto version(co_await Version(*base, provider.locator_));
         const auto cost((spent - balance) / minimum * (1024 * 1024 * 1024));
-        co_return Report{provider.address_.str(), cost, speed, host, version};
+        co_return Report{provider.address_.str(), cost, speed, host, recipient, version};
     });
 }
 
@@ -205,6 +207,11 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
         else
             body << "-.----";
         body << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
+        if (report->recipient_ != Address(0)) {
+            std::ostringstream recipient;
+            recipient << report->recipient_;
+            body << "\n" << std::string(13, ' ') << recipient.str().substr(2);
+        }
         if (!report->version_.empty())
             body << "\n" << std::string(13, ' ') << report->version_;
     } else orc_insist(false);
@@ -268,9 +275,9 @@ int Main(int argc, const char *const argv[]) {
 
     const unsigned milliseconds(60*1000);
 
-    const auto origin(Break<Local>());
+    const auto base(Break<Local>());
     const Locator locator(args["rpc"].as<std::string>());
-    const auto chain(Wait(Chain::New({locator, origin}, {}, 1)));
+    const auto chain(Wait(Chain::New({locator, base}, {}, 1)));
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
@@ -285,23 +292,23 @@ int Main(int argc, const char *const argv[]) {
 
     const auto oracle(Wait(Oracle(milliseconds, chain)));
     const auto oxt(Wait(Token::OXT(milliseconds, chain)));
-    const auto bnb(Wait(Market::New(milliseconds, 56, origin, "https://bsc-dataseed.binance.org/", "BNB")));
+    const auto bnb(Wait(Market::New(milliseconds, 56, base, "https://bsc-dataseed.binance.org/", "BNB")));
 
-    const auto coinbase(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Coinbase(*origin, "ETH-USD"), Coinbase(*origin, "OXT-USD"));
+    const auto coinbase(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Coinbase(*base, "ETH-USD"), Coinbase(*base, "OXT-USD"));
     }, "Coinbase"))));
 
-    const auto binance(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Binance(*origin, "ETHUSDT"), Binance(*origin, "OXTUSDT"));
+    const auto binance(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Binance(*base, "ETHUSDT"), Binance(*base, "OXTUSDT"));
     }, "Binance"))));
 
-    const auto kraken(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
-        const auto [eth, oxt] = *co_await Parallel(Kraken(*origin, "XETHZUSD"), Kraken(*origin, "OXTETH", 1));
+    const auto kraken(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+        const auto [eth, oxt] = *co_await Parallel(Kraken(*base, "XETHZUSD"), Kraken(*base, "OXTETH", 1));
         co_return std::make_tuple(eth, eth * oxt);
     }, "Kraken"))));
 
-    const auto huobi(Wait(Opened(Updating(milliseconds, [origin]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Huobi(*origin, "ethusdt"), Huobi(*origin, "oxtusdt"));
+    const auto huobi(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Huobi(*base, "ethusdt"), Huobi(*base, "oxtusdt"));
     }, "Huobi"))));
 
     const auto uniswap(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
@@ -330,7 +337,7 @@ int Main(int argc, const char *const argv[]) {
         auto state(Make<State>(now));
 
         try {
-            state->speed_ = std::get<0>(co_await Measure(*origin));
+            state->speed_ = std::get<0>(co_await Measure(*base));
         } catch (...) {
             state->speed_ = 0;
         }
@@ -347,12 +354,12 @@ int Main(int argc, const char *const argv[]) {
 
             for (const auto &openvpn : openvpns) {
                 names.emplace_back("OpenVPN");
-                tests.emplace_back(TestOpenVPN(origin, Load(openvpn)));
+                tests.emplace_back(TestOpenVPN(base, Load(openvpn)));
             }
 
             for (const auto &wireguard : wireguards) {
                 names.emplace_back("WireGuard");
-                tests.emplace_back(TestWireGuard(origin, Load(wireguard)));
+                tests.emplace_back(TestWireGuard(base, Load(wireguard)));
             }
 
             for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
@@ -366,7 +373,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(TestOrchid(origin, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client *> {
+                tests.emplace_back(TestOrchid(base, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client *> {
                     co_return co_await Client0::Wire(remote, oracle, oxt, lottery0, secret, funder);
                     //co_return co_await Client1::Wire(remote, oracle, dai, lottery1, secret, funder);
                 }));

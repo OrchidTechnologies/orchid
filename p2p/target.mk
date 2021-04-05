@@ -204,6 +204,11 @@ cflags += -I$(pwd)/bech32/ref/c++
 cflags/$(pwd)/bech32/ += -Wno-unused-variable
 
 
+source += $(pwd)/pugixml/src/pugixml.cpp
+cflags += -I$(pwd)/pugixml/src
+cflags += -DPUGIXML_HAS_LONG_LONG
+
+
 include $(pwd)/asio.mk
 include $(pwd)/protobuf.mk
 

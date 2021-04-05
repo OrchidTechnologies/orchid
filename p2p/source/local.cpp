@@ -96,7 +96,7 @@ class LocalOpening :
 };
 
 Local::Local(U<rtc::NetworkManager> manager) :
-    Origin(typeid(*this).name(), std::move(manager))
+    Base(typeid(*this).name(), std::move(manager))
 {
 }
 
