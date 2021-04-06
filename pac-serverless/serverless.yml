@@ -176,40 +176,6 @@ functions:
       - http:
           path: payment_apple
           method: post
-  pac:
-    handler: handler.main
-    timeout: 10
-    events:
-      - http:
-          path: submit
-          method: post
-  apple:
-    handler: handler.apple
-    timeout: 10
-    events:
-      - http:
-          path: apple
-          method: post
-  UpdateStatus:
-    handler: status.main
-    timeout: 900
-    events:
-      - schedule: cron(10/15 * * * ? *)
-  balance:
-    handler: balance.main
-    timeout: 300
-    events:
-      - schedule: cron(5/15 * * * ? *)
-  recycle:
-    handler: recycle.main
-    timeout: 30
-    events:
-      - http:
-          path: recycle
-          method: post
-  reclaim:
-    timeout: 900
-    handler: reclaim.main
   StoreStatus:
     handler: storestatus.main
     timeout: 30
