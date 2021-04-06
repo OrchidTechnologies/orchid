@@ -136,7 +136,6 @@ provider:
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-payment_apple"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-send_raw"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-get_account"
-        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-refund_failed_txn"
 functions:
   txn_monitor:
     handler: txn_monitor.main
@@ -170,13 +169,6 @@ functions:
     events:
       - http:
           path: send_raw
-          method: post
-  refund_failed_txn:
-    handler: entry_refund_failed_txn.main
-    timeout: 10
-    events:
-      - http:
-          path: refund_failed_txn
           method: post
   payment_apple:
     handler: entry_payment_apple.main
