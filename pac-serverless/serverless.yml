@@ -131,7 +131,6 @@ provider:
         - "lambda:InvokeFunction"
         - "lambda:InvokeAsync"
       Resource:
-        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-MaintainPool"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-txn_monitor"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-payment_apple"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-send_raw"
@@ -191,11 +190,6 @@ functions:
       - http:
           path: apple
           method: post
-  MaintainPool:
-    handler: pool.maintain_pool_wrapper
-    timeout: 900
-    events:
-      - schedule: cron(0/15 * * * ? *)
   UpdateStatus:
     handler: status.main
     timeout: 900
