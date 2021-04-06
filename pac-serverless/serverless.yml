@@ -50,10 +50,6 @@ custom:
     TXN_MONITOR_MODE:
       prod: ''
       dev: 'auto'
-  datadog:
-    addLayers: true
-    flushMetricsToLogs: true
-    apiKey: ${ssm:DATADOG_API_KEY~true}
   enterprise:
     logIngestMode: pull
   dynamodb:
@@ -191,7 +187,6 @@ functions:
           path: verify
           method: post
 plugins:
-  - serverless-plugin-datadog
   - serverless-pseudo-parameters
   - serverless-python-requirements
   - serverless-prune-plugin
