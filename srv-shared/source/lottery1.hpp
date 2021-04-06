@@ -75,7 +75,7 @@ class Lottery1 :
         Spawn([=]() mutable noexcept -> task<void> {
             for (;;) {
                 orc_ignore({
-                    co_await executor->Send(*market_.chain_, {}, contract_, 0, claim({}, recipient, {payment}, {}));
+                    co_await executor->Send(*market_.chain_, {.gas = 90000}, contract_, 0, claim({}, recipient, {payment}, {}));
                     break;
                 });
 
