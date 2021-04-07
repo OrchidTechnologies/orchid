@@ -1,8 +1,8 @@
 import React, {FC, useContext, useRef, useState} from "react";
 import {OrchidAPI} from "../api/orchid-api";
 import {isEthAddress} from "../api/orchid-eth";
-import {errorClass, parseFloatSafe, Visibility} from "../util/util";
-import {TransactionStatus, TransactionProgress} from "./TransactionProgress";
+import {errorClass, Visibility} from "../util/util";
+import {TransactionProgress, TransactionStatus} from "./TransactionProgress";
 import {SubmitButton} from "./SubmitButton";
 import {Col, Container, Row} from "react-bootstrap";
 import {S} from "../i18n/S";
@@ -16,7 +16,7 @@ const BigInt = require("big-integer"); // Mobile Safari requires polyfill
 export const WithdrawFunds: FC = () => {
   let txResult = useRef<TransactionProgress | null>(null);
 
-  const [userEnteredWithdrawAmount, setUserEnteredWithdrawAmount] = useState<number | null>(null);
+  const [userEnteredWithdrawAmount, setUserEnteredWithdrawAmount] = useState<LotFunds| null>(null);
   const [withdrawAll, setWithdrawAll] = useState(false);
   const [sendToAddress, setSendToAddress] = useState<EthAddress | null>(null);
   const [amountError, setAmountError] = useState(true);
@@ -38,7 +38,7 @@ export const WithdrawFunds: FC = () => {
     const wallet = api.wallet.value;
     const signer = api.signer.value;
 
-      if (!wallet
+    if (!wallet
       || !signer
       || !api.eth
       || (userEnteredWithdrawAmount == null && !withdrawAll)
@@ -64,9 +64,8 @@ export const WithdrawFunds: FC = () => {
           console.log("error no withdraw amount")
           return; // Shouldn't get here.
         }
-        const withdrawFunds = fundsToken.fromNumber(userEnteredWithdrawAmount)
         txId = await api.eth.orchidWithdrawFunds(
-          wallet.address, signer.address, targetAddress, withdrawFunds, pot.balance);
+          wallet.address, signer.address, targetAddress, userEnteredWithdrawAmount, pot.balance);
       }
       await api.updateLotteryPot();
       await api.updateWallet();
@@ -122,11 +121,10 @@ export const WithdrawFunds: FC = () => {
           <input
             type="number"
             className="withdraw-amount editable"
-            placeholder={(0).toFixedLocalized(2)}
+            placeholder={fundsToken?.zero.toFixedLocalized()}
             onChange={(e) => {
-              let amount = parseFloatSafe(e.currentTarget.value);
-              const valid = amount != null && amount > 0
-                && (!potBalance || fundsToken?.fromNumber(amount).lte(potBalance));
+              let amount = fundsToken?.fromStringOrZero(e.currentTarget.value) ?? null;
+              const valid = amount != null && amount.gtZero() && (!potBalance || amount.lte(potBalance));
               setUserEnteredWithdrawAmount(amount)
               setAmountError(!valid)
             }}

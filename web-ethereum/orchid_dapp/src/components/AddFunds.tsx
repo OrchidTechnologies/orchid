@@ -19,7 +19,7 @@ import {WalletProviderState} from "../api/orchid-eth-web3";
 import {OrchidLottery} from "../api/orchid-lottery";
 import {AccountRecommendation, MarketConditions} from "../api/orchid-market-conditions";
 import {EthAddress} from "../api/orchid-eth-types";
-import {max, LotFunds} from "../api/orchid-eth-token-types";
+import {max, LotFunds, GasFunds} from "../api/orchid-eth-token-types";
 import {AccountContext, ApiContext, WalletContext, WalletProviderContext} from "../index";
 import {Cancellable, makeCancellable} from "../util/async-util";
 import {Spacer} from "./Spacer";
@@ -376,11 +376,6 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
   /// Render
   ///
 
-  // todo: merge with Token formatCurrency?
-  function formatFunds(val: LotFunds | null): string | null {
-    return val?.floatValue.toFixedLocalized(4).replace(/,/g, '') ?? null
-  }
-
   let totalSpend: LotFunds | null = addBalance && addDeposit ? addBalance.add(addDeposit) : null;
   let submitEnabled =
     wallet !== null
@@ -394,18 +389,19 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
     && (pot != null || props.createAccount)
   ;
 
-  let newBalanceStr = formatFunds(userEnteredBalance)
-    ?? (formatFunds(accountRecommendation?.balance ?? null) ?? null)
-  let newDepositStr = formatFunds(userEnteredDeposit)
-    ?? (formatFunds(accountRecommendation?.deposit ?? null) ?? null)
+  let newBalanceStr = userEnteredBalance?.toFixedLocalized()
+    ?? (accountRecommendation?.balance?.toFixedLocalized() ?? null)
+  let newDepositStr = userEnteredDeposit?.toFixedLocalized()
+    ?? (accountRecommendation?.deposit.toFixedLocalized() ?? null)
 
   const maxEfficiency = 99.0;
   let totalFundsRequired: LotFunds | null = (addBalance != null && addDeposit != null) ?
     addBalance.add(addDeposit) : null
-  // console.log(`totalFundsRequired = ${totalFundsRequired}, addBalance = ${addBalance?.keiki}, addDeposit = ${addDeposit?.keiki}`);
-  const estGas: number | null =
-    (totalFundsRequired === null || totalFundsRequired.floatValue === 0) ? 0
-      : (accountRecommendation?.txGasFundsRequired.floatValue ?? null)
+
+  const estGas: GasFunds | null =
+    (totalFundsRequired === null || totalFundsRequired.isZero())
+      ? (gasToken?.zero ?? null)
+      : (accountRecommendation?.txGasFundsRequired ?? null)
 
   const warnFunds =
     (fundsToken && (wallet?.fundsBalance ?? fundsToken.zero).lt(totalFundsRequired ?? fundsToken.zero)) ?? false
@@ -468,17 +464,17 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
         </Col>
         <Col>
           <input
-            className="editable"
+            className="editable form-style-number"
             onChange={(e) => {
-              // setUserEnteredSizePickerValue(null)
-              setUserEnteredDeposit((fundsToken?.fromString(e.currentTarget.value) ?? fundsToken?.zero) ?? null);
+              setUserEnteredDeposit(
+                (fundsToken?.fromString(e.currentTarget.value) ?? fundsToken?.zero) ?? null);
               // When the user enters one value adopt the corresponding pot value
               // if (!userEnteredBalance && accountRecommendation?.balance) {
               //   setUserEnteredBalance(accountRecommendation?.balance ?? null)
               // }
             }}
-            type="number"
-            value={editingDeposit ? undefined : newDepositStr || (0).toFixedLocalized(2)}
+            type={editingDeposit ? "number" : undefined}
+            value={editingDeposit ? undefined : newDepositStr ?? fundsToken?.zero.toFixedLocalized()}
             onFocus={(e) => setEditingDeposit(true)}
             onBlur={(e) => setEditingDeposit(false)}
           />
@@ -525,18 +521,19 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
         </Col>
         <Col>
           <input
-            className="editable"
+            className="editable form-style-number"
             onChange={(e) => {
               setUserEnteredSizePickerValue(null)
-              setUserEnteredBalance((fundsToken?.fromString(e.currentTarget.value) ?? fundsToken?.zero) ?? null);
+              setUserEnteredBalance(
+                (fundsToken?.fromString(e.currentTarget.value) ?? fundsToken?.zero) ?? null);
               // When the user enters a balance value adopt the corresponding pot value
               if (!userEnteredDeposit && accountRecommendation?.deposit) {
                 setUserEnteredDeposit(accountRecommendation?.deposit ?? null)
               }
               return true;
             }}
-            type="number"
-            value={editingBalance ? undefined : newBalanceStr || (0).toFixedLocalized(2)}
+            type={editingDeposit ? "number" : undefined}
+            value={editingBalance ? undefined : newBalanceStr ?? fundsToken?.zero.toFixedLocalized()}
             onFocus={(e) => setEditingBalance(true)}
             onBlur={(e) => setEditingBalance(false)}
           />
@@ -552,7 +549,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
         </Col>
         <Col>
           <div className="funds-1">{
-            totalFundsRequired?.floatValue.toFixedLocalized(4) ?? "..."
+            totalFundsRequired?.toFixedLocalized() ?? "..."
           }</div>
         </Col>
       </Row>
@@ -561,7 +558,7 @@ const AddOrCreate: FC<AddOrCreateProps> = (props) => {
           <label>{"Network Fee "}{gasToken?.symbol}</label>
         </Col>
         <Col>
-          <div className="funds-1">{estGas?.toFixedLocalized(4) ?? "..."}</div>
+          <div className="funds-1">{estGas?.toFixedLocalized() ?? "..."}</div>
         </Col>
       </Row>
 

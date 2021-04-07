@@ -56,6 +56,11 @@ export class TokenType<InstanceType extends Token<InstanceType>> {
     return this.fromNumber(floatValue);
   }
 
+  // Return the value of the string or zero token value if the string cannot be parsed.
+  fromStringOrZero(val: string | null): InstanceType {
+    return this.fromString(val) ?? this.zero;
+  }
+
   // From a string representing the integer denomination. e.g. "1000000000" WEI
   // Throws an error if the value cannot be parsed.
   fromIntString(val: string): InstanceType {
@@ -150,14 +155,14 @@ export class Token<T extends Token<T>> {
     assertSameType(this, other);
   }
 
-  public toFixedLocalized(decimals: number = 4) {
+  public toFixedLocalized(decimals: number = this.type.decimals): string {
     decimals = Math.round(decimals);
     return this.floatValue.toFixedLocalized(decimals);
   }
 
   // Format as currency with the symbol suffixed
-  public formatCurrency(digits: number = 4): string {
-    return this.toFixedLocalized(digits) + ` ${this.type.symbol}`;
+  public formatCurrency(decimals: number = this.type.decimals): string {
+    return this.toFixedLocalized(decimals) + ` ${this.type.symbol}`;
   }
 
   public toString(): string {

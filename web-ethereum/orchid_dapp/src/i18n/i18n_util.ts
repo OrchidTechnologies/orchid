@@ -4,11 +4,14 @@ export {}
 
 declare global {
   interface Number {
-    toFixedLocalized(decimals: number): string;
-    //formatCurrency(value: number, suffix: string, digits?: number, ifNull?: string) : string;
+    toFixedLocalized(decimals: number, useGrouping?: boolean): string;
   }
 }
 
-(Number.prototype as any).toFixedLocalized = function (decimals: number): string {
-  return intl.formatNumber(this, {maximumFractionDigits: decimals, minimumFractionDigits: decimals});
+(Number.prototype as any).toFixedLocalized = function (decimals: number, useGrouping?: boolean): string {
+  return intl.formatNumber(this, {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: 1,
+    useGrouping: useGrouping ?? false,
+  });
 };

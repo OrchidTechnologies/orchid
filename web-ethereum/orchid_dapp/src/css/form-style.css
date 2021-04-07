@@ -74,6 +74,7 @@
 .form-style input[type="datetime"],
 .form-style input[type="email"],
 .form-style input[type="number"],
+.form-style-number,
 .form-style input[type="search"],
 .form-style input[type="time"],
 .form-style input[type="url"],
